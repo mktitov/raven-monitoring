@@ -41,8 +41,8 @@
   </developers>
   
   <modules>
-    <!--
     <module>raven-core</module>
+    <!--
     <module>raven-ui</module>
     -->
   </modules>
