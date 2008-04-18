@@ -24,7 +24,7 @@ import java.util.List;
  * 
  * @author Mikhail Titov
  */
-public interface Node 
+public interface Node<T>
 {
     /**
      * Returns the parent node for this node. For root node method returns null.
@@ -38,5 +38,25 @@ public interface Node
      * Returns the array of nodes types that can belong to this node type.
      */
     public Class[] getChildNodeTypes();
+    /**
+     * Returns node attributes
+     */
     public List<NodeAttribute> getNodeAttributes();
+    /**
+     * Returns the type of the wrapped object
+     */
+    public Class<? extends T> getWrappedType();
+    /**
+     * Returns wrapped object
+     */
+    public T getWrappedObject();
+    /**
+     * Initializing the node
+     */
+    public void init();
+    /**
+     * Returns the initialization priority of the node. 
+     * The lower priority is stronger
+     */
+    public int getInitializationPriority();
 }
