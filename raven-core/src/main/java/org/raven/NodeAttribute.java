@@ -17,26 +17,36 @@
 
 package org.raven;
 
-import java.util.List;
-
 /**
- * The base intarface of the observable object tree.
+ * Holds information about node attribute
  * 
  * @author Mikhail Titov
  */
-public interface Node 
+public interface NodeAttribute 
 {
     /**
-     * Returns the parent node for this node. For root node method returns null.
+     * Returns an unique attribute name.
      */
-    public Node getParentNode();
+    public String getName();
     /**
-     * Returns nodes that belongs to this node.
+     * Return the value of the attribute.
      */
-    public List<Node> getChildrens();
+    public String getValue();
     /**
-     * Returns the array of nodes types that can belong to this node type.
+     * Returns <code>true</code> if value for this attribute is required.
      */
-    public Class[] getChildNodeTypes();
-    public List<NodeAttribute> getNodeAttributes();
+    public boolean isRequired();
+    /**
+     * Returns the default value of an attribute or null if the default value
+     * not specified.
+     */
+    public String getDefaultValue();
+    /**
+     * Returns the type of the attribute.
+     */
+    public Class getType();
+    /**
+     * Returns the parent attribute name.
+     */
+    public String getParentAttribute();
 }
