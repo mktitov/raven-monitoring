@@ -20,7 +20,7 @@ package org.raven;
 import java.util.List;
 
 /**
- * The base intarface of the observable object tree.
+ * The base interface of the observable object tree.
  * 
  * @author Mikhail Titov
  */
