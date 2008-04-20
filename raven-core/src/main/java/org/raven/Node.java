@@ -45,7 +45,7 @@ public interface Node<T>
     /**
      * Returns the type of the wrapped object
      */
-    public Class<? extends T> getWrappedType();
+    public Class<? extends T> getWrappedObjectType();
     /**
      * Returns wrapped object
      */
