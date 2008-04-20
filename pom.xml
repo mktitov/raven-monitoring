@@ -47,6 +47,13 @@
     -->
   </modules>
  
+ <!--
+ <repositories>
+     <repository>
+         <url></url>
+     </repository>
+ </repositories>
+ -->
   
   <reporting>
     <plugins>
@@ -137,7 +144,13 @@
         <scope>compile</scope>
       </dependency>
       -->
-
+      <dependency>
+          <groupId>org.weda</groupId>
+          <artifactId>weda-core</artifactId>
+          <version>1.0-SNAPSHOT</version>
+          <scope>compile</scope>
+      </dependency>
+      
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-artifact</artifactId>
