@@ -20,6 +20,7 @@ package org.raven.impl;
 import java.util.List;
 import org.raven.Node;
 import org.raven.NodeAttribute;
+import org.raven.NodeInitializationError;
 
 /**
  *
@@ -27,6 +28,7 @@ import org.raven.NodeAttribute;
  */
 public class AbstractNode<T> implements Node<T>
 {
+    private String name;
     private final Class[] childNodeTypes;
     private List<Node> childrens;
     private List<NodeAttribute> nodeAttributes;
@@ -40,6 +42,16 @@ public class AbstractNode<T> implements Node<T>
         this.childNodeTypes = childNodeTypes;
     }
 
+    public String getName()
+    {
+        return name;
+    }
+    
+    public void setName(String name)
+    {
+        this.name = name;
+    }
+    
     public Class<? extends T> getWrappedObjectType()
     {
         return wrappedObjectType;
@@ -85,11 +97,39 @@ public class AbstractNode<T> implements Node<T>
         this.parentNode = parentNode;
     }
 
-    public void init()
+    public String getPath()
     {
+        StringBuffer path = new StringBuffer(name);
+        Node parent;
+        while ( (parent=getParentNode()) != null )
+            path.insert(0, parent.getName()+"/");
+        
+        return path.toString();
+    }
+    
+    public void init() throws NodeInitializationError
+    {
+        if (wrappedObjectType!=null)
+        {
+            createWrappedObject();
+        }
         //extract wrapped node parameters;
         
         //create wrapped object if it is setted
     }
-    
+
+    private void createWrappedObject() throws NodeInitializationError
+    {
+        try
+        {
+            wrappedObject = wrappedObjectType.newInstance();
+        } catch (Exception e)
+        {
+            throw new NodeInitializationError(
+                    String.format(
+                        "Error while creating the wrapped object of the type (%s) for node (%s)"
+                        , getPath(), name)
+                    , e);
+        }
+    }
 }

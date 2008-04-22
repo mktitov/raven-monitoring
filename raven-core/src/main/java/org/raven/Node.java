@@ -27,9 +27,23 @@ import java.util.List;
 public interface Node<T>
 {
     /**
+     * The separator char between nodes names in the path
+     * @see #getPath() 
+     */
+    public static String NODE_SEPARATOR = "/";
+    
+    /**
      * Returns the parent node for this node. For root node method returns null.
      */
     public Node getParentNode();
+    /**
+     * Returns the name of the node.
+     */
+    public String getName();
+    /**
+     * Returns the path to this node from the root. The node name separator is "/".
+     */
+    public String getPath();
     /**
      * Returns nodes that belongs to this node.
      */
@@ -53,7 +67,7 @@ public interface Node<T>
     /**
      * Initializing the node
      */
-    public void init();
+    public void init() throws NodeInitializationError;
     /**
      * Returns the initialization priority of the node. 
      * The lower priority is stronger

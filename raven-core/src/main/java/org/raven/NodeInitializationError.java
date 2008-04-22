@@ -1,5 +1,5 @@
 /*
- *  Copyright 2008 tim.
+ *  Copyright 2008 Mikhail Titov.
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,21 +15,20 @@
  *  under the License.
  */
 
-package org.raven.annotations;
-
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package org.raven;
 
 /**
  *
  * @author Mikhail Titov
  */
-@Documented
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD, ElementType.METHOD})
-public @interface Parameter 
+public class NodeInitializationError extends Exception 
 {
+    /**
+     * Constructs an instance of <code>NodeInitializationError</code> with the specified detail message.
+     * @param msg the detail message.
+     */
+    public NodeInitializationError(String msg, Throwable cause) 
+    {
+        super(msg);
+    }
 }
