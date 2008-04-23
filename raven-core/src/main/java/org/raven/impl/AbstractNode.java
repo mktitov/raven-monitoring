@@ -18,6 +18,7 @@
 package org.raven.impl;
 
 import java.lang.annotation.Annotation;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.raven.Node;
@@ -157,6 +158,12 @@ public class AbstractNode<T> implements Node<T>
                     if (ann instanceof Parameter)
                     {
                         NodeLogicParameter param = new NodeLogicParameterImpl(nodeLogic, desc);
+                        
+                        if (parameters==null)
+                            parameters = new HashMap<String, NodeLogicParameter>();
+                        
+                        parameters.put(desc.getName(), param);
+                        
                         break;
                     }
     }
