@@ -42,9 +42,7 @@
   
   <modules>
     <module>raven-core</module>
-    <!--
     <module>raven-ui</module>
-    -->
   </modules>
  
  <!--
@@ -147,6 +145,13 @@
       <dependency>
           <groupId>org.weda</groupId>
           <artifactId>weda-core</artifactId>
+          <version>1.0-SNAPSHOT</version>
+          <scope>compile</scope>
+      </dependency>
+      
+      <dependency>
+          <groupId>org.raven</groupId>
+          <artifactId>raven-core</artifactId>
           <version>1.0-SNAPSHOT</version>
           <scope>compile</scope>
       </dependency>
