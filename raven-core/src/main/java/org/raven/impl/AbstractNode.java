@@ -33,7 +33,7 @@ public class AbstractNode<T> implements Node<T>
     private List<Node> childrens;
     private List<NodeAttribute> nodeAttributes;
     private Class<? extends T> wrappedObjectType;
-    private T wrappedObject;
+    private T nodeLogic;
     private int initializationPriority;
     private Node parentNode;
 
@@ -52,12 +52,12 @@ public class AbstractNode<T> implements Node<T>
         this.name = name;
     }
     
-    public Class<? extends T> getWrappedObjectType()
+    public Class<? extends T> getNodeLogicType()
     {
         return wrappedObjectType;
     }
 
-    public void setWrappedObjectType(Class<? extends T> wrappedObjectType)
+    public void setNodeLogicType(Class<? extends T> wrappedObjectType)
     {
         this.wrappedObjectType = wrappedObjectType;
     }
@@ -82,9 +82,9 @@ public class AbstractNode<T> implements Node<T>
         return nodeAttributes;
     }
 
-    public T getWrappedObject()
+    public T getNodeLogic()
     {
-        return wrappedObject;
+        return nodeLogic;
     }
 
     public Node getParentNode()
@@ -122,7 +122,7 @@ public class AbstractNode<T> implements Node<T>
     {
         try
         {
-            wrappedObject = wrappedObjectType.newInstance();
+            nodeLogic = wrappedObjectType.newInstance();
         } catch (Exception e)
         {
             throw new NodeInitializationError(

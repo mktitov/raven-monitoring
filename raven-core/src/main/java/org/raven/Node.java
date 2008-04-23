@@ -59,11 +59,11 @@ public interface Node<T>
     /**
      * Returns the type of the wrapped object
      */
-    public Class<? extends T> getWrappedObjectType();
+    public Class<? extends T> getNodeLogicType();
     /**
      * Returns wrapped object
      */
-    public T getWrappedObject();
+    public T getNodeLogic();
     /**
      * Initializing the node
      */
