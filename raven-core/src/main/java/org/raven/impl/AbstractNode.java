@@ -17,10 +17,18 @@
 
 package org.raven.impl;
 
+import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.Map;
 import org.raven.Node;
 import org.raven.NodeAttribute;
 import org.raven.NodeInitializationError;
+import org.raven.NodeLogicParameter;
+import org.raven.annotations.Parameter;
+import org.weda.beans.ClassDescriptor;
+import org.weda.beans.PropertyDescriptor;
+import org.weda.internal.annotations.Service;
+import org.weda.services.ClassDescriptorRegistry;
 
 /**
  *
@@ -28,14 +36,19 @@ import org.raven.NodeInitializationError;
  */
 public class AbstractNode<T> implements Node<T>
 {
+    @Service
+    private ClassDescriptorRegistry descriptorRegistry;
+    
     private String name;
     private final Class[] childNodeTypes;
     private List<Node> childrens;
     private List<NodeAttribute> nodeAttributes;
-    private Class<? extends T> wrappedObjectType;
+    private Class<? extends T> nodeLogicType;
     private T nodeLogic;
     private int initializationPriority;
     private Node parentNode;
+    
+    private Map<String, NodeLogicParameter> parameters;
 
     public AbstractNode(Class[] childNodeTypes)
     {
@@ -54,12 +67,12 @@ public class AbstractNode<T> implements Node<T>
     
     public Class<? extends T> getNodeLogicType()
     {
-        return wrappedObjectType;
+        return nodeLogicType;
     }
 
     public void setNodeLogicType(Class<? extends T> wrappedObjectType)
     {
-        this.wrappedObjectType = wrappedObjectType;
+        this.nodeLogicType = wrappedObjectType;
     }
 
     public Class[] getChildNodeTypes()
@@ -109,9 +122,10 @@ public class AbstractNode<T> implements Node<T>
     
     public void init() throws NodeInitializationError
     {
-        if (wrappedObjectType!=null)
+        if (nodeLogicType!=null)
         {
             createWrappedObject();
+            extractNodeLogicParameters();
         }
         //extract wrapped node parameters;
         
@@ -122,7 +136,7 @@ public class AbstractNode<T> implements Node<T>
     {
         try
         {
-            nodeLogic = wrappedObjectType.newInstance();
+            nodeLogic = nodeLogicType.newInstance();
         } catch (Exception e)
         {
             throw new NodeInitializationError(
@@ -131,5 +145,19 @@ public class AbstractNode<T> implements Node<T>
                         , getPath(), name)
                     , e);
         }
+    }
+
+    private void extractNodeLogicParameters()
+    {
+        ClassDescriptor classDescriptor = descriptorRegistry.getClassDescriptor(nodeLogicType);
+        PropertyDescriptor[] descs = classDescriptor.getPropertyDescriptors();
+        for (PropertyDescriptor desc: descs)
+            if (desc.isReadable() && desc.isWriteable())
+                for (Annotation ann: desc.getAnnotations())
+                    if (ann instanceof Parameter)
+                    {
+                        NodeLogicParameter param = new NodeLogicParameterImpl(nodeLogic, desc);
+                        break;
+                    }
     }
 }

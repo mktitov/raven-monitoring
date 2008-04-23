@@ -17,44 +17,44 @@
 
 package org.raven;
 
+import org.weda.beans.PropertyDescriptor;
+
 /**
- * Holds information about node attribute
+ * Holds the node logic object parameter
+ * 
+ * @see Node#getNodeLogic() 
+ * @see Node#getNodeLogicType() 
  * 
  * @author Mikhail Titov
  */
-public interface NodeAttribute 
+public interface NodeLogicParameter 
 {
     /**
-     * Returns an unique attribute name.
+     * Returns the parameter name (the node logic class property name).
      */
     public String getName();
     /**
-     * Returns the parameter name or null if the attribute not linked with node logic parameter.
+     * Returns the display name of the parameter.
      */
-    public String getParameterName();
+    public String getDisplayName();
     /**
-     * Returns the short description of the attribute.
+     * Returns the short parameter description.
      */
     public String getDescription();
     /**
-     * Return the value of the attribute.
-     */
-    public String getValue();
-    /**
-     * Returns <code>true</code> if value for this attribute is required.
-     */
-    public boolean isRequired();
-    /**
-     * Returns the default value of an attribute or null if the default value
-     * not specified.
-     */
-    public String getDefaultValue();
-    /**
-     * Returns the type of the attribute.
+     * Returns the parameter type.
      */
     public Class getType();
     /**
-     * Returns the parent attribute name.
+     * Returns the parameter value.
      */
-    public NodeAttribute getParentAttribute();
+    public Object getValue();
+    /**
+     * Sets the parameter value.
+     */
+    public void setValue(Object value);
+    /**
+     * Returns the property descriptor of the parameter
+     */
+    public PropertyDescriptor getPropertyDescriptor();
 }
