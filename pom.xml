@@ -1,49 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>org.raven</groupId>
-  <artifactId>raven</artifactId>
-  <packaging>pom</packaging>
-  <version>1.0-SNAPSHOT</version>
-  <name>Raven monitoring </name>
-  <url>http://code.google.com/p/raven-monitoring</url>
-  <inceptionYear>2008</inceptionYear>    
-  
-  <licenses>
-    <license>
-      <name>Apache Software License 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-  
-  <developers>
-    <developer>
-      <id>tim</id>
-      <name>Mikhail K. Titov</name>
-      <email>mikhail1207@gmail.com</email>
-      <url></url>
-      <roles>
-        <role>Developer</role>
-      </roles>
-      <timezone>GMT+3</timezone>
-    </developer>
-    <developer>
-      <id>psn</id>
-      <name>Sergey N. Pinevskiy</name>
-      <email>pinevskiy@gmail.com</email>
-      <url></url>
-      <roles>
-        <role>Developer</role>
-      </roles>
-      <timezone>GMT+3</timezone>
-    </developer>
-  </developers>
-  
-  <modules>
-    <module>raven-core</module>
-    <module>raven-ui</module>
-  </modules>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.raven</groupId>
+    <artifactId>raven</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0-SNAPSHOT</version>
+    <name>Raven monitoring </name>
+    <url>http://code.google.com/p/raven-monitoring</url>
+    <inceptionYear>2008</inceptionYear>
+    <licenses>
+        <license>
+            <name>Apache Software License 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <id>tim</id>
+            <name>Mikhail K. Titov</name>
+            <email>mikhail1207@gmail.com</email>
+            <url></url>
+            <roles>
+                <role>Developer</role>
+            </roles>
+            <timezone>GMT+3</timezone>
+        </developer>
+        <developer>
+            <id>psn</id>
+            <name>Sergey N. Pinevskiy</name>
+            <email>pinevskiy@gmail.com</email>
+            <url></url>
+            <roles>
+                <role>Developer</role>
+            </roles>
+            <timezone>GMT+3</timezone>
+        </developer>
+    </developers>
+    <modules>
+        <module>raven-core</module>
+        <module>raven-ui</module>
+    </modules>
  
  <!--
  <repositories>
@@ -52,87 +49,93 @@
      </repository>
  </repositories>
  -->
-  
-  <reporting>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-site-plugin</artifactId>
-        <configuration>
-          <inputEncoding>utf-8</inputEncoding>
-          <outputEncoding>utf-8</outputEncoding>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <configuration>
-          <encoding>Cp1251</encoding>
-          <charset>utf-8</charset>
-          <docencoding>UTF-8</docencoding>
-        </configuration>
-      </plugin>
-    </plugins>    
-  </reporting>
-  
-  <dependencies>
-    
-  </dependencies>
-  
-  <build>
-    <pluginManagement>
-      <plugins>
-          
-        <plugin>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <configuration>
-            <source>1.5</source>
-            <target>1.5</target>
-            <encoding>Cp1251</encoding>
-            <optimize>true</optimize>
-          </configuration>                
-        </plugin>            
-        
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-surefire-plugin</artifactId>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
-          <configuration>
-            <archive>
-              <compress>true</compress>
-              <index>true</index>
-            </archive>
-          </configuration>
-        </plugin>
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-source-plugin</artifactId>
-          <executions>
-            <execution>
-              <goals>
-                <goal>jar</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>        
-
-      </plugins>
-
-    </pluginManagement>
-
-  </build>
-  
-  <pluginRepositories>
-  </pluginRepositories>
-  
-  <dependencyManagement>
-
-    <dependencies>    
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <configuration>
+                    <inputEncoding>utf-8</inputEncoding>
+                    <outputEncoding>utf-8</outputEncoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <encoding>Cp1251</encoding>
+                    <charset>utf-8</charset>
+                    <docencoding>UTF-8</docencoding>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
+    <dependencies>
+    </dependencies>
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.weda</groupId>
+                    <artifactId>weda-maven-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>transform-classes</id>
+                            <phase>process-classes</phase>
+                            <goals>
+                                <goal>transform-classes</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>transform-test-classes</id>
+                            <phase>test-compile</phase>
+                            <goals>
+                                <goal>transform-test-classes</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <source>1.5</source>
+                        <target>1.5</target>
+                        <encoding>Cp1251</encoding>
+                        <optimize>true</optimize>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <configuration>
+                        <archive>
+                            <compress>true</compress>
+                            <index>true</index>
+                        </archive>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+    <pluginRepositories>
+    </pluginRepositories>
+    <dependencyManagement>
+        <dependencies>    
 
       <!--
       <dependency>
@@ -142,42 +145,36 @@
         <scope>compile</scope>
       </dependency>
       -->
-      <dependency>
-          <groupId>org.weda</groupId>
-          <artifactId>weda-core</artifactId>
-          <version>1.0-SNAPSHOT</version>
-          <scope>compile</scope>
-      </dependency>
-      
-      <dependency>
-          <groupId>org.raven</groupId>
-          <artifactId>raven-core</artifactId>
-          <version>1.0-SNAPSHOT</version>
-          <scope>compile</scope>
-      </dependency>
-      
-      <dependency>
-        <groupId>org.apache.maven</groupId>
-        <artifactId>maven-artifact</artifactId>
-        <version>2.0</version>
-        <scope>compile</scope>
-      </dependency>
-
-      <dependency>
-          <groupId>junit</groupId>
-          <artifactId>junit</artifactId>
-          <scope>test</scope>
-          <version>4.4</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.easymock</groupId>
-        <artifactId>easymock</artifactId>
-        <version>2.3</version>
-        <scope>test</scope>
-      </dependency>    
-    </dependencies>
-
-  </dependencyManagement>
-
+            <dependency>
+                <groupId>org.weda</groupId>
+                <artifactId>weda-core</artifactId>
+                <version>1.0-SNAPSHOT</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.raven</groupId>
+                <artifactId>raven-core</artifactId>
+                <version>1.0-SNAPSHOT</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-artifact</artifactId>
+                <version>2.0</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <scope>test</scope>
+                <version>4.4</version>
+            </dependency>
+            <dependency>
+                <groupId>org.easymock</groupId>
+                <artifactId>easymock</artifactId>
+                <version>2.3</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 </project>
