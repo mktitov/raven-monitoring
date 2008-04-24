@@ -73,4 +73,8 @@ public interface Node<T>
      * The lower priority is stronger
      */
     public int getInitializationPriority();
+    /**
+     * Returns true if node was initialized (method {@link #init()} successfuly executed).
+     */
+    public boolean isInitialized();
 }

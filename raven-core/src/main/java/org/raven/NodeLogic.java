@@ -18,34 +18,17 @@
 package org.raven;
 
 /**
- * Holds information about node attribute
- * 
+ *
  * @author Mikhail Titov
  */
-public interface NodeAttribute 
+public interface NodeLogic 
 {
     /**
-     * Returns an unique attribute name.
+     * Starts the node logic.
      */
-    public String getName();
+    public void start();
     /**
-     * Returns the parameter name or null if the attribute not linked with node logic parameter.
+     * Stops the node logic.
      */
-    public String getParameterName();
-    /**
-     * Returns the short description of the attribute.
-     */
-    public String getDescription();
-    /**
-     * Return the value of the attribute.
-     */
-    public String getValue();
-    /**
-     * Returns the type of the attribute.
-     */
-    public Class getType();
-    /**
-     * Returns the parent attribute name.
-     */
-    public NodeAttribute getParentAttribute();
+    public void stop();
 }

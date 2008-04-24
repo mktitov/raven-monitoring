@@ -17,13 +17,15 @@
 
 package org.raven.impl;
 
+import org.raven.NodeAttribute;
 import org.raven.NodeLogicParameter;
 import org.weda.beans.GetOperation;
 import org.weda.beans.PropertyDescriptor;
 import org.weda.beans.SetOperation;
+import org.weda.constraints.ConstraintException;
 import org.weda.internal.annotations.Service;
-import org.weda.services.ClassDescriptorRegistry;
 import org.weda.services.PropertyOperationCompiler;
+import org.weda.services.TypeConverter;
 
 /**
  *
@@ -33,11 +35,14 @@ public class NodeLogicParameterImpl implements NodeLogicParameter
 {
     @Service
     private PropertyOperationCompiler operationCompiler;
+    @Service
+    private TypeConverter converter;
     
     private final Object nodeLogic;
     private final String name;        
     
     private PropertyDescriptor propertyDescriptor;
+    private NodeAttribute nodeAttribute;
     private GetOperation getter;
     private SetOperation setter;
 
@@ -76,14 +81,31 @@ public class NodeLogicParameterImpl implements NodeLogicParameter
         return getter.getValue(nodeLogic);
     }
 
-    public void setValue(Object value)
+    public void setValue(Object value) throws ConstraintException
     {
-        setter.setValue(nodeLogic, value);
+        Object val = converter.convert(getType(), value, getPattern());
+        propertyDescriptor.check(val);
+        setter.setValue(nodeLogic, val);
     }
 
     public PropertyDescriptor getPropertyDescriptor()
     {
         return propertyDescriptor;
+    }
+    
+    public void setNodeAttribute(NodeAttribute nodeAttribute)
+    {
+        this.nodeAttribute = nodeAttribute;
+    }
+
+    public NodeAttribute getNodeAttribute()
+    {
+        return nodeAttribute;
+    }
+
+    public String getPattern()
+    {
+        return propertyDescriptor.getPattern();
     }
     
 }

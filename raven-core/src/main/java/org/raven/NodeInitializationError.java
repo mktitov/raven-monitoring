@@ -21,7 +21,7 @@ package org.raven;
  *
  * @author Mikhail Titov
  */
-public class NodeInitializationError extends Exception 
+public class NodeInitializationError extends Error
 {
     /**
      * Constructs an instance of <code>NodeInitializationError</code> with the specified detail message.

@@ -31,15 +31,18 @@ import org.weda.beans.ClassDescriptor;
 import org.weda.beans.PropertyDescriptor;
 import org.weda.internal.annotations.Service;
 import org.weda.services.ClassDescriptorRegistry;
+import org.weda.services.TypeConverter;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class AbstractNode<T> implements Node<T>
+public class BaseNode<T> implements Node<T>
 {
     @Service
     private ClassDescriptorRegistry descriptorRegistry;
+    @Service
+    private TypeConverter converter;
     
     private String name;
     private final Class[] childNodeTypes;
@@ -50,9 +53,11 @@ public class AbstractNode<T> implements Node<T>
     private int initializationPriority;
     private Node parentNode;
     
+    private boolean initialized = false;
+    
     private Map<String, NodeLogicParameter> parameters;
 
-    public AbstractNode(Class[] childNodeTypes)
+    public BaseNode(Class[] childNodeTypes)
     {
         this.childNodeTypes = childNodeTypes;
     }
@@ -72,9 +77,16 @@ public class AbstractNode<T> implements Node<T>
         return nodeLogicType;
     }
 
-    public void setNodeLogicType(Class<? extends T> wrappedObjectType)
+    public void setNodeLogicType(Class<? extends T> nodeLogicType)
     {
-        this.nodeLogicType = wrappedObjectType;
+        if (initialized && nodeLogicType != this.nodeLogicType)
+        {
+            this.nodeLogicType = nodeLogicType;
+            if (nodeLogicType!=null)
+                createNodeLogic();
+            syncAttributesAndParameters();
+        }else
+            this.nodeLogicType = nodeLogicType;
     }
 
     public Class[] getChildNodeTypes()
@@ -121,25 +133,33 @@ public class AbstractNode<T> implements Node<T>
         
         return path.toString();
     }
+
+    public boolean isInitialized()
+    {
+        return initialized;
+    }
     
     public void init() throws NodeInitializationError
     {
         if (nodeLogicType!=null)
         {
-            createWrappedObject();
-            extractNodeLogicParameters();
+            createNodeLogic();
             syncAttributesAndParameters();
         }
-        //extract wrapped node parameters;
-        
-        //create wrapped object if it is setted
+        initialized = true;
     }
 
-    private void createWrappedObject() throws NodeInitializationError
+    void fireAttributeValueChanged(NodeAttributeImpl attr)
+    {
+        ;
+    }
+
+    private void createNodeLogic() throws NodeInitializationError
     {
         try
         {
             nodeLogic = nodeLogicType.newInstance();
+            extractNodeLogicParameters();            
         } catch (Exception e)
         {
             throw new NodeInitializationError(
@@ -152,6 +172,8 @@ public class AbstractNode<T> implements Node<T>
 
     private void extractNodeLogicParameters()
     {
+        if (parameters!=null)
+            parameters = null;
         ClassDescriptor classDescriptor = descriptorRegistry.getClassDescriptor(nodeLogicType);
         PropertyDescriptor[] descs = classDescriptor.getPropertyDescriptors();
         for (PropertyDescriptor desc: descs)
@@ -172,7 +194,7 @@ public class AbstractNode<T> implements Node<T>
 
     private void syncAttributesAndParameters()
     {
-        if (nodeAttributes!=null && parameters!=null)
+        if (nodeAttributes!=null)
         {
             ListIterator<NodeAttribute> it = nodeAttributes.listIterator();
             while (it.hasNext())
@@ -180,16 +202,37 @@ public class AbstractNode<T> implements Node<T>
                 NodeAttribute attr = it.next();
                 if (attr.getParameterName()!=null)
                 {
-                    NodeLogicParameter param = parameters.get(attr.getParameterName());
+                    NodeLogicParameter param = 
+                            parameters==null? null : parameters.get(attr.getParameterName());
                     if (param==null)
                         it.remove();
                     else
                     {
+                        param.setNodeAttribute(attr);
                         param.setValue(attr.getValue());
                     }
                 }
             }
-                
         }
+        if (parameters != null)
+        {
+            for (NodeLogicParameter param: parameters.values())
+                if (param.getNodeAttribute()==null)
+                    createNodeAttribute(param);
+        }
+    }
+    
+    private void createNodeAttribute(NodeLogicParameter param)
+    {
+        NodeAttributeImpl attr = new NodeAttributeImpl();
+        attr.setName(param.getDisplayName());
+        attr.setParameterName(param.getName());
+        attr.setParameter(param);
+        attr.setDescription(param.getDescription());
+        attr.setValue(converter.convert(String.class, param.getValue(), param.getPattern()));
+        attr.setType(param.getType());
+        attr.setOwner(this);
+        
+        nodeAttributes.add(attr);
     }
 }

@@ -18,6 +18,7 @@
 package org.raven;
 
 import org.weda.beans.PropertyDescriptor;
+import org.weda.constraints.ConstraintException;
 
 /**
  * Holds the node logic object parameter
@@ -46,15 +47,28 @@ public interface NodeLogicParameter
      */
     public Class getType();
     /**
+     * The format string that used to convert value to string and vice versa.
+     */
+    public String getPattern();
+    /**
      * Returns the parameter value.
      */
     public Object getValue();
     /**
      * Sets the parameter value.
      */
-    public void setValue(Object value);
+    public void setValue(Object value) throws ConstraintException;
     /**
      * Returns the property descriptor of the parameter
      */
     public PropertyDescriptor getPropertyDescriptor();
+    /**
+     * Returns the node attribute linked with the parameter.
+     */
+    public NodeAttribute getNodeAttribute();
+    /**
+     * Links the parameter with the node attribute.
+     * @param nodeAttribute
+     */
+    public void setNodeAttribute(NodeAttribute nodeAttribute);
 }
