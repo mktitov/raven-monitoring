@@ -34,4 +34,9 @@ public interface Configurator
      * @param object object 
      */
     public void save(Object object);
+
+    /**
+     * Returns the configurations parameters storage.
+     */
+    public Config getConfig();
 }
