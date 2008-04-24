@@ -20,6 +20,7 @@ package org.raven.impl;
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import org.raven.Node;
 import org.raven.NodeAttribute;
@@ -127,6 +128,7 @@ public class AbstractNode<T> implements Node<T>
         {
             createWrappedObject();
             extractNodeLogicParameters();
+            syncAttributesAndParameters();
         }
         //extract wrapped node parameters;
         
@@ -166,5 +168,28 @@ public class AbstractNode<T> implements Node<T>
                         
                         break;
                     }
+    }
+
+    private void syncAttributesAndParameters()
+    {
+        if (nodeAttributes!=null && parameters!=null)
+        {
+            ListIterator<NodeAttribute> it = nodeAttributes.listIterator();
+            while (it.hasNext())
+            {
+                NodeAttribute attr = it.next();
+                if (attr.getParameterName()!=null)
+                {
+                    NodeLogicParameter param = parameters.get(attr.getParameterName());
+                    if (param==null)
+                        it.remove();
+                    else
+                    {
+                        param.setValue(attr.getValue());
+                    }
+                }
+            }
+                
+        }
     }
 }
