@@ -41,6 +41,10 @@
     
     <dependencies>
         <dependency>
+      		<groupId>javax.servlet</groupId>
+      		<artifactId>servlet-api</artifactId>
+      	</dependency>
+        <dependency>
             <groupId>org.raven</groupId>
             <artifactId>raven-core</artifactId>
         </dependency>
@@ -50,7 +54,7 @@
         </dependency>
         <dependency>
             <groupId>org.easymock</groupId>
-            <artifactId>easymock</artifactId>
+            <artifactId>easymock</artifactId>            
         </dependency>
     </dependencies>
     
