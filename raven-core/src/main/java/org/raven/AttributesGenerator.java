@@ -18,17 +18,19 @@
 package org.raven;
 
 /**
- *
+ * 
  * @author Mikhail Titov
  */
-public interface NodeLogic 
+public interface AttributesGenerator 
 {
     /**
-     * Sets the node logic owner.
+     * Generates and adds attributes to the node passed in <code>owner</code> parameter. 
+     * 
+     * @param owner the owner of generated attributes
+     * @param parentAttribute the name of the parent attribute
+     * 
+     * @see NodeAttribute#getOwner() 
+     * @see NodeAttribute#getParentAttribute() 
      */
-    public void setOwner(Node node);
-    /**
-     * Initializes node logic
-     */
-    public void init();
+    public void generateAttributes(Node owner, String parentAttribute);
 }

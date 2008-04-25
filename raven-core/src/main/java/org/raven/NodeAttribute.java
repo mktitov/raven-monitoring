@@ -25,6 +25,10 @@ package org.raven;
 public interface NodeAttribute 
 {
     /**
+     * Returns the owner node of the attribute
+     */
+    public Node getOwner();
+    /**
      * Returns an unique attribute name.
      */
     public String getName();
@@ -47,5 +51,5 @@ public interface NodeAttribute
     /**
      * Returns the parent attribute name.
      */
-    public NodeAttribute getParentAttribute();
+    public String getParentAttribute();
 }

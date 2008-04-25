@@ -17,6 +17,8 @@
 
 package org.raven.impl;
 
+import org.raven.AttributesGenerator;
+import org.raven.Node;
 import org.raven.NodeAttribute;
 import org.raven.NodeLogicParameter;
 import org.weda.beans.ObjectUtils;
@@ -36,12 +38,13 @@ public class NodeAttributeImpl implements NodeAttribute
     private String name;
     private String parameterName;
     private String description;
-    private NodeAttribute parentAttribute;
+    private String parentAttribute;
     private Class type;
     private String value;
     
     private BaseNode owner;
     private NodeLogicParameter parameter;
+    private boolean generatorType = false;
 
     public void setParameter(NodeLogicParameter parameter)
     {
@@ -73,7 +76,7 @@ public class NodeAttributeImpl implements NodeAttribute
         return type;
     }
 
-    public NodeAttribute getParentAttribute()
+    public String getParentAttribute()
     {
         return parentAttribute;
     }
@@ -88,6 +91,11 @@ public class NodeAttributeImpl implements NodeAttribute
         this.name = name;
     }
 
+    public Node getOwner()
+    {
+        return owner;
+    }
+
     public void setOwner(BaseNode owner)
     {
         this.owner = owner;
@@ -98,7 +106,7 @@ public class NodeAttributeImpl implements NodeAttribute
         this.parameterName = parameterName;
     }
 
-    public void setParentAttribute(NodeAttribute parentAttribute)
+    public void setParentAttribute(String parentAttribute)
     {
         this.parentAttribute = parentAttribute;
     }
@@ -106,6 +114,7 @@ public class NodeAttributeImpl implements NodeAttribute
     public void setType(Class type)
     {
         this.type = type;
+        generatorType = AttributesGenerator.class.isAssignableFrom(type);
     }
 
     public void setValue(String value) throws ConstraintException
@@ -120,4 +129,11 @@ public class NodeAttributeImpl implements NodeAttribute
             owner.fireAttributeValueChanged(this);
         }
     }
+
+    public boolean isGeneratorType()
+    {
+        return generatorType;
+    }
+    
+    
 }

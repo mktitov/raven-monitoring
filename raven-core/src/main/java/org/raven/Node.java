@@ -24,7 +24,7 @@ import java.util.List;
  * 
  * @author Mikhail Titov
  */
-public interface Node<T>
+public interface Node<T extends NodeLogic>
 {
     /**
      * The separator char between nodes names in the path
@@ -56,12 +56,13 @@ public interface Node<T>
      * Returns node attributes
      */
     public List<NodeAttribute> getNodeAttributes();
+    public NodeAttribute getNodeAttribute(String name);
     /**
-     * Returns the type of the wrapped object
+     * Returns the type of the node logic
      */
     public Class<? extends T> getNodeLogicType();
     /**
-     * Returns wrapped object
+     * Returns node logic object
      */
     public T getNodeLogic();
     /**
@@ -77,4 +78,9 @@ public interface Node<T>
      * Returns true if node was initialized (method {@link #init()} successfuly executed).
      */
     public boolean isInitialized();
+    /**
+     * This node calls method {@link Node#init() dependentNode.init} after self initialization.
+     * @param dependentNode the node that must be initialized after this node.
+     */
+    public void addDependentNode(Node dependentNode);
 }

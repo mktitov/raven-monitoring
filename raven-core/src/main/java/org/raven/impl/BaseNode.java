@@ -18,17 +18,24 @@
 package org.raven.impl;
 
 import java.lang.annotation.Annotation;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.raven.AttributesGenerator;
 import org.raven.Node;
 import org.raven.NodeAttribute;
 import org.raven.NodeInitializationError;
+import org.raven.NodeLogic;
 import org.raven.NodeLogicParameter;
 import org.raven.annotations.Parameter;
 import org.weda.beans.ClassDescriptor;
 import org.weda.beans.PropertyDescriptor;
+import org.weda.constraints.ConstraintException;
 import org.weda.internal.annotations.Service;
 import org.weda.services.ClassDescriptorRegistry;
 import org.weda.services.TypeConverter;
@@ -37,7 +44,7 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
-public class BaseNode<T> implements Node<T>
+public class BaseNode<T extends NodeLogic> implements Node<T>
 {
     @Service
     private ClassDescriptorRegistry descriptorRegistry;
@@ -53,6 +60,8 @@ public class BaseNode<T> implements Node<T>
     private int initializationPriority;
     private Node parentNode;
     
+    private Collection<Node> dependentNodes;
+    
     private boolean initialized = false;
     
     private Map<String, NodeLogicParameter> parameters;
@@ -60,6 +69,13 @@ public class BaseNode<T> implements Node<T>
     public BaseNode(Class[] childNodeTypes)
     {
         this.childNodeTypes = childNodeTypes;
+    }
+
+    public void addDependentNode(Node dependentNode)
+    {
+        if (dependentNodes==null)
+            dependentNodes = new LinkedList<Node>();
+        dependentNodes.add(dependentNode);
     }
 
     public String getName()
@@ -77,7 +93,7 @@ public class BaseNode<T> implements Node<T>
         return nodeLogicType;
     }
 
-    public void setNodeLogicType(Class<? extends T> nodeLogicType)
+    public void setNodeLogicType(Class<? extends T> nodeLogicType) throws ConstraintException
     {
         if (initialized && nodeLogicType != this.nodeLogicType)
         {
@@ -141,17 +157,79 @@ public class BaseNode<T> implements Node<T>
     
     public void init() throws NodeInitializationError
     {
+        if (nodeAttributes!=null)
+            for (NodeAttribute attr: nodeAttributes)
+                if (Node.class.isAssignableFrom(attr.getType()))
+                {
+                    Node node = converter.convert(Node.class, attr.getValue(), null);
+                    if (!node.isInitialized())
+                    {
+                        node.addDependentNode(this);
+                        break;
+                    }
+                }
+            
         if (nodeLogicType!=null)
         {
-            createNodeLogic();
-            syncAttributesAndParameters();
+            try
+            {
+                createNodeLogic();
+                syncAttributesAndParameters();
+            } catch (Exception ex)
+            {
+                throw new NodeInitializationError(String.format(
+                        "Error initializing node (%s)", getPath())
+                        , ex);
+            }
         }
+            
         initialized = true;
+        
+        if (dependentNodes!=null)
+        {
+            for (Node node: dependentNodes)
+                node.init();
+            dependentNodes = null;
+        }
+        
     }
 
     void fireAttributeValueChanged(NodeAttributeImpl attr)
     {
-        ;
+        if (attr.isGeneratorType())
+        {
+            ListIterator<NodeAttribute> it = nodeAttributes.listIterator();
+            while (it.hasNext())
+            {
+                NodeAttribute childAttr = it.next();
+                if (attr.getName().equals(childAttr.getParentAttribute()))
+                    it.remove();
+            }
+            
+            if (attr.getValue()!=null)
+            {
+                AttributesGenerator attributesGenerator = 
+                        (AttributesGenerator) converter.convert(
+                            attr.getType(), attr.getValue(), null);
+                attributesGenerator.generateAttributes(this, attr.getName());
+            }
+        }
+    }
+    
+    /**
+     * Method returns the first not null value of the attribute, with name passed in the 
+     * <code>attributeName</code> parameter, of the nearest parent or null if parents does not
+     * contain the attribute.
+     * @param attributeName
+     * @return
+     */
+    String getParentNodeAttributeValue(String attributeName)
+    {
+        Node parent;
+        while ( (parent=getParentNode())!=null )
+        {
+            
+        }
     }
 
     private void createNodeLogic() throws NodeInitializationError
@@ -159,13 +237,13 @@ public class BaseNode<T> implements Node<T>
         try
         {
             nodeLogic = nodeLogicType.newInstance();
+            nodeLogic.setOwner(this);
             extractNodeLogicParameters();            
         } catch (Exception e)
         {
             throw new NodeInitializationError(
                     String.format(
-                        "Error while creating the wrapped object of the type (%s) for node (%s)"
-                        , getPath(), name)
+                        "Error creating the node logic (%s)", nodeLogicType.getName())
                     , e);
         }
     }
@@ -192,7 +270,7 @@ public class BaseNode<T> implements Node<T>
                     }
     }
 
-    private void syncAttributesAndParameters()
+    private void syncAttributesAndParameters() throws ConstraintException
     {
         if (nodeAttributes!=null)
         {
@@ -224,15 +302,20 @@ public class BaseNode<T> implements Node<T>
     
     private void createNodeAttribute(NodeLogicParameter param)
     {
-        NodeAttributeImpl attr = new NodeAttributeImpl();
-        attr.setName(param.getDisplayName());
-        attr.setParameterName(param.getName());
-        attr.setParameter(param);
-        attr.setDescription(param.getDescription());
-        attr.setValue(converter.convert(String.class, param.getValue(), param.getPattern()));
-        attr.setType(param.getType());
-        attr.setOwner(this);
-        
-        nodeAttributes.add(attr);
+        try
+        {
+            NodeAttributeImpl attr = new NodeAttributeImpl();
+            attr.setName(param.getDisplayName());
+            attr.setParameterName(param.getName());
+            attr.setParameter(param);
+            attr.setDescription(param.getDescription());
+            attr.setValue(converter.convert(String.class, param.getValue(), param.getPattern()));
+            attr.setType(param.getType());
+            attr.setOwner(this);
+
+            nodeAttributes.add(attr);
+        } catch (ConstraintException ex)
+        {
+        }
     }
 }
