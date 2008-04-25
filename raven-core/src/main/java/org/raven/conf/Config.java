@@ -15,7 +15,7 @@
  *  under the License.
  */
 
-package org.raven;
+package org.raven.conf;
 
 public interface Config {
 

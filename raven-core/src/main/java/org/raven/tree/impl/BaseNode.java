@@ -15,7 +15,7 @@
  *  under the License.
  */
 
-package org.raven.impl;
+package org.raven.tree.impl;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
@@ -24,14 +24,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.raven.AttributesGenerator;
-import org.raven.Node;
-import org.raven.NodeAttribute;
-import org.raven.NodeInitializationError;
-import org.raven.NodeLogic;
-import org.raven.NodeLogicParameter;
+import org.raven.tree.AttributesGenerator;
+import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodeInitializationError;
+import org.raven.tree.NodeLogic;
+import org.raven.tree.NodeLogicParameter;
 import org.raven.annotations.Parameter;
 import org.weda.beans.ClassDescriptor;
 import org.weda.beans.PropertyDescriptor;

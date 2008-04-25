@@ -15,10 +15,10 @@
  *  under the License.
  */
 
-package org.raven.impl;
+package org.raven.tree.impl;
 
-import org.raven.NodeAttribute;
-import org.raven.NodeLogicParameter;
+import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodeLogicParameter;
 import org.weda.beans.GetOperation;
 import org.weda.beans.PropertyDescriptor;
 import org.weda.beans.SetOperation;

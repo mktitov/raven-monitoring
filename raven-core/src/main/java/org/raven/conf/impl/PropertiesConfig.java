@@ -15,9 +15,9 @@
  *  under the License.
  */
 
-package org.raven.impl;
+package org.raven.conf.impl;
 
-import org.raven.Config;
+import org.raven.conf.Config;
 import java.util.Properties;
 import java.io.FileInputStream;
 

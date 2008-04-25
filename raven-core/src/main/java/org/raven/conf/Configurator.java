@@ -15,20 +15,31 @@
  *  under the License.
  */
 
-package org.raven;
+package org.raven.conf;
+
+import org.raven.tree.Node;
+import org.raven.*;
 
 /**
- *
+ * The goal of the configurator is to store and restore the application state.
+ * 
  * @author Mikhail Titov
  */
-public class NodeInitializationError extends Error
+public interface Configurator 
 {
     /**
-     * Constructs an instance of <code>NodeInitializationError</code> with the specified detail message.
-     * @param msg the detail message.
+     * Returns the root node of the observable objects tree.
+     * @return
      */
-    public NodeInitializationError(String msg, Throwable cause) 
-    {
-        super(msg);
-    }
+    public Node getRootNode();
+    /**
+     * Saves the state of the object in configuration database.
+     * @param object object 
+     */
+    public void save(Object object);
+
+    /**
+     * Returns the configurations parameters storage.
+     */
+    public Config getConfig();
 }

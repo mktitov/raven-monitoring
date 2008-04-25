@@ -15,28 +15,22 @@
  *  under the License.
  */
 
-package org.raven;
+package org.raven.tree;
 
 /**
- * The goal of the configurator is to store and restore the application state.
  * 
  * @author Mikhail Titov
  */
-public interface Configurator 
+public interface AttributesGenerator 
 {
     /**
-     * Returns the root node of the observable objects tree.
-     * @return
+     * Generates and adds attributes to the node passed in <code>owner</code> parameter. 
+     * 
+     * @param owner the owner of generated attributes
+     * @param parentAttribute the name of the parent attribute
+     * 
+     * @see NodeAttribute#getOwner() 
+     * @see NodeAttribute#getParentAttribute() 
      */
-    public Node getRootNode();
-    /**
-     * Saves the state of the object in configuration database.
-     * @param object object 
-     */
-    public void save(Object object);
-
-    /**
-     * Returns the configurations parameters storage.
-     */
-    public Config getConfig();
+    public void generateAttributes(Node owner, String parentAttribute);
 }

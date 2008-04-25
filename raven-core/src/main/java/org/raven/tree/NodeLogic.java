@@ -15,22 +15,20 @@
  *  under the License.
  */
 
-package org.raven;
+package org.raven.tree;
 
 /**
- * 
+ *
  * @author Mikhail Titov
  */
-public interface AttributesGenerator 
+public interface NodeLogic 
 {
     /**
-     * Generates and adds attributes to the node passed in <code>owner</code> parameter. 
-     * 
-     * @param owner the owner of generated attributes
-     * @param parentAttribute the name of the parent attribute
-     * 
-     * @see NodeAttribute#getOwner() 
-     * @see NodeAttribute#getParentAttribute() 
+     * Sets the node logic owner.
      */
-    public void generateAttributes(Node owner, String parentAttribute);
+    public void setOwner(Node node);
+    /**
+     * Initializes node logic
+     */
+    public void init();
 }

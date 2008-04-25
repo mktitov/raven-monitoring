@@ -15,7 +15,7 @@
  *  under the License.
  */
 
-package org.raven;
+package org.raven.tree;
 
 /**
  * Holds information about node attribute

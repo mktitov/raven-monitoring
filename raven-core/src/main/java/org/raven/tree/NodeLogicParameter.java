@@ -15,7 +15,7 @@
  *  under the License.
  */
 
-package org.raven;
+package org.raven.tree;
 
 import org.weda.beans.PropertyDescriptor;
 import org.weda.constraints.ConstraintException;

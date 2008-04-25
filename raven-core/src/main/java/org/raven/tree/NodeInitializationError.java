@@ -15,20 +15,20 @@
  *  under the License.
  */
 
-package org.raven;
+package org.raven.tree;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface NodeLogic 
+public class NodeInitializationError extends Error
 {
     /**
-     * Sets the node logic owner.
+     * Constructs an instance of <code>NodeInitializationError</code> with the specified detail message.
+     * @param msg the detail message.
      */
-    public void setOwner(Node node);
-    /**
-     * Initializes node logic
-     */
-    public void init();
+    public NodeInitializationError(String msg, Throwable cause) 
+    {
+        super(msg);
+    }
 }
