@@ -9,6 +9,7 @@
     <artifactId>raven-ui</artifactId>
     <name>raven-ui</name>
     <description>Core module of the raven</description>
+    <packaging>war</packaging>
     
     <build>
         
