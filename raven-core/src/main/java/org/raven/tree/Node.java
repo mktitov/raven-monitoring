@@ -18,6 +18,7 @@
 package org.raven.tree;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * The base interface of the observable object tree.
@@ -55,7 +56,12 @@ public interface Node<T extends NodeLogic>
     /**
      * Returns node attributes
      */
-    public List<NodeAttribute> getNodeAttributes();
+    public Map<String, NodeAttribute> getNodeAttributes();
+    /**
+     * Returns node attribute by its name or null if node does not contains the attribute with name
+     * passed in parameter <code>name</code>.
+     * @param name the attribute name
+     */
     public NodeAttribute getNodeAttribute(String name);
     /**
      * Returns the type of the node logic

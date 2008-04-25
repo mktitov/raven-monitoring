@@ -20,9 +20,9 @@ package org.raven.tree.impl;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
@@ -52,7 +52,7 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     private String name;
     private final Class[] childNodeTypes;
     private List<Node> childrens;
-    private List<NodeAttribute> nodeAttributes;
+    private Map<String, NodeAttribute> nodeAttributes;
     private Class<? extends T> nodeLogicType;
     private T nodeLogic;
     private int initializationPriority;
@@ -118,9 +118,14 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
         return initializationPriority;
     }
 
-    public List<NodeAttribute> getNodeAttributes()
+    public Map<String, NodeAttribute> getNodeAttributes()
     {
         return nodeAttributes;
+    }
+
+    public NodeAttribute getNodeAttribute(String name)
+    {
+        return nodeAttributes==null? null : nodeAttributes.get(name);
     }
 
     public T getNodeLogic()
@@ -141,9 +146,9 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     public String getPath()
     {
         StringBuffer path = new StringBuffer(name);
-        Node parent;
-        while ( (parent=getParentNode()) != null )
-            path.insert(0, parent.getName()+"/");
+        Node node = this;
+        while ( (node=node.getParentNode()) != null )
+            path.insert(0, node.getName()+"/");
         
         return path.toString();
     }
@@ -156,7 +161,7 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     public void init() throws NodeInitializationError
     {
         if (nodeAttributes!=null)
-            for (NodeAttribute attr: nodeAttributes)
+            for (NodeAttribute attr: nodeAttributes.values())
                 if (Node.class.isAssignableFrom(attr.getType()))
                 {
                     Node node = converter.convert(Node.class, attr.getValue(), null);
@@ -196,10 +201,10 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     {
         if (attr.isGeneratorType())
         {
-            ListIterator<NodeAttribute> it = nodeAttributes.listIterator();
+            Iterator<Map.Entry<String, NodeAttribute>> it = nodeAttributes.entrySet().iterator();
             while (it.hasNext())
             {
-                NodeAttribute childAttr = it.next();
+                NodeAttribute childAttr = it.next().getValue();
                 if (attr.getName().equals(childAttr.getParentAttribute()))
                     it.remove();
             }
@@ -217,17 +222,24 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     /**
      * Method returns the first not null value of the attribute, with name passed in the 
      * <code>attributeName</code> parameter, of the nearest parent or null if parents does not
-     * contain the attribute.
-     * @param attributeName
+     * contains the attribute with name passed in the parameter.
+     * @param attributeName the name of the attribute
      * @return
      */
     String getParentNodeAttributeValue(String attributeName)
     {
-        Node parent;
-        while ( (parent=getParentNode())!=null )
+        Node node = this;
+        while ( (node=node.getParentNode())!=null )
         {
-            
+            NodeAttribute attr = node.getNodeAttribute(attributeName);
+            if (attr!=null)
+            {
+                String val = attr.getValue();
+                if (val!=null)
+                    return val;
+            }
         }
+        return null;
     }
 
     private void createNodeLogic() throws NodeInitializationError
@@ -272,10 +284,10 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     {
         if (nodeAttributes!=null)
         {
-            ListIterator<NodeAttribute> it = nodeAttributes.listIterator();
+            Iterator<Map.Entry<String, NodeAttribute>> it = nodeAttributes.entrySet().iterator();
             while (it.hasNext())
             {
-                NodeAttribute attr = it.next();
+                NodeAttribute attr = it.next().getValue();
                 if (attr.getParameterName()!=null)
                 {
                     NodeLogicParameter param = 
@@ -311,7 +323,7 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
             attr.setType(param.getType());
             attr.setOwner(this);
 
-            nodeAttributes.add(attr);
+            nodeAttributes.put(attr.getName(), attr);
         } catch (ConstraintException ex)
         {
         }
