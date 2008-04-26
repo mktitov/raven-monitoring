@@ -51,7 +51,7 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     
     private String name;
     private final Class[] childNodeTypes;
-    private List<Node> childrens;
+    private Map<String, Node> childrens;
     private Map<String, NodeAttribute> nodeAttributes;
     private Class<? extends T> nodeLogicType;
     private T nodeLogic;
@@ -108,9 +108,14 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
         return childNodeTypes;
     }
 
-    public List<Node> getChildrens()
+    public Collection<Node> getChildrens()
     {
-        return childrens;
+        return childrens==null? null : childrens.values();
+    }
+
+    public Node getChildren(String name)
+    {
+        return childrens==null? null : childrens.get(name);
     }
 
     public int getInitializationPriority()
@@ -160,17 +165,19 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     
     public void init() throws NodeInitializationError
     {
+        boolean dependenciesInitialized = true;
         if (nodeAttributes!=null)
             for (NodeAttribute attr: nodeAttributes.values())
                 if (Node.class.isAssignableFrom(attr.getType()))
                 {
                     Node node = converter.convert(Node.class, attr.getValue(), null);
+                    node.addDependentNode(this);
                     if (!node.isInitialized())
-                    {
-                        node.addDependentNode(this);
-                        break;
-                    }
+                        dependenciesInitialized = false;
                 }
+            
+        if (!dependenciesInitialized)
+            return;
             
         if (nodeLogicType!=null)
         {
@@ -191,8 +198,8 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
         if (dependentNodes!=null)
         {
             for (Node node: dependentNodes)
-                node.init();
-            dependentNodes = null;
+                if (!node.isInitialized())
+                    node.init();
         }
         
     }

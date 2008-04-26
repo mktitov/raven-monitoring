@@ -22,6 +22,7 @@ import org.weda.converter.TypeConverterWorker;
 
 /**
  * Converts {@link org.raven.tree.Node} to <code>String</code>
+ * 
  * @author Mikhail Titov
  */
 public class NodeToStringConverter implements TypeConverterWorker<Node, String>

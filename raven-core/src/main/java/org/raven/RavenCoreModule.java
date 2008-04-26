@@ -14,14 +14,25 @@
  *  limitations under the License.
  *  under the License.
  */
-
 package org.raven;
+
+import org.apache.tapestry.ioc.Configuration;
+import org.apache.tapestry.ioc.ServiceBinder;
+import org.raven.impl.NodeToStringConverter;
 
 /**
  * Tapestry IOC module for raven-core module
  * @author Mikhail Titov
  */
-public class RavenCoreModule 
+public class RavenCoreModule
 {
-    
+    public static void bind(ServiceBinder binder)
+    {
+        
+    }
+
+    public static void contributeTypeConverter(Configuration conf)
+    {
+        conf.add(new NodeToStringConverter());
+    }
 }

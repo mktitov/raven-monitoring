@@ -17,6 +17,7 @@
 
 package org.raven.tree;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -48,7 +49,13 @@ public interface Node<T extends NodeLogic>
     /**
      * Returns nodes that belongs to this node.
      */
-    public List<Node> getChildrens();
+    public Collection<Node> getChildrens();
+    /**
+     * Returns the children node by its name or <code>null</code> if no children node with specified
+     * name.
+     * @param name the children node name
+     */
+    public Node getChildren(String name);
     /**
      * Returns the array of nodes types that can belong to this node type.
      */

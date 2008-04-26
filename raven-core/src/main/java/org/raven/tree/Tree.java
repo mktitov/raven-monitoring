@@ -15,29 +15,22 @@
  *  under the License.
  */
 
-package org.raven.conf;
-
-import org.raven.tree.Tree;
+package org.raven.tree;
 
 /**
- * The goal of the configurator is to store and restore the application state.
+ * The tree of nodes. 
  * 
  * @author Mikhail Titov
  */
-public interface Configurator 
+public interface Tree 
 {
     /**
-     * Returns the tree of nodes.
+     * Returns the root node of the tree
      */
-    public Tree getTree();
+    public Node getRootNode();
     /**
-     * Saves the state of the object in configuration database.
-     * @param object object 
+     * Look up the node by it path.
+     * @param path the path to the node.
      */
-    public void save(Object object);
-
-    /**
-     * Returns the storage of the configuration parameters.
-     */
-    public Config getConfig();
+    public Node getNode(String path) throws NodeNotFoundError;
 }

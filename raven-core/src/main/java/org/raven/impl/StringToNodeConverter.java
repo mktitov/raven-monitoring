@@ -15,29 +15,36 @@
  *  under the License.
  */
 
-package org.raven.conf;
+package org.raven.impl;
 
-import org.raven.tree.Tree;
+import org.raven.conf.Configurator;
+import org.raven.tree.Node;
+import org.weda.converter.TypeConverterWorker;
+import org.weda.internal.annotations.Service;
 
 /**
- * The goal of the configurator is to store and restore the application state.
+ * Converts <code>String</code> {@link org.raven.tree.Node} 
  * 
  * @author Mikhail Titov
  */
-public interface Configurator 
+public class StringToNodeConverter implements TypeConverterWorker<String, Node>
 {
-    /**
-     * Returns the tree of nodes.
-     */
-    public Tree getTree();
-    /**
-     * Saves the state of the object in configuration database.
-     * @param object object 
-     */
-    public void save(Object object);
+    @Service
+    private Configurator configurator;
 
-    /**
-     * Returns the storage of the configuration parameters.
-     */
-    public Config getConfig();
+    public Node convert(String value, String format)
+    {
+        return configurator.getTree().getNode(value);
+    }
+
+    public Class getSourceType()
+    {
+        return String.class;
+    }
+
+    public Class getTargetType()
+    {
+        return Node.class;
+    }
+    
 }
