@@ -16,6 +16,10 @@
                 <artifactId>weda-maven-plugin</artifactId>
             </plugin>
             <plugin>
+                <groupId>org.datanucleus</groupId>
+                <artifactId>maven-datanucleus-plugin</artifactId>
+            </plugin>
+            <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
             <plugin>
@@ -43,6 +47,10 @@
         <dependency>
             <groupId>org.weda</groupId>
             <artifactId>weda-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.datanucleus</groupId>
+            <artifactId>datanucleus-core</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
