@@ -41,8 +41,26 @@
         <module>raven-core</module>
         <module>raven-ui</module>
     </modules>
- 
- <!--
+    <repositories>
+        <repository>
+            <id>DataNucleus_Repos</id>
+            <name>DataNucleus Repository</name>
+            <url>http://www.datanucleus.org/downloads/maven</url>
+            <layout>legacy</layout>
+        </repository>
+        <repository>
+            <id>DataNucleus_Repos2</id>
+            <name>DataNucleus Repository</name>
+            <url>http://www.datanucleus.org/downloads/maven2</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>DataNucleus_2</id>
+            <url>http://www.datanucleus.org/downloads/maven2</url>
+        </pluginRepository>
+    </pluginRepositories>
+    <!--
  <repositories>
      <repository>
          <url></url>
@@ -70,8 +88,6 @@
             </plugin>
         </plugins>
     </reporting>
-    <dependencies>
-  </dependencies>
     <build>
         <pluginManagement>
             <plugins>
@@ -129,22 +145,31 @@
                         </execution>
                     </executions>
                 </plugin>
+                <plugin>
+                    <groupId>org.datanucleus</groupId>
+                    <artifactId>maven-datanucleus-plugin</artifactId>
+                    <version>1.0.0.m1</version>
+                    <configuration>
+                        <mappingIncludes>**/*.jdo, **/*.class</mappingIncludes>
+                        <log4jConfiguration>${basedir}/src/conf/log4j.properties</log4jConfiguration>
+                        <verbose>true</verbose>
+                        <enhancerName>ASM</enhancerName>
+                        <props>${basedir}/src/conf/datanucleus.properties</props>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <phase>compile</phase>
+                            <goals>
+                                <goal>enhance</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
-    <pluginRepositories>
-    </pluginRepositories>
     <dependencyManagement>
-        <dependencies>    
-
-      <!--
-      <dependency>
-        <groupId>org.apache.tapestry</groupId>
-        <artifactId>tapestry-ioc</artifactId>
-        <version>5.0.11</version>
-        <scope>compile</scope>
-      </dependency>
-      -->
+        <dependencies>
             <dependency>
                 <groupId>org.weda</groupId>
                 <artifactId>weda-core</artifactId>
@@ -176,11 +201,17 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-      			<groupId>javax.servlet</groupId>
-      			<artifactId>servlet-api</artifactId>
-      			<version>2.5</version>
-      			<scope>provided</scope>
-    		</dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>
+                <version>2.5</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.datanucleus</groupId>
+                <artifactId>datanucleus-core</artifactId>
+                <version>1.0.0.m1</version>
+                <scope>compile</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>
