@@ -38,4 +38,6 @@ public interface Config {
      */
 	public Boolean getBooleanProperty(String property,Boolean defaultValue);
 	
+	public long getLastUpdate();
+	
 }

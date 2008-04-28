@@ -19,25 +19,46 @@ package org.raven.conf.impl;
 
 import org.raven.conf.Config;
 import java.util.Properties;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 
 public class PropertiesConfig implements Config {
 	public static final String CONFIG_PROPERTY_NAME = "raven.properties"; 
 	public static final String CONFIG_PROPERTY_NAME_DEFAULT = "raven.cfg";
 	public static final String TRUE_VALUE = "true";
 	public static final String FALSE_VALUE = "false";
+	public static final int MIN_INTERVAL = 1000;
 	private static PropertiesConfig instance = null;
-	private Properties properties;
+	private Properties properties = null;
+	private File confFile;
+	private long lastUpdate = 0;
+    private long lastCheck = 0;
+	private String fileName;
+	private long checkInterval = 60000;
 	
 	protected PropertiesConfig() throws java.io.IOException 
 	{
-		String fileName = System.getProperty(CONFIG_PROPERTY_NAME);
+		fileName = System.getProperty(CONFIG_PROPERTY_NAME);
 		if(fileName==null) fileName = CONFIG_PROPERTY_NAME_DEFAULT;
-		Properties properties = new Properties();
+		confFile = new File(fileName);
+		load();
+		lastCheck = System.currentTimeMillis();
+	}
+	
+	/**
+	 * Loads data from properties file.
+	 * @throws java.io.IOException
+	 */
+	private void load() throws java.io.IOException
+	{
 		FileInputStream propsFile = null;
 		try {
 			propsFile = new FileInputStream(fileName);
-			properties.load(propsFile);
+			Properties props = new Properties();
+			props.load(propsFile);
+			properties = props;
+			lastUpdate = confFile.lastModified();
 		} finally
 		{
 			if(propsFile!=null) propsFile.close();
@@ -54,9 +75,26 @@ public class PropertiesConfig implements Config {
         return instance;
     }
 
+    /**
+     *  Если прошло более <code>checkInterval</code> миллисекунд, и 
+     *  файл был изменён, то заново грузим <code>properties</code>.
+     */
+    private void checkUpdate()
+    {
+    	if( checkInterval < MIN_INTERVAL ) return;
+    	long dt = System.currentTimeMillis();
+    	if(dt-lastCheck < checkInterval) return;
+    	if(lastUpdate != confFile.lastModified())
+    		try { load(); }
+    		catch(IOException e) {
+    			// TODO  write to log
+    		}
+    	lastCheck = dt; 
+    }
 
-	public Boolean getBooleanProperty(String property, Boolean defaultValue) 
+	public synchronized Boolean getBooleanProperty(String property, Boolean defaultValue) 
 	{
+		checkUpdate();
 		String t = properties.getProperty(property);
 		if( t==null || t.length()==0 ) return defaultValue;
 		if( t.equalsIgnoreCase(TRUE_VALUE) ) return Boolean.TRUE;
@@ -64,8 +102,9 @@ public class PropertiesConfig implements Config {
 		return defaultValue;
 	}
 
-	public Integer getIntegerProperty(String property, Integer defaultValue) 
+	public synchronized Integer getIntegerProperty(String property, Integer defaultValue) 
 	{
+		checkUpdate();
 		String t = properties.getProperty(property);
 		if( t==null || t.length()==0 ) return defaultValue;
 		Integer i;
@@ -74,9 +113,16 @@ public class PropertiesConfig implements Config {
 		return i;
 	}
 
-	public String getStringProperty(String property, String defaultValue)
+	public synchronized String getStringProperty(String property, String defaultValue)
 	{
+		checkUpdate();
 		return properties.getProperty(property, defaultValue);
 	}
+	
+	public synchronized long getLastUpdate() { return lastUpdate; }
+	public synchronized void setLastUpdate(long newValue) { lastUpdate = newValue; }
 
+	public synchronized long getCheckInterval() { return checkInterval; }
+	public synchronized void setCheckInterval(long checkInterval) { this.checkInterval = checkInterval; }
+	
 }
