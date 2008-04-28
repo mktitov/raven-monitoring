@@ -17,27 +17,20 @@
 
 package org.raven.conf;
 
-import org.raven.tree.Tree;
-
 /**
- * The goal of the configurator is to store and restore the application state.
+ * Holds resources ids.
  * 
  * @author Mikhail Titov
  */
-public interface Configurator 
+public final class Resources 
 {
     /**
-     * Returns the tree of nodes.
+     * The resource id of the raven configuration file.
      */
-    public Tree getTree();
-    /**
-     * Saves the state of the object in configuration database.
-     * @param object object 
-     */
-    public void save(Object object);
+    public final String RAVEN_CONFIG = "RAVEN_CONFIG";
 
-    /**
-     * Returns the storage of the configuration parameters.
-     */
-    public Config getConfig() throws Exception;
+    private Resources()
+    {
+    }
+
 }

@@ -17,8 +17,14 @@
 
 package org.raven.conf;
 
+import java.util.Properties;
+
 public interface Config {
 
+    /**
+     * Returns the configuration as properties.
+     */
+    public Properties getProperties();
     /**
      * If property exists, then returns value of property, else returns defaultValue.
      * @param property property name

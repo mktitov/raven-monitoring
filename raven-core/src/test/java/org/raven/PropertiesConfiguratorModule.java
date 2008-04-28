@@ -14,30 +14,26 @@
  *  limitations under the License.
  *  under the License.
  */
+package org.raven;
 
-package org.raven.conf;
-
-import org.raven.tree.Tree;
+import org.apache.tapestry.ioc.OrderedConfiguration;
+import org.raven.conf.impl.PropertiesConfig;
 
 /**
- * The goal of the configurator is to store and restore the application state.
- * 
+ *
  * @author Mikhail Titov
  */
-public interface Configurator 
+public class PropertiesConfiguratorModule
 {
-    /**
-     * Returns the tree of nodes.
-     */
-    public Tree getTree();
-    /**
-     * Saves the state of the object in configuration database.
-     * @param object object 
-     */
-    public void save(Object object);
-
-    /**
-     * Returns the storage of the configuration parameters.
-     */
-    public Config getConfig() throws Exception;
+    public static void contributeRegistryStartup(OrderedConfiguration<Runnable> configuration)
+    {
+        configuration.add("MyContributionName", new Runnable()
+        {
+            public void run()
+            {
+                System.setProperty(
+                        PropertiesConfig.CONFIG_PROPERTY_NAME, "src/test/conf/raven.properties");
+            }
+        });
+    }
 }

@@ -23,7 +23,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
+import javax.jdo.annotations.Key;
+import javax.jdo.annotations.NotPersistent;
 import javax.jdo.annotations.PersistenceCapable;
+import javax.jdo.annotations.Persistent;
+import javax.jdo.annotations.Transactional;
+import javax.jdo.annotations.Value;
+import javax.persistence.ManyToOne;
+import javax.persistence.MapKey;
+import javax.persistence.OneToMany;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -31,6 +39,7 @@ import org.raven.tree.NodeInitializationError;
 import org.raven.tree.NodeLogic;
 import org.raven.tree.NodeLogicParameter;
 import org.raven.annotations.Parameter;
+import org.raven.conf.Configurator;
 import org.weda.beans.ClassDescriptor;
 import org.weda.beans.PropertyDescriptor;
 import org.weda.constraints.ConstraintException;
@@ -42,33 +51,53 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
-@PersistenceCapable
+@PersistenceCapable(detachable="true")
 public class BaseNode<T extends NodeLogic> implements Node<T>
 {
     @Service
     private ClassDescriptorRegistry descriptorRegistry;
     @Service
     private TypeConverter converter;
+    @Service
+    private Configurator configurator;
     
     private String name;
     private final Class[] childNodeTypes;
     
+    @ManyToOne(targetEntity=BaseNode.class)
+    private Node parentNode;
+    
+//    @Persistent(mappedBy="parent")
+    @OneToMany(targetEntity=BaseNode.class, mappedBy="parentNode")
+    @Key(mappedBy="name")
+    @Value(types=BaseNode.class)
     private Map<String, Node> childrens;
+    
+    @NotPersistent
     private Map<String, NodeAttribute> nodeAttributes;
     private Class<? extends T> nodeLogicType;
     private T nodeLogic;
     private int initializationPriority;
-    private Node parentNode;
     
+    @NotPersistent
     private Collection<Node> dependentNodes;
     
+    @NotPersistent
     private boolean initialized = false;
     
+    @NotPersistent
     private Map<String, NodeLogicParameter> parameters;
 
     public BaseNode(Class[] childNodeTypes)
     {
         this.childNodeTypes = childNodeTypes;
+    }
+
+    public void addChildren(Node node)
+    {
+        if (childrens==null)
+            childrens = new HashMap<String, Node>();
+        childrens.put(node.getName(), node);
     }
 
     public void addDependentNode(Node dependentNode)

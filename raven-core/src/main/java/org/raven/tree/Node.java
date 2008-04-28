@@ -47,6 +47,11 @@ public interface Node<T extends NodeLogic>
      */
     public String getPath();
     /**
+     * Adds children node to this node.
+     * @param node the children node.
+     */
+    public void addChildren(Node node);
+    /**
      * Returns nodes that belongs to this node.
      */
     public Collection<Node> getChildrens();

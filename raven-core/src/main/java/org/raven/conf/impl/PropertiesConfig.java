@@ -45,6 +45,11 @@ public class PropertiesConfig implements Config {
 		load();
 		lastCheck = System.currentTimeMillis();
 	}
+
+    public Properties getProperties()
+    {
+        return properties;
+    }
 	
 	/**
 	 * Loads data from properties file.

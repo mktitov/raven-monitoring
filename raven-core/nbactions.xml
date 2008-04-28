@@ -7,4 +7,18 @@
                 <goal>jpox:schema-create</goal>
             </goals>
         </action>
+        <action>
+            <actionName>CUSTOM-datanucleus:schema-create</actionName>
+            <displayName>datanucleus:schema-create</displayName>
+            <goals>
+                <goal>datanucleus:schema-create</goal>
+            </goals>
+        </action>
+        <action>
+            <actionName>CUSTOM-compile</actionName>
+            <displayName>compile</displayName>
+            <goals>
+                <goal>compile</goal>
+            </goals>
+        </action>
     </actions>

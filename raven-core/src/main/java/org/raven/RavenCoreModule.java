@@ -18,6 +18,8 @@ package org.raven;
 
 import org.apache.tapestry.ioc.Configuration;
 import org.apache.tapestry.ioc.ServiceBinder;
+import org.raven.conf.Configurator;
+import org.raven.conf.impl.ConfiguratorImpl;
 import org.raven.impl.NodeToStringConverter;
 
 /**
@@ -28,7 +30,7 @@ public class RavenCoreModule
 {
     public static void bind(ServiceBinder binder)
     {
-        
+        binder.bind(Configurator.class, ConfiguratorImpl.class);
     }
 
     public static void contributeTypeConverter(Configuration conf)

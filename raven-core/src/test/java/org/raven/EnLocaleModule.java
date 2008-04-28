@@ -1,5 +1,5 @@
 /*
- *  Copyright 2008 Mikhail Titov.
+ *  Copyright 2007 Mikhail Titov.
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,29 +15,22 @@
  *  under the License.
  */
 
-package org.raven.conf;
+package org.raven;
 
-import org.raven.tree.Tree;
+import org.weda.internal.services.Locale;
 
 /**
- * The goal of the configurator is to store and restore the application state.
- * 
+ *
  * @author Mikhail Titov
  */
-public interface Configurator 
-{
-    /**
-     * Returns the tree of nodes.
-     */
-    public Tree getTree();
-    /**
-     * Saves the state of the object in configuration database.
-     * @param object object 
-     */
-    public void save(Object object);
+public class EnLocaleModule implements Locale {
 
-    /**
-     * Returns the storage of the configuration parameters.
-     */
-    public Config getConfig() throws Exception;
+    public static Locale buildLocale() {
+        return new EnLocaleModule();
+    }
+    
+    public java.util.Locale getCurrent() {
+        return java.util.Locale.ENGLISH;
+    }
+
 }

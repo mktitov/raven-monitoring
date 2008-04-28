@@ -17,27 +17,18 @@
 
 package org.raven.conf;
 
-import org.raven.tree.Tree;
+import java.net.URL;
 
 /**
- * The goal of the configurator is to store and restore the application state.
+ * Allows to find the URL to the resource by resource id
  * 
  * @author Mikhail Titov
  */
-public interface Configurator 
+public interface ResourceLocator 
 {
     /**
-     * Returns the tree of nodes.
+     * Returns URL to the resource by its id.
+     * @param resourceId the unique id of the resource.
      */
-    public Tree getTree();
-    /**
-     * Saves the state of the object in configuration database.
-     * @param object object 
-     */
-    public void save(Object object);
-
-    /**
-     * Returns the storage of the configuration parameters.
-     */
-    public Config getConfig() throws Exception;
+    public URL getResourceURL(String resourceId);
 }
