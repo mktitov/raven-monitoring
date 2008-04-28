@@ -42,6 +42,28 @@
         <module>raven-ui</module>
     </modules>
     <repositories>
+        <!--
+        <repository>
+            <id>DataNucleus_Repos</id>
+            <name>DataNucleus Repository</name>
+            <url>http://www.datanucleus.org/downloads/maven</url>
+            <layout>legacy</layout>
+        </repository>
+        -->
+        <repository>
+            <id>DataNucleus_Repos3</id>
+            <name>DataNucleus Repository</name>
+            <url>http://www.datanucleus.org/downloads/maven-nightly</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>DataNucleus_Repos2</id>
+            <name>DataNucleus Repository</name>
+            <url>http://www.datanucleus.org/downloads/maven2-nightly</url>
+        </repository>
+        <!--
         <repository>
             <id>jpox_Repos</id>
             <name>jpox Repository</name>
@@ -53,20 +75,24 @@
             <name>jpox Repository</name>
             <url>http://www.jpox.org/downloads/maven2</url>
         </repository>
+        <repository>
+            <id>Codehaus Snapshots</id>
+            <url>http://snapshots.repository.codehaus.org/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
+        -->
     </repositories>
     <pluginRepositories>
         <pluginRepository>
-            <id>jpox_2</id>
-            <url>http://www.jpox.org/downloads/maven2</url>
+            <id>DataNucleus_2</id>
+            <url>http://www.datanucleus.org/downloads/maven2-nightly</url>
         </pluginRepository>
     </pluginRepositories>
-    <!--
- <repositories>
-     <repository>
-         <url></url>
-     </repository>
- </repositories>
- -->
     <reporting>
         <plugins>
             <plugin>
@@ -123,6 +149,14 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.4.2</version>
+                    <configuration>
+                        <forkMode>once</forkMode>
+                        <includes>
+                            <include>**/*Test.java</include>
+                        </includes>
+                        <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -146,15 +180,15 @@
                     </executions>
                 </plugin>
                 <plugin>
-                    <groupId>jpox</groupId>
-                    <artifactId>maven-jpox-plugin</artifactId>
-                    <version>1.2.2</version>
+                    <groupId>org.datanucleus</groupId>
+                    <artifactId>maven-datanucleus-plugin</artifactId>
+                    <version>1.0-SNAPSHOT</version>
                     <configuration>
                         <mappingIncludes>**/*.jdo, **/*.class</mappingIncludes>
-                        <log4jConfiguration>${basedir}/src/conf/log4j.properties</log4jConfiguration>
+                        <log4jConfiguration>${basedir}/src/main/conf/log4j.properties</log4jConfiguration>
                         <verbose>true</verbose>
                         <enhancerName>ASM</enhancerName>
-                        <props>${basedir}/src/conf/jpox.properties</props>
+                        <props>${basedir}/src/main/conf/jpox.properties</props>
                     </configuration>
                     <executions>
                         <execution>
@@ -207,27 +241,27 @@
                 <scope>provided</scope>
             </dependency>
             <dependency>
-                <groupId>jpox</groupId>
-                <artifactId>jpox-core</artifactId>
-                <version>1.2.2</version>
+                <groupId>org.datanucleus</groupId>
+                <artifactId>datanucleus-core</artifactId>
+                <version>1.0-SNAPSHOT</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
-                <groupId>jpox</groupId>
-                <artifactId>jpox-rdbms</artifactId>
-                <version>1.2.2</version>
+                <groupId>org.datanucleus</groupId>
+                <artifactId>datanucleus-rdbms</artifactId>
+                <version>1.0-SNAPSHOT</version>
                 <scope>compile</scope>
             </dependency>
-           <dependency>
-                <groupId>jpox</groupId>
-                <artifactId>jpox-enhancer</artifactId>
-                <version>1.2.2</version>
-                <scope>compile</scope>
-            </dependency>            
             <dependency>
-                <groupId>jpox</groupId>
-                <artifactId>jpox-java5</artifactId>
-                <version>1.2.2</version>
+                <groupId>org.datanucleus</groupId>
+                <artifactId>datanucleus-enhancer</artifactId>
+                <version>1.0-SNAPSHOT</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.datanucleus</groupId>
+                <artifactId>datanucleus-java5</artifactId>
+                <version>1.0-SNAPSHOT</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
