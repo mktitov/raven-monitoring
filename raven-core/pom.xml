@@ -16,8 +16,8 @@
                 <artifactId>weda-maven-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>org.datanucleus</groupId>
-                <artifactId>maven-datanucleus-plugin</artifactId>
+                <groupId>jpox</groupId>
+                <artifactId>maven-jpox-plugin</artifactId>
             </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -27,7 +27,48 @@
             </plugin>
             <plugin>
                 <artifactId>maven-source-plugin</artifactId>
-            </plugin>              
+            </plugin>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>schema-create</id>
+                        <phase>compile</phase>
+                        <configuration>
+                            <tasks>
+                                <echo>test</echo>
+                                <taskdef name="schematool" classname="org.jpox.SchemaToolTask" classpathref="maven.compile.classpath"/>
+
+                                <schematool failonerror="true" verbose="true" mode="create" props="${basedir}/src/conf/jpox.properties">
+                                    <classpath>
+                                        <path refid="maven.compile.classpath"/>
+                                    </classpath>
+                                    <fileset dir="${basedir}/target/classes">
+                                        <include name="**/*.class"/>
+                                    </fileset>
+                                    <!--
+                                    <sysproperty key="javax.jdo.option.ConnectionDriverName" 
+                                                 value="${javax.jdo.option.ConnectionDriverName}"/>
+                                    <sysproperty key="javax.jdo.option.ConnectionURL" 
+                                                 value="${javax.jdo.option.ConnectionURL}"/>
+                                    <sysproperty key="javax.jdo.option.ConnectionUserName" 
+                                                 value="${javax.jdo.option.ConnectionUserName}"/>
+                                    <sysproperty key="javax.jdo.option.ConnectionPassword" 
+                                                 value="${javax.jdo.option.ConnectionPassword}"/>
+                                    <sysproperty key="javax.jdo.option.Mapping" 
+                                                 value="${javax.jdo.option.Mapping}"/>
+                                         -->
+                                </schematool>
+                            </tasks>
+                            <sourceRoot>${project.build.directory}/generated-sources/main/java</sourceRoot>
+                            <testSourceRoot>${project.build.directory}/generated-sources/test/java</testSourceRoot>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <!--
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -49,8 +90,28 @@
             <artifactId>weda-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.datanucleus</groupId>
-            <artifactId>datanucleus-core</artifactId>
+            <groupId>jpox</groupId>
+            <artifactId>jpox-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jpox</groupId>
+            <artifactId>jpox-rdbms</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jpox</groupId>
+            <artifactId>jpox-java5</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.jdo</groupId>
+            <artifactId>jdo2-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jpox</groupId>
+            <artifactId>jpox-enhancer</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

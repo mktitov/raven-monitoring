@@ -22,8 +22,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
+import javax.jdo.annotations.PersistenceCapable;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -42,6 +42,7 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
+@PersistenceCapable
 public class BaseNode<T extends NodeLogic> implements Node<T>
 {
     @Service
@@ -51,6 +52,7 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     
     private String name;
     private final Class[] childNodeTypes;
+    
     private Map<String, Node> childrens;
     private Map<String, NodeAttribute> nodeAttributes;
     private Class<? extends T> nodeLogicType;
