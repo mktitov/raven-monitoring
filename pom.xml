@@ -43,21 +43,21 @@
     </modules>
     <repositories>
         <repository>
-            <id>DataNucleus_Repos</id>
-            <name>DataNucleus Repository</name>
-            <url>http://www.datanucleus.org/downloads/maven</url>
+            <id>jpox_Repos</id>
+            <name>jpox Repository</name>
+            <url>http://www.jpox.org/downloads/maven</url>
             <layout>legacy</layout>
         </repository>
         <repository>
-            <id>DataNucleus_Repos2</id>
-            <name>DataNucleus Repository</name>
-            <url>http://www.datanucleus.org/downloads/maven2</url>
+            <id>jpox_Repos2</id>
+            <name>jpox Repository</name>
+            <url>http://www.jpox.org/downloads/maven2</url>
         </repository>
     </repositories>
     <pluginRepositories>
         <pluginRepository>
-            <id>DataNucleus_2</id>
-            <url>http://www.datanucleus.org/downloads/maven2</url>
+            <id>jpox_2</id>
+            <url>http://www.jpox.org/downloads/maven2</url>
         </pluginRepository>
     </pluginRepositories>
     <!--
@@ -146,15 +146,15 @@
                     </executions>
                 </plugin>
                 <plugin>
-                    <groupId>org.datanucleus</groupId>
-                    <artifactId>maven-datanucleus-plugin</artifactId>
-                    <version>1.0.0.m1</version>
+                    <groupId>jpox</groupId>
+                    <artifactId>maven-jpox-plugin</artifactId>
+                    <version>1.2.2</version>
                     <configuration>
                         <mappingIncludes>**/*.jdo, **/*.class</mappingIncludes>
                         <log4jConfiguration>${basedir}/src/conf/log4j.properties</log4jConfiguration>
                         <verbose>true</verbose>
                         <enhancerName>ASM</enhancerName>
-                        <props>${basedir}/src/conf/datanucleus.properties</props>
+                        <props>${basedir}/src/conf/jpox.properties</props>
                     </configuration>
                     <executions>
                         <execution>
@@ -207,9 +207,39 @@
                 <scope>provided</scope>
             </dependency>
             <dependency>
-                <groupId>org.datanucleus</groupId>
-                <artifactId>datanucleus-core</artifactId>
-                <version>1.0.0.m1</version>
+                <groupId>jpox</groupId>
+                <artifactId>jpox-core</artifactId>
+                <version>1.2.2</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>jpox</groupId>
+                <artifactId>jpox-rdbms</artifactId>
+                <version>1.2.2</version>
+                <scope>compile</scope>
+            </dependency>
+           <dependency>
+                <groupId>jpox</groupId>
+                <artifactId>jpox-enhancer</artifactId>
+                <version>1.2.2</version>
+                <scope>compile</scope>
+            </dependency>            
+            <dependency>
+                <groupId>jpox</groupId>
+                <artifactId>jpox-java5</artifactId>
+                <version>1.2.2</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>javax.jdo</groupId>
+                <artifactId>jdo2-api</artifactId>
+                <version>2.1</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.h2database</groupId>
+                <artifactId>h2</artifactId>
+                <version>1.0.70</version>
                 <scope>compile</scope>
             </dependency>
         </dependencies>
