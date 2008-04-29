@@ -43,7 +43,9 @@ public interface Config {
      * @param defaultValue default value of property 
      */
 	public Boolean getBooleanProperty(String property,Boolean defaultValue);
-	
+	/**
+	 * Returns time of last update of config. 
+	 */
 	public long getLastUpdate();
 	
 }

@@ -18,10 +18,17 @@
 package org.raven.conf.impl;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Collections;
+import java.util.Iterator;
+import org.raven.tree.Node;
 
 public class AccessControlList extends ArrayList<AccessControl> 
+implements Comparator<AccessControl> 
 {
 	static final long serialVersionUID = 1;
+
+	public AccessControlList() { super(); }
 	
 	public AccessControlList(String[] acl, int startWith) 
 	{
@@ -30,6 +37,37 @@ public class AccessControlList extends ArrayList<AccessControl>
 		{
 			this.add(new AccessControl(acl[i]));
 		}
+		Collections.sort(this, this);
 	}
+	
+    public int compare(AccessControl a, AccessControl b)
+    {
+    	if(a.getResource().length() > b.getResource().length()) return -1;
+    	if(a.getResource().length() < b.getResource().length()) return 1;
+    	if(a.getRight() > b.getRight()) return -1; 
+    	if(a.getRight() < b.getRight()) return 1; 
+    	return 0;
+    }
+    
+    public void appendACL(AccessControlList acl)
+    {
+    	this.addAll(acl);
+		Collections.sort(this, this);
+    }
+    
+    @SuppressWarnings("unchecked")
+	public int getAccessForNode(Node node)
+    {
+		String path = node.getPath();
+    	Iterator<AccessControl> it = this.iterator();
+    	while(it.hasNext())
+    	{
+    		AccessControl ac = it.next();
+    		if(ac.getResource().startsWith(path+Node.NODE_SEPARATOR))
+    			if(ac.getRight() > AccessControl.NONE ) return AccessControl.READ;
+    		if( path.matches(ac.getRegExp()) ) return ac.getRight();
+    	}
+    	return AccessControl.NONE;
+    }
 
 }

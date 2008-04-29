@@ -23,6 +23,7 @@ public class AccessControl {
 	public static final int NONE = 0; 
 	
 	private String resource = "";
+	private String regExp = "";
 	private int right = 0;
 	
 	public AccessControl(String rule)
@@ -31,6 +32,7 @@ public class AccessControl {
 		if(x.length==2)
 		{
 			resource = x[0];
+			regExp = resource.replaceAll("*", ".*");
 			String tmp = x[1].toLowerCase();
 			if(tmp.length()==0 || tmp.charAt(0)=='n') right = NONE;
 				else if(tmp.charAt(0)=='r') right = READ;
@@ -41,4 +43,5 @@ public class AccessControl {
 	public synchronized String getResource() { return resource; }
 	public synchronized int getRight() { return right; }
 
+	public synchronized String getRegExp() { return regExp; }
 }

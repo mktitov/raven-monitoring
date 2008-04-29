@@ -18,10 +18,10 @@
 package org.raven.conf.impl;
 
 import java.util.HashMap;
-import java.util.List;
+//import java.util.Comparator;
 import org.raven.conf.Config;
 
-public class GroupsAclStorage {
+public class GroupsAclStorage  {
 	public static final String GROUP_PARAM_NAME = "group";
 	private static GroupsAclStorage instance = null;
 	private Config config;
@@ -30,8 +30,7 @@ public class GroupsAclStorage {
 	protected GroupsAclStorage(Config config)
 	{
 		this.config = config;
-		acl = new HashMap<String, AccessControlList>();
-		
+		load();
 	}
 	
 	protected void load()
@@ -59,5 +58,7 @@ public class GroupsAclStorage {
         return instance;
     }
 
+    
+    
 	
 }
