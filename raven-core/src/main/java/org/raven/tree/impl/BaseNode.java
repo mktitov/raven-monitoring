@@ -23,14 +23,16 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
+import javax.jdo.annotations.DatastoreIdentity;
+import javax.jdo.annotations.IdGeneratorStrategy;
+import javax.jdo.annotations.IdentityType;
 import javax.jdo.annotations.Key;
 import javax.jdo.annotations.NotPersistent;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
-import javax.jdo.annotations.Transactional;
+import javax.jdo.annotations.PrimaryKey;
 import javax.jdo.annotations.Value;
 import javax.persistence.ManyToOne;
-import javax.persistence.MapKey;
 import javax.persistence.OneToMany;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
@@ -51,7 +53,7 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
-@PersistenceCapable(detachable="true")
+@PersistenceCapable(detachable="true", identityType=IdentityType.APPLICATION)
 public class BaseNode<T extends NodeLogic> implements Node<T>
 {
     @Service
@@ -61,13 +63,17 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     @Service
     private Configurator configurator;
     
+    @PrimaryKey()
+    @Persistent(valueStrategy=IdGeneratorStrategy.NATIVE)
+    private long id;
+    
     private String name;
     private final Class[] childNodeTypes;
     
     @ManyToOne(targetEntity=BaseNode.class)
     private Node parentNode;
     
-//    @Persistent(mappedBy="parent")
+    @Persistent()
     @OneToMany(targetEntity=BaseNode.class, mappedBy="parentNode")
     @Key(mappedBy="name")
     @Value(types=BaseNode.class)
@@ -91,6 +97,16 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     public BaseNode(Class[] childNodeTypes)
     {
         this.childNodeTypes = childNodeTypes;
+    }
+
+    public long getId() 
+    {
+        return id;
+    }
+
+    public void setId(long id) 
+    {
+        this.id = id;
     }
 
     public void addChildren(Node node)

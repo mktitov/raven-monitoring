@@ -17,6 +17,7 @@
 
 package org.raven.conf;
 
+import java.util.Collection;
 import org.raven.tree.Tree;
 
 /**
@@ -31,11 +32,40 @@ public interface Configurator
      */
     public Tree getTree();
     /**
-     * Saves the state of the object in configuration database.
+     * Starts new transaction.
+     * @see #commit() 
+     * @see #rollback() 
+     */
+    public void beginTransaction();
+    /**
+     * Commits started transaction.
+     * @see #beginTransaction()
+     * @see #rollback() 
+     */
+    public void commit();
+    /**
+     * Rollbacks started transaction.
+     * @see #beginTransaction()
+     * @see #commit() 
+     */
+    public void rollback();
+    /**
+     * Saves the state of the object in configuration database. The call of this method must be 
+     * wrapped between method calls: {@link #beginTransaction()} and {@link #commit()} or 
+     * {@link #beginTransaction()} and {@link #rollback()}
      * @param object object 
      */
     public void save(Object object);
-
+    /**
+     * Returns the object by it id.
+     * @param id the object id
+     */
+    public <T> T getObjectById(Object id);
+    /**
+     * Returns the id of the object.
+     */
+    public Object getObjectId(Object obj);
+    public <T> Collection<T> getObjects(Class<T> objectType);
     /**
      * Returns the storage of the configuration parameters.
      */

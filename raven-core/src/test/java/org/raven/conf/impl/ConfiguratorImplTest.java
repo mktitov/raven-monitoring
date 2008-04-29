@@ -17,6 +17,8 @@
 
 package org.raven.conf.impl;
 
+import java.util.Collection;
+import javax.jdo.identity.LongIdentity;
 import org.apache.tapestry.ioc.RegistryBuilder;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
@@ -57,10 +59,30 @@ public class ConfiguratorImplTest extends ServiceTestCase
         BaseNode node = new BaseNode(null);
         node.setName("root node");
         
+        configurator.beginTransaction();
         configurator.save(node);
+        configurator.commit();
         
         BaseNode childNode = new BaseNode(null);
+        configurator.beginTransaction();
+//        configurator.save(node);
+//        childNode.setParentNode(node);
         childNode.setName("child node");
+//        configurator.save(childNode);
         node.addChildren(childNode);
+        configurator.commit();
+        
+        long id = node.getId();
+                
+        configurator.beginTransaction();
+        node = configurator.getObjectById(new LongIdentity(BaseNode.class, id));
+        
+        assertNotNull(node);
+        
+        assertEquals(1, node.getChildrens().size());
+        configurator.commit();
+        
+        Collection<BaseNode> nodes = configurator.getObjects(BaseNode.class);
+        assertNotNull(nodes);
     }
 }

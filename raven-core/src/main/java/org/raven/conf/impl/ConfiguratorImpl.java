@@ -17,10 +17,11 @@
 
 package org.raven.conf.impl;
 
+import java.util.Collection;
 import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
 import javax.jdo.PersistenceManagerFactory;
-import javax.jdo.Transaction;
+import javax.jdo.Query;
 import org.raven.conf.Config;
 import org.raven.conf.Configurator;
 import org.raven.tree.Tree;
@@ -32,10 +33,13 @@ import org.raven.tree.Tree;
 public class ConfiguratorImpl implements Configurator
 {
     private PersistenceManagerFactory pmf;
+    private PersistenceManager pm;
+    private Tree tree;
             
     public ConfiguratorImpl() throws Exception
     {
-        pmf = JDOHelper.getPersistenceManagerFactory(getConfig().getProperties());
+        initPersistenceManager();
+//        pm.setDetachAllOnCommit(true);
     }
     
     public Tree getTree()
@@ -43,25 +47,60 @@ public class ConfiguratorImpl implements Configurator
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public void save(Object object)
+    public void beginTransaction() 
     {
-        PersistenceManager pm = pmf.getPersistenceManager();
-        Transaction tx = pm.currentTransaction();
-        tx.begin();
-        try
-        {
-            pm.makePersistent(object);
-            tx.commit();
-        }finally
-        {
-            if (tx.isActive())
-                tx.rollback();
-        }
+        pm.currentTransaction().begin();
     }
 
+    public void commit() 
+    {
+        pm.currentTransaction().commit();
+    }
+
+    public void rollback() 
+    {
+        if (pm.currentTransaction().isActive())
+            pm.currentTransaction().rollback();
+    }
+
+    public void save(Object object)
+    {
+        pm.makePersistent(object);
+    }
+
+    public <T> T getObjectById(Object id) 
+    {
+        return (T)pm.getObjectById(id);
+    }
+
+    public Object getObjectId(Object obj) 
+    {
+        return pm.getObjectId(obj);
+    }
+    
     public Config getConfig() throws Exception
     {
         return PropertiesConfig.getInstance();
+    }
+    
+    public <T> Collection<T> getObjects(Class<T> objectType)
+    {
+        pm.currentTransaction().begin();
+        try
+        {
+            Query query = pm.newQuery(objectType);
+            return (Collection<T>) query.execute();
+        }finally
+        {
+            pm.currentTransaction().commit();
+        }
+    }
+
+    private void initPersistenceManager() throws Exception {
+        pmf = JDOHelper.getPersistenceManagerFactory(getConfig().getProperties());
+        pm = pmf.getPersistenceManager();
+        pm.setMultithreaded(true);
+//        pm.setDetachAllOnCommit(true);
     }
 
 }

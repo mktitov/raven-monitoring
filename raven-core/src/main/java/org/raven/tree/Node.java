@@ -18,7 +18,6 @@
 package org.raven.tree;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -33,7 +32,10 @@ public interface Node<T extends NodeLogic>
      * @see #getPath() 
      */
     public static String NODE_SEPARATOR = "/";
-    
+    /**
+     * Returns unique node id
+     */
+    public long getId();
     /**
      * Returns the parent node for this node. For root node method returns null.
      */
