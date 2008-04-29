@@ -46,7 +46,7 @@ public class PropertiesConfig implements Config {
 		lastCheck = System.currentTimeMillis();
 	}
 
-    public Properties getProperties()
+    public synchronized Properties getProperties()
     {
         return properties;
     }
@@ -124,8 +124,11 @@ public class PropertiesConfig implements Config {
 		return properties.getProperty(property, defaultValue);
 	}
 	
-	public synchronized long getLastUpdate() { return lastUpdate; }
-	public synchronized void setLastUpdate(long newValue) { lastUpdate = newValue; }
+	public synchronized long getLastUpdate() 
+	{ 
+		checkUpdate();
+		return lastUpdate; 
+	}
 
 	public synchronized long getCheckInterval() { return checkInterval; }
 	public synchronized void setCheckInterval(long checkInterval) { this.checkInterval = checkInterval; }
