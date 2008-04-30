@@ -51,6 +51,7 @@ implements Comparator<AccessControl>
     
     public void appendACL(AccessControlList acl)
     {
+    	if(acl==null) return;
     	this.addAll(acl);
 		Collections.sort(this, this);
     }

@@ -18,14 +18,15 @@
 package org.raven.conf.impl;
 
 import java.util.HashMap;
-//import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
 import org.raven.conf.Config;
 
 public class GroupsAclStorage  {
 	public static final String GROUP_PARAM_NAME = "group";
 	private static GroupsAclStorage instance = null;
 	private Config config;
-	private HashMap<String, AccessControlList> acl = null;
+	private HashMap<String, AccessControlList> aclMap = null;
 
 	protected GroupsAclStorage(Config config)
 	{
@@ -45,7 +46,7 @@ public class GroupsAclStorage  {
 			AccessControlList acl = new AccessControlList(va,1);
 			acln.put(va[0], acl);
 		}
-		acl = acln;
+		aclMap = acln;
 	}
 	
 	/**
@@ -58,7 +59,17 @@ public class GroupsAclStorage  {
         return instance;
     }
 
-    
-    
+    /**
+     * Returns summary AccessControlList for list of groups.
+     * @param ls list of groups
+     */
+    public AccessControlList getAclForGroups(List<String> ls)
+    {
+    	AccessControlList acl = new AccessControlList();
+    	Iterator<String> it = ls.iterator();
+    	while(it.hasNext())
+    		acl.appendACL( aclMap.get(it.next()) );
+    	return acl;
+    }
 	
 }
