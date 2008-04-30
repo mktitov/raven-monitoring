@@ -54,6 +54,7 @@
             <id>DataNucleus_Repos3</id>
             <name>DataNucleus Repository</name>
             <url>http://www.datanucleus.org/downloads/maven-nightly</url>
+            <layout>legacy</layout>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>

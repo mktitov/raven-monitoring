@@ -63,23 +63,13 @@ public class ConfiguratorImplTest extends ServiceTestCase
         configurator.save(node);
         configurator.commit();
         
-        BaseNode childNode = new BaseNode(null);
         configurator.beginTransaction();
-//        configurator.save(node);
-//        childNode.setParentNode(node);
-        childNode.setName("child node");
-//        configurator.save(childNode);
-        node.addChildren(childNode);
-        configurator.commit();
-        
-        long id = node.getId();
-                
-        configurator.beginTransaction();
-        node = configurator.getObjectById(new LongIdentity(BaseNode.class, id));
-        
-        assertNotNull(node);
-        
-        assertEquals(1, node.getChildrens().size());
+        for (int i=0; i<2; ++i)
+        {
+            BaseNode childNode = new BaseNode(null);
+            childNode.setName("child node");
+            node.addChildren(childNode);
+        }
         configurator.commit();
         
         Collection<BaseNode> nodes = configurator.getObjects(BaseNode.class);

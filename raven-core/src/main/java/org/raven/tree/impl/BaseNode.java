@@ -53,7 +53,7 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
-@PersistenceCapable(detachable="true", identityType=IdentityType.APPLICATION)
+@PersistenceCapable(identityType=IdentityType.APPLICATION)
 public class BaseNode<T extends NodeLogic> implements Node<T>
 {
     @Service
