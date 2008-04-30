@@ -23,17 +23,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
-import javax.jdo.annotations.DatastoreIdentity;
+import javax.jdo.annotations.Discriminator;
+import javax.jdo.annotations.DiscriminatorStrategy;
 import javax.jdo.annotations.IdGeneratorStrategy;
 import javax.jdo.annotations.IdentityType;
-import javax.jdo.annotations.Key;
+import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.NotPersistent;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.PrimaryKey;
-import javax.jdo.annotations.Value;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -41,7 +39,6 @@ import org.raven.tree.NodeInitializationError;
 import org.raven.tree.NodeLogic;
 import org.raven.tree.NodeLogicParameter;
 import org.raven.annotations.Parameter;
-import org.raven.conf.Configurator;
 import org.weda.beans.ClassDescriptor;
 import org.weda.beans.PropertyDescriptor;
 import org.weda.constraints.ConstraintException;
@@ -53,37 +50,40 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
-@PersistenceCapable(identityType=IdentityType.APPLICATION)
+@PersistenceCapable(detachable="true", identityType=IdentityType.APPLICATION)
+@Inheritance()
+@Discriminator(strategy=DiscriminatorStrategy.VALUE_MAP, value="0")
 public class BaseNode<T extends NodeLogic> implements Node<T>
 {
     @Service
     private ClassDescriptorRegistry descriptorRegistry;
     @Service
     private TypeConverter converter;
-    @Service
-    private Configurator configurator;
     
     @PrimaryKey()
     @Persistent(valueStrategy=IdGeneratorStrategy.NATIVE)
     private long id;
     
     private String name;
+    private int level = 0;
     private final Class[] childNodeTypes;
+    private final boolean container;
+    private final boolean readOnly;
     
-    @ManyToOne(targetEntity=BaseNode.class)
-    private Node parentNode;
+    @Persistent(types=BaseNode.class, defaultFetchGroup="true")
+    private Node parent;
     
-    @Persistent()
-    @OneToMany(targetEntity=BaseNode.class, mappedBy="parentNode")
-    @Key(mappedBy="name")
-    @Value(types=BaseNode.class)
+//    @Persistent(defaultFetchGroup="true")
+//    @Key(mappedBy="name")
+//    @Value(types=BaseNode.class)
+    @NotPersistent
     private Map<String, Node> childrens;
     
     @NotPersistent
     private Map<String, NodeAttribute> nodeAttributes;
     private Class<? extends T> nodeLogicType;
+    @NotPersistent
     private T nodeLogic;
-    private int initializationPriority;
     
     @NotPersistent
     private Collection<Node> dependentNodes;
@@ -94,9 +94,11 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     @NotPersistent
     private Map<String, NodeLogicParameter> parameters;
 
-    public BaseNode(Class[] childNodeTypes)
+    public BaseNode(Class[] childNodeTypes, boolean container, boolean readOnly)
     {
         this.childNodeTypes = childNodeTypes;
+        this.container = container;
+        this.readOnly = readOnly;
     }
 
     public long getId() 
@@ -113,6 +115,7 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     {
         if (childrens==null)
             childrens = new HashMap<String, Node>();
+        node.setParent(this);
         childrens.put(node.getName(), node);
     }
 
@@ -133,6 +136,11 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
         this.name = name;
     }
     
+    public boolean isReadOnly()
+    {
+        return readOnly;
+    }
+    
     public Class<? extends T> getNodeLogicType()
     {
         return nodeLogicType;
@@ -150,6 +158,11 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
             this.nodeLogicType = nodeLogicType;
     }
 
+    public boolean isContainer()
+    {
+        return container;
+    }
+
     public Class[] getChildNodeTypes()
     {
         return childNodeTypes;
@@ -163,11 +176,6 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     public Node getChildren(String name)
     {
         return childrens==null? null : childrens.get(name);
-    }
-
-    public int getInitializationPriority()
-    {
-        return initializationPriority;
     }
 
     public Map<String, NodeAttribute> getNodeAttributes()
@@ -185,21 +193,24 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
         return nodeLogic;
     }
 
-    public Node getParentNode()
+    public Node getParent()
     {
-        return parentNode;
+        return parent;
     }
 
-    public void setParentNode(Node parentNode)
+    public void setParent(Node parent)
     {
-        this.parentNode = parentNode;
+        this.parent = parent;
+        level = 0; Node node = this;
+        while ( (node=node.getParent())!=null )
+            ++level;
     }
 
     public String getPath()
     {
         StringBuffer path = new StringBuffer(name);
         Node node = this;
-        while ( (node=node.getParentNode()) != null )
+        while ( (node=node.getParent()) != null )
             path.insert(0, node.getName()+"/");
         
         return path.toString();
@@ -283,7 +294,7 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     String getParentNodeAttributeValue(String attributeName)
     {
         Node node = this;
-        while ( (node=node.getParentNode())!=null )
+        while ( (node=node.getParent())!=null )
         {
             NodeAttribute attr = node.getNodeAttribute(attributeName);
             if (attr!=null)

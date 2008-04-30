@@ -18,9 +18,12 @@ package org.raven;
 
 import org.apache.tapestry.ioc.Configuration;
 import org.apache.tapestry.ioc.ServiceBinder;
+import org.apache.tapestry.ioc.annotations.EagerLoad;
 import org.raven.conf.Configurator;
 import org.raven.conf.impl.ConfiguratorImpl;
 import org.raven.impl.NodeToStringConverter;
+import org.raven.tree.Tree;
+import org.raven.tree.impl.TreeImpl;
 
 /**
  * Tapestry IOC module for raven-core module
@@ -31,6 +34,12 @@ public class RavenCoreModule
     public static void bind(ServiceBinder binder)
     {
         binder.bind(Configurator.class, ConfiguratorImpl.class);
+    }
+    
+    @EagerLoad()
+    public static Tree buildTree(Configurator configurator)
+    {
+        return new TreeImpl(configurator);
     }
 
     public static void contributeTypeConverter(Configuration conf)

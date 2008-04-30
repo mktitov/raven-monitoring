@@ -18,14 +18,16 @@
 package org.raven.conf.impl;
 
 import java.util.Collection;
-import javax.jdo.identity.LongIdentity;
 import org.apache.tapestry.ioc.RegistryBuilder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
 import org.raven.conf.Configurator;
 import org.raven.ServiceTestCase;
 import org.raven.conf.Config;
+import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.ContainerNode;
 
 /**
  *
@@ -51,13 +53,13 @@ public class ConfiguratorImplTest extends ServiceTestCase
         assertSame(props, configurator.getConfig());
     }
     
-    @Test
+    @Test 
+    @Ignore
     public void saveBaseNode()
     {
         Configurator configurator = registry.getService(Configurator.class);
         
-        BaseNode node = new BaseNode(null);
-        node.setName("root node");
+        BaseNode node = new ContainerNode("root node");
         
         configurator.beginTransaction();
         configurator.save(node);
@@ -66,13 +68,39 @@ public class ConfiguratorImplTest extends ServiceTestCase
         configurator.beginTransaction();
         for (int i=0; i<2; ++i)
         {
-            BaseNode childNode = new BaseNode(null);
-            childNode.setName("child node");
+            BaseNode childNode = new ContainerNode("child node "+i);
             node.addChildren(childNode);
+            configurator.save(childNode);
         }
         configurator.commit();
         
-        Collection<BaseNode> nodes = configurator.getObjects(BaseNode.class);
+        Collection<BaseNode> nodes = configurator.getObjects(BaseNode.class, "level ascending");
         assertNotNull(nodes);
+    }
+    
+    @Test
+//    @Ignore
+    public void getObjects()
+    {
+        Configurator configurator = registry.getService(Configurator.class);
+        Collection<BaseNode> nodes = configurator.getObjects(BaseNode.class, "level descending");
+        
+        assertNotNull(nodes);
+        
+        BaseNode rootNode = null;
+        for (BaseNode node: nodes)
+            if (node.getParent()==null)
+            {
+                rootNode = node;
+                break;
+            }
+        
+        assertNotNull(rootNode);
+        assertNotNull(rootNode.getName());
+//        configurator.beginTransaction();
+//        Collection<Node> childrens = rootNode.getChildrens();
+//        configurator.commit();
+        
+//        assertNotNull(childrens);
     }
 }

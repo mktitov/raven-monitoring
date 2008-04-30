@@ -23,6 +23,7 @@ import org.apache.tapestry.ioc.RegistryBuilder;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.raven.conf.impl.PropertiesConfig;
 
 /**
  *
@@ -39,9 +40,12 @@ public class ServiceTestCase extends Assert
     @Before
     public void setUp() 
     {
+        System.setProperty(
+                PropertiesConfig.CONFIG_PROPERTY_NAME, "src/test/conf/raven.properties");
+        
         RegistryBuilder builder = new RegistryBuilder();
         IOCUtilities.addDefaultModules(builder);
-        builder.add(EnLocaleModule.class, PropertiesConfiguratorModule.class);
+        builder.add(EnLocaleModule.class);
         configureRegistry(builder);
 
         registry = builder.build();

@@ -17,6 +17,8 @@
 
 package org.raven.tree.impl;
 
+import java.util.Collection;
+import org.raven.conf.Configurator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeNotFoundError;
 import org.raven.tree.Tree;
@@ -28,11 +30,13 @@ import org.weda.internal.exception.NullParameterError;
  */
 public class TreeImpl implements Tree
 {
-    private final Node rootNode;
+    private final Configurator configurator;
+    private BaseNode rootNode;
 
-    public TreeImpl(Node rootNode)
+    public TreeImpl(Configurator configurator)
     {
-        this.rootNode = rootNode;
+        this.configurator = configurator;
+        init();
     }
 
     public Node getRootNode()
@@ -45,6 +49,7 @@ public class TreeImpl implements Tree
         NullParameterError.check("path", path);
         
         String[] names = path.split(Node.NODE_SEPARATOR);
+        
         Node node = rootNode;
         for (String name: names)
         {
@@ -54,6 +59,38 @@ public class TreeImpl implements Tree
         }
         
         return node;
+    }
+
+    private void init() 
+    {
+        Collection<BaseNode> nodes = configurator.getObjects(BaseNode.class, "level ascending");
+        
+        if (nodes==null || nodes.size()==0)
+            initRootNode();
+        else
+            rootNode = nodes.iterator().next();
+    }
+
+    private void initRootNode()
+    {
+        rootNode = new ContainerNode("/");
+        
+        configurator.saveInTransaction(rootNode);
+        
+        initSystemSubtree();
+    }
+
+    private void initSystemSubtree()
+    {
+        SystemNode systemNode = new SystemNode();
+        rootNode.addChildren(systemNode);
+        
+        configurator.saveInTransaction(systemNode);
+        
+        DataSourcesNode dataSourcesNode = new DataSourcesNode();
+        systemNode.addChildren(dataSourcesNode);
+        
+        configurator.saveInTransaction(dataSourcesNode);
     }
 
 }

@@ -15,26 +15,26 @@
  *  under the License.
  */
 
-package org.raven.tree;
+package org.raven.tree.impl;
+
+import javax.jdo.annotations.Discriminator;
+import javax.jdo.annotations.Inheritance;
+import javax.jdo.annotations.InheritanceStrategy;
+import javax.jdo.annotations.PersistenceCapable;
+import org.raven.tree.Tree;
 
 /**
- * The tree of nodes. 
- * 
+ *
  * @author Mikhail Titov
  */
-public interface Tree 
+@PersistenceCapable()
+@Inheritance(strategy=InheritanceStrategy.SUPERCLASS_TABLE)
+@Discriminator(value=Tree.DATASOURCES_NODE_DESCRIMINATOR)
+public class DataSourcesNode extends BaseNode
 {
-    public final static String SYSTEM_NODE_DISCRIMINATOR = "1";
-    public final static String DATASOURCES_NODE_DESCRIMINATOR = "2";
-    public final static String DATASOURCE_NODE_DESCRIMINATOR = "3";
-    public final static String CONTAINER_NODE_DESCRIMINATOR = "4";
-    /**
-     * Returns the root node of the tree
-     */
-    public Node getRootNode();
-    /**
-     * Look up the node by it path.
-     * @param path the path to the node.
-     */
-    public Node getNode(String path) throws NodeNotFoundError;
+    public DataSourcesNode()
+    {
+        super(null, true, false);
+        setName("Data sources");
+    }
 }

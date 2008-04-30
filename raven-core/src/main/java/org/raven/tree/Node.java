@@ -39,7 +39,12 @@ public interface Node<T extends NodeLogic>
     /**
      * Returns the parent node for this node. For root node method returns null.
      */
-    public Node getParentNode();
+    public Node getParent();
+    /**
+     * Sets the current node parent.
+     * @param parent
+     */
+    public void setParent(Node parent);
     /**
      * Returns the name of the node.
      */
@@ -49,7 +54,9 @@ public interface Node<T extends NodeLogic>
      */
     public String getPath();
     /**
-     * Adds children node to this node.
+     * Adds children node to this node. 
+     * @throws NodeInitializationError if this node is not a {@link #isContainer() container}
+     *      or node type not one of the types returned by method {@link #getChildNodeTypes()}
      * @param node the children node.
      */
     public void addChildren(Node node);
@@ -64,9 +71,19 @@ public interface Node<T extends NodeLogic>
      */
     public Node getChildren(String name);
     /**
-     * Returns the array of nodes types that can belong to this node type.
+     * Returns the array of nodes types that can belong to this node type. If method returns null
+     * then this node can hold any node type.
+     * 
+     * @see #addChildren(org.raven.tree.Node) 
+     * @see #isContainer() 
      */
     public Class[] getChildNodeTypes();
+    /**
+     * Returns <code>true</code> if this node can hold children nodes. 
+     * @see #getChildNodeTypes() 
+     * @see #addChildren(org.raven.tree.Node) 
+     */
+    public boolean isContainer();
     /**
      * Returns node attributes
      */
@@ -90,11 +107,6 @@ public interface Node<T extends NodeLogic>
      */
     public void init() throws NodeInitializationError;
     /**
-     * Returns the initialization priority of the node. 
-     * The lower priority is stronger
-     */
-    public int getInitializationPriority();
-    /**
      * Returns true if node was initialized (method {@link #init()} successfuly executed).
      */
     public boolean isInitialized();
@@ -103,4 +115,8 @@ public interface Node<T extends NodeLogic>
      * @param dependentNode the node that must be initialized after this node.
      */
     public void addDependentNode(Node dependentNode);
+    /**
+     * If method returns <code>true</code> then node permits read only operations.
+     */
+    public boolean isReadOnly();
 }

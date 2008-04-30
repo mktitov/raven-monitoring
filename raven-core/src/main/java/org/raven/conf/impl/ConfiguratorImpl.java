@@ -68,6 +68,20 @@ public class ConfiguratorImpl implements Configurator
         pm.makePersistent(object);
     }
 
+    public void saveInTransaction(Object object)
+    {
+        pm.currentTransaction().begin();
+        try
+        {
+            pm.makePersistent(object);
+            pm.currentTransaction().commit();
+        }finally
+        {
+            if (pm.currentTransaction().isActive())
+                pm.currentTransaction().rollback();
+        }
+    }
+
     public <T> T getObjectById(Object id) 
     {
         return (T)pm.getObjectById(id);
@@ -83,24 +97,29 @@ public class ConfiguratorImpl implements Configurator
         return PropertiesConfig.getInstance();
     }
     
-    public <T> Collection<T> getObjects(Class<T> objectType)
+    public <T> Collection<T> getObjects(Class<T> objectType, String orderingExpression)
     {
         pm.currentTransaction().begin();
         try
         {
             Query query = pm.newQuery(objectType);
+            if (orderingExpression!=null)
+                query.setOrdering(orderingExpression);
+            
             return (Collection<T>) query.execute();
+            
         }finally
         {
             pm.currentTransaction().commit();
         }
     }
 
-    private void initPersistenceManager() throws Exception {
+    private void initPersistenceManager() throws Exception 
+    {
         pmf = JDOHelper.getPersistenceManagerFactory(getConfig().getProperties());
         pm = pmf.getPersistenceManager();
         pm.setMultithreaded(true);
-//        pm.setDetachAllOnCommit(true);
+        pm.setDetachAllOnCommit(true);
     }
 
 }

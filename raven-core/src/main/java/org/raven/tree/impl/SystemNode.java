@@ -14,26 +14,29 @@
  *  limitations under the License.
  *  under the License.
  */
-package org.raven;
 
-import org.apache.tapestry.ioc.OrderedConfiguration;
-import org.raven.conf.impl.PropertiesConfig;
+package org.raven.tree.impl;
+
+import javax.jdo.annotations.Discriminator;
+import javax.jdo.annotations.Inheritance;
+import javax.jdo.annotations.InheritanceStrategy;
+import javax.jdo.annotations.PersistenceCapable;
+import org.raven.tree.Tree;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class PropertiesConfiguratorModule
+@PersistenceCapable()
+@Inheritance(strategy=InheritanceStrategy.SUPERCLASS_TABLE)
+@Discriminator(value=Tree.SYSTEM_NODE_DISCRIMINATOR)
+public class SystemNode extends BaseNode
 {
-    public static void contributeRegistryStartup(OrderedConfiguration<Runnable> configuration)
+    public final static String NAME = "System";
+    
+    public SystemNode()
     {
-        configuration.add("MyContributionName", new Runnable()
-        {
-            public void run()
-            {
-                System.setProperty(
-                        PropertiesConfig.CONFIG_PROPERTY_NAME, "src/test/conf/raven.properties");
-            }
-        });
+        super(new Class[]{DataSourcesNode.class}, true, true);
+        setName(NAME);
     }
 }

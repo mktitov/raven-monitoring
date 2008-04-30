@@ -56,6 +56,7 @@ public interface Configurator
      * @param object object 
      */
     public void save(Object object);
+    public void saveInTransaction(Object object);
     /**
      * Returns the object by it id.
      * @param id the object id
@@ -65,7 +66,8 @@ public interface Configurator
      * Returns the id of the object.
      */
     public Object getObjectId(Object obj);
-    public <T> Collection<T> getObjects(Class<T> objectType);
+    
+    public <T> Collection<T> getObjects(Class<T> objectType, String orderingExpression);
     /**
      * Returns the storage of the configuration parameters.
      */
