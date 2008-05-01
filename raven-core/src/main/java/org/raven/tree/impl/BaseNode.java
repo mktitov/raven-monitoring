@@ -28,10 +28,12 @@ import javax.jdo.annotations.DiscriminatorStrategy;
 import javax.jdo.annotations.IdGeneratorStrategy;
 import javax.jdo.annotations.IdentityType;
 import javax.jdo.annotations.Inheritance;
+import javax.jdo.annotations.Key;
 import javax.jdo.annotations.NotPersistent;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.PrimaryKey;
+import javax.jdo.annotations.Value;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -40,6 +42,7 @@ import org.raven.tree.NodeLogic;
 import org.raven.tree.NodeLogicParameter;
 import org.raven.annotations.Parameter;
 import org.weda.beans.ClassDescriptor;
+import org.weda.beans.ObjectUtils;
 import org.weda.beans.PropertyDescriptor;
 import org.weda.constraints.ConstraintException;
 import org.weda.internal.annotations.Service;
@@ -79,8 +82,13 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     @NotPersistent
     private Map<String, Node> childrens;
     
-    @NotPersistent
+    @Persistent(defaultFetchGroup="true")
+    @Key(mappedBy="name")
+    @Value(types=NodeAttributeImpl.class)
     private Map<String, NodeAttribute> nodeAttributes;
+    @Persistent
+    private String nodeLogicTypeName;
+    @NotPersistent()
     private Class<? extends T> nodeLogicType;
     @NotPersistent
     private T nodeLogic;
@@ -148,8 +156,9 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
 
     public void setNodeLogicType(Class<? extends T> nodeLogicType) throws ConstraintException
     {
-        if (initialized && nodeLogicType != this.nodeLogicType)
+        if (initialized && ObjectUtils.equals(nodeLogicType.getName(), nodeLogicTypeName))
         {
+            nodeLogicTypeName = nodeLogicType.getName();
             this.nodeLogicType = nodeLogicType;
             if (nodeLogicType!=null)
                 createNodeLogic();
@@ -225,6 +234,7 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     {
         boolean dependenciesInitialized = true;
         if (nodeAttributes!=null)
+        {
             for (NodeAttribute attr: nodeAttributes.values())
                 if (Node.class.isAssignableFrom(attr.getType()))
                 {
@@ -233,14 +243,16 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
                     if (!node.isInitialized())
                         dependenciesInitialized = false;
                 }
+        }
             
         if (!dependenciesInitialized)
             return;
             
-        if (nodeLogicType!=null)
+        if (nodeLogicTypeName!=null)
         {
             try
             {
+                nodeLogicType = (Class<T>) Class.forName(nodeLogicTypeName);
                 createNodeLogic();
                 syncAttributesAndParameters();
             } catch (Exception ex)

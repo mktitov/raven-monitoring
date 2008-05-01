@@ -17,6 +17,10 @@
 
 package org.raven.tree.impl;
 
+import javax.jdo.annotations.IdentityType;
+import javax.jdo.annotations.NotPersistent;
+import javax.jdo.annotations.PersistenceCapable;
+import javax.jdo.annotations.Persistent;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -30,21 +34,29 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
+@PersistenceCapable(detachable="true", identityType=IdentityType.DATASTORE)
 public class NodeAttributeImpl implements NodeAttribute
 {
     @Service
     private TypeConverter converter;
     
+    @Persistent
     private String name;
+    @Persistent
     private String parameterName;
+    @Persistent
     private String description;
+    @Persistent
     private String parentAttribute;
+    @Persistent
     private Class type;
+    @Persistent
     private String value;
     
+    @Persistent()
     private BaseNode owner;
+    @NotPersistent
     private NodeLogicParameter parameter;
-    private boolean generatorType = false;
 
     public void setParameter(NodeLogicParameter parameter)
     {
@@ -114,7 +126,6 @@ public class NodeAttributeImpl implements NodeAttribute
     public void setType(Class type)
     {
         this.type = type;
-        generatorType = AttributesGenerator.class.isAssignableFrom(type);
     }
 
     public void setValue(String value) throws ConstraintException
@@ -132,7 +143,7 @@ public class NodeAttributeImpl implements NodeAttribute
 
     public boolean isGeneratorType()
     {
-        return generatorType;
+        return type!=null && AttributesGenerator.class.isAssignableFrom(type);
     }
     
     

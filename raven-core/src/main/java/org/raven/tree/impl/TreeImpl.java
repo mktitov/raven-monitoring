@@ -18,6 +18,9 @@
 package org.raven.tree.impl;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import org.raven.conf.Configurator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeNotFoundError;
@@ -63,24 +66,41 @@ public class TreeImpl implements Tree
 
     private void init() 
     {
-        Collection<BaseNode> nodes = configurator.getObjects(BaseNode.class, "level ascending");
-        
-        if (nodes==null || nodes.size()==0)
-            initRootNode();
-        else
-            rootNode = nodes.iterator().next();
+        buildTree();
     }
 
-    private void initRootNode()
+    private void buildTree()
+    {
+        Collection<BaseNode> nodes = configurator.getObjects(BaseNode.class, "level ascending");
+
+        if (nodes == null || nodes.size() == 0)
+        {
+            createRootNode();
+        } else
+        {
+            Iterator<BaseNode> it = nodes.iterator();
+            rootNode = it.next();
+            Map<Long, BaseNode> cache = new HashMap<Long, BaseNode>();
+            cache.put(rootNode.getId(), rootNode);
+            while (it.hasNext())
+            {
+                BaseNode node = it.next();
+                cache.get(node.getParent().getId()).addChildren(node);
+                cache.put(node.getId(), node);
+            }
+        }
+    }
+
+    private void createRootNode()
     {
         rootNode = new ContainerNode("/");
         
         configurator.saveInTransaction(rootNode);
         
-        initSystemSubtree();
+        createSystemSubtree();
     }
 
-    private void initSystemSubtree()
+    private void createSystemSubtree()
     {
         SystemNode systemNode = new SystemNode();
         rootNode.addChildren(systemNode);
@@ -92,5 +112,4 @@ public class TreeImpl implements Tree
         
         configurator.saveInTransaction(dataSourcesNode);
     }
-
 }

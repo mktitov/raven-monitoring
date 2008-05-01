@@ -82,6 +82,21 @@ public class ConfiguratorImpl implements Configurator
         }
     }
 
+    public void deleteAll(Class objectType)
+    {
+        pm.currentTransaction().begin();
+        try
+        {
+            Query query = pm.newQuery(objectType);
+            query.deletePersistentAll();
+            pm.currentTransaction().commit();
+        }finally
+        {
+            if (pm.currentTransaction().isActive())
+                pm.currentTransaction().rollback();
+        }
+    }
+
     public <T> T getObjectById(Object id) 
     {
         return (T)pm.getObjectById(id);

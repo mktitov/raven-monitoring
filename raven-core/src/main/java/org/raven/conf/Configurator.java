@@ -56,7 +56,16 @@ public interface Configurator
      * @param object object 
      */
     public void save(Object object);
+    /**
+     * Saves the state of the object in configuration database. Method itself calls methods
+     * {@link #beginTransaction()} and {@link #commit()} or {@link #rollback()} 
+     */
     public void saveInTransaction(Object object);
+    /**
+     * Method deletes all objects of the type passed in parameter.
+     * @param objectType the object type.
+     */
+    public void deleteAll(Class objectType);
     /**
      * Returns the object by it id.
      * @param id the object id

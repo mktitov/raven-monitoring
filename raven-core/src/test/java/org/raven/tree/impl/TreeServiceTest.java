@@ -21,7 +21,9 @@ import org.apache.tapestry.ioc.RegistryBuilder;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
 import org.raven.ServiceTestCase;
+import org.raven.conf.Configurator;
 import org.raven.tree.Node;
+import org.raven.tree.NodeNotFoundError;
 import org.raven.tree.Tree;
 
 /**
@@ -30,6 +32,8 @@ import org.raven.tree.Tree;
  */
 public class TreeServiceTest extends ServiceTestCase
 {
+    private static boolean checkTreeExecuted = false;
+    
     @Override
     protected void configureRegistry(RegistryBuilder builder)
     {
@@ -37,12 +41,29 @@ public class TreeServiceTest extends ServiceTestCase
     }
     
     @Test()
-    public void initTree()
+    public void initTree1()
     {
+        checkTree();
+    }
+
+    @Test()
+    public void initTree2()
+    {
+        checkTree();
+    }
+
+    private void checkTree() throws NodeNotFoundError
+    {
+        if (!checkTreeExecuted)
+        {
+            checkTreeExecuted = true;
+            Configurator configurator = registry.getService(Configurator.class);
+            configurator.deleteAll(BaseNode.class);
+        }
         Tree tree = registry.getService(Tree.class);
         assertNotNull(tree);
         assertNotNull(tree.getRootNode());
-        
+
         Node systemNode = tree.getNode(SystemNode.NAME);
         assertNotNull(systemNode);
     }
