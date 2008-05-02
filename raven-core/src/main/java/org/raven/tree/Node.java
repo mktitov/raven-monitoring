@@ -19,6 +19,7 @@ package org.raven.tree;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The base interface of the observable object tree.
@@ -120,6 +121,10 @@ public interface Node<T extends NodeLogic>
      * @param dependentNode the node that must be initialized after this node.
      */
     public void addDependentNode(Node dependentNode);
+    /**
+     * Returns the collection of dependent nodes or null if no nodes dependent on this.
+     */
+    public Set<Node> getDependentNodes();
     /**
      * If method returns <code>true</code> then node permits read only operations.
      */

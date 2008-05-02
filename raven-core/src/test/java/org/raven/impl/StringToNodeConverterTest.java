@@ -17,34 +17,34 @@
 
 package org.raven.impl;
 
+import org.apache.tapestry.ioc.RegistryBuilder;
+import org.junit.Test;
+import org.raven.RavenCoreModule;
+import org.raven.ServiceTestCase;
 import org.raven.tree.Node;
-import org.raven.tree.Tree;
-import org.weda.converter.TypeConverterWorker;
-import org.weda.internal.annotations.Service;
+import org.raven.tree.impl.SystemNode;
+import org.weda.services.TypeConverter;
 
 /**
- * Converts <code>String</code> {@link org.raven.tree.Node} 
- * 
+ *
  * @author Mikhail Titov
  */
-public class StringToNodeConverter implements TypeConverterWorker<String, Node>
+public class StringToNodeConverterTest extends ServiceTestCase
 {
-    @Service
-    private Tree tree;
 
-    public Node convert(String value, String format)
+    @Override
+    protected void configureRegistry(RegistryBuilder builder)
     {
-        return tree.getNode(value);
-    }
-
-    public Class getSourceType()
-    {
-        return String.class;
-    }
-
-    public Class getTargetType()
-    {
-        return Node.class;
+        builder.add(RavenCoreModule.class);
     }
     
+    @Test
+    public void test()
+    {
+        TypeConverter converter = registry.getService(TypeConverter.class);
+        Node systemNode = converter.convert(Node.class, SystemNode.NAME, null);
+        
+        assertNotNull(systemNode);
+        assertEquals(SystemNode.NAME, systemNode.getName());
+    }
 }

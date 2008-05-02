@@ -19,12 +19,14 @@ package org.raven.tree.impl;
 
 import javax.jdo.identity.LongIdentity;
 import org.apache.tapestry.ioc.RegistryBuilder;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
 import org.raven.ServiceTestCase;
 import org.raven.conf.Configurator;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodeLogic;
 import org.weda.constraints.ConstraintException;
 
 /**
@@ -45,6 +47,12 @@ public class BaseNodeTest extends ServiceTestCase
     public void testInit()
     {
         configurator = registry.getService(Configurator.class);
+    }
+    
+    @After
+    public void testShutdown()
+    {
+        configurator.deleteAll(BaseNode.class);
     }
     
     @Test
@@ -92,5 +100,49 @@ public class BaseNodeTest extends ServiceTestCase
         configurator.delete(node);
         
         assertNull(configurator.getObjectById(attrId));
+    }
+    
+    @Test
+    public void node_saveAndLoad() throws ConstraintException
+    {
+        configurator.deleteAll(BaseNode.class);
+        
+        ContainerNode node = new ContainerNode("node");
+        node.setNodeLogicType(NodeLogic.class);
+        
+        configurator.saveInTransaction(node);
+        
+        Object nodeId = configurator.getObjectId(node);
+        
+        node = configurator.getObjectById(nodeId);
+        
+        assertNotNull(node);
+        assertEquals("node", node.getName());
+        assertEquals(NodeLogic.class, node.getNodeLogicType());
+        
+        //parent node test
+        ContainerNode parentNode = new ContainerNode("parent");
+        node.setParent(parentNode);
+        
+        configurator.saveInTransaction(parentNode);
+        configurator.saveInTransaction(node);
+        
+        Object parentNodeId = configurator.getObjectId(parentNode);
+        
+        node = configurator.getObjectById(nodeId);
+        parentNode = configurator.getObjectById(parentNodeId);
+        
+        assertNotNull(node);
+        assertNotNull(parentNode);
+        
+        assertEquals(parentNode.getId(), node.getParent().getId());
+    }
+    
+    @Test
+    public void node_init()
+    {
+        //test node dependencies
+        //node logic create
+        //attributes and parameters synchronization
     }
 }

@@ -17,6 +17,7 @@
 
 package org.raven.tree.impl;
 
+import java.util.Set;
 import org.apache.tapestry.ioc.RegistryBuilder;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,6 +27,7 @@ import org.raven.conf.Configurator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeNotFoundError;
 import org.raven.tree.Tree;
+import org.weda.constraints.ConstraintException;
 
 /**
  *
@@ -68,22 +70,91 @@ public class TreeServiceTest extends ServiceTestCase
     @Test()
     public void remove()
     {
-        Node root = tree.getRootNode();
-        Object rootId = configurator.getObjectId(root);
-        assertNotNull(root);
+        try
+        {
+            Node root = tree.getRootNode();
+            Object rootId = configurator.getObjectId(root);
+            assertNotNull(root);
+
+            Node systemNode = root.getChildren(SystemNode.NAME);
+            Object systemNodeId = configurator.getObjectId(systemNode);
+            assertNotNull(systemNode);
+
+            Node dsNode = systemNode.getChildren(DataSourcesNode.NAME);
+            Object dsNodeId = configurator.getObjectId(dsNode);
+            assertNotNull(dsNode);
+
+            tree.remove(root);
+            assertNull(configurator.getObjectById(rootId));
+            assertNull(configurator.getObjectById(systemNodeId));
+            assertNull(configurator.getObjectById(dsNodeId));
+        }finally
+        {
+            configurator.deleteAll(BaseNode.class);
+        }
+    }
+    
+    //test node dependencies
+    //node logic create
+    //attributes and parameters synchronization
+    
+    @Test
+    public void nodeInit_woAttributes()
+    {
+        BaseNode node = new BaseNode(null, false, false);
+        node.init();
         
-        Node systemNode = root.getChildren(SystemNode.NAME);
-        Object systemNodeId = configurator.getObjectId(systemNode);
-        assertNotNull(systemNode);
+        assertTrue(node.isInitialized());
+    }
+    
+    @Test
+    public void nodeInit_woNodeTypeAttribute()
+    {
+        BaseNode node = new BaseNode(null, false, false);
+        NodeAttributeImpl attr = new NodeAttributeImpl();
+        attr.setName("attr");
+        attr.setType(String.class);
+        node.addNodeAttribute(attr);
         
-        Node dsNode = systemNode.getChildren(DataSourcesNode.NAME);
-        Object dsNodeId = configurator.getObjectId(dsNode);
-        assertNotNull(dsNode);
+        node.init();
         
-        tree.remove(root);
-        assertNull(configurator.getObjectById(root));
-        assertNull(configurator.getObjectById(systemNode));
-        assertNull(configurator.getObjectById(dsNode));
+        assertTrue(node.isInitialized());
+    }
+    
+    @Test
+    public void nodeInit_wNodeTypeAttribute() throws ConstraintException
+    {
+        ContainerNode node1 = new ContainerNode("node1");
+        tree.getRootNode().addChildren(node1);
+        
+        ContainerNode node2 = new ContainerNode("node2");
+        NodeAttributeImpl attr = new NodeAttributeImpl();
+        attr.setName("attr");
+        attr.setOwner(node2);
+        attr.setType(ContainerNode.class);
+        attr.setValue(node1.getName());
+        node2.addNodeAttribute(attr);
+        tree.getRootNode().addChildren(node2);
+        
+        assertNull(node1.getDependentNodes());
+        
+        node2.init();
+        
+        Set<Node> dependentNodes = node1.getDependentNodes();
+        assertNotNull(dependentNodes);
+        assertEquals(1, dependentNodes.size());
+        assertSame(node2, dependentNodes.iterator().next());
+        assertFalse(node2.isInitialized());
+        
+        node1.init();
+        
+        assertTrue(node1.isInitialized());
+        assertTrue(node2.isInitialized());
+    }
+    
+    public void nodeInit_nodeLogic_woParameters()
+    {
+        
     }
 
     private void checkTree() throws NodeNotFoundError

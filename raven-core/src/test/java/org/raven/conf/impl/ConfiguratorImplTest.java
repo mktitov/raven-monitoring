@@ -25,7 +25,6 @@ import org.raven.RavenCoreModule;
 import org.raven.conf.Configurator;
 import org.raven.ServiceTestCase;
 import org.raven.conf.Config;
-import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.ContainerNode;
 

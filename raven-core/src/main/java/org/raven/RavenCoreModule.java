@@ -22,6 +22,7 @@ import org.apache.tapestry.ioc.annotations.EagerLoad;
 import org.raven.conf.Configurator;
 import org.raven.conf.impl.ConfiguratorImpl;
 import org.raven.impl.NodeToStringConverter;
+import org.raven.impl.StringToNodeConverter;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.TreeImpl;
 
@@ -45,5 +46,6 @@ public class RavenCoreModule
     public static void contributeTypeConverter(Configuration conf)
     {
         conf.add(new NodeToStringConverter());
+        conf.add(new StringToNodeConverter());
     }
 }

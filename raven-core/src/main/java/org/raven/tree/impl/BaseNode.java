@@ -20,10 +20,13 @@ package org.raven.tree.impl;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import javax.jdo.InstanceCallbacks;
 import javax.jdo.annotations.Discriminator;
 import javax.jdo.annotations.DiscriminatorStrategy;
 import javax.jdo.annotations.IdGeneratorStrategy;
@@ -57,7 +60,7 @@ import org.weda.services.TypeConverter;
 @PersistenceCapable(detachable="true", identityType=IdentityType.APPLICATION)
 @Inheritance()
 @Discriminator(strategy=DiscriminatorStrategy.VALUE_MAP, value="0")
-public class BaseNode<T extends NodeLogic> implements Node<T>
+public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
 {
     @Service
     private ClassDescriptorRegistry descriptorRegistry;
@@ -95,7 +98,7 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     private T nodeLogic;
     
     @NotPersistent
-    private Collection<Node> dependentNodes;
+    private Set<Node> dependentNodes;
     
     @NotPersistent
     private boolean initialized = false;
@@ -133,7 +136,7 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     public void addDependentNode(Node dependentNode)
     {
         if (dependentNodes==null)
-            dependentNodes = new LinkedList<Node>();
+            dependentNodes = new HashSet<Node>();
         
         dependentNodes.add(dependentNode);
     }
@@ -168,7 +171,9 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
 
     public void setNodeLogicType(Class<? extends T> nodeLogicType) throws ConstraintException
     {
-        if (initialized && ObjectUtils.equals(nodeLogicType.getName(), nodeLogicTypeName))
+        nodeLogicTypeName = nodeLogicType==null? null : nodeLogicType.getName();
+        
+        if (initialized && nodeLogicType != this.nodeLogicType)
         {
             nodeLogicTypeName = nodeLogicType.getName();
             this.nodeLogicType = nodeLogicType;
@@ -207,6 +212,11 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     public NodeAttribute getNodeAttribute(String name)
     {
         return nodeAttributes==null? null : nodeAttributes.get(name);
+    }
+
+    public Set<Node> getDependentNodes()
+    {
+        return dependentNodes;
     }
 
     public T getNodeLogic()
@@ -248,6 +258,7 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
         if (nodeAttributes!=null)
         {
             for (NodeAttribute attr: nodeAttributes.values())
+            {
                 if (Node.class.isAssignableFrom(attr.getType()))
                 {
                     Node node = converter.convert(Node.class, attr.getValue(), null);
@@ -255,6 +266,7 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
                     if (!node.isInitialized())
                         dependenciesInitialized = false;
                 }
+            }
         }
             
         if (!dependenciesInitialized)
@@ -416,5 +428,33 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
         } catch (ConstraintException ex)
         {
         }
+    }
+
+    public void jdoPreClear()
+    {
+    }
+
+    public void jdoPreDelete()
+    {
+    }
+
+    public void jdoPostLoad() throws NodeInitializationError
+    {
+        try
+        {
+            if (nodeLogicTypeName != null)
+            {
+                nodeLogicType = (Class<T>) Class.forName(nodeLogicTypeName);
+            }
+        } catch (ClassNotFoundException classNotFoundException)
+        {
+            throw new NodeInitializationError(String.format(
+                    "Node (id: %d, name: %s) initialization error", id, name)
+                    , classNotFoundException);
+        }
+    }
+
+    public void jdoPreStore()
+    {
     }
 }
