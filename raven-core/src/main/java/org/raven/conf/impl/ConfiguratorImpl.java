@@ -19,6 +19,7 @@ package org.raven.conf.impl;
 
 import java.util.Collection;
 import javax.jdo.JDOHelper;
+import javax.jdo.JDOObjectNotFoundException;
 import javax.jdo.PersistenceManager;
 import javax.jdo.PersistenceManagerFactory;
 import javax.jdo.Query;
@@ -82,6 +83,20 @@ public class ConfiguratorImpl implements Configurator
         }
     }
 
+    public void delete(Object object)
+    {
+        pm.currentTransaction().begin();
+        try
+        {
+            pm.deletePersistent(object);
+            pm.currentTransaction().commit();
+        }finally
+        {
+            if (pm.currentTransaction().isActive())
+                pm.currentTransaction().rollback();
+        }
+    }
+
     public void deleteAll(Class objectType)
     {
         pm.currentTransaction().begin();
@@ -99,7 +114,21 @@ public class ConfiguratorImpl implements Configurator
 
     public <T> T getObjectById(Object id) 
     {
-        return (T)pm.getObjectById(id);
+        pm.currentTransaction().begin();
+        try
+        {
+            try
+            {
+                return (T)pm.getObjectById(id);
+                
+            } catch (JDOObjectNotFoundException e)
+            {
+                return null;
+            }
+        }finally
+        {
+            pm.currentTransaction().commit();
+        }
     }
 
     public Object getObjectId(Object obj) 

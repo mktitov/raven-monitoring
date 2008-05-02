@@ -62,12 +62,18 @@ public interface Configurator
      */
     public void saveInTransaction(Object object);
     /**
+     * Deletes object from configuration database. Method itself calls methods
+     * {@link #beginTransaction()} and {@link #commit()} or {@link #rollback()} 
+     */
+    public void delete(Object object);
+    /**
      * Method deletes all objects of the type passed in parameter.
      * @param objectType the object type.
      */
     public void deleteAll(Class objectType);
     /**
-     * Returns the object by it id.
+     * Returns the object by its id. Method returns <code>null</code> if no object found by id
+     * passed in parameter.
      * @param id the object id
      */
     public <T> T getObjectById(Object id);

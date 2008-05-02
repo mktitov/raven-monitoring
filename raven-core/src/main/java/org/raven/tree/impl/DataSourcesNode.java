@@ -32,6 +32,8 @@ import org.raven.tree.Tree;
 @Discriminator(value=Tree.DATASOURCES_NODE_DESCRIMINATOR)
 public class DataSourcesNode extends BaseNode
 {
+    public static String NAME = "Data sources";
+    
     public DataSourcesNode()
     {
         super(null, true, false);

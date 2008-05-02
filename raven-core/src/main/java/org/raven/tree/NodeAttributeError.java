@@ -15,27 +15,21 @@
  *  under the License.
  */
 
-package org.raven.tree.impl;
-
-import javax.jdo.annotations.Discriminator;
-import javax.jdo.annotations.Inheritance;
-import javax.jdo.annotations.InheritanceStrategy;
-import javax.jdo.annotations.PersistenceCapable;
-import org.raven.tree.Tree;
+package org.raven.tree;
 
 /**
  *
  * @author Mikhail Titov
  */
-
-@PersistenceCapable(detachable="true")
-@Inheritance(strategy=InheritanceStrategy.SUPERCLASS_TABLE)
-@Discriminator(value=Tree.CONTAINER_NODE_DESCRIMINATOR)
-public class ContainerNode extends BaseNode
+public class NodeAttributeError extends RuntimeException
 {
-    public ContainerNode(String name)
+    public NodeAttributeError(String message, Throwable cause) 
     {
-        super(null, true, false);
-        setName(name);
+        super(message, cause);
+    }
+
+    public NodeAttributeError(String msg) 
+    {
+        super(msg);
     }
 }

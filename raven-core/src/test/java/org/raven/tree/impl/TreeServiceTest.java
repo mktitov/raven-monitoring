@@ -18,6 +18,7 @@
 package org.raven.tree.impl;
 
 import org.apache.tapestry.ioc.RegistryBuilder;
+import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
 import org.raven.ServiceTestCase;
@@ -33,11 +34,23 @@ import org.raven.tree.Tree;
 public class TreeServiceTest extends ServiceTestCase
 {
     private static boolean checkTreeExecuted = false;
+    private Tree tree;
+    private Configurator configurator;
     
     @Override
     protected void configureRegistry(RegistryBuilder builder)
     {
         builder.add(RavenCoreModule.class);
+    }
+    
+    @Before
+    public void initTest()
+    {
+        tree = registry.getService(Tree.class);
+        assertNotNull(tree);
+        
+        configurator = registry.getService(Configurator.class);
+        assertNotNull(configurator);
     }
     
     @Test()
@@ -51,17 +64,35 @@ public class TreeServiceTest extends ServiceTestCase
     {
         checkTree();
     }
+    
+    @Test()
+    public void remove()
+    {
+        Node root = tree.getRootNode();
+        Object rootId = configurator.getObjectId(root);
+        assertNotNull(root);
+        
+        Node systemNode = root.getChildren(SystemNode.NAME);
+        Object systemNodeId = configurator.getObjectId(systemNode);
+        assertNotNull(systemNode);
+        
+        Node dsNode = systemNode.getChildren(DataSourcesNode.NAME);
+        Object dsNodeId = configurator.getObjectId(dsNode);
+        assertNotNull(dsNode);
+        
+        tree.remove(root);
+        assertNull(configurator.getObjectById(root));
+        assertNull(configurator.getObjectById(systemNode));
+        assertNull(configurator.getObjectById(dsNode));
+    }
 
     private void checkTree() throws NodeNotFoundError
     {
         if (!checkTreeExecuted)
         {
             checkTreeExecuted = true;
-            Configurator configurator = registry.getService(Configurator.class);
             configurator.deleteAll(BaseNode.class);
         }
-        Tree tree = registry.getService(Tree.class);
-        assertNotNull(tree);
         assertNotNull(tree.getRootNode());
 
         Node systemNode = tree.getNode(SystemNode.NAME);

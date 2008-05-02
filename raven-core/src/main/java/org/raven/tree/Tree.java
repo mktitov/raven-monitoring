@@ -37,4 +37,8 @@ public interface Tree
      * @param path the path to the node.
      */
     public Node getNode(String path) throws NodeNotFoundError;
+    /**
+     * Remove node passed in parameter and all child nodes
+     */
+    public void remove(Node node);
 }

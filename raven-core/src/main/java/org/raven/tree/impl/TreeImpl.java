@@ -64,6 +64,17 @@ public class TreeImpl implements Tree
         return node;
     }
 
+    public void remove(Node node)
+    {
+        Collection<Node> childrens = node.getChildrens();
+        
+        if (childrens!=null)
+            for (Node children: childrens)
+                remove(children);
+        
+        configurator.delete(node);
+    }
+
     private void init() 
     {
         buildTree();

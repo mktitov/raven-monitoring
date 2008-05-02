@@ -17,6 +17,8 @@
 
 package org.raven.tree.impl;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.jdo.annotations.IdentityType;
 import javax.jdo.annotations.NotPersistent;
 import javax.jdo.annotations.PersistenceCapable;
@@ -24,6 +26,7 @@ import javax.jdo.annotations.Persistent;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodeAttributeError;
 import org.raven.tree.NodeLogicParameter;
 import org.weda.beans.ObjectUtils;
 import org.weda.constraints.ConstraintException;
@@ -48,8 +51,10 @@ public class NodeAttributeImpl implements NodeAttribute
     private String description;
     @Persistent
     private String parentAttribute;
-    @Persistent
+    @NotPersistent
     private Class type;
+    @Persistent
+    private String typeName;
     @Persistent
     private String value;
     
@@ -83,9 +88,19 @@ public class NodeAttributeImpl implements NodeAttribute
         return value;
     }
 
-    public Class getType()
+    public Class getType() 
     {
-        return type;
+        try
+        {
+            if (type == null && typeName != null)
+            {
+                type = Class.forName(typeName);
+            }
+            return type;
+        } catch (ClassNotFoundException ex)
+        {
+            throw new NodeAttributeError("Invalid attribute type", ex.getCause());
+        }
     }
 
     public String getParentAttribute()
@@ -126,6 +141,7 @@ public class NodeAttributeImpl implements NodeAttribute
     public void setType(Class type)
     {
         this.type = type;
+        typeName = type.getName();
     }
 
     public void setValue(String value) throws ConstraintException
@@ -134,10 +150,13 @@ public class NodeAttributeImpl implements NodeAttribute
         {
             this.value = value;
             
-            if (parameter!=null && owner.isInitialized())
-                parameter.setValue(value);
-            
-            owner.fireAttributeValueChanged(this);
+            if (owner.isInitialized())
+            {
+                if (parameter!=null)
+                    parameter.setValue(value);
+
+                owner.fireAttributeValueChanged(this);
+            }
         }
     }
 

@@ -61,7 +61,8 @@ public interface Node<T extends NodeLogic>
      */
     public void addChildren(Node node);
     /**
-     * Returns nodes that belongs to this node.
+     * Returns nodes that belongs to this node. Method returns <code>null</code> if this node
+     * has not childrens.
      */
     public Collection<Node> getChildrens();
     /**
@@ -85,9 +86,13 @@ public interface Node<T extends NodeLogic>
      */
     public boolean isContainer();
     /**
+     * Adds new attribute to the node.
+     */
+    public void addNodeAttribute(NodeAttribute attr);
+    /**
      * Returns node attributes
      */
-    public Map<String, NodeAttribute> getNodeAttributes();
+    public Collection<NodeAttribute> getNodeAttributes();
     /**
      * Returns node attribute by its name or null if node does not contains the attribute with name
      * passed in parameter <code>name</code>.

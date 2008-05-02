@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.TreeMap;
 import javax.jdo.annotations.Discriminator;
 import javax.jdo.annotations.DiscriminatorStrategy;
 import javax.jdo.annotations.IdGeneratorStrategy;
@@ -82,7 +83,7 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     @NotPersistent
     private Map<String, Node> childrens;
     
-    @Persistent(defaultFetchGroup="true")
+    @Persistent(defaultFetchGroup="true", mappedBy="owner", dependentValue="true")
     @Key(mappedBy="name")
     @Value(types=NodeAttributeImpl.class)
     private Map<String, NodeAttribute> nodeAttributes;
@@ -123,7 +124,9 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     {
         if (childrens==null)
             childrens = new HashMap<String, Node>();
+        
         node.setParent(this);
+        
         childrens.put(node.getName(), node);
     }
 
@@ -131,7 +134,16 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     {
         if (dependentNodes==null)
             dependentNodes = new LinkedList<Node>();
+        
         dependentNodes.add(dependentNode);
+    }
+
+    public void addNodeAttribute(NodeAttribute attr)
+    {
+        if (nodeAttributes==null)
+            nodeAttributes = new TreeMap<String, NodeAttribute>();
+        
+        nodeAttributes.put(attr.getName(), attr);
     }
 
     public String getName()
@@ -187,9 +199,9 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
         return childrens==null? null : childrens.get(name);
     }
 
-    public Map<String, NodeAttribute> getNodeAttributes()
+    public Collection<NodeAttribute> getNodeAttributes()
     {
-        return nodeAttributes;
+        return nodeAttributes.values();
     }
 
     public NodeAttribute getNodeAttribute(String name)
