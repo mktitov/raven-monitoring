@@ -109,9 +109,14 @@ public interface Node<T extends NodeLogic>
      */
     public T getNodeLogic();
     /**
-     * Initializing the node
+     * Initializing the node.
      */
     public void init() throws NodeInitializationError;
+    /**
+     * Shutdowns only this node. 
+     * @throws org.raven.tree.NodeShutdownError
+     */
+    public void shutdown() throws NodeShutdownError;
     /**
      * Returns true if node was initialized (method {@link #init()} successfuly executed).
      */

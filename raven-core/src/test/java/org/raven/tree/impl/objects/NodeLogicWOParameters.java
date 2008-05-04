@@ -15,20 +15,28 @@
  *  under the License.
  */
 
-package org.raven.tree;
+package org.raven.tree.impl.objects;
+
+import org.raven.tree.impl.AbstractNodeLogic;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class NodeInitializationError extends Error
+public class NodeLogicWOParameters extends AbstractNodeLogic
 {
-    /**
-     * Constructs an instance of <code>NodeInitializationError</code> with the specified detail message.
-     * @param msg the detail message.
-     */
-    public NodeInitializationError(String msg, Throwable cause) 
+    public boolean initialized = false;
+    public boolean shutdowned = false;
+
+    public void init()
     {
-        super(msg, cause);
+        initialized = true;
     }
+
+    public void shutdown()
+    {
+        shutdowned = true;
+    }
+
+    
 }

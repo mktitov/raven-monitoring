@@ -123,9 +123,9 @@ public class NodeAttributeImpl implements NodeAttribute
         return owner;
     }
 
-    public void setOwner(BaseNode owner)
+    public void setOwner(Node owner)
     {
-        this.owner = owner;
+        this.owner = (BaseNode) owner;
     }
 
     public void setParameterName(String parameterName)

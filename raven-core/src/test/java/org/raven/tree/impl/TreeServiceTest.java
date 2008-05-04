@@ -25,8 +25,11 @@ import org.raven.RavenCoreModule;
 import org.raven.ServiceTestCase;
 import org.raven.conf.Configurator;
 import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeNotFoundError;
 import org.raven.tree.Tree;
+import org.raven.tree.impl.objects.NodeLogicWOParameters;
+import org.raven.tree.impl.objects.NodeLogicWParameters;
 import org.weda.constraints.ConstraintException;
 
 /**
@@ -152,9 +155,61 @@ public class TreeServiceTest extends ServiceTestCase
         assertTrue(node2.isInitialized());
     }
     
-    public void nodeInit_nodeLogic_woParameters()
+    @Test
+    public void nodeInit_nodeLogic_woParameters() throws ConstraintException
     {
+        BaseNode node = new BaseNode(null, false, false);
+        node.setName("node");
+        node.setNodeLogicType(NodeLogicWOParameters.class);
         
+        assertNull(node.getNodeLogic());
+        
+        node.init();
+        
+        NodeLogicWOParameters logic = (NodeLogicWOParameters) node.getNodeLogic();
+        assertNotNull(logic);
+        assertTrue(logic.initialized);
+        assertFalse(logic.shutdowned);
+        
+        node.shutdown();
+        
+        assertTrue(logic.initialized);
+        assertTrue(logic.shutdowned);
+    }
+    
+    @Test
+    public void nodeInit_nodeLogic_wParameters() throws ConstraintException 
+    {
+        //synchronization
+        //store
+        //setValue
+        //getValue
+        BaseNode node = new BaseNode(null, false, false);
+        node.setName("node");
+        node.setNodeLogicType(NodeLogicWParameters.class);
+        
+        configurator.saveInTransaction(node);
+        
+        node.init();
+        
+        assertNotNull(node.getNodeAttributes());
+        assertEquals(2, node.getNodeAttributes().size());
+        
+        checkAttributes(node, null);
+    }
+    
+    private void checkAttributes(Node node, String value)
+    {
+        assertNotNull(node.getNodeAttributes());
+        assertEquals(2, node.getNodeAttributes().size());
+
+        NodeAttribute stringAttr = node.getNodeAttribute("string attribute");
+        assertNotNull(stringAttr);
+        assertEquals(String.class, stringAttr.getType());
+        assertEquals("stringParameter", stringAttr.getParentAttribute());
+        assertEquals("This is a string parameter", stringAttr.getDescription());
+        assertEquals(stringAttr.getOwner(), node);
+        assertEquals(value, stringAttr.getValue());
     }
 
     private void checkTree() throws NodeNotFoundError

@@ -22,7 +22,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -45,8 +44,9 @@ import org.raven.tree.NodeInitializationError;
 import org.raven.tree.NodeLogic;
 import org.raven.tree.NodeLogicParameter;
 import org.raven.annotations.Parameter;
+import org.raven.conf.Configurator;
+import org.raven.tree.NodeShutdownError;
 import org.weda.beans.ClassDescriptor;
-import org.weda.beans.ObjectUtils;
 import org.weda.beans.PropertyDescriptor;
 import org.weda.constraints.ConstraintException;
 import org.weda.internal.annotations.Service;
@@ -66,6 +66,8 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
     private ClassDescriptorRegistry descriptorRegistry;
     @Service
     private TypeConverter converter;
+    @Service
+    private Configurator configurator;
     
     @PrimaryKey()
     @Persistent(valueStrategy=IdGeneratorStrategy.NATIVE)
@@ -279,6 +281,9 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
                 nodeLogicType = (Class<T>) Class.forName(nodeLogicTypeName);
                 createNodeLogic();
                 syncAttributesAndParameters();
+                
+                nodeLogic.init();
+                
             } catch (Exception ex)
             {
                 throw new NodeInitializationError(String.format(
@@ -296,6 +301,12 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
                     node.init();
         }
         
+    }
+
+    public void shutdown() throws NodeShutdownError
+    {
+        if (nodeLogic!=null)
+            nodeLogic.shutdown();
     }
 
     void fireAttributeValueChanged(NodeAttributeImpl attr)
@@ -424,7 +435,9 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
             attr.setType(param.getType());
             attr.setOwner(this);
 
-            nodeAttributes.put(attr.getName(), attr);
+            configurator.saveInTransaction(attr);
+//            nodeAttributes.put(attr.getName(), attr);
+            addNodeAttribute(attr);
         } catch (ConstraintException ex)
         {
         }

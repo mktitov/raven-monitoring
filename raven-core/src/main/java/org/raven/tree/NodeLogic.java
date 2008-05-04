@@ -18,7 +18,7 @@
 package org.raven.tree;
 
 /**
- *
+ * 
  * @author Mikhail Titov
  */
 public interface NodeLogic 
@@ -31,4 +31,8 @@ public interface NodeLogic
      * Initializes node logic
      */
     public void init();
+    /**
+     * Shutdowns the node logic.
+     */
+    public void shutdown();
 }

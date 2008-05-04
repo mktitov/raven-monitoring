@@ -71,7 +71,8 @@ public class TreeImpl implements Tree
         if (childrens!=null)
             for (Node children: childrens)
                 remove(children);
-        
+    
+        node.shutdown();
         configurator.delete(node);
     }
 

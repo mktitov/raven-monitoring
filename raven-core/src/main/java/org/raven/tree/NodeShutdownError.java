@@ -21,14 +21,15 @@ package org.raven.tree;
  *
  * @author Mikhail Titov
  */
-public class NodeInitializationError extends Error
+public class NodeShutdownError extends RuntimeException
 {
-    /**
-     * Constructs an instance of <code>NodeInitializationError</code> with the specified detail message.
-     * @param msg the detail message.
-     */
-    public NodeInitializationError(String msg, Throwable cause) 
+    public NodeShutdownError(String message, Throwable cause)
     {
-        super(msg, cause);
+        super(message, cause);
+    }
+
+    public NodeShutdownError(String message)
+    {
+        super(message);
     }
 }

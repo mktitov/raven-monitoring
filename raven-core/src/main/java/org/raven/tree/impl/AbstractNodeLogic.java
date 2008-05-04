@@ -15,20 +15,27 @@
  *  under the License.
  */
 
-package org.raven.tree;
+package org.raven.tree.impl;
+
+import org.raven.tree.Node;
+import org.raven.tree.NodeLogic;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class NodeInitializationError extends Error
+public abstract class AbstractNodeLogic implements NodeLogic
 {
-    /**
-     * Constructs an instance of <code>NodeInitializationError</code> with the specified detail message.
-     * @param msg the detail message.
-     */
-    public NodeInitializationError(String msg, Throwable cause) 
+    private Node owner;
+
+    public Node getOwner()
     {
-        super(msg, cause);
+        return owner;
     }
+
+    public void setOwner(Node owner)
+    {
+        this.owner = owner;
+    }
+
 }

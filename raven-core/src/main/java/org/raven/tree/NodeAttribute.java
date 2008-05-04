@@ -28,10 +28,10 @@ public interface NodeAttribute
      * Returns the owner node of the attribute
      */
     public Node getOwner();
-//    /**
-//     * Sets the attribute owner.
-//     */
-//    public void setOwner(Node owner);
+    /**
+     * Sets the attribute owner.
+     */
+    public void setOwner(Node owner);
     /**
      * Returns an unique attribute name.
      */
