@@ -17,6 +17,8 @@
 
 package org.raven.tree;
 
+import org.weda.constraints.ConstraintException;
+
 /**
  * Holds information about node attribute
  * 
@@ -48,6 +50,10 @@ public interface NodeAttribute
      * Return the value of the attribute.
      */
     public String getValue();
+    /**
+     * Sets the attribute value.
+     */
+    public void setValue(String value) throws ConstraintException;
     /**
      * Returns the type of the attribute.
      */

@@ -427,20 +427,48 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
         try
         {
             NodeAttributeImpl attr = new NodeAttributeImpl();
+            attr.setOwner(this);
             attr.setName(param.getDisplayName());
             attr.setParameterName(param.getName());
             attr.setParameter(param);
             attr.setDescription(param.getDescription());
             attr.setValue(converter.convert(String.class, param.getValue(), param.getPattern()));
             attr.setType(param.getType());
-            attr.setOwner(this);
 
-            configurator.saveInTransaction(attr);
-//            nodeAttributes.put(attr.getName(), attr);
             addNodeAttribute(attr);
+            
+            configurator.saveInTransaction(attr);
+            
         } catch (ConstraintException ex)
         {
         }
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj == null)
+        {
+            return false;
+        }
+        if (getClass() != obj.getClass())
+        {
+            return false;
+        }
+        final BaseNode<T> other = (BaseNode<T>) obj;
+        if (this.id != other.id)
+        {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int hash = 7;
+        hash = 13 * hash + (int) (this.id ^ (this.id >>> 32));
+        return hash;
     }
 
     public void jdoPreClear()

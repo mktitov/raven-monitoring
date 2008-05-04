@@ -188,14 +188,21 @@ public class TreeServiceTest extends ServiceTestCase
         node.setName("node");
         node.setNodeLogicType(NodeLogicWParameters.class);
         
+        tree.getRootNode().addChildren(node);
+        
         configurator.saveInTransaction(node);
         
         node.init();
         
+        assertTrue(node.isInitialized());
         assertNotNull(node.getNodeAttributes());
         assertEquals(2, node.getNodeAttributes().size());
         
         checkAttributes(node, null);
+        
+        node.getNodeAttribute("string parameter").setValue("value");
+        
+        checkAttributes(node, "value");
     }
     
     private void checkAttributes(Node node, String value)
@@ -203,13 +210,19 @@ public class TreeServiceTest extends ServiceTestCase
         assertNotNull(node.getNodeAttributes());
         assertEquals(2, node.getNodeAttributes().size());
 
-        NodeAttribute stringAttr = node.getNodeAttribute("string attribute");
+        NodeAttribute stringAttr = node.getNodeAttribute("string parameter");
         assertNotNull(stringAttr);
         assertEquals(String.class, stringAttr.getType());
-        assertEquals("stringParameter", stringAttr.getParentAttribute());
+        assertEquals("stringParameter", stringAttr.getParameterName());
+        assertNull(stringAttr.getParentAttribute());
         assertEquals("This is a string parameter", stringAttr.getDescription());
         assertEquals(stringAttr.getOwner(), node);
         assertEquals(value, stringAttr.getValue());
+        
+        NodeLogicWParameters logic = (NodeLogicWParameters) node.getNodeLogic();
+        assertNotNull(logic);
+        
+        assertEquals(value, logic.getStringParameter());
     }
 
     private void checkTree() throws NodeNotFoundError
