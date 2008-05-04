@@ -27,6 +27,7 @@ public class GroupsAclStorage  {
 	private static GroupsAclStorage instance = null;
 	private Config config;
 	private HashMap<String, AccessControlList> aclMap = null;
+	private long lastUpdate = 0;
 
 	protected GroupsAclStorage(Config config)
 	{
@@ -46,6 +47,7 @@ public class GroupsAclStorage  {
 			AccessControlList acl = new AccessControlList(va,1);
 			acln.put(va[0], acl);
 		}
+		lastUpdate = config.getLastUpdate();
 		aclMap = acln;
 	}
 	
@@ -63,13 +65,16 @@ public class GroupsAclStorage  {
      * Returns summary AccessControlList for list of groups.
      * @param ls list of groups
      */
-    public AccessControlList getAclForGroups(List<String> ls)
+    public synchronized AccessControlList getAclForGroups(List<String> ls)
     {
+    	if(lastUpdate!=config.getLastUpdate()) load();
     	AccessControlList acl = new AccessControlList();
     	Iterator<String> it = ls.iterator();
     	while(it.hasNext())
     		acl.appendACL( aclMap.get(it.next()) );
     	return acl;
     }
+
+	public synchronized long getLastUpdate() { return lastUpdate; }
 	
 }
