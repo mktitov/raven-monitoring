@@ -216,24 +216,6 @@ public class H2TreeStore implements TreeStore
         }
     }
 
-//    public NodeAttribute getNodeAttribute(int id) throws TreeStoreError
-//    {
-//        try
-//        {
-//            if (selectNodeAttributeStatement==null)
-//                selectNodeAttributeStatement = connection.prepareStatement(
-//                        String.format(                        
-//                            "select id, owner, name, attribute_type, value, parameter_name" +
-//                            "   , parent_attribute, description"));
-//        } catch (Exception e)
-//        {
-//            throw new TreeStoreError(
-//                    String.format(
-//                        "Error loading node attribute with id (%d)", id)
-//                    , e);
-//        }
-//    }
-
     public Node getRootNode() throws TreeStoreError
     {
         try
