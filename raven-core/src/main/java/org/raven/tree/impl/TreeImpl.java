@@ -18,13 +18,11 @@
 package org.raven.tree.impl;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import org.raven.conf.Configurator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeNotFoundError;
 import org.raven.tree.Tree;
+import org.raven.tree.store.TreeStore;
 import org.weda.internal.exception.NullParameterError;
 
 /**
@@ -34,12 +32,18 @@ import org.weda.internal.exception.NullParameterError;
 public class TreeImpl implements Tree
 {
     private final Configurator configurator;
-    private BaseNode rootNode;
+    private final TreeStore treeStore;
+    private Node rootNode;
 
     public TreeImpl(Configurator configurator)
     {
         this.configurator = configurator;
-        init();
+        this.treeStore = configurator.getTreeStore();
+        
+        rootNode = treeStore.getRootNode();
+        
+        if (rootNode==null)
+            createRootNode();
     }
 
     public Node getRootNode()
@@ -73,41 +77,15 @@ public class TreeImpl implements Tree
                 remove(children);
     
         node.shutdown();
-        configurator.delete(node);
-    }
-
-    private void init() 
-    {
-        buildTree();
-    }
-
-    private void buildTree()
-    {
-        Collection<BaseNode> nodes = configurator.getObjects(BaseNode.class, "level ascending");
-
-        if (nodes == null || nodes.size() == 0)
-        {
-            createRootNode();
-        } else
-        {
-            Iterator<BaseNode> it = nodes.iterator();
-            rootNode = it.next();
-            Map<Integer, BaseNode> cache = new HashMap<Integer, BaseNode>();
-            cache.put(rootNode.getId(), rootNode);
-            while (it.hasNext())
-            {
-                BaseNode node = it.next();
-                cache.get(node.getParent().getId()).addChildren(node);
-                cache.put(node.getId(), node);
-            }
-        }
+        
+        configurator.getTreeStore().removeNode(node.getId());
     }
 
     private void createRootNode()
     {
         rootNode = new ContainerNode("/");
         
-        configurator.saveInTransaction(rootNode);
+        treeStore.saveNode(rootNode);
         
         createSystemSubtree();
     }
@@ -117,11 +95,11 @@ public class TreeImpl implements Tree
         SystemNode systemNode = new SystemNode();
         rootNode.addChildren(systemNode);
         
-        configurator.saveInTransaction(systemNode);
+        treeStore.saveNode(systemNode);
         
         DataSourcesNode dataSourcesNode = new DataSourcesNode();
         systemNode.addChildren(dataSourcesNode);
         
-        configurator.saveInTransaction(dataSourcesNode);
+        treeStore.saveNode(dataSourcesNode);
     }
 }

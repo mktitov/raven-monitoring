@@ -25,18 +25,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import javax.jdo.InstanceCallbacks;
-import javax.jdo.annotations.Discriminator;
-import javax.jdo.annotations.DiscriminatorStrategy;
-import javax.jdo.annotations.IdGeneratorStrategy;
-import javax.jdo.annotations.IdentityType;
-import javax.jdo.annotations.Inheritance;
-import javax.jdo.annotations.Key;
-import javax.jdo.annotations.NotPersistent;
-import javax.jdo.annotations.PersistenceCapable;
-import javax.jdo.annotations.Persistent;
-import javax.jdo.annotations.PrimaryKey;
-import javax.jdo.annotations.Value;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -46,6 +34,7 @@ import org.raven.tree.NodeLogicParameter;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
 import org.raven.tree.NodeShutdownError;
+import org.raven.tree.store.TreeStoreError;
 import org.weda.beans.ClassDescriptor;
 import org.weda.beans.PropertyDescriptor;
 import org.weda.constraints.ConstraintException;
@@ -57,10 +46,7 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
-//@PersistenceCapable(detachable="true", identityType=IdentityType.APPLICATION)
-//@Inheritance()
-//@Discriminator(strategy=DiscriminatorStrategy.VALUE_MAP, value="0")
-public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
+public class BaseNode<T extends NodeLogic> implements Node<T>
 {
     @Service
     private ClassDescriptorRegistry descriptorRegistry;
@@ -69,8 +55,6 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
     @Service
     private Configurator configurator;
     
-    @PrimaryKey()
-    @Persistent(valueStrategy=IdGeneratorStrategy.NATIVE)
     private int id;
     
     private String name;
@@ -79,33 +63,17 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
     private final boolean container;
     private final boolean readOnly;
     
-    @Persistent(types=BaseNode.class, defaultFetchGroup="true")
     private Node parent;
     
-//    @Persistent(defaultFetchGroup="true")
-//    @Key(mappedBy="name")
-//    @Value(types=BaseNode.class)
-    @NotPersistent
     private Map<String, Node> childrens;
-    
-    @Persistent(defaultFetchGroup="true", mappedBy="owner", dependentValue="true")
-    @Key(mappedBy="name")
-    @Value(types=NodeAttributeImpl.class)
     private Map<String, NodeAttribute> nodeAttributes;
-    @Persistent
-    private String nodeLogicTypeName;
-    @NotPersistent()
     private Class<? extends T> nodeLogicType;
-    @NotPersistent
     private T nodeLogic;
     
-    @NotPersistent
     private Set<Node> dependentNodes;
     
-    @NotPersistent
     private boolean initialized = false;
     
-    @NotPersistent
     private Map<String, NodeLogicParameter> parameters;
 
     public BaseNode(Class[] childNodeTypes, boolean container, boolean readOnly)
@@ -180,11 +148,8 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
     {
         try
         {
-            nodeLogicTypeName = nodeLogicType == null ? null : nodeLogicType.getName();
-            
             if (initialized && nodeLogicType != this.nodeLogicType)
             {
-                nodeLogicTypeName = nodeLogicType.getName();
                 this.nodeLogicType = nodeLogicType;
                 if (nodeLogicType != null)
                 {
@@ -225,7 +190,7 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
 
     public Collection<NodeAttribute> getNodeAttributes()
     {
-        return nodeAttributes.values();
+        return nodeAttributes==null? null : nodeAttributes.values();
     }
 
     public NodeAttribute getNodeAttribute(String name)
@@ -291,11 +256,10 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
         if (!dependenciesInitialized)
             return;
             
-        if (nodeLogicTypeName!=null)
+        if (nodeLogicType!=null)
         {
             try
             {
-                nodeLogicType = (Class<T>) Class.forName(nodeLogicTypeName);
                 createNodeLogic();
                 syncAttributesAndParameters();
                 
@@ -409,7 +373,7 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
                     }
     }
 
-    private void syncAttributesAndParameters() throws ConstraintException
+    private void syncAttributesAndParameters() throws ConstraintException, TreeStoreError
     {
         if (nodeAttributes!=null)
         {
@@ -439,26 +403,21 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
         }
     }
     
-    private void createNodeAttribute(NodeLogicParameter param)
+    private void createNodeAttribute(NodeLogicParameter param) 
+        throws TreeStoreError, ConstraintException
     {
-        try
-        {
-            NodeAttributeImpl attr = new NodeAttributeImpl();
-            attr.setOwner(this);
-            attr.setName(param.getDisplayName());
-            attr.setParameterName(param.getName());
-            attr.setParameter(param);
-            attr.setDescription(param.getDescription());
-            attr.setValue(converter.convert(String.class, param.getValue(), param.getPattern()));
-            attr.setType(param.getType());
+        NodeAttributeImpl attr = new NodeAttributeImpl();
+        attr.setOwner(this);
+        attr.setName(param.getDisplayName());
+        attr.setParameterName(param.getName());
+        attr.setParameter(param);
+        attr.setDescription(param.getDescription());
+        attr.setValue(converter.convert(String.class, param.getValue(), param.getPattern()));
+        attr.setType(param.getType());
 
-            addNodeAttribute(attr);
-            
-            configurator.saveInTransaction(attr);
-            
-        } catch (ConstraintException ex)
-        {
-        }
+        addNodeAttribute(attr);
+
+        configurator.getTreeStore().saveNodeAttribute(attr);
     }
 
     @Override
@@ -488,31 +447,4 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
         return hash;
     }
 
-    public void jdoPreClear()
-    {
-    }
-
-    public void jdoPreDelete()
-    {
-    }
-
-    public void jdoPostLoad() throws NodeError
-    {
-        try
-        {
-            if (nodeLogicTypeName != null)
-            {
-                nodeLogicType = (Class<T>) Class.forName(nodeLogicTypeName);
-            }
-        } catch (ClassNotFoundException classNotFoundException)
-        {
-            throw new NodeError(String.format(
-                    "Node (id: %d, name: %s) initialization error", id, name)
-                    , classNotFoundException);
-        }
-    }
-
-    public void jdoPreStore()
-    {
-    }
 }

@@ -15,24 +15,24 @@
  *  under the License.
  */
 
-package org.raven.tree.impl;
+package org.raven.conf;
 
 /**
  *
  * @author Mikhail Titov
  */
-
-public class ContainerNode extends BaseNode
+public class ConfiguratorError extends RuntimeException 
 {
-
-    public ContainerNode()
-    {
-        super(null, true, false);
+    /**
+     * Constructs an instance of <code>ConfiguratorError</code> with the specified detail message.
+     * @param msg the detail message.
+     */
+    public ConfiguratorError(String msg) {
+        super(msg);
     }
 
-    public ContainerNode(String name)
+    public ConfiguratorError(String message, Throwable cause)
     {
-        super(null, true, false);
-        setName(name);
+        super(message, cause);
     }
 }

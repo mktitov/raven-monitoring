@@ -17,16 +17,13 @@
 
 package org.raven.conf.impl;
 
-import java.util.Collection;
 import org.apache.tapestry.ioc.RegistryBuilder;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
 import org.raven.conf.Configurator;
 import org.raven.ServiceTestCase;
 import org.raven.conf.Config;
-import org.raven.tree.impl.BaseNode;
-import org.raven.tree.impl.ContainerNode;
+import org.raven.tree.store.TreeStore;
 
 /**
  *
@@ -41,7 +38,7 @@ public class ConfiguratorImplTest extends ServiceTestCase
     }
     
     @Test
-    public void test() throws Exception
+    public void create() throws Exception
     {
         Configurator configurator = registry.getService(Configurator.class);
         assertNotNull(configurator);
@@ -50,56 +47,60 @@ public class ConfiguratorImplTest extends ServiceTestCase
         assertNotNull(props);
         
         assertSame(props, configurator.getConfig());
+        
+        TreeStore store = configurator.getTreeStore();
+        assertNotNull(store);
     }
     
-    @Test 
-    @Ignore
-    public void saveBaseNode()
-    {
-        Configurator configurator = registry.getService(Configurator.class);
-        
-        BaseNode node = new ContainerNode("root node");
-        
-        configurator.beginTransaction();
-        configurator.save(node);
-        configurator.commit();
-        
-        configurator.beginTransaction();
-        for (int i=0; i<2; ++i)
-        {
-            BaseNode childNode = new ContainerNode("child node "+i);
-            node.addChildren(childNode);
-            configurator.save(childNode);
-        }
-        configurator.commit();
-        
-        Collection<BaseNode> nodes = configurator.getObjects(BaseNode.class, "level ascending");
-        assertNotNull(nodes);
-    }
     
-    @Test
+//    @Test 
 //    @Ignore
-    public void getObjects()
-    {
-        Configurator configurator = registry.getService(Configurator.class);
-        Collection<BaseNode> nodes = configurator.getObjects(BaseNode.class, "level descending");
-        
-        assertNotNull(nodes);
-        
-        BaseNode rootNode = null;
-        for (BaseNode node: nodes)
-            if (node.getParent()==null)
-            {
-                rootNode = node;
-                break;
-            }
-        
-        assertNotNull(rootNode);
-        assertNotNull(rootNode.getName());
+//    public void saveBaseNode()
+//    {
+//        Configurator configurator = registry.getService(Configurator.class);
+//        
+//        BaseNode node = new ContainerNode("root node");
+//        
+//        configurator.beginTransaction();
+//        configurator.save(node);
+//        configurator.commit();
+//        
+//        configurator.beginTransaction();
+//        for (int i=0; i<2; ++i)
+//        {
+//            BaseNode childNode = new ContainerNode("child node "+i);
+//            node.addChildren(childNode);
+//            configurator.save(childNode);
+//        }
+//        configurator.commit();
+//        
+//        Collection<BaseNode> nodes = configurator.getObjects(BaseNode.class, "level ascending");
+//        assertNotNull(nodes);
+//    }
+    
+//    @Test
+////    @Ignore
+//    public void getObjects()
+//    {
+//        Configurator configurator = registry.getService(Configurator.class);
+//        Collection<BaseNode> nodes = configurator.getObjects(BaseNode.class, "level descending");
+//        
+//        assertNotNull(nodes);
+//        
+//        BaseNode rootNode = null;
+//        for (BaseNode node: nodes)
+//            if (node.getParent()==null)
+//            {
+//                rootNode = node;
+//                break;
+//            }
+//        
+//        assertNotNull(rootNode);
+//        assertNotNull(rootNode.getName());
 //        configurator.beginTransaction();
 //        Collection<Node> childrens = rootNode.getChildrens();
 //        configurator.commit();
         
 //        assertNotNull(childrens);
-    }
+//    }
 }

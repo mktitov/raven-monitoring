@@ -49,6 +49,11 @@ public interface TreeStore
      */
     public void removeNode(int id) throws TreeStoreError;
     /**
+     * Removes all nodes from the tree store.
+     * @throws org.raven.tree.store.TreeStoreError
+     */
+    public void removeNodes() throws TreeStoreError;
+    /**
      * Saves node attribute in the store.
      * @throws TreeStoreError on any error.
      */

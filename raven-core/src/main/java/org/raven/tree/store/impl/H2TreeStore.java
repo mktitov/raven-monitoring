@@ -263,12 +263,19 @@ public class H2TreeStore implements TreeStore
         }
     }
     
-    public void deleteNodes() throws SQLException
+    public void removeNodes() throws TreeStoreError
     {
-        Statement st = connection.createStatement();
-        st.executeUpdate("delete from "+NODES_TABLE_NAME);
-        
-        connection.commit();
+        try
+        {
+            Statement st = connection.createStatement();
+            st.executeUpdate("delete from "+NODES_TABLE_NAME);
+
+            connection.commit();
+            
+        } catch(Exception e)
+        {
+            throw new TreeStoreError("Error while removing all nodes from the store.");
+        }
     }
 
     private Node createNode(ResultSet rs, Map<Integer, Node> cache) throws Exception
@@ -277,6 +284,8 @@ public class H2TreeStore implements TreeStore
         Node node = (Node) Class.forName(nodeType).newInstance();
         
         node.setId(rs.getInt(1));
+        node.setName(rs.getString(3));
+        
         if (cache!=null)
         {
             int parentId = rs.getInt(2);
@@ -286,8 +295,6 @@ public class H2TreeStore implements TreeStore
                 parentNode.addChildren(node);
             }
         }
-        
-        node.setName(rs.getString(3));
         
         String nodeLogicTypeName = rs.getString(5);
         if (!rs.wasNull())

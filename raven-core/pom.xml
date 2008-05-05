@@ -50,6 +50,7 @@
             <groupId>org.weda</groupId>
             <artifactId>weda-core</artifactId>
         </dependency>
+        <!--
         <dependency>
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-core</artifactId>
@@ -70,6 +71,7 @@
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-enhancer</artifactId>
         </dependency>
+        -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>

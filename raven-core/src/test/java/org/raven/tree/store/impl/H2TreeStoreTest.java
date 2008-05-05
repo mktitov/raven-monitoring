@@ -47,7 +47,7 @@ public class H2TreeStoreTest extends Assert
     @Test
     public void saveAndLoad() throws TreeStoreError, SQLException
     {
-        store.deleteNodes();
+        store.removeNodes();
         
         ContainerNode node = new ContainerNode();
         node.setName("node");
@@ -84,7 +84,7 @@ public class H2TreeStoreTest extends Assert
     @Test
     public void saveAndLoadAttributes() throws SQLException, TreeStoreError, ConstraintException
     {
-        store.deleteNodes();
+        store.removeNodes();
         
         ContainerNode node = new ContainerNode();
         node.setName("node");
@@ -142,5 +142,35 @@ public class H2TreeStoreTest extends Assert
         assertEquals("parentAttribute1", attr1.getParentAttribute());
         assertEquals(Integer.class, attr1.getType());
         assertEquals("1", attr1.getValue());
+        
+        store.removeNodeAttribute(attr1.getId());
+        node1 = (ContainerNode) store.getNode(node.getId());
+        assertNotNull(node1);
+        assertNull(node1.getNodeAttributes());
+        
+    }
+    
+    @Test
+    public void getRootNode() throws Exception
+    {
+        store.removeNodes();
+        
+        ContainerNode rootNode = new ContainerNode("root");
+        store.saveNode(rootNode);
+        
+        ContainerNode childNode = new ContainerNode("child");
+        rootNode.addChildren(childNode);
+        
+        store.saveNode(childNode);
+        
+        Node node = store.getRootNode();
+        assertNotNull(node);
+        
+        assertNotNull(node.getChildrens());
+        assertEquals(1, node.getChildrens().size());
+        
+        Node node2 = node.getChildren("child");
+        assertNotNull(node2);
+        
     }
 }

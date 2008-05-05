@@ -76,24 +76,24 @@ public class TreeServiceTest extends ServiceTestCase
         try
         {
             Node root = tree.getRootNode();
-            Object rootId = configurator.getObjectId(root);
+            int rootId = root.getId();
             assertNotNull(root);
 
             Node systemNode = root.getChildren(SystemNode.NAME);
-            Object systemNodeId = configurator.getObjectId(systemNode);
+            int systemNodeId = systemNode.getId();
             assertNotNull(systemNode);
 
             Node dsNode = systemNode.getChildren(DataSourcesNode.NAME);
-            Object dsNodeId = configurator.getObjectId(dsNode);
+            int dsNodeId = dsNode.getId();
             assertNotNull(dsNode);
 
             tree.remove(root);
-            assertNull(configurator.getObjectById(rootId));
-            assertNull(configurator.getObjectById(systemNodeId));
-            assertNull(configurator.getObjectById(dsNodeId));
+            assertNull(configurator.getTreeStore().getNode(rootId));
+            assertNull(configurator.getTreeStore().getNode(systemNodeId));
+            assertNull(configurator.getTreeStore().getNode(dsNodeId));
         }finally
         {
-            configurator.deleteAll(BaseNode.class);
+            configurator.getTreeStore().removeNodes();
         }
     }
     
@@ -184,13 +184,13 @@ public class TreeServiceTest extends ServiceTestCase
         //store
         //setValue
         //getValue
-        BaseNode node = new BaseNode(null, false, false);
+        ContainerNode node = new ContainerNode();
         node.setName("node");
         node.setNodeLogicType(NodeLogicWParameters.class);
         
         tree.getRootNode().addChildren(node);
         
-        configurator.saveInTransaction(node);
+        configurator.getTreeStore().saveNode(node);
         
         node.init();
         
@@ -230,7 +230,7 @@ public class TreeServiceTest extends ServiceTestCase
         if (!checkTreeExecuted)
         {
             checkTreeExecuted = true;
-            configurator.deleteAll(BaseNode.class);
+            configurator.getTreeStore().removeNodes();
         }
         assertNotNull(tree.getRootNode());
 

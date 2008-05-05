@@ -21,7 +21,7 @@ package org.raven.tree.store;
  *
  * @author Mikhail Titov
  */
-public class TreeStoreError extends Exception 
+public class TreeStoreError extends RuntimeException 
 {
     public TreeStoreError(String msg) 
     {

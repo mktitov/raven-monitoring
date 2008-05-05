@@ -17,19 +17,10 @@
 
 package org.raven.tree.impl;
 
-import javax.jdo.annotations.Discriminator;
-import javax.jdo.annotations.Inheritance;
-import javax.jdo.annotations.InheritanceStrategy;
-import javax.jdo.annotations.PersistenceCapable;
-import org.raven.tree.Tree;
-
 /**
  *
  * @author Mikhail Titov
  */
-@PersistenceCapable()
-@Inheritance(strategy=InheritanceStrategy.SUPERCLASS_TABLE)
-@Discriminator(value=Tree.DATASOURCES_NODE_DESCRIMINATOR)
 public class DataSourcesNode extends BaseNode
 {
     public static String NAME = "Data sources";

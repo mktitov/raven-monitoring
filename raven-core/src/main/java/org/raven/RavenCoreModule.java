@@ -16,7 +16,9 @@
  */
 package org.raven;
 
+import java.util.Map;
 import org.apache.tapestry.ioc.Configuration;
+import org.apache.tapestry.ioc.MappedConfiguration;
 import org.apache.tapestry.ioc.ServiceBinder;
 import org.apache.tapestry.ioc.annotations.EagerLoad;
 import org.raven.conf.Configurator;
@@ -25,6 +27,7 @@ import org.raven.impl.NodeToStringConverter;
 import org.raven.impl.StringToNodeConverter;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.TreeImpl;
+import org.raven.tree.store.impl.H2TreeStore;
 
 /**
  * Tapestry IOC module for raven-core module
@@ -37,12 +40,22 @@ public class RavenCoreModule
         binder.bind(Configurator.class, ConfiguratorImpl.class);
     }
     
+    public static Configurator buildConfigurator(Map<String, Class> treeStoreEngines)
+    {
+        return new ConfiguratorImpl(treeStoreEngines);
+    }
+    
     @EagerLoad()
     public static Tree buildTree(Configurator configurator)
     {
         return new TreeImpl(configurator);
     }
-
+    
+    public static void contributeConfigurator(MappedConfiguration<String, Class> conf)
+    {
+        conf.add(Configurator.H2_TREE_STORE_ENGINE, H2TreeStore.class);
+    }
+    
     public static void contributeTypeConverter(Configuration conf)
     {
         conf.add(new NodeToStringConverter());
