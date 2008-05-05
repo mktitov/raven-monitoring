@@ -40,7 +40,7 @@ import javax.jdo.annotations.Value;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
-import org.raven.tree.NodeInitializationError;
+import org.raven.tree.NodeError;
 import org.raven.tree.NodeLogic;
 import org.raven.tree.NodeLogicParameter;
 import org.raven.annotations.Parameter;
@@ -57,9 +57,9 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
-@PersistenceCapable(detachable="true", identityType=IdentityType.APPLICATION)
-@Inheritance()
-@Discriminator(strategy=DiscriminatorStrategy.VALUE_MAP, value="0")
+//@PersistenceCapable(detachable="true", identityType=IdentityType.APPLICATION)
+//@Inheritance()
+//@Discriminator(strategy=DiscriminatorStrategy.VALUE_MAP, value="0")
 public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
 {
     @Service
@@ -71,10 +71,10 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
     
     @PrimaryKey()
     @Persistent(valueStrategy=IdGeneratorStrategy.NATIVE)
-    private long id;
+    private int id;
     
     private String name;
-    private int level = 0;
+    private byte level = 0;
     private final Class[] childNodeTypes;
     private final boolean container;
     private final boolean readOnly;
@@ -115,12 +115,12 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
         this.readOnly = readOnly;
     }
 
-    public long getId() 
+    public int getId() 
     {
         return id;
     }
 
-    public void setId(long id) 
+    public void setId(int id) 
     {
         this.id = id;
     }
@@ -160,6 +160,11 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
     {
         this.name = name;
     }
+
+    public byte getLevel()
+    {
+        return level;
+    }
     
     public boolean isReadOnly()
     {
@@ -171,19 +176,31 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
         return nodeLogicType;
     }
 
-    public void setNodeLogicType(Class<? extends T> nodeLogicType) throws ConstraintException
+    public void setNodeLogicType(Class<? extends T> nodeLogicType) 
     {
-        nodeLogicTypeName = nodeLogicType==null? null : nodeLogicType.getName();
-        
-        if (initialized && nodeLogicType != this.nodeLogicType)
+        try
         {
-            nodeLogicTypeName = nodeLogicType.getName();
-            this.nodeLogicType = nodeLogicType;
-            if (nodeLogicType!=null)
-                createNodeLogic();
-            syncAttributesAndParameters();
-        }else
-            this.nodeLogicType = nodeLogicType;
+            nodeLogicTypeName = nodeLogicType == null ? null : nodeLogicType.getName();
+            
+            if (initialized && nodeLogicType != this.nodeLogicType)
+            {
+                nodeLogicTypeName = nodeLogicType.getName();
+                this.nodeLogicType = nodeLogicType;
+                if (nodeLogicType != null)
+                {
+                    createNodeLogic();
+                }
+                syncAttributesAndParameters();
+            } else
+            {
+                this.nodeLogicType = nodeLogicType;
+            }
+        } catch (Exception e)
+        {
+            throw new NodeError(
+                    String.format("Error while setting node (%s) logic type", getPath())
+                    , e);
+        }
     }
 
     public boolean isContainer()
@@ -254,7 +271,7 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
         return initialized;
     }
     
-    public void init() throws NodeInitializationError
+    public void init() throws NodeError
     {
         boolean dependenciesInitialized = true;
         if (nodeAttributes!=null)
@@ -286,7 +303,7 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
                 
             } catch (Exception ex)
             {
-                throw new NodeInitializationError(String.format(
+                throw new NodeError(String.format(
                         "Error initializing node (%s)", getPath())
                         , ex);
             }
@@ -354,7 +371,7 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
         return null;
     }
 
-    private void createNodeLogic() throws NodeInitializationError
+    private void createNodeLogic() throws NodeError
     {
         try
         {
@@ -363,7 +380,7 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
             extractNodeLogicParameters();            
         } catch (Exception e)
         {
-            throw new NodeInitializationError(
+            throw new NodeError(
                     String.format(
                         "Error creating the node logic (%s)", nodeLogicType.getName())
                     , e);
@@ -479,7 +496,7 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
     {
     }
 
-    public void jdoPostLoad() throws NodeInitializationError
+    public void jdoPostLoad() throws NodeError
     {
         try
         {
@@ -489,7 +506,7 @@ public class BaseNode<T extends NodeLogic> implements Node<T>, InstanceCallbacks
             }
         } catch (ClassNotFoundException classNotFoundException)
         {
-            throw new NodeInitializationError(String.format(
+            throw new NodeError(String.format(
                     "Node (id: %d, name: %s) initialization error", id, name)
                     , classNotFoundException);
         }

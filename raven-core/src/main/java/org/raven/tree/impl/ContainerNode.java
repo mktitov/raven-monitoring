@@ -33,6 +33,12 @@ import org.raven.tree.Tree;
 @Discriminator(value=Tree.CONTAINER_NODE_DESCRIMINATOR)
 public class ContainerNode extends BaseNode
 {
+
+    public ContainerNode()
+    {
+        super(null, true, false);
+    }
+
     public ContainerNode(String name)
     {
         super(null, true, false);

@@ -15,10 +15,12 @@
                 <groupId>org.weda</groupId>
                 <artifactId>weda-maven-plugin</artifactId>
             </plugin>
+            <!--
             <plugin>
                 <groupId>org.datanucleus</groupId>
                 <artifactId>maven-datanucleus-plugin</artifactId>
             </plugin>
+            -->
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>

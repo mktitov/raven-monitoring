@@ -27,6 +27,14 @@ import org.weda.constraints.ConstraintException;
 public interface NodeAttribute 
 {
     /**
+     * Gets the unique attribute id.
+     */
+    public int getId();
+    /**
+     * Sets the unique attribute id.
+     */
+    public void setId(int id);
+    /**
      * Returns the owner node of the attribute
      */
     public Node getOwner();

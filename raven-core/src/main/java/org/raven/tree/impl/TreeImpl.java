@@ -92,7 +92,7 @@ public class TreeImpl implements Tree
         {
             Iterator<BaseNode> it = nodes.iterator();
             rootNode = it.next();
-            Map<Long, BaseNode> cache = new HashMap<Long, BaseNode>();
+            Map<Integer, BaseNode> cache = new HashMap<Integer, BaseNode>();
             cache.put(rootNode.getId(), rootNode);
             while (it.hasNext())
             {

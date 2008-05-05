@@ -18,7 +18,6 @@
 package org.raven.tree;
 
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -38,6 +37,10 @@ public interface Node<T extends NodeLogic>
      */
     public int getId();
     /**
+     * Sets the node id.
+     */
+    public void setId(int id);
+    /**
      * Returns the node level in the tree. Level 0 is a root node.
      */
     public byte getLevel();
@@ -54,6 +57,10 @@ public interface Node<T extends NodeLogic>
      * Returns the name of the node.
      */
     public String getName();
+    /**
+     * Sets the node name.
+     */
+    public void setName(String name);
     /**
      * Returns the path to this node from the root. The node name separator is "/".
      */
@@ -109,13 +116,17 @@ public interface Node<T extends NodeLogic>
      */
     public Class<? extends T> getNodeLogicType();
     /**
+     * Sets the node logic type.
+     */
+    public void setNodeLogicType(Class<? extends T> nodeLogic);
+    /**
      * Returns node logic object
      */
     public T getNodeLogic();
     /**
      * Initializing the node.
      */
-    public void init() throws NodeInitializationError;
+    public void init() throws NodeError;
     /**
      * Shutdowns only this node. 
      * @throws org.raven.tree.NodeShutdownError

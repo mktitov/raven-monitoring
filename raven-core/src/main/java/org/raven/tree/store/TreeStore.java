@@ -39,13 +39,28 @@ public interface TreeStore
      */
     public void saveNode(Node node) throws TreeStoreError;
     /**
+     * Returns node by id or <code>null</code> if no node with specefied id in the store.
+     * @throws org.raven.tree.store.TreeStoreError
+     */
+    public Node getNode(int id) throws TreeStoreError;
+    /**
+     * Removes the node by its id from the store.
+     * @throws org.raven.tree.store.TreeStoreError
+     */
+    public void removeNode(int id) throws TreeStoreError;
+    /**
      * Saves node attribute in the store.
      * @throws TreeStoreError on any error.
      */
     public void saveNodeAttribute(NodeAttribute nodeAttribute) throws TreeStoreError;
     /**
+     * Removes the node attribute by its id.
+     * @throws org.raven.tree.store.TreeStoreError
+     */
+    public void removeNodeAttribute(int id) throws TreeStoreError;
+    /**
      * Returns all nodes sorted by {@link org.raven.tree.Node#getLevel()}
      * @throws TreeStoreError on any error.
      */
-    public Iterator<Node> getNodes();
+    public Node getRootNode() throws TreeStoreError;
 }

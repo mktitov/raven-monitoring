@@ -17,8 +17,6 @@
 
 package org.raven.tree.impl;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.jdo.annotations.IdentityType;
 import javax.jdo.annotations.NotPersistent;
 import javax.jdo.annotations.PersistenceCapable;
@@ -43,6 +41,7 @@ public class NodeAttributeImpl implements NodeAttribute
     @Service
     private TypeConverter converter;
     
+    private int id;
     @Persistent
     private String name;
     @Persistent
@@ -62,6 +61,16 @@ public class NodeAttributeImpl implements NodeAttribute
     private BaseNode owner;
     @NotPersistent
     private NodeLogicParameter parameter;
+
+    public int getId()
+    {
+        return id;
+    }
+
+    public void setId(int id)
+    {
+        this.id = id;
+    }
 
     public void setParameter(NodeLogicParameter parameter)
     {

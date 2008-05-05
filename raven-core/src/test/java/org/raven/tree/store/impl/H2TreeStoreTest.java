@@ -17,19 +17,130 @@
 
 package org.raven.tree.store.impl;
 
+import java.sql.SQLException;
+import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.raven.tree.Node;
+import org.raven.tree.impl.ContainerNode;
+import org.raven.tree.impl.NodeAttributeImpl;
+import org.raven.tree.impl.objects.NodeLogicWOParameters;
+import org.raven.tree.impl.objects.NodeLogicWParameters;
 import org.raven.tree.store.TreeStoreError;
+import org.weda.constraints.ConstraintException;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class H2TreeStoreTest 
+public class H2TreeStoreTest extends Assert
 {
-    @Test
-    public void test() throws TreeStoreError
+    private static H2TreeStore store;
+    
+    @BeforeClass
+    public static void initTests() throws TreeStoreError
     {
-        H2TreeStore store = new H2TreeStore();
+        store = new H2TreeStore();
         store.init("jdbc:h2:tcp://localhost/~/test;TRACE_LEVEL_FILE=3", "sa", "");
+    }
+    
+    @Test
+    public void saveAndLoad() throws TreeStoreError, SQLException
+    {
+        store.deleteNodes();
+        
+        ContainerNode node = new ContainerNode();
+        node.setName("node");
+        node.setNodeLogicType(NodeLogicWOParameters.class);
+        store.saveNode(node);
+        
+        Node loadedNode = store.getNode(node.getId());
+        assertNotNull(loadedNode);
+        assertEquals("node", loadedNode.getName());
+        assertEquals(node.getId(), loadedNode.getId());
+        assertEquals(NodeLogicWOParameters.class, loadedNode.getNodeLogicType());
+        assertNull(loadedNode.getParent());
+        
+        loadedNode.setName("node 1");
+        loadedNode.setNodeLogicType(NodeLogicWParameters.class);
+        
+        store.saveNode(loadedNode);
+        
+        assertEquals(node.getId(), loadedNode.getId());
+        
+        Node updatedNode = store.getNode(loadedNode.getId());
+        assertNotNull(updatedNode);
+        assertEquals("node 1", updatedNode.getName());
+        assertEquals(node.getId(), updatedNode.getId());
+        assertEquals(NodeLogicWParameters.class, updatedNode.getNodeLogicType());
+        assertNull(updatedNode.getParent());
+        
+        store.removeNode(updatedNode.getId());
+        
+        Node removedNode = store.getNode(updatedNode.getId());
+        assertNull(removedNode);
+    }
+    
+    @Test
+    public void saveAndLoadAttributes() throws SQLException, TreeStoreError, ConstraintException
+    {
+        store.deleteNodes();
+        
+        ContainerNode node = new ContainerNode();
+        node.setName("node");
+        
+        store.saveNode(node);
+        
+        NodeAttributeImpl attr = new NodeAttributeImpl();
+        attr.setDescription("description");
+        attr.setName("name");
+        attr.setOwner(node);
+        attr.setParameterName("parameterName");
+        attr.setParentAttribute("parentAttribute");
+        attr.setType(String.class);
+        attr.setValue("value");
+        
+        store.saveNodeAttribute(attr);
+        
+        assertTrue(attr.getId()>0);
+        
+        ContainerNode node1 = (ContainerNode) store.getNode(node.getId());
+        assertNotNull(node1);
+        
+        assertNotNull(node1.getNodeAttributes());
+        assertEquals(1, node1.getNodeAttributes().size());
+        
+        NodeAttributeImpl attr1 = (NodeAttributeImpl) node1.getNodeAttribute("name");
+        assertNotNull(attr1);
+        assertEquals(attr.getId(), attr1.getId());
+        assertSame(node1, attr1.getOwner());
+        assertEquals("parameterName", attr1.getParameterName());
+        assertEquals("parentAttribute", attr1.getParentAttribute());
+        assertEquals(String.class, attr1.getType());
+        assertEquals("value", attr1.getValue());
+        
+        attr1.setDescription("description1");
+        attr1.setName("name1");
+        attr1.setOwner(node);
+        attr1.setParameterName("parameterName1");
+        attr1.setParentAttribute("parentAttribute1");
+        attr1.setType(Integer.class);
+        attr1.setValue("1");
+        
+        store.saveNodeAttribute(attr1);
+        
+        node1 = (ContainerNode) store.getNode(node.getId());
+        assertNotNull(node1);
+        assertNotNull(node1.getNodeAttributes());
+        assertEquals(1, node1.getNodeAttributes().size());
+        
+        attr1 = (NodeAttributeImpl) node1.getNodeAttribute("name1");
+        assertNotNull(attr1);
+        assertEquals(attr.getId(), attr1.getId());
+        assertSame(node1, attr1.getOwner());
+        assertEquals("parameterName1", attr1.getParameterName());
+        assertEquals("parentAttribute1", attr1.getParentAttribute());
+        assertEquals(Integer.class, attr1.getType());
+        assertEquals("1", attr1.getValue());
     }
 }
