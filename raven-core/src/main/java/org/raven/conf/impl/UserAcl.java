@@ -29,14 +29,11 @@ import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
 import org.raven.conf.Config;
+import org.raven.conf.Configurator;
 import org.raven.tree.Node;
 
 public class UserAcl 
 {
-	public static final String PROVIDER_URL = "providerURL";
-	public static final String SEARCH_CONTEXT = "searchContext";
-	public static final String BIND_NAME = "bindName";
-	public static final String BIND_PASSWORD = "bindPassword";
 	public static final long expireInterval = 300000;
 	
 	private String accountName;
@@ -62,10 +59,10 @@ public class UserAcl
 	@SuppressWarnings("unchecked")
 	private GroupsList loadGroupsList()
 	{
-		String providerUrl = config.getStringProperty(UserAcl.PROVIDER_URL, null);
-		String bindName = config.getStringProperty(UserAcl.BIND_NAME, null);
-		String bindPassword = config.getStringProperty(UserAcl.BIND_PASSWORD, null);
-		String searchContext = config.getStringProperty(UserAcl.SEARCH_CONTEXT, null);
+		String providerUrl = config.getStringProperty(Configurator.PROVIDER_URL, null);
+		String bindName = config.getStringProperty(Configurator.BIND_NAME, null);
+		String bindPassword = config.getStringProperty(Configurator.BIND_PASSWORD, null);
+		String searchContext = config.getStringProperty(Configurator.SEARCH_CONTEXT, null);
 		
 	    Hashtable<String,String> env = new Hashtable<String,String>();
 	    env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
@@ -139,5 +136,11 @@ public class UserAcl
 		boolean r = refreshed;
 		refreshed = false;
 		return r;
+	}
+	
+	public boolean isEmpty()
+	{
+		if(acl.size()==0) return false;
+		return true;
 	}
 }
