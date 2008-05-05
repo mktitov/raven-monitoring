@@ -82,7 +82,6 @@ public class H2TreeStore implements TreeStore
             else
                 st.setString(5, node.getNodeLogicType().getName());
             
-            
         } catch (SQLException ex)
         {
             throw new TreeStoreError(
