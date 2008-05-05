@@ -19,10 +19,14 @@ package org.raven.tree.store.impl;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.store.TreeStore;
@@ -51,9 +55,41 @@ public class H2TreeStore implements TreeStore
         }
     }
 
-    public void saveNode(Node node)
+    public void saveNode(Node node) throws TreeStoreError
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        try
+        {
+            PreparedStatement st = connection.prepareStatement(
+                    String.format(
+                        "insert into %s " + 
+                        "(level, owner, name, node_type, node_logic_type) " +
+                        "values (?, ?, ?, ?, ?)"
+                        , NODES_TABLE_NAME)
+                    , Statement.RETURN_GENERATED_KEYS);
+            
+            st.setByte(1, node.getLevel());
+            
+            if (node.getParent()==null)
+                st.setNull(2, Types.INTEGER);
+            else
+                st.setInt(2, node.getParent().getId());
+            
+            st.setString(3, node.getName());
+            st.setString(4, node.getClass().getName());
+            
+            if (node.getNodeLogicType()==null)
+                st.setNull(5, Types.VARCHAR);
+            else
+                st.setString(5, node.getNodeLogicType().getName());
+            
+            
+        } catch (SQLException ex)
+        {
+            throw new TreeStoreError(
+                    String.format(
+                        "Error saving node %s", node.getPath())
+                    , ex);
+        }
     }
 
     public void saveNodeAttribute(NodeAttribute nodeAttribute)
@@ -75,7 +111,7 @@ public class H2TreeStore implements TreeStore
     
     private void initTables() throws SQLException
     {
-        createNodesTable();
+        createTables();
     }
     
     private boolean isTableExists(String tableName) throws SQLException
@@ -110,12 +146,17 @@ public class H2TreeStore implements TreeStore
                 ")"
                 , NODES_TABLE_NAME));
         st.executeUpdate(String.format(
-                "create cached table if not exists node_attributes (" +
+                "create cached table if not exists %s (" +
                 "  id int auto_increment," +
                 "  owner int," +
-                "  foreign key (owner) references nodes (id) on delete cascade" +
+                "  name varchar(128)," +
+                "  parameter_type varchar(256)," +
+                "  parameter_name varchar(128)," +
+                "  parent_attribute varchar(128)," +
+                "  description varchar(256)," +
+                "  foreign key (owner) references %s (id) on delete cascade" +
                 ")"
-                ));
+                , NODE_ATTRIBUTES_TABLE_NAME, NODES_TABLE_NAME));
         st.close();
     }
 }

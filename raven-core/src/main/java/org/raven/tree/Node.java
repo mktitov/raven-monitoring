@@ -36,7 +36,11 @@ public interface Node<T extends NodeLogic>
     /**
      * Returns unique node id
      */
-    public long getId();
+    public int getId();
+    /**
+     * Returns the node level in the tree. Level 0 is a root node.
+     */
+    public byte getLevel();
     /**
      * Returns the parent node for this node. For root node method returns null.
      */
