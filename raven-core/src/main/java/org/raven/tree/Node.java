@@ -112,18 +112,6 @@ public interface Node<T extends NodeLogic>
      */
     public NodeAttribute getNodeAttribute(String name);
     /**
-     * Returns the type of the node logic
-     */
-    public Class<? extends T> getNodeLogicType();
-    /**
-     * Sets the node logic type.
-     */
-    public void setNodeLogicType(Class<? extends T> nodeLogic);
-    /**
-     * Returns node logic object
-     */
-    public T getNodeLogic();
-    /**
      * Initializing the node.
      */
     public void init() throws NodeError;

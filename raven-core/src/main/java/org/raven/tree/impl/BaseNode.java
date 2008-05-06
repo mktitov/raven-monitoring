@@ -25,6 +25,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -67,9 +69,6 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     
     private Map<String, Node> childrens;
     private Map<String, NodeAttribute> nodeAttributes;
-    private Class<? extends T> nodeLogicType;
-    private T nodeLogic;
-    
     private Set<Node> dependentNodes;
     
     private boolean initialized = false;
@@ -139,35 +138,6 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
         return readOnly;
     }
     
-    public Class<? extends T> getNodeLogicType()
-    {
-        return nodeLogicType;
-    }
-
-    public void setNodeLogicType(Class<? extends T> nodeLogicType) 
-    {
-        try
-        {
-            if (initialized && nodeLogicType != this.nodeLogicType)
-            {
-                this.nodeLogicType = nodeLogicType;
-                if (nodeLogicType != null)
-                {
-                    createNodeLogic();
-                }
-                syncAttributesAndParameters();
-            } else
-            {
-                this.nodeLogicType = nodeLogicType;
-            }
-        } catch (Exception e)
-        {
-            throw new NodeError(
-                    String.format("Error while setting node (%s) logic type", getPath())
-                    , e);
-        }
-    }
-
     public boolean isContainer()
     {
         return container;
@@ -203,11 +173,6 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
         return dependentNodes;
     }
 
-    public T getNodeLogic()
-    {
-        return nodeLogic;
-    }
-
     public Node getParent()
     {
         return parent;
@@ -226,7 +191,7 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
         StringBuffer path = new StringBuffer(name);
         Node node = this;
         while ( (node=node.getParent()) != null )
-            path.insert(0, node.getName()+"/");
+            path.insert(0, node.getName()+Node.NODE_SEPARATOR);
         
         return path.toString();
     }
@@ -238,56 +203,49 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
     
     public void init() throws NodeError
     {
-        boolean dependenciesInitialized = true;
-        if (nodeAttributes!=null)
+        try
         {
-            for (NodeAttribute attr: nodeAttributes.values())
+            boolean dependenciesInitialized = true;
+            if (nodeAttributes != null)
             {
-                if (Node.class.isAssignableFrom(attr.getType()))
+                for (NodeAttribute attr : nodeAttributes.values())
                 {
-                    Node node = converter.convert(Node.class, attr.getValue(), null);
-                    node.addDependentNode(this);
-                    if (!node.isInitialized())
-                        dependenciesInitialized = false;
+                    if (Node.class.isAssignableFrom(attr.getType()) && attr.getValue()!=null)
+                    {
+                        Node node = converter.convert(Node.class, attr.getValue(), null);
+                        node.addDependentNode(this);
+                        if (!node.isInitialized())
+                        {
+                            dependenciesInitialized = false;
+                        }
+                    }
                 }
             }
-        }
             
-        if (!dependenciesInitialized)
-            return;
-            
-        if (nodeLogicType!=null)
-        {
-            try
+            if (!dependenciesInitialized)
             {
-                createNodeLogic();
-                syncAttributesAndParameters();
-                
-                nodeLogic.init();
-                
-            } catch (Exception ex)
-            {
-                throw new NodeError(String.format(
-                        "Error initializing node (%s)", getPath())
-                        , ex);
+                return;
             }
-        }
+            extractNodeLogicParameters();
+            syncAttributesAndParameters();
             
-        initialized = true;
-        
-        if (dependentNodes!=null)
+            initialized = true;
+            
+            if (dependentNodes != null)
+                for (Node node : dependentNodes)
+                    if (!node.isInitialized())
+                        node.init();
+                
+        } catch (Exception e)
         {
-            for (Node node: dependentNodes)
-                if (!node.isInitialized())
-                    node.init();
+            throw new NodeError(
+                    String.format("Node (%s) initialization error", getPath())
+                    , e);
         }
-        
     }
 
     public void shutdown() throws NodeShutdownError
     {
-        if (nodeLogic!=null)
-            nodeLogic.shutdown();
     }
 
     void fireAttributeValueChanged(NodeAttributeImpl attr)
@@ -299,7 +257,10 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
             {
                 NodeAttribute childAttr = it.next().getValue();
                 if (attr.getName().equals(childAttr.getParentAttribute()))
+                {
+                    configurator.getTreeStore().removeNodeAttribute(childAttr.getId());
                     it.remove();
+                }
             }
             
             if (attr.getValue()!=null)
@@ -307,7 +268,30 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
                 AttributesGenerator attributesGenerator = 
                         (AttributesGenerator) converter.convert(
                             attr.getType(), attr.getValue(), null);
-                attributesGenerator.generateAttributes(this, attr.getName());
+                
+                NodeAttribute[] newAttrs = attributesGenerator.generateAttributes();
+                if (newAttrs!=null)
+                    for (NodeAttribute newAttr: newAttrs)
+                    {
+                        NodeAttribute clone = null;
+                        try
+                        {
+                            clone = (NodeAttribute) newAttr.clone();
+                        } catch (CloneNotSupportedException ex)
+                        {
+                            throw new NodeError(
+                                    String.format(
+                                        "Error in the node (%s). Attribute (%s) clone error"
+                                        , getPath(), clone.getName())
+                                    , ex);
+                        }
+                        clone.setOwner(this);
+                        clone.setParentAttribute(attr.getName());
+                        
+                        configurator.getTreeStore().saveNodeAttribute(clone);
+                        
+                        addNodeAttribute(clone);
+                    }
             }
         }
     }
@@ -335,34 +319,18 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
         return null;
     }
 
-    private void createNodeLogic() throws NodeError
-    {
-        try
-        {
-            nodeLogic = nodeLogicType.newInstance();
-            nodeLogic.setOwner(this);
-            extractNodeLogicParameters();            
-        } catch (Exception e)
-        {
-            throw new NodeError(
-                    String.format(
-                        "Error creating the node logic (%s)", nodeLogicType.getName())
-                    , e);
-        }
-    }
-
     private void extractNodeLogicParameters()
     {
         if (parameters!=null)
             parameters = null;
-        ClassDescriptor classDescriptor = descriptorRegistry.getClassDescriptor(nodeLogicType);
+        ClassDescriptor classDescriptor = descriptorRegistry.getClassDescriptor(getClass());
         PropertyDescriptor[] descs = classDescriptor.getPropertyDescriptors();
         for (PropertyDescriptor desc: descs)
             if (desc.isReadable() && desc.isWriteable())
                 for (Annotation ann: desc.getAnnotations())
                     if (ann instanceof Parameter)
                     {
-                        NodeLogicParameter param = new NodeLogicParameterImpl(nodeLogic, desc);
+                        NodeLogicParameter param = new NodeLogicParameterImpl(this, desc);
                         
                         if (parameters==null)
                             parameters = new HashMap<String, NodeLogicParameter>();

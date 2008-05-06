@@ -18,23 +18,27 @@
 package org.raven.impl;
 
 import org.raven.tree.Node;
-import org.raven.tree.Tree;
-import org.weda.converter.TypeConverterWorker;
-import org.weda.internal.annotations.Service;
+import org.raven.tree.impl.TreeImpl;
+import org.weda.converter.impl.AbstractConverter;
 
 /**
  * Converts <code>String</code> {@link org.raven.tree.Node} 
  * 
  * @author Mikhail Titov
  */
-public class StringToNodeConverter implements TypeConverterWorker<String, Node>
+public class StringToNodeConverter extends AbstractConverter<String, Node>
 {
-    @Service
-    private Tree tree;
+//    @Service
+//    private Tree tree;
+
+    public StringToNodeConverter()
+    {
+        super(true);
+    }
 
     public Node convert(String value, String format)
     {
-        return tree.getNode(value);
+        return TreeImpl.INSTANCE.getNode(value);
     }
 
     public Class getSourceType()

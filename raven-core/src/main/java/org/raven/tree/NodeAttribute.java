@@ -24,7 +24,7 @@ import org.weda.constraints.ConstraintException;
  * 
  * @author Mikhail Titov
  */
-public interface NodeAttribute 
+public interface NodeAttribute extends Cloneable
 {
     /**
      * Gets the unique attribute id.
@@ -70,4 +70,10 @@ public interface NodeAttribute
      * Returns the parent attribute name.
      */
     public String getParentAttribute();
+    /**
+     * Sets the name of the parent attribute.
+     */
+    public void setParentAttribute(String name);
+    
+    public Object clone() throws CloneNotSupportedException;
 }

@@ -21,7 +21,9 @@ import org.apache.tapestry.ioc.RegistryBuilder;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
 import org.raven.ServiceTestCase;
+import org.raven.conf.Configurator;
 import org.raven.tree.Node;
+import org.raven.tree.Tree;
 import org.raven.tree.impl.SystemNode;
 import org.weda.services.TypeConverter;
 
@@ -41,8 +43,13 @@ public class StringToNodeConverterTest extends ServiceTestCase
     @Test
     public void test()
     {
+        Configurator configurator = registry.getService(Configurator.class);
+        configurator.getTreeStore().removeNodes();
+        Tree tree = registry.getService(Tree.class);
+        tree.reloadTree();
+        
         TypeConverter converter = registry.getService(TypeConverter.class);
-        Node systemNode = converter.convert(Node.class, SystemNode.NAME, null);
+        Node systemNode = converter.convert(Node.class, Node.NODE_SEPARATOR+SystemNode.NAME, null);
         
         assertNotNull(systemNode);
         assertEquals(SystemNode.NAME, systemNode.getName());

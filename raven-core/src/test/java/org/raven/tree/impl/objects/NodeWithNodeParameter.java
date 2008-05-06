@@ -18,46 +18,25 @@
 package org.raven.tree.impl.objects;
 
 import org.raven.annotations.Parameter;
-import org.raven.tree.impl.AbstractNodeLogic;
-import org.weda.annotations.Description;
-import org.weda.annotations.DisplayName;
+import org.raven.tree.impl.ContainerNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class NodeLogicWParameters extends AbstractNodeLogic
+public class NodeWithNodeParameter extends ContainerNode
 {
-    @Parameter @DisplayName("string parameter") @Description("This is a string parameter")
-    private String stringParameter;
     @Parameter
-    private Integer intParameter;
+    private AttributesGeneratorNode node;
 
-    public Integer getIntParameter()
+    public AttributesGeneratorNode getNode()
     {
-        return intParameter;
+        return node;
     }
 
-    public void setIntParameter(Integer intParameter)
+    public void setNode(AttributesGeneratorNode node)
     {
-        this.intParameter = intParameter;
+        this.node = node;
     }
-
-    public String getStringParameter()
-    {
-        return stringParameter;
-    }
-
-    public void setStringParameter(String stringParameter)
-    {
-        this.stringParameter = stringParameter;
-    }
-
-    public void init()
-    {
-    }
-
-    public void shutdown()
-    {
-    }
+    
 }

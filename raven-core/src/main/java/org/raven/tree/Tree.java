@@ -41,4 +41,8 @@ public interface Tree
      * Remove node passed in parameter and all child nodes
      */
     public void remove(Node node);
+    /**
+     * Reloads tree from tree store.
+     */
+    public void reloadTree();
 }

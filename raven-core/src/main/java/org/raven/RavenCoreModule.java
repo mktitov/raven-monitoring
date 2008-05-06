@@ -45,7 +45,7 @@ public class RavenCoreModule
         return new ConfiguratorImpl(treeStoreEngines);
     }
     
-    @EagerLoad()
+//    @EagerLoad()
     public static Tree buildTree(Configurator configurator)
     {
         return new TreeImpl(configurator);

@@ -18,16 +18,15 @@
 package org.raven.impl;
 
 import org.raven.tree.Node;
-import org.weda.converter.TypeConverterWorker;
+import org.weda.converter.impl.AbstractConverter;
 
 /**
  * Converts {@link org.raven.tree.Node} to <code>String</code>
  * 
  * @author Mikhail Titov
  */
-public class NodeToStringConverter implements TypeConverterWorker<Node, String>
+public class NodeToStringConverter extends AbstractConverter<Node, String>
 {
-
     public String convert(Node value, String format)
     {
         return value.getPath();

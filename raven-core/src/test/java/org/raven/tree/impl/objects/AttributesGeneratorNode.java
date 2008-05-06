@@ -17,26 +17,25 @@
 
 package org.raven.tree.impl.objects;
 
-import org.raven.tree.impl.AbstractNodeLogic;
+import org.raven.tree.AttributesGenerator;
+import org.raven.tree.NodeAttribute;
+import org.raven.tree.impl.ContainerNode;
+import org.raven.tree.impl.NodeAttributeImpl;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class NodeLogicWOParameters extends AbstractNodeLogic
+public class AttributesGeneratorNode extends ContainerNode implements AttributesGenerator
 {
-    public boolean initialized = false;
-    public boolean shutdowned = false;
 
-    public void init()
+    public NodeAttribute[] generateAttributes()
     {
-        initialized = true;
+        NodeAttributeImpl attr = new NodeAttributeImpl();
+        attr.setName("gAttr");
+        attr.setType(String.class);
+        
+        return new NodeAttribute[]{attr};
     }
 
-    public void shutdown()
-    {
-        shutdowned = true;
-    }
-
-    
 }

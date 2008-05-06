@@ -38,7 +38,7 @@ public class NodeLogicParameterImpl implements NodeLogicParameter
     @Service
     private TypeConverter converter;
     
-    private final Object nodeLogic;
+    private final Object node;
     private final String name;        
     
     private PropertyDescriptor propertyDescriptor;
@@ -46,14 +46,14 @@ public class NodeLogicParameterImpl implements NodeLogicParameter
     private GetOperation getter;
     private SetOperation setter;
 
-    public NodeLogicParameterImpl(Object nodeLogic, PropertyDescriptor desc)
+    public NodeLogicParameterImpl(Object node, PropertyDescriptor desc)
     {
-        this.nodeLogic = nodeLogic;
+        this.node = node;
         this.name = desc.getName();
         
         propertyDescriptor = desc;
-        getter = operationCompiler.compileGetOperation(nodeLogic.getClass(), name);
-        setter = operationCompiler.compileSetOperation(nodeLogic.getClass(), name);
+        getter = operationCompiler.compileGetOperation(node.getClass(), name);
+        setter = operationCompiler.compileSetOperation(node.getClass(), name);
     }
 
     public String getName()
@@ -78,14 +78,14 @@ public class NodeLogicParameterImpl implements NodeLogicParameter
 
     public Object getValue()
     {
-        return getter.getValue(nodeLogic);
+        return getter.getValue(node);
     }
 
     public void setValue(Object value) throws ConstraintException
     {
         Object val = converter.convert(getType(), value, getPattern());
         propertyDescriptor.check(val);
-        setter.setValue(nodeLogic, val);
+        setter.setValue(node, val);
     }
 
     public PropertyDescriptor getPropertyDescriptor()

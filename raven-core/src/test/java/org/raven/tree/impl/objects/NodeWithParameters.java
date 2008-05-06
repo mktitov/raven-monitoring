@@ -15,23 +15,30 @@
  *  under the License.
  */
 
-package org.raven.tree;
+package org.raven.tree.impl.objects;
+
+import org.raven.annotations.Parameter;
+import org.raven.tree.impl.ContainerNode;
+import org.weda.annotations.Description;
+import org.weda.annotations.DisplayName;
 
 /**
- * 
+ *
  * @author Mikhail Titov
  */
-public interface AttributesGenerator 
+public class NodeWithParameters extends ContainerNode
 {
-    /**
-     * Generates and adds attributes to the node passed in <code>owner</code> parameter. 
-     * 
-     * @param owner the owner of generated attributes
-     * @param parentAttribute the name of the parent attribute
-     * 
-     * @see NodeAttribute#getOwner() 
-     * @see NodeAttribute#getParentAttribute() 
-     */
-//    public void generateAttributes(Node owner, String parentAttribute);
-    public NodeAttribute[] generateAttributes();
+    @Parameter
+    @DisplayName("string parameter") @Description("This is a string parameter")
+    private String stringParameter;
+
+    public String getStringParameter()
+    {
+        return stringParameter;
+    }
+
+    public void setStringParameter(String stringParameter)
+    {
+        this.stringParameter = stringParameter;
+    }
 }

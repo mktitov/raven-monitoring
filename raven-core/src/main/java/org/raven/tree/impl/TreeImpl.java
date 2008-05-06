@@ -18,11 +18,13 @@
 package org.raven.tree.impl;
 
 import java.util.Collection;
+import java.util.Iterator;
 import org.raven.conf.Configurator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeNotFoundError;
 import org.raven.tree.Tree;
 import org.raven.tree.store.TreeStore;
+import org.raven.tree.store.TreeStoreError;
 import org.weda.internal.exception.NullParameterError;
 
 /**
@@ -31,6 +33,8 @@ import org.weda.internal.exception.NullParameterError;
  */
 public class TreeImpl implements Tree
 {
+    public static Tree INSTANCE;
+    
     private final Configurator configurator;
     private final TreeStore treeStore;
     private Node rootNode;
@@ -39,11 +43,9 @@ public class TreeImpl implements Tree
     {
         this.configurator = configurator;
         this.treeStore = configurator.getTreeStore();
+        INSTANCE = this;
         
-        rootNode = treeStore.getRootNode();
-        
-        if (rootNode==null)
-            createRootNode();
+        reloadTree();
     }
 
     public Node getRootNode()
@@ -55,7 +57,10 @@ public class TreeImpl implements Tree
     {
         NullParameterError.check("path", path);
         
-        String[] names = path.split(Node.NODE_SEPARATOR);
+        if (path.length()<2 || !path.startsWith(Node.NODE_SEPARATOR))
+            throw new NodeNotFoundError(String.format("Invalid path (%s)", path));
+        
+        String[] names = path.substring(1).split(Node.NODE_SEPARATOR);
         
         Node node = rootNode;
         for (String name: names)
@@ -66,6 +71,19 @@ public class TreeImpl implements Tree
         }
         
         return node;
+    }
+
+    public void reloadTree() throws TreeStoreError
+    {
+
+        rootNode = treeStore.getRootNode();
+
+        if (rootNode == null)
+        {
+            createRootNode();
+        }
+        
+        initNode(rootNode);
     }
 
     public void remove(Node node)
@@ -83,7 +101,7 @@ public class TreeImpl implements Tree
 
     private void createRootNode()
     {
-        rootNode = new ContainerNode("/");
+        rootNode = new ContainerNode("");
         
         treeStore.saveNode(rootNode);
         
@@ -101,5 +119,16 @@ public class TreeImpl implements Tree
         systemNode.addChildren(dataSourcesNode);
         
         treeStore.saveNode(dataSourcesNode);
+    }
+
+    private void initNode(Node node)
+    {
+        node.init();
+        if (node.getChildrens()!=null)
+        {
+            Iterator<Node> it = node.getChildrens().iterator();
+            while (it.hasNext())
+                initNode(it.next());
+        }
     }
 }

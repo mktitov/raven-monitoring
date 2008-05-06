@@ -24,8 +24,6 @@ import org.junit.Test;
 import org.raven.tree.Node;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeAttributeImpl;
-import org.raven.tree.impl.objects.NodeLogicWOParameters;
-import org.raven.tree.impl.objects.NodeLogicWParameters;
 import org.raven.tree.store.TreeStoreError;
 import org.weda.constraints.ConstraintException;
 
@@ -51,18 +49,15 @@ public class H2TreeStoreTest extends Assert
         
         ContainerNode node = new ContainerNode();
         node.setName("node");
-        node.setNodeLogicType(NodeLogicWOParameters.class);
         store.saveNode(node);
         
         Node loadedNode = store.getNode(node.getId());
         assertNotNull(loadedNode);
         assertEquals("node", loadedNode.getName());
         assertEquals(node.getId(), loadedNode.getId());
-        assertEquals(NodeLogicWOParameters.class, loadedNode.getNodeLogicType());
         assertNull(loadedNode.getParent());
         
         loadedNode.setName("node 1");
-        loadedNode.setNodeLogicType(NodeLogicWParameters.class);
         
         store.saveNode(loadedNode);
         
@@ -72,7 +67,6 @@ public class H2TreeStoreTest extends Assert
         assertNotNull(updatedNode);
         assertEquals("node 1", updatedNode.getName());
         assertEquals(node.getId(), updatedNode.getId());
-        assertEquals(NodeLogicWParameters.class, updatedNode.getNodeLogicType());
         assertNull(updatedNode.getParent());
         
         store.removeNode(updatedNode.getId());

@@ -20,20 +20,16 @@ package org.raven.tree.impl;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
-import org.raven.tree.NodeAttributeError;
 import org.raven.tree.NodeLogicParameter;
 import org.weda.beans.ObjectUtils;
 import org.weda.constraints.ConstraintException;
-import org.weda.services.TypeConverter;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class NodeAttributeImpl implements NodeAttribute
+public class NodeAttributeImpl implements NodeAttribute, Cloneable
 {
-    private TypeConverter converter;
-    
     private int id;
     private String name;
     private String parameterName;
@@ -144,6 +140,14 @@ public class NodeAttributeImpl implements NodeAttribute
     public boolean isGeneratorType()
     {
         return type!=null && AttributesGenerator.class.isAssignableFrom(type);
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException
+    {
+        NodeAttributeImpl clone = (NodeAttributeImpl) super.clone();
+        
+        return clone;
     }
     
     

@@ -28,8 +28,9 @@ import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeNotFoundError;
 import org.raven.tree.Tree;
-import org.raven.tree.impl.objects.NodeLogicWOParameters;
-import org.raven.tree.impl.objects.NodeLogicWParameters;
+import org.raven.tree.impl.objects.AttributesGeneratorNode;
+import org.raven.tree.impl.objects.NodeWithNodeParameter;
+import org.raven.tree.impl.objects.NodeWithParameters;
 import org.weda.constraints.ConstraintException;
 
 /**
@@ -135,7 +136,7 @@ public class TreeServiceTest extends ServiceTestCase
         attr.setName("attr");
         attr.setOwner(node2);
         attr.setType(ContainerNode.class);
-        attr.setValue(node1.getName());
+        attr.setValue(node1.getPath());
         node2.addNodeAttribute(attr);
         tree.getRootNode().addChildren(node2);
         
@@ -156,37 +157,14 @@ public class TreeServiceTest extends ServiceTestCase
     }
     
     @Test
-    public void nodeInit_nodeLogic_woParameters() throws ConstraintException
-    {
-        BaseNode node = new BaseNode(null, false, false);
-        node.setName("node");
-        node.setNodeLogicType(NodeLogicWOParameters.class);
-        
-        assertNull(node.getNodeLogic());
-        
-        node.init();
-        
-        NodeLogicWOParameters logic = (NodeLogicWOParameters) node.getNodeLogic();
-        assertNotNull(logic);
-        assertTrue(logic.initialized);
-        assertFalse(logic.shutdowned);
-        
-        node.shutdown();
-        
-        assertTrue(logic.initialized);
-        assertTrue(logic.shutdowned);
-    }
-    
-    @Test
     public void nodeInit_nodeLogic_wParameters() throws ConstraintException 
     {
         //synchronization
         //store
         //setValue
         //getValue
-        ContainerNode node = new ContainerNode();
+        NodeWithParameters node = new NodeWithParameters();
         node.setName("node");
-        node.setNodeLogicType(NodeLogicWParameters.class);
         
         tree.getRootNode().addChildren(node);
         
@@ -196,19 +174,80 @@ public class TreeServiceTest extends ServiceTestCase
         
         assertTrue(node.isInitialized());
         assertNotNull(node.getNodeAttributes());
-        assertEquals(2, node.getNodeAttributes().size());
+        assertEquals(1, node.getNodeAttributes().size());
         
         checkAttributes(node, null);
         
-        node.getNodeAttribute("string parameter").setValue("value");
+        NodeAttribute attr = node.getNodeAttribute("string parameter");
+        attr.setValue("value");
         
+        checkAttributes(node, "value");
+        
+        configurator.getTreeStore().saveNodeAttribute(attr);
+        
+        tree.reloadTree();
+        
+        node = (NodeWithParameters) tree.getRootNode().getChildren("node");
         checkAttributes(node, "value");
     }
     
-    private void checkAttributes(Node node, String value)
+    @Test
+    public void attributesGenerator() throws ConstraintException
+    {
+        configurator.getTreeStore().removeNodes();
+        tree.reloadTree();
+        
+        Node node = new AttributesGeneratorNode();
+        node.setName("genNode");
+        
+        tree.getRootNode().addChildren(node);
+        configurator.getTreeStore().saveNode(node);
+        node.init();
+        
+        NodeWithNodeParameter node1 = new NodeWithNodeParameter();
+        node1.setName("node");
+        tree.getRootNode().addChildren(node1);
+        configurator.getTreeStore().saveNode(node1);
+        node1.init();
+        
+        NodeAttribute attr = node1.getNodeAttribute("node");
+        assertNotNull(attr);
+        
+        attr.setValue(Node.NODE_SEPARATOR+"genNode");
+        configurator.getTreeStore().saveNodeAttribute(attr);
+        
+        attr = node1.getNodeAttribute("gAttr");
+        assertNotNull(attr);
+        assertEquals("node", attr.getParentAttribute());
+        assertSame(node, node1.getNode());
+        
+        tree.reloadTree();
+        
+        node1 = (NodeWithNodeParameter) tree.getRootNode().getChildren("node");
+        assertNotNull(node1);
+        
+        attr = node1.getNodeAttribute("gAttr");
+        assertNotNull(attr);
+        assertEquals("node", attr.getParentAttribute());
+        assertEquals(node, node1.getNode());
+        
+        node1.getNodeAttribute("node").setValue(null);
+        attr = node1.getNodeAttribute("gAttr");
+        assertNull(attr);
+        
+        tree.reloadTree();
+        
+        node1 = (NodeWithNodeParameter) tree.getRootNode().getChildren("node");
+        assertNotNull(node1);
+        
+        attr = node1.getNodeAttribute("gAttr");
+        assertNull(attr);
+    }
+    
+    private void checkAttributes(NodeWithParameters node, String value)
     {
         assertNotNull(node.getNodeAttributes());
-        assertEquals(2, node.getNodeAttributes().size());
+        assertEquals(1, node.getNodeAttributes().size());
 
         NodeAttribute stringAttr = node.getNodeAttribute("string parameter");
         assertNotNull(stringAttr);
@@ -219,10 +258,7 @@ public class TreeServiceTest extends ServiceTestCase
         assertEquals(stringAttr.getOwner(), node);
         assertEquals(value, stringAttr.getValue());
         
-        NodeLogicWParameters logic = (NodeLogicWParameters) node.getNodeLogic();
-        assertNotNull(logic);
-        
-        assertEquals(value, logic.getStringParameter());
+        assertEquals(value, node.getStringParameter());
     }
 
     private void checkTree() throws NodeNotFoundError
@@ -234,7 +270,7 @@ public class TreeServiceTest extends ServiceTestCase
         }
         assertNotNull(tree.getRootNode());
 
-        Node systemNode = tree.getNode(SystemNode.NAME);
+        Node systemNode = tree.getNode(Node.NODE_SEPARATOR+SystemNode.NAME);
         assertNotNull(systemNode);
     }
 }
