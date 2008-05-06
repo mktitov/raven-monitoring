@@ -27,25 +27,33 @@ import org.raven.tree.store.TreeStore;
 public interface Configurator 
 {
 	/**
-	 * Name of parameter that stores URL of LDAP server.  
+	 * The name of parameter that stores URL of LDAP server.  
 	 */
 	public static final String PROVIDER_URL = "providerURL";
 	/**
-	 * Name of parameter that stores context for search on LDAP server.  
+	 * The name of parameter that stores context for search on LDAP server.  
 	 */
 	public static final String SEARCH_CONTEXT = "searchContext";
 	/**
-	 * Name of parameter that stores login for bind to LDAP server.  
+	 * The name of parameter that stores login for bind to LDAP server.  
 	 */
 	public static final String BIND_NAME = "bindName";
 	/**
-	 * Name of parameter that stores password for bind to LDAP server.  
+	 * The name of parameter that stores password for bind to LDAP server.  
 	 */
 	public static final String BIND_PASSWORD = "bindPassword";
 	/**
-	 * Name of parameter that stores name of Windows domain.  
+	 * The name of parameter that stores name of Windows domain.  
 	 */
 	public static final String WIN_DOMAIN = "domain";
+    /**
+     * The name of the parameter that stores the list of WINS servers.
+     */
+    public static final String WINS_SERVERS = "winsServers";
+    /**
+     * The name of the parameter that stores the domain controller.
+     */
+    public static final String DOMAIN_CONTROLLER = "domainController";
     /**
      * The name of the parameter that stores the tree store engine.
      */
