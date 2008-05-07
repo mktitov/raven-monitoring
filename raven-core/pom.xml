@@ -50,6 +50,14 @@
             <groupId>org.weda</groupId>
             <artifactId>weda-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>opensymphony</groupId>
+            <artifactId>quartz-all</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+        </dependency>
         <!--
         <dependency>
             <groupId>org.datanucleus</groupId>
@@ -72,10 +80,6 @@
             <artifactId>datanucleus-enhancer</artifactId>
         </dependency>
         -->
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
