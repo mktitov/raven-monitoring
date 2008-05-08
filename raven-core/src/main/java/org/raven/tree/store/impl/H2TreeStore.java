@@ -311,7 +311,7 @@ public class H2TreeStore implements TreeStore
         if (selectNodeAttributesStatement==null)
             selectNodeAttributesStatement = connection.prepareStatement(
                     String.format(
-                        "select id, name, attribute_type, value, parameter_name" +
+                        "select id, name, attribute_type, value, required, parameter_name" +
                         "   , parent_attribute, description " +
                         "from %s " +
                         "where owner=?"
@@ -321,15 +321,17 @@ public class H2TreeStore implements TreeStore
         ResultSet rs = selectNodeAttributesStatement.executeQuery();
         while (rs.next())
         {
+            int pos=1;
             NodeAttributeImpl attr = new NodeAttributeImpl();
-            attr.setId(rs.getInt(1));
+            attr.setId(rs.getInt(pos++));
             attr.setOwner(node);
-            attr.setName(rs.getString(2));
-            attr.setType(Class.forName(rs.getString(3)));
-            attr.setValue(rs.getString(4));
-            attr.setParameterName(rs.getString(5));
-            attr.setParentAttribute(rs.getString(6));
-            attr.setDescription(rs.getString(7));
+            attr.setName(rs.getString(pos++));
+            attr.setType(Class.forName(rs.getString(pos++)));
+            attr.setValue(rs.getString(pos++));
+            attr.setRequired(rs.getBoolean(pos++));
+            attr.setParameterName(rs.getString(pos++));
+            attr.setParentAttribute(rs.getString(pos++));
+            attr.setDescription(rs.getString(pos++));
             
             node.addNodeAttribute(attr);
         }
@@ -401,6 +403,7 @@ public class H2TreeStore implements TreeStore
                 "  name varchar(128)," +
                 "  value varchar(256), " +
                 "  attribute_type varchar(256)," +
+                "  required boolean," +
                 "  parameter_name varchar(128)," +
                 "  parent_attribute varchar(128)," +
                 "  description varchar(256)," +
@@ -416,36 +419,39 @@ public class H2TreeStore implements TreeStore
             insertNodeAttributeStatement = connection.prepareStatement(
                     String.format(
                         "insert into %s " +
-                        "(owner, name, value, attribute_type, parameter_name, " +
+                        "(owner, name, value, attribute_type, required, parameter_name, " +
                         " parent_attribute, description) " +
-                        "values (?, ?, ?, ?, ?, ?, ?)"
+                        "values (?, ?, ?, ?, ?, ?, ?, ?)"
                         , NODE_ATTRIBUTES_TABLE_NAME)
                     , Statement.RETURN_GENERATED_KEYS);
         
-        insertNodeAttributeStatement.setInt(1, nodeAttribute.getOwner().getId());
-        insertNodeAttributeStatement.setString(2, nodeAttribute.getName());
+        int pos=1;
+        insertNodeAttributeStatement.setInt(pos++, nodeAttribute.getOwner().getId());
+        insertNodeAttributeStatement.setString(pos++, nodeAttribute.getName());
         
         if (nodeAttribute.getValue()==null)
-            insertNodeAttributeStatement.setNull(3, Types.VARCHAR);
+            insertNodeAttributeStatement.setNull(pos++, Types.VARCHAR);
         else
-            insertNodeAttributeStatement.setString(3, nodeAttribute.getValue());
+            insertNodeAttributeStatement.setString(pos++, nodeAttribute.getValue());
             
-        insertNodeAttributeStatement.setString(4, nodeAttribute.getType().getName());
+        insertNodeAttributeStatement.setString(pos++, nodeAttribute.getType().getName());
+        
+        insertNodeAttributeStatement.setBoolean(pos++, nodeAttribute.isRequired());
         
         if (nodeAttribute.getParameterName()==null)
-            insertNodeAttributeStatement.setNull(5, Types.VARCHAR);
+            insertNodeAttributeStatement.setNull(pos++, Types.VARCHAR);
         else
-            insertNodeAttributeStatement.setString(5, nodeAttribute.getParameterName());
+            insertNodeAttributeStatement.setString(pos++, nodeAttribute.getParameterName());
         
         if (nodeAttribute.getParentAttribute()==null)
-            insertNodeAttributeStatement.setNull(6, Types.VARCHAR);
+            insertNodeAttributeStatement.setNull(pos++, Types.VARCHAR);
         else
-            insertNodeAttributeStatement.setString(6, nodeAttribute.getParentAttribute());
+            insertNodeAttributeStatement.setString(pos++, nodeAttribute.getParentAttribute());
         
         if (nodeAttribute.getDescription()==null)
-            insertNodeAttributeStatement.setNull(7, Types.VARCHAR);
+            insertNodeAttributeStatement.setNull(pos++, Types.VARCHAR);
         else
-            insertNodeAttributeStatement.setString(7, nodeAttribute.getDescription());
+            insertNodeAttributeStatement.setString(pos++, nodeAttribute.getDescription());
         
         insertNodeAttributeStatement.executeUpdate();
         ResultSet rs = insertNodeAttributeStatement.getGeneratedKeys();
@@ -485,40 +491,43 @@ public class H2TreeStore implements TreeStore
             updateNodeAttributeStatement = connection.prepareStatement(
                     String.format(
                         "update %s " +
-                        "set owner=?, name=?, value=?, attribute_type=?, parameter_name=?, " +
-                        "   parent_attribute=?, description=? " +
+                        "set owner=?, name=?, value=?, attribute_type=?, required=?, " +
+                        "   parameter_name=?, parent_attribute=?, description=? " +
                         "where id=?"
                         , NODE_ATTRIBUTES_TABLE_NAME));
         
-        updateNodeAttributeStatement.setInt(1, nodeAttribute.getOwner().getId());
-        updateNodeAttributeStatement.setString(2, nodeAttribute.getName());
+        int pos=1;
+        updateNodeAttributeStatement.setInt(pos++, nodeAttribute.getOwner().getId());
+        updateNodeAttributeStatement.setString(pos++, nodeAttribute.getName());
         
         if (nodeAttribute.getValue()==null)
-            updateNodeAttributeStatement.setNull(3, Types.VARCHAR);
+            updateNodeAttributeStatement.setNull(pos++, Types.VARCHAR);
         else
-            updateNodeAttributeStatement.setString(3, nodeAttribute.getValue());
+            updateNodeAttributeStatement.setString(pos++, nodeAttribute.getValue());
         
         if (nodeAttribute.getType().getName()==null)
-            updateNodeAttributeStatement.setNull(4, Types.VARCHAR);
+            updateNodeAttributeStatement.setNull(pos++, Types.VARCHAR);
         else
-            updateNodeAttributeStatement.setString(4, nodeAttribute.getType().getName());
+            updateNodeAttributeStatement.setString(pos++, nodeAttribute.getType().getName());
+        
+        updateNodeAttributeStatement.setBoolean(pos++, nodeAttribute.isRequired());
         
         if (nodeAttribute.getParameterName()==null)
-            updateNodeAttributeStatement.setNull(5, Types.VARCHAR);
+            updateNodeAttributeStatement.setNull(pos++, Types.VARCHAR);
         else
-            updateNodeAttributeStatement.setString(5, nodeAttribute.getParameterName());
+            updateNodeAttributeStatement.setString(pos++, nodeAttribute.getParameterName());
         
         if (nodeAttribute.getParentAttribute()==null)
-            updateNodeAttributeStatement.setNull(6, Types.VARCHAR);
+            updateNodeAttributeStatement.setNull(pos++, Types.VARCHAR);
         else
-            updateNodeAttributeStatement.setString(6, nodeAttribute.getParentAttribute());
+            updateNodeAttributeStatement.setString(pos++, nodeAttribute.getParentAttribute());
         
         if (nodeAttribute.getDescription()==null)
-            updateNodeAttributeStatement.setNull(7, Types.VARCHAR);
+            updateNodeAttributeStatement.setNull(pos++, Types.VARCHAR);
         else
-            updateNodeAttributeStatement.setString(7, nodeAttribute.getDescription());
+            updateNodeAttributeStatement.setString(pos++, nodeAttribute.getDescription());
         
-        updateNodeAttributeStatement.setInt(8, nodeAttribute.getId());
+        updateNodeAttributeStatement.setInt(pos++, nodeAttribute.getId());
         
         updateNodeAttributeStatement.executeUpdate();
     }

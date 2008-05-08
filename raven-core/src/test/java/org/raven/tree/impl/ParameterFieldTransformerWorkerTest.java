@@ -24,7 +24,6 @@ import org.apache.tapestry.ioc.RegistryBuilder;
 import org.junit.Test;
 import org.raven.ServiceTestCase;
 import org.raven.TransformModule;
-import org.raven.tree.impl.objects.NodeWithParameters;
 import org.weda.internal.services.ClassTransformer;
 import org.weda.services.JavassistClassPool;
 

@@ -70,6 +70,8 @@ public class BaseNode implements Node
     private Set<Node> dependentNodes;
     
     private boolean initialized = false;
+    private boolean started = false;
+    private boolean autoStart = true;
     
     private Map<String, NodeLogicParameter> parameters;
 
@@ -234,6 +236,9 @@ public class BaseNode implements Node
                     if (!node.isInitialized())
                         node.init();
                 
+            if (autoStart)
+                start();
+                
         } catch (Exception e)
         {
             throw new NodeError(
@@ -242,6 +247,22 @@ public class BaseNode implements Node
         }
     }
 
+    public void start() throws NodeError
+    {
+        //TODO: check that all required attributes values are seted.
+        if (nodeAttributes!=null)
+            for (NodeAttribute attr: nodeAttributes.values())
+                if (attr.isRequired() && attr.getValue()==null)
+                    throw new NodeError(String.format(
+                            "The value of the required attribute (%s) not setted", attr.getName()));
+        started = true;
+    }
+
+    public void stop() throws NodeError
+    {
+        started = false;
+    }
+    
     public void shutdown() throws NodeShutdownError
     {
     }
@@ -320,7 +341,7 @@ public class BaseNode implements Node
         {
             NodeAttribute attr = node.getNodeAttribute(attributeName);
             if (attr!=null)
-                return attr.getRealValue();
+                return (T) attr.getRealValue();
         }
         return null;
     }
@@ -407,7 +428,7 @@ public class BaseNode implements Node
         {
             return false;
         }
-        final BaseNode<T> other = (BaseNode<T>) obj;
+        final BaseNode other = (BaseNode) obj;
         if (this.id != other.id)
         {
             return false;

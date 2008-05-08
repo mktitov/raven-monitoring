@@ -20,12 +20,16 @@ package org.raven.ds.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
+import org.raven.tree.NodeShutdownError;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.weda.annotations.Description;
@@ -34,8 +38,11 @@ import org.weda.annotations.Description;
  *
  * @author Mikhail Titov
  */
-public abstract class AbstractDataSource extends ContainerNode implements DataSource
+public abstract class AbstractDataSource 
+        extends ContainerNode implements DataSource, RejectedExecutionHandler
 {
+    public static final String INTERVAL_ATTRIBUTE = "interval";
+    public static final String INTERVAL_UNIT_ATTRIBUTE = "intervalUnit";
     @Parameter @Description("Sets the core number of threads")
     private int corePoolSize = 3;
     @Parameter @Description("Sets the maximum allowed number of threads")
@@ -50,24 +57,37 @@ public abstract class AbstractDataSource extends ContainerNode implements DataSo
         super.init();
         
         consumerAttributes.add(
-                new NodeAttributeImpl("interval", Integer.class, "the period between executions"));
+                new NodeAttributeImpl(
+                    INTERVAL_ATTRIBUTE, Integer.class, null, "the period between executions"));
         consumerAttributes.add(
                 new NodeAttributeImpl(
-                    "intervalUnit", String.class, "the time unit of the intervale attribute"));
+                    INTERVAL_UNIT_ATTRIBUTE, TimeUnit.class, TimeUnit.MINUTES, 
+                    "the time unit of the interval attribute"));
         
         executorService = 
                 (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(corePoolSize);
         executorService.setMaximumPoolSize(maximumPoolSize);
+        executorService.setRejectedExecutionHandler(this);
+    }
+
+    @Override
+    public void shutdown() throws NodeShutdownError
+    {
+        super.shutdown();
+        executorService.shutdown();
     }
 
     public void addDataConsumer(DataConsumer dataConsumer)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int interval = (Integer)dataConsumer.getNodeAttribute(INTERVAL_ATTRIBUTE).getRealValue();
+        TimeUnit unit = dataConsumer.getNodeAttribute(INTERVAL_UNIT_ATTRIBUTE).getRealValue();
+        
+        executorService.scheduleAtFixedRate(new Task(dataConsumer), 0, interval, unit);
     }
 
     public void removeDataConsumer(DataConsumer dataConsumer)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        executorService.remove(new Task(dataConsumer));
     }
 
     public int getCorePoolSize()
@@ -93,6 +113,11 @@ public abstract class AbstractDataSource extends ContainerNode implements DataSo
         if (executorService!=null)
             executorService.setMaximumPoolSize(maximumPoolSize);
     }
+
+    public void rejectedExecution(Runnable r, ThreadPoolExecutor executor)
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
     
     private class Task implements Runnable
     {
@@ -107,7 +132,23 @@ public abstract class AbstractDataSource extends ContainerNode implements DataSo
         {
             getDataImmediate(dataConsumer);
         }
-        
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this==obj)
+                return true;
+            if (obj instanceof Task)
+                return dataConsumer.equals(((Task)obj).dataConsumer);
+            else 
+                return false;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return dataConsumer.hashCode();
+        }
     }
 
 }

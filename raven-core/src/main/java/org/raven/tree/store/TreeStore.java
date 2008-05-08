@@ -17,7 +17,6 @@
 
 package org.raven.tree.store;
 
-import java.util.Iterator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 

@@ -92,6 +92,7 @@ public class H2TreeStoreTest extends Assert
         attr.setParameterName("parameterName");
         attr.setParentAttribute("parentAttribute");
         attr.setType(String.class);
+        attr.setRequired(false);
         attr.setValue("value");
         
         store.saveNodeAttribute(attr);
@@ -112,6 +113,7 @@ public class H2TreeStoreTest extends Assert
         assertEquals("parentAttribute", attr1.getParentAttribute());
         assertEquals(String.class, attr1.getType());
         assertEquals("value", attr1.getValue());
+        assertFalse(attr1.isRequired());
         
         attr1.setDescription("description1");
         attr1.setName("name1");
@@ -120,6 +122,7 @@ public class H2TreeStoreTest extends Assert
         attr1.setParentAttribute("parentAttribute1");
         attr1.setType(Integer.class);
         attr1.setValue("1");
+        attr1.setRequired(true);
         
         store.saveNodeAttribute(attr1);
         
@@ -136,6 +139,7 @@ public class H2TreeStoreTest extends Assert
         assertEquals("parentAttribute1", attr1.getParentAttribute());
         assertEquals(Integer.class, attr1.getType());
         assertEquals("1", attr1.getValue());
+        assertTrue(attr1.isRequired());
         
         store.removeNodeAttribute(attr1.getId());
         node1 = (ContainerNode) store.getNode(node.getId());

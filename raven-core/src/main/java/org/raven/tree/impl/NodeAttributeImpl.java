@@ -111,7 +111,7 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable
         else
         {
             if (value==null)
-                return owner.getParentAttributeRealValue(name);
+                return (T) owner.getParentAttributeRealValue(name);
             else
                 return (T) converter.convert(type, value, null);
         }

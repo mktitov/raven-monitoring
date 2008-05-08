@@ -23,10 +23,12 @@ package org.raven.tree;
  */
 public class NodeError extends Error
 {
-    /**
-     * Constructs an instance of <code>NodeInitializationError</code> with the specified detail message.
-     * @param msg the detail message.
-     */
+
+    public NodeError(String message)
+    {
+        super(message);
+    }
+
     public NodeError(String msg, Throwable cause) 
     {
         super(msg, cause);
