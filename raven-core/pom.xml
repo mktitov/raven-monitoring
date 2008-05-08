@@ -51,10 +51,6 @@
             <artifactId>weda-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>opensymphony</groupId>
-            <artifactId>quartz-all</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
         </dependency>

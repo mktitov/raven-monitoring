@@ -22,6 +22,37 @@ import java.util.Set;
 
 /**
  * The base interface of the observable object tree.
+ * <p/>
+ * Node lifecycle:
+ * <ul>
+ *  <li><i>creation/restoration</i>. At the end of this phase node created and its attributes linked
+ *      with the node.</li>
+ *  <li><i>initialization</i> ({@link #init()}). At the end of this phase 
+ *      <ul>
+ *          <li>all nodes from which this node is depend on were initialized.
+ *          <li>node parameters extracted from the node class</li>
+ *          <li>parameter values were seted from corresponding attribues values</li>
+ *          <li>attributes where created and stored in the 
+ *              {@link org.raven.tree.store.TreeStore tree database} for parameters that has not
+ *              corresponding attributes.
+ *      </ul>
+ *  </li>
+ *  <li><i>logic execution</i> ({@link #start()}). 
+ *      <ul>
+ *          <li>Node going to this phase automaticaly if the 
+ *          <li><font color="red">The node can not enter to this phase 
+ *              until values of all {@link NodeAttribute#isRequired() required} attributes 
+ *              will not be seted</font>. 
+ *          </li>
+ *          <li>At this point of the lifecycle node must realize its own logic.
+ *          </li>
+ *          <li>User can execute node actions.</li>
+ *          
+ *      </ul>
+ *  </li>
+ *  <li>logic stoping ({@link #stop()}</li>
+ *  <li>node shutdown ({@link #shutdown()})</li>
+ * </ul>
  * 
  * @author Mikhail Titov
  */
@@ -120,6 +151,13 @@ public interface Node
      * @throws org.raven.tree.NodeShutdownError
      */
     public void shutdown() throws NodeShutdownError;
+    /**
+     * Starts the node. This method automaticaly calling after {@link #init() node initialization}
+     * if the {@link #isAutoStart autoStart} property is setted to <code>true</code>
+     * @throws org.raven.tree.NodeError
+     */
+    public void start() throws NodeError;
+    public void stop() throws NodeError;
     /**
      * Returns true if node was initialized (method {@link #init()} successfuly executed).
      */

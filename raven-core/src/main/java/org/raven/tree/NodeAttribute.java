@@ -55,9 +55,14 @@ public interface NodeAttribute extends Cloneable
      */
     public String getDescription();
     /**
-     * If returns <code>true</code> 
+     * If returns <code>true</code> if the value of this node attribute must be seted before 
+     * {@link Node#start() node logic execution}.
      */
     public boolean isRequired();
+    /**
+     * 
+     */
+    public void setRequired(boolean required);
     /**
      * Method returns:
      * <ul>

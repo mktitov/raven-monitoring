@@ -51,6 +51,11 @@ public interface NodeLogicParameter
      */
     public String getPattern();
     /**
+     * If returns <code>true</code> the value of this node parameter must be seted before 
+     * {@link Node#start() node logic execution}.
+     */
+    public boolean isRequired();
+    /**
      * Returns the parameter value.
      */
     public Object getValue();

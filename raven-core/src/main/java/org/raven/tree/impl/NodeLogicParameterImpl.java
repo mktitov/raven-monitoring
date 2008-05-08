@@ -17,8 +17,10 @@
 
 package org.raven.tree.impl;
 
+import java.lang.annotation.Annotation;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeLogicParameter;
+import org.weda.annotations.constraints.NotNull;
 import org.weda.beans.GetOperation;
 import org.weda.beans.PropertyDescriptor;
 import org.weda.beans.SetOperation;
@@ -45,6 +47,7 @@ public class NodeLogicParameterImpl implements NodeLogicParameter
     private NodeAttribute nodeAttribute;
     private GetOperation getter;
     private SetOperation setter;
+    private boolean required = false;
 
     public NodeLogicParameterImpl(Object node, PropertyDescriptor desc)
     {
@@ -54,6 +57,13 @@ public class NodeLogicParameterImpl implements NodeLogicParameter
         propertyDescriptor = desc;
         getter = operationCompiler.compileGetOperation(node.getClass(), name);
         setter = operationCompiler.compileSetOperation(node.getClass(), name);
+        
+        for (Annotation ann: propertyDescriptor.getAnnotations())
+            if (ann instanceof NotNull)
+            {
+                required = true;
+                break;
+            }
     }
 
     public String getName()
@@ -74,6 +84,11 @@ public class NodeLogicParameterImpl implements NodeLogicParameter
     public Class getType()
     {
         return propertyDescriptor.getType();
+    }
+
+    public boolean isRequired()
+    {
+        return required;
     }
 
     public Object getValue()

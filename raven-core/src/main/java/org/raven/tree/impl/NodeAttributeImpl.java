@@ -42,6 +42,7 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable
     private String parentAttribute;
     private Class type;
     private String value;
+    private boolean required;
     
     private BaseNode owner;
     private NodeLogicParameter parameter;
@@ -86,6 +87,19 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable
     public String getDescription()
     {
         return description;
+    }
+
+    public boolean isRequired()
+    {
+        if (parameter==null)
+            return required;
+        else
+            return parameter.isRequired();
+    }
+
+    public void setRequired(boolean required)
+    {
+        this.required = required;
     }
 
     public <T> T getRealValue()

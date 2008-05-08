@@ -37,6 +37,8 @@ import org.raven.tree.store.TreeStoreError;
  *
  * @author Mikhail Titov
  */
+//TODO: add required property to NodeAttribute functionality
+//TODO: add autoStart to the Node functionality
 public class H2TreeStore implements TreeStore
 {
     public static final int GET_NODES_FETCH_SIZE = 1000;
