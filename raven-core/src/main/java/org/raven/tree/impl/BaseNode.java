@@ -25,8 +25,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -48,7 +46,7 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
-public class BaseNode<T extends NodeLogic> implements Node<T>
+public class BaseNode implements Node
 {
     @Service
     private ClassDescriptorRegistry descriptorRegistry;
@@ -303,18 +301,26 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
      * @param attributeName the name of the attribute
      * @return
      */
-    String getParentNodeAttributeValue(String attributeName)
+    public String getParentAttributeValue(String attributeName)
     {
         Node node = this;
         while ( (node=node.getParent())!=null )
         {
             NodeAttribute attr = node.getNodeAttribute(attributeName);
             if (attr!=null)
-            {
-                String val = attr.getValue();
-                if (val!=null)
-                    return val;
-            }
+                return attr.getValue();
+        }
+        return null;
+    }
+
+    public <T> T getParentAttributeRealValue(String attributeName)
+    {
+        Node node = this;
+        while ( (node=node.getParent())!=null )
+        {
+            NodeAttribute attr = node.getNodeAttribute(attributeName);
+            if (attr!=null)
+                return attr.getRealValue();
         }
         return null;
     }
@@ -380,6 +386,8 @@ public class BaseNode<T extends NodeLogic> implements Node<T>
         attr.setParameterName(param.getName());
         attr.setParameter(param);
         attr.setDescription(param.getDescription());
+        //TODO: убрать
+        
         attr.setValue(converter.convert(String.class, param.getValue(), param.getPattern()));
         attr.setType(param.getType());
 

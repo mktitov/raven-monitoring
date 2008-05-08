@@ -15,16 +15,27 @@
  *  under the License.
  */
 
-package org.raven;
+package org.raven.tree.impl.objects;
+
+import org.raven.annotations.Parameter;
+import org.raven.tree.impl.ContainerNode;
 
 /**
- *
+ * 
  * @author Mikhail Titov
  */
-public interface Id 
+public class NodeWithParameter2 extends ContainerNode 
 {
-    /**
-     * Returns the unique id of the object.
-     */
-    public int getId();
+    @Parameter
+    private String parameter;
+
+    public String getParameter()
+    {
+        return parameter;
+    }
+
+    public void setParameter(String parameter)
+    {
+        this.parameter = parameter;
+    }
 }

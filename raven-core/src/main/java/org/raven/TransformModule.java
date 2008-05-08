@@ -15,26 +15,23 @@
  *  under the License.
  */
 
-package org.raven.sched;
+package org.raven;
 
-import org.raven.Id;
+import org.apache.tapestry.ioc.MappedConfiguration;
+import org.raven.annotations.Parameter;
+import org.raven.tree.impl.ParameterFieldTransformerWorker;
+import org.weda.internal.TransformWorker;
+import org.weda.internal.annotations.WedaPluginModule;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface Job extends Runnable, Id
+//@WedaPluginModule
+public class TransformModule 
 {
-    /**
-     * Returns the next exucution time.
-     */
-    public long getNextTime();
-    /**
-     * Returns <code>true</code> if the job is currently executing.
-     */
-    public boolean isRunning();
-    /**
-     * Sets the running flag.
-     */
-    public void setRunning(boolean running);
+    public static void contributeClassTransformer(MappedConfiguration<Class, TransformWorker> conf)
+    {
+        conf.add(Parameter.class, new ParameterFieldTransformerWorker());
+    }
 }

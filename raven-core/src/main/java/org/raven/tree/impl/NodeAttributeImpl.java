@@ -23,6 +23,8 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeLogicParameter;
 import org.weda.beans.ObjectUtils;
 import org.weda.constraints.ConstraintException;
+import org.weda.internal.annotations.Service;
+import org.weda.services.TypeConverter;
 
 /**
  *
@@ -30,6 +32,9 @@ import org.weda.constraints.ConstraintException;
  */
 public class NodeAttributeImpl implements NodeAttribute, Cloneable
 {
+    @Service
+    private TypeConverter converter;
+    
     private int id;
     private String name;
     private String parameterName;
@@ -40,6 +45,18 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable
     
     private BaseNode owner;
     private NodeLogicParameter parameter;
+
+    public NodeAttributeImpl()
+    {
+    }
+
+    public NodeAttributeImpl(String name, Class type, Object value, String description)
+    {
+        this.name = name;
+        this.description = description;
+        this.type = type;
+        this.value = converter.convert(String.class, value, null);
+    }
 
     public int getId()
     {
@@ -71,9 +88,27 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable
         return description;
     }
 
+    public <T> T getRealValue()
+    {
+        if (parameter!=null)
+        {
+            return (T)parameter.getValue();
+        }
+        else
+        {
+            if (value==null)
+                return owner.getParentAttributeRealValue(name);
+            else
+                return (T) converter.convert(type, value, null);
+        }
+    }
+
     public String getValue()
     {
-        return value;
+        if (value!=null)
+            return value;
+        else
+            return owner.getParentAttributeValue(name);
     }
 
     public Class getType() 

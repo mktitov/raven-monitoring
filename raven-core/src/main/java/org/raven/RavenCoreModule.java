@@ -20,7 +20,6 @@ import java.util.Map;
 import org.apache.tapestry.ioc.Configuration;
 import org.apache.tapestry.ioc.MappedConfiguration;
 import org.apache.tapestry.ioc.ServiceBinder;
-import org.apache.tapestry.ioc.annotations.EagerLoad;
 import org.raven.conf.Configurator;
 import org.raven.conf.impl.ConfiguratorImpl;
 import org.raven.impl.NodeToStringConverter;

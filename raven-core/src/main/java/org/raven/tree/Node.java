@@ -25,7 +25,7 @@ import java.util.Set;
  * 
  * @author Mikhail Titov
  */
-public interface Node<T extends NodeLogic>
+public interface Node
 {
     /**
      * The separator char between nodes names in the path
@@ -137,4 +137,20 @@ public interface Node<T extends NodeLogic>
      * If method returns <code>true</code> then node permits read only operations.
      */
     public boolean isReadOnly();
+    /**
+     * Method returns the first not null value of the attribute, with name passed in the 
+     * <code>attributeName</code> parameter, of the nearest parent or null if parents does not
+     * contains the attribute with name passed in the parameter.
+     * @param attributeName the name of the attribute
+     */
+    public String getParentAttributeValue(String attributeName);
+    /**
+     * Method returns the first not null real value (the value of the 
+     * {@link NodeAttribute#getType() attribute type}) 
+     * of the attribute, with name passed in the 
+     * <code>attributeName</code> parameter, of the nearest parent or null if parents does not
+     * contains the attribute with name passed in the parameter.
+     * @param attributeName the name of the attribute
+     */
+    public <T> T getParentAttributeRealValue(String attributeName);
 }

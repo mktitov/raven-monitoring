@@ -17,34 +17,47 @@
 
 package org.raven.ds.impl;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
 import org.raven.tree.impl.ContainerNode;
+import org.raven.tree.impl.NodeAttributeImpl;
 import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class AbstractDataSource extends ContainerNode implements DataSource
+public abstract class AbstractDataSource extends ContainerNode implements DataSource
 {
     @Parameter @Description("Sets the core number of threads")
     private int corePoolSize = 3;
     @Parameter @Description("Sets the maximum allowed number of threads")
     private int maximumPoolSize = 6;
     
-    private ScheduledExecutorService executorService;
+    private ScheduledThreadPoolExecutor executorService = null;
+    private Collection<NodeAttribute> consumerAttributes = new ArrayList<NodeAttribute>();
 
     @Override
     public void init() throws NodeError
     {
         super.init();
         
-        executorService = Executors.newScheduledThreadPool(corePoolSize);
+        consumerAttributes.add(
+                new NodeAttributeImpl("interval", Integer.class, "the period between executions"));
+        consumerAttributes.add(
+                new NodeAttributeImpl(
+                    "intervalUnit", String.class, "the time unit of the intervale attribute"));
+        
+        executorService = 
+                (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(corePoolSize);
+        executorService.setMaximumPoolSize(maximumPoolSize);
     }
 
     public void addDataConsumer(DataConsumer dataConsumer)
@@ -57,11 +70,6 @@ public class AbstractDataSource extends ContainerNode implements DataSource
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public void getDataImmediate(DataConsumer dataConsumer)
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
     public int getCorePoolSize()
     {
         return corePoolSize;
@@ -70,6 +78,8 @@ public class AbstractDataSource extends ContainerNode implements DataSource
     public void setCorePoolSize(int corePoolSize)
     {
         this.corePoolSize = corePoolSize;
+        if (executorService!=null)
+            executorService.setCorePoolSize(corePoolSize);
     }
 
     public int getMaximumPoolSize()
@@ -80,6 +90,24 @@ public class AbstractDataSource extends ContainerNode implements DataSource
     public void setMaximumPoolSize(int maximumPoolSize)
     {
         this.maximumPoolSize = maximumPoolSize;
+        if (executorService!=null)
+            executorService.setMaximumPoolSize(maximumPoolSize);
+    }
+    
+    private class Task implements Runnable
+    {
+        private final DataConsumer dataConsumer;
+
+        public Task(DataConsumer dataConsumer)
+        {
+            this.dataConsumer = dataConsumer;
+        }
+
+        public void run()
+        {
+            getDataImmediate(dataConsumer);
+        }
+        
     }
 
 }

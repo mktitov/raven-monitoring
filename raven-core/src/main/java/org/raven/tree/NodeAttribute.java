@@ -55,7 +55,35 @@ public interface NodeAttribute extends Cloneable
      */
     public String getDescription();
     /**
-     * Return the value of the attribute.
+     * If returns <code>true</code> 
+     */
+    public boolean isRequired();
+    /**
+     * Method returns:
+     * <ul>
+     *  <li>The value of the attribute converted to the {@link #getType() attribute type}. 
+     *      If the attribute is linked with {@link #getParameterName() node parameter} 
+     *      then the value is the parameter value.
+     *  <li>If the value is null then the real value of the attribute with the same name 
+     *      of the nearest parent node.
+     *  </li>
+     *  <li>Otherwise the method returns null.
+     * </ul>
+     * @see Node#getParentAttributeRealValue(java.lang.String) 
+     */
+    public <T> T getRealValue();
+    /**
+     * Method returns:
+     * <ul>
+     *  <li>The value of the attribute. If the attribute is linked with 
+     *      {@link #getParameterName() node parameter} then the value is the parameter value
+     *      converted to string.
+     *  <li>If the value is null then the value of the attribute with the same name of the nearest
+     *      parent node.
+     *  </li>
+     *  <li>Otherwise the method returns null.
+     * </ul>
+     * @see Node#getParentAttributeValue(java.lang.String) 
      */
     public String getValue();
     /**
