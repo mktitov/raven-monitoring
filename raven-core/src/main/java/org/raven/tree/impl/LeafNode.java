@@ -15,13 +15,22 @@
  *  under the License.
  */
 
-package org.raven.ds;
+package org.raven.tree.impl;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class AbstractDataSource 
+public class LeafNode extends BaseNode
 {
+    public LeafNode()
+    {
+        super(null, false, false);
+    }
 
+    public LeafNode(String name)
+    {
+        super(null, false, false);
+        setName(name);
+    }
 }

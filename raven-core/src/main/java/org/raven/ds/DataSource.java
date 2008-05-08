@@ -25,7 +25,16 @@ import org.raven.tree.Node;
  */
 public interface DataSource extends Node
 {
+    /**
+     * Adds data consumer to the data store.
+     */
     public void addDataConsumer(DataConsumer dataConsumer);
+    /**
+     * Removes data consumer from data store.
+     */
     public void removeDataConsumer(DataConsumer dataConsumer);
-    
+    /**
+     * Immediate gathers data for data consumer.
+     */
+    public void getDataImmediate(DataConsumer dataConsumer);
 }
