@@ -20,7 +20,7 @@ package org.raven.tree.impl;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
-import org.raven.tree.NodeLogicParameter;
+import org.raven.tree.NodeParameter;
 import org.weda.beans.ObjectUtils;
 import org.weda.constraints.ConstraintException;
 import org.weda.internal.annotations.Service;
@@ -45,7 +45,7 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable
     private boolean required;
     
     private BaseNode owner;
-    private NodeLogicParameter parameter;
+    private NodeParameter parameter;
 
     public NodeAttributeImpl()
     {
@@ -69,7 +69,7 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable
         this.id = id;
     }
 
-    public void setParameter(NodeLogicParameter parameter)
+    public void setParameter(NodeParameter parameter)
     {
         this.parameter = parameter;
     }

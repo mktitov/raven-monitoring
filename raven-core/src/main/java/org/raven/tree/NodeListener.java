@@ -15,27 +15,20 @@
  *  under the License.
  */
 
-package org.raven.ds;
-
-import org.raven.tree.AttributesGenerator;
-import org.raven.tree.Node;
+package org.raven.tree;
 
 /**
- *
+ * The {@link Node} listener.
+ * 
  * @author Mikhail Titov
  */
-public interface DataSource extends Node, AttributesGenerator
+public interface NodeListener 
 {
     /**
-     * Adds data consumer to the data store.
+     * Informs listener that status of the node changed.
+     * @param node the node which status was changed.
+     * @param oldStatus the old status of the node.
+     * @param newStatus the new status of the node.
      */
-    public void addDataConsumer(DataConsumer dataConsumer);
-    /**
-     * Removes data consumer from data store.
-     */
-    public void removeDataConsumer(DataConsumer dataConsumer);
-    /**
-     * Immediate gathers data for data consumer.
-     */
-    public void getDataImmediate(DataConsumer dataConsumer);
+    public void statusChanged(Node node, Node.Status oldStatus, Node.Status newStatus);
 }

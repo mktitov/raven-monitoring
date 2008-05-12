@@ -19,7 +19,7 @@ package org.raven.tree.impl;
 
 import java.lang.annotation.Annotation;
 import org.raven.tree.NodeAttribute;
-import org.raven.tree.NodeLogicParameter;
+import org.raven.tree.NodeParameter;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.beans.GetOperation;
 import org.weda.beans.PropertyDescriptor;
@@ -33,7 +33,7 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
-public class NodeLogicParameterImpl implements NodeLogicParameter
+public class NodeParameterImpl implements NodeParameter
 {
     @Service
     private PropertyOperationCompiler operationCompiler;
@@ -49,7 +49,7 @@ public class NodeLogicParameterImpl implements NodeLogicParameter
     private SetOperation setter;
     private boolean required = false;
 
-    public NodeLogicParameterImpl(Object node, PropertyDescriptor desc)
+    public NodeParameterImpl(Object node, PropertyDescriptor desc)
     {
         this.node = node;
         this.name = desc.getName();

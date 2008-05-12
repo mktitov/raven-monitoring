@@ -19,6 +19,7 @@ package org.raven.ds.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -27,8 +28,12 @@ import java.util.concurrent.TimeUnit;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
+import org.raven.tree.AttributesGenerator;
+import org.raven.tree.Node;
+import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
+import org.raven.tree.NodeListener;
 import org.raven.tree.NodeShutdownError;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeAttributeImpl;
@@ -38,8 +43,8 @@ import org.weda.annotations.Description;
  *
  * @author Mikhail Titov
  */
-public abstract class AbstractDataSource 
-        extends ContainerNode implements DataSource, RejectedExecutionHandler
+public abstract class AbstractDataSource
+        extends ContainerNode implements DataSource, RejectedExecutionHandler, NodeListener
 {
     public static final String INTERVAL_ATTRIBUTE = "interval";
     public static final String INTERVAL_UNIT_ATTRIBUTE = "intervalUnit";
@@ -50,11 +55,13 @@ public abstract class AbstractDataSource
     
     private ScheduledThreadPoolExecutor executorService = null;
     private Collection<NodeAttribute> consumerAttributes = new ArrayList<NodeAttribute>();
+    private List<Node> nodesNotAddedToExecutor;
 
     @Override
-    public void init() throws NodeError
+    public boolean start() throws NodeError
     {
-        super.init();
+        if (!super.start())
+            return false;
         
         consumerAttributes.add(
                 new NodeAttributeImpl(
@@ -68,6 +75,41 @@ public abstract class AbstractDataSource
                 (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(corePoolSize);
         executorService.setMaximumPoolSize(maximumPoolSize);
         executorService.setRejectedExecutionHandler(this);
+        
+        if (nodesNotAddedToExecutor!=null)
+        {
+            for (Node node: nodesNotAddedToExecutor)
+                addDataConsumer((DataConsumer) node);
+            nodesNotAddedToExecutor = null;
+        }
+        
+        return true;
+    }
+
+    @Override
+    public boolean addDependentNode(Node dependentNode)
+    {
+        boolean nodeAdded = super.addDependentNode(dependentNode);
+        if (nodeAdded)
+        {
+            if (dependentNode instanceof DataConsumer)
+            {
+                //TODO: add node listener to dependent node
+                dependentNode.addListener(this);
+                if ( getStatus()==Status.STARTED && dependentNode.getStatus()==Status.STARTED)
+                {
+                    addDataConsumer((DataConsumer)dependentNode);
+                }
+                if (getStatus()!=Status.STARTED)
+                {
+                    if (nodesNotAddedToExecutor==null)
+                        nodesNotAddedToExecutor = new ArrayList<Node>();
+                    nodesNotAddedToExecutor.add(dependentNode);
+                }
+            }
+        }
+        
+        return nodeAdded;
     }
 
     @Override
@@ -83,6 +125,11 @@ public abstract class AbstractDataSource
         TimeUnit unit = dataConsumer.getNodeAttribute(INTERVAL_UNIT_ATTRIBUTE).getRealValue();
         
         executorService.scheduleAtFixedRate(new Task(dataConsumer), 0, interval, unit);
+    }
+
+    public NodeAttribute[] generateAttributes()
+    {
+        return (NodeAttribute[]) consumerAttributes.toArray();
     }
 
     public void removeDataConsumer(DataConsumer dataConsumer)
@@ -117,6 +164,14 @@ public abstract class AbstractDataSource
     public void rejectedExecution(Runnable r, ThreadPoolExecutor executor)
     {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void statusChanged(Node node, Status oldStatus, Status newStatus)
+    {
+        if (newStatus==Status.STARTED)
+            addDataConsumer((DataConsumer) node);
+        else
+            removeDataConsumer((DataConsumer) node);
     }
     
     private class Task implements Runnable

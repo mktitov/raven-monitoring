@@ -28,7 +28,7 @@ import org.weda.constraints.ConstraintException;
  * 
  * @author Mikhail Titov
  */
-public interface NodeLogicParameter 
+public interface NodeParameter 
 {
     /**
      * Returns the parameter name (the node logic class property name).

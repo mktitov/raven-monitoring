@@ -18,6 +18,7 @@
 package org.raven.tree.impl;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,12 +30,14 @@ import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
-import org.raven.tree.NodeLogic;
-import org.raven.tree.NodeLogicParameter;
+import org.raven.tree.NodeParameter;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
+import org.raven.tree.NodeListener;
 import org.raven.tree.NodeShutdownError;
 import org.raven.tree.store.TreeStoreError;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.weda.beans.ClassDescriptor;
 import org.weda.beans.PropertyDescriptor;
 import org.weda.constraints.ConstraintException;
@@ -48,6 +51,8 @@ import org.weda.services.TypeConverter;
  */
 public class BaseNode implements Node
 {
+    protected Logger logger = LoggerFactory.getLogger(Node.class);
+    
     @Service
     private ClassDescriptorRegistry descriptorRegistry;
     @Service
@@ -68,12 +73,14 @@ public class BaseNode implements Node
     private Map<String, Node> childrens;
     private Map<String, NodeAttribute> nodeAttributes;
     private Set<Node> dependentNodes;
+    private Collection<NodeListener>  listeners;
     
     private boolean initialized = false;
     private boolean started = false;
     private boolean autoStart = true;
+    private Status status = Status.CREATED;
     
-    private Map<String, NodeLogicParameter> parameters;
+    private Map<String, NodeParameter> parameters;
 
     public BaseNode(Class[] childNodeTypes, boolean container, boolean readOnly)
     {
@@ -92,6 +99,19 @@ public class BaseNode implements Node
         this.id = id;
     }
 
+    public Status getStatus()
+    {
+        return status;
+    }
+
+    public synchronized void addListener(NodeListener listener)
+    {
+        if (listeners==null)
+            listeners = new ArrayList<NodeListener>();
+        
+        listeners.add(listener);
+    }
+
     public void addChildren(Node node)
     {
         if (childrens==null)
@@ -102,12 +122,12 @@ public class BaseNode implements Node
         childrens.put(node.getName(), node);
     }
 
-    public void addDependentNode(Node dependentNode)
+    public boolean addDependentNode(Node dependentNode)
     {
         if (dependentNodes==null)
             dependentNodes = new HashSet<Node>();
         
-        dependentNodes.add(dependentNode);
+        return dependentNodes.add(dependentNode);
     }
 
     public void addNodeAttribute(NodeAttribute attr)
@@ -200,6 +220,11 @@ public class BaseNode implements Node
     {
         return initialized;
     }
+
+    public boolean isAutoStart()
+    {
+        return autoStart;
+    }
     
     public void init() throws NodeError
     {
@@ -230,15 +255,16 @@ public class BaseNode implements Node
             syncAttributesAndParameters();
             
             initialized = true;
+            Status oldStatus = status;
+            status = Status.INITIALIZED;
+            
+            fireStatusChanged(oldStatus, status);
             
             if (dependentNodes != null)
                 for (Node node : dependentNodes)
                     if (!node.isInitialized())
                         node.init();
-                
-            if (autoStart)
-                start();
-                
+                                
         } catch (Exception e)
         {
             throw new NodeError(
@@ -247,15 +273,24 @@ public class BaseNode implements Node
         }
     }
 
-    public void start() throws NodeError
+    public boolean start() throws NodeError
     {
-        //TODO: check that all required attributes values are seted.
         if (nodeAttributes!=null)
             for (NodeAttribute attr: nodeAttributes.values())
                 if (attr.isRequired() && attr.getValue()==null)
-                    throw new NodeError(String.format(
-                            "The value of the required attribute (%s) not setted", attr.getName()));
-        started = true;
+                {
+                    logger.info(
+                            "Error switching node (%s) to the STARTED state. " +
+                            "Value for required attribute (%s) not seted "
+                            , getPath(), attr.getName());
+                    return false;
+                }
+        Status oldStatus = status;
+        status = Status.STARTED;
+        
+        fireStatusChanged(oldStatus, status);
+        
+        return true;
     }
 
     public void stop() throws NodeError
@@ -357,15 +392,22 @@ public class BaseNode implements Node
                 for (Annotation ann: desc.getAnnotations())
                     if (ann instanceof Parameter)
                     {
-                        NodeLogicParameter param = new NodeLogicParameterImpl(this, desc);
+                        NodeParameter param = new NodeParameterImpl(this, desc);
                         
                         if (parameters==null)
-                            parameters = new HashMap<String, NodeLogicParameter>();
+                            parameters = new HashMap<String, NodeParameter>();
                         
                         parameters.put(desc.getName(), param);
                         
                         break;
                     }
+    }
+
+    private synchronized void fireStatusChanged(Status oldStatus, Status status)
+    {
+        if (listeners!=null)
+            for (NodeListener listener: listeners)
+                listener.statusChanged(this, oldStatus, status);
     }
 
     private void syncAttributesAndParameters() throws ConstraintException, TreeStoreError
@@ -378,7 +420,7 @@ public class BaseNode implements Node
                 NodeAttribute attr = it.next().getValue();
                 if (attr.getParameterName()!=null)
                 {
-                    NodeLogicParameter param = 
+                    NodeParameter param = 
                             parameters==null? null : parameters.get(attr.getParameterName());
                     if (param==null)
                         it.remove();
@@ -392,13 +434,15 @@ public class BaseNode implements Node
         }
         if (parameters != null)
         {
-            for (NodeLogicParameter param: parameters.values())
+            for (NodeParameter param: parameters.values())
                 if (param.getNodeAttribute()==null)
                     createNodeAttribute(param);
         }
     }
     
-    private void createNodeAttribute(NodeLogicParameter param) 
+//    private void syncParameterWithAttribute()
+    
+    private void createNodeAttribute(NodeParameter param) 
         throws TreeStoreError, ConstraintException
     {
         NodeAttributeImpl attr = new NodeAttributeImpl();
@@ -443,5 +487,4 @@ public class BaseNode implements Node
         hash = 13 * hash + (int) (this.id ^ (this.id >>> 32));
         return hash;
     }
-
 }

@@ -124,6 +124,8 @@ public class TreeImpl implements Tree
     private void initNode(Node node)
     {
         node.init();
+        if (node.isAutoStart())
+            node.start();
         if (node.getChildrens()!=null)
         {
             Iterator<Node> it = node.getChildrens().iterator();

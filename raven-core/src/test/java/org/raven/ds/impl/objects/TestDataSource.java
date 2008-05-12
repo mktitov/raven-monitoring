@@ -15,27 +15,22 @@
  *  under the License.
  */
 
-package org.raven.ds;
+package org.raven.ds.impl.objects;
 
-import org.raven.tree.AttributesGenerator;
-import org.raven.tree.Node;
+import org.raven.ds.DataConsumer;
+import org.raven.ds.impl.AbstractDataSource;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataSource extends Node, AttributesGenerator
+public class TestDataSource extends AbstractDataSource
 {
-    /**
-     * Adds data consumer to the data store.
-     */
-    public void addDataConsumer(DataConsumer dataConsumer);
-    /**
-     * Removes data consumer from data store.
-     */
-    public void removeDataConsumer(DataConsumer dataConsumer);
-    /**
-     * Immediate gathers data for data consumer.
-     */
-    public void getDataImmediate(DataConsumer dataConsumer);
+    public int executionCount = 0;
+
+    public void getDataImmediate(DataConsumer dataConsumer)
+    {
+        executionCount++;
+    }
+    
 }

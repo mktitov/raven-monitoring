@@ -29,6 +29,7 @@ import java.util.Set;
  *      with the node.</li>
  *  <li><i>initialization</i> ({@link #init()}). At the end of this phase 
  *      <ul>
+ *          <li>the node status is {@link Status#INITIALIZED}</li>
  *          <li>all nodes from which this node is depend on were initialized.
  *          <li>node parameters extracted from the node class</li>
  *          <li>parameter values were seted from corresponding attribues values</li>
@@ -39,6 +40,7 @@ import java.util.Set;
  *  </li>
  *  <li><i>logic execution</i> ({@link #start()}). 
  *      <ul>
+ *          <li>the node status is {@link Status#STARTED}</li>
  *          <li>Node going to this phase automaticaly if the 
  *          <li><font color="red">The node can not enter to this phase 
  *              until values of all {@link NodeAttribute#isRequired() required} attributes 
@@ -50,14 +52,16 @@ import java.util.Set;
  *          
  *      </ul>
  *  </li>
- *  <li>logic stoping ({@link #stop()}</li>
+ *  <li><i>logic stoping</i> ({@link #stop()}. Node status is {@link Status#INITIALIZED}</li>
  *  <li>node shutdown ({@link #shutdown()})</li>
  * </ul>
  * 
  * @author Mikhail Titov
  */
+//TODO: add listener functionality
 public interface Node
 {
+    public enum Status {CREATED, INITIALIZED, STARTED}
     /**
      * The separator char between nodes names in the path
      * @see #getPath() 
@@ -71,6 +75,12 @@ public interface Node
      * Sets the node id.
      */
     public void setId(int id);
+    /**
+     * Returns the current node status. 
+     * 
+     * @return
+     */
+    public Status getStatus();
     /**
      * Returns the node level in the tree. Level 0 is a root node.
      */
@@ -115,6 +125,10 @@ public interface Node
      */
     public Node getChildren(String name);
     /**
+     * Adds listener to the node.
+     */
+    public void addListener(NodeListener listener);
+    /**
      * Returns the array of nodes types that can belong to this node type. If method returns null
      * then this node can hold any node type.
      * 
@@ -143,6 +157,11 @@ public interface Node
      */
     public NodeAttribute getNodeAttribute(String name);
     /**
+     * If method returns <code>true</code> then the method {@link #start()} will executed 
+     * automaticaly after {@link #init()} method.
+     */
+    public boolean isAutoStart();
+    /**
      * Initializing the node.
      */
     public void init() throws NodeError;
@@ -155,8 +174,13 @@ public interface Node
      * Starts the node. This method automaticaly calling after {@link #init() node initialization}
      * if the {@link #isAutoStart autoStart} property is setted to <code>true</code>
      * @throws org.raven.tree.NodeError
+     * @return <code>true</code> if node successfully started
      */
-    public void start() throws NodeError;
+    public boolean start() throws NodeError;
+    /**
+     * Stops the node. The status after this operation switching to {@link Status#INITIALIZED}.
+     * @throws org.raven.tree.NodeError
+     */
     public void stop() throws NodeError;
     /**
      * Returns true if node was initialized (method {@link #init()} successfuly executed).
@@ -165,8 +189,14 @@ public interface Node
     /**
      * This node calls method {@link Node#init() dependentNode.init} after self initialization.
      * @param dependentNode the node that must be initialized after this node.
+     * @return <code>true</code> if node successfully added. <code>False</code> if node already
+     *        in dependents list
      */
-    public void addDependentNode(Node dependentNode);
+    public boolean addDependentNode(Node dependentNode);
+    /**
+     * Removes node from the dependency list of this node.
+     */
+    public void removeDependentNode(Node dependentNode);
     /**
      * Returns the collection of dependent nodes or null if no nodes dependent on this.
      */
