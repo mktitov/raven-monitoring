@@ -26,11 +26,9 @@ import org.raven.ds.impl.AbstractDataSource;
  */
 public class TestDataSource extends AbstractDataSource
 {
-    public int executionCount = 0;
-
     public void getDataImmediate(DataConsumer dataConsumer)
     {
-        executionCount++;
+        dataConsumer.setData(null);
     }
     
 }

@@ -50,7 +50,7 @@ public class AbstractDataSourceTest extends ServiceTestCase
     }
     
     @Test
-    public void test() throws ConstraintException
+    public void test() throws ConstraintException, InterruptedException
     {
         Tree tree = registry.getService(Tree.class);
         Configurator configurator = registry.getService(Configurator.class);
@@ -75,6 +75,31 @@ public class AbstractDataSourceTest extends ServiceTestCase
         dataConsumer.getNodeAttribute("interval").setValue("2");
         dataConsumer.getNodeAttribute("intervalUnit").setValue(TimeUnit.SECONDS.toString());
         
+        dataConsumer.start();
         
+        dataSource.start();
+        //
+        TimeUnit.SECONDS.sleep(3);
+        dataSource.stop();
+        
+        assertEquals(2, dataConsumer.getExecutionCount());
+        
+        TimeUnit.SECONDS.sleep(2);
+        assertEquals(2, dataConsumer.getExecutionCount());
+
+        //
+        dataSource.start();
+        TimeUnit.SECONDS.sleep(3);
+        dataSource.stop();
+        
+        assertEquals(4, dataConsumer.getExecutionCount());
+        
+        //
+        dataConsumer.shutdown();
+        dataSource.start();
+        TimeUnit.SECONDS.sleep(3);
+        dataSource.stop();
+        
+        assertEquals(4, dataConsumer.getExecutionCount());
     }
 }

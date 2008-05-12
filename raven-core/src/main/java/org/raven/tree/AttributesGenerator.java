@@ -17,6 +17,8 @@
 
 package org.raven.tree;
 
+import java.util.Collection;
+
 /**
  * 
  * @author Mikhail Titov
@@ -33,5 +35,5 @@ public interface AttributesGenerator
      * @see NodeAttribute#getParentAttribute() 
      */
 //    public void generateAttributes(Node owner, String parentAttribute);
-    public NodeAttribute[] generateAttributes();
+    public Collection<NodeAttribute> generateAttributes();
 }

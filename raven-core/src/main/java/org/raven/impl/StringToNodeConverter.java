@@ -28,15 +28,12 @@ import org.weda.converter.impl.AbstractConverter;
  */
 public class StringToNodeConverter extends AbstractConverter<String, Node>
 {
-//    @Service
-//    private Tree tree;
-
     public StringToNodeConverter()
     {
         super(true);
     }
 
-    public Node convert(String value, String format)
+    public Node convert(String value, Class targetType, String format)
     {
         return TreeImpl.INSTANCE.getNode(value);
     }
@@ -50,5 +47,4 @@ public class StringToNodeConverter extends AbstractConverter<String, Node>
     {
         return Node.class;
     }
-    
 }

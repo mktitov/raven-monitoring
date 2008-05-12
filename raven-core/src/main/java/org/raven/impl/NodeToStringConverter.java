@@ -27,7 +27,7 @@ import org.weda.converter.impl.AbstractConverter;
  */
 public class NodeToStringConverter extends AbstractConverter<Node, String>
 {
-    public String convert(Node value, String format)
+    public String convert(Node value, Class targetType, String format)
     {
         return value.getPath();
     }

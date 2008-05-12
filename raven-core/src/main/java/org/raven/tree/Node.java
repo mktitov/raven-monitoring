@@ -166,6 +166,10 @@ public interface Node
      */
     public void init() throws NodeError;
     /**
+     * This method is calling when node {@link Tree#remove(org.raven.tree.Node) is removing} 
+     * from the tree. Method calls {@link #stop()} method if the node status is 
+     * {@link Status#STARTED} and remove any dependencies from the nodes from which this node is
+     * depend on. The node must not be used after this operation.
      * Shutdowns only this node. 
      * @throws org.raven.tree.NodeShutdownError
      */
@@ -183,10 +187,6 @@ public interface Node
      */
     public void stop() throws NodeError;
     /**
-     * Returns true if node was initialized (method {@link #init()} successfuly executed).
-     */
-    public boolean isInitialized();
-    /**
      * This node calls method {@link Node#init() dependentNode.init} after self initialization.
      * @param dependentNode the node that must be initialized after this node.
      * @return <code>true</code> if node successfully added. <code>False</code> if node already
@@ -195,8 +195,9 @@ public interface Node
     public boolean addDependentNode(Node dependentNode);
     /**
      * Removes node from the dependency list of this node.
+     * @return <code>true</code> if node successfully removed.
      */
-    public void removeDependentNode(Node dependentNode);
+    public boolean removeDependentNode(Node dependentNode);
     /**
      * Returns the collection of dependent nodes or null if no nodes dependent on this.
      */

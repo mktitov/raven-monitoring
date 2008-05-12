@@ -17,10 +17,10 @@
 
 package org.raven.ds.impl.objects;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
-import org.raven.tree.NodeError;
 import org.raven.tree.impl.LeafNode;
 import org.weda.annotations.constraints.NotNull;
 
@@ -33,15 +33,17 @@ public class TestDataConsumer extends LeafNode implements DataConsumer
     @Parameter @NotNull
     private DataSource ds;
 
-    @Override
-    public void start() throws NodeError
+    public AtomicInteger executionCount = new AtomicInteger();
+
+    public int getExecutionCount()
     {
-        super.start();
-        ds.addDataConsumer(this);
+        return executionCount.intValue();
     }
+    
     
     public void setData(Object data)
     {
+        executionCount.incrementAndGet();
     }
 
     public DataSource getDs()

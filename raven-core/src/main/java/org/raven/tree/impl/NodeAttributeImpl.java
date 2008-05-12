@@ -19,6 +19,7 @@ package org.raven.tree.impl;
 
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
+import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeParameter;
 import org.weda.beans.ObjectUtils;
@@ -174,14 +175,15 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable
     {
         if (!ObjectUtils.equals(this.value, value))
         {
+            String oldValue = this.value;
             this.value = value;
             
-            if (owner.isInitialized())
+            if (owner.getStatus()!=Status.CREATED)
             {
                 if (parameter!=null)
                     parameter.setValue(value);
 
-                owner.fireAttributeValueChanged(this);
+                owner.fireAttributeValueChanged(this, oldValue);
             }
         }
     }

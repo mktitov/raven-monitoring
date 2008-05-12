@@ -75,8 +75,6 @@ public class BaseNode implements Node
     private Set<Node> dependentNodes;
     private Collection<NodeListener>  listeners;
     
-    private boolean initialized = false;
-    private boolean started = false;
     private boolean autoStart = true;
     private Status status = Status.CREATED;
     
@@ -112,7 +110,7 @@ public class BaseNode implements Node
         listeners.add(listener);
     }
 
-    public void addChildren(Node node)
+    public synchronized void addChildren(Node node)
     {
         if (childrens==null)
             childrens = new HashMap<String, Node>();
@@ -122,7 +120,7 @@ public class BaseNode implements Node
         childrens.put(node.getName(), node);
     }
 
-    public boolean addDependentNode(Node dependentNode)
+    public synchronized boolean addDependentNode(Node dependentNode)
     {
         if (dependentNodes==null)
             dependentNodes = new HashSet<Node>();
@@ -130,7 +128,12 @@ public class BaseNode implements Node
         return dependentNodes.add(dependentNode);
     }
 
-    public void addNodeAttribute(NodeAttribute attr)
+    public synchronized boolean removeDependentNode(Node dependentNode)
+    {
+        return dependentNodes==null? false : dependentNodes.remove(dependentNode);
+    }
+
+    public synchronized void addNodeAttribute(NodeAttribute attr)
     {
         if (nodeAttributes==null)
             nodeAttributes = new TreeMap<String, NodeAttribute>();
@@ -173,22 +176,22 @@ public class BaseNode implements Node
         return childrens==null? null : childrens.values();
     }
 
-    public Node getChildren(String name)
+    public synchronized Node getChildren(String name)
     {
         return childrens==null? null : childrens.get(name);
     }
 
-    public Collection<NodeAttribute> getNodeAttributes()
+    public synchronized Collection<NodeAttribute> getNodeAttributes()
     {
         return nodeAttributes==null? null : nodeAttributes.values();
     }
 
-    public NodeAttribute getNodeAttribute(String name)
+    public synchronized NodeAttribute getNodeAttribute(String name)
     {
         return nodeAttributes==null? null : nodeAttributes.get(name);
     }
 
-    public Set<Node> getDependentNodes()
+    public synchronized Set<Node> getDependentNodes()
     {
         return dependentNodes;
     }
@@ -216,11 +219,6 @@ public class BaseNode implements Node
         return path.toString();
     }
 
-    public boolean isInitialized()
-    {
-        return initialized;
-    }
-
     public boolean isAutoStart()
     {
         return autoStart;
@@ -239,7 +237,7 @@ public class BaseNode implements Node
                     {
                         Node node = converter.convert(Node.class, attr.getValue(), null);
                         node.addDependentNode(this);
-                        if (!node.isInitialized())
+                        if (node.getStatus()==Status.CREATED)
                         {
                             dependenciesInitialized = false;
                         }
@@ -254,7 +252,6 @@ public class BaseNode implements Node
             extractNodeLogicParameters();
             syncAttributesAndParameters();
             
-            initialized = true;
             Status oldStatus = status;
             status = Status.INITIALIZED;
             
@@ -262,7 +259,7 @@ public class BaseNode implements Node
             
             if (dependentNodes != null)
                 for (Node node : dependentNodes)
-                    if (!node.isInitialized())
+                    if (node.getStatus()==Status.CREATED)
                         node.init();
                                 
         } catch (Exception e)
@@ -293,17 +290,39 @@ public class BaseNode implements Node
         return true;
     }
 
-    public void stop() throws NodeError
+    public synchronized void stop() throws NodeError
     {
-        started = false;
+        status = Status.INITIALIZED;
     }
     
-    public void shutdown() throws NodeShutdownError
+    public synchronized void shutdown() throws NodeShutdownError
     {
+        if (status==Status.STARTED)
+            stop();
+        if (nodeAttributes!=null)
+            for (NodeAttribute attr: nodeAttributes.values())
+                if (attr instanceof Node && attr.getValue()!=null)
+                {
+                    Node node = attr.getRealValue();
+                    node.removeDependentNode(this);
+                }
     }
 
-    void fireAttributeValueChanged(NodeAttributeImpl attr)
+    void fireAttributeValueChanged(NodeAttributeImpl attr, String oldValue)
     {
+        if (Node.class.isAssignableFrom(attr.getType()))
+        {
+            if (oldValue!=null)
+            {
+                Node oldRef = (Node) converter.convert(attr.getType(), oldValue, null);
+                oldRef.removeDependentNode(this);
+            }
+            if (attr.getValue()!=null)
+            {
+                Node node = (Node) converter.convert(attr.getType(), attr.getValue(), null);
+                node.addDependentNode(this);
+            }
+        }
         if (attr.isGeneratorType())
         {
             Iterator<Map.Entry<String, NodeAttribute>> it = nodeAttributes.entrySet().iterator();
@@ -323,7 +342,7 @@ public class BaseNode implements Node
                         (AttributesGenerator) converter.convert(
                             attr.getType(), attr.getValue(), null);
                 
-                NodeAttribute[] newAttrs = attributesGenerator.generateAttributes();
+                Collection<NodeAttribute> newAttrs = attributesGenerator.generateAttributes();
                 if (newAttrs!=null)
                     for (NodeAttribute newAttr: newAttrs)
                     {

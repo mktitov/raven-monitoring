@@ -94,6 +94,7 @@ public class TreeImpl implements Tree
             for (Node children: childrens)
                 remove(children);
     
+        
         node.shutdown();
         
         configurator.getTreeStore().removeNode(node.getId());
@@ -124,7 +125,7 @@ public class TreeImpl implements Tree
     private void initNode(Node node)
     {
         node.init();
-        if (node.isAutoStart())
+        if (node.getStatus()==Node.Status.INITIALIZED && node.isAutoStart())
             node.start();
         if (node.getChildrens()!=null)
         {

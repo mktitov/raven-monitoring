@@ -17,6 +17,8 @@
 
 package org.raven.tree.impl.objects;
 
+import java.util.Arrays;
+import java.util.Collection;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.ContainerNode;
@@ -28,14 +30,10 @@ import org.raven.tree.impl.NodeAttributeImpl;
  */
 public class AttributesGeneratorNode extends ContainerNode implements AttributesGenerator
 {
-
-    public NodeAttribute[] generateAttributes()
+    public Collection<NodeAttribute> generateAttributes()
     {
-        NodeAttributeImpl attr = new NodeAttributeImpl();
-        attr.setName("gAttr");
-        attr.setType(String.class);
+        NodeAttribute attr = new NodeAttributeImpl("gAttr", String.class, null, null);
         
-        return new NodeAttribute[]{attr};
+        return Arrays.asList(attr);
     }
-
 }

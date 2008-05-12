@@ -108,7 +108,7 @@ public class TreeServiceTest extends ServiceTestCase
         BaseNode node = new BaseNode(null, false, false);
         node.init();
         
-        assertTrue(node.isInitialized());
+        assertEquals(Node.Status.INITIALIZED, node.getStatus());
     }
     
     @Test
@@ -122,7 +122,7 @@ public class TreeServiceTest extends ServiceTestCase
         
         node.init();
         
-        assertTrue(node.isInitialized());
+        assertEquals(Node.Status.INITIALIZED, node.getStatus());
     }
     
     @Test
@@ -148,16 +148,16 @@ public class TreeServiceTest extends ServiceTestCase
         assertNotNull(dependentNodes);
         assertEquals(1, dependentNodes.size());
         assertSame(node2, dependentNodes.iterator().next());
-        assertFalse(node2.isInitialized());
+        assertEquals(Node.Status.CREATED, node2.getStatus());
         
         node1.init();
         
-        assertTrue(node1.isInitialized());
-        assertTrue(node2.isInitialized());
+        assertEquals(Node.Status.INITIALIZED, node1.getStatus());
+        assertEquals(Node.Status.INITIALIZED, node2.getStatus());
     }
     
     @Test
-    public void nodeInit_nodeLogic_wParameters() throws ConstraintException 
+    public void nodeInit_node_wParameters() throws ConstraintException 
     {
         //synchronization
         //store
@@ -172,7 +172,7 @@ public class TreeServiceTest extends ServiceTestCase
         
         node.init();
         
-        assertTrue(node.isInitialized());
+        assertEquals(Node.Status.INITIALIZED, node.getStatus());
         assertNotNull(node.getNodeAttributes());
         assertEquals(1, node.getNodeAttributes().size());
         
