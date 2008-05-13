@@ -245,12 +245,14 @@
                 <version>2.5</version>
                 <scope>provided</scope>
             </dependency>
+            <!--
             <dependency>
                 <groupId>opensymphony</groupId>
                 <artifactId>quartz-all</artifactId>
                 <version>1.6.0</version>
                 <scope>compile</scope>
             </dependency>
+            -->
             <dependency>
                 <groupId>com.h2database</groupId>
                 <artifactId>h2</artifactId>
