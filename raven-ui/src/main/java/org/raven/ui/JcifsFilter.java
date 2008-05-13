@@ -35,7 +35,7 @@ public class JcifsFilter extends NtlmHttpFilter {
    
    public static final String[] ravenParams = {	Configurator.WINS_SERVERS,
 	   											Configurator.WIN_DOMAIN,
-	   											Configurator.BIND_NAME,
+	   											Configurator.ACCOUNT_NAME,
 	   											Configurator.BIND_PASSWORD,
 	   											Configurator.DOMAIN_CONTROLLER};
    

@@ -39,6 +39,10 @@ public interface Configurator
 	 */
 	public static final String BIND_NAME = "bindName";
 	/**
+	 * The name of parameter that stores login for bind to domain.  
+	 */
+	public static final String ACCOUNT_NAME = "accountName";
+	/**
 	 * The name of parameter that stores password for bind to LDAP server.  
 	 */
 	public static final String BIND_PASSWORD = "bindPassword";
