@@ -32,7 +32,7 @@ public class AccessControl {
 		if(x.length==2)
 		{
 			resource = x[0];
-			regExp = resource.replaceAll("*", ".*");
+			regExp = resource.replaceAll("\\*", ".*");
 			String tmp = x[1].toLowerCase();
 			if(tmp.length()==0 || tmp.charAt(0)=='n') right = NONE;
 				else if(tmp.charAt(0)=='r') right = READ;

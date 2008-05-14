@@ -33,7 +33,7 @@ implements Comparator<AccessControl>
 	public AccessControlList(String[] acl, int startWith) 
 	{
 		super();
-		for(int i=startWith; i < acl.length-1; i++ )
+		for(int i=startWith; i < acl.length; i++ )
 		{
 			this.add(new AccessControl(acl[i]));
 		}

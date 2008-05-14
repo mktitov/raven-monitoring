@@ -18,6 +18,12 @@ public class GroupsList extends ArrayList<String>
 		created = System.currentTimeMillis();
 	}
 	
+	public boolean add(String grp)
+	{
+		addGroup(grp);
+		return true;
+	}
+	
 	private String pattern = "^CN=(.*),OU=.*"; 
 	public void addGroup(String fullName)
 	{
