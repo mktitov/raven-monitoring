@@ -71,7 +71,7 @@ public class AbstractDataSourceTest extends ServiceTestCase
         
         dataConsumer.init();
         
-        dataConsumer.getNodeAttribute("ds").setValue(dataSource.getPath());
+        dataConsumer.getNodeAttribute("dataSource").setValue(dataSource.getPath());
         dataConsumer.getNodeAttribute("interval").setValue("2");
         dataConsumer.getNodeAttribute("intervalUnit").setValue(TimeUnit.SECONDS.toString());
         

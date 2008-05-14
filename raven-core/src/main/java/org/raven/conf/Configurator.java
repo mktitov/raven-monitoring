@@ -78,6 +78,10 @@ public interface Configurator
      * The name of the h2database tree store engine.
      */
     public static final String H2_TREE_STORE_ENGINE = "h2";
+    /**
+     * 
+     */
+    public static final String RRD_DATABASES_PATH = "rrd.databasesPath";
 	
     /**
      * Returns the tree store.

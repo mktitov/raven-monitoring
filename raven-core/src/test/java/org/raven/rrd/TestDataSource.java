@@ -15,20 +15,21 @@
  *  under the License.
  */
 
-package org.raven.ds;
+package org.raven.rrd;
 
-import org.raven.tree.Node;
+import org.raven.ds.DataConsumer;
+import org.raven.ds.impl.AbstractDataSource;
 
 /**
- * The node that recieves data from the one or more {@link DataSource data sources}
+ *
  * @author Mikhail Titov
  */
-public interface DataConsumer extends Node
+public class TestDataSource extends AbstractDataSource
 {
-    /**
-     * Recieves data from the data source
-     * @param dataSource the data source from which data recieved
-     * @param data the data
-     */
-    public void setData(DataSource dataSource, Object data);
+    private double value = 0.;
+    public void getDataImmediate(DataConsumer dataConsumer)
+    {
+        dataConsumer.setData(this, value++);
+    }
+    
 }

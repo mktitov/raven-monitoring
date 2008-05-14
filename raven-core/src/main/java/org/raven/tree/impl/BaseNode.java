@@ -18,7 +18,6 @@
 package org.raven.tree.impl;
 
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -97,6 +96,17 @@ public class BaseNode implements Node
         this.id = id;
     }
 
+    protected void setStatus(Status status)
+    {
+        if (this.status != status)
+        {
+            Status oldStatus = status;
+            this.status = status;
+
+            fireStatusChanged(oldStatus, status);
+        }
+    }
+
     public Status getStatus()
     {
         return status;
@@ -105,7 +115,7 @@ public class BaseNode implements Node
     public synchronized void addListener(NodeListener listener)
     {
         if (listeners==null)
-            listeners = new ArrayList<NodeListener>();
+            listeners = new HashSet<NodeListener>();
         
         listeners.add(listener);
     }
@@ -252,15 +262,16 @@ public class BaseNode implements Node
             extractNodeLogicParameters();
             syncAttributesAndParameters();
             
-            Status oldStatus = status;
-            status = Status.INITIALIZED;
-            
-            fireStatusChanged(oldStatus, status);
+            setStatus(Status.INITIALIZED);
             
             if (dependentNodes != null)
                 for (Node node : dependentNodes)
                     if (node.getStatus()==Status.CREATED)
+                    {
                         node.init();
+                        if (node.isAutoStart())
+                            node.start();
+                    }
                                 
         } catch (Exception e)
         {
@@ -282,17 +293,15 @@ public class BaseNode implements Node
                             , getPath(), attr.getName());
                     return false;
                 }
-        Status oldStatus = status;
-        status = Status.STARTED;
         
-        fireStatusChanged(oldStatus, status);
+        setStatus(Status.STARTED);
         
         return true;
     }
 
     public synchronized void stop() throws NodeError
     {
-        status = Status.INITIALIZED;
+        setStatus(Status.INITIALIZED);
     }
     
     public synchronized void shutdown() throws NodeShutdownError

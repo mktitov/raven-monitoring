@@ -153,7 +153,7 @@ public class TreeServiceTest extends ServiceTestCase
         node1.init();
         
         assertEquals(Node.Status.INITIALIZED, node1.getStatus());
-        assertEquals(Node.Status.INITIALIZED, node2.getStatus());
+        assertEquals(Node.Status.STARTED, node2.getStatus());
     }
     
     @Test

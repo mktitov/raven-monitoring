@@ -28,7 +28,7 @@ public class TestDataSource extends AbstractDataSource
 {
     public void getDataImmediate(DataConsumer dataConsumer)
     {
-        dataConsumer.setData(null);
+        dataConsumer.setData(this, null);
     }
     
 }

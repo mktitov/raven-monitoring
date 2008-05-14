@@ -15,27 +15,32 @@
  *  under the License.
  */
 
-package org.raven.ds.impl.objects;
+package org.raven.ds.impl;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import org.raven.annotations.Parameter;
+import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
-import org.raven.ds.impl.AbstractDataConsumer;
+import org.raven.tree.impl.ContainerNode;
+import org.weda.annotations.Description;
+import org.weda.annotations.constraints.NotNull;
 
 /**
- *
+ * Data consumer that collects data from one data source.
+ * 
  * @author Mikhail Titov
  */
-public class TestDataConsumer extends AbstractDataConsumer
+public abstract class AbstractDataConsumer extends ContainerNode implements DataConsumer
 {
-    public AtomicInteger executionCount = new AtomicInteger();
+    @Parameter @NotNull @Description("The data source")
+    private DataSource dataSource;
 
-    public int getExecutionCount()
+    public DataSource getDataSource()
     {
-        return executionCount.intValue();
+        return dataSource;
     }
-    
-    public void setData(DataSource dataSource, Object data)
+
+    public void setDataSource(DataSource dataSource)
     {
-        executionCount.incrementAndGet();
+        this.dataSource = dataSource;
     }
 }

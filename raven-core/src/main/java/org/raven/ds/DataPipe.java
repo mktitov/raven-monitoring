@@ -17,18 +17,18 @@
 
 package org.raven.ds;
 
-import org.raven.tree.Node;
+import org.raven.tree.AttributesGenerator;
 
 /**
- * The node that recieves data from the one or more {@link DataSource data sources}
- * @author Mikhail Titov
+ * Gets data from the {@link DataSource data source} and transmits it to all 
+ * {@link DataConsumer data consumers} in the 
+ * {@link org.raven.tree.Node#getDependentNodes()  dependency list}.
+ * Data pipe does not generate attributes, so {@link AttributesGenerator#generateAttributes()} 
+ * returns null.
+ * 
+ * @author Mikhail Titov 
  */
-public interface DataConsumer extends Node
+public interface DataPipe extends DataConsumer, DataSource
 {
-    /**
-     * Recieves data from the data source
-     * @param dataSource the data source from which data recieved
-     * @param data the data
-     */
-    public void setData(DataSource dataSource, Object data);
+
 }
