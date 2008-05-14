@@ -118,6 +118,7 @@ public class RRDNodeTest extends ServiceTestCase
         assertEquals(Status.STARTED, rrds.getStatus());
         rrd.start();
         assertEquals(Status.STARTED, rrd.getStatus());
+        assertEquals(new Integer(0), rra.getIndex());
         ds.start();
         assertEquals(Status.STARTED, ds.getStatus());
         
@@ -150,6 +151,8 @@ public class RRDNodeTest extends ServiceTestCase
         
         assertTrue(rrdFile.delete());
         tree.reloadTree();
+        rra = (RRArchive) tree.getNode(rra.getPath());
+        assertEquals(new Integer(0), rra.getIndex());
         assertTrue(rrdFile.exists());
         TimeUnit.SECONDS.sleep(9);
         db = new RrdDb(rrdFile.getAbsolutePath());

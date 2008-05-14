@@ -43,6 +43,10 @@ public class RRArchive extends LeafNode
     @NotNull
     @Description("Number of archive rows")
     private Integer rows;
+    
+    @Parameter(visible=false)
+    @Description("The index if this archive in the round robin database")
+    private Integer index;
 
     public String getConsolidationFunction()
     {
@@ -82,6 +86,16 @@ public class RRArchive extends LeafNode
     public void setXff(double xff)
     {
         this.xff = xff;
+    }
+
+    public Integer getIndex()
+    {
+        return index;
+    }
+
+    public void setIndex(Integer index)
+    {
+        this.index = index;
     }
     
     
