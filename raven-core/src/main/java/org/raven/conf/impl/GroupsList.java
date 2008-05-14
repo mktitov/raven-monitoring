@@ -24,7 +24,7 @@ public class GroupsList extends ArrayList<String>
 		return true;
 	}
 	
-	private String pattern = "^CN=(.*),OU=.*"; 
+	private String pattern = "^CN=(.*?),OU=.*"; 
 	public void addGroup(String fullName)
 	{
 		sorted = false;
@@ -33,7 +33,7 @@ public class GroupsList extends ArrayList<String>
 		if(m.find())
 		 {
 			String tmp = m.group(1);
-		    if(tmp!=null && tmp.length()==0) super.add(tmp);
+		    if(tmp!=null && tmp.length()>0) super.add(tmp);
 		 }
 	}
 	
