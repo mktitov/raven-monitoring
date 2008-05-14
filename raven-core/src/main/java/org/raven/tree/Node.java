@@ -157,6 +157,10 @@ public interface Node
      */
     public NodeAttribute getNodeAttribute(String name);
     /**
+     * If returns <code>true</code> then node will be initialized after child nodes else before.
+     */
+    public boolean isInitializeAfterChildrens();
+    /**
      * If method returns <code>true</code> then the method {@link #start()} will executed 
      * automaticaly after {@link #init()} method.
      */

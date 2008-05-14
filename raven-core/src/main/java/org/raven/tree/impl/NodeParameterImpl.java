@@ -83,7 +83,8 @@ public class NodeParameterImpl implements NodeParameter
 
     public Class getType()
     {
-        return propertyDescriptor.getType();
+        return propertyDescriptor.getType().isPrimitive()? 
+            propertyDescriptor.getWrapperType() : propertyDescriptor.getType();
     }
 
     public boolean isRequired()

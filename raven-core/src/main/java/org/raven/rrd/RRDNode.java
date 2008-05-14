@@ -19,10 +19,13 @@ package org.raven.rrd;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.io.FileUtils;
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.RrdDef;
+import org.jrobin.core.RrdException;
 import org.jrobin.core.Sample;
+import org.jrobin.core.Util;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
 import org.raven.ds.DataConsumer;
@@ -32,6 +35,7 @@ import org.raven.tree.Node.Status;
 import org.raven.tree.NodeError;
 import org.raven.tree.NodeListener;
 import org.raven.tree.impl.BaseNode;
+import org.raven.tree.store.TreeStoreError;
 import org.weda.annotations.Description;
 import org.weda.internal.annotations.Service;
 import org.weda.services.TypeConverter;
@@ -54,12 +58,13 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
     @Parameter
     @Description("The file name of the rrd database")
     private String databaseFileName;
-    private boolean databaseInitialized;
+    private AtomicBoolean databaseInitialized = new AtomicBoolean(false);
     private RrdDb db;
     
     public RRDNode()
     {
         super(new Class[]{RRDataSource.class, RRArchive.class}, true, false);
+        setInitializeAfterChildrens(true);
     }
 
     @Override
@@ -88,9 +93,9 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
     {
         try
         {
-            if (databaseInitialized)
+            if (databaseInitialized.get())
             {
-                databaseInitialized = false;
+                databaseInitialized.set(false);
                 db.close();
                 db = null;
             }
@@ -114,10 +119,11 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
     {
         try
         {
-            if (databaseInitialized)
+            if (databaseInitialized.get())
             {
                 Sample sample = db.createSample();
                 Double value = converter.convert(Double.class, data, null);
+                System.out.println("!!!"+value);
                 sample.setValue(dataSource.getName(), value);
                 sample.update();
         
@@ -152,66 +158,81 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
         this.step = step;
     }
 
+    private void createDatabase() throws Exception
+    {
+        if (getChildrens() == null || getChildrens().size() == 0)
+        {
+            return;
+        }
+
+        String rrdDatabasesPath = configurator.getConfig().getStringProperty(Configurator.RRD_DATABASES_PATH, null);
+
+        if (rrdDatabasesPath == null)
+        {
+            throw new Exception(String.format("The configuration paramter (%s) must be seted", Configurator.RRD_DATABASES_PATH));
+        }
+        File path = new File(rrdDatabasesPath);
+        if (!path.exists())
+        {
+            FileUtils.forceMkdir(path);
+        }
+        RrdDef def = new RrdDef(
+                path.getAbsolutePath() + File.separator + getId() + ".jrrd", Util.getTime(), step);
+
+        boolean hasDataSources = false;
+        boolean hasArchives = false;
+
+        for (Node node : getChildrens())
+        {
+            if (node instanceof RRDataSource)
+            {
+                hasDataSources = true;
+                RRDataSource ds = (RRDataSource) node;
+                long heartbeat = ds.getHeartbeat() == null ? step * 2 : ds.getHeartbeat();
+                def.addDatasource(
+                        ds.getName(), ds.getDataSourceType(), heartbeat, ds.getMinValue()
+                        , ds.getMaxValue());
+            } 
+            else if (node instanceof RRArchive)
+            {
+                hasArchives = true;
+                RRArchive ar = (RRArchive) node;
+                def.addArchive(
+                        ar.getConsolidationFunction(), ar.getXff(), ar.getSteps(), ar.getRows());
+            }
+        }
+
+        if (!hasDataSources || !hasArchives)
+        {
+            return;
+        }
+
+        db = new RrdDb(def);
+        databaseFileName = db.getCanonicalPath();
+
+        configurator.getTreeStore().saveNodeAttribute(getNodeAttribute("databaseFileName"));
+
+        databaseInitialized.set(true);
+        return;
+    }
+
     private void initDataBase() throws Exception
     {
-        databaseInitialized = false;
+        databaseInitialized.set(false);
         if (databaseFileName!=null)
         {
-            
-            databaseInitialized = true;
+            syncDatabase();
         } 
         else
         {
-            if (getChildrens()==null || getChildrens().size()==0)
-                return;
-            
-            String rrdDatabasesPath = configurator.getConfig().getStringProperty(
-                    Configurator.RRD_DATABASES_PATH, null);
-            
-            if (rrdDatabasesPath==null)
-                throw new Exception(String.format(
-                        "The configuration paramter (%s) must be seted"
-                        , Configurator.RRD_DATABASES_PATH));
-            
-            File path = new File(rrdDatabasesPath);
-            if (!path.exists())
-                FileUtils.forceMkdir(path);
-            
-            RrdDef def = new RrdDef(path.getAbsolutePath()+File.separator+getId()+".jrrd", step);
-            
-            boolean hasDataSources = false;
-            boolean hasArchives = false;
-            
-            for (Node node: getChildrens())
-            {
-                if (node instanceof RRDataSource)
-                {
-                    hasDataSources = true;
-                    RRDataSource ds = (RRDataSource) node;
-                    long heartbeat = ds.getHeartbeat()==null? step*2 : ds.getHeartbeat();
-                    def.addDatasource(
-                            ds.getName(), ds.getDataSourceType(), heartbeat
-                            , ds.getMinValue(), ds.getMaxValue());
-                }
-                else if (node instanceof RRArchive)
-                {
-                    hasArchives = true;
-                    RRArchive ar = (RRArchive) node;
-                    def.addArchive(
-                            ar.getConsolidationFunction(), ar.getXff()
-                            , ar.getSteps(), ar.getRows());
-                }
-            }
-            
-            if (!hasDataSources || !hasArchives)
-                return;
-            
-            db = new RrdDb(def);
-            databaseFileName = db.getCanonicalPath();
-            
-            configurator.getTreeStore().saveNodeAttribute(getNodeAttribute("databaseFileName"));
-            
-            databaseInitialized = true;
+            createDatabase();
         }
+    }
+    
+    private void syncDatabase() throws Exception
+    {
+        db = new RrdDb(databaseFileName);
+        
+        databaseInitialized.set(true);
     }
 }

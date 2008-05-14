@@ -75,6 +75,7 @@ public class BaseNode implements Node
     private Collection<NodeListener>  listeners;
     
     private boolean autoStart = true;
+    private boolean initializeAfterChildrens = false;
     private Status status = Status.CREATED;
     
     private Map<String, NodeParameter> parameters;
@@ -227,6 +228,16 @@ public class BaseNode implements Node
             path.insert(0, node.getName()+Node.NODE_SEPARATOR);
         
         return path.toString();
+    }
+
+    public boolean isInitializeAfterChildrens()
+    {
+        return initializeAfterChildrens;
+    }
+
+    public void setInitializeAfterChildrens(boolean initializeAfterChildrens)
+    {
+        this.initializeAfterChildrens = initializeAfterChildrens;
     }
 
     public boolean isAutoStart()

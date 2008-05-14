@@ -26,10 +26,12 @@ import org.raven.ds.impl.AbstractDataSource;
  */
 public class TestDataSource extends AbstractDataSource
 {
-    private double value = 0.;
+    private double value = 1.;
+    
     public void getDataImmediate(DataConsumer dataConsumer)
     {
         dataConsumer.setData(this, value++);
+        System.out.println(">>>value"+value);
     }
     
 }

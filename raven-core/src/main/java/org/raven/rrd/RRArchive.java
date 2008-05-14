@@ -33,7 +33,7 @@ public class RRArchive extends LeafNode
     
     @Parameter
     @Description("X-files factor. Valid values are between 0 and 1")
-    private double xff = 0.5;
+    private double xff = 0.99;
     
     @Parameter
     @Description("Number of archive steps")

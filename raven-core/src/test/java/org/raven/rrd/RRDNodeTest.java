@@ -30,6 +30,7 @@ import org.raven.RavenCoreModule;
 import org.raven.ServiceTestCase;
 import org.raven.conf.Configurator;
 import org.raven.tree.Node.Status;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.Tree;
 import org.raven.tree.store.TreeStore;
 import org.weda.constraints.ConstraintException;
@@ -78,24 +79,37 @@ public class RRDNodeTest extends ServiceTestCase
         tree.getRootNode().addChildren(rrd);
         treeStore.saveNode(rrd);
         rrd.init();
-        rrd.getNodeAttribute("step").setValue("1");
+        NodeAttribute attr = rrd.getNodeAttribute("step");
+        attr.setValue("2");
+        treeStore.saveNodeAttribute(attr);
+        assertEquals(Status.INITIALIZED, rrd.getStatus());
         
         RRDataSource rrds = new RRDataSource();
         rrds.setName("ds");
         rrd.addChildren(rrds);
         treeStore.saveNode(rrds);
         rrds.init();
-        rrds.getNodeAttribute("dataSource").setValue(ds.getPath());
-        rrds.getNodeAttribute("interval").setValue("1");
-        
-        assertEquals(Status.INITIALIZED, rrd.getStatus());
-        
+        attr = rrds.getNodeAttribute("dataSource");
+        attr.setValue(ds.getPath());
+        treeStore.saveNodeAttribute(attr);
+        attr = rrds.getNodeAttribute("interval");
+        attr.setValue("2");;
+        treeStore.saveNodeAttribute(attr);
+        attr = rrds.getNodeAttribute("intervalUnit");
+        attr.setValue(TimeUnit.SECONDS.toString());
+        treeStore.saveNodeAttribute(attr);
+        attr = rrds.getNodeAttribute("dataSourceType");
+        attr.setValue("GAUGE");
+        treeStore.saveNodeAttribute(attr);
+                
         RRArchive rra = new RRArchive();
         rra.setName("archive");
         rrd.addChildren(rra);
         treeStore.saveNode(rra);
         rra.init();
-        rra.getNodeAttribute("rows").setValue("100");
+        attr = rra.getNodeAttribute("rows");
+        attr.setValue("100");
+        treeStore.saveNodeAttribute(attr);
         rra.start();
         assertEquals(Status.STARTED, rra.getStatus());
       
@@ -107,10 +121,10 @@ public class RRDNodeTest extends ServiceTestCase
         ds.start();
         assertEquals(Status.STARTED, ds.getStatus());
         
-        TimeUnit.SECONDS.sleep(5);
+        TimeUnit.SECONDS.sleep(9);
         
         rrd.stop();
-        long end = Util.getTime();
+        long end = Util.getTime()+1;
         
         String rrdPath = configurator.getConfig().getStringProperty(
                         Configurator.RRD_DATABASES_PATH, null);
@@ -118,15 +132,28 @@ public class RRDNodeTest extends ServiceTestCase
         assertTrue(rrdFile.exists());
         
         RrdDb db = new RrdDb(rrdFile.getAbsolutePath());
+        assertEquals(2, db.getRrdDef().getStep());
         assertTrue(db.containsDs("ds"));
         assertEquals(1, db.getArcCount());
-        FetchRequest fetchRequest = db.createFetchRequest("AVERAGE", start, end);
-        fetchRequest.setFilter("ds");
+        assertEquals(1, db.getArchive(0).getSteps());
+        assertEquals(100, db.getArchive(0).getRows());
+        FetchRequest fetchRequest = db.createFetchRequest(
+                "AVERAGE", db.getArchive(0).getStartTime(), db.getArchive(0).getEndTime());
+//        fetchRequest.setFilter("ds");
         FetchData data = fetchRequest.fetchData();
         double[] values = data.getValues("ds");
         assertNotNull(values);
-        assertEquals(5, values.length);
+//        assertEquals(5, values.length);
+        db.dumpXml("target/rrd_dump.xml");
+        db.close();
+        //
         
+        assertTrue(rrdFile.delete());
+        tree.reloadTree();
+        assertTrue(rrdFile.exists());
+        TimeUnit.SECONDS.sleep(9);
+        db = new RrdDb(rrdFile.getAbsolutePath());
+        db.dumpXml("target/rrd_dump.xml");
         db.close();
     }
 
