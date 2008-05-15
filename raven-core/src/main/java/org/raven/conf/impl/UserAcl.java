@@ -123,10 +123,10 @@ public class UserAcl
 			{
 				logger.info("refreshing ACL for account: {}",this.accountName);
 				storageTime = gaStorage.getLastUpdate();
-				groupsTime = System.currentTimeMillis();
 				acl = gaStorage.getAclForGroups(gList);
 				refreshed = true;
 			}
+			groupsTime = System.currentTimeMillis();
 		}
 		return acl.getAccessForNode(node);
 	}

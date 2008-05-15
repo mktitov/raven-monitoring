@@ -86,6 +86,6 @@ public class GroupsAclStorage
     	return acl;
     }
 
-	public synchronized long getLastUpdate() { return lastUpdate; }
+	public synchronized long getLastUpdate() { return config.getLastUpdate(); }
 	
 }
