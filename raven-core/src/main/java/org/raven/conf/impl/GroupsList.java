@@ -8,6 +8,8 @@ import java.util.regex.Pattern;
 public class GroupsList extends ArrayList<String> 
 {
 	static final long serialVersionUID =1 ;
+	public static final String pattern = "^CN=(.*?),OU=.*"; 
+
 	private long created;
 	private boolean sorted = false;
 	private String glist = "";
@@ -24,7 +26,6 @@ public class GroupsList extends ArrayList<String>
 		return true;
 	}
 	
-	private String pattern = "^CN=(.*?),OU=.*"; 
 	public void addGroup(String fullName)
 	{
 		sorted = false;
@@ -42,8 +43,8 @@ public class GroupsList extends ArrayList<String>
 		if(sorted) return;
 		Collections.sort(this);
 		StringBuffer sb = new StringBuffer();
-		for(String x : this)
-			sb.append(x);
+		for(String x : this) sb.append(x);
+		glist = sb.toString();
 		sorted = true;
 	}
 

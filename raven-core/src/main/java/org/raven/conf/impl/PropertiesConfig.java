@@ -22,10 +22,14 @@ import java.util.Properties;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class PropertiesConfig implements Config {
+public class PropertiesConfig implements Config 
+{
+    protected Logger logger = LoggerFactory.getLogger(PropertiesConfig.class);	
 	public static final String CONFIG_PROPERTY_NAME = "raven.properties"; 
-	public static final String CONFIG_PROPERTY_NAME_DEFAULT = "raven.cfg";
+	public static final String CONFIG_PROPERTY_NAME_DEFAULT = "c:/raven.cfg";
 	public static final String TRUE_VALUE = "true";
 	public static final String FALSE_VALUE = "false";
 	public static final int MIN_INTERVAL = 1000;
@@ -37,7 +41,7 @@ public class PropertiesConfig implements Config {
 	private String fileName;
 	private long checkInterval = 60000;
 	
-	protected PropertiesConfig() throws java.io.IOException 
+	protected PropertiesConfig() throws IOException 
 	{
 		fileName = System.getProperty(CONFIG_PROPERTY_NAME);
 		if(fileName==null) fileName = CONFIG_PROPERTY_NAME_DEFAULT;
@@ -55,7 +59,7 @@ public class PropertiesConfig implements Config {
 	 * Loads data from properties file.
 	 * @throws java.io.IOException
 	 */
-	private void load() throws java.io.IOException
+	private void load() throws IOException
 	{
 		FileInputStream propsFile = null;
 		try {
@@ -66,7 +70,11 @@ public class PropertiesConfig implements Config {
 			lastUpdate = confFile.lastModified();
 		} finally
 		{
-			if(propsFile!=null) propsFile.close();
+			if(propsFile!=null)
+			{
+				propsFile.close();
+				logger.info("config loaded");
+			}	
 		}
 	}
 	
@@ -74,7 +82,7 @@ public class PropertiesConfig implements Config {
 	 * Returns a PropertiesConfig object.
 	 * @throws java.io.IOException
 	 */
-    public static final PropertiesConfig getInstance() throws java.io.IOException 
+    public static final PropertiesConfig getInstance() throws IOException 
     {
         if (instance == null) instance = new PropertiesConfig();
         return instance;
@@ -90,10 +98,12 @@ public class PropertiesConfig implements Config {
     	long dt = System.currentTimeMillis();
     	if(dt-lastCheck < checkInterval) return;
     	if(lastUpdate != confFile.lastModified())
-    		try { load(); }
-    		catch(IOException e) {
-    			// TODO  write to log
+    		try 
+    		{ 
+    			logger.info("reloading config");
+    			load(); 
     		}
+    		catch(IOException e) { logger.error("on reload config : ",e); }
     	lastCheck = dt; 
     }
 

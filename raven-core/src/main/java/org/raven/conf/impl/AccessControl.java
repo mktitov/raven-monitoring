@@ -18,8 +18,9 @@
 package org.raven.conf.impl;
 
 public class AccessControl {
-	public static final int READ = 1; 
-	public static final int WRITE = 2; 
+	public static final int WRITE = 3; 
+	public static final int READ = 2; 
+	public static final int TRANSIT = 1; 
 	public static final int NONE = 0; 
 	
 	private String resource = "";
@@ -44,4 +45,6 @@ public class AccessControl {
 	public synchronized int getRight() { return right; }
 
 	public synchronized String getRegExp() { return regExp; }
+	
+	public synchronized String toString() { return resource+":"+right; }
 }

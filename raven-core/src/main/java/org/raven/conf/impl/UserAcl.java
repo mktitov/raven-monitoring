@@ -31,9 +31,13 @@ import javax.naming.directory.SearchResult;
 import org.raven.conf.Config;
 import org.raven.conf.Configurator;
 import org.raven.tree.Node;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class UserAcl 
 {
+	protected Logger logger = LoggerFactory.getLogger(UserAcl.class);
 	public static final long expireInterval = 300000;
 	
 	private String accountName;
@@ -80,27 +84,24 @@ public class UserAcl
 	    	String returnedAtts[]={"memberOf"};
 	    	sc.setReturningAttributes(returnedAtts);
 	    	NamingEnumeration<SearchResult> answer = context.search(searchContext,flt,sc); 
-	    	while (answer.hasMoreElements()) 
-	    	  {
+	    	while(answer.hasMoreElements()) 
+	    	{
 				SearchResult sr = (SearchResult)answer.next();
 				Attributes attrs = sr.getAttributes();
-				if (attrs != null) 
-				{
-					try {
-						for (NamingEnumeration ae = attrs.getAll();ae.hasMore();) 
+				if (attrs == null) continue; 
+				try {
+					for(NamingEnumeration ae = attrs.getAll();ae.hasMore();) 
+						for(NamingEnumeration ne = ((Attribute)ae.next()).getAll(); ne.hasMore();) 
 						{
-							Attribute attr = (Attribute)ae.next();
-							for (NamingEnumeration ne = attr.getAll(); ne.hasMore();) 
-							{
-								glist.add(ne.next().toString());
-							}	
-						}
-					}	 
-					catch (NamingException e)	{ System.err.println("Problem listing membership: " + e); }
-				}
-	    	  }
-		} catch (NamingException e) { System.err.println("Problem searching directory: " + e); }
-	    finally{ try { context.close();} catch(Exception e) {} }
+							String grpName = ne.next().toString();
+							logger.info("found group:{}  for account:{}", grpName, this.accountName);
+							glist.add(grpName);
+						}	
+				} catch (NamingException e)	
+					{ logger.error("Problem listing groups for account: "+this.accountName , e); }
+	    	}
+		} catch(NamingException e) { logger.error("Problem searching directory: " , e); }
+	    finally { try { context.close(); } catch(Exception e) {} }
     	glist.sort();
 	    return glist;
 	}
@@ -120,6 +121,7 @@ public class UserAcl
 			if(storageTime != gaStorage.getLastUpdate()) refresh = true;
 			if(refresh)
 			{
+				logger.info("refreshing ACL for account: {}",this.accountName);
 				storageTime = gaStorage.getLastUpdate();
 				groupsTime = System.currentTimeMillis();
 				acl = gaStorage.getAclForGroups(gList);

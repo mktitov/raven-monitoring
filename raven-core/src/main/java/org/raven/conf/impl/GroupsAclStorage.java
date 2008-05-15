@@ -21,8 +21,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import org.raven.conf.Config;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class GroupsAclStorage  {
+public class GroupsAclStorage  
+{
+    protected Logger logger = LoggerFactory.getLogger(GroupsAclStorage.class);
 	public static final String GROUP_PARAM_NAME = "group";
 	private static GroupsAclStorage instance = null;
 	private Config config;
@@ -41,11 +45,14 @@ public class GroupsAclStorage  {
 		for(int i=1; ;i++)
 		{
 			String val = config.getStringProperty(GROUP_PARAM_NAME+i, null);
+			logger.info("found group info: {}",val);
 			if(val==null || val.length()==0) break;
 			String[] va = val.split(";");
 			if(va.length<2) continue;
 			AccessControlList acl = new AccessControlList(va,1);
 			acln.put(va[0], acl);
+			if(logger.isInfoEnabled())
+				logger.info("group name: {}  acl: {}",va[0],acl.toString());
 		}
 		lastUpdate = config.getLastUpdate();
 		aclMap = acln;
@@ -67,7 +74,11 @@ public class GroupsAclStorage  {
      */
     public synchronized AccessControlList getAclForGroups(List<String> ls)
     {
-    	if(lastUpdate!=config.getLastUpdate()) load();
+    	if(lastUpdate!=config.getLastUpdate())
+    	{
+    		logger.info("reloading ACL for groups");
+    		load();
+    	}	
     	AccessControlList acl = new AccessControlList();
     	Iterator<String> it = ls.iterator();
     	while(it.hasNext())

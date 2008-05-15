@@ -65,10 +65,21 @@ implements Comparator<AccessControl>
     	{
     		AccessControl ac = it.next();
     		if(ac.getResource().startsWith(path+Node.NODE_SEPARATOR))
-    			if(ac.getRight() > AccessControl.NONE ) return AccessControl.READ;
+    			if(ac.getRight() > AccessControl.NONE ) return AccessControl.TRANSIT;
     		if( path.matches(ac.getRegExp()) ) return ac.getRight();
     	}
     	return AccessControl.NONE;
+    }
+
+    public String toString()
+    {
+    	StringBuffer sb = new StringBuffer();
+    	for(AccessControl ac : this)
+    	{
+    		sb.append(ac.toString());
+    		sb.append(";");
+    	}
+    	return sb.toString();
     }
 
 }
