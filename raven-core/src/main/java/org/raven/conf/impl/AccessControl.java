@@ -59,7 +59,7 @@ public class AccessControl {
 		
 		if(x[0].endsWith("+"))
 		{
-			String t = x[0].substring(0, rule.length()-2);
+			String t = x[0].substring(0, x[0].length()-2);
 			al.add(new AccessControl(t,x[1]));
 			al.add(new AccessControl(t+Node.NODE_SEPARATOR+"*",x[1]));
 		} else al.add(new AccessControl(rule));
