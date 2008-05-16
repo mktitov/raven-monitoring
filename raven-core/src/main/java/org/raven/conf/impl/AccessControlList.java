@@ -35,7 +35,8 @@ implements Comparator<AccessControl>
 		super();
 		for(int i=startWith; i < acl.length; i++ )
 		{
-			this.add(new AccessControl(acl[i]));
+			//this.add(new AccessControl(acl[i]));
+			this.addAll(AccessControl.getACs(acl[i]));
 		}
 		Collections.sort(this, this);
 	}
@@ -61,14 +62,19 @@ implements Comparator<AccessControl>
     {
 		String path = node.getPath();
     	Iterator<AccessControl> it = this.iterator();
+    	int curRight = AccessControl.NONE;
     	while(it.hasNext())
     	{
     		AccessControl ac = it.next();
     		if(ac.getResource().startsWith(path+Node.NODE_SEPARATOR))
-    			if(ac.getRight() > AccessControl.NONE ) return AccessControl.TRANSIT;
-    		if( path.matches(ac.getRegExp()) ) return ac.getRight();
+    			if(ac.getRight() > AccessControl.NONE )
+    			{
+    				curRight = AccessControl.TRANSIT;
+    				continue;
+    			}	
+    		if( path.matches(ac.getRegExp()) && ac.getRight()>=curRight ) return ac.getRight();
     	}
-    	return AccessControl.NONE;
+    	return curRight;
     }
 
     public String toString()

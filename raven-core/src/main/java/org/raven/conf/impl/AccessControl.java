@@ -17,6 +17,11 @@
 
 package org.raven.conf.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.raven.tree.Node;
+
 public class AccessControl {
 	public static final int WRITE = 3; 
 	public static final int READ = 2; 
@@ -30,17 +35,38 @@ public class AccessControl {
 	public AccessControl(String rule)
 	{
 		String[] x = rule.split(":");
-		if(x.length==2)
-		{
-			resource = x[0];
-			regExp = resource.replaceAll("\\*", ".*");
-			String tmp = x[1].toLowerCase();
-			if(tmp.length()==0 || tmp.charAt(0)=='n') right = NONE;
-				else if(tmp.charAt(0)=='r') right = READ;
-					else if(tmp.charAt(0)=='w') right = WRITE;
-		}
+		if(x.length==2) loadData(x[0],x[1]);
 	}
 
+	public AccessControl(String resource, String right) { loadData(resource, right); }
+	
+	private void loadData(String resource, String right)
+	{
+		this.resource = resource;
+		regExp = this.resource.replaceAll("\\*", ".*");
+		String tmp = right.toLowerCase();
+		if(tmp.length()==0 || tmp.charAt(0)=='n') this.right = NONE;
+			else if(tmp.charAt(0)=='r') this.right = READ;
+				else if(tmp.charAt(0)=='w') this.right = WRITE;
+	}
+	
+	public static List<AccessControl> getACs(String rule)
+	{
+		ArrayList<AccessControl> al = new ArrayList<AccessControl>();
+		if(rule==null || rule.length()==0) return al;
+		String[] x = rule.split(":");
+		if(x.length!=2) return al;
+		
+		if(x[0].endsWith("+"))
+		{
+			String t = x[0].substring(0, rule.length()-2);
+			al.add(new AccessControl(t,x[1]));
+			al.add(new AccessControl(t+Node.NODE_SEPARATOR+"*",x[1]));
+		} else al.add(new AccessControl(rule));
+		
+		return al;
+	}
+	
 	public synchronized String getResource() { return resource; }
 	public synchronized int getRight() { return right; }
 
