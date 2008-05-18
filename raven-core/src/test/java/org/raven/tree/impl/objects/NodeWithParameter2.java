@@ -28,6 +28,18 @@ public class NodeWithParameter2 extends ContainerNode
 {
     @Parameter
     private String parameter;
+    @Parameter
+    private int parameter2;
+
+    public int getParameter2()
+    {
+        return parameter2;
+    }
+
+    public void setParameter2(int parameter2)
+    {
+        this.parameter2 = parameter2;
+    }
 
     public String getParameter()
     {

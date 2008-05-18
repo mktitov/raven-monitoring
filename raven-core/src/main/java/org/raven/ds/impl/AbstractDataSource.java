@@ -173,7 +173,7 @@ public abstract class AbstractDataSource
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public void statusChanged(Node node, Status oldStatus, Status newStatus)
+    public void nodeStatusChanged(Node node, Status oldStatus, Status newStatus)
     {
         if (getStatus()==Status.STARTED)
         {

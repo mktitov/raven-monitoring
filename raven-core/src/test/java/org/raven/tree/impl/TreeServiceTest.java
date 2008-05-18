@@ -25,14 +25,16 @@ import org.raven.RavenCoreModule;
 import org.raven.ServiceTestCase;
 import org.raven.conf.Configurator;
 import org.raven.tree.Node;
+import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodeListener;
 import org.raven.tree.NodeNotFoundError;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.objects.AttributesGeneratorNode;
 import org.raven.tree.impl.objects.NodeWithNodeParameter;
 import org.raven.tree.impl.objects.NodeWithParameters;
 import org.weda.constraints.ConstraintException;
-
+import static org.easymock.EasyMock.*;
 /**
  *
  * @author Mikhail Titov
@@ -189,6 +191,46 @@ public class TreeServiceTest extends ServiceTestCase
         
         node = (NodeWithParameters) tree.getRootNode().getChildren("node");
         checkAttributes(node, "value");
+    }
+    
+    @Test
+    public void nodeListener() throws ConstraintException
+    {
+        ContainerNode node = new ContainerNode("name");
+        NodeAttribute attr = new NodeAttributeImpl("attr", String.class, "1", "desc");
+        node.addNodeAttribute(attr);
+        attr.setOwner(node);
+        
+        NodeListener listener = createStrictMock(NodeListener.class);
+        listener.nodeStatusChanged(eq(node), eq(Status.CREATED), eq(Status.INITIALIZED));
+        listener.nodeNameChanged(eq(node), eq("name"), eq("newName"));
+        listener.nodeAttributeValueChanged(eq(node), eq(attr), eq("1"), eq("2"));
+        replay(listener);
+        
+        node.addListener(listener);
+        node.init();
+        node.setName("newName");
+        node.getNodeAttribute("attr").setValue("2");
+        
+        verify(listener);
+    }
+    
+    @Test
+    public void childNodeNameChanging()
+    {
+        ContainerNode node = new ContainerNode("node");
+        ContainerNode childNode = new ContainerNode("child");
+        node.addChildren(childNode);
+        
+        node.init();
+        childNode.init();
+        
+        assertEquals(childNode, node.getChildren("child"));
+        
+        childNode.setName("newChildNodeName");
+
+        assertNull(node.getChildren("child"));
+        assertEquals(childNode, node.getChildren("newChildNodeName"));
     }
     
     @Test

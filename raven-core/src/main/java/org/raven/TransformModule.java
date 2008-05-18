@@ -27,7 +27,7 @@ import org.weda.internal.annotations.WedaPluginModule;
  *
  * @author Mikhail Titov
  */
-//@WedaPluginModule
+@WedaPluginModule
 public class TransformModule 
 {
     public static void contributeClassTransformer(MappedConfiguration<Class, TransformWorker> conf)

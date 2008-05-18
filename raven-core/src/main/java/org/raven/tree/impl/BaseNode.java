@@ -38,6 +38,7 @@ import org.raven.tree.store.TreeStoreError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weda.beans.ClassDescriptor;
+import org.weda.beans.ObjectUtils;
 import org.weda.beans.PropertyDescriptor;
 import org.weda.constraints.ConstraintException;
 import org.weda.internal.annotations.Service;
@@ -48,16 +49,16 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
-public class BaseNode implements Node
+public class BaseNode implements Node, NodeListener
 {
     protected Logger logger = LoggerFactory.getLogger(Node.class);
     
     @Service
-    private ClassDescriptorRegistry descriptorRegistry;
+    protected ClassDescriptorRegistry descriptorRegistry;
     @Service
-    private TypeConverter converter;
+    protected TypeConverter converter;
     @Service
-    private Configurator configurator;
+    protected Configurator configurator;
     
     private int id;
     
@@ -101,7 +102,7 @@ public class BaseNode implements Node
     {
         if (this.status != status)
         {
-            Status oldStatus = status;
+            Status oldStatus = this.status;
             this.status = status;
 
             fireStatusChanged(oldStatus, status);
@@ -120,6 +121,11 @@ public class BaseNode implements Node
         
         listeners.add(listener);
     }
+    
+    public synchronized Collection<NodeListener> getListeners()
+    {
+        return listeners;
+    }
 
     public synchronized void addChildren(Node node)
     {
@@ -129,8 +135,15 @@ public class BaseNode implements Node
         node.setParent(this);
         
         childrens.put(node.getName(), node);
+        node.addListener(this);
     }
 
+    public void removeChildren(Node node)
+    {
+        if (childrens!=null)
+            childrens.remove(node.getName());
+    }
+    
     public synchronized boolean addDependentNode(Node dependentNode)
     {
         if (dependentNodes==null)
@@ -159,7 +172,12 @@ public class BaseNode implements Node
     
     public void setName(String name)
     {
+        String oldName = this.name;
         this.name = name;
+        if (status!=Status.CREATED && !ObjectUtils.equals(oldName, name))
+        {
+            fireNameChanged(oldName, name);
+        }
     }
 
     public byte getLevel()
@@ -387,6 +405,9 @@ public class BaseNode implements Node
                     }
             }
         }
+        if (listeners!=null)
+            for (NodeListener listener: listeners)
+                listener.nodeAttributeValueChanged(this, attr, oldValue, attr.getValue());
     }
     
     /**
@@ -442,11 +463,18 @@ public class BaseNode implements Node
                     }
     }
 
+    private void fireNameChanged(String oldName, String name)
+    {
+        if (listeners!=null)
+            for (NodeListener listener: listeners)
+                listener.nodeNameChanged(this, oldName, name);
+    }
+
     private synchronized void fireStatusChanged(Status oldStatus, Status status)
     {
         if (listeners!=null)
             for (NodeListener listener: listeners)
-                listener.statusChanged(this, oldStatus, status);
+                listener.nodeStatusChanged(this, oldStatus, status);
     }
 
     private void syncAttributesAndParameters() throws ConstraintException, TreeStoreError
@@ -525,5 +553,25 @@ public class BaseNode implements Node
         int hash = 7;
         hash = 13 * hash + (int) (this.id ^ (this.id >>> 32));
         return hash;
+    }
+
+    public void nodeStatusChanged(Node node, Status oldStatus, Status newStatus)
+    {
+    }
+
+    public void nodeNameChanged(Node node, String oldName, String newName)
+    {
+        if (   childrens!=null 
+            && childrens.containsKey(oldName) 
+            && node.equals(childrens.get(oldName)))
+        {
+            childrens.remove(oldName);
+            childrens.put(newName, node);
+        }
+    }
+
+    public void nodeAttributeValueChanged(
+            Node node, NodeAttribute attribute, String oldValue, String newValue)
+    {
     }
 }

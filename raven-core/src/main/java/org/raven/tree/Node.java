@@ -114,6 +114,11 @@ public interface Node
      */
     public void addChildren(Node node);
     /**
+     * Removes children node from this node.
+     * @param node the node which must be removed from this node.
+     */
+    public void removeChildren(Node node);
+    /**
      * Returns nodes that belongs to this node. Method returns <code>null</code> if this node
      * has not childrens.
      */
@@ -128,6 +133,10 @@ public interface Node
      * Adds listener to the node.
      */
     public void addListener(NodeListener listener);
+    /**
+     * Returns this node listeners or null if this node has not listeners.
+     */
+    public Collection<NodeListener> getListeners();
     /**
      * Returns the array of nodes types that can belong to this node type. If method returns null
      * then this node can hold any node type.

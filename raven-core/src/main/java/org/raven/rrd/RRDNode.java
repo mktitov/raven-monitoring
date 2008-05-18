@@ -19,8 +19,11 @@ package org.raven.rrd;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.commons.io.FileUtils;
 import org.jrobin.core.ArcDef;
@@ -39,12 +42,11 @@ import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
 import org.raven.tree.NodeListener;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.Description;
-import org.weda.internal.annotations.Service;
-import org.weda.services.TypeConverter;
 
 /**
  *
@@ -52,11 +54,6 @@ import org.weda.services.TypeConverter;
  */
 public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 {
-    @Service
-    private Configurator configurator;
-    @Service 
-    private TypeConverter converter;
-    
     @Parameter 
     @Description("The base interval in seconds with which data will be fed into the RRD")
     private long step = 300;
@@ -64,9 +61,13 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
     @Parameter
     @Description("The file name of the rrd database")
     private String databaseFileName;
+    
     private AtomicBoolean databaseInitialized = new AtomicBoolean(false);
     private RrdDb db;
     private ReentrantReadWriteLock dbLock = new ReentrantReadWriteLock();
+    private Map<String, String> newDsNames;
+    private ReentrantLock newDsNamesLock = new ReentrantLock();
+    
             
     public RRDNode()
     {
@@ -130,16 +131,40 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
             node.addDependentNode(this);
     }
 
+    @Override
+    public void removeChildren(Node node)
+    {
+        try
+        {
+            super.removeChildren(node);
+            
+            if (node instanceof RRDataSource)
+            {
+                removeDataSource(node.getName(), true);
+            } else if (node instanceof RRArchive)
+            {
+                RRArchive raa = (RRArchive) node;
+                removeArchive(raa.getConsolidationFunction(), raa.getSteps(), true);
+            }
+        } catch (Exception e)
+        {
+            throw new NodeError(String.format(
+                    "Error removing child node (%s) from the (%s) node", node.getPath(), getPath())
+                    , e);
+        }
+    }
+
     public void setData(DataSource dataSource, Object data)
     {
         try
         {
+            long time = Util.getTime();
             dbLock.readLock().lock();
             try
             {
                 if (databaseInitialized.get())
                 {
-                    Sample sample = db.createSample();
+                    Sample sample = db.createSample(time);
                     Double value = converter.convert(Double.class, data, null);
                     System.out.println("!!!"+value);
                     sample.setValue(dataSource.getName(), value);
@@ -156,11 +181,6 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
             logger.error(
                     String.format("Error error saving new value to rrd node (%s)", getPath()), e);
         }
-    }
-
-    public synchronized void statusChanged(Node node, Status oldStatus, Status newStatus)
-    {
-//        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public String getDatabaseFileName()
@@ -248,9 +268,13 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 
     private DsDef createDsDef(RRDataSource ds) throws Exception
     {
-        long heartbeat = ds.getHeartbeat() == null ? step * 2 : ds.getHeartbeat();
+        if (ds.getHeartbeat()==null)
+        {
+            ds.setHeartbeat(step*2);
+            configurator.getTreeStore().saveNodeAttribute(ds.getNodeAttribute("heartbeat"));
+        }
         DsDef def = new DsDef(
-                ds.getName(), ds.getDataSourceType(), heartbeat
+                ds.getName(), ds.getDataSourceType(), ds.getHeartbeat()
                 , ds.getMinValue(), ds.getMaxValue());
         return def;
     }
@@ -333,16 +357,40 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
         }
     }
 
-    private void removeArchive(Archive archive, boolean lock) throws Exception
+    private void removeArchive(String consolidationFunction, int steps, boolean lock) throws Exception
     {
         if (lock)
             dbLock.writeLock().lock();
         try
         {
-            db.close();
-            RrdToolkit.removeArchive(
-                    databaseFileName, archive.getConsolFun(), archive.getSteps(), true);
-            db = new RrdDb(databaseFileName);
+            if (getStatus()==Status.STARTED && databaseInitialized.get())
+            {
+                db.close();
+                RrdToolkit.removeArchive(
+                        databaseFileName, consolidationFunction, steps, true);
+                db = new RrdDb(databaseFileName);
+            }
+        }
+        finally
+        {
+            if (lock)
+                dbLock.writeLock().unlock();
+        }
+    }
+    
+
+    private void removeDataSource(String dsName, boolean lock) throws Exception
+    {
+        if (lock)
+            dbLock.writeLock().lock();
+        try
+        {
+            if (getStatus()==Status.STARTED && databaseInitialized.get())
+            {
+                db.close();
+                RrdToolkit.removeDatasource(databaseFileName, dsName, true);
+                db = new RrdDb(databaseFileName);
+            }
         }
         finally
         {
@@ -351,24 +399,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
         }
     }
 
-    private void removeDataSource(Datasource dataSource, boolean lock) throws Exception
-    {
-        if (lock)
-            dbLock.writeLock().lock();
-        try
-        {
-            db.close();
-            RrdToolkit.removeDatasource(databaseFileName, dataSource.getDsName(), true);
-            db = new RrdDb(databaseFileName);
-        }
-        finally
-        {
-            if (lock)
-                dbLock.writeLock().unlock();
-        }
-    }
-
-    private void syncArchive(RRArchive archive, boolean lock) throws Exception
+    private void updateArchive(RRArchive archive, boolean lock) throws Exception
     {
         if (lock)
             dbLock.writeLock().lock();
@@ -399,25 +430,29 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
         }
     }
 
-    private void syncDataSource(RRDataSource ds, boolean lock) throws Exception
+    private void updateDataSource(RRDataSource rrds, Datasource ds, boolean lock) throws Exception
     {
         if (lock)
             dbLock.writeLock().lock();
         try
         {
-            Datasource rrds = db.getDatasource(ds.getName());
-            long heartbeat = rrds.getHeartbeat();
-            double minValue = rrds.getMinValue();
-            double maxValue = rrds.getMaxValue();
+            long heartbeat = ds.getHeartbeat();
+            double minValue = ds.getMinValue();
+            double maxValue = ds.getMaxValue();
+            String dsName = ds.getDsName();
             
             db.close();
             
-            if (heartbeat!=ds.getHeartbeat())
-                RrdToolkit.setDsHeartbeat(databaseFileName, ds.getName(), ds.getHeartbeat());
+            if (!dsName.equals(rrds.getName()))
+                RrdToolkit.renameDatasource(databaseFileName, dsName, rrds.getName());
             
-            if (minValue!=ds.getMinValue() || maxValue!=ds.getMaxValue())
+            if (heartbeat!=rrds.getHeartbeat())
+                RrdToolkit.setDsHeartbeat(databaseFileName, rrds.getName(), rrds.getHeartbeat());
+            
+            if (minValue!=rrds.getMinValue() || maxValue!=rrds.getMaxValue())
                 RrdToolkit.setDsMinMaxValue(
-                        databaseFileName, ds.getName(), ds.getMinValue(), ds.getMaxValue(), true);
+                        databaseFileName, rrds.getName(), rrds.getMinValue()
+                        , rrds.getMaxValue(), true);
                 
             db = new RrdDb(databaseFileName);
         }
@@ -449,22 +484,20 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
                 {
                     if (node instanceof RRDataSource)
                     {
-                        if (node.getStatus()==Status.CREATED)
-                        {
-                            if (!db.containsDs(node.getName()))
-                                addDataSource((RRDataSource)node, false);
-                            else 
-                                syncDataSource((RRDataSource)node, false);
-                        }
+                        syncDataSource((RRDataSource) node, false);
+//                        if (node.getStatus()==Status.CREATED)
+//                        {
+////                            Datasource datasource = db.getDatasource(node.getName());
+//                            if (!db.containsDs(node.getName()))
+//                                addDataSource((RRDataSource)node, false);
+//                            else 
+//                                updateDataSource((RRDataSource)node, false);
+//                        }
                     }
                     else if (node instanceof RRArchive)
                     {
                         RRArchive rra = (RRArchive) node;
-                        
-                        if (!containsArchive(rra))
-                            addArchive(rra, false);
-                        else
-                            syncArchive(rra, false);
+                        syncArchive(rra, false);
                     }
                 }
                 
@@ -472,7 +505,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
                 for (int i=0; i<db.getDsCount(); ++i)
                 {
                     if (getChildren(db.getDatasource(i).getDsName())==null)
-                        removeDataSource(db.getDatasource(i), false);
+                        removeDataSource(db.getDatasource(i).getDsName(), false);
                 }
                 
                 //deleting rrd archives not linked with RRArchive
@@ -480,7 +513,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
                 {
                     Archive arc = db.getArchive(i);
                     if (!containsArchiveNode(arc))
-                        removeArchive(arc, false);
+                        removeArchive(arc.getConsolFun(), arc.getSteps(), false);
                 }
             }
 
@@ -491,4 +524,148 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
             dbLock.writeLock().unlock();
         }
     }
+    
+    private void addNewDsName(String oldName, String newName)
+    {
+        newDsNamesLock.lock();
+        try
+        {
+            if (newDsNames==null)
+                newDsNames = new HashMap<String, String>();
+            
+            if (newDsNames.containsKey(oldName))
+                oldName = newDsNames.remove(oldName);
+            
+            newDsNames.put(newName, oldName);
+        }
+        finally
+        {
+            newDsNamesLock.unlock();
+        }
+    }
+    
+    private String getOldDsName(String newDsName)
+    {
+        newDsNamesLock.lock();
+        try
+        {
+            String oldDsName = newDsNames==null? null : newDsNames.remove(newDsName);
+            return oldDsName==null? newDsName : oldDsName;
+        }
+        finally
+        {
+            newDsNamesLock.unlock();
+        }
+    }
+    
+    private void syncArchive(RRArchive rra, boolean lock)
+    {
+        try
+        {
+            if (lock)
+                dbLock.writeLock().lock();
+            try 
+            {
+                if (rra.getStatus()==Status.STARTED && databaseInitialized.get())
+                {
+                    if (!containsArchive(rra))
+                    {
+                        addArchive(rra, false);
+                    } else
+                    {
+                        updateArchive(rra, false);
+                    }
+                }
+            }
+            finally
+            {
+                if (lock)
+                    dbLock.writeLock().unlock();
+            }
+        }catch(Exception e)
+        {
+            throw new NodeError(String.format(
+                    "Error synchronzing node (%s) with rrd datasource", rra.getPath()));
+        }
+    }
+
+
+    private void syncDataSource(RRDataSource rrds, boolean lock) 
+    {
+        try
+        {
+            if (lock)
+                dbLock.writeLock().lock();
+            try 
+            {
+                if (   rrds.getStatus()==Status.STARTED 
+                    && databaseInitialized.compareAndSet(true, false))
+                {
+                    String dsName = getOldDsName(rrds.getName());
+                    Datasource ds = db.getDatasource(dsName);
+                    if (ds!=null)
+                        updateDataSource(rrds, ds, false);
+                    else
+                        addDataSource(rrds, false);
+                    databaseInitialized.set(true);
+                }
+            }
+            finally
+            {
+                if (lock)
+                    dbLock.writeLock().unlock();
+            }
+        }catch(Exception e)
+        {
+            throw new NodeError(String.format(
+                    "Error synchronzing node (%s) with rrd datasource", rrds.getPath())
+                    , e);
+        }
+    }
+
+    @Override
+    public void nodeStatusChanged(Node node, Status oldStatus, Status newStatus)
+    {
+        super.nodeStatusChanged(node, oldStatus, newStatus);
+        
+        if (databaseInitialized.get() && node.getStatus()==Status.STARTED)
+        {
+            if (node instanceof RRDataSource)
+                syncDataSource((RRDataSource) node, true);
+            else if (node instanceof RRArchive)
+                syncArchive((RRArchive) node, true);
+        }
+    }
+
+    @Override
+    public void nodeNameChanged(Node node, String oldName, String newName)
+    {
+        super.nodeNameChanged(node, oldName, newName);
+        
+        if (node instanceof RRDataSource)
+        {
+            addNewDsName(oldName, newName);
+            if (databaseInitialized.get() && node.getStatus()==Status.CREATED)
+                syncDataSource((RRDataSource) node, true);
+        }
+        else if (node instanceof RRArchive)
+        {
+            syncArchive((RRArchive) node, true);
+        }
+    }
+
+    @Override
+    public void nodeAttributeValueChanged(
+            Node node, NodeAttribute attribute, String oldValue, String newValue)
+    {
+        if (databaseInitialized.get() && node.getStatus()==Status.STARTED)
+        {
+            if (node instanceof RRDataSource)
+                syncDataSource((RRDataSource) node, true);
+            else if (node instanceof RRArchive)
+                syncArchive((RRArchive) node, true);
+        }
+    }
+    
+    
 }

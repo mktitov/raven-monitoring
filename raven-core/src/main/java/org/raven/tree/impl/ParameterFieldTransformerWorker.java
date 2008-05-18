@@ -19,7 +19,6 @@ package org.raven.tree.impl;
 
 import java.lang.annotation.Annotation;
 import javassist.CannotCompileException;
-import javassist.NotFoundException;
 import javassist.expr.FieldAccess;
 import org.weda.internal.FieldTransformWorker;
 import org.weda.internal.services.ClassTransformer.Phase;
@@ -38,16 +37,28 @@ public class ParameterFieldTransformerWorker implements FieldTransformWorker
             if (!fieldAccess.getField().getType().isPrimitive() && fieldAccess.isReader())
             {
                 String body = String.format(
-                        "{ if (%1$s==null) " +
                         "{ " +
-                        "   $_=null; " +
-                        //                    "   $_ = getParentAttributeRealValue(\"%1$s\"); " +
+                        "System.out.println(\">>>getter(): \"+%1$s);" +
+                        "if (%1$s==null) " +
+                        "{ " +
+                        "   $_ = ($r)getParentAttributeRealValue(\"%1$s\"); " +
                         "} " +
                         "else " +
                         "{ " +
-                        "   $_=%1$s; " +
+                        "   $_=($r)%1$s; " +
                         "} }", fieldAccess.getFieldName());
                 
+                fieldAccess.replace(body);
+            }
+            if (fieldAccess.isWriter())
+            {
+                String body = String.format(
+                        "{ " +
+                        "   Object oldValue = %2$s.getOldValue(this, \"%1$s\");" +
+                        "   $proceed($1);" +
+                        "   %2$s.fireNodeAttributeValueChanged(this, \"%1$s\", oldValue, ($w)%1$s);" +
+                        "} "
+                        , fieldAccess.getFieldName(), NodeListenerExecutorHelper.class.getName());
                 fieldAccess.replace(body);
             }
         } catch (Exception e)

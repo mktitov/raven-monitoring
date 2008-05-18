@@ -20,6 +20,8 @@ package org.raven.rrd;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 import org.apache.tapestry.ioc.RegistryBuilder;
+import org.jrobin.core.Archive;
+import org.jrobin.core.Datasource;
 import org.jrobin.core.FetchData;
 import org.jrobin.core.FetchRequest;
 import org.jrobin.core.RrdDb;
@@ -118,7 +120,6 @@ public class RRDNodeTest extends ServiceTestCase
         assertEquals(Status.STARTED, rrds.getStatus());
         rrd.start();
         assertEquals(Status.STARTED, rrd.getStatus());
-        assertEquals(new Integer(0), rra.getIndex());
         ds.start();
         assertEquals(Status.STARTED, ds.getStatus());
         
@@ -149,15 +150,86 @@ public class RRDNodeTest extends ServiceTestCase
         db.close();
         //
         
-        assertTrue(rrdFile.delete());
+//        assertTrue(rrdFile.delete());
         tree.reloadTree();
         rra = (RRArchive) tree.getNode(rra.getPath());
-        assertEquals(new Integer(0), rra.getIndex());
         assertTrue(rrdFile.exists());
         TimeUnit.SECONDS.sleep(9);
         db = new RrdDb(rrdFile.getAbsolutePath());
         db.dumpXml("target/rrd_dump.xml");
         db.close();
+        
+        //Test add new datasource and archive
+        rrd = (RRDNode) tree.getNode(rrd.getPath());
+        assertNotNull(rrd);
+        RRDataSource rrds2 = new RRDataSource();
+        rrds2.setName("ds2");
+        rrd.addChildren(rrds2);
+        treeStore.saveNode(rrds2);
+        rrds2.init();
+        attr = rrds2.getNodeAttribute("dataSource");
+        attr.setValue(ds.getPath());
+        treeStore.saveNodeAttribute(attr);
+        attr = rrds2.getNodeAttribute("interval");
+        attr.setValue("2");
+        treeStore.saveNodeAttribute(attr);
+        attr = rrds2.getNodeAttribute("intervalUnit");
+        attr.setValue(TimeUnit.SECONDS.toString());
+        treeStore.saveNodeAttribute(attr);
+        rrds2.start();
+        assertEquals(Status.STARTED, rrds2.getStatus());
+        
+        RRArchive rra2 = new RRArchive();
+        rra2.setName("archive2");
+        rrd.addChildren(rra2);
+        treeStore.saveNode(rra2);
+        rra2.init();
+        rra2.setSteps(2);
+        rra2.setRows(10);
+        rra2.start();
+        assertEquals(Status.STARTED, rra2.getStatus());
+        
+        db = new RrdDb(rrdFile.getAbsolutePath());
+        assertNotNull(db);
+        assertTrue(db.containsDs(rrds2.getName()));
+        assertNotNull(db.getArchive(rra2.getConsolidationFunction(), rra2.getSteps()));
+        db.close();
+        
+        rrds2.stop();
+        rrds2.setName("ds3");
+        rrds2.setHeartbeat(5l);
+        rrds2.setMinValue(-1.);
+        rrds2.setMaxValue(10.);
+        rrds2.start();
+        
+        rra2.setRows(50);
+        rra2.setXff(.1);
+        
+        db = new RrdDb(rrdFile.getAbsolutePath());
+        assertNotNull(db);
+        assertEquals(2, db.getDsCount());
+        Datasource datasource = db.getDatasource(rrds2.getName());
+        assertNotNull(datasource);
+        assertEquals(5l, datasource.getHeartbeat());
+        assertEquals(new Double(-1.), new Double(datasource.getMinValue()));
+        assertEquals(new Double(10.), new Double(datasource.getMaxValue()));
+        assertTrue(db.containsDs(rrds2.getName()));
+        assertFalse(db.containsDs("ds2"));
+        
+        Archive archive = db.getArchive(rra2.getConsolidationFunction(), rra2.getSteps());
+        assertNotNull(archive);
+        assertEquals(50, archive.getRows());
+        assertEquals(new Double(.1), new Double(archive.getXff()));
+        
+        rrd.removeChildren(rrds2);
+        rrd.removeChildren(rra2);
+        
+        db = new RrdDb(rrdFile.getAbsolutePath());
+        assertNotNull(db);
+        assertFalse(db.containsDs(rrds2.getName()));
+        assertNull(db.getArchive(rra2.getConsolidationFunction(), rra2.getSteps()));
+        db.close();
+        
     }
 
 }

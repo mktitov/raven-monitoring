@@ -30,5 +30,24 @@ public interface NodeListener
      * @param oldStatus the old status of the node.
      * @param newStatus the new status of the node.
      */
-    public void statusChanged(Node node, Node.Status oldStatus, Node.Status newStatus);
+    public void nodeStatusChanged(Node node, Node.Status oldStatus, Node.Status newStatus);
+    /**
+     * Informs listener that the name of the node were changed. This event will fired only when
+     * the status of the node are {@link Node.Status#INITIALIZED} or {@link Node.Status#STARTED}.
+     * @param node the node where name was changed
+     * @param oldName the old name of the node
+     * @param newName the new name of the node
+     */
+    public void nodeNameChanged(Node node, String oldName, String newName);
+    /**
+     * Informs the listener that the value of one of attributes were changed.
+     * This event will fired only when
+     * the status of the node are {@link Node.Status#INITIALIZED} or {@link Node.Status#STARTED}
+     * @param node the node in which attribute value was changed.
+     * @param attribute the attribute where value was changed.
+     * @param oldValue the old value
+     * @param newValue the new value
+     */
+    public void nodeAttributeValueChanged(
+            Node node, NodeAttribute attribute, String oldValue, String newValue);
 }

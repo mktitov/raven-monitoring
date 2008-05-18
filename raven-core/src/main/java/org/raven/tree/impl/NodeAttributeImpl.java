@@ -120,10 +120,15 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable
 
     public String getValue()
     {
-        if (value!=null)
-            return value;
+        if (parameter!=null && owner!=null && owner.getStatus()!=Status.CREATED)
+            return converter.convert(String.class, parameter.getValue(), parameter.getPattern());
         else
-            return owner.getParentAttributeValue(name);
+        {
+            if (value!=null)
+                return value;
+            else
+                return owner.getParentAttributeValue(name);
+        }
     }
 
     public Class getType() 

@@ -29,7 +29,7 @@ public class RRDataSource extends DataPipeImpl
 {
     @Parameter 
     @Description("The data source type (GAUGE | COUNTER | DERIVE | ABSOLUTE)")
-    private String dataSourceType = "COUNTER";
+    private String dataSourceType = "GAUGE";
     @Parameter
     @Description("The data source heartbeat")
     private Long heartbeat;
