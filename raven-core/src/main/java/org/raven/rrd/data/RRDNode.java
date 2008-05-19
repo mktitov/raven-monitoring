@@ -15,7 +15,7 @@
  *  under the License.
  */
 
-package org.raven.rrd;
+package org.raven.rrd.data;
 
 import java.io.File;
 import java.io.IOException;
@@ -144,7 +144,9 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
             } else if (node instanceof RRArchive)
             {
                 RRArchive raa = (RRArchive) node;
-                removeArchive(raa.getConsolidationFunction(), raa.getSteps(), true);
+                String conFun = converter.convert(
+                        String.class, raa.getConsolidationFunction(), null);
+                removeArchive(conFun, raa.getSteps(), true);
             }
         } catch (Exception e)
         {
@@ -239,7 +241,8 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 
     private boolean containsArchive(RRArchive archive) throws IOException
     {
-        return db.getArchive(archive.getConsolidationFunction(), archive.getSteps())!=null;
+        String conFun = converter.convert(String.class, archive.getConsolidationFunction(), null);
+        return db.getArchive(conFun, archive.getSteps())!=null;
     }
 
     private boolean containsArchiveNode(Archive arc) throws IOException
@@ -260,9 +263,8 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 
     private ArcDef createArcDef(RRArchive archive) throws RrdException
     {
-        ArcDef def = new ArcDef(
-                archive.getConsolidationFunction(), archive.getXff()
-                , archive.getSteps(), archive.getRows());
+        String conFun = converter.convert(String.class, archive.getConsolidationFunction(), null);
+        ArcDef def = new ArcDef(conFun, archive.getXff(), archive.getSteps(), archive.getRows());
         return def;
     }
 
@@ -405,7 +407,9 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
             dbLock.writeLock().lock();
         try
         {
-            Archive rra = db.getArchive(archive.getConsolidationFunction(), archive.getSteps());
+            String conFun = 
+                    converter.convert(String.class, archive.getConsolidationFunction(), null);
+            Archive rra = db.getArchive(conFun, archive.getSteps());
             
             double xxf = rra.getXff();
             int rows = rra.getRows();
@@ -414,12 +418,10 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
             
             if (xxf!=archive.getXff())
                 RrdToolkit.setArcXff(
-                        databaseFileName, archive.getConsolidationFunction()
-                        , archive.getSteps(), archive.getXff());
+                        databaseFileName, conFun, archive.getSteps(), archive.getXff());
             if (rows!=archive.getRows())
                 RrdToolkit.resizeArchive(
-                        databaseFileName, archive.getConsolidationFunction(), archive.getSteps()
-                        , archive.getRows(), true);
+                        databaseFileName, conFun, archive.getSteps(), archive.getRows(), true);
             
             db = new RrdDb(databaseFileName);
         }

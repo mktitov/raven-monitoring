@@ -15,9 +15,10 @@
  *  under the License.
  */
 
-package org.raven.rrd;
+package org.raven.rrd.data;
 
 import org.raven.annotations.Parameter;
+import org.raven.rrd.ConsolidationFunction;
 import org.raven.tree.impl.LeafNode;
 import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
@@ -29,7 +30,7 @@ public class RRArchive extends LeafNode
 {
     @Parameter
     @Description("Consolidation function. Valid values are 'AVERAGE', 'MIN', 'MAX' and 'LAST'")
-    private String consolidationFunction = "AVERAGE";
+    private ConsolidationFunction consolidationFunction = ConsolidationFunction.AVERAGE;
     
     @Parameter
     @Description("X-files factor. Valid values are between 0 and 1")
@@ -48,12 +49,12 @@ public class RRArchive extends LeafNode
     @Description("The index if this archive in the round robin database")
     private Integer index;
 
-    public String getConsolidationFunction()
+    public ConsolidationFunction getConsolidationFunction()
     {
         return consolidationFunction;
     }
 
-    public void setConsolidationFunction(String consolidationFunction)
+    public void setConsolidationFunction(ConsolidationFunction consolidationFunction)
     {
         this.consolidationFunction = consolidationFunction;
     }

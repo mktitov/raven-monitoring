@@ -17,11 +17,22 @@
 
 package org.raven.rrd;
 
+import org.weda.internal.annotations.Service;
+import org.weda.services.TypeConverter;
+
 /**
  *
  * @author Mikhail Titov
  */
-public interface DBPool 
+public enum ConsolidationFunction 
 {
-
+    AVERAGE, MIN, MAX, LAST;
+    
+    @Service
+    private static TypeConverter converter;
+            
+    public String asString()
+    {
+        return converter.convert(String.class, this, null);
+    }
 }

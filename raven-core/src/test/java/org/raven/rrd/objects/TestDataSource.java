@@ -15,7 +15,7 @@
  *  under the License.
  */
 
-package org.raven.rrd;
+package org.raven.rrd.objects;
 
 import org.raven.ds.DataConsumer;
 import org.raven.ds.impl.AbstractDataSource;

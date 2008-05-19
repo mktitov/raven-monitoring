@@ -15,8 +15,9 @@
  *  under the License.
  */
 
-package org.raven.rrd;
+package org.raven.rrd.data;
 
+import org.raven.rrd.objects.TestDataSource;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 import org.apache.tapestry.ioc.RegistryBuilder;
@@ -36,6 +37,7 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.Tree;
 import org.raven.tree.store.TreeStore;
 import org.weda.constraints.ConstraintException;
+import org.weda.services.TypeConverter;
 
 /**
  *
@@ -46,6 +48,7 @@ public class RRDNodeTest extends ServiceTestCase
     private Configurator configurator;
     private TreeStore treeStore;
     private Tree tree;
+    private TypeConverter converter;
     
     @Before
     public void initTest()
@@ -54,10 +57,9 @@ public class RRDNodeTest extends ServiceTestCase
         assertNotNull(configurator);
         
         treeStore = configurator.getTreeStore();
-        
         treeStore.removeNodes();
-        
         tree = registry.getService(Tree.class);
+        converter = registry.getService(TypeConverter.class);
         assertNotNull(tree);
     }
 
@@ -95,7 +97,7 @@ public class RRDNodeTest extends ServiceTestCase
         attr.setValue(ds.getPath());
         treeStore.saveNodeAttribute(attr);
         attr = rrds.getNodeAttribute("interval");
-        attr.setValue("2");;
+        attr.setValue("2");
         treeStore.saveNodeAttribute(attr);
         attr = rrds.getNodeAttribute("intervalUnit");
         attr.setValue(TimeUnit.SECONDS.toString());
@@ -192,7 +194,8 @@ public class RRDNodeTest extends ServiceTestCase
         db = new RrdDb(rrdFile.getAbsolutePath());
         assertNotNull(db);
         assertTrue(db.containsDs(rrds2.getName()));
-        assertNotNull(db.getArchive(rra2.getConsolidationFunction(), rra2.getSteps()));
+        String conFun = converter.convert(String.class, rra2.getConsolidationFunction(), null);
+        assertNotNull(db.getArchive(conFun, rra2.getSteps()));
         db.close();
         
         rrds2.stop();
@@ -216,7 +219,8 @@ public class RRDNodeTest extends ServiceTestCase
         assertTrue(db.containsDs(rrds2.getName()));
         assertFalse(db.containsDs("ds2"));
         
-        Archive archive = db.getArchive(rra2.getConsolidationFunction(), rra2.getSteps());
+        conFun = converter.convert(String.class, rra2.getConsolidationFunction(), null);
+        Archive archive = db.getArchive(conFun, rra2.getSteps());
         assertNotNull(archive);
         assertEquals(50, archive.getRows());
         assertEquals(new Double(.1), new Double(archive.getXff()));
@@ -227,9 +231,7 @@ public class RRDNodeTest extends ServiceTestCase
         db = new RrdDb(rrdFile.getAbsolutePath());
         assertNotNull(db);
         assertFalse(db.containsDs(rrds2.getName()));
-        assertNull(db.getArchive(rra2.getConsolidationFunction(), rra2.getSteps()));
+        assertNull(db.getArchive(conFun, rra2.getSteps()));
         db.close();
-        
     }
-
 }

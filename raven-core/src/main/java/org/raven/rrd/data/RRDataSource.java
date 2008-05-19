@@ -15,7 +15,7 @@
  *  under the License.
  */
 
-package org.raven.rrd;
+package org.raven.rrd.data;
 
 import org.raven.annotations.Parameter;
 import org.raven.ds.impl.DataPipeImpl;
