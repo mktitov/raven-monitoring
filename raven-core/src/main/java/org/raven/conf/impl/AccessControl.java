@@ -19,6 +19,7 @@ package org.raven.conf.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.raven.tree.Node;
 
@@ -43,7 +44,13 @@ public class AccessControl {
 	private void loadData(String resource, String right)
 	{
 		this.resource = resource;
-		regExp = this.resource.replaceAll("\\*", ".*");
+		if(resource.endsWith("*"))
+		{
+			regExp = resource.substring(0, resource.length()-1);
+			regExp = Pattern.quote(regExp)+".*";
+		}
+		else regExp = Pattern.quote(resource);
+		//regExp = this.resource.replaceAll("\\*", ".*");
 		String tmp = right.toLowerCase();
 		if(tmp.length()==0 || tmp.charAt(0)=='n') this.right = NONE;
 			else if(tmp.charAt(0)=='r') this.right = READ;
