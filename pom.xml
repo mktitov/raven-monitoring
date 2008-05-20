@@ -259,7 +259,36 @@
               <version>1.5.8</version>
               <scope>compile</scope>
             </dependency>
-            
+            <dependency>
+    			<groupId>jstl</groupId>
+    			<artifactId>jstl</artifactId>
+    			<version>1.1.2</version>
+    			<scope>compile</scope>
+			</dependency>
+			<dependency>
+    			<groupId>org.apache.myfaces.core</groupId>
+    			<artifactId>myfaces-api</artifactId>
+    			<version>1.2.3</version>
+    			<scope>compile</scope>
+			</dependency>
+			<dependency>
+    			<groupId>org.apache.myfaces.core</groupId>
+    			<artifactId>myfaces-impl</artifactId>
+    			<version>1.2.3</version>
+    			<scope>compile</scope>
+			</dependency>
+			<dependency>
+    			<groupId>org.apache.myfaces.trinidad</groupId>
+    			<artifactId>trinidad-api</artifactId>
+    			<version>1.2.7</version>
+    			<scope>compile</scope>
+			</dependency>
+			<dependency>
+    			<groupId>org.apache.myfaces.trinidad</groupId>
+    			<artifactId>trinidad-impl</artifactId>
+    			<version>1.2.7</version>
+    			<scope>compile</scope>
+			</dependency>
             <!--
             <dependency>
                 <groupId>opensymphony</groupId>
