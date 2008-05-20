@@ -18,10 +18,13 @@
 package org.raven;
 
 import org.apache.tapestry.ioc.MappedConfiguration;
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.impl.NodeClassTransformerWorker;
 import org.raven.tree.impl.ParameterFieldTransformerWorker;
 import org.weda.internal.TransformWorker;
 import org.weda.internal.annotations.WedaPluginModule;
+import org.weda.internal.services.ProjectBuild;
 
 /**
  *
@@ -30,8 +33,10 @@ import org.weda.internal.annotations.WedaPluginModule;
 @WedaPluginModule
 public class TransformModule 
 {
-    public static void contributeClassTransformer(MappedConfiguration<Class, TransformWorker> conf)
+    public static void contributeClassTransformer(
+            MappedConfiguration<Class, TransformWorker> conf, ProjectBuild buildInfo)
     {
         conf.add(Parameter.class, new ParameterFieldTransformerWorker());
+        conf.add(NodeClass.class, new NodeClassTransformerWorker(buildInfo));
     }
 }

@@ -45,4 +45,8 @@ public interface Tree
      * Reloads tree from tree store.
      */
     public void reloadTree();
+    /**
+     * Returns all classes marked with {@link org.raven.annotations.NodeClass} annotation. 
+     */
+    public Class[] getAvailableNodesTypes();
 }

@@ -34,6 +34,7 @@ import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
 import org.raven.tree.NodeListener;
 import org.raven.tree.NodeShutdownError;
+import org.raven.tree.Tree;
 import org.raven.tree.store.TreeStoreError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,11 +55,13 @@ public class BaseNode implements Node, NodeListener
     protected Logger logger = LoggerFactory.getLogger(Node.class);
     
     @Service
-    protected ClassDescriptorRegistry descriptorRegistry;
+    protected static ClassDescriptorRegistry descriptorRegistry;
     @Service
-    protected TypeConverter converter;
+    protected static TypeConverter converter;
     @Service
-    protected Configurator configurator;
+    protected static Configurator configurator;
+    @Service
+    protected static Tree tree;
     
     private int id;
     
@@ -197,7 +200,7 @@ public class BaseNode implements Node, NodeListener
 
     public Class[] getChildNodeTypes()
     {
-        return childNodeTypes;
+        return childNodeTypes!=null? childNodeTypes : tree.getAvailableNodesTypes();
     }
 
     public Collection<Node> getChildrens()

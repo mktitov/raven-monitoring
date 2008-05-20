@@ -15,26 +15,21 @@
  *  under the License.
  */
 
-package org.raven.tree.impl;
+package org.raven.annotations;
 
-import org.raven.annotations.NodeClass;
-import org.weda.annotations.Description;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- *
+ * Mark the class as node class. The class must implements the {@link org.raven.tree.Node} 
+ * interface.
  * @author Mikhail Titov
  */
-@NodeClass @Description("The leaf node")
-public class LeafNode extends BaseNode
-{
-    public LeafNode()
-    {
-        super(null, false, false);
-    }
-
-    public LeafNode(String name)
-    {
-        super(null, false, false);
-        setName(name);
-    }
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface NodeClass {
 }

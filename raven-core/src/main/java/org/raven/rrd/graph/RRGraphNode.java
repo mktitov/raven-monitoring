@@ -17,15 +17,11 @@
 
 package org.raven.rrd.graph;
 
-import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.imageio.ImageIO;
 import org.jrobin.core.Util;
 import org.jrobin.graph.RrdGraph;
 import org.jrobin.graph.RrdGraphDef;
-import org.jrobin.graph.RrdGraphInfo;
 import org.raven.annotations.Parameter;
 import org.raven.rrd.data.RRDNode;
 import org.raven.tree.Node;
@@ -40,48 +36,45 @@ import org.weda.annotations.constraints.NotNull;
  */
 public class RRGraphNode extends BaseNode
 {
-    @Parameter
-    @Description("The time when the graph should begin")
+    @Parameter @Description("The time when the graph should begin")
     private String startTime = "end-1d";
-    @Parameter
-    @Description("The time when the graph should end")
+    
+    @Parameter @Description("The time when the graph should end")
     private String endTime = "now";
-    @Parameter
-    @NotNull
+    
+    @Parameter @NotNull
     @Description("The height of the drawing area within the graph")
     private Integer height;
-    @Parameter
-    @NotNull
-    @Description("The width of the drawing area within the graph")
+    
+    @Parameter @NotNull @Description("The width of the drawing area within the graph")
     private Integer width;
+    
+    @Parameter @NotNull @Description("The image format (PNG, GIF, JPEG)")
+    private ImageFormat imageFormat = ImageFormat.PNG;
     
     
     public RRGraphNode()
     {
-        super(new Class[]{RRDef.class/*, RRCdef.class, RRVdef.class*/}, true, false);
+        super(new Class[]{RRDef.class, RRLine.class/*, RRCdef.class, RRVdef.class*/}, true, false);
     }
     
     public InputStream render(String startTime, String endTime)
     {
         try
         {
+            if (getStatus()!=Status.STARTED)
+                throw new NodeError("Node not started");
+            
             RrdGraphDef def = createGraphDef(startTime, endTime);
             RrdGraph graph = new RrdGraph(def);
-            RrdGraphInfo info = graph.getRrdGraphInfo();
             
-            BufferedImage image = 
-                    new BufferedImage(
-                        info.getWidth(), info.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
-            
-            graph.render(image.createGraphics());
-            ImageIO.write
+            return new ByteArrayInputStream(graph.getRrdGraphInfo().getBytes());
         } 
         catch (Exception ex)
         {
             throw new NodeError(
                     String.format("Error generating graph (%s)", getPath()), ex);
         }
-        return null;
     }
 
     public String getEndTime()
@@ -126,54 +119,52 @@ public class RRGraphNode extends BaseNode
     
     private RrdGraphDef createGraphDef(String startTime, String endTime) throws Exception
     {
-        if (getChildrens()!=null)
+        if (getChildrens()==null)
+            return null;
+        
+        RrdGraphDef gdef = new RrdGraphDef();
+        gdef.setWidth(width);
+        gdef.setHeight(height);
+        gdef.setImageFormat(imageFormat.asString());
+        gdef.setFilename("-");
+
+        if (startTime==null && this.startTime==null)
+            throw new NodeError("startTime attribute must be seted");
+        if (endTime==null && this.endTime==null)
+            throw new NodeError("endTime attribute must be seted");
+
+        String start = startTime==null? this.startTime : startTime;
+        String end = endTime==null? this.endTime : endTime;
+
+        long[] timeInterval = Util.getTimestamps(start, end);
+
+        gdef.setStartTime(timeInterval[0]);
+        gdef.setEndTime(timeInterval[1]);
+
+        for (Node node: getChildrens())
         {
-            RrdGraphDef gdef = new RrdGraphDef();
-            gdef.setWidth(width);
-            gdef.setHeight(height);
-            
-            if (startTime==null && this.startTime==null)
-                throw new NodeError("startTime attribute must be seted");
-            if (endTime==null && this.endTime==null)
-                throw new NodeError("endTime attribute must be seted");
-            
-            String start = startTime==null? this.startTime : startTime;
-            String end = endTime==null? this.endTime : endTime;
-            
-            long[] timeInterval = Util.getTimestamps(start, end);
-            
-            gdef.setStartTime(timeInterval[0]);
-            gdef.setEndTime(timeInterval[1]);
-            
-            for (Node node: getChildrens())
+            if (node.getStatus()!=Status.STARTED)
+                continue;
+
+            if (node instanceof RRDef)
             {
-                if (node.getStatus()!=Status.STARTED)
-                    continue;
-                
-                if (node instanceof RRDef)
-                {
-                    RRDef def = (RRDef) node;
-                    RRDNode rrd = (RRDNode) def.getDataSource().getParent();
-                    gdef.datasource(
-                            def.getName(), rrd.getDatabaseFileName()
-                            , def.getDataSource().getName()
-                            , def.getConsolidationFunction().asString());
-                } 
-                else if (node instanceof RRLine)
-                {
-                    RRLine line = (RRLine) node;
-                    if (line.getDataDefinition().getStatus()==Status.STARTED)
-                        gdef.line(
-                                line.getDataDefinition().getName(), line.getColor().getColor()
-                                , line.getLegend(), line.getWidth());
-                }
+                RRDef def = (RRDef) node;
+                RRDNode rrd = (RRDNode) def.getDataSource().getParent();
+                gdef.datasource(
+                        def.getName(), rrd.getDatabaseFileName()
+                        , def.getDataSource().getName()
+                        , def.getConsolidationFunction().asString());
+            } 
+            else if (node instanceof RRLine)
+            {
+                RRLine line = (RRLine) node;
+                if (line.getDataDefinition().getStatus()==Status.STARTED)
+                    gdef.line(
+                            line.getDataDefinition().getName(), line.getColor().getColor()
+                            , line.getLegend(), line.getWidth());
             }
-            return null;
-        } 
-        else
-        {
-            return null;
         }
+        return gdef;
     }
     
 }

@@ -19,13 +19,16 @@ package org.raven.tree.impl;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import org.raven.conf.Configurator;
+import org.raven.impl.NodeClassTransformerWorker;
 import org.raven.tree.Node;
 import org.raven.tree.NodeNotFoundError;
 import org.raven.tree.Tree;
 import org.raven.tree.store.TreeStore;
 import org.raven.tree.store.TreeStoreError;
 import org.weda.internal.exception.NullParameterError;
+import org.weda.internal.services.ResourceProvider;
 
 /**
  *
@@ -37,15 +40,30 @@ public class TreeImpl implements Tree
     
     private final Configurator configurator;
     private final TreeStore treeStore;
+    private final Class[] nodesTypes;
     private Node rootNode;
 
-    public TreeImpl(Configurator configurator)
+    public TreeImpl(Configurator configurator, ResourceProvider resourceProvider) throws Exception
     {
         this.configurator = configurator;
         this.treeStore = configurator.getTreeStore();
         INSTANCE = this;
         
+        List<String> nodesTypesList = 
+                resourceProvider.getResourceStrings(
+                    NodeClassTransformerWorker.NODES_TYPES_RESOURCE);
+        
+        nodesTypes = new Class[nodesTypesList.size()];
+        int i=0;
+        for (String nodeType: nodesTypesList)
+            nodesTypes[i++] = Class.forName(nodeType);
+        
         reloadTree();
+    }
+
+    public Class[] getAvailableNodesTypes()
+    {
+        return nodesTypes;
     }
 
     public Node getRootNode()

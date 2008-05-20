@@ -15,26 +15,24 @@
  *  under the License.
  */
 
-package org.raven.tree.impl;
+package org.raven.rrd.graph;
 
-import org.raven.annotations.NodeClass;
-import org.weda.annotations.Description;
+import org.weda.internal.annotations.Service;
+import org.weda.services.TypeConverter;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass @Description("The leaf node")
-public class LeafNode extends BaseNode
+public enum ImageFormat 
 {
-    public LeafNode()
+    PNG, GIF, JPEG;
+    
+    @Service
+    private static TypeConverter converter;
+    
+    public String asString()
     {
-        super(null, false, false);
-    }
-
-    public LeafNode(String name)
-    {
-        super(null, false, false);
-        setName(name);
+        return converter.convert(String.class, this, null);
     }
 }

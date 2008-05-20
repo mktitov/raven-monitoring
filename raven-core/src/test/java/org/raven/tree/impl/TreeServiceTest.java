@@ -61,6 +61,16 @@ public class TreeServiceTest extends ServiceTestCase
         assertNotNull(configurator);
     }
     
+    @Test
+    public void getAvailableNodesTypes()
+    {
+        Class[] nodesTypes = tree.getAvailableNodesTypes();
+        assertNotNull(nodesTypes);
+        
+        //at least two nodes types must be in the array: ContainerNode, LeafNode
+        assertTrue(nodesTypes.length>=2);
+    }
+    
     @Test()
     public void initTree1()
     {

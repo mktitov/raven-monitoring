@@ -27,6 +27,7 @@ import org.raven.impl.StringToNodeConverter;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.TreeImpl;
 import org.raven.tree.store.impl.H2TreeStore;
+import org.weda.internal.services.ResourceProvider;
 
 /**
  * Tapestry IOC module for raven-core module
@@ -45,9 +46,10 @@ public class RavenCoreModule
     }
     
 //    @EagerLoad()
-    public static Tree buildTree(Configurator configurator)
+    public static Tree buildTree(Configurator configurator, ResourceProvider resourceProvider) 
+            throws Exception
     {
-        return new TreeImpl(configurator);
+        return new TreeImpl(configurator, resourceProvider);
     }
     
     public static void contributeConfigurator(MappedConfiguration<String, Class> conf)

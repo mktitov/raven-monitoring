@@ -138,8 +138,7 @@ public interface Node
      */
     public Collection<NodeListener> getListeners();
     /**
-     * Returns the array of nodes types that can belong to this node type. If method returns null
-     * then this node can hold any node type.
+     * Returns the array of nodes types that can belong to this node type. 
      * 
      * @see #addChildren(org.raven.tree.Node) 
      * @see #isContainer() 
