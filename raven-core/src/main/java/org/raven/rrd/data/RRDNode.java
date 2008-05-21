@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.commons.io.FileUtils;
@@ -67,12 +68,17 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
     private ReentrantReadWriteLock dbLock = new ReentrantReadWriteLock();
     private Map<String, String> newDsNames;
     private ReentrantLock newDsNamesLock = new ReentrantLock();
-    
+    private Sample sample;
             
     public RRDNode()
     {
         super(new Class[]{RRDataSource.class, RRArchive.class}, true, false);
         setInitializeAfterChildrens(true);
+    }
+    
+    public Lock getReadLock()
+    {
+        return dbLock.readLock();
     }
 
     @Override
@@ -107,15 +113,14 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
                 if (databaseInitialized.get())
                 {
                     databaseInitialized.set(false);
-                    db.close();
-                    db = null;
+                    closeDatabase();
                 }
             }
             finally
             {
                 dbLock.writeLock().unlock();
             }
-        } catch (IOException e)
+        } catch (Exception e)
         {
             logger.error(String.format("Error stoping node (%s)", getPath()), e);
         }
@@ -161,21 +166,26 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
         try
         {
             long time = Util.getTime();
-            dbLock.readLock().lock();
+            dbLock.writeLock().lock();
             try
             {
                 if (databaseInitialized.get())
                 {
-                    Sample sample = db.createSample(time);
+                    long stepsBetween = (time-sample.getTime())/step+1;
+                    if (stepsBetween>0)
+                    {
+                        long lastTime = sample.getTime();
+                        sample.update();
+                        sample.setTime(sample.getTime()+stepsBetween*step);
+                    }
                     Double value = converter.convert(Double.class, data, null);
                     System.out.println("!!!"+value);
                     sample.setValue(dataSource.getName(), value);
-                    sample.update();
                 }
             }
             finally
             {
-                dbLock.readLock().unlock();
+                dbLock.writeLock().unlock();
             }
         } 
         catch (Exception e)
@@ -211,9 +221,9 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
             dbLock.writeLock().lock();
         try
         {
-            db.close();
+            closeDatabase();
             RrdToolkit.addArchive(databaseFileName, createArcDef(archive), true);
-            db = new RrdDb(databaseFileName);
+            openDatabase();
         }
         finally
         {
@@ -228,9 +238,9 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
             dbLock.writeLock().lock();
         try
         {
-            db.close();
+            closeDatabase();
             RrdToolkit.addDatasource(databaseFileName, createDsDef(ds), true);
-            db = new RrdDb(databaseFileName);
+            openDatabase();
         }
         finally
         {
@@ -288,75 +298,95 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
             return;
         }
         
-        dbLock.writeLock().lock();
-        try
+        String rrdDatabasesPath = 
+                configurator.getConfig().getStringProperty(Configurator.RRD_DATABASES_PATH, null);
+
+        if (rrdDatabasesPath == null)
         {
-            String rrdDatabasesPath = 
-                    configurator.getConfig().getStringProperty(Configurator.RRD_DATABASES_PATH, null);
-
-            if (rrdDatabasesPath == null)
-            {
-                throw new Exception(String.format(
-                        "The configuration paramter (%s) must be seted"
-                        , Configurator.RRD_DATABASES_PATH));
-            }
-            File path = new File(rrdDatabasesPath);
-            if (!path.exists())
-            {
-                FileUtils.forceMkdir(path);
-            }
-            RrdDef def = new RrdDef(
-                    path.getAbsolutePath() + File.separator + getId() + ".jrrd"
-                    , Util.getTime(), step);
-
-            boolean hasDataSources = false;
-            boolean hasArchives = false;
-
-            for (Node node : getChildrens())
-            {
-                if (node instanceof RRDataSource)
-                {
-                    hasDataSources = true;
-                    RRDataSource ds = (RRDataSource) node;
-                    def.addDatasource(createDsDef(ds));
-                } 
-                else if (node instanceof RRArchive)
-                {
-                    hasArchives = true;
-                    RRArchive ar = (RRArchive) node;
-                    def.addArchive(createArcDef(ar));
-                }
-            }
-
-            if (!hasDataSources || !hasArchives)
-            {
-                return;
-            }
-
-            db = new RrdDb(def);
-            databaseFileName = db.getCanonicalPath();
-
-            configurator.getTreeStore().saveNodeAttribute(getNodeAttribute("databaseFileName"));
-
-            databaseInitialized.set(true);
+            throw new Exception(String.format(
+                    "The configuration paramter (%s) must be seted"
+                    , Configurator.RRD_DATABASES_PATH));
         }
-        finally
+        File path = new File(rrdDatabasesPath);
+        if (!path.exists())
         {
-            dbLock.writeLock().unlock();
+            FileUtils.forceMkdir(path);
         }
+        RrdDef def = new RrdDef(
+                path.getAbsolutePath() + File.separator + getId() + ".jrrd"
+                , Util.getTime(), step);
+
+        boolean hasDataSources = false;
+        boolean hasArchives = false;
+
+        for (Node node : getChildrens())
+        {
+            if (node instanceof RRDataSource)
+            {
+                hasDataSources = true;
+                RRDataSource ds = (RRDataSource) node;
+                def.addDatasource(createDsDef(ds));
+            } 
+            else if (node instanceof RRArchive)
+            {
+                hasArchives = true;
+                RRArchive ar = (RRArchive) node;
+                def.addArchive(createArcDef(ar));
+            }
+        }
+
+        if (!hasDataSources || !hasArchives)
+        {
+            return;
+        }
+
+        db = new RrdDb(def);
+        databaseFileName = db.getCanonicalPath();
+
+        configurator.getTreeStore().saveNodeAttribute(getNodeAttribute("databaseFileName"));
+
+        databaseInitialized.set(true);
     }
     
     private void initDataBase() throws Exception
     {
-        databaseInitialized.set(false);
-        if (databaseFileName!=null)
+        dbLock.writeLock().lock();
+        try
         {
-            syncDatabase();
-        } 
-        else
+            databaseInitialized.set(false);
+            if (databaseFileName!=null)
+            {
+                syncDatabase();
+            } 
+            else
+            {
+                createDatabase();
+            }
+            sample = db.createSample(Util.getTime()+step);
+        }finally
         {
-            createDatabase();
+            dbLock.writeLock().unlock();
         }
+    }
+
+    private void openDatabase() throws IOException, RrdException
+    {
+        db = new RrdDb(databaseFileName);
+        sample = db.createSample(Util.getTime()+step);
+    }
+    
+    private void closeDatabase() throws IOException, RrdException
+    {
+        tuneSampleTime();
+        sample.update();
+        db.close();
+        db = null;
+    }
+    
+    private void tuneSampleTime() throws IOException
+    {
+        if (sample.getTime()<=db.getHeader().getLastUpdateTime())
+            sample.setTime(db.getHeader().getLastUpdateTime()+1);
     }
 
     private void removeArchive(String consolidationFunction, int steps, boolean lock) throws Exception
@@ -367,10 +397,10 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
         {
             if (getStatus()==Status.STARTED && databaseInitialized.get())
             {
-                db.close();
+                closeDatabase();
                 RrdToolkit.removeArchive(
                         databaseFileName, consolidationFunction, steps, true);
-                db = new RrdDb(databaseFileName);
+                openDatabase();
             }
         }
         finally
@@ -389,9 +419,9 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
         {
             if (getStatus()==Status.STARTED && databaseInitialized.get())
             {
-                db.close();
+                closeDatabase();
                 RrdToolkit.removeDatasource(databaseFileName, dsName, true);
-                db = new RrdDb(databaseFileName);
+                openDatabase();
             }
         }
         finally
@@ -414,7 +444,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
             double xxf = rra.getXff();
             int rows = rra.getRows();
             
-            db.close();
+            closeDatabase();
             
             if (xxf!=archive.getXff())
                 RrdToolkit.setArcXff(
@@ -423,7 +453,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
                 RrdToolkit.resizeArchive(
                         databaseFileName, conFun, archive.getSteps(), archive.getRows(), true);
             
-            db = new RrdDb(databaseFileName);
+            openDatabase();
         }
         finally
         {
@@ -443,7 +473,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
             double maxValue = ds.getMaxValue();
             String dsName = ds.getDsName();
             
-            db.close();
+            closeDatabase();
             
             if (!dsName.equals(rrds.getName()))
                 RrdToolkit.renameDatasource(databaseFileName, dsName, rrds.getName());
@@ -456,7 +486,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
                         databaseFileName, rrds.getName(), rrds.getMinValue()
                         , rrds.getMaxValue(), true);
                 
-            db = new RrdDb(databaseFileName);
+            openDatabase();
         }
         finally
         {
@@ -467,64 +497,48 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
     
     private void syncDatabase() throws Exception
     {
-        dbLock.writeLock().lock();
-        try
-        {
-            db = new RrdDb(databaseFileName);
+        openDatabase();
 
-            if (getChildrens()==null)
-            {
-                db.close();
-                new File(databaseFileName).delete();
-                databaseInitialized.set(false);
+        if (getChildrens()==null)
+        {
+            db.close();
+            new File(databaseFileName).delete();
+            databaseInitialized.set(false);
 //                createDatabase();
-            }
-            else
+        }
+        else
+        {
+            HashSet<Integer> dsIndexes = new HashSet<Integer>();
+            for (Node node: getChildrens())
             {
-                HashSet<Integer> dsIndexes = new HashSet<Integer>();
-                for (Node node: getChildrens())
+                if (node instanceof RRDataSource)
                 {
-                    if (node instanceof RRDataSource)
-                    {
-                        syncDataSource((RRDataSource) node, false);
-//                        if (node.getStatus()==Status.CREATED)
-//                        {
-////                            Datasource datasource = db.getDatasource(node.getName());
-//                            if (!db.containsDs(node.getName()))
-//                                addDataSource((RRDataSource)node, false);
-//                            else 
-//                                updateDataSource((RRDataSource)node, false);
-//                        }
-                    }
-                    else if (node instanceof RRArchive)
-                    {
-                        RRArchive rra = (RRArchive) node;
-                        syncArchive(rra, false);
-                    }
+                    syncDataSource((RRDataSource) node, false);
                 }
-                
-                //deleting rrd datasources not linked with RRDataSource
-                for (int i=0; i<db.getDsCount(); ++i)
+                else if (node instanceof RRArchive)
                 {
-                    if (getChildren(db.getDatasource(i).getDsName())==null)
-                        removeDataSource(db.getDatasource(i).getDsName(), false);
-                }
-                
-                //deleting rrd archives not linked with RRArchive
-                for (int i=0; i<db.getArcCount(); ++i)
-                {
-                    Archive arc = db.getArchive(i);
-                    if (!containsArchiveNode(arc))
-                        removeArchive(arc.getConsolFun(), arc.getSteps(), false);
+                    RRArchive rra = (RRArchive) node;
+                    syncArchive(rra, false);
                 }
             }
 
-            databaseInitialized.set(true);
-        } 
-        finally
-        {
-            dbLock.writeLock().unlock();
+            //deleting rrd datasources not linked with RRDataSource
+            for (int i=0; i<db.getDsCount(); ++i)
+            {
+                if (getChildren(db.getDatasource(i).getDsName())==null)
+                    removeDataSource(db.getDatasource(i).getDsName(), false);
+            }
+
+            //deleting rrd archives not linked with RRArchive
+            for (int i=0; i<db.getArcCount(); ++i)
+            {
+                Archive arc = db.getArchive(i);
+                if (!containsArchiveNode(arc))
+                    removeArchive(arc.getConsolFun(), arc.getSteps(), false);
+            }
         }
+
+        databaseInitialized.set(true);
     }
     
     private void addNewDsName(String oldName, String newName)

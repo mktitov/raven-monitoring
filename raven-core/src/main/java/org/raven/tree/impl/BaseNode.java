@@ -19,12 +19,14 @@ package org.raven.tree.impl;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -50,7 +52,7 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
-public class BaseNode implements Node, NodeListener
+public class BaseNode implements Node, NodeListener, Comparable<Node>
 {
     protected Logger logger = LoggerFactory.getLogger(Node.class);
     
@@ -67,6 +69,7 @@ public class BaseNode implements Node, NodeListener
     
     private String name;
     private byte level = 0;
+    private int index = 0;
     private final Class[] childNodeTypes;
     private final boolean container;
     private final boolean readOnly;
@@ -133,9 +136,11 @@ public class BaseNode implements Node, NodeListener
     public synchronized void addChildren(Node node)
     {
         if (childrens==null)
-            childrens = new HashMap<String, Node>();
+            childrens = new TreeMap<String, Node>();
         
         node.setParent(this);
+        if (node.getIndex()==0)
+            node.setIndex(childrens.size()+1);
         
         childrens.put(node.getName(), node);
         node.addListener(this);
@@ -187,6 +192,16 @@ public class BaseNode implements Node, NodeListener
     {
         return level;
     }
+
+    public int getIndex()
+    {
+        return index;
+    }
+
+    public void setIndex(int index)
+    {
+        this.index = index;
+    }
     
     public boolean isReadOnly()
     {
@@ -206,6 +221,11 @@ public class BaseNode implements Node, NodeListener
     public Collection<Node> getChildrens()
     {
         return childrens==null? null : childrens.values();
+    }
+    
+    public Collection<Node> getSortedChildrens()
+    {
+        return childrens==null? null : new TreeSet<Node>(childrens.values());
     }
 
     public synchronized Node getChildren(String name)
@@ -576,5 +596,10 @@ public class BaseNode implements Node, NodeListener
     public void nodeAttributeValueChanged(
             Node node, NodeAttribute attribute, String oldValue, String newValue)
     {
+    }
+
+    public int compareTo(Node o)
+    {
+        return index-o.getIndex();
     }
 }

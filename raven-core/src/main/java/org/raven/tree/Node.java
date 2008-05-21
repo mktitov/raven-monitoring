@@ -76,15 +76,21 @@ public interface Node
      */
     public void setId(int id);
     /**
-     * Returns the current node status. 
-     * 
-     * @return
+     * Returns the status of the current node. 
      */
     public Status getStatus();
     /**
      * Returns the node level in the tree. Level 0 is a root node.
      */
     public byte getLevel();
+    /**
+     * Returns the position of this node in the {@link #getChildrens() parent childrens list}.
+     */
+    public int getIndex();
+    /**
+     * Sets the position of this node in the {@link #getChildrens() parent childrens list}.
+     */
+    public void setIndex(int index);
     /**
      * Returns the parent node for this node. For root node method returns null.
      */
@@ -123,6 +129,11 @@ public interface Node
      * has not childrens.
      */
     public Collection<Node> getChildrens();
+    /**
+     * Returns children nodes sorted by {@link #getIndex() index}. Method returns <code>null</code>
+     * if this node has not childrens.
+     */
+    public Collection<Node> getSortedChildrens();
     /**
      * Returns the children node by its name or <code>null</code> if no children node with specified
      * name.

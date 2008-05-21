@@ -15,27 +15,15 @@
  *  under the License.
  */
 
-package org.raven.rrd.objects;
+package org.raven.rrd.graph;
 
-import org.raven.ds.DataConsumer;
-import org.raven.ds.impl.AbstractDataSource;
+import org.raven.tree.Node;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class TestDataSource extends AbstractDataSource
+public interface DataDefinition extends Node
 {
-    private double value = 1.;
-    private double value2 = 100.;
-    
-    public void getDataImmediate(DataConsumer dataConsumer)
-    {
-        if (dataConsumer.getName().equals("ds"))
-            dataConsumer.setData(this, value++);
-        else
-            dataConsumer.setData(this, value2--);
-        System.out.println(">>>value"+value);
-    }
-    
+
 }

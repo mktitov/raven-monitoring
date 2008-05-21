@@ -15,27 +15,32 @@
  *  under the License.
  */
 
-package org.raven.rrd.objects;
+package org.raven.rrd.graph;
 
-import org.raven.ds.DataConsumer;
-import org.raven.ds.impl.AbstractDataSource;
+import org.raven.annotations.NodeClass;
+import org.raven.annotations.Parameter;
+import org.raven.tree.impl.LeafNode;
+import org.weda.annotations.Description;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
- * @author Mikhail Titov
+ * @author Mikhail Titov 
  */
-public class TestDataSource extends AbstractDataSource
+@NodeClass
+@Description("Comment to be printed on the graph")
+public class RRComment extends LeafNode
 {
-    private double value = 1.;
-    private double value2 = 100.;
-    
-    public void getDataImmediate(DataConsumer dataConsumer)
+    @Parameter @NotNull @Description("Comment to be printed on the graph")
+    private String comment;
+
+    public String getComment()
     {
-        if (dataConsumer.getName().equals("ds"))
-            dataConsumer.setData(this, value++);
-        else
-            dataConsumer.setData(this, value2--);
-        System.out.println(">>>value"+value);
+        return comment;
     }
-    
+
+    public void setComment(String comment)
+    {
+        this.comment = comment;
+    }
 }

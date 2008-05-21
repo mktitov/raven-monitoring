@@ -19,6 +19,8 @@ package org.raven.rrd.graph;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import org.jrobin.core.Util;
 import org.jrobin.graph.RrdGraph;
 import org.jrobin.graph.RrdGraphDef;
@@ -55,7 +57,11 @@ public class RRGraphNode extends BaseNode
     
     public RRGraphNode()
     {
-        super(new Class[]{RRDef.class, RRLine.class/*, RRCdef.class, RRVdef.class*/}, true, false);
+        super(
+            new Class[]{
+                RRDef.class, RRLine.class, RRCDef.class, RRComment.class, RRGPrint.class,
+                RRHRule.class}
+            , true, false);
     }
     
     public InputStream render(String startTime, String endTime)
@@ -65,10 +71,30 @@ public class RRGraphNode extends BaseNode
             if (getStatus()!=Status.STARTED)
                 throw new NodeError("Node not started");
             
-            RrdGraphDef def = createGraphDef(startTime, endTime);
-            RrdGraph graph = new RrdGraph(def);
+            GraphDef def = createGraphDef(startTime, endTime);
             
-            return new ByteArrayInputStream(graph.getRrdGraphInfo().getBytes());
+            for (int i=0; i<def.rrdNodes.size(); ++i)
+            {
+                RRDNode rrd = def.rrdNodes.get(i);
+                if (!rrd.getReadLock().tryLock())
+                {
+                    for (int j=0; j<i; ++j)
+                        def.rrdNodes.get(j).getReadLock().unlock();
+                    throw new NodeError(
+                            String.format("Error lock rrd (%s) node for read.", rrd.getPath()));
+                }
+            }
+            
+            try
+            {
+                RrdGraph graph = new RrdGraph(def.graphDef);
+                return new ByteArrayInputStream(graph.getRrdGraphInfo().getBytes());
+            }
+            finally
+            {
+                for (RRDNode rrd: def.rrdNodes)
+                    rrd.getReadLock().unlock();
+            }
         } 
         catch (Exception ex)
         {
@@ -116,19 +142,31 @@ public class RRGraphNode extends BaseNode
     {
         this.width = width;
     }
+
+    public ImageFormat getImageFormat()
+    {
+        return imageFormat;
+    }
+
+    public void setImageFormat(ImageFormat imageFormat)
+    {
+        this.imageFormat = imageFormat;
+    }
     
-    private RrdGraphDef createGraphDef(String startTime, String endTime) throws Exception
+    private GraphDef createGraphDef(String startTime, String endTime) throws Exception
     {
         if (getChildrens()==null)
             return null;
-        
+        GraphDef graphDef = new GraphDef();
         RrdGraphDef gdef = new RrdGraphDef();
+        graphDef.graphDef = gdef;
         gdef.setWidth(width);
         gdef.setHeight(height);
         gdef.setImageFormat(imageFormat.asString());
         gdef.setFilename("-");
 
-        if (startTime==null && this.startTime==null)
+        String strt = this.startTime;
+        if (startTime==null && strt==null)
             throw new NodeError("startTime attribute must be seted");
         if (endTime==null && this.endTime==null)
             throw new NodeError("endTime attribute must be seted");
@@ -141,7 +179,7 @@ public class RRGraphNode extends BaseNode
         gdef.setStartTime(timeInterval[0]);
         gdef.setEndTime(timeInterval[1]);
 
-        for (Node node: getChildrens())
+        for (Node node: getSortedChildrens())
         {
             if (node.getStatus()!=Status.STARTED)
                 continue;
@@ -150,11 +188,17 @@ public class RRGraphNode extends BaseNode
             {
                 RRDef def = (RRDef) node;
                 RRDNode rrd = (RRDNode) def.getDataSource().getParent();
+                graphDef.rrdNodes.add(rrd);
                 gdef.datasource(
                         def.getName(), rrd.getDatabaseFileName()
                         , def.getDataSource().getName()
                         , def.getConsolidationFunction().asString());
             } 
+            else if (node instanceof RRCDef)
+            {
+                RRCDef cdef = (RRCDef) node;
+                gdef.datasource(cdef.getName(), cdef.getExpression());
+            }
             else if (node instanceof RRLine)
             {
                 RRLine line = (RRLine) node;
@@ -163,8 +207,43 @@ public class RRGraphNode extends BaseNode
                             line.getDataDefinition().getName(), line.getColor().getColor()
                             , line.getLegend(), line.getWidth());
             }
+            else if (node instanceof RRArea)
+            {
+                RRArea area = (RRArea) node;
+                if (area.getDataDefinition().getStatus()==Status.STARTED)
+                    gdef.area(
+                            area.getDataDefinition().getName(), area.getColor().getColor()
+                            , area.getLegend());
+            }
+            else if (node instanceof RRComment)
+            {
+                RRComment comment = (RRComment) node;
+                gdef.comment(comment.getComment());
+            }
+            else if (node instanceof RRGPrint)
+            {
+                RRGPrint gprint = (RRGPrint) node;
+                if (gprint.getDataDefinition().getStatus()==Status.STARTED)
+                    gdef.gprint(
+                            gprint.getDataDefinition().getName()
+                            , gprint.getConsolidationFunction().asString()
+                            , gprint.getFormat());
+            }
+            else if (node instanceof RRHRule)
+            {
+                RRHRule hrule = (RRHRule) node;
+                gdef.hrule(
+                        hrule.getValue(), hrule.getColor().getColor(), hrule.getLegend()
+                        , hrule.getWidth());
+            }
         }
-        return gdef;
+        return graphDef;
+    }
+    
+    private class GraphDef 
+    {
+        public RrdGraphDef graphDef;
+        public List<RRDNode> rrdNodes = new ArrayList<RRDNode>(5);
     }
     
 }

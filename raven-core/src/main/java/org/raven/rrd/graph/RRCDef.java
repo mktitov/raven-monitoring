@@ -19,27 +19,30 @@ package org.raven.rrd.graph;
 
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.tree.impl.LeafNode;
 import org.weda.annotations.Description;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass
-@Description("Plots requested data as a line, using specified the color and width.")
-public class RRLine extends RRArea
+@Description(
+    "The virtual datasource. The values of this datasource are evaluating using" +
+    "mathematical expression, specified in Reverse Polish Notation (RPN).")
+public class RRCDef extends LeafNode implements DataDefinition
 {
-    @Parameter
-    @Description("The width of the line")
-    private float width = 1.0f;
+    @Parameter @NotNull @Description("Reverse Polish Notation (RPN) expression")
+    private String expression;
 
-    public Float getWidth()
+    public String getExpression()
     {
-        return width;
+        return expression;
     }
 
-    public void setWidth(Float width)
+    public void setExpression(String expression)
     {
-        this.width = width;
+        this.expression = expression;
     }
 }

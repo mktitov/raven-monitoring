@@ -102,7 +102,7 @@ public class H2TreeStore implements TreeStore
             {
                 selectNodeStatement = connection.prepareStatement(
                         String.format(
-                            "select id, owner, name, node_type " +
+                            "select id, owner, index, name, node_type " +
                             "from %s " +
                             "where id=?"
                         , NODES_TABLE_NAME));
@@ -230,7 +230,7 @@ public class H2TreeStore implements TreeStore
             
             ResultSet rs = st.executeQuery(
                     String.format(
-                            "select id, owner, name, node_type " +
+                            "select id, owner, index, name, node_type " +
                             "from %s " +
                             "order by level"
                         , NODES_TABLE_NAME));
@@ -279,17 +279,18 @@ public class H2TreeStore implements TreeStore
             
         } catch(Exception e)
         {
-            throw new TreeStoreError("Error while removing all nodes from the store.");
+            throw new TreeStoreError("Error while removing all nodes from the store.", e);
         }
     }
 
     private Node createNode(ResultSet rs, Map<Integer, Node> cache) throws Exception
     {
-        String nodeType = rs.getString(4);
+        String nodeType = rs.getString(5);
         Node node = (Node) Class.forName(nodeType).newInstance();
         
         node.setId(rs.getInt(1));
-        node.setName(rs.getString(3));
+        node.setIndex(rs.getInt(3));
+        node.setName(rs.getString(4));
         
         if (cache!=null)
         {
@@ -357,8 +358,8 @@ public class H2TreeStore implements TreeStore
             insertNodeStatement = connection.prepareStatement(
                     String.format(
                     "insert into %s " + 
-                    "(level, owner, name, node_type) " + 
-                    "values (?, ?, ?, ?)"
+                    "(level, owner, index, name, node_type) " + 
+                    "values (?, ?, ?, ?, ?)"
                     , NODES_TABLE_NAME)
                 , Statement.RETURN_GENERATED_KEYS);
         }
@@ -371,8 +372,9 @@ public class H2TreeStore implements TreeStore
         {
             insertNodeStatement.setInt(2, node.getParent().getId());
         }
-        insertNodeStatement.setString(3, node.getName());
-        insertNodeStatement.setString(4, node.getClass().getName());
+        insertNodeStatement.setInt(3, node.getIndex());
+        insertNodeStatement.setString(4, node.getName());
+        insertNodeStatement.setString(5, node.getClass().getName());
 
         insertNodeStatement.executeUpdate();
         
@@ -392,6 +394,7 @@ public class H2TreeStore implements TreeStore
                 "  id int AUTO_INCREMENT (1)," +
                 "  level TINYINT not null," +
                 "  owner int," +
+                "  index int not null, " +
                 "  name varchar(128) not null," +
                 "  node_type varchar(256) not null" +
                 ")"
@@ -467,7 +470,7 @@ public class H2TreeStore implements TreeStore
             updateNodeStatement = connection.prepareStatement(
                     String.format(
                         "update %s " +
-                        "set level=?, owner=?, name=?, node_type=? " +
+                        "set level=?, owner=?, index=?, name=?, node_type=? " +
                         "where id=? "
                         , NODES_TABLE_NAME));
         updateNodeStatement.setByte(1, node.getLevel());
@@ -476,11 +479,11 @@ public class H2TreeStore implements TreeStore
             updateNodeStatement.setNull(2, Types.INTEGER);
         else
             updateNodeStatement.setInt(2, node.getParent().getId());
+        updateNodeStatement.setInt(3, node.getIndex());
+        updateNodeStatement.setString(4, node.getName());
+        updateNodeStatement.setString(5, node.getClass().getName());
         
-        updateNodeStatement.setString(3, node.getName());
-        updateNodeStatement.setString(4, node.getClass().getName());
-        
-        updateNodeStatement.setInt(5, node.getId());
+        updateNodeStatement.setInt(6, node.getId());
         
         updateNodeStatement.executeUpdate();
     }

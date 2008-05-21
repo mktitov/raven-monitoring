@@ -1,5 +1,5 @@
 /*
- *  Copyright 2008 Mikhail Titov.
+ *  Copyright 2008 Mikhail Titov .
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -20,31 +20,26 @@ package org.raven.rrd.graph;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.rrd.ConsolidationFunction;
-import org.raven.rrd.data.RRDataSource;
 import org.raven.tree.impl.LeafNode;
 import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
 
 /**
- * This is the named source of the data for the graph. 
- * Holds the reference to the {@link org.raven.rrd.data.RRDataSource}
+ *
  * @author Mikhail Titov
  */
 @NodeClass
-@Description("Defines virtual datasource.")
-public class RRDef extends LeafNode implements DataDefinition
+@Description("")
+public class RRGPrint extends LeafNode
 {
-    @Parameter()
-    @Description("The reference to the rrd data source from which data will be taken")
-    @NotNull
-    private RRDataSource dataSource;
+    @Parameter @NotNull @Description("The reference to the data defenition node")
+    private DataDefinition dataDefinition;
     
-    @Parameter
-    @Description(
-        "Consolidation function. If not seted consolidation function will be taken from the" +
-        "rrd archive corresponding the dataSource.")
-    @NotNull
-    private ConsolidationFunction consolidationFunction = ConsolidationFunction.AVERAGE;
+    @Parameter @NotNull @Description("The consolidation function")
+    private ConsolidationFunction consolidationFunction;
+    
+    @Parameter @NotNull @Description("Format string (like \"average = %10.3f %s\")")
+    private String format;
 
     public ConsolidationFunction getConsolidationFunction()
     {
@@ -56,13 +51,23 @@ public class RRDef extends LeafNode implements DataDefinition
         this.consolidationFunction = consolidationFunction;
     }
 
-    public RRDataSource getDataSource()
+    public DataDefinition getDataDefinition()
     {
-        return dataSource;
+        return dataDefinition;
     }
 
-    public void setDataSource(RRDataSource dataSource)
+    public void setDataDefinition(DataDefinition dataDefinition)
     {
-        this.dataSource = dataSource;
+        this.dataDefinition = dataDefinition;
+    }
+
+    public String getFormat()
+    {
+        return format;
+    }
+
+    public void setFormat(String format)
+    {
+        this.format = format;
     }
 }

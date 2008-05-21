@@ -39,13 +39,13 @@ public class ParameterFieldTransformerWorker implements FieldTransformWorker
                 String body = String.format(
                         "{ " +
                         "System.out.println(\">>>getter(): \"+%1$s);" +
-                        "if (%1$s==null) " +
+                        "if (this.%1$s==null) " +
                         "{ " +
                         "   $_ = ($r)getParentAttributeRealValue(\"%1$s\"); " +
                         "} " +
                         "else " +
                         "{ " +
-                        "   $_=($r)%1$s; " +
+                        "   $_=($r)this.%1$s; " +
                         "} }", fieldAccess.getFieldName());
                 
                 fieldAccess.replace(body);
@@ -56,7 +56,7 @@ public class ParameterFieldTransformerWorker implements FieldTransformWorker
                         "{ " +
                         "   Object oldValue = %2$s.getOldValue(this, \"%1$s\");" +
                         "   $proceed($1);" +
-                        "   %2$s.fireNodeAttributeValueChanged(this, \"%1$s\", oldValue, ($w)%1$s);" +
+                        "   %2$s.fireNodeAttributeValueChanged(this, \"%1$s\", oldValue, ($w)this.%1$s);" +
                         "} "
                         , fieldAccess.getFieldName(), NodeListenerExecutorHelper.class.getName());
                 fieldAccess.replace(body);
