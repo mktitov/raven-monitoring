@@ -24,6 +24,7 @@ import java.util.List;
 import org.jrobin.core.Util;
 import org.jrobin.graph.RrdGraph;
 import org.jrobin.graph.RrdGraphDef;
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.rrd.data.RRDNode;
 import org.raven.tree.Node;
@@ -36,8 +37,13 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
+@NodeClass
+@Description("Plots the graph using RRDataSource nodes as data sources")
 public class RRGraphNode extends BaseNode
 {
+    @Parameter @Description("Title")
+    private String title;
+    
     @Parameter @Description("The time when the graph should begin")
     private String startTime = "end-1d";
     
@@ -54,13 +60,22 @@ public class RRGraphNode extends BaseNode
     @Parameter @NotNull @Description("The image format (PNG, GIF, JPEG)")
     private ImageFormat imageFormat = ImageFormat.PNG;
     
+    @Parameter @Description("Sets vertical label on the left side of the graph")
+    private String verticalLabel;
+    
+    @Parameter @Description("Sets the upper limit of a graph")
+    private Double maxValue;
+    
+    @Parameter @Description("Sets the lower limit of a grap.")
+    private Double minValue;
+    
     
     public RRGraphNode()
     {
         super(
             new Class[]{
                 RRDef.class, RRLine.class, RRCDef.class, RRComment.class, RRGPrint.class,
-                RRHRule.class}
+                RRHRule.class, RRStack.class}
             , true, false);
     }
     
@@ -152,6 +167,46 @@ public class RRGraphNode extends BaseNode
     {
         this.imageFormat = imageFormat;
     }
+
+    public String getTitle()
+    {
+        return title;
+    }
+
+    public void setTitle(String title)
+    {
+        this.title = title;
+    }
+
+    public Double getMaxValue()
+    {
+        return maxValue;
+    }
+
+    public void setMaxValue(Double maxValue)
+    {
+        this.maxValue = maxValue;
+    }
+
+    public Double getMinValue()
+    {
+        return minValue;
+    }
+
+    public void setMinValue(Double minValue)
+    {
+        this.minValue = minValue;
+    }
+
+    public String getVerticalLabel()
+    {
+        return verticalLabel;
+    }
+
+    public void setVerticalLabel(String verticalLabel)
+    {
+        this.verticalLabel = verticalLabel;
+    }
     
     private GraphDef createGraphDef(String startTime, String endTime) throws Exception
     {
@@ -160,10 +215,17 @@ public class RRGraphNode extends BaseNode
         GraphDef graphDef = new GraphDef();
         RrdGraphDef gdef = new RrdGraphDef();
         graphDef.graphDef = gdef;
+        gdef.setShowSignature(false);
+        gdef.setTitle(title);
         gdef.setWidth(width);
         gdef.setHeight(height);
         gdef.setImageFormat(imageFormat.asString());
         gdef.setFilename("-");
+        gdef.setVerticalLabel(verticalLabel);
+        if (minValue!=null)
+            gdef.setMinValue(minValue);
+        if (maxValue!=null)
+            gdef.setMaxValue(maxValue);
 
         String strt = this.startTime;
         if (startTime==null && strt==null)
@@ -206,6 +268,14 @@ public class RRGraphNode extends BaseNode
                     gdef.line(
                             line.getDataDefinition().getName(), line.getColor().getColor()
                             , line.getLegend(), line.getWidth());
+            }
+            else if (node instanceof RRStack)
+            {
+                RRStack stack = (RRStack) node;
+                if (stack.getDataDefinition().getStatus()==Status.STARTED)
+                    gdef.stack(
+                            stack.getDataDefinition().getName(), stack.getColor().getColor()
+                            , stack.getLegend());
             }
             else if (node instanceof RRArea)
             {

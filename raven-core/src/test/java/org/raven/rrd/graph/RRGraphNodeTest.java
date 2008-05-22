@@ -164,6 +164,16 @@ public class RRGraphNodeTest extends ServiceTestCase
         cdef.start();
         assertEquals(Status.STARTED, cdef.getStatus());
         
+        RRCDef cdef2 = new RRCDef();
+        cdef2.setName("cdef2");
+        gnode.addChildren(cdef2);
+        treeStore.saveNode(cdef2);
+        cdef2.init();
+        cdef2.setExpression("0,10,+");
+        cdef2.start();
+        assertEquals(Status.STARTED, cdef2.getStatus());
+        
+        assertEquals(Status.STARTED, cdef.getStatus());
         RRArea area = new RRArea();
         area.setName("area");
         gnode.addChildren(area);
@@ -186,6 +196,17 @@ public class RRGraphNodeTest extends ServiceTestCase
         line.setWidth(1f);
         line.start();
         assertEquals(Status.STARTED, line.getStatus());
+        
+        RRStack stack = new RRStack();
+        stack.setName("stack");
+        gnode.addChildren(stack);
+        treeStore.saveNode(stack);
+        stack.init();
+        stack.setColor(RRColor.ORANGE);
+        stack.setDataDefinition(cdef2);
+        stack.setLegend("Stack legend");
+        stack.start();
+        assertEquals(Status.STARTED, stack.getStatus());
         
         RRLine line2 = new RRLine();
         line2.setName("line2");
@@ -242,6 +263,10 @@ public class RRGraphNodeTest extends ServiceTestCase
         
         gnode.setHeight(600);
         gnode.setWidth(900);
+        gnode.setTitle("The title of a graph");
+        gnode.setVerticalLabel("vertical label");
+        gnode.setMaxValue(150.);
+        gnode.setMinValue(-10.);
         gnode.start();
         assertEquals(Status.STARTED, gnode.getStatus());
         
