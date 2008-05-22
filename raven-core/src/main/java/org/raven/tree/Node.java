@@ -18,6 +18,7 @@
 package org.raven.tree;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -245,4 +246,6 @@ public interface Node
      * @param attributeName the name of the attribute
      */
     public <T> T getParentAttributeRealValue(String attributeName);
+    
+    public List<Node> getChildrenList();
 }

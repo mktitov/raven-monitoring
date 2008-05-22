@@ -18,11 +18,13 @@
 package org.raven.tree.impl;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -103,6 +105,15 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     {
         this.id = id;
     }
+    
+	public List<Node> getChildrenList() 
+	{ 
+		Collection<Node> nc = this.getChildrens();
+		ArrayList<Node> na = new ArrayList<Node>();
+		if(nc!=null) na.addAll(nc);
+		return na; 
+	}
+
 
     protected void setStatus(Status status)
     {
