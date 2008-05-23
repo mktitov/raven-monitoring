@@ -24,10 +24,17 @@ import java.util.regex.Pattern;
 import org.raven.tree.Node;
 
 public class AccessControl {
-	public static final int WRITE = 3; 
+	public static final int TREE_EDIT = 16;
+	public static final char TREE_EDIT_SYMBOL = 't';
+	public static final int CONTROL = 8;
+	public static final char CONTROL_SYMBOL = 's';
+	public static final int WRITE = 4; 
+	public static final char WRITE_SYMBOL = 'w'; 
 	public static final int READ = 2; 
+	public static final char READ_SYMBOL = 'r'; 
 	public static final int TRANSIT = 1; 
 	public static final int NONE = 0; 
+	public static final char NONE_SYMBOL = 'n'; 
 	
 	private String resource = "";
 	private String regExp = "";
@@ -41,7 +48,7 @@ public class AccessControl {
 
 	public AccessControl(String resource, String right) { loadData(resource, right); }
 	
-	private void loadData(String resource, String right)
+	private void loadData(String resource, String rightString)
 	{
 		this.resource = resource;
 		if(resource.endsWith("*"))
@@ -51,10 +58,24 @@ public class AccessControl {
 		}
 		else regExp = Pattern.quote(resource);
 		//regExp = this.resource.replaceAll("\\*", ".*");
-		String tmp = right.toLowerCase();
-		if(tmp.length()==0 || tmp.charAt(0)=='n') this.right = NONE;
-			else if(tmp.charAt(0)=='r') this.right = READ;
-				else if(tmp.charAt(0)=='w') this.right = WRITE;
+		String tmp = rightString.toLowerCase();
+		if(tmp.length()==0) tmp = ""+READ_SYMBOL;
+		
+		char[] chars = tmp.toCharArray();
+		right = 0;
+		boolean none = false;
+		for(char cc: chars)
+		{
+			switch(cc)
+			{
+				case NONE_SYMBOL	: right = NONE; none= true; break;
+				case READ_SYMBOL	: right |= READ;  break;
+				case WRITE_SYMBOL  	: right |= READ|WRITE;  break;
+				case CONTROL_SYMBOL : right |= READ|CONTROL;  break;
+				case TREE_EDIT_SYMBOL : right |= READ|WRITE|TREE_EDIT;  break;
+			}
+			if(none) break;
+		}
 	}
 	
 	public static List<AccessControl> getACs(String rule)
