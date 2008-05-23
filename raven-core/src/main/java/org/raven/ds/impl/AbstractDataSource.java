@@ -19,7 +19,6 @@ package org.raven.ds.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -46,6 +45,7 @@ public abstract class AbstractDataSource
 {
     public static final String INTERVAL_ATTRIBUTE = "interval";
     public static final String INTERVAL_UNIT_ATTRIBUTE = "intervalUnit";
+    
     @Parameter @Description("Sets the core number of threads")
     private int corePoolSize = 3;
     @Parameter @Description("Sets the maximum allowed number of threads")
@@ -64,6 +64,14 @@ public abstract class AbstractDataSource
                     INTERVAL_UNIT_ATTRIBUTE, TimeUnit.class, TimeUnit.MINUTES, 
                     "the time unit of the interval attribute"));
     }
+    
+    /**
+     * Use this method to add attributes that consumers must have and set. The filled collection
+     * will be returned by the {@link org.raven.tree.AttributesGenerator#generateAttributes()}
+     * method.
+     * @param consumerAttributes the collection 
+     */
+    public abstract void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes);
 
     @Override
     public synchronized boolean start() throws NodeError

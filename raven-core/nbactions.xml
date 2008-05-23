@@ -21,4 +21,11 @@
                 <goal>compile</goal>
             </goals>
         </action>
+        <action>
+            <actionName>CUSTOM-test:compile</actionName>
+            <displayName>test:compile</displayName>
+            <goals>
+                <goal>test:compile</goal>
+            </goals>
+        </action>
     </actions>

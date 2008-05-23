@@ -100,8 +100,12 @@ public class TreeServiceTest extends ServiceTestCase
             int dsNodeId = dsNode.getId();
             assertNotNull(dsNode);
 
-            tree.remove(root);
-            assertNull(configurator.getTreeStore().getNode(rootId));
+            tree.remove(systemNode);
+            try{
+                tree.getNode(systemNode.getPath());
+                fail();
+            }
+            catch(NodeNotFoundError e) {}
             assertNull(configurator.getTreeStore().getNode(systemNodeId));
             assertNull(configurator.getTreeStore().getNode(dsNodeId));
         }finally

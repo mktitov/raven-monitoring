@@ -15,27 +15,40 @@
  *  under the License.
  */
 
-package org.raven.ds.impl.objects;
+package org.raven.snmp;
 
 import java.util.Collection;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.impl.AbstractDataSource;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.impl.NodeAttributeImpl;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class TestDataSource extends AbstractDataSource
+public class SnmpNode extends AbstractDataSource
 {
+
     public void getDataImmediate(DataConsumer dataConsumer)
     {
-        dataConsumer.setData(this, null);
+        ;
     }
 
     @Override
     public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
     {
+        NodeAttributeImpl attr = 
+                new NodeAttributeImpl(
+                    "host", String.class, null, "The ip address or the domain name of the device");
+        attr.setRequired(true);
+        consumerAttributes.add(attr);
+        
+        attr = new NodeAttributeImpl("OID", String.class, null, "The Object Identifier Class");
+        attr.setRequired(true);
+        consumerAttributes.add(attr);
+        
+//        attr = new NodeAttributeImpl("SNMP port", Integer.class, 161)
     }
-    
+
 }

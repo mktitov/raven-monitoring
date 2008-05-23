@@ -116,6 +116,9 @@ public class TreeImpl implements Tree
         node.shutdown();
         
         configurator.getTreeStore().removeNode(node.getId());
+        
+        if (node.getParent()!=null)
+            node.getParent().removeChildren(node);
     }
 
     private void createRootNode()

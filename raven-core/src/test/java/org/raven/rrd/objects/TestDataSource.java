@@ -17,8 +17,10 @@
 
 package org.raven.rrd.objects;
 
+import java.util.Collection;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.impl.AbstractDataSource;
+import org.raven.tree.NodeAttribute;
 
 /**
  *
@@ -36,6 +38,11 @@ public class TestDataSource extends AbstractDataSource
         else
             dataConsumer.setData(this, value2--);
         System.out.println(">>>value"+value);
+    }
+
+    @Override
+    public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
+    {
     }
     
 }
