@@ -96,6 +96,11 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
         this.readOnly = readOnly;
     }
 
+    public Logger getLogger()
+    {
+        return logger;
+    }
+
     public int getId() 
     {
         return id;

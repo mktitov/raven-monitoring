@@ -55,11 +55,13 @@ public class NodeListenerExecutorHelper
             String pattern = 
                     classDescriptorRegistry.getPropertyDescriptor(
                         node.getClass(), attributeName).getPattern();
-            for (NodeListener listener: node.getListeners())
-                listener.nodeAttributeValueChanged(
-                    node, attr, 
-                    converter.convert(String.class, oldValue, pattern),
-                    converter.convert(String.class, newValue, pattern));
+            ((BaseNode)node).fireAttributeValueChanged(
+                    (NodeAttributeImpl) attr, converter.convert(String.class, oldValue, pattern));
+//            for (NodeListener listener: node.getListeners())
+//                listener.nodeAttributeValueChanged(
+//                    node, attr, 
+//                    converter.convert(String.class, oldValue, pattern),
+//                    converter.convert(String.class, newValue, pattern));
         }
     }
 }

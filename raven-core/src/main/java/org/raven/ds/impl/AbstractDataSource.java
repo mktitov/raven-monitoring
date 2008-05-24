@@ -24,6 +24,7 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import org.raven.Helper;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
@@ -63,6 +64,7 @@ public abstract class AbstractDataSource
                 new NodeAttributeImpl(
                     INTERVAL_UNIT_ATTRIBUTE, TimeUnit.class, TimeUnit.MINUTES, 
                     "the time unit of the interval attribute"));
+        fillConsumerAttributes(consumerAttributes);
     }
     
     /**
@@ -181,6 +183,7 @@ public abstract class AbstractDataSource
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public void nodeStatusChanged(Node node, Status oldStatus, Status newStatus)
     {
         if (getStatus()==Status.STARTED)
@@ -190,6 +193,12 @@ public abstract class AbstractDataSource
             else
                 removeDataConsumer((DataConsumer) node);
         }
+    }
+    
+    protected boolean checkDataConsumer(DataConsumer consumer)
+    {
+        return  consumer.getStatus()==Status.STARTED 
+                && Helper.checkAttributes(this, consumerAttributes, consumer);
     }
     
     private class Task implements Runnable

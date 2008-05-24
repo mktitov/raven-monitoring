@@ -20,6 +20,7 @@ package org.raven.tree;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import org.slf4j.Logger;
 
 /**
  * The base interface of the observable object tree.
@@ -68,8 +69,13 @@ public interface Node
      * @see #getPath() 
      */
     public static String NODE_SEPARATOR = "/";
+    
     /**
-     * Returns unique node id
+     * Returns the node logger.
+     */
+    public Logger getLogger();
+    /**
+     * Returns unique node id.
      */
     public int getId();
     /**

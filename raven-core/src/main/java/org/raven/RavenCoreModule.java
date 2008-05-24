@@ -23,6 +23,7 @@ import org.apache.tapestry.ioc.ServiceBinder;
 import org.raven.conf.Configurator;
 import org.raven.conf.impl.ConfiguratorImpl;
 import org.raven.impl.NodeToStringConverter;
+import org.raven.impl.SnmpVariableToNumberConverter;
 import org.raven.impl.StringToNodeConverter;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.TreeImpl;
@@ -61,5 +62,6 @@ public class RavenCoreModule
     {
         conf.add(new NodeToStringConverter());
         conf.add(new StringToNodeConverter());
+        conf.add(new SnmpVariableToNumberConverter());
     }
 }
