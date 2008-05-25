@@ -69,6 +69,10 @@ public class RRGraphNode extends BaseNode
     @Parameter @Description("Sets the lower limit of a grap.")
     private Double minValue;
     
+    @Parameter @Description("Sets unit to be displayed on y axis")
+    private String unit;
+    @Parameter @Description("Sets the 10**unitsExponent scaling of the y-axis values")
+    private Integer unitsExponent;
     
     public RRGraphNode()
     {
@@ -207,6 +211,26 @@ public class RRGraphNode extends BaseNode
     {
         this.verticalLabel = verticalLabel;
     }
+
+    public String getUnit()
+    {
+        return unit;
+    }
+
+    public void setUnit(String unit)
+    {
+        this.unit = unit;
+    }
+
+    public Integer getUnitsExponent()
+    {
+        return unitsExponent;
+    }
+
+    public void setUnitsExponent(Integer unitsExponent)
+    {
+        this.unitsExponent = unitsExponent;
+    }
     
     private GraphDef createGraphDef(String startTime, String endTime) throws Exception
     {
@@ -226,6 +250,10 @@ public class RRGraphNode extends BaseNode
             gdef.setMinValue(minValue);
         if (maxValue!=null)
             gdef.setMaxValue(maxValue);
+        if (unit!=null)
+            gdef.setUnit(unit);
+        if (unitsExponent!=null)
+            gdef.setUnitsExponent(unitsExponent);
 
         String strt = this.startTime;
         if (startTime==null && strt==null)
