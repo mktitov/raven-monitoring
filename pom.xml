@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.raven</groupId>
     <artifactId>raven</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
-    <name>Raven monitoring </name>
+    <name>Raven monitoring</name>
     <url>http://code.google.com/p/raven-monitoring</url>
     <inceptionYear>2008</inceptionYear>
     <licenses>
@@ -20,7 +20,6 @@
             <id>tim</id>
             <name>Mikhail K. Titov</name>
             <email>mikhail1207@gmail.com</email>
-            <url/>
             <roles>
                 <role>Developer</role>
             </roles>
@@ -30,7 +29,6 @@
             <id>psn</id>
             <name>Sergey N. Pinevskiy</name>
             <email>pinevskiy@gmail.com</email>
-            <url/>
             <roles>
                 <role>Developer</role>
             </roles>
@@ -96,14 +94,6 @@
         </repository>
         -->
     </repositories>
-    <pluginRepositories>
-        <!--
-        <pluginRepository>
-            <id>DataNucleus_2</id>
-            <url>http://www.datanucleus.org/downloads/maven2-nightly</url>
-        </pluginRepository>
-        -->
-    </pluginRepositories>
     <reporting>
         <plugins>
             <plugin>
