@@ -31,7 +31,7 @@ public class RRLine extends RRArea
 {
     @Parameter
     @Description("The width of the line")
-    private float width = 1.0f;
+    private Float width = 1.0f;
 
     public Float getWidth()
     {

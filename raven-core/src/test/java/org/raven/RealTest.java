@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.IOUtils;
 import org.apache.tapestry.ioc.RegistryBuilder;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.raven.conf.Configurator;
 import org.raven.ds.impl.AbstractDataSource;
@@ -69,6 +70,7 @@ public class RealTest extends ServiceTestCase
         store.removeNodes();
     }
     
+    @Ignore
     @Test
     public void test() throws Exception
     {

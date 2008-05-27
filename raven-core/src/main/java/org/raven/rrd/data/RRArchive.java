@@ -17,6 +17,7 @@
 
 package org.raven.rrd.data;
 
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.rrd.ConsolidationFunction;
 import org.raven.tree.impl.LeafNode;
@@ -26,6 +27,8 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
+@NodeClass
+@Description("Round robin archive node")
 public class RRArchive extends LeafNode
 {
     @Parameter

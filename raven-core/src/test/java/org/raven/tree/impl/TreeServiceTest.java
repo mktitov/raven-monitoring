@@ -194,7 +194,7 @@ public class TreeServiceTest extends ServiceTestCase
         
         checkAttributes(node, null);
         
-        NodeAttribute attr = node.getNodeAttribute("string parameter");
+        NodeAttribute attr = node.getNodeAttribute("stringParameter");
         attr.setValue("value");
         
         checkAttributes(node, "value");
@@ -288,6 +288,7 @@ public class TreeServiceTest extends ServiceTestCase
         assertEquals(node, node1.getNode());
         
         node1.getNodeAttribute("node").setValue(null);
+        configurator.getTreeStore().saveNodeAttribute(node1.getNodeAttribute("node"));
         attr = node1.getNodeAttribute("gAttr");
         assertNull(attr);
         
@@ -305,7 +306,7 @@ public class TreeServiceTest extends ServiceTestCase
         assertNotNull(node.getNodeAttributes());
         assertEquals(1, node.getNodeAttributes().size());
 
-        NodeAttribute stringAttr = node.getNodeAttribute("string parameter");
+        NodeAttribute stringAttr = node.getNodeAttribute("stringParameter");
         assertNotNull(stringAttr);
         assertEquals(String.class, stringAttr.getType());
         assertEquals("stringParameter", stringAttr.getParameterName());

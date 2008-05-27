@@ -20,7 +20,6 @@ package org.raven.tree.impl.objects;
 import org.raven.annotations.Parameter;
 import org.raven.tree.impl.ContainerNode;
 import org.weda.annotations.Description;
-import org.weda.annotations.DisplayName;
 
 /**
  *
@@ -29,7 +28,7 @@ import org.weda.annotations.DisplayName;
 public class NodeWithParameters extends ContainerNode
 {
     @Parameter
-    @DisplayName("string parameter") @Description("This is a string parameter")
+    @Description("This is a string parameter")
     private String stringParameter;
 
     public String getStringParameter()

@@ -41,12 +41,13 @@ public class ParameterFieldTransformerWorker implements FieldTransformWorker
                         "System.out.println(\">>>getter(): \"+%1$s);" +
                         "if (this.%1$s==null) " +
                         "{ " +
-                        "   $_ = ($r)getParentAttributeRealValue(\"%1$s\"); " +
+                        "   $_ = ($r)%2$s.getParentAttributeValue(this, \"%1$s\", $type); " +
                         "} " +
                         "else " +
                         "{ " +
                         "   $_=($r)this.%1$s; " +
-                        "} }", fieldAccess.getFieldName());
+                        "} }"
+                        , fieldAccess.getFieldName(), NodeListenerExecutorHelper.class.getName());
                 
                 fieldAccess.replace(body);
             }

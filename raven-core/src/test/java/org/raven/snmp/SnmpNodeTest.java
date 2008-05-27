@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.tapestry.ioc.RegistryBuilder;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
 import org.raven.ServiceTestCase;
@@ -69,7 +70,8 @@ public class SnmpNodeTest extends ServiceTestCase
         builder.add(RavenCoreModule.class);
     }
     
-    @Test
+    @Ignore
+    @Test 
     public void snmp4j() throws Exception
     {
         UdpAddress addr = new UdpAddress("127.0.0.1/161");
@@ -107,6 +109,7 @@ public class SnmpNodeTest extends ServiceTestCase
         }
     }
     
+    @Ignore
     @Test
     public void test() throws ConstraintException, InterruptedException 
     {

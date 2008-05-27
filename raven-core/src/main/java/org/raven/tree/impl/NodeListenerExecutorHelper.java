@@ -18,10 +18,12 @@
 package org.raven.tree.impl;
 
 import org.raven.tree.Node;
+import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeListener;
 import org.weda.beans.GetOperation;
 import org.weda.beans.ObjectUtils;
+import org.weda.beans.PropertyDescriptor;
 import org.weda.internal.annotations.Service;
 import org.weda.services.ClassDescriptorRegistry;
 import org.weda.services.PropertyOperationCompiler;
@@ -39,7 +41,21 @@ public class NodeListenerExecutorHelper
     private static ClassDescriptorRegistry classDescriptorRegistry;
     @Service
     private static PropertyOperationCompiler compiler;
-            
+    
+    public static Object getParentAttributeValue(
+            Node node, String parameterName, Class parameterType)
+    {
+        Object val = node.getParentAttributeRealValue(parameterName);
+        if (val==null)
+            return null;
+        else
+        {
+            PropertyDescriptor desc = 
+                    classDescriptorRegistry.getPropertyDescriptor(node.getClass(), parameterName);
+            return converter.convert(parameterType, val, desc.getPattern());
+        }
+    }
+    
     public static Object getOldValue(Object obj, String propertyName)
     {
         GetOperation getter = compiler.compileGetOperation(obj.getClass(), propertyName);
@@ -49,7 +65,9 @@ public class NodeListenerExecutorHelper
     public static void fireNodeAttributeValueChanged(
             Node node, String attributeName, Object oldValue, Object newValue)
     {
-        if (node.getListeners()!=null && !ObjectUtils.equals(oldValue, newValue))
+        if (   node.getStatus()!=Status.CREATED 
+            && node.getListeners()!=null 
+            && !ObjectUtils.equals(oldValue, newValue))
         {
             NodeAttribute attr = node.getNodeAttribute(attributeName);
             String pattern = 

@@ -18,6 +18,8 @@
 package org.raven.tree.impl;
 
 import java.lang.annotation.Annotation;
+import org.raven.tree.Node;
+import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeParameter;
 import org.weda.annotations.constraints.NotNull;
@@ -40,7 +42,7 @@ public class NodeParameterImpl implements NodeParameter
     @Service
     private TypeConverter converter;
     
-    private final Object node;
+    private final Node node;
     private final String name;        
     
     private PropertyDescriptor propertyDescriptor;
@@ -49,7 +51,7 @@ public class NodeParameterImpl implements NodeParameter
     private SetOperation setter;
     private boolean required = false;
 
-    public NodeParameterImpl(Object node, PropertyDescriptor desc)
+    public NodeParameterImpl(Node node, PropertyDescriptor desc)
     {
         this.node = node;
         this.name = desc.getName();
@@ -100,7 +102,8 @@ public class NodeParameterImpl implements NodeParameter
     public void setValue(Object value) throws ConstraintException
     {
         Object val = converter.convert(getType(), value, getPattern());
-        propertyDescriptor.check(val);
+        if (node.getStatus()!=Status.CREATED)
+            propertyDescriptor.check(val);
         setter.setValue(node, val);
     }
 

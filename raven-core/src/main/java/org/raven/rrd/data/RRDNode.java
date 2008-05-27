@@ -37,6 +37,7 @@ import org.jrobin.core.RrdException;
 import org.jrobin.core.RrdToolkit;
 import org.jrobin.core.Sample;
 import org.jrobin.core.Util;
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
 import org.raven.ds.DataConsumer;
@@ -53,6 +54,8 @@ import org.weda.annotations.Description;
  *
  * @author Mikhail Titov
  */
+@NodeClass
+@Description("Saves data in round robin database")
 public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 {
     @Parameter 

@@ -17,6 +17,7 @@
 
 package org.raven.rrd.data;
 
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.impl.DataPipeImpl;
 import org.weda.annotations.Description;
@@ -25,6 +26,8 @@ import org.weda.annotations.Description;
  *
  * @author Mikhail Titov
  */
+@NodeClass
+@Description("Round robin database data source node")
 public class RRDataSource extends DataPipeImpl
 {
     @Parameter 
