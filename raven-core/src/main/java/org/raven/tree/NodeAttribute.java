@@ -101,6 +101,10 @@ public interface NodeAttribute extends Cloneable
      */
     public Class getType();
     /**
+     * Sets the type of the attribute.
+     */
+    public void setType(Class type);
+    /**
      * Returns the parent attribute name.
      */
     public String getParentAttribute();

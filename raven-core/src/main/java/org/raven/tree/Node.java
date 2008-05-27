@@ -173,6 +173,10 @@ public interface Node
      */
     public void addNodeAttribute(NodeAttribute attr);
     /**
+     * Removes node attribute by its name.
+     */
+    public void removeNodeAttribute(String name);
+    /**
      * Returns node attributes
      */
     public Collection<NodeAttribute> getNodeAttributes();

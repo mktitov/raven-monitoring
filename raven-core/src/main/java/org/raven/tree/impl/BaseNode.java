@@ -189,6 +189,12 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
         nodeAttributes.put(attr.getName(), attr);
     }
 
+    public synchronized void removeNodeAttribute(String name)
+    {
+        if (nodeAttributes!=null)
+            nodeAttributes.remove(name);
+    }
+
     public String getName()
     {
         return name;
