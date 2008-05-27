@@ -66,6 +66,10 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
     @Description("The file name of the rrd database")
     private String databaseFileName;
     
+    @Parameter
+    @Description("Backup database file before structure change operations")
+    private boolean backup = false;
+    
     private AtomicBoolean databaseInitialized = new AtomicBoolean(false);
     private RrdDb db;
     private ReentrantReadWriteLock dbLock = new ReentrantReadWriteLock();
@@ -218,6 +222,16 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
         this.step = step;
     }
 
+    public boolean isBackup()
+    {
+        return backup;
+    }
+
+    public void setBackup(boolean backup)
+    {
+        this.backup = backup;
+    }
+
     private void addArchive(RRArchive archive, boolean lock) throws Exception
     {
         if (lock)
@@ -225,7 +239,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
         try
         {
             closeDatabase();
-            RrdToolkit.addArchive(databaseFileName, createArcDef(archive), true);
+            RrdToolkit.addArchive(databaseFileName, createArcDef(archive), backup);
             openDatabase();
         }
         finally
@@ -242,7 +256,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
         try
         {
             closeDatabase();
-            RrdToolkit.addDatasource(databaseFileName, createDsDef(ds), true);
+            RrdToolkit.addDatasource(databaseFileName, createDsDef(ds), backup);
             openDatabase();
         }
         finally
@@ -402,7 +416,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
             {
                 closeDatabase();
                 RrdToolkit.removeArchive(
-                        databaseFileName, consolidationFunction, steps, true);
+                        databaseFileName, consolidationFunction, steps, backup);
                 openDatabase();
             }
         }
@@ -423,7 +437,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
             if (getStatus()==Status.STARTED && databaseInitialized.get())
             {
                 closeDatabase();
-                RrdToolkit.removeDatasource(databaseFileName, dsName, true);
+                RrdToolkit.removeDatasource(databaseFileName, dsName, backup);
                 openDatabase();
             }
         }
@@ -454,7 +468,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
                         databaseFileName, conFun, archive.getSteps(), archive.getXff());
             if (rows!=archive.getRows())
                 RrdToolkit.resizeArchive(
-                        databaseFileName, conFun, archive.getSteps(), archive.getRows(), true);
+                        databaseFileName, conFun, archive.getSteps(), archive.getRows(), backup);
             
             openDatabase();
         }

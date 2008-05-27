@@ -224,6 +224,7 @@ public class RRDNodeTest extends ServiceTestCase
         assertNotNull(archive);
         assertEquals(50, archive.getRows());
         assertEquals(new Double(.1), new Double(archive.getXff()));
+        db.close();
         
         rrd.removeChildren(rrds2);
         rrd.removeChildren(rra2);

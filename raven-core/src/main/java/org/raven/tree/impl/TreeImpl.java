@@ -93,15 +93,21 @@ public class TreeImpl implements Tree
 
     public void reloadTree() throws TreeStoreError
     {
-
+        shutdown();
+        rootNode = null;
+    
         rootNode = treeStore.getRootNode();
-
         if (rootNode == null)
         {
             createRootNode();
         }
-        
         initNode(rootNode);
+    }
+    
+    public void shutdown()
+    {
+        if (rootNode!=null)
+            shutdownNode(rootNode);
     }
 
     public void remove(Node node)
@@ -163,5 +169,16 @@ public class TreeImpl implements Tree
             if (node.getStatus()==Node.Status.INITIALIZED && node.isAutoStart())
                 node.start();
         }
+    }
+
+    private void shutdownNode(Node node)
+    {
+       Collection<Node> childrens = node.getChildrens();
+       
+       if (childrens!=null)
+           for (Node children: childrens)
+               shutdownNode(children);
+       
+       node.shutdown();
     }
 }
