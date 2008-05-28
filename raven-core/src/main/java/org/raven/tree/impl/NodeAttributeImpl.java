@@ -17,6 +17,10 @@
 
 package org.raven.tree.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
@@ -24,6 +28,8 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeParameter;
 import org.weda.beans.ObjectUtils;
 import org.weda.constraints.ConstraintException;
+import org.weda.constraints.ReferenceValue;
+import org.weda.constraints.TooManyReferenceValuesException;
 import org.weda.internal.annotations.Service;
 import org.weda.services.TypeConverter;
 
@@ -199,6 +205,28 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable
         return type!=null && AttributesGenerator.class.isAssignableFrom(type);
     }
 
+    public List<String> getReferenceValues()
+    {
+        if (parameter==null)
+            return null;
+        else {
+            try
+            {
+                List<ReferenceValue> refValues = parameter.getReferenceValues();
+                if (refValues==null)
+                    return null;
+                List<String> values = new ArrayList<String>(refValues.size());
+                for (ReferenceValue refValue: refValues)
+                    values.add(converter.convert(
+                        String.class, refValue.getValue(), parameter.getPattern()));
+                return values;
+            } catch (TooManyReferenceValuesException ex)
+            {
+                return null;
+            }
+        }
+    }
+
     @Override
     public Object clone() throws CloneNotSupportedException
     {
@@ -206,6 +234,4 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable
         
         return clone;
     }
-    
-    
 }

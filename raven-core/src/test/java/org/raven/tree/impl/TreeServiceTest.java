@@ -17,6 +17,7 @@
 
 package org.raven.tree.impl;
 
+import java.util.List;
 import java.util.Set;
 import org.apache.tapestry.ioc.RegistryBuilder;
 import org.junit.Before;
@@ -190,7 +191,7 @@ public class TreeServiceTest extends ServiceTestCase
         
         assertEquals(Node.Status.INITIALIZED, node.getStatus());
         assertNotNull(node.getNodeAttributes());
-        assertEquals(1, node.getNodeAttributes().size());
+        assertEquals(2, node.getNodeAttributes().size());
         
         checkAttributes(node, null);
         
@@ -205,6 +206,12 @@ public class TreeServiceTest extends ServiceTestCase
         
         node = (NodeWithParameters) tree.getRootNode().getChildren("node");
         checkAttributes(node, "value");
+        
+        NodeAttribute enumAttr = node.getNodeAttribute("enumParameter");
+        List<String> refValues = enumAttr.getReferenceValues();
+        assertNotNull(refValues);
+        assertEquals(2, refValues.size());
+        assertArrayEquals(new String[]{"ONE", "TWO"}, refValues.toArray());
     }
     
     @Test
@@ -304,7 +311,7 @@ public class TreeServiceTest extends ServiceTestCase
     private void checkAttributes(NodeWithParameters node, String value)
     {
         assertNotNull(node.getNodeAttributes());
-        assertEquals(1, node.getNodeAttributes().size());
+        assertEquals(2, node.getNodeAttributes().size());
 
         NodeAttribute stringAttr = node.getNodeAttribute("stringParameter");
         assertNotNull(stringAttr);

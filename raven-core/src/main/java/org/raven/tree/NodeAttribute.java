@@ -17,6 +17,7 @@
 
 package org.raven.tree;
 
+import java.util.List;
 import org.weda.constraints.ConstraintException;
 
 /**
@@ -112,6 +113,11 @@ public interface NodeAttribute extends Cloneable
      * Sets the name of the parent attribute.
      */
     public void setParentAttribute(String name);
+    /**
+     * Returns the list of the values that this attribute can take. If method returns null
+     * then the attribute does not have reference values.
+     */
+    public List<String> getReferenceValues();
     
     public Object clone() throws CloneNotSupportedException;
 }

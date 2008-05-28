@@ -17,8 +17,11 @@
 
 package org.raven.tree;
 
+import java.util.List;
 import org.weda.beans.PropertyDescriptor;
 import org.weda.constraints.ConstraintException;
+import org.weda.constraints.ReferenceValue;
+import org.weda.constraints.TooManyReferenceValuesException;
 
 /**
  * Holds the node logic object parameter
@@ -76,4 +79,9 @@ public interface NodeParameter
      * @param nodeAttribute
      */
     public void setNodeAttribute(NodeAttribute nodeAttribute);
+    /**
+     * Returns the parameter reference values or <code>null</code> if parameter doesn't have
+     * reference values.
+     */
+    public List<ReferenceValue> getReferenceValues() throws TooManyReferenceValuesException;
 }

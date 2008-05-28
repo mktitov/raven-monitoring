@@ -27,9 +27,14 @@ import org.weda.annotations.Description;
  */
 public class NodeWithParameters extends ContainerNode
 {
+    public enum TestEnum {ONE, TWO};
+    
     @Parameter
     @Description("This is a string parameter")
     private String stringParameter;
+    
+    @Parameter
+    private TestEnum enumParameter;
 
     public String getStringParameter()
     {
@@ -40,4 +45,16 @@ public class NodeWithParameters extends ContainerNode
     {
         this.stringParameter = stringParameter;
     }
+
+    public TestEnum getEnumParameter()
+    {
+        return enumParameter;
+    }
+
+    public void setEnumParameter(TestEnum enumParameter)
+    {
+        this.enumParameter = enumParameter;
+    }
+    
+    
 }

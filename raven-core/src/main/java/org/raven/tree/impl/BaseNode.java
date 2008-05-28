@@ -529,7 +529,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
             Iterator<Map.Entry<String, NodeAttribute>> it = nodeAttributes.entrySet().iterator();
             while (it.hasNext())
             {
-                NodeAttribute attr = it.next().getValue();
+                NodeAttributeImpl attr = (NodeAttributeImpl) it.next().getValue();
                 if (attr.getParameterName()!=null)
                 {
                     NodeParameter param = 
@@ -540,6 +540,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
                     {
                         param.setNodeAttribute(attr);
                         param.setValue(attr.getValue());
+                        attr.setParameter(param);
                     }
                 }
             }

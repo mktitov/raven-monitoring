@@ -18,6 +18,7 @@
 package org.raven.tree.impl;
 
 import java.lang.annotation.Annotation;
+import java.util.List;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
@@ -27,6 +28,8 @@ import org.weda.beans.GetOperation;
 import org.weda.beans.PropertyDescriptor;
 import org.weda.beans.SetOperation;
 import org.weda.constraints.ConstraintException;
+import org.weda.constraints.ReferenceValue;
+import org.weda.constraints.TooManyReferenceValuesException;
 import org.weda.internal.annotations.Service;
 import org.weda.services.PropertyOperationCompiler;
 import org.weda.services.TypeConverter;
@@ -126,5 +129,9 @@ public class NodeParameterImpl implements NodeParameter
     {
         return propertyDescriptor.getPattern();
     }
-    
+
+    public List<ReferenceValue> getReferenceValues() throws TooManyReferenceValuesException
+    {
+        return propertyDescriptor.getReferenceValues(node, null, Integer.MAX_VALUE);
+    }
 }
