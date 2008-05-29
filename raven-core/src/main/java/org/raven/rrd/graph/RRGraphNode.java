@@ -17,6 +17,7 @@
 
 package org.raven.rrd.graph;
 
+import org.raven.ImageFormat;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import java.util.List;
 import org.jrobin.core.Util;
 import org.jrobin.graph.RrdGraph;
 import org.jrobin.graph.RrdGraphDef;
+import org.raven.DynamicImageNode;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.rrd.data.RRDNode;
@@ -39,7 +41,7 @@ import org.weda.annotations.constraints.NotNull;
  */
 @NodeClass
 @Description("Plots the graph using RRDataSource nodes as data sources")
-public class RRGraphNode extends BaseNode
+public class RRGraphNode extends BaseNode implements DynamicImageNode
 {
     @Parameter @Description("Title")
     private String title;
@@ -81,6 +83,11 @@ public class RRGraphNode extends BaseNode
                 RRDef.class, RRLine.class, RRCDef.class, RRComment.class, RRGPrint.class,
                 RRHRule.class, RRStack.class}
             , true, false);
+    }
+
+    public InputStream render()
+    {
+        return render(null, null);
     }
     
     public InputStream render(String startTime, String endTime)

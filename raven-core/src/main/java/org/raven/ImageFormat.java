@@ -15,7 +15,7 @@
  *  under the License.
  */
 
-package org.raven.rrd.graph;
+package org.raven;
 
 import org.weda.internal.annotations.Service;
 import org.weda.services.TypeConverter;
