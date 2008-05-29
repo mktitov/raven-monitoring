@@ -173,6 +173,12 @@ public interface Node
      */
     public void addNodeAttribute(NodeAttribute attr);
     /**
+     * Adds node attribute dependency.
+     * @param attributeName attribute name.
+     * @param listener the node attribute listener.
+     */
+    public void addNodeAttributeDependency(String attributeName, NodeAttributeListener listener);
+    /**
      * Removes node attribute by its name.
      */
     public void removeNodeAttribute(String name);

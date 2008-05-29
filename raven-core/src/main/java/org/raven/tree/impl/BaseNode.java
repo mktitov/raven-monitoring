@@ -36,6 +36,7 @@ import org.raven.tree.NodeParameter;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
 import org.raven.template.TemplateEntry;
+import org.raven.tree.NodeAttributeListener;
 import org.raven.tree.NodeListener;
 import org.raven.tree.NodeShutdownError;
 import org.raven.tree.Tree;
@@ -82,6 +83,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     private Map<String, NodeAttribute> nodeAttributes;
     private Set<Node> dependentNodes;
     private Collection<NodeListener>  listeners;
+    private Map<NodeAttribute, Set<NodeAttributeListener>> attributesListeners;
     
     private boolean autoStart = true;
     private boolean initializeAfterChildrens = false;
@@ -184,6 +186,27 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
         return dependentNodes.add(dependentNode);
     }
 
+    public synchronized void addNodeAttributeDependency(
+            String attributeName, NodeAttributeListener listener)
+    {
+        NodeAttribute attr = getNodeAttribute(attributeName);
+        if (attr==null)
+            throw new NodeError(String.format(
+                    "Attribute (%s) not found in the node (%s)", attributeName, getPath()));
+        
+        if (attributesListeners==null)
+            attributesListeners = new HashMap<NodeAttribute, Set<NodeAttributeListener>>();
+        
+        Set<NodeAttributeListener> listeners = attributesListeners.get(attr);
+        if (listeners==null)
+        {
+            listeners = new HashSet<NodeAttributeListener>();
+            attributesListeners.put(attr, listeners);
+        }
+        
+        listeners.add(listener);
+    }
+
     public synchronized boolean removeDependentNode(Node dependentNode)
     {
         return dependentNodes==null? false : dependentNodes.remove(dependentNode);
@@ -200,7 +223,11 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     public synchronized void removeNodeAttribute(String name)
     {
         if (nodeAttributes!=null)
-            nodeAttributes.remove(name);
+        {
+            NodeAttribute attr = nodeAttributes.remove(name);
+            if (attr!=null)
+                fireNodeAttributeRemoved(attr);
+        }
     }
 
     public String getName()
@@ -467,6 +494,13 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
         if (listeners!=null)
             for (NodeListener listener: listeners)
                 listener.nodeAttributeValueChanged(this, attr, oldValue, attr.getValue());
+        if (attributesListeners!=null)
+        {
+            Set<NodeAttributeListener> listenersSet = attributesListeners.get(attr);
+            if (listenersSet!=null)
+                for (NodeAttributeListener listener: listenersSet)
+                    listener.nodeAttributeValueChanged(this, attr, oldValue, attr.getValue());
+        }
     }
     
     /**
@@ -527,6 +561,20 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
         if (listeners!=null)
             for (NodeListener listener: listeners)
                 listener.nodeNameChanged(this, oldName, name);
+    }
+
+    private void fireNodeAttributeRemoved(NodeAttribute attr)
+    {
+        if (listeners!=null)
+            for (NodeListener listener: listeners)
+                listener.nodeAttributeRemoved(this, attr);
+        if (attributesListeners!=null)
+        {
+            Set<NodeAttributeListener> listenersSet = attributesListeners.get(attr);
+            if (listenersSet!=null)
+                for (NodeAttributeListener listener: listenersSet)
+                    listener.nodeAttributeRemoved(this, attr);
+        }
     }
 
     private synchronized void fireStatusChanged(Status oldStatus, Status status)

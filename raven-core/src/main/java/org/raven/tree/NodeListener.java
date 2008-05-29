@@ -22,7 +22,7 @@ package org.raven.tree;
  * 
  * @author Mikhail Titov
  */
-public interface NodeListener 
+public interface NodeListener extends NodeAttributeListener
 {
     /**
      * Informs listener that status of the node changed.
@@ -39,15 +39,4 @@ public interface NodeListener
      * @param newName the new name of the node
      */
     public void nodeNameChanged(Node node, String oldName, String newName);
-    /**
-     * Informs the listener that the value of one of attributes were changed.
-     * This event will fired only when
-     * the status of the node are {@link Node.Status#INITIALIZED} or {@link Node.Status#STARTED}
-     * @param node the node in which attribute value was changed.
-     * @param attribute the attribute where value was changed.
-     * @param oldValue the old value
-     * @param newValue the new value
-     */
-    public void nodeAttributeValueChanged(
-            Node node, NodeAttribute attribute, String oldValue, String newValue);
 }
