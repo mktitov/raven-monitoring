@@ -50,7 +50,7 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable
     private Class type;
     private String value;
     private boolean required;
-    
+    private boolean variableReference;
     private BaseNode owner;
     private NodeParameter parameter;
 
@@ -225,6 +225,16 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable
                 return null;
             }
         }
+    }
+
+    public boolean isVariableReference()
+    {
+        return variableReference;
+    }
+
+    public void setVariableReference(boolean variableReference)
+    {
+        this.variableReference = variableReference;
     }
 
     @Override

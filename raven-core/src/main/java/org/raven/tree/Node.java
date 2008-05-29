@@ -258,4 +258,8 @@ public interface Node
     public <T> T getParentAttributeRealValue(String attributeName);
     
     public List<Node> getChildrenList();
+    /**
+     * Returns <code>true</code> if this node is in the template.
+     */
+    public boolean isTemplate();
 }

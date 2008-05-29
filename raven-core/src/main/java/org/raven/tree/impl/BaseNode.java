@@ -20,7 +20,6 @@ package org.raven.tree.impl;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -36,6 +35,7 @@ import org.raven.tree.NodeError;
 import org.raven.tree.NodeParameter;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
+import org.raven.template.TemplateEntry;
 import org.raven.tree.NodeListener;
 import org.raven.tree.NodeShutdownError;
 import org.raven.tree.Tree;
@@ -111,14 +111,22 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
         this.id = id;
     }
     
-	public List<Node> getChildrenList() 
-	{ 
-		Collection<Node> nc = this.getChildrens();
-		ArrayList<Node> na = new ArrayList<Node>();
-		if(nc!=null) na.addAll(nc);
-		return na; 
-	}
+    public List<Node> getChildrenList() 
+    { 
+        Collection<Node> nc = this.getChildrens();
+        ArrayList<Node> na = new ArrayList<Node>();
+        if(nc!=null) na.addAll(nc);
+        return na; 
+    }
 
+    public boolean isTemplate()
+    {
+        Node pNode = this;
+        while ( (pNode=pNode.getParent())!=null )
+            if (pNode instanceof TemplateEntry)
+                return true;
+        return false;
+    }
 
     protected void setStatus(Status status)
     {
@@ -336,6 +344,8 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
             extractNodeLogicParameters();
             syncAttributesAndParameters();
             
+            doInit();
+            
             setStatus(Status.INITIALIZED);
             
             if (dependentNodes != null)
@@ -353,6 +363,10 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
                     String.format("Node (%s) initialization error", getPath())
                     , e);
         }
+    }
+    
+    protected void doInit()
+    {
     }
 
     public boolean start() throws NodeError
