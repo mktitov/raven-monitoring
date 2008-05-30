@@ -683,6 +683,10 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     {
     }
 
+    public void nodeAttributeRemoved(Node node, NodeAttribute attribute)
+    {
+    }
+
     public int compareTo(Node o)
     {
         return index-o.getIndex();
