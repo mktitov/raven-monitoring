@@ -49,4 +49,5 @@ public interface Tree
      * Returns all classes marked with {@link org.raven.annotations.NodeClass} annotation. 
      */
     public Class[] getAvailableNodesTypes();
+    public Class[] getNodeAttributesTypes();
 }

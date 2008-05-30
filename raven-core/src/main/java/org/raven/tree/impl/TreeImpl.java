@@ -66,6 +66,11 @@ public class TreeImpl implements Tree
         return nodesTypes;
     }
 
+    public Class[] getNodeAttributesTypes()
+    {
+        return new Class[]{String.class, Integer.class, Double.class, Node.class};
+    }
+
     public Node getRootNode()
     {
         return rootNode;

@@ -24,7 +24,12 @@ import org.weda.annotations.Description;
  *
  * @author Mikhail Titov
  */
-@Description("Holds the subtree of nodes")
+@Description("Holds the subtree of template nodes")
 public class TemplateEntry extends ContainerNode
 {
+    @Override
+    public boolean isTemplate()
+    {
+        return true;
+    }
 }
