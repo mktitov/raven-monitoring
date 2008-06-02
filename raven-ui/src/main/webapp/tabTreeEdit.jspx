@@ -1,0 +1,73 @@
+<!-- 
+ *  Copyright 2008 Sergey Pinevskiy.
+ * 
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ * 
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *  under the License.
+ -->
+
+<?xml version="1.0" encoding="iso-8859-1" standalone="yes" ?>
+<jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
+          xmlns:f="http://java.sun.com/jsf/core"
+          xmlns:tr="http://myfaces.apache.org/trinidad" >
+<f:loadBundle basename="org.xraven.ui.messages" var="msgs"></f:loadBundle>
+<!-- 
+<tr:form>
+-->
+<tr:panelCaptionGroup captionText="#{msgs.nodeCreate}" rendered="#{cNode.allowCreateSubNode}">
+	<tr:panelFormLayout>
+		<tr:inputText label="#{msgs.name}" value="#{sBean.newNodeName}" ></tr:inputText>
+		<tr:inputListOfValues  
+			label="#{msgs.type}" value="#{sBean.newNodeType}"
+        	action="dialog:chooseType" 
+        	windowWidth="500" windowHeight="400"/>
+		<tr:commandButton text="#{msgs.create}" action="#{sBean.createNode}"/>        
+   </tr:panelFormLayout>
+</tr:panelCaptionGroup>        
+
+<tr:separator></tr:separator>
+
+<tr:panelHorizontalLayout  inlineStyle="width:100%;" halign="center" valign="top">
+
+<tr:panelCaptionGroup inlineStyle="width:90%;"  captionText="#{msgs.children}" rendered="#{cNode.allowCreateSubNode}">
+    <tr:message binding="#{subNodes.message}" for="delSubNode" messageType="warning" />
+  	<tr:table width="100%" summary="Nodes" 
+  		value="#{cNode.childrenList}" binding="#{subNodes.table}"
+  		var="row" rows="20" rowSelection="single" id="delSubNode" >
+    	<tr:column headerText="#{msgs.name}">
+	      <tr:outputText value="#{row.nodeName}"/>
+        </tr:column>
+    	<tr:column headerText="#{msgs.type}">
+	      <tr:outputText value="#{row.classDisplayName}"/>
+        </tr:column>
+ 	</tr:table>
+ 	<tr:commandButton text="#{msgs.delete}" actionListener="#{subNodes.deleteNodes}"/>
+</tr:panelCaptionGroup>
+<tr:panelCaptionGroup  inlineStyle="width:90%;" captionText="#{msgs.dependencies}" rendered="#{cNode.allowCreateSubNode}">
+  	<tr:table width="100%" value="#{cNode.dependencies}" 
+  		var="row" rows="20" rowSelection="none" >
+    	<tr:column headerText="#{msgs.name}">
+	      <tr:outputText value="#{row.path}"/>
+        </tr:column>
+    	<tr:column headerText="#{msgs.type}">
+	      <tr:outputText value="#{row.class}"/>
+        </tr:column>
+ 	</tr:table>
+</tr:panelCaptionGroup>
+
+</tr:panelHorizontalLayout>
+
+<!-- 
+</tr:form>
+-->
+
+</jsp:root>

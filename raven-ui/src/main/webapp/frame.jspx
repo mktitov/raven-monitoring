@@ -1,0 +1,49 @@
+<!-- 
+ *  Copyright 2008 Sergey Pinevskiy.
+ * 
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ * 
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *  under the License.
+ -->
+
+<jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
+          xmlns:f="http://java.sun.com/jsf/core"
+          xmlns:h="http://java.sun.com/jsf/html"
+          xmlns:tr="http://myfaces.apache.org/trinidad"
+          xmlns:trh="http://myfaces.apache.org/trinidad/html" 
+          >
+<jsp:directive.page contentType="text/html;charset=utf-8"/>
+<f:view>
+<trh:html>
+	<trh:head title="Body Demo"/>  
+<!-- 
+	<trh:frameBorderLayout frameBorderWidth="2" frameSpacing="2" >
+ 		<f:facet name="left">
+  			<trh:frame source="page1.jspx" name="left" width="30%" scrolling="yes" />
+ 		</f:facet>
+		 <f:facet name="center">
+  			<trh:frame source="page2.jspx" name="contents" scrolling="yes"  />
+ 		</f:facet>
+	</trh:frameBorderLayout>
+-->
+
+ <frameset cols="25%,75%" >
+  <FRAME id="frame1" name="frame1" src="tree.jspx" frameborder="1"></FRAME>
+  <frameset rows="80%,20%">
+  <FRAME id="frame2" name="frame2" src="tabbed.jspx" frameborder="1"></FRAME>
+  	<FRAME id="frame3" name="frame3" src="page1.jspx" frameborder="1"></FRAME>
+ </frameset>
+ </frameset>
+ 
+</trh:html>
+</f:view>
+</jsp:root>

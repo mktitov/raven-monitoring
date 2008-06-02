@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<trinidad-config xmlns="http://myfaces.apache.org/trinidad/config">
+  <debug-output>true</debug-output>
+  <!-- Uncomment to switch back to ALERT style client-side validation,
+    or set to DISABLED to disable it altogether
+  <client-validation>ALERT</client-validation>
+  -->
+ <formatting-locale>ru_RU</formatting-locale>
+
+ <skin-family>simple</skin-family>  
+   
+</trinidad-config>

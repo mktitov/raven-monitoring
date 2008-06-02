@@ -1,0 +1,77 @@
+<!-- 
+ *  Copyright 2008 Sergey Pinevskiy.
+ * 
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ * 
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *  under the License.
+ -->
+
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
+          xmlns:f="http://java.sun.com/jsf/core"
+          xmlns:tr="http://myfaces.apache.org/trinidad" >
+<jsp:directive.page contentType="text/html;charset=utf-8"/>
+<f:view>
+<f:loadBundle basename="org.xraven.ui.messages" var="msgs"></f:loadBundle>
+<tr:document title="TabbedPanel" >
+<tr:statusIndicator></tr:statusIndicator>
+<tr:form>
+<!-- 
+<tr:poll id="poolStatus" ></tr:poll>
+ -->
+<tr:panelGroupLayout layout="vertical">
+	<tr:panelCaptionGroup partialTriggers="::poolStatus"  captionText="#{msgs.nodeStatus}" >
+	<tr:panelGroupLayout layout="vertical">
+	<tr:group>
+	<tr:commandButton action="#{cNode.nodeStart}" disabled="#{! cNode.canNodeStart}"  text="#{msgs.start}"></tr:commandButton>
+	<tr:spacer width="20"></tr:spacer>
+	<tr:outputText value="#{msgs.node}:"></tr:outputText>
+	<tr:spacer width="10"></tr:spacer>
+	<tr:outputFormatted value="&lt;b&gt;#{cNode.nodePath}&lt;/b&gt;"></tr:outputFormatted>
+	</tr:group>
+
+	<tr:group>
+	<tr:commandButton action="#{cNode.nodeStop}" disabled="#{! cNode.canNodeStop}" text="#{msgs.stop}"></tr:commandButton>
+	<tr:spacer width="20"></tr:spacer>
+	<tr:outputText value="#{msgs.status}:"></tr:outputText>
+	<tr:spacer width="10"></tr:spacer>
+	<tr:outputFormatted value="&lt;b&gt;#{cNode.nodeStatusText}&lt;/b&gt;"></tr:outputFormatted>
+	</tr:group>
+	</tr:panelGroupLayout>
+    </tr:panelCaptionGroup>
+    <tr:separator></tr:separator>
+       
+		<tr:panelTabbed position="above" id="panelTabbed1" inlineStyle="width: 100%" >
+  		<tr:showDetailItem text="#{msgs.nodeView}" id="item1">
+    	<f:subview id="v1">
+    		<tr:separator></tr:separator>
+    		<jsp:include page="tabShow.jspx" flush="true"/>
+    	</f:subview>
+   		</tr:showDetailItem>
+   		<tr:showDetailItem text="#{msgs.nodeEdit}" id="item2">
+    	<f:subview id="v2">
+    		<tr:separator></tr:separator>
+     		<jsp:include page="tabNodeEdit.jspx" flush="true"/>
+    	</f:subview>
+  		</tr:showDetailItem>
+   		<tr:showDetailItem text="#{msgs.treeEdit}" id="item3">
+    	<f:subview id="v3">
+    		<tr:separator></tr:separator>
+     		<jsp:include page="tabTreeEdit.jspx" flush="true"/>
+    	</f:subview>
+  		</tr:showDetailItem>
+		</tr:panelTabbed>
+</tr:panelGroupLayout>		 
+</tr:form>
+</tr:document>
+</f:view>
+</jsp:root>

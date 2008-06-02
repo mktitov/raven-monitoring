@@ -29,35 +29,35 @@ public interface Configurator
 	/**
 	 * The name of parameter that stores URL of LDAP server.  
 	 */
-	public static final String PROVIDER_URL = "providerURL";
+	public static final String PROVIDER_URL = "auth.providerURL";
 	/**
 	 * The name of parameter that stores context for search on LDAP server.  
 	 */
-	public static final String SEARCH_CONTEXT = "searchContext";
+	public static final String SEARCH_CONTEXT = "auth.searchContext";
 	/**
 	 * The name of parameter that stores login for bind to LDAP server.  
 	 */
-	public static final String BIND_NAME = "bindName";
+	public static final String BIND_NAME = "auth.bindName";
 	/**
 	 * The name of parameter that stores login for bind to domain.  
 	 */
-	public static final String ACCOUNT_NAME = "accountName";
+	public static final String ACCOUNT_NAME = "auth.accountName";
 	/**
 	 * The name of parameter that stores password for bind to LDAP server.  
 	 */
-	public static final String BIND_PASSWORD = "bindPassword";
+	public static final String BIND_PASSWORD = "auth.bindPassword";
 	/**
 	 * The name of parameter that stores name of Windows domain.  
 	 */
-	public static final String WIN_DOMAIN = "domain";
+	public static final String WIN_DOMAIN = "auth.domain";
     /**
      * The name of the parameter that stores the list of WINS servers.
      */
-    public static final String WINS_SERVERS = "winsServers";
+    public static final String WINS_SERVERS = "auth.winsServers";
     /**
      * The name of the parameter that stores the domain controller.
      */
-    public static final String DOMAIN_CONTROLLER = "domainController";
+    public static final String DOMAIN_CONTROLLER = "auth.domainController";
     /**
      * The name of the parameter that stores the tree store engine.
      */

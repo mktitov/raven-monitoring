@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<faces-config
+    xmlns="http://java.sun.com/xml/ns/javaee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-facesconfig_1_2.xsd"
+    version="1.2">
+
+  <application>
+    <!-- Use the Trinidad RenderKit -->
+    <default-render-kit-id>org.apache.myfaces.trinidad.core</default-render-kit-id>
+    <locale-config>
+        <default-locale>en</default-locale>
+    	<supported-locale>ru</supported-locale>
+    </locale-config>
+    <message-bundle>org.raven.ui.messages</message-bundle>
+  </application>
+  <!--
+  <managed-bean>
+    <managed-bean-name>ctree</managed-bean-name>
+    <managed-bean-class>org.apache.myfaces.trinidad.component.core.data.CoreTree</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+  <managed-bean>
+    <managed-bean-name>personsModel</managed-bean-name>
+    <managed-bean-class>org.raven.tree.NodeXModel</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+  -->
+  <managed-bean>
+    <managed-bean-name>sBean</managed-bean-name>
+    <managed-bean-class>org.raven.ui.SessionBean</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>cNode</managed-bean-name>
+    <managed-bean-class>org.raven.ui.NodeWrapper</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>nodeTypes</managed-bean-name>
+    <managed-bean-class>org.raven.ui.NodeTypesBean</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>subNodes</managed-bean-name>
+    <managed-bean-class>org.raven.ui.SubNodesTableBean</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>cNodeAttrs</managed-bean-name>
+    <managed-bean-class>org.raven.ui.AttributesTableBean</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>rowExplorer</managed-bean-name>
+    <managed-bean-class>org.raven.ui.RowExplorer</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
+<!-- 
+  <managed-bean>
+    <managed-bean-name>rowMap</managed-bean-name>
+    <managed-bean-class>org.raven.ui.RowMap</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+ -->
+  <!-- navigation rules for index.jspx -->
+  <navigation-rule>
+    <from-view-id>/page1.jspx</from-view-id>
+    <navigation-case>
+      <from-outcome>success</from-outcome>
+      <to-view-id>/page2.jspx</to-view-id>
+    </navigation-case>
+  </navigation-rule>
+	
+  <!-- navigation rules for page2.jspx -->
+  <navigation-rule>
+    <from-view-id>/page2.jspx</from-view-id>
+    <navigation-case>
+      <from-outcome>back</from-outcome>
+      <to-view-id>/page1.jspx</to-view-id>
+    </navigation-case>
+  </navigation-rule>
+
+  <!-- navigation rules for tree.jspx -->
+  <navigation-rule>
+    <from-view-id>/tree.jspx</from-view-id>
+    <navigation-case>
+      <from-outcome>frame2</from-outcome>
+      <to-view-id>/page2.jspx</to-view-id>
+    </navigation-case>
+  </navigation-rule>
+
+  <!-- navigation rules for tabbed.jspx -->
+  <navigation-rule>
+    <from-view-id>/tabbed.jspx</from-view-id>
+    <navigation-case>
+      <from-outcome>dialog:chooseType</from-outcome>
+      <to-view-id>/chooseTypeDialog.jspx</to-view-id>
+    </navigation-case>
+  </navigation-rule>
+
+</faces-config>

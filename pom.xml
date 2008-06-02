@@ -48,6 +48,11 @@
             <enabled>false</enabled>
           </snapshots>
         </repository>
+        <repository>
+  			<id>java.net</id>
+  			<url>http://download.java.net/maven/1</url>
+  			<layout>legacy</layout>
+		</repository>
         <!--
         <repository>
             <id>DataNucleus_Repos</id>
@@ -303,6 +308,25 @@
     			<groupId>org.snmp4j</groupId>
     			<artifactId>snmp4j</artifactId>
     			<version>1.8.1</version>
+    			<scope>compile</scope>
+			</dependency>
+	    	<dependency>
+			 	<groupId>javax.el</groupId>
+  				<artifactId>el-api</artifactId>
+  				<version>1.0</version>
+  				<scope>compile</scope>
+			</dependency>
+			<dependency>
+    			<groupId>org.apache.myfaces.tomahawk</groupId>
+    			<artifactId>tomahawk</artifactId>
+    			<version>1.1.6</version>
+    			<scope>compile</scope>
+			</dependency>
+			<dependency>
+    			<groupId>org.apache.myfaces.tomahawk</groupId>
+    			<artifactId>tomahawk-sandbox</artifactId>
+    			<version>1.1.6</version>
+    			<scope>compile</scope>
 			</dependency>
             <!--
             <dependency>

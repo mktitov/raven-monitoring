@@ -19,10 +19,11 @@ package org.raven.ui;
 
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
-import org.apache.tapestry.ioc.Registry;
-import org.raven.RavenRegistry;
+
 import org.raven.conf.Config;
 import org.raven.conf.Configurator;
+import org.raven.conf.impl.PropertiesConfig;
+
 import jcifs.http.NtlmHttpFilter;
 
 public class JcifsFilter extends NtlmHttpFilter {
@@ -34,19 +35,17 @@ public class JcifsFilter extends NtlmHttpFilter {
    public static final String CONTROLLER = "jcifs.http.domainController";
    
    public static final String[] ravenParams = {	Configurator.WINS_SERVERS,
-	   											Configurator.WIN_DOMAIN,
-	   											Configurator.ACCOUNT_NAME,
-	   											Configurator.BIND_PASSWORD,
-	   											Configurator.DOMAIN_CONTROLLER};
+						Configurator.WIN_DOMAIN,
+						Configurator.ACCOUNT_NAME,
+						Configurator.BIND_PASSWORD,
+						Configurator.DOMAIN_CONTROLLER};
    
    public static final String[] jcifsParams  = {WINS,DOMAIN,USERNAME,PASSWORD,CONTROLLER};
 	
     public void init(FilterConfig filterConfig ) throws ServletException 
     {
     	Config config;
-		Registry registry = RavenRegistry.getRegistry();
-        Configurator configurator = registry.getService(Configurator.class);
-        try { config = configurator.getConfig(); } 
+        try { config = PropertiesConfig.getInstance(); } 
         catch(Exception e) { throw new ServletException("init filter: " + e.getMessage()); }
         String param;
         for(int i=0;i<ravenParams.length;i++)
@@ -56,6 +55,5 @@ public class JcifsFilter extends NtlmHttpFilter {
         }
         super.init(filterConfig);
     }
-
 
 }

@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 public class GroupsAclStorage  
 {
     protected Logger logger = LoggerFactory.getLogger(GroupsAclStorage.class);
-	public static final String GROUP_PARAM_NAME = "group";
+	public static final String GROUP_PARAM_NAME = "auth.group";
 	private static GroupsAclStorage instance = null;
 	private Config config;
 	private HashMap<String, AccessControlList> aclMap = null;

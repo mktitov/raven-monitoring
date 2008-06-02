@@ -1,0 +1,78 @@
+<!-- 
+ *  Copyright 2008 Sergey Pinevskiy.
+ * 
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ * 
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *  under the License.
+ -->
+
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
+          xmlns:f="http://java.sun.com/jsf/core"
+          xmlns:h="http://java.sun.com/jsf/html"
+          xmlns:tr="http://myfaces.apache.org/trinidad"
+          xmlns:trh="http://myfaces.apache.org/trinidad/html" 
+          >
+          
+  <jsp:directive.page contentType="text/html;charset=utf-8"/>
+  <f:view>
+    <tr:document title="tree">
+    <tr:statusIndicator  ></tr:statusIndicator>
+    
+       <tr:form>
+       <tr:poll  id="pooltree"  ></tr:poll>
+        <tr:panelPage>
+<!--
+        <tr:tree var="node"           
+        value="#{personsModel.model}" 
+        >
+ 		<f:facet name="nodeStamp">
+    		<tr:column>
+      			<f:facet name="header">
+        			<tr:outputText value="name"/>
+      			</f:facet>
+      			<tr:outputText value="#{node.name}"/>
+    		</tr:column>
+  		</f:facet>
+        </tr:tree>
+ -->
+        <tr:tree partialTriggers="::pooltree" id="tree1" var="node" binding="#{ctree}"  value="#{sBean.treeModel}"  >
+ 		<f:facet name="nodeStamp">
+ 		<tr:group >
+ 		<tr:commandLink
+ 		id="pSub_link"
+ 		immediate="true"
+ 		partialSubmit="true" 
+ 		actionListener="#{sBean.show}"
+ 		>
+		<tr:outputText value="#{node.name}"/>
+ 		</tr:commandLink>
+ 		<tr:image source="/images/#{node.status}.png" shortDesc="help2" />
+ 		<!--
+ 		<tr:image source="images/started.png" shortDesc="help2_" />
+ 		<tr:image source="images/CREATED.png" shortDesc="help3" />
+ 		<tr:image source="images/redsq.png" shortDesc="help4" />
+ 		<tr:image source="/images/redsq.png" shortDesc="help5" />
+ 		<tr:image source="redsq.png" shortDesc="help6" />
+ 		  
+      			<tr:chooseDate  ></tr:chooseDate> -->
+ 		</tr:group>
+  		</f:facet>
+        
+        </tr:tree>
+         
+        </tr:panelPage>
+       
+       </tr:form>
+    </tr:document>
+  </f:view>
+</jsp:root>

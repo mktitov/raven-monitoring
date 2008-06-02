@@ -1,0 +1,77 @@
+<!-- 
+ *  Copyright 2008 Sergey Pinevskiy.
+ * 
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ * 
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *  under the License.
+ -->
+
+<?xml version="1.0" encoding="iso-8859-1" standalone="yes" ?>
+<jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
+          xmlns:f="http://java.sun.com/jsf/core"
+          xmlns:tr="http://myfaces.apache.org/trinidad" >
+<f:loadBundle basename="org.xraven.ui.messages" var="msgs"></f:loadBundle>          
+<!--           
+<tr:panelCaptionGroup captionText="Create node" rendered="#{cNode.allowNodeEdit}">
+	<tr:panelFormLayout>
+		<tr:inputText label="Name" value="#{sBean.newNodeName}" ></tr:inputText>
+		<tr:inputListOfValues  
+			label="Type" value="#{sBean.newNodeType}"
+        	action="dialog:chooseType" 
+        	windowWidth="400" windowHeight="300"/>
+		<tr:commandButton text="Create" action="#{sBean.createNode}"/>        
+   </tr:panelFormLayout>
+</tr:panelCaptionGroup>        
+        
+ -->
+<tr:panelCaptionGroup rendered="#{cNode.allowNodeEdit}" captionText="#{msgs.attributeCreate}" >
+	<tr:panelFormLayout>
+		<tr:inputText label="#{msgs.name}" value="#{cNode.newAttributeName}" ></tr:inputText>
+		<tr:inputText columns="90" label="#{msgs.dsc}"  value="#{cNode.newAttributeDsc}" ></tr:inputText>
+<!-- 		
+		<tr:inputListOfValues  
+			label="#{msgs.type}" value="#{sBean.newNodeType}"
+        	action="dialog:chooseType" 
+        	windowWidth="500" windowHeight="400"/>
+        	-->
+		<tr:commandButton text="#{msgs.create}" action="#{cNode.createAttribute}"/>        
+   </tr:panelFormLayout>
+</tr:panelCaptionGroup>    
+
+ 
+<tr:panelCaptionGroup rendered="#{cNode.allowNodeEdit}"  captionText="#{msgs.nodeAttributes}"  >
+	<tr:message binding="#{cNodeAttrs.message}" for="attrs" messageType="error" />
+  	<tr:table  binding="#{cNodeAttrs.table}" width="90%" rowSelection="single" summary="Nodes" 
+  		value="#{cNode.attributes}" 
+  		var="row" rows="20" id="attrs" >
+    	<tr:column headerText="#{msgs.name}">
+	      <tr:outputText value="#{row.name}"/>
+        </tr:column>
+    	<tr:column headerText="#{msgs.value}">
+	      <tr:inputText rendered="#{row.selectItems == null}" value="#{row.value}"/>
+	      <tr:selectOneChoice rendered="#{!(row.selectItems == null)}" value="#{row.value}" >
+	      	<f:selectItems value="#{row.selectItems}" />
+	      </tr:selectOneChoice>
+        </tr:column>
+    	<tr:column headerText="#{msgs.dsc}">
+	      <tr:outputText value="#{row.description}"/>
+        </tr:column>
+ 	</tr:table>
+ 	<tr:panelButtonBar halign="left" >
+ 	<tr:commandButton shortDesc="#{msgs.dscDelSelAttr}" disabled="#{!cNode.allowNodeEdit}" text="#{msgs.delete}" action="#{cNodeAttrs.deleteAttributes}"  />
+ 	<tr:spacer width="60"></tr:spacer>
+ 	<tr:commandButton shortDesc="#{msgs.dscSaveAttr}" disabled="#{!cNode.allowNodeEdit}" text="#{msgs.save}" action="#{cNode.save}"  />
+ 	<tr:commandButton shortDesc="#{msgs.dscCancelAttr}" disabled="#{!cNode.allowNodeEdit}" text="#{msgs.cancel}" action="#{cNode.cancel}" />
+ 	</tr:panelButtonBar>
+</tr:panelCaptionGroup>        
+
+</jsp:root>
