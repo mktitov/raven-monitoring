@@ -24,6 +24,13 @@ package org.raven.tree;
 public interface NodeAttributeListener 
 {
     /**
+     * Informs listener that attribute name changed.
+     * @param attribute the attribute which name was changed.
+     * @param oldName the old attribute name.
+     * @param newName the new attribute name.
+     */
+    public void nodeAttributeNameChanged(NodeAttribute attribute, String oldName, String newName);
+    /**
      * Informs the listener that the value of one of attributes were changed.
      * This event will fired only when
      * the status of the node are {@link Node.Status#INITIALIZED} or {@link Node.Status#STARTED}

@@ -30,24 +30,31 @@ public class TemplateNode extends BaseNode
     public final static String VARIABLES_NODE = "Variables";
     public final static String ENTRY_NODE = "Entry";
     
+    private TemplateVariablesNode variablesNode;
+    private TemplateEntry entryNode;
+    
     public TemplateNode(Class[] childNodeTypes, boolean container, boolean readOnly)
     {
         super(new Class[]{TemplateVariablesNode.class, TemplateEntry.class}, true, false);
+        setSubtreeListener(true);
     }
 
     @Override
     protected void doInit()
     {
-        if (getChildren(VARIABLES_NODE)==null)
+        variablesNode = (TemplateVariablesNode) getChildren(VARIABLES_NODE);
+        if (variablesNode==null)
         {
-            TemplateVariablesNode varNode = new TemplateVariablesNode();
-            varNode.setName(VARIABLES_NODE);
-            addChildren(varNode);
-            configurator.getTreeStore().saveNode(varNode);
+            variablesNode = new TemplateVariablesNode();
+            variablesNode.setName(VARIABLES_NODE);
+            addChildren(variablesNode);
+            configurator.getTreeStore().saveNode(variablesNode);
         }
-        if (getChildren(ENTRY_NODE)==null)
+        
+        entryNode = (TemplateEntry) getChildren(ENTRY_NODE);
+        if (entryNode==null)
         {
-            TemplateEntry entryNode = new TemplateEntry();
+            entryNode = new TemplateEntry();
             entryNode.setName(ENTRY_NODE);
             addChildren(entryNode);
             configurator.getTreeStore().saveNode(entryNode);

@@ -223,6 +223,7 @@ public class TreeServiceTest extends ServiceTestCase
         attr.setOwner(node);
         
         NodeListener listener = createStrictMock(NodeListener.class);
+        expect(listener.isSubtreeListener()).andReturn(false).anyTimes();
         listener.nodeStatusChanged(eq(node), eq(Status.CREATED), eq(Status.INITIALIZED));
         listener.nodeNameChanged(eq(node), eq("name"), eq("newName"));
         listener.nodeAttributeValueChanged(eq(node), eq(attr), eq("1"), eq("2"));
@@ -232,6 +233,35 @@ public class TreeServiceTest extends ServiceTestCase
         node.init();
         node.setName("newName");
         node.getNodeAttribute("attr").setValue("2");
+        
+        verify(listener);
+    }
+    
+    @Test
+    public void subreeListener() throws Exception
+    {
+        NodeListener listener = createMock(NodeListener.class);
+        expect(listener.isSubtreeListener()).andReturn(true).anyTimes();
+        replay(listener);
+        
+        Node parent = new ContainerNode();
+        parent.setName("parent");
+        Node child = new ContainerNode();
+        child.setName("child");
+        parent.addChildren(child);
+        
+        parent.addListener(listener);
+        assertTrue(parent.getListeners().contains(listener));
+        assertTrue(child.getListeners().contains(listener));
+        
+        Node child2 = new ContainerNode("child2");
+        parent.addChildren(child2);
+        assertTrue(child2.getListeners().contains(listener));
+        
+        parent.removeListener(listener);
+        assertFalse(parent.getListeners().contains(listener));
+        assertFalse(child.getListeners().contains(listener));
+        assertFalse(child2.getListeners().contains(listener));
         
         verify(listener);
     }

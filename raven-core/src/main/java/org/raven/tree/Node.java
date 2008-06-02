@@ -152,6 +152,10 @@ public interface Node
      */
     public void addListener(NodeListener listener);
     /**
+     * Removes listener from node.
+     */
+    public void removeListener(NodeListener listener);
+    /**
      * Returns this node listeners or null if this node has not listeners.
      */
     public Collection<NodeListener> getListeners();
@@ -178,6 +182,10 @@ public interface Node
      * @param listener the node attribute listener.
      */
     public void addNodeAttributeDependency(String attributeName, NodeAttributeListener listener);
+    /**
+     * Removes node attribute dependency.
+     */
+    public void removeNodeAttributeDependency(String attributeName, NodeAttributeListener listener);
     /**
      * Removes node attribute by its name.
      */

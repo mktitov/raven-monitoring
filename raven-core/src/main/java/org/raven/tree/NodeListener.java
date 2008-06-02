@@ -25,6 +25,10 @@ package org.raven.tree;
 public interface NodeListener extends NodeAttributeListener
 {
     /**
+     * Returns <code>true</code> if this listener is a subtree listener (listen all children nodes. 
+     */
+    public boolean isSubtreeListener();
+    /**
      * Informs listener that status of the node changed.
      * @param node the node which status was changed.
      * @param oldStatus the old status of the node.

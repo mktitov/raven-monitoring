@@ -91,6 +91,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     private Status status = Status.CREATED;
     
     private Map<String, NodeParameter> parameters;
+    private boolean subtreeListener = false;
 
     public BaseNode(Class[] childNodeTypes, boolean container, boolean readOnly)
     {
@@ -109,13 +110,13 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
         return id;
     }
 
-    private void processListeners(NodeAttributeImpl attr, String oldValue)
+    private void processListeners(NodeAttributeImpl attr, String newValue, String oldValue)
     {
         if (listeners != null)
         {
             for (NodeListener listener : listeners)
             {
-                listener.nodeAttributeValueChanged(this, attr, oldValue, attr.getValue());
+                listener.nodeAttributeValueChanged(this, attr, oldValue, newValue);
             }
         }
         if (attributesListeners != null)
@@ -125,7 +126,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
             {
                 for (NodeAttributeListener listener : listenersSet)
                 {
-                    listener.nodeAttributeValueChanged(this, attr, oldValue, attr.getValue());
+                    listener.nodeAttributeValueChanged(this, attr, oldValue, newValue);
                 }
             }
         }
@@ -135,11 +136,11 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
 
     private void processNodeAttributeDependency(NodeAttributeImpl attr, String oldValue)
     {
-        throw new UnsupportedOperationException("Not yet implemented");
+//        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     private void processNodeDependency(
-            NodeAttributeImpl attr, String oldValue) throws TypeConverterException
+            NodeAttributeImpl attr, String newValue, String oldValue) throws TypeConverterException
     {
         if (Node.class.isAssignableFrom(attr.getType()))
         {
@@ -148,9 +149,9 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
                 Node oldRef = (Node) converter.convert(attr.getType(), oldValue, null);
                 oldRef.removeDependentNode(this);
             }
-            if (attr.getValue() != null)
+            if (newValue != null)
             {
-                Node node = (Node) converter.convert(attr.getType(), attr.getValue(), null);
+                Node node = (Node) converter.convert(attr.getType(), newValue, null);
                 node.addDependentNode(this);
             }
         }
@@ -200,6 +201,17 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
             listeners = new HashSet<NodeListener>();
         
         listeners.add(listener);
+        if (listener.isSubtreeListener() && childrens!=null)
+            for (Node children: childrens.values())
+                children.addListener(listener);
+    }
+    
+    public synchronized void removeListener(NodeListener listener)
+    {
+        if (listeners!=null)
+            if (listeners.remove(listener) && listener.isSubtreeListener() && childrens!=null)
+                for (Node children: childrens.values())
+                    children.removeListener(listener);
     }
     
     public synchronized Collection<NodeListener> getListeners()
@@ -218,6 +230,11 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
         
         childrens.put(node.getName(), node);
         node.addListener(this);
+        
+        if (listeners!=null)
+            for (NodeListener listener: listeners)
+                if (listener.isSubtreeListener())
+                    node.addListener(listener);
     }
 
     public void removeChildren(Node node)
@@ -480,12 +497,11 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
                 }
     }
 
-    void fireAttributeValueChanged(NodeAttributeImpl attr, String oldValue)
+    void fireAttributeValueChanged(NodeAttributeImpl attr, String oldValue, String newValue)
     {
-        processNodeDependency(attr, oldValue);
-        processNodeAttributeDependency(attr, oldValue);
-        processAttributeGeneration(attr);
-        processListeners(attr, oldValue);
+        processNodeDependency(attr, newValue, oldValue);
+        processAttributeGeneration(attr, newValue);
+        processListeners(attr, newValue, oldValue);
     }
     
     /**
@@ -577,7 +593,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
                 listener.nodeStatusChanged(this, oldStatus, status);
     }
 
-    private void processAttributeGeneration(NodeAttributeImpl attr) 
+    private void processAttributeGeneration(NodeAttributeImpl attr, String newValue) 
             throws TypeConverterException, NodeError, TreeStoreError
     {
 
@@ -594,10 +610,10 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
                 }
             }
 
-            if (attr.getValue() != null)
+            if (newValue != null)
             {
                 AttributesGenerator attributesGenerator = (AttributesGenerator) converter.convert(
-                            attr.getType(), attr.getValue(), null);
+                            attr.getType(), newValue, null);
 
                 Collection<NodeAttribute> newAttrs = attributesGenerator.generateAttributes();
                 if (newAttrs != null)
@@ -705,6 +721,16 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
         return hash;
     }
 
+    public void setSubtreeListener(boolean subtreeListener)
+    {
+        this.subtreeListener = subtreeListener;
+    }
+
+    public boolean isSubtreeListener()
+    {
+        return subtreeListener;
+    }
+
     public void nodeStatusChanged(Node node, Status oldStatus, Status newStatus)
     {
     }
@@ -726,6 +752,14 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     }
 
     public void nodeAttributeRemoved(Node node, NodeAttribute attribute)
+    {
+    }
+
+    public void removeNodeAttributeDependency(String attributeName, NodeAttributeListener listener)
+    {
+    }
+
+    public void nodeAttributeNameChanged(NodeAttribute attribute, String oldName, String newName)
     {
     }
 
