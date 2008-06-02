@@ -41,18 +41,18 @@
     </modules>
     <repositories>
         <repository>
-          <id>opennms-repo</id>
-          <name>OpenNMS Repository</name>
-          <url>http://repo.opennms.org/maven2</url>
-          <snapshots>
-            <enabled>false</enabled>
-          </snapshots>
+            <id>opennms-repo</id>
+            <name>OpenNMS Repository</name>
+            <url>http://repo.opennms.org/maven2</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
         <repository>
-  			<id>java.net</id>
-  			<url>http://download.java.net/maven/1</url>
-  			<layout>legacy</layout>
-		</repository>
+            <id>java.net</id>
+            <url>http://download.java.net/maven/1</url>
+            <layout>legacy</layout>
+        </repository>
         <!--
         <repository>
             <id>DataNucleus_Repos</id>
@@ -249,41 +249,41 @@
                 <scope>provided</scope>
             </dependency>
             <dependency>
-              <groupId>org.jrobin</groupId>
-              <artifactId>jrobin</artifactId>
-              <version>1.5.8</version>
-              <scope>compile</scope>
+                <groupId>org.jrobin</groupId>
+                <artifactId>jrobin</artifactId>
+                <version>1.5.8</version>
+                <scope>compile</scope>
             </dependency>
             <dependency>
-    			<groupId>jstl</groupId>
-    			<artifactId>jstl</artifactId>
-    			<version>1.1.2</version>
-    			<scope>compile</scope>
-			</dependency>
-			<dependency>
-    			<groupId>org.apache.myfaces.core</groupId>
-    			<artifactId>myfaces-api</artifactId>
-    			<version>1.2.3</version>
-    			<scope>compile</scope>
-			</dependency>
-			<dependency>
-    			<groupId>org.apache.myfaces.core</groupId>
-    			<artifactId>myfaces-impl</artifactId>
-    			<version>1.2.3</version>
-    			<scope>compile</scope>
-			</dependency>
-			<dependency>
-    			<groupId>org.apache.myfaces.trinidad</groupId>
-    			<artifactId>trinidad-api</artifactId>
-    			<version>1.2.7</version>
-    			<scope>compile</scope>
-			</dependency>
-			<dependency>
-    			<groupId>org.apache.myfaces.trinidad</groupId>
-    			<artifactId>trinidad-impl</artifactId>
-    			<version>1.2.7</version>
-    			<scope>compile</scope>
-			</dependency>
+                <groupId>jstl</groupId>
+                <artifactId>jstl</artifactId>
+                <version>1.1.2</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.myfaces.core</groupId>
+                <artifactId>myfaces-api</artifactId>
+                <version>1.2.3</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.myfaces.core</groupId>
+                <artifactId>myfaces-impl</artifactId>
+                <version>1.2.3</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.myfaces.trinidad</groupId>
+                <artifactId>trinidad-api</artifactId>
+                <version>1.2.7</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.myfaces.trinidad</groupId>
+                <artifactId>trinidad-impl</artifactId>
+                <version>1.2.7</version>
+                <scope>compile</scope>
+            </dependency>
             <!--
             <dependency>
                 <groupId>opensymphony</groupId>
@@ -305,29 +305,29 @@
                 <scope>compile</scope>
             </dependency>
             <dependency>
-    			<groupId>org.snmp4j</groupId>
-    			<artifactId>snmp4j</artifactId>
-    			<version>1.8.1</version>
-    			<scope>compile</scope>
-			</dependency>
-	    	<dependency>
-			 	<groupId>javax.el</groupId>
-  				<artifactId>el-api</artifactId>
-  				<version>1.0</version>
-  				<scope>compile</scope>
-			</dependency>
-			<dependency>
-    			<groupId>org.apache.myfaces.tomahawk</groupId>
-    			<artifactId>tomahawk</artifactId>
-    			<version>1.1.6</version>
-    			<scope>compile</scope>
-			</dependency>
-			<dependency>
-    			<groupId>org.apache.myfaces.tomahawk</groupId>
-    			<artifactId>tomahawk-sandbox</artifactId>
-    			<version>1.1.6</version>
-    			<scope>compile</scope>
-			</dependency>
+                <groupId>org.snmp4j</groupId>
+                <artifactId>snmp4j</artifactId>
+                <version>1.8.1</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>javax.el</groupId>
+                <artifactId>el-api</artifactId>
+                <version>1.0</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.myfaces.tomahawk</groupId>
+                <artifactId>tomahawk</artifactId>
+                <version>1.1.6</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.myfaces.tomahawk</groupId>
+                <artifactId>tomahawk-sandbox</artifactId>
+                <version>1.1.6</version>
+                <scope>compile</scope>
+            </dependency>
             <!--
             <dependency>
                 <groupId>org.datanucleus</groupId>
