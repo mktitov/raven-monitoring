@@ -45,7 +45,8 @@ public class ParameterFieldTransformerWorker implements FieldTransformWorker
                         "} " +
                         "else " +
                         "{ " +
-                        "   $_=($r)this.%1$s; " +
+//                        "   $_=($r)this.%1$s; " +
+                        "   $_ = $proceed(); " +
                         "} }"
                         , fieldAccess.getFieldName(), NodeListenerExecutorHelper.class.getName());
                 

@@ -92,6 +92,8 @@ public class ParameterFieldTransformerWorkerTest extends ServiceTestCase
         expect(attribute.getRealValue()).andReturn("parentValue").times(2);
         
         expect(parentNode.getName()).andReturn("parentNode").anyTimes();
+        
+        expect(listener.isSubtreeListener()).andReturn(false).anyTimes();
         listener.nodeStatusChanged(node, Status.CREATED, Status.INITIALIZED);
         listener.nodeAttributeValueChanged(
                 eq(node), isA(NodeAttribute.class), eq("test"), eq("newValue"));

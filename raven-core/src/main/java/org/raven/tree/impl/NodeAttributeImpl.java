@@ -141,23 +141,24 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
     {
         NullParameterError.check("owner", owner);
         
-        if (owner.getStatus()==Status.CREATED || parameter==null)
+        if (owner.getStatus()==Status.CREATED)
             return value;
-        else {
-            if (isAttributeReference())
-            {
-                if (value==null)
-                    return null;
-                else
-                    return attributeReference.getAttribute().getValue();
-            } else
-            {
-                if (value==null)
-                    return owner.getParentAttributeValue(name);
-                else
-                    return converter.convert(
-                            String.class, parameter.getValue(), parameter.getPattern());
-            }
+        
+        if (isAttributeReference())
+        {
+            if (value==null)
+                return null;
+            else
+                return attributeReference.getAttribute().getValue();
+        } else
+        {
+            if (parameter!=null)
+                return converter.convert(
+                        String.class, parameter.getValue(), parameter.getPattern());
+            else if (value!=null)
+                return value;
+            else
+                return owner.getParentAttributeValue(name);
         }
     }
 
