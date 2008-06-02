@@ -119,15 +119,15 @@ public interface NodeAttribute extends Cloneable
      */
     public List<String> getReferenceValues();
     /**
-     * Returns true if this attribute is references to the template variable.
-     * It is meaningful when attribute node is {@link Node#isTemplate() template}
-     * @see Node#isTemplate() 
+     * Returns true if this attribute is references to the other node attribute.
+     * @see #getAttributeReference()
      */
-    public boolean isVariableReference();
+    public boolean isAttributeReference();
     /**
-     * Sets the {@link #isVariableReference() variable reference} flag.
+     * Returns reference to the attribute.
+     * @see #isAttributeReference() 
      */
-    public void setVariableReference(boolean variableReference);
+    public AttributeReference getAttributeReference();
     /**
      * Clones the attribute.
      * @throws java.lang.CloneNotSupportedException

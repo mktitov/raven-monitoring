@@ -74,7 +74,9 @@ public class NodeListenerExecutorHelper
                     classDescriptorRegistry.getPropertyDescriptor(
                         node.getClass(), attributeName).getPattern();
             ((BaseNode)node).fireAttributeValueChanged(
-                    (NodeAttributeImpl) attr, converter.convert(String.class, oldValue, pattern));
+                    (NodeAttributeImpl) attr
+                    , converter.convert(String.class, oldValue, pattern)
+                    , converter.convert(String.class, newValue, pattern));
 //            for (NodeListener listener: node.getListeners())
 //                listener.nodeAttributeValueChanged(
 //                    node, attr, 

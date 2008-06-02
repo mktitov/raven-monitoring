@@ -36,6 +36,7 @@ import org.raven.tree.NodeParameter;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
 import org.raven.template.TemplateEntry;
+import org.raven.tree.AttributeReference;
 import org.raven.tree.NodeAttributeListener;
 import org.raven.tree.NodeListener;
 import org.raven.tree.NodeShutdownError;
@@ -425,6 +426,14 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
                         {
                             dependenciesInitialized = false;
                         }
+                    }else if (   AttributeReference.class.isAssignableFrom(attr.getType()) 
+                              && attr.getAttributeReference()!=null)
+                    {
+                        if (   attr.getAttributeReference().getAttribute().getOwner().getStatus()
+                            == Status.CREATED)
+                        {
+                            dependenciesInitialized = false;
+                        }
                     }
                 }
             }
@@ -597,7 +606,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
             throws TypeConverterException, NodeError, TreeStoreError
     {
 
-        if (!attr.isVariableReference() && attr.isGeneratorType())
+        if (attr.isGeneratorType())
         {
             Iterator<Map.Entry<String, NodeAttribute>> it = nodeAttributes.entrySet().iterator();
             while (it.hasNext())

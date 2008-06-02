@@ -31,6 +31,7 @@ import org.weda.constraints.ConstraintException;
 import org.weda.constraints.ReferenceValue;
 import org.weda.constraints.TooManyReferenceValuesException;
 import org.weda.internal.annotations.Service;
+import org.weda.internal.exception.NullParameterError;
 import org.weda.services.TypeConverter;
 
 /**
@@ -50,10 +51,10 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
     private Class type;
     private String value;
     private boolean required;
-    private boolean variableReference;
     private BaseNode owner;
     private NodeParameter parameter;
     private AttributeReference attributeReference;
+    private boolean initialized = false;
 
     public NodeAttributeImpl()
     {
@@ -66,6 +67,16 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
         this.type = type;
         this.value = converter.convert(String.class, value, null);
     }
+    
+//    public void init()
+//    {
+//        if (!initialized)
+//        {
+//            if (isAttributeReference() && value!=null)
+//                attributeReference = 
+//            initialized = true;
+//        }
+//    }
 
     public int getId()
     {
@@ -128,23 +139,24 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
 
     public String getValue()
     {
-        if (AttributeReference.class.isAssignableFrom(type))
-        {
-            if (value==null)
-                return null;
-            else {
-                AttributeReference ref = converter.convert(AttributeReference.class, value, null);
-                return ref.getAttribute().getValue();
-            }
-        } else {
-            if (parameter!=null && owner!=null && owner.getStatus()!=Status.CREATED)
-                return converter.convert(String.class, parameter.getValue(), parameter.getPattern());
-            else
+        NullParameterError.check("owner", owner);
+        
+        if (owner.getStatus()==Status.CREATED || parameter==null)
+            return value;
+        else {
+            if (isAttributeReference())
             {
-                if (value!=null)
-                    return value;
+                if (value==null)
+                    return null;
                 else
+                    return attributeReference.getAttribute().getValue();
+            } else
+            {
+                if (value==null)
                     return owner.getParentAttributeValue(name);
+                else
+                    return converter.convert(
+                            String.class, parameter.getValue(), parameter.getPattern());
             }
         }
     }
@@ -240,16 +252,6 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
         }
     }
 
-    public boolean isVariableReference()
-    {
-        return variableReference;
-    }
-
-    public void setVariableReference(boolean variableReference)
-    {
-        this.variableReference = variableReference;
-    }
-
     @Override
     public Object clone() throws CloneNotSupportedException
     {
@@ -258,11 +260,22 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
         return clone;
     }
 
-    private boolean isAttributeReference()
+    public boolean isAttributeReference()
     {
         return type==null? false : AttributeReference.class.isAssignableFrom(type);
     }
-
+    
+    public AttributeReference getAttributeReference()
+    {
+        if (attributeReference==null && value!=null && isAttributeReference())
+        {
+            attributeReference = (AttributeReference) converter.convert(type, value, null);
+            attributeReference.getAttribute().getOwner().addNodeAttributeDependency(
+                    attributeReference.getAttribute().getName(), this);
+        }
+        return attributeReference;
+    }
+    
     private void processAttributeReference(String newValue, String oldValue)
     {
         if (attributeReference!=null)
@@ -270,7 +283,7 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
             attributeReference.getAttribute().getOwner().removeNodeAttributeDependency(
                     attributeReference.getAttribute().getName(), this);
         }
-        if (newValue!=null)
+        if (newValue!=null && owner.getStatus()!=Status.CREATED)
         {
             attributeReference = converter.convert(AttributeReference.class, newValue, null);
             attributeReference.getAttribute().getOwner().addNodeAttributeDependency(
