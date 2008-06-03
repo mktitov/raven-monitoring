@@ -19,11 +19,13 @@ package org.raven.tree.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.raven.conf.Configurator;
 import org.raven.tree.AttributeReference;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodeAttributeError;
 import org.raven.tree.NodeAttributeListener;
 import org.raven.tree.NodeParameter;
 import org.weda.beans.ObjectUtils;
@@ -41,7 +43,9 @@ import org.weda.services.TypeConverter;
 public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttributeListener
 {
     @Service
-    private TypeConverter converter;
+    private static TypeConverter converter;
+    @Service
+    private static Configurator configurator;
     
     private int id;
     private String name;
@@ -54,7 +58,6 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
     private BaseNode owner;
     private NodeParameter parameter;
     private AttributeReference attributeReference;
-    private boolean initialized = false;
 
     public NodeAttributeImpl()
     {
@@ -68,16 +71,6 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
         this.value = converter.convert(String.class, value, null);
     }
     
-//    public void init()
-//    {
-//        if (!initialized)
-//        {
-//            if (isAttributeReference() && value!=null)
-//                attributeReference = 
-//            initialized = true;
-//        }
-//    }
-
     public int getId()
     {
         return id;
@@ -123,17 +116,22 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
 
     public <T> T getRealValue()
     {
-        if (parameter!=null)
-        {
-            return (T)parameter.getValue();
-        }
-        else
-        {
-            if (value==null)
-                return (T) converter.convert(
-                        type, owner.getParentAttributeRealValue(name), null);
+        if (isAttributeReference())
+            return attributeReference == null ? 
+                null : (T)attributeReference.getAttribute().getRealValue();
+        else {
+            if (parameter!=null)
+            {
+                return (T)parameter.getValue();
+            }
             else
-                return (T) converter.convert(type, value, null);
+            {
+                if (value==null)
+                    return (T) converter.convert(
+                            type, owner.getParentAttributeRealValue(name), null);
+                else
+                    return (T) converter.convert(type, value, null);
+            }
         }
     }
 
@@ -162,8 +160,21 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
         }
     }
 
+    public String getRawValue()
+    {
+        return value;
+    }
+    
+    public void setRawValue(String rawValue)
+    {
+        this.value = rawValue;
+    }
+    
     public Class getType() 
     {
+//        if (isAttributeReference())
+//            return getAttributeReference()==null? 
+//                null : attributeReference.getAttribute().getType();
         return type;
     }
 
@@ -214,25 +225,33 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
             String oldValue = this.value;
             this.value = value;
             if (isAttributeReference())
-                processAttributeReference(value, oldValue);
-            
-            if (owner.getStatus()!=Status.CREATED)
             {
-                if (parameter!=null)
-                    parameter.setValue(value);
+                processAttributeReference(value, oldValue);
+            }
+            else {
+                if (owner.getStatus()!=Status.CREATED)
+                {
+                    if (parameter!=null)
+                        parameter.setValue(value);
 
-                owner.fireAttributeValueChanged(this, oldValue, value);
+                    owner.fireAttributeValueChanged(this, oldValue, value);
+                }
             }
         }
     }
 
     public boolean isGeneratorType()
     {
+        if (isAttributeReference())
+            return getAttributeReference()==null? 
+                false : attributeReference.getAttribute().isGeneratorType();
         return type!=null && AttributesGenerator.class.isAssignableFrom(type);
     }
 
     public List<String> getReferenceValues()
     {
+        if (isAttributeReference())
+            return null;
         if (parameter==null)
             return null;
         else {
@@ -279,18 +298,36 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
     
     private void processAttributeReference(String newValue, String oldValue)
     {
+        AttributeReference oldRef = null;
+        String oldRefValue = null;
+        String newRefValue = null;
         if (attributeReference!=null)
         {
+            oldRef = attributeReference;
+            oldRefValue = oldRef.getAttribute().getValue();
             attributeReference.getAttribute().getOwner().removeNodeAttributeDependency(
                     attributeReference.getAttribute().getName(), this);
         }
         if (newValue!=null && owner.getStatus()!=Status.CREATED)
         {
             attributeReference = converter.convert(AttributeReference.class, newValue, null);
+            newRefValue = attributeReference.getAttribute().getValue();
             attributeReference.getAttribute().getOwner().addNodeAttributeDependency(
                     attributeReference.getAttribute().getName(), this);
         } else
             attributeReference = null;
+        
+        if (   oldRef!=null && oldRef.getAttribute().isGeneratorType() 
+            && (attributeReference==null || !attributeReference.getAttribute().isGeneratorType()))
+        {
+            owner.removeChildAttributes(name, null);
+        }
+        
+        if (    !ObjectUtils.equals(oldRefValue, newRefValue) 
+            || (attributeReference!=null && attributeReference.getAttribute().isGeneratorType()))
+        {
+            owner.fireAttributeValueChanged(this, oldRefValue, newRefValue);
+        }
     }
 
     public void nodeAttributeValueChanged(
@@ -301,11 +338,18 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
 
     public void nodeAttributeRemoved(Node node, NodeAttribute attribute)
     {
-//        setValue(null);
+        try
+        {
+            setValue(null);
+        } catch (ConstraintException ex)
+        {
+            throw new NodeAttributeError(ex);
+        }
     }
 
     public void nodeAttributeNameChanged(NodeAttribute attribute, String oldName, String newName)
     {
-//        value = converter.convert(String.class, value, name);
+        value = converter.convert(String.class, attributeReference, null);
+        configurator.getTreeStore().saveNodeAttribute(this);
     }
 }

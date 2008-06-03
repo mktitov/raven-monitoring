@@ -93,6 +93,8 @@ public interface NodeAttribute extends Cloneable
      * @see Node#getParentAttributeValue(java.lang.String) 
      */
     public String getValue();
+    public String getRawValue();
+    public void setRawValue(String rawValue);
     /**
      * Sets the attribute value.
      */
@@ -118,6 +120,10 @@ public interface NodeAttribute extends Cloneable
      * then the attribute does not have reference values.
      */
     public List<String> getReferenceValues();
+    /**
+     * Returns <code>true</code> if attribute type is {@link AttributesGenerator}
+     */
+    public boolean isGeneratorType();
     /**
      * Returns true if this attribute is references to the other node attribute.
      * @see #getAttributeReference()

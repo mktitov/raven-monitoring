@@ -15,26 +15,27 @@
  *  under the License.
  */
 
-package org.raven.tree;
+package org.raven.tree.impl.objects;
+
+import org.raven.annotations.Parameter;
+import org.raven.tree.impl.ContainerNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class NodeAttributeError extends RuntimeException
+public class NodeWithIntegerParameter extends ContainerNode
 {
-    public NodeAttributeError(Throwable cause)
+    @Parameter()
+    private Integer parameter;
+
+    public Integer getParameter()
     {
-        super(cause);
-    }
-    
-    public NodeAttributeError(String message, Throwable cause) 
-    {
-        super(message, cause);
+        return parameter;
     }
 
-    public NodeAttributeError(String msg) 
+    public void setParameter(Integer parameter)
     {
-        super(msg);
+        this.parameter = parameter;
     }
 }

@@ -69,6 +69,7 @@ public interface Node
      * @see #getPath() 
      */
     public static String NODE_SEPARATOR = "/";
+    public static String ATTRIBUTE_SEPARATOR = "#";
     
     /**
      * Returns the node logger.

@@ -15,26 +15,26 @@
  *  under the License.
  */
 
-package org.raven.tree;
+package org.raven.tree.impl;
+
+import org.raven.tree.AttributeReference;
+import org.raven.tree.NodeAttribute;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class NodeAttributeError extends RuntimeException
+public class AttributeReferenceImpl implements AttributeReference
 {
-    public NodeAttributeError(Throwable cause)
+    private final NodeAttribute attribute;
+
+    public AttributeReferenceImpl(NodeAttribute attribute)
     {
-        super(cause);
-    }
-    
-    public NodeAttributeError(String message, Throwable cause) 
-    {
-        super(message, cause);
+        this.attribute = attribute;
     }
 
-    public NodeAttributeError(String msg) 
+    public NodeAttribute getAttribute()
     {
-        super(msg);
+        return attribute;
     }
 }

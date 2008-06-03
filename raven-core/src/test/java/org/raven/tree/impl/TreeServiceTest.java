@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.raven.RavenCoreModule;
 import org.raven.ServiceTestCase;
 import org.raven.conf.Configurator;
+import org.raven.tree.AttributeReference;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
@@ -32,9 +33,12 @@ import org.raven.tree.NodeListener;
 import org.raven.tree.NodeNotFoundError;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.objects.AttributesGeneratorNode;
+import org.raven.tree.impl.objects.NodeWithIntegerParameter;
 import org.raven.tree.impl.objects.NodeWithNodeParameter;
+import org.raven.tree.impl.objects.NodeWithParameter2;
 import org.raven.tree.impl.objects.NodeWithParameters;
 import org.weda.constraints.ConstraintException;
+import org.weda.services.TypeConverter;
 import static org.easymock.EasyMock.*;
 /**
  *
@@ -45,6 +49,7 @@ public class TreeServiceTest extends ServiceTestCase
     private static boolean checkTreeExecuted = false;
     private Tree tree;
     private Configurator configurator;
+    private TypeConverter converter;
     
     @Override
     protected void configureRegistry(RegistryBuilder builder)
@@ -60,6 +65,9 @@ public class TreeServiceTest extends ServiceTestCase
         
         configurator = registry.getService(Configurator.class);
         assertNotNull(configurator);
+        
+        converter = registry.getService(TypeConverter.class);
+        assertNotNull(converter);
     }
     
     @Test
@@ -336,6 +344,121 @@ public class TreeServiceTest extends ServiceTestCase
         
         attr = node1.getNodeAttribute("gAttr");
         assertNull(attr);
+    }
+    
+    @Test
+    public void attributeReference() throws ConstraintException
+    {
+        configurator.getTreeStore().removeNodes();
+        
+        ContainerNode node = new ContainerNode("node");
+        tree.getRootNode().addChildren(node);
+        configurator.getTreeStore().saveNode(node);
+        NodeAttribute attr = new NodeAttributeImpl("attr", Integer.class, null, null);
+        attr.setOwner(node);
+        node.addNodeAttribute(attr);
+        configurator.getTreeStore().saveNodeAttribute(attr);
+        
+        ContainerNode node2 = new ContainerNode("node2");
+        tree.getRootNode().addChildren(node2);
+        configurator.getTreeStore().saveNode(node2);
+        String attrPath = converter.convert(String.class, new AttributeReferenceImpl(attr), null);
+        NodeAttribute refAttr = new NodeAttributeImpl("ref", AttributeReference.class, null, null);
+        refAttr.setOwner(node2);
+        node2.addNodeAttribute(refAttr);
+        refAttr.setValue(attrPath);
+        configurator.getTreeStore().saveNodeAttribute(refAttr);
+        
+        assertTrue(refAttr.isAttributeReference());
+        AttributeReference ref = refAttr.getAttributeReference();
+        assertNotNull(ref);
+        assertSame(attr, ref.getAttribute());
+        assertEquals(attrPath, refAttr.getValue());
+        
+        node2.init();
+        assertEquals(Status.CREATED, node2.getStatus());
+        
+        node.init();
+        assertEquals(Status.INITIALIZED, node.getStatus());
+        assertEquals(Status.STARTED, node2.getStatus());
+        assertNull(refAttr.getValue());
+        
+        NodeListener listener = trainMocks_attributeReference(node2, refAttr);
+        node2.addListener(listener);
+        
+        attr.setValue("1");
+        assertEquals("1", refAttr.getValue());
+        assertEquals(new Integer(1), refAttr.getRealValue());
+        verify(listener);
+        node2.removeListener(listener);
+        configurator.getTreeStore().saveNodeAttribute(attr);
+        
+        tree.reloadTree();
+        
+        node2 = (ContainerNode) tree.getNode(node2.getPath());
+        assertNotNull(node2);
+        assertEquals(Status.STARTED, node2.getStatus());
+        refAttr = node2.getNodeAttribute("ref");
+        assertNotNull(refAttr);
+        assertEquals("1", refAttr.getValue());
+    }
+    
+    @Test
+    public void attributeReferenceWithParameter() throws Exception
+    {
+        configurator.getTreeStore().removeNodes();
+        
+        ContainerNode node = new ContainerNode("node");
+        tree.getRootNode().addChildren(node);
+        configurator.getTreeStore().saveNode(node);
+        node.init();
+        NodeAttribute attr = new NodeAttributeImpl("attr", Integer.class, null, null);
+        attr.setOwner(node);
+        node.addNodeAttribute(attr);
+        configurator.getTreeStore().saveNodeAttribute(attr);
+        
+        NodeWithIntegerParameter node2 = new NodeWithIntegerParameter();
+        node2.setName("node2");
+        tree.getRootNode().addChildren(node2);
+        configurator.getTreeStore().saveNode(node2);
+        node2.init();
+        assertEquals(Status.INITIALIZED, node2.getStatus());
+        
+        NodeAttribute ref = node2.getNodeAttribute("parameter");
+        ref.setType(AttributeReference.class);
+        String attrPath = converter.convert(String.class, new AttributeReferenceImpl(attr), null);
+        ref.setValue(attrPath);
+        configurator.getTreeStore().saveNodeAttribute(ref);
+        
+        assertNull(ref.getValue());
+        assertNull(node2.getParameter());
+        
+        attr.setValue("1");
+        configurator.getTreeStore().saveNodeAttribute(attr);
+        assertEquals("1", ref.getValue());
+        assertEquals(new Integer(1), node2.getParameter());
+        
+        tree.reloadTree();
+        
+        node2 = (NodeWithIntegerParameter) tree.getNode(node2.getPath());
+        assertNotNull(node2);
+        assertEquals(Status.STARTED, node2.getStatus());
+        ref = node2.getNodeAttribute("parameter");
+        assertNotNull(ref);
+        assertEquals(AttributeReference.class, ref.getType());
+        assertEquals("1", ref.getValue());
+        assertEquals(new Integer(1), node2.getParameter());
+    }
+    
+    private NodeListener trainMocks_attributeReference(Node node, NodeAttribute attr)
+    {
+        NodeListener listener = createMock(NodeListener.class);
+        expect(listener.isSubtreeListener()).andReturn(false).anyTimes();
+        listener.nodeAttributeValueChanged(eq(node), eq(attr), (String)isNull(), eq("1"));
+        
+        replay(listener);
+        
+        return listener;
     }
     
     private void checkAttributes(NodeWithParameters node, String value)

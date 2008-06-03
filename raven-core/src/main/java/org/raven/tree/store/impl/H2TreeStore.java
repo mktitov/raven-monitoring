@@ -432,10 +432,10 @@ public class H2TreeStore implements TreeStore
         insertNodeAttributeStatement.setInt(pos++, nodeAttribute.getOwner().getId());
         insertNodeAttributeStatement.setString(pos++, nodeAttribute.getName());
         
-        if (nodeAttribute.getValue()==null)
+        if (nodeAttribute.getRawValue()==null)
             insertNodeAttributeStatement.setNull(pos++, Types.VARCHAR);
         else
-            insertNodeAttributeStatement.setString(pos++, nodeAttribute.getValue());
+            insertNodeAttributeStatement.setString(pos++, nodeAttribute.getRawValue());
             
         insertNodeAttributeStatement.setString(pos++, nodeAttribute.getType().getName());
         
@@ -503,10 +503,10 @@ public class H2TreeStore implements TreeStore
         updateNodeAttributeStatement.setInt(pos++, nodeAttribute.getOwner().getId());
         updateNodeAttributeStatement.setString(pos++, nodeAttribute.getName());
         
-        if (nodeAttribute.getValue()==null)
+        if (nodeAttribute.getRawValue()==null)
             updateNodeAttributeStatement.setNull(pos++, Types.VARCHAR);
         else
-            updateNodeAttributeStatement.setString(pos++, nodeAttribute.getValue());
+            updateNodeAttributeStatement.setString(pos++, nodeAttribute.getRawValue());
         
         if (nodeAttribute.getType().getName()==null)
             updateNodeAttributeStatement.setNull(pos++, Types.VARCHAR);

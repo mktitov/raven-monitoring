@@ -15,26 +15,34 @@
  *  under the License.
  */
 
-package org.raven.tree;
+package org.raven.impl;
+
+import org.raven.tree.AttributeReference;
+import org.raven.tree.Node;
+import org.weda.converter.impl.AbstractConverter;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class NodeAttributeError extends RuntimeException
+public class AttributeReferenceToStringConverter 
+        extends AbstractConverter<AttributeReference, String>
 {
-    public NodeAttributeError(Throwable cause)
+
+    public String convert(AttributeReference value, Class realTargetType, String format)
     {
-        super(cause);
-    }
-    
-    public NodeAttributeError(String message, Throwable cause) 
-    {
-        super(message, cause);
+        return value.getAttribute().getOwner().getPath()
+                + Node.ATTRIBUTE_SEPARATOR+value.getAttribute().getName();
     }
 
-    public NodeAttributeError(String msg) 
+    public Class getSourceType()
     {
-        super(msg);
+        return AttributeReference.class;
     }
+
+    public Class getTargetType()
+    {
+        return String.class;
+    }
+
 }

@@ -35,7 +35,6 @@ import org.raven.tree.NodeError;
 import org.raven.tree.NodeParameter;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
-import org.raven.template.TemplateEntry;
 import org.raven.tree.AttributeReference;
 import org.raven.tree.NodeAttributeListener;
 import org.raven.tree.NodeListener;
@@ -111,6 +110,29 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
         return id;
     }
 
+    private void initDependentNodes()
+    {
+        if (dependentNodes != null)
+            for (Node node : dependentNodes)
+                initDependentNode(node);
+            
+        if (attributesListeners != null)
+            for (Set<NodeAttributeListener> listeners : attributesListeners.values())
+                for (NodeAttributeListener listener : listeners)
+                    if (listener instanceof NodeAttribute)
+                        initDependentNode(((NodeAttribute) listener).getOwner());
+    }
+
+    private void initDependentNode(Node node)
+    {
+        if (node.getStatus()==Status.CREATED)
+        {
+            node.init();
+            if (node.isAutoStart())
+                node.start();
+        }
+    }
+    
     private void processListeners(NodeAttributeImpl attr, String newValue, String oldValue)
     {
         if (listeners != null)
@@ -449,14 +471,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
             
             setStatus(Status.INITIALIZED);
             
-            if (dependentNodes != null)
-                for (Node node : dependentNodes)
-                    if (node.getStatus()==Status.CREATED)
-                    {
-                        node.init();
-                        if (node.isAutoStart())
-                            node.start();
-                    }
+            initDependentNodes();
                                 
         } catch (Exception e)
         {
@@ -608,27 +623,35 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
 
         if (attr.isGeneratorType())
         {
-            Iterator<Map.Entry<String, NodeAttribute>> it = nodeAttributes.entrySet().iterator();
-            while (it.hasNext())
+//            Iterator<Map.Entry<String, NodeAttribute>> it = nodeAttributes.entrySet().iterator();
+//            while (it.hasNext())
+//            {
+//                NodeAttribute childAttr = it.next().getValue();
+//                if (attr.getName().equals(childAttr.getParentAttribute()))
+//                {
+//                    configurator.getTreeStore().removeNodeAttribute(childAttr.getId());
+//                    it.remove();
+//                }
+//            }
+//
+            if (newValue == null)
+                removeChildAttributes(attr.getName(), null);
+            else
             {
-                NodeAttribute childAttr = it.next().getValue();
-                if (attr.getName().equals(childAttr.getParentAttribute()))
-                {
-                    configurator.getTreeStore().removeNodeAttribute(childAttr.getId());
-                    it.remove();
-                }
-            }
-
-            if (newValue != null)
-            {
-                AttributesGenerator attributesGenerator = (AttributesGenerator) converter.convert(
+                AttributesGenerator attributesGenerator = (AttributesGenerator)converter.convert(
                             attr.getType(), newValue, null);
 
                 Collection<NodeAttribute> newAttrs = attributesGenerator.generateAttributes();
+                
+                removeChildAttributes(attr.getName(), newAttrs);
+                
                 if (newAttrs != null)
                 {
                     for (NodeAttribute newAttr : newAttrs)
                     {
+                        if (nodeAttributes.containsKey(newAttr.getName()))
+                            continue;
+                        
                         NodeAttribute clone = null;
                         try
                         {
@@ -668,8 +691,9 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
                     else
                     {
                         param.setNodeAttribute(attr);
-                        param.setValue(attr.getValue());
                         attr.setParameter(param);
+                        if (!attr.isAttributeReference())
+                            param.setValue(attr.getValue());
                     }
                 }
             }
@@ -701,6 +725,28 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
         addNodeAttribute(attr);
 
         configurator.getTreeStore().saveNodeAttribute(attr);
+    }
+    
+    void removeChildAttributes(String parentName, Collection<NodeAttribute> leaveAttributes)
+    {
+        Iterator<Map.Entry<String, NodeAttribute>> it = nodeAttributes.entrySet().iterator();
+        while (it.hasNext())
+        {
+            NodeAttribute childAttr = it.next().getValue();
+            if (parentName.equals(childAttr.getParentAttribute()))
+            {
+                if (leaveAttributes!=null)
+                    for (NodeAttribute attr: leaveAttributes)
+                        if (   childAttr.getName().equals(attr.getName()) 
+                            && childAttr.getType().equals(attr.getType()))
+                        {
+                            continue;
+                        }
+                configurator.getTreeStore().removeNodeAttribute(childAttr.getId());
+                it.remove();
+            }
+        }
+        
     }
 
     @Override

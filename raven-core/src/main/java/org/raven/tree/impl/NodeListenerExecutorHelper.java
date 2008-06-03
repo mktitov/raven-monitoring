@@ -42,6 +42,29 @@ public class NodeListenerExecutorHelper
     @Service
     private static PropertyOperationCompiler compiler;
     
+    public static Object getParameterValue(Node node, String parameterName, Object fieldValue)
+    {
+        NodeAttribute attr = node.getNodeAttribute(parameterName);
+        if (attr==null || !attr.isAttributeReference())
+        {
+            if (fieldValue==null)
+            {
+                PropertyDescriptor desc = classDescriptorRegistry.getPropertyDescriptor(
+                        node.getClass(), parameterName);
+                return converter.convert(
+                        desc.getType(), node.getParentAttributeRealValue(parameterName)
+                        , desc.getPattern());
+            } else
+                return fieldValue;
+        } 
+        else 
+        {
+            PropertyDescriptor desc = 
+                    classDescriptorRegistry.getPropertyDescriptor(node.getClass(), parameterName);
+            return converter.convert(desc.getType(), attr.getRealValue(), desc.getPattern());
+        }
+    }
+    
     public static Object getParentAttributeValue(
             Node node, String parameterName, Class parameterType)
     {
@@ -65,18 +88,20 @@ public class NodeListenerExecutorHelper
     public static void fireNodeAttributeValueChanged(
             Node node, String attributeName, Object oldValue, Object newValue)
     {
-        if (   node.getStatus()!=Status.CREATED 
-            && node.getListeners()!=null 
-            && !ObjectUtils.equals(oldValue, newValue))
+        if (node.getStatus()!=Status.CREATED && !ObjectUtils.equals(oldValue, newValue))
         {
-            NodeAttribute attr = node.getNodeAttribute(attributeName);
+            NodeAttribute attr = node.getNodeAttribute(attributeName);            
             String pattern = 
                     classDescriptorRegistry.getPropertyDescriptor(
                         node.getClass(), attributeName).getPattern();
-            ((BaseNode)node).fireAttributeValueChanged(
-                    (NodeAttributeImpl) attr
-                    , converter.convert(String.class, oldValue, pattern)
-                    , converter.convert(String.class, newValue, pattern));
+            String newStrValue = converter.convert(String.class, newValue, pattern);
+            attr.setRawValue(newStrValue);
+            
+            if (node.getListeners()!=null)
+                ((BaseNode)node).fireAttributeValueChanged(
+                        (NodeAttributeImpl) attr
+                        , converter.convert(String.class, oldValue, pattern)
+                        , newStrValue);
 //            for (NodeListener listener: node.getListeners())
 //                listener.nodeAttributeValueChanged(
 //                    node, attr, 
