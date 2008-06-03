@@ -10,16 +10,13 @@
     <name>raven-ui</name>
     <description>Core module of the raven</description>
     <packaging>war</packaging>
-    
     <build>
-        
         <plugins>
-            
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
             <plugin>
-                <artifactId>maven-surefire-plugin</artifactId> 
+                <artifactId>maven-surefire-plugin</artifactId>
             </plugin>
             <plugin>
                 <artifactId>maven-source-plugin</artifactId>
@@ -39,12 +36,11 @@
             -->
         </plugins>
     </build>
-    
     <dependencies>
         <dependency>
-      		<groupId>javax.servlet</groupId>
-      		<artifactId>servlet-api</artifactId>
-      	</dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.raven</groupId>
             <artifactId>raven-core</artifactId>
@@ -55,45 +51,47 @@
         </dependency>
         <dependency>
             <groupId>org.easymock</groupId>
-            <artifactId>easymock</artifactId>            
+            <artifactId>easymock</artifactId>
         </dependency>
         <dependency>
-    		<groupId>org.samba.jcifs</groupId>
-    		<artifactId>jcifs</artifactId>
-		</dependency>
-		<dependency>
-    		<groupId>jstl</groupId>
-    		<artifactId>jstl</artifactId>
-    	</dependency>
-    	<dependency>
-    		<groupId>org.apache.myfaces.core</groupId>
-    		<artifactId>myfaces-api</artifactId>
-		</dependency>
-		<dependency>
-   			<groupId>org.apache.myfaces.core</groupId>
-   			<artifactId>myfaces-impl</artifactId>
-		</dependency>
-		<dependency>
-   			<groupId>org.apache.myfaces.trinidad</groupId>
-   			<artifactId>trinidad-api</artifactId>
-		</dependency>
-		<dependency>
-   			<groupId>org.apache.myfaces.trinidad</groupId>
-   			<artifactId>trinidad-impl</artifactId>
-		</dependency>
-    	<dependency>
-		 	<groupId>javax.el</groupId>
-			<artifactId>el-api</artifactId>
-		</dependency>
-		<dependency>
-   			<groupId>org.apache.myfaces.tomahawk</groupId>
-   			<artifactId>tomahawk</artifactId>
-		</dependency>
-		<dependency>
-   			<groupId>org.apache.myfaces.tomahawk</groupId>
-   			<artifactId>tomahawk-sandbox</artifactId>
-		</dependency>
-		
+            <groupId>org.samba.jcifs</groupId>
+            <artifactId>jcifs</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jstl</groupId>
+            <artifactId>jstl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.myfaces.core</groupId>
+            <artifactId>myfaces-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.myfaces.core</groupId>
+            <artifactId>myfaces-impl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.myfaces.trinidad</groupId>
+            <artifactId>trinidad-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.myfaces.trinidad</groupId>
+            <artifactId>trinidad-impl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.el</groupId>
+            <artifactId>el-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.myfaces.tomahawk</groupId>
+            <artifactId>tomahawk</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.myfaces.tomahawk</groupId>
+            <artifactId>tomahawk-sandbox</artifactId>
+        </dependency>
     </dependencies>
-    
+    <properties>
+        <netbeans.hint.deploy.server>Tomcat60</netbeans.hint.deploy.server>
+    </properties>
 </project>

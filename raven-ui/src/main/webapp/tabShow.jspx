@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="yes" ?>
 <!-- 
  *  Copyright 2008 Sergey Pinevskiy.
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +15,6 @@
  *  under the License.
  -->
  
-<?xml version="1.0" encoding="iso-8859-1" standalone="yes" ?>
 <jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
           xmlns:f="http://java.sun.com/jsf/core"
           xmlns:tr="http://myfaces.apache.org/trinidad" 
