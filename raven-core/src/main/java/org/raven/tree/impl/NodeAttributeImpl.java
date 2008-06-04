@@ -318,6 +318,8 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
     public Object clone() throws CloneNotSupportedException
     {
         NodeAttributeImpl clone = (NodeAttributeImpl) super.clone();
+        clone.id = 0;
+        clone.owner = null;
         
         return clone;
     }

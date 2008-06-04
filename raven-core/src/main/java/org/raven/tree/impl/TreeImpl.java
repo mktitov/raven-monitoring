@@ -21,6 +21,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.raven.conf.Configurator;
 import org.raven.impl.NodeClassTransformerWorker;
 import org.raven.template.TemplateVariable;
@@ -29,7 +31,9 @@ import org.raven.tree.AttributeReferenceValues;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeNotFoundError;
+import org.raven.tree.NodeTuner;
 import org.raven.tree.Tree;
+import org.raven.tree.TreeError;
 import org.raven.tree.store.TreeStore;
 import org.raven.tree.store.TreeStoreError;
 import org.weda.internal.exception.NullParameterError;
@@ -148,6 +152,34 @@ public class TreeImpl implements Tree
             node.getParent().removeChildren(node);
     }
 
+    public void copy(Node source, Node destination, NodeTuner nodeTuner)
+    {
+        Class[] childTypes = destination.getChildNodeTypes();
+        if (childTypes!=null)
+        {
+            boolean isValidChildType = false;
+            for (Class childType: childTypes)
+                if (childType.equals(source.getClass()))
+                {
+                    isValidChildType = true;
+                    break;
+                }
+            if (!isValidChildType)
+                throw new TreeError(String.format(
+                        "The source node type (%s) is not a valid type for destination node (%s)"
+                        , source.getClass().getName(), destination.getPath()));
+        }
+        try
+        {
+            Node clone = (Node) source.clone();
+            saveClonedNode(source, destination.getPath(), clone, nodeTuner);
+        } 
+        catch (CloneNotSupportedException ex)
+        {
+            throw new TreeError("Node (%s) clone error", ex);
+        }
+    }
+
     public List<String> getReferenceValuesForAttribute(NodeAttribute attr)
     {
         AttributeReferenceValues provider = referenceValuesProviders.get(attr.getType());
@@ -209,6 +241,35 @@ public class TreeImpl implements Tree
             if (node.getStatus()==Node.Status.INITIALIZED && node.isAutoStart())
                 node.start();
         }
+    }
+
+    private void saveClonedNode(
+            final Node source, final String destPath, final Node clone, final NodeTuner nodeTuner)
+    {
+        nodeTuner.tuneNode(clone);
+        configurator.getTreeStore().saveNode(clone);
+        Collection<NodeAttribute> attrs = clone.getNodeAttributes();
+        if (attrs!=null)
+        {
+            String sourcePath = source.getPath();
+            for (NodeAttribute attr: attrs)
+            {
+                if (   (attr.isAttributeReference() || Node.class.isAssignableFrom(attr.getType()))
+                    && attr.getRawValue()!=null && attr.getRawValue().startsWith(sourcePath))
+                {
+                    attr.setRawValue(
+                            destPath
+                            + Node.NODE_SEPARATOR+source.getName()
+                            + clone.getPath().substring(sourcePath.length()));
+                }
+                configurator.getTreeStore().saveNodeAttribute(attr);
+            }
+        }
+        
+        Collection<Node> childs = clone.getChildrens();
+        if (childs!=null)
+            for (Node child: childs)
+                saveClonedNode(source, destPath, child, nodeTuner);
     }
 
     private void shutdownNode(Node node)

@@ -62,7 +62,7 @@ import org.weda.annotations.Description;
  * @author Mikhail Titov
  */
 @Description("The node type")
-public interface Node
+public interface Node extends Cloneable
 {
     public enum Status {CREATED, INITIALIZED, STARTED}
     /**
@@ -278,4 +278,11 @@ public interface Node
      * Returns <code>true</code> if this node is in the template.
      */
     public boolean isTemplate();
+    
+    /**
+     * Clones the node.
+     * @throws java.lang.CloneNotSupportedException
+     */
+    public Object clone() throws CloneNotSupportedException;
+    
 }

@@ -401,9 +401,14 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     public void setParent(Node parent)
     {
         this.parent = parent;
+        byte oldLevel = level;
         level = 0; Node node = this;
         while ( (node=node.getParent())!=null )
             ++level;
+        
+        if (level!=oldLevel && childrens!=null)
+            for (Node child: childrens.values())
+                child.setParent(this);
     }
 
     public String getPath()
@@ -842,4 +847,38 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     {
         return index-o.getIndex();
     }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException
+    {
+        BaseNode clone = (BaseNode) super.clone();
+        clone.setId(0);
+        clone.parent = null;
+        clone.dependentNodes = null;
+        clone.listeners = null;
+        clone.attributesListeners = null;
+        clone.status = Status.CREATED;
+        clone.parameters = null;
+        clone.nodeAttributes = null;
+        clone.childrens = null;
+        
+        if (nodeAttributes!=null)
+            for (NodeAttribute attr: nodeAttributes.values()) 
+            {
+                NodeAttribute attrClone = (NodeAttribute) attr.clone();
+                attrClone.setOwner(clone);
+                clone.addNodeAttribute(attrClone);
+            }
+            
+        if (childrens!=null)
+            for (Node child: childrens.values())
+            {
+                Node childClone = (Node) child.clone();
+                clone.addChildren(childClone);
+            }
+        
+        return clone;
+    }
+    
+    
 }

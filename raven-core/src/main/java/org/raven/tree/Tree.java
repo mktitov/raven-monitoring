@@ -60,4 +60,11 @@ public interface Tree
      * attribute was not defined.
      */
     public List<String> getReferenceValuesForAttribute(NodeAttribute attr);
+    /**
+     * Copy the <code>source</code> node to the <code>destination</code> node
+     * @param source the source node
+     * @param destination the node to wich the source will be copied
+     * @param nodeTuner allows to tune node parameters in copy process.
+     */
+    public void copy(Node source, Node destination, NodeTuner nodeTuner);
 }
