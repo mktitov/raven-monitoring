@@ -190,7 +190,24 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
 
     public void setName(String name)
     {
-        this.name = name;
+        if (name==null)
+            throw new NodeAttributeError("The name of the attribute can not be empty");
+        
+        if (!ObjectUtils.equals(this.name, name))
+        {
+            if (this.name!=null && owner.getStatus()!=Status.CREATED)
+            {
+                if (owner.getNodeAttribute(name)!=null)
+                    throw new NodeAttributeError(String.format(
+                            "The attribute with name (%s) is already exists in the node (%s)"
+                            , name, owner.getPath()));
+                
+                String oldValue = this.name;
+                this.name = name;
+                owner.fireAttributeNameChanged(this, oldValue, this.name);
+            } else
+                this.name = name;
+        }
     }
 
     public Node getOwner()

@@ -49,6 +49,10 @@ public interface NodeAttribute extends Cloneable
      */
     public String getName();
     /**
+     * Sets the attribute name. The name must be unique.
+     */
+    public void setName(String name);
+    /**
      * Returns the parameter name or null if the attribute not linked with node logic parameter.
      */
     public String getParameterName();
@@ -56,6 +60,10 @@ public interface NodeAttribute extends Cloneable
      * Returns the short description of the attribute.
      */
     public String getDescription();
+    /**
+     * Sets the attribute description.
+     */
+    public void setDescription(String description);
     /**
      * If returns <code>true</code> if the value of this node attribute must be seted before 
      * {@link Node#start() node logic execution}.
@@ -93,7 +101,16 @@ public interface NodeAttribute extends Cloneable
      * @see Node#getParentAttributeValue(java.lang.String) 
      */
     public String getValue();
+    /**
+     * Returns the raw value (the value without any transformation)
+     * @see #getValue() 
+     */
     public String getRawValue();
+    /**
+     * Sets the raw value (the value without any transformation)
+     * @see #getRawValue() 
+     * @see #getValue() 
+     */
     public void setRawValue(String rawValue);
     /**
      * Sets the attribute value.

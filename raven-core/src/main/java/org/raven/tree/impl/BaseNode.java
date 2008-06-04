@@ -528,6 +528,23 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
         processListeners(attr, newValue, oldValue);
     }
     
+    void fireAttributeNameChanged(NodeAttribute attr, String oldName, String newName)
+    {
+        nodeAttributes.remove(oldName);
+        nodeAttributes.put(newName, attr);
+        
+        if (listeners!=null)
+            for (NodeListener listener: listeners)
+                listener.nodeAttributeNameChanged(attr, oldName, newName);
+        if (attributesListeners!=null)
+        {
+            Set<NodeAttributeListener> listeners = attributesListeners.get(attr);
+            if (listeners!=null)
+                for (NodeAttributeListener listener: listeners)
+                    listener.nodeAttributeNameChanged(attr, oldName, newName);
+        }
+    }
+    
     /**
      * Method returns the first not null value of the attribute, with name passed in the 
      * <code>attributeName</code> parameter, of the nearest parent or null if parents does not

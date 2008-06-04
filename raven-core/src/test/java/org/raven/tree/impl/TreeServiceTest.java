@@ -29,6 +29,7 @@ import org.raven.tree.AttributeReference;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodeAttributeListener;
 import org.raven.tree.NodeListener;
 import org.raven.tree.NodeNotFoundError;
 import org.raven.tree.Tree;
@@ -448,6 +449,39 @@ public class TreeServiceTest extends ServiceTestCase
         assertEquals(AttributeReference.class, ref.getType());
         assertEquals("1", ref.getValue());
         assertEquals(new Integer(1), node2.getParameter());
+    }
+    
+    @Test
+    public void attributeChangeName() throws Exception
+    {
+        configurator.getTreeStore().removeNodes();
+        
+        ContainerNode node = new ContainerNode("node");
+        tree.getRootNode().addChildren(node);
+        configurator.getTreeStore().saveNode(node);
+        node.init();
+        
+        NodeAttribute attr = new NodeAttributeImpl("attr", String.class, null, null);
+        attr.setOwner(node);        
+        node.addNodeAttribute(attr);
+        configurator.getTreeStore().saveNodeAttribute(attr);
+        
+        NodeAttributeListener attrListener = 
+                createMock("AttributeListener", NodeAttributeListener.class);
+        attrListener.nodeAttributeNameChanged(attr, "attr", "newName");
+        NodeListener listener = createMock("NodeListener", NodeListener.class);
+        expect(listener.isSubtreeListener()).andReturn(false).anyTimes();
+        listener.nodeAttributeNameChanged(attr, "attr", "newName");
+        replay(attrListener, listener);
+        
+        node.addListener(listener);
+        node.addNodeAttributeDependency("attr", attrListener);
+        
+        attr.setName("newName");
+        
+        assertNull(node.getNodeAttribute("attr"));
+        assertSame(attr, node.getNodeAttribute("newName"));
+        verify(attrListener, listener);
     }
     
     private NodeListener trainMocks_attributeReference(Node node, NodeAttribute attr)

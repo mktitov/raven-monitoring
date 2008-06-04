@@ -262,14 +262,14 @@ public class RRGraphNode extends BaseNode implements DynamicImageNode
         if (unitsExponent!=null)
             gdef.setUnitsExponent(unitsExponent);
 
-        String strt = this.startTime;
-        if (startTime==null && strt==null)
-            throw new NodeError("startTime attribute must be seted");
-        if (endTime==null && this.endTime==null)
-            throw new NodeError("endTime attribute must be seted");
+//        String strt = this.startTime;
+//        if (startTime==null && strt==null)
+//            throw new NodeError("startTime attribute must be seted");
+//        if (endTime==null && this.endTime==null)
+//            throw new NodeError("endTime attribute must be seted");
 
-        String start = startTime==null? this.startTime : startTime;
-        String end = endTime==null? this.endTime : endTime;
+        String start = startTime==null? this.startTime==null? "end-1d" : this.startTime : startTime;
+        String end = endTime==null? this.endTime==null? "now" : this.endTime : endTime;
 
         long[] timeInterval = Util.getTimestamps(start, end);
 
@@ -350,5 +350,4 @@ public class RRGraphNode extends BaseNode implements DynamicImageNode
         public RrdGraphDef graphDef;
         public List<RRDNode> rrdNodes = new ArrayList<RRDNode>(5);
     }
-    
 }
