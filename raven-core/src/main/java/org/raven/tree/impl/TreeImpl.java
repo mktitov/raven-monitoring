@@ -20,9 +20,14 @@ package org.raven.tree.impl;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import org.raven.conf.Configurator;
 import org.raven.impl.NodeClassTransformerWorker;
+import org.raven.template.TemplateVariable;
+import org.raven.tree.AttributeReference;
+import org.raven.tree.AttributeReferenceValues;
 import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeNotFoundError;
 import org.raven.tree.Tree;
 import org.raven.tree.store.TreeStore;
@@ -41,12 +46,17 @@ public class TreeImpl implements Tree
     private final Configurator configurator;
     private final TreeStore treeStore;
     private final Class[] nodesTypes;
+    private final Map<Class, AttributeReferenceValues> referenceValuesProviders;
     private Node rootNode;
 
-    public TreeImpl(Configurator configurator, ResourceProvider resourceProvider) throws Exception
+    public TreeImpl(
+            Map<Class, AttributeReferenceValues> referenceValuesProviders
+            , Configurator configurator, ResourceProvider resourceProvider) 
+        throws Exception
     {
         this.configurator = configurator;
         this.treeStore = configurator.getTreeStore();
+        this.referenceValuesProviders = referenceValuesProviders;
         INSTANCE = this;
         
         List<String> nodesTypesList = 
@@ -66,9 +76,15 @@ public class TreeImpl implements Tree
         return nodesTypes;
     }
 
-    public Class[] getNodeAttributesTypes()
+    public Class[] getNodeAttributesTypes(Node node)
     {
-        return new Class[]{String.class, Integer.class, Double.class, Node.class};
+        if (node.isTemplate())
+            return new Class[]{
+                String.class, Integer.class, Double.class, Node.class, AttributeReference.class
+                , TemplateVariable.class};
+        else
+            return new Class[]{
+                String.class, Integer.class, Double.class, Node.class, AttributeReference.class};
     }
 
     public Node getRootNode()
@@ -126,10 +142,29 @@ public class TreeImpl implements Tree
         
         node.shutdown();
         
-        configurator.getTreeStore().removeNode(node.getId());
+        treeStore.removeNode(node.getId());
         
         if (node.getParent()!=null)
             node.getParent().removeChildren(node);
+    }
+
+    public List<String> getReferenceValuesForAttribute(NodeAttribute attr)
+    {
+        AttributeReferenceValues provider = referenceValuesProviders.get(attr.getType());
+        if (provider!=null)
+        {
+            return provider.getReferenceValues(attr);
+        }
+        else
+        {
+            for (Map.Entry<Class, AttributeReferenceValues> entry: 
+                    referenceValuesProviders.entrySet())
+            {
+                if (entry.getKey().isAssignableFrom(attr.getType()))
+                    return entry.getValue().getReferenceValues(attr);
+            }
+            return null;
+        }
     }
 
     private void createRootNode()

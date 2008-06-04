@@ -15,16 +15,21 @@
  *  under the License.
  */
 
-package org.raven.tree;
+package org.raven.template;
 
+import org.raven.tree.NodeAttribute;
+import org.raven.tree.impl.AttributeReferenceImpl;
 import org.weda.annotations.Description;
 
 /**
- * Reference to the attribute.
+ *
  * @author Mikhail Titov
  */
-@Description("Allows to reference to the value of the other attribute")
-public interface AttributeReference 
+@Description("Allows to reference to the template variable")
+public class TemplateVariable extends AttributeReferenceImpl
 {
-    public NodeAttribute getAttribute();
+    public TemplateVariable(NodeAttribute attribute)
+    {
+        super(attribute);
+    }
 }

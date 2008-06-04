@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import org.slf4j.Logger;
+import org.weda.annotations.Description;
 
 /**
  * The base interface of the observable object tree.
@@ -60,7 +61,7 @@ import org.slf4j.Logger;
  * 
  * @author Mikhail Titov
  */
-//TODO: add listener functionality
+@Description("The node type")
 public interface Node
 {
     public enum Status {CREATED, INITIALIZED, STARTED}

@@ -27,6 +27,10 @@ import org.raven.impl.NodeToStringConverter;
 import org.raven.impl.SnmpVariableToNumberConverter;
 import org.raven.impl.StringToAttributeReferenceConverter;
 import org.raven.impl.StringToNodeConverter;
+import org.raven.impl.StringToTemplateVariableConverter;
+import org.raven.template.TemplateVariable;
+import org.raven.template.TemplateVariableReferenceValues;
+import org.raven.tree.AttributeReferenceValues;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.TreeImpl;
 import org.raven.tree.store.impl.H2TreeStore;
@@ -49,10 +53,12 @@ public class RavenCoreModule
     }
     
 //    @EagerLoad()
-    public static Tree buildTree(Configurator configurator, ResourceProvider resourceProvider) 
-            throws Exception
+    public static Tree buildTree(
+            Map<Class, AttributeReferenceValues> referenceValuesProvider
+            , Configurator configurator, ResourceProvider resourceProvider) 
+        throws Exception
     {
-        return new TreeImpl(configurator, resourceProvider);
+        return new TreeImpl(referenceValuesProvider, configurator, resourceProvider);
     }
     
     public static void contributeConfigurator(MappedConfiguration<String, Class> conf)
@@ -67,5 +73,11 @@ public class RavenCoreModule
         conf.add(new SnmpVariableToNumberConverter());
         conf.add(new StringToAttributeReferenceConverter());
         conf.add(new AttributeReferenceToStringConverter());
+        conf.add(new StringToTemplateVariableConverter());
+    }
+    
+    public static void contributeTree(MappedConfiguration<Class, AttributeReferenceValues> conf)
+    {
+        conf.add(TemplateVariable.class, new TemplateVariableReferenceValues());
     }
 }

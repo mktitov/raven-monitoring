@@ -17,6 +17,8 @@
 
 package org.raven.tree;
 
+import java.util.List;
+
 /**
  * The tree of nodes. 
  * 
@@ -49,5 +51,13 @@ public interface Tree
      * Returns all classes marked with {@link org.raven.annotations.NodeClass} annotation. 
      */
     public Class[] getAvailableNodesTypes();
-    public Class[] getNodeAttributesTypes();
+    /**
+     * Returns attributes types available for the node .
+     */
+    public Class[] getNodeAttributesTypes(Node node);
+    /**
+     * Returns reference values for attribute or <code>null</code> if reference values for
+     * attribute was not defined.
+     */
+    public List<String> getReferenceValuesForAttribute(NodeAttribute attr);
 }

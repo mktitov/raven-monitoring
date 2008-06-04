@@ -28,6 +28,7 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeAttributeError;
 import org.raven.tree.NodeAttributeListener;
 import org.raven.tree.NodeParameter;
+import org.raven.tree.Tree;
 import org.weda.beans.ObjectUtils;
 import org.weda.constraints.ConstraintException;
 import org.weda.constraints.ReferenceValue;
@@ -46,6 +47,8 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
     private static TypeConverter converter;
     @Service
     private static Configurator configurator;
+    @Service
+    private static Tree tree;
     
     private int id;
     private String name;
@@ -267,26 +270,48 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
 
     public List<String> getReferenceValues()
     {
-        if (isAttributeReference())
-            return null;
-        if (parameter==null)
-            return null;
-        else {
+        List<String> result = null;
+        if (parameter!=null && !isAttributeReference())
+        {
             try
             {
                 List<ReferenceValue> refValues = parameter.getReferenceValues();
-                if (refValues==null)
-                    return null;
-                List<String> values = new ArrayList<String>(refValues.size());
-                for (ReferenceValue refValue: refValues)
-                    values.add(converter.convert(
-                        String.class, refValue.getValue(), parameter.getPattern()));
-                return values;
+                if (refValues!=null)
+                {
+                    result = new ArrayList<String>(refValues.size());
+                    for (ReferenceValue refValue: refValues)
+                        result.add(converter.convert(
+                            String.class, refValue.getValue(), parameter.getPattern()));
+                }
             } catch (TooManyReferenceValuesException ex)
             {
-                return null;
             }
         }
+        if (result==null)
+            result = tree.getReferenceValuesForAttribute(this);
+        
+        return result;
+        
+//        if (isAttributeReference())
+//            return null;
+//        if (parameter==null)
+//            return null;
+//        else {
+//            try
+//            {
+//                List<ReferenceValue> refValues = parameter.getReferenceValues();
+//                if (refValues==null)
+//                    return null;
+//                List<String> values = new ArrayList<String>(refValues.size());
+//                for (ReferenceValue refValue: refValues)
+//                    values.add(converter.convert(
+//                        String.class, refValue.getValue(), parameter.getPattern()));
+//                return values;
+//            } catch (TooManyReferenceValuesException ex)
+//            {
+//                return null;
+//            }
+//        }
     }
 
     @Override

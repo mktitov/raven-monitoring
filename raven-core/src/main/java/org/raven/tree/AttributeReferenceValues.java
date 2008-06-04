@@ -17,14 +17,16 @@
 
 package org.raven.tree;
 
-import org.weda.annotations.Description;
+import java.util.List;
 
 /**
- * Reference to the attribute.
+ * Returns the reference values for {@link NodeAttribute node attribute}
  * @author Mikhail Titov
  */
-@Description("Allows to reference to the value of the other attribute")
-public interface AttributeReference 
+public interface AttributeReferenceValues 
 {
-    public NodeAttribute getAttribute();
+    /**
+     * Returns the reference values for {@link NodeAttribute node attribute}.
+     */
+    public List<String> getReferenceValues(NodeAttribute attr);
 }

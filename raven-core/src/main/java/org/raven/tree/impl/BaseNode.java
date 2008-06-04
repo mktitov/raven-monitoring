@@ -755,7 +755,10 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
                 if (leaveAttributes!=null)
                     for (NodeAttribute attr: leaveAttributes)
                         if (   childAttr.getName().equals(attr.getName()) 
-                            && childAttr.getType().equals(attr.getType()))
+                            && (  attr.getType().isAssignableFrom(childAttr.getType()))
+                                || (   childAttr.getAttributeReference()!=null 
+                                    && attr.getType().isAssignableFrom(
+                                       childAttr.getAttributeReference().getAttribute().getType())))
                         {
                             continue;
                         }

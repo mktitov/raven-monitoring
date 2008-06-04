@@ -15,16 +15,27 @@
  *  under the License.
  */
 
-package org.raven.tree;
+package org.raven.impl;
 
-import org.weda.annotations.Description;
+import org.raven.template.TemplateVariable;
+import org.raven.tree.AttributeReference;
 
 /**
- * Reference to the attribute.
+ *
  * @author Mikhail Titov
  */
-@Description("Allows to reference to the value of the other attribute")
-public interface AttributeReference 
+public class StringToTemplateVariableConverter extends StringToAttributeReferenceConverter
 {
-    public NodeAttribute getAttribute();
+    @Override
+    public TemplateVariable convert(String value, Class realTargetType, String format)
+    {
+        AttributeReference attrRef = super.convert(value, realTargetType, format);
+        return new TemplateVariable(attrRef.getAttribute());
+    }
+
+    @Override
+    public Class getTargetType()
+    {
+        return TemplateVariable.class;
+    }
 }

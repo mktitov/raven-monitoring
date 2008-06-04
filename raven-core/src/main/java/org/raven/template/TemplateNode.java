@@ -33,7 +33,7 @@ public class TemplateNode extends BaseNode
     private TemplateVariablesNode variablesNode;
     private TemplateEntry entryNode;
     
-    public TemplateNode(Class[] childNodeTypes, boolean container, boolean readOnly)
+    public TemplateNode()
     {
         super(new Class[]{TemplateVariablesNode.class, TemplateEntry.class}, true, false);
         setSubtreeListener(true);
@@ -49,6 +49,7 @@ public class TemplateNode extends BaseNode
             variablesNode.setName(VARIABLES_NODE);
             addChildren(variablesNode);
             configurator.getTreeStore().saveNode(variablesNode);
+            variablesNode.init();
         }
         
         entryNode = (TemplateEntry) getChildren(ENTRY_NODE);
@@ -58,6 +59,17 @@ public class TemplateNode extends BaseNode
             entryNode.setName(ENTRY_NODE);
             addChildren(entryNode);
             configurator.getTreeStore().saveNode(entryNode);
+            entryNode.init();   
         }
+    }
+    
+    public TemplateVariablesNode getVariablesNode()
+    {
+        return variablesNode;
+    }
+    
+    public TemplateEntry getEntryNode()
+    {
+        return entryNode;
     }
 }
