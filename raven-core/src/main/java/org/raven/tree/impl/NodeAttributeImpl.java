@@ -310,7 +310,7 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
         }
         if (newValue!=null && owner.getStatus()!=Status.CREATED)
         {
-            attributeReference = converter.convert(AttributeReference.class, newValue, null);
+            attributeReference = (AttributeReference) converter.convert(type, newValue, null);
             newRefValue = attributeReference.getAttribute().getValue();
             attributeReference.getAttribute().getOwner().addNodeAttributeDependency(
                     attributeReference.getAttribute().getName(), this);
