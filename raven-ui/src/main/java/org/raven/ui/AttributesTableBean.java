@@ -72,6 +72,16 @@ public class AttributesTableBean
 		    NodeWrapper nw = (NodeWrapper) context.getELContext().getELResolver().getValue(context.getELContext(), null, NodeWrapper.BEAN_NAME);
 		    return nw.deleteAttrubutes(attrs);
 		  }
+		  
+		  public String saveAttributes()
+		  {
+		    FacesContext context = FacesContext.getCurrentInstance();
+		    NodeWrapper nw = (NodeWrapper) context.getELContext().getELResolver().getValue(context.getELContext(), null, NodeWrapper.BEAN_NAME);
+		    String ret = nw.save();
+		    if(ret!=null && message!=null) message.setMessage(ret);
+		    	else message.setMessage("");
+		    return "";
+		  }
 
 		  public CoreMessage getMessage() { return message; }
 		  public void setMessage(CoreMessage message) { this.message = message; }

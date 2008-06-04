@@ -35,8 +35,12 @@
  -->
 <tr:panelCaptionGroup rendered="#{cNode.allowNodeEdit}" captionText="#{msgs.attributeCreate}" >
 	<tr:panelFormLayout>
-		<tr:inputText label="#{msgs.name}" value="#{cNode.newAttributeName}" ></tr:inputText>
-		<tr:inputText columns="90" label="#{msgs.dsc}"  value="#{cNode.newAttributeDsc}" ></tr:inputText>
+		<tr:inputText label="#{msgs.name}" value="#{cNode.newAttribute.name}" ></tr:inputText>
+	      <tr:selectOneChoice label="#{msgs.type}" value="#{cNode.newAttribute.attrClass}" >
+	      	<f:selectItems value="#{cNode.newAttribute.selectItems}" />
+	      </tr:selectOneChoice>
+		
+		<tr:inputText columns="90" label="#{msgs.dsc}"  value="#{cNode.newAttribute.description}" ></tr:inputText>
 <!-- 		
 		<tr:inputListOfValues  
 			label="#{msgs.type}" value="#{sBean.newNodeType}"
@@ -65,11 +69,14 @@
     	<tr:column headerText="#{msgs.dsc}">
 	      <tr:outputText value="#{row.description}"/>
         </tr:column>
+    	<tr:column headerText="#{msgs.type}">
+	      <tr:outputText value="#{row.classDisplayName}"/>
+        </tr:column>
  	</tr:table>
  	<tr:panelButtonBar halign="left" >
  	<tr:commandButton shortDesc="#{msgs.dscDelSelAttr}" disabled="#{!cNode.allowNodeEdit}" text="#{msgs.delete}" action="#{cNodeAttrs.deleteAttributes}"  />
  	<tr:spacer width="60"></tr:spacer>
- 	<tr:commandButton shortDesc="#{msgs.dscSaveAttr}" disabled="#{!cNode.allowNodeEdit}" text="#{msgs.save}" action="#{cNode.save}"  />
+ 	<tr:commandButton shortDesc="#{msgs.dscSaveAttr}" disabled="#{!cNode.allowNodeEdit}" text="#{msgs.save}" action="#{cNodeAttrs.saveAttributes}"  />
  	<tr:commandButton shortDesc="#{msgs.dscCancelAttr}" disabled="#{!cNode.allowNodeEdit}" text="#{msgs.cancel}" action="#{cNode.cancel}" />
  	</tr:panelButtonBar>
 </tr:panelCaptionGroup>        

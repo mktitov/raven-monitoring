@@ -28,6 +28,7 @@ import org.raven.tree.impl.NodeAttributeImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weda.constraints.ConstraintException;
+import org.weda.converter.TypeConverterException;
 
 //import org.raven.DynamicImageNode;
 //import java.util.Set;
@@ -47,16 +48,26 @@ public class NodeWrapper extends AbstractNodeWrapper
     protected Logger logger = LoggerFactory.getLogger(NodeWrapper.class);	
 	private List<NodeAttribute> savedAttrs = null;
 	private List<Attr> editingAttrs = null;
-	private String newAttributeType = null;
-	private String newAttributeName = null;
-	private String newAttributeDsc = "";
+//	private String newAttributeType = null;
+//	private String newAttributeName = null;
+//	private String newAttributeDsc = "";
+	private NewAttribute newAttribute = null; 
 	
-	public NodeWrapper() {}
+	public NodeWrapper() 
+	{
+	}
 
 	public NodeWrapper(Node node) 
 	{
 		super();
 		this.setNode(node);
+	}
+
+	public void createNewAttribute()
+	{
+		if(getClassDesc()!=null && getTree()!=null)
+			newAttribute = new NewAttribute(getTree().getNodeAttributesTypes(),getClassDesc());
+		
 	}
 	
 	public String nodeStart()
@@ -90,29 +101,55 @@ public class NodeWrapper extends AbstractNodeWrapper
 	
 	  public String save()
 	  {
+		  int save = 0;
+		  StringBuffer ret = new StringBuffer();
 		  if( ! isAllowNodeEdit() ) return "err";
 		  Iterator<NodeAttribute> itn = savedAttrs.iterator();
 		  Iterator<Attr> ita = editingAttrs.iterator();
+		  NodeAttribute na = null; 
 		  while(itn.hasNext())
 		  {
 			  if(!ita.hasNext()) break;
-			  NodeAttribute na = itn.next();
+			  save = 0;
+			  na = itn.next();
 			  Attr at = ita.next();
 			  if(na.getId()!=at.getId()) continue;
-			  String val = na.getValue();
-			  if(val==null) val = "";
-			  if(val.equals(at.getValue())) continue;
+			  String val = getNotNull(na.getValue());
+			  //String dsc = getNotNull(na.getDescription());
+			  if( ! val.equals(at.getValue()) ) save |=1;
+			  //if( ! dsc.equals(at.getDescription()) ) save |=2;
+			  if( ! na.getName().equals(at.getName()) ) save |=4;
+			  if(save==0) continue;
 			  try 
 			  { 
-				  na.setValue(at.getValue());
+				  if( (save&1) !=0 )na.setValue(at.getValue());
+				  //if( (save&2) !=0 )na.s.setValue(at.getValue());
+				  
 				  getConfigurator().getTreeStore().saveNodeAttribute(na);
 			  }
 			  catch(ConstraintException e) 
 			  {
-				  logger.warn("on set value="+at.getValue()+" to attribute="+na.getName(), e);
+				  String t = Messages.getString("org.raven.ui.messages", "attribute",new Object[] {});
+				  if(ret.length()!=0) ret.append(". ");
+				  ret.append(t+" '"+at.getName()+"' : "+e.getMessage());
+				  logger.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
+			  }
+			  catch(TypeConverterException e) 
+			  {
+				  String t = Messages.getString("org.raven.ui.messages", "attribute",new Object[] {});
+				  if(ret.length()!=0) ret.append(". ");
+				  ret.append(t+" '"+at.getName()+"' : "+e.getMessage());
+				  logger.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
+			  }
+			  finally 
+			  { 
+				  at.setValue(na.getValue());
+				  at.setDescription(na.getDescription());
+				  at.setName(na.getName());
 			  }
 		  }
-		  return "";
+		  if(ret.length()==0) return null;
+		  return ret.toString();
 	  }
 	
 	  public String cancel() //ActionEvent event
@@ -132,13 +169,13 @@ public class NodeWrapper extends AbstractNodeWrapper
 				return "err";
 			}
 		*/		
-			if(newAttributeName==null || newAttributeName.length()==0)
+			if(newAttribute.getName()==null || newAttribute.getName().length()==0)
 			{
 				logger.warn("no newAttributeName");
 				return "err";
 			}	
 			NodeAttribute na = null;
-			na = new NodeAttributeImpl(newAttributeName,String.class,"",newAttributeDsc);
+			na = new NodeAttributeImpl(newAttribute.getName(),newAttribute.getAttrClass(),"",newAttribute.getDescription());
 		//	na.setType(String.class);
 			na.setOwner(getNode());
 			getNode().addNodeAttribute(na);
@@ -241,13 +278,13 @@ public class NodeWrapper extends AbstractNodeWrapper
 		return null;
 	  }
 
-		public String getNewAttributeType() { return newAttributeType; }
-		public void setNewAttributeType(String newAttributeType) { this.newAttributeType = newAttributeType; }
+	public NewAttribute getNewAttribute() { return newAttribute; }
+	public void setNewAttribute(NewAttribute newAttribute) { this.newAttribute = newAttribute; }
 
-		public String getNewAttributeName() { return newAttributeName; }
-		public void setNewAttributeName(String newAttributeName) { this.newAttributeName = newAttributeName; }
-
-		public String getNewAttributeDsc() { return newAttributeDsc; }
-		public void setNewAttributeDsc(String newAttributeDsc) { this.newAttributeDsc = newAttributeDsc; }
+	public static String getNotNull(String x)
+	{
+		  if(x==null) return "";
+		  return x;
+	}
 
 }

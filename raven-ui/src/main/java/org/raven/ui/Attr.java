@@ -21,9 +21,13 @@ import java.util.List;
 import java.util.ArrayList;
 import javax.faces.model.SelectItem;
 
+import org.apache.tapestry.ioc.Registry;
+import org.raven.RavenRegistry;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.Tree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.weda.services.ClassDescriptorRegistry;
 
 public class Attr 
 {
@@ -32,6 +36,7 @@ public class Attr
 	private String name;
 	private String value;
 	private String description;
+	private String classDisplayName;
 	private List<SelectItem> selectItems = null;
 	
 	// int id,String name,String value,String description
@@ -41,6 +46,9 @@ public class Attr
 		this.value = na.getValue();
 		this.description = na.getDescription();
 		this.id = na.getId();
+		Registry registry = RavenRegistry.getRegistry();
+		ClassDescriptorRegistry classDsc = registry.getService(ClassDescriptorRegistry.class);
+		classDisplayName = classDsc.getClassDescriptor(na.getType()).getDisplayName();
 		List<String> lst = na.getReferenceValues();
 		if(lst==null)
 		{
@@ -57,7 +65,11 @@ public class Attr
 	public void setName(String name) { this.name = name; }
 
 	public String getValue() { return value; }
-	public void setValue(String value) { this.value = value; }
+	public void setValue(String value) 
+	{ 
+		if(value!=null && value.length()==0) this.value = null;
+			else this.value = value; 
+	}
 
 	public String getDescription() { return description; }
 	public void setDescription(String description) { this.description = description; }
@@ -67,4 +79,7 @@ public class Attr
 
 	public List<SelectItem> getSelectItems() { return selectItems; }
 	public void setSelectItems(List<SelectItem> selectItems) { this.selectItems = selectItems; }
+
+	public String getClassDisplayName() { return classDisplayName; }
+	public void setClassDisplayName(String type) { this.classDisplayName = type; }
 }

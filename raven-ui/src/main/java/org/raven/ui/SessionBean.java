@@ -86,7 +86,7 @@ public class SessionBean
 		treeModel = new RavenTreeModel(nodes, "childrenList");
 		treeModel.setUserAcl(userAcl);
 		
-		
+		wrapper.createNewAttribute();
 	}
 
 	 public String send()
