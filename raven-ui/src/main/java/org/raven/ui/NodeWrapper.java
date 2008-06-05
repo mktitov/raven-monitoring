@@ -21,26 +21,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+
+import org.apache.myfaces.trinidad.component.core.layout.CoreShowDetailItem;
 import org.raven.conf.impl.AccessControl;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.weda.beans.ObjectUtils;
 import org.weda.constraints.ConstraintException;
 import org.weda.converter.TypeConverterException;
-
-//import org.raven.DynamicImageNode;
-//import java.util.Set;
-//import org.raven.tree.Node;
-//import java.util.Collection;
-//import org.weda.services.ClassDescriptorRegistry;
-//import org.raven.tree.Tree;
-//import org.raven.conf.Configurator;
-//import org.raven.conf.impl.AccessControl;
-//import org.raven.conf.impl.UserAcl;
-//import javax.faces.context.FacesContext;
-//import javax.faces.event.ActionEvent;
 
 public class NodeWrapper extends AbstractNodeWrapper
 {
@@ -48,11 +39,11 @@ public class NodeWrapper extends AbstractNodeWrapper
     protected Logger logger = LoggerFactory.getLogger(NodeWrapper.class);	
 	private List<NodeAttribute> savedAttrs = null;
 	private List<Attr> editingAttrs = null;
-//	private String newAttributeType = null;
-//	private String newAttributeName = null;
-//	private String newAttributeDsc = "";
-	private NewAttribute newAttribute = null; 
-	
+	private NewAttribute newAttribute = null;
+	private CoreShowDetailItem showTab; 
+	private CoreShowDetailItem nodeEditTab; 
+	private CoreShowDetailItem treeEditTab; 
+		
 	public NodeWrapper() 
 	{
 	}
@@ -62,11 +53,17 @@ public class NodeWrapper extends AbstractNodeWrapper
 		super();
 		this.setNode(node);
 	}
+	
+	public void onSetNode()
+	{
+		editingAttrs = null;
+		createNewAttribute();
+	}
 
 	public void createNewAttribute()
 	{
 		if(getClassDesc()!=null && getTree()!=null)
-			newAttribute = new NewAttribute(getTree().getNodeAttributesTypes(),getClassDesc());
+			newAttribute = new NewAttribute(getTree().getNodeAttributesTypes(getNode()),getClassDesc());
 		
 	}
 	
@@ -88,15 +85,19 @@ public class NodeWrapper extends AbstractNodeWrapper
 	
 	public List<Attr> getAttributes()
 	{
-		savedAttrs = getNodeAttributes();
-		editingAttrs = new ArrayList<Attr>();
-		for(NodeAttribute na : savedAttrs)
-		{
-			editingAttrs.add(new Attr(na));
-		}
+		if(editingAttrs==null) loadAttributes();
 		return editingAttrs;
 	}
 
+	public void  loadAttributes()
+	{
+		savedAttrs = getNodeAttributes();
+		editingAttrs = new ArrayList<Attr>();
+		for(NodeAttribute na : savedAttrs)
+			editingAttrs.add(new Attr(na));
+	}
+	
+	
 //	  public String delAttr()  {   return "";  }
 	
 	  public String save()
@@ -115,15 +116,19 @@ public class NodeWrapper extends AbstractNodeWrapper
 			  Attr at = ita.next();
 			  if(na.getId()!=at.getId()) continue;
 			  String val = getNotNull(na.getValue());
-			  //String dsc = getNotNull(na.getDescription());
-			  if( ! val.equals(at.getValue()) ) save |=1;
-			  //if( ! dsc.equals(at.getDescription()) ) save |=2;
-			  if( ! na.getName().equals(at.getName()) ) save |=4;
+			  String dsc = getNotNull(na.getDescription());
+			  if( !at.isReference() &&  !val.equals(at.getValue()) ) save |=1;
+			  if( !dsc.equals(at.getDescription()) ) save |=2;
+			  if( !na.getName().equals(at.getName()) ) save |=4;
+			  if( at.isReference() &&  ! ObjectUtils.equals(na.getRawValue(), at.getRefPath()) ) save |=8;
+			  
 			  if(save==0) continue;
 			  try 
 			  { 
-				  if( (save&1) !=0 )na.setValue(at.getValue());
-				  //if( (save&2) !=0 )na.s.setValue(at.getValue());
+				  if( (save&1) !=0 ) na.setValue(at.getValue());
+				  if( (save&2) !=0 ) na.setDescription(at.getDescription());
+				  if( (save&4) !=0 ) na.setName(at.getName());
+				  if( (save&8) !=0 ) na.setValue(at.getRefPath());
 				  
 				  getConfigurator().getTreeStore().saveNodeAttribute(na);
 			  }
@@ -175,7 +180,7 @@ public class NodeWrapper extends AbstractNodeWrapper
 				return "err";
 			}	
 			NodeAttribute na = null;
-			na = new NodeAttributeImpl(newAttribute.getName(),newAttribute.getAttrClass(),"",newAttribute.getDescription());
+			na = new NodeAttributeImpl(newAttribute.getName(),newAttribute.getAttrClass(),null,newAttribute.getDescription());
 		//	na.setType(String.class);
 			na.setOwner(getNode());
 			getNode().addNodeAttribute(na);
@@ -199,8 +204,9 @@ public class NodeWrapper extends AbstractNodeWrapper
 				  String t = Messages.getString("org.raven.ui.messages", "attributeNotFound",new Object[] {});
 				  ret.append(t + a.getName());
 				  break;
-			  }	
-			  if(na.getParentAttribute()!=null || na.getParameterName()!=null)
+			  }
+			  if(!a.isAllowDelete())
+			  //if(na.getParentAttribute()!=null || na.getParameterName()!=null)
 			  {
 				  String t = Messages.getString("org.raven.ui.messages", "attributesCantDeleted",new Object[] {});
 				  if(ret.length()==0) ret.append(t); else ret.append(", ");
@@ -286,5 +292,23 @@ public class NodeWrapper extends AbstractNodeWrapper
 		  if(x==null) return "";
 		  return x;
 	}
+	
+	public String goToEditNewAttribute(Node n)
+	{
+		showTab.setDisclosed(false);
+		nodeEditTab.setDisclosed(true);
+		treeEditTab.setDisclosed(true);
+		setNode(n);
+		return "";
+	}
+
+	public CoreShowDetailItem getShowTab() { return showTab; }
+	public void setShowTab(CoreShowDetailItem showTab) { this.showTab = showTab; }
+
+	public CoreShowDetailItem getNodeEditTab() { return nodeEditTab; }
+	public void setNodeEditTab(CoreShowDetailItem nodeEditTab) { this.nodeEditTab = nodeEditTab; }
+
+	public CoreShowDetailItem getTreeEditTab() { return treeEditTab; }
+	public void setTreeEditTab(CoreShowDetailItem treeEditTab) { this.treeEditTab = treeEditTab; }
 
 }

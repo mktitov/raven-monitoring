@@ -24,24 +24,29 @@ import javax.faces.model.SelectItem;
 import org.apache.tapestry.ioc.Registry;
 import org.raven.RavenRegistry;
 import org.raven.tree.NodeAttribute;
-import org.raven.tree.Tree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weda.services.ClassDescriptorRegistry;
+//import org.raven.tree.Tree;
 
 public class Attr 
 {
     protected Logger logger = LoggerFactory.getLogger(Attr.class);
+    private NodeAttribute attribute;
 	private int id;
 	private String name;
 	private String value;
 	private String description;
 	private String classDisplayName;
 	private List<SelectItem> selectItems = null;
-	
-	// int id,String name,String value,String description
+	private boolean allowDelete = false;
+	private boolean edit = false;
+	private boolean reference = false;
+	private String refPath = "";
+
 	public Attr(NodeAttribute na)
 	{
+		attribute = na;
 		this.name = na.getName();
 		this.value = na.getValue();
 		this.description = na.getDescription();
@@ -49,7 +54,10 @@ public class Attr
 		Registry registry = RavenRegistry.getRegistry();
 		ClassDescriptorRegistry classDsc = registry.getService(ClassDescriptorRegistry.class);
 		classDisplayName = classDsc.getClassDescriptor(na.getType()).getDisplayName();
+		if(na.getParentAttribute()==null && na.getParameterName()==null) allowDelete = true;
 		List<String> lst = na.getReferenceValues();
+		reference = na.isAttributeReference();
+		if(reference) refPath = na.getRawValue();  
 		if(lst==null)
 		{
 			logger.warn("NodeAttribute '{}' has not reference values",name);
@@ -82,4 +90,19 @@ public class Attr
 
 	public String getClassDisplayName() { return classDisplayName; }
 	public void setClassDisplayName(String type) { this.classDisplayName = type; }
+
+	public boolean isAllowDelete() { return allowDelete; }
+	public void setAllowDelete(boolean allowDelete) { this.allowDelete = allowDelete; }
+
+	public boolean isEdit() { return edit; }
+	public void setEdit(boolean edit) { this.edit = edit; }
+
+	public boolean isReference() { return reference; }
+	public void setReference(boolean reference) { this.reference = reference; }
+
+	public String getRefPath() { return refPath; }
+	public void setRefPath(String refPath) { this.refPath = refPath; }
+
+	public NodeAttribute getAttribute() { return attribute; }
+	public void setAttribute(NodeAttribute attribute) { this.attribute = attribute; }
 }

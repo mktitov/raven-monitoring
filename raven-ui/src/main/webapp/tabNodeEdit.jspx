@@ -54,24 +54,40 @@
  
 <tr:panelCaptionGroup rendered="#{cNode.allowNodeEdit}"  captionText="#{msgs.nodeAttributes}"  >
 	<tr:message binding="#{cNodeAttrs.message}" for="attrs" messageType="error" />
-  	<tr:table  binding="#{cNodeAttrs.table}" width="90%" rowSelection="single" summary="Nodes" 
+  	<tr:table allDetailsEnabled="true" rowBandingInterval="2" binding="#{cNodeAttrs.table}" width="90%" rowSelection="single" summary="Nodes" 
   		value="#{cNode.attributes}" 
   		var="row" rows="20" id="attrs" >
+
+    	<tr:column headerText="*">
+    	  <tr:selectBooleanCheckbox onclick="submit();" shortDesc="#{msgs.dscEnableRenameAttr}" value="#{row.edit}" rendered="#{row.allowDelete}"></tr:selectBooleanCheckbox>
+        </tr:column>
+  		
     	<tr:column headerText="#{msgs.name}">
-	      <tr:outputText value="#{row.name}"/>
+	      <tr:outputText rendered="#{!row.edit}" value="#{row.name}"/>
+	      <tr:inputText columns="8" rendered="#{row.edit}" required="true" value="#{row.name}"/>
         </tr:column>
     	<tr:column headerText="#{msgs.value}">
-	      <tr:inputText rendered="#{row.selectItems == null}" value="#{row.value}"/>
-	      <tr:selectOneChoice rendered="#{!(row.selectItems == null)}" value="#{row.value}" >
+	      <tr:inputText readOnly="#{row.reference}" rendered="#{row.reference or (row.selectItems == null)}" value="#{row.value}" columns="12" />
+	      <tr:selectOneChoice rendered="#{!row.reference and !(row.selectItems == null)}" value="#{row.value}" >
 	      	<f:selectItems value="#{row.selectItems}" />
 	      </tr:selectOneChoice>
         </tr:column>
     	<tr:column headerText="#{msgs.dsc}">
-	      <tr:outputText value="#{row.description}"/>
+	      <tr:outputText rendered="#{!row.edit}" value="#{row.description}"/>
+	      <tr:inputText rendered="#{row.edit}" value="#{row.description}"/>
         </tr:column>
     	<tr:column headerText="#{msgs.type}">
 	      <tr:outputText value="#{row.classDisplayName}"/>
         </tr:column>
+
+		<f:facet name="detailStamp">
+			<tr:panelGroupLayout layout="vertical">
+				<tr:inputText label="#{msgs.link}" rendered="#{row.reference}" value="#{row.refPath}"/>
+			</tr:panelGroupLayout>					
+  		<!-- <tr:panelGroupLayout layout="vertical">
+  			</tr:panelGroupLayout>  -->
+		</f:facet>
+        
  	</tr:table>
  	<tr:panelButtonBar halign="left" >
  	<tr:commandButton shortDesc="#{msgs.dscDelSelAttr}" disabled="#{!cNode.allowNodeEdit}" text="#{msgs.delete}" action="#{cNodeAttrs.deleteAttributes}"  />

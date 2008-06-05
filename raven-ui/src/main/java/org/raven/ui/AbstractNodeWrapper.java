@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weda.services.ClassDescriptorRegistry;
 
-public class AbstractNodeWrapper 
+public abstract class AbstractNodeWrapper 
 {
     protected Logger logger = LoggerFactory.getLogger(AbstractNodeWrapper.class);	
 	private UserAcl userAcl = null;
@@ -45,7 +45,6 @@ public class AbstractNodeWrapper
 	
 	public boolean isGraphNode()
 	{
-		//if (node instanceof org.raven.rrd.graph.RRGraphNode) return true;
 		if (node instanceof org.raven.DynamicImageNode) return true;
 		return false;
 	}
@@ -171,8 +170,14 @@ public class AbstractNodeWrapper
 		  return classDesc.getClassDescriptor(getNode().getClass()).getDisplayName();
 	  }
 	  
+	  public abstract void onSetNode(); 
+	  
 	  public Node getNode() { return node; }
-	  public void setNode(Node node) { this.node = node; }
+	  public void setNode(Node node) 
+	  { 
+		  this.node = node;
+		  onSetNode();
+	  }
 
 	  public UserAcl getUserAcl() { return userAcl; }
 	  public void setUserAcl(UserAcl userAcl) { this.userAcl = userAcl; }

@@ -28,12 +28,12 @@ import org.apache.myfaces.trinidad.component.UIXCollection;
 import org.apache.myfaces.trinidad.component.UIXTable;
 import org.apache.myfaces.trinidad.model.RowKeySet;
 import org.apache.myfaces.trinidad.component.core.output.CoreMessage;
-import org.raven.tree.Node;
+//import org.raven.tree.Node;
 
 public class SubNodesTableBean 
 {
 	  private UIComponent table = null;
-	  private List<Node> selected;
+	  private List<NodeWrapper> selected;
 	  private CoreMessage message = null;
 
 	  @SuppressWarnings("unchecked")
@@ -47,11 +47,11 @@ public class SubNodesTableBean
 	    state = ((UIXTable) tbl).getSelectedRowKeys();
 	    Iterator it = state.iterator();
 	    Object oldKey = tbl.getRowKey();
-	    selected = new ArrayList<Node>();
+	    selected = new ArrayList<NodeWrapper>();
 	    while (it.hasNext())
 	    {
 	      tbl.setRowKey(it.next());
-	      selected.add((Node)tbl.getRowData());
+	      selected.add((NodeWrapper)tbl.getRowData());
 	    }
 	    tbl.setRowKey(oldKey);
 	    if(selected.size()==0)
@@ -63,7 +63,7 @@ public class SubNodesTableBean
 	    if(ret!=null && message!=null) message.setMessage(ret);
 	  }
 	  
-	  public String tryDelete(List<Node> nodes)
+	  public String tryDelete(List<NodeWrapper> nodes)
 	  {
 	    FacesContext context = FacesContext.getCurrentInstance();
 	    SessionBean sb = (SessionBean) context.getELContext().getELResolver().getValue(context.getELContext(), null, SessionBean.BEAN_NAME);

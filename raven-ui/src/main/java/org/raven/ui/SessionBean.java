@@ -155,16 +155,17 @@ public class SessionBean
 		configurator.getTreeStore().saveNode(n);
 		n.init();
 		logger.warn("Added new node name={}",getNewNodeName());
+		wrapper.goToEditNewAttribute(n);
 		return "ok";
 	}
 	
-	public String deleteNodes(List<Node> nodes)
+	public String deleteNodes(List<NodeWrapper> nodes)
 	{
 		StringBuffer ret = new StringBuffer();
-		Iterator<Node> it = nodes.iterator();
+		Iterator<NodeWrapper> it = nodes.iterator();
 		while(it.hasNext())
 		{
-			Node n = it.next();
+			Node n = it.next().getNode();
 			if(n.getDependentNodes()!=null)
 			{
 				if(ret.length()==0) ret.append("This nodes have dependensies: ");
@@ -176,6 +177,7 @@ public class SessionBean
 			logger.warn("removed node: {}",n.getName());
 			FacesContext.getCurrentInstance().getExternalContext().log("removed node: "+n.getName());
 		}
+		wrapper.onSetNode();
 		if(ret.length()==0) return null;
 		return ret.toString();
 	}

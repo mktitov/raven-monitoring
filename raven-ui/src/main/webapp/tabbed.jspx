@@ -51,19 +51,19 @@
     <tr:separator></tr:separator>
        
 		<tr:panelTabbed position="above" id="panelTabbed1" inlineStyle="width: 100%" >
-  		<tr:showDetailItem text="#{msgs.nodeView}" id="item1">
+  		<tr:showDetailItem binding="#{cNode.showTab}" text="#{msgs.nodeView}" id="item1">
     	<f:subview id="v1">
     		<tr:separator></tr:separator>
     		<jsp:include page="tabShow.jspx" flush="true"/>
     	</f:subview>
    		</tr:showDetailItem>
-   		<tr:showDetailItem text="#{msgs.nodeEdit}" id="item2">
+   		<tr:showDetailItem binding="#{cNode.nodeEditTab}" text="#{msgs.nodeEdit}" id="item2">
     	<f:subview id="v2">
     		<tr:separator></tr:separator>
      		<jsp:include page="tabNodeEdit.jspx" flush="true"/>
     	</f:subview>
   		</tr:showDetailItem>
-   		<tr:showDetailItem text="#{msgs.treeEdit}" id="item3">
+   		<tr:showDetailItem binding="#{cNode.treeEditTab}" text="#{msgs.treeEdit}" id="item3">
     	<f:subview id="v3">
     		<tr:separator></tr:separator>
      		<jsp:include page="tabTreeEdit.jspx" flush="true"/>
