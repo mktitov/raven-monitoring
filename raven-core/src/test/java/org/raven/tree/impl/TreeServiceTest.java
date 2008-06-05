@@ -36,8 +36,8 @@ import org.raven.tree.Tree;
 import org.raven.tree.impl.objects.AttributesGeneratorNode;
 import org.raven.tree.impl.objects.NodeWithIntegerParameter;
 import org.raven.tree.impl.objects.NodeWithNodeParameter;
-import org.raven.tree.impl.objects.NodeWithParameter2;
 import org.raven.tree.impl.objects.NodeWithParameters;
+import org.raven.tree.store.TreeStore;
 import org.weda.constraints.ConstraintException;
 import org.weda.services.TypeConverter;
 import static org.easymock.EasyMock.*;
@@ -48,6 +48,7 @@ import static org.easymock.EasyMock.*;
 public class TreeServiceTest extends ServiceTestCase
 {
     private static boolean checkTreeExecuted = false;
+    private TreeStore store;
     private Tree tree;
     private Configurator configurator;
     private TypeConverter converter;
@@ -66,6 +67,7 @@ public class TreeServiceTest extends ServiceTestCase
         
         configurator = registry.getService(Configurator.class);
         assertNotNull(configurator);
+        store = configurator.getTreeStore();
         
         converter = registry.getService(TypeConverter.class);
         assertNotNull(converter);
@@ -116,11 +118,11 @@ public class TreeServiceTest extends ServiceTestCase
                 fail();
             }
             catch(NodeNotFoundError e) {}
-            assertNull(configurator.getTreeStore().getNode(systemNodeId));
-            assertNull(configurator.getTreeStore().getNode(dsNodeId));
+            assertNull(store.getNode(systemNodeId));
+            assertNull(store.getNode(dsNodeId));
         }finally
         {
-            configurator.getTreeStore().removeNodes();
+            store.removeNodes();
         }
     }
     
@@ -194,7 +196,7 @@ public class TreeServiceTest extends ServiceTestCase
         
         tree.getRootNode().addChildren(node);
         
-        configurator.getTreeStore().saveNode(node);
+        store.saveNode(node);
         
         node.init();
         
@@ -209,7 +211,7 @@ public class TreeServiceTest extends ServiceTestCase
         
         checkAttributes(node, "value");
         
-        configurator.getTreeStore().saveNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
         
         tree.reloadTree();
         
@@ -296,27 +298,27 @@ public class TreeServiceTest extends ServiceTestCase
     @Test
     public void attributesGenerator() throws ConstraintException
     {
-        configurator.getTreeStore().removeNodes();
+        store.removeNodes();
         tree.reloadTree();
         
         Node node = new AttributesGeneratorNode();
         node.setName("genNode");
         
         tree.getRootNode().addChildren(node);
-        configurator.getTreeStore().saveNode(node);
+        store.saveNode(node);
         node.init();
         
         NodeWithNodeParameter node1 = new NodeWithNodeParameter();
         node1.setName("node");
         tree.getRootNode().addChildren(node1);
-        configurator.getTreeStore().saveNode(node1);
+        store.saveNode(node1);
         node1.init();
         
         NodeAttribute attr = node1.getNodeAttribute("node");
         assertNotNull(attr);
         
         attr.setValue(Node.NODE_SEPARATOR+"genNode");
-        configurator.getTreeStore().saveNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
         
         attr = node1.getNodeAttribute("gAttr");
         assertNotNull(attr);
@@ -334,7 +336,7 @@ public class TreeServiceTest extends ServiceTestCase
         assertEquals(node, node1.getNode());
         
         node1.getNodeAttribute("node").setValue(null);
-        configurator.getTreeStore().saveNodeAttribute(node1.getNodeAttribute("node"));
+        store.saveNodeAttribute(node1.getNodeAttribute("node"));
         attr = node1.getNodeAttribute("gAttr");
         assertNull(attr);
         
@@ -350,25 +352,25 @@ public class TreeServiceTest extends ServiceTestCase
     @Test
     public void attributeReference() throws ConstraintException
     {
-        configurator.getTreeStore().removeNodes();
+        store.removeNodes();
         
         ContainerNode node = new ContainerNode("node");
         tree.getRootNode().addChildren(node);
-        configurator.getTreeStore().saveNode(node);
+        store.saveNode(node);
         NodeAttribute attr = new NodeAttributeImpl("attr", Integer.class, null, null);
         attr.setOwner(node);
         node.addNodeAttribute(attr);
-        configurator.getTreeStore().saveNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
         
         ContainerNode node2 = new ContainerNode("node2");
         tree.getRootNode().addChildren(node2);
-        configurator.getTreeStore().saveNode(node2);
+        store.saveNode(node2);
         String attrPath = converter.convert(String.class, new AttributeReferenceImpl(attr), null);
         NodeAttribute refAttr = new NodeAttributeImpl("ref", AttributeReference.class, null, null);
         refAttr.setOwner(node2);
         node2.addNodeAttribute(refAttr);
         refAttr.setValue(attrPath);
-        configurator.getTreeStore().saveNodeAttribute(refAttr);
+        store.saveNodeAttribute(refAttr);
         
         assertTrue(refAttr.isAttributeReference());
         AttributeReference ref = refAttr.getAttributeReference();
@@ -392,7 +394,7 @@ public class TreeServiceTest extends ServiceTestCase
         assertEquals(new Integer(1), refAttr.getRealValue());
         verify(listener);
         node2.removeListener(listener);
-        configurator.getTreeStore().saveNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
         
         tree.reloadTree();
         
@@ -407,21 +409,21 @@ public class TreeServiceTest extends ServiceTestCase
     @Test
     public void attributeReferenceWithParameter() throws Exception
     {
-        configurator.getTreeStore().removeNodes();
+        store.removeNodes();
         
         ContainerNode node = new ContainerNode("node");
         tree.getRootNode().addChildren(node);
-        configurator.getTreeStore().saveNode(node);
+        store.saveNode(node);
         node.init();
         NodeAttribute attr = new NodeAttributeImpl("attr", Integer.class, null, null);
         attr.setOwner(node);
         node.addNodeAttribute(attr);
-        configurator.getTreeStore().saveNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
         
         NodeWithIntegerParameter node2 = new NodeWithIntegerParameter();
         node2.setName("node2");
         tree.getRootNode().addChildren(node2);
-        configurator.getTreeStore().saveNode(node2);
+        store.saveNode(node2);
         node2.init();
         assertEquals(Status.INITIALIZED, node2.getStatus());
         
@@ -429,13 +431,13 @@ public class TreeServiceTest extends ServiceTestCase
         ref.setType(AttributeReference.class);
         String attrPath = converter.convert(String.class, new AttributeReferenceImpl(attr), null);
         ref.setValue(attrPath);
-        configurator.getTreeStore().saveNodeAttribute(ref);
+        store.saveNodeAttribute(ref);
         
         assertNull(ref.getValue());
         assertNull(node2.getParameter());
         
         attr.setValue("1");
-        configurator.getTreeStore().saveNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
         assertEquals("1", ref.getValue());
         assertEquals(new Integer(1), node2.getParameter());
         
@@ -454,17 +456,17 @@ public class TreeServiceTest extends ServiceTestCase
     @Test
     public void attributeChangeName() throws Exception
     {
-        configurator.getTreeStore().removeNodes();
+        store.removeNodes();
         
         ContainerNode node = new ContainerNode("node");
         tree.getRootNode().addChildren(node);
-        configurator.getTreeStore().saveNode(node);
+        store.saveNode(node);
         node.init();
         
         NodeAttribute attr = new NodeAttributeImpl("attr", String.class, null, null);
         attr.setOwner(node);        
         node.addNodeAttribute(attr);
-        configurator.getTreeStore().saveNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
         
         NodeAttributeListener attrListener = 
                 createMock("AttributeListener", NodeAttributeListener.class);
@@ -482,6 +484,20 @@ public class TreeServiceTest extends ServiceTestCase
         assertNull(node.getNodeAttribute("attr"));
         assertSame(attr, node.getNodeAttribute("newName"));
         verify(attrListener, listener);
+    }
+    
+    @Test
+    public void copy()
+    {
+        store.removeNodes();
+        tree.reloadTree();
+        
+        Node node = new ContainerNode("node");
+        tree.getRootNode().addChildren(node);
+        store.saveNode(node);
+        node.init();
+        
+        NodeAttribute attr = new NodeAttributeImpl("attr", Node.class, null, null);
     }
     
     private NodeListener trainMocks_attributeReference(Node node, NodeAttribute attr)
@@ -517,7 +533,7 @@ public class TreeServiceTest extends ServiceTestCase
         if (!checkTreeExecuted)
         {
             checkTreeExecuted = true;
-            configurator.getTreeStore().removeNodes();
+            store.removeNodes();
         }
         assertNotNull(tree.getRootNode());
 

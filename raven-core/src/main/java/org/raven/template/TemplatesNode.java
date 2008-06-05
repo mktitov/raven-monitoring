@@ -29,7 +29,7 @@ import org.weda.annotations.Description;
 @Description("The root for template")
 public class TemplatesNode extends BaseNode
 {
-    public TemplatesNode(Class[] childNodeTypes, boolean container, boolean readOnly)
+    public TemplatesNode()
     {
         super(new Class[]{TemplateNode.class}, true, false);
     }
