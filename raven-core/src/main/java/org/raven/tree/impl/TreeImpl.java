@@ -170,6 +170,7 @@ public class TreeImpl implements Tree
         try
         {
             Node clone = (Node) source.clone();
+            destination.addChildren(clone);
             saveClonedNode(source, destination.getPath(), clone, nodeTuner);
             initNode(clone, false);
         } 
@@ -225,7 +226,7 @@ public class TreeImpl implements Tree
         if (!node.isInitializeAfterChildrens())
         {
             node.init();
-            if (node.getStatus()==Node.Status.INITIALIZED && node.isAutoStart())
+            if (autoStart && node.getStatus()==Node.Status.INITIALIZED && node.isAutoStart())
                 node.start();
         }
         if (node.getChildrens()!=null)
@@ -237,7 +238,7 @@ public class TreeImpl implements Tree
         if (node.isInitializeAfterChildrens())
         {
             node.init();
-            if (node.getStatus()==Node.Status.INITIALIZED && node.isAutoStart())
+            if (autoStart && node.getStatus()==Node.Status.INITIALIZED && node.isAutoStart())
                 node.start();
         }
     }
@@ -245,7 +246,8 @@ public class TreeImpl implements Tree
     private void saveClonedNode(
             final Node source, final String destPath, final Node clone, final NodeTuner nodeTuner)
     {
-        nodeTuner.tuneNode(clone);
+        if (nodeTuner!=null)
+            nodeTuner.tuneNode(clone);
         configurator.getTreeStore().saveNode(clone);
         Collection<NodeAttribute> attrs = clone.getNodeAttributes();
         if (attrs!=null)
@@ -259,7 +261,7 @@ public class TreeImpl implements Tree
                     attr.setRawValue(
                             destPath
                             + Node.NODE_SEPARATOR+source.getName()
-                            + clone.getPath().substring(sourcePath.length()));
+                            + attr.getRawValue().substring(sourcePath.length()));
                 }
                 configurator.getTreeStore().saveNodeAttribute(attr);
             }

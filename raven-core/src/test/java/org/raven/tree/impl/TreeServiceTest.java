@@ -487,7 +487,7 @@ public class TreeServiceTest extends ServiceTestCase
     }
     
     @Test
-    public void copy()
+    public void copy() throws ConstraintException
     {
         store.removeNodes();
         tree.reloadTree();
@@ -497,7 +497,66 @@ public class TreeServiceTest extends ServiceTestCase
         store.saveNode(node);
         node.init();
         
-        NodeAttribute attr = new NodeAttributeImpl("attr", Node.class, null, null);
+        Node sysNode = tree.getRootNode().getChildren(SystemNode.NAME);
+        NodeAttribute attr = new NodeAttributeImpl("attr", Node.class, sysNode.getPath(), null);
+        attr.setOwner(node);
+        node.addNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
+        
+        Node child = new ContainerNode("child");
+        node.addChildren(child);
+        store.saveNode(child);
+        child.init();
+        
+        NodeAttribute attrRef = new NodeAttributeImpl("ref", AttributeReference.class, null, null);
+        attrRef.setOwner(child);
+        child.addNodeAttribute(attrRef);
+        attrRef.setValue(converter.convert(String.class, new AttributeReferenceImpl(attr), null));
+        store.saveNodeAttribute(attrRef);
+        
+        NodeAttribute nodeRef = new NodeAttributeImpl("nodeRef", Node.class, node.getPath(), null);
+        nodeRef.setOwner(child);
+        child.addNodeAttribute(nodeRef);
+        store.saveNodeAttribute(nodeRef);
+        
+        Node copyDest = new ContainerNode("copy");
+        tree.getRootNode().addChildren(copyDest);
+        store.saveNode(copyDest);
+        copyDest.init();
+        
+        tree.copy(node, copyDest, null);
+        
+        checkNodeCopy(copyDest, sysNode, node, child, Status.INITIALIZED);
+        
+        tree.reloadTree();
+        
+        checkNodeCopy(copyDest, sysNode, node, child, Status.STARTED);
+    }
+    
+    private void checkNodeCopy(Node copyDest, Node sysNode, Node node, Node child, Status status)
+    {
+        Node nodeCopy = copyDest.getChildren("node");
+        assertNotNull(nodeCopy);
+        assertFalse(nodeCopy.equals(node));
+        assertEquals(status, nodeCopy.getStatus());
+        NodeAttribute attrCopy = nodeCopy.getNodeAttribute("attr");
+        assertNotNull(attrCopy);
+        assertEquals(sysNode, attrCopy.getRealValue());
+        
+        Node childCopy = nodeCopy.getChildren("child");
+        assertNotNull(childCopy);
+        assertFalse(childCopy.equals(node));
+        assertEquals(status, childCopy.getStatus());
+        
+        String attrPath = 
+                converter.convert(String.class, new AttributeReferenceImpl(attrCopy), null);
+        NodeAttribute refCopy = childCopy.getNodeAttribute("ref");
+        assertNotNull(refCopy);
+        assertEquals(attrPath, refCopy.getRawValue());
+        
+        NodeAttribute nodeRefCopy = childCopy.getNodeAttribute("nodeRef");
+        assertNotNull(nodeRefCopy);
+        assertEquals(nodeCopy.getPath(), nodeRefCopy.getValue());
     }
     
     private NodeListener trainMocks_attributeReference(Node node, NodeAttribute attr)
