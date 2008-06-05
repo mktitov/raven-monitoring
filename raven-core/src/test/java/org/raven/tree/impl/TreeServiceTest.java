@@ -530,6 +530,8 @@ public class TreeServiceTest extends ServiceTestCase
         
         tree.reloadTree();
         
+        copyDest = tree.getNode(copyDest.getPath());
+        assertNotNull(copyDest);
         checkNodeCopy(copyDest, sysNode, node, child, Status.STARTED);
     }
     
@@ -538,6 +540,8 @@ public class TreeServiceTest extends ServiceTestCase
         Node nodeCopy = copyDest.getChildren("node");
         assertNotNull(nodeCopy);
         assertFalse(nodeCopy.equals(node));
+//        if (status==Status.STARTED)
+//            nodeCopy.start();
         assertEquals(status, nodeCopy.getStatus());
         NodeAttribute attrCopy = nodeCopy.getNodeAttribute("attr");
         assertNotNull(attrCopy);
