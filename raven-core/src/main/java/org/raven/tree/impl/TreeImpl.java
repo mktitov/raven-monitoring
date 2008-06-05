@@ -21,8 +21,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.raven.conf.Configurator;
 import org.raven.impl.NodeClassTransformerWorker;
 import org.raven.template.TemplateVariable;
@@ -126,7 +124,7 @@ public class TreeImpl implements Tree
         {
             createRootNode();
         }
-        initNode(rootNode);
+        initNode(rootNode, true);
     }
     
     public void shutdown()
@@ -173,6 +171,7 @@ public class TreeImpl implements Tree
         {
             Node clone = (Node) source.clone();
             saveClonedNode(source, destination.getPath(), clone, nodeTuner);
+            initNode(clone, false);
         } 
         catch (CloneNotSupportedException ex)
         {
@@ -221,7 +220,7 @@ public class TreeImpl implements Tree
         treeStore.saveNode(dataSourcesNode);
     }
 
-    private void initNode(Node node)
+    private void initNode(Node node, boolean autoStart)
     {
         if (!node.isInitializeAfterChildrens())
         {
@@ -233,7 +232,7 @@ public class TreeImpl implements Tree
         {
             Iterator<Node> it = node.getChildrens().iterator();
             while (it.hasNext())
-                initNode(it.next());
+                initNode(it.next(), autoStart);
         }
         if (node.isInitializeAfterChildrens())
         {

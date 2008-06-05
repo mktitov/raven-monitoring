@@ -492,6 +492,8 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
 
     public boolean start() throws NodeError
     {
+        if (isTemplate())
+            return false;
         if (nodeAttributes!=null)
             for (NodeAttribute attr: nodeAttributes.values())
                 if (attr.isRequired() && attr.getValue()==null)
