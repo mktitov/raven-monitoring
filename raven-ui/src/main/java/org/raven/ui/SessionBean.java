@@ -33,6 +33,10 @@ import org.raven.tree.Tree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weda.services.ClassDescriptorRegistry;
+import org.apache.myfaces.trinidad.component.core.data.CoreTree;
+import org.apache.myfaces.trinidad.event.PollEvent;
+import org.apache.myfaces.trinidad.model.RowKeySetImpl;
+import org.apache.myfaces.trinidad.model.RowKeySetTreeImpl;
 import org.apache.myfaces.trinidad.model.TreeModel;
 import org.apache.myfaces.trinidad.render.ExtendedRenderKitService;
 import org.apache.myfaces.trinidad.util.Service;
@@ -50,6 +54,7 @@ public class SessionBean
 	private NodeWrapper wrapper = null;
 	private String title = "RAVEN";
 	private ClassDescriptorRegistry classDsc = null;
+	private boolean refreshTree = true;
 
 	private String newNodeType = null;
 	private String newNodeName = null;
@@ -111,7 +116,39 @@ public class SessionBean
 	//	  requestContext.getPageFlowScope().put("selectedNode", n);
 //		  send();
 	  }
+
+	  public void onTreePoll(PollEvent event)
+	  {
+		  //treeModel.setRowIndex(-1);
+		  treeModel.setRowKey(null);
+		  FacesContext context = FacesContext.getCurrentInstance();
+		  CoreTree tr = (CoreTree) context.getELContext().getELResolver().getValue(context.getELContext(), null, "ctree");
+		  //RowKeySetTreeImpl rowKeys = new RowKeySetTreeImpl();
+		  //RowKeySetImpl rk = new RowKeySetImpl();
+		  //rowKeys.
+		  //rowKeys.clear();
+		  //tr.setSelectedRowKeys(null);
+		  tr.setFocusRowKey(null);
+		  tr.setClientRowKey(null);
+		  tr.markInitialState();
+	  }
 	  
+	  public String getFocusRowKey()
+	  {
+		  FacesContext context = FacesContext.getCurrentInstance();
+		  CoreTree tr = (CoreTree) context.getELContext().getELResolver().getValue(context.getELContext(), null, "ctree");
+		  org.apache.myfaces.trinidad.model.RowKeySet rk =  tr.getSelectedRowKeys();
+		  String z="";
+		  if(rk!=null)
+		  {
+		  Iterator it = rk.iterator();
+		  while(it.hasNext())
+		  {
+			  z = z + it.next()+";";
+		  }
+		  }
+		  return "focus: "+tr.getFocusRowKey()+"  selected:"+z;
+	  }
 	
 	public TreeModel getTreeModel() { return treeModel; }
 	public void setTreeModel(RavenTreeModel treeModel) { this.treeModel = treeModel; }
@@ -190,5 +227,14 @@ public class SessionBean
 
 	public String getNewNodeName() { return newNodeName; }
 	public void setNewNodeName(String newNodeName) { this.newNodeName = newNodeName; }
+
+	public boolean isRefreshTree() { return refreshTree; }
+ 	public void setRefreshTree(boolean refreshTree) { this.refreshTree = refreshTree; }
+ 	
+ 	public int getRefreshTreeInterval()
+ 	{
+ 		if(isRefreshTree()) return 10000;
+ 		return 100000000;
+ 	}
 	
 }

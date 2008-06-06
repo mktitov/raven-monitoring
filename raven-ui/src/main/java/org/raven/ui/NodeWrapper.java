@@ -188,6 +188,7 @@ public class NodeWrapper extends AbstractNodeWrapper
 		//	catch(ConstraintException e) { }
 			getConfigurator().getTreeStore().saveNodeAttribute(na);
 			logger.warn("Added new attribute='{}' for node='{}'",na.getName(),getNode().getName());
+			onSetNode();
 			return "ok";
 		}
 	  

@@ -123,7 +123,7 @@ public abstract class AbstractNodeWrapper
 	@SuppressWarnings("unchecked")
 	public List<NodeType> getValidSubNodeTypesList()
 	{
-		Class[] cls = getNode().getChildNodeTypes();
+		List<Class> cls = getNode().getChildNodeTypes();
 		ArrayList<NodeType> al = new ArrayList<NodeType>();
 		if(cls==null) return al;
 		for(Class c: cls)
