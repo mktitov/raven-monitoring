@@ -23,6 +23,7 @@ import org.raven.ds.DataConsumer;
 import org.raven.ds.impl.AbstractDataSource;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
+import org.raven.tree.impl.DataSourcesNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.snmp4j.CommunityTarget;
 import org.snmp4j.PDU;
@@ -40,7 +41,7 @@ import org.weda.annotations.Description;
  *
  * @author Mikhail Titov
  */
-@NodeClass
+@NodeClass(parentNode=DataSourcesNode.class)
 @Description("The data source node that gathers data using snmp.")
 public class SnmpNode extends AbstractDataSource
 {

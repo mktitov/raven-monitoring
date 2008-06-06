@@ -17,7 +17,6 @@
 
 package org.raven.template;
 
-import org.raven.annotations.NodeClass;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.Description;
 
@@ -25,7 +24,6 @@ import org.weda.annotations.Description;
  *
  * @author Mikhail Titov
  */
-@NodeClass
 @Description("The root for template")
 public class TemplatesNode extends BaseNode
 {
@@ -35,6 +33,4 @@ public class TemplatesNode extends BaseNode
     {
         setName(NAME);
     }
-    
-    
 }

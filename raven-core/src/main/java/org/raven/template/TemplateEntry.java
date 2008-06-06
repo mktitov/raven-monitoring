@@ -25,7 +25,7 @@ import org.weda.annotations.Description;
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=TemplateNode.class)
+@NodeClass(parentNode=TemplateNode.class, anyChildTypes=true)
 @Description("Holds the subtree of template nodes")
 public class TemplateEntry extends BaseNode
 {
