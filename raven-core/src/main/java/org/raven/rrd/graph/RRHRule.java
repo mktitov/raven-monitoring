@@ -28,7 +28,8 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass @Description("Draws a horizontal rule into the graph and optionally adds a legend")
+@NodeClass(parentNode=RRGraphNode.class)
+@Description("Draws a horizontal rule into the graph and optionally adds a legend")
 public class RRHRule extends LeafNode
 {
     @Parameter @NotNull @Description("Position of the rule")

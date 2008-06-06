@@ -28,7 +28,7 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass
+@NodeClass(parentNode=RRGraphNode.class)
 @Description(
     "Plots requested data in the form of the filled area starting" +
     " from zero, using the color specified.")

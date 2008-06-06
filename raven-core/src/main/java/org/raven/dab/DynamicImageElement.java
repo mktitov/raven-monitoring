@@ -20,16 +20,16 @@ package org.raven.dab;
 import org.raven.DynamicImageNode;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
-import org.raven.tree.impl.LeafNode;
+import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass
+@NodeClass(parentNode=DashboardNode.class)
 @Description("The image that generated dynamiclly")
-public class DynamicImageElement extends LeafNode
+public class DynamicImageElement extends BaseNode
 {
     @Parameter 
     @Description("The reference to the dynamic image node")

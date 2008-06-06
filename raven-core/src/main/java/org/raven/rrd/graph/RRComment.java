@@ -27,7 +27,7 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov 
  */
-@NodeClass
+@NodeClass(parentNode=RRGraphNode.class)
 @Description("Comment to be printed on the graph")
 public class RRComment extends LeafNode
 {

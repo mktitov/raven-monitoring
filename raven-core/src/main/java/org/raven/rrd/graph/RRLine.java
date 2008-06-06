@@ -25,7 +25,7 @@ import org.weda.annotations.Description;
  *
  * @author Mikhail Titov
  */
-@NodeClass
+@NodeClass(parentNode=RRGraphNode.class)
 @Description("Plots requested data as a line, using specified the color and width.")
 public class RRLine extends RRArea
 {

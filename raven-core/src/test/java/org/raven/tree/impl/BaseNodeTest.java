@@ -31,11 +31,11 @@ public class BaseNodeTest extends Assert
     @Test
     public void cloneTest() throws CloneNotSupportedException
     {
-        BaseNode parent = new BaseNode(null, true, false);
+        BaseNode parent = new BaseNode();
         parent.setName("parent");
         
-        Class[] childTypes = new Class[]{BaseNode.class};
-        BaseNode node = new BaseNode(childTypes, true, false);
+//        Class[] childTypes = new Class[]{BaseNode.class};
+        BaseNode node = new BaseNode();
         node.setName("node");
         node.setId(1);
         node.setParent(parent);
@@ -46,7 +46,7 @@ public class BaseNodeTest extends Assert
         attr.setOwner(node);
         node.addNodeAttribute(attr);
         
-        BaseNode child = new BaseNode(null, false, true);
+        BaseNode child = new BaseNode();
         child.setName("child");
         node.addChildren(child);
         child.setId(2);

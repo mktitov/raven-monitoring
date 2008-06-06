@@ -17,13 +17,20 @@
 
 package org.raven.tree.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import org.raven.annotations.NodeClass;
 import org.raven.conf.Configurator;
 import org.raven.impl.NodeClassTransformerWorker;
 import org.raven.template.TemplateVariable;
+import org.raven.template.TemplatesNode;
 import org.raven.tree.AttributeReference;
 import org.raven.tree.AttributeReferenceValues;
 import org.raven.tree.Node;
@@ -47,9 +54,13 @@ public class TreeImpl implements Tree
     
     private final Configurator configurator;
     private final TreeStore treeStore;
-    private final Class[] nodesTypes;
     private final Map<Class, AttributeReferenceValues> referenceValuesProviders;
+    private final Map<Class, List<Class>> nodeTypes = new HashMap<Class, List<Class>>();
+    private final Set<Class> anyChildTypeNodes = new HashSet<Class>();
     private Node rootNode;
+    private SystemNode systemNode;
+    private DataSourcesNode dataSourcesNode;
+    private TemplatesNode templatesNode;
 
     public TreeImpl(
             Map<Class, AttributeReferenceValues> referenceValuesProviders
@@ -65,17 +76,16 @@ public class TreeImpl implements Tree
                 resourceProvider.getResourceStrings(
                     NodeClassTransformerWorker.NODES_TYPES_RESOURCE);
         
-        nodesTypes = new Class[nodesTypesList.size()];
-        int i=0;
         for (String nodeType: nodesTypesList)
-            nodesTypes[i++] = Class.forName(nodeType);
+            addNodeType(Class.forName(nodeType));
         
         reloadTree();
     }
 
-    public Class[] getAvailableNodesTypes()
+    public List<Class> getChildNodesTypes(Class nodeType)
     {
-        return nodesTypes;
+        nodeType = anyChildTypeNodes.contains(nodeType)? Void.class : nodeType;
+        return nodeTypes.get(nodeType);
     }
 
     public Class[] getNodeAttributesTypes(Node node)
@@ -121,9 +131,10 @@ public class TreeImpl implements Tree
     
         rootNode = treeStore.getRootNode();
         if (rootNode == null)
-        {
             createRootNode();
-        }
+        
+        createSystemNodes();
+        
         initNode(rootNode, true);
     }
     
@@ -152,7 +163,7 @@ public class TreeImpl implements Tree
 
     public void copy(Node source, Node destination, NodeTuner nodeTuner)
     {
-        Class[] childTypes = destination.getChildNodeTypes();
+        List<Class> childTypes = destination.getChildNodeTypes();
         if (childTypes!=null)
         {
             boolean isValidChildType = false;
@@ -199,26 +210,52 @@ public class TreeImpl implements Tree
         }
     }
 
+    public List<Node> getTempltateNodes()
+    {
+        Collection<Node> result = templatesNode.getSortedChildrens();
+        return result==null? Collections.EMPTY_LIST : new ArrayList<Node>(result);
+    }
+    
     private void createRootNode()
     {
         rootNode = new ContainerNode("");
-        
         treeStore.saveNode(rootNode);
-        
+    }
+
+    private void createSystemNodes()
+    {
         createSystemSubtree();
+        createTempatesSubtree();
     }
 
     private void createSystemSubtree()
     {
-        SystemNode systemNode = new SystemNode();
-        rootNode.addChildren(systemNode);
+        systemNode = (SystemNode) rootNode.getChildren(SystemNode.NAME);
+        if (systemNode==null)
+        {
+            systemNode = new SystemNode();
+            rootNode.addChildren(systemNode);
+            treeStore.saveNode(systemNode);
+        }
         
-        treeStore.saveNode(systemNode);
-        
-        DataSourcesNode dataSourcesNode = new DataSourcesNode();
-        systemNode.addChildren(dataSourcesNode);
-        
-        treeStore.saveNode(dataSourcesNode);
+        dataSourcesNode = (DataSourcesNode) systemNode.getChildren(DataSourcesNode.NAME);
+        if (dataSourcesNode==null)
+        {
+            dataSourcesNode = new DataSourcesNode();
+            systemNode.addChildren(dataSourcesNode);
+            treeStore.saveNode(dataSourcesNode);
+        }
+    }
+
+    private void createTempatesSubtree()
+    {
+        templatesNode = (TemplatesNode) rootNode.getChildren(TemplatesNode.NAME);
+        if (templatesNode==null)
+        {
+            templatesNode = new TemplatesNode();
+            rootNode.addChildren(templatesNode);
+            treeStore.saveNode(templatesNode);
+        }
     }
 
     private void initNode(Node node, boolean autoStart)
@@ -282,5 +319,24 @@ public class TreeImpl implements Tree
                shutdownNode(children);
        
        node.shutdown();
+    }
+    
+    private void addNodeType(Class nodeType)
+    {
+        NodeClass ann = (NodeClass) nodeType.getAnnotation(NodeClass.class);
+        if (ann==null)
+            throw new TreeError(String.format(
+                    "Annotation @NodeClass not found in the node class (%s)", nodeType.getName()));
+        
+        if (ann.anyChildTypes())
+            anyChildTypeNodes.add(nodeType);
+        
+        List<Class> childTypes = nodeTypes.get(ann.parentNode());
+        if (childTypes==null)
+        {
+            childTypes = new ArrayList<Class>();
+            nodeTypes.put(ann.parentNode(), childTypes);
+        }
+        childTypes.add(nodeType);
     }
 }

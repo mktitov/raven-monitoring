@@ -35,6 +35,7 @@ import org.raven.tree.NodeError;
 import org.raven.tree.NodeParameter;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
+import org.raven.template.TemplateEntry;
 import org.raven.tree.AttributeReference;
 import org.raven.tree.NodeAttributeListener;
 import org.raven.tree.NodeListener;
@@ -74,9 +75,6 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     private String name;
     private byte level = 0;
     private int index = 0;
-    private final Class[] childNodeTypes;
-    private final boolean container;
-    private final boolean readOnly;
     
     private Node parent;
     
@@ -93,11 +91,17 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     private Map<String, NodeParameter> parameters;
     private boolean subtreeListener = false;
 
-    public BaseNode(Class[] childNodeTypes, boolean container, boolean readOnly)
+//    public BaseNode(Class[] childNodeTypes, boolean container, boolean readOnly)
+//    {
+//        this.childNodeTypes = childNodeTypes;
+//        this.container = container;
+//        this.readOnly = readOnly;
+//    }
+    public BaseNode(){}
+    
+    public BaseNode(String name)
     {
-        this.childNodeTypes = childNodeTypes;
-        this.container = container;
-        this.readOnly = readOnly;
+        this.name = name;
     }
 
     public Logger getLogger()
@@ -197,7 +201,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     {
         Node pNode = this;
         while ( (pNode=pNode.getParent())!=null )
-            if (pNode.isTemplate())
+            if (pNode instanceof TemplateEntry)
                 return true;
         return false;
     }
@@ -348,19 +352,19 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
         this.index = index;
     }
     
-    public boolean isReadOnly()
-    {
-        return readOnly;
-    }
-    
-    public boolean isContainer()
-    {
-        return container;
-    }
+//    public boolean isReadOnly()
+//    {
+//        return readOnly;
+//    }
+//    
+//    public boolean isContainer()
+//    {
+//        return container;
+//    }
 
-    public Class[] getChildNodeTypes()
+    public List<Class> getChildNodeTypes()
     {
-        return childNodeTypes!=null? childNodeTypes : tree.getAvailableNodesTypes();
+        return tree.getChildNodesTypes(getClass());
     }
 
     public Collection<Node> getChildrens()
@@ -434,6 +438,11 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     public boolean isAutoStart()
     {
         return autoStart;
+    }
+
+    public boolean isContainer()
+    {
+        return getChildNodeTypes()!=null;
     }
     
     public void init() throws NodeError

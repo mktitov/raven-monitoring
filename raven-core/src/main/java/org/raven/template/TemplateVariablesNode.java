@@ -17,14 +17,16 @@
 
 package org.raven.template;
 
-import org.raven.tree.impl.LeafNode;
+import org.raven.annotations.NodeClass;
+import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
+@NodeClass(parentNode=TemplateNode.class)
 @Description("Holds the template variables")
-public class TemplateVariablesNode extends LeafNode
+public class TemplateVariablesNode extends BaseNode
 {
 }

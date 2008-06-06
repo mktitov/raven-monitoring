@@ -54,7 +54,7 @@ import org.weda.annotations.Description;
  *
  * @author Mikhail Titov
  */
-@NodeClass
+@NodeClass()
 @Description("Saves data in round robin database")
 public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 {
@@ -79,7 +79,6 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
             
     public RRDNode()
     {
-        super(new Class[]{RRDataSource.class, RRArchive.class}, true, false);
         setInitializeAfterChildrens(true);
     }
     

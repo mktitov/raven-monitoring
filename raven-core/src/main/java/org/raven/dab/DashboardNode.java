@@ -29,8 +29,4 @@ import org.weda.annotations.Description;
 @Description("The dashboard")
 public class DashboardNode extends BaseNode 
 {
-    public DashboardNode()
-    {
-        super(new Class[]{TextElement.class, DynamicImageElement.class}, true, false);
-    }
 }

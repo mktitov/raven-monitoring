@@ -17,6 +17,7 @@
 
 package org.raven.template;
 
+import org.raven.annotations.NodeClass;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.Description;
 
@@ -24,6 +25,7 @@ import org.weda.annotations.Description;
  *
  * @author Mikhail Titov
  */
+@NodeClass(parentNode=TemplatesNode.class)
 @Description("The template node")
 public class TemplateNode extends BaseNode 
 {
@@ -33,12 +35,6 @@ public class TemplateNode extends BaseNode
     private TemplateVariablesNode variablesNode;
     private TemplateEntry entryNode;
     
-    public TemplateNode()
-    {
-        super(new Class[]{TemplateVariablesNode.class, TemplateEntry.class}, true, false);
-        setSubtreeListener(true);
-    }
-
     @Override
     protected void doInit()
     {
@@ -50,6 +46,7 @@ public class TemplateNode extends BaseNode
             addChildren(variablesNode);
             configurator.getTreeStore().saveNode(variablesNode);
             variablesNode.init();
+            variablesNode.start();
         }
         
         entryNode = (TemplateEntry) getChildren(ENTRY_NODE);
@@ -60,6 +57,7 @@ public class TemplateNode extends BaseNode
             addChildren(entryNode);
             configurator.getTreeStore().saveNode(entryNode);
             entryNode.init();   
+            entryNode.start();
         }
     }
     

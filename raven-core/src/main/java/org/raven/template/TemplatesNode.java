@@ -29,9 +29,11 @@ import org.weda.annotations.Description;
 @Description("The root for template")
 public class TemplatesNode extends BaseNode
 {
+    public static String NAME = "Templates";
+    
     public TemplatesNode()
     {
-        super(new Class[]{TemplateNode.class}, true, false);
+        setName(NAME);
     }
     
     

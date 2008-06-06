@@ -31,5 +31,15 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface NodeClass {
+public @interface NodeClass 
+{
+    /**
+     * If this parameter sets to <code>true</code> then annotated node can hold child nodes 
+     * which {@link #parentNode()} parameter sets to the <code>Void.class</code>.
+     */
+    boolean anyChildTypes() default false;
+    /**
+     * If parameter seted then annotated node can be added only to the node with specified type.
+     */
+    Class parentNode() default Void.class;
 }

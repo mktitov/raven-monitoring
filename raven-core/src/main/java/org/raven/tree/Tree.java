@@ -50,7 +50,7 @@ public interface Tree
     /**
      * Returns all classes marked with {@link org.raven.annotations.NodeClass} annotation. 
      */
-    public Class[] getAvailableNodesTypes();
+    public List<Class> getChildNodesTypes(Class nodeType);
     /**
      * Returns attributes types available for the node .
      */
@@ -67,4 +67,8 @@ public interface Tree
      * @param nodeTuner allows to tune node parameters in copy process.
      */
     public void copy(Node source, Node destination, NodeTuner nodeTuner);
+    /**
+     * Returns the list of the template nodes or empty list if no template nodes in the tree.
+     */
+    public List<Node> getTempltateNodes();
 }

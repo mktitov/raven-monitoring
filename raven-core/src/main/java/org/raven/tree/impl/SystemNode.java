@@ -27,7 +27,6 @@ public class SystemNode extends BaseNode
     
     public SystemNode()
     {
-        super(new Class[]{DataSourcesNode.class}, true, true);
-        setName(NAME);
+        super(NAME);
     }
 }

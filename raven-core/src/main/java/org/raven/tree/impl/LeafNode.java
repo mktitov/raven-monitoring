@@ -24,17 +24,16 @@ import org.weda.annotations.Description;
  *
  * @author Mikhail Titov
  */
-@NodeClass @Description("The leaf node")
+@NodeClass() 
+@Description("The node that can not contain any child nodes")
 public class LeafNode extends BaseNode
 {
     public LeafNode()
     {
-        super(null, false, false);
     }
 
     public LeafNode(String name)
     {
-        super(null, false, false);
-        setName(name);
+        super(name);
     }
 }

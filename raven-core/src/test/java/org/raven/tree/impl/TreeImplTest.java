@@ -30,6 +30,7 @@ import org.raven.ServiceTestCase;
 import org.raven.conf.Configurator;
 import org.raven.impl.NodeClassTransformerWorker;
 import org.raven.tree.AttributeReferenceValues;
+import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.store.TreeStore;
 import org.weda.internal.services.ResourceProvider;
@@ -69,6 +70,8 @@ public class TreeImplTest extends ServiceTestCase
         expect(configurator.getTreeStore()).andReturn(store).anyTimes();
         ContainerNode rootNode = new ContainerNode("");
         expect(store.getRootNode()).andReturn(rootNode);
+        store.saveNode(isA(Node.class));
+        expectLastCall().anyTimes();
         resourceProvider.getResourceStrings(NodeClassTransformerWorker.NODES_TYPES_RESOURCE);
         expectLastCall().andReturn(Collections.EMPTY_LIST);
         List<String> oneList = Arrays.asList("1");

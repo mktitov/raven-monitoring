@@ -26,7 +26,7 @@ import org.weda.annotations.Description;
  *
  * @author Mikhail Titov
  */
-@NodeClass
+@NodeClass(parentNode=RRDNode.class)
 @Description("Round robin database data source node")
 public class RRDataSource extends DataPipeImpl
 {

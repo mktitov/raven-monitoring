@@ -28,7 +28,7 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass
+@NodeClass(parentNode=RRGraphNode.class)
 @Description("")
 public class RRGPrint extends LeafNode
 {

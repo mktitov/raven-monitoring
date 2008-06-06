@@ -30,7 +30,7 @@ import org.weda.annotations.constraints.NotNull;
  * Holds the reference to the {@link org.raven.rrd.data.RRDataSource}
  * @author Mikhail Titov
  */
-@NodeClass
+@NodeClass(parentNode=RRGraphNode.class)
 @Description("Defines virtual datasource.")
 public class RRDef extends LeafNode implements DataDefinition
 {

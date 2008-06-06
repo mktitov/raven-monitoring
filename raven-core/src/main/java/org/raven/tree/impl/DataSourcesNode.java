@@ -17,17 +17,21 @@
 
 package org.raven.tree.impl;
 
+import org.raven.annotations.NodeClass;
+import org.weda.annotations.Description;
+
 /**
  *
  * @author Mikhail Titov
  */
+@Description("The node which contains the data sources")
+@NodeClass(parentNode=SystemNode.class)
 public class DataSourcesNode extends BaseNode
 {
     public static String NAME = "Data sources";
     
     public DataSourcesNode()
     {
-        super(null, true, false);
-        setName("Data sources");
+        setName(NAME);
     }
 }

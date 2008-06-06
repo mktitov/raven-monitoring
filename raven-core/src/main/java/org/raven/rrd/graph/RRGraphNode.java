@@ -76,15 +76,6 @@ public class RRGraphNode extends BaseNode implements DynamicImageNode
     @Parameter @Description("Sets the 10**unitsExponent scaling of the y-axis values")
     private Integer unitsExponent;
     
-    public RRGraphNode()
-    {
-        super(
-            new Class[]{
-                RRDef.class, RRLine.class, RRCDef.class, RRComment.class, RRGPrint.class,
-                RRHRule.class, RRStack.class}
-            , true, false);
-    }
-
     public InputStream render()
     {
         return render(null, null);

@@ -24,18 +24,17 @@ import org.weda.annotations.Description;
  *
  * @author Mikhail Titov
  */
-@NodeClass @Description("The node that can contains any type of children nodes")
+@NodeClass(anyChildTypes=true) 
+@Description("The node that can contains any type of children nodes")
 public class ContainerNode extends BaseNode
 {
 
     public ContainerNode()
     {
-        super(null, true, false);
     }
 
     public ContainerNode(String name)
     {
-        super(null, true, false);
-        setName(name);
+        super(name);
     }
 }

@@ -19,16 +19,16 @@ package org.raven.dab;
 
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
-import org.raven.tree.impl.LeafNode;
+import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass()
+@NodeClass(parentNode=DashboardNode.class)
 @Description("The text element of the dashboard")
-public class TextElement extends LeafNode
+public class TextElement extends BaseNode
 {
     @Parameter
     @Description("The text that must be rendered in dashboard")

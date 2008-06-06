@@ -167,7 +167,7 @@ public interface Node extends Cloneable
      * @see #addChildren(org.raven.tree.Node) 
      * @see #isContainer() 
      */
-    public Class[] getChildNodeTypes();
+    public List<Class> getChildNodeTypes();
     /**
      * Returns <code>true</code> if this node can hold children nodes. 
      * @see #getChildNodeTypes() 
@@ -255,7 +255,7 @@ public interface Node extends Cloneable
     /**
      * If method returns <code>true</code> then node permits read only operations.
      */
-    public boolean isReadOnly();
+//    public boolean isReadOnly();
     /**
      * Method returns the first not null value of the attribute, with name passed in the 
      * <code>attributeName</code> parameter, of the nearest parent or null if parents does not

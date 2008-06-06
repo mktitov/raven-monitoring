@@ -27,7 +27,7 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass
+@NodeClass(parentNode=RRDNode.class)
 @Description("Round robin archive node")
 public class RRArchive extends LeafNode
 {

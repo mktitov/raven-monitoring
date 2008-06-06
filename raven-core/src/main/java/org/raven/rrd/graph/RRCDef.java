@@ -27,7 +27,7 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass
+@NodeClass(parentNode=RRGraphNode.class)
 @Description(
     "The virtual datasource. The values of this datasource are evaluating using" +
     "mathematical expression, specified in Reverse Polish Notation (RPN).")

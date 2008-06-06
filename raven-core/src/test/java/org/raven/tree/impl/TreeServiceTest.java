@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.raven.RavenCoreModule;
 import org.raven.ServiceTestCase;
 import org.raven.conf.Configurator;
+import org.raven.template.TemplatesNode;
 import org.raven.tree.AttributeReference;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
@@ -33,7 +34,12 @@ import org.raven.tree.NodeAttributeListener;
 import org.raven.tree.NodeListener;
 import org.raven.tree.NodeNotFoundError;
 import org.raven.tree.Tree;
+import org.raven.tree.impl.objects.AnyChildsNode;
+import org.raven.tree.impl.objects.AnyParentNode;
 import org.raven.tree.impl.objects.AttributesGeneratorNode;
+import org.raven.tree.impl.objects.ChildNode1;
+import org.raven.tree.impl.objects.ChildNode2;
+import org.raven.tree.impl.objects.NodeWithFixedChilds;
 import org.raven.tree.impl.objects.NodeWithIntegerParameter;
 import org.raven.tree.impl.objects.NodeWithNodeParameter;
 import org.raven.tree.impl.objects.NodeWithParameters;
@@ -74,13 +80,20 @@ public class TreeServiceTest extends ServiceTestCase
     }
     
     @Test
-    public void getAvailableNodesTypes()
+    public void getChildNodesTypes()
     {
-        Class[] nodesTypes = tree.getAvailableNodesTypes();
-        assertNotNull(nodesTypes);
+        List<Class> types = tree.getChildNodesTypes(AnyChildsNode.class);
+        assertNotNull(types);
+        assertTrue(types.contains(AnyChildsNode.class));
+        assertTrue(types.contains(AnyParentNode.class));
+        assertFalse(types.contains(ChildNode1.class));
+        assertFalse(types.contains(ChildNode2.class));
         
-        //at least two nodes types must be in the array: ContainerNode, LeafNode
-        assertTrue(nodesTypes.length>=2);
+        types = tree.getChildNodesTypes(NodeWithFixedChilds.class);
+        assertNotNull(types);
+        assertEquals(2, types.size());
+        assertTrue(types.contains(ChildNode1.class));
+        assertTrue(types.contains(ChildNode1.class));
     }
     
     @Test()
@@ -133,7 +146,7 @@ public class TreeServiceTest extends ServiceTestCase
     @Test
     public void nodeInit_woAttributes()
     {
-        BaseNode node = new BaseNode(null, false, false);
+        BaseNode node = new BaseNode();
         node.init();
         
         assertEquals(Node.Status.INITIALIZED, node.getStatus());
@@ -142,7 +155,7 @@ public class TreeServiceTest extends ServiceTestCase
     @Test
     public void nodeInit_woNodeTypeAttribute()
     {
-        BaseNode node = new BaseNode(null, false, false);
+        BaseNode node = new BaseNode();
         NodeAttributeImpl attr = new NodeAttributeImpl();
         attr.setName("attr");
         attr.setType(String.class);
@@ -602,5 +615,13 @@ public class TreeServiceTest extends ServiceTestCase
 
         Node systemNode = tree.getNode(Node.NODE_SEPARATOR+SystemNode.NAME);
         assertNotNull(systemNode);
+        
+        DataSourcesNode dataSourcesNode = 
+                (DataSourcesNode) systemNode.getChildren(DataSourcesNode.NAME);
+        assertNotNull(dataSourcesNode);
+        
+        TemplatesNode templatesNode = 
+                (TemplatesNode) tree.getRootNode().getChildren(TemplatesNode.NAME);
+        assertNotNull(templatesNode);
     }
 }
