@@ -537,7 +537,7 @@ public class TreeServiceTest extends ServiceTestCase
         store.saveNode(copyDest);
         copyDest.init();
         
-        tree.copy(node, copyDest, null);
+        tree.copy(node, copyDest, "newName", null, true, true);
         
         checkNodeCopy(copyDest, sysNode, node, child, Status.INITIALIZED);
         
@@ -550,7 +550,7 @@ public class TreeServiceTest extends ServiceTestCase
     
     private void checkNodeCopy(Node copyDest, Node sysNode, Node node, Node child, Status status)
     {
-        Node nodeCopy = copyDest.getChildren("node");
+        Node nodeCopy = copyDest.getChildren("newName");
         assertNotNull(nodeCopy);
         assertFalse(nodeCopy.equals(node));
 //        if (status==Status.STARTED)

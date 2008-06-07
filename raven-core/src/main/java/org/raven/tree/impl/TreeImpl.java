@@ -34,6 +34,7 @@ import org.raven.template.TemplatesNode;
 import org.raven.tree.AttributeReference;
 import org.raven.tree.AttributeReferenceValues;
 import org.raven.tree.Node;
+import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeNotFoundError;
 import org.raven.tree.NodeTuner;
@@ -161,34 +162,54 @@ public class TreeImpl implements Tree
             node.getParent().removeChildren(node);
     }
 
-    public void copy(Node source, Node destination, NodeTuner nodeTuner)
+    public Node copy(
+            Node source, Node destination, String newNodeName, NodeTuner nodeTuner
+            , boolean store, boolean validateNodeType)
     {
-        List<Class> childTypes = destination.getChildNodeTypes();
-        if (childTypes!=null)
+        if (validateNodeType)
         {
-            boolean isValidChildType = false;
-            for (Class childType: childTypes)
-                if (childType.equals(source.getClass()))
-                {
-                    isValidChildType = true;
-                    break;
-                }
-            if (!isValidChildType)
-                throw new TreeError(String.format(
-                        "The source node type (%s) is not a valid type for destination node (%s)"
-                        , source.getClass().getName(), destination.getPath()));
+            List<Class> childTypes = destination.getChildNodeTypes();
+            if (childTypes!=null)
+            {
+                boolean isValidChildType = false;
+                for (Class childType: childTypes)
+                    if (childType.equals(source.getClass()))
+                    {
+                        isValidChildType = true;
+                        break;
+                    }
+                if (!isValidChildType)
+                    throw new TreeError(String.format(
+                            "The source node type (%s) is not a valid type for " +
+                            "destination node (%s)"
+                            , source.getClass().getName(), destination.getPath()));
+            }
         }
         try
         {
             Node clone = (Node) source.clone();
+            if (newNodeName!=null)
+                clone.setName(newNodeName);
             destination.addChildren(clone);
-            saveClonedNode(source, destination.getPath(), clone, nodeTuner);
+            saveClonedNode(source, clone, destination.getPath(), clone, nodeTuner, store);
             initNode(clone, false);
+            
+            return clone;
         } 
         catch (CloneNotSupportedException ex)
         {
             throw new TreeError("Node (%s) clone error", ex);
         }
+    }
+    
+    public void start(Node node)
+    {
+        if (node.getStatus()==Status.INITIALIZED)
+            node.start();
+        
+        if (node.getChildrens()!=null)
+            for (Node child: node.getChildrens())
+                start(child);
     }
 
     public List<String> getReferenceValuesForAttribute(NodeAttribute attr)
@@ -281,11 +302,13 @@ public class TreeImpl implements Tree
     }
 
     private void saveClonedNode(
-            final Node source, final String destPath, final Node clone, final NodeTuner nodeTuner)
+            final Node source, final Node clonedSource, final String destPath, final Node clone
+            , final NodeTuner nodeTuner, final boolean store)
     {
         if (nodeTuner!=null)
             nodeTuner.tuneNode(clone);
-        configurator.getTreeStore().saveNode(clone);
+        if (store)
+            configurator.getTreeStore().saveNode(clone);
         Collection<NodeAttribute> attrs = clone.getNodeAttributes();
         if (attrs!=null)
         {
@@ -297,17 +320,18 @@ public class TreeImpl implements Tree
                 {
                     attr.setRawValue(
                             destPath
-                            + Node.NODE_SEPARATOR+source.getName()
+                            + Node.NODE_SEPARATOR+clonedSource.getName()
                             + attr.getRawValue().substring(sourcePath.length()));
                 }
-                configurator.getTreeStore().saveNodeAttribute(attr);
+                if (store)
+                    configurator.getTreeStore().saveNodeAttribute(attr);
             }
         }
         
         Collection<Node> childs = clone.getChildrens();
         if (childs!=null)
             for (Node child: childs)
-                saveClonedNode(source, destPath, child, nodeTuner);
+                saveClonedNode(source, clonedSource, destPath, child, nodeTuner, store);
     }
 
     private void shutdownNode(Node node)

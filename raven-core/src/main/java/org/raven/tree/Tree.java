@@ -61,12 +61,25 @@ public interface Tree
      */
     public List<String> getReferenceValuesForAttribute(NodeAttribute attr);
     /**
-     * Copy the <code>source</code> node to the <code>destination</code> node
+     * Copies subtree of nodes starting from the <code>source</code> node 
+     * to the <code>destination</code> node.
      * @param source the source node
      * @param destination the node to wich the source will be copied
-     * @param nodeTuner allows to tune node parameters in copy process.
+     * @param newNodeName if not null then this name will be seted to the new node
+     * @param nodeTuner allows to tune node parameters in copy process
+     * @param store if seted to <code>true</code> then new node will be stored in the tree database
+     * @param validateNodeType if seted to <code>true</code> and the type of the <code>source</code>
+     *      node is not {@link Node#getChildNodeTypes() a valid child type} 
+     *      for the <code>destination</code> node then {@link TreeError} exception will be throwed.
      */
-    public void copy(Node source, Node destination, NodeTuner nodeTuner);
+    public Node copy(
+            Node source, Node destination, String newNodeName, NodeTuner nodeTuner
+            , boolean store, boolean validateNodeType);
+    /**
+     * Starts all nodes in subtree starting from the <code>node</code> passed in the parameter.
+     * @param node the starting point.
+     */
+    public void start(Node node);
     /**
      * Returns the list of the template nodes or empty list if no template nodes in the tree.
      */
