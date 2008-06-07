@@ -17,9 +17,11 @@
 
 package org.raven.ui;
 
+import org.apache.tapestry.ioc.Registry;
+import org.raven.RavenRegistry;
 import org.raven.conf.Config;
 import org.raven.conf.Configurator;
-import org.raven.conf.impl.PropertiesConfig;
+
 import org.raven.conf.impl.UserAcl;
 
 import javax.servlet.Filter;
@@ -38,15 +40,22 @@ public class AuthFilter implements Filter
 {
 	public static final String NTLM_AUTH = "NtlmHttpAuth";
 	public static final String USER_ACL = "UserAcl";
+	public static final String TEST_DOMAIN = "TEST";
+	public static final String TEST_USER = "test";
 	private Config config = null;
 	private String domain = ""; 
 	private boolean first=true;
+	private boolean testMode = false;
 	
     public void init(FilterConfig filterConfig ) throws ServletException 
     {
-        try { config = PropertiesConfig.getInstance(); } 
+    	Registry registry = RavenRegistry.getRegistry();
+		org.raven.conf.Configurator configurator = registry.getService(Configurator.class);
+		try { config = configurator.getConfig(); }
         catch(Exception e) { throw new ServletException("init filter: " + e.getMessage()); }
         domain = config.getStringProperty(Configurator.WIN_DOMAIN, domain);
+        testMode = config.getBooleanProperty(Configurator.TEST_MODE, Boolean.FALSE);
+        if(testMode) domain = TEST_DOMAIN;
     }
 
     public void destroy() { }

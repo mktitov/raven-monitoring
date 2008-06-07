@@ -17,12 +17,21 @@
 
 package org.raven.ui;
 
+import java.io.IOException;
+
+import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
+import org.apache.tapestry.ioc.Registry;
+import org.raven.RavenRegistry;
 import org.raven.conf.Config;
 import org.raven.conf.Configurator;
-import org.raven.conf.impl.PropertiesConfig;
 
 import jcifs.http.NtlmHttpFilter;
 
@@ -39,13 +48,15 @@ public class JcifsFilter extends NtlmHttpFilter {
 						Configurator.ACCOUNT_NAME,
 						Configurator.BIND_PASSWORD,
 						Configurator.DOMAIN_CONTROLLER};
-   
    public static final String[] jcifsParams  = {WINS,DOMAIN,USERNAME,PASSWORD,CONTROLLER};
+   private boolean testMode = false;
 	
     public void init(FilterConfig filterConfig ) throws ServletException 
     {
-    	Config config;
-        try { config = PropertiesConfig.getInstance(); } 
+    	Registry registry = RavenRegistry.getRegistry();
+		org.raven.conf.Configurator configurator = registry.getService(Configurator.class);
+		Config config;
+		try { config = configurator.getConfig(); }
         catch(Exception e) { throw new ServletException("init filter: " + e.getMessage()); }
         String param;
         for(int i=0;i<ravenParams.length;i++)
@@ -53,7 +64,23 @@ public class JcifsFilter extends NtlmHttpFilter {
         	param = config.getStringProperty(ravenParams[i], null);
             if(param!=null) jcifs.Config.setProperty(jcifsParams[i], param);        	
         }
+        testMode = config.getBooleanProperty(Configurator.TEST_MODE, Boolean.FALSE);
         super.init(filterConfig);
     }
+    
+    public void doFilter( ServletRequest request, ServletResponse response, FilterChain chain ) 
+    throws IOException, ServletException
+    {
+    	if(!testMode) super.doFilter(request, response, chain);
+    	else
+    	{
+            HttpServletRequest req = (HttpServletRequest)request;
+            HttpSession ses =  req.getSession();
+            Object obj = ses.getAttribute(AuthFilter.NTLM_AUTH);
+            if(obj==null) ses.setAttribute(AuthFilter.NTLM_AUTH,AuthFilter.TEST_DOMAIN+"\\"+AuthFilter.TEST_USER);
+    		chain.doFilter( request, response );
+    	}
+    }
+    
 
 }

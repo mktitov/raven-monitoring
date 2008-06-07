@@ -29,6 +29,10 @@ public interface Configurator
 	/**
 	 * The name of parameter that stores URL of LDAP server.  
 	 */
+	public static final String TEST_MODE = "auth.testMode";
+	/**
+	 * The name of parameter that stores URL of LDAP server.  
+	 */
 	public static final String PROVIDER_URL = "auth.providerURL";
 	/**
 	 * The name of parameter that stores context for search on LDAP server.  

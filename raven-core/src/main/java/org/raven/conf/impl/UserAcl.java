@@ -39,6 +39,7 @@ public class UserAcl
 {
 	protected Logger logger = LoggerFactory.getLogger(UserAcl.class);
 	public static final long expireInterval = 300000;
+	public static final String TEST_GROUP = "CN=testGroup,OU=testOU";
 	
 	private String accountName;
 	private AccessControlList acl;
@@ -48,11 +49,13 @@ public class UserAcl
 	private GroupsList gList;
 	private GroupsAclStorage gaStorage;
 	private boolean refreshed = true;
+	private boolean testMode = false;
 	
 	public UserAcl(String accountName, Config cfg) 
 	{
 		this.accountName = accountName;
 		this.config = cfg;
+		testMode = config.getBooleanProperty(Configurator.TEST_MODE, Boolean.FALSE);
 		gList = loadGroupsList();
 		gaStorage = GroupsAclStorage.getInstance(config);
 		storageTime = gaStorage.getLastUpdate();
@@ -63,6 +66,14 @@ public class UserAcl
 	@SuppressWarnings("unchecked")
 	private GroupsList loadGroupsList()
 	{
+	    GroupsList glist = new GroupsList();
+	    if(testMode)
+	    {
+	    	glist.add(TEST_GROUP);
+	    	glist.sort();
+	    	return glist;
+	    }
+
 		String providerUrl = config.getStringProperty(Configurator.PROVIDER_URL, null);
 		String bindName = config.getStringProperty(Configurator.BIND_NAME, null);
 		String bindPassword = config.getStringProperty(Configurator.BIND_PASSWORD, null);
@@ -75,7 +86,6 @@ public class UserAcl
 	    env.put(Context.SECURITY_PRINCIPAL, bindName); 
 	    env.put(Context.SECURITY_CREDENTIALS, bindPassword);
 	    InitialDirContext context = null;
-	    GroupsList glist = new GroupsList();
 	    try {
 	    	context = new InitialDirContext(env); 
 	    	String flt = "(sAMAccountName="+accountName+")";

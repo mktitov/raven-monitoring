@@ -22,8 +22,12 @@ import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class GroupsList extends ArrayList<String> 
 {
+	protected Logger logger = LoggerFactory.getLogger(GroupsList.class);
 	static final long serialVersionUID =1 ;
 	public static final String pattern = "^CN=(.*?),OU=.*"; 
 
@@ -51,8 +55,9 @@ public class GroupsList extends ArrayList<String>
 		if(m.find())
 		 {
 			String tmp = m.group(1);
-		    if(tmp!=null && tmp.length()>0) super.add(tmp);
-		 }
+		    if(tmp!=null && tmp.length()>0)
+		    	super.add(tmp);
+		 } 
 	}
 	
 	public void sort()
