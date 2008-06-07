@@ -18,17 +18,23 @@
 package org.raven.ds.impl;
 
 import java.util.Collection;
+import org.raven.annotations.NodeClass;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataPipe;
 import org.raven.ds.DataSource;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.weda.annotations.Description;
 
 /**
  * Collects data from one data source and transmits it to all {@link DataConsumer data consumers} 
  * in the {@link org.raven.tree.Node#getDependentNodes()  dependency list}.
  * @author Mikhail Titov
  */
+@NodeClass()
+@Description(
+    "The node takes data from data source and gives data to back to the data consumers " +
+    "connected to this node")
 public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
 {
     public void setData(DataSource dataSource, Object data)
