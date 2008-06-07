@@ -17,6 +17,7 @@ public class NewAttribute
 	@SuppressWarnings("unchecked")
 	private Class attrClass;
 	private String description="";
+	private boolean required = false;
 	//private String refPath = "";
 	private List<SelectItem> selectItems = null;
 	
@@ -48,6 +49,9 @@ public class NewAttribute
 
 	public List<SelectItem> getSelectItems() { 	return selectItems; }
 	public void setSelectItems(List<SelectItem> selectItems) { this.selectItems = selectItems; }
+
+	public boolean isRequired() { return required; }
+	public void setRequired(boolean required) { this.required = required; }
 
 //	public String getRefPath() { return refPath; }
 //	public void setRefPath(String refPath) { this.refPath = refPath; }

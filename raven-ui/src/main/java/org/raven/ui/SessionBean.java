@@ -34,9 +34,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weda.services.ClassDescriptorRegistry;
 import org.apache.myfaces.trinidad.component.core.data.CoreTree;
+//import org.apache.myfaces.trinidad.event.FocusListener;
+//import org.apache.myfaces.trinidad.event.FocusEvent;
 import org.apache.myfaces.trinidad.event.PollEvent;
-import org.apache.myfaces.trinidad.model.RowKeySetImpl;
-import org.apache.myfaces.trinidad.model.RowKeySetTreeImpl;
+//import org.apache.myfaces.trinidad.model.RowKeySetImpl;
+//import org.apache.myfaces.trinidad.model.RowKeySetTreeImpl;
 import org.apache.myfaces.trinidad.model.TreeModel;
 import org.apache.myfaces.trinidad.render.ExtendedRenderKitService;
 import org.apache.myfaces.trinidad.util.Service;
@@ -58,6 +60,13 @@ public class SessionBean
 
 	private String newNodeType = null;
 	private String newNodeName = null;
+	
+	private CoreTree coreTree = null;
+	
+	public String getNodeNamePattern()
+	{
+		return "[^\\Q~"+Node.NODE_SEPARATOR+Node.ATTRIBUTE_SEPARATOR+"\\E]+";
+	}
 	
 	public String getTitle()
 	{
@@ -99,7 +108,9 @@ public class SessionBean
 		 FacesContext facesContext = FacesContext.getCurrentInstance();
 		 ExtendedRenderKitService service = (ExtendedRenderKitService)
 		 Service.getRenderKitService(facesContext, ExtendedRenderKitService.class);
+		// service.addScript(facesContext, "parent.frames.frame1.document.treeform.reftree.focus();");
 		 service.addScript(facesContext, "parent.frames.frame2.location.href=parent.frames.frame2.location.href");
+		 service.addScript(facesContext, "parent.frames.frame1.location.href=parent.frames.frame1.location.href");
 		 return ("success");
 	  }
 
@@ -111,33 +122,40 @@ public class SessionBean
 		  Node n = (Node) context.getELContext().getELResolver().getValue(context.getELContext(), null, "node");
 		  context.getExternalContext().log("Node="+n.getPath());
 		  setCurrentNode(n);
-//		  currentNode = n; 
-	  ///RequestContext requestContext = RequestContext.getCurrentInstance();
-	//	  requestContext.getPageFlowScope().put("selectedNode", n);
-//		  send();
 	  }
 
 	  public void onTreePoll(PollEvent event)
 	  {
 		  //treeModel.setRowIndex(-1);
-		  treeModel.setRowKey(null);
-		  FacesContext context = FacesContext.getCurrentInstance();
-		  CoreTree tr = (CoreTree) context.getELContext().getELResolver().getValue(context.getELContext(), null, "ctree");
+		  
+		  //treeModel.setRowKey(null);
+		  //FacesContext context = FacesContext.getCurrentInstance();
+		  //CoreTree tr = (CoreTree) context.getELContext().getELResolver().getValue(context.getELContext(), null, "ctree");
 		  //RowKeySetTreeImpl rowKeys = new RowKeySetTreeImpl();
 		  //RowKeySetImpl rk = new RowKeySetImpl();
 		  //rowKeys.
 		  //rowKeys.clear();
-		  //tr.setSelectedRowKeys(null);
-		  tr.setFocusRowKey(null);
-		  tr.setClientRowKey(null);
-		  tr.markInitialState();
+		  //coreTree.setSelectedRowKeys(null);
+		  /*
+		  FocusListener[] fl =  tr.getFocusListeners();
+		  for(FocusListener f: fl)
+		  {
+			//  FocusEvent fe = new FocusEvent(); 
+		  } */
+	//	  if(coreTree!=null)
+	//	  {
+		 // coreTree.setFocusRowKey(null);
+		 // coreTree.setClientRowKey(null);
+		//	  coreTree.setClientRowKey(null)
+		  //coreTree.markInitialState();
+	//	  }
 	  }
 	  
 	  public String getFocusRowKey()
 	  {
-		  FacesContext context = FacesContext.getCurrentInstance();
-		  CoreTree tr = (CoreTree) context.getELContext().getELResolver().getValue(context.getELContext(), null, "ctree");
-		  org.apache.myfaces.trinidad.model.RowKeySet rk =  tr.getSelectedRowKeys();
+		  /*
+		  if(coreTree==null) return "isNull";
+		  org.apache.myfaces.trinidad.model.RowKeySet rk =  coreTree.getSelectedRowKeys();
 		  String z="";
 		  if(rk!=null)
 		  {
@@ -147,7 +165,9 @@ public class SessionBean
 			  z = z + it.next()+";";
 		  }
 		  }
-		  return "focus: "+tr.getFocusRowKey()+"  selected:"+z;
+		  return "focus: "+coreTree.getFocusRowKey()+"  selected:"+z;
+		  */
+		  return "";
 	  }
 	
 	public TreeModel getTreeModel() { return treeModel; }
@@ -191,6 +211,7 @@ public class SessionBean
 		wrapper.getNode().addChildren(n);
 		configurator.getTreeStore().saveNode(n);
 		n.init();
+		if(n.isAutoStart()) n.start();
 		logger.warn("Added new node name={}",getNewNodeName());
 		wrapper.goToEditNewAttribute(n);
 		return "ok";
@@ -236,5 +257,8 @@ public class SessionBean
  		if(isRefreshTree()) return 10000;
  		return 100000000;
  	}
+
+	public CoreTree getCoreTree() { return coreTree; }
+	public void setCoreTree(CoreTree coreTree) { this.coreTree = coreTree; }
 	
 }

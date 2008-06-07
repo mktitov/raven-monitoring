@@ -25,7 +25,9 @@
 -->
 <tr:panelCaptionGroup captionText="#{msgs.nodeCreate}" rendered="#{cNode.allowCreateSubNode}">
 	<tr:panelFormLayout>
-		<tr:inputText label="#{msgs.name}" value="#{sBean.newNodeName}" ></tr:inputText>
+		<tr:inputText label="#{msgs.name}" value="#{sBean.newNodeName}" >
+			<tr:validateRegExp pattern="#{sBean.nodeNamePattern}"/>
+		</tr:inputText>
 		<tr:inputListOfValues  
 			label="#{msgs.type}" value="#{sBean.newNodeType}"
         	action="dialog:chooseType" 

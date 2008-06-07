@@ -25,27 +25,26 @@
           
   <jsp:directive.page contentType="text/html;charset=utf-8"/>
   <f:view>
+  <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
     <tr:document title="tree">
-    <tr:statusIndicator  ></tr:statusIndicator>
-    
-       <tr:form>
-       <tr:poll  id="pooltree"  ></tr:poll>
+       <tr:form id="treeform">
+       <!-- 
+       <tr:panelGroupLayout layout="horizontal">
+           	<tr:statusIndicator/>
+    		<tr:selectBooleanCheckbox id="reftree" onclick="submit();" label="#{msgs.refreshTree}" value="#{sBean.refreshTree}"/>
+    		<tr:outputText value="#{sBean.refreshTreeInterval}"/>
+    		<tr:outputText partialTriggers="::pooltree" value="QQQQQQ :#{sBean.focusRowKey}" />
+    	</tr:panelGroupLayout>
+    	 -->
+    	<tr:statusIndicator/>
         <tr:panelPage>
 <!--
-        <tr:tree var="node"           
-        value="#{personsModel.model}" 
-        >
- 		<f:facet name="nodeStamp">
-    		<tr:column>
-      			<f:facet name="header">
-        			<tr:outputText value="name"/>
-      			</f:facet>
-      			<tr:outputText value="#{node.name}"/>
-    		</tr:column>
-  		</f:facet>
-        </tr:tree>
+        partialTriggers="::pooltree"
+        partialTriggers="::pooltree :reftree"
+        onclick="parent.frames.frame1.document.treeform.reftree.focus();"
  -->
-        <tr:tree partialTriggers="::pooltree" id="tree1" var="node" binding="#{ctree}"  value="#{sBean.treeModel}"  >
+       	<tr:poll pollListener="#{sBean.onTreePoll}" id="pooltree" interval="#{sBean.refreshTreeInterval}" ></tr:poll>
+        <tr:tree partialTriggers="::pooltree" id="tree1" var="node" binding="#{sBean.coreTree}"  value="#{sBean.treeModel}"  >
  		<f:facet name="nodeStamp">
  		<tr:group >
  		<tr:commandLink

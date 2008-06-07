@@ -184,6 +184,7 @@ public class NodeWrapper extends AbstractNodeWrapper
 		//	na.setType(String.class);
 			na.setOwner(getNode());
 			getNode().addNodeAttribute(na);
+			na.setRequired(newAttribute.isRequired());
 		//	try { na.setValue(""); }
 		//	catch(ConstraintException e) { }
 			getConfigurator().getTreeStore().saveNodeAttribute(na);
