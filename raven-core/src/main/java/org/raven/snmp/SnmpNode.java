@@ -80,7 +80,6 @@ public class SnmpNode extends AbstractDataSource
 
             PDU pdu = new PDU();
             pdu.add(new VariableBinding(new OID(oid)));
-            pdu.setType(isTable? PDU.GETNEXT : PDU.GET);
 
             TransportMapping transport = new DefaultUdpTransportMapping();
             Snmp snmp  = new Snmp(transport);
@@ -140,6 +139,7 @@ public class SnmpNode extends AbstractDataSource
     
     private Object getSimpleValue(Snmp snmp, Target target, PDU pdu) throws Exception
     {
+        pdu.setType(PDU.GET);
         ResponseEvent response = snmp.send(pdu, target);
         if (response.getError()!=null)
             throw response.getError();
@@ -156,6 +156,7 @@ public class SnmpNode extends AbstractDataSource
         Table table = new TableImpl();
         while (true) 
         {
+            pdu.setType(PDU.GETNEXT);
             ResponseEvent response = snmp.send(pdu, target);
             if (response.getError()!=null)
                 throw response.getError();
