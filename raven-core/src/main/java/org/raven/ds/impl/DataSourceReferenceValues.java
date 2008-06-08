@@ -15,16 +15,17 @@
  *  under the License.
  */
 
-package org.raven.template;
+package org.raven.ds.impl;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import org.raven.tree.AttributeReferenceValues;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
-import org.raven.tree.impl.AttributeReferenceImpl;
+import org.raven.tree.Tree;
+import org.raven.tree.impl.DataSourcesNode;
+import org.raven.tree.impl.SystemNode;
 import org.weda.internal.annotations.Service;
 import org.weda.services.TypeConverter;
 
@@ -32,32 +33,32 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
-public class TemplateVariableReferenceValues implements AttributeReferenceValues
+public class DataSourceReferenceValues implements AttributeReferenceValues
 {
     @Service
+    private static Tree tree;
+    @Service
     private static TypeConverter converter;
-    
+
     public List<String> getReferenceValues(NodeAttribute attr)
     {
-        Node node = attr.getOwner();
-        List<String> refValues = Collections.EMPTY_LIST;
-        while ( (node=node.getParent())!=null )
+        DataSourcesNode dataSources = 
+                (DataSourcesNode) 
+                tree.getRootNode().getChildren(SystemNode.NAME).getChildren(DataSourcesNode.NAME);
+        if (dataSources.getChildrens()!=null)
         {
-            if (node instanceof TemplateNode)
-            {
-                TemplateVariablesNode varsNode = ((TemplateNode)node).getVariablesNode();
-                Collection<NodeAttribute> attrs = varsNode.getNodeAttributes();
-                if (attrs!=null && attrs.size()>0)
+            List<String> result = new ArrayList<String>();
+            for (Node node: dataSources.getChildrens())
+                if (attr.getType().isAssignableFrom(node.getClass()))
                 {
-                    refValues = new ArrayList<String>(attrs.size());
-                    for (NodeAttribute var: attrs)
-                        refValues.add(converter.convert(
-                            String.class, new AttributeReferenceImpl(var), null));
-                    Collections.sort(refValues);
+                    String nodePath = converter.convert(String.class, node, null);
+                    result.add(nodePath);
                 }
-                break;
-            }
-        }
-        return refValues;
+            Collections.sort(result);
+            
+            return result;
+        } 
+        else
+            return null;
     }
 }

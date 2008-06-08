@@ -22,6 +22,8 @@ import org.apache.tapestry.ioc.MappedConfiguration;
 import org.apache.tapestry.ioc.ServiceBinder;
 import org.raven.conf.Configurator;
 import org.raven.conf.impl.ConfiguratorImpl;
+import org.raven.ds.DataSource;
+import org.raven.ds.impl.DataSourceReferenceValues;
 import org.raven.impl.AttributeReferenceToStringConverter;
 import org.raven.impl.NodeToStringConverter;
 import org.raven.impl.SnmpVariableToNumberConverter;
@@ -79,5 +81,6 @@ public class RavenCoreModule
     public static void contributeTree(MappedConfiguration<Class, AttributeReferenceValues> conf)
     {
         conf.add(TemplateVariable.class, new TemplateVariableReferenceValues());
+        conf.add(DataSource.class, new DataSourceReferenceValues());
     }
 }
