@@ -17,11 +17,9 @@
 
 package org.raven.snmp;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.apache.tapestry.ioc.RegistryBuilder;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -103,6 +101,44 @@ public class SnmpNodeTest extends ServiceTestCase
                 System.out.println("Type: "+var.getVariable().getSyntaxString());
                 System.out.println("Type: "+var.getVariable().getSyntax());
             }
+        }finally
+        {
+            transport.close();
+        }
+    }
+    
+    @Test
+    public void tableReadTest() throws Exception
+    {
+        UdpAddress addr = new UdpAddress("127.0.0.1/161");
+        
+        CommunityTarget target = new CommunityTarget(addr, new OctetString("public"));
+        target.setRetries(1);
+        target.setTimeout(1500);
+        target.setVersion(SnmpConstants.version1);
+        
+        OID tableOID = new OID(".1.3.6.1.2.1.2.2");
+        PDU pdu = new PDU();
+        pdu.add(new VariableBinding(tableOID));
+        pdu.setType(PDU.GETNEXT);
+        
+        TransportMapping transport = new DefaultUdpTransportMapping();
+        transport.listen();
+        try
+        {
+            Snmp snmp = new Snmp(transport);
+            {
+                ResponseEvent res = snmp.send(pdu, target);
+                if (res.getError()!=null)
+                    throw res.getError();
+                assertNotNull(res.getResponse());
+                pdu = res.getResponse();
+                List<VariableBinding> vars =  pdu.getVariableBindings();
+                assertTrue(vars.size()>0);
+                VariableBinding var = vars.get(0);
+                System.out.println(""+var.getOid()+"="+var.getVariable().toString());
+                pdu.setType(PDU.GETNEXT);
+            } while (((VariableBinding)pdu.getVariableBindings().get(0)).getOid().startsWith(tableOID));
         }finally
         {
             transport.close();

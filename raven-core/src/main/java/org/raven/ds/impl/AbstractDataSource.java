@@ -57,13 +57,16 @@ public abstract class AbstractDataSource
 
     public AbstractDataSource()
     {
-        consumerAttributes.add(
-                new NodeAttributeImpl(
-                    INTERVAL_ATTRIBUTE, Integer.class, null, "the period between executions"));
-        consumerAttributes.add(
-                new NodeAttributeImpl(
+        NodeAttribute attr = new NodeAttributeImpl(
+                    INTERVAL_ATTRIBUTE, Integer.class, null, "the period between executions");
+        attr.setRequired(true);
+        consumerAttributes.add(attr);
+        
+        attr = new NodeAttributeImpl(
                     INTERVAL_UNIT_ATTRIBUTE, TimeUnit.class, TimeUnit.MINUTES, 
-                    "the time unit of the interval attribute"));
+                    "the time unit of the interval attribute");
+        attr.setRequired(true);
+        consumerAttributes.add(attr);
         fillConsumerAttributes(consumerAttributes);
     }
     
