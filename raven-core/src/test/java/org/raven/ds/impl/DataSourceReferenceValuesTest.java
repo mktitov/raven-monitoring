@@ -29,6 +29,7 @@ import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeListener;
 import org.raven.tree.Tree;
+import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.DataSourcesNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.impl.SystemNode;
@@ -67,7 +68,7 @@ public class DataSourceReferenceValuesTest extends ServiceTestCase
         
         DataSourceReferenceValues referenceValues = new DataSourceReferenceValues();
         NodeAttribute attr = new NodeAttributeImpl("attr", DataSource.class, null, null);
-        
+        attr.setOwner(new ContainerNode("owner"));
         trainMocks();
         
         assertNull(referenceValues.getReferenceValues(attr));

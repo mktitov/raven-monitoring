@@ -18,6 +18,7 @@
 package org.raven;
 
 import org.apache.tapestry.ioc.RegistryBuilder;
+import org.junit.Test;
 
 /**
  *
@@ -29,5 +30,11 @@ public class TableNodeTest extends ServiceTestCase
     protected void configureRegistry(RegistryBuilder builder)
     {
         builder.add(RavenCoreModule.class);
+    }
+    
+    @Test
+    public void test()
+    {
+        
     }
 }
