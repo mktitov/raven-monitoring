@@ -17,18 +17,17 @@
 
 package org.raven;
 
-import java.util.List;
-import java.util.Map;
+import org.apache.tapestry.ioc.RegistryBuilder;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface Table 
+public class TableNodeTest extends ServiceTestCase
 {
-    /**
-     * 
-     */
-    public Map<String, List<Object>> getRows();
-    public void addValue(String columnName, Object value);    
+    @Override
+    protected void configureRegistry(RegistryBuilder builder)
+    {
+        builder.add(RavenCoreModule.class);
+    }
 }

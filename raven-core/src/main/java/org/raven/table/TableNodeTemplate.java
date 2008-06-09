@@ -19,22 +19,42 @@ package org.raven.table;
 
 import org.raven.annotations.NodeClass;
 import org.raven.template.TemplateEntry;
+import org.raven.tree.Node;
+import org.raven.tree.Node.Status;
+import org.raven.tree.NodeAttribute;
+import org.raven.tree.impl.NodeAttributeImpl;
 import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=TableNode.class)
+@NodeClass(parentNode=TableNode.class, anyChildTypes=true)
 @Description("The template for creation child nodes in the TableNode")
 public class TableNodeTemplate extends TemplateEntry
 {
-    public static String NAME="Template";
+    public final static String NAME="Template";
+    public final static String TABLE_COLUMN_NAME = "tableColumnName";
 
     public TableNodeTemplate()
     {
         setName(NAME);
         setSubtreeListener(true);
     }
+
+    @Override
+    public void nodeStatusChanged(Node node, Status oldStatus, Status newStatus)
+    {
+        if (newStatus==Status.INITIALIZED && node.getNodeAttribute(TABLE_COLUMN_NAME)==null)
+        {
+            NodeAttribute attr = new NodeAttributeImpl(
+                    TABLE_COLUMN_NAME, String.class, null
+                    , "The reference to the table column name");
+            attr.setOwner(node);
+            node.addNodeAttribute(attr);
+            configurator.getTreeStore().saveNodeAttribute(attr);
+        }
+    }
+
     
 }

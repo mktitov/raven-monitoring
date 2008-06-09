@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.raven.Table;
 
 /**
  *
@@ -29,23 +28,44 @@ import org.raven.Table;
  */
 public class TableImpl implements Table
 {
-    private final Map<String, List<Object>> rows = new HashMap<String, List<Object>>(); 
+    private final Map<String, List<Object>> cols = new HashMap<String, List<Object>>(); 
+    private final List<String> columnNames = new ArrayList<String>();
             
             
     public Map<String, List<Object>> getRows()
     {
-        return rows;
+        return cols;
     }
     
     public void addValue(String columnName, Object value)
     {
-        List<Object> values = rows.get(columnName);
+        List<Object> values = cols.get(columnName);
         if (values==null)
         {
+            columnNames.add(columnName);
             values = new ArrayList<Object>();
-            rows.put(columnName, values);
+            cols.put(columnName, values);
         }
         values.add(value);
+    }
+
+    public List<String> getColumnNames()
+    {
+        return columnNames;
+    }
+
+    public Object getValue(String columnName, int row)
+    {
+        List<Object> values = cols.get(columnName);
+        if (values==null)
+            return null;
+        else
+            return values.get(row);
+    }
+
+    public int getRowCount()
+    {
+        return cols.size()==0? 0 : cols.get(columnNames.get(0)).size();
     }
 
 }

@@ -20,6 +20,7 @@ package org.raven.ds.impl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.raven.ds.DataSource;
 import org.raven.tree.AttributeReferenceValues;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -54,7 +55,18 @@ public class DataSourceReferenceValues implements AttributeReferenceValues
                     String nodePath = converter.convert(String.class, node, null);
                     result.add(nodePath);
                 }
+            
             Collections.sort(result);
+            
+            Node node = attr.getOwner();
+            while ( (node = node.getParent())!=null )
+            {
+                if (node instanceof DataSource)
+                {
+                    String nodePath = converter.convert(String.class, node, null);
+                    result.add(nodePath);
+                }
+            }
             
             return result;
         } 

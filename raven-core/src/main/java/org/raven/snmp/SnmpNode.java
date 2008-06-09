@@ -19,7 +19,7 @@ package org.raven.snmp;
 
 import java.io.IOException;
 import java.util.Collection;
-import org.raven.Table;
+import org.raven.table.Table;
 import org.raven.annotations.NodeClass;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.impl.AbstractDataSource;
