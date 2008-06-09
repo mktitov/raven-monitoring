@@ -218,6 +218,7 @@ public class NodeWrapper extends AbstractNodeWrapper
 			  getNode().removeNodeAttribute(na.getName());
 			  getConfigurator().getTreeStore().removeNodeAttribute(na.getId());
 			  logger.warn("removed attrubute: {}",na.getName());
+			  onSetNode();
 		  }
 		  if(ret.length()==0) return null;
 		  return ret.toString();

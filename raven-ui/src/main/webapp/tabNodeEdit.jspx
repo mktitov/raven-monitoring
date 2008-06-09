@@ -57,8 +57,8 @@
  
 <tr:panelCaptionGroup rendered="#{cNode.allowNodeEdit}"  captionText="#{msgs.nodeAttributes}"  >
 	<tr:message binding="#{cNodeAttrs.message}" for="attrs" messageType="error" />
-  	<tr:table allDetailsEnabled="true" rowBandingInterval="2" binding="#{cNodeAttrs.table}" width="90%" rowSelection="single" summary="Nodes" 
-  		value="#{cNode.attributes}" 
+  	<tr:table allDetailsEnabled="true" rowBandingInterval="1" binding="#{cNodeAttrs.table}" 
+  		width="90%" rowSelection="multiple" summary="Nodes" value="#{cNode.attributes}" 
   		var="row" rows="20" id="attrs" >
 
     	<tr:column headerText="*">
