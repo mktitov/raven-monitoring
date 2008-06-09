@@ -63,7 +63,7 @@ public class JcifsFilter extends NtlmHttpFilter {
             if(param!=null) jcifs.Config.setProperty(jcifsParams[i], param);        	
         }
         testMode = config.getBooleanProperty(Configurator.TEST_MODE, Boolean.FALSE);
-        super.init(filterConfig);
+        if(!testMode) super.init(filterConfig);
     }
     
     public void doFilter( ServletRequest request, ServletResponse response, FilterChain chain ) 
