@@ -25,15 +25,13 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-
 import org.apache.tapestry.ioc.Registry;
 import org.raven.RavenRegistry;
 import org.raven.conf.Config;
 import org.raven.conf.Configurator;
-
 import jcifs.http.NtlmHttpFilter;
+//import javax.servlet.http.HttpServletResponse;
 
 public class JcifsFilter extends NtlmHttpFilter {
 
@@ -54,7 +52,7 @@ public class JcifsFilter extends NtlmHttpFilter {
     public void init(FilterConfig filterConfig ) throws ServletException 
     {
     	Registry registry = RavenRegistry.getRegistry();
-		org.raven.conf.Configurator configurator = registry.getService(Configurator.class);
+		Configurator configurator = registry.getService(Configurator.class);
 		Config config;
 		try { config = configurator.getConfig(); }
         catch(Exception e) { throw new ServletException("init filter: " + e.getMessage()); }
