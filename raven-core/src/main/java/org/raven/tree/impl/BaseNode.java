@@ -454,15 +454,17 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
             {
                 for (NodeAttribute attr : nodeAttributes.values())
                 {
+                    Node node = null;
                     if (Node.class.isAssignableFrom(attr.getType()) && attr.getValue()!=null)
                     {
-                        Node node = converter.convert(Node.class, attr.getValue(), null);
+                        node = converter.convert(Node.class, attr.getValue(), null);
                         node.addDependentNode(this);
                         if (node.getStatus()==Status.CREATED)
                         {
                             dependenciesInitialized = false;
-                        }
-                    }else if (   AttributeReference.class.isAssignableFrom(attr.getType()) 
+                        } 
+                    }
+                    if (   AttributeReference.class.isAssignableFrom(attr.getType()) 
                               && attr.getAttributeReference()!=null)
                     {
                         if (   attr.getAttributeReference().getAttribute().getOwner().getStatus()
@@ -480,7 +482,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
             }
             extractNodeLogicParameters();
             syncAttributesAndParameters();
-            
+            syncAttributesGenerators();
             doInit();
             
             setStatus(Status.INITIALIZED);
@@ -653,55 +655,57 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     private void processAttributeGeneration(NodeAttributeImpl attr, String newValue) 
             throws TypeConverterException, NodeError, TreeStoreError
     {
-
         if (attr.isGeneratorType())
+            syncParentAttributes(attr);
+    }
+
+    private void syncAttributesGenerators()
+    {
+        if (nodeAttributes==null)
+            return;
+        
+        List<NodeAttribute> attrs = new ArrayList<NodeAttribute>(nodeAttributes.values());
+        for (NodeAttribute attr: attrs)
+            if (attr.isGeneratorType())
+                syncParentAttributes(attr);
+    }
+    
+    private void syncParentAttributes(NodeAttribute parent)
+    {
+        if (parent.getValue() == null)
+            removeChildAttributes(parent.getName(), null);
+        else
         {
-//            Iterator<Map.Entry<String, NodeAttribute>> it = nodeAttributes.entrySet().iterator();
-//            while (it.hasNext())
-//            {
-//                NodeAttribute childAttr = it.next().getValue();
-//                if (attr.getName().equals(childAttr.getParentAttribute()))
-//                {
-//                    configurator.getTreeStore().removeNodeAttribute(childAttr.getId());
-//                    it.remove();
-//                }
-//            }
-//
-            if (newValue == null)
-                removeChildAttributes(attr.getName(), null);
-            else
+            AttributesGenerator attributesGenerator = (AttributesGenerator)converter.convert(
+                        parent.getType(), parent.getValue(), null);
+
+            Collection<NodeAttribute> newAttrs = attributesGenerator.generateAttributes();
+
+            removeChildAttributes(parent.getName(), newAttrs);
+
+            if (newAttrs != null)
             {
-                AttributesGenerator attributesGenerator = (AttributesGenerator)converter.convert(
-                            attr.getType(), newValue, null);
-
-                Collection<NodeAttribute> newAttrs = attributesGenerator.generateAttributes();
-                
-                removeChildAttributes(attr.getName(), newAttrs);
-                
-                if (newAttrs != null)
+                for (NodeAttribute newAttr : newAttrs)
                 {
-                    for (NodeAttribute newAttr : newAttrs)
+                    if (nodeAttributes.containsKey(newAttr.getName()))
+                        continue;
+
+                    NodeAttribute clone = null;
+                    try
                     {
-                        if (nodeAttributes.containsKey(newAttr.getName()))
-                            continue;
-                        
-                        NodeAttribute clone = null;
-                        try
-                        {
-                            clone = (NodeAttribute) newAttr.clone();
-                        } catch (CloneNotSupportedException ex)
-                        {
-                            throw new NodeError(String.format(
-                                    "Error in the node (%s). Attribute (%s) clone error"
-                                    , getPath(), clone.getName()), ex);
-                        }
-                        clone.setOwner(this);
-                        clone.setParentAttribute(attr.getName());
-
-                        configurator.getTreeStore().saveNodeAttribute(clone);
-
-                        addNodeAttribute(clone);
+                        clone = (NodeAttribute) newAttr.clone();
+                    } catch (CloneNotSupportedException ex)
+                    {
+                        throw new NodeError(String.format(
+                                "Error in the node (%s). Attribute (%s) clone error"
+                                , getPath(), clone.getName()), ex);
                     }
+                    clone.setOwner(this);
+                    clone.setParentAttribute(parent.getName());
+
+                    configurator.getTreeStore().saveNodeAttribute(clone);
+
+                    addNodeAttribute(clone);
                 }
             }
         }
@@ -768,7 +772,9 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
             NodeAttribute childAttr = it.next().getValue();
             if (parentName.equals(childAttr.getParentAttribute()))
             {
+                boolean removeAttr = true;
                 if (leaveAttributes!=null)
+                {
                     for (NodeAttribute attr: leaveAttributes)
                         if (   childAttr.getName().equals(attr.getName()) 
                             && (  attr.getType().isAssignableFrom(childAttr.getType()))
@@ -776,10 +782,15 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
                                     && attr.getType().isAssignableFrom(
                                        childAttr.getAttributeReference().getAttribute().getType())))
                         {
-                            continue;
+                            removeAttr = false;
+                            break;
                         }
-                configurator.getTreeStore().removeNodeAttribute(childAttr.getId());
-                it.remove();
+                }
+                if (removeAttr)
+                {
+                    configurator.getTreeStore().removeNodeAttribute(childAttr.getId());
+                    it.remove();
+                }
             }
         }
         

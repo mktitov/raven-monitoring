@@ -15,32 +15,31 @@
  *  under the License.
  */
 
-package org.raven;
+package org.raven.impl;
 
-import java.util.Collection;
-import org.raven.tree.Node;
+import java.util.ArrayList;
+import java.util.List;
+import org.raven.tree.AttributeReferenceValues;
 import org.raven.tree.NodeAttribute;
+import org.weda.internal.annotations.Service;
+import org.weda.services.TypeConverter;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class Helper 
+public class EnumReferenceValues implements AttributeReferenceValues
 {
-    private Helper(){}
+    @Service
+    private static TypeConverter converter;
     
-    public static boolean checkAttributes(
-            Node whoCheck, Collection<NodeAttribute> reqAttrs, Node testNode)
+    public List<String> getReferenceValues(NodeAttribute attr)
     {
-        for (NodeAttribute attr: reqAttrs)
-            if (testNode.getNodeAttribute(attr.getName())==null)
-            {
-                whoCheck.getLogger().error(
-                        String.format(
-                            "Node (%s) does not have required attribute (%s)"
-                            , testNode.getPath(), attr.getName()));
-                return false;
-            }
-        return true;
+        Object[] values = attr.getType().getEnumConstants();
+        List<String> result = new ArrayList<String>(values.length);
+        for (Object value: values)
+            result.add(converter.convert(String.class, value, null));
+        
+        return result;
     }
 }

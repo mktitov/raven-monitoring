@@ -26,6 +26,7 @@ import org.weda.constraints.ConstraintException;
  * @author Mikhail Titov
  */
 //TODO: add isVisible method
+//TODO: add isReadOnly functionality
 public interface NodeAttribute extends Cloneable
 {
     /**

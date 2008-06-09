@@ -108,6 +108,7 @@ public class SnmpNodeTest extends ServiceTestCase
     }
     
     @Test
+    @Ignore
     public void tableReadTest() throws Exception
     {
         UdpAddress addr = new UdpAddress("127.0.0.1/161");

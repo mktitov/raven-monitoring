@@ -337,6 +337,8 @@ public class TreeServiceTest extends ServiceTestCase
         assertNotNull(attr);
         assertEquals("node", attr.getParentAttribute());
         assertSame(node, node1.getNode());
+        attr.setValue("testVal");
+        store.saveNodeAttribute(attr);
         
         tree.reloadTree();
         
@@ -346,6 +348,17 @@ public class TreeServiceTest extends ServiceTestCase
         attr = node1.getNodeAttribute("gAttr");
         assertNotNull(attr);
         assertEquals("node", attr.getParentAttribute());
+        assertEquals("testVal", attr.getValue());
+        assertEquals(node, node1.getNode());
+        
+        store.removeNodeAttribute(attr.getId());
+        tree.reloadTree();
+        node1 = (NodeWithNodeParameter) tree.getRootNode().getChildren("node");
+        assertNotNull(node1);
+        attr = node1.getNodeAttribute("gAttr");
+        assertNotNull(attr);
+        assertEquals("node", attr.getParentAttribute());
+        assertNull(attr.getValue());
         assertEquals(node, node1.getNode());
         
         node1.getNodeAttribute("node").setValue(null);

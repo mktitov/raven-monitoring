@@ -61,9 +61,18 @@ public class SnmpNode extends AbstractDataSource
     public void getDataImmediate(DataConsumer dataConsumer)
     {
         if (!checkDataConsumer(dataConsumer))
+        {
+            if (logger.isDebugEnabled())
+                logger.debug(String.format(
+                        "Skiping gathering data for data consumer (%s). Data consumer not ready"
+                        , dataConsumer.getPath()));
             return;
+        }
         try
         {
+            if (logger.isDebugEnabled())
+                logger.debug(String.format(
+                        "Gathering data for data consumer (%s)", dataConsumer.getPath()));
             String host = dataConsumer.getNodeAttribute(HOST_ATTR).getRealValue();
             Integer port = dataConsumer.getNodeAttribute(PORT_ATTR).getRealValue();
             SnmpVersion version = dataConsumer.getNodeAttribute(VERSION_ATTR).getRealValue();

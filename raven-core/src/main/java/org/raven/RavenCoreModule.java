@@ -25,6 +25,7 @@ import org.raven.conf.impl.ConfiguratorImpl;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.DataSourceReferenceValues;
 import org.raven.impl.AttributeReferenceToStringConverter;
+import org.raven.impl.EnumReferenceValues;
 import org.raven.impl.NodeToStringConverter;
 import org.raven.impl.SnmpVariableToNumberConverter;
 import org.raven.impl.StringToAttributeReferenceConverter;
@@ -82,5 +83,6 @@ public class RavenCoreModule
     {
         conf.add(TemplateVariable.class, new TemplateVariableReferenceValues());
         conf.add(DataSource.class, new DataSourceReferenceValues());
+        conf.add(Enum.class, new EnumReferenceValues());
     }
 }

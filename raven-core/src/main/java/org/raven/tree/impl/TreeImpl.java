@@ -42,6 +42,8 @@ import org.raven.tree.Tree;
 import org.raven.tree.TreeError;
 import org.raven.tree.store.TreeStore;
 import org.raven.tree.store.TreeStoreError;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.weda.internal.exception.NullParameterError;
 import org.weda.internal.services.ResourceProvider;
 
@@ -51,6 +53,8 @@ import org.weda.internal.services.ResourceProvider;
  */
 public class TreeImpl implements Tree
 {
+    protected Logger logger = LoggerFactory.getLogger(Node.class);
+    
     public static Tree INSTANCE;
     
     private final Configurator configurator;
@@ -127,6 +131,7 @@ public class TreeImpl implements Tree
 
     public void reloadTree() throws TreeStoreError
     {
+        logger.info("Reloading tree");
         shutdown();
         rootNode = null;
     
@@ -281,6 +286,8 @@ public class TreeImpl implements Tree
 
     private void initNode(Node node, boolean autoStart)
     {
+        if (logger.isDebugEnabled())
+            logger.debug(String.format("Initializing node (%s)", node.getPath()));
         if (!node.isInitializeAfterChildrens())
         {
             node.init();

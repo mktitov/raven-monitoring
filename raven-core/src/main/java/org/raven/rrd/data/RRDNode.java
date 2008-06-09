@@ -181,6 +181,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
                     if (stepsBetween>0)
                     {
                         long lastTime = sample.getTime();
+                        tuneSampleTime();
                         sample.update();
                         sample.setTime(sample.getTime()+stepsBetween*step);
                     }
@@ -219,6 +220,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
     public void setStep(long step)
     {
         this.step = step;
+//        RrdToolkit.
     }
 
     public boolean isBackup()
