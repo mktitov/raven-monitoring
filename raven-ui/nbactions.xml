@@ -13,6 +13,7 @@
             </goals>
             <properties>
                 <netbeans.deploy.clientUrlPart>faces/index.jspx</netbeans.deploy.clientUrlPart>
+                <raven.properties>/home/tim/raven.cfg</raven.properties>
             </properties>
         </action>
         <action>

@@ -52,7 +52,7 @@ public class AuthFilter implements Filter
     	Registry registry = RavenRegistry.getRegistry();
 		org.raven.conf.Configurator configurator = registry.getService(Configurator.class);
 		try { config = configurator.getConfig(); }
-        catch(Exception e) { throw new ServletException("init filter: " + e.getMessage()); }
+        catch(Exception e) { throw new ServletException("init filter: " + e.getMessage(), e); }
         domain = config.getStringProperty(Configurator.WIN_DOMAIN, domain);
         testMode = config.getBooleanProperty(Configurator.TEST_MODE, Boolean.FALSE);
         if(testMode) domain = TEST_DOMAIN;
