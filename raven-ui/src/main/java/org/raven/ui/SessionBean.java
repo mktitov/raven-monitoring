@@ -103,7 +103,15 @@ public class SessionBean
 		wrapper.createNewAttribute();
 	}
 
-	 public String send()
+	public void reloadLeftFrame()
+	{
+		 FacesContext facesContext = FacesContext.getCurrentInstance();
+		 ExtendedRenderKitService service = (ExtendedRenderKitService)
+		 Service.getRenderKitService(facesContext, ExtendedRenderKitService.class);
+		 service.addScript(facesContext, "parent.frames.frame1.location.href=parent.frames.frame1.location.href");
+	}
+	
+	 public String reloadBothFrames()
 	  {
 		 FacesContext facesContext = FacesContext.getCurrentInstance();
 		 ExtendedRenderKitService service = (ExtendedRenderKitService)
@@ -179,8 +187,8 @@ public class SessionBean
 		if(getCurrentNode()==null || !getCurrentNode().equals(currentNode))
 		{
 			wrapper.setNode(currentNode);
-			send();
-		}
+			reloadBothFrames();
+		} else reloadLeftFrame();
 	}
 	
 	public String createNode()
