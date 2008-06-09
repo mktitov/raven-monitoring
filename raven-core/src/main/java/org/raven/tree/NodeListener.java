@@ -43,4 +43,10 @@ public interface NodeListener extends NodeAttributeListener
      * @param newName the new name of the node
      */
     public void nodeNameChanged(Node node, String oldName, String newName);
+    /**
+     * Informs listener that the new children was added to the node
+     * @param owner the node to wich children was added
+     * @param children the node that added to the owner
+     */
+    public void childrenAdded(Node owner, Node children);
 }

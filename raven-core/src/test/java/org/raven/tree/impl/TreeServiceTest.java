@@ -246,17 +246,23 @@ public class TreeServiceTest extends ServiceTestCase
         node.addNodeAttribute(attr);
         attr.setOwner(node);
         
+        ContainerNode child = new ContainerNode("child");
+        
         NodeListener listener = createStrictMock(NodeListener.class);
         expect(listener.isSubtreeListener()).andReturn(false).anyTimes();
         listener.nodeStatusChanged(eq(node), eq(Status.CREATED), eq(Status.INITIALIZED));
         listener.nodeNameChanged(eq(node), eq("name"), eq("newName"));
         listener.nodeAttributeValueChanged(eq(node), eq(attr), eq("1"), eq("2"));
+        expect(listener.isSubtreeListener()).andReturn(false);
+        listener.childrenAdded(node, child);
+        
         replay(listener);
         
         node.addListener(listener);
         node.init();
         node.setName("newName");
         node.getNodeAttribute("attr").setValue("2");
+        node.addChildren(child);
         
         verify(listener);
     }
@@ -266,6 +272,7 @@ public class TreeServiceTest extends ServiceTestCase
     {
         NodeListener listener = createMock(NodeListener.class);
         expect(listener.isSubtreeListener()).andReturn(true).anyTimes();
+        listener.childrenAdded(isA(Node.class), isA(Node.class));
         replay(listener);
         
         Node parent = new ContainerNode();

@@ -262,6 +262,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
             for (NodeListener listener: listeners)
                 if (listener.isSubtreeListener())
                     node.addListener(listener);
+        fireChildrenAdded(node);
     }
 
     public void removeChildren(Node node)
@@ -563,6 +564,14 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
         }
     }
     
+    private void fireChildrenAdded(Node children)
+    {
+        if (listeners!=null)
+            for (NodeListener listener: listeners)
+                listener.childrenAdded(this, children);
+    }
+
+    
     /**
      * Method returns the first not null value of the attribute, with name passed in the 
      * <code>attributeName</code> parameter, of the nearest parent or null if parents does not
@@ -862,6 +871,10 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     }
 
     public void nodeAttributeNameChanged(NodeAttribute attribute, String oldName, String newName)
+    {
+    }
+
+    public void childrenAdded(Node owner, Node children)
     {
     }
 
