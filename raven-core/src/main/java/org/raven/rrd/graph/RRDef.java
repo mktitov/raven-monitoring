@@ -37,6 +37,7 @@ public class RRDef extends LeafNode implements DataDefinition
     @Parameter()
     @Description("The reference to the rrd data source from which data will be taken")
     @NotNull
+    //TODO: add RRDataSourceReferenceValues
     private RRDataSource dataSource;
     
     @Parameter

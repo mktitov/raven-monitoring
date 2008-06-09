@@ -15,7 +15,7 @@
  *  under the License.
  */
 
-package org.raven.impl;
+package org.raven.table;
 
 import java.util.ArrayList;
 import java.util.HashMap;

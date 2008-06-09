@@ -23,7 +23,7 @@ import org.raven.Table;
 import org.raven.annotations.NodeClass;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.impl.AbstractDataSource;
-import org.raven.impl.TableImpl;
+import org.raven.table.TableImpl;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
 import org.raven.tree.impl.DataSourcesNode;
