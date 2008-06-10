@@ -18,23 +18,34 @@
 package org.raven;
 
 import org.apache.tapestry.ioc.RegistryBuilder;
-import org.junit.Test;
+import org.junit.Before;
+import org.raven.conf.Configurator;
+import org.raven.tree.Tree;
+import org.raven.tree.store.TreeStore;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class TableNodeTest extends ServiceTestCase
+public class RavenCoreTestCase extends ServiceTestCase
 {
+    protected Tree tree;
+    protected Configurator configurator;
+    protected TreeStore store;
+    
     @Override
     protected void configureRegistry(RegistryBuilder builder)
     {
         builder.add(RavenCoreModule.class);
     }
     
-    @Test
-    public void test()
+    @Before
+    public void initTest()
     {
-        
+        tree = registry.getService(Tree.class);
+        assertNotNull(tree);
+        configurator = registry.getService(Configurator.class);
+        assertNotNull(configurator);
+        store = configurator.getTreeStore();
     }
 }

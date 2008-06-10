@@ -396,4 +396,36 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
         value = converter.convert(String.class, attributeReference, null);
         configurator.getTreeStore().saveNodeAttribute(this);
     }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj == null)
+        {
+            return false;
+        }
+        if (getClass() != obj.getClass())
+        {
+            return false;
+        }
+        final NodeAttributeImpl other = (NodeAttributeImpl) obj;
+        if (this.id != other.id)
+        {
+            return false;
+        }
+        if (this.name != other.name && (this.name == null || !this.name.equals(other.name)))
+        {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int hash = 5;
+        hash = 79 * hash + this.id;
+        return hash;
+    }
+    
 }

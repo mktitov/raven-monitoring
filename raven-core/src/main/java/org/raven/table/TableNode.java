@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -35,7 +36,7 @@ import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
 import org.weda.annotations.Description;
-
+import org.weda.beans.ObjectUtils;
 /**
  *
  * @author Mikhail Titov
@@ -88,7 +89,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
                     table = (Table) data;
                 else
                 {
-                    //
+                    processData(data);
                 }
             } finally {
                 dataLock.unlock();
@@ -104,6 +105,8 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
 
     public void configure()
     {
+        if (getStatus()!=Status.STARTED)
+            return;
         try
         {
             if (dataLock.tryLock(500, TimeUnit.MILLISECONDS))
@@ -116,7 +119,11 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
                     
                     needTableForConfiguration = true;
                     table = null;
-                    getDataSource().getDataImmediate(this);
+                    try{
+                        getDataSource().getDataImmediate(this);
+                    }finally{
+                        needTableForConfiguration = false;
+                    }
                     
                     if (table==null)
                         throw new NodeError(String.format(
@@ -147,31 +154,84 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
         }
     }
 
+    private void processData(Object data)
+    {
+        Set<Node> deps = getDependentNodes();
+        if (deps==null || deps.size()==0)
+            return;
+        Map<String, List<DataConsumer>> consumers = new HashMap<String, List<DataConsumer>>();
+        for (Node dep: deps)
+        {
+            if (dep instanceof DataConsumer)
+            {
+                NodeAttribute colName = dep.getNodeAttribute(TableNodeTemplate.TABLE_COLUMN_NAME);
+                if (colName==null || colName.getValue()==null)
+                    ((DataConsumer)dep).setData(this, data);
+                else
+                {
+                    String name = colName.getValue();
+                    List<DataConsumer> list = consumers.get(name);
+                    if (list==null)
+                    {
+                        list = new ArrayList<DataConsumer>(2);
+                        consumers.put(name, list);
+                    }
+                    list.add((DataConsumer)dep);
+                }
+            }
+        }
+        Table tab = (Table) data;
+        if (tab.getRowCount()>0 && consumers.size()>0)
+            for (int row=0; row<tab.getRowCount(); ++row)
+            {
+                for (Map.Entry<String, List<DataConsumer>> entry: consumers.entrySet())
+                {
+                    Object value = tab.getValue(entry.getKey(), row);
+                    for (DataConsumer consumer: entry.getValue())
+                        consumer.setData(this, value);
+                }
+            }
+    }
+
     private void tuneNode(TableNode tableNode, StrSubstitutor subst, Node newNode)
     {
-        newNode.setName(subst.replace(newNode.getName()));
+        String newName = subst.replace(newNode.getName());
+        if (!newName.equals(newNode.getName()))
+        {
+            newNode.setName(newName);
+            configurator.getTreeStore().saveNode(newNode);
+        }
         
         if (getNodeAttributes()!=null)
         {
-            List<NodeAttribute> attrs = new ArrayList<NodeAttribute>(getNodeAttributes());
+            List<NodeAttribute> attrs = new ArrayList<NodeAttribute>(newNode.getNodeAttributes());
             for (NodeAttribute attr: attrs)
             {
-                attr.setName(subst.replace(attr.getName()));
-                attr.setRawValue(subst.replace(attr.getRawValue()));
+                boolean hasChanges = false;
+                String newVal = subst.replace(attr.getName());
+                if (!ObjectUtils.equals(newVal, attr.getName()))
+                {
+                    attr.setName(newVal);
+                    hasChanges = true;
+                }
+                newVal = subst.replace(attr.getRawValue());
+                if (!ObjectUtils.equals(newVal, attr.getRawValue()))
+                {
+                    hasChanges = true;
+                    attr.setRawValue(newVal);
+                }
+                newVal = subst.replace(attr.getDescription());
+                if (!ObjectUtils.equals(newVal, attr.getDescription()))
+                {
+                    hasChanges = true;
+                    attr.setDescription(newVal);
+                }
+                if (hasChanges)
+                    configurator.getTreeStore().saveNodeAttribute(attr);
             }
         }
         
-//        if (newNode instanceof AbstractDataConsumer)
-//        {
-//            NodeAttribute tableColumnNameAttr = 
-//                    newNode.getNodeAttribute(TableNodeTemplate.TABLE_COLUMN_NAME);
-//            if (tableColumnNameAttr!=null && tableColumnNameAttr.getValue()!=null)
-//            {
-//                
-//            }
-//        }
-        
-        Collection<Node> childs = getChildrens();
+        Collection<Node> childs = newNode.getChildrens();
         if (childs!=null)
             for (Node child: childs)
                 tuneNode(tableNode, subst, child);
