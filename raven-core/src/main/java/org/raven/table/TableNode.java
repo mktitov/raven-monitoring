@@ -28,6 +28,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.raven.annotations.NodeClass;
+import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.DataPipeImpl;
@@ -36,6 +37,7 @@ import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
 import org.weda.annotations.Description;
+import org.weda.annotations.constraints.NotNull;
 import org.weda.beans.ObjectUtils;
 /**
  *
@@ -45,6 +47,11 @@ import org.weda.beans.ObjectUtils;
 @Description("Allows to create child nodes dynamically")
 public class TableNode extends DataPipeImpl implements ConfigurableNode
 {
+    @Parameter
+    @NotNull
+    @Description("The table column name which is the index column for this node")
+    private String indexColumnName;
+    
     private final Lock dataLock = new ReentrantLock();
     private TableNodeTemplate template;
     private boolean needTableForConfiguration = false;
@@ -64,6 +71,16 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
             template.init();
             template.start();
         }
+    }
+
+    public String getIndexColumnName()
+    {
+        return indexColumnName;
+    }
+
+    public void setIndexColumnName(String indexColumnName)
+    {
+        this.indexColumnName = indexColumnName;
     }
 
     @Override
@@ -115,7 +132,15 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
                     Collection<Node> templateNodes = template.getChildrens();
 
                     if (templateNodes==null || templateNodes.size()==0)
-                        return;
+                        throw new NodeError("Template node must be created");
+                    
+                    if (templateNodes.size()>1)
+                        throw new NodeError("Only one node must created in the template");
+                    
+                    Node templateNode = templateNode.getChildrens().iterator().next();
+                    NodeAttribute indexColAttr = 
+                            templateNode.getNodeAttribute(TableNodeTemplate.TABLE_COLUMN_NAME);
+                    if (indexCol)
                     
                     needTableForConfiguration = true;
                     table = null;
