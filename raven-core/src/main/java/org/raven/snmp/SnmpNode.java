@@ -175,8 +175,9 @@ public class SnmpNode extends AbstractDataSource
             
             if (var.getOid().startsWith(tableOID))
             {
-                var.getOid().removeLast();
-                String columnName = var.toString();
+                OID columnOid = new OID(var.getOid());
+                columnOid.removeLast();
+                String columnName = columnOid.toString();
                 table.addValue(columnName, var.getVariable());
             }
             else

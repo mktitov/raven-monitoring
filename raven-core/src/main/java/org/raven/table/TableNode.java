@@ -52,8 +52,8 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
 {
     public final static String INDEX_COLUMN_VALUE = "tableIndexColumnValue";
 
-    public enum AddPolicy {DONT_ADD, AUTO_ADD, AUTO_ADD_AND_START}
-    public enum RemovePolicy {DONT_REMOVE, STOP_NODE, AUTO_REMOVE}
+    public enum AddPolicy {DO_NOTHING, AUTO_ADD, AUTO_ADD_AND_START}
+    public enum RemovePolicy {DO_NOTHING, STOP_NODE, AUTO_REMOVE}
     
     @Parameter
     @NotNull
@@ -63,7 +63,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
     @Parameter
     @NotNull
     @Description("Add policy")
-    private AddPolicy addPolicy = AddPolicy.DONT_ADD;
+    private AddPolicy addPolicy = AddPolicy.DO_NOTHING;
     
     @Parameter
     @NotNull
@@ -350,7 +350,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
     
     private void processRemoveOperation(Map<String, Node> indexValues, Set<String> indexesInTable)
     {
-        if (removePolicy==RemovePolicy.DONT_REMOVE)
+        if (removePolicy==RemovePolicy.DO_NOTHING)
             return;
         for (Map.Entry<String, Node> entry: indexValues.entrySet())
         {

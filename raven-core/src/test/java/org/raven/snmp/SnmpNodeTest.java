@@ -28,6 +28,7 @@ import org.raven.ServiceTestCase;
 import org.raven.conf.Configurator;
 import org.raven.ds.impl.AbstractDataSource;
 import org.raven.snmp.objects.SnmpDataConsumer;
+import org.raven.table.Table;
 import org.raven.tree.Node.Status;
 import org.raven.tree.Tree;
 import org.raven.tree.store.TreeStore;
@@ -43,6 +44,7 @@ import org.snmp4j.smi.UdpAddress;
 import org.snmp4j.smi.VariableBinding;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.weda.constraints.ConstraintException;
+import org.weda.services.TypeConverter;
 
 /**
  *
@@ -52,6 +54,7 @@ public class SnmpNodeTest extends ServiceTestCase
 {
     private Tree tree;
     private TreeStore store;
+    private TypeConverter converter;
     
     @Before
     public void initTest()
@@ -59,6 +62,7 @@ public class SnmpNodeTest extends ServiceTestCase
         tree = registry.getService(Tree.class);
         store = registry.getService(Configurator.class).getTreeStore();
         store.removeNodes();
+        converter = registry.getService(TypeConverter.class);
     }
     
     @Override
@@ -139,7 +143,7 @@ public class SnmpNodeTest extends ServiceTestCase
                 VariableBinding var = vars.get(0);
                 System.out.println(""+var.getOid()+"="+var.getVariable().toString());
                 pdu.setType(PDU.GETNEXT);
-            } while (((VariableBinding)pdu.getVariableBindings().get(0)).getOid().startsWith(tableOID));
+            } while ( ((VariableBinding)pdu.getVariableBindings().get(0)).getOid().startsWith(tableOID) );
         }finally
         {
             transport.close();
@@ -148,7 +152,7 @@ public class SnmpNodeTest extends ServiceTestCase
     
     @Ignore
     @Test
-    public void test() throws ConstraintException, InterruptedException 
+    public void singleValueTest() throws ConstraintException, InterruptedException 
     {
         SnmpNode snmpNode = new SnmpNode();
         snmpNode.setName("snmp");
@@ -180,4 +184,51 @@ public class SnmpNodeTest extends ServiceTestCase
         assertNotNull(consumer.getData());
         assertSame(snmpNode, consumer.getSource());
     }
+    
+    @Test
+    public void tableValueTest() throws ConstraintException, InterruptedException 
+    {
+        store.removeNodes();
+        tree.reloadTree();
+        
+        SnmpNode snmpNode = new SnmpNode();
+        snmpNode.setName("snmp");
+        tree.getRootNode().addChildren(snmpNode);
+        store.saveNode(snmpNode);
+        snmpNode.init();
+        snmpNode.start();
+        assertEquals(Status.STARTED, snmpNode.getStatus());
+        
+        SnmpDataConsumer consumer = new SnmpDataConsumer();
+        consumer.setName("snmp-consumer");
+        tree.getRootNode().addChildren(consumer);
+        store.saveNode(consumer);
+        consumer.init();
+        
+        consumer.setDataSource(snmpNode);
+        consumer.getNodeAttribute(AbstractDataSource.INTERVAL_ATTRIBUTE).setValue("2");
+        consumer.getNodeAttribute(AbstractDataSource.INTERVAL_UNIT_ATTRIBUTE).setValue(
+                TimeUnit.SECONDS.toString());
+        consumer.getNodeAttribute(SnmpNode.HOST_ATTR).setValue("localhost");
+        consumer.getNodeAttribute(SnmpNode.OID_ATTR).setValue(".1.3.6.1.2.1.2.2");
+        consumer.getNodeAttribute(
+                SnmpNode.OID_TYPE_ATTR).setValue(SnmpNode.OidType.TABLE.toString());
+        
+        consumer.start();
+        assertEquals(Status.STARTED, consumer.getStatus());
+        snmpNode.getDataImmediate(consumer);
+        TimeUnit.SECONDS.sleep(3);
+        
+        snmpNode.stop();
+        
+        assertSame(snmpNode, consumer.getSource());
+        assertNotNull(consumer.getData());
+        assertTrue(consumer.getData() instanceof Table);
+        
+        Table table = (Table) consumer.getData();
+        Object val = table.getValue("1.3.6.1.2.1.2.2.1.2", 0);
+        assertNotNull(val);
+        assertEquals("lo", converter.convert(String.class, val, null));
+    }
+    
 }

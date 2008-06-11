@@ -18,7 +18,6 @@
 package org.raven.table;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.raven.*;
 import org.junit.Test;
 import org.raven.table.objects.ColumnValueDataConsumer;
@@ -176,7 +175,7 @@ public class TableNodeTest extends RavenCoreTestCase
         checkDataConsumers(table, 1, 1, 1);
         checkDataConsumers(table, 2, 1, 1);
         
-        table.setAddPolicy(TableNode.AddPolicy.DONT_ADD);
+        table.setAddPolicy(TableNode.AddPolicy.DO_NOTHING);
         ds.pushDataWithNewRow();
         
         checkDataConsumers(table, 1, 2, 2);
@@ -208,11 +207,29 @@ public class TableNodeTest extends RavenCoreTestCase
         checkDataConsumers(table, 2, 5, 5);
         checkDataConsumers(table, 3, 1, 1);
         
-        table.setRemovePolicy(TableNode.RemovePolicy.DONT_REMOVE);
+        table.setRemovePolicy(TableNode.RemovePolicy.DO_NOTHING);
         ds.pushData();
         checkDataConsumers(table, 1, 6, 6);
         checkDataConsumers(table, 2, 6, 6);
         checkDataConsumers(table, 3, 2, 1);
+        
+        table.setRemovePolicy(TableNode.RemovePolicy.STOP_NODE);
+        ds.pushData();
+        checkDataConsumers(table, 1, 7, 7);
+        checkDataConsumers(table, 2, 7, 7);
+        checkDataConsumers(table, 3, 3, 1);
+        node = (ContainerNode) table.getChildren("node-value1_3");
+        assertNotNull(node);
+        assertEquals(Status.INITIALIZED, node.getStatus());
+        tree.start(node);
+        
+        table.setRemovePolicy(TableNode.RemovePolicy.AUTO_REMOVE);
+        ds.pushData();
+        checkDataConsumers(table, 1, 8, 8);
+        checkDataConsumers(table, 2, 8, 8);
+        node = (ContainerNode) table.getChildren("node-value1_3");
+        assertNull(node);
+        
     }
 
     private void checkDataConsumers(
