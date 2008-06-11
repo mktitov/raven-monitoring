@@ -76,12 +76,17 @@ public interface Tree
             Node source, Node destination, String newNodeName, NodeTuner nodeTuner
             , boolean store, boolean validateNodeType);
     /**
-     * Starts all nodes in subtree starting from the <code>node</code> passed in the parameter.
+     * Starts all nodes in the subtree starting from the <code>node</code> passed in the parameter.
      * @param node the starting point.
      */
     public void start(Node node);
     /**
+     * Stops all nodes in the subtree starting from the <code>node</code> passed in the parameter.
+     */
+    public void stop(Node node);
+    /**
      * Returns the list of the template nodes or empty list if no template nodes in the tree.
      */
     public List<Node> getTempltateNodes();
+
 }

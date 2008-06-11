@@ -28,10 +28,12 @@ public class ColumnValueDataConsumer extends AbstractDataConsumer
 {
     public DataSource sourceDataSource = null;
     public Object value = null;
+    public int executionCount = 0;
     
     public void setData(DataSource dataSource, Object data)
     {
         sourceDataSource = dataSource;
         value = data;
+        ++executionCount;
     }
 }

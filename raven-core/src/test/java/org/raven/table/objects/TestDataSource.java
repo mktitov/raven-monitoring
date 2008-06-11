@@ -20,6 +20,7 @@ package org.raven.table.objects;
 import java.util.Collection;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
+import org.raven.table.Table;
 import org.raven.table.TableImpl;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -43,12 +44,7 @@ public class TestDataSource extends BaseNode implements DataSource
     
     public void getDataImmediate(DataConsumer dataConsumer)
     {
-        TableImpl table = new TableImpl();
-        table.addValue("column1", "value1_1");
-        table.addValue("column1", "value1_2");
-        
-        table.addValue("column2", "value2_1");
-        table.addValue("column2", "value2_2");
+        Table table = createTable();
         
         dataConsumer.setData(this, table);
     }
@@ -57,8 +53,8 @@ public class TestDataSource extends BaseNode implements DataSource
     {
         if (getDependentNodes()==null)
             throw new Exception("No dependencies to the data source");
-        TableImpl table = new TableImpl();
-        table.addValue("column1", "value1_1");
+        
+        Table table = createTable();
         for (Node node: getDependentNodes())
         {
             if (node instanceof DataConsumer)
@@ -69,5 +65,32 @@ public class TestDataSource extends BaseNode implements DataSource
     public Collection<NodeAttribute> generateAttributes()
     {
         return null;
+    }
+
+    public void pushDataWithNewRow() throws Exception
+    {
+        if (getDependentNodes()==null)
+            throw new Exception("No dependencies to the data source");
+        
+        Table table = createTable();
+        table.addValue("column1", "value1_3");
+        table.addValue("column2", "value2_3");
+        for (Node node: getDependentNodes())
+        {
+            if (node instanceof DataConsumer)
+                ((DataConsumer)node).setData(this, table);
+        }
+    }
+    
+    private Table createTable()
+    {
+        Table table = new TableImpl();
+        table.addValue("column1", "value1_1");
+        table.addValue("column1", "value1_2");
+        
+        table.addValue("column2", "value2_1");
+        table.addValue("column2", "value2_2");        
+        
+        return table;
     }
 }

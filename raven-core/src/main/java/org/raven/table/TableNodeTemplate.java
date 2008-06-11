@@ -35,6 +35,7 @@ public class TableNodeTemplate extends TemplateEntry
 {
     public final static String NAME="Template";
     public final static String TABLE_COLUMN_NAME = "tableColumnName";
+    public final static String TABLE_INDEX_COLUMN_NAME = "indexTableColumnName";
 
     public TableNodeTemplate()
     {
@@ -45,14 +46,26 @@ public class TableNodeTemplate extends TemplateEntry
     @Override
     public void nodeStatusChanged(Node node, Status oldStatus, Status newStatus)
     {
-        if (newStatus==Status.INITIALIZED && node.getNodeAttribute(TABLE_COLUMN_NAME)==null)
+        if (newStatus==Status.INITIALIZED)
         {
-            NodeAttribute attr = new NodeAttributeImpl(
-                    TABLE_COLUMN_NAME, String.class, null
-                    , "The reference to the table column name");
-            attr.setOwner(node);
-            node.addNodeAttribute(attr);
-            configurator.getTreeStore().saveNodeAttribute(attr);
+            if (node.getNodeAttribute(TABLE_COLUMN_NAME)==null)
+            {
+                NodeAttribute attr = new NodeAttributeImpl(
+                        TABLE_COLUMN_NAME, String.class, null
+                        , "The reference to the table column name");
+                attr.setOwner(node);
+                node.addNodeAttribute(attr);
+                configurator.getTreeStore().saveNodeAttribute(attr);
+            }
+//            if (node.getParent()==this && node.getNodeAttribute(TABLE_INDEX_COLUMN_NAME)==null)
+//            {
+//                NodeAttribute attr = new NodeAttributeImpl(
+//                        TABLE_INDEX_COLUMN_NAME, String.class, null
+//                        , "The reference to the table index column name");
+//                attr.setOwner(node);
+//                node.addNodeAttribute(attr);
+//                configurator.getTreeStore().saveNodeAttribute(attr);
+//            }
         }
     }
 

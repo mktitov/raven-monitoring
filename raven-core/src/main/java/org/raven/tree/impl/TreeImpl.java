@@ -155,7 +155,7 @@ public class TreeImpl implements Tree
         Collection<Node> childrens = node.getChildrens();
         
         if (childrens!=null)
-            for (Node children: childrens)
+            for (Node children: new ArrayList<Node>(childrens))
                 remove(children);
     
         
@@ -215,6 +215,16 @@ public class TreeImpl implements Tree
         if (node.getChildrens()!=null)
             for (Node child: node.getChildrens())
                 start(child);
+    }
+
+    public void stop(Node node)
+    {
+        if (node.getStatus()==Status.STARTED)
+            node.stop();
+        
+        if (node.getChildrens()!=null)
+            for (Node child: node.getChildrens())
+                stop(child);
     }
 
     public List<String> getReferenceValuesForAttribute(NodeAttribute attr)
