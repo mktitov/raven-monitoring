@@ -1,5 +1,5 @@
 /*
- *  Copyright 2008 Mikhail Titov.
+ *  Copyright 2008 tim.
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,16 +15,23 @@
  *  under the License.
  */
 
-package org.raven.tree.impl.objects;
+package org.raven.rrd;
 
 import org.raven.annotations.NodeClass;
-import org.raven.tree.impl.ContainerNode;
+import org.raven.rrd.data.RRDNode;
+import org.raven.template.TemplateEntry;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(childNodes=ChildNode3.class)
-public class NodeWithFixedChilds extends ContainerNode
+@NodeClass(parentNode=RRDatabaseManager.class, childNodes=RRDNode.class)
+public class RRDatabaseManagerTemplate extends TemplateEntry
 {
+    public final static String NAME = "Template";
+
+    public RRDatabaseManagerTemplate()
+    {
+        setName(NAME);
+    }
 }

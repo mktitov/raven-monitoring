@@ -139,6 +139,10 @@ public interface Node extends Cloneable
      */
     public Collection<Node> getChildrens();
     /**
+     * Returns <b>count</b> of the childrens in this node or <b>zero</b> if this node has not childrens.
+     */
+    public int getChildrenCount();
+    /**
      * Returns children nodes sorted by {@link #getIndex() index}. Method returns <code>null</code>
      * if this node has not childrens.
      */

@@ -39,6 +39,7 @@ import org.raven.tree.impl.objects.AnyParentNode;
 import org.raven.tree.impl.objects.AttributesGeneratorNode;
 import org.raven.tree.impl.objects.ChildNode1;
 import org.raven.tree.impl.objects.ChildNode2;
+import org.raven.tree.impl.objects.ChildNode3;
 import org.raven.tree.impl.objects.NodeWithFixedChilds;
 import org.raven.tree.impl.objects.NodeWithIntegerParameter;
 import org.raven.tree.impl.objects.NodeWithNodeParameter;
@@ -91,9 +92,10 @@ public class TreeServiceTest extends ServiceTestCase
         
         types = tree.getChildNodesTypes(NodeWithFixedChilds.class);
         assertNotNull(types);
-        assertEquals(2, types.size());
+        assertEquals(3, types.size());
         assertTrue(types.contains(ChildNode1.class));
-        assertTrue(types.contains(ChildNode1.class));
+        assertTrue(types.contains(ChildNode2.class));
+        assertTrue(types.contains(ChildNode3.class));
     }
     
     @Test()

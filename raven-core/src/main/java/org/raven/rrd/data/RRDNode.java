@@ -19,6 +19,7 @@ package org.raven.rrd.data;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -165,6 +166,17 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
                     "Error removing child node (%s) from the (%s) node", node.getPath(), getPath())
                     , e);
         }
+    }
+    
+    public int getDataSourceCount()
+    {
+        int count=0;
+        Collection<Node> childs = getChildrens();
+        if (childs!=null)
+            for (Node child: childs)
+                if (child instanceof RRDataSource)
+                    ++count;
+        return count;
     }
 
     public void setData(DataSource dataSource, Object data)

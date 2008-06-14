@@ -42,4 +42,5 @@ public @interface NodeClass
      * If parameter seted then annotated node can be added only to the node with specified type.
      */
     Class parentNode() default Void.class;
+    Class[] childNodes() default Void.class;
 }

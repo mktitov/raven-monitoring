@@ -251,6 +251,20 @@ public class TreeImpl implements Tree
         Collection<Node> result = templatesNode.getSortedChildrens();
         return result==null? Collections.EMPTY_LIST : new ArrayList<Node>(result);
     }
+
+    private void addChildsToParent(Class parent, Class... childs)
+    {
+
+        List<Class> childTypes = nodeTypes.get(parent);
+        if (childTypes == null)
+        {
+            childTypes = new ArrayList<Class>();
+            nodeTypes.put(parent, childTypes);
+        }
+        for (Class child: childs)
+            if (!child.equals(Void.class))
+                childTypes.add(child);
+    }
     
     private void createRootNode()
     {
@@ -371,13 +385,7 @@ public class TreeImpl implements Tree
         
         if (ann.anyChildTypes())
             anyChildTypeNodes.add(nodeType);
-        
-        List<Class> childTypes = nodeTypes.get(ann.parentNode());
-        if (childTypes==null)
-        {
-            childTypes = new ArrayList<Class>();
-            nodeTypes.put(ann.parentNode(), childTypes);
-        }
-        childTypes.add(nodeType);
+        addChildsToParent(ann.parentNode(), nodeType);
+        addChildsToParent(nodeType, ann.childNodes());
     }
 }

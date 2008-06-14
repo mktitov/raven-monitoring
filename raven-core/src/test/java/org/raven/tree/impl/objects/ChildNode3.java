@@ -18,13 +18,14 @@
 package org.raven.tree.impl.objects;
 
 import org.raven.annotations.NodeClass;
-import org.raven.tree.impl.ContainerNode;
+import org.raven.tree.impl.BaseNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(childNodes=ChildNode3.class)
-public class NodeWithFixedChilds extends ContainerNode
+@NodeClass(parentNode=ChildNode1.class)
+public class ChildNode3 extends BaseNode
 {
+    
 }

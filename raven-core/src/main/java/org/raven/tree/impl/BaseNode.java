@@ -368,6 +368,11 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
         return tree.getChildNodesTypes(getClass());
     }
 
+    public int getChildrenCount()
+    {
+        return childrens==null? 0 : childrens.size();
+    }
+    
     public Collection<Node> getChildrens()
     {
         return childrens==null? null : childrens.values();
