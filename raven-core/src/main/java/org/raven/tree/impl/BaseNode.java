@@ -268,7 +268,11 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     public void removeChildren(Node node)
     {
         if (childrens!=null)
-            childrens.remove(node.getName());
+        {
+            Node removedNode = childrens.remove(node.getName());
+            if (removedNode!=null && listeners!=null)
+                fireChildrenRemoved(removedNode);
+        }
     }
     
     public synchronized boolean addDependentNode(Node dependentNode)
@@ -340,6 +344,9 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
 
     public byte getLevel()
     {
+        level = 0; Node node = this;
+        while ( (node=node.getParent())!=null )
+            ++level;
         return level;
     }
 
@@ -411,14 +418,14 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     public void setParent(Node parent)
     {
         this.parent = parent;
-        byte oldLevel = level;
-        level = 0; Node node = this;
-        while ( (node=node.getParent())!=null )
-            ++level;
-        
-        if (level!=oldLevel && childrens!=null)
-            for (Node child: childrens.values())
-                child.setParent(this);
+//        byte oldLevel = level;
+//        level = 0; Node node = this;
+//        while ( (node=node.getParent())!=null )
+//            ++level;
+//        
+//        if (level!=oldLevel && childrens!=null)
+//            for (Node child: childrens.values())
+//                child.setParent(this);
     }
 
     public String getPath()
@@ -506,24 +513,36 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     protected void doInit()
     {
     }
+    
+    protected void doStart()
+    {
+    }
 
     public boolean start() throws NodeError
     {
-        if (isTemplate())
+        try
+        {
+            if (isTemplate())
+                return false;
+            if (nodeAttributes!=null)
+                for (NodeAttribute attr: nodeAttributes.values())
+                    if (attr.isRequired() && attr.getValue()==null)
+                    {
+                        logger.info(
+                                "Error switching node (%s) to the STARTED state. " +
+                                "Value for required attribute (%s) not seted "
+                                , getPath(), attr.getName());
+                        return false;
+                    }
+            doStart();
+            setStatus(Status.STARTED);
+        }catch (Exception e)
+        {
+            logger.error(
+                    String.format("Error starting node (%s)", getPath())
+                    , e);
             return false;
-        if (nodeAttributes!=null)
-            for (NodeAttribute attr: nodeAttributes.values())
-                if (attr.isRequired() && attr.getValue()==null)
-                {
-                    logger.info(
-                            "Error switching node (%s) to the STARTED state. " +
-                            "Value for required attribute (%s) not seted "
-                            , getPath(), attr.getName());
-                    return false;
-                }
-        
-        setStatus(Status.STARTED);
-        
+        }
         return true;
     }
 
@@ -576,7 +595,13 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
                 listener.childrenAdded(this, children);
     }
 
-    
+    private void fireChildrenRemoved(Node removedNode)
+    {
+        if (listeners!=null)
+            for (NodeListener listener: listeners)
+                listener.childrenRemoved(this, removedNode);
+    }
+
     /**
      * Method returns the first not null value of the attribute, with name passed in the 
      * <code>attributeName</code> parameter, of the nearest parent or null if parents does not
@@ -880,6 +905,10 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     }
 
     public void childrenAdded(Node owner, Node children)
+    {
+    }
+
+    public void childrenRemoved(Node owner, Node children)
     {
     }
 

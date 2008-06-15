@@ -186,6 +186,7 @@ public class SnmpNodeTest extends ServiceTestCase
     }
     
     @Test
+    @Ignore
     public void tableValueTest() throws ConstraintException, InterruptedException 
     {
         store.removeNodes();

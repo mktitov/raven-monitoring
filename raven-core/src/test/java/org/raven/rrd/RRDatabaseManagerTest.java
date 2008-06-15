@@ -17,16 +17,23 @@
 
 package org.raven.rrd;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
+import org.raven.ds.DataSource;
 import org.raven.ds.impl.DataPipeImpl;
 import org.raven.rrd.data.RRArchive;
 import org.raven.rrd.data.RRDNode;
 import org.raven.rrd.data.RRDataSource;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.NodeAttributeImpl;
 
 /**
  *
@@ -35,8 +42,10 @@ import org.raven.tree.impl.BaseNode;
 public class RRDatabaseManagerTest extends RavenCoreTestCase
 {
     RRDatabaseManager databaseManager;
-    DataPipeImpl source1;
-    DataPipeImpl source2;
+    DataPipeImpl source_d1;
+    DataPipeImpl source_i1;
+    DataPipeImpl source_i2;
+    DataPipeImpl source_i3;
     
     @Before
     public void prepareTest()
@@ -77,30 +86,127 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
     public void setStartingPointTest() 
     {
         initTemplate();
-        initDatasources();
+        Node sourcesRoot = initDatasources();
+        databaseManager.setDataSourcesPerDatabase(2);
+        databaseManager.setStartingPoint(sourcesRoot);
+        databaseManager.start();
+        checkDefaultEntry();
+        checkInterfaceEntry();
+        
+        tree.reloadTree();
+        
+        checkDefaultEntry();
+        checkInterfaceEntry();
+    }
+
+    private void checkDefaultEntry()
+    {
+        RRDatabaseManager databaseManager = 
+                (RRDatabaseManager) tree.getNode(this.databaseManager.getPath());
+        DatabasesEntry defaultEntry = (DatabasesEntry) databaseManager.getChildren(
+                RRDatabaseManager.DEFAULT_DATABASE_TEMPLATE);
+        assertNotNull(defaultEntry);
+        assertEquals(1, defaultEntry.getChildrenCount());
+        RRDNode rrd = (RRDNode) defaultEntry.getChildren("1");
+        assertNotNull(rrd);
+        assertEquals(Status.STARTED, rrd.getStatus());
+        assertEquals(2, rrd.getChildrenCount());
+
+        RRArchive archive = (RRArchive) rrd.getChildren("archive");
+        assertNotNull(archive);
+        assertEquals(Status.STARTED, archive.getStatus());
+
+        List<RRDataSource> sources = getRRDataSources(rrd);
+        assertEquals(1, sources.size());
+        assertEquals(Status.STARTED, sources.get(0).getStatus());
+        assertEquals(source_d1, sources.get(0).getDataSource());
     }
     
-    private void initDatasources()
+    private List<RRDataSource> getRRDataSources(RRDNode rrd)
+    {
+        List<RRDataSource> result = new ArrayList<RRDataSource>();
+        for (Node child: rrd.getChildrens())
+            if (child instanceof RRDataSource)
+                result.add((RRDataSource) child);
+        return result;
+    }
+
+    private void checkInterfaceEntry()
+    {
+        RRDatabaseManager databaseManager = 
+                (RRDatabaseManager) tree.getNode(this.databaseManager.getPath());
+        DatabasesEntry interfaceEntry = (DatabasesEntry) databaseManager.getChildren("interface");
+        assertNotNull(interfaceEntry);
+        assertEquals(2, interfaceEntry.getChildrenCount());
+        
+        Map<DataSource, Boolean> flags = new HashMap<DataSource, Boolean>();
+        for (DataSource dataSource: new DataSource[]{source_i1, source_i2, source_i3})
+            flags.put(dataSource, false);
+        
+        checkInterfaceDatabase(interfaceEntry, "1", 2, flags);
+        checkInterfaceDatabase(interfaceEntry, "2", 1, flags);
+        
+        for (Map.Entry<DataSource, Boolean> entry: flags.entrySet())
+            assertTrue(entry.getValue());
+    }
+    
+    private void checkInterfaceDatabase(
+            DatabasesEntry databaseEntry, String databaseName, int dsCount
+            , Map<DataSource, Boolean> flags)
+    {
+        RRDNode rrd = (RRDNode) databaseEntry.getChildren(databaseName);
+        assertNotNull(rrd);
+        assertEquals(Status.STARTED, rrd.getStatus());
+        assertEquals(dsCount+1, rrd.getChildrenCount());
+
+        RRArchive archive = (RRArchive) rrd.getChildren("archive");
+        assertNotNull(archive);
+        assertEquals(Status.STARTED, archive.getStatus());
+
+        for (RRDataSource datasource: getRRDataSources(rrd))
+        {
+            assertNotNull(datasource);
+            assertEquals(Status.STARTED, datasource.getStatus());
+            assertNotNull(datasource.getDataSource());
+            assertTrue(flags.containsKey(datasource.getDataSource()));
+            flags.put(datasource.getDataSource(), true);
+        }
+    }
+    
+    private Node initDatasources()
     {
         Node sourcesRoot = new BaseNode("sources");
         tree.getRootNode().addChildren(sourcesRoot);
         store.saveNode(sourcesRoot);
         sourcesRoot.init();
         
-        source1 = createSource(sourcesRoot, "source1");
+        source_d1 = createSource(sourcesRoot, "source_d1", "default");
+        source_i1 = createSource(sourcesRoot, "source_i1", "interface");
         
         Node groupNode = new BaseNode("other sources");
         sourcesRoot.addChildren(groupNode);
+        store.saveNode(groupNode);
+        groupNode.init();
         
+        source_i2 = createSource(groupNode, "source_i2", "interface");
+        source_i3 = createSource(groupNode, "source_i3", "interface");
         
+        return sourcesRoot;
     }
     
-    private DataPipeImpl createSource(Node parent, String sourceName)
+    private DataPipeImpl createSource(Node parent, String sourceName, String datatype)
     {
         DataPipeImpl source = new DataPipeImpl();
         source.setName(sourceName);
         parent.addChildren(source);
         store.saveNode(source);
+        source.init();
+        
+        NodeAttribute dataTypeAttr = new NodeAttributeImpl(
+                databaseManager.getDataTypeAttributeName(), String.class, datatype, null);
+        dataTypeAttr.setOwner(source);
+        source.addNodeAttribute(dataTypeAttr);
+        store.saveNodeAttribute(dataTypeAttr);
         
         return source;
     }
@@ -117,7 +223,7 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
     private void addDatabase(RRDatabaseManagerTemplate templatesNode, String databaseName)
     {
         RRDNode db = new RRDNode();
-        db.setName(RRDatabaseManager.DEFAULT_DATABASE_TEMPLATE);
+        db.setName(databaseName);
         templatesNode.addChildren(db);
         store.saveNode(db);
         db.init();

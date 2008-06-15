@@ -54,8 +54,9 @@ public class DatabasesEntry extends BaseNode
     {
         RRDataSource templateDataSource = getTemplateDataSource(template);
         RRDataSource rrds = (RRDataSource) tree.copy(
-                templateDataSource, rrd, ""+rrd.getChildrenCount()+1, null, true, false);
+                templateDataSource, rrd, ""+(rrd.getChildrenCount()+1), null, true, false);
         rrds.setDataSource(dataSource);
+        configurator.getTreeStore().saveNodeAttribute(rrds.getNodeAttribute("dataSource"));
         rrds.start();
     }
 
@@ -71,7 +72,9 @@ public class DatabasesEntry extends BaseNode
                 break;
             }
         rrds.setName(""+(db.getChildrenCount()+1));
+        configurator.getTreeStore().saveNode(rrds);
         rrds.setDataSource(dataSource);
+        configurator.getTreeStore().saveNodeAttribute(rrds.getNodeAttribute("dataSource"));
         tree.start(db);
     }
     
