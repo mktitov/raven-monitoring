@@ -71,7 +71,7 @@ public class DatabasesEntry extends BaseNode
                 rrds = (RRDataSource) child;
                 break;
             }
-        rrds.setName(""+(db.getChildrenCount()+1));
+        rrds.setName(""+db.getChildrenCount());
         configurator.getTreeStore().saveNode(rrds);
         rrds.setDataSource(dataSource);
         configurator.getTreeStore().saveNodeAttribute(rrds.getNodeAttribute("dataSource"));

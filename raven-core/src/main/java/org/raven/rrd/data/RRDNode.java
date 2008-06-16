@@ -89,24 +89,9 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
     }
 
     @Override
-    public synchronized boolean start() throws NodeError
+    protected void doStart() throws Exception
     {
-        boolean started =  super.start();
-        
-        if (started)
-        {
-            try
-            {
-                initDataBase();
-            } catch (Exception e)
-            {
-                started = false;
-                setStatus(Status.INITIALIZED);
-                logger.error(String.format("Error starting node (%s)", getPath()), e);
-            }
-        }
-        
-        return started;
+        initDataBase();
     }
 
     @Override
@@ -340,7 +325,9 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
         File path = new File(rrdDatabasesPath);
         if (!path.exists())
         {
-            FileUtils.forceMkdir(path);
+            if (!path.mkdirs())
+                throw new Exception(String.format("Error creating directory (%s)", path));
+//            FileUtils.forceMkdir(path);
         }
         RrdDef def = new RrdDef(
                 path.getAbsolutePath() + File.separator + getId() + ".jrrd"

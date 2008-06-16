@@ -76,7 +76,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
     private Table table = null;
     
     @Override
-    protected void doInit()
+    protected void doInit() throws Exception
     {
         super.doInit();
         

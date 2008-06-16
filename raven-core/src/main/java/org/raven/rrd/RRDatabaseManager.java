@@ -74,7 +74,7 @@ public class RRDatabaseManager extends BaseNode
     private Set<Integer> newDataSources = new HashSet<Integer>();
 
     @Override
-    protected void doInit()
+    protected void doInit() throws Exception 
     {
         super.doInit();
         template = (RRDatabaseManagerTemplate) getChildren(RRDatabaseManagerTemplate.NAME);
@@ -88,7 +88,7 @@ public class RRDatabaseManager extends BaseNode
     }
 
     @Override
-    protected void doStart()
+    protected void doStart() throws Exception
     {
         super.doStart();
         

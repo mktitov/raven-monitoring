@@ -510,11 +510,11 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
         }
     }
     
-    protected void doInit()
+    protected void doInit() throws Exception
     {
     }
     
-    protected void doStart()
+    protected void doStart() throws Exception 
     {
     }
 
