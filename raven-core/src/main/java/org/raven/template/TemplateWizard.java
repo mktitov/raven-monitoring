@@ -87,6 +87,11 @@ public class TemplateWizard
         destination.removeChildren(variablesNode);
     }
     
+    public void cancelWizard()
+    {
+        destination.removeChildren(variablesNode);        
+    }
+    
     private class Tuner implements NodeTuner
     {
         public void tuneNode(Node node)
