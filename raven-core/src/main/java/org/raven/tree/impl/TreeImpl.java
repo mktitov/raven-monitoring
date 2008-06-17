@@ -44,6 +44,8 @@ import org.raven.tree.store.TreeStore;
 import org.raven.tree.store.TreeStoreError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.weda.constraints.ReferenceValue;
+import org.weda.constraints.impl.ReferenceValueImpl;
 import org.weda.internal.exception.NullParameterError;
 import org.weda.internal.services.ResourceProvider;
 
@@ -250,6 +252,15 @@ public class TreeImpl implements Tree
     {
         Collection<Node> result = templatesNode.getSortedChildrens();
         return result==null? Collections.EMPTY_LIST : new ArrayList<Node>(result);
+    }
+
+    public List<ReferenceValue> getAttributeValueHandlerTypes(NodeAttribute attr)
+    {
+        List<ReferenceValue> values = new ArrayList<ReferenceValue>();
+        values.add(new ReferenceValueImpl("type1", "Attribute reference"));
+        values.add(new ReferenceValueImpl("type2", "Node reference"));
+        values.add(new ReferenceValueImpl("type3", "Expression"));
+        return values;
     }
 
     private void addChildsToParent(Class parent, Class... childs)

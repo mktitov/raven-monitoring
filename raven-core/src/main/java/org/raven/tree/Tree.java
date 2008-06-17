@@ -18,7 +18,7 @@
 package org.raven.tree;
 
 import java.util.List;
-
+import org.weda.constraints.ReferenceValue;
 /**
  * The tree of nodes. 
  * 
@@ -88,5 +88,12 @@ public interface Tree
      * Returns the list of the template nodes or empty list if no template nodes in the tree.
      */
     public List<Node> getTempltateNodes();
+    /**
+     * Returns the list of the value handler types available for the attribute.
+     * Method {@link ReferenceValue#getValue()} returns the value handler type
+     * and the method {@link ReferenceValue#getValueAsString()} returns the localized name
+     * of the value handler.
+     */
+    public List<ReferenceValue> getAttributeValueHandlerTypes(NodeAttribute attr);
 
 }

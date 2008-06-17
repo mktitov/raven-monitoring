@@ -57,6 +57,8 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
     private String parentAttribute;
     private Class type;
     private String value;
+    private String valueHandlerType;
+    
     private boolean required;
     private BaseNode owner;
     private NodeParameter parameter;
@@ -181,6 +183,16 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
         return type;
     }
 
+    public String getValueHandlerType()
+    {
+        return valueHandlerType;
+    }
+
+    public void setValueHandlerType(String valueHandlerType)
+    {
+        this.valueHandlerType = valueHandlerType;
+    }
+    
     public String getParentAttribute()
     {
         return parentAttribute;
@@ -327,6 +339,11 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
     public boolean isAttributeReference()
     {
         return type==null? false : AttributeReference.class.isAssignableFrom(type);
+    }
+
+    public boolean isExpression()
+    {
+        return valueHandlerType==null? false : true;
     }
     
     public AttributeReference getAttributeReference()

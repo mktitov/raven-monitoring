@@ -15,27 +15,15 @@
  *  under the License.
  */
 
-package org.raven.tree.impl;
-
-import org.raven.tree.Node;
-import org.raven.tree.NodeLogic;
+package org.raven.tree;
 
 /**
- *
+ * The value handler of the attribute. 
+ * 
  * @author Mikhail Titov
  */
-public abstract class AbstractNodeLogic implements NodeLogic
+public interface AttributeValueHandler 
 {
-    private Node owner;
-
-    public Node getOwner()
-    {
-        return owner;
-    }
-
-    public void setOwner(Node owner)
-    {
-        this.owner = owner;
-    }
-
+    
+    public void setValue(String value);
 }

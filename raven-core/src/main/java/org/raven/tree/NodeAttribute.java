@@ -153,6 +153,19 @@ public interface NodeAttribute extends Cloneable
      */
     public AttributeReference getAttributeReference();
     /**
+     * Sets the attribute value handler by it's type.
+     */
+    public void setValueHandlerType(String valueHandlerType);
+    /**
+     * Returns the attribute value handler type or <code>null</code> if value handler 
+     * not associated with attribute.
+     */
+    public String getValueHandlerType();
+    /**
+     * Returns <code>true</code> if value handler supports expressions.
+     */
+    public boolean isExpression();
+    /**
      * Clones the attribute.
      * @throws java.lang.CloneNotSupportedException
      */
