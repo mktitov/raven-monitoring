@@ -20,29 +20,33 @@
           xmlns:f="http://java.sun.com/jsf/core"
           xmlns:tr="http://myfaces.apache.org/trinidad" >
 <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
-<!-- 
-<tr:form>
--->
+<!-- ********************* -->
+<!-- create new node -->
+<!-- ********************* -->
 <tr:panelCaptionGroup captionText="#{msgs.nodeCreate}" rendered="#{cNode.allowCreateSubNode}">
 	<tr:panelFormLayout>
 		<tr:inputText label="#{msgs.name}" value="#{sBean.newNodeName}" >
 			<tr:validateRegExp pattern="#{sBean.nodeNamePattern}"/>
 		</tr:inputText>
-		<tr:inputListOfValues  
+		<tr:inputListOfValues id="typeList"
 			label="#{msgs.type}" value="#{sBean.newNodeType}"
         	action="dialog:chooseType" 
         	windowWidth="500" windowHeight="400"/>
-		<tr:commandButton text="#{msgs.create}" action="#{sBean.createNode}"/>        
+		<tr:commandButton returnListener="#{sBean.template.handleReturn}" id="createNode" text="#{msgs.create}" action="#{sBean.createNode}" useWindow="true" windowWidth="500" windowHeight="400" />        
    </tr:panelFormLayout>
 </tr:panelCaptionGroup>        
 
 <tr:separator></tr:separator>
 
 <tr:panelHorizontalLayout  inlineStyle="width:100%;" halign="center" valign="top">
-
-<tr:panelCaptionGroup inlineStyle="width:90%;"  captionText="#{msgs.children}" rendered="#{cNode.allowCreateSubNode}">
+<!-- ********************* -->
+<!-- existing nodes -->
+<!-- ********************* -->
+<tr:panelCaptionGroup inlineStyle="width:90%;"  captionText="#{msgs.children}"
+ rendered="#{cNode.allowCreateSubNode}" 
+  >
     <tr:message binding="#{subNodes.message}" for="delSubNode" messageType="warning" />
-  	<tr:table width="100%" summary="Nodes" 
+  	<tr:table width="100%" summary="Nodes"  
   		value="#{cNode.childrenList}" binding="#{subNodes.table}"
   		var="row" rows="20" rowSelection="single" id="delSubNode" >
     	<tr:column headerText="#{msgs.name}">
@@ -54,7 +58,12 @@
  	</tr:table>
  	<tr:commandButton text="#{msgs.delete}" actionListener="#{subNodes.deleteNodes}"/>
 </tr:panelCaptionGroup>
-<tr:panelCaptionGroup  inlineStyle="width:90%;" captionText="#{msgs.dependencies}" rendered="#{cNode.allowCreateSubNode}">
+<!-- ********************* -->
+<!-- existing dependencies -->
+<!-- ********************* -->
+<tr:panelCaptionGroup  inlineStyle="width:90%;" captionText="#{msgs.dependencies}"
+ rendered="#{cNode.allowNodeRead}"
+  >
   	<tr:table width="100%" value="#{cNode.dependencies}" 
   		var="row" rows="20" rowSelection="none" >
     	<tr:column headerText="#{msgs.name}">
@@ -67,9 +76,5 @@
 </tr:panelCaptionGroup>
 
 </tr:panelHorizontalLayout>
-
-<!-- 
-</tr:form>
--->
 
 </jsp:root>

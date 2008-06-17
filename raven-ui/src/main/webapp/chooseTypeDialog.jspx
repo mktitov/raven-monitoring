@@ -25,31 +25,46 @@
 <tr:document title="#{msgs.selectNodeType}" >
 
 <tr:form >
- 
-  <tr:panelPage id="plId">
-    <tr:messages/>
-  	<tr:table summary="Nodes types" 
-  		value="#{cNode.validSubNodeTypesList}" 
-  		var="row" rows="20" rowSelection="single"
-  		binding="#{nodeTypes.table}"
-  		 >
-    	<tr:column>
-  	    	  <f:facet name="header"><tr:outputText value="#{msgs.name}"/></f:facet>
-		      <tr:outputText value="#{row.shortName}"/>
-        </tr:column>
-    	<tr:column>
-    	  	<f:facet name="header"><tr:outputText value="#{msgs.dsc}"/></f:facet>
-	      	<tr:outputText value="#{row.description}"/>
-        </tr:column>
-
- 	</tr:table>
+<tr:messages/>
+	<tr:panelTabbed position="above" id="panelTabbed1" inlineStyle="width: 100%" >
+  		<tr:showDetailItem  text="#{msgs.nodes}" id="item1">
+    	<f:subview id="v1">
+    		<tr:separator></tr:separator>
+  			<tr:table summary="Nodes types" value="#{cNode.validSubNodeTypesList}" 
+  				var="row" rows="20" rowSelection="single" binding="#{nodeTypes.table}" >
+    		<tr:column headerText="#{msgs.name}">
+			    <tr:outputText value="#{row.shortName}"/>
+        	</tr:column>
+    		<tr:column headerText="#{msgs.dsc}">
+	      		<tr:outputText value="#{row.description}"/>
+        	</tr:column>
+ 			</tr:table>
 	<tr:panelButtonBar>
-    	<tr:commandButton text="#{msgs.cancel}" immediate="true"
-                               action="#{nodeTypes.cancel}"/>
         <tr:commandButton text="#{msgs.select}" action="#{nodeTypes.select}"/>
+    	<tr:commandButton text="#{msgs.cancel}" immediate="true" action="#{nodeTypes.cancel}"/>
 	</tr:panelButtonBar>
-  </tr:panelPage>
+ 			
+    	</f:subview>
+   		</tr:showDetailItem>
+  		<tr:showDetailItem text="#{msgs.templates}" id="item2">
+    	<f:subview id="v2">
+    		<tr:separator></tr:separator>
+  			<tr:table summary="Templates" value="#{cNode.validSubNodeTemplatesList}" 
+  				var="row" rows="20" rowSelection="single" binding="#{nodeTemplates.table}" >
+    		<tr:column headerText="#{msgs.name}">
+			    <tr:outputText value="#{row.shortName}"/>
+        	</tr:column>
+ 			</tr:table>
+	<tr:panelButtonBar>
+        <tr:commandButton text="#{msgs.select}" action="#{nodeTemplates.select}"/>
+    	<tr:commandButton text="#{msgs.cancel}" immediate="true" action="#{nodeTemplates.cancel}"/>
+	</tr:panelButtonBar>
 
+    	</f:subview>
+   		</tr:showDetailItem>
+   	</tr:panelTabbed>
+
+ 
 </tr:form>
 
 </tr:document>

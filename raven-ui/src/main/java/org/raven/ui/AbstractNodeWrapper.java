@@ -25,6 +25,7 @@ import java.util.Set;
 import org.raven.conf.Configurator;
 import org.raven.conf.impl.AccessControl;
 import org.raven.conf.impl.UserAcl;
+import org.raven.template.TemplateWizard;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Tree;
@@ -97,6 +98,12 @@ public abstract class AbstractNodeWrapper
 		if( (userAcl.getAccessForNode(node) & AccessControl.WRITE) ==0 ) return false;
 		return true;
 	}
+
+	public boolean isAllowNodeRead()
+	{
+		if( (userAcl.getAccessForNode(node) & AccessControl.READ) ==0 ) return false;
+		return true;
+	}
 	
 	public boolean isCanNodeStop()
 	{
@@ -135,6 +142,22 @@ public abstract class AbstractNodeWrapper
 		return al;
 	}
 
+	@SuppressWarnings("unchecked")
+	public List<NodeType> getValidSubNodeTemplatesList()
+	{
+		List<Node> templates = tree.getTempltateNodes();
+		ArrayList<NodeType> al = new ArrayList<NodeType>();
+		if(templates==null) return al;
+		for(Node n: templates)
+		{
+			//String dispName = classDesc.getClassDescriptor(n.getClass()).getDisplayName();
+			//String dsc = classDesc.getClassDescriptor(n.getClass()).getDescription();
+			al.add(new NodeType(n.getPath(),n.getName(), ""));
+		}
+		return al;
+	}
+
+	
 	  public String getNodeName()
 	  {
 		 Node n = getNode();

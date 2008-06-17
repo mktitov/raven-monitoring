@@ -46,6 +46,12 @@
   </managed-bean>
 
   <managed-bean>
+    <managed-bean-name>nodeTemplates</managed-bean-name>
+    <managed-bean-class>org.raven.ui.NodeTypesBean</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
     <managed-bean-name>subNodes</managed-bean-name>
     <managed-bean-class>org.raven.ui.SubNodesTableBean</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
@@ -53,6 +59,12 @@
 
   <managed-bean>
     <managed-bean-name>cNodeAttrs</managed-bean-name>
+    <managed-bean-class>org.raven.ui.AttributesTableBean</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>templateAttrs</managed-bean-name>
     <managed-bean-class>org.raven.ui.AttributesTableBean</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
@@ -104,6 +116,11 @@
       <from-outcome>dialog:chooseType</from-outcome>
       <to-view-id>/chooseTypeDialog.jspx</to-view-id>
     </navigation-case>
+    <navigation-case>
+      <from-outcome>dialog:templateAttrEdit</from-outcome>
+      <to-view-id>/templateAttrEdit.jspx</to-view-id>
+    </navigation-case>
   </navigation-rule>
+
 
 </faces-config>

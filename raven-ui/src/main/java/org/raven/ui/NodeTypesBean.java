@@ -40,10 +40,11 @@ public class NodeTypesBean
 	  public String select()
 	  {
 	    FacesContext context = FacesContext.getCurrentInstance();
-	    // The tableSelectOne is marked as required; so there'd better
-	    // be a selected row - an exception will result here if there
-	    // isn't.  Is there some better code?
+	    //NodeWrapper wrapper = (NodeWrapper) context.getELContext().getELResolver().getValue(context.getELContext(), null, NodeWrapper.BEAN_NAME);
+	    //if( wrapper.getSelNodeTab().isDisclosed() )
+	    //{
 	    Iterator<Object> iterator = table.getSelectedRowKeys().iterator();
+	    if( !iterator.hasNext() ) return null;
 	    Object rowKey = iterator.next();
 	    Object oldRowKey = table.getRowKey();
 	    table.setRowKey(rowKey);
@@ -56,6 +57,7 @@ public class NodeTypesBean
 */
 	    RequestContext.getCurrentInstance().returnFromDialog(n.getClassName(), null);
 	    table.setRowKey(oldRowKey);
+	   // }
 
 	    return null;
 	  }

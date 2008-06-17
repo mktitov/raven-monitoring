@@ -43,6 +43,8 @@ public class NodeWrapper extends AbstractNodeWrapper
 	private CoreShowDetailItem showTab; 
 	private CoreShowDetailItem nodeEditTab; 
 	private CoreShowDetailItem treeEditTab; 
+	private CoreShowDetailItem selNodeTab; 
+	private CoreShowDetailItem selTemplateTab;
 		
 	public NodeWrapper() 
 	{
@@ -313,5 +315,11 @@ public class NodeWrapper extends AbstractNodeWrapper
 
 	public CoreShowDetailItem getTreeEditTab() { return treeEditTab; }
 	public void setTreeEditTab(CoreShowDetailItem treeEditTab) { this.treeEditTab = treeEditTab; }
+
+	public CoreShowDetailItem getSelNodeTab() { return selNodeTab; }
+	public void setSelNodeTab(CoreShowDetailItem selNodeTab) { 	this.selNodeTab = selNodeTab; }
+
+	public CoreShowDetailItem getSelTemplateTab() { return selTemplateTab; }
+	public void setSelTemplateTab(CoreShowDetailItem selTemplateTab) { this.selTemplateTab = selTemplateTab; }
 
 }

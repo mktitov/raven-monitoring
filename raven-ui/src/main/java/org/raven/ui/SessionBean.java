@@ -27,6 +27,7 @@ import javax.faces.event.ActionEvent;
 import org.raven.RavenRegistry;
 import org.raven.conf.Configurator;
 import org.raven.conf.impl.UserAcl;
+import org.raven.template.TemplateNode;
 import org.raven.tree.Node;
 //import org.raven.tree.NodeAttribute;
 import org.raven.tree.Tree;
@@ -62,10 +63,13 @@ public class SessionBean
 	private String newNodeName = null;
 	
 	private CoreTree coreTree = null;
+//	private TemplateNode templateNode = null; 
+	private NewNodeFromTemplate template;
 	
 	public String getNodeNamePattern()
 	{
-		return "[^\\Q~"+Node.NODE_SEPARATOR+Node.ATTRIBUTE_SEPARATOR+"\\E]+";
+		//return "[^\\Q~"+Node.NODE_SEPARATOR+Node.ATTRIBUTE_SEPARATOR+"\\E]+";
+		return "[^\\~\\"+Node.NODE_SEPARATOR+"\\"+Node.ATTRIBUTE_SEPARATOR+"]+";
 	}
 	
 	public String getTitle()
@@ -101,6 +105,7 @@ public class SessionBean
 		treeModel.setUserAcl(userAcl);
 		
 		wrapper.createNewAttribute();
+		template = new NewNodeFromTemplate();
 	}
 
 	public void reloadLeftFrame()
@@ -191,11 +196,27 @@ public class SessionBean
 		} else reloadLeftFrame();
 	}
 	
+	public String createTemplate()
+	{
+		Node n = tree.getNode(newNodeType);
+		if (n instanceof TemplateNode) 
+		{
+			template.init((TemplateNode) n, wrapper.getNode(), getNewNodeName());
+			return "dialog:templateAttrEdit";
+		}
+		return "err";
+	}
+	
 	public String createNode()
 	{
 		if(!wrapper.isAllowCreateSubNode())
 		{
 			logger.warn("not AllowCreateSubNode");
+			return "err";
+		}
+		if(newNodeName==null || newNodeName.length()==0)
+		{
+			logger.warn("no newNodeName");
 			return "err";
 		}	
 		if(newNodeType==null || newNodeType.length()==0)
@@ -203,11 +224,11 @@ public class SessionBean
 			logger.warn("no newNodeType");
 			return "err";
 		}	
-		if(newNodeName==null || newNodeName.length()==0)
+		if(newNodeType.startsWith(""+Node.NODE_SEPARATOR))
 		{
-			logger.warn("no newNodeName");
-			return "err";
-		}	
+			return createTemplate();
+		}
+		
 		Object o = null;
 		try { o = Class.forName(newNodeType).newInstance(); } 
 		catch(Exception e) 	{
@@ -268,5 +289,13 @@ public class SessionBean
 
 	public CoreTree getCoreTree() { return coreTree; }
 	public void setCoreTree(CoreTree coreTree) { this.coreTree = coreTree; }
+
+	public NewNodeFromTemplate getTemplate() {
+		return template;
+	}
+
+	public void setTemplate(NewNodeFromTemplate template) {
+		this.template = template;
+	}
 	
 }
