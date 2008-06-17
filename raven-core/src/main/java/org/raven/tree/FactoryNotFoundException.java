@@ -18,18 +18,16 @@
 package org.raven.tree;
 
 /**
- * The goal is to create {@link AttributeValueHandler}
+ *
  * @author Mikhail Titov
  */
-public interface AttributeValueHandlerFactory 
+public class FactoryNotFoundException extends Exception 
 {
-    /**
-     * Creates new {@link AttributeValueHandler value handler} for attribute passed 
-     * in the parameter.
-     */
-    public AttributeValueHandler createValueHandler(NodeAttribute attribute);
-    /**
-     * Returns the name of the factory.
-     */
-    public String getName();
+    public FactoryNotFoundException(String valueHandlerType) 
+    {
+        super(String.format(
+            "Attribute value handler registry does not contains the factory for the value " +
+            "handler type (%s)"
+            , valueHandlerType));
+    }
 }

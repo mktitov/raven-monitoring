@@ -42,5 +42,6 @@ public interface AttributeValueHandlerRegistry
      *      {@link AttributeValueHandlerFactory} for the type passed in the 
      *      <code>valueHandlerType</code> parameter.
      */
-    public AttributeValueHandler getValueHandler(String valueHandlerType, NodeAttribute attribute);
+    public AttributeValueHandler getValueHandler(String valueHandlerType, NodeAttribute attribute)
+            throws FactoryNotFoundException;
 }

@@ -34,7 +34,10 @@ import org.raven.impl.StringToTemplateVariableConverter;
 import org.raven.template.TemplateVariable;
 import org.raven.template.TemplateVariableReferenceValues;
 import org.raven.tree.AttributeReferenceValues;
+import org.raven.tree.AttributeValueHandlerFactory;
+import org.raven.tree.AttributeValueHandlerRegistry;
 import org.raven.tree.Tree;
+import org.raven.tree.impl.AttributeValueHandlerRegistryImpl;
 import org.raven.tree.impl.TreeImpl;
 import org.raven.tree.store.impl.H2TreeStore;
 import org.weda.internal.services.ResourceProvider;
@@ -55,13 +58,18 @@ public class RavenCoreModule
         return new ConfiguratorImpl(treeStoreEngines);
     }
     
-//    @EagerLoad()
     public static Tree buildTree(
             Map<Class, AttributeReferenceValues> referenceValuesProvider
             , Configurator configurator, ResourceProvider resourceProvider) 
         throws Exception
     {
         return new TreeImpl(referenceValuesProvider, configurator, resourceProvider);
+    }
+    
+    public static AttributeValueHandlerRegistry buildAttributeValueHandlerRegistry(
+            Map<String, AttributeValueHandlerFactory> factories)
+    {
+        return new AttributeValueHandlerRegistryImpl(factories);
     }
     
     public static void contributeConfigurator(MappedConfiguration<String, Class> conf)

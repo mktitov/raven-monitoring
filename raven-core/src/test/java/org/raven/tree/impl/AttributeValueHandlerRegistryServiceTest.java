@@ -15,21 +15,24 @@
  *  under the License.
  */
 
-package org.raven.tree;
+package org.raven.tree.impl;
+
+import org.junit.Test;
+import org.raven.RavenCoreTestCase;
+import org.raven.tree.AttributeValueHandlerRegistry;
 
 /**
- * The goal is to create {@link AttributeValueHandler}
+ *
  * @author Mikhail Titov
  */
-public interface AttributeValueHandlerFactory 
+public class AttributeValueHandlerRegistryServiceTest extends RavenCoreTestCase
 {
-    /**
-     * Creates new {@link AttributeValueHandler value handler} for attribute passed 
-     * in the parameter.
-     */
-    public AttributeValueHandler createValueHandler(NodeAttribute attribute);
-    /**
-     * Returns the name of the factory.
-     */
-    public String getName();
+    @Test
+    public void test()
+    {
+        AttributeValueHandlerRegistry valueHandlerRegistry = 
+                registry.getService(AttributeValueHandlerRegistry.class);
+        assertNotNull(valueHandlerRegistry);
+        assertNotNull(valueHandlerRegistry.getValueHandlerTypes());
+    }
 }
