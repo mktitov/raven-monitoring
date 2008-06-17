@@ -24,6 +24,34 @@ package org.raven.tree;
  */
 public interface AttributeValueHandler 
 {
-    
+    /**
+     * Sets the value that must be handled. Must be call before {@link #handleValue()}.
+     * @see #handleValue() 
+     */
     public void setValue(String value);
+    /**
+     * Returns the string value. 
+     */
+    public String getValue();
+    /**
+     * Returns the translated value.
+     */
+    public Object handleValue();
+    /**
+     * Closes the value handler. The value handler can't be use after this method call.
+     */
+    public void close();
+    /**
+     * If returns <b>true</b> then method {@link #handleValue()} can be used.
+     */
+    public boolean canHandleValue();
+    /**
+     * If returns <b>false</b> the method {@link NodeAttribute#getReferenceValues()} must returns
+     * <b>null</b>
+     */
+    public boolean isReferenceValuesSupported();
+    /**
+     * If returns <b>true</b> method {@link NodeAttribute#isExpression()} must returns <b>true</b>.
+     */
+    public boolean isExpressionSupported();
 }
