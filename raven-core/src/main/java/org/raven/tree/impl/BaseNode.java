@@ -602,6 +602,18 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
                 listener.childrenRemoved(this, removedNode);
     }
 
+    public NodeAttribute getParentAttribute(String attributeName)
+    {
+        Node node = this;
+        while ( (node=node.getParent())!=null )
+        {
+            NodeAttribute attr = node.getNodeAttribute(attributeName);
+            if (attr!=null)
+                return attr;
+        }
+        return null;
+    }
+
     /**
      * Method returns the first not null value of the attribute, with name passed in the 
      * <code>attributeName</code> parameter, of the nearest parent or null if parents does not

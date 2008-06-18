@@ -25,6 +25,14 @@ package org.raven.tree;
 public interface AttributeValueHandler 
 {
     /**
+     * Adds listener.
+     */
+    public void addListener(AttributeValueHandlerListener listener);
+    /**
+     * Removes listener.
+     */
+    public void removeListener(AttributeValueHandlerListener listener);
+    /**
      * Sets the value that must be handled. Must be call before {@link #handleValue()}.
      * @see #handleValue() 
      */

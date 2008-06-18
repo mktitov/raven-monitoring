@@ -257,6 +257,13 @@ public interface Node extends Cloneable
      */
     public Set<Node> getDependentNodes();
     /**
+     * Method returns the first attribute, with name passed in the 
+     * <code>attributeName</code> parameter, of the nearest parent or null if parents does not
+     * contains the attribute with name passed in the parameter.
+     * @param attributeName the name of the attribute
+     */
+    public NodeAttribute getParentAttribute(String attributeName);
+    /**
      * If method returns <code>true</code> then node permits read only operations.
      */
 //    public boolean isReadOnly();

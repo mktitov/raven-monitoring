@@ -155,7 +155,7 @@ public interface NodeAttribute extends Cloneable
     /**
      * Sets the attribute value handler by it's type.
      */
-    public void setValueHandlerType(String valueHandlerType);
+    public void setValueHandlerType(String valueHandlerType) throws FactoryNotFoundException;
     /**
      * Returns the attribute value handler type or <code>null</code> if value handler 
      * not associated with attribute.

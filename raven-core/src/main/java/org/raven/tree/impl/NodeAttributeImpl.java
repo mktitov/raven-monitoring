@@ -21,7 +21,10 @@ import java.util.ArrayList;
 import java.util.List;
 import org.raven.conf.Configurator;
 import org.raven.tree.AttributeReference;
+import org.raven.tree.AttributeValueHandler;
+import org.raven.tree.AttributeValueHandlerRegistry;
 import org.raven.tree.AttributesGenerator;
+import org.raven.tree.FactoryNotFoundException;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
@@ -49,6 +52,8 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
     private static Configurator configurator;
     @Service
     private static Tree tree;
+    @Service
+    private static AttributeValueHandlerRegistry valueHandlerRegistry;
     
     private int id;
     private String name;
@@ -63,6 +68,7 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
     private BaseNode owner;
     private NodeParameter parameter;
     private AttributeReference attributeReference;
+    private AttributeValueHandler valueHandler;
 
     public NodeAttributeImpl()
     {
@@ -121,23 +127,24 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
 
     public <T> T getRealValue()
     {
-        if (isAttributeReference())
-            return attributeReference == null ? 
-                null : (T)attributeReference.getAttribute().getRealValue();
-        else {
-            if (parameter!=null)
-            {
-                return (T)parameter.getValue();
-            }
-            else
-            {
-                if (value==null)
-                    return (T) converter.convert(
-                            type, owner.getParentAttributeRealValue(name), null);
-                else
-                    return (T) converter.convert(type, value, null);
-            }
-        }
+        return (T) converter.convert(type, valueHandler.handleValue(), null);
+//        if (isAttributeReference())
+//            return attributeReference == null ? 
+//                null : (T)attributeReference.getAttribute().getRealValue();
+//        else {
+//            if (parameter!=null)
+//            {
+//                return (T)parameter.getValue();
+//            }
+//            else
+//            {
+//                if (value==null)
+//                    return (T) converter.convert(
+//                            type, owner.getParentAttributeRealValue(name), null);
+//                else
+//                    return (T) converter.convert(type, value, null);
+//            }
+//        }
     }
 
     public String getValue()
@@ -188,9 +195,23 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
         return valueHandlerType;
     }
 
-    public void setValueHandlerType(String valueHandlerType)
+    public void setValueHandlerType(String valueHandlerType) throws FactoryNotFoundException
     {
-        this.valueHandlerType = valueHandlerType;
+        if (!ObjectUtils.equals(this.valueHandlerType, valueHandlerType))
+        {
+            if (valueHandler!=null)
+                valueHandler.close();
+            
+            this.valueHandlerType = valueHandlerType;
+            
+            if (this.valueHandlerType==null)
+                valueHandler = null;
+            else
+            {
+                valueHandler = valueHandlerRegistry.getValueHandler(valueHandlerType, this);
+                valueHandler.setValue(value);
+            }
+        }
     }
     
     public String getParentAttribute()
@@ -256,19 +277,26 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
         {
             String oldValue = this.value;
             this.value = value;
-            if (isAttributeReference())
+            valueHandler.setValue(value);
+            
+            if (owner.getStatus()!=Status.CREATED)
             {
-                processAttributeReference(value, oldValue);
+                owner.fireAttributeValueChanged(this, oldValue, oldValue);
             }
-            else {
-                if (owner.getStatus()!=Status.CREATED)
-                {
-                    if (parameter!=null)
-                        parameter.setValue(value);
-
-                    owner.fireAttributeValueChanged(this, oldValue, value);
-                }
-            }
+            
+//            if (isAttributeReference())
+//            {
+//                processAttributeReference(value, oldValue);
+//            }
+//            else {
+//                if (owner.getStatus()!=Status.CREATED)
+//                {
+//                    if (parameter!=null)
+//                        parameter.setValue(value);
+//
+//                    owner.fireAttributeValueChanged(this, oldValue, value);
+//                }
+//            }
         }
     }
 
@@ -343,7 +371,7 @@ public class NodeAttributeImpl implements NodeAttribute, Cloneable, NodeAttribut
 
     public boolean isExpression()
     {
-        return valueHandlerType==null? false : true;
+        return valueHandler==null? false : valueHandler.isExpressionSupported();
     }
     
     public AttributeReference getAttributeReference()
