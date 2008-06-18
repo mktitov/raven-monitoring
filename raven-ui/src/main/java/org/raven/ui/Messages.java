@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 	{
 	   protected Logger logger = LoggerFactory.getLogger(Messages.class);	
 	   
+	   
 		public static FacesMessage getMessage(String bundleName, String resourceId, Object[] params) 
 	   {
 	      FacesContext context = FacesContext.getCurrentInstance();
@@ -44,6 +45,11 @@ import org.slf4j.LoggerFactory;
 	      String detail = getString(appBundle, bundleName, resourceId + "_detail", locale, loader, params);
 	      return new FacesMessage(summary, detail);
 	   }
+		
+		public static String getUiMessage(String name)
+		{
+			return Messages.getString("org.raven.ui.messages", name,new Object[] {});
+		}
 
 	   public static String getString(String bundle, String resourceId, Object[] params) 
 	   {

@@ -127,7 +127,13 @@ public class SessionBean
 		 return ("success");
 	  }
 
-	  //public void al(ActionEvent event)  { send(); }  
+	  //public void al(ActionEvent event)  { send(); }
+	 
+	 public static Object getElValue(String name)
+	 {
+	    FacesContext context = FacesContext.getCurrentInstance();
+	    return context.getELContext().getELResolver().getValue(context.getELContext(), null, name);
+	 }
 	  
 	  public void show(ActionEvent event)
 	  {
@@ -245,6 +251,18 @@ public class SessionBean
 		wrapper.goToEditNewAttribute(n);
 		return "ok";
 	}
+
+	public int deleteNode(NodeWrapper node)
+	{
+		Node n = node.getNode();
+		if(n.getDependentNodes()!=null) return -1;
+		tree.remove(n);
+		logger.warn("removed node: {}",n.getName());
+		//FacesContext.getCurrentInstance().getExternalContext().log("removed node: "+n.getName());
+		return 0;
+	}
+	
+	public void afterDeleteNodes() { wrapper.onSetNode(); }
 	
 	public String deleteNodes(List<NodeWrapper> nodes)
 	{

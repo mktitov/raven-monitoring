@@ -24,43 +24,58 @@ import java.util.List;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
-import org.apache.myfaces.trinidad.component.UIXCollection;
 import org.apache.myfaces.trinidad.component.UIXTable;
 import org.apache.myfaces.trinidad.model.RowKeySet;
 import org.apache.myfaces.trinidad.component.core.output.CoreMessage;
+//import org.apache.myfaces.trinidad.component.UIXCollection;
 //import org.raven.tree.Node;
 
 public class SubNodesTableBean 
 {
 	  private UIComponent table = null;
-	  private List<NodeWrapper> selected;
+//	  private List<NodeWrapper> selected;
 	  private CoreMessage message = null;
 
 	  @SuppressWarnings("unchecked")
-	  public SubNodesTableBean() { selected = Collections.EMPTY_LIST; }
+	  public SubNodesTableBean() 
+	  {
+		//  selected = Collections.EMPTY_LIST; 
+	  }
 	  
 	  @SuppressWarnings("unchecked")
 	  public void deleteNodes(ActionEvent action)
 	  {
-	    UIXCollection tbl = (UIXCollection) table;
-	    final RowKeySet state;
-	    state = ((UIXTable) tbl).getSelectedRowKeys();
+		UIXTable tbl = (UIXTable) table;
+	    RowKeySet state;
+	    StringBuffer retb = new StringBuffer();
+	    state = tbl.getSelectedRowKeys();
 	    Iterator it = state.iterator();
 	    Object oldKey = tbl.getRowKey();
-	    selected = new ArrayList<NodeWrapper>();
-	    while (it.hasNext())
+	    SessionBean sb = (SessionBean) SessionBean.getElValue(SessionBean.BEAN_NAME);
+	    NodeWrapper nw = null;
+	    while(it.hasNext())
 	    {
 	      tbl.setRowKey(it.next());
-	      selected.add((NodeWrapper)tbl.getRowData());
+	      nw = (NodeWrapper)tbl.getRowData();
+	      int x = sb.deleteNode(nw);
+	      if(x==-1)
+	      {
+	    	if(retb.length()==0) retb.append("This nodes have dependensies: ");
+	    	retb.append(" "+nw.getNodeName());
+	      } else it.remove();
+	      
 	    }
 	    tbl.setRowKey(oldKey);
-	    if(selected.size()==0)
+	    if(nw == null)
 	    {
 	    	message.setMessage("No selected nodes !");
 	    	return;
-	    }	
-	    String ret = tryDelete(selected);
-	    if(ret!=null && message!=null) message.setMessage(ret);
+	    }
+	    state.clear();
+	    //tbl.setSelectedRowKeys(state);
+	    sb.afterDeleteNodes();
+	    
+	    if(message!=null) message.setMessage(retb.toString());
 	  }
 	  
 	  public String tryDelete(List<NodeWrapper> nodes)

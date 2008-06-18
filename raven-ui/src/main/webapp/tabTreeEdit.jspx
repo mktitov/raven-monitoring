@@ -48,7 +48,7 @@
     <tr:message binding="#{subNodes.message}" for="delSubNode" messageType="warning" />
   	<tr:table width="100%" summary="Nodes"  
   		value="#{cNode.childrenList}" binding="#{subNodes.table}"
-  		var="row" rows="20" rowSelection="single" id="delSubNode" >
+  		var="row" rows="20" rowSelection="multiple" id="delSubNode" >
     	<tr:column headerText="#{msgs.name}">
 	      <tr:outputText value="#{row.nodeName}"/>
         </tr:column>

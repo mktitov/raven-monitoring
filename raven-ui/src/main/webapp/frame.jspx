@@ -25,7 +25,7 @@
 <jsp:directive.page contentType="text/html;charset=utf-8"/>
 <f:view>
 <trh:html>
-	<trh:head title="Body Demo"/>  
+	<trh:head title="#{sBean.title}"/>  
 <!-- 
 	<trh:frameBorderLayout frameBorderWidth="2" frameSpacing="2" >
  		<f:facet name="left">

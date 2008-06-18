@@ -33,7 +33,10 @@
 </tr:panelCaptionGroup>        
         
  -->
-<tr:panelCaptionGroup rendered="#{cNode.allowNodeEdit}" captionText="#{msgs.attributeCreate}" >
+<!-- ********************* -->
+<!-- attribute create -->
+<!-- ********************* -->
+ <tr:panelCaptionGroup rendered="#{cNode.allowNodeEdit}" captionText="#{msgs.attributeCreate}" >
 	<tr:panelFormLayout>
 		<tr:inputText label="#{msgs.name}" value="#{cNode.newAttribute.name}" >
 			<tr:validateRegExp pattern="#{sBean.nodeNamePattern}"/>
@@ -54,7 +57,9 @@
    </tr:panelFormLayout>
 </tr:panelCaptionGroup>    
 
- 
+<!-- ********************* -->
+<!-- existing attributes -->
+<!-- ********************* -->
 <tr:panelCaptionGroup rendered="#{cNode.allowNodeEdit}"  captionText="#{msgs.nodeAttributes}"  >
 	<tr:message binding="#{cNodeAttrs.message}" for="attrs" messageType="error" />
   	<tr:table allDetailsEnabled="true" rowBandingInterval="1" binding="#{cNodeAttrs.table}" 

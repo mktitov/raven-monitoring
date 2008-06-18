@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-
 import org.apache.myfaces.trinidad.component.core.layout.CoreShowDetailItem;
 import org.raven.conf.impl.AccessControl;
 import org.raven.tree.Node;
@@ -32,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import org.weda.beans.ObjectUtils;
 import org.weda.constraints.ConstraintException;
 import org.weda.converter.TypeConverterException;
+//import javax.faces.context.FacesContext;
 
 public class NodeWrapper extends AbstractNodeWrapper
 {
@@ -60,6 +60,9 @@ public class NodeWrapper extends AbstractNodeWrapper
 	{
 		editingAttrs = null;
 		createNewAttribute();
+//		FacesContext context = FacesContext.getCurrentInstance();
+//		AttributesTableBean atb = (AttributesTableBean) context.getELContext().getELResolver().getValue(context.getELContext(), null, AttributesTableBean.BEAN_NAME);
+//		if(atb != null && atb.getMessage() !=null) atb.getMessage().setMessage("");
 	}
 
 	public void createNewAttribute()
@@ -165,10 +168,9 @@ public class NodeWrapper extends AbstractNodeWrapper
 		  return "";
 	  }
 	  
-		public String createAttribute()
-		{
-			
-			if( !isAllowNodeEdit() ) return "err";
+	  public String createAttribute()
+	  {
+		  if( !isAllowNodeEdit() ) return "err";
 		/*	
 			if(newNodeType==null || newNodeType.length()==0)
 			{
@@ -176,14 +178,14 @@ public class NodeWrapper extends AbstractNodeWrapper
 				return "err";
 			}
 		*/		
-			if(newAttribute.getName()==null || newAttribute.getName().length()==0)
-			{
-				logger.warn("no newAttributeName");
-				return "err";
-			}	
-			NodeAttribute na = null;
-			na = new NodeAttributeImpl(newAttribute.getName(),newAttribute.getAttrClass(),null,newAttribute.getDescription());
-		//	na.setType(String.class);
+		  if(newAttribute.getName()==null || newAttribute.getName().length()==0)
+		  {
+			  logger.warn("no newAttributeName");
+			  return "err";
+		  }	
+		  NodeAttribute na = null;
+		  na = new NodeAttributeImpl(newAttribute.getName(),newAttribute.getAttrClass(),null,newAttribute.getDescription());
+		  //	na.setType(String.class);
 			na.setOwner(getNode());
 			getNode().addNodeAttribute(na);
 			na.setRequired(newAttribute.isRequired());
@@ -193,9 +195,25 @@ public class NodeWrapper extends AbstractNodeWrapper
 			logger.warn("Added new attribute='{}' for node='{}'",na.getName(),getNode().getName());
 			onSetNode();
 			return "ok";
+	  }
+
+		public int deleteAttrubute(Attr attr)
+		{
+			NodeAttribute na = getNode().getNodeAttribute(attr.getName());
+			if(na==null) return -1;
+			if(!attr.isAllowDelete()) return -2;
+			getNode().removeNodeAttribute(na.getName());
+			getConfigurator().getTreeStore().removeNodeAttribute(na.getId());
+			logger.warn("removed attrubute: {}",na.getName());
+			return 0;
 		}
-	  
-	  public String deleteAttrubutes(List<Attr> attrs)
+		
+		public void afterDeleteAttrubutes()
+		{
+			onSetNode();
+		}
+		
+		public String deleteAttrubutes(List<Attr> attrs)
 	  {
 		  StringBuffer ret = new StringBuffer();
 		  Iterator<Attr> it = attrs.iterator();

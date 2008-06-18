@@ -20,6 +20,7 @@ package org.raven.ui;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.myfaces.trinidad.model.ChildPropertyTreeModel;
+import org.raven.conf.impl.AccessControl;
 import org.raven.conf.impl.UserAcl;
 import org.raven.tree.Node;
 
@@ -48,7 +49,7 @@ public class RavenTreeModel extends ChildPropertyTreeModel
 		  for(Object ob : olist)
 		  	{
 			  Node n = (Node) ob;
-			  if(userAcl.getAccessForNode(n)>0) ret.add(n);
+			  if(userAcl.getAccessForNode(n)> AccessControl.NONE) ret.add(n);
 		  	}  
 		  if(ret.size()==0) return null;
 	    return ret;
