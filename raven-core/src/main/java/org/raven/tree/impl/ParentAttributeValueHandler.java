@@ -19,7 +19,9 @@ package org.raven.tree.impl;
 
 import org.raven.tree.AttributeValueHandler;
 import org.raven.tree.AttributeValueHandlerListener;
+import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodeAttributeListener;
 import org.weda.beans.ObjectUtils;
 
 /**
@@ -27,7 +29,8 @@ import org.weda.beans.ObjectUtils;
  * @author Mikhail Titov
  */
 public class ParentAttributeValueHandler 
-        extends AbstractAttributeValueHandler implements AttributeValueHandlerListener
+        extends AbstractAttributeValueHandler 
+        implements AttributeValueHandlerListener, NodeAttributeListener
 {
     private AttributeValueHandler wrappedHandler;
     private NodeAttribute parentAttribute;
@@ -74,7 +77,10 @@ public class ParentAttributeValueHandler
         {
             String result = wrappedHandler.getValue();
             if (result!=null)
+            {
+                cleanupParentAttribute();
                 return result;
+            }
             else
                 return getParentAttribute()==null? null : getParentAttribute().getValue();
         }
@@ -83,6 +89,13 @@ public class ParentAttributeValueHandler
     public Object handleValue()
     {
         Object result = wrappedHandler==null? null : wrappedHandler.handleValue();
+        if (result!=null)
+        {
+            cleanupParentAttribute();
+            return result;
+        } 
+        else
+            return getParentAttribute()==null? null : getParentAttribute().getRealValue();
     }
 
     public void close()
@@ -110,13 +123,39 @@ public class ParentAttributeValueHandler
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    private void cleanupParentAttribute()
+    {
+        if (parentAttribute!=null)
+        {
+            parentAttribute.getOwner().removeNodeAttributeDependency(attribute.getName(), this);
+            parentAttribute = null;
+        }
+    }
+
     private NodeAttribute getParentAttribute()
     {
         if (parentAttribute==null)
         {
             parentAttribute = attribute.getOwner().getParentAttribute(attribute.getName());
             if (parentAttribute!=null)
-//                parentAttribute.getOwner().add
+                parentAttribute.getOwner().addNodeAttributeDependency(attribute.getName(), this);
         }
+        return parentAttribute;
+    }
+
+    public void nodeAttributeNameChanged(NodeAttribute attribute, String oldName, String newName)
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void nodeAttributeValueChanged(
+            Node node, NodeAttribute attribute, String oldValue, String newValue)
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void nodeAttributeRemoved(Node node, NodeAttribute attribute)
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
