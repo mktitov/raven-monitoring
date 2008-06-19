@@ -354,17 +354,17 @@ public class TreeImpl implements Tree
         Collection<NodeAttribute> attrs = clone.getNodeAttributes();
         if (attrs!=null)
         {
-            String sourcePath = source.getPath();
+//            String sourcePath = source.getPath();
             for (NodeAttribute attr: attrs)
             {
-                if (   (attr.isAttributeReference() || Node.class.isAssignableFrom(attr.getType()))
-                    && attr.getRawValue()!=null && attr.getRawValue().startsWith(sourcePath))
-                {
-                    attr.setRawValue(
-                            destPath
-                            + Node.NODE_SEPARATOR+clonedSource.getName()
-                            + attr.getRawValue().substring(sourcePath.length()));
-                }
+//                if (   (attr.isAttributeReference() || Node.class.isAssignableFrom(attr.getType()))
+//                    && attr.getRawValue()!=null && attr.getRawValue().startsWith(sourcePath))
+//                {
+//                    attr.setRawValue(
+//                            destPath
+//                            + Node.NODE_SEPARATOR+clonedSource.getName()
+//                            + attr.getRawValue().substring(sourcePath.length()));
+//                }
                 if (store)
                     configurator.getTreeStore().saveNodeAttribute(attr);
             }

@@ -40,6 +40,7 @@ import org.raven.tree.AttributeReference;
 import org.raven.tree.NodeAttributeListener;
 import org.raven.tree.NodeListener;
 import org.raven.tree.NodeShutdownError;
+import org.raven.tree.NodeTuner;
 import org.raven.tree.Tree;
 import org.raven.tree.store.TreeStoreError;
 import org.slf4j.Logger;
@@ -137,7 +138,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
         }
     }
     
-    private void processListeners(NodeAttributeImpl attr, String newValue, String oldValue)
+    private void processListeners(NodeAttributeImpl attr, Object newValue, Object oldValue)
     {
         if (listeners != null)
         {
@@ -167,19 +168,19 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     }
 
     private void processNodeDependency(
-            NodeAttributeImpl attr, String newValue, String oldValue) throws TypeConverterException
+            NodeAttributeImpl attr, Object newValue, Object oldValue) throws TypeConverterException
     {
         if (Node.class.isAssignableFrom(attr.getType()))
         {
             if (oldValue != null)
             {
-                Node oldRef = (Node) converter.convert(attr.getType(), oldValue, null);
-                oldRef.removeDependentNode(this);
+//                Node oldRef = (Node) converter.convert(attr.getType(), oldValue, null);
+                ((Node)oldValue).removeDependentNode(this);
             }
             if (newValue != null)
             {
                 Node node = (Node) converter.convert(attr.getType(), newValue, null);
-                node.addDependentNode(this);
+                ((Node)newValue).addDependentNode(this);
             }
         }
     }
@@ -462,45 +463,48 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     {
         try
         {
-            boolean dependenciesInitialized = true;
-            if (nodeAttributes != null)
-            {
-                for (NodeAttribute attr : nodeAttributes.values())
-                {
-                    Node node = null;
-                    if (Node.class.isAssignableFrom(attr.getType()) && attr.getValue()!=null)
-                    {
-                        node = converter.convert(Node.class, attr.getValue(), null);
-                        node.addDependentNode(this);
-                        if (node.getStatus()==Status.CREATED)
-                        {
-                            dependenciesInitialized = false;
-                        } 
-                    }
-                    if (   AttributeReference.class.isAssignableFrom(attr.getType()) 
-                              && attr.getAttributeReference()!=null)
-                    {
-                        if (   attr.getAttributeReference().getAttribute().getOwner().getStatus()
-                            == Status.CREATED)
-                        {
-                            dependenciesInitialized = false;
-                        }
-                    }
-                }
-            }
-            
-            if (!dependenciesInitialized)
-            {
-                return;
-            }
-            extractNodeLogicParameters();
+            if (nodeAttributes!=null)
+                for (NodeAttribute attr: nodeAttributes.values())
+                    attr.init();
+//            boolean dependenciesInitialized = true;
+//            if (nodeAttributes != null)
+//            {
+//                for (NodeAttribute attr : nodeAttributes.values())
+//                {
+//                    Node node = null;
+//                    if (Node.class.isAssignableFrom(attr.getType()) && attr.getValue()!=null)
+//                    {
+//                        node = converter.convert(Node.class, attr.getValue(), null);
+//                        node.addDependentNode(this);
+//                        if (node.getStatus()==Status.CREATED)
+//                        {
+//                            dependenciesInitialized = false;
+//                        } 
+//                    }
+//                    if (   AttributeReference.class.isAssignableFrom(attr.getType()) 
+//                              && attr.getAttributeReference()!=null)
+//                    {
+//                        if (   attr.getAttributeReference().getAttribute().getOwner().getStatus()
+//                            == Status.CREATED)
+//                        {
+//                            dependenciesInitialized = false;
+//                        }
+//                    }
+//                }
+//            }
+//            
+//            if (!dependenciesInitialized)
+//            {
+//                return;
+//            }
+            extractNodeParameters();
             syncAttributesAndParameters();
             syncAttributesGenerators();
             doInit();
             
             setStatus(Status.INITIALIZED);
             
-            initDependentNodes();
+//            initDependentNodes();
                                 
         } catch (Exception e)
         {
@@ -564,7 +568,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
                 }
     }
 
-    void fireAttributeValueChanged(NodeAttributeImpl attr, String oldValue, String newValue)
+    void fireAttributeValueChanged(NodeAttributeImpl attr, Object oldValue, Object newValue)
     {
         processNodeDependency(attr, newValue, oldValue);
         processAttributeGeneration(attr, newValue);
@@ -644,7 +648,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
         return null;
     }
 
-    private void extractNodeLogicParameters()
+    private void extractNodeParameters()
     {
         if (parameters!=null)
             parameters = null;
@@ -703,7 +707,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
                 listener.nodeStatusChanged(this, oldStatus, status);
     }
 
-    private void processAttributeGeneration(NodeAttributeImpl attr, String newValue) 
+    private void processAttributeGeneration(NodeAttributeImpl attr, Object newValue) 
             throws TypeConverterException, NodeError, TreeStoreError
     {
         if (attr.isGeneratorType())
@@ -780,8 +784,8 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
                     {
                         param.setNodeAttribute(attr);
                         attr.setParameter(param);
-                        if (!attr.isAttributeReference())
-                            param.setValue(attr.getValue());
+//                        if (!attr.isAttributeReference())
+//                            param.setValue(attr.getValue());
                     }
                 }
             }
@@ -828,10 +832,10 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
                 {
                     for (NodeAttribute attr: leaveAttributes)
                         if (   childAttr.getName().equals(attr.getName()) 
-                            && (  attr.getType().isAssignableFrom(childAttr.getType()))
-                                || (   childAttr.getAttributeReference()!=null 
-                                    && attr.getType().isAssignableFrom(
-                                       childAttr.getAttributeReference().getAttribute().getType())))
+                            && (  attr.getType().isAssignableFrom(childAttr.getType())))
+//                                || (   childAttr.getAttributeReference()!=null 
+//                                    && attr.getType().isAssignableFrom(
+//                                       childAttr.getAttributeReference().getAttribute().getType())))
                         {
                             removeAttr = false;
                             break;
@@ -900,7 +904,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     }
 
     public void nodeAttributeValueChanged(
-            Node node, NodeAttribute attribute, String oldValue, String newValue)
+            Node node, NodeAttribute attribute, Object oldValue, Object newValue)
     {
     }
 
@@ -949,6 +953,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
                 NodeAttribute attrClone = (NodeAttribute) attr.clone();
                 attrClone.setOwner(clone);
                 clone.addNodeAttribute(attrClone);
+//                attrClone.init();
             }
             
         if (childrens!=null)
@@ -960,6 +965,9 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
         
         return clone;
     }
-    
-    
+
+//    public Node copyTo(Node destination, NodeTuner nodeTuner, boolean save)
+//    {
+//        
+//    }
 }

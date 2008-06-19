@@ -49,4 +49,11 @@ public abstract class AbstractAttributeValueHandler implements AttributeValueHan
     {
         listeners.remove(listener);
     }
+    
+    protected void fireValueChangedEvent(Object oldValue, Object newValue)
+    {
+        if (listeners!=null)
+            for (AttributeValueHandlerListener listener: listeners)
+                listener.valueChanged(oldValue, newValue);
+    }
 }

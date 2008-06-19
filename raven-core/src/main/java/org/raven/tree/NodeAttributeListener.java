@@ -40,7 +40,7 @@ public interface NodeAttributeListener
      * @param newValue the new value
      */
     public void nodeAttributeValueChanged(
-            Node node, NodeAttribute attribute, String oldValue, String newValue);
+            Node node, NodeAttribute attribute, Object oldRealValue, Object newRealValue);
     /**
      * Informs the listener that the node attribute was removed.
      * @param node the owner of the attribute.

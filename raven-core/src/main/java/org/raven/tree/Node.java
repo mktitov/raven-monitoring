@@ -296,4 +296,6 @@ public interface Node extends Cloneable
      */
     public Object clone() throws CloneNotSupportedException;
     
+//    public Node copyTo(Node destination, NodeTuner nodeTuner, boolean save);
+    
 }

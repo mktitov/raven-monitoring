@@ -689,7 +689,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 
     @Override
     public void nodeAttributeValueChanged(
-            Node node, NodeAttribute attribute, String oldValue, String newValue)
+            Node node, NodeAttribute attribute, Object oldValue, Object newValue)
     {
         if (databaseInitialized.get() && node.getStatus()==Status.STARTED)
         {

@@ -27,8 +27,10 @@ import org.weda.constraints.ConstraintException;
  */
 //TODO: add isVisible method
 //TODO: add isReadOnly functionality
+//TODO: add getPattern functionality
 public interface NodeAttribute extends Cloneable
 {
+    public void init() throws Exception;
     /**
      * Gets the unique attribute id.
      */
@@ -146,12 +148,12 @@ public interface NodeAttribute extends Cloneable
      * Returns true if this attribute is references to the other node attribute.
      * @see #getAttributeReference()
      */
-    public boolean isAttributeReference();
+//    public boolean isAttributeReference();
     /**
      * Returns reference to the attribute.
      * @see #isAttributeReference() 
      */
-    public AttributeReference getAttributeReference();
+//    public AttributeReference getAttributeReference();
     /**
      * Sets the attribute value handler by it's type.
      */

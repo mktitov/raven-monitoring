@@ -33,26 +33,26 @@ public interface AttributeValueHandler
      */
     public void removeListener(AttributeValueHandlerListener listener);
     /**
-     * Sets the value that must be handled. Must be call before {@link #handleValue()}.
-     * @see #handleValue() 
+     * Sets the value that must be handled. Must be call before {@link #handleData()}.
+     * @see #handleData() 
      */
-    public void setValue(String value);
+    public void setData(String value);
     /**
      * Returns the string value. 
      */
-    public String getValue();
+    public String getData();
     /**
      * Returns the translated value.
      */
-    public Object handleValue();
+    public Object handleData();
     /**
      * Closes the value handler. The value handler can't be use after this method call.
      */
     public void close();
     /**
-     * If returns <b>true</b> then method {@link #handleValue()} can be used.
+     * If returns <b>true</b> then method {@link #handleData()} can be used.
      */
-    public boolean canHandleValue();
+//    public boolean canHandleValue();
     /**
      * If returns <b>false</b> the method {@link NodeAttribute#getReferenceValues()} must returns
      * <b>null</b>

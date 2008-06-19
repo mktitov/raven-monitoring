@@ -19,10 +19,14 @@ package org.raven.tree.impl;
 
 import org.raven.tree.AttributeValueHandler;
 import org.raven.tree.AttributeValueHandlerListener;
+import org.raven.tree.AttributeValueHandlerRegistry;
+import org.raven.tree.FactoryNotFoundException;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeAttributeListener;
 import org.weda.beans.ObjectUtils;
+import org.weda.internal.annotations.Service;
+import org.weda.services.TypeConverter;
 
 /**
  *
@@ -32,9 +36,15 @@ public class ParentAttributeValueHandler
         extends AbstractAttributeValueHandler 
         implements AttributeValueHandlerListener, NodeAttributeListener
 {
+    @Service
+    private static AttributeValueHandlerRegistry handlerRegistry;
+    @Service
+    private static TypeConverter converter;
+    
     private AttributeValueHandler wrappedHandler;
     private NodeAttribute parentAttribute;
-    private String value;
+    private String data;
+    private String wrappedHandlerType;
 
     public ParentAttributeValueHandler(NodeAttribute attribute)
     {
@@ -46,63 +56,75 @@ public class ParentAttributeValueHandler
         return wrappedHandler;
     }
 
-    public void setWrappedHandler(AttributeValueHandler wrappedHandler)
+    public void setWrappedHandlerType(String handlerType) throws FactoryNotFoundException
     {
-        if (!ObjectUtils.equals(this.wrappedHandler, wrappedHandler))
+        if (!ObjectUtils.equals(this.wrappedHandlerType, handlerType))
         {
-            if (this.wrappedHandler!=null)
-                this.wrappedHandler.close();
-
-            this.wrappedHandler = wrappedHandler;
-            if (this.wrappedHandler!=null)
+            cleanupWrappedHandler();
+            
+            if (handlerType==null)
+                wrappedHandler = null;
+            else 
+                wrappedHandler = handlerRegistry.getValueHandler(wrappedHandlerType, attribute);
+            
+            if (wrappedHandler!=null)
             {
-                this.wrappedHandler.addListener(this);
-                this.wrappedHandler.setValue(value);
+                wrappedHandler.addListener(this);
+                if (data!=null)
+                    wrappedHandler.setData(data);
             }
         }
     }
 
-    public void setValue(String value)
+    public void setData(String data)
     {
-        this.value = value;
-        if (wrappedHandler!=null)
-            wrappedHandler.setValue(value);
+        if (!ObjectUtils.equals(this.data, data))
+        {
+            String oldData = this.data;
+            this.data = data;
+            if (wrappedHandler!=null)
+                wrappedHandler.setData(data);
+            else
+            {
+                Object oldValue = converter.convert(attribute.getType(), oldData, null);
+                Object newValue = converter.convert(attribute.getType(), this.data, null);
+                fireValueChangedEvent(oldValue, newValue);
+            }
+        }
     }
 
-    public String getValue()
+    public String getData()
     {
         if (wrappedHandler==null)
-            return value;
+            return data;
+        else
+            return wrappedHandler.getData();
+    }
+
+    public Object handleData()
+    {
+        if (wrappedHandler==null && data != null)
+        {
+            cleanupParentAttribute();
+            return converter.convert(attribute.getType(), data, null);
+        }
         else
         {
-            String result = wrappedHandler.getValue();
+            Object result = wrappedHandler==null? null : wrappedHandler.handleData();
             if (result!=null)
             {
                 cleanupParentAttribute();
                 return result;
-            }
+            } 
             else
-                return getParentAttribute()==null? null : getParentAttribute().getValue();
+                return getParentAttribute()==null? null : getParentAttribute().getRealValue();
         }
-    }
-
-    public Object handleValue()
-    {
-        Object result = wrappedHandler==null? null : wrappedHandler.handleValue();
-        if (result!=null)
-        {
-            cleanupParentAttribute();
-            return result;
-        } 
-        else
-            return getParentAttribute()==null? null : getParentAttribute().getRealValue();
     }
 
     public void close()
     {
         cleanupParentAttribute();
-        if (wrappedHandler!=null)
-            wrappedHandler.close();
+        cleanupWrappedHandler();
     }
 
     public boolean canHandleValue()
@@ -112,17 +134,17 @@ public class ParentAttributeValueHandler
 
     public boolean isReferenceValuesSupported()
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return wrappedHandler!=null && wrappedHandler.isReferenceValuesSupported();
     }
 
     public boolean isExpressionSupported()
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return wrappedHandler!=null && wrappedHandler.isExpressionSupported();
     }
 
-    public void valueChanged(Object newValue)
+    public void valueChanged(Object oldValue, Object newValue)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        fireValueChangedEvent(oldValue, newValue);
     }
 
     private void cleanupParentAttribute()
@@ -132,6 +154,12 @@ public class ParentAttributeValueHandler
             parentAttribute.getOwner().removeNodeAttributeDependency(attribute.getName(), this);
             parentAttribute = null;
         }
+    }
+    
+    private void cleanupWrappedHandler()
+    {
+        if (wrappedHandler!=null)
+            wrappedHandler.close();
     }
 
     private NodeAttribute getParentAttribute()
@@ -147,17 +175,20 @@ public class ParentAttributeValueHandler
 
     public void nodeAttributeNameChanged(NodeAttribute attribute, String oldName, String newName)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public void nodeAttributeValueChanged(
-            Node node, NodeAttribute attribute, String oldValue, String newValue)
+            Node node, NodeAttribute attribute, Object oldValue, Object newValue)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        fireValueChangedEvent(oldValue, newValue);
     }
 
     public void nodeAttributeRemoved(Node node, NodeAttribute attribute)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Object oldValue = handleData();
+        cleanupParentAttribute();
+        Object newValue = handleData();
+        if (!ObjectUtils.equals(newValue, oldValue))
+            fireValueChangedEvent(oldValue, newValue);
     }
 }

@@ -36,9 +36,6 @@ import static org.easymock.EasyMock.*;
  */
 public class ParameterFieldTransformerWorkerTest extends ServiceTestCase 
 {
-    private Node parentNode;
-    private NodeAttribute attribute;
-    private NodeListener listener;
     private Configurator configurator;
     
     @Override
@@ -58,49 +55,22 @@ public class ParameterFieldTransformerWorkerTest extends ServiceTestCase
     public void test() throws Exception
     {
         NodeWithParameter2 node = new NodeWithParameter2();
-        createAndTrainMocks(node);
         node.setName("node");
-        node.setParent(parentNode);
-        assertEquals("parentValue", node.getParameter());
+        NodeAttribute attribute = createAndTrainAttribute();
+        node.addNodeAttribute(attribute);
         
-        node.setParameter("test");
-        assertEquals("test", node.getParameter());
+        assertEquals("value", node.getParameter());
         
-        assertEquals(0, node.getParameter2());
-        node.setParameter2(10);
-        assertEquals(10, node.getParameter2());
-        
-        node.addListener(listener);
-        configurator.getTreeStore().saveNode(node);
-        node.init();
-        
-        node.setParameter("newValue");
-        node.setParameter2(20);
-        
-        verify(parentNode, attribute, listener);
+        verify(attribute);
     }
 
-    private void createAndTrainMocks(Node node)
+    private NodeAttribute createAndTrainAttribute()
     {
-        parentNode = createMock(Node.class);
-        attribute = createMock(NodeAttribute.class);
-        listener = createMock(NodeListener.class);
+        NodeAttribute attribute = createMock(NodeAttribute.class);
+        expect(attribute.getName()).andReturn("parameter");
+        expect(attribute.getRealValue()).andReturn("value");
+        replay(attribute);
         
-        expect(parentNode.getId()).andReturn(-1);
-        expect(parentNode.getParent()).andReturn(null).anyTimes();
-        expect(parentNode.getNodeAttribute("parameter")).andReturn(attribute).times(2);
-        expect(attribute.getRealValue()).andReturn("parentValue").times(2);
-        
-        expect(parentNode.getName()).andReturn("parentNode").anyTimes();
-        
-        expect(listener.isSubtreeListener()).andReturn(false).anyTimes();
-        listener.nodeStatusChanged(node, Status.CREATED, Status.INITIALIZED);
-        listener.nodeAttributeValueChanged(
-                eq(node), isA(NodeAttribute.class), eq("test"), eq("newValue"));
-        listener.nodeAttributeValueChanged(
-                eq(node), isA(NodeAttribute.class), eq("10"), eq("20"));
-        
-        
-        replay(parentNode, attribute, listener);
+        return attribute;
     }
 }

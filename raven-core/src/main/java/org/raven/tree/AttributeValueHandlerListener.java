@@ -26,5 +26,5 @@ public interface AttributeValueHandlerListener
     /**
      * Informs the listener that the {@link AttributeValueHandler#handleValue() value} changed.
      */
-    public void valueChanged(Object newValue);
+    public void valueChanged(Object oldValue, Object newValue);
 }

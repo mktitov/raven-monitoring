@@ -21,6 +21,7 @@ import java.sql.SQLException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.raven.tree.FactoryNotFoundException;
 import org.raven.tree.Node;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeAttributeImpl;
@@ -76,7 +77,7 @@ public class H2TreeStoreTest extends Assert
     }
     
     @Test
-    public void saveAndLoadAttributes() throws SQLException, TreeStoreError, ConstraintException
+    public void saveAndLoadAttributes() throws Exception
     {
         store.removeNodes();
         
@@ -93,7 +94,8 @@ public class H2TreeStoreTest extends Assert
         attr.setParentAttribute("parentAttribute");
         attr.setType(String.class);
         attr.setRequired(false);
-        attr.setValue("value");
+        attr.setRawValue("value");
+        attr.setValueHandlerType("valueHandlerType");
         
         store.saveNodeAttribute(attr);
         
@@ -112,8 +114,9 @@ public class H2TreeStoreTest extends Assert
         assertEquals("parameterName", attr1.getParameterName());
         assertEquals("parentAttribute", attr1.getParentAttribute());
         assertEquals(String.class, attr1.getType());
-        assertEquals("value", attr1.getValue());
+        assertEquals("value", attr1.getRawValue());
         assertFalse(attr1.isRequired());
+        assertEquals("valueHandlerType", attr1.getValueHandlerType());
         
         attr1.setDescription("description1");
         attr1.setName("name1");
@@ -121,8 +124,9 @@ public class H2TreeStoreTest extends Assert
         attr1.setParameterName("parameterName1");
         attr1.setParentAttribute("parentAttribute1");
         attr1.setType(Integer.class);
-        attr1.setValue("1");
+        attr1.setRawValue("1");
         attr1.setRequired(true);
+        attr1.setValueHandlerType("changedValueHandlerType");
         
         store.saveNodeAttribute(attr1);
         
@@ -138,8 +142,9 @@ public class H2TreeStoreTest extends Assert
         assertEquals("parameterName1", attr1.getParameterName());
         assertEquals("parentAttribute1", attr1.getParentAttribute());
         assertEquals(Integer.class, attr1.getType());
-        assertEquals("1", attr1.getValue());
+        assertEquals("1", attr1.getRawValue());
         assertTrue(attr1.isRequired());
+        assertEquals("changedValueHandlerType", attr1.getValueHandlerType());
         
         store.removeNodeAttribute(attr1.getId());
         node1 = (ContainerNode) store.getNode(node.getId());

@@ -45,24 +45,25 @@ public class NodeListenerExecutorHelper
     public static Object getParameterValue(Node node, String parameterName, Object fieldValue)
     {
         NodeAttribute attr = node.getNodeAttribute(parameterName);
-        if (attr==null || !attr.isAttributeReference())
-        {
-            if (fieldValue==null)
-            {
-                PropertyDescriptor desc = classDescriptorRegistry.getPropertyDescriptor(
-                        node.getClass(), parameterName);
-                return converter.convert(
-                        desc.getType(), node.getParentAttributeRealValue(parameterName)
-                        , desc.getPattern());
-            } else
-                return fieldValue;
-        } 
-        else 
-        {
-            PropertyDescriptor desc = 
-                    classDescriptorRegistry.getPropertyDescriptor(node.getClass(), parameterName);
-            return converter.convert(desc.getType(), attr.getRealValue(), desc.getPattern());
-        }
+        return attr.getRealValue();
+//        if (attr==null || !attr.isAttributeReference())
+//        {
+//            if (fieldValue==null)
+//            {
+//                PropertyDescriptor desc = classDescriptorRegistry.getPropertyDescriptor(
+//                        node.getClass(), parameterName);
+//                return converter.convert(
+//                        desc.getType(), node.getParentAttributeRealValue(parameterName)
+//                        , desc.getPattern());
+//            } else
+//                return fieldValue;
+//        } 
+//        else 
+//        {
+//            PropertyDescriptor desc = 
+//                    classDescriptorRegistry.getPropertyDescriptor(node.getClass(), parameterName);
+//            return converter.convert(desc.getType(), attr.getRealValue(), desc.getPattern());
+//        }
     }
     
     public static Object getParentAttributeValue(

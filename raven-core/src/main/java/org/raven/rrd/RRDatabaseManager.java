@@ -97,7 +97,7 @@ public class RRDatabaseManager extends BaseNode
 
     @Override
     public void nodeAttributeValueChanged(
-            Node node, NodeAttribute attribute, String oldValue, String newValue)
+            Node node, NodeAttribute attribute, Object oldValue, Object newValue)
     {
         if (node==this)
         {
