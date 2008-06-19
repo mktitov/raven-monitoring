@@ -100,7 +100,9 @@ public class ParentAttributeValueHandler
 
     public void close()
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        cleanupParentAttribute();
+        if (wrappedHandler!=null)
+            wrappedHandler.close();
     }
 
     public boolean canHandleValue()
