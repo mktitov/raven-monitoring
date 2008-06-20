@@ -59,13 +59,19 @@ public interface NodeParameter
      */
     public boolean isRequired();
     /**
+     * Returns the parameter default value
+     */
+    public String getDefaultValue();
+    /**
      * Returns the parameter value.
      */
-    public Object getValue();
+    //TODO: убрать
+//    public Object getValue();
     /**
      * Sets the parameter value.
      */
-    public void setValue(Object value) throws ConstraintException;
+    //TOT: убрать
+//    public void setValue(Object value) throws ConstraintException;
     /**
      * Returns the property descriptor of the parameter
      */

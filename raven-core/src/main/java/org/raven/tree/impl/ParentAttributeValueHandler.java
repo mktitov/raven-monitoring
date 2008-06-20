@@ -134,7 +134,8 @@ public class ParentAttributeValueHandler
 
     public boolean isReferenceValuesSupported()
     {
-        return wrappedHandler!=null && wrappedHandler.isReferenceValuesSupported();
+        return wrappedHandler==null 
+                || (wrappedHandler!=null && wrappedHandler.isReferenceValuesSupported());
     }
 
     public boolean isExpressionSupported()

@@ -19,6 +19,7 @@ package org.raven.tree.impl;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
+import org.raven.annotations.Parameter;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
@@ -47,21 +48,27 @@ public class NodeParameterImpl implements NodeParameter
     
     private final Node node;
     private final String name;        
+    private final String defaultValue;
     
     private PropertyDescriptor propertyDescriptor;
     private NodeAttribute nodeAttribute;
-    private GetOperation getter;
-    private SetOperation setter;
+//    private GetOperation getter;
+//    private SetOperation setter;
     private boolean required = false;
 
-    public NodeParameterImpl(Node node, PropertyDescriptor desc)
+    public NodeParameterImpl(Parameter parameterAnn, Node node, PropertyDescriptor desc)
     {
         this.node = node;
         this.name = desc.getName();
         
+        if (!"".equals(parameterAnn.defaultValue()))
+            defaultValue = parameterAnn.defaultValue();
+        else
+            defaultValue = null;
+        
         propertyDescriptor = desc;
-        getter = operationCompiler.compileGetOperation(node.getClass(), name);
-        setter = operationCompiler.compileSetOperation(node.getClass(), name);
+//        getter = operationCompiler.compileGetOperation(node.getClass(), name);
+//        setter = operationCompiler.compileSetOperation(node.getClass(), name);
         
         for (Annotation ann: propertyDescriptor.getAnnotations())
             if (ann instanceof NotNull)
@@ -97,18 +104,23 @@ public class NodeParameterImpl implements NodeParameter
         return required;
     }
 
-    public Object getValue()
+    public String getDefaultValue()
     {
-        return getter.getValue(node);
+        return defaultValue;
     }
-
-    public void setValue(Object value) throws ConstraintException
-    {
-        Object val = converter.convert(getType(), value, getPattern());
-        if (node.getStatus()!=Status.CREATED)
-            propertyDescriptor.check(val);
-        setter.setValue(node, val);
-    }
+    
+//    public Object getValue()
+//    {
+//        return getter.getValue(node);
+//    }
+//
+//    public void setValue(Object value) throws ConstraintException
+//    {
+//        Object val = converter.convert(getType(), value, getPattern());
+//        if (node.getStatus()!=Status.CREATED)
+//            propertyDescriptor.check(val);
+//        setter.setValue(node, val);
+//    }
 
     public PropertyDescriptor getPropertyDescriptor()
     {

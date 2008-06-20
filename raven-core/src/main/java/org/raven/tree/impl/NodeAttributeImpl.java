@@ -270,7 +270,10 @@ public class NodeAttributeImpl
 
     public void setValue(String value) throws ConstraintException
     {
-        valueHandler.setData(value);
+        if (initialized)
+            valueHandler.setData(value);
+        else
+            this.value = value;
 //        if (!ObjectUtils.equals(this.value, value))
 //        {
 //            String oldValue = this.value;

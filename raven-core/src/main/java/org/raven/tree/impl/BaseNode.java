@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import org.raven.tree.AttributesGenerator;
+import org.raven.tree.FactoryNotFoundException;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
@@ -36,11 +37,9 @@ import org.raven.tree.NodeParameter;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
 import org.raven.template.TemplateEntry;
-import org.raven.tree.AttributeReference;
 import org.raven.tree.NodeAttributeListener;
 import org.raven.tree.NodeListener;
 import org.raven.tree.NodeShutdownError;
-import org.raven.tree.NodeTuner;
 import org.raven.tree.Tree;
 import org.raven.tree.store.TreeStoreError;
 import org.slf4j.Logger;
@@ -659,7 +658,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
                 for (Annotation ann: desc.getAnnotations())
                     if (ann instanceof Parameter)
                     {
-                        NodeParameter param = new NodeParameterImpl(this, desc);
+                        NodeParameter param = new NodeParameterImpl((Parameter) ann,this, desc);
                         
                         if (parameters==null)
                             parameters = new HashMap<String, NodeParameter>();
@@ -708,13 +707,12 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     }
 
     private void processAttributeGeneration(NodeAttributeImpl attr, Object newValue) 
-            throws TypeConverterException, NodeError, TreeStoreError
     {
         if (attr.isGeneratorType())
             syncParentAttributes(attr);
     }
 
-    private void syncAttributesGenerators()
+    private void syncAttributesGenerators() throws Exception
     {
         if (nodeAttributes==null)
             return;
@@ -725,7 +723,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
                 syncParentAttributes(attr);
     }
     
-    private void syncParentAttributes(NodeAttribute parent)
+            private void syncParentAttributes(NodeAttribute parent) throws Exception
     {
         if (parent.getValue() == null)
             removeChildAttributes(parent.getName(), null);
@@ -761,12 +759,22 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
                     configurator.getTreeStore().saveNodeAttribute(clone);
 
                     addNodeAttribute(clone);
+                    try
+                    {
+                        clone.init();
+                    } 
+                    catch (Exception exception)
+                    {
+                        logger.error(String.format(
+                                "Error initializing the attribute (%s) of the node (%s)"
+                                , clone.getName(), getPath()))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ;
+                    }
                 }
             }
         }
     }
 
-    private void syncAttributesAndParameters() throws ConstraintException, TreeStoreError
+    private void syncAttributesAndParameters() throws Exception
     {
         if (nodeAttributes!=null)
         {
@@ -801,7 +809,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
 //    private void syncParameterWithAttribute()
     
     private void createNodeAttribute(NodeParameter param) 
-        throws TreeStoreError, ConstraintException
+        throws TreeStoreError, ConstraintException, FactoryNotFoundException
     {
         NodeAttributeImpl attr = new NodeAttributeImpl();
         attr.setOwner(this);
@@ -809,14 +817,13 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
         attr.setParameterName(param.getName());
         attr.setParameter(param);
         attr.setDescription(param.getDescription());
-        //TODO: убрать
-        
-        attr.setValue(converter.convert(String.class, param.getValue(), param.getPattern()));
+        attr.setRawValue(param.getDefaultValue());
         attr.setType(param.getType());
-
         addNodeAttribute(attr);
 
         configurator.getTreeStore().saveNodeAttribute(attr);
+        
+        attr.init();
     }
     
     void removeChildAttributes(String parentName, Collection<NodeAttribute> leaveAttributes)

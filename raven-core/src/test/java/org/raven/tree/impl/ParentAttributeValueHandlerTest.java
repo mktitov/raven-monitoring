@@ -1,5 +1,5 @@
 /*
- *  Copyright 2008 tim.
+ *  Copyright 2008 Mikhail Titov.
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,29 +15,16 @@
  *  under the License.
  */
 
-package org.raven.annotations;
+package org.raven.tree.impl;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import org.raven.RavenCoreTestCase;
 
 /**
  *
  * @author Mikhail Titov
  */
-@Documented
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD, ElementType.METHOD})
-public @interface Parameter 
+//TODO: write tests
+public class ParentAttributeValueHandlerTest extends RavenCoreTestCase
 {
-    /**
-     * If sets to <code>true</code> the parameter is visible in the user interface.
-     */
-    boolean visible() default true;
-    /**
-     * The default value of the parameter
-     */
-    String defaultValue() default "";
+
 }
