@@ -36,7 +36,7 @@ public interface AttributeValueHandler
      * Sets the value that must be handled. Must be call before {@link #handleData()}.
      * @see #handleData() 
      */
-    public void setData(String value);
+    public void setData(String value) throws Exception;
     /**
      * Returns the string value. 
      */

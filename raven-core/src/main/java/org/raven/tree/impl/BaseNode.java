@@ -708,8 +708,17 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
 
     private void processAttributeGeneration(NodeAttributeImpl attr, Object newValue) 
     {
-        if (attr.isGeneratorType())
-            syncParentAttributes(attr);
+        try
+        {
+            if (attr.isGeneratorType())
+            {
+                syncParentAttributes(attr);
+            }
+        } catch (Exception e)
+        {
+            logger.error(String.format(
+                    "Error generating child attributes for (%s) attribute"), attr.getName());
+        }
     }
 
     private void syncAttributesGenerators() throws Exception

@@ -69,8 +69,8 @@ public interface Node extends Cloneable
      * The separator char between nodes names in the path
      * @see #getPath() 
      */
-    public static String NODE_SEPARATOR = "/";
-    public static String ATTRIBUTE_SEPARATOR = "#";
+    public static char NODE_SEPARATOR = '/';
+    public static char ATTRIBUTE_SEPARATOR = '@';
     
     /**
      * Returns the node logger.
