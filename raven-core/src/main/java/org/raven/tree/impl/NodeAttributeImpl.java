@@ -338,6 +338,11 @@ public class NodeAttributeImpl
         return result;
     }
 
+    public void save()
+    {
+        configurator.getTreeStore().saveNodeAttribute(this);
+    }
+
     @Override
     public Object clone() throws CloneNotSupportedException
     {

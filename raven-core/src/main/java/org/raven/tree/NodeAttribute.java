@@ -18,6 +18,7 @@
 package org.raven.tree;
 
 import java.util.List;
+import org.raven.tree.store.TreeStore;
 import org.weda.constraints.ConstraintException;
 
 /**
@@ -167,6 +168,10 @@ public interface NodeAttribute extends Cloneable
      * Returns <code>true</code> if value handler supports expressions.
      */
     public boolean isExpression();
+    /**
+     * Stores node attribute in the {@link TreeStore}.
+     */
+    public void save();
     /**
      * Clones the attribute.
      * @throws java.lang.CloneNotSupportedException

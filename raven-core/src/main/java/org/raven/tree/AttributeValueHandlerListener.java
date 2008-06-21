@@ -27,4 +27,8 @@ public interface AttributeValueHandlerListener
      * Informs the listener that the {@link AttributeValueHandler#handleValue() value} changed.
      */
     public void valueChanged(Object oldValue, Object newValue);
+    /**
+     * Informs listener that expression in the value handler is invalidated.
+     */
+    public void expressionInvalidated();
 }

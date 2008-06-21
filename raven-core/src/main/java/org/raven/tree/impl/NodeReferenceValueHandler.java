@@ -23,7 +23,9 @@ import java.util.List;
 import java.util.Set;
 import org.apache.commons.lang.text.StrTokenizer;
 import org.raven.tree.Node;
+import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodeListener;
 import org.raven.tree.NodeReferenceValueHandlerException;
 import org.raven.tree.Tree;
 import org.weda.internal.annotations.Service;
@@ -41,19 +43,20 @@ import org.weda.beans.ObjectUtils;
  * </pre>
  * @author Mikhail Titov
  */
-public class NodeReferenceValueHandler extends AbstractAttributeValueHandler
+public class NodeReferenceValueHandler 
+        extends AbstractAttributeValueHandler implements NodeListener
 {
     public final static char QUOTE = '"';
     public final static String PARENT_REFERENCE = "..";
-    public final static String THIS_REFERENCE = ".";
+    public final static String SELF_REFERENCE = ".";
     
     @Service
     private static Tree tree;
     
     private String data = null;
-    private Node node = null;
+    protected Node node = null;
     private boolean addDependencyToNode = false;
-    private List<Node> listenNodes = null;
+    private PathElement[] pathElements = null;
             
     public NodeReferenceValueHandler(NodeAttribute attribute)
     {
@@ -71,11 +74,18 @@ public class NodeReferenceValueHandler extends AbstractAttributeValueHandler
         if (ObjectUtils.equals(this.data, data))
             return;
         
+        Node currentNode = null;
+        List<PathElement> newPathElements = null;
         if (data!=null && data.length()>0)
         {
-            List<Node> newListenNodes = new ArrayList<Node>();
-            Node currentNode = data.charAt(0)==Node.NODE_SEPARATOR? 
-                tree.getRootNode() : attribute.getOwner();
+            newPathElements = new ArrayList<PathElement>();
+            if (data.charAt(0)==Node.NODE_SEPARATOR)
+            {
+                currentNode = tree.getRootNode();
+                newPathElements.add(new PathElement(null, PathElement.Type.ROOT_REFERENCE));
+            } else
+                currentNode = attribute.getOwner();
+            
             StrTokenizer tokenizer = new StrTokenizer(data, Node.NODE_SEPARATOR, QUOTE);
             while (tokenizer.hasNext())
             {
@@ -86,8 +96,9 @@ public class NodeReferenceValueHandler extends AbstractAttributeValueHandler
                     if (currentNode==null)
                         throw new NodeReferenceValueHandlerException(String.format(
                                 "Invalid path (%s) to the node", data));
+                    newPathElements.add(new PathElement(null, PathElement.Type.PARENT_REFERENCE));
                 }
-                else if (!THIS_REFERENCE.equals(nodeName))
+                else if (!SELF_REFERENCE.equals(nodeName))
                 {
                     Node nextNode = currentNode.getChildren(nodeName);                    
                     if (nextNode==null)
@@ -96,22 +107,27 @@ public class NodeReferenceValueHandler extends AbstractAttributeValueHandler
                                 "Node (%s) does not exists in the (%s) node."
                                 , data, nodeName, currentNode.getPath()));
                     currentNode = nextNode;
-                    newListenNodes.add(currentNode);
+                    newPathElements.add(
+                            new PathElement(currentNode, PathElement.Type.NODE_REFERENCE));
                 } 
-            }
-            Node oldNode = node;
-            node = currentNode;
-            if (!ObjectUtils.equals(oldNode, node))
-            {
-                if (oldNode!=null)
-                    oldNode.rem
+                else
+                    newPathElements.add(new PathElement(null, PathElement.Type.SELF_REFERENCE));
             }
         }
+        Node oldNode = node;
+        node = currentNode;
+        if (!ObjectUtils.equals(oldNode, node))
+        {
+            cleanupNodeReference(oldNode);
+            initNodeReference(node, newPathElements);
+            fireValueChangedEvent(oldNode, node);
+        }
+        attribute.save();
     }
-
+    
     public String getData()
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return data;
     }
 
     public Object handleData()
@@ -121,7 +137,7 @@ public class NodeReferenceValueHandler extends AbstractAttributeValueHandler
 
     public void close()
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        cleanupNodeReference(node);
     }
 
     public boolean isReferenceValuesSupported()
@@ -132,6 +148,122 @@ public class NodeReferenceValueHandler extends AbstractAttributeValueHandler
     public boolean isExpressionSupported()
     {
         return true;
+    }
+
+    public boolean isSubtreeListener()
+    {
+        return false;
+    }
+
+    public void nodeStatusChanged(Node node, Status oldStatus, Status newStatus)
+    {
+    }
+
+    public void nodeNameChanged(Node node, String oldName, String newName)
+    {
+        attribute.save();
+    }
+
+    public void childrenAdded(Node owner, Node children)
+    {
+    }
+
+    public void childrenRemoved(Node owner, Node children)
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void nodeAttributeNameChanged(NodeAttribute attribute, String oldName, String newName)
+    {
+    }
+
+    public void nodeAttributeValueChanged(
+            Node node, NodeAttribute attribute, Object oldRealValue, Object newRealValue)
+    {
+    }
+
+    public void nodeAttributeRemoved(Node node, NodeAttribute attribute)
+    {
+    }
+
+    private void cleanupNodeReference(Node oldNode)
+    {
+        if (oldNode!=null)
+        {
+            if (addDependencyToNode)
+                oldNode.removeDependentNode(attribute.getOwner());
+            else
+                oldNode.removeListener(this);
+            for (PathElement pathElement: pathElements)
+            {
+                Node pathElementNode = pathElement.getNode();
+                if (pathElementNode!=null && pathElementNode!=oldNode)
+                    pathElementNode.removeListener(this);
+            }
+        }
+    }
+
+    private void initNodeReference(Node node, List<PathElement> newPathElements)
+    {
+        if (node!=null)
+        {
+            if (addDependencyToNode)
+                node.addDependentNode(node);
+            else
+                node.addListener(this);
+            
+            pathElements = newPathElements.toArray(new PathElement[newPathElements.size()]);
+            for (PathElement pathElement: pathElements)
+            {
+                Node pathElementNode = pathElement.getNode();
+                if (pathElementNode!=null && pathElementNode!=node)
+                    pathElementNode.addListener(this);
+            }
+        }
+    }
+    
+    private void recalculateData()
+    {
+        if (pathElements==null)
+            data = null;
+        else
+        {
+            StringBuffer path = new StringBuffer();
+            for (PathElement pathElement: pathElements)
+                path.append(pathElement.getElement()).append(Node.NODE_SEPARATOR);
+            data = path.toString();
+        }
+    }
+    
+    private static class PathElement
+    {
+        public enum Type {ROOT_REFERENCE, NODE_REFERENCE, SELF_REFERENCE, PARENT_REFERENCE};
+        
+        private final Node node;
+        private final Type elementType;
+
+        public PathElement(Node node, Type elementType)
+        {
+            this.node = node;
+            this.elementType = elementType;
+        }
+        
+        public String getElement()
+        {
+            switch(elementType)
+            {
+                case NODE_REFERENCE : return QUOTE+node.getName()+QUOTE;
+                case PARENT_REFERENCE : return PARENT_REFERENCE;
+                case ROOT_REFERENCE : return "";
+                case SELF_REFERENCE : return SELF_REFERENCE;
+            }
+            return null;
+        }
+        
+        public Node getNode()
+        {
+            return node;
+        }
     }
 
 }

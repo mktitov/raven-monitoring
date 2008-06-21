@@ -62,4 +62,9 @@ public interface AttributeValueHandler
      * If returns <b>true</b> method {@link NodeAttribute#isExpression()} must returns <b>true</b>.
      */
     public boolean isExpressionSupported();
+    /**
+     * Returns <b>true</b> if expression in the value handler is valid
+     * @return
+     */
+    public boolean isExpressionValid();
 }
