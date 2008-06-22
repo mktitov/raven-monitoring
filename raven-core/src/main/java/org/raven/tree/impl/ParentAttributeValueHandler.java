@@ -56,7 +56,7 @@ public class ParentAttributeValueHandler
         return wrappedHandler;
     }
 
-    public void setWrappedHandlerType(String handlerType) throws FactoryNotFoundException
+    public void setWrappedHandlerType(String handlerType) throws Exception
     {
         if (!ObjectUtils.equals(this.wrappedHandlerType, handlerType))
         {
@@ -76,7 +76,7 @@ public class ParentAttributeValueHandler
         }
     }
 
-    public void setData(String data)
+    public void setData(String data) throws Exception
     {
         if (!ObjectUtils.equals(this.data, data))
         {
@@ -191,5 +191,21 @@ public class ParentAttributeValueHandler
         Object newValue = handleData();
         if (!ObjectUtils.equals(newValue, oldValue))
             fireValueChangedEvent(oldValue, newValue);
+    }
+
+    public boolean isExpressionValid()
+    {
+        return wrappedHandler==null? true : wrappedHandler.isExpressionValid();
+    }
+
+    public void validateExpression() throws Exception
+    {
+        if (wrappedHandler!=null)
+            wrappedHandler.validateExpression();
+    }
+
+    public void expressionInvalidated(Object oldValue)
+    {
+        fireExpressionInvalidatedEvent(oldValue);
     }
 }

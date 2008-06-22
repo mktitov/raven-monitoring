@@ -64,7 +64,10 @@ public interface AttributeValueHandler
     public boolean isExpressionSupported();
     /**
      * Returns <b>true</b> if expression in the value handler is valid
-     * @return
      */
     public boolean isExpressionValid();
+    /**
+     * Force value handler to recheck its expression.
+     */
+    public void validateExpression() throws Exception;
 }

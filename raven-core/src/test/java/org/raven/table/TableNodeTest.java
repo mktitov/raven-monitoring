@@ -22,6 +22,7 @@ import org.raven.*;
 import org.junit.Test;
 import org.raven.table.objects.ColumnValueDataConsumer;
 import org.raven.table.objects.TestDataSource;
+import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
@@ -51,7 +52,7 @@ public class TableNodeTest extends RavenCoreTestCase
     }
     
     @Test
-    public void createTest()
+    public void createTest() throws Exception
     {
         TableNodeTemplate template = (TableNodeTemplate) table.getChildren(TableNodeTemplate.NAME);
         assertNotNull(template);
@@ -67,7 +68,7 @@ public class TableNodeTest extends RavenCoreTestCase
     }
     
     @Test
-    public void addTableColumnNameAttributeTest()
+    public void addTableColumnNameAttributeTest() throws InvalidPathException
     {
         TableNodeTemplate template = (TableNodeTemplate) table.getChildren(TableNodeTemplate.NAME);
         ContainerNode node = new ContainerNode("node");
@@ -85,7 +86,7 @@ public class TableNodeTest extends RavenCoreTestCase
     }
     
     @Test
-    public void configureTest() throws ConstraintException
+    public void configureTest() throws Exception
     {
         TestDataSource ds = new TestDataSource("dataSource");
         tree.getRootNode().addChildren(ds);
@@ -233,7 +234,8 @@ public class TableNodeTest extends RavenCoreTestCase
     }
 
     private void checkDataConsumers(
-            TableNode tableRef, int row, int executionCount1, int executionCount2)
+            TableNode tableRef, int row, int executionCount1, int executionCount2) 
+        throws InvalidPathException
     {
         TableNode table = (TableNode) tree.getNode(tableRef.getPath());
         assertNotNull(table);
@@ -254,7 +256,7 @@ public class TableNodeTest extends RavenCoreTestCase
         assertEquals(executionCount2, c.executionCount);
     }
     
-    private void checkNodes(Node node, Status status)
+    private void checkNodes(Node node, Status status) throws InvalidPathException
     {
         Node table = tree.getNode(node.getPath());
         assertNotNull(table);
@@ -287,7 +289,8 @@ public class TableNodeTest extends RavenCoreTestCase
     }
 
     private NodeAttribute checkColumnNameAttribute(
-            ContainerNode node, String attrName, NodeAttribute columnNameAttr)
+            ContainerNode node, String attrName, NodeAttribute columnNameAttr) 
+        throws InvalidPathException
     {
         Node templateNode = tree.getNode(node.getPath());
         NodeAttribute columnNameAttribute = 

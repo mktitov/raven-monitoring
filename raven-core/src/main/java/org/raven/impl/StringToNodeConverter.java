@@ -17,9 +17,11 @@
 
 package org.raven.impl;
 
+import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
 import org.raven.tree.impl.TreeImpl;
 import org.weda.converter.impl.AbstractConverter;
+import org.weda.converter.TypeConverterException;
 
 /**
  * Converts <code>String</code> {@link org.raven.tree.Node} 
@@ -35,7 +37,13 @@ public class StringToNodeConverter extends AbstractConverter<String, Node>
 
     public Node convert(String value, Class targetType, String format)
     {
-        return TreeImpl.INSTANCE.getNode(value);
+        try
+        {
+            return TreeImpl.INSTANCE.getNode(value);
+        } catch (InvalidPathException ex)
+        {
+            throw new TypeConverterException(ex);
+        }
     }
 
     public Class getSourceType()

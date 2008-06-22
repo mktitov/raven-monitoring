@@ -56,4 +56,11 @@ public abstract class AbstractAttributeValueHandler implements AttributeValueHan
             for (AttributeValueHandlerListener listener: listeners)
                 listener.valueChanged(oldValue, newValue);
     }
+    
+    protected void fireExpressionInvalidatedEvent(Object oldValue)
+    {
+        if (listeners!=null)
+            for (AttributeValueHandlerListener listener: listeners)
+                listener.expressionInvalidated(oldValue);
+    }
 }

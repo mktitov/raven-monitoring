@@ -29,6 +29,7 @@ import org.raven.ds.impl.DataPipeImpl;
 import org.raven.rrd.data.RRArchive;
 import org.raven.rrd.data.RRDNode;
 import org.raven.rrd.data.RRDataSource;
+import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
@@ -83,7 +84,7 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
     }
     
     @Test
-    public void setStartingPointTest() 
+    public void setStartingPointTest() throws InvalidPathException 
     {
         initTemplate();
         Node sourcesRoot = initDatasources();
@@ -99,7 +100,7 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
         checkInterfaceEntry();
     }
 
-    private void checkDefaultEntry()
+    private void checkDefaultEntry() throws InvalidPathException
     {
         RRDatabaseManager databaseManager = 
                 (RRDatabaseManager) tree.getNode(this.databaseManager.getPath());
@@ -131,7 +132,7 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
         return result;
     }
 
-    private void checkInterfaceEntry()
+    private void checkInterfaceEntry() throws InvalidPathException
     {
         RRDatabaseManager databaseManager = 
                 (RRDatabaseManager) tree.getNode(this.databaseManager.getPath());

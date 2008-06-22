@@ -152,7 +152,7 @@ public class SnmpNodeTest extends ServiceTestCase
     
     @Ignore
     @Test
-    public void singleValueTest() throws ConstraintException, InterruptedException 
+    public void singleValueTest() throws Exception
     {
         SnmpNode snmpNode = new SnmpNode();
         snmpNode.setName("snmp");
@@ -187,7 +187,7 @@ public class SnmpNodeTest extends ServiceTestCase
     
     @Test
     @Ignore
-    public void tableValueTest() throws ConstraintException, InterruptedException 
+    public void tableValueTest() throws Exception
     {
         store.removeNodes();
         tree.reloadTree();

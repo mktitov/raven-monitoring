@@ -38,7 +38,7 @@ public interface Tree
      * Look up the node by it path.
      * @param path the path to the node.
      */
-    public Node getNode(String path) throws NodeNotFoundError;
+    public Node getNode(String path) throws InvalidPathException;
     /**
      * Remove node passed in parameter and all child nodes
      */

@@ -39,7 +39,7 @@ public class StringToAttributeReferenceConverter extends AbstractConverter<Strin
     
     public AttributeReference convert(String value, Class realTargetType, String format)
     {
-        StringTokenizer tokenizer = new StringTokenizer(value, Node.ATTRIBUTE_SEPARATOR);
+        StringTokenizer tokenizer = new StringTokenizer(value, ""+Node.ATTRIBUTE_SEPARATOR);
         try
         {
             String nodePath = tokenizer.nextToken();

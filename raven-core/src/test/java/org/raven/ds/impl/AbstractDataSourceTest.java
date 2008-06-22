@@ -50,7 +50,7 @@ public class AbstractDataSourceTest extends ServiceTestCase
     }
     
     @Test
-    public void test() throws ConstraintException, InterruptedException
+    public void test() throws Exception
     {
         Tree tree = registry.getService(Tree.class);
         Configurator configurator = registry.getService(Configurator.class);

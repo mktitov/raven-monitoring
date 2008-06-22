@@ -18,17 +18,13 @@
 package org.raven.tree;
 
 /**
- * The listener of the {@link AttributeValueHandler}
+ *
  * @author Mikhail Titov
  */
-public interface AttributeValueHandlerListener 
+public interface PathElement 
 {
-    /**
-     * Informs the listener that the {@link AttributeValueHandler#handleValue() value} changed.
-     */
-    public void valueChanged(Object oldValue, Object newValue);
-    /**
-     * Informs listener that expression in the value handler is invalidated.
-     */
-    public void expressionInvalidated(Object oldValue);
+    public enum Type {ROOT_REFERENCE, NODE_REFERENCE, SELF_REFERENCE, PARENT_REFERENCE};
+    
+    public String getElement();
+    public Node getNode();
 }

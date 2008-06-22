@@ -18,15 +18,16 @@
 package org.raven.tree.impl;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import org.apache.commons.lang.text.StrTokenizer;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeListener;
+import org.raven.tree.NodePathResolver;
 import org.raven.tree.NodeReferenceValueHandlerException;
+import org.raven.tree.PathElement;
+import org.raven.tree.PathInfo;
 import org.raven.tree.Tree;
 import org.weda.internal.annotations.Service;
 import org.weda.beans.ObjectUtils;
@@ -46,17 +47,17 @@ import org.weda.beans.ObjectUtils;
 public class NodeReferenceValueHandler 
         extends AbstractAttributeValueHandler implements NodeListener
 {
-    public final static char QUOTE = '"';
-    public final static String PARENT_REFERENCE = "..";
-    public final static String SELF_REFERENCE = ".";
     
     @Service
     private static Tree tree;
-    
+    @Service
+    private static NodePathResolver pathResolver;
+
     private String data = null;
     protected Node node = null;
     private boolean addDependencyToNode = false;
     private PathElement[] pathElements = null;
+    private boolean expressionValid = true;
             
     public NodeReferenceValueHandler(NodeAttribute attribute)
     {
@@ -71,49 +72,18 @@ public class NodeReferenceValueHandler
 
     public void setData(String data) throws Exception
     {
-        if (ObjectUtils.equals(this.data, data))
+        if (ObjectUtils.equals(this.data, data) && !expressionValid)
             return;
         
         Node currentNode = null;
-        List<PathElement> newPathElements = null;
+        PathElement[] newPathElements = null;
         if (data!=null && data.length()>0)
         {
-            newPathElements = new ArrayList<PathElement>();
-            if (data.charAt(0)==Node.NODE_SEPARATOR)
-            {
-                currentNode = tree.getRootNode();
-                newPathElements.add(new PathElement(null, PathElement.Type.ROOT_REFERENCE));
-            } else
-                currentNode = attribute.getOwner();
-            
-            StrTokenizer tokenizer = new StrTokenizer(data, Node.NODE_SEPARATOR, QUOTE);
-            while (tokenizer.hasNext())
-            {
-                String nodeName = tokenizer.nextToken();
-                if (PARENT_REFERENCE.equals(nodeName))
-                {
-                    currentNode = currentNode.getParent();
-                    if (currentNode==null)
-                        throw new NodeReferenceValueHandlerException(String.format(
-                                "Invalid path (%s) to the node", data));
-                    newPathElements.add(new PathElement(null, PathElement.Type.PARENT_REFERENCE));
-                }
-                else if (!SELF_REFERENCE.equals(nodeName))
-                {
-                    Node nextNode = currentNode.getChildren(nodeName);                    
-                    if (nextNode==null)
-                        throw new NodeReferenceValueHandlerException(String.format(
-                                "Invalid path (%s) to the node. " +
-                                "Node (%s) does not exists in the (%s) node."
-                                , data, nodeName, currentNode.getPath()));
-                    currentNode = nextNode;
-                    newPathElements.add(
-                            new PathElement(currentNode, PathElement.Type.NODE_REFERENCE));
-                } 
-                else
-                    newPathElements.add(new PathElement(null, PathElement.Type.SELF_REFERENCE));
-            }
+            PathInfo pathInfo = pathResolver.resolvePath(data, attribute.getOwner());
+            currentNode = pathInfo.getNode();
+            pathElements = pathInfo.getPathElements();
         }
+
         Node oldNode = node;
         node = currentNode;
         if (!ObjectUtils.equals(oldNode, node))
@@ -123,6 +93,7 @@ public class NodeReferenceValueHandler
             fireValueChangedEvent(oldNode, node);
         }
         attribute.save();
+        expressionValid = true;
     }
     
     public String getData()
@@ -132,12 +103,22 @@ public class NodeReferenceValueHandler
 
     public Object handleData()
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return node;
     }
 
     public void close()
     {
         cleanupNodeReference(node);
+    }
+
+    public boolean isExpressionValid()
+    {
+        return expressionValid;
+    }
+
+    public void validateExpression() throws Exception
+    {
+        setData(data);
     }
 
     public boolean isReferenceValuesSupported()
@@ -161,6 +142,7 @@ public class NodeReferenceValueHandler
 
     public void nodeNameChanged(Node node, String oldName, String newName)
     {
+        recalculateData();
         attribute.save();
     }
 
@@ -170,9 +152,13 @@ public class NodeReferenceValueHandler
 
     public void childrenRemoved(Node owner, Node children)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Object oldValue = node;
+        cleanupNodeReference(node);
+        expressionValid = false;
+        node = null;
+        fireExpressionInvalidatedEvent(oldValue);
     }
-
+    
     public void nodeAttributeNameChanged(NodeAttribute attribute, String oldName, String newName)
     {
     }
@@ -203,7 +189,7 @@ public class NodeReferenceValueHandler
         }
     }
 
-    private void initNodeReference(Node node, List<PathElement> newPathElements)
+    private void initNodeReference(Node node, PathElement[] newPathElements)
     {
         if (node!=null)
         {
@@ -212,7 +198,6 @@ public class NodeReferenceValueHandler
             else
                 node.addListener(this);
             
-            pathElements = newPathElements.toArray(new PathElement[newPathElements.size()]);
             for (PathElement pathElement: pathElements)
             {
                 Node pathElementNode = pathElement.getNode();
@@ -235,35 +220,4 @@ public class NodeReferenceValueHandler
         }
     }
     
-    private static class PathElement
-    {
-        public enum Type {ROOT_REFERENCE, NODE_REFERENCE, SELF_REFERENCE, PARENT_REFERENCE};
-        
-        private final Node node;
-        private final Type elementType;
-
-        public PathElement(Node node, Type elementType)
-        {
-            this.node = node;
-            this.elementType = elementType;
-        }
-        
-        public String getElement()
-        {
-            switch(elementType)
-            {
-                case NODE_REFERENCE : return QUOTE+node.getName()+QUOTE;
-                case PARENT_REFERENCE : return PARENT_REFERENCE;
-                case ROOT_REFERENCE : return "";
-                case SELF_REFERENCE : return SELF_REFERENCE;
-            }
-            return null;
-        }
-        
-        public Node getNode()
-        {
-            return node;
-        }
-    }
-
 }

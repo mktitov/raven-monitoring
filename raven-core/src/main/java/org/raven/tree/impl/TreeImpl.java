@@ -33,11 +33,14 @@ import org.raven.template.TemplateVariable;
 import org.raven.template.TemplatesNode;
 import org.raven.tree.AttributeReference;
 import org.raven.tree.AttributeReferenceValues;
+import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeNotFoundError;
+import org.raven.tree.NodePathResolver;
 import org.raven.tree.NodeTuner;
+import org.raven.tree.PathInfo;
 import org.raven.tree.Tree;
 import org.raven.tree.TreeError;
 import org.raven.tree.store.TreeStore;
@@ -61,6 +64,8 @@ public class TreeImpl implements Tree
     
     private final Configurator configurator;
     private final TreeStore treeStore;
+    private final NodePathResolver pathResolver;
+
     private final Map<Class, AttributeReferenceValues> referenceValuesProviders;
     private final Map<Class, List<Class>> nodeTypes = new HashMap<Class, List<Class>>();
     private final Set<Class> anyChildTypeNodes = new HashSet<Class>();
@@ -71,12 +76,15 @@ public class TreeImpl implements Tree
 
     public TreeImpl(
             Map<Class, AttributeReferenceValues> referenceValuesProviders
-            , Configurator configurator, ResourceProvider resourceProvider) 
+            , Configurator configurator, ResourceProvider resourceProvider
+            , NodePathResolver pathResolver) 
         throws Exception
     {
         this.configurator = configurator;
         this.treeStore = configurator.getTreeStore();
         this.referenceValuesProviders = referenceValuesProviders;
+        this.pathResolver = pathResolver;
+        
         INSTANCE = this;
         
         List<String> nodesTypesList = 
@@ -111,24 +119,13 @@ public class TreeImpl implements Tree
         return rootNode;
     }
 
-    public Node getNode(String path) throws NodeNotFoundError
+    public Node getNode(String path) throws InvalidPathException
     {
         NullParameterError.check("path", path);
         
-        if (path.length()<2 || !path.startsWith(Node.NODE_SEPARATOR))
-            throw new NodeNotFoundError(String.format("Invalid path (%s)", path));
+        PathInfo pathInfo = pathResolver.resolvePath(path, rootNode);
         
-        String[] names = path.substring(1).split(Node.NODE_SEPARATOR);
-        
-        Node node = rootNode;
-        for (String name: names)
-        {
-            node = node.getChildren(name);
-            if (node==null)
-                throw new NodeNotFoundError(path);
-        }
-        
-        return node;
+        return pathInfo.getNode();
     }
 
     public void reloadTree() throws TreeStoreError

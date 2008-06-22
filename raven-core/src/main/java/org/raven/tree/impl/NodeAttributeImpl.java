@@ -82,7 +82,7 @@ public class NodeAttributeImpl
         this.value = converter.convert(String.class, value, null);
     }
     
-    public void init() throws FactoryNotFoundException
+    public void init() throws Exception
     {
         valueHandler = new ParentAttributeValueHandler(this);
         valueHandler.setWrappedHandlerType(valueHandlerType);
@@ -204,7 +204,7 @@ public class NodeAttributeImpl
         return valueHandlerType;
     }
 
-    public void setValueHandlerType(String valueHandlerType) throws FactoryNotFoundException
+    public void setValueHandlerType(String valueHandlerType) throws Exception
     {
         this.valueHandlerType = valueHandlerType;
         if (initialized)
@@ -268,7 +268,7 @@ public class NodeAttributeImpl
         this.type = type;
     }
 
-    public void setValue(String value) throws ConstraintException
+    public void setValue(String value) throws Exception
     {
         if (initialized)
             valueHandler.setData(value);
@@ -363,6 +363,16 @@ public class NodeAttributeImpl
     public boolean isExpression()
     {
         return valueHandler==null? false : valueHandler.isExpressionSupported();
+    }
+
+    public boolean isExpressionValid()
+    {
+        return valueHandler.isExpressionValid();
+    }
+
+    public void validateExpression() throws Exception
+    {
+        valueHandler.validateExpression();
     }
     
 //    public AttributeReference getAttributeReference()
@@ -468,5 +478,9 @@ public class NodeAttributeImpl
     {
         owner.fireAttributeValueChanged(this, oldValue, newValue);
     }
-    
+
+    public void expressionInvalidated(Object oldValue)
+    {
+        owner.fireAttributeValueChanged(this, oldValue, null);
+    }
 }

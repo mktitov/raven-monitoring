@@ -28,6 +28,7 @@ import org.raven.ServiceTestCase;
 import org.raven.conf.Configurator;
 import org.raven.template.TemplatesNode;
 import org.raven.tree.AttributeReference;
+import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
@@ -100,19 +101,19 @@ public class TreeServiceTest extends ServiceTestCase
     }
     
     @Test()
-    public void initTree1()
+    public void initTree1() throws InvalidPathException
     {
         checkTree();
     }
 
     @Test()
-    public void initTree2()
+    public void initTree2() throws InvalidPathException
     {
         checkTree();
     }
     
     @Test()
-    public void remove()
+    public void remove() throws InvalidPathException
     {
         try
         {
@@ -170,7 +171,7 @@ public class TreeServiceTest extends ServiceTestCase
     }
     
     @Test
-    public void nodeInit_wNodeTypeAttribute() throws ConstraintException
+    public void nodeInit_wNodeTypeAttribute() throws Exception
     {
         ContainerNode node1 = new ContainerNode("node1");
         tree.getRootNode().addChildren(node1);
@@ -201,7 +202,7 @@ public class TreeServiceTest extends ServiceTestCase
     }
     
     @Test
-    public void nodeInit_node_wParameters() throws ConstraintException 
+    public void nodeInit_node_wParameters() throws Exception 
     {
         //synchronization
         //store
@@ -242,7 +243,7 @@ public class TreeServiceTest extends ServiceTestCase
     }
     
     @Test
-    public void nodeListener() throws ConstraintException
+    public void nodeListener() throws Exception
     {
         ContainerNode node = new ContainerNode("name");
         NodeAttribute attr = new NodeAttributeImpl("attr", String.class, "1", "desc");
@@ -320,7 +321,7 @@ public class TreeServiceTest extends ServiceTestCase
     }
     
     @Test
-    public void attributesGenerator() throws ConstraintException
+    public void attributesGenerator() throws Exception
     {
         store.removeNodes();
         tree.reloadTree();
@@ -388,7 +389,7 @@ public class TreeServiceTest extends ServiceTestCase
     
     @Test
     @Ignore
-    public void attributeReference() throws ConstraintException
+    public void attributeReference() throws Exception
     {
         store.removeNodes();
         
@@ -526,7 +527,7 @@ public class TreeServiceTest extends ServiceTestCase
     }
     
     @Test
-    public void copy() throws ConstraintException
+    public void copy() throws ConstraintException, InvalidPathException
     {
         store.removeNodes();
         tree.reloadTree();
@@ -630,7 +631,7 @@ public class TreeServiceTest extends ServiceTestCase
         assertEquals(value, node.getStringParameter());
     }
 
-    private void checkTree() throws NodeNotFoundError
+    private void checkTree() throws NodeNotFoundError, InvalidPathException
     {
         if (!checkTreeExecuted)
         {

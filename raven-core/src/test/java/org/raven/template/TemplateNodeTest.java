@@ -22,6 +22,7 @@ import org.junit.Test;
 import org.raven.RavenCoreModule;
 import org.raven.ServiceTestCase;
 import org.raven.conf.Configurator;
+import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
 import org.raven.tree.Tree;
 import org.raven.tree.store.TreeStore;
@@ -39,7 +40,7 @@ public class TemplateNodeTest extends ServiceTestCase
     }
     
     @Test
-    public void init() 
+    public void init() throws InvalidPathException 
     {
         Tree tree = registry.getService(Tree.class);
         Configurator configurator = registry.getService(Configurator.class);

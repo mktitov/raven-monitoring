@@ -32,6 +32,7 @@ import org.raven.impl.NodeClassTransformerWorker;
 import org.raven.tree.AttributeReferenceValues;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodePathResolver;
 import org.raven.tree.store.TreeStore;
 import org.weda.internal.services.ResourceProvider;
 import static org.easymock.EasyMock.*;
@@ -66,6 +67,7 @@ public class TreeImplTest extends ServiceTestCase
         ResourceProvider resourceProvider = createMock("ResourceProvider", ResourceProvider.class);
         AttributeReferenceValues refValues = 
                 createMock("AttributeReferenceValues", AttributeReferenceValues.class);
+        NodePathResolver pathResolver = createMock("NodePathResolver", NodePathResolver.class);
         
         expect(configurator.getTreeStore()).andReturn(store).anyTimes();
         ContainerNode rootNode = new ContainerNode("");
@@ -84,7 +86,7 @@ public class TreeImplTest extends ServiceTestCase
         Map<Class, AttributeReferenceValues> providers = 
                 new HashMap<Class, AttributeReferenceValues>();
         providers.put(Number.class, refValues);
-        TreeImpl tree = new TreeImpl(providers, configurator, resourceProvider);
+        TreeImpl tree = new TreeImpl(providers, configurator, resourceProvider, pathResolver);
         assertSame(oneList, tree.getReferenceValuesForAttribute(numberAttr));
         assertSame(twoList, tree.getReferenceValuesForAttribute(integerAttr));
         assertNull(tree.getReferenceValuesForAttribute(stringAttr));

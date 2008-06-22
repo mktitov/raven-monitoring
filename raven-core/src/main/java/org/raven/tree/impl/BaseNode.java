@@ -818,7 +818,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
 //    private void syncParameterWithAttribute()
     
     private void createNodeAttribute(NodeParameter param) 
-        throws TreeStoreError, ConstraintException, FactoryNotFoundException
+        throws Exception
     {
         NodeAttributeImpl attr = new NodeAttributeImpl();
         attr.setOwner(this);

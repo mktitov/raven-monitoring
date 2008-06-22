@@ -94,7 +94,7 @@ public class RealTest extends ServiceTestCase
         file.close();
     }
 
-    private void addRRDataSource(String name, String oid) throws ConstraintException
+    private void addRRDataSource(String name, String oid) throws Exception
     {
         RRDataSource rrs = new RRDataSource();
         rrs.setName(name);

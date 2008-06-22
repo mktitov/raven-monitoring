@@ -274,7 +274,7 @@ public class RRGraphNodeTest extends ServiceTestCase
     }
     
     private RRDataSource createRRDataSource(String name, RRDNode rrd, DataSource ds) 
-            throws ConstraintException
+            throws Exception
     {
         RRDataSource rrds = new RRDataSource();
         rrds.setName(name);

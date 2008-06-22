@@ -46,7 +46,7 @@ public class TemplateWizardTest extends ServiceTestCase
     }
     
     @Test
-    public void test() throws ConstraintException
+    public void test() throws Exception
     {
         //initialization block
         Tree tree = registry.getService(Tree.class);

@@ -19,7 +19,6 @@ package org.raven.tree;
 
 import java.util.List;
 import org.raven.tree.store.TreeStore;
-import org.weda.constraints.ConstraintException;
 
 /**
  * Holds information about node attribute
@@ -119,7 +118,7 @@ public interface NodeAttribute extends Cloneable
     /**
      * Sets the attribute value.
      */
-    public void setValue(String value) throws ConstraintException;
+    public void setValue(String value) throws Exception;
     /**
      * Returns the type of the attribute.
      */
@@ -158,7 +157,7 @@ public interface NodeAttribute extends Cloneable
     /**
      * Sets the attribute value handler by it's type.
      */
-    public void setValueHandlerType(String valueHandlerType) throws FactoryNotFoundException;
+    public void setValueHandlerType(String valueHandlerType) throws Exception;
     /**
      * Returns the attribute value handler type or <code>null</code> if value handler 
      * not associated with attribute.
@@ -166,8 +165,19 @@ public interface NodeAttribute extends Cloneable
     public String getValueHandlerType();
     /**
      * Returns <code>true</code> if value handler supports expressions.
+     * @see AttributeValueHandler#isExpressionSupported() 
      */
     public boolean isExpression();
+    /**
+     * If returns <b>true</b> then expression attribute expression is valid.
+     * @see AttributeValueHandler#isExpressionValid() 
+     */
+    public boolean isExpressionValid();
+    /**
+     * Force attribute to recheck it's expression
+     * @see AttributeValueHandler#validateExpression() 
+     */
+    public void validateExpression() throws Exception;
     /**
      * Stores node attribute in the {@link TreeStore}.
      */

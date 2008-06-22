@@ -15,20 +15,35 @@
  *  under the License.
  */
 
-package org.raven.tree;
+package org.raven.tree.impl;
+
+import org.raven.tree.Node;
+import org.raven.tree.PathElement;
+import org.raven.tree.PathInfo;
 
 /**
- * The listener of the {@link AttributeValueHandler}
+ *
  * @author Mikhail Titov
  */
-public interface AttributeValueHandlerListener 
+public class PathInfoImpl implements PathInfo
 {
-    /**
-     * Informs the listener that the {@link AttributeValueHandler#handleValue() value} changed.
-     */
-    public void valueChanged(Object oldValue, Object newValue);
-    /**
-     * Informs listener that expression in the value handler is invalidated.
-     */
-    public void expressionInvalidated(Object oldValue);
+    private final PathElement[] pathElements;
+    private final Node node;
+
+    public PathInfoImpl(PathElement[] pathElements, Node node)
+    {
+        this.pathElements = pathElements;
+        this.node = node;
+    }
+
+    public PathElement[] getPathElements()
+    {
+        return pathElements;
+    }
+
+    public Node getNode()
+    {
+        return node;
+    }
+
 }

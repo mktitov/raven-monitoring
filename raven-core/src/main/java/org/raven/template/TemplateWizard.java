@@ -101,7 +101,7 @@ public class TemplateWizard
                 for (NodeAttribute attr: attrs)
                     if (TemplateVariable.class.isAssignableFrom(attr.getType()))
                     {
-                        String[] elems = attr.getRawValue().split(Node.ATTRIBUTE_SEPARATOR);
+                        String[] elems = attr.getRawValue().split(""+Node.ATTRIBUTE_SEPARATOR);
                         NodeAttribute var = variablesNode.getNodeAttribute(elems[1]);
                         attr.setType(var.getType());
                         attr.setRawValue(var.getRawValue());

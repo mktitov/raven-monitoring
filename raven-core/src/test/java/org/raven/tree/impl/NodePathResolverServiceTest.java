@@ -15,20 +15,28 @@
  *  under the License.
  */
 
-package org.raven.tree;
+package org.raven.tree.impl;
+
+import org.junit.Test;
+import org.raven.RavenCoreTestCase;
+import org.raven.tree.InvalidPathException;
+import org.raven.tree.Node;
+import org.raven.tree.NodePathResolver;
+import org.raven.tree.PathInfo;
 
 /**
- * The listener of the {@link AttributeValueHandler}
+ *
  * @author Mikhail Titov
  */
-public interface AttributeValueHandlerListener 
+public class NodePathResolverServiceTest extends RavenCoreTestCase
 {
-    /**
-     * Informs the listener that the {@link AttributeValueHandler#handleValue() value} changed.
-     */
-    public void valueChanged(Object oldValue, Object newValue);
-    /**
-     * Informs listener that expression in the value handler is invalidated.
-     */
-    public void expressionInvalidated(Object oldValue);
+    @Test
+    public void test() throws InvalidPathException
+    {
+        NodePathResolver pathResolver = registry.getService(NodePathResolver.class);
+        PathInfo pathInfo = pathResolver.resolvePath(""+Node.NODE_SEPARATOR, null);
+        assertNotNull(pathInfo);
+        
+        assertSame(tree.getRootNode(), pathInfo.getNode());
+    }
 }
