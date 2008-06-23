@@ -25,6 +25,7 @@ import org.raven.tree.AttributeReferenceValues;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.AttributeReferenceImpl;
+import org.weda.constraints.ReferenceValueCollection;
 import org.weda.internal.annotations.Service;
 import org.weda.services.TypeConverter;
 
@@ -59,5 +60,30 @@ public class TemplateVariableReferenceValues implements AttributeReferenceValues
             }
         }
         return refValues;
+    }
+
+    public boolean getReferenceValues(NodeAttribute attr, ReferenceValueCollection referenceValues)
+    {
+        
+        Node node = attr.getOwner();
+        List<String> refValues = Collections.EMPTY_LIST;
+        while ( (node=node.getParent())!=null )
+        {
+            if (node instanceof TemplateNode)
+            {
+                TemplateVariablesNode varsNode = ((TemplateNode)node).getVariablesNode();
+                Collection<NodeAttribute> attrs = varsNode.getNodeAttributes();
+                if (attrs!=null && attrs.size()>0)
+                {
+                    refValues = new ArrayList<String>(attrs.size());
+                    for (NodeAttribute var: attrs)
+                        refValues.add(converter.convert(
+                            String.class, new AttributeReferenceImpl(var), null));
+                    Collections.sort(refValues);
+                }
+                break;
+            }
+        }
+        return true;
     }
 }

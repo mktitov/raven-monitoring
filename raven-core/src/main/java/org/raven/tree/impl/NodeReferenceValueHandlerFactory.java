@@ -27,6 +27,8 @@ import org.raven.tree.NodeAttribute;
  */
 public class NodeReferenceValueHandlerFactory implements AttributeValueHandlerFactory
 {
+    public final static String TYPE = "NodeReference";
+    
     public AttributeValueHandler createValueHandler(NodeAttribute attribute)
     {
         return new NodeReferenceValueHandler(attribute);

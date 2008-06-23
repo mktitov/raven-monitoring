@@ -17,7 +17,8 @@
 
 package org.raven.tree;
 
-import java.util.List;
+import org.weda.constraints.ReferenceValueCollection;
+import org.weda.constraints.TooManyReferenceValuesException;
 
 /**
  * Returns the reference values for {@link NodeAttribute node attribute}
@@ -26,7 +27,11 @@ import java.util.List;
 public interface AttributeReferenceValues 
 {
     /**
-     * Returns the reference values for {@link NodeAttribute node attribute}.
+     * The method fills the collection <code>referenceValues</code> with reference values.
+     * @param attr the node attribute for wich reference values are generating.
+     * @param referenceValues the collection to which reference values will collect.
+     * @return If methods returns <b>true</b> then the reference values collecting will stoped.
      */
-    public List<String> getReferenceValues(NodeAttribute attr);
+    public boolean getReferenceValues(NodeAttribute attr, ReferenceValueCollection referenceValues)
+            throws TooManyReferenceValuesException;
 }

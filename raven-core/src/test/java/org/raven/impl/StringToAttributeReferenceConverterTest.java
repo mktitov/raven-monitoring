@@ -17,14 +17,11 @@
 
 package org.raven.impl;
 
-import org.apache.tapestry.ioc.RegistryBuilder;
 import org.junit.Test;
-import org.raven.RavenCoreModule;
-import org.raven.ServiceTestCase;
+import org.raven.RavenCoreTestCase;
 import org.raven.tree.AttributeReference;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
-import org.raven.tree.Tree;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.weda.services.TypeConverter;
@@ -33,25 +30,21 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
-public class StringToAttributeReferenceConverterTest extends ServiceTestCase
+public class StringToAttributeReferenceConverterTest extends RavenCoreTestCase
 {
-    @Override
-    protected void configureRegistry(RegistryBuilder builder)
-    {
-        builder.add(RavenCoreModule.class);
-    }
-    
     @Test
     public void test()
     {
+        store.removeNodes();
+        
         TypeConverter converter = registry.getService(TypeConverter.class);
-        Tree tree = registry.getService(Tree.class);
         
         ContainerNode node = new ContainerNode("node");
+        tree.getRootNode().addChildren(node);
+        node.init();
         NodeAttribute attr = new NodeAttributeImpl("attr", String.class, null, null);
         attr.setOwner(node);
         node.addNodeAttribute(attr);
-        tree.getRootNode().addChildren(node);
         
         AttributeReference ref = converter.convert(
                 AttributeReference.class

@@ -19,36 +19,23 @@ package org.raven.template;
 
 import java.util.Arrays;
 import java.util.Collections;
-import org.apache.tapestry.ioc.RegistryBuilder;
 import org.junit.Test;
-import org.raven.RavenCoreModule;
-import org.raven.ServiceTestCase;
-import org.raven.conf.Configurator;
+import org.raven.RavenCoreTestCase;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
-import org.raven.tree.Tree;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeAttributeImpl;
-import org.raven.tree.store.TreeStore;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class TemplateVariableReferenceValuesTest extends ServiceTestCase
+public class TemplateVariableReferenceValuesTest extends RavenCoreTestCase
 {
-    @Override
-    protected void configureRegistry(RegistryBuilder builder)
-    {
-        builder.add(RavenCoreModule.class);
-    }
-    
     @Test
     public void test() 
     {
-        Tree tree = registry.getService(Tree.class);
-        Configurator configurator = registry.getService(Configurator.class);
-        TreeStore store = configurator.getTreeStore(); 
+        store.removeNodes();
         
         TemplateNode template = new TemplateNode();
         template.setName("template");

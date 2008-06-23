@@ -61,7 +61,7 @@ public class ParentAttributeValueHandler
         if (!ObjectUtils.equals(this.wrappedHandlerType, handlerType))
         {
             cleanupWrappedHandler();
-            
+            this.wrappedHandlerType = handlerType;
             if (handlerType==null)
                 wrappedHandler = null;
             else 

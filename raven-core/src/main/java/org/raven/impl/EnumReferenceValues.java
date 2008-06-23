@@ -21,6 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 import org.raven.tree.AttributeReferenceValues;
 import org.raven.tree.NodeAttribute;
+import org.weda.constraints.ReferenceValueCollection;
+import org.weda.constraints.TooManyReferenceValuesException;
+import org.weda.constraints.impl.ReferenceValueImpl;
 import org.weda.internal.annotations.Service;
 import org.weda.services.TypeConverter;
 
@@ -41,5 +44,17 @@ public class EnumReferenceValues implements AttributeReferenceValues
             result.add(converter.convert(String.class, value, null));
         
         return result;
+    }
+
+    public boolean getReferenceValues(NodeAttribute attr, ReferenceValueCollection referenceValues) 
+            throws TooManyReferenceValuesException
+    {
+        if (!attr.getType().isEnum())
+            return false;
+        
+        for (Object value: attr.getType().getEnumConstants())
+            referenceValues.add(new ReferenceValueImpl(
+                value, converter.convert(String.class, value, null)), null);
+        return true;
     }
 }

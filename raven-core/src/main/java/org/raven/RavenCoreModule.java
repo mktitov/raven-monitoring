@@ -16,10 +16,12 @@
  */
 package org.raven;
 
+import java.util.List;
 import java.util.Map;
 import org.apache.tapestry.ioc.Configuration;
 import org.apache.tapestry.ioc.MappedConfiguration;
 import org.apache.tapestry.ioc.ServiceBinder;
+import org.apache.tapestry.ioc.services.ChainBuilder;
 import org.raven.conf.Configurator;
 import org.raven.conf.impl.ConfiguratorImpl;
 import org.raven.ds.DataSource;
@@ -75,6 +77,12 @@ public class RavenCoreModule
         return new TreeImpl(referenceValuesProvider, configurator, resourceProvider, pathResolver);
     }
     
+    public static AttributeReferenceValues buildAttributeReferenceValues(
+            ChainBuilder builder, List<AttributeReferenceValues> commands)
+    {
+        return builder.build(AttributeReferenceValues.class, commands);
+    }
+    
     public static AttributeValueHandlerRegistry buildAttributeValueHandlerRegistry(
             Map<String, AttributeValueHandlerFactory> factories)
     {
@@ -106,6 +114,6 @@ public class RavenCoreModule
     public static void contributeAttributeValueHandlerRegistry(
             MappedConfiguration<String, AttributeValueHandlerFactory> conf)
     {
-        conf.add("NodeReference", new NodeReferenceValueHandlerFactory());
+        conf.add(NodeReferenceValueHandlerFactory.TYPE, new NodeReferenceValueHandlerFactory());
     }
 }
