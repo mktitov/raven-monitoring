@@ -87,5 +87,20 @@ public class NodePathResolverImpl implements NodePathResolver
         
         return new PathInfoImpl(elements, currentNode);
     }
-    
+
+    public String getAbsolutePath(Node node)
+    {
+        StringBuffer path = new StringBuffer();
+        while (node!=null)
+        {
+            Node parent = node.getParent();
+            if (parent!=null)
+                path.insert(0, QUOTE+node.getName()+QUOTE+Node.NODE_SEPARATOR);
+            else
+                path.insert(0, node.getName()+Node.NODE_SEPARATOR);
+            node = parent;
+        }
+        
+        return path.toString();
+    }
 }

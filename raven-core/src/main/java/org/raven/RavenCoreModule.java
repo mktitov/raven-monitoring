@@ -40,6 +40,7 @@ import org.raven.tree.NodePathResolver;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.AttributeValueHandlerRegistryImpl;
 import org.raven.tree.impl.NodePathResolverImpl;
+import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.tree.impl.TreeImpl;
 import org.raven.tree.store.impl.H2TreeStore;
 import org.weda.internal.services.ResourceProvider;
@@ -100,5 +101,11 @@ public class RavenCoreModule
         conf.add(TemplateVariable.class, new TemplateVariableReferenceValues());
         conf.add(DataSource.class, new DataSourceReferenceValues());
         conf.add(Enum.class, new EnumReferenceValues());
+    }
+    
+    public static void contributeAttributeValueHandlerRegistry(
+            MappedConfiguration<String, AttributeValueHandlerFactory> conf)
+    {
+        conf.add("NodeReference", new NodeReferenceValueHandlerFactory());
     }
 }

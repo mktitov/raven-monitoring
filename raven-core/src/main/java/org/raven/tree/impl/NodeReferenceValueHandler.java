@@ -17,18 +17,13 @@
 
 package org.raven.tree.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import org.apache.commons.lang.text.StrTokenizer;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeListener;
 import org.raven.tree.NodePathResolver;
-import org.raven.tree.NodeReferenceValueHandlerException;
 import org.raven.tree.PathElement;
 import org.raven.tree.PathInfo;
-import org.raven.tree.Tree;
 import org.weda.internal.annotations.Service;
 import org.weda.beans.ObjectUtils;
 /**
@@ -47,15 +42,12 @@ import org.weda.beans.ObjectUtils;
 public class NodeReferenceValueHandler 
         extends AbstractAttributeValueHandler implements NodeListener
 {
-    
-    @Service
-    private static Tree tree;
     @Service
     private static NodePathResolver pathResolver;
 
     private String data = null;
     protected Node node = null;
-    private boolean addDependencyToNode = false;
+    private boolean addDependencyToNode = true;
     private PathElement[] pathElements = null;
     private boolean expressionValid = true;
             
@@ -72,7 +64,7 @@ public class NodeReferenceValueHandler
 
     public void setData(String data) throws Exception
     {
-        if (ObjectUtils.equals(this.data, data) && !expressionValid)
+        if (ObjectUtils.equals(this.data, data) && expressionValid)
             return;
         
         Node currentNode = null;
@@ -84,15 +76,18 @@ public class NodeReferenceValueHandler
             pathElements = pathInfo.getPathElements();
         }
 
+        String oldData = this.data;
+        this.data = data;
         Node oldNode = node;
         node = currentNode;
         if (!ObjectUtils.equals(oldNode, node))
         {
-            cleanupNodeReference(oldNode);
+            cleanupNodeReference(oldNode, null);
             initNodeReference(node, newPathElements);
             fireValueChangedEvent(oldNode, node);
         }
-        attribute.save();
+        if (!ObjectUtils.equals(this.data, oldData))
+            attribute.save();
         expressionValid = true;
     }
     
@@ -108,7 +103,7 @@ public class NodeReferenceValueHandler
 
     public void close()
     {
-        cleanupNodeReference(node);
+        cleanupNodeReference(node, null);
     }
 
     public boolean isExpressionValid()
@@ -153,7 +148,7 @@ public class NodeReferenceValueHandler
     public void childrenRemoved(Node owner, Node children)
     {
         Object oldValue = node;
-        cleanupNodeReference(node);
+        cleanupNodeReference(node, owner);
         expressionValid = false;
         node = null;
         fireExpressionInvalidatedEvent(oldValue);
@@ -172,18 +167,17 @@ public class NodeReferenceValueHandler
     {
     }
 
-    private void cleanupNodeReference(Node oldNode)
+    private void cleanupNodeReference(Node oldNode, Node removedNodeOwner)
     {
         if (oldNode!=null)
         {
             if (addDependencyToNode)
                 oldNode.removeDependentNode(attribute.getOwner());
-            else
-                oldNode.removeListener(this);
+
             for (PathElement pathElement: pathElements)
             {
                 Node pathElementNode = pathElement.getNode();
-                if (pathElementNode!=null && pathElementNode!=oldNode)
+                if (pathElementNode!=null && pathElementNode!=removedNodeOwner)
                     pathElementNode.removeListener(this);
             }
         }
@@ -194,14 +188,12 @@ public class NodeReferenceValueHandler
         if (node!=null)
         {
             if (addDependencyToNode)
-                node.addDependentNode(node);
-            else
-                node.addListener(this);
+                node.addDependentNode(attribute.getOwner());
             
             for (PathElement pathElement: pathElements)
             {
                 Node pathElementNode = pathElement.getNode();
-                if (pathElementNode!=null && pathElementNode!=node)
+                if (pathElementNode!=null)
                     pathElementNode.addListener(this);
             }
         }

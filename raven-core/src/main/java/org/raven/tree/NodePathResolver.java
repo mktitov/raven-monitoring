@@ -41,4 +41,8 @@ public interface NodePathResolver
      *      parameter if the type of the path is relative.
      */
     public PathInfo resolvePath(String path, Node currentNode) throws InvalidPathException;
+    /**
+     * Returns the absolute path to the node passed in the parameter.
+     */
+    public String getAbsolutePath(Node node);
 }

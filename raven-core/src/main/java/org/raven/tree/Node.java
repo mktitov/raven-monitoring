@@ -20,6 +20,7 @@ package org.raven.tree;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import org.raven.tree.store.TreeStore;
 import org.slf4j.Logger;
 import org.weda.annotations.Description;
 
@@ -289,7 +290,10 @@ public interface Node extends Cloneable
      * Returns <code>true</code> if this node is in the template.
      */
     public boolean isTemplate();
-    
+    /**
+     * Saves node in the {@link TreeStore tree store} database.
+     */
+    public void save();
     /**
      * Clones the node.
      * @throws java.lang.CloneNotSupportedException

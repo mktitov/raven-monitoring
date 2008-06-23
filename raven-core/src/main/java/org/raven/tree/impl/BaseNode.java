@@ -29,7 +29,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import org.raven.tree.AttributesGenerator;
-import org.raven.tree.FactoryNotFoundException;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
@@ -39,15 +38,14 @@ import org.raven.conf.Configurator;
 import org.raven.template.TemplateEntry;
 import org.raven.tree.NodeAttributeListener;
 import org.raven.tree.NodeListener;
+import org.raven.tree.NodePathResolver;
 import org.raven.tree.NodeShutdownError;
 import org.raven.tree.Tree;
-import org.raven.tree.store.TreeStoreError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weda.beans.ClassDescriptor;
 import org.weda.beans.ObjectUtils;
 import org.weda.beans.PropertyDescriptor;
-import org.weda.constraints.ConstraintException;
 import org.weda.converter.TypeConverterException;
 import org.weda.internal.annotations.Service;
 import org.weda.services.ClassDescriptorRegistry;
@@ -69,6 +67,8 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     protected static Configurator configurator;
     @Service
     protected static Tree tree;
+    @Service
+    protected static NodePathResolver pathResolver;
     
     private int id;
     
@@ -430,12 +430,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
 
     public String getPath()
     {
-        StringBuffer path = new StringBuffer(name);
-        Node node = this;
-        while ( (node=node.getParent()) != null )
-            path.insert(0, node.getName()+Node.NODE_SEPARATOR);
-        
-        return path.toString();
+        return pathResolver.getAbsolutePath(this);
     }
 
     public boolean isInitializeAfterChildrens()
@@ -645,6 +640,11 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
                 return (T) attr.getRealValue();
         }
         return null;
+    }
+
+    public void save()
+    {
+        configurator.getTreeStore().saveNode(this);
     }
 
     private void extractNodeParameters()
