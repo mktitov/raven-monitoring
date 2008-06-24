@@ -49,7 +49,7 @@ public class NodeReferenceValueHandler
     protected Node node = null;
     private boolean addDependencyToNode = true;
     private PathElement[] pathElements = null;
-    private boolean expressionValid = true;
+    protected boolean expressionValid = true;
             
     public NodeReferenceValueHandler(NodeAttribute attribute)
     {
@@ -71,8 +71,8 @@ public class NodeReferenceValueHandler
         PathElement[] newPathElements = null;
         if (data!=null && data.length()>0)
         {
-            PathInfo pathInfo = pathResolver.resolvePath(data, attribute.getOwner());
-            currentNode = pathInfo.getNode();
+            PathInfo<Node> pathInfo = pathResolver.resolvePath(data, attribute.getOwner());
+            currentNode = pathInfo.getReferencedObject();
             pathElements = pathInfo.getPathElements();
         }
 
@@ -167,7 +167,7 @@ public class NodeReferenceValueHandler
     {
     }
 
-    private void cleanupNodeReference(Node oldNode, Node removedNodeOwner)
+    protected void cleanupNodeReference(Node oldNode, Node removedNodeOwner)
     {
         if (oldNode!=null)
         {

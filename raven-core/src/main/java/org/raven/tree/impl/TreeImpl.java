@@ -125,7 +125,7 @@ public class TreeImpl implements Tree
         
         PathInfo pathInfo = pathResolver.resolvePath(path, rootNode);
         
-        return pathInfo.getNode();
+        return pathInfo.getReferencedObject();
     }
 
     public void reloadTree() throws TreeStoreError
@@ -228,21 +228,22 @@ public class TreeImpl implements Tree
 
     public List<String> getReferenceValuesForAttribute(NodeAttribute attr)
     {
-        AttributeReferenceValues provider = referenceValuesProviders.get(attr.getType());
-        if (provider!=null)
-        {
-            return provider.getReferenceValues(attr);
-        }
-        else
-        {
-            for (Map.Entry<Class, AttributeReferenceValues> entry: 
-                    referenceValuesProviders.entrySet())
-            {
-                if (entry.getKey().isAssignableFrom(attr.getType()))
-                    return entry.getValue().getReferenceValues(attr);
-            }
-            return null;
-        }
+//        AttributeReferenceValues provider = referenceValuesProviders.get(attr.getType());
+//        if (provider!=null)
+//        {
+//            return provider.getReferenceValues(attr);
+//        }
+//        else
+//        {
+//            for (Map.Entry<Class, AttributeReferenceValues> entry: 
+//                    referenceValuesProviders.entrySet())
+//            {
+//                if (entry.getKey().isAssignableFrom(attr.getType()))
+//                    return entry.getValue().getReferenceValues(attr);
+//            }
+//            return null;
+//        }
+        return null;
     }
 
     public List<Node> getTempltateNodes()

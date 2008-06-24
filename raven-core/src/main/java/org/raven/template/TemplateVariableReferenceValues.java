@@ -64,9 +64,11 @@ public class TemplateVariableReferenceValues implements AttributeReferenceValues
 
     public boolean getReferenceValues(NodeAttribute attr, ReferenceValueCollection referenceValues)
     {
+        if (!TemplateVariableValueHandlerFactory.TYPE.equals(attr.getValueHandlerType()))
+            return false;
         
         Node node = attr.getOwner();
-        List<String> refValues = Collections.EMPTY_LIST;
+        List<String> refValues = null;
         while ( (node=node.getParent())!=null )
         {
             if (node instanceof TemplateNode)
@@ -84,6 +86,8 @@ public class TemplateVariableReferenceValues implements AttributeReferenceValues
                 break;
             }
         }
+//        if (refValues!=null)
+//            for 
         return true;
     }
 }

@@ -41,7 +41,7 @@ public class PathInfoImpl implements PathInfo
         return pathElements;
     }
 
-    public Node getNode()
+    public Node getReferencedObject()
     {
         return node;
     }

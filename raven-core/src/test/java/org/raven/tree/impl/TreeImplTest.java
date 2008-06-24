@@ -78,8 +78,8 @@ public class TreeImplTest extends ServiceTestCase
         expectLastCall().andReturn(Collections.EMPTY_LIST);
         List<String> oneList = Arrays.asList("1");
         List<String> twoList = Arrays.asList("2");
-        expect(refValues.getReferenceValues(numberAttr)).andReturn(oneList);
-        expect(refValues.getReferenceValues(integerAttr)).andReturn(twoList);
+//        expect(refValues.getReferenceValues(numberAttr)).andReturn(oneList);
+//        expect(refValues.getReferenceValues(integerAttr)).andReturn(twoList);
                 
         replay(configurator, store, resourceProvider, refValues);
         

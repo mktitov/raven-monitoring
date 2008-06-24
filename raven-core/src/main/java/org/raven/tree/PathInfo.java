@@ -21,7 +21,7 @@ package org.raven.tree;
  *
  * @author Mikhail Titov
  */
-public interface PathInfo 
+public interface PathInfo<T> 
 {
     /**
      * Returns the elements of the path.
@@ -30,5 +30,5 @@ public interface PathInfo
     /**
      * Returns the node that path is references to.
      */
-    public Node getNode();
+    public T getReferencedObject();
 }

@@ -15,28 +15,28 @@
  *  under the License.
  */
 
-package org.raven.tree.impl;
+package org.raven.template;
 
-import org.junit.Test;
-import org.raven.RavenCoreTestCase;
-import org.raven.tree.InvalidPathException;
-import org.raven.tree.Node;
-import org.raven.tree.NodePathResolver;
-import org.raven.tree.PathInfo;
+import org.raven.tree.AttributeValueHandler;
+import org.raven.tree.AttributeValueHandlerFactory;
+import org.raven.tree.NodeAttribute;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class NodePathResolverServiceTest extends RavenCoreTestCase
+public class TemplateVariableValueHandlerFactory implements AttributeValueHandlerFactory
 {
-    @Test
-    public void test() throws InvalidPathException
+    public final static String TYPE = "TemplateVariable";
+    
+    public AttributeValueHandler createValueHandler(NodeAttribute attribute)
     {
-        NodePathResolver pathResolver = registry.getService(NodePathResolver.class);
-        PathInfo pathInfo = pathResolver.resolvePath(""+Node.NODE_SEPARATOR, null);
-        assertNotNull(pathInfo);
-        
-        assertSame(tree.getRootNode(), pathInfo.getReferencedObject());
+        return new TemplateVariableValueHandler(attribute);
     }
+
+    public String getName()
+    {
+        return "Template variable";
+    }
+    
 }

@@ -44,7 +44,7 @@ public class NodePathResolverImplTest extends Assert
         NodePathResolverImpl pathResolver = new NodePathResolverImpl(tree);
         PathInfo pathInfo = pathResolver.resolvePath("/", null);
         
-        assertSame(node, pathInfo.getNode());
+        assertSame(node, pathInfo.getReferencedObject());
         PathElement[] elements = pathInfo.getPathElements();
         assertNotNull(elements);
         assertEquals(1, elements.length);

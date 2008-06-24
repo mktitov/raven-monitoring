@@ -20,8 +20,10 @@ package org.raven.tree.impl;
 import org.raven.tree.InvalidPathException;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrTokenizer;
 import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodePathResolver;
 import org.raven.tree.PathElement;
 import org.raven.tree.PathInfo;
@@ -40,7 +42,7 @@ public class NodePathResolverImpl implements NodePathResolver
         this.tree = tree;
     }
 
-    public PathInfo resolvePath(String path, Node currentNode) throws InvalidPathException
+    public PathInfo<Node> resolvePath(String path, Node currentNode) throws InvalidPathException
     {
         List<PathElement> pathElements = new ArrayList<PathElement>();
         if (path.charAt(0)==Node.NODE_SEPARATOR)
@@ -86,6 +88,27 @@ public class NodePathResolverImpl implements NodePathResolver
         elements = pathElements.toArray(elements);
         
         return new PathInfoImpl(elements, currentNode);
+    }
+    
+    public PathInfo<NodeAttribute> resolveAttributePath(String path, Node currentNode) 
+            throws InvalidPathException
+    {
+        int pos = path.lastIndexOf(Node.ATTRIBUTE_SEPARATOR);
+        if (pos<0)
+            throw new InvalidPathException(String.format(
+                    "Invalid path (%s) to the attribute. " +
+                    "Attribute separator symbol (%s) not found"
+                    , path, Node.ATTRIBUTE_SEPARATOR));
+        String pathToNode = path.substring(0, pos);
+        PathInfo<Node> nodePathInfo = resolvePath(pathToNode, currentNode);
+        String attributeName = pathToNode.substring(pos+1);
+        NodeAttribute attr = nodePathInfo.getReferencedObject().getNodeAttribute(attributeName);
+        if (attr==null)
+            throw new InvalidPathException(String.format(
+                    "Invalid path (%s) to the attribute. " +
+                    "Node (%s) does not contains attribute (%s)"
+                    , path, nodePathInfo.getReferencedObject().getName(), attributeName));
+        return new AttributePathInfo(nodePathInfo, attr);
     }
 
     public String getAbsolutePath(Node node)

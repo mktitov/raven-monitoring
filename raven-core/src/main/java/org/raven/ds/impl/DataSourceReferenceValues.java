@@ -27,6 +27,8 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.DataSourcesNode;
 import org.raven.tree.impl.SystemNode;
+import org.weda.constraints.ReferenceValueCollection;
+import org.weda.constraints.TooManyReferenceValuesException;
 import org.weda.internal.annotations.Service;
 import org.weda.services.TypeConverter;
 
@@ -72,5 +74,11 @@ public class DataSourceReferenceValues implements AttributeReferenceValues
         } 
         else
             return null;
+    }
+
+    public boolean getReferenceValues(NodeAttribute attr, ReferenceValueCollection referenceValues) 
+            throws TooManyReferenceValuesException
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
