@@ -90,26 +90,26 @@ public class NodePathResolverImpl implements NodePathResolver
         return new PathInfoImpl(elements, currentNode);
     }
     
-    public PathInfo<NodeAttribute> resolveAttributePath(String path, Node currentNode) 
-            throws InvalidPathException
-    {
-        int pos = path.lastIndexOf(Node.ATTRIBUTE_SEPARATOR);
-        if (pos<0)
-            throw new InvalidPathException(String.format(
-                    "Invalid path (%s) to the attribute. " +
-                    "Attribute separator symbol (%s) not found"
-                    , path, Node.ATTRIBUTE_SEPARATOR));
-        String pathToNode = path.substring(0, pos);
-        PathInfo<Node> nodePathInfo = resolvePath(pathToNode, currentNode);
-        String attributeName = pathToNode.substring(pos+1);
-        NodeAttribute attr = nodePathInfo.getReferencedObject().getNodeAttribute(attributeName);
-        if (attr==null)
-            throw new InvalidPathException(String.format(
-                    "Invalid path (%s) to the attribute. " +
-                    "Node (%s) does not contains attribute (%s)"
-                    , path, nodePathInfo.getReferencedObject().getName(), attributeName));
-        return new AttributePathInfo(nodePathInfo, attr);
-    }
+//    public PathInfo<NodeAttribute> resolveAttributePath(String path, Node currentNode) 
+//            throws InvalidPathException
+//    {
+//        int pos = path.lastIndexOf(Node.ATTRIBUTE_SEPARATOR);
+//        if (pos<0)
+//            throw new InvalidPathException(String.format(
+//                    "Invalid path (%s) to the attribute. " +
+//                    "Attribute separator symbol (%s) not found"
+//                    , path, Node.ATTRIBUTE_SEPARATOR));
+//        String pathToNode = path.substring(0, pos);
+//        PathInfo<Node> nodePathInfo = resolvePath(pathToNode, currentNode);
+//        String attributeName = pathToNode.substring(pos+1);
+//        NodeAttribute attr = nodePathInfo.getReferencedObject().getNodeAttribute(attributeName);
+//        if (attr==null)
+//            throw new InvalidPathException(String.format(
+//                    "Invalid path (%s) to the attribute. " +
+//                    "Node (%s) does not contains attribute (%s)"
+//                    , path, nodePathInfo.getReferencedObject().getName(), attributeName));
+//        return new AttributePathInfo(nodePathInfo, attr);
+//    }
 
     public String getAbsolutePath(Node node)
     {

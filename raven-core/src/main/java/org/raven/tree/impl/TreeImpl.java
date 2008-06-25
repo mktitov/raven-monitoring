@@ -123,7 +123,7 @@ public class TreeImpl implements Tree
     {
         NullParameterError.check("path", path);
         
-        PathInfo pathInfo = pathResolver.resolvePath(path, rootNode);
+        PathInfo<Node> pathInfo = pathResolver.resolvePath(path, rootNode);
         
         return pathInfo.getReferencedObject();
     }

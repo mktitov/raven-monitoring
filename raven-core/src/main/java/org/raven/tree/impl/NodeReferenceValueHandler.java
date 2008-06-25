@@ -45,11 +45,12 @@ public class NodeReferenceValueHandler
     @Service
     private static NodePathResolver pathResolver;
 
-    private String data = null;
+    protected String data = null;
     protected Node node = null;
     private boolean addDependencyToNode = true;
     private PathElement[] pathElements = null;
     protected boolean expressionValid = true;
+    protected boolean slaveMode = false;
             
     public NodeReferenceValueHandler(NodeAttribute attribute)
     {
@@ -84,9 +85,10 @@ public class NodeReferenceValueHandler
         {
             cleanupNodeReference(oldNode, null);
             initNodeReference(node, newPathElements);
-            fireValueChangedEvent(oldNode, node);
+            if (!slaveMode)
+                fireValueChangedEvent(oldNode, node);
         }
-        if (!ObjectUtils.equals(this.data, oldData))
+        if (!ObjectUtils.equals(this.data, oldData) && !slaveMode)
             attribute.save();
         expressionValid = true;
     }
@@ -199,7 +201,7 @@ public class NodeReferenceValueHandler
         }
     }
     
-    private void recalculateData()
+    protected void recalculateData()
     {
         if (pathElements==null)
             data = null;
