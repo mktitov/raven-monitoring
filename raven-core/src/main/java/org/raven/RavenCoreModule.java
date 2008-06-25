@@ -35,11 +35,14 @@ import org.raven.impl.StringToNodeConverter;
 import org.raven.impl.StringToTemplateVariableConverter;
 import org.raven.template.TemplateVariable;
 import org.raven.template.TemplateVariableReferenceValues;
+import org.raven.template.TemplateVariableValueHandlerFactory;
 import org.raven.tree.AttributeReferenceValues;
 import org.raven.tree.AttributeValueHandlerFactory;
 import org.raven.tree.AttributeValueHandlerRegistry;
 import org.raven.tree.NodePathResolver;
 import org.raven.tree.Tree;
+import org.raven.tree.impl.AttributeReferenceValueHandler;
+import org.raven.tree.impl.AttributeReferenceValueHandlerFactory;
 import org.raven.tree.impl.AttributeValueHandlerRegistryImpl;
 import org.raven.tree.impl.NodePathResolverImpl;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
@@ -115,5 +118,10 @@ public class RavenCoreModule
             MappedConfiguration<String, AttributeValueHandlerFactory> conf)
     {
         conf.add(NodeReferenceValueHandlerFactory.TYPE, new NodeReferenceValueHandlerFactory());
+        conf.add(
+            AttributeReferenceValueHandlerFactory.TYPE
+            , new AttributeReferenceValueHandlerFactory());
+        conf.add(
+            TemplateVariableValueHandlerFactory.TYPE, new TemplateVariableValueHandlerFactory());
     }
 }

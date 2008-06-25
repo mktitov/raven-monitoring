@@ -165,8 +165,9 @@ public class NodeReferenceValueHandler
     {
     }
 
-    public void nodeAttributeRemoved(Node node, NodeAttribute attribute)
+    public boolean nodeAttributeRemoved(Node node, NodeAttribute attribute)
     {
+        return false;
     }
 
     protected void cleanupNodeReference(Node oldNode, Node removedNodeOwner)
@@ -213,5 +214,4 @@ public class NodeReferenceValueHandler
             data = path.toString();
         }
     }
-    
 }

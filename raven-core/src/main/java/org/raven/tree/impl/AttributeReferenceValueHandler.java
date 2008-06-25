@@ -20,6 +20,7 @@ package org.raven.tree.impl;
 import org.raven.tree.AttributeNotFoundException;
 import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
+import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.weda.beans.ObjectUtils;
 import org.weda.internal.annotations.Service;
@@ -74,12 +75,15 @@ public class AttributeReferenceValueHandler extends NodeReferenceValueHandler
         attrData = data;
         if (!ObjectUtils.equals(oldAttrData, attrData))
             attribute.save();
-        attrValue = referencedAttribute==null? 
-            null : convertValue(referencedAttribute.getRealValue());
-        Object oldAttrValue = oldReferencedAttribute==null? 
-            null : convertValue(oldReferencedAttribute.getRealValue());
-        if (!ObjectUtils.equals(oldAttrValue, attrValue))
-            fireValueChangedEvent(oldAttrValue, attrValue);
+        if (node!=null && node.getStatus()!=Node.Status.CREATED)
+        {
+            attrValue = referencedAttribute==null? 
+                null : convertValue(referencedAttribute.getRealValue());
+            Object oldAttrValue = oldReferencedAttribute==null? 
+                null : convertValue(oldReferencedAttribute.getRealValue());
+            if (!ObjectUtils.equals(oldAttrValue, attrValue))
+                fireValueChangedEvent(oldAttrValue, attrValue);
+        }
     }
 
     @Override
@@ -95,6 +99,23 @@ public class AttributeReferenceValueHandler extends NodeReferenceValueHandler
     }
 
     @Override
+    public void validateExpression() throws Exception
+    {
+        setData(attrData);
+    }
+
+    @Override
+    public void nodeStatusChanged(Node sourceNode, Status oldStatus, Status newStatus)
+    {
+        if (sourceNode.equals(node) && oldStatus==Node.Status.CREATED)
+        {
+            attrValue = convertValue(referencedAttribute.getRealValue());
+            if (attrValue!=null)
+                fireValueChangedEvent(null, attrValue);
+        }
+    }
+
+    @Override
     public void nodeAttributeNameChanged(NodeAttribute attribute, String oldName, String newName)
     {
         if (ObjectUtils.equals(referencedAttribute, attribute))
@@ -105,18 +126,19 @@ public class AttributeReferenceValueHandler extends NodeReferenceValueHandler
     }
 
     @Override
-    public void nodeAttributeRemoved(Node node, NodeAttribute removedAttribute)
+    public boolean nodeAttributeRemoved(Node node, NodeAttribute removedAttribute)
     {
         if (ObjectUtils.equals(referencedAttribute, removedAttribute))
         {
             referencedAttribute = null;
             Object oldAttrValue = attrValue;
             attrValue = null;
-            cleanupNodeReference(node, null);
+            cleanupNodeReference(this.node, node);
             expressionValid = false;
-            node = null;
+            this.node = null;
             fireExpressionInvalidatedEvent(oldAttrValue);
         }
+        return true;
     }
 
     @Override

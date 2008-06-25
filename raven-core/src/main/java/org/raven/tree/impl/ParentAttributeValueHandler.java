@@ -20,7 +20,6 @@ package org.raven.tree.impl;
 import org.raven.tree.AttributeValueHandler;
 import org.raven.tree.AttributeValueHandlerListener;
 import org.raven.tree.AttributeValueHandlerRegistry;
-import org.raven.tree.FactoryNotFoundException;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeAttributeListener;
@@ -184,13 +183,14 @@ public class ParentAttributeValueHandler
         fireValueChangedEvent(oldValue, newValue);
     }
 
-    public void nodeAttributeRemoved(Node node, NodeAttribute attribute)
+    public boolean nodeAttributeRemoved(Node node, NodeAttribute attribute)
     {
         Object oldValue = handleData();
         cleanupParentAttribute();
         Object newValue = handleData();
         if (!ObjectUtils.equals(newValue, oldValue))
             fireValueChangedEvent(oldValue, newValue);
+        return false;
     }
 
     public boolean isExpressionValid()

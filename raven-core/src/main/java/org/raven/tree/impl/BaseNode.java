@@ -683,14 +683,22 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
         try
         {
             if (listeners!=null)
-                for (NodeListener listener: listeners)
-                    listener.nodeAttributeRemoved(this, attr);
+                for (Iterator<NodeListener> it=listeners.iterator(); it.hasNext();)
+                {
+                    boolean removeListener = it.next().nodeAttributeRemoved(this, attr);
+                    if (removeListener)
+                        it.remove();
+                }
             if (attributesListeners!=null)
             {
                 Set<NodeAttributeListener> listenersSet = attributesListeners.get(attr);
                 if (listenersSet!=null)
-                    for (NodeAttributeListener listener: listenersSet)
-                        listener.nodeAttributeRemoved(this, attr);
+                    for (Iterator<NodeAttributeListener> it=listenersSet.iterator(); it.hasNext();)
+                    {
+                        boolean removeListener = it.next().nodeAttributeRemoved(this, attr);
+                        if (removeListener)
+                            it.remove();
+                    }
             }
         } catch (Error e)
         {
@@ -924,8 +932,9 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
     {
     }
 
-    public void nodeAttributeRemoved(Node node, NodeAttribute attribute)
+    public boolean nodeAttributeRemoved(Node node, NodeAttribute attribute)
     {
+        return false;
     }
 
     public void removeNodeAttributeDependency(String attributeName, NodeAttributeListener listener)

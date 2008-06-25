@@ -45,6 +45,8 @@ public interface NodeAttributeListener
      * Informs the listener that the node attribute was removed.
      * @param node the owner of the attribute.
      * @param attribute the attribute that was removed.
+     * @return If listener returns <b>true</b> then listener was removed event source 
+     *      (from <code>node</code>)
      */
-    public void nodeAttributeRemoved(Node node, NodeAttribute attribute);
+    public boolean nodeAttributeRemoved(Node node, NodeAttribute attribute);
 }

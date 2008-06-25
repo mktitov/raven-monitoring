@@ -18,58 +18,28 @@
 package org.raven.template;
 
 import org.raven.tree.NodeAttribute;
-import org.raven.tree.impl.AbstractAttributeValueHandler;
+import org.raven.tree.impl.AttributeReferenceValueHandler;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class TemplateVariableValueHandler extends AbstractAttributeValueHandler
+public class TemplateVariableValueHandler extends AttributeReferenceValueHandler
 {
-
     public TemplateVariableValueHandler(NodeAttribute attribute)
     {
         super(attribute);
     }
 
-    public void setData(String value) throws Exception
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public String getData()
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public Object handleData()
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public void close()
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
+    @Override
     public boolean isReferenceValuesSupported()
     {
         return true;
     }
 
+    @Override
     public boolean isExpressionSupported()
     {
         return true;
     }
-
-    public boolean isExpressionValid()
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public void validateExpression() throws Exception
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-    
 }

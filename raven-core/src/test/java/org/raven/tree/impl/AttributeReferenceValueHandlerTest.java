@@ -51,11 +51,7 @@ public class AttributeReferenceValueHandlerTest extends RavenCoreTestCase
         parentNode.addChildren(childNode);
         childNode.save();
         childNode.init();
-        attr = new NodeAttributeImpl("attr", String.class, "10", null);
-        attr.setOwner(childNode);
-        childNode.addNodeAttribute(attr);
-        attr.init();
-        attr.save();
+        addAttribute();
 //        NodeAttribute refAttr = new NodeAttributeImpl("ref", Integer.class, null, null);
 //        refAttr.setValueHandlerType(AttributeReferenceValueHandlerFactory.TYPE);
         
@@ -125,5 +121,107 @@ public class AttributeReferenceValueHandlerTest extends RavenCoreTestCase
         assertEquals(new Integer(99), valueHandler.handleData());
         
         verify(refAttr, listener);
+    }
+    
+    @Test
+    public void attributeRemoved() throws Exception
+    {
+        NodeAttribute refAttr = createMock(NodeAttribute.class);
+        AttributeValueHandlerListener listener = createMock(AttributeValueHandlerListener.class);
+        
+        expect(refAttr.getOwner()).andReturn(node).times(2);
+        expect(refAttr.getType()).andReturn(Integer.class).times(2);
+        refAttr.save();
+        listener.valueChanged(null, 10);
+        listener.expressionInvalidated(10);
+        listener.valueChanged(null, 10);
+        replay(refAttr, listener);
+        
+        AttributeReferenceValueHandler valueHandler = new AttributeReferenceValueHandler(refAttr);
+        valueHandler.addListener(listener);
+        valueHandler.setData(childNode.getPath()+Node.ATTRIBUTE_SEPARATOR+attr.getName());
+        
+        assertEquals(10, valueHandler.handleData());
+        assertTrue(childNode.getListeners().contains(valueHandler));
+        childNode.removeNodeAttribute("attr");
+        
+        assertFalse(childNode.getListeners().contains(valueHandler));
+        assertFalse(valueHandler.expressionValid);
+        assertNull(valueHandler.handleData());
+        assertEquals(
+                childNode.getPath()+Node.ATTRIBUTE_SEPARATOR+attr.getName()
+                , valueHandler.getData());
+        
+        addAttribute();
+        valueHandler.validateExpression();
+        assertTrue(valueHandler.isExpressionValid());
+        assertEquals(10, valueHandler.handleData());
+        
+        verify(refAttr, listener);
+    }
+    
+    @Test
+    public void attributeRenamed() throws Exception
+    {
+        NodeAttribute refAttr = createMock(NodeAttribute.class);
+        AttributeValueHandlerListener listener = createMock(AttributeValueHandlerListener.class);
+        
+        expect(refAttr.getOwner()).andReturn(node).times(1);
+        expect(refAttr.getType()).andReturn(Integer.class).times(2);
+        refAttr.save();
+        refAttr.save();
+        listener.valueChanged(null, 10);
+        listener.valueChanged(10, 20);
+        replay(refAttr, listener);
+        
+        AttributeReferenceValueHandler valueHandler = new AttributeReferenceValueHandler(refAttr);
+        valueHandler.addListener(listener);
+        valueHandler.setData(childNode.getPath()+Node.ATTRIBUTE_SEPARATOR+attr.getName());
+        
+        assertEquals(10, valueHandler.handleData());
+        attr.setName("newName");
+        attr.save();
+        
+        valueHandler.getData().endsWith("newName");
+        assertEquals(10, valueHandler.handleData());
+        attr.setValue("20");
+        assertEquals(20, valueHandler.handleData());
+    }
+    
+    @Test
+    public void realTest() throws Exception
+    {
+        NodeAttribute refAttr = new NodeAttributeImpl("refAttr", Integer.class, null, null);
+        refAttr.setValueHandlerType(AttributeReferenceValueHandlerFactory.TYPE);
+        refAttr.setOwner(node);
+        node.addNodeAttribute(refAttr);
+        refAttr.init();
+        refAttr.setValue(childNode.getPath()+Node.ATTRIBUTE_SEPARATOR+attr.getName());
+        refAttr.save();
+        
+        assertEquals("10", refAttr.getValue());
+        assertEquals(10, refAttr.getRealValue());
+        
+        tree.reloadTree();
+        
+        node = tree.getNode(node.getPath());
+        assertNotNull(node);
+        refAttr = node.getNodeAttribute("refAttr");
+        assertNotNull(refAttr);
+        assertEquals("10", refAttr.getValue());
+        assertEquals(10, refAttr.getRealValue());
+        assertEquals(
+                childNode.getPath()+Node.ATTRIBUTE_SEPARATOR+attr.getName(), refAttr.getRawValue());
+    }
+
+    private void addAttribute() throws Exception
+    {
+        attr = new NodeAttributeImpl("attr", String.class, "10", null);
+        attr.setOwner(childNode);
+        childNode.addNodeAttribute(attr);
+        attr.init();
+        attr.save();
+//        NodeAttribute refAttr = new NodeAttributeImpl("ref", Integer.class, null, null);
+//        refAttr.setValueHandlerType(AttributeReferenceValueHandlerFactory.TYPE);
     }
 }
