@@ -53,8 +53,10 @@ public class EnumReferenceValues implements AttributeReferenceValues
             return false;
         
         for (Object value: attr.getType().getEnumConstants())
-            referenceValues.add(new ReferenceValueImpl(
-                value, converter.convert(String.class, value, null)), null);
+        {
+            String strValue = converter.convert(String.class, value, null);
+            referenceValues.add(new ReferenceValueImpl(strValue, strValue), null);
+        }
         return true;
     }
 }

@@ -26,6 +26,10 @@ import org.raven.ServiceTestCase;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.NodeAttributeImpl;
+import org.weda.constraints.ReferenceValue;
+import org.weda.constraints.ReferenceValueCollection;
+import org.weda.constraints.TooManyReferenceValuesException;
+import org.weda.constraints.impl.ReferenceValueCollectionImpl;
 
 /**
  *
@@ -51,28 +55,28 @@ public class EnumReferenceValuesTest extends ServiceTestCase
     }
     
     @Test
-    public void instanceTest()
+    public void instanceTest() throws TooManyReferenceValuesException
     {
-        EnumReferenceValues referenceValues = new EnumReferenceValues();
-        List<String> values = referenceValues.getReferenceValues(attr);
-        
-        checkValues(values);
+        EnumReferenceValues enumReferenceValues = new EnumReferenceValues();
+        ReferenceValueCollection values = new ReferenceValueCollectionImpl(Integer.MAX_VALUE, null);
+        assertTrue(enumReferenceValues.getReferenceValues(attr, values));
+        checkValues(values.asList());
     }
     
     @Test
     public void treeTest()
     {
         Tree tree = registry.getService(Tree.class);
-        List<String> values = tree.getReferenceValuesForAttribute(attr);
+        List<ReferenceValue> values = tree.getReferenceValuesForAttribute(attr);
         
         checkValues(values);
     }
     
-    private void checkValues(List<String> values)
+    private void checkValues(List<ReferenceValue> values)
     {
         assertNotNull(values);
         assertEquals(2, values.size());
-        assertEquals("ONE", values.get(0));
-        assertEquals("TWO", values.get(1));
+        assertEquals("ONE", values.get(0).getValue());
+        assertEquals("TWO", values.get(1).getValue());
     }
 }

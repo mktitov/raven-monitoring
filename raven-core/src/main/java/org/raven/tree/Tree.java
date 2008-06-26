@@ -59,7 +59,7 @@ public interface Tree
      * Returns reference values for attribute or <code>null</code> if reference values for
      * attribute was not defined.
      */
-    public List<String> getReferenceValuesForAttribute(NodeAttribute attr);
+    public List<ReferenceValue> getReferenceValuesForAttribute(NodeAttribute attr);
     /**
      * Copies subtree of nodes starting from the <code>source</code> node 
      * to the <code>destination</code> node.

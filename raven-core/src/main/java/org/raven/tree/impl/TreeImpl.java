@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import org.raven.annotations.NodeClass;
 import org.raven.conf.Configurator;
 import org.raven.impl.NodeClassTransformerWorker;
@@ -48,6 +49,9 @@ import org.raven.tree.store.TreeStoreError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weda.constraints.ReferenceValue;
+import org.weda.constraints.ReferenceValueCollection;
+import org.weda.constraints.TooManyReferenceValuesException;
+import org.weda.constraints.impl.ReferenceValueCollectionImpl;
 import org.weda.constraints.impl.ReferenceValueImpl;
 import org.weda.internal.exception.NullParameterError;
 import org.weda.internal.services.ResourceProvider;
@@ -61,12 +65,13 @@ public class TreeImpl implements Tree
     protected Logger logger = LoggerFactory.getLogger(Node.class);
     
     public static Tree INSTANCE;
-    
+
+    private final AttributeReferenceValues attributeReferenceValues;
     private final Configurator configurator;
     private final TreeStore treeStore;
     private final NodePathResolver pathResolver;
 
-    private final Map<Class, AttributeReferenceValues> referenceValuesProviders;
+//    private final Map<Class, AttributeReferenceValues> referenceValuesProviders;
     private final Map<Class, List<Class>> nodeTypes = new HashMap<Class, List<Class>>();
     private final Set<Class> anyChildTypeNodes = new HashSet<Class>();
     private Node rootNode;
@@ -75,15 +80,16 @@ public class TreeImpl implements Tree
     private TemplatesNode templatesNode;
 
     public TreeImpl(
-            Map<Class, AttributeReferenceValues> referenceValuesProviders
+            AttributeReferenceValues attributeReferenceValues
             , Configurator configurator, ResourceProvider resourceProvider
             , NodePathResolver pathResolver) 
         throws Exception
     {
         this.configurator = configurator;
         this.treeStore = configurator.getTreeStore();
-        this.referenceValuesProviders = referenceValuesProviders;
+//        this.referenceValuesProviders = referenceValuesProviders;
         this.pathResolver = pathResolver;
+        this.attributeReferenceValues = attributeReferenceValues;
         
         INSTANCE = this;
         
@@ -226,24 +232,19 @@ public class TreeImpl implements Tree
                 stop(child);
     }
 
-    public List<String> getReferenceValuesForAttribute(NodeAttribute attr)
+    public List<ReferenceValue> getReferenceValuesForAttribute(NodeAttribute attr)
     {
-//        AttributeReferenceValues provider = referenceValuesProviders.get(attr.getType());
-//        if (provider!=null)
-//        {
-//            return provider.getReferenceValues(attr);
-//        }
-//        else
-//        {
-//            for (Map.Entry<Class, AttributeReferenceValues> entry: 
-//                    referenceValuesProviders.entrySet())
-//            {
-//                if (entry.getKey().isAssignableFrom(attr.getType()))
-//                    return entry.getValue().getReferenceValues(attr);
-//            }
-//            return null;
-//        }
-        return null;
+        ReferenceValueCollection values = new ReferenceValueCollectionImpl(Integer.MAX_VALUE, null);
+        try
+        {
+            attributeReferenceValues.getReferenceValues(attr, values);
+            List<ReferenceValue> result = values.asList();
+            return result.size()==0? null : values.asList();
+        } 
+        catch (TooManyReferenceValuesException ex)
+        {
+            return null;
+        }
     }
 
     public List<Node> getTempltateNodes()

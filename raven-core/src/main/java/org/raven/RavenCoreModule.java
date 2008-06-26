@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.tapestry.ioc.Configuration;
 import org.apache.tapestry.ioc.MappedConfiguration;
+import org.apache.tapestry.ioc.OrderedConfiguration;
 import org.apache.tapestry.ioc.ServiceBinder;
 import org.apache.tapestry.ioc.services.ChainBuilder;
 import org.raven.conf.Configurator;
@@ -72,12 +73,12 @@ public class RavenCoreModule
     }
     
     public static Tree buildTree(
-            Map<Class, AttributeReferenceValues> referenceValuesProvider
+            AttributeReferenceValues attributeReferenceValues
             , Configurator configurator, ResourceProvider resourceProvider
             , NodePathResolver pathResolver) 
         throws Exception
     {
-        return new TreeImpl(referenceValuesProvider, configurator, resourceProvider, pathResolver);
+        return new TreeImpl(attributeReferenceValues, configurator, resourceProvider, pathResolver);
     }
     
     public static AttributeReferenceValues buildAttributeReferenceValues(
@@ -123,5 +124,11 @@ public class RavenCoreModule
             , new AttributeReferenceValueHandlerFactory());
         conf.add(
             TemplateVariableValueHandlerFactory.TYPE, new TemplateVariableValueHandlerFactory());
+    }
+    
+    public static void contributeAttributeReferenceValues(
+            OrderedConfiguration<AttributeReferenceValues> conf)
+    {
+        conf.add(EnumReferenceValues.class.getSimpleName(), new EnumReferenceValues(), "before:*");
     }
 }
