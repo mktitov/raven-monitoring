@@ -186,8 +186,8 @@ public class RRDNodeTest extends ServiceTestCase
         rrd.addChildren(rra2);
         treeStore.saveNode(rra2);
         rra2.init();
-        rra2.setSteps(2);
-        rra2.setRows(10);
+        rra2.getNodeAttribute("steps").setValue("2");
+        rra2.getNodeAttribute("rows").setValue("10");
         rra2.start();
         assertEquals(Status.STARTED, rra2.getStatus());
         
@@ -200,13 +200,13 @@ public class RRDNodeTest extends ServiceTestCase
         
         rrds2.stop();
         rrds2.setName("ds3");
-        rrds2.setHeartbeat(5l);
-        rrds2.setMinValue(-1.);
-        rrds2.setMaxValue(10.);
+        rrds2.getNodeAttribute("heartbeat").setValue("5");
+        rrds2.getNodeAttribute("minValue").setValue("-1");
+        rrds2.getNodeAttribute("maxValue").setValue("10.");
         rrds2.start();
         
-        rra2.setRows(50);
-        rra2.setXff(.1);
+        rra2.getNodeAttribute("rows").setValue("50");
+        rra2.getNodeAttribute("xff").setValue(".0");
         
         db = new RrdDb(rrdFile.getAbsolutePath());
         assertNotNull(db);

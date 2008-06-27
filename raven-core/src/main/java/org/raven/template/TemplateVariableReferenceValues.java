@@ -24,10 +24,13 @@ import java.util.List;
 import org.raven.tree.AttributeReferenceValues;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
-import org.raven.tree.impl.AttributeReferenceImpl;
+import org.raven.tree.NodePathResolver;
+import org.raven.tree.impl.AttributeNameComporator;
 import org.weda.constraints.ReferenceValueCollection;
+import org.weda.constraints.ReferenceValue;
+import org.weda.constraints.TooManyReferenceValuesException;
+import org.weda.constraints.impl.ReferenceValueImpl;
 import org.weda.internal.annotations.Service;
-import org.weda.services.TypeConverter;
 
 /**
  *
@@ -36,39 +39,15 @@ import org.weda.services.TypeConverter;
 public class TemplateVariableReferenceValues implements AttributeReferenceValues
 {
     @Service
-    private static TypeConverter converter;
-    
-    public List<String> getReferenceValues(NodeAttribute attr)
-    {
-        Node node = attr.getOwner();
-        List<String> refValues = Collections.EMPTY_LIST;
-        while ( (node=node.getParent())!=null )
-        {
-            if (node instanceof TemplateNode)
-            {
-                TemplateVariablesNode varsNode = ((TemplateNode)node).getVariablesNode();
-                Collection<NodeAttribute> attrs = varsNode.getNodeAttributes();
-                if (attrs!=null && attrs.size()>0)
-                {
-                    refValues = new ArrayList<String>(attrs.size());
-                    for (NodeAttribute var: attrs)
-                        refValues.add(converter.convert(
-                            String.class, new AttributeReferenceImpl(var), null));
-                    Collections.sort(refValues);
-                }
-                break;
-            }
-        }
-        return refValues;
-    }
-
-    public boolean getReferenceValues(NodeAttribute attr, ReferenceValueCollection referenceValues)
+    private static NodePathResolver pathResolver;
+            
+    public boolean getReferenceValues(NodeAttribute attr, ReferenceValueCollection referenceValues) 
+            throws TooManyReferenceValuesException
     {
         if (!TemplateVariableValueHandlerFactory.TYPE.equals(attr.getValueHandlerType()))
             return false;
         
         Node node = attr.getOwner();
-        List<String> refValues = null;
         while ( (node=node.getParent())!=null )
         {
             if (node instanceof TemplateNode)
@@ -77,17 +56,19 @@ public class TemplateVariableReferenceValues implements AttributeReferenceValues
                 Collection<NodeAttribute> attrs = varsNode.getNodeAttributes();
                 if (attrs!=null && attrs.size()>0)
                 {
-                    refValues = new ArrayList<String>(attrs.size());
-                    for (NodeAttribute var: attrs)
-                        refValues.add(converter.convert(
-                            String.class, new AttributeReferenceImpl(var), null));
-                    Collections.sort(refValues);
+                    List<NodeAttribute> vars = 
+                            new ArrayList<NodeAttribute>(varsNode.getNodeAttributes());
+                    Collections.sort(vars, new AttributeNameComporator());
+                    for (NodeAttribute var: vars)
+                    {
+                        ReferenceValue referenceValue = new ReferenceValueImpl(
+                            pathResolver.getAbsolutePath(var), var.getName());
+                        referenceValues.add(referenceValue, null);
+                    }
                 }
                 break;
             }
         }
-//        if (refValues!=null)
-//            for 
         return true;
     }
 }

@@ -17,18 +17,17 @@
 
 package org.raven.tree.impl;
 
-import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import java.util.Comparator;
+import org.raven.tree.NodeAttribute;
 
 /**
- *
+ * Compares {@link NodeAttribute node attribute} by it's {@link NodeAttribute#getName() name}
  * @author Mikhail Titov
  */
-//TODO: write tests
-public class ParentAttributeValueHandlerTest extends RavenCoreTestCase
+public class AttributeNameComporator implements Comparator<NodeAttribute>
 {
-    @Test
-    public void test()
+    public int compare(NodeAttribute o1, NodeAttribute o2)
     {
+        return o1.getName().compareTo(o2.getName());
     }
 }

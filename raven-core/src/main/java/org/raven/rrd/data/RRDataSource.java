@@ -30,18 +30,21 @@ import org.weda.annotations.Description;
 @Description("Round robin database data source node")
 public class RRDataSource extends DataPipeImpl
 {
-    @Parameter 
-    @Description("The data source type (GAUGE | COUNTER | DERIVE | ABSOLUTE)")
-    private String dataSourceType = "GAUGE";
+    @Parameter(defaultValue="GAUGE")
+    @Description("The data source type (GAUGE | COUNTER | DERIVE | ABSOLUTE)")    
+    private String dataSourceType;
+    
     @Parameter
     @Description("The data source heartbeat")
     private Long heartbeat;
-    @Parameter
+    
+    @Parameter(defaultValue="NaN")
     @Description("Minimal acceptable value")
-    private double minValue = Double.NaN;
-    @Parameter
+    private Double minValue;
+
+    @Parameter(defaultValue="NaN")
     @Description("Maximal acceptable value")
-    private double maxValue = Double.NaN;
+    private Double maxValue;
 
     public String getDataSourceType()
     {
@@ -63,22 +66,22 @@ public class RRDataSource extends DataPipeImpl
         this.heartbeat = heartbeat;
     }
 
-    public double getMaxValue()
+    public Double getMaxValue()
     {
         return maxValue;
     }
 
-    public void setMaxValue(double maxValue)
+    public void setMaxValue(Double maxValue)
     {
         this.maxValue = maxValue;
     }
 
-    public double getMinValue()
+    public Double getMinValue()
     {
         return minValue;
     }
 
-    public void setMinValue(double minValue)
+    public void setMinValue(Double minValue)
     {
         this.minValue = minValue;
     }

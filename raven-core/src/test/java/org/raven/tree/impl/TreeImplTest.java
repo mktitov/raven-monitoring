@@ -18,12 +18,13 @@
 package org.raven.tree.impl;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.tapestry.ioc.RegistryBuilder;
+import org.easymock.IAnswer;
+import org.easymock.IArgumentMatcher;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
 import org.raven.ServiceTestCase;
@@ -34,7 +35,11 @@ import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodePathResolver;
 import org.raven.tree.store.TreeStore;
+import org.weda.constraints.ReferenceValue;
+import org.weda.constraints.TooManyReferenceValuesException;
 import org.weda.internal.services.ResourceProvider;
+import org.weda.constraints.ReferenceValueCollection;
+import org.weda.constraints.impl.ReferenceValueImpl;
 import static org.easymock.EasyMock.*;
 /**
  *
@@ -52,22 +57,15 @@ public class TreeImplTest extends ServiceTestCase
     @Test
     public void getReferenceValuesForAttribute() throws IOException, Exception
     {
-        fail();
         NodeAttribute integerAttr = 
                 new NodeAttributeImpl("integerAttribute", Integer.class, null, null);
         integerAttr.setId(1);
-        NodeAttribute numberAttr = 
-                new NodeAttributeImpl("numberAttribute", Number.class, null, null);
-        numberAttr.setId(2);
-        NodeAttribute stringAttr = 
-                new NodeAttributeImpl("stringAttribute", String.class, null, null);
-        stringAttr.setId(3);
         
+        AttributeReferenceValues referenceValues = 
+                createMock("AttributeReferenceValues", AttributeReferenceValues.class);
         Configurator configurator = createMock("Configurator", Configurator.class);
         TreeStore store = createMock("TreeStore", TreeStore.class);
         ResourceProvider resourceProvider = createMock("ResourceProvider", ResourceProvider.class);
-        AttributeReferenceValues refValues = 
-                createMock("AttributeReferenceValues", AttributeReferenceValues.class);
         NodePathResolver pathResolver = createMock("NodePathResolver", NodePathResolver.class);
         
         expect(configurator.getTreeStore()).andReturn(store).anyTimes();
@@ -77,21 +75,49 @@ public class TreeImplTest extends ServiceTestCase
         expectLastCall().anyTimes();
         resourceProvider.getResourceStrings(NodeClassTransformerWorker.NODES_TYPES_RESOURCE);
         expectLastCall().andReturn(Collections.EMPTY_LIST);
-        List<String> oneList = Arrays.asList("1");
-        List<String> twoList = Arrays.asList("2");
-//        expect(refValues.getReferenceValues(numberAttr)).andReturn(oneList);
-//        expect(refValues.getReferenceValues(integerAttr)).andReturn(twoList);
+        referenceValues.getReferenceValues(
+                (NodeAttribute)notNull(), (ReferenceValueCollection)notNull());
+        expectLastCall().andReturn(true);
+        referenceValues.getReferenceValues(
+                (NodeAttribute)notNull(), matchCollection());
+        expectLastCall().andReturn(true);
                 
-        replay(configurator, store, resourceProvider, refValues);
+        replay(referenceValues, configurator, store, resourceProvider);
         
-        Map<Class, AttributeReferenceValues> providers = 
-                new HashMap<Class, AttributeReferenceValues>();
-        providers.put(Number.class, refValues);
-//        TreeImpl tree = new TreeImpl(providers, configurator, resourceProvider, pathResolver);
+        TreeImpl tree = new TreeImpl(referenceValues, configurator, resourceProvider, pathResolver);
+        assertNull(tree.getReferenceValuesForAttribute(integerAttr));
+        List<ReferenceValue> values = tree.getReferenceValuesForAttribute(integerAttr);
+        assertNotNull(values);
+        assertEquals(1, values.size());
+        assertEquals("value", values.get(0).getValue());
+        assertEquals("valueAsString", values.get(0).getValueAsString());
 //        assertSame(oneList, tree.getReferenceValuesForAttribute(numberAttr));
 //        assertSame(twoList, tree.getReferenceValuesForAttribute(integerAttr));
 //        assertNull(tree.getReferenceValuesForAttribute(stringAttr));
         
-        verify(configurator, store, resourceProvider);
+        verify(referenceValues, configurator, store, resourceProvider);
+    }
+    
+    private static ReferenceValueCollection matchCollection()
+    {
+        reportMatcher(new IArgumentMatcher() {
+
+            public boolean matches(Object argument)
+            {
+                try
+                {
+                    ReferenceValueCollection values = (ReferenceValueCollection) argument;
+                    values.add(new ReferenceValueImpl("value", "valueAsString"), null);
+                } catch (TooManyReferenceValuesException ex)
+                {
+                }
+                return true;
+            }
+
+            public void appendTo(StringBuffer buffer)
+            {
+            }
+        });
+        return null;
     }
 }

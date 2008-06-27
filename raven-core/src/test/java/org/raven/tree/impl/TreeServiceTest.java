@@ -134,7 +134,7 @@ public class TreeServiceTest extends ServiceTestCase
                 tree.getNode(systemNode.getPath());
                 fail();
             }
-            catch(NodeNotFoundError e) {}
+            catch(InvalidPathException e) {}
             assertNull(store.getNode(systemNodeId));
             assertNull(store.getNode(dsNodeId));
         }finally

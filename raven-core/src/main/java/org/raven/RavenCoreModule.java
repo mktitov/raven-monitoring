@@ -137,5 +137,9 @@ public class RavenCoreModule
             SystemDataSourceReferenceValues.class.getSimpleName()
             , new SystemDataSourceReferenceValues()
             , "after:"+EnumReferenceValues.class.getSimpleName());
+        conf.add(
+            TemplateVariableReferenceValues.class.getSimpleName()
+            , new TemplateVariableReferenceValues()
+            , "after:"+SystemDataSourceReferenceValues.class.getSimpleName());
     }
 }

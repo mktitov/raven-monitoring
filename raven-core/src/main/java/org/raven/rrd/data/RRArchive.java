@@ -31,17 +31,17 @@ import org.weda.annotations.constraints.NotNull;
 @Description("Round robin archive node")
 public class RRArchive extends LeafNode
 {
-    @Parameter
+    @Parameter(defaultValue="AVERAGE")
     @Description("Consolidation function. Valid values are 'AVERAGE', 'MIN', 'MAX' and 'LAST'")
-    private ConsolidationFunction consolidationFunction = ConsolidationFunction.AVERAGE;
+    private ConsolidationFunction consolidationFunction;
     
-    @Parameter
+    @Parameter(defaultValue="0.99")
     @Description("X-files factor. Valid values are between 0 and 1")
-    private double xff = 0.99;
+    private Double xff;
     
-    @Parameter
+    @Parameter(defaultValue="1")
     @Description("Number of archive steps")
-    private int steps = 1;
+    private Integer steps;
     
     @Parameter
     @NotNull
@@ -68,22 +68,22 @@ public class RRArchive extends LeafNode
         this.rows = rows;
     }
 
-    public int getSteps()
+    public Integer getSteps()
     {
         return steps;
     }
 
-    public void setSteps(int steps)
+    public void setSteps(Integer steps)
     {
         this.steps = steps;
     }
 
-    public double getXff()
+    public Double getXff()
     {
         return xff;
     }
 
-    public void setXff(double xff)
+    public void setXff(Double xff)
     {
         this.xff = xff;
     }

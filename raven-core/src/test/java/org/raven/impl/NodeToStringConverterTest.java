@@ -22,6 +22,7 @@ import org.junit.Test;
 import org.raven.RavenCoreModule;
 import org.raven.ServiceTestCase;
 import org.raven.tree.Node;
+import org.raven.tree.NodePathResolver;
 import org.raven.tree.impl.ContainerNode;
 import org.weda.services.TypeConverter;
 /**
@@ -47,6 +48,8 @@ public class NodeToStringConverterTest extends ServiceTestCase
         node.setParent(parentNode);
         
         assertEquals(
-                "parent"+Node.NODE_SEPARATOR+"child", converter.convert(String.class, node, null));
+                String.format(
+                    "parent%1$s%2$schild%2$s%1$s", Node.NODE_SEPARATOR, NodePathResolver.QUOTE)
+                , converter.convert(String.class, node, null));
     }
 }

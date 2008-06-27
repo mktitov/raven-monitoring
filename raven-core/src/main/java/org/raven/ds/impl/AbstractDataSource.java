@@ -47,10 +47,13 @@ public abstract class AbstractDataSource
     public static final String INTERVAL_ATTRIBUTE = "interval";
     public static final String INTERVAL_UNIT_ATTRIBUTE = "intervalUnit";
     
-    @Parameter @Description("Sets the core number of threads")
-    private int corePoolSize = 3;
-    @Parameter @Description("Sets the maximum allowed number of threads")
-    private int maximumPoolSize = 6;
+    @Parameter(defaultValue="3")
+    @Description("Sets the core number of threads")
+    private Integer corePoolSize;
+    
+    @Parameter(defaultValue="6")
+    @Description("Sets the maximum allowed number of threads")
+    private Integer maximumPoolSize;
     
     private ScheduledThreadPoolExecutor executorService = null;
     private Collection<NodeAttribute> consumerAttributes = new ArrayList<NodeAttribute>();
@@ -79,11 +82,9 @@ public abstract class AbstractDataSource
     public abstract void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes);
 
     @Override
-    public synchronized boolean start() throws NodeError
+    protected void doStart() throws Exception
     {
-        if (!super.start())
-            return false;
-                
+        super.doStart();
         executorService = 
                 (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(corePoolSize);
         executorService.setMaximumPoolSize(maximumPoolSize);
@@ -94,8 +95,6 @@ public abstract class AbstractDataSource
             for (Node node: getDependentNodes())
                 if (node instanceof DataConsumer && node.getStatus()==Status.STARTED)
                     addDataConsumer((DataConsumer) node);
-        
-        return true;
     }
 
     @Override
@@ -157,33 +156,32 @@ public abstract class AbstractDataSource
         executorService.remove(new Task(dataConsumer));
     }
 
-    public int getCorePoolSize()
+    public Integer getCorePoolSize()
     {
         return corePoolSize;
     }
 
-    public void setCorePoolSize(int corePoolSize)
-    {
-        this.corePoolSize = corePoolSize;
-        if (executorService!=null)
-            executorService.setCorePoolSize(corePoolSize);
-    }
-
-    public int getMaximumPoolSize()
+    public Integer getMaximumPoolSize()
     {
         return maximumPoolSize;
-    }
-
-    public void setMaximumPoolSize(int maximumPoolSize)
-    {
-        this.maximumPoolSize = maximumPoolSize;
-        if (executorService!=null)
-            executorService.setMaximumPoolSize(maximumPoolSize);
     }
 
     public void rejectedExecution(Runnable r, ThreadPoolExecutor executor)
     {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void nodeAttributeValueChanged(
+            Node node, NodeAttribute attribute, Object oldValue, Object newValue)
+    {
+        if (this==node && executorService!=null)
+        {
+            if (attribute.getName().equals("corePoolSize"))
+                executorService.setCorePoolSize(corePoolSize);
+            else if (attribute.getName().equals("maximumPoolSize"))
+                executorService.setMaximumPoolSize(maximumPoolSize);
+        }
     }
 
     @Override

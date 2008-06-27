@@ -48,7 +48,7 @@ public class SystemDataSourceReferenceValuesTest extends RavenCoreTestCase
     private DataSourcesNode dataSources;
     
     @Test
-    public void test() throws TooManyReferenceValuesException, Exception 
+    public void instanceTest() throws TooManyReferenceValuesException, Exception 
     {
         NodePathResolver pathResolver = registry.getService(NodePathResolver.class);
         
@@ -75,12 +75,7 @@ public class SystemDataSourceReferenceValuesTest extends RavenCoreTestCase
         
         values = new ReferenceValueCollectionImpl(Integer.MAX_VALUE, null);
         referenceValues.getReferenceValues(attr, values);
-        List<ReferenceValue> list = values.asList();
-        assertNotNull(list);
-        assertEquals(2, list.size());
-        ReferenceValue value1 = list.get(0);
-        assertEquals("ds1", value1.getValueAsString());
-        assertEquals(pathResolver.getAbsolutePath(ds1), value1.getValue());
+        checkReferenceValues(values.asList(), pathResolver);
         
 //        attr.setType(ds1.getClass());
 //        values = referenceValues.getReferenceValues(attr);
@@ -94,31 +89,59 @@ public class SystemDataSourceReferenceValuesTest extends RavenCoreTestCase
 //        assertEquals(1, values.size());
 //        assertTrue(values.contains("ds2Path"));
 //        
-//        attr.setType(DataSource.class);
-//        values = tree.getReferenceValuesForAttribute(attr);
-//        assertNotNull(values);
-//        assertEquals(2, values.size());
+        attr.setType(DataSource.class);
+        checkReferenceValues(tree.getReferenceValuesForAttribute(attr), pathResolver);
         
         verify(ds1, ds2);
     }
     
+    private void checkReferenceValues(List<ReferenceValue> values, NodePathResolver pathResolver)
+    {
+        assertNotNull(values);
+        assertEquals(2, values.size());
+        ReferenceValue value = values.get(0);
+        assertEquals("ds1", value.getValueAsString());
+        assertEquals(pathResolver.getAbsolutePath(ds1), value.getValue());
+        value = values.get(1);
+        assertEquals("ds2", value.getValueAsString());
+        assertEquals(pathResolver.getAbsolutePath(ds2), value.getValue());
+
+//        attr.setType(ds1.getClass());
+//        values = referenceValues.getReferenceValues(attr);
+//        assertNotNull(values);
+//        assertEquals(1, values.size());
+//        assertTrue(values.contains("ds1Path"));
+//
+//        attr.setType(ds2.getClass());
+//        values = referenceValues.getReferenceValues(attr);
+//        assertNotNull(values);
+//        assertEquals(1, values.size());
+//        assertTrue(values.contains("ds2Path"));
+//
+//        attr.setType(DataSource.class);
+//        values = tree.getReferenceValuesForAttribute(attr);
+//        assertNotNull(values);
+//        assertEquals(2, values.size());
+    }
+    
     private void trainMocks()
     {
-        ds1 = createMock(DataSource.class);
-        ds2 = createMock(TestDataSourceInterface.class);
+        ds1 = createMock("ds1", DataSource.class);
+        ds2 = createMock("ds2", TestDataSourceInterface.class);
         
-        expect(ds1.getName()).andReturn("ds1");
+        expect(ds1.getName()).andReturn("ds1").anyTimes();
         ds1.setParent((Node) anyObject());
         ds1.addListener((NodeListener) anyObject());
         expect(ds1.getIndex()).andReturn(1);
         expect(ds1.getParent()).andReturn(dataSources).anyTimes();
-//        expect(ds1.getPath()).andReturn("ds1Path").times(3);
+//        expect(ds1.compareTo((Node)anyObject())).andReturn(-1);
         
-        expect(ds2.getName()).andReturn("ds2");
+        expect(ds2.getName()).andReturn("ds2").anyTimes();
         ds2.setParent((Node) anyObject());
         ds2.addListener((NodeListener) anyObject());
         expect(ds2.getIndex()).andReturn(2);
         expect(ds2.getParent()).andReturn(dataSources).anyTimes();
+        expect(ds2.compareTo((Node)anyObject())).andReturn(1).times(2);
 //        expect(ds2.getPath()).andReturn("ds2Path").times(3);
         
         replay(ds1, ds2);

@@ -20,7 +20,6 @@ package org.raven.tree.impl;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
-import org.raven.tree.NodeListener;
 import org.weda.beans.GetOperation;
 import org.weda.beans.ObjectUtils;
 import org.weda.beans.PropertyDescriptor;
@@ -33,7 +32,7 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
-public class NodeListenerExecutorHelper 
+public class NodeListenerExecutorHelper
 {
     @Service
     private static TypeConverter converter;
@@ -89,25 +88,30 @@ public class NodeListenerExecutorHelper
     public static void fireNodeAttributeValueChanged(
             Node node, String attributeName, Object oldValue, Object newValue)
     {
-        if (node.getStatus()!=Status.CREATED && !ObjectUtils.equals(oldValue, newValue))
-        {
-            NodeAttribute attr = node.getNodeAttribute(attributeName);            
-            String pattern = 
-                    classDescriptorRegistry.getPropertyDescriptor(
-                        node.getClass(), attributeName).getPattern();
-            String newStrValue = converter.convert(String.class, newValue, pattern);
-            attr.setRawValue(newStrValue);
-            
-            if (node.getListeners()!=null)
-                ((BaseNode)node).fireAttributeValueChanged(
-                        (NodeAttributeImpl) attr
-                        , converter.convert(String.class, oldValue, pattern)
-                        , newStrValue);
+        throw new UnsupportedOperationException(String.format(
+                "Error seting value for field (%s) of the class (%s). " +
+                "Set operation not supported for parameters"
+                , attributeName, node.getClass().getName()));
+//        throw new ;
+//        if (node.getStatus()!=Status.CREATED && !ObjectUtils.equals(oldValue, newValue))
+//        {
+//            NodeAttribute attr = node.getNodeAttribute(attributeName);            
+//            String pattern = 
+//                    classDescriptorRegistry.getPropertyDescriptor(
+//                        node.getClass(), attributeName).getPattern();
+//            String newStrValue = converter.convert(String.class, newValue, pattern);
+//            attr.setRawValue(newStrValue);
+//            
+//            if (node.getListeners()!=null)
+//                ((BaseNode)node).fireAttributeValueChanged(
+//                        (NodeAttributeImpl) attr
+//                        , converter.convert(String.class, oldValue, pattern)
+//                        , newStrValue);
 //            for (NodeListener listener: node.getListeners())
 //                listener.nodeAttributeValueChanged(
 //                    node, attr, 
 //                    converter.convert(String.class, oldValue, pattern),
 //                    converter.convert(String.class, newValue, pattern));
-        }
+//        }
     }
 }

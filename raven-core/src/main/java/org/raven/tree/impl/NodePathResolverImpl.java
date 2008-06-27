@@ -126,4 +126,10 @@ public class NodePathResolverImpl implements NodePathResolver
         
         return path.toString();
     }
+
+    public String getAbsolutePath(NodeAttribute attribute)
+    {
+        return getAbsolutePath(attribute.getOwner())+Node.ATTRIBUTE_SEPARATOR+attribute.getName();
+    }
+    
 }

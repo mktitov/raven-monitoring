@@ -45,4 +45,8 @@ public interface NodePathResolver
      * Returns the absolute path to the node passed in the parameter.
      */
     public String getAbsolutePath(Node node);
+    /**
+     * Returns the absolute path to the node attribue passed in the parameter.
+     */
+    public String getAbsolutePath(NodeAttribute attribute);
 }

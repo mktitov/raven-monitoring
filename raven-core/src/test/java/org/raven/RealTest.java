@@ -173,7 +173,7 @@ public class RealTest extends ServiceTestCase
         tree.getRootNode().addChildren(rrd);
         store.saveNode(rrd);
         rrd.init();
-        rrd.setStep(60);
+        rrd.setStep(60l);
         
         RRArchive rra = new RRArchive();
         rra.setName("archive");

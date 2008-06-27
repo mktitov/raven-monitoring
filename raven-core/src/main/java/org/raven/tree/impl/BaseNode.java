@@ -55,7 +55,7 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
-public class BaseNode implements Node, NodeListener, Comparable<Node>
+public class BaseNode implements Node, NodeListener
 {
     protected Logger logger = LoggerFactory.getLogger(Node.class);
     
@@ -526,10 +526,10 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
                 for (NodeAttribute attr: nodeAttributes.values())
                     if (attr.isRequired() && attr.getValue()==null)
                     {
-                        logger.info(
+                        logger.info(String.format(
                                 "Error switching node (%s) to the STARTED state. " +
                                 "Value for required attribute (%s) not seted "
-                                , getPath(), attr.getName());
+                                , getPath(), attr.getName()));
                         return false;
                     }
             doStart();
@@ -654,7 +654,7 @@ public class BaseNode implements Node, NodeListener, Comparable<Node>
         ClassDescriptor classDescriptor = descriptorRegistry.getClassDescriptor(getClass());
         PropertyDescriptor[] descs = classDescriptor.getPropertyDescriptors();
         for (PropertyDescriptor desc: descs)
-            if (desc.isReadable() && desc.isWriteable())
+            if (desc.isReadable())
                 for (Annotation ann: desc.getAnnotations())
                     if (ann instanceof Parameter)
                     {

@@ -63,7 +63,7 @@ import org.weda.annotations.Description;
  * @author Mikhail Titov
  */
 @Description("The node type")
-public interface Node extends Cloneable
+public interface Node extends Cloneable, Comparable<Node>
 {
     public enum Status {CREATED, INITIALIZED, STARTED}
     /**
