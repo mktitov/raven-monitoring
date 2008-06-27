@@ -52,6 +52,7 @@ public class TreeImplTest extends ServiceTestCase
     @Test
     public void getReferenceValuesForAttribute() throws IOException, Exception
     {
+        fail();
         NodeAttribute integerAttr = 
                 new NodeAttributeImpl("integerAttribute", Integer.class, null, null);
         integerAttr.setId(1);
@@ -86,10 +87,10 @@ public class TreeImplTest extends ServiceTestCase
         Map<Class, AttributeReferenceValues> providers = 
                 new HashMap<Class, AttributeReferenceValues>();
         providers.put(Number.class, refValues);
-        TreeImpl tree = new TreeImpl(providers, configurator, resourceProvider, pathResolver);
-        assertSame(oneList, tree.getReferenceValuesForAttribute(numberAttr));
-        assertSame(twoList, tree.getReferenceValuesForAttribute(integerAttr));
-        assertNull(tree.getReferenceValuesForAttribute(stringAttr));
+//        TreeImpl tree = new TreeImpl(providers, configurator, resourceProvider, pathResolver);
+//        assertSame(oneList, tree.getReferenceValuesForAttribute(numberAttr));
+//        assertSame(twoList, tree.getReferenceValuesForAttribute(integerAttr));
+//        assertNull(tree.getReferenceValuesForAttribute(stringAttr));
         
         verify(configurator, store, resourceProvider);
     }

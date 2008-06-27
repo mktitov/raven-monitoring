@@ -330,8 +330,8 @@ public class NodeAttributeImpl
             {
             }
         }
-        if (result==null)
-            result = tree.getReferenceValuesForAttribute(this);
+//        if (result==null)
+//            result = tree.getReferenceValuesForAttribute(this);
         
         return result;
     }

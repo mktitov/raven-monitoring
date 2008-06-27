@@ -17,68 +17,50 @@
 
 package org.raven.ds.impl;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import org.raven.ds.DataSource;
 import org.raven.tree.AttributeReferenceValues;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodePathResolver;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.DataSourcesNode;
 import org.raven.tree.impl.SystemNode;
+import org.weda.constraints.ReferenceValue;
 import org.weda.constraints.ReferenceValueCollection;
 import org.weda.constraints.TooManyReferenceValuesException;
+import org.weda.constraints.impl.ReferenceValueImpl;
 import org.weda.internal.annotations.Service;
-import org.weda.services.TypeConverter;
 
 /**
- *
+ * Returns the list of the system data sources for attributes with 
+ * {@link org.raven.tree.NodeAttribute#getValueHandlerType() value handler type} equals to
+ * {@link SystemDataSourceValueHandlerFactory#TYPE}
  * @author Mikhail Titov
  */
-public class DataSourceReferenceValues implements AttributeReferenceValues
+public class SystemDataSourceReferenceValues implements AttributeReferenceValues
 {
     @Service
     private static Tree tree;
-    @Service
-    private static TypeConverter converter;
+    @Service 
+    private static NodePathResolver pathResolver;
 
-    public List<String> getReferenceValues(NodeAttribute attr)
+    public boolean getReferenceValues(NodeAttribute attr, ReferenceValueCollection referenceValues) 
+            throws TooManyReferenceValuesException
     {
+        if (!SystemDataSourceValueHandlerFactory.TYPE.equals(attr.getValueHandlerType()))
+            return false;
+        
         DataSourcesNode dataSources = 
                 (DataSourcesNode) 
                 tree.getRootNode().getChildren(SystemNode.NAME).getChildren(DataSourcesNode.NAME);
         if (dataSources.getChildrens()!=null)
         {
-            List<String> result = new ArrayList<String>();
-            for (Node node: dataSources.getChildrens())
-                if (attr.getType().isAssignableFrom(node.getClass()))
-                {
-                    String nodePath = converter.convert(String.class, node, null);
-                    result.add(nodePath);
-                }
-            
-            Collections.sort(result);
-            
-            Node node = attr.getOwner();
-            while ( (node = node.getParent())!=null )
+            for (Node node: dataSources.getSortedChildrens())
             {
-                if (node instanceof DataSource)
-                {
-                    String nodePath = converter.convert(String.class, node, null);
-                    result.add(nodePath);
-                }
+                ReferenceValue referenceValue = 
+                        new ReferenceValueImpl(pathResolver.getAbsolutePath(node), node.getName());
+                referenceValues.add(referenceValue, null);
             }
-            
-            return result;
-        } 
-        else
-            return null;
-    }
-
-    public boolean getReferenceValues(NodeAttribute attr, ReferenceValueCollection referenceValues) 
-            throws TooManyReferenceValuesException
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
+        }
+        return true;
     }
 }

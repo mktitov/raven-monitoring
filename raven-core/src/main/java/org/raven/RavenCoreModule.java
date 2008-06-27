@@ -26,7 +26,8 @@ import org.apache.tapestry.ioc.services.ChainBuilder;
 import org.raven.conf.Configurator;
 import org.raven.conf.impl.ConfiguratorImpl;
 import org.raven.ds.DataSource;
-import org.raven.ds.impl.DataSourceReferenceValues;
+import org.raven.ds.impl.SystemDataSourceReferenceValues;
+import org.raven.ds.impl.SystemDataSourceValueHandlerFactory;
 import org.raven.impl.AttributeReferenceToStringConverter;
 import org.raven.impl.EnumReferenceValues;
 import org.raven.impl.NodeToStringConverter;
@@ -111,7 +112,7 @@ public class RavenCoreModule
     public static void contributeTree(MappedConfiguration<Class, AttributeReferenceValues> conf)
     {
         conf.add(TemplateVariable.class, new TemplateVariableReferenceValues());
-        conf.add(DataSource.class, new DataSourceReferenceValues());
+        conf.add(DataSource.class, new SystemDataSourceReferenceValues());
         conf.add(Enum.class, new EnumReferenceValues());
     }
     
@@ -124,11 +125,17 @@ public class RavenCoreModule
             , new AttributeReferenceValueHandlerFactory());
         conf.add(
             TemplateVariableValueHandlerFactory.TYPE, new TemplateVariableValueHandlerFactory());
+        conf.add(
+            SystemDataSourceValueHandlerFactory.TYPE, new SystemDataSourceValueHandlerFactory());
     }
     
     public static void contributeAttributeReferenceValues(
             OrderedConfiguration<AttributeReferenceValues> conf)
     {
         conf.add(EnumReferenceValues.class.getSimpleName(), new EnumReferenceValues(), "before:*");
+        conf.add(
+            SystemDataSourceReferenceValues.class.getSimpleName()
+            , new SystemDataSourceReferenceValues()
+            , "after:"+EnumReferenceValues.class.getSimpleName());
     }
 }
