@@ -122,10 +122,10 @@ public class NodeWrapper extends AbstractNodeWrapper
 			  if(na.getId()!=at.getId()) continue;
 			  String val = getNotNull(na.getValue());
 			  String dsc = getNotNull(na.getDescription());
-			  if( !at.isReference() &&  !val.equals(at.getValue()) ) save |=1;
+			  if( !at.isExpressionSupported() &&  !val.equals(at.getValue()) ) save |=1;
 			  if( !dsc.equals(at.getDescription()) ) save |=2;
 			  if( !na.getName().equals(at.getName()) ) save |=4;
-			  if( at.isReference() &&  ! ObjectUtils.equals(na.getRawValue(), at.getRefPath()) ) save |=8;
+			  if( at.isExpressionSupported() &&  ! ObjectUtils.equals(na.getRawValue(), at.getExpression()) ) save |=8;
 			  
 			  if(save==0) continue;
 			  try 
@@ -133,7 +133,7 @@ public class NodeWrapper extends AbstractNodeWrapper
 				  if( (save&1) !=0 ) na.setValue(at.getValue());
 				  if( (save&2) !=0 ) na.setDescription(at.getDescription());
 				  if( (save&4) !=0 ) na.setName(at.getName());
-				  if( (save&8) !=0 ) na.setValue(at.getRefPath());
+				  if( (save&8) !=0 ) na.setValue(at.getExpression());
 				  
 				  getConfigurator().getTreeStore().saveNodeAttribute(na);
 			  }
@@ -145,6 +145,13 @@ public class NodeWrapper extends AbstractNodeWrapper
 				  logger.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
 			  }
 			  catch(TypeConverterException e) 
+			  {
+				  String t = Messages.getString("org.raven.ui.messages", "attribute",new Object[] {});
+				  if(ret.length()!=0) ret.append(". ");
+				  ret.append(t+" '"+at.getName()+"' : "+e.getMessage());
+				  logger.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
+			  }
+			  catch(Exception e) 
 			  {
 				  String t = Messages.getString("org.raven.ui.messages", "attribute",new Object[] {});
 				  if(ret.length()!=0) ret.append(". ");

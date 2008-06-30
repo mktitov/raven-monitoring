@@ -41,8 +41,8 @@ public class Attr
 	private List<SelectItem> selectItems = null;
 	private boolean allowDelete = false;
 	private boolean edit = false;
-	private boolean reference = false;
-	private String refPath = "";
+	private boolean expressionSupported = false;
+	private String expression = "";
 
 	public Attr(NodeAttribute na)
 	{
@@ -56,8 +56,8 @@ public class Attr
 		classDisplayName = classDsc.getClassDescriptor(na.getType()).getDisplayName();
 		if(na.getParentAttribute()==null && na.getParameterName()==null) allowDelete = true;
 		List<String> lst = na.getReferenceValues();
-		reference = na.isAttributeReference();
-		if(reference) refPath = na.getRawValue();  
+		expressionSupported = na.isExpression();
+		if(expressionSupported) expression = na.getRawValue();  
 		if(lst==null)
 		{
 			logger.warn("NodeAttribute '{}' has not reference values",name);
@@ -97,11 +97,11 @@ public class Attr
 	public boolean isEdit() { return edit; }
 	public void setEdit(boolean edit) { this.edit = edit; }
 
-	public boolean isReference() { return reference; }
-	public void setReference(boolean reference) { this.reference = reference; }
+	public boolean isExpressionSupported() { return expressionSupported; }
+//	public void setReference(boolean reference) { this.expression = reference; }
 
-	public String getRefPath() { return refPath; }
-	public void setRefPath(String refPath) { this.refPath = refPath; }
+	public String getExpression() { return expression; }
+//	public void setRefPath(String refPath) { this.expression = refPath; }
 
 	public NodeAttribute getAttribute() { return attribute; }
 	public void setAttribute(NodeAttribute attribute) { this.attribute = attribute; }
