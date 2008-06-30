@@ -109,10 +109,11 @@ public class TableNodeTest extends RavenCoreTestCase
                 new NodeAttributeImpl("${column2}", String.class, "test ${column1}", "${column1}");
         attr.setOwner(child);
         child.addNodeAttribute(attr);
+        attr.init();
         store.saveNodeAttribute(attr);
         
         table.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(ds.getPath());
-        table.setIndexColumnName("column1");
+        table.getNodeAttribute(TableNode.INDEXCOLUMNNAME_ATTRIBUTE).setValue("column1");
         table.start();
         assertEquals(Status.STARTED, table.getStatus());
         
@@ -135,7 +136,7 @@ public class TableNodeTest extends RavenCoreTestCase
         ds.start();
         
         table.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(ds.getPath());
-        table.setIndexColumnName("column1");
+        table.getNodeAttribute(TableNode.INDEXCOLUMNNAME_ATTRIBUTE).setValue("column1");
         store.saveNode(table);
         table.start();
         assertEquals(Status.STARTED, table.getStatus());
@@ -177,14 +178,16 @@ public class TableNodeTest extends RavenCoreTestCase
         checkDataConsumers(table, 1, 1, 1);
         checkDataConsumers(table, 2, 1, 1);
         
-        table.setAddPolicy(TableNode.AddPolicy.DO_NOTHING);
+        table.getNodeAttribute(TableNode.ADDPOLICY_ATTRIBUTE)
+                .setValue(TableNode.AddPolicy.DO_NOTHING.toString());
         ds.pushDataWithNewRow();
         
         checkDataConsumers(table, 1, 2, 2);
         checkDataConsumers(table, 2, 2, 2);
         assertEquals(3, table.getChildrens().size());
         
-        table.setAddPolicy(TableNode.AddPolicy.AUTO_ADD);
+        table.getNodeAttribute(TableNode.ADDPOLICY_ATTRIBUTE)
+                .setValue(TableNode.AddPolicy.AUTO_ADD.toString());
         ds.pushDataWithNewRow();
         
         checkDataConsumers(table, 1, 3, 3);
@@ -195,7 +198,8 @@ public class TableNodeTest extends RavenCoreTestCase
         assertEquals(Status.INITIALIZED, node.getStatus());
         tree.remove(node);
         
-        table.setAddPolicy(TableNode.AddPolicy.AUTO_ADD_AND_START);
+        table.getNodeAttribute(TableNode.ADDPOLICY_ATTRIBUTE)
+                .setValue(TableNode.AddPolicy.AUTO_ADD_AND_START.toString());
         ds.pushDataWithNewRow();
         checkDataConsumers(table, 1, 4, 4);
         checkDataConsumers(table, 2, 4, 4);
@@ -209,13 +213,15 @@ public class TableNodeTest extends RavenCoreTestCase
         checkDataConsumers(table, 2, 5, 5);
         checkDataConsumers(table, 3, 1, 1);
         
-        table.setRemovePolicy(TableNode.RemovePolicy.DO_NOTHING);
+        table.getNodeAttribute(TableNode.REMOVEPOLICY_ATTRIBUTE)
+                .setValue(TableNode.RemovePolicy.DO_NOTHING.toString());
         ds.pushData();
         checkDataConsumers(table, 1, 6, 6);
         checkDataConsumers(table, 2, 6, 6);
         checkDataConsumers(table, 3, 2, 1);
         
-        table.setRemovePolicy(TableNode.RemovePolicy.STOP_NODE);
+        table.getNodeAttribute(TableNode.REMOVEPOLICY_ATTRIBUTE)
+                .setValue(TableNode.RemovePolicy.STOP_NODE.toString());
         ds.pushData();
         checkDataConsumers(table, 1, 7, 7);
         checkDataConsumers(table, 2, 7, 7);
@@ -225,7 +231,8 @@ public class TableNodeTest extends RavenCoreTestCase
         assertEquals(Status.INITIALIZED, node.getStatus());
         tree.start(node);
         
-        table.setRemovePolicy(TableNode.RemovePolicy.AUTO_REMOVE);
+        table.getNodeAttribute(TableNode.REMOVEPOLICY_ATTRIBUTE)
+                .setValue(TableNode.RemovePolicy.AUTO_REMOVE.toString());
         ds.pushData();
         checkDataConsumers(table, 1, 8, 8);
         checkDataConsumers(table, 2, 8, 8);

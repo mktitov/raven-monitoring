@@ -52,6 +52,10 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
 {
     public final static String INDEX_COLUMN_VALUE = "tableIndexColumnValue";
 
+    public final static String INDEXCOLUMNNAME_ATTRIBUTE = "indexColumnName";
+    public final static String ADDPOLICY_ATTRIBUTE = "addPolicy";
+    public final static String REMOVEPOLICY_ATTRIBUTE = "removePolicy";
+    
     public enum AddPolicy {DO_NOTHING, AUTO_ADD, AUTO_ADD_AND_START}
     public enum RemovePolicy {DO_NOTHING, STOP_NODE, AUTO_REMOVE}
     
@@ -60,15 +64,15 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
     @Description("The table column name which is the index column for this node")
     private String indexColumnName;
     
-    @Parameter
+    @Parameter(defaultValue="DO_NOTHING")
     @NotNull
     @Description("Add policy")
-    private AddPolicy addPolicy = AddPolicy.DO_NOTHING;
+    private AddPolicy addPolicy;
     
-    @Parameter
+    @Parameter(defaultValue="STOP_NODE")
     @NotNull
     @Description("Remove policy")
-    private RemovePolicy removePolicy = RemovePolicy.STOP_NODE;
+    private RemovePolicy removePolicy;
     
     private final Lock dataLock = new ReentrantLock();
     private TableNodeTemplate template;
@@ -96,29 +100,14 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
         return indexColumnName;
     }
 
-    public void setIndexColumnName(String indexColumnName)
-    {
-        this.indexColumnName = indexColumnName;
-    }
-
     public AddPolicy getAddPolicy()
     {
         return addPolicy;
     }
 
-    public void setAddPolicy(AddPolicy addPolicy)
-    {
-        this.addPolicy = addPolicy;
-    }
-
     public RemovePolicy getRemovePolicy()
     {
         return removePolicy;
-    }
-
-    public void setRemovePolicy(RemovePolicy removePolicy)
-    {
-        this.removePolicy = removePolicy;
     }
 
     @Override
@@ -133,8 +122,8 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
                     if (!(data instanceof Table))
                     {
                         logger.error(String.format(
-                            "Invalid data type (%s) recieved from data source (%s) for node (%s). " +
-                            "The valid data type is (%s)"
+                            "Invalid data type (%s) recieved from data source (%s) for node (%s). "
+                            + "The valid data type is (%s)"
                             , data.getClass().getName(), getDataSource().getPath(), getPath()
                             , Table.class.getName()));
                         logger.warn(String.format("Stopping node (%s) due errors", getPath()));
@@ -246,19 +235,20 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
 
     private void createNewNode(
             Table tab, int row, Node templateNode, String indexValue, boolean autoStart) 
-        throws TypeConverterException
+        throws Exception
     {
         Map<String, Object> values = new HashMap<String, Object>();
         for (String columnName : tab.getColumnNames())
             values.put(columnName, tab.getValue(columnName, row));
         StrSubstitutor subst = new StrSubstitutor(values);
 
-        Node newNode = tree.copy(templateNode, this, null, null, true, true);
+        Node newNode = tree.copy(templateNode, this, null, null, true, false);
         NodeAttribute indexAttr = new NodeAttributeImpl(
                 INDEX_COLUMN_VALUE, String.class, indexValue, null);
         indexAttr.setOwner(newNode);
         newNode.addNodeAttribute(indexAttr);
-        configurator.getTreeStore().saveNodeAttribute(indexAttr);
+        indexAttr.init();
+        indexAttr.save();
         
         tuneNode(this, subst, newNode);
         
@@ -303,7 +293,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
                     , getDataSource().getPath()));
     }
 
-    private void processData(Object data)
+    private void processData(Object data) throws Exception
     {
         Set<Node> deps = getDependentNodes();
 //        if (deps==null || deps.size()==0)
@@ -335,7 +325,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
         }
     }
     
-    private void processAddOperation(Table tab, int row, String indexColumnValue)
+    private void processAddOperation(Table tab, int row, String indexColumnValue) throws Exception
     {
         if (   addPolicy==AddPolicy.AUTO_ADD
             || addPolicy==AddPolicy.AUTO_ADD_AND_START 
@@ -402,7 +392,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
             }
     }
 
-    private void tuneNode(TableNode tableNode, StrSubstitutor subst, Node newNode)
+    private void tuneNode(TableNode tableNode, StrSubstitutor subst, Node newNode) throws Exception
     {
         String newName = subst.replace(newNode.getName());
         if (!newName.equals(newNode.getName()))
@@ -435,7 +425,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
                 if (!ObjectUtils.equals(newVal, attr.getRawValue()))
                 {
                     hasChanges = true;
-                    attr.setRawValue(newVal);
+                    attr.setValue(newVal);
                 }
                 newVal = subst.replace(attr.getDescription());
                 if (!ObjectUtils.equals(newVal, attr.getDescription()))

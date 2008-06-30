@@ -18,13 +18,10 @@
 package org.raven.impl;
 
 import java.util.List;
-import org.apache.tapestry.ioc.RegistryBuilder;
 import org.junit.Before;
 import org.junit.Test;
-import org.raven.RavenCoreModule;
-import org.raven.ServiceTestCase;
+import org.raven.RavenCoreTestCase;
 import org.raven.tree.NodeAttribute;
-import org.raven.tree.Tree;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.weda.constraints.ReferenceValue;
 import org.weda.constraints.ReferenceValueCollection;
@@ -35,22 +32,18 @@ import org.weda.constraints.impl.ReferenceValueCollectionImpl;
  *
  * @author Mikhail Titov
  */
-public class EnumReferenceValuesTest extends ServiceTestCase
+public class EnumReferenceValuesTest extends RavenCoreTestCase
 {
 
     public enum TestEnum {ONE, TWO};
     
     private NodeAttribute attr;
     
-    @Override
-    protected void configureRegistry(RegistryBuilder builder)
-    {
-        builder.add(RavenCoreModule.class);
-    }
-    
     @Before
-    public void initTest()
+    public void setupTest()
     {
+        store.removeNodes();
+        
         attr = new NodeAttributeImpl("attr", TestEnum.class, null, null);
     }
     
@@ -66,7 +59,6 @@ public class EnumReferenceValuesTest extends ServiceTestCase
     @Test
     public void treeTest()
     {
-        Tree tree = registry.getService(Tree.class);
         List<ReferenceValue> values = tree.getReferenceValuesForAttribute(attr);
         
         checkValues(values);

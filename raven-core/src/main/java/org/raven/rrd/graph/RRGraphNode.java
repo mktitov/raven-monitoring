@@ -45,7 +45,7 @@ public class RRGraphNode extends BaseNode implements DynamicImageNode
 {
     public final static String SARTTIME_ATTRIBUTE = "startTime";
     public final static String ENDTIME_ATTRIBUTE = "endTime";
-    public final static String TITLE_ATTRIBUTE = "titlle";
+    public final static String TITLE_ATTRIBUTE = "title";
     public final static String HEIGHT_ATTRIBUTE = "height";
     public final static String WIDTH_ATTRIBUTE = "width";
     public final static String IMAGEFORMAT_ATTRIBUTE = "imageFormat";

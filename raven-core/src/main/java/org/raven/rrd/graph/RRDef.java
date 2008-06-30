@@ -43,7 +43,7 @@ public class RRDef extends LeafNode implements DataDefinition
     //TODO: add RRDataSourceReferenceValues
     private RRDataSource dataSource;
     
-    @Parameter(defaultValue="AVARAGE")
+    @Parameter(defaultValue="AVERAGE")
     @Description(
         "Consolidation function. If not seted consolidation function will be taken from the" +
         "rrd archive corresponding the dataSource.")

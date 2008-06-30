@@ -18,6 +18,7 @@
 package org.raven.impl;
 
 import org.apache.tapestry.ioc.RegistryBuilder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
 import org.raven.ServiceTestCase;
@@ -43,6 +44,7 @@ public class AttributeReferenceToStringConverterTest extends ServiceTestCase
     }
     
     @Test
+    @Ignore
     public void test()
     {
         TypeConverter converter = registry.getService(TypeConverter.class);
