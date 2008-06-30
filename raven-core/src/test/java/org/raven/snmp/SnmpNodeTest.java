@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.raven.RavenCoreModule;
 import org.raven.ServiceTestCase;
 import org.raven.conf.Configurator;
+import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.ds.impl.AbstractDataSource;
 import org.raven.snmp.objects.SnmpDataConsumer;
 import org.raven.table.Table;
@@ -168,7 +169,8 @@ public class SnmpNodeTest extends ServiceTestCase
         store.saveNode(consumer);
         consumer.init();
         
-        consumer.setDataSource(snmpNode);
+        consumer.getNodeAttribute(
+                AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(snmpNode.getPath());
         consumer.getNodeAttribute(AbstractDataSource.INTERVAL_ATTRIBUTE).setValue("2");
         consumer.getNodeAttribute(AbstractDataSource.INTERVAL_UNIT_ATTRIBUTE).setValue(
                 TimeUnit.SECONDS.toString());
@@ -206,7 +208,8 @@ public class SnmpNodeTest extends ServiceTestCase
         store.saveNode(consumer);
         consumer.init();
         
-        consumer.setDataSource(snmpNode);
+        consumer.getNodeAttribute(
+                AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(snmpNode.getPath());
         consumer.getNodeAttribute(AbstractDataSource.INTERVAL_ATTRIBUTE).setValue("2");
         consumer.getNodeAttribute(AbstractDataSource.INTERVAL_UNIT_ATTRIBUTE).setValue(
                 TimeUnit.SECONDS.toString());

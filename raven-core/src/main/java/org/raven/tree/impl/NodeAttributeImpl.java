@@ -349,7 +349,7 @@ public class NodeAttributeImpl
         clone.owner = null;
         clone.valueHandler = null;
         clone.initialized = false;
-        
+        clone.value = getRawValue();
         return clone;
     }
 

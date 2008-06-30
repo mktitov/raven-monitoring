@@ -49,9 +49,10 @@ public class RRDatabaseManager extends BaseNode
 
     public enum RemovePolicy {STOP_DATABASES, REMOVE_DATABASES}
     
-    @Parameter @NotNull
+    @Parameter(defaultValue=DEFAULT_DATA_TYPE_ATTRIBUTE_NAME)
+    @NotNull
     @Description("The attribute name by which value data pipes will in one database")
-    private String dataTypeAttributeName = DEFAULT_DATA_TYPE_ATTRIBUTE_NAME;
+    private String dataTypeAttributeName;
     
     @Parameter @NotNull
     @Description("The count of data sources per database")
@@ -64,12 +65,12 @@ public class RRDatabaseManager extends BaseNode
         "dataType attribute value")
     private Node startingPoint;
     
-    private Lock lock = new ReentrantLock();
-    
-    @Parameter @NotNull
+    @Parameter (defaultValue="STOP_DATABASES")
+    @NotNull
     @Description("Defines the remove policy")
-    private RemovePolicy removePolicy = RemovePolicy.STOP_DATABASES;
+    private RemovePolicy removePolicy;
     
+    private Lock lock = new ReentrantLock();
     private RRDatabaseManagerTemplate template;
     private Set<Integer> newDataSources = new HashSet<Integer>();
 
@@ -154,19 +155,9 @@ public class RRDatabaseManager extends BaseNode
         return removePolicy;
     }
 
-    public void setRemovePolicy(RemovePolicy removePolicy)
-    {
-        this.removePolicy = removePolicy;
-    }
-    
     public Integer getDataSourcesPerDatabase()
     {
         return dataSourcesPerDatabase;
-    }
-
-    public void setDataSourcesPerDatabase(Integer dataSourcesPerDatabase)
-    {
-        this.dataSourcesPerDatabase = dataSourcesPerDatabase;
     }
 
     public String getDataTypeAttributeName()
@@ -174,21 +165,11 @@ public class RRDatabaseManager extends BaseNode
         return dataTypeAttributeName;
     }
 
-    public void setDataTypeAttributeName(String dataTypeAttributeName)
-    {
-        this.dataTypeAttributeName = dataTypeAttributeName;
-    }
-
     public Node getStartingPoint()
     {
         return startingPoint;
     }
 
-    public void setStartingPoint(Node startingPoint)
-    {
-        this.startingPoint = startingPoint;
-    }
-    
     private boolean isNotInDatabaseManager(Node node)
     {
         if (!(node instanceof DataSource))
@@ -243,14 +224,6 @@ public class RRDatabaseManager extends BaseNode
     private void syncDataSource(
             DataSource dataSource, Set<Integer> pipes)
     {
-//        if (datasources.containsKey(dataSource.getId()))
-//        {
-//            if (logger.isDebugEnabled())
-//                logger.debug(String.format(
-//                        "Data source (%s) already under (%s) control",
-//                        dataSource.getPath(), getPath()));
-//            return;
-//        }
         
         NodeAttribute dataTypeAttr = dataSource.getNodeAttribute(dataTypeAttributeName);
         if (dataTypeAttr==null || !String.class.equals(dataTypeAttr.getType()))

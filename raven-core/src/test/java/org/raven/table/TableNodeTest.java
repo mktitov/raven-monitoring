@@ -20,6 +20,7 @@ package org.raven.table;
 import org.junit.Before;
 import org.raven.*;
 import org.junit.Test;
+import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.table.objects.ColumnValueDataConsumer;
 import org.raven.table.objects.TestDataSource;
 import org.raven.tree.InvalidPathException;
@@ -110,7 +111,7 @@ public class TableNodeTest extends RavenCoreTestCase
         child.addNodeAttribute(attr);
         store.saveNodeAttribute(attr);
         
-        table.setDataSource(ds);
+        table.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(ds.getPath());
         table.setIndexColumnName("column1");
         table.start();
         assertEquals(Status.STARTED, table.getStatus());
@@ -133,7 +134,7 @@ public class TableNodeTest extends RavenCoreTestCase
         ds.init();
         ds.start();
         
-        table.setDataSource(ds);
+        table.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(ds.getPath());
         table.setIndexColumnName("column1");
         store.saveNode(table);
         table.start();
@@ -151,7 +152,7 @@ public class TableNodeTest extends RavenCoreTestCase
         node.addChildren(c1);
         store.saveNode(c1);
         c1.init();
-        c1.setDataSource(table);
+        c1.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(table.getPath());
         store.saveNodeAttribute(c1.getNodeAttribute("dataSource"));
         
         ColumnValueDataConsumer c2 = new ColumnValueDataConsumer();
@@ -159,7 +160,7 @@ public class TableNodeTest extends RavenCoreTestCase
         node.addChildren(c2);
         store.saveNode(c2);
         c2.init();
-        c2.setDataSource(table);
+        c2.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(table.getPath());
         store.saveNodeAttribute(c2.getNodeAttribute("dataSource"));
         NodeAttribute colAttr = c2.getNodeAttribute(TableNodeTemplate.TABLE_COLUMN_NAME);
         assertNotNull(colAttr);

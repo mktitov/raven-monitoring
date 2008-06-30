@@ -32,6 +32,10 @@ import org.weda.annotations.constraints.NotNull;
 @Description("")
 public class RRGPrint extends LeafNode
 {
+    public final static String DATADEFINITION_ATTRIBUTE = "dataDefinition";
+    public final static String CONSOLIDATIONFUNCTION_ATTRIBUTE = "consolidationFunction";
+    public final static String FORMAT_ATTRIBUTE = "format";
+    
     @Parameter @NotNull @Description("The reference to the data defenition node")
     private DataDefinition dataDefinition;
     
@@ -46,28 +50,13 @@ public class RRGPrint extends LeafNode
         return consolidationFunction;
     }
 
-    public void setConsolidationFunction(ConsolidationFunction consolidationFunction)
-    {
-        this.consolidationFunction = consolidationFunction;
-    }
-
     public DataDefinition getDataDefinition()
     {
         return dataDefinition;
     }
 
-    public void setDataDefinition(DataDefinition dataDefinition)
-    {
-        this.dataDefinition = dataDefinition;
-    }
-
     public String getFormat()
     {
         return format;
-    }
-
-    public void setFormat(String format)
-    {
-        this.format = format;
     }
 }

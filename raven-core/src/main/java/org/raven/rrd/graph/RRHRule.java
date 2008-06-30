@@ -32,6 +32,11 @@ import org.weda.annotations.constraints.NotNull;
 @Description("Draws a horizontal rule into the graph and optionally adds a legend")
 public class RRHRule extends LeafNode
 {
+    public final static String VALUE_ATTRIBUTE = "value";
+    public final static String COLOR_ATTRIBUTE = "color";
+    public final static String LEGEND_ATTRIBUTE = "legend";
+    public final static String WIDTH_ATTRIBUTE = "width";
+    
     @Parameter @NotNull @Description("Position of the rule")
     private Double value;
     
@@ -41,17 +46,13 @@ public class RRHRule extends LeafNode
     @Parameter @Description("Legend text. If null, legend text will be omitted")
     private String legend;
     
-    @Parameter @Description("Rule width")
-    private float width = 1f;
+    @Parameter(defaultValue="1") 
+    @Description("Rule width")
+    private float width;
 
     public RRColor getColor()
     {
         return color;
-    }
-
-    public void setColor(RRColor color)
-    {
-        this.color = color;
     }
 
     public String getLegend()
@@ -59,28 +60,13 @@ public class RRHRule extends LeafNode
         return legend;
     }
 
-    public void setLegend(String legend)
-    {
-        this.legend = legend;
-    }
-
     public Double getValue()
     {
         return value;
     }
 
-    public void setValue(Double value)
-    {
-        this.value = value;
-    }
-
     public float getWidth()
     {
         return width;
-    }
-
-    public void setWidth(float width)
-    {
-        this.width = width;
     }
 }

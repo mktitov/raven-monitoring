@@ -638,8 +638,14 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
                     Datasource ds = db.getDatasource(dsName);
                     if (ds!=null)
                         updateDataSource(rrds, ds, false);
-                    else
-                        addDataSource(rrds, false);
+                    else 
+                    {
+                        ds = db.getDatasource(rrds.getName());
+                        if (ds!=null)
+                            updateDataSource(rrds, ds, false);
+                        else
+                            addDataSource(rrds, false);
+                    }
                     databaseInitialized.set(true);
                 }
             }

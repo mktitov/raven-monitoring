@@ -85,6 +85,8 @@ public class TreeServiceTest extends ServiceTestCase
     @Test
     public void getChildNodesTypes()
     {
+        store.removeNodes();
+        
         List<Class> types = tree.getChildNodesTypes(AnyChildsNode.class);
         assertNotNull(types);
         assertTrue(types.contains(AnyChildsNode.class));
@@ -527,7 +529,7 @@ public class TreeServiceTest extends ServiceTestCase
     }
     
     @Test
-    public void copy() throws ConstraintException, InvalidPathException
+    public void copy() throws ConstraintException, InvalidPathException, Exception
     {
         store.removeNodes();
         tree.reloadTree();
@@ -538,9 +540,10 @@ public class TreeServiceTest extends ServiceTestCase
         node.init();
         
         Node sysNode = tree.getRootNode().getChildren(SystemNode.NAME);
-        NodeAttribute attr = new NodeAttributeImpl("attr", Node.class, sysNode.getPath(), null);
+        NodeAttribute attr = new NodeAttributeImpl("attr", Integer.class, "1", null);
         attr.setOwner(node);
         node.addNodeAttribute(attr);
+        attr.init();
         store.saveNodeAttribute(attr);
         
         Node child = new ContainerNode("child");
@@ -585,7 +588,8 @@ public class TreeServiceTest extends ServiceTestCase
         assertEquals(status, nodeCopy.getStatus());
         NodeAttribute attrCopy = nodeCopy.getNodeAttribute("attr");
         assertNotNull(attrCopy);
-        assertEquals(sysNode, attrCopy.getRealValue());
+        assertEquals(1, attrCopy.getRealValue());
+//        assertEquals(sysNode, attrCopy.getRealValue());
         
         Node childCopy = nodeCopy.getChildren("child");
         assertNotNull(childCopy);

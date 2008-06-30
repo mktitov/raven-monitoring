@@ -34,36 +34,29 @@ import org.weda.annotations.constraints.NotNull;
 @Description("Defines virtual datasource.")
 public class RRDef extends LeafNode implements DataDefinition
 {
+    public final static String CONSOLIDATIONFUNCTION_ATTRIBUTE = "consolidationFunction";
+    public final static String DATASOURCE_ATTRIBUTE = "dataSource";
+    
     @Parameter()
     @Description("The reference to the rrd data source from which data will be taken")
     @NotNull
     //TODO: add RRDataSourceReferenceValues
     private RRDataSource dataSource;
     
-    @Parameter
+    @Parameter(defaultValue="AVARAGE")
     @Description(
         "Consolidation function. If not seted consolidation function will be taken from the" +
         "rrd archive corresponding the dataSource.")
     @NotNull
-    private ConsolidationFunction consolidationFunction = ConsolidationFunction.AVERAGE;
+    private ConsolidationFunction consolidationFunction;
 
     public ConsolidationFunction getConsolidationFunction()
     {
         return consolidationFunction;
     }
 
-    public void setConsolidationFunction(ConsolidationFunction consolidationFunction)
-    {
-        this.consolidationFunction = consolidationFunction;
-    }
-
     public RRDataSource getDataSource()
     {
         return dataSource;
-    }
-
-    public void setDataSource(RRDataSource dataSource)
-    {
-        this.dataSource = dataSource;
     }
 }

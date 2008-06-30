@@ -206,7 +206,7 @@ public class RRDNodeTest extends ServiceTestCase
         rrds2.start();
         
         rra2.getNodeAttribute("rows").setValue("50");
-        rra2.getNodeAttribute("xff").setValue(".0");
+        rra2.getNodeAttribute("xff").setValue("0.1");
         
         db = new RrdDb(rrdFile.getAbsolutePath());
         assertNotNull(db);

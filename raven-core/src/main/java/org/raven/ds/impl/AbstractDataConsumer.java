@@ -31,16 +31,13 @@ import org.weda.annotations.constraints.NotNull;
  */
 public abstract class AbstractDataConsumer extends ContainerNode implements DataConsumer
 {
+    public final static String DATASOURCE_ATTRIBUTE = "dataSource";
+    
     @Parameter @NotNull @Description("The data source")
     private DataSource dataSource;
 
     public DataSource getDataSource()
     {
         return dataSource;
-    }
-
-    public void setDataSource(DataSource dataSource)
-    {
-        this.dataSource = dataSource;
     }
 }

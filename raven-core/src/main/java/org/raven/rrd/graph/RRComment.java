@@ -31,16 +31,13 @@ import org.weda.annotations.constraints.NotNull;
 @Description("Comment to be printed on the graph")
 public class RRComment extends LeafNode
 {
+    public final static String COMMENT_ATTRIBUTE = "comment";
+    
     @Parameter @NotNull @Description("Comment to be printed on the graph")
     private String comment;
 
     public String getComment()
     {
         return comment;
-    }
-
-    public void setComment(String comment)
-    {
-        this.comment = comment;
     }
 }

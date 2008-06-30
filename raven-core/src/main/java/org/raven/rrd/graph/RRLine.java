@@ -29,17 +29,14 @@ import org.weda.annotations.Description;
 @Description("Plots requested data as a line, using specified the color and width.")
 public class RRLine extends RRArea
 {
-    @Parameter
+    public final static String WIDTH_ATTRIBUTE = "width";
+    
+    @Parameter(defaultValue="1")
     @Description("The width of the line")
-    private Float width = 1.0f;
+    private Float width;
 
     public Float getWidth()
     {
         return width;
-    }
-
-    public void setWidth(Float width)
-    {
-        this.width = width;
     }
 }

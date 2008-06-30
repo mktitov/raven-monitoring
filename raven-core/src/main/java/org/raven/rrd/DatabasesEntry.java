@@ -18,12 +18,15 @@
 package org.raven.rrd;
 
 import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.raven.ds.DataSource;
+import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.rrd.data.RRDNode;
 import org.raven.rrd.data.RRDataSource;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
-
+import org.raven.tree.NodeAttribute;
 /**
  *
  * @author Mikhail Titov
@@ -50,32 +53,55 @@ public class DatabasesEntry extends BaseNode
             addDataSourceToDatabase(templateNode, rrd, dataSource);
     }
 
-    private void addDataSourceToDatabase(Node template, RRDNode rrd, DataSource dataSource)
+    private void addDataSourceToDatabase(Node template, RRDNode rrd, DataSource dataSource) 
     {
-        RRDataSource templateDataSource = getTemplateDataSource(template);
-        RRDataSource rrds = (RRDataSource) tree.copy(
+        try
+        {
+            RRDataSource templateDataSource = getTemplateDataSource(template);
+            RRDataSource rrds = (RRDataSource) tree.copy(
                 templateDataSource, rrd, ""+(rrd.getChildrenCount()+1), null, true, false);
-        rrds.setDataSource(dataSource);
-        configurator.getTreeStore().saveNodeAttribute(rrds.getNodeAttribute("dataSource"));
-        rrds.start();
+            NodeAttribute dataSourceAttr = 
+                    rrds.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE);
+            dataSourceAttr.setValue(dataSource.getPath());
+            dataSourceAttr.save();
+            rrds.start();
+        } catch (Exception ex)
+        {
+            logger.error(String.format(
+                    "Error creating rrd datasource for datasource (%s)", dataSource.getPath())
+                    , ex);
+        }
     }
 
     private void createNewDatabase(Node templateNode, DataSource dataSource)
     {
-        String databaseName = ""+(getChildrenCount()+1);
-        RRDNode db = (RRDNode) tree.copy(templateNode, this, databaseName, null, true, false);
-        RRDataSource rrds = null;
-        for (Node child: db.getChildrens())
-            if (child instanceof RRDataSource)
+        try
+        {
+            String databaseName = "" + (getChildrenCount() + 1);
+            RRDNode db = (RRDNode) tree.copy(templateNode, this, databaseName, null, true, false);
+            RRDataSource rrds = null;
+            for (Node child : db.getChildrens())
             {
-                rrds = (RRDataSource) child;
-                break;
+                if (child instanceof RRDataSource)
+                {
+                    rrds = (RRDataSource) child;
+                    break;
+                }
             }
-        rrds.setName(""+db.getChildrenCount());
-        configurator.getTreeStore().saveNode(rrds);
-        rrds.setDataSource(dataSource);
-        configurator.getTreeStore().saveNodeAttribute(rrds.getNodeAttribute("dataSource"));
-        tree.start(db);
+            rrds.setName("" + db.getChildrenCount());
+            rrds.save();
+            NodeAttribute dataSourceAttr = 
+                    rrds.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE);
+            dataSourceAttr.setValue(dataSource.getPath());
+            dataSourceAttr.save();
+            dataSource.save();
+            tree.start(db);
+        } catch (Exception ex)
+        {
+            logger.error(String.format(
+                    "Error creating rrd database for datasource (%s)", dataSource.getPath())
+                    , ex);
+        }
     }
     
     private RRDataSource getTemplateDataSource(Node templateNode)

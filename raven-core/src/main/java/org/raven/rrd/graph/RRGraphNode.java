@@ -43,14 +43,28 @@ import org.weda.annotations.constraints.NotNull;
 @Description("Plots the graph using RRDataSource nodes as data sources")
 public class RRGraphNode extends BaseNode implements DynamicImageNode
 {
+    public final static String SARTTIME_ATTRIBUTE = "startTime";
+    public final static String ENDTIME_ATTRIBUTE = "endTime";
+    public final static String TITLE_ATTRIBUTE = "titlle";
+    public final static String HEIGHT_ATTRIBUTE = "height";
+    public final static String WIDTH_ATTRIBUTE = "width";
+    public final static String IMAGEFORMAT_ATTRIBUTE = "imageFormat";
+    public final static String VERTICALLABEL_ATTRIBUTE = "verticalLabel";
+    public final static String MAXVALUE_ATTRIBUTE = "maxValue";
+    public final static String MINVALUE_ATTRIBUTE = "minValue";
+    public final static String UNIT_ATTRIBUTE = "unit";
+    public final static String UNITEXPONENT_ATTRIBUTE = "unitExponent";
+    
     @Parameter @Description("Title")
     private String title;
     
-    @Parameter @Description("The time when the graph should begin")
-    private String startTime = "end-1d";
+    @Parameter(defaultValue="end-1d")
+    @Description("The time when the graph should begin")
+    private String startTime;
     
-    @Parameter @Description("The time when the graph should end")
-    private String endTime = "now";
+    @Parameter(defaultValue="now")
+    @Description("The time when the graph should end")
+    private String endTime;
     
     @Parameter @NotNull
     @Description("The height of the drawing area within the graph")
@@ -59,21 +73,28 @@ public class RRGraphNode extends BaseNode implements DynamicImageNode
     @Parameter @NotNull @Description("The width of the drawing area within the graph")
     private Integer width;
     
-    @Parameter @NotNull @Description("The image format (PNG, GIF, JPEG)")
-    private ImageFormat imageFormat = ImageFormat.PNG;
+    @Parameter(defaultValue="PNG")
+    @NotNull @Description("The image format (PNG, GIF, JPEG)")
+    private ImageFormat imageFormat;
     
-    @Parameter @Description("Sets vertical label on the left side of the graph")
+    @Parameter 
+    @Description("Sets vertical label on the left side of the graph")
     private String verticalLabel;
     
-    @Parameter @Description("Sets the upper limit of a graph")
+    @Parameter 
+    @Description("Sets the upper limit of a graph")
     private Double maxValue;
     
-    @Parameter @Description("Sets the lower limit of a grap.")
+    @Parameter 
+    @Description("Sets the lower limit of a grap.")
     private Double minValue;
     
-    @Parameter @Description("Sets unit to be displayed on y axis")
+    @Parameter 
+    @Description("Sets unit to be displayed on y axis")
     private String unit;
-    @Parameter @Description("Sets the 10**unitsExponent scaling of the y-axis values")
+    
+    @Parameter 
+    @Description("Sets the 10**unitsExponent scaling of the y-axis values")
     private Integer unitsExponent;
     
     public InputStream render()
@@ -125,19 +146,9 @@ public class RRGraphNode extends BaseNode implements DynamicImageNode
         return endTime;
     }
 
-    public void setEndTime(String endTime)
-    {
-        this.endTime = endTime;
-    }
-
     public Integer getHeight()
     {
         return height;
-    }
-
-    public void setHeight(Integer height)
-    {
-        this.height = height;
     }
 
     public String getStartTime()
@@ -145,19 +156,9 @@ public class RRGraphNode extends BaseNode implements DynamicImageNode
         return startTime;
     }
 
-    public void setStartTime(String startTime)
-    {
-        this.startTime = startTime;
-    }
-
     public Integer getWidth()
     {
         return width;
-    }
-
-    public void setWidth(Integer width)
-    {
-        this.width = width;
     }
 
     public ImageFormat getImageFormat()
@@ -165,19 +166,9 @@ public class RRGraphNode extends BaseNode implements DynamicImageNode
         return imageFormat;
     }
 
-    public void setImageFormat(ImageFormat imageFormat)
-    {
-        this.imageFormat = imageFormat;
-    }
-
     public String getTitle()
     {
         return title;
-    }
-
-    public void setTitle(String title)
-    {
-        this.title = title;
     }
 
     public Double getMaxValue()
@@ -185,19 +176,9 @@ public class RRGraphNode extends BaseNode implements DynamicImageNode
         return maxValue;
     }
 
-    public void setMaxValue(Double maxValue)
-    {
-        this.maxValue = maxValue;
-    }
-
     public Double getMinValue()
     {
         return minValue;
-    }
-
-    public void setMinValue(Double minValue)
-    {
-        this.minValue = minValue;
     }
 
     public String getVerticalLabel()
@@ -205,19 +186,9 @@ public class RRGraphNode extends BaseNode implements DynamicImageNode
         return verticalLabel;
     }
 
-    public void setVerticalLabel(String verticalLabel)
-    {
-        this.verticalLabel = verticalLabel;
-    }
-
     public String getUnit()
     {
         return unit;
-    }
-
-    public void setUnit(String unit)
-    {
-        this.unit = unit;
     }
 
     public Integer getUnitsExponent()
@@ -225,11 +196,6 @@ public class RRGraphNode extends BaseNode implements DynamicImageNode
         return unitsExponent;
     }
 
-    public void setUnitsExponent(Integer unitsExponent)
-    {
-        this.unitsExponent = unitsExponent;
-    }
-    
     private GraphDef createGraphDef(String startTime, String endTime) throws Exception
     {
         if (getChildrens()==null)

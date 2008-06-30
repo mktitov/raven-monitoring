@@ -107,7 +107,7 @@ public class RRGraphNodeTest extends ServiceTestCase
         
         RRGraphNode graph = createGraphNode(rrds, rrds2);
         long start = Util.getTime()-1;
-        graph.setStartTime(""+start);
+        graph.getNodeAttribute(RRGraphNode.SARTTIME_ATTRIBUTE).setValue(""+start);
       
         rrd.start();
         assertEquals(Status.STARTED, rrd.getStatus());
@@ -127,7 +127,7 @@ public class RRGraphNodeTest extends ServiceTestCase
         IOUtils.copy(graph.render(null, null), new FileOutputStream(file2));
     }
 
-    private RRGraphNode createGraphNode(RRDataSource rrds, RRDataSource rrds2)
+    private RRGraphNode createGraphNode(RRDataSource rrds, RRDataSource rrds2) throws Exception
     {
         RRGraphNode gnode = new RRGraphNode();
         gnode.setName("graph");
@@ -140,8 +140,8 @@ public class RRGraphNodeTest extends ServiceTestCase
         gnode.addChildren(def);
         treeStore.saveNode(def);
         def.init();
-        def.setConsolidationFunction(ConsolidationFunction.AVERAGE);
-        def.setDataSource(rrds);
+        def.getNodeAttribute(RRDef.CONSOLIDATIONFUNCTION_ATTRIBUTE).setValue("AVERAGE");
+        def.getNodeAttribute(RRDef.DATASOURCE_ATTRIBUTE).setValue(rrds.getPath());
         def.start();
         assertEquals(Status.STARTED, def.getStatus());
         
@@ -150,8 +150,8 @@ public class RRGraphNodeTest extends ServiceTestCase
         gnode.addChildren(def2);
         treeStore.saveNode(def2);
         def2.init();
-        def2.setConsolidationFunction(ConsolidationFunction.AVERAGE);
-        def2.setDataSource(rrds2);
+        def2.getNodeAttribute(RRDef.CONSOLIDATIONFUNCTION_ATTRIBUTE).setValue("AVERAGE");
+        def2.getNodeAttribute(RRDef.DATASOURCE_ATTRIBUTE).setValue(rrds2.getPath());
         def2.start();
         assertEquals(Status.STARTED, def2.getStatus());
         
@@ -160,7 +160,7 @@ public class RRGraphNodeTest extends ServiceTestCase
         gnode.addChildren(cdef);
         treeStore.saveNode(cdef);
         cdef.init();
-        cdef.setExpression("ds2,30,-");
+        cdef.getNodeAttribute(RRCDef.EXPRESSION_ATTRIBUTE).setValue("ds2,30,-");
         cdef.start();
         assertEquals(Status.STARTED, cdef.getStatus());
         
@@ -169,7 +169,7 @@ public class RRGraphNodeTest extends ServiceTestCase
         gnode.addChildren(cdef2);
         treeStore.saveNode(cdef2);
         cdef2.init();
-        cdef2.setExpression("0,10,+");
+        cdef2.getNodeAttribute(RRCDef.EXPRESSION_ATTRIBUTE).setValue("0,10,+");
         cdef2.start();
         assertEquals(Status.STARTED, cdef2.getStatus());
         
@@ -179,9 +179,9 @@ public class RRGraphNodeTest extends ServiceTestCase
         gnode.addChildren(area);
         treeStore.saveNode(area);
         area.init();
-        area.setColor(RRColor.GREEN);
-        area.setDataDefinition(cdef);
-        area.setLegend("cdef legend");
+        area.getNodeAttribute(RRArea.COLOR_ATTRIBUTE).setValue(RRColor.GREEN.toString());
+        area.getNodeAttribute(RRArea.DATADEFINITION_ATTRIBUTE).setValue(cdef.getPath());
+        area.getNodeAttribute(RRArea.LEGEND_ATTRIBUTE).setValue("cdef legend");
         area.start();
         assertEquals(Status.STARTED, area.getStatus());
         
@@ -190,10 +190,10 @@ public class RRGraphNodeTest extends ServiceTestCase
         gnode.addChildren(line);
         treeStore.saveNode(line);
         line.init();
-        line.setColor(RRColor.BLUE);
-        line.setDataDefinition(def);
-        line.setLegend("line1 legend");
-        line.setWidth(1f);
+        line.getNodeAttribute(RRLine.COLOR_ATTRIBUTE).setValue(RRColor.BLUE.toString());
+        line.getNodeAttribute(RRLine.DATADEFINITION_ATTRIBUTE).setValue(def.getPath());
+        line.getNodeAttribute(RRLine.LEGEND_ATTRIBUTE).setValue("line1 legend");
+        line.getNodeAttribute(RRLine.WIDTH_ATTRIBUTE).setValue("1f");
         line.start();
         assertEquals(Status.STARTED, line.getStatus());
         
@@ -202,9 +202,9 @@ public class RRGraphNodeTest extends ServiceTestCase
         gnode.addChildren(stack);
         treeStore.saveNode(stack);
         stack.init();
-        stack.setColor(RRColor.ORANGE);
-        stack.setDataDefinition(cdef2);
-        stack.setLegend("Stack legend");
+        stack.getNodeAttribute(RRArea.COLOR_ATTRIBUTE).setValue(RRColor.ORANGE.toString());
+        stack.getNodeAttribute(RRArea.DATADEFINITION_ATTRIBUTE).setValue(cdef2.getPath());
+        stack.getNodeAttribute(RRArea.LEGEND_ATTRIBUTE).setValue("Stack legend");
         stack.start();
         assertEquals(Status.STARTED, stack.getStatus());
         
@@ -213,10 +213,10 @@ public class RRGraphNodeTest extends ServiceTestCase
         gnode.addChildren(line2);
         treeStore.saveNode(line2);
         line2.init();
-        line2.setColor(RRColor.RED);
-        line2.setDataDefinition(def2);
-        line2.setLegend("line2 legend\\r");
-        line2.setWidth(2f);
+        line2.getNodeAttribute(RRArea.COLOR_ATTRIBUTE).setValue(RRColor.RED.toString());
+        line2.getNodeAttribute(RRArea.DATADEFINITION_ATTRIBUTE).setValue(def2.getPath());
+        line2.getNodeAttribute(RRArea.LEGEND_ATTRIBUTE).setValue("line2 legend\\r");
+        line2.getNodeAttribute(RRLine.WIDTH_ATTRIBUTE).setValue("2f");
         line2.start();
         assertEquals(Status.STARTED, line2.getStatus());
         
@@ -225,10 +225,10 @@ public class RRGraphNodeTest extends ServiceTestCase
         gnode.addChildren(hrule);
         treeStore.saveNode(hrule);
         hrule.init();
-        hrule.setValue(50.);
-        hrule.setColor(RRColor.DARK_GRAY);
-        hrule.setLegend("hrule legend\\r");
-        hrule.setWidth(3f);
+        hrule.getNodeAttribute(RRHRule.VALUE_ATTRIBUTE).setValue("50");
+        hrule.getNodeAttribute(RRHRule.COLOR_ATTRIBUTE).setValue(RRColor.DARK_GRAY.toString());
+        hrule.getNodeAttribute(RRHRule.LEGEND_ATTRIBUTE).setValue("hrule legend\\r");
+        hrule.getNodeAttribute(RRHRule.WIDTH_ATTRIBUTE).setValue("3");
         hrule.start();
         assertEquals(Status.STARTED, hrule.getStatus());
         
@@ -237,9 +237,10 @@ public class RRGraphNodeTest extends ServiceTestCase
         gnode.addChildren(gprint);
         treeStore.saveNode(gprint);
         gprint.init();
-        gprint.setDataDefinition(def2);
-        gprint.setConsolidationFunction(ConsolidationFunction.AVERAGE);
-        gprint.setFormat("average = %3.2f%s\\r");
+        gprint.getNodeAttribute(RRGPrint.DATADEFINITION_ATTRIBUTE).setValue(def2.getPath());
+        gprint.getNodeAttribute(RRGPrint.CONSOLIDATIONFUNCTION_ATTRIBUTE)
+                .setValue(ConsolidationFunction.AVERAGE.toString());
+        gprint.getNodeAttribute(RRGPrint.FORMAT_ATTRIBUTE).setValue("average = %3.2f%s\\r");
         gprint.start();
         assertEquals(Status.STARTED, gprint.getStatus());
         
@@ -248,7 +249,7 @@ public class RRGraphNodeTest extends ServiceTestCase
         gnode.addChildren(comment);
         treeStore.saveNode(comment);
         comment.init();
-        comment.setComment("The first comment");
+        comment.getNodeAttribute(RRComment.COMMENT_ATTRIBUTE).setValue("The first comment");
         comment.start();
         assertEquals(Status.STARTED, comment.getStatus());
         
@@ -257,16 +258,16 @@ public class RRGraphNodeTest extends ServiceTestCase
         gnode.addChildren(comment);
         treeStore.saveNode(comment);
         comment.init();
-        comment.setComment("The second comment");
+        comment.getNodeAttribute(RRComment.COMMENT_ATTRIBUTE).setValue("The second comment");
         comment.start();
         assertEquals(Status.STARTED, comment.getStatus());
         
-        gnode.setHeight(600);
-        gnode.setWidth(900);
-        gnode.setTitle("The title of a graph");
-        gnode.setVerticalLabel("vertical label");
-        gnode.setMaxValue(150.);
-        gnode.setMinValue(-10.);
+        gnode.getNodeAttribute(RRGraphNode.HEIGHT_ATTRIBUTE).setValue("600");
+        gnode.getNodeAttribute(RRGraphNode.WIDTH_ATTRIBUTE).setValue("900");
+        gnode.getNodeAttribute(RRGraphNode.TITLE_ATTRIBUTE).setValue("The title of a graph");
+        gnode.getNodeAttribute(RRGraphNode.VERTICALLABEL_ATTRIBUTE).setValue("vertical label");
+        gnode.getNodeAttribute(RRGraphNode.MAXVALUE_ATTRIBUTE).setValue("150.");
+        gnode.getNodeAttribute(RRGraphNode.MINVALUE_ATTRIBUTE).setValue("-10.");
         gnode.start();
         assertEquals(Status.STARTED, gnode.getStatus());
         

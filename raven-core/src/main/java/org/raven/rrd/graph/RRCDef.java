@@ -33,16 +33,13 @@ import org.weda.annotations.constraints.NotNull;
     "mathematical expression, specified in Reverse Polish Notation (RPN).")
 public class RRCDef extends LeafNode implements DataDefinition
 {
+    public final static String EXPRESSION_ATTRIBUTE = "expression";
+    
     @Parameter @NotNull @Description("Reverse Polish Notation (RPN) expression")
     private String expression;
 
     public String getExpression()
     {
         return expression;
-    }
-
-    public void setExpression(String expression)
-    {
-        this.expression = expression;
     }
 }

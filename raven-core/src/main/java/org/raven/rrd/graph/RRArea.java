@@ -34,6 +34,10 @@ import org.weda.annotations.constraints.NotNull;
     " from zero, using the color specified.")
 public class RRArea extends LeafNode
 {
+    public final static String DATADEFINITION_ATTRIBUTE = "dataDefinition";
+    public final static String COLOR_ATTRIBUTE = "color";
+    public final static String LEGEND_ATTRIBUTE = "legend";
+    
     @Parameter
     @NotNull
     @Description("The reference to the data defenition node")
@@ -54,19 +58,9 @@ public class RRArea extends LeafNode
         return dataDefinition;
     }
 
-    public void setDataDefinition(DataDefinition dataDefinition)
-    {
-        this.dataDefinition = dataDefinition;
-    }
-
     public RRColor getColor()
     {
         return color;
-    }
-
-    public void setColor(RRColor color)
-    {
-        this.color = color;
     }
 
     public String getLegend()
@@ -74,8 +68,4 @@ public class RRArea extends LeafNode
         return legend;
     }
 
-    public void setLegend(String legend)
-    {
-        this.legend = legend;
-    }
 }

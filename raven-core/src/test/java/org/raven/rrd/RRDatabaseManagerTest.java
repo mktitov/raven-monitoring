@@ -84,13 +84,14 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
     }
     
     @Test
-    public void setStartingPointTest() throws InvalidPathException 
+    public void setStartingPointTest() throws InvalidPathException, Exception 
     {
         initTemplate();
         Node sourcesRoot = initDatasources();
-        databaseManager.setDataSourcesPerDatabase(2);
-        databaseManager.setStartingPoint(sourcesRoot);
+        databaseManager.getNodeAttribute("dataSourcesPerDatabase").setValue("2");
+        databaseManager.getNodeAttribute("startingPoint").setValue(sourcesRoot.getPath());
         databaseManager.start();
+        assertEquals(Status.STARTED, databaseManager.getStatus());
         checkDefaultEntry();
         checkInterfaceEntry();
         
@@ -174,7 +175,7 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
         }
     }
     
-    private Node initDatasources()
+    private Node initDatasources() throws Exception
     {
         Node sourcesRoot = new BaseNode("sources");
         tree.getRootNode().addChildren(sourcesRoot);
@@ -195,7 +196,8 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
         return sourcesRoot;
     }
     
-    private DataPipeImpl createSource(Node parent, String sourceName, String datatype)
+    private DataPipeImpl createSource(Node parent, String sourceName, String datatype) 
+            throws Exception
     {
         DataPipeImpl source = new DataPipeImpl();
         source.setName(sourceName);
@@ -207,12 +209,13 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
                 databaseManager.getDataTypeAttributeName(), String.class, datatype, null);
         dataTypeAttr.setOwner(source);
         source.addNodeAttribute(dataTypeAttr);
-        store.saveNodeAttribute(dataTypeAttr);
+        dataTypeAttr.init();
+        dataTypeAttr.save();
         
         return source;
     }
 
-    private void initTemplate()
+    private void initTemplate() throws Exception
     {
         RRDatabaseManagerTemplate templatesNode = 
                 (RRDatabaseManagerTemplate) 
@@ -221,7 +224,8 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
         addDatabase(templatesNode, "interface");
     }
     
-    private void addDatabase(RRDatabaseManagerTemplate templatesNode, String databaseName)
+    private void addDatabase(RRDatabaseManagerTemplate templatesNode, String databaseName) 
+            throws Exception
     {
         RRDNode db = new RRDNode();
         db.setName(databaseName);
@@ -234,7 +238,8 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
         db.addChildren(archive);
         store.saveNode(archive);
         archive.init();
-        archive.setRows(100);
+        archive.getNodeAttribute(RRArchive.ROWS_ATTRIBUTE).setValue("100");
+        archive.getNodeAttribute(RRArchive.ROWS_ATTRIBUTE).save();
         
         RRDataSource datasource = new RRDataSource();
         datasource.setName("datasource");
