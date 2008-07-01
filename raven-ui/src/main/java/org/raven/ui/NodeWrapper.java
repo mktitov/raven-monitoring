@@ -126,6 +126,7 @@ public class NodeWrapper extends AbstractNodeWrapper
 			  if( !dsc.equals(at.getDescription()) ) save |=2;
 			  if( !na.getName().equals(at.getName()) ) save |=4;
 			  if( at.isExpressionSupported() &&  ! ObjectUtils.equals(na.getRawValue(), at.getExpression()) ) save |=8;
+              if( !ObjectUtils.equals(na.getValueHandlerType(), at.getValueHandlerType())) save |=16;
 			  
 			  if(save==0) continue;
 			  try 
@@ -134,6 +135,7 @@ public class NodeWrapper extends AbstractNodeWrapper
 				  if( (save&2) !=0 ) na.setDescription(at.getDescription());
 				  if( (save&4) !=0 ) na.setName(at.getName());
 				  if( (save&8) !=0 ) na.setValue(at.getExpression());
+                  if( (save&16) !=0) na.setValueHandlerType(at.getValueHandlerType());
 				  
 				  getConfigurator().getTreeStore().saveNodeAttribute(na);
 			  }
@@ -175,7 +177,7 @@ public class NodeWrapper extends AbstractNodeWrapper
 		  return "";
 	  }
 	  
-	  public String createAttribute()
+	  public String createAttribute() throws Exception
 	  {
 		  if( !isAllowNodeEdit() ) return "err";
 		/*	
@@ -198,6 +200,8 @@ public class NodeWrapper extends AbstractNodeWrapper
 			na.setRequired(newAttribute.isRequired());
 		//	try { na.setValue(""); }
 		//	catch(ConstraintException e) { }
+            na.init();
+            na.save();
 			getConfigurator().getTreeStore().saveNodeAttribute(na);
 			logger.warn("Added new attribute='{}' for node='{}'",na.getName(),getNode().getName());
 			onSetNode();

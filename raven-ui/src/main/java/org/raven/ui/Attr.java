@@ -43,6 +43,7 @@ public class Attr
 	private int id;
 	private String name;
 	private String value;
+    private String valueHandlerType;
 	private String description;
 	private String classDisplayName;
 	private List<SelectItem> selectItems = null;
@@ -66,16 +67,14 @@ public class Attr
 		List<String> lst = na.getReferenceValues();
 		expressionSupported = na.isExpression();
 		if(expressionSupported) expression = na.getRawValue();  
-		if(lst==null)
+		if(lst!=null)
 		{
-			logger.warn("NodeAttribute '{}' has not reference values",name);
-			return;
+            selectItems = new ArrayList<SelectItem>();
+            for(String val: lst)
+                selectItems.add( new SelectItem(val,val) );
 		}	
-		logger.warn("NodeAttribute '{}' has reference values",name);
-		selectItems = new ArrayList<SelectItem>();
-		for(String val: lst)
-			selectItems.add( new SelectItem(val,val) );
         
+        valueHandlerType = na.getValueHandlerType();
         List<ReferenceValue> refValues = tree.getAttributeValueHandlerTypes(na);
         if (refValues!=null)
         {
@@ -118,12 +117,36 @@ public class Attr
 	public boolean isEdit() { return edit; }
 	public void setEdit(boolean edit) { this.edit = edit; }
 
-	public boolean isExpressionSupported() { return expressionSupported; }
+	public boolean isExpressionSupported() { return attribute.isExpression(); }
 //	public void setReference(boolean reference) { this.expression = reference; }
 
 	public String getExpression() { return expression; }
-//	public void setRefPath(String refPath) { this.expression = refPath; }
+    public void setExpression(String expression) { this.expression = expression; }
 
 	public NodeAttribute getAttribute() { return attribute; }
 	public void setAttribute(NodeAttribute attribute) { this.attribute = attribute; }
+
+    public String getValueHandlerType()
+    {
+        return valueHandlerType;
+    }
+
+    public void setValueHandlerType(String valueHandlerType)
+    {        
+        if (valueHandlerType!=null && valueHandlerType.length()==0)
+            this.valueHandlerType = null;
+        else
+            this.valueHandlerType = valueHandlerType;
+    }
+
+    public List<SelectItem> getValueHandlerTypes()
+    {
+        return valueHandlerTypes;
+    }
+
+    public void setValueHandlerTypes(List<SelectItem> valueHandlerTypes)
+    {
+        this.valueHandlerTypes = valueHandlerTypes;
+    }
+    
 }

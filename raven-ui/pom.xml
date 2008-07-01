@@ -13,6 +13,10 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.weda</groupId>
+                <artifactId>weda-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
             <plugin>
