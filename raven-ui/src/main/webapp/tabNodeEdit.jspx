@@ -84,7 +84,9 @@
 	      <tr:outputText value="#{row.classDisplayName}"/>
         </tr:column>
     	<tr:column headerText="#{msgs.subtype}">
-	      <tr:outputText value="#{row.classDisplayName}"/>
+	      <tr:selectOneChoice value="#{row.value}" >
+	      	<f:selectItems value="#{row.selectItems}" />
+	      </tr:selectOneChoice>
         </tr:column>
     	<tr:column headerText="#{msgs.dsc}">
 	      <tr:outputText rendered="#{!row.edit}" value="#{row.description}"/>

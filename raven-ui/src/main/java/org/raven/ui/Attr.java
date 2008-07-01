@@ -19,18 +19,25 @@ package org.raven.ui;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
 import javax.faces.model.SelectItem;
 
 import org.apache.tapestry.ioc.Registry;
 import org.raven.RavenRegistry;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.Tree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.weda.constraints.ReferenceValue;
+import org.weda.internal.annotations.Service;
 import org.weda.services.ClassDescriptorRegistry;
 //import org.raven.tree.Tree;
 
 public class Attr 
 {
+    @Service
+    private static Tree tree;
+    
     protected Logger logger = LoggerFactory.getLogger(Attr.class);
     private NodeAttribute attribute;
 	private int id;
@@ -39,6 +46,7 @@ public class Attr
 	private String description;
 	private String classDisplayName;
 	private List<SelectItem> selectItems = null;
+    private List<SelectItem> valueHandlerTypes = null;
 	private boolean allowDelete = false;
 	private boolean edit = false;
 	private boolean expressionSupported = false;
@@ -67,6 +75,19 @@ public class Attr
 		selectItems = new ArrayList<SelectItem>();
 		for(String val: lst)
 			selectItems.add( new SelectItem(val,val) );
+        
+        List<ReferenceValue> refValues = tree.getAttributeValueHandlerTypes(na);
+        if (refValues!=null)
+        {
+            valueHandlerTypes = new ArrayList<SelectItem>(refValues.size());
+            for (ReferenceValue refValue: refValues)
+                valueHandlerTypes.add(
+                    new SelectItem(refValue.getValue(), refValue.getValueAsString()));
+        } 
+        else
+        {
+            valueHandlerTypes = Collections.EMPTY_LIST;
+        }
 	}
 
 	public String getName() { return name; }

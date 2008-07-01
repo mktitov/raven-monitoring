@@ -44,6 +44,7 @@ import org.apache.myfaces.trinidad.model.TreeModel;
 import org.apache.myfaces.trinidad.render.ExtendedRenderKitService;
 import org.apache.myfaces.trinidad.util.Service;
 import org.apache.tapestry.ioc.Registry;
+import org.raven.tree.InvalidPathException;
 
 public class SessionBean 
 {
@@ -204,13 +205,19 @@ public class SessionBean
 	
 	public String createTemplate()
 	{
-		Node n = tree.getNode(newNodeType);
-		if (n instanceof TemplateNode) 
-		{
-			template.init((TemplateNode) n, wrapper.getNode(), getNewNodeName());
-			return "dialog:templateAttrEdit";
-		}
-		return "err";
+        try
+        {
+            Node n = tree.getNode(newNodeType);
+            if (n instanceof TemplateNode)            
+            {
+                template.init((TemplateNode) n, wrapper.getNode(), getNewNodeName());
+                return "dialog:templateAttrEdit";
+            }
+            return "err";
+        } catch (InvalidPathException invalidPathException)
+        {
+            return null;
+        }
 	}
 	
 	public String createNode()
