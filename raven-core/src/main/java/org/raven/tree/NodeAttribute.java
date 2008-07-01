@@ -19,6 +19,8 @@ package org.raven.tree;
 
 import java.util.List;
 import org.raven.tree.store.TreeStore;
+import org.weda.constraints.ReferenceValue;
+import org.weda.constraints.TooManyReferenceValuesException;
 
 /**
  * Holds information about node attribute
@@ -139,7 +141,7 @@ public interface NodeAttribute extends Cloneable
      * Returns the list of the values that this attribute can take. If method returns null
      * then the attribute does not have reference values.
      */
-    public List<String> getReferenceValues();
+    public List<ReferenceValue> getReferenceValues() throws TooManyReferenceValuesException;
     /**
      * Returns <code>true</code> if attribute type is {@link AttributesGenerator}
      */

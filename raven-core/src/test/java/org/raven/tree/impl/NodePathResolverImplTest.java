@@ -37,21 +37,26 @@ public class NodePathResolverImplTest extends Assert
     public void absoluteReferenceTest() throws InvalidPathException
     {
         Tree tree = createMock(Tree.class);
-        Node node = createMock(Node.class);
-        expect(tree.getRootNode()).andReturn(node);
-        replay(tree, node);
+        Node rootNode = createMock(Node.class);
+        Node childNode = createMock(Node.class);
         
-        NodePathResolverImpl pathResolver = new NodePathResolverImpl(tree);
-        PathInfo pathInfo = pathResolver.resolvePath("/", null);
+        expect(tree.getRootNode()).andReturn(rootNode);
+        expect(rootNode.getChildren("child node")).andReturn(childNode);
+        expect(childNode.getName()).andReturn("child node");
+        replay(tree, rootNode, childNode);
         
-        assertSame(node, pathInfo.getReferencedObject());
+        TreeImpl.INSTANCE = tree;
+        NodePathResolverImpl pathResolver = new NodePathResolverImpl();
+        PathInfo pathInfo = pathResolver.resolvePath("/child node", null);
+        
+        assertSame(childNode, pathInfo.getReferencedObject());
         PathElement[] elements = pathInfo.getPathElements();
         assertNotNull(elements);
-        assertEquals(1, elements.length);
-        PathElement element = elements[0];
-        assertEquals("", element.getElement());
+        assertEquals(2, elements.length);
+        assertEquals("", elements[0].getElement());
+        assertEquals("\"child node\"", elements[1].getElement());
         
-        verify(tree, node);
+        verify(tree, rootNode, childNode);
     }
     
     @Test(expected=InvalidPathException.class)
@@ -62,7 +67,8 @@ public class NodePathResolverImplTest extends Assert
         replay(tree, node);
         
         
-        NodePathResolverImpl pathResolver = new NodePathResolverImpl(tree);
+        TreeImpl.INSTANCE = tree;
+        NodePathResolverImpl pathResolver = new NodePathResolverImpl();
         PathInfo pathInfo = pathResolver.resolvePath("node", null);
         
         verify(tree, node);
@@ -78,7 +84,8 @@ public class NodePathResolverImplTest extends Assert
         expect(node.getChildren("child")).andReturn(childNode);
         replay(tree, node, childNode);
         
-        NodePathResolverImpl pathResolver = new NodePathResolverImpl(tree);
+        TreeImpl.INSTANCE = tree;
+        NodePathResolverImpl pathResolver = new NodePathResolverImpl();
         PathInfo pathInfo = pathResolver.resolvePath("child", node);
         
         verify(tree, node, childNode);
@@ -94,7 +101,8 @@ public class NodePathResolverImplTest extends Assert
         expect(node.getChildren("child")).andReturn(childNode);
         replay(tree, node, childNode);
         
-        NodePathResolverImpl pathResolver = new NodePathResolverImpl(tree);
+        TreeImpl.INSTANCE = tree;
+        NodePathResolverImpl pathResolver = new NodePathResolverImpl();
         PathInfo pathInfo = pathResolver.resolvePath("./child", node);
         
         verify(tree, node, childNode);
@@ -111,7 +119,8 @@ public class NodePathResolverImplTest extends Assert
         expect(node.getChildren("child")).andReturn(childNode);
         replay(tree, node, childNode);
         
-        NodePathResolverImpl pathResolver = new NodePathResolverImpl(tree);
+        TreeImpl.INSTANCE = tree;
+        NodePathResolverImpl pathResolver = new NodePathResolverImpl();
         PathInfo pathInfo = pathResolver.resolvePath("../child", childNode);
         
         verify(tree, node, childNode);
@@ -128,7 +137,8 @@ public class NodePathResolverImplTest extends Assert
         expect(node.getChildren("child")).andReturn(childNode);
         replay(tree, node, childNode);
         
-        NodePathResolverImpl pathResolver = new NodePathResolverImpl(tree);
+        TreeImpl.INSTANCE = tree;
+        NodePathResolverImpl pathResolver = new NodePathResolverImpl();
         PathInfo pathInfo = pathResolver.resolvePath(
                 String.format("../%1$schild%1$s", NodePathResolver.QUOTE)
                 , childNode);
@@ -145,7 +155,8 @@ public class NodePathResolverImplTest extends Assert
         expect(node.getParent()).andReturn(null);
         replay(tree, node);
         
-        NodePathResolverImpl pathResolver = new NodePathResolverImpl(tree);
+        TreeImpl.INSTANCE = tree;
+        NodePathResolverImpl pathResolver = new NodePathResolverImpl();
         PathInfo pathInfo = pathResolver.resolvePath("../", node);
         
         verify(tree, node);
@@ -161,7 +172,8 @@ public class NodePathResolverImplTest extends Assert
         expect(node.getPath()).andReturn("node");
         replay(tree, node);
         
-        NodePathResolverImpl pathResolver = new NodePathResolverImpl(tree);
+        TreeImpl.INSTANCE = tree;
+        NodePathResolverImpl pathResolver = new NodePathResolverImpl();
         PathInfo pathInfo = pathResolver.resolvePath("child", node);
         
         verify(tree, node);

@@ -68,18 +68,22 @@ public class RavenCoreModule
         return new ConfiguratorImpl(treeStoreEngines);
     }
     
-    public static NodePathResolver buildNodePathResolver(Tree tree)
+    public static NodePathResolver buildNodePathResolver()
     {
-        return new NodePathResolverImpl(tree);
+        return new NodePathResolverImpl();
     }
     
     public static Tree buildTree(
             AttributeReferenceValues attributeReferenceValues
-            , Configurator configurator, ResourceProvider resourceProvider
-            , NodePathResolver pathResolver) 
+            , Configurator configurator
+            , ResourceProvider resourceProvider
+            , NodePathResolver pathResolver
+            , AttributeValueHandlerRegistry valueHandlerRegistry) 
         throws Exception
     {
-        return new TreeImpl(attributeReferenceValues, configurator, resourceProvider, pathResolver);
+        return new TreeImpl(
+                attributeReferenceValues, configurator, resourceProvider, pathResolver
+                , valueHandlerRegistry);
     }
     
     public static AttributeReferenceValues buildAttributeReferenceValues(

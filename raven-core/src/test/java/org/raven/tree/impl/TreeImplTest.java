@@ -31,6 +31,7 @@ import org.raven.ServiceTestCase;
 import org.raven.conf.Configurator;
 import org.raven.impl.NodeClassTransformerWorker;
 import org.raven.tree.AttributeReferenceValues;
+import org.raven.tree.AttributeValueHandlerRegistry;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodePathResolver;
@@ -67,6 +68,8 @@ public class TreeImplTest extends ServiceTestCase
         TreeStore store = createMock("TreeStore", TreeStore.class);
         ResourceProvider resourceProvider = createMock("ResourceProvider", ResourceProvider.class);
         NodePathResolver pathResolver = createMock("NodePathResolver", NodePathResolver.class);
+        AttributeValueHandlerRegistry valueHandlerRegistry = 
+                createMock("AttributeValueHandlerRegistry", AttributeValueHandlerRegistry.class);
         
         expect(configurator.getTreeStore()).andReturn(store).anyTimes();
         ContainerNode rootNode = new ContainerNode("");
@@ -82,9 +85,11 @@ public class TreeImplTest extends ServiceTestCase
                 (NodeAttribute)notNull(), matchCollection());
         expectLastCall().andReturn(true);
                 
-        replay(referenceValues, configurator, store, resourceProvider);
+        replay(referenceValues, configurator, store, resourceProvider, valueHandlerRegistry);
         
-        TreeImpl tree = new TreeImpl(referenceValues, configurator, resourceProvider, pathResolver);
+        TreeImpl tree = new TreeImpl(
+                referenceValues, configurator, resourceProvider, pathResolver
+                , valueHandlerRegistry);
         assertNull(tree.getReferenceValuesForAttribute(integerAttr));
         List<ReferenceValue> values = tree.getReferenceValuesForAttribute(integerAttr);
         assertNotNull(values);
@@ -95,7 +100,7 @@ public class TreeImplTest extends ServiceTestCase
 //        assertSame(twoList, tree.getReferenceValuesForAttribute(integerAttr));
 //        assertNull(tree.getReferenceValuesForAttribute(stringAttr));
         
-        verify(referenceValues, configurator, store, resourceProvider);
+        verify(referenceValues, configurator, store, resourceProvider, valueHandlerRegistry);
     }
     
     private static ReferenceValueCollection matchCollection()

@@ -48,6 +48,7 @@ import org.raven.tree.impl.objects.NodeWithNodeParameter;
 import org.raven.tree.impl.objects.NodeWithParameters;
 import org.raven.tree.store.TreeStore;
 import org.weda.constraints.ConstraintException;
+import org.weda.constraints.ReferenceValue;
 import org.weda.services.TypeConverter;
 import static org.easymock.EasyMock.*;
 /**
@@ -238,10 +239,14 @@ public class TreeServiceTest extends ServiceTestCase
         checkAttributes(node, "value");
         
         NodeAttribute enumAttr = node.getNodeAttribute("enumParameter");
-        List<String> refValues = enumAttr.getReferenceValues();
+        List<ReferenceValue> refValues = enumAttr.getReferenceValues();
         assertNotNull(refValues);
         assertEquals(2, refValues.size());
-        assertArrayEquals(new String[]{"ONE", "TWO"}, refValues.toArray());
+        assertEquals("ONE", refValues.get(0).getValue());
+        assertEquals("ONE", refValues.get(0).getValueAsString());
+        assertEquals("TWO", refValues.get(1).getValue());
+        assertEquals("TWO", refValues.get(1).getValueAsString());
+//        assertArrayEquals(new String[]{"ONE", "TWO"}, refValues.toArray());
     }
     
     @Test

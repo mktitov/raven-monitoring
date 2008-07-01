@@ -32,6 +32,7 @@ import org.raven.tree.Tree;
 import org.weda.beans.ObjectUtils;
 import org.weda.constraints.ReferenceValue;
 import org.weda.constraints.TooManyReferenceValuesException;
+import org.weda.constraints.impl.ReferenceValueImpl;
 import org.weda.internal.annotations.Service;
 import org.weda.services.TypeConverter;
 
@@ -308,30 +309,29 @@ public class NodeAttributeImpl
     }
 
     //TODO: привести к виду List<ReferenceValue>
-    public List<String> getReferenceValues()
+    public List<ReferenceValue> getReferenceValues() throws TooManyReferenceValuesException
     {
         if (!valueHandler.isReferenceValuesSupported())
             return null;
         
-        List<String> result = null;
+        List<ReferenceValue> result = null;
         if (parameter!=null)
         {
-            try
-            {
-                List<ReferenceValue> refValues = parameter.getReferenceValues();
-                if (refValues!=null)
+                List<ReferenceValue> parameterRefValues = parameter.getReferenceValues();
+                if (parameterRefValues!=null)
                 {
-                    result = new ArrayList<String>(refValues.size());
-                    for (ReferenceValue refValue: refValues)
-                        result.add(converter.convert(
-                            String.class, refValue.getValue(), parameter.getPattern()));
+                    result = new ArrayList<ReferenceValue>(parameterRefValues.size());
+                    for (ReferenceValue refValue: parameterRefValues)
+                    {
+                        ReferenceValue value = new ReferenceValueImpl(
+                                converter.convert(String.class, refValue.getValue(), null)
+                                , refValue.getValueAsString());
+                        result.add(value);
+                    }
                 }
-            } catch (TooManyReferenceValuesException ex)
-            {
-            }
         }
-//        if (result==null)
-//            result = tree.getReferenceValuesForAttribute(this);
+        if (result==null)
+            result = tree.getReferenceValuesForAttribute(this);
         
         return result;
     }

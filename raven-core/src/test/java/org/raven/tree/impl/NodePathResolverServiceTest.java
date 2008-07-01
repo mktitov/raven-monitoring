@@ -33,10 +33,13 @@ public class NodePathResolverServiceTest extends RavenCoreTestCase
     @Test
     public void test() throws InvalidPathException
     {
+        store.removeNodes();
+        tree.reloadTree();
+        
         NodePathResolver pathResolver = registry.getService(NodePathResolver.class);
         PathInfo pathInfo = pathResolver.resolvePath(""+Node.NODE_SEPARATOR, null);
         assertNotNull(pathInfo);
         
-        assertSame(tree.getRootNode(), pathInfo.getReferencedObject());
+        assertEquals(tree.getRootNode(), pathInfo.getReferencedObject());
     }
 }

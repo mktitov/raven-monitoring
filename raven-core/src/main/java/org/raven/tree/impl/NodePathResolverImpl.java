@@ -20,7 +20,6 @@ package org.raven.tree.impl;
 import org.raven.tree.InvalidPathException;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrTokenizer;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -35,12 +34,7 @@ import org.raven.tree.Tree;
  */
 public class NodePathResolverImpl implements NodePathResolver
 {
-    private final Tree tree;
-
-    public NodePathResolverImpl(Tree tree)
-    {
-        this.tree = tree;
-    }
+    private final Tree tree = TreeImpl.INSTANCE;
 
     public PathInfo<Node> resolvePath(String path, Node currentNode) throws InvalidPathException
     {

@@ -26,7 +26,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import org.raven.annotations.NodeClass;
 import org.raven.conf.Configurator;
 import org.raven.impl.NodeClassTransformerWorker;
@@ -34,11 +33,11 @@ import org.raven.template.TemplateVariable;
 import org.raven.template.TemplatesNode;
 import org.raven.tree.AttributeReference;
 import org.raven.tree.AttributeReferenceValues;
+import org.raven.tree.AttributeValueHandlerRegistry;
 import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
-import org.raven.tree.NodeNotFoundError;
 import org.raven.tree.NodePathResolver;
 import org.raven.tree.NodeTuner;
 import org.raven.tree.PathInfo;
@@ -52,7 +51,6 @@ import org.weda.constraints.ReferenceValue;
 import org.weda.constraints.ReferenceValueCollection;
 import org.weda.constraints.TooManyReferenceValuesException;
 import org.weda.constraints.impl.ReferenceValueCollectionImpl;
-import org.weda.constraints.impl.ReferenceValueImpl;
 import org.weda.internal.exception.NullParameterError;
 import org.weda.internal.services.ResourceProvider;
 
@@ -70,6 +68,7 @@ public class TreeImpl implements Tree
     private final Configurator configurator;
     private final TreeStore treeStore;
     private final NodePathResolver pathResolver;
+    private final AttributeValueHandlerRegistry valueHandlerRegistry;
 
 //    private final Map<Class, AttributeReferenceValues> referenceValuesProviders;
     private final Map<Class, List<Class>> nodeTypes = new HashMap<Class, List<Class>>();
@@ -81,8 +80,10 @@ public class TreeImpl implements Tree
 
     public TreeImpl(
             AttributeReferenceValues attributeReferenceValues
-            , Configurator configurator, ResourceProvider resourceProvider
-            , NodePathResolver pathResolver) 
+            , Configurator configurator
+            , ResourceProvider resourceProvider
+            , NodePathResolver pathResolver
+            , AttributeValueHandlerRegistry valueHandlerRegistry) 
         throws Exception
     {
         this.configurator = configurator;
@@ -90,6 +91,7 @@ public class TreeImpl implements Tree
 //        this.referenceValuesProviders = referenceValuesProviders;
         this.pathResolver = pathResolver;
         this.attributeReferenceValues = attributeReferenceValues;
+        this.valueHandlerRegistry = valueHandlerRegistry;
         
         INSTANCE = this;
         
@@ -255,11 +257,7 @@ public class TreeImpl implements Tree
 
     public List<ReferenceValue> getAttributeValueHandlerTypes(NodeAttribute attr)
     {
-        List<ReferenceValue> values = new ArrayList<ReferenceValue>();
-        values.add(new ReferenceValueImpl("type1", "Attribute reference"));
-        values.add(new ReferenceValueImpl("type2", "Node reference"));
-        values.add(new ReferenceValueImpl("type3", "Expression"));
-        return values;
+        return valueHandlerRegistry.getValueHandlerTypes();
     }
 
     private void addChildsToParent(Class parent, Class... childs)

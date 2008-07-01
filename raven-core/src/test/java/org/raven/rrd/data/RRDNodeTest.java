@@ -20,7 +20,6 @@ package org.raven.rrd.data;
 import org.raven.rrd.objects.TestDataSource;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
-import org.apache.tapestry.ioc.RegistryBuilder;
 import org.jrobin.core.Archive;
 import org.jrobin.core.Datasource;
 import org.jrobin.core.FetchData;
@@ -29,8 +28,7 @@ import org.jrobin.core.RrdDb;
 import org.jrobin.core.Util;
 import org.junit.Before;
 import org.junit.Test;
-import org.raven.RavenCoreModule;
-import org.raven.ServiceTestCase;
+import org.raven.RavenCoreTestCase;
 import org.raven.conf.Configurator;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
@@ -43,77 +41,65 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
-public class RRDNodeTest extends ServiceTestCase
+public class RRDNodeTest extends RavenCoreTestCase
 {
-    private Configurator configurator;
-    private TreeStore treeStore;
-    private Tree tree;
     private TypeConverter converter;
     
     @Before
-    public void initTest()
+    public void setupTest()
     {
-        configurator = registry.getService(Configurator.class);
-        assertNotNull(configurator);
+        store.removeNodes();
+        tree.reloadTree();
         
-        treeStore = configurator.getTreeStore();
-        treeStore.removeNodes();
-        tree = registry.getService(Tree.class);
         converter = registry.getService(TypeConverter.class);
         assertNotNull(tree);
     }
 
-    @Override
-    protected void configureRegistry(RegistryBuilder builder)
-    {
-        builder.add(RavenCoreModule.class);
-    }
-    
     @Test
     public void test() throws ConstraintException, Exception
     {
         TestDataSource ds = new TestDataSource();
         ds.setName("dataSource");
         tree.getRootNode().addChildren(ds);
-        treeStore.saveNode(ds);
+        store.saveNode(ds);
         ds.init();
         
         RRDNode rrd = new RRDNode();
         rrd.setName("rrd");
         tree.getRootNode().addChildren(rrd);
-        treeStore.saveNode(rrd);
+        store.saveNode(rrd);
         rrd.init();
         NodeAttribute attr = rrd.getNodeAttribute("step");
         attr.setValue("2");
-        treeStore.saveNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
         assertEquals(Status.INITIALIZED, rrd.getStatus());
         
         RRDataSource rrds = new RRDataSource();
         rrds.setName("ds");
         rrd.addChildren(rrds);
-        treeStore.saveNode(rrds);
+        store.saveNode(rrds);
         rrds.init();
         attr = rrds.getNodeAttribute("dataSource");
         attr.setValue(ds.getPath());
-        treeStore.saveNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
         attr = rrds.getNodeAttribute("interval");
         attr.setValue("2");
-        treeStore.saveNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
         attr = rrds.getNodeAttribute("intervalUnit");
         attr.setValue(TimeUnit.SECONDS.toString());
-        treeStore.saveNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
         attr = rrds.getNodeAttribute("dataSourceType");
         attr.setValue("GAUGE");
-        treeStore.saveNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
                 
         RRArchive rra = new RRArchive();
         rra.setName("archive");
         rrd.addChildren(rra);
-        treeStore.saveNode(rra);
+        store.saveNode(rra);
         rra.init();
         attr = rra.getNodeAttribute("rows");
         attr.setValue("100");
-        treeStore.saveNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
         rra.start();
         assertEquals(Status.STARTED, rra.getStatus());
       
@@ -167,24 +153,24 @@ public class RRDNodeTest extends ServiceTestCase
         RRDataSource rrds2 = new RRDataSource();
         rrds2.setName("ds2");
         rrd.addChildren(rrds2);
-        treeStore.saveNode(rrds2);
+        store.saveNode(rrds2);
         rrds2.init();
         attr = rrds2.getNodeAttribute("dataSource");
         attr.setValue(ds.getPath());
-        treeStore.saveNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
         attr = rrds2.getNodeAttribute("interval");
         attr.setValue("2");
-        treeStore.saveNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
         attr = rrds2.getNodeAttribute("intervalUnit");
         attr.setValue(TimeUnit.SECONDS.toString());
-        treeStore.saveNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
         rrds2.start();
         assertEquals(Status.STARTED, rrds2.getStatus());
         
         RRArchive rra2 = new RRArchive();
         rra2.setName("archive2");
         rrd.addChildren(rra2);
-        treeStore.saveNode(rra2);
+        store.saveNode(rra2);
         rra2.init();
         rra2.getNodeAttribute("steps").setValue("2");
         rra2.getNodeAttribute("rows").setValue("10");
