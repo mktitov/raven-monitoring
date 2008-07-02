@@ -29,6 +29,7 @@ import org.raven.tree.Tree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weda.constraints.ReferenceValue;
+import org.weda.constraints.TooManyReferenceValuesException;
 import org.weda.internal.annotations.Service;
 import org.weda.services.ClassDescriptorRegistry;
 //import org.raven.tree.Tree;
@@ -53,7 +54,7 @@ public class Attr
 	private boolean expressionSupported = false;
 	private String expression = "";
 
-	public Attr(NodeAttribute na)
+	public Attr(NodeAttribute na) throws TooManyReferenceValuesException
 	{
 		attribute = na;
 		this.name = na.getName();
@@ -64,15 +65,9 @@ public class Attr
 		ClassDescriptorRegistry classDsc = registry.getService(ClassDescriptorRegistry.class);
 		classDisplayName = classDsc.getClassDescriptor(na.getType()).getDisplayName();
 		if(na.getParentAttribute()==null && na.getParameterName()==null) allowDelete = true;
-		List<String> lst = na.getReferenceValues();
+        
 		expressionSupported = na.isExpression();
 		if(expressionSupported) expression = na.getRawValue();  
-		if(lst!=null)
-		{
-            selectItems = new ArrayList<SelectItem>();
-            for(String val: lst)
-                selectItems.add( new SelectItem(val,val) );
-		}	
         
         valueHandlerType = na.getValueHandlerType();
         List<ReferenceValue> refValues = tree.getAttributeValueHandlerTypes(na);
@@ -105,8 +100,21 @@ public class Attr
 	public int getId() { return id; }
 	public void setId(int id) { this.id = id; }
 
-	public List<SelectItem> getSelectItems() { return selectItems; }
-	public void setSelectItems(List<SelectItem> selectItems) { this.selectItems = selectItems; }
+	public List<SelectItem> getSelectItems() throws TooManyReferenceValuesException 
+    { 
+		List<ReferenceValue> lst = attribute.getReferenceValues();
+		if(lst!=null)
+		{
+            selectItems = new ArrayList<SelectItem>();
+            for(ReferenceValue val: lst)
+                selectItems.add( new SelectItem(val.getValue(), val.getValueAsString()));
+		}	
+        
+        return selectItems; 
+    }
+	public void setSelectItems(List<SelectItem> selectItems) throws TooManyReferenceValuesException 
+    {
+    }
 
 	public String getClassDisplayName() { return classDisplayName; }
 	public void setClassDisplayName(String type) { this.classDisplayName = type; }

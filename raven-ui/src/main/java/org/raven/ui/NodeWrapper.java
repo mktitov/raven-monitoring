@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weda.beans.ObjectUtils;
 import org.weda.constraints.ConstraintException;
+import org.weda.constraints.TooManyReferenceValuesException;
 import org.weda.converter.TypeConverterException;
 //import javax.faces.context.FacesContext;
 
@@ -88,13 +89,13 @@ public class NodeWrapper extends AbstractNodeWrapper
 		return "ok";
 	}
 	
-	public List<Attr> getAttributes()
+	public List<Attr> getAttributes() throws TooManyReferenceValuesException
 	{
 		if(editingAttrs==null) loadAttributes();
 		return editingAttrs;
 	}
 
-	public void  loadAttributes()
+	public void  loadAttributes() throws TooManyReferenceValuesException
 	{
 		savedAttrs = getNodeAttributes();
 		editingAttrs = new ArrayList<Attr>();
@@ -171,7 +172,7 @@ public class NodeWrapper extends AbstractNodeWrapper
 		  return ret.toString();
 	  }
 	
-	  public String cancel() //ActionEvent event
+	  public String cancel() throws TooManyReferenceValuesException //ActionEvent event
 	  {
 		  getAttributes();
 		  return "";
