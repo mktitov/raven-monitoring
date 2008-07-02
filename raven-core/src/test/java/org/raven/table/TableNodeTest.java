@@ -29,6 +29,8 @@ import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeAttributeImpl;
+import org.raven.tree.impl.NodeReferenceValueHandler;
+import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.constraints.ConstraintException;
 
 /**
@@ -153,6 +155,8 @@ public class TableNodeTest extends RavenCoreTestCase
         node.addChildren(c1);
         store.saveNode(c1);
         c1.init();
+        c1.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE)
+                .setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
         c1.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(table.getPath());
         store.saveNodeAttribute(c1.getNodeAttribute("dataSource"));
         
@@ -161,11 +165,12 @@ public class TableNodeTest extends RavenCoreTestCase
         node.addChildren(c2);
         store.saveNode(c2);
         c2.init();
-        c2.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(table.getPath());
-        store.saveNodeAttribute(c2.getNodeAttribute("dataSource"));
+//        c2.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(table.getPath());
+//        store.saveNodeAttribute(c2.getNodeAttribute("dataSource"));
         NodeAttribute colAttr = c2.getNodeAttribute(TableNodeTemplate.TABLE_COLUMN_NAME);
         assertNotNull(colAttr);
         colAttr.setValue("column2");
+        
         store.saveNodeAttribute(colAttr);
         
         table.configure();

@@ -32,12 +32,14 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
+import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.ds.impl.DataPipeImpl;
 import org.raven.tree.ConfigurableNode;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
 import org.raven.tree.impl.NodeAttributeImpl;
+import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.beans.ObjectUtils;
@@ -403,10 +405,21 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
         
         NodeAttribute columnNameAttr = 
                 newNode.getNodeAttribute(TableNodeTemplate.TABLE_COLUMN_NAME);
-        if (columnNameAttr!=null && columnNameAttr.getRawValue()==null)
+        if (columnNameAttr!=null)
         {
-            newNode.removeNodeAttribute(columnNameAttr.getName());
-            configurator.getTreeStore().removeNodeAttribute(columnNameAttr.getId());
+            if (columnNameAttr.getRawValue()==null)
+            {
+                newNode.removeNodeAttribute(columnNameAttr.getName());
+                configurator.getTreeStore().removeNodeAttribute(columnNameAttr.getId());
+            } 
+            else if (newNode instanceof AbstractDataConsumer)
+            {
+                NodeAttribute dataSourceAttr = 
+                        newNode.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE);
+                dataSourceAttr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
+                dataSourceAttr.setValue(tableNode.getPath());
+                dataSourceAttr.save();
+            }
         }
         
         if (getNodeAttributes()!=null)

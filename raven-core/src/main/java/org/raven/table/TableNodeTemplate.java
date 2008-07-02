@@ -17,6 +17,8 @@
 
 package org.raven.table;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.raven.annotations.NodeClass;
 import org.raven.template.TemplateEntry;
 import org.raven.tree.Node;
@@ -55,17 +57,17 @@ public class TableNodeTemplate extends TemplateEntry
                         , "The reference to the table column name");
                 attr.setOwner(node);
                 node.addNodeAttribute(attr);
+                try
+                {
+                    attr.init();
+                } catch (Exception ex)
+                {
+                    getLogger().error(String.format(
+                            "Error creating attribute (%s)", TABLE_COLUMN_NAME, ex));
+                }
+                attr.save();
                 configurator.getTreeStore().saveNodeAttribute(attr);
             }
-//            if (node.getParent()==this && node.getNodeAttribute(TABLE_INDEX_COLUMN_NAME)==null)
-//            {
-//                NodeAttribute attr = new NodeAttributeImpl(
-//                        TABLE_INDEX_COLUMN_NAME, String.class, null
-//                        , "The reference to the table index column name");
-//                attr.setOwner(node);
-//                node.addNodeAttribute(attr);
-//                configurator.getTreeStore().saveNodeAttribute(attr);
-//            }
         }
     }
 
