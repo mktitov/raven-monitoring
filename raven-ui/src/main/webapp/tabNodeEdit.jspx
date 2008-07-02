@@ -84,7 +84,7 @@
                 <tr:outputText value="#{row.classDisplayName}"/>
             </tr:column>
             <tr:column headerText="#{msgs.subtype}">
-                <tr:selectOneChoice value="#{row.valueHandlerType}" autoSubmit="true" id="subtypes">
+                <tr:selectOneChoice value="#{row.valueHandlerType}" onchange="submit();">
                     <f:selectItems value="#{row.valueHandlerTypes}" />
                 </tr:selectOneChoice>
             </tr:column>
