@@ -25,6 +25,7 @@ import org.raven.conf.Configurator;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodePathResolver;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.LeafNode;
@@ -53,6 +54,7 @@ public class TemplateWizardTest extends ServiceTestCase
         Configurator configurator = registry.getService(Configurator.class);
         TreeStore store = configurator.getTreeStore();
         TypeConverter converter = registry.getService(TypeConverter.class);
+        NodePathResolver pathResolver = registry.getService(NodePathResolver.class);
         
         store.removeNodes();
         tree.reloadTree();
@@ -65,39 +67,50 @@ public class TemplateWizardTest extends ServiceTestCase
         template.init();
         template.start();
         assertEquals(Node.Status.STARTED, template.getStatus());
+        
+        //Creating template variables
         TemplateVariablesNode varsNode = template.getVariablesNode();
+        
         NodeAttribute stringVar = new NodeAttributeImpl("stringVar", String.class, null, null);
         stringVar.setOwner(varsNode);
         varsNode.addNodeAttribute(stringVar);
-        store.saveNodeAttribute(stringVar);
+        stringVar.init();
+        stringVar.save();
+        
         NodeAttribute integerVar = new NodeAttributeImpl("integerVar", Integer.class, null, null);
         integerVar.setOwner(varsNode);
         integerVar.setRequired(true);
         varsNode.addNodeAttribute(integerVar);
-        store.saveNodeAttribute(integerVar);
+        integerVar.init();
+        integerVar.save();
         
+        //Creating template entry
         Node node = new ContainerNode("node");
         template.getEntryNode().addChildren(node);
         store.saveNode(node);
         node.init();
+        
         NodeAttribute stringAttr =
-                new NodeAttributeImpl("stringAttr", TemplateVariable.class, null, null);
+                new NodeAttributeImpl("stringAttr", String.class, null, null);
         stringAttr.setOwner(node);
         node.addNodeAttribute(stringAttr);
-        stringAttr.setValue(converter.convert(String.class, new TemplateVariable(stringVar), null));
-        store.saveNodeAttribute(stringAttr);
+        stringAttr.setValueHandlerType(TemplateVariableValueHandlerFactory.TYPE);
+        stringAttr.setValue(pathResolver.getAbsolutePath(stringVar));
+        stringAttr.init();
+        stringAttr.save();
         
         Node child = new LeafNode("child");
         node.addChildren(child);
         store.saveNode(child);
         child.init();
         NodeAttribute integerAttr = 
-                new NodeAttributeImpl("integerAttr", TemplateVariable.class, null, null);
+                new NodeAttributeImpl("integerAttr", Integer.class, null, null);
         integerAttr.setOwner(child);
         child.addNodeAttribute(integerAttr);
-        integerAttr.setValue(
-                converter.convert(String.class, new TemplateVariable(integerVar), null));
-        store.saveNodeAttribute(integerAttr);
+        integerAttr.setValueHandlerType(TemplateVariableValueHandlerFactory.TYPE);
+        integerAttr.setValue(pathResolver.getAbsolutePath(integerVar));
+        integerAttr.init();
+        integerAttr.save();
         
         //test
         TemplateWizard wizard = new TemplateWizard(template, tree.getRootNode(), "newName");

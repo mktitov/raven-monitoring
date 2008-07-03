@@ -149,8 +149,12 @@ public class NodeReferenceValueHandler
 
     public void childrenRemoved(Node owner, Node children)
     {
+    }
+
+    public void nodeShutdowned(Node shutdownedNode)
+    {
         Object oldValue = node;
-        cleanupNodeReference(node, owner);
+        cleanupNodeReference(node, shutdownedNode);
         expressionValid = false;
         node = null;
         fireExpressionInvalidatedEvent(oldValue);
@@ -170,7 +174,7 @@ public class NodeReferenceValueHandler
         return false;
     }
 
-    protected void cleanupNodeReference(Node oldNode, Node removedNodeOwner)
+    protected void cleanupNodeReference(Node oldNode, Node removedNode)
     {
         if (oldNode!=null)
         {
@@ -180,7 +184,7 @@ public class NodeReferenceValueHandler
             for (PathElement pathElement: pathElements)
             {
                 Node pathElementNode = pathElement.getNode();
-                if (pathElementNode!=null && pathElementNode!=removedNodeOwner)
+                if (pathElementNode!=null && pathElementNode!=removedNode)
                     pathElementNode.removeListener(this);
             }
         }

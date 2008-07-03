@@ -555,11 +555,12 @@ public class BaseNode implements Node, NodeListener
             stop();
         if (nodeAttributes!=null)
             for (NodeAttribute attr: nodeAttributes.values())
-                if (attr instanceof Node && attr.getValue()!=null)
+                if (Node.class.isAssignableFrom(attr.getType()) && attr.getRealValue()!=null)
                 {
                     Node node = attr.getRealValue();
                     node.removeDependentNode(this);
                 }
+        fireNodeShutdownedEvent(this);
     }
 
     void fireAttributeValueChanged(NodeAttributeImpl attr, Object oldValue, Object newValue)
@@ -712,6 +713,13 @@ public class BaseNode implements Node, NodeListener
         if (listeners!=null)
             for (NodeListener listener: listeners)
                 listener.nodeStatusChanged(this, oldStatus, status);
+    }
+
+    private void fireNodeShutdownedEvent(BaseNode aThis)
+    {
+        if (listeners!=null)
+            for (NodeListener listener: listeners)
+                listener.nodeShutdowned(this);
     }
 
     private void processAttributeGeneration(NodeAttributeImpl attr, Object newValue) 
@@ -916,6 +924,10 @@ public class BaseNode implements Node, NodeListener
     {
     }
 
+    public void nodeShutdowned(Node node)
+    {
+    }
+
     public void nodeNameChanged(Node node, String oldName, String newName)
     {
         if (   childrens!=null 
@@ -991,8 +1003,4 @@ public class BaseNode implements Node, NodeListener
         return clone;
     }
 
-//    public Node copyTo(Node destination, NodeTuner nodeTuner, boolean save)
-//    {
-//        
-//    }
 }

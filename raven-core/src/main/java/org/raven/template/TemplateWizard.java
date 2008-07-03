@@ -18,6 +18,8 @@
 package org.raven.template;
 
 import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeTuner;
@@ -99,13 +101,27 @@ public class TemplateWizard
             Collection<NodeAttribute> attrs = node.getNodeAttributes();
             if (attrs!=null)
                 for (NodeAttribute attr: attrs)
-                    if (TemplateVariable.class.isAssignableFrom(attr.getType()))
+                    if (TemplateVariableValueHandlerFactory.TYPE.equals(attr.getValueHandlerType()))
                     {
-                        String[] elems = attr.getRawValue().split(""+Node.ATTRIBUTE_SEPARATOR);
-                        NodeAttribute var = variablesNode.getNodeAttribute(elems[1]);
-                        attr.setType(var.getType());
-                        attr.setRawValue(var.getRawValue());
+                try
+                {
+                    NodeAttribute var = variablesNode.getNodeAttribute(
+                            ((NodeAttribute) attr.getRealValue()).getName());
+                    attr.setValueHandlerType(var.getValueHandlerType());
+                    attr.setValue(var.getRawValue());
+                } catch (Exception ex)
+                {
+                    node.getLogger().error(
+                            String.format("Error tuning node (%s)", node.getPath()), ex);
+                }
                     }
+//                    if (TemplateVariable.class.isAssignableFrom(attr.getType()))
+//                    {
+//                        String[] elems = attr.getRawValue().split(""+Node.ATTRIBUTE_SEPARATOR);
+//                        NodeAttribute var = variablesNode.getNodeAttribute(elems[1]);
+//                        attr.setType(var.getType());
+//                        attr.setRawValue(var.getRawValue());
+//                    }
         }
     }
 }

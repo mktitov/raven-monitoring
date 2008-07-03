@@ -44,6 +44,10 @@ public interface NodeListener extends NodeAttributeListener
      */
     public void nodeNameChanged(Node node, String oldName, String newName);
     /**
+     * Informs listeners that node was shutdowned.
+     */
+    public void nodeShutdowned(Node node);
+    /**
      * Informs listener that the new children was added to the node
      * @param owner the node to wich children was added
      * @param children the node that added to the owner
