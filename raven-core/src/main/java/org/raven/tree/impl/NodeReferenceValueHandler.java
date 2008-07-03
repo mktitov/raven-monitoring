@@ -165,17 +165,17 @@ public class NodeReferenceValueHandler
     {
     }
 
-    public void childrenRemoved(Node owner, Node children)
+    public void nodeRemoved(Node removedNode)
     {
+        Object oldValue = node;
+        cleanupNodeReference(node, removedNode);
+        expressionValid = false;
+        node = null;
+        fireExpressionInvalidatedEvent(oldValue);
     }
 
     public void nodeShutdowned(Node shutdownedNode)
     {
-        Object oldValue = node;
-        cleanupNodeReference(node, shutdownedNode);
-        expressionValid = false;
-        node = null;
-        fireExpressionInvalidatedEvent(oldValue);
     }
     
     public void nodeAttributeNameChanged(NodeAttribute attribute, String oldName, String newName)

@@ -54,9 +54,9 @@ public interface NodeListener extends NodeAttributeListener
      */
     public void childrenAdded(Node owner, Node children);
     /**
-     * Informs listener that the children removed from the node
-     * @param owner node from which children was removed
-     * @param children the node which was removed from the <code>owner</code>
+     * Informs listener that the children removed from the node.
+     * 
+     * @param removedNode the node which was removed.
      */
-    public void childrenRemoved(Node owner, Node children);
+    public void nodeRemoved(Node removedNode);
 }

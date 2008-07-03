@@ -271,7 +271,7 @@ public class BaseNode implements Node, NodeListener
         {
             Node removedNode = childrens.remove(node.getName());
             if (removedNode!=null && listeners!=null)
-                fireChildrenRemoved(removedNode);
+                fireNodeRemoved(removedNode);
         }
     }
     
@@ -594,11 +594,13 @@ public class BaseNode implements Node, NodeListener
                 listener.childrenAdded(this, children);
     }
 
-    private void fireChildrenRemoved(Node removedNode)
+    private void fireNodeRemoved(Node removedNode)
     {
-        if (listeners!=null)
-            for (NodeListener listener: listeners)
-                listener.childrenRemoved(this, removedNode);
+        Collection<NodeListener> removedNodeListeners = 
+                removedNode.getListeners();
+        if (removedNodeListeners!=null)
+            for (NodeListener listener: removedNodeListeners)
+                listener.nodeRemoved(removedNode);
     }
 
     public NodeAttribute getParentAttribute(String attributeName)
@@ -960,7 +962,7 @@ public class BaseNode implements Node, NodeListener
     {
     }
 
-    public void childrenRemoved(Node owner, Node children)
+    public void nodeRemoved(Node removedNode)
     {
     }
 

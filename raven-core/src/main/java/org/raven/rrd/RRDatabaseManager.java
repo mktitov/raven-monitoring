@@ -129,9 +129,9 @@ public class RRDatabaseManager extends BaseNode
     }
 
     @Override
-    public void childrenRemoved(Node owner, Node children)
+    public void nodeRemoved(Node removedNode)
     {
-        super.childrenRemoved(owner, children);
+        super.nodeRemoved(removedNode);
     }
 
     @Override
