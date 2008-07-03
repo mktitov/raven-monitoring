@@ -86,7 +86,7 @@ public class NodeAttributeImpl
         valueHandler = new ParentAttributeValueHandler(this);
         valueHandler.setWrappedHandlerType(valueHandlerType);
         valueHandler.addListener(this);
-        valueHandler.setData(value);
+//        valueHandler.setData(value);
         initialized = true;
     }
     

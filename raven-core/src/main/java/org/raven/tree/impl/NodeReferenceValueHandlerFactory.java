@@ -17,9 +17,12 @@
 
 package org.raven.tree.impl;
 
+import org.raven.RavenRuntimeException;
 import org.raven.tree.AttributeValueHandler;
 import org.raven.tree.AttributeValueHandlerFactory;
+import org.raven.tree.InvalidPathException;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodePathResolver;
 
 /**
  *
@@ -28,10 +31,26 @@ import org.raven.tree.NodeAttribute;
 public class NodeReferenceValueHandlerFactory implements AttributeValueHandlerFactory
 {
     public final static String TYPE = "NodeReference";
+    private final NodePathResolver pathResolver;
+
+    public NodeReferenceValueHandlerFactory(NodePathResolver pathResolver)
+    {
+        this.pathResolver = pathResolver;
+    }
     
     public AttributeValueHandler createValueHandler(NodeAttribute attribute)
     {
-        return new NodeReferenceValueHandler(attribute);
+        try
+        {
+            return new NodeReferenceValueHandler(attribute);
+        }
+        catch (InvalidPathException ex)
+        {
+            throw new RavenRuntimeException(String.format(
+                    "Error creating node reference value handler for attribute (%s)"
+                    , pathResolver.getAbsolutePath(attribute))
+                    , ex);
+        }
     }
 
     public String getName()

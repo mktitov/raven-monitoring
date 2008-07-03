@@ -121,16 +121,21 @@ public class RavenCoreModule
     }
     
     public static void contributeAttributeValueHandlerRegistry(
-            MappedConfiguration<String, AttributeValueHandlerFactory> conf)
+            MappedConfiguration<String, AttributeValueHandlerFactory> conf
+            , NodePathResolver pathResolver)
     {
-        conf.add(NodeReferenceValueHandlerFactory.TYPE, new NodeReferenceValueHandlerFactory());
+        conf.add(
+            NodeReferenceValueHandlerFactory.TYPE
+            , new NodeReferenceValueHandlerFactory(pathResolver));
         conf.add(
             AttributeReferenceValueHandlerFactory.TYPE
-            , new AttributeReferenceValueHandlerFactory());
+            , new AttributeReferenceValueHandlerFactory(pathResolver));
         conf.add(
-            TemplateVariableValueHandlerFactory.TYPE, new TemplateVariableValueHandlerFactory());
+            TemplateVariableValueHandlerFactory.TYPE
+            , new TemplateVariableValueHandlerFactory(pathResolver));
         conf.add(
-            SystemDataSourceValueHandlerFactory.TYPE, new SystemDataSourceValueHandlerFactory());
+            SystemDataSourceValueHandlerFactory.TYPE
+            , new SystemDataSourceValueHandlerFactory(pathResolver));
     }
     
     public static void contributeAttributeReferenceValues(

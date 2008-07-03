@@ -96,6 +96,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
     {
         NodeAttribute attr = createMock(NodeAttribute.class);
         expect(attr.getOwner()).andReturn(node).anyTimes();
+        expect(attr.getRawValue()).andReturn(null);
         attr.save();
         attr.save();
         attr.save();
@@ -118,6 +119,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
         NodeAttribute attr = createMock(NodeAttribute.class);
         AttributeValueHandlerListener listener = createMock(AttributeValueHandlerListener.class);
         expect(attr.getOwner()).andReturn(node).anyTimes();
+        expect(attr.getRawValue()).andReturn(null);
         attr.save();
         attr.save();
         listener.valueChanged(isNull(), eq(childNode));
@@ -181,12 +183,14 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
         NodeAttribute attr = createMock(NodeAttribute.class);
         AttributeValueHandlerListener listener = createMock(AttributeValueHandlerListener.class);
         expect(attr.getOwner()).andReturn(node).anyTimes();
+        expect(attr.getRawValue()).andReturn(null);
         attr.save();
         listener.valueChanged(isNull(), eq(childNode));
         replay(attr, listener);
         
         NodeReferenceValueHandler valueHandler = addDependencyFlag?
-                new NodeReferenceValueHandler(attr) : new NodeReferenceValueHandler(attr, false);
+                  new NodeReferenceValueHandler(attr) 
+                : new NodeReferenceValueHandler(attr, false, false);
         valueHandler.addListener(listener);
         valueHandler.setData(childNode.getPath());
         assertEquals(childNode.getPath(), valueHandler.getData());
@@ -211,6 +215,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
         NodeAttribute attr = createMock(NodeAttribute.class);
         AttributeValueHandlerListener listener = createMock(AttributeValueHandlerListener.class);
         expect(attr.getOwner()).andReturn(node).anyTimes();
+        expect(attr.getRawValue()).andReturn(null);
         attr.save();
         expectLastCall().times(2);
         listener.valueChanged(isNull(), eq(childNode));
@@ -218,7 +223,8 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
         replay(attr, listener);
         
         NodeReferenceValueHandler valueHandler = addDependencyFlag?
-                new NodeReferenceValueHandler(attr) : new NodeReferenceValueHandler(attr, false);
+                  new NodeReferenceValueHandler(attr) 
+                : new NodeReferenceValueHandler(attr, false, false);
         valueHandler.addListener(listener);
         valueHandler.setData(childNode.getPath());
         valueHandler.setData(null);

@@ -38,18 +38,22 @@ public class AttributeReferenceValueHandler extends NodeReferenceValueHandler
     private NodeAttribute referencedAttribute = null;
     private Object attrValue;
 
-    public AttributeReferenceValueHandler(NodeAttribute attribute)
+    public AttributeReferenceValueHandler(NodeAttribute attribute) throws Exception
     {
-        super(attribute, false);
-        slaveMode=true;
+        super(attribute, false, true);
+        resolveAttribute(attribute.getRawValue(), true);
+        initNodeReference(node, pathElements);
+        if (node!=null && node.getStatus()!=Node.Status.CREATED)
+        {
+            attrValue = referencedAttribute==null? 
+                null : convertValue(referencedAttribute.getRealValue());
+        }
     }
-
-    @Override
-    public void setData(String data) throws Exception
+    
+    private void resolveAttribute(String data, boolean init) throws InvalidPathException, Exception
     {
         if (ObjectUtils.equals(attrData, data) && expressionValid)
             return;
-        NodeAttribute oldReferencedAttribute = referencedAttribute;
         if (data!=null)
         {
             int pos = data.lastIndexOf(Node.ATTRIBUTE_SEPARATOR);
@@ -61,7 +65,10 @@ public class AttributeReferenceValueHandler extends NodeReferenceValueHandler
             String pathToNode = data.substring(0, pos);
             String attributeName = data.substring(pos+1);
 
-            super.setData(pathToNode);
+            if (init)
+                super.resolveNode(pathToNode);
+            else
+                super.setData(pathToNode);
             
             referencedAttribute = node.getNodeAttribute(attributeName);
             
@@ -71,8 +78,17 @@ public class AttributeReferenceValueHandler extends NodeReferenceValueHandler
                         "Node (%s) does not contains attribute (%s)"
                         , data, node.getName(), attributeName));
         }
-        String oldAttrData = attrData;
         attrData = data;
+    }
+
+    @Override
+    public void setData(String data) throws Exception
+    {
+        String oldAttrData = attrData;
+        NodeAttribute oldReferencedAttribute = referencedAttribute;
+        resolveAttribute(data, false);
+        attrData = data;
+        
         if (!ObjectUtils.equals(oldAttrData, attrData))
             attribute.save();
         if (node!=null && node.getStatus()!=Node.Status.CREATED)

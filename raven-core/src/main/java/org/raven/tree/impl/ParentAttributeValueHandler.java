@@ -48,6 +48,7 @@ public class ParentAttributeValueHandler
     public ParentAttributeValueHandler(NodeAttribute attribute)
     {
         super(attribute);
+        data = attribute.getRawValue();
     }
 
     public AttributeValueHandler getWrappedHandler()
@@ -69,8 +70,8 @@ public class ParentAttributeValueHandler
             if (wrappedHandler!=null)
             {
                 wrappedHandler.addListener(this);
-                if (data!=null)
-                    wrappedHandler.setData(data);
+//                if (data!=null)
+//                    wrappedHandler.setData(data);
             }
         }
     }

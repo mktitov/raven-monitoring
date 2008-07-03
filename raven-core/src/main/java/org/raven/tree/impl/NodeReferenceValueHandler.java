@@ -17,6 +17,7 @@
 
 package org.raven.tree.impl;
 
+import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
@@ -48,28 +49,39 @@ public class NodeReferenceValueHandler
     protected String data = null;
     protected Node node = null;
     private boolean addDependencyToNode = true;
-    private PathElement[] pathElements = null;
+    protected PathElement[] pathElements = null;
     protected boolean expressionValid = true;
     protected boolean slaveMode = false;
             
-    public NodeReferenceValueHandler(NodeAttribute attribute)
+    public NodeReferenceValueHandler(NodeAttribute attribute) throws InvalidPathException
     {
         super(attribute);
+        resolveNode(attribute.getRawValue());
+        initNodeReference(node, pathElements);
     }
 
-    public NodeReferenceValueHandler(NodeAttribute attribute, boolean addDependencyToNode)
+    public NodeReferenceValueHandler(
+            NodeAttribute attribute, boolean addDependencyToNode, boolean slaveMode) 
+        throws InvalidPathException
     {
         super(attribute);
         this.addDependencyToNode = addDependencyToNode;
+        this.slaveMode = slaveMode;
+        
+        if (!slaveMode)
+        {
+            resolveNode(attribute.getRawValue());
+            initNodeReference(node, pathElements);
+        }
     }
-
-    public void setData(String data) throws Exception
+    
+    protected void resolveNode(String data) throws InvalidPathException
     {
         if (ObjectUtils.equals(this.data, data) && expressionValid)
             return;
         
         Node currentNode = null;
-        PathElement[] newPathElements = null;
+//        PathElement[] newPathElements = null;
         if (data!=null && data.length()>0)
         {
             PathInfo<Node> pathInfo = pathResolver.resolvePath(data, attribute.getOwner());
@@ -77,19 +89,25 @@ public class NodeReferenceValueHandler
             pathElements = pathInfo.getPathElements();
         }
 
-        String oldData = this.data;
-        this.data = data;
-        Node oldNode = node;
         node = currentNode;
-        if (!ObjectUtils.equals(oldNode, node))
-        {
-            cleanupNodeReference(oldNode, null);
-            initNodeReference(node, newPathElements);
-            if (!slaveMode)
-                fireValueChangedEvent(oldNode, node);
-        }
+        this.data = data;
+    }
+
+    public void setData(String data) throws Exception
+    {
+        String oldData = this.data;
+        Node oldNode = node;
+        
+        cleanupNodeReference(oldNode, null);
+        resolveNode(data);
+        initNodeReference(node, pathElements);
+        
+        if (!slaveMode)
+            fireValueChangedEvent(oldNode, node);
+        
         if (!ObjectUtils.equals(this.data, oldData) && !slaveMode)
             attribute.save();
+        
         expressionValid = true;
     }
     
@@ -190,7 +208,7 @@ public class NodeReferenceValueHandler
         }
     }
 
-    private void initNodeReference(Node node, PathElement[] newPathElements)
+    protected void initNodeReference(Node node, PathElement[] newPathElements)
     {
         if (node!=null)
         {

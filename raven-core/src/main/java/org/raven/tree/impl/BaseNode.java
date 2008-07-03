@@ -493,7 +493,7 @@ public class BaseNode implements Node, NodeListener
 //            }
             extractNodeParameters();
             syncAttributesAndParameters();
-            syncAttributesGenerators();
+//            syncAttributesGenerators();
             doInit();
             
             setStatus(Status.INITIALIZED);
@@ -748,7 +748,7 @@ public class BaseNode implements Node, NodeListener
                 syncParentAttributes(attr);
     }
     
-            private void syncParentAttributes(NodeAttribute parent) throws Exception
+    private void syncParentAttributes(NodeAttribute parent) throws Exception
     {
         if (parent.getValue() == null)
             removeChildAttributes(parent.getName(), null);
@@ -781,12 +781,11 @@ public class BaseNode implements Node, NodeListener
                     clone.setOwner(this);
                     clone.setParentAttribute(parent.getName());
 
-                    configurator.getTreeStore().saveNodeAttribute(clone);
-
                     addNodeAttribute(clone);
                     try
                     {
                         clone.init();
+                        clone.save();
                     } 
                     catch (Exception exception)
                     {
