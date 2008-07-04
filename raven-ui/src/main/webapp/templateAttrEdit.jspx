@@ -39,8 +39,8 @@
 	      <tr:inputText columns="8" rendered="#{row.edit}" required="true" value="#{row.name}"/>
         </tr:column>
     	<tr:column headerText="#{msgs.value}">
-	      <tr:inputText readOnly="#{row.reference}" rendered="#{row.reference or (row.selectItems == null)}" value="#{row.value}" columns="12" />
-	      <tr:selectOneChoice rendered="#{!row.reference and !(row.selectItems == null)}" value="#{row.value}" >
+	      <tr:inputText readOnly="#{row.expression}" rendered="#{row.expressionSupported or (row.selectItems == null)}" value="#{row.value}" columns="12" />
+	      <tr:selectOneChoice rendered="#{!row.expressionSupported and !(row.selectItems == null)}" value="#{row.value}" >
 	      	<f:selectItems value="#{row.selectItems}" />
 	      </tr:selectOneChoice>
         </tr:column>
