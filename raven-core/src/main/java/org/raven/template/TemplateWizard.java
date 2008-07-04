@@ -103,17 +103,19 @@ public class TemplateWizard
                 for (NodeAttribute attr: attrs)
                     if (TemplateVariableValueHandlerFactory.TYPE.equals(attr.getValueHandlerType()))
                     {
-                try
-                {
-                    NodeAttribute var = variablesNode.getNodeAttribute(
-                            ((NodeAttribute) attr.getRealValue()).getName());
-                    attr.setValueHandlerType(var.getValueHandlerType());
-                    attr.setValue(var.getRawValue());
-                } catch (Exception ex)
-                {
-                    node.getLogger().error(
-                            String.format("Error tuning node (%s)", node.getPath()), ex);
-                }
+                        try
+                        {
+                            int attrSepPos = 
+                                    attr.getRawValue().lastIndexOf(Node.ATTRIBUTE_SEPARATOR);
+                            String varName = attr.getRawValue().substring(++attrSepPos);
+                            NodeAttribute var = variablesNode.getNodeAttribute(varName);
+                            attr.setValueHandlerType(var.getValueHandlerType());
+                            attr.setValue(var.getRawValue());
+                        } catch (Exception ex)
+                        {
+                            node.getLogger().error(
+                                    String.format("Error tuning node (%s)", node.getPath()), ex);
+                        }
                     }
 //                    if (TemplateVariable.class.isAssignableFrom(attr.getType()))
 //                    {

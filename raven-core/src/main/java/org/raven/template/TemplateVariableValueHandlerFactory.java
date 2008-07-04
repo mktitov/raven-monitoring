@@ -17,9 +17,13 @@
 
 package org.raven.template;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.raven.RavenRuntimeException;
 import org.raven.tree.AttributeValueHandler;
 import org.raven.tree.AttributeValueHandlerFactory;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodePathResolver;
 
 /**
  *
@@ -29,9 +33,26 @@ public class TemplateVariableValueHandlerFactory implements AttributeValueHandle
 {
     public final static String TYPE = "TemplateVariable";
     
+    private final NodePathResolver pathResolver;
+
+    public TemplateVariableValueHandlerFactory(NodePathResolver pathResolver)
+    {
+        this.pathResolver = pathResolver;
+    }
+    
     public AttributeValueHandler createValueHandler(NodeAttribute attribute)
     {
-        return new TemplateVariableValueHandler(attribute);
+        try
+        {
+            return new TemplateVariableValueHandler(attribute);
+        } 
+        catch (Exception ex)
+        {
+            throw new RavenRuntimeException(String.format(
+                    "Error creating attribute reference value handler for attribute (%s)"
+                    , pathResolver.getAbsolutePath(attribute))
+                    , ex);
+        }
     }
 
     public String getName()

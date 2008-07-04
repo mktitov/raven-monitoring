@@ -26,7 +26,7 @@ import org.raven.tree.impl.AttributeReferenceValueHandler;
  */
 public class TemplateVariableValueHandler extends AttributeReferenceValueHandler
 {
-    public TemplateVariableValueHandler(NodeAttribute attribute)
+    public TemplateVariableValueHandler(NodeAttribute attribute) throws Exception
     {
         super(attribute);
     }

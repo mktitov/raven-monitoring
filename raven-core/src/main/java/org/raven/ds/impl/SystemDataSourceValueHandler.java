@@ -17,6 +17,7 @@
 
 package org.raven.ds.impl;
 
+import org.raven.tree.InvalidPathException;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeReferenceValueHandler;
 
@@ -26,9 +27,9 @@ import org.raven.tree.impl.NodeReferenceValueHandler;
  */
 public class SystemDataSourceValueHandler extends NodeReferenceValueHandler
 {
-    public SystemDataSourceValueHandler(NodeAttribute attribute)
+    public SystemDataSourceValueHandler(NodeAttribute attribute) throws InvalidPathException
     {
-        super(attribute, true);
+        super(attribute, true, false);
     }
 
     @Override

@@ -17,9 +17,14 @@
 
 package org.raven.ds.impl;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.raven.RavenRuntimeException;
 import org.raven.tree.AttributeValueHandler;
 import org.raven.tree.AttributeValueHandlerFactory;
+import org.raven.tree.InvalidPathException;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodePathResolver;
 
 /**
  *
@@ -29,9 +34,26 @@ public class SystemDataSourceValueHandlerFactory implements AttributeValueHandle
 {
     public final static String TYPE = "SystemDataSource";
     
+    private final NodePathResolver pathResolver;
+
+    public SystemDataSourceValueHandlerFactory(NodePathResolver pathResolver)
+    {
+        this.pathResolver = pathResolver;
+    }
+    
     public AttributeValueHandler createValueHandler(NodeAttribute attribute)
     {
-        return new SystemDataSourceValueHandler(attribute);
+        try
+        {
+            return new SystemDataSourceValueHandler(attribute);
+        } 
+        catch (InvalidPathException ex)
+        {
+            throw new RavenRuntimeException(String.format(
+                    "Error creating reference to system datasource value handler for attribute (%s)"
+                    , pathResolver.getAbsolutePath(attribute))
+                    , ex);
+        }
     }
 
     public String getName()
