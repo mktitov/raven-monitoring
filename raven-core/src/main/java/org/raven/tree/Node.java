@@ -230,6 +230,10 @@ public interface Node extends Cloneable, Comparable<Node>
      */
     public void shutdown() throws NodeShutdownError;
     /**
+     * Method is calling when node is removing from the parent node.
+     */
+    public void remove();
+    /**
      * Starts the node. This method automaticaly calling after {@link #init() node initialization}
      * if the {@link #isAutoStart autoStart} property is setted to <code>true</code>
      * @throws org.raven.tree.NodeError

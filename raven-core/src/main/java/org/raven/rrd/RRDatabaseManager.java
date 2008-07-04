@@ -78,6 +78,7 @@ public class RRDatabaseManager extends BaseNode
     protected void doInit() throws Exception 
     {
         super.doInit();
+        setSubtreeListener(true);
         template = (RRDatabaseManagerTemplate) getChildren(RRDatabaseManagerTemplate.NAME);
         if (template==null)
         {
@@ -92,7 +93,8 @@ public class RRDatabaseManager extends BaseNode
     protected void doStart() throws Exception
     {
         super.doStart();
-        
+        if (startingPoint!=null)
+            startingPoint.addListener(this);
         syncDatabases();
     }
 
@@ -103,28 +105,36 @@ public class RRDatabaseManager extends BaseNode
         if (node==this)
         {
             if (attribute.getName().equals(STARING_POINT_ATTR_NAME) && getStatus()==Status.STARTED)
+            {
+                if (oldValue!=null)
+                    ((Node)oldValue).removeListener(this);
                 syncDatabases();
+            }
         }
     }
 
     @Override
-    public void childrenAdded(Node owner, Node children)
+    public  void childrenAdded(Node owner, Node children)
     {
         super.childrenAdded(owner, children);
         
         if (owner!=this && isNotInDatabaseManager(children))
         {
-            lock.lock();
-            try
+            if (lock.tryLock())
             {
-                DataSource newSource = (DataSource) children;
-                if (newSource.getStatus()==Status.CREATED)
-                    newDataSources.add(newSource.getId());
-                else
-                    syncDataSource(newSource, null);
-            }finally{
-                lock.unlock();
-            }
+                try
+                {
+                    DataSource newSource = (DataSource) children;
+                    if (newSource.getStatus()==Status.CREATED)
+                        newDataSources.add(newSource.getId());
+                    else
+                        syncDataSource(newSource, null);
+                }finally{
+                    lock.unlock();
+                }
+            }else
+                logger.error(String.format(
+                        "Error syncing database manager (%s). Locking error.", getPath()));
         }
     }
 
@@ -139,14 +149,18 @@ public class RRDatabaseManager extends BaseNode
     {
         if (isNotInDatabaseManager(node) && node.getStatus()!=Status.CREATED)
         {
-            lock.lock();
-            try
+            if (lock.tryLock())
             {
-                if (newDataSources.remove(node.getId()))
-                    syncDataSource((DataSource) node, null);
-            }finally{
-                lock.unlock();
-            }
+                try
+                {
+                    if (newDataSources.remove(node.getId()))
+                        syncDataSource((DataSource) node, null);
+                }finally{
+                    lock.unlock();
+                }
+            }else
+                logger.error(String.format(
+                        "Error syncing database manager (%s). Locking error.", getPath()));                
         }
     }
     
@@ -218,38 +232,53 @@ public class RRDatabaseManager extends BaseNode
                 lock.unlock();
             }
         }else
-            logger.error("Error syncing database manager (%s). Locking error.");
+            logger.error(String.format("Error syncing database manager (%s). Locking error."));
     }
     
     private void syncDataSource(
             DataSource dataSource, Set<Integer> pipes)
     {
-        
-        NodeAttribute dataTypeAttr = dataSource.getNodeAttribute(dataTypeAttributeName);
-        if (dataTypeAttr==null || !String.class.equals(dataTypeAttr.getType()))
+        if (lock.tryLock())
         {
-            if (logger.isDebugEnabled())
-                logger.debug(String.format(
-                        "Skiping data source (%s). Data type attribute (%s) not found"
-                        , dataSource.getPath(), dataTypeAttributeName));
-            return;
-        }
-        String dataType = dataTypeAttr.getValue();
-        if (dataType==null)
-        {
-            if (logger.isDebugEnabled())
-                logger.debug(String.format(
-                        "Skiping data source (%s). Data type attribute (%s) value not seted"
-                        , dataSource.getPath(), dataTypeAttributeName));
-            return;
-        }
-        if (pipes!=null)
-            pipes.add(dataSource.getId());
-        addNewDataSource(dataSource, dataType);
+            try
+            {
+                NodeAttribute dataTypeAttr = dataSource.getNodeAttribute(dataTypeAttributeName);
+                if (dataTypeAttr==null || !String.class.equals(dataTypeAttr.getType()))
+                {
+                    if (logger.isDebugEnabled())
+                        logger.debug(String.format(
+                                "Skiping data source (%s). Data type attribute (%s) not found"
+                                , dataSource.getPath(), dataTypeAttributeName));
+                    return;
+                }
+                String dataType = dataTypeAttr.getValue();
+                if (dataType==null)
+                {
+                    if (logger.isDebugEnabled())
+                        logger.debug(String.format(
+                                "Skiping data source (%s). Data type attribute (%s) value not seted"
+                                , dataSource.getPath(), dataTypeAttributeName));
+                    return;
+                }
+                if (pipes!=null)
+                    pipes.add(dataSource.getId());
+                addNewDataSource(dataSource, dataType);
+            }
+            finally
+            {
+                lock.unlock();
+            }
+        }else
+            logger.error(String.format(
+                    "Error syncing database manager (%s). Locking error.", getPath()));
     }
     
     private void addNewDataSource(DataSource dataSource, String dataType)
     {
+        if (logger.isDebugEnabled())
+            logger.debug(String.format(
+                    "Found new datasource (%s). Trying to add it to the database"
+                    , dataSource.getPath()));
         Node databaseTemplate = getDatabaseTemplate(dataType, dataSource);
         if (databaseTemplate==null)
             return;
@@ -318,7 +347,10 @@ public class RRDatabaseManager extends BaseNode
     private void collectDataPipes(
             Node node, Set<Integer> dataPipes, Map<Integer, RRDataSource> datasources)
     {
-        if (node instanceof DataSource && !datasources.containsKey(node.getId()))
+        if (   node instanceof DataSource 
+            && !datasources.containsKey(node.getId())
+            && !this.equals(node)
+            && !(node instanceof RRDataSource))
             syncDataSource((DataSource)node, dataPipes);
         
         Collection<Node> childs = node.getChildrens();
