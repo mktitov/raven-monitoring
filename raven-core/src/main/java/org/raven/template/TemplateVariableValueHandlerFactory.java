@@ -57,7 +57,7 @@ public class TemplateVariableValueHandlerFactory implements AttributeValueHandle
 
     public String getName()
     {
-        return "Template variable";
+        return "Template variable"; 
     }
     
 }

@@ -32,8 +32,7 @@ import org.raven.RavenCoreTestCase;
 import org.raven.conf.Configurator;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
-import org.raven.tree.Tree;
-import org.raven.tree.store.TreeStore;
+import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.constraints.ConstraintException;
 import org.weda.services.TypeConverter;
 
@@ -80,6 +79,7 @@ public class RRDNodeTest extends RavenCoreTestCase
         store.saveNode(rrds);
         rrds.init();
         attr = rrds.getNodeAttribute("dataSource");
+        attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
         attr.setValue(ds.getPath());
         store.saveNodeAttribute(attr);
         attr = rrds.getNodeAttribute("interval");
@@ -220,5 +220,65 @@ public class RRDNodeTest extends RavenCoreTestCase
         assertFalse(db.containsDs(rrds2.getName()));
         assertNull(db.getArchive(conFun, rra2.getSteps()));
         db.close();
+    }
+    
+    @Test
+    public void removeTest() throws Exception
+    {
+        TestDataSource ds = new TestDataSource();
+        ds.setName("dataSource");
+        tree.getRootNode().addChildren(ds);
+        store.saveNode(ds);
+        ds.init();
+        
+        RRDNode rrd = new RRDNode();
+        rrd.setName("rrd");
+        tree.getRootNode().addChildren(rrd);
+        store.saveNode(rrd);
+        rrd.init();
+        NodeAttribute attr = rrd.getNodeAttribute("step");
+        attr.setValue("2");
+        store.saveNodeAttribute(attr);
+        assertEquals(Status.INITIALIZED, rrd.getStatus());
+        
+        RRDataSource rrds = new RRDataSource();
+        rrds.setName("ds");
+        rrd.addChildren(rrds);
+        store.saveNode(rrds);
+        rrds.init();
+        attr = rrds.getNodeAttribute("dataSource");
+        attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
+        attr.setValue(ds.getPath());
+        store.saveNodeAttribute(attr);
+        attr = rrds.getNodeAttribute("interval");
+        attr.setValue("2");
+        store.saveNodeAttribute(attr);
+        attr = rrds.getNodeAttribute("intervalUnit");
+        attr.setValue(TimeUnit.SECONDS.toString());
+        store.saveNodeAttribute(attr);
+        attr = rrds.getNodeAttribute("dataSourceType");
+        attr.setValue("GAUGE");
+        store.saveNodeAttribute(attr);
+                
+        RRArchive rra = new RRArchive();
+        rra.setName("archive");
+        rrd.addChildren(rra);
+        store.saveNode(rra);
+        rra.init();
+        attr = rra.getNodeAttribute("rows");
+        attr.setValue("100");
+        store.saveNodeAttribute(attr);
+        rra.start();
+        assertEquals(Status.STARTED, rra.getStatus());
+      
+        long start = Util.getTime()-1;
+        rrds.start();
+        assertEquals(Status.STARTED, rrds.getStatus());
+        rrd.start();
+        assertEquals(Status.STARTED, rrd.getStatus());
+        ds.start();
+        assertEquals(Status.STARTED, ds.getStatus());
+        
+        tree.remove(rrd);
     }
 }
