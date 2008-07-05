@@ -27,6 +27,7 @@ import org.jrobin.core.FetchRequest;
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.Util;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.conf.Configurator;
@@ -279,6 +280,11 @@ public class RRDNodeTest extends RavenCoreTestCase
         ds.start();
         assertEquals(Status.STARTED, ds.getStatus());
         
+        File dbFile = new File(rrd.getDatabaseFileName());
+        assertTrue(dbFile.exists());
+        
         tree.remove(rrd);
+        
+        assertFalse(dbFile.exists());
     }
 }

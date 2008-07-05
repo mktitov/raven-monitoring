@@ -65,7 +65,7 @@ import org.weda.annotations.Description;
 @Description("The node type")
 public interface Node extends Cloneable, Comparable<Node>
 {
-    public enum Status {CREATED, INITIALIZED, STARTED}
+    public enum Status {CREATED, INITIALIZED, STARTED, REMOVING, REMOVED}
     /**
      * The separator char between nodes names in the path
      * @see #getPath() 
@@ -89,6 +89,10 @@ public interface Node extends Cloneable, Comparable<Node>
      * Returns the status of the current node. 
      */
     public Status getStatus();
+    /**
+     * Sets the new node status.
+     */
+    public void setStatus(Status status);
     /**
      * Returns the node level in the tree. Level 0 is a root node.
      */

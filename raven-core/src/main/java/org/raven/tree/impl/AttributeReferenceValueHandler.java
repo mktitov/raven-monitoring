@@ -43,7 +43,7 @@ public class AttributeReferenceValueHandler extends NodeReferenceValueHandler
         super(attribute, false, true);
         resolveAttribute(attribute.getRawValue(), true);
         initNodeReference(node, pathElements);
-        if (node!=null && node.getStatus()!=Node.Status.CREATED)
+        if (node!=null && ObjectUtils.in(node.getStatus(), Status.INITIALIZED, Status.STARTED))
         {
             attrValue = referencedAttribute==null? 
                 null : convertValue(referencedAttribute.getRealValue());
@@ -91,7 +91,7 @@ public class AttributeReferenceValueHandler extends NodeReferenceValueHandler
         
         if (!ObjectUtils.equals(oldAttrData, attrData))
             attribute.save();
-        if (node!=null && node.getStatus()!=Node.Status.CREATED)
+        if (node!=null && ObjectUtils.in(node.getStatus(), Status.INITIALIZED, Status.STARTED))
         {
             attrValue = referencedAttribute==null? 
                 null : convertValue(referencedAttribute.getRealValue());

@@ -27,6 +27,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.commons.io.FileUtils;
 import org.jrobin.core.ArcDef;
 import org.jrobin.core.Archive;
 import org.jrobin.core.Datasource;
@@ -37,6 +40,7 @@ import org.jrobin.core.RrdException;
 import org.jrobin.core.RrdToolkit;
 import org.jrobin.core.Sample;
 import org.jrobin.core.Util;
+import org.raven.RavenRuntimeException;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
@@ -47,8 +51,10 @@ import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
 import org.raven.tree.NodeListener;
+import org.raven.tree.NodeShutdownError;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.Description;
+import org.weda.beans.ObjectUtils;
 
 /**
  *
@@ -70,11 +76,11 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
     @Description("Backup database file before structure change operations")
     private Boolean backup;
     
-    private AtomicBoolean databaseInitialized = new AtomicBoolean(false);
+    private AtomicBoolean databaseInitialized;
     private RrdDb db;
-    private ReentrantReadWriteLock dbLock = new ReentrantReadWriteLock();
+    private ReentrantReadWriteLock dbLock;
     private Map<String, String> newDsNames;
-    private ReentrantLock newDsNamesLock = new ReentrantLock();
+    private ReentrantLock newDsNamesLock;
     private Sample sample;
             
     public RRDNode()
@@ -82,6 +88,19 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
         setInitializeAfterChildrens(true);
     }
     
+    @Override
+    protected void initFields()
+    {
+        super.initFields();
+        
+        databaseInitialized = new AtomicBoolean(false);
+        dbLock = new ReentrantReadWriteLock();
+        newDsNames = null;
+        newDsNamesLock = new ReentrantLock();
+        sample = null;
+        db = null;
+    }
+
     public Lock getReadLock()
     {
         return dbLock.readLock();
@@ -106,6 +125,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
                     databaseInitialized.set(false);
                     closeDatabase();
                 }
+                super.stop();
             }
             finally
             {
@@ -114,6 +134,46 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
         } catch (Exception e)
         {
             logger.error(String.format("Error stoping node (%s)", getPath()), e);
+        }
+    }
+
+    @Override
+    public synchronized void shutdown() throws NodeShutdownError 
+    {
+        super.shutdown();
+        
+        dbLock.writeLock().lock();
+        try
+        {
+            if (databaseInitialized.get())
+            {
+                databaseInitialized.set(false);
+                closeDatabase();
+            }
+        }
+        catch (Exception ex) 
+        {
+            throw new NodeShutdownError(String.format(
+                    "Error shutdowning node (%s)", getPath())
+                    , ex);
+        } 
+        finally
+        {
+            dbLock.writeLock().unlock();
+        }
+    }
+
+    @Override
+    public synchronized void remove() 
+    {
+        super.remove();
+        if (databaseFileName!=null && databaseFileName.length()>0)
+        {
+            File dbFile = new File(databaseFileName);
+            if (!dbFile.delete())
+                logger.error(String.format(
+                        "Error removing rrd database (%s) attached to the node (%s)"
+                        , databaseFileName, getPath()));
         }
     }
 
@@ -132,8 +192,13 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
     {
         try
         {
+            if (!ObjectUtils.in(getStatus(), Status.STARTED, Status.REMOVING))
+                throw new RavenRuntimeException(
+                        "Error removing RRDNode. The node must be started.");
             super.removeChildren(node);
             
+            if (getStatus()==Status.REMOVING)
+                return;
             if (node instanceof RRDataSource)
             {
                 removeDataSource(node.getName(), true);
@@ -667,7 +732,9 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
     {
         super.nodeStatusChanged(node, oldStatus, newStatus);
         
-        if (databaseInitialized.get() && node.getStatus()==Status.STARTED)
+        if (   databaseInitialized.get() 
+            && node.getStatus()==Status.STARTED 
+            && getStatus()!=Status.REMOVING)
         {
             if (node instanceof RRDataSource)
                 syncDataSource((RRDataSource) node, true);

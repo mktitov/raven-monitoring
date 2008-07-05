@@ -97,11 +97,27 @@ public class BaseNode implements Node, NodeListener
 //        this.container = container;
 //        this.readOnly = readOnly;
 //    }
-    public BaseNode(){}
+    public BaseNode()
+    {
+        initFields();
+    }
     
     public BaseNode(String name)
     {
+        this();
         this.name = name;
+    }
+    
+    protected void initFields()
+    {
+        parent = null;
+        dependentNodes = null;
+        listeners = null;
+        attributesListeners = null;
+        status = Status.CREATED;
+        parameters = null;
+        nodeAttributes = null;
+        childrens = null;
     }
 
     public Logger getLogger()
@@ -206,7 +222,7 @@ public class BaseNode implements Node, NodeListener
         return false;
     }
 
-    protected void setStatus(Status status)
+    public void setStatus(Status status)
     {
         if (this.status != status)
         {
@@ -337,7 +353,8 @@ public class BaseNode implements Node, NodeListener
     {
         String oldName = this.name;
         this.name = name;
-        if (status!=Status.CREATED && !ObjectUtils.equals(oldName, name))
+        if (   ObjectUtils.in(status, Status.INITIALIZED, Status.STARTED) 
+            && !ObjectUtils.equals(oldName, name))
         {
             fireNameChanged(oldName, name);
         }
@@ -552,6 +569,7 @@ public class BaseNode implements Node, NodeListener
 
     public synchronized void remove() 
     {
+        status = Status.REMOVED;
         fireNodeRemoved();
     }
     
@@ -561,11 +579,12 @@ public class BaseNode implements Node, NodeListener
             stop();
         if (nodeAttributes!=null)
             for (NodeAttribute attr: nodeAttributes.values())
-                if (Node.class.isAssignableFrom(attr.getType()) && attr.getRealValue()!=null)
-                {
-                    Node node = attr.getRealValue();
-                    node.removeDependentNode(this);
-                }
+                attr.shutdown();
+//                if (Node.class.isAssignableFrom(attr.getType()) && attr.getRealValue()!=null)
+//                {
+//                    Node node = attr.getRealValue();
+//                    node.removeDependentNode(this);
+//                }
         fireNodeShutdownedEvent(this);
     }
 
@@ -980,14 +999,7 @@ public class BaseNode implements Node, NodeListener
     {
         BaseNode clone = (BaseNode) super.clone();
         clone.setId(0);
-        clone.parent = null;
-        clone.dependentNodes = null;
-        clone.listeners = null;
-        clone.attributesListeners = null;
-        clone.status = Status.CREATED;
-        clone.parameters = null;
-        clone.nodeAttributes = null;
-        clone.childrens = null;
+        clone.initFields();
         
         if (nodeAttributes!=null)
             for (NodeAttribute attr: nodeAttributes.values()) 

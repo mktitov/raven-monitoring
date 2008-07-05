@@ -159,6 +159,8 @@ public class TreeImpl implements Tree
 
     public void remove(Node node)
     {
+        node.setStatus(Status.REMOVING);
+        
         Collection<Node> childrens = node.getChildrens();
         
         if (childrens!=null)

@@ -185,6 +185,10 @@ public interface NodeAttribute extends Cloneable
      */
     public void save();
     /**
+     * 
+     */
+    public void shutdown();
+    /**
      * Clones the attribute.
      * @throws java.lang.CloneNotSupportedException
      */

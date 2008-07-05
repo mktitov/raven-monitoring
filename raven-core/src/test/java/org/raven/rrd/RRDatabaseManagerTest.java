@@ -91,6 +91,8 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
         databaseManager.getNodeAttribute("dataSourcesPerDatabase").setValue("2");
         databaseManager.getNodeAttribute("startingPoint").setValue(sourcesRoot.getPath());
         databaseManager.start();
+        databaseManager.stop();
+        databaseManager.start();
         assertEquals(Status.STARTED, databaseManager.getStatus());
         checkDefaultEntry();
         checkInterfaceEntry();

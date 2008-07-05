@@ -55,8 +55,16 @@ public abstract class AbstractDataSource
     @Description("Sets the maximum allowed number of threads")
     private Integer maximumPoolSize;
     
-    private ScheduledThreadPoolExecutor executorService = null;
-    private Collection<NodeAttribute> consumerAttributes = new ArrayList<NodeAttribute>();
+    private ScheduledThreadPoolExecutor executorService;
+    private Collection<NodeAttribute> consumerAttributes;
+
+    @Override
+    protected void initFields() 
+    {
+        super.initFields();
+        executorService = null;
+        consumerAttributes = new ArrayList<NodeAttribute>();
+    }
 
     public AbstractDataSource()
     {

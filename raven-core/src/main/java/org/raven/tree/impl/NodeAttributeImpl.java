@@ -227,7 +227,8 @@ public class NodeAttributeImpl
         
         if (!ObjectUtils.equals(this.name, name))
         {
-            if (this.name!=null && owner.getStatus()!=Status.CREATED)
+            if (   this.name!=null 
+                && ObjectUtils.in(owner.getStatus(), Status.INITIALIZED, Status.STARTED))
             {
                 if (owner.getNodeAttribute(name)!=null)
                     throw new NodeAttributeError(String.format(
@@ -339,6 +340,12 @@ public class NodeAttributeImpl
     public void save()
     {
         configurator.getTreeStore().saveNodeAttribute(this);
+    }
+
+    public void shutdown() 
+    {
+        if (valueHandler!=null)
+            valueHandler.close();
     }
 
     @Override

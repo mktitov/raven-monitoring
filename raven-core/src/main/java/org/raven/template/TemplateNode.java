@@ -34,7 +34,16 @@ public class TemplateNode extends BaseNode
     
     private TemplateVariablesNode variablesNode;
     private TemplateEntry entryNode;
-    
+
+    @Override
+    protected void initFields() 
+    {
+        super.initFields();
+        
+        variablesNode = null;
+        entryNode = null;
+    }
+
     @Override
     protected void doInit()
     {

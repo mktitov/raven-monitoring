@@ -35,6 +35,7 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.beans.ObjectUtils;
 
 /**
  *
@@ -70,13 +71,25 @@ public class RRDatabaseManager extends BaseNode
     @Description("Defines the remove policy")
     private RemovePolicy removePolicy;
     
-    private Lock lock = new ReentrantLock();
+    private Lock lock;
     private RRDatabaseManagerTemplate template;
-    private Set<Integer> newDataSources = new HashSet<Integer>();
+    private Set<Integer> newDataSources;
+    private boolean initializing;
+
+    @Override
+    protected void initFields() 
+    {
+        super.initFields();
+        setInitializeAfterChildrens(true);
+        lock = new ReentrantLock();
+        template = null;
+        newDataSources = new HashSet<Integer>();
+    }
 
     @Override
     protected void doInit() throws Exception 
     {
+        initializing = true;
         super.doInit();
         setSubtreeListener(true);
         template = (RRDatabaseManagerTemplate) getChildren(RRDatabaseManagerTemplate.NAME);
@@ -95,7 +108,9 @@ public class RRDatabaseManager extends BaseNode
         super.doStart();
         if (startingPoint!=null)
             startingPoint.addListener(this);
-        syncDatabases();
+        if (!initializing)
+            syncDatabases();
+        initializing = false;
     }
 
     @Override
@@ -147,7 +162,8 @@ public class RRDatabaseManager extends BaseNode
     @Override
     public void nodeStatusChanged(Node node, Status oldStatus, Status newStatus)
     {
-        if (isNotInDatabaseManager(node) && node.getStatus()!=Status.CREATED)
+        if (   isNotInDatabaseManager(node) 
+            && ObjectUtils.in(node.getStatus(), Status.INITIALIZED, Status.STARTED))
         {
             if (lock.tryLock())
             {

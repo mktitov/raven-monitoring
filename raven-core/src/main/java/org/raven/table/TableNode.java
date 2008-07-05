@@ -76,10 +76,20 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
     @Description("Remove policy")
     private RemovePolicy removePolicy;
     
-    private final Lock dataLock = new ReentrantLock();
+    private Lock dataLock;
     private TableNodeTemplate template;
-    private boolean needTableForConfiguration = false;
-    private Table table = null;
+    private boolean needTableForConfiguration;
+    private Table table;
+
+    @Override
+    protected void initFields() 
+    {
+        super.initFields();
+        dataLock = new ReentrantLock();
+        template = null;
+        needTableForConfiguration = false;
+        table = null;
+    }
     
     @Override
     protected void doInit() throws Exception
@@ -297,7 +307,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
 
     private void processData(Object data) throws Exception
     {
-        Set<Node> deps = getDependentNodes();
+        Set<Node> deps = getDependentNodes()==null? null : new HashSet<Node>(getDependentNodes());
 //        if (deps==null || deps.size()==0)
 //            return;
         
