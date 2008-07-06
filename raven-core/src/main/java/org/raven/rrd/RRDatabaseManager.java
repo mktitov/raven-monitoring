@@ -75,6 +75,8 @@ public class RRDatabaseManager extends BaseNode
     private RRDatabaseManagerTemplate template;
     private Set<Integer> newDataSources;
     private boolean initializing;
+    //DataSource that under database manager control
+    private Set<DataSource> managedDatasources;
 
     @Override
     protected void initFields() 
@@ -84,6 +86,14 @@ public class RRDatabaseManager extends BaseNode
         lock = new ReentrantLock();
         template = null;
         newDataSources = new HashSet<Integer>();
+        managedDatasources = new HashSet<DataSource>();
+        
+        setSubtreeListener(true);
+    }
+    
+    void addManagedDatasource(DataSource dataSource)
+    {
+        managedDatasources.add(dataSource);
     }
 
     @Override
@@ -91,7 +101,6 @@ public class RRDatabaseManager extends BaseNode
     {
         initializing = true;
         super.doInit();
-        setSubtreeListener(true);
         template = (RRDatabaseManagerTemplate) getChildren(RRDatabaseManagerTemplate.NAME);
         if (template==null)
         {
@@ -140,9 +149,10 @@ public class RRDatabaseManager extends BaseNode
                 try
                 {
                     DataSource newSource = (DataSource) children;
-                    if (newSource.getStatus()==Status.CREATED)
-                        newDataSources.add(newSource.getId());
-                    else
+//                    if (newSource.getStatus()==Status.CREATED)
+//                        newDataSources.add(newSource.getId());
+//                    else
+                    if (ObjectUtils.in(newSource.getStatus(), Status.INITIALIZED, Status.STARTED))
                         syncDataSource(newSource, null);
                 }finally{
                     lock.unlock();
@@ -169,8 +179,8 @@ public class RRDatabaseManager extends BaseNode
             {
                 try
                 {
-                    if (newDataSources.remove(node.getId()))
-                        syncDataSource((DataSource) node, null);
+                    if (!managedDatasources.contains(node.getId()))
+                            syncDataSource((DataSource) node, null);
                 }finally{
                     lock.unlock();
                 }

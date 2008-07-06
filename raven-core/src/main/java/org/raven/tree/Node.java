@@ -307,7 +307,14 @@ public interface Node extends Cloneable, Comparable<Node>
      * @throws java.lang.CloneNotSupportedException
      */
     public Object clone() throws CloneNotSupportedException;
-    
+    /**
+     * Copy this node to the destination node passed in the parameter.
+     * @param dest the destination node.
+     * @param newNodeName if specified then the copied node will get the new name
+     * 
+     * @throws java.lang.CloneNotSupportedException
+     */
+    public Node cloneTo(Node dest, String newNodeName) throws CloneNotSupportedException;
 //    public Node copyTo(Node destination, NodeTuner nodeTuner, boolean save);
     
 }

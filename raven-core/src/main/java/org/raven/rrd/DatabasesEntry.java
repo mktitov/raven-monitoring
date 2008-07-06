@@ -18,8 +18,6 @@
 package org.raven.rrd;
 
 import java.util.Collection;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.rrd.data.RRDNode;
@@ -33,6 +31,21 @@ import org.raven.tree.NodeAttribute;
  */
 public class DatabasesEntry extends BaseNode
 {
+
+    public DatabasesEntry()
+    {
+        setSubtreeListener(true);
+    }
+
+    @Override
+    public void childrenAdded(Node owner, Node children)
+    {
+        super.childrenAdded(owner, children);
+        
+        if (children instanceof DataSource)
+            getDatabaseManager().addManagedDatasource((DataSource) children);
+    }
+    
     public void addDataSource(Node templateNode, DataSource dataSource)
     {
         Collection<Node> childs = getChildrens();
@@ -69,6 +82,9 @@ public class DatabasesEntry extends BaseNode
             dataSourceAttr.setValue(dataSource.getPath());
             dataSourceAttr.save();
             rrds.start();
+            
+//            getDatabaseManager().addManagedDatasource(dataSource);
+            
         } catch (Exception ex)
         {
             logger.error(String.format(
@@ -103,6 +119,9 @@ public class DatabasesEntry extends BaseNode
             dataSourceAttr.setValue(dataSource.getPath());
             dataSourceAttr.save();
             dataSource.save();
+            
+//            getDatabaseManager().addManagedDatasource(dataSource);
+            
             tree.start(db);
         } catch (Exception ex)
         {

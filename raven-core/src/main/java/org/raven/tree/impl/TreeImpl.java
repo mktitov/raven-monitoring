@@ -159,6 +159,9 @@ public class TreeImpl implements Tree
 
     public void remove(Node node)
     {
+        if (logger.isDebugEnabled())
+            logger.debug(String.format("Removing node (%s)", node.getPath()));
+        
         node.setStatus(Status.REMOVING);
         
         Collection<Node> childrens = node.getChildrens();
@@ -201,10 +204,11 @@ public class TreeImpl implements Tree
         }
         try
         {
-            Node clone = (Node) source.clone();
-            if (newNodeName!=null)
-                clone.setName(newNodeName);
-            destination.addChildren(clone);
+//            Node clone = (Node) source.clone();
+//            if (newNodeName!=null)
+//                clone.setName(newNodeName);
+//            destination.addChildren(clone);
+            Node clone = source.cloneTo(destination, newNodeName);
             saveClonedNode(source, clone, destination.getPath(), clone, nodeTuner, store);
             initNode(clone, false);
             

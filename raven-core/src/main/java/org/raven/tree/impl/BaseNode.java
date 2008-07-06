@@ -283,6 +283,9 @@ public class BaseNode implements Node, NodeListener
 
     public void removeChildren(Node node)
     {
+        if (logger.isDebugEnabled())
+            logger.debug("Removing children node (%s) from (%s) node", node.getPath(), getPath());
+        
         if (childrens!=null)
         {
             Node removedNode = childrens.remove(node.getName());
@@ -575,6 +578,8 @@ public class BaseNode implements Node, NodeListener
     
     public synchronized void shutdown() throws NodeShutdownError
     {
+        if (logger.isDebugEnabled())
+            logger.debug(String.format("Shutdowning node (%s)", getPath()));
         if (status==Status.STARTED)
             stop();
         if (nodeAttributes!=null)
@@ -1009,15 +1014,46 @@ public class BaseNode implements Node, NodeListener
                 clone.addNodeAttribute(attrClone);
 //                attrClone.init();
             }
+//            
+//        if (childrens!=null)
+//            for (Node child: childrens.values())
+//            {
+//                Node childClone = (Node) child.clone();
+//                clone.addChildren(childClone);
+//            }
+        
+        return clone;
+    }
+    
+    public Node cloneTo(Node dest, String newNodeName) throws CloneNotSupportedException
+    {
+        Node clone = (Node) clone();
+        if (newNodeName!=null)
+            clone.setName(newNodeName);
+        dest.addChildren(clone);
+        
+//        if (nodeAttributes!=null)
+//            for (NodeAttribute attr: nodeAttributes.values()) 
+//            {
+//                NodeAttribute attrClone = (NodeAttribute) attr.clone();
+//                attrClone.setOwner(clone);
+//                clone.addNodeAttribute(attrClone);
+////                attrClone.init();
+//            }
             
         if (childrens!=null)
             for (Node child: childrens.values())
             {
-                Node childClone = (Node) child.clone();
-                clone.addChildren(childClone);
+                child.cloneTo(clone, null);
             }
         
         return clone;
+    }
+
+    @Override
+    public String toString()
+    {
+        return name;
     }
 
 }

@@ -20,6 +20,7 @@ package org.raven.tree.impl;
 import java.util.List;
 import java.util.Set;
 import org.apache.tapestry.ioc.RegistryBuilder;
+import org.easymock.IArgumentMatcher;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -579,7 +580,21 @@ public class TreeServiceTest extends ServiceTestCase
         store.saveNode(copyDest);
         copyDest.init();
         
+        NodeListener listener = createMock(NodeListener.class);
+        expect(listener.isSubtreeListener()).andReturn(true).anyTimes();
+        listener.childrenAdded(eq(copyDest), matchNode("newName"));
+        listener.childrenAdded(matchNode("newName"), matchNode("child"));
+        listener.nodeStatusChanged((Node)anyObject(), (Status)anyObject(), (Status)anyObject());
+        expectLastCall().anyTimes();
+        
+        replay(listener);
+        
+        copyDest.addListener(listener);
+                
         tree.copy(node, copyDest, "newName", null, true, true);
+
+        copyDest.removeListener(listener);
+        verify(listener);
         
         checkNodeCopy(copyDest, sysNode, node, child, Status.INITIALIZED);
         
@@ -588,6 +603,27 @@ public class TreeServiceTest extends ServiceTestCase
         copyDest = tree.getNode(copyDest.getPath());
         assertNotNull(copyDest);
         checkNodeCopy(copyDest, sysNode, node, child, Status.STARTED);
+        
+    }
+    
+    private static Node matchNode(final String nodeName)
+    {
+        reportMatcher(new IArgumentMatcher() {
+            private Node node;
+
+            public boolean matches(Object argument)
+            {
+                node = (Node) argument;
+                return nodeName.equals(node.getName());
+            }
+
+            public void appendTo(StringBuffer buffer)
+            {
+                buffer.append(node.getName());
+            }
+        });
+        
+        return null;
     }
     
     private void checkNodeCopy(Node copyDest, Node sysNode, Node node, Node child, Status status)
