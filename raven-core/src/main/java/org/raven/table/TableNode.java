@@ -267,7 +267,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
         tuneNode(this, subst, newNode);
         
         if (autoStart)
-            tree.start(newNode);
+            tree.start(newNode, false);
     }
 
     private Node getTemplateNode()

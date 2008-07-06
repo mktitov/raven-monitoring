@@ -40,8 +40,6 @@ public class AttributeReferenceValueHandlerTest extends RavenCoreTestCase
     @Before
     public void setupTest() throws Exception
     {
-        store.removeNodes();
-        
         parentNode = new BaseNode("parent");
         tree.getRootNode().addChildren(parentNode);
         parentNode.save();

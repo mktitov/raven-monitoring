@@ -20,6 +20,7 @@ package org.raven;
 import org.apache.tapestry.ioc.IOCUtilities;
 import org.apache.tapestry.ioc.Registry;
 import org.apache.tapestry.ioc.RegistryBuilder;
+import org.raven.tree.Tree;
 
 public class RavenRegistry 
 {
@@ -29,9 +30,10 @@ public class RavenRegistry
 	{
         RegistryBuilder builder = new RegistryBuilder();
         IOCUtilities.addDefaultModules(builder);
-        builder.add(EnLocaleModule.class,RavenCoreModule.class);
+        builder.add(EnLocaleModule.class, RavenCoreModule.class);
         registry = builder.build();
         registry.performRegistryStartup();
+        registry.getService(Tree.class).reloadTree();
 	}
 	
 	public static synchronized Registry getRegistry() 

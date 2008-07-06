@@ -102,7 +102,7 @@ public class TreeImpl implements Tree
         for (String nodeType: nodesTypesList)
             addNodeType(Class.forName(nodeType));
         
-        reloadTree();
+//        reloadTree();
     }
 
     public List<Class> getChildNodesTypes(Class nodeType)
@@ -138,6 +138,7 @@ public class TreeImpl implements Tree
 
     public void reloadTree() throws TreeStoreError
     {
+        long curTime = System.currentTimeMillis();
         logger.info("Reloading tree");
         shutdown();
         rootNode = null;
@@ -148,7 +149,18 @@ public class TreeImpl implements Tree
         
         createSystemNodes();
         
-        initNode(rootNode, true);
+        logger.info("Initializing tree nodes.");
+        initNode(rootNode);
+        long operationTime = (System.currentTimeMillis()-curTime)/1000;
+        logger.info(String.format("Tree nodes initialized in %d seconds", operationTime));
+        
+        logger.info("Starting tree nodes");
+        start(rootNode, true);
+        operationTime = (System.currentTimeMillis()-curTime)/1000;
+        logger.info(String.format("Tree nodes started in %d seconds", operationTime));
+        
+        operationTime = (System.currentTimeMillis()-curTime)/1000;
+        logger.info(String.format("Tree reloaded in %d seconds", operationTime));
     }
     
     public void shutdown()
@@ -210,7 +222,7 @@ public class TreeImpl implements Tree
 //            destination.addChildren(clone);
             Node clone = source.cloneTo(destination, newNodeName);
             saveClonedNode(source, clone, destination.getPath(), clone, nodeTuner, store);
-            initNode(clone, false);
+            initNode(clone);
             
             return clone;
         } 
@@ -220,14 +232,14 @@ public class TreeImpl implements Tree
         }
     }
     
-    public void start(Node node)
+    public void start(Node node, boolean autoStartOnly)
     {
-        if (node.getStatus()==Status.INITIALIZED)
+        if (node.getStatus()==Status.INITIALIZED && (!autoStartOnly || node.isAutoStart()))
             node.start();
         
         if (node.getChildrens()!=null)
             for (Node child: node.getChildrens())
-                start(child);
+                start(child, autoStartOnly);
     }
 
     public void stop(Node node)
@@ -322,27 +334,27 @@ public class TreeImpl implements Tree
         }
     }
 
-    private void initNode(Node node, boolean autoStart)
+    private void initNode(Node node)
     {
         if (logger.isDebugEnabled())
             logger.debug(String.format("Initializing node (%s)", node.getPath()));
         if (!node.isInitializeAfterChildrens())
         {
             node.init();
-            if (autoStart && node.getStatus()==Node.Status.INITIALIZED && node.isAutoStart())
-                node.start();
+//            if (autoStart && node.getStatus()==Node.Status.INITIALIZED && node.isAutoStart())
+//                node.start();
         }
         if (node.getChildrens()!=null)
         {
             Iterator<Node> it = node.getChildrens().iterator();
             while (it.hasNext())
-                initNode(it.next(), autoStart);
+                initNode(it.next());
         }
         if (node.isInitializeAfterChildrens())
         {
             node.init();
-            if (autoStart && node.getStatus()==Node.Status.INITIALIZED && node.isAutoStart())
-                node.start();
+//            if (autoStart && node.getStatus()==Node.Status.INITIALIZED && node.isAutoStart())
+//                node.start();
         }
     }
 

@@ -83,7 +83,7 @@ public class TemplateWizard
                 Node newNode = tree.copy(
                         node, destination, useNewNodeName? newNodeName : null
                         , nodeTuner, true, true);
-                tree.start(newNode);
+                tree.start(newNode, false);
             }
         }
         destination.removeChildren(variablesNode);

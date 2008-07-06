@@ -234,7 +234,7 @@ public class TableNodeTest extends RavenCoreTestCase
         node = (ContainerNode) table.getChildren("node-value1_3");
         assertNotNull(node);
         assertEquals(Status.INITIALIZED, node.getStatus());
-        tree.start(node);
+        tree.start(node, false);
         
         table.getNodeAttribute(TableNode.REMOVEPOLICY_ATTRIBUTE)
                 .setValue(TableNode.RemovePolicy.AUTO_REMOVE.toString());

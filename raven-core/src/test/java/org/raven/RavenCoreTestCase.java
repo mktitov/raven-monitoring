@@ -42,10 +42,13 @@ public class RavenCoreTestCase extends ServiceTestCase
     @Before
     public void initTest()
     {
-        tree = registry.getService(Tree.class);
-        assertNotNull(tree);
         configurator = registry.getService(Configurator.class);
         assertNotNull(configurator);
         store = configurator.getTreeStore();
+        store.removeNodes();
+        
+        tree = registry.getService(Tree.class);
+        assertNotNull(tree);
+        tree.reloadTree();
     }
 }

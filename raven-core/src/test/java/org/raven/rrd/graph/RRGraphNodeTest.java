@@ -21,13 +21,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.IOUtils;
-import org.apache.tapestry.ioc.RegistryBuilder;
 import org.jrobin.core.Util;
-import org.junit.Before;
 import org.junit.Test;
-import org.raven.RavenCoreModule;
-import org.raven.ServiceTestCase;
-import org.raven.conf.Configurator;
+import org.raven.RavenCoreTestCase;
 import org.raven.ds.DataSource;
 import org.raven.rrd.ConsolidationFunction;
 import org.raven.rrd.RRColor;
@@ -37,58 +33,30 @@ import org.raven.rrd.data.RRDataSource;
 import org.raven.rrd.objects.TestDataSource;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
-import org.raven.tree.Tree;
-import org.raven.tree.store.TreeStore;
-import org.weda.constraints.ConstraintException;
-import org.weda.services.TypeConverter;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class RRGraphNodeTest extends ServiceTestCase
+public class RRGraphNodeTest extends RavenCoreTestCase
 {
-    private Configurator configurator;
-    private TreeStore treeStore;
-    private Tree tree;
-    private TypeConverter converter;
-    
-    @Override
-    protected void configureRegistry(RegistryBuilder builder)
-    {
-        builder.add(RavenCoreModule.class);
-    }
-    
-    @Before
-    public void initTest()
-    {
-        configurator = registry.getService(Configurator.class);
-        assertNotNull(configurator);
-        
-        treeStore = configurator.getTreeStore();
-        treeStore.removeNodes();
-        tree = registry.getService(Tree.class);
-        converter = registry.getService(TypeConverter.class);
-        assertNotNull(tree);
-    }
-
     @Test
     public void render() throws Exception 
     {
         TestDataSource ds = new TestDataSource();
         ds.setName("dataSource");
         tree.getRootNode().addChildren(ds);
-        treeStore.saveNode(ds);
+        store.saveNode(ds);
         ds.init();
         
         RRDNode rrd = new RRDNode();
         rrd.setName("rrd");
         tree.getRootNode().addChildren(rrd);
-        treeStore.saveNode(rrd);
+        store.saveNode(rrd);
         rrd.init();
         NodeAttribute attr = rrd.getNodeAttribute("step");
         attr.setValue("1");
-        treeStore.saveNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
         assertEquals(Status.INITIALIZED, rrd.getStatus());
         
         RRDataSource rrds = createRRDataSource("ds", rrd, ds);
@@ -97,11 +65,11 @@ public class RRGraphNodeTest extends ServiceTestCase
         RRArchive rra = new RRArchive();
         rra.setName("archive");
         rrd.addChildren(rra);
-        treeStore.saveNode(rra);
+        store.saveNode(rra);
         rra.init();
         attr = rra.getNodeAttribute("rows");
         attr.setValue("100");
-        treeStore.saveNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
         rra.start();
         assertEquals(Status.STARTED, rra.getStatus());
         
@@ -132,13 +100,13 @@ public class RRGraphNodeTest extends ServiceTestCase
         RRGraphNode gnode = new RRGraphNode();
         gnode.setName("graph");
         tree.getRootNode().addChildren(gnode);
-        treeStore.saveNode(gnode);
+        store.saveNode(gnode);
         gnode.init();
         
         RRDef def = new RRDef();
         def.setName("ds");
         gnode.addChildren(def);
-        treeStore.saveNode(def);
+        store.saveNode(def);
         def.init();
         def.getNodeAttribute(RRDef.CONSOLIDATIONFUNCTION_ATTRIBUTE).setValue("AVERAGE");
         def.getNodeAttribute(RRDef.DATASOURCE_ATTRIBUTE).setValue(rrds.getPath());
@@ -148,7 +116,7 @@ public class RRGraphNodeTest extends ServiceTestCase
         RRDef def2 = new RRDef();
         def2.setName("ds2");
         gnode.addChildren(def2);
-        treeStore.saveNode(def2);
+        store.saveNode(def2);
         def2.init();
         def2.getNodeAttribute(RRDef.CONSOLIDATIONFUNCTION_ATTRIBUTE).setValue("AVERAGE");
         def2.getNodeAttribute(RRDef.DATASOURCE_ATTRIBUTE).setValue(rrds2.getPath());
@@ -158,7 +126,7 @@ public class RRGraphNodeTest extends ServiceTestCase
         RRCDef cdef = new RRCDef();
         cdef.setName("cdef");
         gnode.addChildren(cdef);
-        treeStore.saveNode(cdef);
+        store.saveNode(cdef);
         cdef.init();
         cdef.getNodeAttribute(RRCDef.EXPRESSION_ATTRIBUTE).setValue("ds2,30,-");
         cdef.start();
@@ -167,7 +135,7 @@ public class RRGraphNodeTest extends ServiceTestCase
         RRCDef cdef2 = new RRCDef();
         cdef2.setName("cdef2");
         gnode.addChildren(cdef2);
-        treeStore.saveNode(cdef2);
+        store.saveNode(cdef2);
         cdef2.init();
         cdef2.getNodeAttribute(RRCDef.EXPRESSION_ATTRIBUTE).setValue("0,10,+");
         cdef2.start();
@@ -177,7 +145,7 @@ public class RRGraphNodeTest extends ServiceTestCase
         RRArea area = new RRArea();
         area.setName("area");
         gnode.addChildren(area);
-        treeStore.saveNode(area);
+        store.saveNode(area);
         area.init();
         area.getNodeAttribute(RRArea.COLOR_ATTRIBUTE).setValue(RRColor.GREEN.toString());
         area.getNodeAttribute(RRArea.DATADEFINITION_ATTRIBUTE).setValue(cdef.getPath());
@@ -188,7 +156,7 @@ public class RRGraphNodeTest extends ServiceTestCase
         RRLine line = new RRLine();
         line.setName("line1");
         gnode.addChildren(line);
-        treeStore.saveNode(line);
+        store.saveNode(line);
         line.init();
         line.getNodeAttribute(RRLine.COLOR_ATTRIBUTE).setValue(RRColor.BLUE.toString());
         line.getNodeAttribute(RRLine.DATADEFINITION_ATTRIBUTE).setValue(def.getPath());
@@ -200,7 +168,7 @@ public class RRGraphNodeTest extends ServiceTestCase
         RRStack stack = new RRStack();
         stack.setName("stack");
         gnode.addChildren(stack);
-        treeStore.saveNode(stack);
+        store.saveNode(stack);
         stack.init();
         stack.getNodeAttribute(RRArea.COLOR_ATTRIBUTE).setValue(RRColor.ORANGE.toString());
         stack.getNodeAttribute(RRArea.DATADEFINITION_ATTRIBUTE).setValue(cdef2.getPath());
@@ -211,7 +179,7 @@ public class RRGraphNodeTest extends ServiceTestCase
         RRLine line2 = new RRLine();
         line2.setName("line2");
         gnode.addChildren(line2);
-        treeStore.saveNode(line2);
+        store.saveNode(line2);
         line2.init();
         line2.getNodeAttribute(RRArea.COLOR_ATTRIBUTE).setValue(RRColor.RED.toString());
         line2.getNodeAttribute(RRArea.DATADEFINITION_ATTRIBUTE).setValue(def2.getPath());
@@ -223,7 +191,7 @@ public class RRGraphNodeTest extends ServiceTestCase
         RRHRule hrule = new RRHRule();
         hrule.setName("hrule");
         gnode.addChildren(hrule);
-        treeStore.saveNode(hrule);
+        store.saveNode(hrule);
         hrule.init();
         hrule.getNodeAttribute(RRHRule.VALUE_ATTRIBUTE).setValue("50");
         hrule.getNodeAttribute(RRHRule.COLOR_ATTRIBUTE).setValue(RRColor.DARK_GRAY.toString());
@@ -235,7 +203,7 @@ public class RRGraphNodeTest extends ServiceTestCase
         RRGPrint gprint = new RRGPrint();
         gprint.setName("gprint");
         gnode.addChildren(gprint);
-        treeStore.saveNode(gprint);
+        store.saveNode(gprint);
         gprint.init();
         gprint.getNodeAttribute(RRGPrint.DATADEFINITION_ATTRIBUTE).setValue(def2.getPath());
         gprint.getNodeAttribute(RRGPrint.CONSOLIDATIONFUNCTION_ATTRIBUTE)
@@ -247,7 +215,7 @@ public class RRGraphNodeTest extends ServiceTestCase
         RRComment comment = new RRComment();
         comment.setName("comment1");
         gnode.addChildren(comment);
-        treeStore.saveNode(comment);
+        store.saveNode(comment);
         comment.init();
         comment.getNodeAttribute(RRComment.COMMENT_ATTRIBUTE).setValue("The first comment");
         comment.start();
@@ -256,7 +224,7 @@ public class RRGraphNodeTest extends ServiceTestCase
         comment = new RRComment();
         comment.setName("comment2");
         gnode.addChildren(comment);
-        treeStore.saveNode(comment);
+        store.saveNode(comment);
         comment.init();
         comment.getNodeAttribute(RRComment.COMMENT_ATTRIBUTE).setValue("The second comment");
         comment.start();
@@ -280,20 +248,20 @@ public class RRGraphNodeTest extends ServiceTestCase
         RRDataSource rrds = new RRDataSource();
         rrds.setName(name);
         rrd.addChildren(rrds);
-        treeStore.saveNode(rrds);
+        store.saveNode(rrds);
         rrds.init();
         NodeAttribute attr = rrds.getNodeAttribute("dataSource");
         attr.setValue(ds.getPath());
-        treeStore.saveNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
         attr = rrds.getNodeAttribute("interval");
         attr.setValue("1");
-        treeStore.saveNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
         attr = rrds.getNodeAttribute("intervalUnit");
         attr.setValue(TimeUnit.SECONDS.toString());
-        treeStore.saveNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
         attr = rrds.getNodeAttribute("dataSourceType");
         attr.setValue("GAUGE");
-        treeStore.saveNodeAttribute(attr);
+        store.saveNodeAttribute(attr);
                 
         rrds.start();
         assertEquals(Status.STARTED, rrds.getStatus());

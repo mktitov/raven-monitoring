@@ -41,8 +41,6 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
     @Before
     public void setupTest()
     {
-        store.removeNodes();
-        
         parentNode = new BaseNode("parent");
         tree.getRootNode().addChildren(parentNode);
         parentNode.save();

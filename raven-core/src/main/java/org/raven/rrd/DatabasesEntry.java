@@ -122,7 +122,7 @@ public class DatabasesEntry extends BaseNode
             
 //            getDatabaseManager().addManagedDatasource(dataSource);
             
-            tree.start(db);
+            tree.start(db, false);
         } catch (Exception ex)
         {
             logger.error(String.format(

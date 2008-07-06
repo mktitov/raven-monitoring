@@ -73,12 +73,12 @@ public class TreeServiceTest extends ServiceTestCase
     @Before
     public void initTest()
     {
-        tree = registry.getService(Tree.class);
-        assertNotNull(tree);
-        
         configurator = registry.getService(Configurator.class);
         assertNotNull(configurator);
         store = configurator.getTreeStore();
+        
+        tree = registry.getService(Tree.class);
+        assertNotNull(tree);
         
         converter = registry.getService(TypeConverter.class);
         assertNotNull(converter);
@@ -88,6 +88,7 @@ public class TreeServiceTest extends ServiceTestCase
     public void getChildNodesTypes()
     {
         store.removeNodes();
+        tree.reloadTree();
         
         List<Class> types = tree.getChildNodesTypes(AnyChildsNode.class);
         assertNotNull(types);
@@ -119,6 +120,8 @@ public class TreeServiceTest extends ServiceTestCase
     @Test()
     public void remove() throws InvalidPathException
     {
+        store.removeNodes();
+        tree.reloadTree();
         try
         {
             Node root = tree.getRootNode();
@@ -143,7 +146,7 @@ public class TreeServiceTest extends ServiceTestCase
             assertNull(store.getNode(dsNodeId));
         }finally
         {
-            store.removeNodes();
+//            store.removeNodes();
         }
     }
     
@@ -154,6 +157,9 @@ public class TreeServiceTest extends ServiceTestCase
     @Test
     public void nodeInit_woAttributes()
     {
+        store.removeNodes();
+        tree.reloadTree();
+        
         BaseNode node = new BaseNode();
         node.init();
         
@@ -163,6 +169,9 @@ public class TreeServiceTest extends ServiceTestCase
     @Test
     public void nodeInit_woNodeTypeAttribute()
     {
+        store.removeNodes();
+        tree.reloadTree();
+        
         BaseNode node = new BaseNode();
         NodeAttributeImpl attr = new NodeAttributeImpl();
         attr.setName("attr");
@@ -177,6 +186,9 @@ public class TreeServiceTest extends ServiceTestCase
     @Test
     public void nodeInit_wNodeTypeAttribute() throws Exception
     {
+        store.removeNodes();
+        tree.reloadTree();
+        
         ContainerNode node1 = new ContainerNode("node1");
         tree.getRootNode().addChildren(node1);
         
@@ -208,6 +220,8 @@ public class TreeServiceTest extends ServiceTestCase
     @Test
     public void nodeInit_node_wParameters() throws Exception 
     {
+        store.removeNodes();
+        tree.reloadTree();
         //synchronization
         //store
         //setValue
@@ -253,6 +267,9 @@ public class TreeServiceTest extends ServiceTestCase
     @Test
     public void nodeListener() throws Exception
     {
+        store.removeNodes();
+        tree.reloadTree();
+        
         ContainerNode node = new ContainerNode("name");
         NodeAttribute attr = new NodeAttributeImpl("attr", String.class, "1", "desc");
         node.addNodeAttribute(attr);
@@ -291,6 +308,9 @@ public class TreeServiceTest extends ServiceTestCase
     @Test
     public void subreeListener() throws Exception
     {
+        store.removeNodes();
+        tree.reloadTree();
+        
         NodeListener listener = createMock(NodeListener.class);
         expect(listener.isSubtreeListener()).andReturn(true).anyTimes();
         listener.childrenAdded(isA(Node.class), isA(Node.class));
@@ -321,6 +341,9 @@ public class TreeServiceTest extends ServiceTestCase
     @Test
     public void childNodeNameChanging()
     {
+        store.removeNodes();
+        tree.reloadTree();
+        
         ContainerNode node = new ContainerNode("node");
         ContainerNode childNode = new ContainerNode("child");
         node.addChildren(childNode);
@@ -512,6 +535,7 @@ public class TreeServiceTest extends ServiceTestCase
     public void attributeChangeName() throws Exception
     {
         store.removeNodes();
+        tree.reloadTree();
         
         ContainerNode node = new ContainerNode("node");
         tree.getRootNode().addChildren(node);
@@ -690,6 +714,8 @@ public class TreeServiceTest extends ServiceTestCase
             checkTreeExecuted = true;
             store.removeNodes();
         }
+        tree.reloadTree();
+        
         assertNotNull(tree.getRootNode());
 
         Node systemNode = tree.getNode(Node.NODE_SEPARATOR+SystemNode.NAME);

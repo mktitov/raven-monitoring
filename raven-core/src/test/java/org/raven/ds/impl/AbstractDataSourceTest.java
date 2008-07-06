@@ -18,43 +18,20 @@
 package org.raven.ds.impl;
 
 import java.util.concurrent.TimeUnit;
-import org.apache.tapestry.ioc.RegistryBuilder;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
-import org.raven.RavenCoreModule;
-import org.raven.ServiceTestCase;
-import org.raven.conf.Configurator;
+import org.raven.RavenCoreTestCase;
 import org.raven.ds.impl.objects.TestDataConsumer;
 import org.raven.ds.impl.objects.TestDataSource;
-import org.raven.tree.Tree;
-import org.weda.constraints.ConstraintException;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class AbstractDataSourceTest extends ServiceTestCase
+public class AbstractDataSourceTest extends RavenCoreTestCase
 {
-
-    @Override
-    protected void configureRegistry(RegistryBuilder builder)
-    {
-        builder.add(RavenCoreModule.class);
-    }
-    
-    @Before @After
-    public void initTest()
-    {
-        registry.getService(Configurator.class).getTreeStore().removeNodes();
-    }
-    
     @Test
     public void test() throws Exception
     {
-        Tree tree = registry.getService(Tree.class);
-        Configurator configurator = registry.getService(Configurator.class);
-        
         TestDataSource dataSource = new TestDataSource();
         dataSource.setName("ds");
         tree.getRootNode().addChildren(dataSource);

@@ -27,6 +27,7 @@ import java.sql.Types;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import org.raven.RavenRuntimeException;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeAttributeImpl;
@@ -298,6 +299,11 @@ public class H2TreeStore implements TreeStore
             if (!rs.wasNull())
             {
                 Node parentNode = cache.get(parentId);
+                if (parentNode==null)
+                    throw new TreeStoreError(String.format(
+                            "Error adding node with id (%d) to the tree. " +
+                            "Parent node (%d) not found."
+                            , node.getId(), parentId));
                 parentNode.addChildren(node);
             }
         }

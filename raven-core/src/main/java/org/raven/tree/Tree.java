@@ -78,8 +78,11 @@ public interface Tree
     /**
      * Starts all nodes in the subtree starting from the <code>node</code> passed in the parameter.
      * @param node the starting point.
+     * @param autoStartOnly if sets to <code>true</code> then only nodes with 
+     *      {@link Node#isAutoStart() autostart} attribute seted to <code>true</code> 
+     *      will be started.
      */
-    public void start(Node node);
+    public void start(Node node, boolean autoStartOnly);
     /**
      * Stops all nodes in the subtree starting from the <code>node</code> passed in the parameter.
      */

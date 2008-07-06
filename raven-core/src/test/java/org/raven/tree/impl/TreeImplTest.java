@@ -20,10 +20,7 @@ package org.raven.tree.impl;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.tapestry.ioc.RegistryBuilder;
-import org.easymock.IAnswer;
 import org.easymock.IArgumentMatcher;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
@@ -90,6 +87,8 @@ public class TreeImplTest extends ServiceTestCase
         TreeImpl tree = new TreeImpl(
                 referenceValues, configurator, resourceProvider, pathResolver
                 , valueHandlerRegistry);
+        tree.reloadTree();
+        
         assertNull(tree.getReferenceValuesForAttribute(integerAttr));
         List<ReferenceValue> values = tree.getReferenceValuesForAttribute(integerAttr);
         assertNotNull(values);

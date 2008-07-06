@@ -20,6 +20,7 @@ package org.raven.template;
 import org.apache.tapestry.ioc.RegistryBuilder;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
+import org.raven.RavenCoreTestCase;
 import org.raven.ServiceTestCase;
 import org.raven.conf.Configurator;
 import org.raven.tree.InvalidPathException;
@@ -31,21 +32,13 @@ import org.raven.tree.store.TreeStore;
  *
  * @author Mikhail Titov
  */
-public class TemplateNodeTest extends ServiceTestCase
+public class TemplateNodeTest extends RavenCoreTestCase
 {
-    @Override
-    protected void configureRegistry(RegistryBuilder builder)
-    {
-        builder.add(RavenCoreModule.class);
-    }
-    
     @Test
     public void init() throws InvalidPathException 
     {
-        Tree tree = registry.getService(Tree.class);
-        Configurator configurator = registry.getService(Configurator.class);
-        TreeStore store = configurator.getTreeStore(); 
         store.removeNodes();
+        tree.reloadTree();
         
         TemplateNode template = new TemplateNode();
         template.setName("template");
