@@ -185,10 +185,11 @@ public class TreeImpl implements Tree
         
         node.shutdown();
         
-        treeStore.removeNode(node.getId());
         
         if (node.getParent()!=null)
             node.getParent().removeChildren(node);
+        
+        treeStore.removeNode(node.getId());
     }
 
     public Node copy(

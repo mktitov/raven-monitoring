@@ -20,6 +20,7 @@ package org.raven.rrd;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
@@ -28,6 +29,7 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataSource;
 import org.raven.rrd.data.RRArchive;
+import org.raven.rrd.data.RRDNode;
 import org.raven.rrd.data.RRDataSource;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
@@ -76,7 +78,7 @@ public class RRDatabaseManager extends BaseNode
     private Set<Integer> newDataSources;
     private boolean initializing;
     //DataSource that under database manager control
-    private Set<DataSource> managedDatasources;
+    private Map<DataSource, RRDataSource> managedDatasources;
 
     @Override
     protected void initFields() 
@@ -86,20 +88,20 @@ public class RRDatabaseManager extends BaseNode
         lock = new ReentrantLock();
         template = null;
         newDataSources = new HashSet<Integer>();
-        managedDatasources = new HashSet<DataSource>();
+        managedDatasources = new HashMap<DataSource, RRDataSource>();
         
         setSubtreeListener(true);
     }
     
-    void addManagedDatasource(DataSource dataSource)
+    void addManagedDatasource(DataSource dataSource, RRDataSource rrds)
     {
-        managedDatasources.add(dataSource);
+        managedDatasources.put(dataSource, rrds);
     }
 
     @Override
     protected void doInit() throws Exception 
     {
-        initializing = true;
+//        initializing = true;
         super.doInit();
         template = (RRDatabaseManagerTemplate) getChildren(RRDatabaseManagerTemplate.NAME);
         if (template==null)
@@ -109,6 +111,7 @@ public class RRDatabaseManager extends BaseNode
             configurator.getTreeStore().saveNode(template);
             template.init();
         }
+        collectDatasources(this);
     }
 
     @Override
@@ -117,9 +120,9 @@ public class RRDatabaseManager extends BaseNode
         super.doStart();
         if (startingPoint!=null)
             startingPoint.addListener(this);
-        if (!initializing)
+//        if (!initializing)
             syncDatabases();
-        initializing = false;
+//        initializing = false;
     }
 
     @Override
@@ -142,7 +145,8 @@ public class RRDatabaseManager extends BaseNode
     {
         super.childrenAdded(owner, children);
         
-        if (owner!=this && isNotInDatabaseManager(children))
+        if (   getStatus()==Status.STARTED 
+            && owner!=this && isNotInDatabaseManager(children) && !children.isTemplate())
         {
             if (lock.tryLock())
             {
@@ -172,14 +176,16 @@ public class RRDatabaseManager extends BaseNode
     @Override
     public void nodeStatusChanged(Node node, Status oldStatus, Status newStatus)
     {
-        if (   isNotInDatabaseManager(node) 
+        if (getStatus()==Status.STARTED   
+            && isNotInDatabaseManager(node) 
+            && !node.isTemplate()
             && ObjectUtils.in(node.getStatus(), Status.INITIALIZED, Status.STARTED))
         {
             if (lock.tryLock())
             {
                 try
                 {
-                    if (!managedDatasources.contains(node.getId()))
+                    if (!managedDatasources.containsKey(node))
                             syncDataSource((DataSource) node, null);
                 }finally{
                     lock.unlock();
@@ -224,6 +230,7 @@ public class RRDatabaseManager extends BaseNode
 
     private void syncDatabases()
     {
+        logger.info("Synchronizing database manager.");
         if (lock.tryLock())
         {
             try
@@ -233,32 +240,63 @@ public class RRDatabaseManager extends BaseNode
                 if (startNode==null)
                     return;
 
-                Map<Integer, RRDataSource> datasources = new HashMap<Integer, RRDataSource>();
-                collectDatasources(this, datasources);
+//                Map<Integer, RRDataSource> datasources = new HashMap<Integer, RRDataSource>();
+//                collectDatasources(this, datasources);
 
                 Set<Integer> pipes = new HashSet<Integer>();
-                collectDataPipes(startNode, pipes, datasources);
+                collectDataPipes(startNode, pipes);
 
-                if (datasources.size()!=pipes.size())
-                    for (Map.Entry<Integer, RRDataSource> entry: datasources.entrySet())
+                if (managedDatasources.size()!=pipes.size())
+                {
+                    Iterator<Map.Entry<DataSource, RRDataSource>> it = 
+                            managedDatasources.entrySet().iterator();
+                    while (it.hasNext())
+                    {
+                        Map.Entry<DataSource, RRDataSource> entry = it.next();
                         if (!pipes.contains(entry.getKey()))
                         {
                             switch (removePolicy)
                             {
                                 case STOP_DATABASES : entry.getValue().stop(); break;
                                 case REMOVE_DATABASES : 
-                                    entry.getValue().getParent().removeChildren(entry.getValue()); 
-                                    break;
+                                    removeRRDataSource(entry.getKey(), entry.getValue(), it); break;
                             }
                             if (removePolicy==RemovePolicy.STOP_DATABASES)
                                 entry.getValue().stop();
                         }
+                    }
+                }
             }finally
             {
                 lock.unlock();
             }
         }else
             logger.error(String.format("Error syncing database manager (%s). Locking error."));
+    }
+    
+    private void removeRRDataSource(DataSource dataSource, RRDataSource rrds, Iterator it)
+    {
+        try 
+        {
+            RRDNode rrd = (RRDNode) rrds.getParent();
+            int dsCount = 0;
+            if (rrd.getChildrens()!=null)
+                for (Node child: rrd.getChildrens())
+                    if (child instanceof RRDataSource)
+                        ++dsCount;
+            if (dsCount>1)
+                tree.remove(rrds); 
+            else
+                tree.remove(rrd);
+            it.remove();
+        }
+        catch(Throwable e)
+        {
+            logger.error(String.format(
+                    "Error removing rr datasource (%s)"
+                    , rrds.getPath())
+                    , e);
+        }
     }
     
     private void syncDataSource(
@@ -371,22 +409,28 @@ public class RRDatabaseManager extends BaseNode
     }
 
     private void collectDataPipes(
-            Node node, Set<Integer> dataPipes, Map<Integer, RRDataSource> datasources)
+            Node node, Set<Integer> dataPipes)
     {
         if (   node instanceof DataSource 
-            && !datasources.containsKey(node.getId())
             && !this.equals(node)
-            && !(node instanceof RRDataSource))
+            && !(node instanceof RRDataSource)
+            && !node.isTemplate()
+            && !managedDatasources.containsKey(node))
+        {
             syncDataSource((DataSource)node, dataPipes);
+        }
         
         Collection<Node> childs = node.getChildrens();
         if (childs!=null)
             for (Node child: childs)
-                collectDataPipes(child, dataPipes, datasources);
+                collectDataPipes(child, dataPipes);
     }
     
-    private void collectDatasources(Node node, Map<Integer, RRDataSource> datasources)
+    private void collectDatasources(Node node)
     {
+        if (template==node)
+            return;
+        
         Collection<Node> childs = node.getChildrens();
         if (childs!=null)
             for (Node child: childs)
@@ -394,8 +438,8 @@ public class RRDatabaseManager extends BaseNode
                 {
                     DataSource ds = ((RRDataSource)child).getDataSource();
                     if (ds!=null)
-                        datasources.put(ds.getId(),(RRDataSource) child);
+                        managedDatasources.put(ds,(RRDataSource) child);
                 }else if (child!=template)
-                    collectDatasources(child, datasources);
+                    collectDatasources(child);
     }
 }

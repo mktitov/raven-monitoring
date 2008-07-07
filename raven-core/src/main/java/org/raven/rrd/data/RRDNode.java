@@ -193,7 +193,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
         try
         {
             if (!ObjectUtils.in(getStatus(), Status.STARTED, Status.REMOVING))
-                throw new RavenRuntimeException(
+                throw new Exception(
                         "Error removing RRDNode. The node must be started.");
             super.removeChildren(node);
             

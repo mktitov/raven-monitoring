@@ -17,7 +17,9 @@
 
 package org.raven.rrd;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.rrd.data.RRDNode;
@@ -31,20 +33,37 @@ import org.raven.tree.NodeAttribute;
  */
 public class DatabasesEntry extends BaseNode
 {
+//    private List<RRDataSource> uninitializedDataSources = new ArrayList<RRDataSource>();
 
     public DatabasesEntry()
     {
         setSubtreeListener(true);
+        setInitializeAfterChildrens(true);
     }
 
-    @Override
-    public void childrenAdded(Node owner, Node children)
-    {
-        super.childrenAdded(owner, children);
-        
-        if (children instanceof DataSource)
-            getDatabaseManager().addManagedDatasource((DataSource) children);
-    }
+//    @Override
+//    protected void doInit() throws Exception
+//    {
+//        super.doInit();
+//        
+//        for (RRDataSource rrds: uninitializedDataSources)
+//            getDatabaseManager().addManagedDatasource(rrds.getDataSource(), rrds);
+//    }
+//
+//    @Override
+//    public void childrenAdded(Node owner, Node children)
+//    {
+//        super.childrenAdded(owner, children);
+//        
+//        if (children instanceof RRDataSource)
+//        {
+//            RRDataSource rrds = (RRDataSource) children;
+//            if (getStatus()==Status.CREATED)
+//                uninitializedDataSources.add(rrds);
+//            else if (Object)
+//                getDatabaseManager().addManagedDatasource(rrds.getDataSource(), rrds);
+//        }
+//    }
     
     public void addDataSource(Node templateNode, DataSource dataSource)
     {
@@ -83,6 +102,7 @@ public class DatabasesEntry extends BaseNode
             dataSourceAttr.save();
             rrds.start();
             
+            getDatabaseManager().addManagedDatasource(dataSource, rrds);
 //            getDatabaseManager().addManagedDatasource(dataSource);
             
         } catch (Exception ex)
@@ -120,7 +140,7 @@ public class DatabasesEntry extends BaseNode
             dataSourceAttr.save();
             dataSource.save();
             
-//            getDatabaseManager().addManagedDatasource(dataSource);
+            getDatabaseManager().addManagedDatasource(dataSource, rrds);
             
             tree.start(db, false);
         } catch (Exception ex)
