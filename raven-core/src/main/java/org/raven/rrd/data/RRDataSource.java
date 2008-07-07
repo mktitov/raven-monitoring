@@ -20,6 +20,8 @@ package org.raven.rrd.data;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.impl.DataPipeImpl;
+import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
 import org.weda.annotations.Description;
 
 /**
@@ -47,6 +49,21 @@ public class RRDataSource extends DataPipeImpl
     @Parameter(defaultValue="NaN")
     @Description("Maximal acceptable value")
     private Double maxValue;
+
+    @Override
+    public void nodeAttributeValueChanged(
+            Node node, NodeAttribute attribute, Object oldValue, Object newValue) 
+    {
+        super.nodeAttributeValueChanged(node, attribute, oldValue, newValue);
+        
+        if (   node==this 
+            && newValue==null 
+            && getStatus()==Status.STARTED 
+            && DATASOURCE_ATTRIBUTE.equals(attribute.getName()))
+        {
+            setStatus(Status.INITIALIZED);
+        }
+    }
 
     public String getDataSourceType()
     {

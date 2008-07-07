@@ -75,8 +75,6 @@ public class RRDatabaseManager extends BaseNode
     
     private Lock lock;
     private RRDatabaseManagerTemplate template;
-    private Set<Integer> newDataSources;
-    private boolean initializing;
     //DataSource that under database manager control
     private Map<DataSource, RRDataSource> managedDatasources;
 
@@ -87,15 +85,24 @@ public class RRDatabaseManager extends BaseNode
         setInitializeAfterChildrens(true);
         lock = new ReentrantLock();
         template = null;
-        newDataSources = new HashSet<Integer>();
         managedDatasources = new HashMap<DataSource, RRDataSource>();
         
         setSubtreeListener(true);
     }
     
+    Lock getLock()
+    {
+        return lock;
+    }
+    
     void addManagedDatasource(DataSource dataSource, RRDataSource rrds)
     {
         managedDatasources.put(dataSource, rrds);
+    }
+    
+    void removeManagedDatasource(DataSource dataSource)
+    {
+        managedDatasources.remove(dataSource);
     }
 
     @Override
@@ -140,32 +147,32 @@ public class RRDatabaseManager extends BaseNode
         }
     }
 
-    @Override
-    public  void childrenAdded(Node owner, Node children)
-    {
-        super.childrenAdded(owner, children);
-        
-        if (   getStatus()==Status.STARTED 
-            && owner!=this && isNotInDatabaseManager(children) && !children.isTemplate())
-        {
-            if (lock.tryLock())
-            {
-                try
-                {
-                    DataSource newSource = (DataSource) children;
-//                    if (newSource.getStatus()==Status.CREATED)
-//                        newDataSources.add(newSource.getId());
-//                    else
-                    if (ObjectUtils.in(newSource.getStatus(), Status.INITIALIZED, Status.STARTED))
-                        syncDataSource(newSource, null);
-                }finally{
-                    lock.unlock();
-                }
-            }else
-                logger.error(String.format(
-                        "Error syncing database manager (%s). Locking error.", getPath()));
-        }
-    }
+//    @Override
+//    public  void childrenAdded(Node owner, Node children)
+//    {
+//        super.childrenAdded(owner, children);
+//        
+//        if (   getStatus()==Status.STARTED 
+//            && owner!=this && isNotInDatabaseManager(children) && !children.isTemplate())
+//        {
+//            if (lock.tryLock())
+//            {
+//                try
+//                {
+//                    DataSource newSource = (DataSource) children;
+////                    if (newSource.getStatus()==Status.CREATED)
+////                        newDataSources.add(newSource.getId());
+////                    else
+//                    if (ObjectUtils.in(newSource.getStatus(), Status.INITIALIZED, Status.STARTED))
+//                        syncDataSource(newSource, null);
+//                }finally{
+//                    lock.unlock();
+//                }
+//            }else
+//                logger.error(String.format(
+//                        "Error syncing database manager (%s). Locking error.", getPath()));
+//        }
+//    }
 
     @Override
     public void nodeRemoved(Node removedNode)
@@ -178,15 +185,25 @@ public class RRDatabaseManager extends BaseNode
     {
         if (getStatus()==Status.STARTED   
             && isNotInDatabaseManager(node) 
-            && !node.isTemplate()
-            && ObjectUtils.in(node.getStatus(), Status.INITIALIZED, Status.STARTED))
+            && !node.isTemplate())
         {
             if (lock.tryLock())
             {
                 try
                 {
-                    if (!managedDatasources.containsKey(node))
-                            syncDataSource((DataSource) node, null);
+                    //adding datasource to the database manager
+                    if (oldStatus==Status.CREATED && newStatus==Status.INITIALIZED)
+                    {
+                        if (!managedDatasources.containsKey(node))
+                                syncDataSource((DataSource) node, null);
+                    }
+                    //stoping or removing datasource from database manager
+//                    if (newStatus==Status.REMOVED && managedDatasources.containsKey(node))
+//                    {
+//                        RRDataSource rrds = managedDatasources.get(node);
+//                        removeRRDataSource((DataSource)node, rrds, null);
+//                    }
+                        
                 }finally{
                     lock.unlock();
                 }
@@ -254,16 +271,7 @@ public class RRDatabaseManager extends BaseNode
                     {
                         Map.Entry<DataSource, RRDataSource> entry = it.next();
                         if (!pipes.contains(entry.getKey()))
-                        {
-                            switch (removePolicy)
-                            {
-                                case STOP_DATABASES : entry.getValue().stop(); break;
-                                case REMOVE_DATABASES : 
-                                    removeRRDataSource(entry.getKey(), entry.getValue(), it); break;
-                            }
-                            if (removePolicy==RemovePolicy.STOP_DATABASES)
-                                entry.getValue().stop();
-                        }
+                            removeRRDataSource(entry.getKey(), entry.getValue(), it);
                     }
                 }
             }finally
@@ -274,21 +282,24 @@ public class RRDatabaseManager extends BaseNode
             logger.error(String.format("Error syncing database manager (%s). Locking error."));
     }
     
-    private void removeRRDataSource(DataSource dataSource, RRDataSource rrds, Iterator it)
+    void removeRRDataSource(DataSource dataSource, RRDataSource rrds, Iterator it)
     {
         try 
         {
-            RRDNode rrd = (RRDNode) rrds.getParent();
-            int dsCount = 0;
-            if (rrd.getChildrens()!=null)
-                for (Node child: rrd.getChildrens())
-                    if (child instanceof RRDataSource)
-                        ++dsCount;
-            if (dsCount>1)
-                tree.remove(rrds); 
+            if (removePolicy==RemovePolicy.REMOVE_DATABASES)
+            {
+                RRDNode rrd = (RRDNode) rrds.getParent();
+                int dsCount = rrd.getDataSourceCount();
+                if (dsCount>1)
+                    tree.remove(rrds); 
+                else
+                    tree.remove(rrd);
+                
+            }
+            if (it!=null)
+                it.remove();
             else
-                tree.remove(rrd);
-            it.remove();
+                managedDatasources.remove(dataSource);
         }
         catch(Throwable e)
         {

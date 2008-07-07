@@ -155,6 +155,8 @@ public class BaseNode implements Node, NodeListener
     
     private void processListeners(NodeAttributeImpl attr, Object newValue, Object oldValue)
     {
+        this.nodeAttributeValueChanged(attr.getOwner(), attr, oldValue, newValue);
+        
         if (listeners != null)
         {
             for (NodeListener listener : listeners)

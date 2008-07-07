@@ -22,11 +22,14 @@ import java.util.Collection;
 import java.util.List;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
+import org.raven.rrd.RRDatabaseManager.RemovePolicy;
 import org.raven.rrd.data.RRDNode;
 import org.raven.rrd.data.RRDataSource;
 import org.raven.tree.Node;
+import org.raven.tree.Node.Status;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 /**
  *
  * @author Mikhail Titov
@@ -34,6 +37,7 @@ import org.raven.tree.NodeAttribute;
 public class DatabasesEntry extends BaseNode
 {
 //    private List<RRDataSource> uninitializedDataSources = new ArrayList<RRDataSource>();
+    private Node removingNode;
 
     public DatabasesEntry()
     {
@@ -41,30 +45,75 @@ public class DatabasesEntry extends BaseNode
         setInitializeAfterChildrens(true);
     }
 
-//    @Override
-//    protected void doInit() throws Exception
-//    {
-//        super.doInit();
-//        
-//        for (RRDataSource rrds: uninitializedDataSources)
-//            getDatabaseManager().addManagedDatasource(rrds.getDataSource(), rrds);
-//    }
-//
-//    @Override
-//    public void childrenAdded(Node owner, Node children)
-//    {
-//        super.childrenAdded(owner, children);
-//        
-//        if (children instanceof RRDataSource)
-//        {
-//            RRDataSource rrds = (RRDataSource) children;
-//            if (getStatus()==Status.CREATED)
-//                uninitializedDataSources.add(rrds);
-//            else if (Object)
-//                getDatabaseManager().addManagedDatasource(rrds.getDataSource(), rrds);
-//        }
-//    }
+    @Override
+    public void nodeStatusChanged(Node node, Status oldStatus, Status newStatus) 
+    {
+        if (node instanceof RRDataSource)
+        {
+            if (getStatus()==Status.CREATED && newStatus==Status.INITIALIZED)
+            {
+                RRDataSource rrds = (RRDataSource)node;
+                DataSource ds = rrds.getDataSource();
+                if (ds!=null)
+                    getDatabaseManager().addManagedDatasource(ds, rrds);
+            }
+            if (newStatus==Status.REMOVED)
+            {
+                RRDatabaseManager databaseManager = getDatabaseManager();
+                RRDataSource rrds = (RRDataSource) node;
+                DataSource ds = ((RRDataSource)node);
+                if (ds!=null)
+                {
+                    databaseManager.getLock().lock();
+                    try{
+                       if (node!=removingNode) 
+                           databaseManager.removeRRDataSource(ds, rrds, null);
+                    }finally{
+                        databaseManager.getLock().unlock();
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    public void nodeAttributeValueChanged(
+            Node node, NodeAttribute attribute, Object oldValue, Object newValue) 
+    {
+        super.nodeAttributeValueChanged(node, attribute, oldValue, newValue);
+        
+        if (   newValue==null 
+            && node instanceof RRDataSource 
+            && AbstractDataConsumer.DATASOURCE_ATTRIBUTE.equals(attribute.getName()))
+        {
+            RRDatabaseManager databaseManager = getDatabaseManager();
+            databaseManager.getLock().lock();
+            DataSource ds = (DataSource) oldValue;
+            RRDataSource rrds = (RRDataSource) node;
+            try{
+                if (databaseManager.getRemovePolicy()==RemovePolicy.REMOVE_DATABASES)
+                {
+                    removingNode = node;
+                    databaseManager.removeRRDataSource(ds, rrds, null);
+                    removeRRDataSource((RRDataSource)node);
+                } else
+                    databaseManager.removeManagedDatasource((DataSource) oldValue);
+            }finally{
+                databaseManager.getLock().unlock();
+            }
+        }
+    }
     
+    private void removeRRDataSource(RRDataSource rrds)
+    {
+        RRDNode rrd = (RRDNode) rrds.getParent();
+        int dsCount = rrd.getDataSourceCount();
+        if (dsCount>1)
+            tree.remove(rrds); 
+        else
+            tree.remove(rrd);
+    }
+
     public void addDataSource(Node templateNode, DataSource dataSource)
     {
         Collection<Node> childs = getChildrens();
@@ -98,6 +147,7 @@ public class DatabasesEntry extends BaseNode
                 templateDataSource, rrd, ""+(rrd.getChildrenCount()+1), null, true, false);
             NodeAttribute dataSourceAttr = 
                     rrds.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE);
+            dataSourceAttr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
             dataSourceAttr.setValue(dataSource.getPath());
             dataSourceAttr.save();
             rrds.start();
@@ -136,6 +186,7 @@ public class DatabasesEntry extends BaseNode
             rrds.save();
             NodeAttribute dataSourceAttr = 
                     rrds.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE);
+            dataSourceAttr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
             dataSourceAttr.setValue(dataSource.getPath());
             dataSourceAttr.save();
             dataSource.save();
