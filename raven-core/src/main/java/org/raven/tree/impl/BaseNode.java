@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.CopyOnWriteArraySet;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -243,7 +244,7 @@ public class BaseNode implements Node, NodeListener
     public synchronized void addListener(NodeListener listener)
     {
         if (listeners==null)
-            listeners = new HashSet<NodeListener>();
+            listeners = new CopyOnWriteArraySet<NodeListener>();
         
         listeners.add(listener);
         if (listener.isSubtreeListener() && childrens!=null)
@@ -718,12 +719,18 @@ public class BaseNode implements Node, NodeListener
         try
         {
             if (listeners!=null)
-                for (Iterator<NodeListener> it=listeners.iterator(); it.hasNext();)
+            {
+                List<NodeListener> listenersToRemove = 
+                        new ArrayList<NodeListener>(listeners.size());
+                for (NodeListener listener: listeners)
                 {
-                    boolean removeListener = it.next().nodeAttributeRemoved(this, attr);
+                    boolean removeListener = listener.nodeAttributeRemoved(this, attr);
                     if (removeListener)
-                        it.remove();
+                        listenersToRemove.add(listener);
                 }
+                if (listenersToRemove.size()>0)
+                    listeners.removeAll(listenersToRemove);
+            }
             if (attributesListeners!=null)
             {
                 Set<NodeAttributeListener> listenersSet = attributesListeners.get(attr);

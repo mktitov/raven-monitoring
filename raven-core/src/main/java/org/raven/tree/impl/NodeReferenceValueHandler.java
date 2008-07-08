@@ -17,6 +17,8 @@
 
 package org.raven.tree.impl;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
@@ -75,21 +77,30 @@ public class NodeReferenceValueHandler
         }
     }
     
-    protected void resolveNode(String data) throws InvalidPathException
+    protected void resolveNode(String data)
     {
         if (ObjectUtils.equals(this.data, data) && expressionValid)
             return;
         
-        Node currentNode = null;
-//        PathElement[] newPathElements = null;
-        if (data!=null && data.length()>0)
+        try 
         {
-            PathInfo<Node> pathInfo = pathResolver.resolvePath(data, attribute.getOwner());
-            currentNode = pathInfo.getReferencedObject();
-            pathElements = pathInfo.getPathElements();
+            Node currentNode = null;
+    //        PathElement[] newPathElements = null;
+            if (data!=null && data.length()>0)
+            {
+                    PathInfo<Node> pathInfo = pathResolver.resolvePath(data, attribute.getOwner());
+                    currentNode = pathInfo.getReferencedObject();
+                    pathElements = pathInfo.getPathElements();
+            } 
+            node = currentNode;
+            expressionValid = true;
+        }
+        catch (InvalidPathException ex) 
+        {
+            expressionValid = false;
+            node = null;
         }
 
-        node = currentNode;
         this.data = data;
     }
 
@@ -108,7 +119,7 @@ public class NodeReferenceValueHandler
         if (!ObjectUtils.equals(this.data, oldData) && !slaveMode)
             attribute.save();
         
-        expressionValid = true;
+//        expressionValid = true;
     }
     
     public String getData()

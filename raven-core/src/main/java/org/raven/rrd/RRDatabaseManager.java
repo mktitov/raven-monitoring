@@ -342,8 +342,11 @@ public class RRDatabaseManager extends BaseNode
                 }
                 if (pipes!=null)
                     pipes.add(dataSource.getId());
-                if (!managedDatasources.containsKey(dataSource))
+                if (   !managedDatasources.containsKey(dataSource) 
+                    && dataSource.getStatus()==Status.STARTED)
+                {
                     addNewDataSource(dataSource, dataType);
+                }
             }
             finally
             {
@@ -431,8 +434,8 @@ public class RRDatabaseManager extends BaseNode
         if (   node instanceof DataSource 
             && !this.equals(node)
             && !(node instanceof RRDataSource)
-            && !node.isTemplate()
-            && node.getStatus()==Status.STARTED)
+            && ObjectUtils.in(node.getStatus(), Status.INITIALIZED, Status.STARTED)
+            && !node.isTemplate())
         {
             syncDataSource((DataSource)node, dataPipes);
         }

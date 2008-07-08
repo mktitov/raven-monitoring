@@ -155,8 +155,9 @@ public class TreeImpl implements Tree
         logger.info(String.format("Tree nodes initialized in %d seconds", operationTime));
         
         logger.info("Starting tree nodes");
+        long curTime2 = System.currentTimeMillis();
         start(rootNode, true);
-        operationTime = (System.currentTimeMillis()-curTime)/1000;
+        operationTime = (System.currentTimeMillis()-curTime2)/1000;
         logger.info(String.format("Tree nodes started in %d seconds", operationTime));
         
         operationTime = (System.currentTimeMillis()-curTime)/1000;

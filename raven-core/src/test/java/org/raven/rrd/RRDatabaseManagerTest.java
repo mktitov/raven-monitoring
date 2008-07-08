@@ -30,6 +30,8 @@ import org.raven.ds.impl.DataPipeImpl;
 import org.raven.rrd.data.RRArchive;
 import org.raven.rrd.data.RRDNode;
 import org.raven.rrd.data.RRDataSource;
+import org.raven.rrd.objects.TestDataSource2;
+import org.raven.rrd.objects.TestDataSource3;
 import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
@@ -44,10 +46,10 @@ import org.raven.tree.impl.NodeAttributeImpl;
 public class RRDatabaseManagerTest extends RavenCoreTestCase
 {
     RRDatabaseManager databaseManager;
-    DataPipeImpl source_d1 = null;
-    DataPipeImpl source_i1 = null;
-    DataPipeImpl source_i2 = null;
-    DataPipeImpl source_i3 = null;
+    DataSource source_d1 = null;
+    DataSource source_i1 = null;
+    DataSource source_i2 = null;
+    DataSource source_i3 = null;
     
     @Before
     public void prepareTest()
@@ -92,8 +94,6 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
         databaseManager.getNodeAttribute("dataSourcesPerDatabase").setValue("2");
         databaseManager.getNodeAttribute("startingPoint").setValue(sourcesRoot.getPath());
         databaseManager.start();
-//        databaseManager.stop();
-//        databaseManager.start();
         assertEquals(Status.STARTED, databaseManager.getStatus());
         checkDefaultEntry();
         checkInterfaceEntry();
@@ -110,14 +110,31 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
         initTemplate();
         Node sourcesRoot = initDatasources();
         databaseManager.getNodeAttribute("dataSourcesPerDatabase").setValue("2");
+        databaseManager.getNodeAttribute("dataSourcesPerDatabase").save();
         databaseManager.getNodeAttribute("startingPoint").setValue(sourcesRoot.getPath());
+        databaseManager.getNodeAttribute("startingPoint").save();
         databaseManager.getNodeAttribute(RRDatabaseManager.REMOVEPOLICY_ATTRIBUTE)
                 .setValue(RRDatabaseManager.RemovePolicy.STOP_DATABASES.toString());
+        databaseManager.getNodeAttribute(RRDatabaseManager.REMOVEPOLICY_ATTRIBUTE).save();
+
         databaseManager.start();
         
-        DataPipeImpl newDs = createSource(sourcesRoot, "newDataPipe", "interface");
+        DataSource newDs = createSource2(sourcesRoot, "newDataPipe", "interface");
         
         Set<Node> dependentNodes = newDs.getDependentNodes();
+        assertNotNull(dependentNodes);
+        assertEquals(1, dependentNodes.size());
+        
+        tree.reloadTree();
+        
+        databaseManager = (RRDatabaseManager) tree.getNode(databaseManager.getPath());
+        assertEquals(Status.STARTED, databaseManager.getStatus());
+        
+        newDs = (DataSource) tree.getNode(newDs.getPath());
+        assertEquals(newDs.getStatus(), Status.INITIALIZED);
+        assertNotNull(newDs);
+        newDs.start();
+        dependentNodes = newDs.getDependentNodes();
         assertNotNull(dependentNodes);
         assertEquals(1, dependentNodes.size());
     }
@@ -383,10 +400,10 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
         return sourcesRoot;
     }
     
-    private DataPipeImpl createSource(Node parent, String sourceName, String datatype) 
+    private DataSource createSource(Node parent, String sourceName, String datatype) 
             throws Exception
     {
-        DataPipeImpl source = new DataPipeImpl();
+        DataSource source = new TestDataSource2();
         source.setName(sourceName);
         parent.addChildren(source);
         store.saveNode(source);
@@ -400,6 +417,31 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
         dataTypeAttr.save();
         
         source.start();
+        
+        assertEquals(Status.STARTED, source.getStatus());
+        
+        return source;
+    }
+
+    private DataSource createSource2(Node parent, String sourceName, String datatype) 
+            throws Exception
+    {
+        DataSource source = new TestDataSource3();
+        source.setName(sourceName);
+        parent.addChildren(source);
+        store.saveNode(source);
+        source.init();
+        
+        NodeAttribute dataTypeAttr = new NodeAttributeImpl(
+                databaseManager.getDataTypeAttributeName(), String.class, datatype, null);
+        dataTypeAttr.setOwner(source);
+        source.addNodeAttribute(dataTypeAttr);
+        dataTypeAttr.init();
+        dataTypeAttr.save();
+        
+        source.start();
+        
+        assertEquals(Status.STARTED, source.getStatus());
         
         return source;
     }

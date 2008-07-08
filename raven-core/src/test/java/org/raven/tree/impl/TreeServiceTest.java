@@ -288,6 +288,7 @@ public class TreeServiceTest extends ServiceTestCase
         expect(listener.isSubtreeListener()).andReturn(false);
         listener.childrenAdded(node, child);
         expect(childListener.isSubtreeListener()).andReturn(false);
+        childListener.nodeStatusChanged(child, Status.CREATED, Status.REMOVED);
         childListener.nodeRemoved(child);
         
         replay(listener, childListener);
