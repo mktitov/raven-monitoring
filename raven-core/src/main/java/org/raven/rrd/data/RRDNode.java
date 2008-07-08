@@ -167,6 +167,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
     public synchronized void remove() 
     {
         super.remove();
+        
         if (databaseFileName!=null && databaseFileName.length()>0)
         {
             File dbFile = new File(databaseFileName);

@@ -49,6 +49,11 @@ public class RRDatabaseManager extends BaseNode
 {
     public static final String DEFAULT_DATABASE_TEMPLATE = "DEFAULT";
     public final static String DEFAULT_DATA_TYPE_ATTRIBUTE_NAME = "dataType";
+    
+    public final static String DATATYPEATTRIBUTE_NAME = "dataTypeAttributeName";
+    public final static String DATASOURCESPERDATABASE = "dataSourcesPerDatabase";
+    public final static String STARTINGPOINT_ATTRIBUTE = "startingPoint";
+    public final static String REMOVEPOLICY_ATTRIBUTE = "removePolicy";
 
     public enum RemovePolicy {STOP_DATABASES, REMOVE_DATABASES}
     
@@ -192,7 +197,7 @@ public class RRDatabaseManager extends BaseNode
                 try
                 {
                     //adding datasource to the database manager
-                    if (oldStatus==Status.CREATED && newStatus==Status.INITIALIZED)
+                    if (newStatus==Status.STARTED)
                     {
                         if (!managedDatasources.containsKey(node))
                                 syncDataSource((DataSource) node, null);
@@ -337,7 +342,8 @@ public class RRDatabaseManager extends BaseNode
                 }
                 if (pipes!=null)
                     pipes.add(dataSource.getId());
-                addNewDataSource(dataSource, dataType);
+                if (!managedDatasources.containsKey(dataSource))
+                    addNewDataSource(dataSource, dataType);
             }
             finally
             {
@@ -426,7 +432,7 @@ public class RRDatabaseManager extends BaseNode
             && !this.equals(node)
             && !(node instanceof RRDataSource)
             && !node.isTemplate()
-            && !managedDatasources.containsKey(node))
+            && node.getStatus()==Status.STARTED)
         {
             syncDataSource((DataSource)node, dataPipes);
         }

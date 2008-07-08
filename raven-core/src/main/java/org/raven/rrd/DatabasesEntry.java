@@ -17,9 +17,7 @@
 
 package org.raven.rrd;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.rrd.RRDatabaseManager.RemovePolicy;
@@ -61,13 +59,13 @@ public class DatabasesEntry extends BaseNode
             {
                 RRDatabaseManager databaseManager = getDatabaseManager();
                 RRDataSource rrds = (RRDataSource) node;
-                DataSource ds = ((RRDataSource)node);
+                DataSource ds = rrds.getDataSource();
                 if (ds!=null)
                 {
                     databaseManager.getLock().lock();
                     try{
                        if (node!=removingNode) 
-                           databaseManager.removeRRDataSource(ds, rrds, null);
+                           databaseManager.removeManagedDatasource(ds);
                     }finally{
                         databaseManager.getLock().unlock();
                     }
@@ -95,7 +93,6 @@ public class DatabasesEntry extends BaseNode
                 {
                     removingNode = node;
                     databaseManager.removeRRDataSource(ds, rrds, null);
-                    removeRRDataSource((RRDataSource)node);
                 } else
                     databaseManager.removeManagedDatasource((DataSource) oldValue);
             }finally{
@@ -104,16 +101,6 @@ public class DatabasesEntry extends BaseNode
         }
     }
     
-    private void removeRRDataSource(RRDataSource rrds)
-    {
-        RRDNode rrd = (RRDNode) rrds.getParent();
-        int dsCount = rrd.getDataSourceCount();
-        if (dsCount>1)
-            tree.remove(rrds); 
-        else
-            tree.remove(rrd);
-    }
-
     public void addDataSource(Node templateNode, DataSource dataSource)
     {
         Collection<Node> childs = getChildrens();

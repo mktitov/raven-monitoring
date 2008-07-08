@@ -1,5 +1,5 @@
 /*
- *  Copyright 2008 tim.
+ *  Copyright 2008 Mikhail Titov.
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -286,7 +286,8 @@ public class BaseNode implements Node, NodeListener
     public void removeChildren(Node node)
     {
         if (logger.isDebugEnabled())
-            logger.debug("Removing children node (%s) from (%s) node", node.getPath(), getPath());
+            logger.debug(String.format(
+                    "Removing children node (%s) from (%s) node", node.getPath(), getPath()));
         
         if (childrens!=null)
         {
@@ -574,7 +575,8 @@ public class BaseNode implements Node, NodeListener
 
     public synchronized void remove() 
     {
-        status = Status.REMOVED;
+//        status = Status.REMOVED;
+        setStatus(Status.REMOVED);
         fireNodeRemoved();
     }
     

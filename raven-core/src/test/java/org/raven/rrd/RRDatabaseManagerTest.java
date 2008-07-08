@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
@@ -43,10 +44,10 @@ import org.raven.tree.impl.NodeAttributeImpl;
 public class RRDatabaseManagerTest extends RavenCoreTestCase
 {
     RRDatabaseManager databaseManager;
-    DataPipeImpl source_d1;
-    DataPipeImpl source_i1;
-    DataPipeImpl source_i2;
-    DataPipeImpl source_i3;
+    DataPipeImpl source_d1 = null;
+    DataPipeImpl source_i1 = null;
+    DataPipeImpl source_i2 = null;
+    DataPipeImpl source_i3 = null;
     
     @Before
     public void prepareTest()
@@ -101,6 +102,190 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
         
         checkDefaultEntry();
         checkInterfaceEntry();
+    }
+    
+    @Test
+    public void addDataToStartingPoint() throws Exception
+    {
+        initTemplate();
+        Node sourcesRoot = initDatasources();
+        databaseManager.getNodeAttribute("dataSourcesPerDatabase").setValue("2");
+        databaseManager.getNodeAttribute("startingPoint").setValue(sourcesRoot.getPath());
+        databaseManager.getNodeAttribute(RRDatabaseManager.REMOVEPOLICY_ATTRIBUTE)
+                .setValue(RRDatabaseManager.RemovePolicy.STOP_DATABASES.toString());
+        databaseManager.start();
+        
+        DataPipeImpl newDs = createSource(sourcesRoot, "newDataPipe", "interface");
+        
+        Set<Node> dependentNodes = newDs.getDependentNodes();
+        assertNotNull(dependentNodes);
+        assertEquals(1, dependentNodes.size());
+    }
+    
+    @Test
+    public void stopDatabaseRemovePolicyTest() throws Exception
+    {
+        initTemplate();
+        Node sourcesRoot = initDatasources();
+        databaseManager.getNodeAttribute("dataSourcesPerDatabase").setValue("2");
+        databaseManager.getNodeAttribute("startingPoint").setValue(sourcesRoot.getPath());
+        databaseManager.getNodeAttribute(RRDatabaseManager.REMOVEPOLICY_ATTRIBUTE)
+                .setValue(RRDatabaseManager.RemovePolicy.STOP_DATABASES.toString());
+        databaseManager.start();
+        
+        assertNotNull(source_d1);
+        Set<Node> dependentNodes = source_d1.getDependentNodes();
+        assertNotNull(dependentNodes);
+        assertEquals(1, dependentNodes.size());
+        RRDataSource rrds = (RRDataSource) dependentNodes.iterator().next();
+        assertNotNull(rrds);
+        assertEquals(Status.STARTED, rrds.getStatus());
+        
+        tree.remove(source_d1);
+        
+        Node parent = tree.getNode(rrds.getParent().getPath());
+        assertNotNull(parent);
+        assertSame(rrds, parent.getChildren(rrds.getName()));
+        assertEquals(Status.INITIALIZED, rrds.getStatus());
+    }
+    
+    @Test
+    public void removeDatabaseRemovePolicyTest() throws Exception
+    {
+        initTemplate();
+        Node sourcesRoot = initDatasources();
+        databaseManager.getNodeAttribute("dataSourcesPerDatabase").setValue("2");
+        databaseManager.getNodeAttribute("startingPoint").setValue(sourcesRoot.getPath());
+        databaseManager.getNodeAttribute(RRDatabaseManager.REMOVEPOLICY_ATTRIBUTE)
+                .setValue(RRDatabaseManager.RemovePolicy.REMOVE_DATABASES.toString());
+        databaseManager.start();
+        
+        assertNotNull(source_d1);
+        Set<Node> dependentNodes = source_d1.getDependentNodes();
+        assertNotNull(dependentNodes);
+        assertEquals(1, dependentNodes.size());
+        RRDataSource rrds = (RRDataSource) dependentNodes.iterator().next();
+        assertNotNull(rrds);
+        assertEquals(Status.STARTED, rrds.getStatus());
+        
+        tree.remove(source_d1);
+        
+        assertEquals(Status.REMOVED, rrds.getStatus());
+        assertEquals(Status.REMOVED, rrds.getParent().getStatus());
+        try{
+            tree.getNode(rrds.getPath());
+            fail();
+        }catch(InvalidPathException e){}
+        try{
+            tree.getNode(rrds.getParent().getPath());
+            fail();
+        }catch(InvalidPathException e){}
+        
+        tree.reloadTree();
+        
+        try{
+            tree.getNode(rrds.getPath());
+            fail();
+        }catch(InvalidPathException e){}
+        try{
+            tree.getNode(rrds.getParent().getPath());
+            fail();
+        }catch(InvalidPathException e){}
+    }
+
+    @Test
+    public void removeDatabaseRemovePolicyTest2() throws Exception
+    {
+        initTemplate();
+        Node sourcesRoot = initDatasources();
+        databaseManager.getNodeAttribute("dataSourcesPerDatabase").setValue("3");
+        databaseManager.getNodeAttribute("startingPoint").setValue(sourcesRoot.getPath());
+        databaseManager.getNodeAttribute(RRDatabaseManager.REMOVEPOLICY_ATTRIBUTE)
+                .setValue(RRDatabaseManager.RemovePolicy.REMOVE_DATABASES.toString());
+        databaseManager.start();
+
+//        RRDataSource rrds = null;
+        Node dataSource = source_i1;
+        
+        assertNotNull(dataSource);
+        Set<Node> dependentNodes = dataSource.getDependentNodes();
+        assertNotNull(dependentNodes);
+        assertEquals(1, dependentNodes.size());
+        RRDataSource rrds = (RRDataSource) dependentNodes.iterator().next();
+        assertNotNull(rrds);
+        assertEquals(Status.STARTED, rrds.getStatus());
+        
+        assertNotNull(rrds);
+        
+        assertEquals(Status.STARTED, rrds.getStatus());
+        
+        tree.remove(dataSource);
+        
+        assertEquals(Status.REMOVED, rrds.getStatus());
+        assertEquals(Status.STARTED, rrds.getParent().getStatus());
+        Node rrd = tree.getNode(rrds.getParent().getPath());
+        assertNotNull(rrd);
+        assertEquals(Status.STARTED, rrd.getStatus());
+        try{
+            tree.getNode(rrds.getPath());
+            fail();
+        }catch(InvalidPathException e){}
+        
+        tree.reloadTree();
+        
+        rrd = tree.getNode(rrds.getParent().getPath());
+        assertNotNull(rrd);
+        assertEquals(Status.STARTED, rrd.getStatus());
+        try{
+            tree.getNode(rrds.getPath());
+            fail();
+        }catch(InvalidPathException e){}
+    }
+    
+    @Test
+    public void manualRemoveRRDataSource() throws Exception
+    {
+        initTemplate();
+        Node sourcesRoot = initDatasources();
+        databaseManager.getNodeAttribute("dataSourcesPerDatabase").setValue("3");
+        databaseManager.getNodeAttribute("startingPoint").setValue(sourcesRoot.getPath());
+        databaseManager.getNodeAttribute(RRDatabaseManager.REMOVEPOLICY_ATTRIBUTE)
+                .setValue(RRDatabaseManager.RemovePolicy.REMOVE_DATABASES.toString());
+        databaseManager.start();
+
+//        RRDataSource rrds = null;
+        Node dataSource = source_i1;
+        
+        assertNotNull(dataSource);
+        Set<Node> dependentNodes = dataSource.getDependentNodes();
+        assertNotNull(dependentNodes);
+        assertEquals(1, dependentNodes.size());
+        RRDataSource rrds = (RRDataSource) dependentNodes.iterator().next();
+        assertNotNull(rrds);
+        assertEquals(Status.STARTED, rrds.getStatus());
+        
+        assertNotNull(rrds);
+        
+        assertEquals(Status.STARTED, rrds.getStatus());
+        
+        tree.remove(rrds);
+        
+        assertEquals(Status.REMOVED, rrds.getStatus());
+        dependentNodes = dataSource.getDependentNodes();
+        assertEquals(0, dependentNodes.size());
+        
+        try{
+            tree.getNode(rrds.getPath());
+            fail();
+        }catch(InvalidPathException e){}
+        
+        databaseManager.stop();
+        databaseManager.start();
+        
+        dependentNodes = dataSource.getDependentNodes();
+        assertEquals(1, dependentNodes.size());
+        rrds = (RRDataSource) dependentNodes.iterator().next();
+        assertNotNull(rrds);
     }
 
     private void checkDefaultEntry() throws InvalidPathException
@@ -213,6 +398,8 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
         source.addNodeAttribute(dataTypeAttr);
         dataTypeAttr.init();
         dataTypeAttr.save();
+        
+        source.start();
         
         return source;
     }

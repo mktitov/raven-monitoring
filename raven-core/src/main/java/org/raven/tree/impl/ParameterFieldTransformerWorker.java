@@ -38,7 +38,6 @@ public class ParameterFieldTransformerWorker implements FieldTransformWorker
             {
                 String body = String.format(
                         "{ " +
-                        "System.out.println(\">>>getter(): \"+%1$s);" +
                         "$_ = ($r)%2$s.getParameterValue(this, \"%1$s\", this.%1$s);" +
 //                        "if (this.%1$s==null) " +
 //                        "{ " +
