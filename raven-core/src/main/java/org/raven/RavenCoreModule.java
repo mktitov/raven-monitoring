@@ -28,6 +28,9 @@ import org.raven.conf.impl.ConfiguratorImpl;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.SystemDataSourceReferenceValues;
 import org.raven.ds.impl.SystemDataSourceValueHandlerFactory;
+import org.raven.expr.ExpressionCompiler;
+import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
+import org.raven.expr.impl.ExpressionCompilerImpl;
 import org.raven.impl.AttributeReferenceToStringConverter;
 import org.raven.impl.EnumReferenceValues;
 import org.raven.impl.NodeToStringConverter;
@@ -43,7 +46,6 @@ import org.raven.tree.AttributeValueHandlerFactory;
 import org.raven.tree.AttributeValueHandlerRegistry;
 import org.raven.tree.NodePathResolver;
 import org.raven.tree.Tree;
-import org.raven.tree.impl.AttributeReferenceValueHandler;
 import org.raven.tree.impl.AttributeReferenceValueHandlerFactory;
 import org.raven.tree.impl.AttributeValueHandlerRegistryImpl;
 import org.raven.tree.impl.NodePathResolverImpl;
@@ -61,6 +63,7 @@ public class RavenCoreModule
     public static void bind(ServiceBinder binder)
     {
         binder.bind(Configurator.class, ConfiguratorImpl.class);
+        binder.bind(ExpressionCompiler.class, ExpressionCompilerImpl.class);
     }
     
     public static Configurator buildConfigurator(Map<String, Class> treeStoreEngines)
@@ -136,6 +139,9 @@ public class RavenCoreModule
         conf.add(
             SystemDataSourceValueHandlerFactory.TYPE
             , new SystemDataSourceValueHandlerFactory(pathResolver));
+        conf.add(
+            ExpressionAttributeValueHandlerFactory.TYPE
+            , new ExpressionAttributeValueHandlerFactory());
     }
     
     public static void contributeAttributeReferenceValues(

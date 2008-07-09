@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArraySet;
+import javax.script.Bindings;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -1065,6 +1066,12 @@ public class BaseNode implements Node, NodeListener
     public String toString()
     {
         return name;
+    }
+
+    public void formExpressionBindings(Bindings bindings) 
+    {
+        if (parent!=null)
+            parent.formExpressionBindings(bindings);
     }
 
 }

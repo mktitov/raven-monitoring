@@ -20,6 +20,7 @@ package org.raven.tree;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import javax.script.Bindings;
 import org.raven.tree.store.TreeStore;
 import org.slf4j.Logger;
 import org.weda.annotations.Description;
@@ -315,6 +316,8 @@ public interface Node extends Cloneable, Comparable<Node>
      * @throws java.lang.CloneNotSupportedException
      */
     public Node cloneTo(Node dest, String newNodeName) throws CloneNotSupportedException;
-//    public Node copyTo(Node destination, NodeTuner nodeTuner, boolean save);
-    
+    /**
+     * Method adds expression bindings to the bindings object passed in the parameter.
+     */
+    public void formExpressionBindings(Bindings bindings);
 }
