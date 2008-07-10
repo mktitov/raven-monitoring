@@ -50,6 +50,11 @@ public interface NodeParameter
      */
     public Class getType();
     /**
+     * Returns the default value handler type
+     * @return
+     */
+    public String getValueHandlerType();
+    /**
      * The format string that used to convert value to string and vice versa.
      */
     public String getPattern();

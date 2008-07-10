@@ -154,6 +154,19 @@ public interface Node extends Cloneable, Comparable<Node>
      */
     public Collection<Node> getSortedChildrens();
     /**
+     * Return <code>true</code> if this node is conditional.
+     * @see #getEffectiveChildrens()
+     */
+    public boolean isConditionalNode();
+    /**
+     * Returns the childrens of a this node excluding {@link #isConditionalNode() conditional nodes}
+     * and the {@link #getEffectiveChildrens() effective childrens} of the conditional nodes. 
+     * Returned nodes are sorted by the {@link #getIndex() index property} and effective childrens 
+     * from the {@link #isConditionalNode() conditional nodes} are inserted to the returned list at
+     * the conditional node position.
+     */
+    public Collection<Node> getEffectiveChildrens();
+    /**
      * Returns the children node by its name or <code>null</code> if no children node with specified
      * name.
      * @param name the children node name

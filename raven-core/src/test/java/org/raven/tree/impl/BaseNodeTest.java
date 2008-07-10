@@ -17,10 +17,14 @@
 
 package org.raven.tree.impl;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
 import org.junit.Assert;
 import org.junit.Test;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import static org.easymock.EasyMock.*;
 
 /**
  *
@@ -34,7 +38,6 @@ public class BaseNodeTest extends Assert
         BaseNode parent = new BaseNode();
         parent.setName("parent");
         
-//        Class[] childTypes = new Class[]{BaseNode.class};
         BaseNode node = new BaseNode();
         node.setName("node");
         node.setId(1);
@@ -45,11 +48,6 @@ public class BaseNodeTest extends Assert
         attr.setType(String.class);
         attr.setOwner(node);
         node.addNodeAttribute(attr);
-        
-//        BaseNode child = new BaseNode();
-//        child.setName("child");
-//        node.addChildren(child);
-//        child.setId(2);
         
         //
         Node nodeClone = (Node) node.clone();
@@ -66,10 +64,57 @@ public class BaseNodeTest extends Assert
         assertNotSame(attr, attrClone);
         assertEquals(0, attrClone.getId());
         assertEquals(String.class, attrClone.getType());
+    }
+    
+    @Test
+    public void getEffectiveChildrens()
+    {
+        BaseNode node = new BaseNode();
+        assertNull(node.getEffectiveChildrens());
         
-//        Node childClone = nodeClone.getChildren("child");
-//        assertNotNull(childClone);
-//        assertNotSame(child, childClone);
-//        assertSame(nodeClone, childClone.getParent());
+        Node child1 = createMock("child1", Node.class);
+        Node child3 = createMock("child3", Node.class);
+        Node condChild = createMock("condChild", Node.class);
+        
+        child1.setParent(node);
+        child1.addListener(node);
+        expect(child1.getName()).andReturn("child1");
+        expect(child1.compareTo(child3)).andReturn(-1);
+        expect(child1.compareTo(condChild)).andReturn(-1);
+        expect(child1.getIndex()).andReturn(1);
+        expect(child1.isConditionalNode()).andReturn(false);
+        
+        Node condChildChild = createMock("condChildChild", Node.class);
+        
+        condChild.setParent(node);
+        condChild.addListener(node);
+        expect(condChild.getName()).andReturn("condChild");
+        expect(condChild.isConditionalNode()).andReturn(true);
+        expect(condChild.getIndex()).andReturn(2);
+        expect(condChild.getEffectiveChildrens()).andReturn(Arrays.asList(condChildChild));
+        
+        child3.setParent(node);
+        child3.addListener(node);
+        expect(child3.getName()).andReturn("child3");
+        expect(child3.getIndex()).andReturn(3);
+        expect(child3.compareTo(condChild)).andReturn(1);
+        expect(child3.isConditionalNode()).andReturn(false);
+        
+        replay(child1, condChild, condChildChild, child3);
+        
+        node.addChildren(child3);
+        node.addChildren(child1);
+        node.addChildren(condChild);
+        
+        Collection childs = node.getEffectiveChildrens();
+        assertNotNull(childs);
+        assertEquals(3, childs.size());
+        
+        Iterator<Node> it = childs.iterator();
+        assertSame(child1, it.next());
+        assertSame(condChildChild, it.next());
+        assertSame(child3, it.next());
+        
+        verify(child1, condChild, condChildChild, child3);
     }
 }

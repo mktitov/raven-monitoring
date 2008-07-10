@@ -21,14 +21,10 @@ import java.lang.annotation.Annotation;
 import java.util.List;
 import org.raven.annotations.Parameter;
 import org.raven.tree.Node;
-import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeParameter;
 import org.weda.annotations.constraints.NotNull;
-import org.weda.beans.GetOperation;
 import org.weda.beans.PropertyDescriptor;
-import org.weda.beans.SetOperation;
-import org.weda.constraints.ConstraintException;
 import org.weda.constraints.ReferenceValue;
 import org.weda.constraints.TooManyReferenceValuesException;
 import org.weda.internal.annotations.Service;
@@ -49,6 +45,7 @@ public class NodeParameterImpl implements NodeParameter
     private final Node node;
     private final String name;        
     private final String defaultValue;
+    private final String valueHandlerType;
     
     private PropertyDescriptor propertyDescriptor;
     private NodeAttribute nodeAttribute;
@@ -65,6 +62,11 @@ public class NodeParameterImpl implements NodeParameter
             defaultValue = parameterAnn.defaultValue();
         else
             defaultValue = null;
+        
+        if (!"".equals(parameterAnn.valueHandlerType()))
+            valueHandlerType = parameterAnn.valueHandlerType();
+        else
+            valueHandlerType = null;
         
         propertyDescriptor = desc;
 //        getter = operationCompiler.compileGetOperation(node.getClass(), name);
@@ -97,6 +99,11 @@ public class NodeParameterImpl implements NodeParameter
     {
         return propertyDescriptor.getType().isPrimitive()? 
             propertyDescriptor.getWrapperType() : propertyDescriptor.getType();
+    }
+
+    public String getValueHandlerType() 
+    {
+        return valueHandlerType;
     }
 
     public boolean isRequired()

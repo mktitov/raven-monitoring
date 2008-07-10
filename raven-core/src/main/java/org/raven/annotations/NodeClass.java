@@ -43,4 +43,9 @@ public @interface NodeClass
      */
     Class parentNode() default Void.class;
     Class[] childNodes() default Void.class;
+    /**
+     * If this parameter sets to <code>true</code> then the parent node child nodes will be added
+     * to the list of the child node types.
+     */
+    boolean importChildTypesFromParent() default false;
 }

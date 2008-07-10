@@ -90,14 +90,16 @@ public class TreeServiceTest extends ServiceTestCase
         store.removeNodes();
         tree.reloadTree();
         
-        List<Class> types = tree.getChildNodesTypes(AnyChildsNode.class);
+        AnyChildsNode anyChildsNode = new AnyChildsNode();
+        List<Class> types = tree.getChildNodesTypes(anyChildsNode);
         assertNotNull(types);
         assertTrue(types.contains(AnyChildsNode.class));
         assertTrue(types.contains(AnyParentNode.class));
         assertFalse(types.contains(ChildNode1.class));
         assertFalse(types.contains(ChildNode2.class));
         
-        types = tree.getChildNodesTypes(NodeWithFixedChilds.class);
+        NodeWithFixedChilds nodeWithFixedChilds = new NodeWithFixedChilds();
+        types = tree.getChildNodesTypes(nodeWithFixedChilds);
         assertNotNull(types);
         assertEquals(3, types.size());
         assertTrue(types.contains(ChildNode1.class));

@@ -20,6 +20,7 @@ package org.raven.tree.impl;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -398,7 +399,7 @@ public class BaseNode implements Node, NodeListener
 
     public List<Class> getChildNodeTypes()
     {
-        return tree.getChildNodesTypes(getClass());
+        return tree.getChildNodesTypes(this);
     }
 
     public int getChildrenCount()
@@ -414,6 +415,30 @@ public class BaseNode implements Node, NodeListener
     public Collection<Node> getSortedChildrens()
     {
         return childrens==null? null : new TreeSet<Node>(childrens.values());
+    }
+
+    public boolean isConditionalNode() {
+        return false;
+    }
+
+    public Collection<Node> getEffectiveChildrens() 
+    {
+        if (childrens==null)
+            return null;
+        List<Node> sortedChildrens = new ArrayList<Node>(childrens.values());
+        Collections.sort(sortedChildrens);
+        for (int i=sortedChildrens.size()-1; i>=0; --i)
+        {
+            Node node = sortedChildrens.get(i);
+            if (node.isConditionalNode())
+            {
+                sortedChildrens.remove(i);
+                Collection<Node> list = node.getEffectiveChildrens();
+                if (list!=null)
+                    sortedChildrens.addAll(i, list);
+            }
+        }
+        return sortedChildrens.size()==0? null : sortedChildrens;
     }
 
     public synchronized Node getChildren(String name)
@@ -695,7 +720,7 @@ public class BaseNode implements Node, NodeListener
                 for (Annotation ann: desc.getAnnotations())
                     if (ann instanceof Parameter)
                     {
-                        NodeParameter param = new NodeParameterImpl((Parameter) ann,this, desc);
+                        NodeParameter param = new NodeParameterImpl((Parameter) ann, this, desc);
                         
                         if (parameters==null)
                             parameters = new HashMap<String, NodeParameter>();
@@ -872,8 +897,6 @@ public class BaseNode implements Node, NodeListener
         }
     }
     
-//    private void syncParameterWithAttribute()
-    
     private void createNodeAttribute(NodeParameter param) 
         throws Exception
     {
@@ -885,6 +908,7 @@ public class BaseNode implements Node, NodeListener
         attr.setDescription(param.getDescription());
         attr.setRawValue(param.getDefaultValue());
         attr.setType(param.getType());
+        attr.setValueHandlerType(param.getValueHandlerType());
         addNodeAttribute(attr);
 
         configurator.getTreeStore().saveNodeAttribute(attr);

@@ -40,4 +40,8 @@ public @interface Parameter
      * The default value of the parameter
      */
     String defaultValue() default "";
+    /**
+     * The default value handler type.
+     */
+    String valueHandlerType() default "";
 }

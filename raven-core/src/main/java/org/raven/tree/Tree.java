@@ -50,7 +50,7 @@ public interface Tree
     /**
      * Returns all classes marked with {@link org.raven.annotations.NodeClass} annotation. 
      */
-    public List<Class> getChildNodesTypes(Class nodeType);
+    public List<Class> getChildNodesTypes(Node node);
     /**
      * Returns attributes types available for the node .
      */

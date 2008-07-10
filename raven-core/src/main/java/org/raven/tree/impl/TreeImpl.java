@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import org.raven.annotations.NodeClass;
 import org.raven.conf.Configurator;
+import org.raven.impl.ClassNameComparator;
 import org.raven.impl.NodeClassTransformerWorker;
 import org.raven.template.TemplateVariable;
 import org.raven.template.TemplatesNode;
@@ -73,6 +74,7 @@ public class TreeImpl implements Tree
 //    private final Map<Class, AttributeReferenceValues> referenceValuesProviders;
     private final Map<Class, List<Class>> nodeTypes = new HashMap<Class, List<Class>>();
     private final Set<Class> anyChildTypeNodes = new HashSet<Class>();
+    private final Set<Class> importParentChildTypeNodes = new HashSet<Class>();
     private Node rootNode;
     private SystemNode systemNode;
     private DataSourcesNode dataSourcesNode;
@@ -105,10 +107,15 @@ public class TreeImpl implements Tree
 //        reloadTree();
     }
 
-    public List<Class> getChildNodesTypes(Class nodeType)
+    public List<Class> getChildNodesTypes(Node node)
     {
-        nodeType = anyChildTypeNodes.contains(nodeType)? Void.class : nodeType;
-        return nodeTypes.get(nodeType);
+        Set<Class> childTypes = new HashSet<Class>();
+        collectChildTypes(node, childTypes);
+        
+        List<Class> types = new ArrayList<Class>(childTypes);
+        Collections.sort(types, new ClassNameComparator());
+        
+        return types;
     }
 
     public Class[] getNodeAttributesTypes(Node node)
@@ -293,6 +300,17 @@ public class TreeImpl implements Tree
             if (!child.equals(Void.class))
                 childTypes.add(child);
     }
+
+    private void collectChildTypes(Node node, Set<Class> types) 
+    {
+        Class nodeType = anyChildTypeNodes.contains(node.getClass())? Void.class : node.getClass();
+        List<Class> childTypes = nodeTypes.get(nodeType);
+        if (childTypes!=null)
+            types.addAll(childTypes);
+        
+        if (node.getParent()!=null && importParentChildTypeNodes.contains(node.getClass()))
+            collectChildTypes(node.getParent(), types);
+    }
     
     private void createRootNode()
     {
@@ -413,6 +431,8 @@ public class TreeImpl implements Tree
         
         if (ann.anyChildTypes())
             anyChildTypeNodes.add(nodeType);
+        if (ann.importChildTypesFromParent())
+            importParentChildTypeNodes.add(nodeType);
         addChildsToParent(ann.parentNode(), nodeType);
         addChildsToParent(nodeType, ann.childNodes());
     }
