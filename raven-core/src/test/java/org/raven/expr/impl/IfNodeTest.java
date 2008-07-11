@@ -62,4 +62,33 @@ public class IfNodeTest extends RavenCoreTestCase
         assertFalse(ifNode.isConditionalNode());
         assertNull(ifNode.getEffectiveChildrens());
     }
+    
+    @Test
+    public void notInTemplate() throws Exception
+    {
+        IfNode ifNode = new IfNode();
+        ifNode.setName("if");
+        tree.getRootNode().addChildren(ifNode);
+        ifNode.save();
+        ifNode.init();
+        Node child = new BaseNode("child");
+        ifNode.addChildren(child);
+        child.init();
+        
+        ifNode.getNodeAttribute(IfNode.USEDINTEMPLATE_ATTRIBUTE).setValue("false");
+        ifNode.getNodeAttribute(IfNode.EXPRESSION_ATTRIBUTE).setValue("false");
+        assertTrue(ifNode.isConditionalNode());
+        assertNull(ifNode.getEffectiveChildrens());
+        
+        ifNode.getNodeAttribute(IfNode.EXPRESSION_ATTRIBUTE).setValue("true");
+        Collection<Node> childs = ifNode.getEffectiveChildrens();
+        assertNotNull(childs);
+        assertEquals(1, childs.size());
+        assertSame(child, childs.iterator().next());
+        
+        ifNode.getNodeAttribute(IfNode.USEDINTEMPLATE_ATTRIBUTE).setValue("true");
+        assertFalse(ifNode.isConditionalNode());
+        assertNull(ifNode.getEffectiveChildrens());
+    }
+    
 }
