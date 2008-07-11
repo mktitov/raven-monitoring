@@ -24,6 +24,7 @@ import java.util.Map;
 import org.raven.api.NodeAccess;
 import org.raven.api.NodeAttributeAccess;
 import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
 
 /**
  *
@@ -33,6 +34,7 @@ public class NodeAccessImpl implements NodeAccess
 {
     private final Node node;
     private Map<String, NodeAccess> childs;
+    private Map<String, NodeAttribute> attrs;
 
     public NodeAccessImpl(Node node)
     {
@@ -70,9 +72,17 @@ public class NodeAccessImpl implements NodeAccess
         return childs;
     }
 
-    public Map<String, NodeAttributeAccess> getAttrs()
+    public NodeAttributeAccess getAttr(String attributeName) 
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        NodeAttribute attr = node.getNodeAttribute(attributeName);
+        if (attr==null)
+            return null;
+        return new NodeAttributeAccessImpl(attr);
     }
+
+//    public Map<String, NodeAttributeAccess> getAttrs()
+//    {
+//        if (attrs==null)
+//    }
 
 }

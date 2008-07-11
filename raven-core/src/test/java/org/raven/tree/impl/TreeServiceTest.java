@@ -109,6 +109,7 @@ public class TreeServiceTest extends ServiceTestCase
         assertTrue(types.contains(ChildNode3.class));
         
         NodeWithParentChilds nodeWithParentChilds = new NodeWithParentChilds();
+        nodeWithParentChilds.setName("nodeWithParentChilds");
         types = tree.getChildNodesTypes(nodeWithParentChilds);
         assertNotNull(types);
         assertEquals(1, types.size());
@@ -218,7 +219,7 @@ public class TreeServiceTest extends ServiceTestCase
         node2.addNodeAttribute(attr);
         tree.getRootNode().addChildren(node2);
         
-        assertNull(node1.getDependentNodes());
+        assertTrue(node1.getDependentNodes().isEmpty());
         
         node2.init();
         attr.setValue(node1.getPath());

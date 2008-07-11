@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import javax.script.Bindings;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
@@ -57,6 +58,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
     public final static String INDEXCOLUMNNAME_ATTRIBUTE = "indexColumnName";
     public final static String ADDPOLICY_ATTRIBUTE = "addPolicy";
     public final static String REMOVEPOLICY_ATTRIBUTE = "removePolicy";
+    private final static String ROW_EXPRESSION_VARIABLE = "row";
     
     public enum AddPolicy {DO_NOTHING, AUTO_ADD, AUTO_ADD_AND_START}
     public enum RemovePolicy {DO_NOTHING, STOP_NODE, AUTO_REMOVE}
@@ -80,6 +82,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
     private TableNodeTemplate template;
     private boolean needTableForConfiguration;
     private Table table;
+    private Map<String, Object> expressionBindings;
 
     @Override
     protected void initFields() 
@@ -89,6 +92,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
         template = null;
         needTableForConfiguration = false;
         table = null;
+        expressionBindings = new HashMap<String, Object>();
     }
     
     @Override
@@ -221,7 +225,8 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
             {
                 if (dep instanceof DataConsumer && !dep.isTemplate())
                 {
-                    NodeAttribute colName = dep.getNodeAttribute(TableNodeTemplate.TABLE_COLUMN_NAME);
+                    NodeAttribute colName = dep.getNodeAttribute(
+                            TableNodeTemplate.TABLE_COLUMN_NAME);
                     if (colName == null || colName.getValue() == null)
                     {
                         ((DataConsumer) dep).setData(this, data);
@@ -230,7 +235,9 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
                         String indexColumnValue = getIndexValue(dep);
                         if (indexColumnValue == null)
                         {
-                            logger.error(String.format("Table index column value not found for node (%s)", dep.getPath()));
+                            logger.error(String.format(
+                                    "Table index column value not found for node (%s)"
+                                    , dep.getPath()));
                         } else
                         {
                             List<DataConsumer> list = consumers.get(indexColumnValue);
@@ -251,9 +258,8 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
             Table tab, int row, Node templateNode, String indexValue, boolean autoStart) 
         throws Exception
     {
-        Map<String, Object> values = new HashMap<String, Object>();
-        for (String columnName : tab.getColumnNames())
-            values.put(columnName, tab.getValue(columnName, row));
+        Map<String, Object> values = tab.getRow(row);
+
         StrSubstitutor subst = new StrSubstitutor(values);
 
         Node newNode = tree.copy(templateNode, this, null, null, true, false);
@@ -272,23 +278,16 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
 
     private Node getTemplateNode()
     {
-        Collection<Node> templateNodes = template.getChildrens();
+        Collection<Node> templateNodes = template.getEffectiveChildrens();
 
         if (templateNodes==null || templateNodes.size()==0)
-            throw new NodeError("Template node must be created");
+            return null;
+//            throw new NodeError("Template node must be created");
 
         if (templateNodes.size()>1)
             throw new NodeError("Only one node must created in the template");
 
-        Node templateNode = templateNodes.iterator().next();
-//        NodeAttribute indexColAttr = 
-//                templateNode.getNodeAttribute(TableNodeTemplate.TABLE_INDEX_COLUMN_NAME);
-//        if (indexColAttr==null || indexColAttr.getValue()==null)
-//            throw new NodeError(String.format(
-//                    "The attribute (%s) value must be seted for the node (%s)"
-//                    , TableNodeTemplate.TABLE_INDEX_COLUMN_NAME, templateNode.getPath()));
-        
-        return templateNode;
+        return templateNodes.iterator().next();
     }
     
     private void getTable()
@@ -321,6 +320,8 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
         {
             for (int row = 0; row < tab.getRowCount(); ++row)
             {
+                Map<String, Object> tableRow = tab.getRow(row);
+                expressionBindings.put(ROW_EXPRESSION_VARIABLE, tableRow);
                 Object val = tab.getValue(indexColumnName, row);
                 String indexColumnValue = converter.convert(String.class, val, null);
                 
@@ -346,6 +347,8 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
             || needTableForConfiguration)
         {
             Node templateNode = getTemplateNode();
+            if (templateNode==null)
+                return;
             createNewNode(
                     tab, row, templateNode, indexColumnValue
                     , addPolicy==AddPolicy.AUTO_ADD_AND_START && !needTableForConfiguration);
@@ -468,4 +471,11 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
             for (Node child: childs)
                 tuneNode(tableNode, subst, child);
     }
+
+    @Override
+    public void formExpressionBindings(Bindings bindings) 
+    {
+        bindings.putAll(expressionBindings);
+    }
+    
 }

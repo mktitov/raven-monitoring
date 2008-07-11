@@ -17,8 +17,6 @@
 
 package org.raven.table;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.raven.annotations.NodeClass;
 import org.raven.template.TemplateEntry;
 import org.raven.tree.Node;

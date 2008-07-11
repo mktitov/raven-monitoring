@@ -152,7 +152,7 @@ public interface Node extends Cloneable, Comparable<Node>
      * Returns children nodes sorted by {@link #getIndex() index}. Method returns <code>null</code>
      * if this node has not childrens.
      */
-    public Collection<Node> getSortedChildrens();
+    public List<Node> getSortedChildrens();
     /**
      * Return <code>true</code> if this node is conditional.
      * @see #getEffectiveChildrens()

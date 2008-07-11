@@ -15,20 +15,34 @@
  *  under the License.
  */
 
-package org.raven.api;
+package org.raven.api.impl;
 
-import java.util.Map;
+import org.raven.api.NodeAttributeAccess;
+import org.raven.tree.NodeAttribute;
 
 /**
- * Stricted access to the {@link org.raven.tree.Node}.
+ *
  * @author Mikhail Titov
  */
-public interface NodeAccess 
+public class NodeAttributeAccessImpl implements NodeAttributeAccess
 {
-    public NodeAccess getParent();
-    public String getName();
-    public String getPath();
-    public Map<String, NodeAccess> getChilds();
-//    public Map<String, NodeAttributeAccess> getAttrs();
-    public NodeAttributeAccess getAttr(String attributeName);
+    private final NodeAttribute attribute;
+
+    public NodeAttributeAccessImpl(NodeAttribute attribute) 
+    {
+        this.attribute = attribute;
+    }
+
+    public String getName() {
+        return attribute.getName();
+    }
+
+    public Object getValue() {
+        return attribute.getRealValue();
+    }
+
+    public String getValueAsString() {
+        return attribute.getValue();
+    }
+
 }

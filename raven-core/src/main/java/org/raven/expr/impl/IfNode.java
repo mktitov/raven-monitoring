@@ -28,7 +28,7 @@ import org.weda.annotations.Description;
  *
  * @author Mikhail Titov
  */
-@NodeClass(importChildTypesFromParent=true)
+@NodeClass(importChildTypesFromParent=true, childNodes=IfNode.class)
 public class IfNode extends BaseNode
 {
     public final static String EXPRESSION_ATTRIBUTE = "expression";

@@ -44,6 +44,7 @@ public interface Table
      * 
      */
     public Map<String, List<Object>> getRows();
+    public Map<String, Object> getRow(int row);
     /**
      * Adds value for the selected column
      * @param columnName the name of the column for which value must be added.

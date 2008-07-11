@@ -27,9 +27,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import javax.script.Bindings;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
@@ -83,13 +86,15 @@ public class BaseNode implements Node, NodeListener
     
     private Map<String, Node> childrens;
     private Map<String, NodeAttribute> nodeAttributes;
-    private Set<Node> dependentNodes;
+    private Map<Node, Node> dependentNodes;
     private Collection<NodeListener>  listeners;
     private Map<NodeAttribute, Set<NodeAttributeListener>> attributesListeners;
+    private Lock attributeListenersLock;
     
     private boolean autoStart = true;
     private boolean initializeAfterChildrens = false;
-    private Status status = Status.CREATED;
+    private Status status;
+    private Lock statusLock;
     
     private Map<String, NodeParameter> parameters;
     private boolean subtreeListener = false;
@@ -114,13 +119,15 @@ public class BaseNode implements Node, NodeListener
     protected void initFields()
     {
         parent = null;
-        dependentNodes = null;
-        listeners = null;
-        attributesListeners = null;
+        dependentNodes = new ConcurrentHashMap<Node, Node>();
+        listeners = new CopyOnWriteArraySet<NodeListener>();
+        attributesListeners = new ConcurrentHashMap<NodeAttribute, Set<NodeAttributeListener>>();
+        attributeListenersLock = new ReentrantLock();
         status = Status.CREATED;
+        statusLock = new ReentrantLock();
         parameters = null;
-        nodeAttributes = null;
-        childrens = null;
+        nodeAttributes = new ConcurrentHashMap<String, NodeAttribute>();
+        childrens = new ConcurrentHashMap<String, Node>();
     }
 
     public Logger getLogger()
@@ -133,28 +140,28 @@ public class BaseNode implements Node, NodeListener
         return id;
     }
 
-    private void initDependentNodes()
-    {
-        if (dependentNodes != null)
-            for (Node node : dependentNodes)
-                initDependentNode(node);
-            
-        if (attributesListeners != null)
-            for (Set<NodeAttributeListener> listeners : attributesListeners.values())
-                for (NodeAttributeListener listener : listeners)
-                    if (listener instanceof NodeAttribute)
-                        initDependentNode(((NodeAttribute) listener).getOwner());
-    }
-
-    private void initDependentNode(Node node)
-    {
-        if (node.getStatus()==Status.CREATED)
-        {
-            node.init();
-            if (node.isAutoStart())
-                node.start();
-        }
-    }
+//    private void initDependentNodes()
+//    {
+//        if (dependentNodes != null)
+//            for (Node node : dependentNodes)
+//                initDependentNode(node);
+//            
+//        if (attributesListeners != null)
+//            for (Set<NodeAttributeListener> listeners : attributesListeners.values())
+//                for (NodeAttributeListener listener : listeners)
+//                    if (listener instanceof NodeAttribute)
+//                        initDependentNode(((NodeAttribute) listener).getOwner());
+//    }
+//
+//    private void initDependentNode(Node node)
+//    {
+//        if (node.getStatus()==Status.CREATED)
+//        {
+//            node.init();
+//            if (node.isAutoStart())
+//                node.start();
+//        }
+//    }
     
     private void processListeners(NodeAttributeImpl attr, Object newValue, Object oldValue)
     {
@@ -172,9 +179,14 @@ public class BaseNode implements Node, NodeListener
             Set<NodeAttributeListener> listenersSet = attributesListeners.get(attr);
             if (listenersSet != null)
             {
-                for (NodeAttributeListener listener : listenersSet)
-                {
-                    listener.nodeAttributeValueChanged(this, attr, oldValue, newValue);
+                attributeListenersLock.lock();
+                try{
+                    for (NodeAttributeListener listener : listenersSet)
+                    {
+                        listener.nodeAttributeValueChanged(this, attr, oldValue, newValue);
+                    }
+                }finally{
+                    attributeListenersLock.unlock();
                 }
             }
         }
@@ -212,10 +224,7 @@ public class BaseNode implements Node, NodeListener
     
     public List<Node> getChildrenList() 
     { 
-        Collection<Node> nc = this.getChildrens();
-        ArrayList<Node> na = new ArrayList<Node>();
-        if(nc!=null) na.addAll(nc);
-        return na; 
+        return getSortedChildrens(); 
     }
 
     public boolean isTemplate()
@@ -229,49 +238,52 @@ public class BaseNode implements Node, NodeListener
 
     public void setStatus(Status status)
     {
-        if (this.status != status)
-        {
-            Status oldStatus = this.status;
-            this.status = status;
+        statusLock.lock();
+        try{
+            if (this.status != status)
+            {
+                Status oldStatus = this.status;
+                this.status = status;
 
-            fireStatusChanged(oldStatus, status);
+                fireStatusChanged(oldStatus, status);
+            }
+        }finally{
+            statusLock.unlock();
         }
     }
 
     public Status getStatus()
     {
-        return status;
+        statusLock.lock();
+        try{
+            return status;
+        }finally{
+            statusLock.unlock();
+        }
     }
 
-    public synchronized void addListener(NodeListener listener)
+    public void addListener(NodeListener listener)
     {
-        if (listeners==null)
-            listeners = new CopyOnWriteArraySet<NodeListener>();
-        
         listeners.add(listener);
         if (listener.isSubtreeListener() && childrens!=null)
             for (Node children: childrens.values())
                 children.addListener(listener);
     }
     
-    public synchronized void removeListener(NodeListener listener)
+    public void removeListener(NodeListener listener)
     {
-        if (listeners!=null)
-            if (listeners.remove(listener) && listener.isSubtreeListener() && childrens!=null)
-                for (Node children: childrens.values())
-                    children.removeListener(listener);
+        if (listeners.remove(listener) && listener.isSubtreeListener() && childrens!=null)
+            for (Node children: childrens.values())
+                children.removeListener(listener);
     }
     
-    public synchronized Collection<NodeListener> getListeners()
+    public Collection<NodeListener> getListeners()
     {
         return listeners;
     }
 
-    public synchronized void addChildren(Node node)
+    public void addChildren(Node node)
     {
-        if (childrens==null)
-            childrens = new TreeMap<String, Node>();
-        
         node.setParent(this);
         if (node.getIndex()==0)
             node.setIndex(childrens.size()+1);
@@ -301,15 +313,18 @@ public class BaseNode implements Node, NodeListener
         }
     }
     
-    public synchronized boolean addDependentNode(Node dependentNode)
+    public boolean addDependentNode(Node dependentNode)
     {
-        if (dependentNodes==null)
-            dependentNodes = new HashSet<Node>();
-        
-        return dependentNodes.add(dependentNode);
+        if (dependentNodes.containsKey(dependentNode))
+            return false;
+        else
+        {
+            dependentNodes.put(dependentNode, dependentNode);
+            return true;
+        }
     }
 
-    public synchronized void addNodeAttributeDependency(
+    public void addNodeAttributeDependency(
             String attributeName, NodeAttributeListener listener)
     {
         NodeAttribute attr = getNodeAttribute(attributeName);
@@ -317,40 +332,42 @@ public class BaseNode implements Node, NodeListener
             throw new NodeError(String.format(
                     "Attribute (%s) not found in the node (%s)", attributeName, getPath()));
         
-        if (attributesListeners==null)
-            attributesListeners = new HashMap<NodeAttribute, Set<NodeAttributeListener>>();
-        
-        Set<NodeAttributeListener> listeners = attributesListeners.get(attr);
-        if (listeners==null)
+        attributeListenersLock.lock();
+        try{
+            Set<NodeAttributeListener> listeners = attributesListeners.get(attr);
+            if (listeners==null)
+            {
+                listeners = new HashSet<NodeAttributeListener>();
+                attributesListeners.put(attr, listeners);
+            }
+
+            listeners.add(listener);
+        }finally
         {
-            listeners = new HashSet<NodeAttributeListener>();
-            attributesListeners.put(attr, listeners);
+            attributeListenersLock.unlock();
         }
-        
-        listeners.add(listener);
     }
 
-    public synchronized boolean removeDependentNode(Node dependentNode)
+    public boolean removeDependentNode(Node dependentNode)
     {
-        return dependentNodes==null? false : dependentNodes.remove(dependentNode);
+        if (dependentNodes.containsKey(dependentNode))
+        {
+            dependentNodes.remove(dependentNode);
+            return true;
+        }else
+            return false;
     }
 
-    public synchronized void addNodeAttribute(NodeAttribute attr)
+    public void addNodeAttribute(NodeAttribute attr)
     {
-        if (nodeAttributes==null)
-            nodeAttributes = new TreeMap<String, NodeAttribute>();
-        
         nodeAttributes.put(attr.getName(), attr);
     }
 
-    public synchronized void removeNodeAttribute(String name)
+    public void removeNodeAttribute(String name)
     {
-        if (nodeAttributes!=null)
-        {
-            NodeAttribute attr = nodeAttributes.remove(name);
-            if (attr!=null)
-                fireNodeAttributeRemoved(attr);
-        }
+        NodeAttribute attr = nodeAttributes.remove(name);
+        if (attr!=null)
+            fireNodeAttributeRemoved(attr);
     }
 
     public String getName()
@@ -362,7 +379,7 @@ public class BaseNode implements Node, NodeListener
     {
         String oldName = this.name;
         this.name = name;
-        if (   ObjectUtils.in(status, Status.INITIALIZED, Status.STARTED) 
+        if (   ObjectUtils.in(getStatus(), Status.INITIALIZED, Status.STARTED) 
             && !ObjectUtils.equals(oldName, name))
         {
             fireNameChanged(oldName, name);
@@ -412,9 +429,11 @@ public class BaseNode implements Node, NodeListener
         return childrens==null? null : childrens.values();
     }
     
-    public Collection<Node> getSortedChildrens()
+    public List<Node> getSortedChildrens()
     {
-        return childrens==null? null : new TreeSet<Node>(childrens.values());
+        List<Node> sortedChildrens = new ArrayList<Node>(childrens.values());
+        Collections.sort(sortedChildrens);
+        return sortedChildrens;
     }
 
     public boolean isConditionalNode() {
@@ -441,24 +460,24 @@ public class BaseNode implements Node, NodeListener
         return sortedChildrens.size()==0? null : sortedChildrens;
     }
 
-    public synchronized Node getChildren(String name)
+    public Node getChildren(String name)
     {
         return childrens==null? null : childrens.get(name);
     }
 
-    public synchronized Collection<NodeAttribute> getNodeAttributes()
+    public Collection<NodeAttribute> getNodeAttributes()
     {
         return nodeAttributes==null? null : nodeAttributes.values();
     }
 
-    public synchronized NodeAttribute getNodeAttribute(String name)
+    public NodeAttribute getNodeAttribute(String name)
     {
-        return nodeAttributes==null? null : nodeAttributes.get(name);
+        return nodeAttributes.get(name);
     }
 
-    public synchronized Set<Node> getDependentNodes()
+    public Set<Node> getDependentNodes()
     {
-        return dependentNodes;
+        return dependentNodes.keySet();
     }
 
     public Node getParent()
@@ -611,7 +630,7 @@ public class BaseNode implements Node, NodeListener
     {
         if (logger.isDebugEnabled())
             logger.debug(String.format("Shutdowning node (%s)", getPath()));
-        if (status==Status.STARTED)
+        if (getStatus()==Status.STARTED)
             stop();
         if (nodeAttributes!=null)
             for (NodeAttribute attr: nodeAttributes.values())
@@ -775,7 +794,7 @@ public class BaseNode implements Node, NodeListener
         }
     }
 
-    private synchronized void fireStatusChanged(Status oldStatus, Status status)
+    private void fireStatusChanged(Status oldStatus, Status status)
     {
         if (listeners!=null)
             for (NodeListener listener: listeners)

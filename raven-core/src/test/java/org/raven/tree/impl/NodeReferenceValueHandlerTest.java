@@ -199,7 +199,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
             assertTrue(childNode.getDependentNodes().contains(node));
         } else
         {
-            assertNull(childNode.getDependentNodes());
+            assertTrue(childNode.getDependentNodes().isEmpty());
         }
         assertTrue(childNode.getListeners().contains(valueHandler));
         assertTrue(parentNode.getListeners().contains(valueHandler));
@@ -232,7 +232,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
         if (addDependencyFlag)
             assertTrue(childNode.getDependentNodes().isEmpty());
         else
-            assertNull(childNode.getDependentNodes());
+            assertTrue(childNode.getDependentNodes().isEmpty());
         assertFalse(childNode.getListeners().contains(valueHandler));
         assertFalse(parentNode.getListeners().contains(valueHandler));
         

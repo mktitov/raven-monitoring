@@ -134,14 +134,14 @@ public class SystemDataSourceReferenceValuesTest extends RavenCoreTestCase
         ds1.addListener((NodeListener) anyObject());
         expect(ds1.getIndex()).andReturn(1);
         expect(ds1.getParent()).andReturn(dataSources).anyTimes();
-//        expect(ds1.compareTo((Node)anyObject())).andReturn(-1);
+        expect(ds1.compareTo((Node)anyObject())).andReturn(-1).anyTimes();
         
         expect(ds2.getName()).andReturn("ds2").anyTimes();
         ds2.setParent((Node) anyObject());
         ds2.addListener((NodeListener) anyObject());
         expect(ds2.getIndex()).andReturn(2);
         expect(ds2.getParent()).andReturn(dataSources).anyTimes();
-        expect(ds2.compareTo((Node)anyObject())).andReturn(1).times(2);
+        expect(ds2.compareTo((Node)anyObject())).andReturn(1).anyTimes();
 //        expect(ds2.getPath()).andReturn("ds2Path").times(3);
         
         replay(ds1, ds2);

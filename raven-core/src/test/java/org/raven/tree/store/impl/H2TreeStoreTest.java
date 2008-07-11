@@ -149,7 +149,7 @@ public class H2TreeStoreTest extends Assert
         store.removeNodeAttribute(attr1.getId());
         node1 = (ContainerNode) store.getNode(node.getId());
         assertNotNull(node1);
-        assertNull(node1.getNodeAttributes());
+        assertTrue(node1.getNodeAttributes().isEmpty());
         
     }
     

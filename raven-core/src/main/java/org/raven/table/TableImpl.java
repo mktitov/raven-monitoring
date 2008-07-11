@@ -62,6 +62,14 @@ public class TableImpl implements Table
         else
             return values.get(row);
     }
+    
+    public Map<String, Object> getRow(int row)
+    {
+        Map<String, Object> res = new HashMap<String, Object>();
+        for (String columnName: columnNames)
+            res.put(columnName, getValue(columnName, row));
+        return res;
+    }
 
     public int getRowCount()
     {
