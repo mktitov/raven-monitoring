@@ -47,6 +47,8 @@ import org.raven.tree.impl.objects.NodeWithFixedChilds;
 import org.raven.tree.impl.objects.NodeWithIntegerParameter;
 import org.raven.tree.impl.objects.NodeWithNodeParameter;
 import org.raven.tree.impl.objects.NodeWithParameters;
+import org.raven.tree.impl.objects.NodeWithParentChilds;
+import org.raven.tree.impl.objects.ParentNode;
 import org.raven.tree.store.TreeStore;
 import org.weda.constraints.ConstraintException;
 import org.weda.constraints.ReferenceValue;
@@ -104,6 +106,20 @@ public class TreeServiceTest extends ServiceTestCase
         assertEquals(3, types.size());
         assertTrue(types.contains(ChildNode1.class));
         assertTrue(types.contains(ChildNode2.class));
+        assertTrue(types.contains(ChildNode3.class));
+        
+        NodeWithParentChilds nodeWithParentChilds = new NodeWithParentChilds();
+        types = tree.getChildNodesTypes(nodeWithParentChilds);
+        assertNotNull(types);
+        assertEquals(1, types.size());
+        assertTrue(types.contains(ChildNode3.class));
+        //
+        ParentNode parentNode = new ParentNode();
+        parentNode.addChildren(nodeWithParentChilds);
+        types = tree.getChildNodesTypes(nodeWithParentChilds);
+        assertNotNull(types);
+        assertEquals(2, types.size());
+        assertTrue(types.contains(ChildNode1.class));
         assertTrue(types.contains(ChildNode3.class));
     }
     

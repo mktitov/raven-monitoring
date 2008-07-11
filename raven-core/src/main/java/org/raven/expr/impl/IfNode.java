@@ -28,9 +28,12 @@ import org.weda.annotations.Description;
  *
  * @author Mikhail Titov
  */
-@NodeClass()
+@NodeClass(importChildTypesFromParent=true)
 public class IfNode extends BaseNode
 {
+    public final static String EXPRESSION_ATTRIBUTE = "expression";
+    public final static String USEDINTEMPLATE_ATTRIBUTE = "usedInTemplate";
+    
     @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE, defaultValue="false")
     @Description("The expression that must return boolean value")
     private Boolean expression;
@@ -43,13 +46,15 @@ public class IfNode extends BaseNode
     public Collection<Node> getEffectiveChildrens() 
     {
         Boolean res = expression;
-        return res==null || res==false? null : super.getEffectiveChildrens();
+        return !isConditionalNode() || res==null || res==false? 
+            null : super.getEffectiveChildrens();
     }
 
     @Override
     public boolean isConditionalNode() 
     {
-        boolean res = usedInTemplate==null? false : usedInTemplate;
+        Boolean res = usedInTemplate;
+        res = res==null? false : res;
         return isTemplate()? res : !res;
     }
 
@@ -57,4 +62,10 @@ public class IfNode extends BaseNode
     {
         return expression;
     }
+
+    public Boolean getUsedInTemplate()
+    {
+        return usedInTemplate;
+    }
+    
 }
