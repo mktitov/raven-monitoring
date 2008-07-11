@@ -262,7 +262,7 @@ public class SessionBean
 	public int deleteNode(NodeWrapper node)
 	{
 		Node n = node.getNode();
-		if(n.getDependentNodes()!=null) return -1;
+		if(n.getDependentNodes()!=null && !n.getDependentNodes().isEmpty()) return -1;
 		tree.remove(n);
 		logger.warn("removed node: {}",n.getName());
 		//FacesContext.getCurrentInstance().getExternalContext().log("removed node: "+n.getName());
@@ -278,7 +278,7 @@ public class SessionBean
 		while(it.hasNext())
 		{
 			Node n = it.next().getNode();
-			if(n.getDependentNodes()!=null)
+			if(n.getDependentNodes()!=null && !n.getDependentNodes().isEmpty())
 			{
 				if(ret.length()==0) ret.append("This nodes have dependensies: ");
 					else ret.append(", ");
