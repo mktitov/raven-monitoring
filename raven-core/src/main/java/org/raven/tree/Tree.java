@@ -98,5 +98,17 @@ public interface Tree
      * of the value handler.
      */
     public List<ReferenceValue> getAttributeValueHandlerTypes(NodeAttribute attr);
-
+    /**
+     * Scans every node (all childrens and all childrens of childrens) begining 
+     * from <b>startingPoint</b> (excluding <code>startingPoint</code> node) and pass
+     * every scaned node to the <b>handler</b>. 
+     * @param startingPoint the node from which scan must begin
+     * @param handler the handler to which every scanned node will be passed.
+     * @param nodeTypes only the nodes of types in this array will be passed to the node handler.
+     *      if the parameter was not seted then any node will be passed to the node handler.
+     */
+    public void scanSubtree(
+            Node startingPoint, ScannedNodeHandler handler
+            , Class<? extends Node>[] nodeTypes
+            , Node.Status... nodeStatuses);
 }

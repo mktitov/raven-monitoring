@@ -42,12 +42,14 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodePathResolver;
 import org.raven.tree.NodeTuner;
 import org.raven.tree.PathInfo;
+import org.raven.tree.ScannedNodeHandler;
 import org.raven.tree.Tree;
 import org.raven.tree.TreeError;
 import org.raven.tree.store.TreeStore;
 import org.raven.tree.store.TreeStoreError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.weda.beans.ObjectUtils;
 import org.weda.constraints.ReferenceValue;
 import org.weda.constraints.ReferenceValueCollection;
 import org.weda.constraints.TooManyReferenceValuesException;
@@ -259,6 +261,23 @@ public class TreeImpl implements Tree
         if (node.getChildrens()!=null)
             for (Node child: node.getChildrens())
                 stop(child);
+    }
+
+    public void scanSubtree(
+            Node startingPoint, ScannedNodeHandler handler
+            , Class<? extends Node>[] nodeTypes, Status... statuses)
+    {
+        Collection<Node> childrens = startingPoint.getChildrens();
+        if (childrens!=null)
+            for (Node node: childrens)
+            {
+                if (   (nodeTypes==null || ObjectUtils.in(node.getClass(), nodeTypes))
+                    && (statuses.length==0 || ObjectUtils.in(node.getStatus(), statuses)))
+                {
+                    handler.nodeScanned(node);
+                }
+                scanSubtree(node, handler, nodeTypes, statuses);
+            }
     }
 
     public List<ReferenceValue> getReferenceValuesForAttribute(NodeAttribute attr)

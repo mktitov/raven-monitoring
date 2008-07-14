@@ -36,6 +36,7 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeAttributeListener;
 import org.raven.tree.NodeListener;
 import org.raven.tree.NodeNotFoundError;
+import org.raven.tree.ScannedNodeHandler;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.objects.AnyChildsNode;
 import org.raven.tree.impl.objects.AnyParentNode;
@@ -647,7 +648,89 @@ public class TreeServiceTest extends ServiceTestCase
         copyDest = tree.getNode(copyDest.getPath());
         assertNotNull(copyDest);
         checkNodeCopy(copyDest, sysNode, node, child, Status.STARTED);
+    }
+    
+    @Test
+    public void scanSubtree_allNodeTypes()
+    {
+        store.removeNodes();
+        tree.reloadTree();
         
+        Node parent1 = new BaseNode("parent1");
+        tree.getRootNode().addChildren(parent1);
+        parent1.save();
+        parent1.init();
+        
+        Node parent2 = new BaseNode("parent2");
+        parent1.addChildren(parent2);
+        parent2.save();
+        parent2.init();
+        
+        Node child = new ContainerNode("child");
+        parent2.addChildren(child);
+        child.save();
+        child.init();
+        child.start();
+        assertEquals(Status.STARTED, child.getStatus());
+        
+        ScannedNodeHandler handler = createMock(ScannedNodeHandler.class);
+        handler.nodeScanned(parent2);
+        handler.nodeScanned(child);
+        replay(handler);
+        
+        tree.scanSubtree(parent1, handler, null);
+        
+        verify(handler);
+        
+        handler = createMock(ScannedNodeHandler.class);
+        handler.nodeScanned(child);
+        replay(handler);
+        tree.scanSubtree(parent1, handler, null, Status.STARTED);
+        
+        verify(handler);
+    }
+    
+    @Test
+    public void scanSubtree_constrainedNodeTypes()
+    {
+        store.removeNodes();
+        tree.reloadTree();
+        
+        Node parent1 = new BaseNode("parent1");
+        tree.getRootNode().addChildren(parent1);
+        parent1.save();
+        parent1.init();
+        
+        Node parent2 = new BaseNode("parent2");
+        parent1.addChildren(parent2);
+        parent2.save();
+        parent2.init();
+        
+        Node child = new ContainerNode("child");
+        parent2.addChildren(child);
+        child.save();
+        child.init();
+        
+        ScannedNodeHandler handler = createMock(ScannedNodeHandler.class);
+        handler.nodeScanned(child);
+        replay(handler);
+        
+        tree.scanSubtree(parent1, handler, new Class[]{ContainerNode.class});
+        
+        verify(handler);
+        
+        handler = createMock(ScannedNodeHandler.class);
+        replay(handler);
+        tree.scanSubtree(parent1, handler, new Class[]{ContainerNode.class}, Status.STARTED);
+        verify(handler);
+        
+        handler = createMock(ScannedNodeHandler.class);
+        handler.nodeScanned(child);
+        replay(handler);
+        child.start();
+        assertEquals(Status.STARTED, child.getStatus());
+        tree.scanSubtree(parent1, handler, new Class[]{ContainerNode.class}, Status.STARTED);
+        verify(handler);
     }
     
     private static Node matchNode(final String nodeName)

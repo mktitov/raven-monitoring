@@ -69,7 +69,7 @@ public class RRDatabaseManager extends BaseNode
     private final static String STARING_POINT_ATTR_NAME = "startingPoint";
     @Parameter @NotNull
     @Description(
-        "The node from which database manager take a control on data pipe nodes with seted " +
+        "The node from which database manager take a control on data source nodes with seted " +
         "dataType attribute value")
     private Node startingPoint;
     
