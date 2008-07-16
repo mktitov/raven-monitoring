@@ -18,8 +18,6 @@
 package org.raven.template;
 
 import java.util.Collection;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeTuner;
@@ -96,9 +94,9 @@ public class TemplateWizard
     
     private class Tuner implements NodeTuner
     {
-        public void tuneNode(Node node)
+        public void tuneNode(Node sourceNode, Node sourceClone)
         {
-            Collection<NodeAttribute> attrs = node.getNodeAttributes();
+            Collection<NodeAttribute> attrs = sourceClone.getNodeAttributes();
             if (attrs!=null)
                 for (NodeAttribute attr: attrs)
                     if (TemplateVariableValueHandlerFactory.TYPE.equals(attr.getValueHandlerType()))
@@ -113,8 +111,9 @@ public class TemplateWizard
                             attr.setValue(var.getRawValue());
                         } catch (Exception ex)
                         {
-                            node.getLogger().error(
-                                    String.format("Error tuning node (%s)", node.getPath()), ex);
+                            sourceClone.getLogger().error(
+                                    String.format("Error tuning node (%s)"
+                                    , sourceClone.getPath()), ex);
                         }
                     }
 //                    if (TemplateVariable.class.isAssignableFrom(attr.getType()))
@@ -124,6 +123,11 @@ public class TemplateWizard
 //                        attr.setType(var.getType());
 //                        attr.setRawValue(var.getRawValue());
 //                    }
+        }
+
+        public Node cloneNode(Node sourceNode)
+        {
+            return null;
         }
     }
 }

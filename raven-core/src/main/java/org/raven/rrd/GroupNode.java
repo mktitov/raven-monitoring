@@ -31,6 +31,8 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass(importChildTypesFromParent=true)
 public class GroupNode extends BaseNode
 {
+    public final static String GROUPINGEXPRESSION_ATTRIBUTE = "groupingExpression";
+    
     @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
     @Description("The expression that must return the string")
     @NotNull

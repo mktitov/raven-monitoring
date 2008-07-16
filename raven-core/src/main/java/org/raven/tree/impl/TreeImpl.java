@@ -42,6 +42,7 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodePathResolver;
 import org.raven.tree.NodeTuner;
 import org.raven.tree.PathInfo;
+import org.raven.tree.ScanOperation;
 import org.raven.tree.ScannedNodeHandler;
 import org.raven.tree.Tree;
 import org.raven.tree.TreeError;
@@ -231,8 +232,8 @@ public class TreeImpl implements Tree
 //            if (newNodeName!=null)
 //                clone.setName(newNodeName);
 //            destination.addChildren(clone);
-            Node clone = source.cloneTo(destination, newNodeName);
-            saveClonedNode(source, clone, destination.getPath(), clone, nodeTuner, store);
+            Node clone = source.cloneTo(destination, newNodeName, nodeTuner);
+            saveClonedNode(source, clone, destination.getPath(), clone, store);
             initNode(clone);
             
             return clone;
@@ -271,12 +272,14 @@ public class TreeImpl implements Tree
         if (childrens!=null)
             for (Node node: childrens)
             {
+                ScanOperation operation = ScanOperation.CONTINUE;
                 if (   (nodeTypes==null || ObjectUtils.in(node.getClass(), nodeTypes))
                     && (statuses.length==0 || ObjectUtils.in(node.getStatus(), statuses)))
                 {
-                    handler.nodeScanned(node);
+                    operation = handler.nodeScanned(node);
                 }
-                scanSubtree(node, handler, nodeTypes, statuses);
+                if (operation==ScanOperation.CONTINUE)
+                    scanSubtree(node, handler, nodeTypes, statuses);
             }
     }
 
@@ -399,10 +402,8 @@ public class TreeImpl implements Tree
 
     private void saveClonedNode(
             final Node source, final Node clonedSource, final String destPath, final Node clone
-            , final NodeTuner nodeTuner, final boolean store)
+            , final boolean store)
     {
-        if (nodeTuner!=null)
-            nodeTuner.tuneNode(clone);
         if (store)
             configurator.getTreeStore().saveNode(clone);
         Collection<NodeAttribute> attrs = clone.getNodeAttributes();
@@ -427,7 +428,7 @@ public class TreeImpl implements Tree
         Collection<Node> childs = clone.getChildrens();
         if (childs!=null)
             for (Node child: childs)
-                saveClonedNode(source, clonedSource, destPath, child, nodeTuner, store);
+                saveClonedNode(source, clonedSource, destPath, child, store);
     }
 
     private void shutdownNode(Node node)

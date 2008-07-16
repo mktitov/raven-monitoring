@@ -328,7 +328,8 @@ public interface Node extends Cloneable, Comparable<Node>
      * 
      * @throws java.lang.CloneNotSupportedException
      */
-    public Node cloneTo(Node dest, String newNodeName) throws CloneNotSupportedException;
+    public Node cloneTo(Node dest, String newNodeName, NodeTuner nodeTuner) 
+            throws CloneNotSupportedException;
     /**
      * Method adds expression bindings to the bindings object passed in the parameter.
      */

@@ -18,10 +18,22 @@
 package org.raven.tree;
 
 /**
- *
+ * Allows to new tune node parameters in the clone process.
+ * 
  * @author Mikhail Titov
  */
 public interface NodeTuner 
 {
-    public void tuneNode(Node node);
+    /**
+     * If method returns not null value then node returned by this method will be used as clone
+     * of the <code>sourceNode</code>.
+     * @param sourceNode the node that must be cloned.
+     */
+    public Node cloneNode(Node sourceNode);
+    /**
+     * Tune cloned node.
+     * @param sourceNode the node which was cloned.
+     * @param sourceClone the clone of the <code>sourceNode</code>
+     */
+    public void tuneNode(Node sourceNode, Node sourceClone);
 }

@@ -21,11 +21,7 @@ package org.raven.tree;
  *
  * @author Mikhail Titov
  */
-public interface ScannedNodeHandler
+public enum ScanOperation 
 {
-    /**
-     * Informs handler that scaner found new node in scaning subtree.
-     * @return the action that scanner must do. 
-     */
-    public ScanOperation nodeScanned(Node node);
+    CONTINUE, SKIP_NODE
 }

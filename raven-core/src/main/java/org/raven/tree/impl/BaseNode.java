@@ -46,6 +46,7 @@ import org.raven.tree.NodeAttributeListener;
 import org.raven.tree.NodeListener;
 import org.raven.tree.NodePathResolver;
 import org.raven.tree.NodeShutdownError;
+import org.raven.tree.NodeTuner;
 import org.raven.tree.Tree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1080,27 +1081,28 @@ public class BaseNode implements Node, NodeListener
         return clone;
     }
     
-    public Node cloneTo(Node dest, String newNodeName) throws CloneNotSupportedException
+    public Node cloneTo(Node dest, String newNodeName, NodeTuner nodeTuner) 
+            throws CloneNotSupportedException
     {
-        Node clone = (Node) clone();
+        Node clone = null;
+        
+        if (nodeTuner!=null)
+            clone = nodeTuner.cloneNode(this);
+        
+        if (clone==null)
+                clone = (Node) clone();
+        
         if (newNodeName!=null)
             clone.setName(newNodeName);
+        
+        if (nodeTuner!=null)
+            nodeTuner.tuneNode(this, clone);
+        
         dest.addChildren(clone);
         
-//        if (nodeAttributes!=null)
-//            for (NodeAttribute attr: nodeAttributes.values()) 
-//            {
-//                NodeAttribute attrClone = (NodeAttribute) attr.clone();
-//                attrClone.setOwner(clone);
-//                clone.addNodeAttribute(attrClone);
-////                attrClone.init();
-//            }
-            
         if (childrens!=null)
             for (Node child: childrens.values())
-            {
-                child.cloneTo(clone, null);
-            }
+                child.cloneTo(clone, null, nodeTuner);
         
         return clone;
     }
