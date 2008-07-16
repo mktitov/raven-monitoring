@@ -36,6 +36,7 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeAttributeListener;
 import org.raven.tree.NodeListener;
 import org.raven.tree.NodeNotFoundError;
+import org.raven.tree.ScanOperation;
 import org.raven.tree.ScannedNodeHandler;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.objects.AnyChildsNode;
@@ -674,8 +675,8 @@ public class TreeServiceTest extends ServiceTestCase
         assertEquals(Status.STARTED, child.getStatus());
         
         ScannedNodeHandler handler = createMock(ScannedNodeHandler.class);
-        handler.nodeScanned(parent2);
-        handler.nodeScanned(child);
+        expect(handler.nodeScanned(parent2)).andReturn(ScanOperation.CONTINUE);
+        expect(handler.nodeScanned(child)).andReturn(ScanOperation.CONTINUE);
         replay(handler);
         
         tree.scanSubtree(parent1, handler, null);
@@ -683,7 +684,7 @@ public class TreeServiceTest extends ServiceTestCase
         verify(handler);
         
         handler = createMock(ScannedNodeHandler.class);
-        handler.nodeScanned(child);
+        expect(handler.nodeScanned(child)).andReturn(ScanOperation.CONTINUE);
         replay(handler);
         tree.scanSubtree(parent1, handler, null, Status.STARTED);
         
@@ -712,7 +713,7 @@ public class TreeServiceTest extends ServiceTestCase
         child.init();
         
         ScannedNodeHandler handler = createMock(ScannedNodeHandler.class);
-        handler.nodeScanned(child);
+        expect(handler.nodeScanned(child)).andReturn(ScanOperation.CONTINUE);
         replay(handler);
         
         tree.scanSubtree(parent1, handler, new Class[]{ContainerNode.class});
@@ -725,7 +726,7 @@ public class TreeServiceTest extends ServiceTestCase
         verify(handler);
         
         handler = createMock(ScannedNodeHandler.class);
-        handler.nodeScanned(child);
+        expect(handler.nodeScanned(child)).andReturn(ScanOperation.CONTINUE);
         replay(handler);
         child.start();
         assertEquals(Status.STARTED, child.getStatus());
