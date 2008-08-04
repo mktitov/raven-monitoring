@@ -36,4 +36,9 @@ public interface NodeTuner
      * @param sourceClone the clone of the <code>sourceNode</code>
      */
     public void tuneNode(Node sourceNode, Node sourceClone);
+    /**
+     * Executing after initialization cloned node.
+     * @param sourceClone the clone node
+     */
+    public void finishTuning(Node sourceClone);
 }

@@ -129,5 +129,9 @@ public class TemplateWizard
         {
             return null;
         }
+
+        public void finishTuning(Node sourceClone) 
+        {
+        }
     }
 }

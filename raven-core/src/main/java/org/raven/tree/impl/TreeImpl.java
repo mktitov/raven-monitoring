@@ -160,7 +160,7 @@ public class TreeImpl implements Tree
         createSystemNodes();
         
         logger.info("Initializing tree nodes.");
-        initNode(rootNode);
+        initNode(rootNode, null);
         long operationTime = (System.currentTimeMillis()-curTime)/1000;
         logger.info(String.format("Tree nodes initialized in %d seconds", operationTime));
         
@@ -234,7 +234,7 @@ public class TreeImpl implements Tree
 //            destination.addChildren(clone);
             Node clone = source.cloneTo(destination, newNodeName, nodeTuner);
             saveClonedNode(source, clone, destination.getPath(), clone, store);
-            initNode(clone);
+            initNode(clone, nodeTuner);
             
             return clone;
         } 
@@ -376,27 +376,27 @@ public class TreeImpl implements Tree
         }
     }
 
-    private void initNode(Node node)
+    private void initNode(Node node, NodeTuner nodeTuner)
     {
         if (logger.isDebugEnabled())
             logger.debug(String.format("Initializing node (%s)", node.getPath()));
         if (!node.isInitializeAfterChildrens())
         {
             node.init();
-//            if (autoStart && node.getStatus()==Node.Status.INITIALIZED && node.isAutoStart())
-//                node.start();
+            if (nodeTuner!=null)
+                nodeTuner.finishTuning(node);
         }
         if (node.getChildrens()!=null)
         {
             Iterator<Node> it = node.getChildrens().iterator();
             while (it.hasNext())
-                initNode(it.next());
+                initNode(it.next(), nodeTuner);
         }
         if (node.isInitializeAfterChildrens())
         {
             node.init();
-//            if (autoStart && node.getStatus()==Node.Status.INITIALIZED && node.isAutoStart())
-//                node.start();
+            if (nodeTuner!=null)
+                nodeTuner.finishTuning(node);
         }
     }
 

@@ -30,11 +30,15 @@ import org.raven.ds.DataSource;
 import org.raven.rrd.data.RRDataSource;
 import org.raven.rrd.graph.RRDef;
 import org.raven.rrd.graph.RRGraphNode;
+import org.raven.template.TemplateEntry;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodeError;
+import org.raven.tree.NodeTuner;
 import org.raven.tree.ScanOperation;
 import org.raven.tree.ScannedNodeHandler;
 import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
@@ -44,7 +48,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass()
-public class RRGraphManager extends BaseNode implements ScannedNodeHandler
+public class RRGraphManager extends BaseNode
 {
     public final static String STARTINGPOINT_ATTRIBUTE = "startingPoint";
     public final static long LOCK_TIMEOUT = 500;
@@ -104,7 +108,7 @@ public class RRGraphManager extends BaseNode implements ScannedNodeHandler
         bindings.putAll(expressionContext);
     }
 
-    private void addDataSourceToGraph(DataSource dataSource, RRDataSource rrds)
+    private void addDataSourceToGraph(DataSource dataSource, RRDataSource rrds) 
     {
         expressionContext.put("dataSource", dataSource);
         expressionContext.put("rrDataSource", rrds);
@@ -151,15 +155,21 @@ public class RRGraphManager extends BaseNode implements ScannedNodeHandler
             else
                 break;
         }
+        
+        NodeTuner tuner = new Tuner(dataSource, rrds);
         if (gTemplate instanceof GroupNode || gTemplate instanceof RRGraphNode)
         {
             //cloning subtree
+            tree.copy(gTemplate, injectingPoint, null, tuner, true, false);
         }
         else
         {
             //cloning all nodes inside graph template (the parent of the gTemplate)
+            Collection<Node> childs = gTemplate.getChildrens();
+            if (childs!=null)
+                for (Node node: childs)
+                    tree.copy(node, injectingPoint, null, tuner, true, false);
         }
-        
     }
     
     private void sync() throws Exception
@@ -168,8 +178,10 @@ public class RRGraphManager extends BaseNode implements ScannedNodeHandler
         {
             try
             {
-                tree.scanSubtree(
-                        startingPoint, this, new Class[]{DataSource.class}, Status.STARTED);
+                //scan subtree for existing RRGraphNode for dataSources
+                tree.scanSubtree(this, new ExistingDataSourcesScanner(), null);
+                //scan subtree from starting point to find new data sources and create RRGraphNode
+                tree.scanSubtree(startingPoint, new NewDataSourcesScanner(), null, Status.STARTED);
             }
             finally
             {
@@ -181,32 +193,130 @@ public class RRGraphManager extends BaseNode implements ScannedNodeHandler
             throw new Exception(String.format("Error locking graphic manager (%s)", getPath()));
         }
     }
-
-    public ScanOperation nodeScanned(Node node)
+    
+    private class ExistingDataSourcesScanner implements ScannedNodeHandler
     {
-        if (node instanceof RRGraphManagerTemplate)
-            return ScanOperation.SKIP_NODE;
-        
-        if (dataSources.containsKey(node))
+        public ScanOperation nodeScanned(Node node) 
+        {
+            if (node instanceof TemplateEntry)
+                return ScanOperation.SKIP_NODE;
+            if (node instanceof RRDef)
+            {
+                RRDef def = (RRDef) node;
+                dataSources.put(def.getDataSource().getDataSource(), def);
+            }
             return ScanOperation.CONTINUE;
-        
-        RRDataSource rrds = null;
-        Collection<Node> nodeDeps = node.getDependentNodes();
-        if (nodeDeps==null)
-            for (Node dep: nodeDeps)
-                if (dep instanceof RRDataSource)
-                {
-                    rrds = (RRDataSource) dep;
-                    break;
-                }
-                
-        if (rrds==null)
+        }
+    }
+
+    private class NewDataSourcesScanner implements ScannedNodeHandler
+    {
+        public ScanOperation nodeScanned(Node node) 
+        {
+            if (node instanceof TemplateEntry)
+                return ScanOperation.SKIP_NODE;
+
+            if (!(node instanceof DataSource) || dataSources.containsKey(node))
+                return ScanOperation.CONTINUE;
+
+            RRDataSource rrds = null;
+            Collection<Node> nodeDeps = node.getDependentNodes();
+            if (nodeDeps==null)
+                for (Node dep: nodeDeps)
+                    if (dep instanceof RRDataSource)
+                    {
+                        rrds = (RRDataSource) dep;
+                        break;
+                    }
+
+            if (rrds==null)
+                return ScanOperation.CONTINUE;
+
+            addDataSourceToGraph((DataSource)node, rrds);
+
             return ScanOperation.CONTINUE;
-            
-        addDataSourceToGraph((DataSource)node, rrds);
-        
-        return ScanOperation.CONTINUE;
+        }
     }
     
-//    private
+    private class Tuner implements NodeTuner
+    {
+        private final DataSource dataSource;
+        private final RRDataSource rrds;
+
+        public Tuner(DataSource dataSource, RRDataSource rrds) 
+        {
+            this.dataSource = dataSource;
+            this.rrds = rrds;
+        }
+
+        public Node cloneNode(Node sourceNode) 
+        {
+            if (sourceNode instanceof GroupNode)
+            {
+                String groupName = getGroupName(sourceNode);
+                ContainerNode clone = new ContainerNode(groupName);
+                return clone;
+            }
+            else
+                return null;
+        }
+
+        public void tuneNode(Node sourceNode, Node sourceClone) 
+        {
+            if (sourceNode instanceof RRGraphNode)
+            {
+                String groupName = getGroupName(sourceNode);
+                sourceClone.setName(groupName);
+            }
+            else if (!(sourceNode instanceof GroupNode))
+            {
+                //tunig nodes inside RRGraphNode
+                sourceClone.setName(sourceNode.getName()+"_"+dataSource.getId());
+            }
+        }
+        
+        public void finishTuning(Node nodeClone) 
+        {
+            if (nodeClone instanceof RRDef)
+            {
+                NodeAttribute rrdAttr = 
+                        nodeClone.getNodeAttribute(RRDef.DATASOURCE_ATTRIBUTE);
+                try {
+                    rrdAttr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
+                    rrdAttr.setValue(rrds.getPath());
+                    rrdAttr.save();
+                } catch (Exception e) 
+                {
+                    logger.error(
+                        String.format(
+                            "Error configuring RRDef node (%s) for dataSource (%s)"
+                            , nodeClone.getPath(), rrds.getPath())
+                        , e);
+                }
+            }
+        }
+        
+        private String getGroupName(Node sourceNode)
+        {
+            NodeAttribute groupingExpression = sourceNode.getNodeAttribute(
+                    GroupNode.GROUPINGEXPRESSION_ATTRIBUTE);
+            if (groupingExpression==null)
+                throw new NodeError(String.format(
+                        "Error creating graph for dataSource (%s). " +
+                        "Node (%s) must contains (%s) attribute",
+                        dataSource.getPath(), sourceNode.getPath()
+                        , GroupNode.GROUPINGEXPRESSION_ATTRIBUTE));
+
+            String groupName = groupingExpression.getValue();
+            if (groupName==null)
+                throw new NodeError(String.format(
+                        "Error creating graph for dataSource (%s). Error in the node (%s). " +
+                        "The value of the attribute (%s) is NULL"
+                        , dataSource.getPath(), sourceNode.getPath()
+                        , GroupNode.GROUPINGEXPRESSION_ATTRIBUTE));
+            
+            return groupName;
+        }
+    }
+    
 }
