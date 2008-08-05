@@ -72,7 +72,7 @@ public class SessionBean
 	public String getNodeNamePattern()
 	{
 		//return "[^\\Q~"+Node.NODE_SEPARATOR+Node.ATTRIBUTE_SEPARATOR+"\\E]+";
-		return "[^\\~\\"+Node.NODE_SEPARATOR+"\\"+Node.ATTRIBUTE_SEPARATOR+"]+";
+		return "[^\"\\~\\"+Node.NODE_SEPARATOR+"\\"+Node.ATTRIBUTE_SEPARATOR+"]+";
 	}
 	
 	public String getTitle()
@@ -225,6 +225,7 @@ public class SessionBean
 		if(getCurrentNode()==null || !getCurrentNode().equals(currentNode))
 		{
 			wrapper.setNode(currentNode);
+			clearNewNode();
 			reloadBothFrames();
 		} else reloadLeftFrame();
 	}
@@ -281,6 +282,7 @@ public class SessionBean
 		n.init();
 		if(n.isAutoStart()) n.start();
 		logger.warn("Added new node name={}",getNewNodeName());
+		clearNewNode();
 		wrapper.goToEditNewAttribute(n);
 		return "ok";
 	}
@@ -318,6 +320,12 @@ public class SessionBean
 		wrapper.onSetNode();
 		if(ret.length()==0) return null;
 		return ret.toString();
+	}
+	
+	public void clearNewNode()
+	{
+		setNewNodeType("");
+		setNewNodeName("");
 	}
 	
 	@SuppressWarnings("unchecked")
