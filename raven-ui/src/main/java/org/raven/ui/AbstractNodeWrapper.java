@@ -17,15 +17,15 @@
 
 package org.raven.ui;
 
+//import org.raven.template.TemplateWizard;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-
 import org.raven.conf.Configurator;
 import org.raven.conf.impl.AccessControl;
 import org.raven.conf.impl.UserAcl;
-import org.raven.template.TemplateWizard;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Tree;
@@ -142,7 +142,6 @@ public abstract class AbstractNodeWrapper
 		return al;
 	}
 
-	@SuppressWarnings("unchecked")
 	public List<NodeType> getValidSubNodeTemplatesList()
 	{
 		List<Node> templates = tree.getTempltateNodes();
@@ -156,7 +155,6 @@ public abstract class AbstractNodeWrapper
 		}
 		return al;
 	}
-
 	
 	  public String getNodeName()
 	  {

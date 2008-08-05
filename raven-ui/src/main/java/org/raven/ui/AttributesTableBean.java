@@ -19,18 +19,18 @@ package org.raven.ui;
 
 //import java.util.ArrayList;
 //import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import javax.faces.component.UIComponent;
-import javax.faces.context.FacesContext;
-import org.apache.myfaces.trinidad.component.UIXTable;
-import org.apache.myfaces.trinidad.model.RowKeySet;
-import org.apache.myfaces.trinidad.component.core.output.CoreMessage;
-
+//import javax.faces.context.FacesContext;
 //import javax.faces.event.ActionEvent;
 //import org.raven.tree.NodeAttribute;
 //import org.apache.myfaces.trinidad.component.UIXCollection;
 //import org.apache.myfaces.trinidad.model.RowKeySetImpl;
+
+import java.util.Iterator;
+import java.util.List;
+import javax.faces.component.UIComponent;
+import org.apache.myfaces.trinidad.component.UIXTable;
+import org.apache.myfaces.trinidad.model.RowKeySet;
+import org.apache.myfaces.trinidad.component.core.output.CoreMessage;
 
 public class AttributesTableBean 
 {
@@ -39,7 +39,6 @@ public class AttributesTableBean
 //	private List<Attr> selected;
 	private CoreMessage message = null;
 
-	@SuppressWarnings("unchecked")
 	public AttributesTableBean() 
 	{ 
 		//selected = Collections.EMPTY_LIST;
@@ -84,7 +83,6 @@ public class AttributesTableBean
 			nw.afterDeleteAttrubutes();
 		}	
 		//tbl.setSelectedRowKeys(state);
-		
 
 		if(message!=null) message.setMessage(retb.toString());
 		//else message.setMessage("");
@@ -93,8 +91,7 @@ public class AttributesTableBean
 		  
 	public String tryDelete(List<Attr> attrs)
 	{
-		FacesContext context = FacesContext.getCurrentInstance();
-		NodeWrapper nw = (NodeWrapper) context.getELContext().getELResolver().getValue(context.getELContext(), null, NodeWrapper.BEAN_NAME);
+		NodeWrapper nw = (NodeWrapper) SessionBean.getElValue(NodeWrapper.BEAN_NAME);
 		String ret = nw.deleteAttrubutes(attrs);
 /*		if(ret==null)
 		{
@@ -106,9 +103,13 @@ public class AttributesTableBean
 	
 	public String saveAttributes()
 	{
-		FacesContext context = FacesContext.getCurrentInstance();
-		NodeWrapper nw = (NodeWrapper) context.getELContext().getELResolver().getValue(context.getELContext(), null, NodeWrapper.BEAN_NAME);
-		String ret = nw.save();
+		NodeWrapper nw = (NodeWrapper) SessionBean.getElValue(NodeWrapper.BEAN_NAME);
+		return saveAttributes(nw);
+	}
+
+	public String saveAttributes(NodeWrapper nw)
+	{
+		String ret = nw.save(true);
 		if(ret!=null && message!=null) message.setMessage(ret);
 		else message.setMessage("");
 		return "";

@@ -46,6 +46,8 @@ import org.apache.myfaces.trinidad.util.Service;
 import org.apache.tapestry.ioc.Registry;
 import org.raven.tree.InvalidPathException;
 
+//import com.sun.org.apache.xml.internal.security.Init;
+
 public class SessionBean 
 {
 	public static final String BEAN_NAME = "sBean";
@@ -57,7 +59,7 @@ public class SessionBean
 	private Configurator configurator;
 	private NodeWrapper wrapper = null;
 	private String title = "RAVEN";
-	private ClassDescriptorRegistry classDsc = null;
+//	private ClassDescriptorRegistry classDsc = null;
 	private boolean refreshTree = true;
 
 	private String newNodeType = null;
@@ -80,24 +82,15 @@ public class SessionBean
 
 	public SessionBean() 
 	{
-		FacesContext fc = FacesContext.getCurrentInstance();
-	    wrapper = (NodeWrapper) fc.getELContext().getELResolver().getValue(fc.getELContext(), null, NodeWrapper.BEAN_NAME);
+//		FacesContext fc = FacesContext.getCurrentInstance();
+	    wrapper = (NodeWrapper) getElValue(NodeWrapper.BEAN_NAME);
+	    initNodeWrapper(wrapper);
 		
-		Map<String,Object> session = fc.getExternalContext().getSessionMap();
-		userAcl = (UserAcl)session.get(AuthFilter.USER_ACL);
-		wrapper.setUserAcl(userAcl);
-
-		Registry registry = RavenRegistry.getRegistry();
-		tree = registry.getService(Tree.class);
-		wrapper.setTree(tree);
-		classDsc = registry.getService(ClassDescriptorRegistry.class);
-		wrapper.setClassDesc(classDsc);
+		userAcl = getUserAcl();
+		tree = getTree();
+//		classDsc = getClassDscRegistry();
+		configurator = getConfigurator();
 		
-//		classDsc.getClassDescriptor(Class.class).
-//		registry.getService(ClassDescriptorRegistry.class);
-		
-		configurator = registry.getService(Configurator.class);
-		wrapper.setConfigurator(configurator);
 		List<Node> nodes = new ArrayList<Node>();
 		nodes.add(tree.getRootNode());
 		wrapper.setNode(tree.getRootNode());
@@ -130,12 +123,45 @@ public class SessionBean
 
 	  //public void al(ActionEvent event)  { send(); }
 	 
+	 public static void initNodeWrapper(NodeWrapper nw)
+	 {
+		 nw.setUserAcl(getUserAcl());
+		 nw.setTree(getTree());
+		 nw.setClassDesc(getClassDscRegistry());
+		 nw.setConfigurator(getConfigurator());
+	 }
+	 
 	 public static Object getElValue(String name)
 	 {
 	    FacesContext context = FacesContext.getCurrentInstance();
 	    return context.getELContext().getELResolver().getValue(context.getELContext(), null, name);
 	 }
-	  
+
+	 private static UserAcl getUserAcl()
+	 {
+		FacesContext fc = FacesContext.getCurrentInstance();
+		Map<String,Object> session = fc.getExternalContext().getSessionMap();
+		return (UserAcl)session.get(AuthFilter.USER_ACL);
+	 }	
+
+	 private static Tree getTree()
+	 {
+		Registry registry = RavenRegistry.getRegistry();
+		return registry.getService(Tree.class);
+	 }	 
+
+	 private static ClassDescriptorRegistry getClassDscRegistry()
+	 {
+		Registry registry = RavenRegistry.getRegistry();
+		return registry.getService(ClassDescriptorRegistry.class);
+	 }	 
+
+	 private static Configurator getConfigurator()
+	 {
+		Registry registry = RavenRegistry.getRegistry();
+		return registry.getService(Configurator.class);
+	 }	 
+	 
 	  public void show(ActionEvent event)
 	  {
 		  FacesContext context = FacesContext.getCurrentInstance();
@@ -315,12 +341,7 @@ public class SessionBean
 	public CoreTree getCoreTree() { return coreTree; }
 	public void setCoreTree(CoreTree coreTree) { this.coreTree = coreTree; }
 
-	public NewNodeFromTemplate getTemplate() {
-		return template;
-	}
-
-	public void setTemplate(NewNodeFromTemplate template) {
-		this.template = template;
-	}
+	public NewNodeFromTemplate getTemplate() { return template;	}
+	public void setTemplate(NewNodeFromTemplate template) { this.template = template; }
 	
 }

@@ -17,19 +17,15 @@
 
 package org.raven.ui;
 
-import javax.faces.context.FacesContext;
-
 public class RowExplorer 
 {
 	private NodeWrapper current = null;
 	private String rowName = "row";
 //	private String id;
 	
-	@SuppressWarnings("unchecked")
 	public String getRefresh()
 	{
-	    FacesContext context = FacesContext.getCurrentInstance();
-	    current = (NodeWrapper) context.getELContext().getELResolver().getValue(context.getELContext(), null, rowName);
+	    current = (NodeWrapper) SessionBean.getElValue(rowName);
 		return current.getNode().getPath(); 
 	}
 	

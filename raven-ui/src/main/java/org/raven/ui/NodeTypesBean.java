@@ -18,10 +18,8 @@
 package org.raven.ui;
 
 import java.util.Iterator;
-import javax.faces.context.FacesContext;
 import org.apache.myfaces.trinidad.component.UIXTable;
 import org.apache.myfaces.trinidad.context.RequestContext;
-//import org.raven.tree.Node;
 
 public class NodeTypesBean 
 {
@@ -36,29 +34,16 @@ public class NodeTypesBean
 	    return null;
 	}
 
-	 @SuppressWarnings("unchecked")
-	  public String select()
-	  {
-	    FacesContext context = FacesContext.getCurrentInstance();
-	    //NodeWrapper wrapper = (NodeWrapper) context.getELContext().getELResolver().getValue(context.getELContext(), null, NodeWrapper.BEAN_NAME);
-	    //if( wrapper.getSelNodeTab().isDisclosed() )
-	    //{
+	public String select()
+	{
 	    Iterator<Object> iterator = table.getSelectedRowKeys().iterator();
 	    if( !iterator.hasNext() ) return null;
 	    Object rowKey = iterator.next();
 	    Object oldRowKey = table.getRowKey();
 	    table.setRowKey(rowKey);
-	    NodeType n = (NodeType) context.getELContext().getELResolver().getValue(context.getELContext(), null, "row");
-/*	    
-	    ExpressionFactory ef = context.getApplication().getExpressionFactory();
-	    javax.el.ValueExpression ve = ef.createValueExpression(context.getELContext(), "row",  Object.class);
-	    ve.
-	    Object value = binding.getValue(context);
-*/
+	    NodeType n = (NodeType) SessionBean.getElValue("row");
 	    RequestContext.getCurrentInstance().returnFromDialog(n.getClassName(), null);
 	    table.setRowKey(oldRowKey);
-	   // }
-
 	    return null;
 	  }
 

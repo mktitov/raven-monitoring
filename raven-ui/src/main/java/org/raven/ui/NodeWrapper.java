@@ -49,11 +49,14 @@ public class NodeWrapper extends AbstractNodeWrapper
 		
 	public NodeWrapper() 
 	{
+		super();
+		SessionBean.initNodeWrapper(this);
+		
 	}
 
 	public NodeWrapper(Node node) 
 	{
-		super();
+		this();
 		this.setNode(node);
 	}
 	
@@ -106,7 +109,7 @@ public class NodeWrapper extends AbstractNodeWrapper
 	
 //	  public String delAttr()  {   return "";  }
 	
-	  public String save()
+	  public String save(boolean write)
 	  {
 		  int save = 0;
 		  StringBuffer ret = new StringBuffer();
@@ -138,7 +141,7 @@ public class NodeWrapper extends AbstractNodeWrapper
 				  if( (save&8) !=0 ) na.setValue(at.getExpression());
                   if( (save&16) !=0) na.setValueHandlerType(at.getValueHandlerType());
 				  
-				  getConfigurator().getTreeStore().saveNodeAttribute(na);
+				  if(write) getConfigurator().getTreeStore().saveNodeAttribute(na);
 			  }
 			  catch(ConstraintException e) 
 			  {

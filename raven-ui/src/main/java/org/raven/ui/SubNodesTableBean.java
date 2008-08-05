@@ -17,8 +17,6 @@
 
 package org.raven.ui;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import javax.faces.component.UIComponent;
@@ -36,7 +34,6 @@ public class SubNodesTableBean
 //	  private List<NodeWrapper> selected;
 	  private CoreMessage message = null;
 
-	  @SuppressWarnings("unchecked")
 	  public SubNodesTableBean() 
 	  {
 		//  selected = Collections.EMPTY_LIST; 

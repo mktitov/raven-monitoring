@@ -1,16 +1,10 @@
 package org.raven.ui;
 
-//import java.util.Collection;
-//import java.util.Iterator;
-
-import javax.faces.context.FacesContext;
-
 import org.apache.myfaces.trinidad.context.RequestContext;
 import org.apache.myfaces.trinidad.event.ReturnEvent;
 import org.raven.template.TemplateNode;
 import org.raven.template.TemplateWizard;
 import org.raven.tree.Node;
-//import org.raven.tree.NodeAttribute;
 import org.weda.constraints.ConstraintException;
 
 public class NewNodeFromTemplate 
@@ -33,13 +27,13 @@ public class NewNodeFromTemplate
 	 public void handleReturn(ReturnEvent event)
 	  {
 	    //Object returnedValue = event.getReturnValue();
-		    FacesContext context = FacesContext.getCurrentInstance();
-		    SessionBean sb = (SessionBean) context.getELContext().getELResolver().getValue(context.getELContext(), null, SessionBean.BEAN_NAME);
-		    sb.reloadBothFrames();
+	    SessionBean sb = (SessionBean) SessionBean.getElValue(SessionBean.BEAN_NAME);
+	    sb.reloadBothFrames();
 	  }
 
 	public String write()
 	{
+		wrapper.save(false);
 		try { wizard.createNodes(); } 
 		catch(ConstraintException e) { return cancel();} 
 	    RequestContext.getCurrentInstance().returnFromDialog(null, null);

@@ -54,6 +54,7 @@ public class Attr
 	private boolean expressionSupported = false;
 	private String expression = "";
 
+	@SuppressWarnings("unchecked")
 	public Attr(NodeAttribute na) throws TooManyReferenceValuesException
 	{
 		attribute = na;
