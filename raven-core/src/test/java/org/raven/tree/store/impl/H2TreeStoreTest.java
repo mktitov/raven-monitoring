@@ -21,12 +21,10 @@ import java.sql.SQLException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.raven.tree.FactoryNotFoundException;
 import org.raven.tree.Node;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.store.TreeStoreError;
-import org.weda.constraints.ConstraintException;
 
 /**
  *

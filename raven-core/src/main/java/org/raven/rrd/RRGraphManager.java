@@ -19,7 +19,9 @@ package org.raven.rrd;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -27,6 +29,7 @@ import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataSource;
+import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.rrd.data.RRDataSource;
 import org.raven.rrd.graph.RRDef;
 import org.raven.rrd.graph.RRGraphNode;
@@ -51,6 +54,7 @@ import org.weda.annotations.constraints.NotNull;
 public class RRGraphManager extends BaseNode
 {
     public final static String STARTINGPOINT_ATTRIBUTE = "startingPoint";
+    public final static String FILTER_EXPRESSION_ATTRIBUTE = "filterExpression";
     public final static long LOCK_TIMEOUT = 500;
     
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
@@ -58,9 +62,17 @@ public class RRGraphManager extends BaseNode
     @NotNull
     private Node startingPoint;
     
+    @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
+    @NotNull
+    @Description(
+        "The expression that will be call on each dataSource. " +
+        "If expression returns true then dataSource will be added to the graph. " +
+        "The (dataSource) parameter will be in the expression context")
+    private Boolean filterExpression;
+    
     private RRGraphManagerTemplate template;
     private Lock lock;
-    private HashMap<DataSource, RRDef> dataSources;
+    private Set<DataSource> dataSources;
     private Map<String, Object> expressionContext;
 
     @Override
@@ -68,7 +80,7 @@ public class RRGraphManager extends BaseNode
     {
         super.initFields();
         lock = new ReentrantLock();
-        dataSources = new HashMap<DataSource, RRDef>();
+        dataSources = new HashSet<DataSource>();
         expressionContext = new HashMap<String, Object>();
     }
 
@@ -112,6 +124,9 @@ public class RRGraphManager extends BaseNode
     {
         expressionContext.put("dataSource", dataSource);
         expressionContext.put("rrDataSource", rrds);
+        
+        if (filterExpression==null || filterExpression.equals(Boolean.FALSE))
+            return;
         
         Collection<Node> tempChilds = template.getEffectiveChildrens();
         if (tempChilds==null || tempChilds.size()==0)
@@ -170,6 +185,7 @@ public class RRGraphManager extends BaseNode
                 for (Node node: childs)
                     tree.copy(node, injectingPoint, null, tuner, true, false);
         }
+        dataSources.add(dataSource);
     }
     
     private void sync() throws Exception
@@ -203,7 +219,7 @@ public class RRGraphManager extends BaseNode
             if (node instanceof RRDef)
             {
                 RRDef def = (RRDef) node;
-                dataSources.put(def.getDataSource().getDataSource(), def);
+                dataSources.add(def.getDataSource().getDataSource());
             }
             return ScanOperation.CONTINUE;
         }
@@ -216,7 +232,7 @@ public class RRGraphManager extends BaseNode
             if (node instanceof TemplateEntry)
                 return ScanOperation.SKIP_NODE;
 
-            if (!(node instanceof DataSource) || dataSources.containsKey(node))
+            if (!(node instanceof DataSource) || dataSources.contains(node))
                 return ScanOperation.CONTINUE;
 
             RRDataSource rrds = null;
