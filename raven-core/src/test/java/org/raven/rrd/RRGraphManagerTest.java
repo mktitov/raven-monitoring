@@ -19,12 +19,20 @@ package org.raven.rrd;
 
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
+import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
+import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.rrd.data.RRArchive;
 import org.raven.rrd.data.RRDNode;
 import org.raven.rrd.data.RRDataSource;
+import org.raven.rrd.graph.RRComment;
+import org.raven.rrd.graph.RRDef;
+import org.raven.rrd.graph.RRGraphNode;
 import org.raven.rrd.objects.TestDataSource2;
+import org.raven.tree.Node;
+import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodeError;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 
@@ -37,28 +45,198 @@ public class RRGraphManagerTest extends RavenCoreTestCase
     private ContainerNode dataSourcesNode;
     
     @Test
-    public void addDataSourcesToGraphTest() throws Exception
+    public void syncTest() throws Exception
     {
         createTestDataSources();
         createRoundRobinDatabase();
+        RRGraphManager gmanager = createGraphManager();
+        assertNotNull(gmanager);
         
+        gmanager.start();
+        checkGraphManager(gmanager);
+        
+        tree.reloadTree();
+        checkGraphManager(gmanager);
+    }
+    
+    @Test
+    public void removeDataSourceTest() throws Exception
+    {
+        createTestDataSources();
+        createRoundRobinDatabase();
+        RRGraphManager gmanager = createGraphManager();
+        assertNotNull(gmanager);
+        gmanager.start();
+        
+        Node ds = dataSourcesNode.getChildren("ds_0");
+        
+        Node graphNode = gmanager.getChildren("group1").getChildren("graph");
+        assertNotNull(graphNode.getChildren("def_"+ds.getId()));
+        assertNotNull(graphNode.getChildren("comment_"+ds.getId()));
+        
+        tree.remove(ds);
+        assertNull(graphNode.getChildren("def_"+ds.getId()));
+        assertNull(graphNode.getChildren("comment_"+ds.getId()));
+        
+        assertEquals(2, graphNode.getChildrenCount());
+        
+        tree.reloadTree();
+        gmanager = (RRGraphManager) tree.getNode(gmanager.getPath());
+        graphNode = gmanager.getChildren("group1").getChildren("graph");
+        assertEquals(2, graphNode.getChildrenCount());
+        
+        gmanager.stop();
+        dataSourcesNode = (ContainerNode) tree.getNode(dataSourcesNode.getPath());
+        ds = dataSourcesNode.getChildren("ds_1");
+        tree.remove(ds);
+        gmanager.start();
+        graphNode = gmanager.getChildren("group1").getChildren("graph");
+        assertNotNull(graphNode);
+        assertEquals(0, graphNode.getChildrenCount());
+    }
+    
+    @Test
+    public void addDataSourceTest() throws Exception
+    {
+        createTestDataSources();
+        RRDNode rrd = createRoundRobinDatabase();
+        RRGraphManager gmanager = createGraphManager();
+        assertNotNull(gmanager);
+        gmanager.start();
+        
+        addTestDataSource(3);
+        addRRDataSource(3, rrd);
+        
+        Node graphNode = gmanager.getChildren("group2").getChildren("graph");
+        assertNotNull(graphNode);
+        assertEquals(4, graphNode.getChildrenCount());
+    }
+
+    private TestDataSource2 addTestDataSource(int i) throws NodeError 
+    {
+        TestDataSource2 ds = new TestDataSource2();
+        ds.setName("ds_" + i);
+        dataSourcesNode.addChildren(ds);
+        ds.save();
+        ds.init();
+        ds.start();
+        assertEquals(Status.STARTED, ds.getStatus());
+        
+        return ds;
+    }
+    
+    private void checkDataSourceInGraph(RRGraphNode node, DataSource ds)
+    {
+        Node comment = node.getChildren("comment_"+ds.getId());
+        assertNotNull(comment);
+        assertTrue(comment instanceof RRComment);
+        
+        Node def = node.getChildren("def_"+ds.getId());
+        assertNotNull(def);
+        assertTrue(def instanceof RRDef);
+        RRDataSource rrds = ((RRDef)def).getDataSource();
+        assertNotNull(rrds);
+        assertSame(ds, rrds.getDataSource());
+    }
+
+    private void checkGraphManager(RRGraphManager gmanager) {
+
+        //group1, group2 and Template
+        assertEquals(3, gmanager.getChildrenCount());
+        Node group = gmanager.getChildren("group1");
+        assertNotNull(group);
+        assertTrue(group instanceof ContainerNode);
+        assertEquals(1, group.getChildrenCount());
+
+        Node gNode = group.getChildren("graph");
+        assertTrue(gNode instanceof RRGraphNode);
+        assertEquals(4, gNode.getChildrenCount());
+        checkDataSourceInGraph((RRGraphNode) gNode, (DataSource) dataSourcesNode.getChildren("ds_0"));
+        checkDataSourceInGraph((RRGraphNode) gNode, (DataSource) dataSourcesNode.getChildren("ds_1"));
+
+        group = gmanager.getChildren("group2");
+        assertNotNull(group);
+        assertTrue(group instanceof ContainerNode);
+        assertEquals(1, group.getChildrenCount());
+
+        gNode = group.getChildren("graph");
+        assertTrue(gNode instanceof RRGraphNode);
+        assertEquals(2, gNode.getChildrenCount());
+        checkDataSourceInGraph((RRGraphNode) gNode, (DataSource) dataSourcesNode.getChildren("ds_2"));
+    }
+
+    private RRGraphManager createGraphManager() throws NodeError, Exception {
+
         RRGraphManager gmanager = new RRGraphManager();
         gmanager.setName("graph manager");
         tree.getRootNode().addChildren(gmanager);
         gmanager.save();
         gmanager.init();
-        
+
         NodeAttribute attr = gmanager.getNodeAttribute(RRGraphManager.STARTINGPOINT_ATTRIBUTE);
         attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
         attr.setValue(dataSourcesNode.getPath());
         attr.save();
-        
+
         attr = gmanager.getNodeAttribute(RRGraphManager.FILTER_EXPRESSION_ATTRIBUTE);
         attr.setValue("true");
         attr.save();
+        
+        //creating template
+        RRGraphManagerTemplate template = gmanager.getTemplate();
+        assertNotNull(template);
+        GroupNode groupNode = new GroupNode();
+        groupNode.setName("grouping-by-name");
+        template.addChildren(groupNode);
+        groupNode.save();
+        groupNode.init();
+        
+        attr = groupNode.getNodeAttribute(GroupNode.GROUPINGEXPRESSION_ATTRIBUTE);
+        attr.setValue("dataSource.name ==~ /.*[01]/? \"group1\" : \"group2\"");
+        attr.save();
+        
+        RRGraphNode graphNode = new RRGraphNode();
+        graphNode.setName("graph");
+        groupNode.addChildren(graphNode);
+        graphNode.save();
+        graphNode.init();
+        
+        attr = graphNode.getNodeAttribute(GroupNode.GROUPINGEXPRESSION_ATTRIBUTE);
+        //The RRGraphManagerTemplate must create this attribute
+        assertNotNull(attr);
+        assertEquals(ExpressionAttributeValueHandlerFactory.TYPE, attr.getValueHandlerType());
+        attr.setValue("\"graph\"");
+        attr.save();
+        
+        RRDef def = new RRDef();
+        def.setName("def");
+        graphNode.addChildren(def);
+        def.save();
+        def.init();
+        
+        RRComment comment = new RRComment();
+        comment.setName("comment");
+        graphNode.addChildren(comment);
+        comment.save();
+        comment.init();
+        
+        return gmanager;
     }
 
-    private void createRoundRobinDatabase() throws Exception 
+    private void addRRDataSource(int i, RRDNode rrd) throws Exception, NodeError 
+    {
+        RRDataSource rrds = new RRDataSource();
+        rrds.setName("rrds_" + i);
+        rrd.addChildren(rrds);
+        rrds.save();
+        rrds.init();
+        NodeAttribute attr = rrds.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE);
+        attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
+        attr.setValue(dataSourcesNode.getChildren("ds_" + i).getPath());
+        attr.save();
+    }
+
+    private RRDNode createRoundRobinDatabase() throws Exception 
     {
         RRDNode rrd = new RRDNode();
         rrd.setName("Round robin database");
@@ -72,21 +250,16 @@ public class RRGraphManagerTest extends RavenCoreTestCase
         rrd.addChildren(rra);
         rra.save();
         rra.init();
+        rra.getNodeAttribute(RRArchive.ROWS_ATTRIBUTE).setValue("100");
 
         for (int i=0; i<3; ++i)
         {
-            RRDataSource rrds = new RRDataSource();
-            rrds.setName("rrds_"+i);
-            rrd.addChildren(rrds);
-            rrds.save();
-            rrds.init();
-            NodeAttribute attr = rrds.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE);
-            attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
-            attr.setValue(dataSourcesNode.getChildren("ds_"+i).getPath());
-            attr.save();
+            addRRDataSource(i, rrd);
         }
         
         tree.start(rrd, false);
+        
+        return rrd;
     }
 
     private void createTestDataSources() 
@@ -99,12 +272,7 @@ public class RRGraphManagerTest extends RavenCoreTestCase
         
         for (int i=0; i<3; ++i)
         {
-            TestDataSource2 ds = new TestDataSource2();
-            ds.setName("ds_"+i);
-            dataSourcesNode.addChildren(ds);
-            ds.save();
-            ds.init();
-            ds.start();
+            addTestDataSource(i);
         }
     }
 }

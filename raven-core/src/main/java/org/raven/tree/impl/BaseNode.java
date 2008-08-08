@@ -265,6 +265,8 @@ public class BaseNode implements Node, NodeListener
 
     public void addListener(NodeListener listener)
     {
+        if (listeners.contains(listener))
+            return;
         listeners.add(listener);
         if (listener.isSubtreeListener() && childrens!=null)
             for (Node children: childrens.values())
@@ -321,6 +323,7 @@ public class BaseNode implements Node, NodeListener
         else
         {
             dependentNodes.put(dependentNode, dependentNode);
+            fireDependentNodeAdded(dependentNode);
             return true;
         }
     }
@@ -674,6 +677,14 @@ public class BaseNode implements Node, NodeListener
             for (NodeListener listener: listeners)
                 listener.childrenAdded(this, children);
     }
+    
+    private void fireDependentNodeAdded(Node dependentNode) 
+    {
+        if (listeners!=null)
+            for (NodeListener listener: listeners)
+                listener.dependendNodeAdded(this, dependentNode);
+    }
+
 
     private void fireNodeRemoved()
     {
@@ -1044,6 +1055,9 @@ public class BaseNode implements Node, NodeListener
 
     public void childrenAdded(Node owner, Node children)
     {
+    }
+
+    public void dependendNodeAdded(Node node, Node dependentNode) {
     }
 
     public void nodeRemoved(Node removedNode)

@@ -54,6 +54,12 @@ public interface NodeListener extends NodeAttributeListener
      */
     public void childrenAdded(Node owner, Node children);
     /**
+     * Informs listener that dependent node was added.
+     * @param node the node to which dependent node was added.
+     * @param dependentNode the depenent node.
+     */
+    public void dependendNodeAdded(Node node, Node dependentNode);
+    /**
      * Informs listener that the children removed from the node.
      * 
      * @param removedNode the node which was removed.

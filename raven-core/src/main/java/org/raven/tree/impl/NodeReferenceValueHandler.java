@@ -17,8 +17,6 @@
 
 package org.raven.tree.impl;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
@@ -172,8 +170,10 @@ public class NodeReferenceValueHandler
         attribute.save();
     }
 
-    public void childrenAdded(Node owner, Node children)
-    {
+    public void childrenAdded(Node owner, Node children) {
+    }
+
+    public void dependendNodeAdded(Node node, Node dependentNode) {
     }
 
     public void nodeRemoved(Node removedNode)

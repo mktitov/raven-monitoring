@@ -19,9 +19,7 @@ package org.raven.rrd;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -35,6 +33,7 @@ import org.raven.rrd.graph.RRDef;
 import org.raven.rrd.graph.RRGraphNode;
 import org.raven.template.TemplateEntry;
 import org.raven.tree.Node;
+import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
 import org.raven.tree.NodeTuner;
@@ -42,6 +41,7 @@ import org.raven.tree.ScanOperation;
 import org.raven.tree.ScannedNodeHandler;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.ContainerNode;
+import org.raven.tree.impl.NodeListenerAdapter;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
@@ -72,16 +72,18 @@ public class RRGraphManager extends BaseNode
     
     private RRGraphManagerTemplate template;
     private Lock lock;
-    private Set<DataSource> dataSources;
+    private Map<DataSource, RRDef> dataSources;
     private Map<String, Object> expressionContext;
+    private StartingPointListener startingPointListener;
 
     @Override
     protected void initFields()
     {
         super.initFields();
         lock = new ReentrantLock();
-        dataSources = new HashSet<DataSource>();
+        dataSources = new HashMap<DataSource, RRDef>();
         expressionContext = new HashMap<String, Object>();
+        startingPointListener = new StartingPointListener();
     }
 
     @Override
@@ -103,8 +105,18 @@ public class RRGraphManager extends BaseNode
     protected void doStart() throws Exception
     {
         super.doStart();
-        
         sync();
+    }
+
+    @Override
+    public synchronized void stop() throws NodeError 
+    {
+        if (startingPoint!=null)
+            startingPoint.removeListener(startingPointListener);
+    }
+
+    public RRGraphManagerTemplate getTemplate() {
+        return template;
     }
 
     public Node getStartingPoint()
@@ -112,16 +124,39 @@ public class RRGraphManager extends BaseNode
         return startingPoint;
     }
 
+    public Boolean getFilterExpression() {
+        return filterExpression;
+    }
+
     @Override
     public void formExpressionBindings(Bindings bindings)
     {
         super.formExpressionBindings(bindings);
-        
         bindings.putAll(expressionContext);
     }
 
-    private void addDataSourceToGraph(DataSource dataSource, RRDataSource rrds) 
+    @Override
+    public void nodeAttributeValueChanged(
+            Node node, NodeAttribute attribute, Object oldValue, Object newValue) 
     {
+        if (   getStatus()==Status.STARTED 
+            && node==this 
+            && attribute.getName().equals(STARTINGPOINT_ATTRIBUTE))
+        {
+            if (oldValue!=null)
+                ((Node)oldValue).removeListener(startingPointListener);
+            if (newValue!=null)
+                ((Node)newValue).addListener(startingPointListener);
+        }
+    }
+
+    private void addDataSourceToGraph(DataSource dataSource) 
+    {
+        RRDataSource rrds = getRRDataSourceForDataSource(dataSource);
+
+        if (rrds==null)
+            return;
+
         expressionContext.put("dataSource", dataSource);
         expressionContext.put("rrDataSource", rrds);
         
@@ -180,12 +215,41 @@ public class RRGraphManager extends BaseNode
         else
         {
             //cloning all nodes inside graph template (the parent of the gTemplate)
-            Collection<Node> childs = gTemplate.getChildrens();
+            Collection<Node> childs = gTemplate.getParent().getChildrens();
             if (childs!=null)
                 for (Node node: childs)
                     tree.copy(node, injectingPoint, null, tuner, true, false);
         }
-        dataSources.add(dataSource);
+    }
+
+    private RRDataSource getRRDataSourceForDataSource(DataSource dataSource) 
+    {
+        RRDataSource rrds = null;
+        Collection<Node> nodeDeps = dataSource.getDependentNodes();
+        if (nodeDeps != null) {
+            for (Node dep : nodeDeps) {
+                if (dep instanceof RRDataSource) {
+                    rrds = (RRDataSource) dep;
+                    break;
+                }
+            }
+        }
+        return rrds;
+    }
+
+    private void removeDataSourceFromGraph(DataSource removedNode) 
+    {
+        RRDef def = dataSources.remove(removedNode);
+        if (def != null) {
+            removeDataSourceFromGraphById(def.getParent(), ""+removedNode.getId());
+        }
+    }
+
+    private void removeDataSourceFromGraphById(Node graphNode, String id) 
+    {
+        for (Node node : graphNode.getChildrens()) 
+            if (node.getName().endsWith(id))
+                tree.remove(node);
     }
     
     private void sync() throws Exception
@@ -203,6 +267,7 @@ public class RRGraphManager extends BaseNode
             {
                 lock.unlock();
             }
+            startingPoint.addListener(startingPointListener);
         }
         else
         {
@@ -219,7 +284,14 @@ public class RRGraphManager extends BaseNode
             if (node instanceof RRDef)
             {
                 RRDef def = (RRDef) node;
-                dataSources.add(def.getDataSource().getDataSource());
+                RRDataSource rrds = def.getDataSource();
+                if (rrds==null || rrds.getDataSource()==null)
+                {
+                    String id = def.getName().substring(def.getName().lastIndexOf('_')+1);
+                    removeDataSourceFromGraphById(def.getParent(), id);
+                }
+                else
+                    dataSources.put(def.getDataSource().getDataSource(), def);
             }
             return ScanOperation.CONTINUE;
         }
@@ -232,23 +304,10 @@ public class RRGraphManager extends BaseNode
             if (node instanceof TemplateEntry)
                 return ScanOperation.SKIP_NODE;
 
-            if (!(node instanceof DataSource) || dataSources.contains(node))
+            if (!(node instanceof DataSource) || dataSources.containsKey(node))
                 return ScanOperation.CONTINUE;
 
-            RRDataSource rrds = null;
-            Collection<Node> nodeDeps = node.getDependentNodes();
-            if (nodeDeps==null)
-                for (Node dep: nodeDeps)
-                    if (dep instanceof RRDataSource)
-                    {
-                        rrds = (RRDataSource) dep;
-                        break;
-                    }
-
-            if (rrds==null)
-                return ScanOperation.CONTINUE;
-
-            addDataSourceToGraph((DataSource)node, rrds);
+            addDataSourceToGraph((DataSource)node);
 
             return ScanOperation.CONTINUE;
         }
@@ -309,6 +368,7 @@ public class RRGraphManager extends BaseNode
                             , nodeClone.getPath(), rrds.getPath())
                         , e);
                 }
+                dataSources.put(dataSource, (RRDef)nodeClone);
             }
         }
         
@@ -335,4 +395,60 @@ public class RRGraphManager extends BaseNode
         }
     }
     
+    private class StartingPointListener extends NodeListenerAdapter
+    {
+        public StartingPointListener() 
+        {
+            super(true);
+        }
+
+        @Override
+        public void nodeStatusChanged(Node node, Status oldStatus, Status newStatus) 
+        {
+            if (   getStatus()==Status.STARTED 
+                && node instanceof DataSource 
+                && newStatus==Status.STARTED)
+            {
+                lock.lock();
+                try{
+                    if (!dataSources.containsKey(node))
+                        addDataSourceToGraph((DataSource)node);
+                }finally{
+                    lock.unlock();
+                }
+            }
+        }
+
+        @Override
+        public void dependendNodeAdded(Node node, Node dependentNode) 
+        {
+            if (   getStatus()==Status.STARTED 
+                && node instanceof DataSource 
+                && node.getStatus()==Status.STARTED
+                && dependentNode instanceof RRDataSource)
+            {
+                lock.lock();
+                try{
+                    if (!dataSources.containsKey(node))
+                        addDataSourceToGraph((DataSource)node);
+                }finally{
+                    lock.unlock();
+                }
+            }
+        }
+
+        @Override
+        public void nodeRemoved(Node removedNode)
+        {
+            if (getStatus()!=Status.STARTED || !(removedNode instanceof DataSource))
+                return;
+
+            lock.lock();
+            try {
+                removeDataSourceFromGraph((DataSource)removedNode);
+            }finally{
+                lock.unlock();
+            }
+        }
+    }
 }
