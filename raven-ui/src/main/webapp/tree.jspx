@@ -57,11 +57,6 @@
  		</tr:commandLink>
  		<tr:image source="/images/#{node.status}.png" shortDesc="help2" />
  		<!--
- 		<tr:image source="images/started.png" shortDesc="help2_" />
- 		<tr:image source="images/CREATED.png" shortDesc="help3" />
- 		<tr:image source="images/redsq.png" shortDesc="help4" />
- 		<tr:image source="/images/redsq.png" shortDesc="help5" />
- 		<tr:image source="redsq.png" shortDesc="help6" />
  		  
       			<tr:chooseDate  ></tr:chooseDate> -->
  		</tr:group>

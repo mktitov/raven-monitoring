@@ -17,6 +17,7 @@
  
 <jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
           xmlns:f="http://java.sun.com/jsf/core"
+          xmlns:h="http://java.sun.com/jsf/html"
           xmlns:tr="http://myfaces.apache.org/trinidad" 
           xmlns:s="http://myfaces.apache.org/sandbox" >
     
@@ -25,11 +26,14 @@
  
  <tr:column align="center">
   <tr:switcher facetName="#{row.nodeShowType}" defaultFacet="default">
-  <f:facet name="default"></f:facet >
+  <f:facet name="default">
+  </f:facet >
   
   <f:facet name="GraphNode">
   	<tr:panelGroupLayout layout="vertical">
-  	  <tr:outputText value="#{row.nodePath}"></tr:outputText>
+	<tr:commandLink text="#{row.nodePath}" actionListener="#{sBean.selectNode}">
+		<f:attribute name="nodePath" value="#{row.nodePath}"></f:attribute>
+	</tr:commandLink>
       <s:graphicImageDynamic forceId="true" id="graph" 
          forceIdIndex="true" imageRendererClass="#{sBean.ravenImageRenderer}" > 
          <f:param name="nodePath" value="#{rowExplorer.refresh}"></f:param>

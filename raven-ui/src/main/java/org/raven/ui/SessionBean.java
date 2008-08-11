@@ -45,12 +45,15 @@ import org.apache.myfaces.trinidad.render.ExtendedRenderKitService;
 import org.apache.myfaces.trinidad.util.Service;
 import org.apache.tapestry.ioc.Registry;
 import org.raven.tree.InvalidPathException;
+//import javax.faces.component.UIParameter;
+import javax.faces.component.UIComponent;
 
 //import com.sun.org.apache.xml.internal.security.Init;
 
 public class SessionBean 
 {
 	public static final String BEAN_NAME = "sBean";
+	public static final String SELECT_NODE_PARAM = "nodePath";
     protected Logger logger = LoggerFactory.getLogger(SessionBean.class);	
 	private UserAcl userAcl = null;
 	private Tree tree = null;
@@ -68,6 +71,8 @@ public class SessionBean
 	private CoreTree coreTree = null;
 //	private TemplateNode templateNode = null; 
 	private NewNodeFromTemplate template;
+	
+	//public String getSelectNodeParam() { return SELECT_NODE_PARAM; }
 	
 	public String getNodeNamePattern()
 	{
@@ -164,9 +169,7 @@ public class SessionBean
 	 
 	  public void show(ActionEvent event)
 	  {
-		  FacesContext context = FacesContext.getCurrentInstance();
-		  Node n = (Node) context.getELContext().getELResolver().getValue(context.getELContext(), null, "node");
-		  context.getExternalContext().log("Node="+n.getPath());
+		  Node n = (Node) SessionBean.getElValue("node");
 		  setCurrentNode(n);
 	  }
 
@@ -214,6 +217,24 @@ public class SessionBean
 		  return "focus: "+coreTree.getFocusRowKey()+"  selected:"+z;
 		  */
 		  return "";
+	  }
+	  
+	  public void selectNode(ActionEvent event)
+	  {
+		  UIComponent component=event.getComponent();
+		  if(component==null)
+		  {
+			  logger.info("component==null");
+			  return;
+		  }	  
+		  Map<String, Object> params = component.getAttributes();
+		  String nodePath =  (String) params.get(SELECT_NODE_PARAM);
+		  logger.info("select Node: "+nodePath);
+		  if(nodePath==null || nodePath.length()==0) return;
+		  try {
+			Node n = tree.getNode(nodePath);
+			setCurrentNode(n);
+		  } catch (InvalidPathException e) { logger.error("InvalidPath ["+nodePath+"]",e); }
 	  }
 	
 	public TreeModel getTreeModel() { return treeModel; }

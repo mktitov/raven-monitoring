@@ -75,6 +75,13 @@
     <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>editExpression</managed-bean-name>
+    <managed-bean-class>org.raven.ui.EditExpressionBean</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
+
 <!-- 
   <managed-bean>
     <managed-bean-name>rowMap</managed-bean-name>
@@ -119,6 +126,10 @@
     <navigation-case>
       <from-outcome>dialog:templateAttrEdit</from-outcome>
       <to-view-id>/templateAttrEdit.jspx</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>dialog:editExpression</from-outcome>
+      <to-view-id>/editExpressionDialog.jspx</to-view-id>
     </navigation-case>
   </navigation-rule>
 
