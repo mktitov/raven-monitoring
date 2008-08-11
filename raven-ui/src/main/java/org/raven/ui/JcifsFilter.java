@@ -30,6 +30,8 @@ import org.apache.tapestry.ioc.Registry;
 import org.raven.RavenRegistry;
 import org.raven.conf.Config;
 import org.raven.conf.Configurator;
+import org.raven.tree.Tree;
+
 import jcifs.http.NtlmHttpFilter;
 //import javax.servlet.http.HttpServletResponse;
 
@@ -80,5 +82,12 @@ public class JcifsFilter extends NtlmHttpFilter {
     	}
     }
     
+    public void destroy()
+    {
+    	Registry registry = RavenRegistry.getRegistry();
+        Tree tree = registry.getService(Tree.class);
+        tree.stop(tree.getRootNode());
+    	super.destroy();
+    }
 
 }
