@@ -25,9 +25,12 @@ import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.rrd.data.RRArchive;
 import org.raven.rrd.data.RRDNode;
 import org.raven.rrd.data.RRDataSource;
+import org.raven.rrd.graph.DataDefinition;
+import org.raven.rrd.graph.RRArea;
 import org.raven.rrd.graph.RRComment;
 import org.raven.rrd.graph.RRDef;
 import org.raven.rrd.graph.RRGraphNode;
+import org.raven.rrd.graph.RRLine;
 import org.raven.rrd.objects.TestDataSource2;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
@@ -56,6 +59,8 @@ public class RRGraphManagerTest extends RavenCoreTestCase
         checkGraphManager(gmanager);
         
         tree.reloadTree();
+        gmanager = (RRGraphManager) tree.getNode(gmanager.getPath());
+        dataSourcesNode = (ContainerNode) tree.getNode(dataSourcesNode.getPath());
         checkGraphManager(gmanager);
     }
     
@@ -78,12 +83,12 @@ public class RRGraphManagerTest extends RavenCoreTestCase
         assertNull(graphNode.getChildren("def_"+ds.getId()));
         assertNull(graphNode.getChildren("comment_"+ds.getId()));
         
-        assertEquals(2, graphNode.getChildrenCount());
+        assertEquals(3, graphNode.getChildrenCount());
         
         tree.reloadTree();
         gmanager = (RRGraphManager) tree.getNode(gmanager.getPath());
         graphNode = gmanager.getChildren("group1").getChildren("graph");
-        assertEquals(2, graphNode.getChildrenCount());
+        assertEquals(3, graphNode.getChildrenCount());
         
         gmanager.stop();
         dataSourcesNode = (ContainerNode) tree.getNode(dataSourcesNode.getPath());
@@ -109,7 +114,7 @@ public class RRGraphManagerTest extends RavenCoreTestCase
         
         Node graphNode = gmanager.getChildren("group2").getChildren("graph");
         assertNotNull(graphNode);
-        assertEquals(4, graphNode.getChildrenCount());
+        assertEquals(6, graphNode.getChildrenCount());
     }
 
     private TestDataSource2 addTestDataSource(int i) throws NodeError 
@@ -137,6 +142,13 @@ public class RRGraphManagerTest extends RavenCoreTestCase
         RRDataSource rrds = ((RRDef)def).getDataSource();
         assertNotNull(rrds);
         assertSame(ds, rrds.getDataSource());
+        
+        Node line = node.getChildren("line_"+ds.getId());
+        assertNotNull(line);
+        assertTrue(line instanceof RRLine);
+        DataDefinition dataDef = ((RRLine)line).getDataDefinition();
+        assertNotNull(dataDef);
+        assertSame(def, dataDef);
     }
 
     private void checkGraphManager(RRGraphManager gmanager) {
@@ -150,7 +162,8 @@ public class RRGraphManagerTest extends RavenCoreTestCase
 
         Node gNode = group.getChildren("graph");
         assertTrue(gNode instanceof RRGraphNode);
-        assertEquals(4, gNode.getChildrenCount());
+        assertNull(gNode.getNodeAttribute(GroupNode.GROUPINGEXPRESSION_ATTRIBUTE));
+        assertEquals(6, gNode.getChildrenCount());
         checkDataSourceInGraph((RRGraphNode) gNode, (DataSource) dataSourcesNode.getChildren("ds_0"));
         checkDataSourceInGraph((RRGraphNode) gNode, (DataSource) dataSourcesNode.getChildren("ds_1"));
 
@@ -161,7 +174,8 @@ public class RRGraphManagerTest extends RavenCoreTestCase
 
         gNode = group.getChildren("graph");
         assertTrue(gNode instanceof RRGraphNode);
-        assertEquals(2, gNode.getChildrenCount());
+        assertEquals(3, gNode.getChildrenCount());
+        assertNull(gNode.getNodeAttribute(GroupNode.GROUPINGEXPRESSION_ATTRIBUTE));
         checkDataSourceInGraph((RRGraphNode) gNode, (DataSource) dataSourcesNode.getChildren("ds_2"));
     }
 
@@ -208,17 +222,36 @@ public class RRGraphManagerTest extends RavenCoreTestCase
         attr.setValue("\"graph\"");
         attr.save();
         
+        attr = graphNode.getNodeAttribute(RRGraphManagerTemplate.AUTOCOLOR_ATTRIBUTE);
+        assertNotNull(attr);
+        assertEquals(RRColor.BLACK, attr.getRealValue());
+        
         RRDef def = new RRDef();
         def.setName("def");
         graphNode.addChildren(def);
         def.save();
         def.init();
+        assertNull(def.getNodeAttribute(GroupNode.GROUPINGEXPRESSION_ATTRIBUTE));
+        assertNull(def.getNodeAttribute(RRGraphManagerTemplate.AUTOCOLOR_ATTRIBUTE));
         
         RRComment comment = new RRComment();
         comment.setName("comment");
         graphNode.addChildren(comment);
         comment.save();
         comment.init();
+        assertNull(comment.getNodeAttribute(GroupNode.GROUPINGEXPRESSION_ATTRIBUTE));
+        assertNull(comment.getNodeAttribute(RRGraphManagerTemplate.AUTOCOLOR_ATTRIBUTE));
+        
+        RRLine line = new RRLine();
+        line.setName("line");
+        graphNode.addChildren(line);
+        line.save();
+        line.init();
+        attr = line.getNodeAttribute(RRArea.DATADEFINITION_ATTRIBUTE);
+        assertNotNull(attr);
+        attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
+        attr.setValue("../def");
+        attr.save();
         
         return gmanager;
     }

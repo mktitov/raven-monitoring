@@ -1115,7 +1115,7 @@ public class BaseNode implements Node, NodeListener
         dest.addChildren(clone);
         
         if (childrens!=null)
-            for (Node child: childrens.values())
+            for (Node child: getSortedChildrens())
                 child.cloneTo(clone, null, nodeTuner);
         
         return clone;

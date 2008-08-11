@@ -17,8 +17,10 @@
 
 package org.raven.rrd;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -36,9 +38,11 @@ import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
+import org.raven.tree.NodePathResolver;
 import org.raven.tree.NodeTuner;
 import org.raven.tree.ScanOperation;
 import org.raven.tree.ScannedNodeHandler;
+import org.raven.tree.impl.AttributeReferenceValueHandlerFactory;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeListenerAdapter;
@@ -56,6 +60,8 @@ public class RRGraphManager extends BaseNode
     public final static String STARTINGPOINT_ATTRIBUTE = "startingPoint";
     public final static String FILTER_EXPRESSION_ATTRIBUTE = "filterExpression";
     public final static long LOCK_TIMEOUT = 500;
+    
+    private static NodePathResolver pathResolver;
     
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     @Description("The node from which graph manager take a control on dataSources")
@@ -113,6 +119,8 @@ public class RRGraphManager extends BaseNode
     {
         if (startingPoint!=null)
             startingPoint.removeListener(startingPointListener);
+        dataSources.clear();
+        super.stop();
     }
 
     public RRGraphManagerTemplate getTemplate() {
@@ -216,9 +224,31 @@ public class RRGraphManager extends BaseNode
         {
             //cloning all nodes inside graph template (the parent of the gTemplate)
             Collection<Node> childs = gTemplate.getParent().getChildrens();
+            NodeAttribute autoColorAttr = incrementAutoColorAttribute(injectingPoint);
+            RRColor nextColor = autoColorAttr.getRealValue();
+            
             if (childs!=null)
+            {
+                List<Node> clonedNodes = new ArrayList<Node>();
                 for (Node node: childs)
-                    tree.copy(node, injectingPoint, null, tuner, true, false);
+                    clonedNodes.add(tree.copy(node, injectingPoint, null, tuner, true, false));
+                
+                for (Node node: clonedNodes)
+                {
+                    Collection<NodeAttribute> attrs = node.getNodeAttributes();
+                    if (attrs!=null)
+                        for (NodeAttribute attr: attrs)
+                        {
+                            revalidateAttributeExpression(attr, node);
+                            if (   AttributeReferenceValueHandlerFactory.TYPE.equals(
+                                     attr.getValueHandlerType())
+                                && autoColorAttr==attr.getR)
+                            {
+                                
+                            }
+                        }
+                }
+            }
         }
     }
 
@@ -237,6 +267,32 @@ public class RRGraphManager extends BaseNode
         return rrds;
     }
 
+    private NodeAttribute incrementAutoColorAttribute(Node injectingPoint) throws NodeError 
+    {
+        NodeAttribute colorAttr = 
+                injectingPoint.getNodeAttribute(RRGraphManagerTemplate.AUTOCOLOR_ATTRIBUTE);
+        RRColor nextColor = RRColor.BLACK;
+        if (colorAttr != null) {
+            RRColor curColor = colorAttr.getRealValue();
+            if (curColor != null) {
+                nextColor = curColor.nextColor();
+            }
+        } else {
+            colorAttr = getTemplate().addAutoColorAttribute(injectingPoint);
+        }
+        try {
+
+            colorAttr.setValue(nextColor.toString());
+            colorAttr.save();
+        } catch (Exception ex) {
+            logger.error(String.format(
+                    "Error saving new color (%s) for attribute (%s) in node (%s)"
+                    , nextColor.toString(), colorAttr.getName(), injectingPoint.getPath()), ex);
+        }
+        
+        return colorAttr;
+    }
+
     private void removeDataSourceFromGraph(DataSource removedNode) 
     {
         RRDef def = dataSources.remove(removedNode);
@@ -250,6 +306,18 @@ public class RRGraphManager extends BaseNode
         for (Node node : graphNode.getChildrens()) 
             if (node.getName().endsWith(id))
                 tree.remove(node);
+    }
+
+    private void revalidateAttributeExpression(NodeAttribute attr, Node node) {
+        if (!attr.isExpressionValid()) {
+            try {
+                attr.validateExpression();
+            } catch (Exception ex) {
+                logger.warn(String.format(
+                        "Error validating expression for attribute (%s)" + " of node (%s)"
+                        , attr.getName(), node.getPath()));
+            }
+        }
     }
     
     private void sync() throws Exception
@@ -342,11 +410,36 @@ public class RRGraphManager extends BaseNode
             {
                 String groupName = getGroupName(sourceNode);
                 sourceClone.setName(groupName);
+                sourceClone.removeNodeAttribute(GroupNode.GROUPINGEXPRESSION_ATTRIBUTE);
             }
             else if (!(sourceNode instanceof GroupNode))
             {
                 //tunig nodes inside RRGraphNode
                 sourceClone.setName(sourceNode.getName()+"_"+dataSource.getId());
+            }
+            
+            //searching for attributes that referenced to the GraphNode childs
+            if (sourceNode.getParent() instanceof RRGraphNode)
+            {
+                Collection<NodeAttribute> attrs = sourceNode.getNodeAttributes();
+                if (attrs!=null)
+                    for (NodeAttribute attr: attrs)
+                        if (NodeReferenceValueHandlerFactory.TYPE.equals(attr.getValueHandlerType()))
+                        {
+                            Node value = attr.getRealValue();
+                            if (value!=null && value.getParent()==sourceNode.getParent())
+                            {
+                                NodeAttribute clonedAttribute = 
+                                        sourceClone.getNodeAttribute(attr.getName());
+                                String path = clonedAttribute.getRawValue();
+                                if (path.endsWith("\""))
+                                    clonedAttribute.setRawValue(
+                                            path.substring(0, path.length()-1)
+                                            + "_"+dataSource.getId()+"\"");
+                                else
+                                    clonedAttribute.setRawValue(path+"_"+dataSource.getId());
+                            }
+                        }
             }
         }
         

@@ -41,4 +41,12 @@ public enum RRColor
     {
         return color;
     }
+    
+    public RRColor nextColor()
+    {
+        if (ordinal()==values().length-1)
+            return values()[0];
+        else
+            return values()[ordinal()+1];
+    }
 }

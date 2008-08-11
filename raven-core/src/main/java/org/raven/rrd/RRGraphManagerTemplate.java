@@ -17,6 +17,8 @@
 
 package org.raven.rrd;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.raven.annotations.NodeClass;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.expr.impl.IfNode;
@@ -32,10 +34,13 @@ import org.raven.tree.impl.NodeAttributeImpl;
  *
  * @author Mikhail Titov
  */
-@NodeClass(childNodes={IfNode.class, GroupNode.class, RRGraphNode.class})
+@NodeClass(
+    parentNode=RRGraphManager.class, childNodes={IfNode.class, GroupNode.class, RRGraphNode.class})
 public class RRGraphManagerTemplate extends TemplateEntry
 {
     public final static String NAME = "Template";
+    
+    public final static String AUTOCOLOR_ATTRIBUTE = "autoColor";
 
     public RRGraphManagerTemplate()
     {
@@ -46,28 +51,50 @@ public class RRGraphManagerTemplate extends TemplateEntry
     @Override
     public void nodeStatusChanged(Node node, Status oldStatus, Status newStatus) 
     {
-        if (!(node instanceof RRGraphNode) && newStatus!=Status.INITIALIZED)
+        if (!(node instanceof RRGraphNode) || newStatus!=Status.INITIALIZED)
             return;
+        
+        addAutoColorAttribute(node);
         
         NodeAttribute exprAttr = node.getNodeAttribute(GroupNode.GROUPINGEXPRESSION_ATTRIBUTE);
-        if (exprAttr!=null)
-            return;
-        
-        exprAttr = new NodeAttributeImpl(
-                GroupNode.GROUPINGEXPRESSION_ATTRIBUTE, String.class, null, null);
-        exprAttr.setRequired(true);
-        try {
-            exprAttr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
-            node.addNodeAttribute(exprAttr);
-            exprAttr.setOwner(node);
-            exprAttr.init();
-        } catch (Exception ex) {
-            throw new NodeError(
-                    String.format(
-                        "Error adding (%s) attribute to the node (%s)"
-                        , GroupNode.GROUPINGEXPRESSION_ATTRIBUTE, node.getPath())
-                    , ex);
+        if (exprAttr==null)
+        {
+            try {
+                exprAttr = new NodeAttributeImpl(
+                        GroupNode.GROUPINGEXPRESSION_ATTRIBUTE, String.class, null, null);
+                exprAttr.setRequired(true);
+                exprAttr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
+                node.addNodeAttribute(exprAttr);
+                exprAttr.setOwner(node);
+                exprAttr.init();
+
+            } catch (Exception ex) {
+                throw new NodeError(
+                        String.format(
+                            "Error adding (%s) attribute to the node (%s)"
+                            , GroupNode.GROUPINGEXPRESSION_ATTRIBUTE, node.getPath())
+                        , ex);
+            }
         }
+        
+    }
+
+    NodeAttribute addAutoColorAttribute(Node node) throws NodeError 
+    {
+        NodeAttribute colorAttr = new NodeAttributeImpl(
+                AUTOCOLOR_ATTRIBUTE, RRColor.class, RRColor.BLACK, null);
+        node.addNodeAttribute(colorAttr);
+        colorAttr.setOwner(node);
+        try {
+            colorAttr.init();
+            colorAttr.save();
+        } catch (Exception ex) {
+            throw new NodeError(String.format(
+                    "Error adding (%s) attribute to the (%s) node"
+                    , AUTOCOLOR_ATTRIBUTE, node.getPath()), ex);
+        }
+        
+        return colorAttr;
     }
     
     

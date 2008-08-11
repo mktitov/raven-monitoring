@@ -125,9 +125,20 @@ public class NodeReferenceValueHandler
         return data;
     }
 
-    public Object handleData()
+    public Object handleData() 
     {
+//        if (!isExpressionValid())
+//        {
+//            try {
+//                validateExpression();
+//            } catch (Exception ex) {
+//                attribute.getOwner().getLogger().warn(String.format(
+//                        "Error in node (%s) attribute (%s). Invalid path to the node (%s)."
+//                        , attribute.getOwner().getPath(), attribute.getName(), data));
+//            }
+//        }
         return node;
+        
     }
 
     public void close()

@@ -15,23 +15,36 @@
  *  under the License.
  */
 
-package org.raven.api;
+package org.raven.impl;
 
-import java.util.Map;
+import org.raven.api.NodeAccess;
 import org.raven.tree.Node;
+import org.weda.converter.TypeConverterWorker;
 
 /**
- * Stricted access to the {@link org.raven.tree.Node}.
+ *
  * @author Mikhail Titov
  */
-public interface NodeAccess 
+public class NodeAccessToNodeConverter implements TypeConverterWorker<NodeAccess, Node>
 {
-    public NodeAccess getParent();
-    public String getName();
-    public String getPath();
-    public Map<String, NodeAccess> getChilds();
-//    public Map<String, NodeAttributeAccess> getAttrs();
-    public NodeAttributeAccess getAttr(String attributeName);
-    public NodeAttributeAccess getAt(String attributeName);
-    public Node asNode();
+
+    public Node convert(NodeAccess value, Class realTargetType, String format) 
+    {
+        return value.asNode();
+    }
+
+    public Class getSourceType() 
+    {
+        return NodeAccess.class;
+    }
+
+    public Class getTargetType() 
+    {
+        return Node.class;
+    }
+
+    public boolean canConvertToTargetSuperType() 
+    {
+        return true;
+    }
 }

@@ -80,6 +80,16 @@ public class NodeAccessImpl implements NodeAccess
         return new NodeAttributeAccessImpl(attr);
     }
 
+    public NodeAttributeAccess getAt(String attributeName) 
+    {
+        return getAttr(attributeName);
+    }
+
+    public Node asNode() 
+    {
+        return node;
+    }
+
 //    public Map<String, NodeAttributeAccess> getAttrs()
 //    {
 //        if (attrs==null)

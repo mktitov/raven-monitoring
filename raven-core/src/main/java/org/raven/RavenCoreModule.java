@@ -33,6 +33,7 @@ import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.expr.impl.ExpressionCompilerImpl;
 import org.raven.impl.AttributeReferenceToStringConverter;
 import org.raven.impl.EnumReferenceValues;
+import org.raven.impl.NodeAccessToNodeConverter;
 import org.raven.impl.NodeToStringConverter;
 import org.raven.impl.SnmpVariableToNumberConverter;
 import org.raven.impl.StringToAttributeReferenceConverter;
@@ -114,6 +115,7 @@ public class RavenCoreModule
         conf.add(new StringToAttributeReferenceConverter());
         conf.add(new AttributeReferenceToStringConverter());
         conf.add(new StringToTemplateVariableConverter());
+        conf.add(new NodeAccessToNodeConverter());
     }
     
     public static void contributeTree(MappedConfiguration<Class, AttributeReferenceValues> conf)
