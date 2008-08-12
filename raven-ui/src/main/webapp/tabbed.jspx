@@ -31,18 +31,18 @@
                 <tr:panelGroupLayout layout="vertical">
                     <tr:panelCaptionGroup partialTriggers="::poolStatus"  captionText="#{msgs.nodeStatus}" >
                         <tr:panelGroupLayout layout="vertical">
-                            <tr:group>
-                                <tr:commandButton action="#{cNode.nodeStart}" disabled="#{! cNode.canNodeStart}"  text="#{msgs.start}"></tr:commandButton>
-                                <tr:spacer width="20"></tr:spacer>
+                              <tr:group>
                                 <tr:outputText value="#{msgs.node}:"></tr:outputText>
                                 <tr:spacer width="10"></tr:spacer>
                                 <tr:outputFormatted value="&lt;b&gt;#{cNode.nodePath}&lt;/b&gt;"></tr:outputFormatted>
                             </tr:group>
                             
                             <tr:group>
-                                <tr:commandButton action="#{cNode.nodeStop}" disabled="#{! cNode.canNodeStop}" text="#{msgs.stop}"></tr:commandButton>
+                               <tr:outputText value="ID:"></tr:outputText>
+                                <tr:spacer width="10"></tr:spacer>
+                                <tr:outputFormatted value="&lt;b&gt;#{cNode.node.id}&lt;/b&gt;"></tr:outputFormatted>
                                 <tr:spacer width="20"></tr:spacer>
-                                <tr:outputText value="#{msgs.status}:"></tr:outputText>
+                               <tr:outputText value="#{msgs.status}:"></tr:outputText>
                                 <tr:spacer width="10"></tr:spacer>
                                 <tr:outputFormatted value="&lt;b&gt;#{cNode.nodeStatusText}&lt;/b&gt;"></tr:outputFormatted>
                             </tr:group>
@@ -57,7 +57,7 @@
                                 <jsp:include page="tabShow.jspx" flush="true"/>
                             </f:subview>
                         </tr:showDetailItem>
-                        <tr:showDetailItem binding="#{cNode.nodeEditTab}" text="#{msgs.nodeEdit}" id="item2">
+                        <tr:showDetailItem binding="#{cNode.nodeEditTab}" text="#{msgs.attributes}" id="item2">
                             <f:subview id="v2">
                                 <tr:separator></tr:separator>
                                 <jsp:include page="tabNodeEdit.jspx" flush="true"/>
@@ -67,6 +67,12 @@
                             <f:subview id="v3">
                                 <tr:separator></tr:separator>
                                 <jsp:include page="tabTreeEdit.jspx" flush="true"/>
+                            </f:subview>
+                        </tr:showDetailItem>
+                        <tr:showDetailItem text="#{msgs.control}" id="item4">
+                            <f:subview id="v3">
+                                <tr:separator></tr:separator>
+                                <jsp:include page="tabControl.jspx" flush="true"/>
                             </f:subview>
                         </tr:showDetailItem>
                     </tr:panelTabbed>
