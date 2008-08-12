@@ -41,13 +41,24 @@ public class AttributeReferenceValueHandler extends NodeReferenceValueHandler
     public AttributeReferenceValueHandler(NodeAttribute attribute) throws Exception
     {
         super(attribute, false, true);
-        resolveAttribute(attribute.getRawValue(), true);
-        initNodeReference(node, pathElements);
-        if (node!=null && ObjectUtils.in(node.getStatus(), Status.INITIALIZED, Status.STARTED))
+        try{
+            resolveAttribute(attribute.getRawValue(), true);
+            initNodeReference(node, pathElements);
+            if (node!=null && ObjectUtils.in(node.getStatus(), Status.INITIALIZED, Status.STARTED))
+            {
+                attrValue = referencedAttribute==null? 
+                    null : convertValue(referencedAttribute.getRealValue());
+            }
+        }catch(Exception e)
         {
-            attrValue = referencedAttribute==null? 
-                null : convertValue(referencedAttribute.getRealValue());
+            attribute.getOwner().getLogger().warn(
+                    "Error setting expression", e);
         }
+    }
+
+    public NodeAttribute getReferencedAttribute() 
+    {
+        return referencedAttribute;
     }
     
     private void resolveAttribute(String data, boolean init) throws InvalidPathException, Exception

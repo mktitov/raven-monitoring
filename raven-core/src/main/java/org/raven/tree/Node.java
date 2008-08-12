@@ -159,6 +159,11 @@ public interface Node extends Cloneable, Comparable<Node>
      */
     public boolean isConditionalNode();
     /**
+     * Returns the first {@link #isConditionalNode() non conditional} parent node
+     * in the chain of the parent nodes.
+     */
+    public Node getEffectiveParent(); 
+    /**
      * Returns the childrens of a this node excluding {@link #isConditionalNode() conditional nodes}
      * and the {@link #getEffectiveChildrens() effective childrens} of the conditional nodes. 
      * Returned nodes are sorted by the {@link #getIndex() index property} and effective childrens 

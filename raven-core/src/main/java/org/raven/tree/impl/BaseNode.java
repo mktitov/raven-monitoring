@@ -444,6 +444,14 @@ public class BaseNode implements Node, NodeListener
         return false;
     }
 
+    public Node getEffectiveParent() 
+    {
+        Node node = getParent();
+        while (node.isConditionalNode())
+            node = node.getParent();
+        return node;
+    }
+
     public Collection<Node> getEffectiveChildrens() 
     {
         if (childrens==null)

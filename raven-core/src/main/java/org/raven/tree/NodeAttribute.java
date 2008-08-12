@@ -166,6 +166,11 @@ public interface NodeAttribute extends Cloneable
      */
     public String getValueHandlerType();
     /**
+     * Returns the attribute value handler or <code>null</code> if value handler not seted for the
+     * attribute.
+     */
+    public AttributeValueHandler getValueHandler();
+    /**
      * Returns <code>true</code> if value handler supports expressions.
      * @see AttributeValueHandler#isExpressionSupported() 
      */

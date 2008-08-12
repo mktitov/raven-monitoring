@@ -36,6 +36,7 @@ import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
+import org.raven.tree.impl.AttributeReferenceValueHandlerFactory;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 
@@ -130,15 +131,18 @@ public class RRGraphManagerTest extends RavenCoreTestCase
         return ds;
     }
     
-    private void checkDataSourceInGraph(RRGraphNode node, DataSource ds)
+    private void checkDataSourceInGraph(RRGraphNode node, DataSource ds, RRColor lineColor)
     {
         Node comment = node.getChildren("comment_"+ds.getId());
         assertNotNull(comment);
         assertTrue(comment instanceof RRComment);
+        assertEquals(Status.STARTED, comment.getStatus());
+
         
         Node def = node.getChildren("def_"+ds.getId());
         assertNotNull(def);
         assertTrue(def instanceof RRDef);
+        assertEquals(Status.STARTED, def.getStatus());
         RRDataSource rrds = ((RRDef)def).getDataSource();
         assertNotNull(rrds);
         assertSame(ds, rrds.getDataSource());
@@ -146,9 +150,14 @@ public class RRGraphManagerTest extends RavenCoreTestCase
         Node line = node.getChildren("line_"+ds.getId());
         assertNotNull(line);
         assertTrue(line instanceof RRLine);
+        assertEquals(Status.STARTED, line.getStatus());
         DataDefinition dataDef = ((RRLine)line).getDataDefinition();
         assertNotNull(dataDef);
         assertSame(def, dataDef);
+        NodeAttribute colorAttr = line.getNodeAttribute(RRArea.COLOR_ATTRIBUTE);
+        assertNull(colorAttr.getValueHandlerType());
+        assertEquals(lineColor, colorAttr.getRealValue());
+//        assertEquals(tree, this);
     }
 
     private void checkGraphManager(RRGraphManager gmanager) {
@@ -159,24 +168,34 @@ public class RRGraphManagerTest extends RavenCoreTestCase
         assertNotNull(group);
         assertTrue(group instanceof ContainerNode);
         assertEquals(1, group.getChildrenCount());
+        assertEquals(Status.STARTED, group.getStatus());
 
         Node gNode = group.getChildren("graph");
         assertTrue(gNode instanceof RRGraphNode);
+        assertEquals(Status.STARTED, gNode.getStatus());
         assertNull(gNode.getNodeAttribute(GroupNode.GROUPINGEXPRESSION_ATTRIBUTE));
         assertEquals(6, gNode.getChildrenCount());
-        checkDataSourceInGraph((RRGraphNode) gNode, (DataSource) dataSourcesNode.getChildren("ds_0"));
-        checkDataSourceInGraph((RRGraphNode) gNode, (DataSource) dataSourcesNode.getChildren("ds_1"));
+        checkDataSourceInGraph(
+                (RRGraphNode) gNode, (DataSource) dataSourcesNode.getChildren("ds_0")
+                , RRColor.BLACK);
+        checkDataSourceInGraph(
+                (RRGraphNode) gNode, (DataSource) dataSourcesNode.getChildren("ds_1")
+                , RRColor.BLUE);
 
         group = gmanager.getChildren("group2");
         assertNotNull(group);
         assertTrue(group instanceof ContainerNode);
+        assertEquals(Status.STARTED, group.getStatus());
         assertEquals(1, group.getChildrenCount());
 
         gNode = group.getChildren("graph");
         assertTrue(gNode instanceof RRGraphNode);
+        assertEquals(Status.STARTED, gNode.getStatus());
         assertEquals(3, gNode.getChildrenCount());
         assertNull(gNode.getNodeAttribute(GroupNode.GROUPINGEXPRESSION_ATTRIBUTE));
-        checkDataSourceInGraph((RRGraphNode) gNode, (DataSource) dataSourcesNode.getChildren("ds_2"));
+        checkDataSourceInGraph(
+                (RRGraphNode) gNode, (DataSource) dataSourcesNode.getChildren("ds_2")
+                , RRColor.BLACK);
     }
 
     private RRGraphManager createGraphManager() throws NodeError, Exception {
@@ -252,6 +271,10 @@ public class RRGraphManagerTest extends RavenCoreTestCase
         attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
         attr.setValue("../def");
         attr.save();
+        attr = line.getNodeAttribute(RRArea.COLOR_ATTRIBUTE);
+        attr.setValueHandlerType(AttributeReferenceValueHandlerFactory.TYPE);
+        attr.setValue("../@"+RRGraphManagerTemplate.AUTOCOLOR_ATTRIBUTE);
+        assertTrue(attr.isExpressionValid());
         
         return gmanager;
     }

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.raven.conf.Configurator;
 import org.raven.tree.AttributeReference;
+import org.raven.tree.AttributeValueHandler;
 import org.raven.tree.AttributeValueHandlerListener;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
@@ -203,6 +204,11 @@ public class NodeAttributeImpl
         return valueHandlerType;
     }
 
+    public AttributeValueHandler getValueHandler() 
+    {
+        return initialized && valueHandlerType!=null? valueHandler.getWrappedHandler() : null;
+    }
+    
     public void setValueHandlerType(String valueHandlerType) throws Exception
     {
         this.valueHandlerType = valueHandlerType;

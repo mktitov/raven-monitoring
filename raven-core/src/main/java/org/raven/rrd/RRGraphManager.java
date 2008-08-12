@@ -42,6 +42,7 @@ import org.raven.tree.NodePathResolver;
 import org.raven.tree.NodeTuner;
 import org.raven.tree.ScanOperation;
 import org.raven.tree.ScannedNodeHandler;
+import org.raven.tree.impl.AttributeReferenceValueHandler;
 import org.raven.tree.impl.AttributeReferenceValueHandlerFactory;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.ContainerNode;
@@ -60,8 +61,6 @@ public class RRGraphManager extends BaseNode
     public final static String STARTINGPOINT_ATTRIBUTE = "startingPoint";
     public final static String FILTER_EXPRESSION_ATTRIBUTE = "filterExpression";
     public final static long LOCK_TIMEOUT = 500;
-    
-    private static NodePathResolver pathResolver;
     
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     @Description("The node from which graph manager take a control on dataSources")
@@ -198,7 +197,7 @@ public class RRGraphManager extends BaseNode
                 }else
                 {
                     injectingPoint = nextInjectingPoint;
-                    Collection<Node> childs = gTemplate.getChildrens();
+                    Collection<Node> childs = gTemplate.getEffectiveChildrens();
                     if (childs==null || childs.size()==0)
                     {
                         logger.error(String.format(
@@ -218,14 +217,14 @@ public class RRGraphManager extends BaseNode
         if (gTemplate instanceof GroupNode || gTemplate instanceof RRGraphNode)
         {
             //cloning subtree
-            tree.copy(gTemplate, injectingPoint, null, tuner, true, false);
+            Node result = tree.copy(gTemplate, injectingPoint, null, tuner, true, false);
+            tree.start(result, true);
         }
         else
         {
+            incrementAutoColorAttribute(injectingPoint);
             //cloning all nodes inside graph template (the parent of the gTemplate)
             Collection<Node> childs = gTemplate.getParent().getChildrens();
-            NodeAttribute autoColorAttr = incrementAutoColorAttribute(injectingPoint);
-            RRColor nextColor = autoColorAttr.getRealValue();
             
             if (childs!=null)
             {
@@ -235,18 +234,11 @@ public class RRGraphManager extends BaseNode
                 
                 for (Node node: clonedNodes)
                 {
+                    tree.start(node, true);
                     Collection<NodeAttribute> attrs = node.getNodeAttributes();
                     if (attrs!=null)
                         for (NodeAttribute attr: attrs)
-                        {
                             revalidateAttributeExpression(attr, node);
-                            if (   AttributeReferenceValueHandlerFactory.TYPE.equals(
-                                     attr.getValueHandlerType())
-                                && autoColorAttr==attr.getR)
-                            {
-                                
-                            }
-                        }
                 }
             }
         }
@@ -462,6 +454,37 @@ public class RRGraphManager extends BaseNode
                         , e);
                 }
                 dataSources.put(dataSource, (RRDef)nodeClone);
+            }
+            
+            if (nodeClone.getEffectiveParent() instanceof RRGraphNode)
+            {
+                NodeAttribute autoColorAttr = nodeClone.getParent().getNodeAttribute(
+                        RRGraphManagerTemplate.AUTOCOLOR_ATTRIBUTE);
+                Collection<NodeAttribute> attrs = nodeClone.getNodeAttributes();
+                if (attrs!=null)
+                    for (NodeAttribute attr: attrs)
+                        correctAttributeColor(attr, autoColorAttr);
+            }
+        }
+        
+        private void correctAttributeColor(NodeAttribute attr, NodeAttribute autoColorAttr) 
+        {
+            if (   AttributeReferenceValueHandlerFactory.TYPE.equals(attr.getValueHandlerType()) 
+                && ((   AttributeReferenceValueHandler) attr.getValueHandler()).getReferencedAttribute() 
+                     == autoColorAttr) 
+            {
+                try {
+                    attr.setValue(null);
+                    attr.setValueHandlerType(null);
+                    attr.setValue(autoColorAttr.getValue());
+                    attr.save();
+                } catch (Exception exception) 
+                {
+                    logger.error(String.format(
+                            "Error seting color (%s) for attribute (%s) of the node (%s)", 
+                            autoColorAttr.getValue(), attr.getName(), attr.getOwner().getPath())
+                            , exception);
+                }
             }
         }
         
