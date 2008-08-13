@@ -38,6 +38,7 @@ import org.raven.tree.NodeListener;
 import org.raven.tree.NodeNotFoundError;
 import org.raven.tree.ScanOperation;
 import org.raven.tree.ScannedNodeHandler;
+import org.raven.tree.SearchFilter;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.objects.AnyChildsNode;
 import org.raven.tree.impl.objects.AnyParentNode;
@@ -637,7 +638,7 @@ public class TreeServiceTest extends ServiceTestCase
         
         copyDest.addListener(listener);
                 
-        tree.copy(node, copyDest, "newName", null, true, true);
+        tree.copy(node, copyDest, "newName", null, true, false, false);
 
         copyDest.removeListener(listener);
         verify(listener);
@@ -732,6 +733,61 @@ public class TreeServiceTest extends ServiceTestCase
         assertEquals(Status.STARTED, child.getStatus());
         tree.scanSubtree(parent1, handler, new Class[]{ContainerNode.class}, Status.STARTED);
         verify(handler);
+    }
+    
+    @Test
+    public void search()
+    {
+        store.removeNodes();
+        tree.reloadTree();
+        
+        ContainerNode node = new ContainerNode("search-test-node");
+        tree.getRootNode().addChildren(node);
+        node.save();
+        node.init();
+        
+        ContainerNode node1 = new ContainerNode("node");
+        node.addChildren(node1);
+        node1.save();
+        node1.init();
+        
+        ContainerNode node2 = new ContainerNode("node");
+        node1.addChildren(node2);
+        node2.init();
+        node2.save();
+        
+        ContainerNode node3 = new ContainerNode("node3");
+        node1.addChildren(node3);
+        node3.init();
+        node3.save();
+        
+        List<Node> searchResult = tree.search(node, new SearchOptionsImpl(), new SearchFilter() {
+            public boolean filter(Node node) {
+                return false;
+            }
+        });
+        assertNotNull(searchResult);
+        assertTrue(searchResult.isEmpty());
+        
+        searchResult = tree.search(node, new SearchOptionsImpl(), new SearchFilter() {
+            public boolean filter(Node node) {
+                return node.getName().equals("node");
+            }
+        });
+        assertNotNull(searchResult);
+        assertEquals(2, searchResult.size());
+        searchResult.contains(node1);
+        searchResult.contains(node2);
+        
+        searchResult = tree.search(node, new SearchOptionsImpl().setFindFirst(true)
+                , new SearchFilter() {
+                    public boolean filter(Node node) {
+                        return node.getName().equals("node");
+                    }
+                });
+        assertNotNull(searchResult);
+        assertEquals(1, searchResult.size());
+        searchResult.contains(node1);
     }
     
     private static Node matchNode(final String nodeName)

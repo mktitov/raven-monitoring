@@ -131,7 +131,7 @@ public class DatabasesEntry extends BaseNode
                         , dataSource.getPath(), rrd.getPath()));
             RRDataSource templateDataSource = getTemplateDataSource(template);
             RRDataSource rrds = (RRDataSource) tree.copy(
-                templateDataSource, rrd, ""+(rrd.getChildrenCount()+1), null, true, false);
+                templateDataSource, rrd, ""+(rrd.getChildrenCount()+1), null, true, false, false);
             NodeAttribute dataSourceAttr = 
                     rrds.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE);
             dataSourceAttr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
@@ -159,7 +159,8 @@ public class DatabasesEntry extends BaseNode
                         String.format("Creating new database. Initial datasource is (%s)"
                         , dataSource.getPath()));
             String databaseName = "" + (getChildrenCount() + 1);
-            RRDNode db = (RRDNode) tree.copy(templateNode, this, databaseName, null, true, false);
+            RRDNode db = (RRDNode) tree.copy(
+                    templateNode, this, databaseName, null, true, false, false);
             RRDataSource rrds = null;
             for (Node child : db.getChildrens())
             {

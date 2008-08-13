@@ -15,13 +15,27 @@
  *  under the License.
  */
 
-package org.raven.tree;
+package org.raven.tree.impl.filters;
+
+import org.raven.tree.Node;
+import org.raven.tree.SearchFilter;
 
 /**
  *
  * @author Mikhail Titov
  */
-public enum ScanOperation 
+public class NodeNameSearchFilter implements SearchFilter
 {
-    CONTINUE, SKIP_NODE, STOP
+    private final String nodeName;
+
+    public NodeNameSearchFilter(String nodeName) 
+    {
+        this.nodeName = nodeName;
+    }
+
+    public boolean filter(Node node) 
+    {
+        return nodeName.equals(node.getName());
+    }
+
 }

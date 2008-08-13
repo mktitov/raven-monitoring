@@ -129,6 +129,7 @@ public class BaseNode implements Node, NodeListener
         parameters = null;
         nodeAttributes = new ConcurrentHashMap<String, NodeAttribute>();
         childrens = new ConcurrentHashMap<String, Node>();
+        index = 0;
     }
 
     public Logger getLogger()
@@ -1103,8 +1104,9 @@ public class BaseNode implements Node, NodeListener
         return clone;
     }
     
-    public Node cloneTo(Node dest, String newNodeName, NodeTuner nodeTuner) 
-            throws CloneNotSupportedException
+    public Node cloneTo(
+            Node dest, String newNodeName, NodeTuner nodeTuner, boolean useEffectiveChildrens) 
+        throws CloneNotSupportedException
     {
         Node clone = null;
         
@@ -1122,9 +1124,11 @@ public class BaseNode implements Node, NodeListener
         
         dest.addChildren(clone);
         
-        if (childrens!=null)
-            for (Node child: getSortedChildrens())
-                child.cloneTo(clone, null, nodeTuner);
+        Collection<Node> childs = 
+                useEffectiveChildrens? getEffectiveChildrens() : getSortedChildrens();
+        if (childs!=null)
+            for (Node child: childs)
+                child.cloneTo(clone, null, nodeTuner, useEffectiveChildrens);
         
         return clone;
     }

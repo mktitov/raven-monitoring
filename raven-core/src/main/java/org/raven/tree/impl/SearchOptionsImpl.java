@@ -15,13 +15,27 @@
  *  under the License.
  */
 
-package org.raven.tree;
+package org.raven.tree.impl;
+
+import org.raven.tree.SearchOptions;
 
 /**
  *
  * @author Mikhail Titov
  */
-public enum ScanOperation 
+public class SearchOptionsImpl implements SearchOptions
 {
-    CONTINUE, SKIP_NODE, STOP
+    private boolean findFirst;
+
+    public boolean isFindFirst() 
+    {
+        return findFirst;
+    }
+
+    public SearchOptionsImpl setFindFirst(boolean findFirst) 
+    {
+        this.findFirst = findFirst;
+        return this;
+    }
+
 }

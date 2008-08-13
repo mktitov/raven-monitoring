@@ -71,10 +71,20 @@ public interface Tree
      * @param validateNodeType if seted to <code>true</code> and the type of the <code>source</code>
      *      node is not {@link Node#getChildNodeTypes() a valid child type} 
      *      for the <code>destination</code> node then {@link TreeError} exception will be throwed.
+     * @param useEffectiveChildrens if seted to <code>true</code> then method 
+     *      {@link Node#getEffectiveChildrens()} will be used to clone children nodes of the <code>
+     *      source</code>.
      */
     public Node copy(
             Node source, Node destination, String newNodeName, NodeTuner nodeTuner
-            , boolean store, boolean validateNodeType);
+            , boolean store, boolean validateNodeType, boolean useEffectiveChildrens);
+    /**
+     * Search for nodes that satisfy the node filter
+     * @param options search options
+     * @param filter filter options
+     * @return The list of found nodes. Method can return an empty list but never null.
+     */
+    public List<Node> search(Node searchFromNode, SearchOptions options, SearchFilter filter);
     /**
      * Starts all nodes in the subtree starting from the <code>node</code> passed in the parameter.
      * @param node the starting point.
@@ -107,7 +117,7 @@ public interface Tree
      * @param nodeTypes only the nodes of types in this array will be passed to the node handler.
      *      if the parameter was not seted then any node will be passed to the node handler.
      */
-    public void scanSubtree(
+    public boolean scanSubtree(
             Node startingPoint, ScannedNodeHandler handler
             , Class<? extends Node>[] nodeTypes
             , Node.Status... nodeStatuses);

@@ -54,7 +54,8 @@ public class TemplateWizard
         this.newNodeName = newNodeName;
         
         variablesNode = (TemplateVariablesNode) tree.copy(
-                template.getVariablesNode(), destination, "~TemplateVariables", null, false, false);
+                template.getVariablesNode(), destination, "~TemplateVariables"
+                , null, false, false, false);
     }
 
     public TemplateVariablesNode getVariablesNode()
@@ -80,7 +81,7 @@ public class TemplateWizard
             {
                 Node newNode = tree.copy(
                         node, destination, useNewNodeName? newNodeName : null
-                        , nodeTuner, true, true);
+                        , nodeTuner, true, true, false);
                 tree.start(newNode, false);
             }
         }

@@ -21,7 +21,7 @@ package org.raven.tree;
  *
  * @author Mikhail Titov
  */
-public enum ScanOperation 
+public interface SearchFilter 
 {
-    CONTINUE, SKIP_NODE, STOP
+    public boolean filter(Node node);
 }

@@ -330,11 +330,13 @@ public interface Node extends Cloneable, Comparable<Node>
      * Copy this node to the destination node passed in the parameter.
      * @param dest the destination node.
      * @param newNodeName if specified then the copied node will get the new name
-     * 
+     * @param useEffectiveChildrens if seted to <code>true</code> then method 
+     *      {@link #getEffectiveChildrens()} will be used to clone children nodes of this node.
      * @throws java.lang.CloneNotSupportedException
      */
-    public Node cloneTo(Node dest, String newNodeName, NodeTuner nodeTuner) 
-            throws CloneNotSupportedException;
+    public Node cloneTo(
+            Node dest, String newNodeName, NodeTuner nodeTuner, boolean useEffectiveChildrens) 
+        throws CloneNotSupportedException;
     /**
      * Method adds expression bindings to the bindings object passed in the parameter.
      */

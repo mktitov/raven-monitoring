@@ -28,6 +28,7 @@ import org.jrobin.graph.RrdGraphDef;
 import org.raven.DynamicImageNode;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.expr.impl.IfNode;
 import org.raven.rrd.data.RRDNode;
 import org.raven.tree.Node;
 import org.raven.tree.NodeError;
@@ -39,7 +40,7 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass
+@NodeClass(childNodes=IfNode.class)
 @Description("Plots the graph using RRDataSource nodes as data sources")
 public class RRGraphNode extends BaseNode implements DynamicImageNode
 {

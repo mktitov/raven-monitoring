@@ -21,7 +21,10 @@ package org.raven.tree;
  *
  * @author Mikhail Titov
  */
-public enum ScanOperation 
+public interface SearchOptions 
 {
-    CONTINUE, SKIP_NODE, STOP
+    /**
+     * Searching stops on first found node.
+     */
+    public boolean isFindFirst();
 }

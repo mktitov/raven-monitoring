@@ -38,7 +38,6 @@ import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
-import org.raven.tree.NodePathResolver;
 import org.raven.tree.NodeTuner;
 import org.raven.tree.ScanOperation;
 import org.raven.tree.ScannedNodeHandler;
@@ -46,10 +45,15 @@ import org.raven.tree.impl.AttributeReferenceValueHandler;
 import org.raven.tree.impl.AttributeReferenceValueHandlerFactory;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.ContainerNode;
+import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.impl.NodeListenerAdapter;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
+import org.raven.tree.impl.SearchOptionsImpl;
+import org.raven.tree.impl.filters.NodeNameSearchFilter;
+import org.raven.tree.store.TreeStore;
 import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.internal.annotations.Service;
 
 /**
  * Allows to create {@link org.raven.rrd.graph.RRGraphNode graphics} 
@@ -60,6 +64,8 @@ public class RRGraphManager extends BaseNode
 {
     public final static String STARTINGPOINT_ATTRIBUTE = "startingPoint";
     public final static String FILTER_EXPRESSION_ATTRIBUTE = "filterExpression";
+    public final static String REFERENCE_TO_GRAPH_NODE_ATTRIBUTE = "referenceToGraphNode_";
+    public final static String AUTOCOLOR_FLAG_ATTRIBUTE = "autoColor_";
     public final static long LOCK_TIMEOUT = 500;
     
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
@@ -217,28 +223,29 @@ public class RRGraphManager extends BaseNode
         if (gTemplate instanceof GroupNode || gTemplate instanceof RRGraphNode)
         {
             //cloning subtree
-            Node result = tree.copy(gTemplate, injectingPoint, null, tuner, true, false);
-            tree.start(result, true);
+            Node result = tree.copy(gTemplate, injectingPoint, null, tuner, true, false, true);
+            tree.start(result, false);
         }
         else
         {
             incrementAutoColorAttribute(injectingPoint);
             //cloning all nodes inside graph template (the parent of the gTemplate)
-            Collection<Node> childs = gTemplate.getParent().getChildrens();
+            Collection<Node> childs = gTemplate.getParent().getEffectiveChildrens();
             
             if (childs!=null)
             {
                 List<Node> clonedNodes = new ArrayList<Node>();
                 for (Node node: childs)
-                    clonedNodes.add(tree.copy(node, injectingPoint, null, tuner, true, false));
+                    clonedNodes.add(
+                        tree.copy(node, injectingPoint, null, tuner, true, false, true));
                 
                 for (Node node: clonedNodes)
                 {
-                    tree.start(node, true);
                     Collection<NodeAttribute> attrs = node.getNodeAttributes();
                     if (attrs!=null)
                         for (NodeAttribute attr: attrs)
                             revalidateAttributeExpression(attr, node);
+                    tree.start(node, false);
                 }
             }
         }
@@ -411,27 +418,33 @@ public class RRGraphManager extends BaseNode
             }
             
             //searching for attributes that referenced to the GraphNode childs
-            if (sourceNode.getParent() instanceof RRGraphNode)
+            if (sourceNode.getEffectiveParent() instanceof RRGraphNode)
             {
+                NodeAttribute autoColorAttr = sourceNode.getEffectiveParent().getNodeAttribute(
+                        RRGraphManagerTemplate.AUTOCOLOR_ATTRIBUTE);
+                
                 Collection<NodeAttribute> attrs = sourceNode.getNodeAttributes();
                 if (attrs!=null)
                     for (NodeAttribute attr: attrs)
-                        if (NodeReferenceValueHandlerFactory.TYPE.equals(attr.getValueHandlerType()))
+                    {
+                        addNodeReferenceFlag(attr, sourceNode, sourceClone);
+                        if (AttributeReferenceValueHandlerFactory.TYPE.equals(
+                                attr.getValueHandlerType()))
                         {
-                            Node value = attr.getRealValue();
-                            if (value!=null && value.getParent()==sourceNode.getParent())
+                            AttributeReferenceValueHandler handler = 
+                                    (AttributeReferenceValueHandler) attr.getValueHandler();
+                            
+                            if (handler.getReferencedAttribute()==autoColorAttr)
                             {
-                                NodeAttribute clonedAttribute = 
-                                        sourceClone.getNodeAttribute(attr.getName());
-                                String path = clonedAttribute.getRawValue();
-                                if (path.endsWith("\""))
-                                    clonedAttribute.setRawValue(
-                                            path.substring(0, path.length()-1)
-                                            + "_"+dataSource.getId()+"\"");
-                                else
-                                    clonedAttribute.setRawValue(path+"_"+dataSource.getId());
+                                NodeAttribute autoColorFlag = 
+                                        new NodeAttributeImpl(
+                                            AUTOCOLOR_FLAG_ATTRIBUTE+attr.getName(), String.class
+                                            , null, null);
+                                sourceClone.addNodeAttribute(autoColorFlag);
+                                autoColorFlag.setOwner(sourceClone);
                             }
                         }
+                    }
             }
         }
         
@@ -458,33 +471,85 @@ public class RRGraphManager extends BaseNode
             
             if (nodeClone.getEffectiveParent() instanceof RRGraphNode)
             {
-                NodeAttribute autoColorAttr = nodeClone.getParent().getNodeAttribute(
+                NodeAttribute autoColorAttr = nodeClone.getEffectiveParent().getNodeAttribute(
                         RRGraphManagerTemplate.AUTOCOLOR_ATTRIBUTE);
                 Collection<NodeAttribute> attrs = nodeClone.getNodeAttributes();
                 if (attrs!=null)
                     for (NodeAttribute attr: attrs)
-                        correctAttributeColor(attr, autoColorAttr);
+                    {
+                        NodeAttribute autoColorFlag = nodeClone.getNodeAttribute(
+                                AUTOCOLOR_FLAG_ATTRIBUTE+attr.getName());
+                        if (autoColorFlag!=null)
+                        {
+                            correctAttributeColor(attr, autoColorAttr);
+                            configurator.getTreeStore().removeNodeAttribute(autoColorFlag.getId());
+                            nodeClone.removeNodeAttribute(autoColorFlag.getName());
+                        }
+                    }
+            }
+            
+            Node effectiveParent = nodeClone.getEffectiveParent();
+            if (effectiveParent instanceof RRGraphNode)
+            {
+                Collection<NodeAttribute> attrs = nodeClone.getNodeAttributes();
+                if (attrs!=null)
+                    for (NodeAttribute attr: attrs)
+                    {
+                        NodeAttribute refAttr = nodeClone.getNodeAttribute(
+                                REFERENCE_TO_GRAPH_NODE_ATTRIBUTE+attr.getName());
+                        if (refAttr!=null)
+                        {
+                            configurator.getTreeStore().removeNodeAttribute(refAttr.getId());
+                            List<Node> nodes = tree.search(
+                                    effectiveParent
+                                    , new SearchOptionsImpl().setFindFirst(true)
+                                    , new NodeNameSearchFilter(refAttr.getValue()));
+                            if (nodes.size()==0)
+                                logger.error(String.format(
+                                        "Error finding node with name (%s) in the subtree (%s) " +
+                                        "for recreating reference for attribute (%s) of node (%s)"
+                                        , refAttr.getValue(), effectiveParent, attr.getName()
+                                        , nodeClone.getPath()));
+                            else
+                                try {
+                                    attr.setValue(nodes.get(0).getPath());
+                                } catch (Exception ex) {
+                                    logger.error(
+                                        String.format(
+                                            "Error seting value (%s) for attribute (%s) of node (%s)"
+                                            , nodes.get(0).getPath(), attr.getName()
+                                            , nodeClone.getPath())
+                                        , ex);
+                                }
+                        }
+                    }
+            }
+        }
+
+        private void addNodeReferenceFlag(NodeAttribute attr, Node sourceNode, Node sourceClone) {
+            if (NodeReferenceValueHandlerFactory.TYPE.equals(attr.getValueHandlerType())) {
+                Node value = attr.getRealValue();
+                if (value != null && value.getEffectiveParent() == sourceNode.getEffectiveParent()) {
+                    NodeAttribute nodeRefAttr = new NodeAttributeImpl(REFERENCE_TO_GRAPH_NODE_ATTRIBUTE + attr.getName(), String.class, value.getName() + "_" + dataSource.getId(), null);
+                    sourceClone.addNodeAttribute(nodeRefAttr);
+                    nodeRefAttr.setOwner(sourceClone);
+                }
             }
         }
         
         private void correctAttributeColor(NodeAttribute attr, NodeAttribute autoColorAttr) 
         {
-            if (   AttributeReferenceValueHandlerFactory.TYPE.equals(attr.getValueHandlerType()) 
-                && ((   AttributeReferenceValueHandler) attr.getValueHandler()).getReferencedAttribute() 
-                     == autoColorAttr) 
+            try {
+                attr.setValue(null);
+                attr.setValueHandlerType(null);
+                attr.setValue(autoColorAttr.getValue());
+                attr.save();
+            } catch (Exception exception) 
             {
-                try {
-                    attr.setValue(null);
-                    attr.setValueHandlerType(null);
-                    attr.setValue(autoColorAttr.getValue());
-                    attr.save();
-                } catch (Exception exception) 
-                {
-                    logger.error(String.format(
-                            "Error seting color (%s) for attribute (%s) of the node (%s)", 
-                            autoColorAttr.getValue(), attr.getName(), attr.getOwner().getPath())
-                            , exception);
-                }
+                logger.error(String.format(
+                        "Error seting color (%s) for attribute (%s) of the node (%s)", 
+                        autoColorAttr.getValue(), attr.getName(), attr.getOwner().getPath())
+                        , exception);
             }
         }
         
@@ -509,6 +574,7 @@ public class RRGraphManager extends BaseNode
             
             return groupName;
         }
+
     }
     
     private class StartingPointListener extends NodeListenerAdapter

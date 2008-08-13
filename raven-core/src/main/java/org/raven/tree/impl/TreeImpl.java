@@ -44,6 +44,8 @@ import org.raven.tree.NodeTuner;
 import org.raven.tree.PathInfo;
 import org.raven.tree.ScanOperation;
 import org.raven.tree.ScannedNodeHandler;
+import org.raven.tree.SearchFilter;
+import org.raven.tree.SearchOptions;
 import org.raven.tree.Tree;
 import org.raven.tree.TreeError;
 import org.raven.tree.store.TreeStore;
@@ -205,7 +207,7 @@ public class TreeImpl implements Tree
 
     public Node copy(
             Node source, Node destination, String newNodeName, NodeTuner nodeTuner
-            , boolean store, boolean validateNodeType)
+            , boolean store, boolean validateNodeType, boolean useEffectiveChildrens)
     {
         if (validateNodeType)
         {
@@ -232,7 +234,7 @@ public class TreeImpl implements Tree
 //            if (newNodeName!=null)
 //                clone.setName(newNodeName);
 //            destination.addChildren(clone);
-            Node clone = source.cloneTo(destination, newNodeName, nodeTuner);
+            Node clone = source.cloneTo(destination, newNodeName, nodeTuner, useEffectiveChildrens);
             saveClonedNode(source, clone, destination.getPath(), clone, store);
             initNode(clone, nodeTuner);
             
@@ -242,6 +244,14 @@ public class TreeImpl implements Tree
         {
             throw new TreeError("Node (%s) clone error", ex);
         }
+    }
+
+    public List<Node> search(Node searchFromNode, SearchOptions options, SearchFilter filter) 
+    {
+        List<Node> result = new ArrayList<Node>();
+        ScannedNodeHandler handler = new SearchScannedNodeHandler(result, options, filter);
+        scanSubtree(searchFromNode, handler, null, null);
+        return result;
     }
     
     public void start(Node node, boolean autoStartOnly)
@@ -264,7 +274,7 @@ public class TreeImpl implements Tree
                 stop(child);
     }
 
-    public void scanSubtree(
+    public boolean scanSubtree(
             Node startingPoint, ScannedNodeHandler handler
             , Class<? extends Node>[] nodeTypes, Status... statuses)
     {
@@ -274,13 +284,21 @@ public class TreeImpl implements Tree
             {
                 ScanOperation operation = ScanOperation.CONTINUE;
                 if (   (nodeTypes==null || ObjectUtils.in(node.getClass(), nodeTypes))
-                    && (statuses.length==0 || ObjectUtils.in(node.getStatus(), statuses)))
+                    && (   statuses==null || statuses.length==0 
+                        || ObjectUtils.in(node.getStatus(), statuses)))
                 {
                     operation = handler.nodeScanned(node);
                 }
                 if (operation==ScanOperation.CONTINUE)
-                    scanSubtree(node, handler, nodeTypes, statuses);
+                {
+                    boolean continueScan = scanSubtree(node, handler, nodeTypes, statuses);
+                    if (!continueScan)
+                        return false;
+                }
+                else if (operation==ScanOperation.STOP)
+                    return false;
             }
+        return true;
     }
 
     public List<ReferenceValue> getReferenceValuesForAttribute(NodeAttribute attr)
@@ -455,5 +473,32 @@ public class TreeImpl implements Tree
             importParentChildTypeNodes.add(nodeType);
         addChildsToParent(ann.parentNode(), nodeType);
         addChildsToParent(nodeType, ann.childNodes());
+    }
+    
+    private class SearchScannedNodeHandler implements ScannedNodeHandler
+    {
+        private final List<Node> foundNodes;
+        private final SearchOptions searchOptions;
+        private final SearchFilter searchFilter;
+
+        public SearchScannedNodeHandler(
+                List<Node> foundNodes, SearchOptions searchOptions, SearchFilter searchFilter) 
+        {
+            this.foundNodes = foundNodes;
+            this.searchOptions = searchOptions;
+            this.searchFilter = searchFilter;
+        }
+
+        public ScanOperation nodeScanned(Node node) 
+        {
+            if (searchFilter.filter(node))
+            {
+                foundNodes.add(node);
+                if (searchOptions.isFindFirst())
+                    return ScanOperation.STOP;
+            }
+            return ScanOperation.CONTINUE;
+        }
+        
     }
 }

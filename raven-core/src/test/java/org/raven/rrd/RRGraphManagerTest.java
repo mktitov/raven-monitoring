@@ -233,6 +233,12 @@ public class RRGraphManagerTest extends RavenCoreTestCase
         groupNode.addChildren(graphNode);
         graphNode.save();
         graphNode.init();
+        attr = graphNode.getNodeAttribute(RRGraphNode.HEIGHT_ATTRIBUTE);
+        attr.setValue("100");
+        attr.save();
+        attr = graphNode.getNodeAttribute(RRGraphNode.WIDTH_ATTRIBUTE);
+        attr.setValue("100");
+        attr.save();
         
         attr = graphNode.getNodeAttribute(GroupNode.GROUPINGEXPRESSION_ATTRIBUTE);
         //The RRGraphManagerTemplate must create this attribute
@@ -258,6 +264,9 @@ public class RRGraphManagerTest extends RavenCoreTestCase
         graphNode.addChildren(comment);
         comment.save();
         comment.init();
+        attr = comment.getNodeAttribute(RRComment.COMMENT_ATTRIBUTE);
+        attr.setValue("comment");
+        attr.save();
         assertNull(comment.getNodeAttribute(GroupNode.GROUPINGEXPRESSION_ATTRIBUTE));
         assertNull(comment.getNodeAttribute(RRGraphManagerTemplate.AUTOCOLOR_ATTRIBUTE));
         
@@ -275,6 +284,9 @@ public class RRGraphManagerTest extends RavenCoreTestCase
         attr.setValueHandlerType(AttributeReferenceValueHandlerFactory.TYPE);
         attr.setValue("../@"+RRGraphManagerTemplate.AUTOCOLOR_ATTRIBUTE);
         assertTrue(attr.isExpressionValid());
+        attr = line.getNodeAttribute(RRArea.LEGEND_ATTRIBUTE);
+        attr.setValue("legend");
+        attr.save();
         
         return gmanager;
     }

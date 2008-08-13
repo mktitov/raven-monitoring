@@ -262,7 +262,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
 
         StrSubstitutor subst = new StrSubstitutor(values);
 
-        Node newNode = tree.copy(templateNode, this, null, null, true, false);
+        Node newNode = tree.copy(templateNode, this, null, null, true, false, true);
         NodeAttribute indexAttr = new NodeAttributeImpl(
                 INDEX_COLUMN_VALUE, String.class, indexValue, null);
         indexAttr.setOwner(newNode);
