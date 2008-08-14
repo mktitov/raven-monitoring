@@ -94,7 +94,7 @@
             </tr:column>
             
             <f:facet name="detailStamp">
-                <tr:panelGroupLayout layout="vertical">
+                <tr:panelGroupLayout layout="vertical"  >
 				<tr:inputListOfValues 
 					rendered="#{row.expressionSupported and (row.selectItems == null) }"
 					value="#{row.expression}" 
@@ -105,20 +105,17 @@
 				>
 					<f:attribute name="#{editExpression.paramName}" value="#{row}" />
 				</tr:inputListOfValues>
-<!-- 
-					<tr:panelGroupLayout layout="horizontal" rendered="#{row.expressionSupported and (row.selectItems == null) }">
-        	            <tr:inputText columns="30" label="#{msgs.expression}" value="#{row.expression}"/>
-						<tr:commandButton text="..." action="dialog:editExpression" 
-						 actionListener="#{editExpression.selectAttr}" 
-						 useWindow="true" windowWidth="300" windowHeight="300" 
-						>
-							<f:attribute name="editedRow" value="#{row}" />
-						</tr:commandButton>
+	            <tr:selectOneChoice label="#{msgs.expression}" rendered="#{row.expressionSupported and !(row.selectItems == null)}" value="#{row.expression}" >
+    	            <f:selectItems value="#{row.selectItems}" />
+                </tr:selectOneChoice>
+				
+				<tr:spacer height="10"></tr:spacer>
+				<tr:panelGroupLayout layout="horizontal">
+					<tr:spacer width="40"></tr:spacer>
+						<jsp:include page="childAttributes.jspx" flush="true"/>
 					</tr:panelGroupLayout>
- -->					
-                    <tr:selectOneChoice label="#{msgs.expression}" rendered="#{row.expressionSupported and !(row.selectItems == null)}" value="#{row.expression}" >
-                        <f:selectItems value="#{row.selectItems}" />
-                    </tr:selectOneChoice>
+				<tr:spacer height="15"></tr:spacer>
+
                 </tr:panelGroupLayout>					
                 <!-- <tr:panelGroupLayout layout="vertical">
                 </tr:panelGroupLayout>  -->

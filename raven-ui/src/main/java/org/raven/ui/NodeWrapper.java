@@ -46,12 +46,12 @@ public class NodeWrapper extends AbstractNodeWrapper
 	private CoreShowDetailItem treeEditTab; 
 	private CoreShowDetailItem selNodeTab; 
 	private CoreShowDetailItem selTemplateTab;
+	private boolean useChildAttributesView = true;
 		
 	public NodeWrapper() 
 	{
 		super();
 		SessionBean.initNodeWrapper(this);
-		
 	}
 
 	public NodeWrapper(Node node) 
@@ -95,17 +95,29 @@ public class NodeWrapper extends AbstractNodeWrapper
 	public List<Attr> getAttributes() throws TooManyReferenceValuesException
 	{
 		if(editingAttrs==null) loadAttributes();
-		return editingAttrs;
+		if(!useChildAttributesView) return editingAttrs;
+		List<Attr> parentAttrs = new ArrayList<Attr>();
+		for(Attr a : editingAttrs)
+			if(a.getAttribute().getParentAttribute()==null) parentAttrs.add(a);
+		return parentAttrs;
 	}
-
+	
+/*	public List<Attr> getChildAttributes()
+	{
+		if(!useChildAttributesView) return null;
+		List<Attr> childAttrs = new ArrayList<Attr>();
+		return childAttrs;
+	}
+*/
 	public void  loadAttributes() throws TooManyReferenceValuesException
 	{
 		savedAttrs = getNodeAttributes();
 		editingAttrs = new ArrayList<Attr>();
 		for(NodeAttribute na : savedAttrs)
 			editingAttrs.add(new Attr(na));
+		for(Attr a : editingAttrs)
+			a.findChildren(editingAttrs);
 	}
-	
 	
 //	  public String delAttr()  {   return "";  }
 	
@@ -354,5 +366,13 @@ public class NodeWrapper extends AbstractNodeWrapper
 
 	public CoreShowDetailItem getSelTemplateTab() { return selTemplateTab; }
 	public void setSelTemplateTab(CoreShowDetailItem selTemplateTab) { this.selTemplateTab = selTemplateTab; }
+
+	public boolean isUseChildAttributesView() {
+		return useChildAttributesView;
+	}
+
+	public void setUseChildAttributesView(boolean useChildAttributesView) {
+		this.useChildAttributesView = useChildAttributesView;
+	}
 
 }

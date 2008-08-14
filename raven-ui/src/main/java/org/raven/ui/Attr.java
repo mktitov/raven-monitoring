@@ -53,6 +53,8 @@ public class Attr
 	private boolean edit = false;
 	private boolean expressionSupported = false;
 	private String expression = "";
+	private List<Attr> children = new ArrayList<Attr>();
+	private boolean hasChildren = false;
 
 	@SuppressWarnings("unchecked")
 	public Attr(NodeAttribute na) throws TooManyReferenceValuesException
@@ -85,6 +87,26 @@ public class Attr
         }
 	}
 
+	public void addChild(Attr a) 
+	{ 
+		children.add(a);
+		setHasChildren(true);
+	}
+	
+	public List<Attr> getChildAttributes()
+	{
+		return children;
+	}
+	
+	public void findChildren(List<Attr> l)
+	{
+		for(Attr a: l)
+		{
+			String parent = a.getAttribute().getParentAttribute();
+			if(parent!=null && this.name.equals(parent)) addChild(a);
+		}
+	}
+	
 	public String getName() { return name; }
 	public void setName(String name) { this.name = name; }
 
@@ -157,5 +179,13 @@ public class Attr
     {
         this.valueHandlerTypes = valueHandlerTypes;
     }
+
+	public boolean isHasChildren() {
+		return hasChildren;
+	}
+
+	public void setHasChildren(boolean hasChildren) {
+		this.hasChildren = hasChildren;
+	}
     
 }

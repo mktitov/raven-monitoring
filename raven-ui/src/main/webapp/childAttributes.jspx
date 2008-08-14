@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<!-- 
+*  Copyright 2008 Sergey Pinevskiy.
+* 
+*  Licensed under the Apache License, Version 2.0 (the "License");
+*  you may not use this file except in compliance with the License.
+*  You may obtain a copy of the License at
+* 
+*       http://www.apache.org/licenses/LICENSE-2.0
+* 
+*  Unless required by applicable law or agreed to in writing, software
+*  distributed under the License is distributed on an "AS IS" BASIS,
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*  See the License for the specific language governing permissions and
+*  limitations under the License.
+*  under the License.
+-->
+<jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
+          xmlns:f="http://java.sun.com/jsf/core"
+          xmlns:tr="http://myfaces.apache.org/trinidad" >
+    <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>          
+<!-- binding="#{cNodeAttrs.table}" -->    
+
+        <tr:table allDetailsEnabled="true" rowBandingInterval="1"
+        	 rendered="#{cNode.useChildAttributesView and row.hasChildren}"  
+             width="90%" summary="Nodes" value="#{row.childAttributes}" 
+             var="rowz" rows="20" id="attrsz" partialTriggers="subtypes">
+            
+            <tr:column headerText="#{msgs.name}">
+                <tr:outputText value="#{rowz.name}"/>
+            </tr:column>
+            <tr:column headerText="#{msgs.value}">
+                <tr:inputText readOnly="#{rowz.expressionSupported}" rendered="#{rowz.expressionSupported or (rowz.selectItems == null)}" value="#{rowz.value}" columns="12" />
+                <tr:selectOneChoice rendered="#{!rowz.expressionSupported and !(rowz.selectItems == null)}" value="#{rowz.value}" >
+                    <f:selectItems value="#{rowz.selectItems}" />
+                </tr:selectOneChoice>
+            </tr:column>
+            <tr:column headerText="#{msgs.type}">
+                <tr:outputText value="#{rowz.classDisplayName}"/>
+            </tr:column>
+            <tr:column headerText="#{msgs.subtype}">
+                <tr:selectOneChoice value="#{rowz.valueHandlerType}">
+                    <f:selectItems value="#{rowz.valueHandlerTypes}" />
+                </tr:selectOneChoice>
+            </tr:column>
+            <tr:column headerText="#{msgs.dsc}">
+                <tr:outputText rendered="#{!rowz.edit}" value="#{rowz.description}"/>
+                <tr:inputText rendered="#{rowz.edit}" value="#{rowz.description}"/>
+            </tr:column>
+            
+            <f:facet name="detailStamp">
+                <tr:panelGroupLayout layout="vertical">
+				<tr:inputListOfValues 
+					rendered="#{rowz.expressionSupported and (rowz.selectItems == null) }"
+					value="#{rowz.expression}" 
+					action="dialog:editExpression"
+					actionListener="#{editExpression.selectAttr}"
+					windowWidth="300" windowHeight="300"
+					columns="40" label="#{msgs.expression}"
+				>
+					<f:attribute name="#{editExpression.paramName}" value="#{rowz}" />
+				</tr:inputListOfValues>
+	            <tr:selectOneChoice label="#{msgs.expression}" rendered="#{rowz.expressionSupported and !(rowz.selectItems == null)}" value="#{rowz.expression}" >
+    	            <f:selectItems value="#{rowz.selectItems}" />
+                </tr:selectOneChoice>
+                </tr:panelGroupLayout>					
+                <!-- <tr:panelGroupLayout layout="vertical">
+                </tr:panelGroupLayout>  -->
+            </f:facet>
+            
+        </tr:table>
+
+</jsp:root>
