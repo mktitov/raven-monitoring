@@ -59,6 +59,7 @@ public class NodeAttributeImpl
     private Class type;
     private String value;
     private String valueHandlerType;
+    private boolean templateExpression;
     
     private boolean required;
     private BaseNode owner;
@@ -158,32 +159,15 @@ public class NodeAttributeImpl
 
     public String getValue()
     {
-        return converter.convert(String.class, valueHandler.handleData(), null);
-//        
-//        if (owner.getStatus()==Status.CREATED)
-//            return value;
-//        
-//        if (isAttributeReference())
-//        {
-//            if (value==null)
-//                return null;
-//            else
-//                return attributeReference.getAttribute().getValue();
-//        } else
-//        {
-//            if (parameter!=null)
-//                return converter.convert(
-//                        String.class, parameter.getValue(), parameter.getPattern());
-//            else if (value!=null)
-//                return value;
-//            else
-//                return owner.getParentAttributeValue(name);
-//        }
+        if (templateExpression)
+            return null;
+        else
+            return converter.convert(String.class, valueHandler.handleData(), null);
     }
 
     public String getRawValue()
     {
-        return valueHandler==null? value : valueHandler.getData();
+        return valueHandler==null || templateExpression? value : valueHandler.getData();
     }
     
     public void setRawValue(String rawValue)
@@ -193,9 +177,6 @@ public class NodeAttributeImpl
     
     public Class getType() 
     {
-//        if (isAttributeReference())
-//            return getAttributeReference()==null? 
-//                null : attributeReference.getAttribute().getType();
         return type;
     }
 
@@ -276,46 +257,17 @@ public class NodeAttributeImpl
 
     public void setValue(String value) throws Exception
     {
-        if (initialized)
-            valueHandler.setData(value);
-        else
+        if (templateExpression || !initialized)
             this.value = value;
-//        if (!ObjectUtils.equals(this.value, value))
-//        {
-//            String oldValue = this.value;
-//            this.value = value;
-//            valueHandler.setData(value);
-//            
-//            if (owner.getStatus()!=Status.CREATED)
-//            {
-//                owner.fireAttributeValueChanged(this, oldValue, oldValue);
-//            }
-            
-//            if (isAttributeReference())
-//            {
-//                processAttributeReference(value, oldValue);
-//            }
-//            else {
-//                if (owner.getStatus()!=Status.CREATED)
-//                {
-//                    if (parameter!=null)
-//                        parameter.setData(value);
-//
-//                    owner.fireAttributeValueChanged(this, oldValue, value);
-//                }
-//            }
-//        }
+        else 
+            valueHandler.setData(value);
     }
 
     public boolean isGeneratorType()
     {
-//        if (isAttributeReference())
-//            return getAttributeReference()==null? 
-//                false : attributeReference.getAttribute().isGeneratorType();
         return type!=null && AttributesGenerator.class.isAssignableFrom(type);
     }
 
-    //TODO: привести к виду List<ReferenceValue>
     public List<ReferenceValue> getReferenceValues() throws TooManyReferenceValuesException
     {
         if (!valueHandler.isReferenceValuesSupported())
@@ -373,7 +325,10 @@ public class NodeAttributeImpl
 
     public boolean isExpression()
     {
-        return valueHandler==null? false : valueHandler.isExpressionSupported();
+        if (templateExpression)
+            return true;
+        else
+            return valueHandler==null? false : valueHandler.isExpressionSupported();
     }
 
     public boolean isExpressionValid()
@@ -385,75 +340,17 @@ public class NodeAttributeImpl
     {
         valueHandler.validateExpression();
     }
+
+    public boolean isTemplateExpression() 
+    {
+        return templateExpression;
+    }
+
+    public void setTemplateExpression(boolean templateExpression) 
+    {
+        this.templateExpression = templateExpression;
+    }
     
-//    public AttributeReference getAttributeReference()
-//    {
-//        if (attributeReference==null && value!=null && isAttributeReference())
-//        {
-//            attributeReference = (AttributeReference) converter.convert(type, value, null);
-//            attributeReference.getAttribute().getOwner().addNodeAttributeDependency(
-//                    attributeReference.getAttribute().getName(), this);
-//        }
-//        return attributeReference;
-//    }
-//    
-//    private void processAttributeReference(String newValue, String oldValue)
-//    {
-//        AttributeReference oldRef = null;
-//        String oldRefValue = null;
-//        String newRefValue = null;
-//        if (attributeReference!=null)
-//        {
-//            oldRef = attributeReference;
-//            oldRefValue = oldRef.getAttribute().getValue();
-//            attributeReference.getAttribute().getOwner().removeNodeAttributeDependency(
-//                    attributeReference.getAttribute().getName(), this);
-//        }
-//        if (newValue!=null && owner.getStatus()!=Status.CREATED)
-//        {
-//            attributeReference = (AttributeReference) converter.convert(type, newValue, null);
-//            newRefValue = attributeReference.getAttribute().getValue();
-//            attributeReference.getAttribute().getOwner().addNodeAttributeDependency(
-//                    attributeReference.getAttribute().getName(), this);
-//        } else
-//            attributeReference = null;
-//        
-//        if (   oldRef!=null && oldRef.getAttribute().isGeneratorType() 
-//            && (attributeReference==null || !attributeReference.getAttribute().isGeneratorType()))
-//        {
-//            owner.removeChildAttributes(name, null);
-//        }
-//        
-//        if (    !ObjectUtils.equals(oldRefValue, newRefValue) 
-//            || (attributeReference!=null && attributeReference.getAttribute().isGeneratorType()))
-//        {
-//            owner.fireAttributeValueChanged(this, oldRefValue, newRefValue);
-//        }
-//    }
-
-//    public void nodeAttributeValueChanged(
-//            Node node, NodeAttribute attribute, Object oldValue, Object newValue)
-//    {
-//        owner.fireAttributeValueChanged(this, oldValue, newValue);
-//    }
-
-//    public void nodeAttributeRemoved(Node node, NodeAttribute attribute)
-//    {
-//        try
-//        {
-//            setValue(null);
-//        } catch (ConstraintException ex)
-//        {
-//            throw new NodeAttributeError(ex);
-//        }
-//    }
-//
-//    public void nodeAttributeNameChanged(NodeAttribute attribute, String oldName, String newName)
-//    {
-//        value = converter.convert(String.class, attributeReference, null);
-//        configurator.getTreeStore().saveNodeAttribute(this);
-//    }
-
     @Override
     public boolean equals(Object obj)
     {

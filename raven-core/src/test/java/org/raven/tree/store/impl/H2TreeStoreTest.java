@@ -94,6 +94,7 @@ public class H2TreeStoreTest extends Assert
         attr.setRequired(false);
         attr.setRawValue("value");
         attr.setValueHandlerType("valueHandlerType");
+        attr.setTemplateExpression(true);
         
         store.saveNodeAttribute(attr);
         
@@ -114,6 +115,7 @@ public class H2TreeStoreTest extends Assert
         assertEquals(String.class, attr1.getType());
         assertEquals("value", attr1.getRawValue());
         assertFalse(attr1.isRequired());
+        assertTrue(attr1.isTemplateExpression());
         assertEquals("valueHandlerType", attr1.getValueHandlerType());
         
         attr1.setDescription("description1");
@@ -124,6 +126,7 @@ public class H2TreeStoreTest extends Assert
         attr1.setType(Integer.class);
         attr1.setRawValue("1");
         attr1.setRequired(true);
+        attr1.setTemplateExpression(false);
         attr1.setValueHandlerType("changedValueHandlerType");
         
         store.saveNodeAttribute(attr1);
@@ -142,6 +145,7 @@ public class H2TreeStoreTest extends Assert
         assertEquals(Integer.class, attr1.getType());
         assertEquals("1", attr1.getRawValue());
         assertTrue(attr1.isRequired());
+        assertFalse(attr1.isTemplateExpression());
         assertEquals("changedValueHandlerType", attr1.getValueHandlerType());
         
         store.removeNodeAttribute(attr1.getId());

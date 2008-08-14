@@ -72,7 +72,7 @@ public class TemplateWizard
                     throw new ConstraintException(String.format(
                             "The value for required variable (%s) was not seted.", var.getName()));
         
-        Collection<Node> nodesToCopy = template.getEntryNode().getChildrens();
+        Collection<Node> nodesToCopy = template.getEntryNode().getSortedChildrens();
         if (nodesToCopy!=null)
         {
             NodeTuner nodeTuner = new Tuner();
@@ -93,10 +93,13 @@ public class TemplateWizard
         destination.removeChildren(variablesNode);        
     }
     
-    private class Tuner implements NodeTuner
+    private class Tuner extends TemplateExpressionNodeTuner
     {
+        @Override
         public void tuneNode(Node sourceNode, Node sourceClone)
         {
+            super.tuneNode(sourceNode, sourceClone);
+            
             Collection<NodeAttribute> attrs = sourceClone.getNodeAttributes();
             if (attrs!=null)
                 for (NodeAttribute attr: attrs)
@@ -117,22 +120,15 @@ public class TemplateWizard
                                     , sourceClone.getPath()), ex);
                         }
                     }
-//                    if (TemplateVariable.class.isAssignableFrom(attr.getType()))
-//                    {
-//                        String[] elems = attr.getRawValue().split(""+Node.ATTRIBUTE_SEPARATOR);
-//                        NodeAttribute var = variablesNode.getNodeAttribute(elems[1]);
-//                        attr.setType(var.getType());
-//                        attr.setRawValue(var.getRawValue());
-//                    }
         }
 
+        @Override
         public Node cloneNode(Node sourceNode)
         {
             return null;
         }
 
-        public void finishTuning(Node sourceClone) 
-        {
-        }
+        @Override
+        public void finishTuning(Node sourceClone) { }
     }
 }

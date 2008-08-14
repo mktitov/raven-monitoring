@@ -186,6 +186,14 @@ public interface NodeAttribute extends Cloneable
      */
     public void validateExpression() throws Exception;
     /**
+     * Returns <code>true</code> if the value of the attribute holds template expression.
+     */
+    public boolean isTemplateExpression();
+    /**
+     * @see #isTemplateExpression() 
+     */
+    public void setTemplateExpression(boolean templateExpression);
+    /**
      * Stores node attribute in the {@link TreeStore}.
      */
     public void save();

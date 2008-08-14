@@ -238,6 +238,15 @@ public class BaseNode implements Node, NodeListener
         return false;
     }
 
+    public Node getTemplate() 
+    {
+        Node pNode = this;
+        while ( (pNode=pNode.getParent())!=null )
+            if (pNode instanceof TemplateEntry)
+                return pNode.getParent();
+        return null;
+    }
+
     public void setStatus(Status status)
     {
         statusLock.lock();

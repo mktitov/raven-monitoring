@@ -318,6 +318,11 @@ public interface Node extends Cloneable, Comparable<Node>
      */
     public boolean isTemplate();
     /**
+     * Returns the template node to which this node belongs or <code>null</code> if this node 
+     * does not belong to template.
+     */
+    public Node getTemplate();
+    /**
      * Saves node in the {@link TreeStore tree store} database.
      */
     public void save();

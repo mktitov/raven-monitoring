@@ -34,6 +34,8 @@ import org.raven.rrd.data.RRDataSource;
 import org.raven.rrd.graph.RRDef;
 import org.raven.rrd.graph.RRGraphNode;
 import org.raven.template.TemplateEntry;
+import org.raven.template.TemplateExpressionNodeTuner;
+import org.raven.template.TemplateNode;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
@@ -50,10 +52,8 @@ import org.raven.tree.impl.NodeListenerAdapter;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.tree.impl.SearchOptionsImpl;
 import org.raven.tree.impl.filters.NodeNameSearchFilter;
-import org.raven.tree.store.TreeStore;
 import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
-import org.weda.internal.annotations.Service;
 
 /**
  * Allows to create {@link org.raven.rrd.graph.RRGraphNode graphics} 
@@ -172,6 +172,7 @@ public class RRGraphManager extends BaseNode
 
         expressionContext.put("dataSource", dataSource);
         expressionContext.put("rrDataSource", rrds);
+        expressionContext.put(TemplateNode.TEMPLATE_EXPRESSION_BINDING, this);
         
         if (filterExpression==null || filterExpression.equals(Boolean.FALSE))
             return;
@@ -380,7 +381,7 @@ public class RRGraphManager extends BaseNode
         }
     }
     
-    private class Tuner implements NodeTuner
+    private class Tuner extends TemplateExpressionNodeTuner
     {
         private final DataSource dataSource;
         private final RRDataSource rrds;
@@ -391,6 +392,7 @@ public class RRGraphManager extends BaseNode
             this.rrds = rrds;
         }
 
+        @Override
         public Node cloneNode(Node sourceNode) 
         {
             if (sourceNode instanceof GroupNode)
@@ -403,8 +405,11 @@ public class RRGraphManager extends BaseNode
                 return null;
         }
 
+        @Override
         public void tuneNode(Node sourceNode, Node sourceClone) 
         {
+            super.tuneNode(sourceNode, sourceClone);
+            
             if (sourceNode instanceof RRGraphNode)
             {
                 String groupName = getGroupName(sourceNode);
@@ -448,6 +453,7 @@ public class RRGraphManager extends BaseNode
             }
         }
         
+        @Override
         public void finishTuning(Node nodeClone) 
         {
             if (nodeClone instanceof RRDef)
@@ -526,11 +532,15 @@ public class RRGraphManager extends BaseNode
             }
         }
 
-        private void addNodeReferenceFlag(NodeAttribute attr, Node sourceNode, Node sourceClone) {
+        private void addNodeReferenceFlag(NodeAttribute attr, Node sourceNode, Node sourceClone) 
+        {
             if (NodeReferenceValueHandlerFactory.TYPE.equals(attr.getValueHandlerType())) {
                 Node value = attr.getRealValue();
-                if (value != null && value.getEffectiveParent() == sourceNode.getEffectiveParent()) {
-                    NodeAttribute nodeRefAttr = new NodeAttributeImpl(REFERENCE_TO_GRAPH_NODE_ATTRIBUTE + attr.getName(), String.class, value.getName() + "_" + dataSource.getId(), null);
+                if (value != null && value.getEffectiveParent() == sourceNode.getEffectiveParent()) 
+                {
+                    NodeAttribute nodeRefAttr = new NodeAttributeImpl(
+                            REFERENCE_TO_GRAPH_NODE_ATTRIBUTE + attr.getName(), String.class
+                            , value.getName() + "_" + dataSource.getId(), null);
                     sourceClone.addNodeAttribute(nodeRefAttr);
                     nodeRefAttr.setOwner(sourceClone);
                 }

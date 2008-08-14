@@ -17,6 +17,7 @@
 
 package org.raven.template;
 
+import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.Description;
@@ -31,6 +32,7 @@ public class TemplateNode extends BaseNode
 {
     public final static String VARIABLES_NODE = "Variables";
     public final static String ENTRY_NODE = "Entry";
+    public final static String TEMPLATE_EXPRESSION_BINDING = "template";
     
     private TemplateVariablesNode variablesNode;
     private TemplateEntry entryNode;
@@ -79,4 +81,12 @@ public class TemplateNode extends BaseNode
     {
         return entryNode;
     }
+
+    @Override
+    public void formExpressionBindings(Bindings bindings) 
+    {
+        super.formExpressionBindings(bindings);
+        bindings.put(TEMPLATE_EXPRESSION_BINDING, this);
+    }
+    
 }
