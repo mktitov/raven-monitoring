@@ -26,6 +26,7 @@ import org.apache.tapestry.ioc.services.ChainBuilder;
 import org.raven.conf.Configurator;
 import org.raven.conf.impl.ConfiguratorImpl;
 import org.raven.ds.DataSource;
+import org.raven.ds.impl.DataPipeConvertToTypesReferenceValues;
 import org.raven.ds.impl.SystemDataSourceReferenceValues;
 import org.raven.ds.impl.SystemDataSourceValueHandlerFactory;
 import org.raven.expr.ExpressionCompiler;
@@ -37,6 +38,7 @@ import org.raven.impl.NodeAccessToNodeConverter;
 import org.raven.impl.NodeToStringConverter;
 import org.raven.impl.SnmpVariableToNumberConverter;
 import org.raven.impl.StringToAttributeReferenceConverter;
+import org.raven.impl.StringToClassConverter;
 import org.raven.impl.StringToNodeConverter;
 import org.raven.impl.StringToTemplateVariableConverter;
 import org.raven.template.TemplateVariable;
@@ -116,6 +118,7 @@ public class RavenCoreModule
         conf.add(new AttributeReferenceToStringConverter());
         conf.add(new StringToTemplateVariableConverter());
         conf.add(new NodeAccessToNodeConverter());
+        conf.add(new StringToClassConverter());
     }
     
     public static void contributeTree(MappedConfiguration<Class, AttributeReferenceValues> conf)
@@ -158,5 +161,9 @@ public class RavenCoreModule
             TemplateVariableReferenceValues.class.getSimpleName()
             , new TemplateVariableReferenceValues()
             , "after:"+SystemDataSourceReferenceValues.class.getSimpleName());
+        conf.add(
+            DataPipeConvertToTypesReferenceValues.class.getSimpleName()
+            , new DataPipeConvertToTypesReferenceValues()
+            , "after:"+TemplateVariableReferenceValues.class.getSimpleName());
     }
 }

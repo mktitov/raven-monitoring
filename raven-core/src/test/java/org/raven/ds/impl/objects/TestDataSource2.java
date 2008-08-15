@@ -15,32 +15,25 @@
  *  under the License.
  */
 
-package org.raven.ds.impl;
+package org.raven.ds.impl.objects;
 
-import org.raven.annotations.Parameter;
+import java.util.Collection;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.ContainerNode;
-import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
-import org.weda.annotations.Description;
-import org.weda.annotations.constraints.NotNull;
 
 /**
- * Data consumer that collects data from one data source.
- * 
+ *
  * @author Mikhail Titov
  */
-public abstract class AbstractDataConsumer extends ContainerNode implements DataConsumer
+public class TestDataSource2 extends ContainerNode implements DataSource
 {
-    public final static String DATASOURCE_ATTRIBUTE = "dataSource";
-    
-    @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
-    @NotNull 
-    @Description("The data source")
-    private DataSource dataSource;
-
-    public DataSource getDataSource()
-    {
-        return dataSource;
+    public void getDataImmediate(DataConsumer dataConsumer) {
     }
+
+    public Collection<NodeAttribute> generateAttributes() {
+        return null;
+    }
+    
 }

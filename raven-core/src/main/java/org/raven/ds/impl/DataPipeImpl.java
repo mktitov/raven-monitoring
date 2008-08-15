@@ -18,10 +18,13 @@
 package org.raven.ds.impl;
 
 import java.util.Collection;
+import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
+import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataPipe;
 import org.raven.ds.DataSource;
+import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.weda.annotations.Description;
@@ -37,12 +40,41 @@ import org.weda.annotations.Description;
     "connected to this node")
 public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
 {
+    public final static String CONVERT_VALUE_TO_TYPE_ATTRIBUTE = "convertValueToType";
+    public final static String EXPRESSION_ATTRIBUTE = "expression";
+    public final static String DATA_ATTRIBUTE = "data";
+    
+    @Parameter()
+    @Description(
+        "Allows to convert data to the selected type before sending data to the data consumers")
+    private Class convertValueToType;
+    
+    @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
+    @Description(
+        "Allows to transform data to another data using this expression before sending data to " +
+        "consumers. Expression executes after data converting (see convertValueToType parameter)")
+    private String expression;
+    
+//    @Parameter()
+//    @Description("The last data posted to this data pipe")
+    private Object value;
+    
     public void setData(DataSource dataSource, Object data)
     {
+        this.value = data;
+        if (getStatus()!=Status.STARTED)
+            return;
+        Class convertTo = convertValueToType;
+        if (convertTo!=null)
+            this.value = converter.convert(convertTo, this.value, null);
+        NodeAttribute attr = getNodeAttribute(EXPRESSION_ATTRIBUTE);
+        if (attr.getRawValue()!=null && attr.getRawValue().trim().length()>0)
+            this.value = attr.getRealValue();
+        
         if (getDependentNodes()!=null)
             for (Node node: getDependentNodes())
-                if (node instanceof DataConsumer)
-                    ((DataConsumer)node).setData(this, data);
+                if (node.getStatus()==Status.STARTED && node instanceof DataConsumer)
+                    ((DataConsumer)node).setData(this, this.value);
     }
 
     public void getDataImmediate(DataConsumer dataConsumer)
@@ -50,8 +82,30 @@ public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
         getDataSource().getDataImmediate(this);
     }
 
+    @Override
+    public void formExpressionBindings(Bindings bindings) 
+    {
+        super.formExpressionBindings(bindings);
+        bindings.put("value", value);
+    }
+
     public Collection<NodeAttribute> generateAttributes()
     {
         return null;
     }
+
+    public Class getConvertValueToType() 
+    {
+        return convertValueToType;
+    }
+
+    public Object getValue() 
+    {
+        return value;
+    }
+
+    public String getExpression() {
+        return expression;
+    }
+    
 }

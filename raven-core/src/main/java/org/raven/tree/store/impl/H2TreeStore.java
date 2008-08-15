@@ -27,6 +27,8 @@ import java.sql.Types;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeAttributeImpl;
@@ -55,7 +57,7 @@ public class H2TreeStore implements TreeStore
     private PreparedStatement updateNodeAttributeStatement;
     private PreparedStatement removeNodeAttributeStatement;
     private PreparedStatement selectNodeAttributesStatement;
-
+    
     public void init(String databaseUrl, String username, String password) throws TreeStoreError
     {
         try
@@ -68,7 +70,7 @@ public class H2TreeStore implements TreeStore
         }
     }
 
-    public void saveNode(Node node) throws TreeStoreError
+    public synchronized void saveNode(Node node) throws TreeStoreError
     {
         try
         {
@@ -94,7 +96,7 @@ public class H2TreeStore implements TreeStore
         }
     }
 
-    public Node getNode(int id) throws TreeStoreError
+    public synchronized Node getNode(int id) throws TreeStoreError
     {
         try
         {
@@ -131,7 +133,7 @@ public class H2TreeStore implements TreeStore
         }
     }
 
-    public void removeNode(int id) throws TreeStoreError
+    public synchronized void removeNode(int id) throws TreeStoreError
     {
         try
         {
@@ -161,7 +163,7 @@ public class H2TreeStore implements TreeStore
         }
     }
 
-    public void saveNodeAttribute(NodeAttribute nodeAttribute) throws TreeStoreError
+    public synchronized void saveNodeAttribute(NodeAttribute nodeAttribute) throws TreeStoreError
     {
         try
         {
@@ -189,7 +191,7 @@ public class H2TreeStore implements TreeStore
         }
     }
 
-    public void removeNodeAttribute(int id) throws TreeStoreError
+    public synchronized void removeNodeAttribute(int id) throws TreeStoreError
     {
         try
         {
@@ -219,7 +221,7 @@ public class H2TreeStore implements TreeStore
         }
     }
 
-    public Node getRootNode() throws TreeStoreError
+    public synchronized Node getRootNode() throws TreeStoreError
     {
         try
         {
@@ -268,7 +270,7 @@ public class H2TreeStore implements TreeStore
         }
     }
     
-    public void removeNodes() throws TreeStoreError
+    public synchronized void removeNodes() throws TreeStoreError
     {
         try
         {
