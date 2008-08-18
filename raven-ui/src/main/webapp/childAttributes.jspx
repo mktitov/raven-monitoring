@@ -39,10 +39,20 @@
                 <tr:outputText value="#{rowz.classDisplayName}"/>
             </tr:column>
             <tr:column headerText="#{msgs.subtype}">
-                <tr:selectOneChoice value="#{rowz.valueHandlerType}">
+                <tr:selectOneChoice
+                   	valueChangeListener="#{rowz.applySubType}"
+					onchange="submit();"            
+                	value="#{rowz.valueHandlerType}">
                     <f:selectItems value="#{rowz.valueHandlerTypes}" />
                 </tr:selectOneChoice>
             </tr:column>
+            <tr:column rendered="#{cNode.node.template}" headerText="#{msgs.templateExpression}" >
+                <tr:selectBooleanCheckbox 
+					valueChangeListener="#{rowz.applyTemplateExpression}"  
+					onchange="submit();"                	
+                	value="#{rowz.templateExpression}" />
+            </tr:column>
+
             <tr:column headerText="#{msgs.dsc}">
                 <tr:outputText rendered="#{!rowz.edit}" value="#{rowz.description}"/>
                 <tr:inputText rendered="#{rowz.edit}" value="#{rowz.description}"/>
