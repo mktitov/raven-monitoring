@@ -47,6 +47,7 @@ public class NodeWrapper extends AbstractNodeWrapper
 	private CoreShowDetailItem selNodeTab; 
 	private CoreShowDetailItem selTemplateTab;
 	private boolean useChildAttributesView = true;
+	private boolean hasUnsavedChanges = false;
 		
 	public NodeWrapper() 
 	{
@@ -117,9 +118,16 @@ public class NodeWrapper extends AbstractNodeWrapper
 			editingAttrs.add(new Attr(na));
 		for(Attr a : editingAttrs)
 			a.findChildren(editingAttrs);
+		//logger.info("loadAttributes()");
 	}
 	
 //	  public String delAttr()  {   return "";  }
+
+	  public String saveWithoutWrite()
+	  {
+		  return save(false);
+	  }
+
 	
 	  public String save(boolean write)
 	  {
@@ -143,6 +151,8 @@ public class NodeWrapper extends AbstractNodeWrapper
 			  if( !na.getName().equals(at.getName()) ) save |=4;
 			  if( at.isExpressionSupported() &&  ! ObjectUtils.equals(na.getRawValue(), at.getExpression()) ) save |=8;
               if( !ObjectUtils.equals(na.getValueHandlerType(), at.getValueHandlerType())) save |=16;
+              if(at.isTemplateExpression() != na.isTemplateExpression()) save |=32;
+              if(isHasUnsavedChanges()) save |= 4096; 
 			  
 			  if(save==0) continue;
 			  try 
@@ -152,8 +162,14 @@ public class NodeWrapper extends AbstractNodeWrapper
 				  if( (save&4) !=0 ) na.setName(at.getName());
 				  if( (save&8) !=0 ) na.setValue(at.getExpression());
                   if( (save&16) !=0) na.setValueHandlerType(at.getValueHandlerType());
+                  if( (save&32) !=0) na.setTemplateExpression(at.isTemplateExpression());
 				  
-				  if(write) getConfigurator().getTreeStore().saveNodeAttribute(na);
+				  if(write)
+				  {
+					  getConfigurator().getTreeStore().saveNodeAttribute(na);
+					  setHasUnsavedChanges(false);
+				  }	  
+				  	else setHasUnsavedChanges(true);
 			  }
 			  catch(ConstraintException e) 
 			  {
@@ -183,13 +199,16 @@ public class NodeWrapper extends AbstractNodeWrapper
 				  at.setName(na.getName());
 			  }
 		  }
-		  if(ret.length()==0) return null;
-		  return ret.toString();
+		  if(ret.length()!=0) ret.toString();
+		  try { loadAttributes(); }
+		  catch (TooManyReferenceValuesException e) { logger.info("on loadAttributes ", e); }
+		  return null;
 	  }
 	
 	  public String cancel() throws TooManyReferenceValuesException //ActionEvent event
 	  {
 		  getAttributes();
+		  setHasUnsavedChanges(false);
 		  return "";
 	  }
 	  
@@ -373,6 +392,14 @@ public class NodeWrapper extends AbstractNodeWrapper
 
 	public void setUseChildAttributesView(boolean useChildAttributesView) {
 		this.useChildAttributesView = useChildAttributesView;
+	}
+
+	public void setHasUnsavedChanges(boolean hasUnsavedChanges) {
+		this.hasUnsavedChanges = hasUnsavedChanges;
+	}
+
+	public boolean isHasUnsavedChanges() {
+		return hasUnsavedChanges;
 	}
 
 }

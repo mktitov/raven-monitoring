@@ -20,7 +20,7 @@ package org.raven.ui;
 //import java.util.ArrayList;
 //import java.util.Collections;
 //import javax.faces.context.FacesContext;
-//import javax.faces.event.ActionEvent;
+import javax.faces.event.ActionEvent;
 //import org.raven.tree.NodeAttribute;
 //import org.apache.myfaces.trinidad.component.UIXCollection;
 //import org.apache.myfaces.trinidad.model.RowKeySetImpl;
@@ -31,6 +31,7 @@ import javax.faces.component.UIComponent;
 import org.apache.myfaces.trinidad.component.UIXTable;
 import org.apache.myfaces.trinidad.model.RowKeySet;
 import org.apache.myfaces.trinidad.component.core.output.CoreMessage;
+import javax.faces.event.ValueChangeEvent;
 
 public class AttributesTableBean 
 {
@@ -101,15 +102,31 @@ public class AttributesTableBean
 */		return ret;
 	}
 	
+	public void saveAttributes(ValueChangeEvent vce)	
+	{
+		saveAttributes();
+	}
 	public String saveAttributes()
 	{
 		NodeWrapper nw = (NodeWrapper) SessionBean.getElValue(NodeWrapper.BEAN_NAME);
-		return saveAttributes(nw);
+		return saveAttributes(nw,true);
 	}
 
-	public String saveAttributes(NodeWrapper nw)
+	public void saveAttributesWithoutWrite(ActionEvent ae)
 	{
-		String ret = nw.save(true);
+		NodeWrapper nw = (NodeWrapper) SessionBean.getElValue(NodeWrapper.BEAN_NAME);
+		saveAttributes(nw,false);
+	}
+	
+	public void saveAttributesWithoutWrite(ValueChangeEvent vce)
+	{
+		NodeWrapper nw = (NodeWrapper) SessionBean.getElValue(NodeWrapper.BEAN_NAME);
+		saveAttributes(nw,false);
+	}
+	
+	public String saveAttributes(NodeWrapper nw, boolean write)
+	{
+		String ret = nw.save(write);
 		if(ret!=null && message!=null) message.setMessage(ret);
 		else message.setMessage("");
 		return "";

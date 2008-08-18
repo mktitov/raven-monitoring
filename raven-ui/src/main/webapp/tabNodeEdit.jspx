@@ -66,7 +66,7 @@
              width="90%" rowSelection="multiple" summary="Nodes" value="#{cNode.attributes}" 
              var="row" rows="20" id="attrs" partialTriggers="subtypes">
             
-            <tr:column headerText="*">
+            <tr:column headerText="*" shortDesc="#{msgs.dscEnableRenameAttr}" >
                 <tr:selectBooleanCheckbox onclick="submit();" shortDesc="#{msgs.dscEnableRenameAttr}" value="#{row.edit}" rendered="#{row.allowDelete}"></tr:selectBooleanCheckbox>
             </tr:column>
             
@@ -84,9 +84,19 @@
                 <tr:outputText value="#{row.classDisplayName}"/>
             </tr:column>
             <tr:column headerText="#{msgs.subtype}">
-                <tr:selectOneChoice value="#{row.valueHandlerType}">
+                <tr:selectOneChoice 
+                	valueChangeListener="#{row.applySubType}"
+					onchange="submit();"            
+                	value="#{row.valueHandlerType}">
                     <f:selectItems value="#{row.valueHandlerTypes}" />
                 </tr:selectOneChoice>
+            </tr:column>
+<!-- valueChangeListener="#{cNodeAttrs.saveAttributesWithoutWrite}"  onchange="submit();" -->
+            <tr:column rendered="#{cNode.node.template}" headerText="#{msgs.templateExpression}" >
+                <tr:selectBooleanCheckbox 
+					valueChangeListener="#{row.applyTemplateExpression}"  
+					onchange="submit();"                	
+                	value="#{row.templateExpression}" />
             </tr:column>
             <tr:column headerText="#{msgs.dsc}">
                 <tr:outputText rendered="#{!row.edit}" value="#{row.description}"/>

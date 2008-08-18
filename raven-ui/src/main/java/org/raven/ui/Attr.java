@@ -20,6 +20,8 @@ package org.raven.ui;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
+
+import javax.faces.event.ValueChangeEvent;
 import javax.faces.model.SelectItem;
 
 import org.apache.tapestry.ioc.Registry;
@@ -32,6 +34,7 @@ import org.weda.constraints.ReferenceValue;
 import org.weda.constraints.TooManyReferenceValuesException;
 import org.weda.internal.annotations.Service;
 import org.weda.services.ClassDescriptorRegistry;
+//import org.apache.myfaces.trinidad.component.core.nav.CoreCommandButton;
 //import org.raven.tree.Tree;
 
 public class Attr 
@@ -55,6 +58,7 @@ public class Attr
 	private String expression = "";
 	private List<Attr> children = new ArrayList<Attr>();
 	private boolean hasChildren = false;
+	private boolean templateExpression = false;
 
 	@SuppressWarnings("unchecked")
 	public Attr(NodeAttribute na) throws TooManyReferenceValuesException
@@ -76,17 +80,35 @@ public class Attr
         List<ReferenceValue> refValues = tree.getAttributeValueHandlerTypes(na);
         if (refValues!=null)
         {
-            valueHandlerTypes = new ArrayList<SelectItem>(refValues.size());
+            valueHandlerTypes = new ArrayList<SelectItem>(refValues.size()+1);
+            valueHandlerTypes.add(new SelectItem(null, ""));
             for (ReferenceValue refValue: refValues)
                 valueHandlerTypes.add(
                     new SelectItem(refValue.getValue(), refValue.getValueAsString()));
         } 
-        else
-        {
-            valueHandlerTypes = Collections.EMPTY_LIST;
-        }
+        else valueHandlerTypes = Collections.EMPTY_LIST;
+        templateExpression = na.isTemplateExpression();
 	}
 
+	public void applySubType(ValueChangeEvent vce)
+	{
+		valueHandlerType = (String) vce.getNewValue();
+		NodeWrapper nw = (NodeWrapper) SessionBean.getElValue(NodeWrapper.BEAN_NAME);
+		nw.saveWithoutWrite();
+		try { nw.loadAttributes(); } 
+		catch(TooManyReferenceValuesException e) {logger.error("On loadAttributes:",e);}
+	}
+	
+	public void applyTemplateExpression(ValueChangeEvent vce)
+	{
+		Boolean b = (Boolean) vce.getNewValue();
+		templateExpression = b.booleanValue();
+		NodeWrapper nw = (NodeWrapper) SessionBean.getElValue(NodeWrapper.BEAN_NAME);
+		nw.saveWithoutWrite();
+		try { nw.loadAttributes(); } 
+		catch(TooManyReferenceValuesException e) {logger.error("On loadAttributes:",e);}
+	}
+	
 	public void addChild(Attr a) 
 	{ 
 		children.add(a);
@@ -157,35 +179,44 @@ public class Attr
 	public NodeAttribute getAttribute() { return attribute; }
 	public void setAttribute(NodeAttribute attribute) { this.attribute = attribute; }
 
-    public String getValueHandlerType()
-    {
-        return valueHandlerType;
-    }
-
+    public String getValueHandlerType() { return valueHandlerType; }
     public void setValueHandlerType(String valueHandlerType)
     {        
-        if (valueHandlerType!=null && valueHandlerType.length()==0)
-            this.valueHandlerType = null;
-        else
-            this.valueHandlerType = valueHandlerType;
+        if (valueHandlerType!=null && valueHandlerType.length()==0) 
+        	this.valueHandlerType = null;
+        else 
+        	this.valueHandlerType = valueHandlerType;
     }
 
-    public List<SelectItem> getValueHandlerTypes()
-    {
-        return valueHandlerTypes;
+    public List<SelectItem> getValueHandlerTypes() 
+    { 
+    	return valueHandlerTypes; 
     }
-
+    
     public void setValueHandlerTypes(List<SelectItem> valueHandlerTypes)
     {
         this.valueHandlerTypes = valueHandlerTypes;
     }
 
-	public boolean isHasChildren() {
-		return hasChildren;
+	public boolean isHasChildren() 
+	{ 
+		return hasChildren; 
+	}
+	
+	public void setHasChildren(boolean hasChildren) 
+	{ 
+		this.hasChildren = hasChildren; 
 	}
 
-	public void setHasChildren(boolean hasChildren) {
-		this.hasChildren = hasChildren;
+	public boolean isTemplateExpression() 
+	{ 
+		return templateExpression; 
 	}
+	
+	public void setTemplateExpression(boolean templateExpression) 
+	{ 
+		this.templateExpression = templateExpression; 
+	}
+
     
 }
