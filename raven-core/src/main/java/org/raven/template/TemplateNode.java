@@ -17,8 +17,12 @@
 
 package org.raven.template;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.Description;
 
@@ -30,6 +34,7 @@ import org.weda.annotations.Description;
 @Description("The template node")
 public class TemplateNode extends BaseNode 
 {
+    public static final String TEMPLATE_VARIABLES_EXPRESSION_BINDING = "vars";
     public final static String VARIABLES_NODE = "Variables";
     public final static String ENTRY_NODE = "Entry";
     public final static String TEMPLATE_EXPRESSION_BINDING = "template";

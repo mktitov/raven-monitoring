@@ -27,8 +27,10 @@ import org.raven.expr.Expression;
 import org.raven.expr.ExpressionCompiler;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodeError;
 import org.raven.tree.NodeTuner;
 import org.weda.beans.ObjectUtils;
+import org.weda.converter.TypeConverterException;
 import org.weda.internal.annotations.Service;
 import org.weda.services.TypeConverter;
 
@@ -38,6 +40,8 @@ import org.weda.services.TypeConverter;
  */
 public class TemplateExpressionNodeTuner implements NodeTuner
 {
+    public final static String TEMPLATE_EXPRESSION_PREFIX = "^t";
+    
     @Service
     private static ExpressionCompiler expressionCompiler;
     @Service
@@ -45,20 +49,33 @@ public class TemplateExpressionNodeTuner implements NodeTuner
     
     public Node cloneNode(Node sourceNode) 
     {
-        return null;
+        Bindings bindings = null;
+        if (   sourceNode.getName().startsWith(TEMPLATE_EXPRESSION_PREFIX) 
+            && (bindings=getBindings(sourceNode))!=null)
+        {
+            Node sourceClone = null;
+            try {
+                sourceClone = (Node) sourceNode.clone();
+            } catch (CloneNotSupportedException ex) { 
+                sourceNode.getLogger().error(
+                        String.format("Error cloning (%s) node", sourceNode.getPath())
+                        , ex);
+            }
+            String newNodeName = evalExpression(
+                    sourceNode.getName().substring(TEMPLATE_EXPRESSION_PREFIX.length())
+                    , bindings, sourceNode, null);
+            sourceClone.setName(newNodeName);
+            
+            return sourceClone;
+        }
+        else
+            return null;
     }
 
     public void tuneNode(Node sourceNode, Node sourceClone) 
     {
-        Bindings bindings = new SimpleBindings();
-        sourceNode.formExpressionBindings(bindings);
-        //geting the template that now work
-        Node templateNode = (Node) bindings.get(TemplateNode.TEMPLATE_EXPRESSION_BINDING);
-        if (templateNode==null)
-            return;
-        
-        //testing that working template and sourceNode template is the same nodes
-        if (!ObjectUtils.equals(sourceNode.getTemplate(), templateNode))
+        Bindings bindings = getBindings(sourceNode);
+        if (bindings==null)
             return;
         
         Collection<NodeAttribute> attrs = sourceNode.getNodeAttributes();
@@ -66,27 +83,55 @@ public class TemplateExpressionNodeTuner implements NodeTuner
             for (NodeAttribute attr: attrs)
                 if (attr.isTemplateExpression())
                 {
-                    try {
-                        Expression expression = 
-                                expressionCompiler.compile(attr.getValue(), "groovy");
-                        Object result = expression.eval(bindings);
-                        String strResult = converter.convert(String.class, result, null);
-                        
-                        NodeAttribute attrClone = sourceClone.getNodeAttribute(attr.getName());
-                        attrClone.setTemplateExpression(false);
-                        attrClone.setRawValue(strResult);
-                    } 
-                    catch (ScriptException ex) {
-                        sourceNode.getLogger().error(
-                            String.format(
-                                "Error compiling template expression (%s) for attribute (%s) " +
-                                "of node (%s)"
-                                , attr.getValue(), attr.getName(), sourceNode.getPath())
-                            , ex);
-                    }
+                    String strResult = evalExpression(attr.getValue(), bindings, sourceNode, attr);
+
+                    NodeAttribute attrClone = sourceClone.getNodeAttribute(attr.getName());
+                    attrClone.setTemplateExpression(false);
+                    attrClone.setRawValue(strResult);
                 }
-                
     }
 
     public void finishTuning(Node sourceClone) { }
+    
+    private Bindings getBindings(Node sourceNode)
+    {
+        Bindings bindings = new SimpleBindings();
+        sourceNode.formExpressionBindings(bindings);
+        formBindings(bindings);
+        //geting the template that now work
+        Node templateNode = (Node) bindings.get(TemplateNode.TEMPLATE_EXPRESSION_BINDING);
+        if (templateNode==null)
+            return null;
+        
+        //testing that working template and sourceNode template is the same nodes
+        if (!ObjectUtils.equals(sourceNode.getTemplate(), templateNode))
+            return null;
+        
+        return bindings;
+    }
+    
+    protected void formBindings(Bindings bindings) { }
+    
+    private String evalExpression(
+            String expressionStr, Bindings bindings, Node sourceNode, NodeAttribute attr)
+    {
+        try 
+        {
+            Expression expression = expressionCompiler.compile(expressionStr, "groovy");
+            Object result = expression.eval(bindings);
+            String strResult = converter.convert(String.class, result, null);
+            return strResult;
+        } 
+        catch (Exception e)
+        {
+            String errorMessage = 
+                    String.format("Error evaluating template expression (%s) ", expressionStr);
+            if (attr==null)
+                String.format(errorMessage+"for name of the node (%s)", sourceNode.getPath());
+            else
+                String.format(errorMessage+"for attribute (%s) of the node (%s)"
+                        , attr.getName(), sourceNode.getPath());
+            throw new NodeError(errorMessage, e);
+        }
+    }
 }

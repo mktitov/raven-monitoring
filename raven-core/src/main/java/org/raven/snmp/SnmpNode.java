@@ -18,6 +18,8 @@
 package org.raven.snmp;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import org.raven.table.Table;
 import org.raven.annotations.NodeClass;
 import org.raven.ds.DataConsumer;
@@ -49,6 +51,8 @@ import org.weda.annotations.Description;
 public class SnmpNode extends AbstractDataSource
 {
     public enum OidType {SINGLE, TABLE};
+    
+    public final static String ROW_INDEX_COLUMN_NAME = "index";
     
     public static final String PORT_ATTR = "snmp-port";
     public static final String VERSION_ATTR = "snmp-version";
@@ -162,6 +166,7 @@ public class SnmpNode extends AbstractDataSource
     {
         OID tableOID = pdu.get(0).getOid();
         Table table = new TableImpl();
+        Set<Integer> rowIndexes = new HashSet<Integer>();
         while (true) 
         {
             pdu.setType(PDU.GETNEXT);
@@ -176,6 +181,12 @@ public class SnmpNode extends AbstractDataSource
             if (var.getOid().startsWith(tableOID))
             {
                 OID columnOid = new OID(var.getOid());
+                int index = columnOid.last();
+                if (!rowIndexes.contains(index))
+                {
+                    table.addValue(ROW_INDEX_COLUMN_NAME, index);
+                    rowIndexes.add(index);
+                }
                 columnOid.removeLast();
                 String columnName = columnOid.toString();
                 table.addValue(columnName, var.getVariable());

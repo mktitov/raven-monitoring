@@ -43,7 +43,7 @@ public class TemplateExpressionNodeTunerTest extends RavenCoreTestCase
     private NodeAttribute attrClone;
     
     @Test
-    public void test()
+    public void templateExpression_in_attribute()
     {
         createMocks();
         
@@ -62,6 +62,27 @@ public class TemplateExpressionNodeTunerTest extends RavenCoreTestCase
         tuner.tuneNode(sourceNode, sourceClone);
         
         verify(sourceNode, sourceClone, templateNode, templateNode2);
+    }
+    
+    @Test
+    public void nodeNameWithTemplateExpression() throws CloneNotSupportedException
+    {
+        createMocks3();
+        
+        NodeTuner tuner = new TemplateExpressionNodeTuner();
+        assertSame(tuner.cloneNode(sourceNode), sourceClone);
+        
+        verify(sourceNode, sourceClone, templateNode);
+    }
+    
+    @Test 
+    public void nodeNameWithoutTemplateExpression()
+    {
+        createMocks4();
+        
+        NodeTuner tuner = new TemplateExpressionNodeTuner();
+        assertNull(tuner.cloneNode(sourceNode));
+        verify(sourceNode);
     }
     
     private void createMocks()
@@ -122,5 +143,29 @@ public class TemplateExpressionNodeTunerTest extends RavenCoreTestCase
         replay(sourceNode, sourceClone, templateNode, templateNode2);
     }
 
+    private void createMocks3() throws CloneNotSupportedException
+    {
+        sourceNode = createMock("sourceNode", Node.class);
+        sourceClone = createMock("sourceClone", Node.class);
+        templateNode = createMock("templateNode", Node.class);
+        
+        sourceNode.formExpressionBindings(formExpressionBindings(templateNode));
+        expect(sourceNode.getTemplate()).andReturn(templateNode);
+        expect(sourceNode.getName()).andReturn(
+                TemplateExpressionNodeTuner.TEMPLATE_EXPRESSION_PREFIX+"'1'+'1'").times(2);
+        expect(sourceNode.clone()).andReturn(sourceClone);
+        sourceClone.setName("11");
+        
+        replay(sourceNode, sourceClone, templateNode);
+    }
+    
+    private void createMocks4() 
+    {
+        sourceNode = createMock("sourceNode", Node.class);
+        
+        expect(sourceNode.getName()).andReturn("name without expression");
+        
+        replay(sourceNode);
+    }
     
 }

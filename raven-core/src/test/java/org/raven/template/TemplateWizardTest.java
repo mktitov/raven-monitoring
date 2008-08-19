@@ -99,7 +99,7 @@ public class TemplateWizardTest extends ServiceTestCase
         stringAttr.init();
         stringAttr.save();
         
-        Node child = new LeafNode("child");
+        Node child = new LeafNode("^t vars['stringVar']");
         node.addChildren(child);
         store.saveNode(child);
         child.init();
@@ -120,6 +120,7 @@ public class TemplateWizardTest extends ServiceTestCase
         }catch(ConstraintException e){           
         }
         wizard.getVariablesNode().getNodeAttribute("integerVar").setValue("10");
+        wizard.getVariablesNode().getNodeAttribute("stringVar").setValue("child");
         wizard.createNodes();
         
         checkCreatedNodes(tree);
@@ -136,7 +137,7 @@ public class TemplateWizardTest extends ServiceTestCase
         assertEquals(Status.STARTED, newNode.getStatus());
         NodeAttribute attr = newNode.getNodeAttribute("stringAttr");
         assertNotNull(attr);
-        assertNull(attr.getValue());
+        assertEquals("child", attr.getValue());
         assertEquals(String.class, attr.getType());
         
         Node newChild = newNode.getChildren("child");

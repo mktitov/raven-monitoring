@@ -28,10 +28,15 @@ import java.util.Map;
  */
 public class TableImpl implements Table
 {
+    public final static String ROWNUM_COLUMN_NAME = "#";
     private final Map<String, List<Object>> cols = new HashMap<String, List<Object>>(); 
     private final List<String> columnNames = new ArrayList<String>();
-            
-            
+
+    public TableImpl() 
+    {
+        columnNames.add(ROWNUM_COLUMN_NAME);
+    }
+
     public Map<String, List<Object>> getRows()
     {
         return cols;
@@ -56,6 +61,9 @@ public class TableImpl implements Table
 
     public Object getValue(String columnName, int row)
     {
+        if (ROWNUM_COLUMN_NAME.equals(columnName))
+            return row;
+        
         List<Object> values = cols.get(columnName);
         if (values==null)
             return null;
@@ -66,6 +74,7 @@ public class TableImpl implements Table
     public Map<String, Object> getRow(int row)
     {
         Map<String, Object> res = new HashMap<String, Object>();
+        res.put(ROWNUM_COLUMN_NAME, row);
         for (String columnName: columnNames)
             res.put(columnName, getValue(columnName, row));
         return res;
@@ -73,7 +82,7 @@ public class TableImpl implements Table
 
     public int getRowCount()
     {
-        return cols.size()==0? 0 : cols.get(columnNames.get(0)).size();
+        return cols.size()==0? 0 : cols.get(columnNames.get(1)).size();
     }
 
 }

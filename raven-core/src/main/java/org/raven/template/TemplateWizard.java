@@ -18,6 +18,9 @@
 package org.raven.template;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import javax.script.Bindings;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeTuner;
@@ -81,7 +84,7 @@ public class TemplateWizard
             {
                 Node newNode = tree.copy(
                         node, destination, useNewNodeName? newNodeName : null
-                        , nodeTuner, true, true, false);
+                        , nodeTuner, true, false, false);
                 tree.start(newNode, false);
             }
         }
@@ -125,10 +128,23 @@ public class TemplateWizard
         @Override
         public Node cloneNode(Node sourceNode)
         {
-            return null;
+            return super.cloneNode(sourceNode);
         }
 
         @Override
         public void finishTuning(Node sourceClone) { }
+
+        @Override
+        protected void formBindings(Bindings bindings) 
+        {
+            Map<String, Object> vars = new HashMap<String, Object>();
+            Collection<NodeAttribute> attrs = variablesNode.getNodeAttributes();
+            if (attrs!=null)
+                for (NodeAttribute attr: attrs)
+                    vars.put(attr.getName(), attr.getRealValue());
+            bindings.put(TemplateNode.TEMPLATE_VARIABLES_EXPRESSION_BINDING, vars);
+        }
+        
+        
     }
 }
