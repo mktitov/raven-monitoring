@@ -26,6 +26,7 @@ import java.util.Map;
  */
 public interface Table 
 {
+    public final static String ROWNUM_COLUMN_NAME = "#";
     /**
      * Returns the column names
      */

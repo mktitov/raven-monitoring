@@ -26,12 +26,10 @@ import org.raven.ds.impl.AbstractDataConsumer;
  */
 public class SnmpDataConsumer extends AbstractDataConsumer
 {
-    private Object data;
     private DataSource source;
     
-    public void setData(DataSource dataSource, Object data)
+    protected void doSetData(DataSource dataSource, Object data)
     {
-        this.data = data;
         this.source = dataSource;
     }
 

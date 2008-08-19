@@ -229,6 +229,11 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
         return count;
     }
 
+    public Object refereshData() 
+    {
+        return null;
+    }
+
     public void setData(DataSource dataSource, Object data)
     {
         try

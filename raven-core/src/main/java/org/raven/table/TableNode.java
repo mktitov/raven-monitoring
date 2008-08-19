@@ -127,10 +127,8 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
     }
 
     @Override
-    public void setData(DataSource dataSource, Object data)
+    protected void doSetData(DataSource dataSource, Object data)
     {
-        if (getStatus()!=Status.STARTED)
-            return;
         try{
             if (dataLock.tryLock())
             {

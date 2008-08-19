@@ -38,9 +38,42 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
     @NotNull 
     @Description("The data source")
     private DataSource dataSource;
+    protected Object data;
 
     public DataSource getDataSource()
     {
         return dataSource;
     }
+
+    public void setData(DataSource dataSource, Object data) 
+    {
+        if (Status.STARTED!=getStatus())
+        {
+            logger.error(String.format(
+                    "Error pushing data to the node (%s) from the (%s) node. Node NOT STARTED"
+                    , getPath(), dataSource.getPath()));
+            return;
+        }
+        this.data = data;
+        doSetData(dataSource, data);    
+    }
+    
+    protected abstract void doSetData(DataSource dataSource, Object data);
+
+    public Object refereshData() 
+    {
+        if (Status.STARTED==getStatus())
+        {
+            dataSource.getDataImmediate(this);
+            return data;
+        }
+        else
+        {
+            getLogger().error(String.format(
+                    "Error refreshing data in the node (%s). Node NOT STARTED", getPath()));
+            return null;
+        }
+    }
+    
+    
 }

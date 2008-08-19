@@ -26,14 +26,12 @@ import org.raven.ds.impl.AbstractDataConsumer;
  */
 public class TestDataConsumer2 extends AbstractDataConsumer
 {
-    private Object data;
-
-    public void setData(DataSource dataSource, Object data) 
+    public Object getData() 
     {
-        this.data = data;
+        return data;
     }
 
-    public Object getData() {
-        return data;
+    @Override
+    protected void doSetData(DataSource dataSource, Object data) {
     }
 }

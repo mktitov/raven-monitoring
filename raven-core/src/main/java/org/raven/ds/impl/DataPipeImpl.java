@@ -57,24 +57,21 @@ public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
     
 //    @Parameter()
 //    @Description("The last data posted to this data pipe")
-    private Object value;
     
-    public void setData(DataSource dataSource, Object data)
+    @Override
+    protected void doSetData(DataSource dataSource, Object data)
     {
-        this.value = data;
-        if (getStatus()!=Status.STARTED)
-            return;
         Class convertTo = convertValueToType;
         if (convertTo!=null)
-            this.value = converter.convert(convertTo, this.value, null);
+            this.data = converter.convert(convertTo, this.data, null);
         NodeAttribute attr = getNodeAttribute(EXPRESSION_ATTRIBUTE);
         if (attr.getRawValue()!=null && attr.getRawValue().trim().length()>0)
-            this.value = attr.getRealValue();
+            this.data = attr.getRealValue();
         
         if (getDependentNodes()!=null)
             for (Node node: getDependentNodes())
                 if (node.getStatus()==Status.STARTED && node instanceof DataConsumer)
-                    ((DataConsumer)node).setData(this, this.value);
+                    ((DataConsumer)node).setData(this, this.data);
     }
 
     public void getDataImmediate(DataConsumer dataConsumer)
@@ -86,7 +83,7 @@ public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
     public void formExpressionBindings(Bindings bindings) 
     {
         super.formExpressionBindings(bindings);
-        bindings.put("value", value);
+        bindings.put("value", data);
     }
 
     public Collection<NodeAttribute> generateAttributes()
@@ -101,7 +98,7 @@ public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
 
     public Object getValue() 
     {
-        return value;
+        return data;
     }
 
     public String getExpression() {

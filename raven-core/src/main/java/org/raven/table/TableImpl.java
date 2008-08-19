@@ -28,7 +28,6 @@ import java.util.Map;
  */
 public class TableImpl implements Table
 {
-    public final static String ROWNUM_COLUMN_NAME = "#";
     private final Map<String, List<Object>> cols = new HashMap<String, List<Object>>(); 
     private final List<String> columnNames = new ArrayList<String>();
 

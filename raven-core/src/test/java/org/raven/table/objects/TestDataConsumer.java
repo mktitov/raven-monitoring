@@ -15,9 +15,8 @@
  *  under the License.
  */
 
-package org.raven.ds.impl.objects;
+package org.raven.table.objects;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 
@@ -27,15 +26,13 @@ import org.raven.ds.impl.AbstractDataConsumer;
  */
 public class TestDataConsumer extends AbstractDataConsumer
 {
-    public AtomicInteger executionCount = new AtomicInteger();
+    @Override
+    protected void doSetData(DataSource dataSource, Object data) {
+    }
 
-    public int getExecutionCount()
+    public Object getData()
     {
-        return executionCount.intValue();
+        return data;
     }
-    
-    protected void doSetData(DataSource dataSource, Object data)
-    {
-        executionCount.incrementAndGet();
-    }
+            
 }

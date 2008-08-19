@@ -15,27 +15,35 @@
  *  under the License.
  */
 
-package org.raven.ds.impl.objects;
+package org.raven.table.objects;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Collection;
+import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
-import org.raven.ds.impl.AbstractDataConsumer;
+import org.raven.table.TableImpl;
+import org.raven.tree.NodeAttribute;
+import org.raven.tree.impl.BaseNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class TestDataConsumer extends AbstractDataConsumer
+public class TestTableDataSource extends BaseNode implements DataSource
 {
-    public AtomicInteger executionCount = new AtomicInteger();
+    public void getDataImmediate(DataConsumer dataConsumer) 
+    {
+        TableImpl table = new TableImpl();
+        table.addValue("col1", "val_1_1");
+        table.addValue("col2", "val_2_1");
+        table.addValue("col1", "val_1_2");
+        table.addValue("col2", "val_2_2");
+        
+        dataConsumer.setData(this, table);
+    }
 
-    public int getExecutionCount()
+    public Collection<NodeAttribute> generateAttributes() 
     {
-        return executionCount.intValue();
+        return null;
     }
-    
-    protected void doSetData(DataSource dataSource, Object data)
-    {
-        executionCount.incrementAndGet();
-    }
+
 }

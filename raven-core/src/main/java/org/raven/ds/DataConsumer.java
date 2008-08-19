@@ -31,4 +31,8 @@ public interface DataConsumer extends Node
      * @param data the data
      */
     public void setData(DataSource dataSource, Object data);
+    /**
+     * Refreshes data.
+     */
+    public Object refereshData();
 }

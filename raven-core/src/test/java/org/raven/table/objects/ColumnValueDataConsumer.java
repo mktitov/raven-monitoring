@@ -30,7 +30,7 @@ public class ColumnValueDataConsumer extends AbstractDataConsumer
     public Object value = null;
     public int executionCount = 0;
     
-    public void setData(DataSource dataSource, Object data)
+    protected void doSetData(DataSource dataSource, Object data)
     {
         sourceDataSource = dataSource;
         value = data;
