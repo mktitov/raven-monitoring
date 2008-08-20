@@ -17,36 +17,27 @@
 
 package org.raven.impl;
 
-import org.weda.converter.TypeConverterException;
+import org.raven.tree.NodeAttribute;
 import org.weda.converter.impl.AbstractConverter;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class StringToClassConverter extends AbstractConverter<String, Class>
+public class NodeAttributeToStringConverter extends AbstractConverter<NodeAttribute, String>
 {
-    public Class convert(String value, Class realTargetType, String format) 
+    public String convert(NodeAttribute value, Class realTargetType, String format) 
     {
-        try 
-        {
-            return Class.forName(value);
-        } 
-        catch (ClassNotFoundException ex) 
-        {
-            throw new TypeConverterException(String.format(
-                    "Error converting (%s) to class", value), ex);
-        }
+        return value.getPath();
     }
 
     public Class getSourceType() 
     {
-        return String.class;
+        return NodeAttribute.class;
     }
 
     public Class getTargetType() 
     {
-        return Class.class;
+        return String.class;
     }
-
 }

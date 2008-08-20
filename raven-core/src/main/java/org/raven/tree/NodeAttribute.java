@@ -206,4 +206,8 @@ public interface NodeAttribute extends Cloneable
      * @throws java.lang.CloneNotSupportedException
      */
     public Object clone() throws CloneNotSupportedException;
+    /**
+     * Returns path to the attribute
+     */
+    public String getPath();
 }

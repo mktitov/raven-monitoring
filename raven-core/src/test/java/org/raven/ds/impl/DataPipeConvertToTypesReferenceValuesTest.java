@@ -42,17 +42,17 @@ public class DataPipeConvertToTypesReferenceValuesTest extends RavenCoreTestCase
                 DataPipeImpl.CONVERT_VALUE_TO_TYPE_ATTRIBUTE).getReferenceValues();
         assertNotNull(refValues);
         assertEquals(6, refValues.size());
-        assertEquals(refValues.get(0).getValue(), String.class);
+        assertEquals(refValues.get(0).getValue(), String.class.getName());
         assertEquals(refValues.get(0).getValueAsString(), "String");
-        assertEquals(refValues.get(1).getValue(), Long.class);
+        assertEquals(refValues.get(1).getValue(), Long.class.getName());
         assertEquals(refValues.get(1).getValueAsString(), "Long");
-        assertEquals(refValues.get(2).getValue(), Integer.class);
+        assertEquals(refValues.get(2).getValue(), Integer.class.getName());
         assertEquals(refValues.get(2).getValueAsString(), "Integer");
-        assertEquals(refValues.get(3).getValue(), Short.class);
+        assertEquals(refValues.get(3).getValue(), Short.class.getName());
         assertEquals(refValues.get(3).getValueAsString(), "Short");
-        assertEquals(refValues.get(4).getValue(), Double.class);
+        assertEquals(refValues.get(4).getValue(), Double.class.getName());
         assertEquals(refValues.get(4).getValueAsString(), "Double");
-        assertEquals(refValues.get(5).getValue(), Float.class);
+        assertEquals(refValues.get(5).getValue(), Float.class.getName());
         assertEquals(refValues.get(5).getValueAsString(), "Float");
     }
 }

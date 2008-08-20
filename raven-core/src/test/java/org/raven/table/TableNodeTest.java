@@ -29,7 +29,6 @@ import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeAttributeImpl;
-import org.raven.tree.impl.NodeReferenceValueHandler;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.constraints.ConstraintException;
 
@@ -159,7 +158,6 @@ public class TableNodeTest extends RavenCoreTestCase
                 .setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
         c1.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(table.getPath());
         store.saveNodeAttribute(c1.getNodeAttribute("dataSource"));
-        assertEquals(Status.STARTED, c1.getStatus());
         
         ColumnValueDataConsumer c2 = new ColumnValueDataConsumer();
         c2.setName("c2");

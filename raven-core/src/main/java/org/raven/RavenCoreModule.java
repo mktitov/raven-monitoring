@@ -35,6 +35,7 @@ import org.raven.expr.impl.ExpressionCompilerImpl;
 import org.raven.impl.AttributeReferenceToStringConverter;
 import org.raven.impl.EnumReferenceValues;
 import org.raven.impl.NodeAccessToNodeConverter;
+import org.raven.impl.NodeAttributeToStringConverter;
 import org.raven.impl.NodeToStringConverter;
 import org.raven.impl.SnmpVariableToNumberConverter;
 import org.raven.impl.StringToAttributeReferenceConverter;
@@ -49,6 +50,7 @@ import org.raven.tree.AttributeValueHandlerFactory;
 import org.raven.tree.AttributeValueHandlerRegistry;
 import org.raven.tree.NodePathResolver;
 import org.raven.tree.Tree;
+import org.raven.tree.impl.AttributeReferenceHandlerFactory;
 import org.raven.tree.impl.AttributeReferenceValueHandlerFactory;
 import org.raven.tree.impl.AttributeValueHandlerRegistryImpl;
 import org.raven.tree.impl.NodePathResolverImpl;
@@ -112,6 +114,7 @@ public class RavenCoreModule
     public static void contributeTypeConverter(Configuration conf)
     {
         conf.add(new NodeToStringConverter());
+        conf.add(new NodeAttributeToStringConverter());
         conf.add(new StringToNodeConverter());
         conf.add(new SnmpVariableToNumberConverter());
         conf.add(new StringToAttributeReferenceConverter());
@@ -138,6 +141,9 @@ public class RavenCoreModule
         conf.add(
             AttributeReferenceValueHandlerFactory.TYPE
             , new AttributeReferenceValueHandlerFactory(pathResolver));
+        conf.add(
+            AttributeReferenceHandlerFactory.TYPE
+            , new AttributeReferenceHandlerFactory(pathResolver));
         conf.add(
             TemplateVariableValueHandlerFactory.TYPE
             , new TemplateVariableValueHandlerFactory(pathResolver));

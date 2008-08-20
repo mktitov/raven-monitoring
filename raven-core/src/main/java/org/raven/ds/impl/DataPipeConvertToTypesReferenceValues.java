@@ -35,12 +35,12 @@ public class DataPipeConvertToTypesReferenceValues implements AttributeReference
         if (   attr.getOwner() instanceof DataPipeImpl 
             && attr.getName().equals(DataPipeImpl.CONVERT_VALUE_TO_TYPE_ATTRIBUTE))
         {
-            referenceValues.add(new ReferenceValueImpl(String.class, "String"), null);
-            referenceValues.add(new ReferenceValueImpl(Long.class, "Long"), null);
-            referenceValues.add(new ReferenceValueImpl(Integer.class, "Integer"), null);
-            referenceValues.add(new ReferenceValueImpl(Short.class, "Short"), null);
-            referenceValues.add(new ReferenceValueImpl(Double.class, "Double"), null);
-            referenceValues.add(new ReferenceValueImpl(Float.class, "Float"), null);
+            referenceValues.add(new ReferenceValueImpl(String.class.getName(), "String"), null);
+            referenceValues.add(new ReferenceValueImpl(Long.class.getName(), "Long"), null);
+            referenceValues.add(new ReferenceValueImpl(Integer.class.getName(), "Integer"), null);
+            referenceValues.add(new ReferenceValueImpl(Short.class.getName(), "Short"), null);
+            referenceValues.add(new ReferenceValueImpl(Double.class.getName(), "Double"), null);
+            referenceValues.add(new ReferenceValueImpl(Float.class.getName(), "Float"), null);
             
             return true;
         }

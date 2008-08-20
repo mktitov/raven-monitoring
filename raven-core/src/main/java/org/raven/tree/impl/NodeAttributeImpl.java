@@ -29,6 +29,7 @@ import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeAttributeError;
 import org.raven.tree.NodeParameter;
+import org.raven.tree.NodePathResolver;
 import org.raven.tree.Tree;
 import org.weda.beans.ObjectUtils;
 import org.weda.constraints.ReferenceValue;
@@ -50,6 +51,8 @@ public class NodeAttributeImpl
     private static Configurator configurator;
     @Service
     private static Tree tree;
+    @Service
+    private static NodePathResolver pathResolver;
 
     private int id;
     private String name;
@@ -390,5 +393,10 @@ public class NodeAttributeImpl
     public void expressionInvalidated(Object oldValue)
     {
         owner.fireAttributeValueChanged(this, oldValue, null);
+    }
+
+    public String getPath() 
+    {
+        return owner==null? null : pathResolver.getAbsolutePath(this);
     }
 }

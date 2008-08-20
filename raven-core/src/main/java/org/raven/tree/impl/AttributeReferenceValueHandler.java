@@ -17,8 +17,6 @@
 
 package org.raven.tree.impl;
 
-import org.raven.tree.AttributeNotFoundException;
-import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
@@ -29,21 +27,17 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
-public class AttributeReferenceValueHandler extends NodeReferenceValueHandler
+public class AttributeReferenceValueHandler extends AttributeReferenceHandler
 {
     @Service
     private static TypeConverter converter;
     
-    private String attrData = null;
-    private NodeAttribute referencedAttribute = null;
     private Object attrValue;
 
     public AttributeReferenceValueHandler(NodeAttribute attribute) throws Exception
     {
-        super(attribute, false, true);
+        super(attribute);
         try{
-            resolveAttribute(attribute.getRawValue(), true);
-            initNodeReference(node, pathElements);
             if (node!=null && ObjectUtils.in(node.getStatus(), Status.INITIALIZED, Status.STARTED))
             {
                 attrValue = referencedAttribute==null? 
@@ -56,52 +50,12 @@ public class AttributeReferenceValueHandler extends NodeReferenceValueHandler
         }
     }
 
-    public NodeAttribute getReferencedAttribute() 
-    {
-        return referencedAttribute;
-    }
-    
-    private void resolveAttribute(String data, boolean init) throws InvalidPathException, Exception
-    {
-        if (ObjectUtils.equals(attrData, data) && expressionValid)
-            return;
-        if (data!=null)
-        {
-            int pos = data.lastIndexOf(Node.ATTRIBUTE_SEPARATOR);
-            if (pos<0)
-                throw new InvalidPathException(String.format(
-                        "Invalid path (%s) to the attribute. " +
-                        "Attribute separator symbol (%s) not found"
-                        , data, Node.ATTRIBUTE_SEPARATOR));
-            String pathToNode = data.substring(0, pos);
-            String attributeName = data.substring(pos+1);
-
-            if (init)
-                super.resolveNode(pathToNode);
-            else
-                super.setData(pathToNode);
-            
-            referencedAttribute = node.getNodeAttribute(attributeName);
-            
-            if (referencedAttribute==null)
-                throw new AttributeNotFoundException(String.format(
-                        "Invalid path (%s) to the attribute. " +
-                        "Node (%s) does not contains attribute (%s)"
-                        , data, node.getName(), attributeName));
-        }
-        attrData = data;
-    }
-
     @Override
     public void setData(String data) throws Exception
     {
-        String oldAttrData = attrData;
         NodeAttribute oldReferencedAttribute = referencedAttribute;
-        resolveAttribute(data, false);
-        attrData = data;
+        super.setData(data);
         
-        if (!ObjectUtils.equals(oldAttrData, attrData))
-            attribute.save();
         if (node!=null && ObjectUtils.in(node.getStatus(), Status.INITIALIZED, Status.STARTED))
         {
             attrValue = referencedAttribute==null? 
@@ -114,21 +68,9 @@ public class AttributeReferenceValueHandler extends NodeReferenceValueHandler
     }
 
     @Override
-    public String getData()
-    {
-        return attrData;
-    }
-
-    @Override
     public Object handleData()
     {
         return attrValue;
-    }
-
-    @Override
-    public void validateExpression() throws Exception
-    {
-        setData(attrData);
     }
 
     @Override
@@ -143,26 +85,16 @@ public class AttributeReferenceValueHandler extends NodeReferenceValueHandler
     }
 
     @Override
-    public void nodeAttributeNameChanged(NodeAttribute attribute, String oldName, String newName)
-    {
-        if (ObjectUtils.equals(referencedAttribute, attribute))
-        {
-            attrData = data + Node.ATTRIBUTE_SEPARATOR + newName;
-            attribute.save();
-        }
-    }
-
-    @Override
     public boolean nodeAttributeRemoved(Node node, NodeAttribute removedAttribute)
     {
         if (ObjectUtils.equals(referencedAttribute, removedAttribute))
         {
             referencedAttribute = null;
-            Object oldAttrValue = attrValue;
-            attrValue = null;
             cleanupNodeReference(this.node, node);
             expressionValid = false;
             this.node = null;
+            Object oldAttrValue = attrValue;
+            attrValue = null;
             fireExpressionInvalidatedEvent(oldAttrValue);
         }
         return true;
