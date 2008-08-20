@@ -159,6 +159,7 @@ public class TableNodeTest extends RavenCoreTestCase
                 .setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
         c1.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(table.getPath());
         store.saveNodeAttribute(c1.getNodeAttribute("dataSource"));
+        assertEquals(Status.STARTED, c1.getStatus());
         
         ColumnValueDataConsumer c2 = new ColumnValueDataConsumer();
         c2.setName("c2");
