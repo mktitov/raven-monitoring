@@ -32,7 +32,11 @@
 			label="#{msgs.type}" value="#{sBean.newNodeType}"
         	action="dialog:chooseType" 
         	windowWidth="500" windowHeight="400"/>
-		<tr:commandButton returnListener="#{sBean.template.handleReturn}" id="createNode" text="#{msgs.create}" action="#{sBean.createNode}" useWindow="true" windowWidth="500" windowHeight="400" />        
+		<tr:commandButton returnListener="#{sBean.template.handleReturn}" 
+			id="createNode" 
+			text="#{msgs.create}" 
+			action="#{sBean.createNode}" 
+			useWindow="true" windowWidth="500" windowHeight="400" />        
    </tr:panelFormLayout>
 </tr:panelCaptionGroup>        
 
@@ -45,8 +49,8 @@
 <tr:panelCaptionGroup inlineStyle="width:90%;"  captionText="#{msgs.children}"
  rendered="#{cNode.allowCreateSubNode}" 
   >
-    <tr:message binding="#{subNodes.message}" for="delSubNode" messageType="warning" />
-  	<tr:table width="100%" summary="Nodes"  
+    <tr:message binding="#{subNodes.message}" for="delSubNode" messageType="error" />
+  	<tr:table width="100%" summary="Nodes"  rowBandingInterval="1"
   		value="#{cNode.childrenList}" binding="#{subNodes.table}"
   		var="row" rows="20" rowSelection="multiple" id="delSubNode" >
     	<tr:column headerText="#{msgs.name}">
@@ -56,7 +60,26 @@
 	      <tr:outputText value="#{row.classDisplayName}"/>
         </tr:column>
  	</tr:table>
+	<tr:spacer height="10" />
+
+	<tr:commandButton id="copyNode" 
+			partialSubmit="true"
+			returnListener="#{subNodes.copyHandleReturn}" 
+			text="#{msgs.copy}" 
+			action="dialog:copyMoveNode"
+			immediate="true" 
+			useWindow="true" windowWidth="500" windowHeight="400" />        
+
+	<tr:commandButton id="moveNode" 
+			partialSubmit="true"
+			returnListener="#{subNodes.moveHandleReturn}" 
+			text="#{msgs.move}" 
+			action="dialog:copyMoveNode"
+			immediate="true" 
+			useWindow="true" windowWidth="500" windowHeight="400" />        
+
  	<tr:commandButton text="#{msgs.delete}" actionListener="#{subNodes.deleteNodes}"/>
+
 </tr:panelCaptionGroup>
 <!-- ********************* -->
 <!-- existing dependencies -->

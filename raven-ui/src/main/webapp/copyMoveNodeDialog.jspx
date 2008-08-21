@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
+          xmlns:f="http://java.sun.com/jsf/core"
+          xmlns:h="http://java.sun.com/jsf/html"
+          xmlns:tr="http://myfaces.apache.org/trinidad"
+          xmlns:trh="http://myfaces.apache.org/trinidad/html" 
+          >
+<jsp:directive.page contentType="text/html;charset=utf-8"/>
+<f:view>
+<f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
+	<tr:document title="#{msgs.selectDstNode}">
+   	<tr:form id="treeform2">
+    <tr:panelPage>
+		<tr:outputFormatted 
+			value="#{msgs.dstNode}: &lt;b&gt;#{copyMoveNode.dstNode.path}&lt;/b&gt;" />
+        <tr:tree id="tree2" var="nodex" 
+        		binding="#{copyMoveNode.coreTree}"  
+        		value="#{copyMoveNode.treeModel}"  >
+ 			<f:facet name="nodeStamp">
+	 			<tr:commandLink 
+ 					id="nodesLinks" 
+ 					immediate="true"
+ 					actionListener="#{copyMoveNode.setNode}"
+					text="#{nodex.name}" />
+			</f:facet>
+        </tr:tree>
+
+    </tr:panelPage>
+	<tr:panelButtonBar>
+		<tr:commandButton 
+			text="#{msgs.select}" 
+			action="#{copyMoveNode.select}" />
+		<tr:commandButton 
+			immediate="true" 
+			action="#{copyMoveNode.cancel}" 
+			text="#{msgs.cancel}"  />
+	</tr:panelButtonBar>
+    </tr:form>
+    </tr:document>
+</f:view>
+</jsp:root>

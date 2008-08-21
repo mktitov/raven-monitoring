@@ -105,6 +105,9 @@ public class SessionBean
 		
 		wrapper.createNewAttribute();
 		template = new NewNodeFromTemplate();
+		
+		CopyMoveNodeBean cmnb = (CopyMoveNodeBean) getElValue(CopyMoveNodeBean.BEAN_NAME);
+		cmnb.getTreeModel().toString();
 	}
 
 	public void reloadLeftFrame()
@@ -142,14 +145,14 @@ public class SessionBean
 	    return context.getELContext().getELResolver().getValue(context.getELContext(), null, name);
 	 }
 
-	 private static UserAcl getUserAcl()
+	 public static UserAcl getUserAcl()
 	 {
 		FacesContext fc = FacesContext.getCurrentInstance();
 		Map<String,Object> session = fc.getExternalContext().getSessionMap();
 		return (UserAcl)session.get(AuthFilter.USER_ACL);
 	 }	
 
-	 private static Tree getTree()
+	 public static Tree getTree()
 	 {
 		Registry registry = RavenRegistry.getRegistry();
 		return registry.getService(Tree.class);
@@ -310,11 +313,14 @@ public class SessionBean
 
 	public int deleteNode(NodeWrapper node)
 	{
-		Node n = node.getNode();
+		return deleteNode(node.getNode());
+	}
+
+	public int deleteNode(Node n)
+	{
 		if(n.getDependentNodes()!=null && !n.getDependentNodes().isEmpty()) return -1;
 		tree.remove(n);
 		logger.warn("removed node: {}",n.getName());
-		//FacesContext.getCurrentInstance().getExternalContext().log("removed node: "+n.getName());
 		return 0;
 	}
 	
