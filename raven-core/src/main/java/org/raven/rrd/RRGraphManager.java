@@ -28,6 +28,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.api.impl.NodeAccessImpl;
 import org.raven.ds.DataSource;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.rrd.data.RRDataSource;
@@ -74,7 +75,6 @@ public class RRGraphManager extends BaseNode
     private Node startingPoint;
     
     @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
-    @NotNull
     @Description(
         "The expression that will be call on each dataSource. " +
         "If expression returns true then dataSource will be added to the graph. " +
@@ -145,7 +145,8 @@ public class RRGraphManager extends BaseNode
     public void formExpressionBindings(Bindings bindings)
     {
         super.formExpressionBindings(bindings);
-        bindings.putAll(expressionContext);
+        if (!isTemplate())
+            bindings.putAll(expressionContext);
     }
 
     @Override
@@ -170,8 +171,8 @@ public class RRGraphManager extends BaseNode
         if (rrds==null)
             return;
 
-        expressionContext.put("dataSource", dataSource);
-        expressionContext.put("rrDataSource", rrds);
+        expressionContext.put("dataSource", new NodeAccessImpl(dataSource));
+        expressionContext.put("rrDataSource", new NodeAccessImpl(rrds));
         expressionContext.put(TemplateNode.TEMPLATE_EXPRESSION_BINDING, this);
         
         if (filterExpression==null || filterExpression.equals(Boolean.FALSE))

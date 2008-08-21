@@ -297,6 +297,10 @@ public class BaseNode implements Node, NodeListener
 
     public void addChildren(Node node)
     {
+        if (childrens.containsKey(node.getName()))
+            throw new NodeError(String.format(
+                    "Node (%s) already contains children node with name (%s)"
+                    , getPath(), node.getName()));
         node.setParent(this);
         if (node.getIndex()==0)
             node.setIndex(childrens.size()+1);

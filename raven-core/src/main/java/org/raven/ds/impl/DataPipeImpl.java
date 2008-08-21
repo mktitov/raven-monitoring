@@ -55,12 +55,31 @@ public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
         "consumers. Expression executes after data converting (see convertValueToType parameter)")
     private String expression;
     
+    private boolean skipCycle;
+    private long dataTime;
+    private long prevDataTime;
+    private Object prevData;
+
+    @Override
+    public void setData(DataSource dataSource, Object data) 
+    {
+        if (Status.STARTED==getStatus())
+        {
+            prevData = this.data;
+            prevDataTime = this.dataTime;
+            dataTime = System.currentTimeMillis();
+        }
+        
+        super.setData(dataSource, data);
+    }
+    
 //    @Parameter()
 //    @Description("The last data posted to this data pipe")
     
     @Override
     protected void doSetData(DataSource dataSource, Object data)
     {
+        skipCycle = false;
         Class convertTo = convertValueToType;
         if (convertTo!=null)
             this.data = converter.convert(convertTo, this.data, null);
@@ -68,7 +87,7 @@ public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
         if (attr.getRawValue()!=null && attr.getRawValue().trim().length()>0)
             this.data = attr.getRealValue();
         
-        if (getDependentNodes()!=null)
+        if (!skipCycle && getDependentNodes()!=null)
             for (Node node: getDependentNodes())
                 if (node.getStatus()==Status.STARTED && node instanceof DataConsumer)
                     ((DataConsumer)node).setData(this, this.data);

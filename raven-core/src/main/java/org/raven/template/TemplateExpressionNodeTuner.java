@@ -83,7 +83,7 @@ public class TemplateExpressionNodeTuner implements NodeTuner
             for (NodeAttribute attr: attrs)
                 if (attr.isTemplateExpression())
                 {
-                    String strResult = evalExpression(attr.getValue(), bindings, sourceNode, attr);
+                    String strResult = evalExpression(attr.getRawValue(), bindings, sourceNode, attr);
 
                     NodeAttribute attrClone = sourceClone.getNodeAttribute(attr.getName());
                     attrClone.setTemplateExpression(false);
@@ -117,6 +117,9 @@ public class TemplateExpressionNodeTuner implements NodeTuner
     {
         try 
         {
+            if (expressionStr==null)
+                return null;
+            
             Expression expression = expressionCompiler.compile(expressionStr, "groovy");
             Object result = expression.eval(bindings);
             String strResult = converter.convert(String.class, result, null);

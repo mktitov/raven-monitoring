@@ -78,7 +78,7 @@ public class BaseNodeTest extends Assert
         
         child1.setParent(node);
         child1.addListener(node);
-        expect(child1.getName()).andReturn("child1");
+        expect(child1.getName()).andReturn("child1").times(2);
         expect(child1.compareTo(child3)).andReturn(-1).anyTimes();
         expect(child1.compareTo(condChild)).andReturn(-1).anyTimes();
         expect(child1.getIndex()).andReturn(1);
@@ -88,7 +88,7 @@ public class BaseNodeTest extends Assert
         
         condChild.setParent(node);
         condChild.addListener(node);
-        expect(condChild.getName()).andReturn("condChild");
+        expect(condChild.getName()).andReturn("condChild").times(2);
         expect(condChild.isConditionalNode()).andReturn(true);
         expect(condChild.getIndex()).andReturn(2);
         expect(condChild.compareTo(child1)).andReturn(1).anyTimes();
@@ -97,7 +97,7 @@ public class BaseNodeTest extends Assert
         
         child3.setParent(node);
         child3.addListener(node);
-        expect(child3.getName()).andReturn("child3");
+        expect(child3.getName()).andReturn("child3").times(2);
         expect(child3.getIndex()).andReturn(3);
         expect(child3.compareTo(condChild)).andReturn(1).anyTimes();
         expect(child3.compareTo(child1)).andReturn(1).anyTimes();

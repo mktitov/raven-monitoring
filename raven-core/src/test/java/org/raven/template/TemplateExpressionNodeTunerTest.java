@@ -99,7 +99,7 @@ public class TemplateExpressionNodeTunerTest extends RavenCoreTestCase
         List<NodeAttribute> attrs = Arrays.asList(attr, attr2);
         expect(sourceNode.getNodeAttributes()).andReturn(attrs);
         expect(attr.isTemplateExpression()).andReturn(true);
-        expect(attr.getValue()).andReturn("1+1");
+        expect(attr.getRawValue()).andReturn("1+1");
         expect(attr.getName()).andReturn("exprAttr");
         
         expect(sourceClone.getNodeAttribute("exprAttr")).andReturn(attrClone);

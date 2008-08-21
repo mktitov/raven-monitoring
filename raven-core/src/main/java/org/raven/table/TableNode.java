@@ -35,6 +35,8 @@ import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.ds.impl.DataPipeImpl;
+import org.raven.template.TemplateExpressionNodeTuner;
+import org.raven.template.TemplateNode;
 import org.raven.tree.ConfigurableNode;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -260,7 +262,8 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
 
         StrSubstitutor subst = new StrSubstitutor(values);
 
-        Node newNode = tree.copy(templateNode, this, null, null, true, false, true);
+        Node newNode = tree.copy(
+                templateNode, this, null, new TemplateExpressionNodeTuner(), true, false, true);
         NodeAttribute indexAttr = new NodeAttributeImpl(
                 INDEX_COLUMN_VALUE, String.class, indexValue, null);
         indexAttr.setOwner(newNode);
@@ -407,6 +410,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
             }
     }
 
+    //TODO: преобразовать в NodeTuner
     private void tuneNode(TableNode tableNode, StrSubstitutor subst, Node newNode) throws Exception
     {
         String newName = subst.replace(newNode.getName());
@@ -473,7 +477,12 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
     @Override
     public void formExpressionBindings(Bindings bindings) 
     {
-        bindings.putAll(expressionBindings);
+        super.formExpressionBindings(bindings);
+        if (!isTemplate())
+        {
+            bindings.putAll(expressionBindings);
+            bindings.put(TemplateNode.TEMPLATE_EXPRESSION_BINDING, this);
+        }
     }
     
 }
