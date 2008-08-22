@@ -278,6 +278,7 @@ public class SessionBean
 			logger.warn("not AllowCreateSubNode");
 			return "err";
 		}
+		boolean isTemplate = newNodeType.startsWith(""+Node.NODE_SEPARATOR);
 		if(newNodeName==null || newNodeName.length()==0)
 		{
 			logger.warn("no newNodeName");
@@ -285,10 +286,14 @@ public class SessionBean
 		}	
 		if(newNodeType==null || newNodeType.length()==0)
 		{
-			logger.warn("no newNodeType");
-			return "err";
+			newNodeType=null;
+			if(!isTemplate)
+			{
+				logger.warn("no newNodeType");
+				return "err";
+			}
 		}	
-		if(newNodeType.startsWith(""+Node.NODE_SEPARATOR))
+		if(isTemplate)
 		{
 			return createTemplate();
 		}

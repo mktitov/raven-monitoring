@@ -185,7 +185,7 @@ public class NodeWrapper extends AbstractNodeWrapper
 				  ret.append(t+" '"+at.getName()+"' : "+e.getMessage());
 				  logger.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
 			  }
-			  catch(Exception e) 
+			  catch(Throwable e) 
 			  {
 				  String t = Messages.getString("org.raven.ui.messages", "attribute",new Object[] {});
 				  if(ret.length()!=0) ret.append(". ");
