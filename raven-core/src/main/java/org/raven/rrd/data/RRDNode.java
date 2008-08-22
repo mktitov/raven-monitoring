@@ -247,13 +247,15 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
                     long stepsBetween = (time-sample.getTime())/step+1;
                     if (stepsBetween>0)
                     {
-                        long lastTime = sample.getTime();
                         tuneSampleTime();
                         sample.update();
                         sample.setTime(sample.getTime()+stepsBetween*step);
                     }
                     Double value = converter.convert(Double.class, data, null);
-                    System.out.println("!!!"+value);
+                    if (logger.isDebugEnabled())
+                        logger.debug(String.format(
+                                "Setting sample value (%s) for dataSource (%s)"
+                                , data, dataSource.getPath()));
                     sample.setValue(dataSource.getName(), value);
                 }
             }
@@ -473,7 +475,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
     
     private void tuneSampleTime() throws IOException
     {
-        if (sample.getTime()<=db.getHeader().getLastUpdateTime())
+        if (sample!=null && db!=null && sample.getTime()<=db.getHeader().getLastUpdateTime())
             sample.setTime(db.getHeader().getLastUpdateTime()+1);
     }
 
@@ -688,8 +690,10 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
             }
         }catch(Exception e)
         {
-            throw new NodeError(String.format(
-                    "Error synchronzing node (%s) with rrd datasource", rra.getPath()));
+            throw new NodeError(
+                    String.format(
+                        "Error synchronzing node (%s) with rrd datasource", rra.getPath())
+                    , e);
         }
     }
 
