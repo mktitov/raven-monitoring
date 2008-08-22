@@ -67,7 +67,7 @@ public class TableImpl implements Table
         if (values==null)
             return null;
         else
-            return values.get(row);
+            return row>=values.size()? null : values.get(row);
     }
     
     public Map<String, Object> getRow(int row)

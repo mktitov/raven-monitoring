@@ -195,7 +195,8 @@ public class RRGraphManager extends BaseNode
                 {
                     logger.error(String.format(
                             "Error adding graph for dataSource (%s) groupingExpression attribute " +
-                            "of the node (%s) returns NULL"));
+                            "of the node (%s) returns NULL"
+                            , dataSource.getPath(), gTemplate.getPath()));
                     return;
                 }
                 Node nextInjectingPoint = injectingPoint.getChildren(groupName);
