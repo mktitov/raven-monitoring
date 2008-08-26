@@ -24,18 +24,21 @@ import java.util.Collections;
 import javax.faces.event.ValueChangeEvent;
 import javax.faces.model.SelectItem;
 
+import org.apache.myfaces.trinidad.event.ReturnEvent;
 import org.apache.tapestry.ioc.Registry;
 import org.raven.RavenRegistry;
+import org.raven.tree.InvalidPathException;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Tree;
+import org.raven.tree.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weda.constraints.ReferenceValue;
 import org.weda.constraints.TooManyReferenceValuesException;
 import org.weda.internal.annotations.Service;
 import org.weda.services.ClassDescriptorRegistry;
+import javax.faces.event.ActionEvent;
 //import org.apache.myfaces.trinidad.component.core.nav.CoreCommandButton;
-//import org.raven.tree.Tree;
 
 public class Attr 
 {
@@ -90,6 +93,60 @@ public class Attr
         templateExpression = na.isTemplateExpression();
 	}
 
+	public boolean isEnableValueDialog()
+	{
+		try {
+			if(expressionSupported && (getSelectItems() == null) ) 
+				return true;
+		} catch (TooManyReferenceValuesException e) {
+			logger.warn("isEnableEditValueDialog : ",e);
+		}
+		return false;
+	}
+
+	public boolean isEnableEditValueDialog()
+	{
+		if(isEnableValueDialog() && !isSubTypeNodeReference() ) 
+				return true;
+		return false;
+	}
+
+	public boolean isEnableSelectNodeDialog()
+	{
+		if(isEnableValueDialog() && isSubTypeNodeReference() ) 
+				return true;
+		return false;
+	}
+	
+	public void setNode(ActionEvent event)
+	{
+		if( !isEnableSelectNodeDialog() ) return;
+		if(expression==null || expression.length()==0) return;
+		SelectNodeBean nb = (SelectNodeBean) SessionBean.getElValue(SelectNodeBean.BEAN_NAME);
+		Tree tree = SessionBean.getTree();
+		Node n = null;
+		try {
+			n = tree.getNode(expression);
+		} catch (InvalidPathException e) {
+			logger.error("on set current node in dialog : ",e);
+			return;
+		}
+		nb.setDstNode(n);
+	}
+	
+	public void selectNodeHandleReturn(ReturnEvent event)
+	{
+		expression = (String) event.getReturnValue();
+		//SessionBean sb = (SessionBean) SessionBean.getElValue(SessionBean.BEAN_NAME);
+		//sb.reloadBothFrames();
+	}
+	
+	public boolean isSubTypeNodeReference()
+	{
+		if("NodeReference".equals(valueHandlerType)) return true;
+		return false;
+	}
+	
 	public void applySubType(ValueChangeEvent vce)
 	{
 		valueHandlerType = (String) vce.getNewValue();
