@@ -28,14 +28,14 @@ import org.raven.tree.NodeAttribute;
  */
 public class TestDataSource extends AbstractDataSource
 {
-    public void getDataImmediate(DataConsumer dataConsumer)
-    {
-        dataConsumer.setData(this, null);
-    }
-
     @Override
     public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
     {
+    }
+
+    @Override
+    public void gatherDataForConsumer(DataConsumer dataConsumer) throws Exception {
+        dataConsumer.setData(this, null);
     }
     
 }

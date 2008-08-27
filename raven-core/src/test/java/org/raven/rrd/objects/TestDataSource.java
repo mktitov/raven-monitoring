@@ -31,18 +31,19 @@ public class TestDataSource extends AbstractDataSource
     private double value = 1.;
     private double value2 = 100.;
     
-    public void getDataImmediate(DataConsumer dataConsumer)
+    @Override
+    public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
+    {
+    }
+
+    @Override
+    public void gatherDataForConsumer(DataConsumer dataConsumer) throws Exception
     {
         if (dataConsumer.getName().equals("ds"))
             dataConsumer.setData(this, value++);
         else
             dataConsumer.setData(this, value2--);
         System.out.println(">>>value"+value);
-    }
-
-    @Override
-    public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
-    {
     }
     
 }
