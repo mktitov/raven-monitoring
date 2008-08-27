@@ -57,9 +57,11 @@ public class ParameterFieldTransformerWorker implements FieldTransformWorker
             {
                 String body = String.format(
                         "{ " +
-                        "   Object oldValue = %2$s.getOldValue(this, \"%1$s\");" +
                         "   $proceed($1);" +
-                        "   %2$s.fireNodeAttributeValueChanged(this, \"%1$s\", oldValue, ($w)this.%1$s);" +
+                        "   %2$s.setParameterValue(this, \"%1$s\", ($w)this.%1$s);" +
+//                        "   Object oldValue = %2$s.getOldValue(this, \"%1$s\");" +
+//                        "   $proceed($1);" +
+//                        "   %2$s.fireNodeAttributeValueChanged(this, \"%1$s\", oldValue, ($w)this.%1$s);" +
                         "} "
                         , fieldAccess.getFieldName(), NodeListenerExecutorHelper.class.getName());
                 fieldAccess.replace(body);

@@ -122,7 +122,7 @@ public class NodeAttributeImpl
 
     public String getDescription()
     {
-        return description;
+        return parameter==null? description : parameter.getDescription();
     }
 
     public boolean isRequired()

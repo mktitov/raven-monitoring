@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import org.raven.annotations.NodeClass;
 import org.raven.conf.Configurator;
+import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.impl.ClassNameComparator;
 import org.raven.impl.NodeClassTransformerWorker;
 import org.raven.template.TemplateVariable;
@@ -84,6 +85,7 @@ public class TreeImpl implements Tree
     private SystemNode systemNode;
     private DataSourcesNode dataSourcesNode;
     private TemplatesNode templatesNode;
+    private ConnectionPoolsNode connectionPoolsNode;
 
     public TreeImpl(
             AttributeReferenceValues attributeReferenceValues
@@ -372,6 +374,14 @@ public class TreeImpl implements Tree
             systemNode = new SystemNode();
             rootNode.addChildren(systemNode);
             treeStore.saveNode(systemNode);
+        }
+        
+        connectionPoolsNode = (ConnectionPoolsNode)systemNode.getChildren(ConnectionPoolsNode.NAME);
+        if (connectionPoolsNode==null)
+        {
+            connectionPoolsNode = new ConnectionPoolsNode();
+            systemNode.addChildren(connectionPoolsNode);
+            treeStore.saveNode(connectionPoolsNode);
         }
         
         dataSourcesNode = (DataSourcesNode) systemNode.getChildren(DataSourcesNode.NAME);

@@ -45,6 +45,10 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
         return dataSource;
     }
 
+    public void setDataSource(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
     public void setData(DataSource dataSource, Object data) 
     {
         if (Status.STARTED!=getStatus())

@@ -35,7 +35,7 @@ import org.raven.tree.NodeError;
 import org.raven.tree.NodeListener;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeAttributeImpl;
-import org.weda.annotations.Description;
+import org.weda.internal.annotations.Message;
 
 /**
  *
@@ -48,15 +48,16 @@ public abstract class AbstractDataSource
     public static final String INTERVAL_UNIT_ATTRIBUTE = "intervalUnit";
     
     @Parameter(defaultValue="3")
-    @Description("Sets the core number of threads")
     private Integer corePoolSize;
     
     @Parameter(defaultValue="6")
-    @Description("Sets the maximum allowed number of threads")
     private Integer maximumPoolSize;
     
     private ScheduledThreadPoolExecutor executorService;
     private Collection<NodeAttribute> consumerAttributes;
+
+    @Message
+    private String intervalDescription;
 
     @Override
     protected void initFields() 
@@ -69,7 +70,7 @@ public abstract class AbstractDataSource
     public AbstractDataSource()
     {
         NodeAttribute attr = new NodeAttributeImpl(
-                    INTERVAL_ATTRIBUTE, Integer.class, null, "the period between executions");
+                    INTERVAL_ATTRIBUTE, Integer.class, null, intervalDescription);
         attr.setRequired(true);
         consumerAttributes.add(attr);
         
@@ -80,6 +81,29 @@ public abstract class AbstractDataSource
         consumerAttributes.add(attr);
         fillConsumerAttributes(consumerAttributes);
     }
+
+    public void getDataImmediate(DataConsumer dataConsumer)
+    {
+        if (!checkDataConsumer(dataConsumer))
+        {
+            if (logger.isDebugEnabled())
+                logger.debug(String.format(
+                        "Skiping gathering data for data consumer (%s). Data consumer not ready"
+                        , dataConsumer.getPath()));
+            return;
+        }
+        try
+        {
+            gatherDataForConsumer(dataConsumer);
+        }
+        catch (Exception e)
+        {
+            logger.error(String.format(
+                    "Error gathering data for consumer (%s)", dataConsumer.getPath()), e);
+        }
+    }
+
+    public abstract void gatherDataForConsumer(DataConsumer dataConsumer) throws Exception;
     
     /**
      * Use this method to add attributes that consumers must have and set. The filled collection

@@ -64,6 +64,25 @@ public class NodeListenerExecutorHelper
 //            return converter.convert(desc.getType(), attr.getRealValue(), desc.getPattern());
 //        }
     }
+
+    public static void setParameterValue(Node node, String parameterName, Object value)
+            throws Exception
+    {
+        if (!ObjectUtils.in(node.getStatus(), Status.STARTED, Status.INITIALIZED))
+            throw new UnsupportedOperationException(
+                    String.format(
+                        "To set values of attributes using field access node (%s) must be " +
+                        "in INITIALIZED or STARTED stated", node.getPath()));
+        NodeAttribute attr = node.getNodeAttribute(parameterName);
+        if (!ObjectUtils.equals(value, attr.getRealValue()))
+        {
+            PropertyDescriptor desc =
+                    classDescriptorRegistry.getPropertyDescriptor(node.getClass(), parameterName);            
+            String newValue = converter.convert(String.class, value, desc.getPattern());
+            attr.setValue(newValue);
+            attr.save();
+        }
+    }
     
     public static Object getParentAttributeValue(
             Node node, String parameterName, Class parameterType)

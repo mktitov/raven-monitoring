@@ -61,57 +61,43 @@ public class SnmpNode extends AbstractDataSource
     public static final String OID_ATTR = "OID";
     public static final String OID_TYPE_ATTR = "OID-Type";
     
-    public void getDataImmediate(DataConsumer dataConsumer)
+    @Override
+    public void gatherDataForConsumer(DataConsumer dataConsumer) throws Exception 
     {
-        if (!checkDataConsumer(dataConsumer))
-        {
-            if (logger.isDebugEnabled())
-                logger.debug(String.format(
-                        "Skiping gathering data for data consumer (%s). Data consumer not ready"
-                        , dataConsumer.getPath()));
-            return;
-        }
+        if (logger.isDebugEnabled())
+            logger.debug(String.format(
+                    "Gathering data for data consumer (%s)", dataConsumer.getPath()));
+        String host = dataConsumer.getNodeAttribute(HOST_ATTR).getRealValue();
+        Integer port = dataConsumer.getNodeAttribute(PORT_ATTR).getRealValue();
+        SnmpVersion version = dataConsumer.getNodeAttribute(VERSION_ATTR).getRealValue();
+        String community = dataConsumer.getNodeAttribute(COMMUNITY_ATTR).getRealValue();
+        String oid = dataConsumer.getNodeAttribute(OID_ATTR).getRealValue();
+        boolean isTable =
+                dataConsumer.getNodeAttribute(OID_TYPE_ATTR).getRealValue()==OidType.TABLE;
+
+        UdpAddress address = new UdpAddress(host+"/"+port);
+        CommunityTarget target = new CommunityTarget(address, new OctetString(community));
+        target.setRetries(1);
+        target.setTimeout(2000);
+        target.setVersion(version.asInt());
+
+        PDU pdu = new PDU();
+        pdu.add(new VariableBinding(new OID(oid)));
+
+        TransportMapping transport = new DefaultUdpTransportMapping();
+        Snmp snmp  = new Snmp(transport);
         try
         {
-            if (logger.isDebugEnabled())
-                logger.debug(String.format(
-                        "Gathering data for data consumer (%s)", dataConsumer.getPath()));
-            String host = dataConsumer.getNodeAttribute(HOST_ATTR).getRealValue();
-            Integer port = dataConsumer.getNodeAttribute(PORT_ATTR).getRealValue();
-            SnmpVersion version = dataConsumer.getNodeAttribute(VERSION_ATTR).getRealValue();
-            String community = dataConsumer.getNodeAttribute(COMMUNITY_ATTR).getRealValue();
-            String oid = dataConsumer.getNodeAttribute(OID_ATTR).getRealValue();
-            boolean isTable = 
-                    dataConsumer.getNodeAttribute(OID_TYPE_ATTR).getRealValue()==OidType.TABLE;
+            snmp.listen();
 
-            UdpAddress address = new UdpAddress(host+"/"+port);
-            CommunityTarget target = new CommunityTarget(address, new OctetString(community));
-            target.setRetries(1);
-            target.setTimeout(2000);
-            target.setVersion(version.asInt());
+            Object value = isTable?
+                getTableValue(snmp, target, pdu) : getSimpleValue(snmp, target, pdu);
 
-            PDU pdu = new PDU();
-            pdu.add(new VariableBinding(new OID(oid)));
-
-            TransportMapping transport = new DefaultUdpTransportMapping();
-            Snmp snmp  = new Snmp(transport);
-            try
-            {
-                snmp.listen();
-                
-                Object value = isTable? 
-                    getTableValue(snmp, target, pdu) : getSimpleValue(snmp, target, pdu);
-                
-                dataConsumer.setData(this, value);
-            }
-            finally
-            {
-                snmp.close();
-            }
-        }catch (Exception e)
+            dataConsumer.setData(this, value);
+        }
+        finally
         {
-            logger.error(String.format(
-                    "Error geting value for node (%s)", dataConsumer.getPath()), e);
+            snmp.close();
         }
     }
 

@@ -20,8 +20,6 @@ package org.raven.dbcp.impl;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.commons.dbcp.ConnectionFactory;
 import org.apache.commons.dbcp.DriverManagerConnectionFactory;
 import org.apache.commons.dbcp.PoolableConnectionFactory;
@@ -38,8 +36,8 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass
-public class ConnectPoolNode extends BaseNode implements ConnectionPool
+@NodeClass(parentNode=ConnectionPoolsNode.class)
+public class JDBCConnectionPoolNode extends BaseNode implements ConnectionPool
 {
     @Parameter @NotNull 
     private String userName;
@@ -48,7 +46,7 @@ public class ConnectPoolNode extends BaseNode implements ConnectionPool
     @Parameter @NotNull
     private String url;
     @Parameter @NotNull
-    private String driverClass;
+    private String driver;
     @Parameter (defaultValue="true") @NotNull
     private Boolean autoCommit;
     @Parameter
@@ -108,44 +106,88 @@ public class ConnectPoolNode extends BaseNode implements ConnectionPool
         return autoCommit;
     }
 
+    public void setAutoCommit(Boolean autoCommit) {
+        this.autoCommit = autoCommit;
+    }
+
     public String getDefaultCatalog() {
         return defaultCatalog;
     }
 
-    public String getDriverClass() {
-        return driverClass;
+    public void setDefaultCatalog(String defaultCatalog) {
+        this.defaultCatalog = defaultCatalog;
+    }
+
+    public String getDriver() {
+        return driver;
+    }
+
+    public void setDriver(String driver) {
+        this.driver = driver;
     }
 
     public Integer getInitialSize() {
         return initialSize;
     }
 
+    public void setInitialSize(Integer initialSize) {
+        this.initialSize = initialSize;
+    }
+
     public Integer getMaxActive() {
         return maxActive;
+    }
+
+    public void setMaxActive(Integer maxActive) {
+        this.maxActive = maxActive;
     }
 
     public Integer getMaxIdle() {
         return maxIdle;
     }
 
+    public void setMaxIdle(Integer maxIdle) {
+        this.maxIdle = maxIdle;
+    }
+
     public Integer getMaxWait() {
         return maxWait;
+    }
+
+    public void setMaxWait(Integer maxWait) {
+        this.maxWait = maxWait;
     }
 
     public String getPassword() {
         return password;
     }
 
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     public String getUrl() {
         return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     public String getUserName() {
         return userName;
     }
 
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
     public String getValidationQuery() {
         return validationQuery;
     }
-    
+
+    public void setValidationQuery(String validationQuery) {
+        this.validationQuery = validationQuery;
+    }
+
 }

@@ -341,7 +341,8 @@ public class H2TreeStore implements TreeStore
             attr.setValueHandlerType(rs.getString(pos++));
             attr.setParameterName(rs.getString(pos++));
             attr.setParentAttribute(rs.getString(pos++));
-            attr.setDescription(rs.getString(pos++));
+            if (attr.getParameterName()==null)
+                attr.setDescription(rs.getString(pos++));
             
             node.addNodeAttribute(attr);
         }
@@ -469,7 +470,7 @@ public class H2TreeStore implements TreeStore
         else
             insertNodeAttributeStatement.setString(pos++, nodeAttribute.getParentAttribute());
         
-        if (nodeAttribute.getDescription()==null)
+        if (nodeAttribute.getParameterName()!=null || nodeAttribute.getDescription()==null)
             insertNodeAttributeStatement.setNull(pos++, Types.VARCHAR);
         else
             insertNodeAttributeStatement.setString(pos++, nodeAttribute.getDescription());
@@ -551,7 +552,7 @@ public class H2TreeStore implements TreeStore
         else
             updateNodeAttributeStatement.setString(pos++, nodeAttribute.getParentAttribute());
         
-        if (nodeAttribute.getDescription()==null)
+        if (nodeAttribute.getParameterName()!=null || nodeAttribute.getDescription()==null)
             updateNodeAttributeStatement.setNull(pos++, Types.VARCHAR);
         else
             updateNodeAttributeStatement.setString(pos++, nodeAttribute.getDescription());
