@@ -35,10 +35,10 @@ import org.raven.tree.impl.SystemNode;
  *
  * @author Mikhail Titov
  */
-public class SQLDataSourceTest extends RavenCoreTestCase
+public class SQLDataSourceNodeTest extends RavenCoreTestCase
 {
     private JDBCConnectionPoolNode pool;
-    private SQLDataSource sqlds;
+    private SQLDataSourceNode sqlds;
     private SqlDataConsumer dataConsumer;
     
     @Test
@@ -49,13 +49,13 @@ public class SQLDataSourceTest extends RavenCoreTestCase
         assertEquals(Status.STARTED, sqlds.getStatus());
 
         dataConsumer.setDataSource(sqlds);
-        NodeAttribute attr = dataConsumer.getNodeAttribute(SQLDataSource.QUERY_ATTRIBUTE);
+        NodeAttribute attr = dataConsumer.getNodeAttribute(SQLDataSourceNode.QUERY_ATTRIBUTE);
         assertNotNull(attr);
         attr.setValue("select count(*) from nodes");
         attr.save();
-        attr = dataConsumer.getNodeAttribute(SQLDataSource.RESULT_TYPE_ATTRIBUTE);
+        attr = dataConsumer.getNodeAttribute(SQLDataSourceNode.RESULT_TYPE_ATTRIBUTE);
         assertNotNull(attr);
-        assertEquals(SQLDataSource.ResultType.TABLE, attr.getRealValue());
+        assertEquals(SQLDataSourceNode.ResultType.TABLE, attr.getRealValue());
         dataConsumer.getNodeAttribute(AbstractDataSource.INTERVAL_ATTRIBUTE).setValue("1000");
 
         dataConsumer.start();
@@ -65,7 +65,7 @@ public class SQLDataSourceTest extends RavenCoreTestCase
         assertNotNull(data);
         assertTrue(data instanceof ResultSet);
 
-        attr.setValue(SQLDataSource.ResultType.SINGLE.toString());
+        attr.setValue(SQLDataSourceNode.ResultType.SINGLE.toString());
         attr.save();
 
         data = dataConsumer.refereshData();
@@ -98,7 +98,7 @@ public class SQLDataSourceTest extends RavenCoreTestCase
 
         DataSourcesNode dataSources =
                 (DataSourcesNode) tree.getNode(SystemNode.NAME).getChildren(DataSourcesNode.NAME);
-        sqlds = new SQLDataSource();
+        sqlds = new SQLDataSourceNode();
         sqlds.setName("SQL datasource");
         dataSources.addChildren(sqlds);
         sqlds.save();

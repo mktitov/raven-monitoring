@@ -37,7 +37,7 @@ import org.weda.internal.annotations.Message;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=DataSourcesNode.class)
-public class SQLDataSource extends AbstractDataSource {
+public class SQLDataSourceNode extends AbstractDataSource {
 
     public enum ResultType {
         SINGLE, TABLE
