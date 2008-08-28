@@ -165,6 +165,8 @@ public class H2TreeStore implements TreeStore
 
     public synchronized void saveNodeAttribute(NodeAttribute nodeAttribute) throws TreeStoreError
     {
+        if (nodeAttribute.isReadonly())
+            return;
         try
         {
             try

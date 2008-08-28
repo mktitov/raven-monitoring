@@ -20,6 +20,7 @@ package org.raven.tree.impl;
 import java.lang.annotation.Annotation;
 import javassist.CannotCompileException;
 import javassist.expr.FieldAccess;
+import org.raven.annotations.Parameter;
 import org.weda.internal.FieldTransformWorker;
 import org.weda.internal.services.ClassTransformer.Phase;
 
@@ -34,20 +35,14 @@ public class ParameterFieldTransformerWorker implements FieldTransformWorker
     {
         try
         {
+            Parameter paramAnn = (Parameter) firedAnnotation;
+            if (paramAnn.readOnly())
+                return;
             if (!fieldAccess.getField().getType().isPrimitive() && fieldAccess.isReader())
             {
                 String body = String.format(
                         "{ " +
-                        "$_ = ($r)%2$s.getParameterValue(this, \"%1$s\", this.%1$s);" +
-//                        "if (this.%1$s==null) " +
-//                        "{ " +
-//                        "   $_ = ($r)%2$s.getParentAttributeValue(this, \"%1$s\", $type); " +
-//                        "} " +
-//                        "else " +
-//                        "{ " +
-////                        "   $_=($r)this.%1$s; " +
-//                        "   $_ = $proceed(); " +
-//                        "} " +
+                        "   $_ = ($r)%2$s.getParameterValue(this, \"%1$s\", this.%1$s);" +
                         "}"
                         , fieldAccess.getFieldName(), NodeListenerExecutorHelper.class.getName());
                 
@@ -59,9 +54,6 @@ public class ParameterFieldTransformerWorker implements FieldTransformWorker
                         "{ " +
                         "   $proceed($1);" +
                         "   %2$s.setParameterValue(this, \"%1$s\", ($w)this.%1$s);" +
-//                        "   Object oldValue = %2$s.getOldValue(this, \"%1$s\");" +
-//                        "   $proceed($1);" +
-//                        "   %2$s.fireNodeAttributeValueChanged(this, \"%1$s\", oldValue, ($w)this.%1$s);" +
                         "} "
                         , fieldAccess.getFieldName(), NodeListenerExecutorHelper.class.getName());
                 fieldAccess.replace(body);
