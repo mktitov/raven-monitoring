@@ -64,6 +64,7 @@ public class SessionBean
 	private String title = "RAVEN";
 //	private ClassDescriptorRegistry classDsc = null;
 	private boolean refreshTree = true;
+	private int refreshViewInteval = 0;
 
 	private String newNodeType = null;
 	private String newNodeName = null;
@@ -116,6 +117,7 @@ public class SessionBean
 		 ExtendedRenderKitService service = (ExtendedRenderKitService)
 		 Service.getRenderKitService(facesContext, ExtendedRenderKitService.class);
 		 service.addScript(facesContext, "parent.frames.frame1.location.href=parent.frames.frame1.location.href");
+		 logger.info("reloadLeftFrame");
 	}
 	
 	 public String reloadBothFrames()
@@ -126,9 +128,20 @@ public class SessionBean
 		// service.addScript(facesContext, "parent.frames.frame1.document.treeform.reftree.focus();");
 		 service.addScript(facesContext, "parent.frames.frame2.location.href=parent.frames.frame2.location.href");
 		 service.addScript(facesContext, "parent.frames.frame1.location.href=parent.frames.frame1.location.href");
+		 logger.info("reloadBothFrame");
 		 return ("success");
 	  }
 
+	 public String reloadRightFrame()
+	  {
+		 FacesContext fc = FacesContext.getCurrentInstance();
+		 ExtendedRenderKitService service = (ExtendedRenderKitService)
+		 Service.getRenderKitService(fc, ExtendedRenderKitService.class);
+		 logger.info("reloadRightFrame");
+		 service.addScript(fc, "parent.frames.frame2.location.href=parent.frames.frame2.location.href");
+		 return ("success");
+	  }
+	 
 	  //public void al(ActionEvent event)  { send(); }
 	 
 	 public static void initNodeWrapper(NodeWrapper nw)
@@ -176,6 +189,11 @@ public class SessionBean
 		  setCurrentNode(n);
 	  }
 
+	  public void pollReloadRightFrame(PollEvent event)
+	  {
+		  reloadRightFrame();
+	  }
+	  
 	  public void onTreePoll(PollEvent event)
 	  {
 		  //treeModel.setRowIndex(-1);
@@ -383,5 +401,17 @@ public class SessionBean
 
 	public NewNodeFromTemplate getTemplate() { return template;	}
 	public void setTemplate(NewNodeFromTemplate template) { this.template = template; }
+
+	public void setRefreshViewInteval(int refreshViewInteval) {
+		this.refreshViewInteval = refreshViewInteval;
+	}
+
+	public int getRefreshViewInteval() {
+		return refreshViewInteval;
+	}
+
+	public int getRefreshViewIntevalMS() {
+		return refreshViewInteval*1000;
+	}
 	
 }

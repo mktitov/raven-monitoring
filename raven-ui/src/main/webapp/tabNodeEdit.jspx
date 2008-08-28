@@ -69,11 +69,23 @@
             <tr:column headerText="*" shortDesc="#{msgs.dscEnableRenameAttr}" >
                 <tr:selectBooleanCheckbox onclick="submit();" shortDesc="#{msgs.dscEnableRenameAttr}" value="#{row.edit}" rendered="#{row.allowDelete}"></tr:selectBooleanCheckbox>
             </tr:column>
-            
+<!-- name of attribute-->            
             <tr:column headerText="#{msgs.name}">
-                <tr:outputText rendered="#{!row.edit}" value="#{row.name}"/>
+				<tr:panelHorizontalLayout>
+                <tr:outputText rendered="#{!row.edit and !row.attribute.required}" value="#{row.name}"/>
+                <tr:outputFormatted 
+                		rendered="#{!row.edit and row.attribute.required}"
+						inlineStyle="font-weight: bold;" 
+                		value="#{row.name}"/>
+                <tr:outputFormatted 
+                		inlineStyle="color: #cc0000;" 
+                		rendered="#{!row.edit and row.attribute.required and (row.attribute.value == null) }"
+                		value=" *"/>
+			
                 <tr:inputText columns="8" rendered="#{row.edit}" required="true" value="#{row.name}"/>
+				</tr:panelHorizontalLayout>
             </tr:column>
+<!-- value of attribute-->
             <tr:column headerText="#{msgs.value}">
                 <tr:inputText readOnly="#{row.expressionSupported}" rendered="#{row.expressionSupported or (row.selectItems == null)}" value="#{row.value}" columns="30" />
                 <tr:selectOneChoice rendered="#{!row.expressionSupported and !(row.selectItems == null)}" value="#{row.value}" >

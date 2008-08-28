@@ -25,10 +25,25 @@
         	 rendered="#{cNode.useChildAttributesView and row.hasChildren}"  
              width="90%" summary="Nodes" value="#{row.childAttributes}" 
              var="rowz" rows="20" id="attrsz" partialTriggers="subtypes">
-            
+
+<!-- name of attribute-->            
             <tr:column headerText="#{msgs.name}">
-                <tr:outputText value="#{rowz.name}"/>
+				<tr:panelHorizontalLayout>
+                <tr:outputText 
+                	rendered="#{!rowz.attribute.required}" 
+                	value="#{rowz.name}"/>
+                <tr:outputFormatted 
+                		rendered="#{rowz.attribute.required}"
+						inlineStyle="font-weight: bold;" 
+                		value="#{rowz.name}"/>
+                <tr:outputFormatted 
+                		inlineStyle="color: #cc0000;" 
+                		rendered="#{rowz.attribute.required and (rowz.attribute.value == null) }"
+                		value=" *"/>
+				</tr:panelHorizontalLayout>
             </tr:column>
+
+<!-- value of attribute-->
             <tr:column headerText="#{msgs.value}">
                 <tr:inputText readOnly="#{rowz.expressionSupported}" rendered="#{rowz.expressionSupported or (rowz.selectItems == null)}" value="#{rowz.value}" columns="30" />
                 <tr:selectOneChoice rendered="#{!rowz.expressionSupported and !(rowz.selectItems == null)}" value="#{rowz.value}" >
@@ -52,12 +67,12 @@
 					onchange="submit();"                	
                 	value="#{rowz.templateExpression}" />
             </tr:column>
-
+<!-- 
             <tr:column headerText="#{msgs.dsc}">
                 <tr:outputText rendered="#{!rowz.edit}" value="#{rowz.description}"/>
                 <tr:inputText rendered="#{rowz.edit}" value="#{rowz.description}"/>
             </tr:column>
-            
+ -->            
             <f:facet name="detailStamp">
                 <tr:panelGroupLayout layout="vertical">
 				<tr:panelCaptionGroup captionText="#{msgs.dsc}">

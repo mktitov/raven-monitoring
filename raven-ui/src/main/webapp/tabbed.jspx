@@ -25,12 +25,12 @@
         <tr:document title="TabbedPanel" >
             <tr:statusIndicator></tr:statusIndicator>
             <tr:form>
-                <!-- 
+                <!--  
                 <tr:poll id="poolStatus" ></tr:poll>
                 -->
                 <tr:panelGroupLayout layout="vertical">
-                    <tr:panelCaptionGroup partialTriggers="::poolStatus"  captionText="#{msgs.nodeStatus}" >
-                        <tr:panelGroupLayout layout="vertical">
+                    <tr:panelCaptionGroup id="pcg"  captionText="#{msgs.nodeStatus}" >
+                        <tr:panelGroupLayout layout="vertical" id="pgl_1" >
                               <tr:group>
                                 <tr:outputText value="#{msgs.node}:"></tr:outputText>
                                 <tr:spacer width="10"></tr:spacer>
@@ -70,7 +70,7 @@
                             </f:subview>
                         </tr:showDetailItem>
                         <tr:showDetailItem text="#{msgs.control}" id="item4">
-                            <f:subview id="v3">
+                            <f:subview id="v4">
                                 <tr:separator></tr:separator>
                                 <jsp:include page="tabControl.jspx" flush="true"/>
                             </f:subview>
