@@ -93,6 +93,12 @@
     <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
 
+  <managed-bean>
+    <managed-bean-name>renameNode</managed-bean-name>
+    <managed-bean-class>org.raven.ui.RenameNodeBean</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
 <!-- 
   <managed-bean>
     <managed-bean-name>rowMap</managed-bean-name>
@@ -149,6 +155,10 @@
     <navigation-case>
       <from-outcome>dialog:selectNode</from-outcome>
       <to-view-id>/selectNodeDialog.jspx</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>dialog:renameNode</from-outcome>
+      <to-view-id>/renameNodeDialog.jspx</to-view-id>
     </navigation-case>
   </navigation-rule>
 

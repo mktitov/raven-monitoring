@@ -23,22 +23,41 @@
 <!-- ********************* -->
 <!-- create new node -->
 <!-- ********************* -->
-<tr:panelCaptionGroup captionText="#{msgs.nodeCreate}" rendered="#{cNode.allowCreateSubNode}">
-	<tr:panelFormLayout>
-		<tr:inputText label="#{msgs.name}" value="#{sBean.newNodeName}" >
-			<tr:validateRegExp pattern="#{sBean.nodeNamePattern}"/>
-		</tr:inputText>
-		<tr:inputListOfValues id="typeList"
-			label="#{msgs.type}" value="#{sBean.newNodeType}"
-        	action="dialog:chooseType" 
-        	windowWidth="500" windowHeight="400"/>
-		<tr:commandButton returnListener="#{sBean.template.handleReturn}" 
-			id="createNode" 
-			text="#{msgs.create}" 
-			action="#{sBean.createNode}" 
-			useWindow="true" windowWidth="500" windowHeight="400" />        
-   </tr:panelFormLayout>
-</tr:panelCaptionGroup>        
+<tr:panelHorizontalLayout halign="start" valign="top">
+	<tr:panelCaptionGroup 
+		captionText="#{msgs.nodeCreate}" 
+		rendered="#{cNode.allowCreateSubNode}">
+		<tr:panelFormLayout>
+			<tr:inputText 
+				label="#{msgs.name}" 
+				value="#{sBean.newNodeName}" >
+				<tr:validateRegExp pattern="#{sBean.nodeNamePattern}"/>
+			</tr:inputText>
+			<tr:inputListOfValues 
+				id="typeList"
+				label="#{msgs.type}" 
+				value="#{sBean.newNodeType}"
+        		action="dialog:chooseType" 
+        		windowWidth="500" windowHeight="400"/>
+			<tr:commandButton 
+				returnListener="#{sBean.template.handleReturn}" 
+				id="createNode" 
+				text="#{msgs.create}" 
+				action="#{sBean.createNode}" 
+				useWindow="true" windowWidth="500" windowHeight="400" />        
+   		</tr:panelFormLayout>
+	</tr:panelCaptionGroup>
+	<tr:spacer width="40"/>
+	<tr:commandButton 
+		id="renameNode"
+		text="#{msgs.renameNode}"
+		action="dialog:renameNode"
+		actionListener="#{cNode.setNameInDialog}"
+		returnListener="#{cNode.renameNodeHandleReturn}"
+		useWindow="true" windowWidth="400" windowHeight="300" 
+	>
+	</tr:commandButton> 
+</tr:panelHorizontalLayout>       
 
 <tr:separator></tr:separator>
 

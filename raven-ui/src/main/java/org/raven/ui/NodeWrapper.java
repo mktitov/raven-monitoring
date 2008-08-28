@@ -21,7 +21,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import javax.faces.event.ActionEvent;
 import org.apache.myfaces.trinidad.component.core.layout.CoreShowDetailItem;
+import org.apache.myfaces.trinidad.event.ReturnEvent;
 import org.raven.conf.impl.AccessControl;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -59,6 +61,25 @@ public class NodeWrapper extends AbstractNodeWrapper
 	{
 		this();
 		this.setNode(node);
+	}
+	
+	public void setNameInDialog(ActionEvent event)
+	{
+		RenameNodeBean b = (RenameNodeBean) SessionBean.getElValue(RenameNodeBean.BEAN_NAME);
+		b.setName(getNode().getName());
+	}
+	
+	public void renameNodeHandleReturn(ReturnEvent event)
+	{
+		String ret = (String) event.getReturnValue();
+		if(ret!=null && ret.length()>0)
+		{
+			Node n = getNode();
+			n.setName(ret);
+			n.save();
+			SessionBean sb = (SessionBean) SessionBean.getElValue(SessionBean.BEAN_NAME);
+			sb.reloadBothFrames();
+		}
 	}
 	
 	public void onSetNode()
