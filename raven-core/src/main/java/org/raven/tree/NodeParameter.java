@@ -64,14 +64,19 @@ public interface NodeParameter
      */
     public boolean isRequired();
     /**
+     * If returns <code>true</code> then the parameter value is read only. The value
+     * of the parameter must be
+     */
+    public boolean isReadOnly();
+    /**
      * Returns the parameter default value
      */
     public String getDefaultValue();
     /**
-     * Returns the parameter value.
+     * Returns the parameter value. Must be used only if {@link #isReadOnly}
+     * returns <code>true</code>
      */
-    //TODO: убрать
-//    public Object getValue();
+    public Object getValue();
     /**
      * Sets the parameter value.
      */

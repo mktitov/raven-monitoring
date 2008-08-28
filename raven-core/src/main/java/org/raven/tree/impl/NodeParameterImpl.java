@@ -24,12 +24,12 @@ import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeParameter;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.beans.GetOperation;
 import org.weda.beans.PropertyDescriptor;
 import org.weda.constraints.ReferenceValue;
 import org.weda.constraints.TooManyReferenceValuesException;
 import org.weda.internal.annotations.Service;
 import org.weda.services.PropertyOperationCompiler;
-import org.weda.services.TypeConverter;
 
 /**
  *
@@ -38,18 +38,17 @@ import org.weda.services.TypeConverter;
 public class NodeParameterImpl implements NodeParameter
 {
     @Service
-    private PropertyOperationCompiler operationCompiler;
-    @Service
-    private TypeConverter converter;
-    
+    private static PropertyOperationCompiler operationCompiler;
+
     private final Node node;
     private final String name;        
     private final String defaultValue;
     private final String valueHandlerType;
+    private final boolean readOnly;
     
     private PropertyDescriptor propertyDescriptor;
     private NodeAttribute nodeAttribute;
-//    private GetOperation getter;
+    private GetOperation getter;
 //    private SetOperation setter;
     private boolean required = false;
 
@@ -67,17 +66,20 @@ public class NodeParameterImpl implements NodeParameter
             valueHandlerType = parameterAnn.valueHandlerType();
         else
             valueHandlerType = null;
+
+        readOnly = parameterAnn.readOnly();
         
         propertyDescriptor = desc;
-//        getter = operationCompiler.compileGetOperation(node.getClass(), name);
+        getter = operationCompiler.compileGetOperation(node.getClass(), name);
 //        setter = operationCompiler.compileSetOperation(node.getClass(), name);
-        
-        for (Annotation ann: propertyDescriptor.getAnnotations())
-            if (ann instanceof NotNull)
-            {
-                required = true;
-                break;
-            }
+
+        if (!readOnly)
+            for (Annotation ann: propertyDescriptor.getAnnotations())
+                if (ann instanceof NotNull)
+                {
+                    required = true;
+                    break;
+                }
     }
 
     public String getName()
@@ -116,19 +118,6 @@ public class NodeParameterImpl implements NodeParameter
         return defaultValue;
     }
     
-//    public Object getValue()
-//    {
-//        return getter.getValue(node);
-//    }
-//
-//    public void setValue(Object value) throws ConstraintException
-//    {
-//        Object val = converter.convert(getType(), value, getPattern());
-//        if (node.getStatus()!=Status.CREATED)
-//            propertyDescriptor.check(val);
-//        setter.setValue(node, val);
-//    }
-
     public PropertyDescriptor getPropertyDescriptor()
     {
         return propertyDescriptor;
@@ -152,5 +141,15 @@ public class NodeParameterImpl implements NodeParameter
     public List<ReferenceValue> getReferenceValues() throws TooManyReferenceValuesException
     {
         return propertyDescriptor.getReferenceValues(node, null, Integer.MAX_VALUE);
+    }
+
+    public boolean isReadOnly() 
+    {
+        return readOnly;
+    }
+
+    public Object getValue()
+    {
+        return getter.getValue(node);
     }
 }

@@ -194,6 +194,10 @@ public interface NodeAttribute extends Cloneable
      */
     public void setTemplateExpression(boolean templateExpression);
     /**
+     * If returns <code>true</code> then attribute value is readonly.
+     */
+    public boolean isReadonly();
+    /**
      * Stores node attribute in the {@link TreeStore}.
      */
     public void save();

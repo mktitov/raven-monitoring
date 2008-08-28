@@ -37,6 +37,10 @@ public @interface Parameter
      */
     boolean visible() default true;
     /**
+     * If <code>true</code> then the parameter is read only
+     */
+    boolean readOnly() default false;
+    /**
      * The default value of the parameter
      */
     String defaultValue() default "";

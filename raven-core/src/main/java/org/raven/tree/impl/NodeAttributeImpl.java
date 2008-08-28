@@ -140,7 +140,7 @@ public class NodeAttributeImpl
 
     public <T> T getRealValue()
     {
-        return (T) valueHandler.handleData();
+        return isReadonly()? (T)parameter.getValue() : (T)valueHandler.handleData();
 //        if (isAttributeReference())
 //            return attributeReference == null ? 
 //                null : (T)attributeReference.getAttribute().getRealValue();
@@ -162,15 +162,23 @@ public class NodeAttributeImpl
 
     public String getValue()
     {
-        if (templateExpression)
-            return null;
+        if (isReadonly())
+            return converter.convert(String.class, parameter.getValue(), parameter.getPattern());
         else
-            return converter.convert(String.class, valueHandler.handleData(), null);
+        {
+            if (templateExpression)
+                return null;
+            else
+                return converter.convert(String.class, valueHandler.handleData(), null);
+        }
     }
 
     public String getRawValue()
     {
-        return valueHandler==null || templateExpression? value : valueHandler.getData();
+        if (isReadonly())
+            return null;
+        else
+            return valueHandler==null || templateExpression? value : valueHandler.getData();
     }
     
     public void setRawValue(String rawValue)
@@ -260,6 +268,9 @@ public class NodeAttributeImpl
 
     public void setValue(String value) throws Exception
     {
+        if (isReadonly())
+            throw new Exception(String.format(
+                    "Attribute (%s) of the node (%s) is readonly", getName(), owner.getPath()));
         if (templateExpression || !initialized)
             this.value = value;
         else 
@@ -398,5 +409,10 @@ public class NodeAttributeImpl
     public String getPath() 
     {
         return owner==null? null : pathResolver.getAbsolutePath(this);
+    }
+
+    public boolean isReadonly()
+    {
+        return parameter==null? false : parameter.isReadOnly();
     }
 }
