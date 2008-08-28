@@ -17,6 +17,7 @@
 
 package org.raven.table;
 
+import java.util.Iterator;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.ds.impl.AbstractDataConsumer;
@@ -74,17 +75,22 @@ public class TableMultiplexerNodeTest extends RavenCoreTestCase
         assertNotNull(tabObj);
         assertTrue(tabObj instanceof Table);
         Table table = (Table) tabObj;
-        assertEquals(2, table.getRowCount());
-        assertEquals(5, table.getColumnNames().size());
-        for (int row=0; row<2; ++row)
+        assertEquals(4, table.getColumnNames().length);
+
+        String[] colNames = {"col1", "col2", "col3", "col4"};
+        assertArrayEquals(colNames, table.getColumnNames());
+        int row=0;
+        for (Iterator<Object[]> it=table.getRowIterator(); it.hasNext();)
         {
-            int col=1;
-            for (String colName: new String[]{"col1", "col2", "col3", "col4"})
+            Object[] tableRow = it.next();
+            for (int i=0; i<colNames.length; ++i)
             {
-                String val = "val_"+col+"_"+(row+1);
-                assertEquals(val, table.getValue(colName, row));
-                ++col;
+                String val = "val_"+(i+1)+"_"+(row+1);
+                assertEquals(val, tableRow[i]);
             }
+            ++row;
         }
+        assertEquals(2, row);
+
     }
 }

@@ -18,70 +18,52 @@
 package org.raven.table;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+
 
 /**
  *
  * @author Mikhail Titov
  */
-public class TableImpl implements Table
+public class TableImpl extends AbstractTable
 {
-    private final Map<String, List<Object>> cols = new HashMap<String, List<Object>>(); 
-    private final List<String> columnNames = new ArrayList<String>();
+    private final List<Object[]> rows = new ArrayList<Object[]>();
 
-    public TableImpl() 
+    public TableImpl(String[] columnNames) 
     {
-        columnNames.add(ROWNUM_COLUMN_NAME);
+        this.columnNames = columnNames;
     }
 
-    public Map<String, List<Object>> getRows()
+    public TableImpl addRow(Object[] row)
     {
-        return cols;
-    }
-    
-    public void addValue(String columnName, Object value)
-    {
-        List<Object> values = cols.get(columnName);
-        if (values==null)
-        {
-            columnNames.add(columnName);
-            values = new ArrayList<Object>();
-            cols.put(columnName, values);
-        }
-        values.add(value);
+        if (row==null || row.length!=columnNames.length)
+            throw new IllegalArgumentException("Null row or invalid row length");
+        rows.add(row);
+        return this;
     }
 
-    public List<String> getColumnNames()
+    public Iterator<Object[]> getRowIterator()
     {
-        return columnNames;
+        return new RowIterator();
     }
 
-    public Object getValue(String columnName, int row)
+    private class RowIterator implements Iterator<Object[]>
     {
-        if (ROWNUM_COLUMN_NAME.equals(columnName))
-            return row;
+        private int currentRow = 0;
         
-        List<Object> values = cols.get(columnName);
-        if (values==null)
-            return null;
-        else
-            return row>=values.size()? null : values.get(row);
-    }
-    
-    public Map<String, Object> getRow(int row)
-    {
-        Map<String, Object> res = new HashMap<String, Object>();
-        res.put(ROWNUM_COLUMN_NAME, row);
-        for (String columnName: columnNames)
-            res.put(columnName, getValue(columnName, row));
-        return res;
-    }
+        public boolean hasNext() {
+            return currentRow<rows.size();
+        }
 
-    public int getRowCount()
-    {
-        return cols.size()==0? 0 : cols.get(columnNames.get(1)).size();
-    }
+        public Object[] next()
+        {
+            return rows.get(currentRow++);
+        }
 
+        public void remove() {
+            throw new UnsupportedOperationException("Not supported.");
+        }
+        
+    }
 }

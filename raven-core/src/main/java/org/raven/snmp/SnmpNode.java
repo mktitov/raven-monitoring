@@ -24,7 +24,7 @@ import org.raven.table.Table;
 import org.raven.annotations.NodeClass;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.impl.AbstractDataSource;
-import org.raven.table.TableImpl;
+import org.raven.table.ColumnBasedTable;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
 import org.raven.tree.impl.DataSourcesNode;
@@ -151,7 +151,7 @@ public class SnmpNode extends AbstractDataSource
     private Object getTableValue(Snmp snmp, CommunityTarget target, PDU pdu) throws Exception
     {
         OID tableOID = pdu.get(0).getOid();
-        Table table = new TableImpl();
+        ColumnBasedTable table = new ColumnBasedTable();
         Set<Integer> rowIndexes = new HashSet<Integer>();
         while (true) 
         {
@@ -180,7 +180,7 @@ public class SnmpNode extends AbstractDataSource
             else
                 break;
         }
-        
+        table.freeze();
         return table;
     }
 }

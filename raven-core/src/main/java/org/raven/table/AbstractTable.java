@@ -17,32 +17,26 @@
 
 package org.raven.table;
 
-import java.util.List;
-import org.raven.annotations.NodeClass;
-import org.raven.ds.DataConsumer;
-import org.raven.ds.DataPipe;
-import org.raven.ds.impl.AbstractDataMultiplexer;
-import org.weda.annotations.Description;
-
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(childNodes={DataConsumer.class, DataPipe.class})
-@Description("Allows to mulitiplex several tables in one table.")
-public class TableMultiplexerNode extends AbstractDataMultiplexer<Table, Table>
+public abstract class AbstractTable implements Table
 {
-    public TableMultiplexerNode() 
+    protected String[] columnNames;
+
+    public String[] getColumnNames()
     {
-        super(Table.class);
+        return columnNames;
     }
 
-    @Override
-    public Table multiplex(List<Table> listOfData) 
+    public int getColumnIndex(String columnName)
     {
-        if (listOfData.size()==1)
-            return listOfData.get(0);
-
-        return new TableMultiplexer(listOfData);
+        if (columnNames!=null)
+            for (int i=0; i<columnNames.length; ++i)
+                if (columnNames[i].equals(columnName))
+                    return i;
+        return -1;
     }
+
 }

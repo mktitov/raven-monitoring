@@ -27,6 +27,7 @@ import org.jrobin.core.FetchRequest;
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.Util;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.conf.Configurator;
@@ -47,14 +48,14 @@ public class RRDNodeTest extends RavenCoreTestCase
     @Before
     public void setupTest()
     {
-        store.removeNodes();
-        tree.reloadTree();
+//        store.removeNodes();
+//        tree.reloadTree();
         
         converter = registry.getService(TypeConverter.class);
-        assertNotNull(tree);
+//        assertNotNull(tree);
     }
     
-    @Test
+    @Test 
     public void test() throws ConstraintException, Exception
     {
         TestDataSource ds = new TestDataSource();
@@ -220,6 +221,7 @@ public class RRDNodeTest extends RavenCoreTestCase
         assertFalse(db.containsDs(rrds2.getName()));
         assertNull(db.getArchive(conFun, rra2.getSteps()));
         db.close();
+
     }
     
     @Test

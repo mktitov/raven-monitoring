@@ -20,7 +20,7 @@ package org.raven.table.objects;
 import java.util.Collection;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
-import org.raven.table.TableImpl;
+import org.raven.table.ColumnBasedTable;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
 
@@ -32,11 +32,12 @@ public class TestTableDataSource extends BaseNode implements DataSource
 {
     public void getDataImmediate(DataConsumer dataConsumer) 
     {
-        TableImpl table = new TableImpl();
+        ColumnBasedTable table = new ColumnBasedTable();
         table.addValue("col1", "val_1_1");
         table.addValue("col2", "val_2_1");
         table.addValue("col1", "val_1_2");
         table.addValue("col2", "val_2_2");
+        table.freeze();
         
         dataConsumer.setData(this, table);
     }

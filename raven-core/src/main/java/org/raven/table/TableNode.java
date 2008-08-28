@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -255,11 +256,9 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
     }
 
     private void createNewNode(
-            Table tab, int row, Node templateNode, String indexValue, boolean autoStart) 
+            Map<String, Object> values, Node templateNode, String indexValue, boolean autoStart)
         throws Exception
     {
-        Map<String, Object> values = tab.getRow(row);
-
         StrSubstitutor subst = new StrSubstitutor(values);
 
         Node newNode = tree.copy(
@@ -317,23 +316,23 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
         Map<String, Node> indexValues = getIndexValues();
         Set<String> indexesInTable = new HashSet<String>();
         Table tab = (Table) data;
-        if (tab.getRowCount() > 0)
+        for (Iterator<Object[]> it = tab.getRowIterator(); it.hasNext();)
         {
-            for (int row = 0; row < tab.getRowCount(); ++row)
-            {
-                Map<String, Object> tableRow = tab.getRow(row);
-                expressionBindings.put(ROW_EXPRESSION_VARIABLE, tableRow);
-                Object val = tab.getValue(indexColumnName, row);
-                String indexColumnValue = converter.convert(String.class, val, null);
-                
-                indexesInTable.add(indexColumnValue);
-                
-                sendDataToConsumers(tab, row, indexColumnValue, consumers);
-                
-                if (!indexValues.containsKey(indexColumnValue))
-                    processAddOperation(tab, row, indexColumnValue);
-                
-            }
+            Object[] tableRow = it.next();
+            Map<String, Object> namedRow = new HashMap<String, Object>();
+            for (int col=0; col<tab.getColumnNames().length; ++col)
+                namedRow.put(tab.getColumnNames()[col], tableRow[col]);
+            expressionBindings.put(ROW_EXPRESSION_VARIABLE, namedRow);
+            Object val = namedRow.get(indexColumnName);
+            String indexColumnValue = converter.convert(String.class, val, null);
+
+            indexesInTable.add(indexColumnValue);
+
+            sendDataToConsumers(namedRow, indexColumnValue, consumers);
+
+            if (!indexValues.containsKey(indexColumnValue))
+                processAddOperation(namedRow, indexColumnValue);
+
         }
         if (indexesInTable.size()<indexValues.size())
         {
@@ -341,7 +340,9 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
         }
     }
     
-    private void processAddOperation(Table tab, int row, String indexColumnValue) throws Exception
+    private void processAddOperation(
+            Map<String, Object> namedRow, String indexColumnValue)
+        throws Exception
     {
         if (   addPolicy==AddPolicy.AUTO_ADD
             || addPolicy==AddPolicy.AUTO_ADD_AND_START 
@@ -351,7 +352,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
             if (templateNode==null)
                 return;
             createNewNode(
-                    tab, row, templateNode, indexColumnValue
+                    namedRow, templateNode, indexColumnValue
                     , addPolicy==AddPolicy.AUTO_ADD_AND_START && !needTableForConfiguration);
         }
     }
@@ -397,7 +398,8 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
     }
 
     private void sendDataToConsumers(
-            Table tab, int row, String indexColumnValue, Map<String, List<DataConsumer>> consumers) 
+            Map<String, Object> namedRow, String indexColumnValue
+            , Map<String, List<DataConsumer>> consumers) 
         throws TypeConverterException
     {
         List<DataConsumer> list = consumers.get(indexColumnValue);
@@ -405,7 +407,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
             for (DataConsumer consumer : list)
             {
                 String columnName = getTableCoumnName(consumer);
-                Object value = tab.getValue(columnName, row);
+                Object value = namedRow.get(columnName);
                 consumer.setData(this, value);
             }
     }

@@ -23,6 +23,7 @@ import org.raven.RavenCoreTestCase;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.objects.TestDataSourceInterface;
 import org.raven.tree.Node;
+import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeListener;
 import org.raven.tree.NodePathResolver;
@@ -92,6 +93,8 @@ public class SystemDataSourceReferenceValuesTest extends RavenCoreTestCase
         attr.setType(DataSource.class);
         checkReferenceValues(tree.getReferenceValuesForAttribute(attr), pathResolver);
         
+        dataSources.removeChildren(ds1);
+        dataSources.removeChildren(ds2);
         verify(ds1, ds2);
     }
     
@@ -132,9 +135,14 @@ public class SystemDataSourceReferenceValuesTest extends RavenCoreTestCase
         expect(ds1.getName()).andReturn("ds1").anyTimes();
         ds1.setParent((Node) anyObject());
         ds1.addListener((NodeListener) anyObject());
+        expect(ds1.getPath()).andReturn("ds1").anyTimes();
         expect(ds1.getIndex()).andReturn(1);
         expect(ds1.getParent()).andReturn(dataSources).anyTimes();
+//        expect(ds1.getStatus()).andReturn(Status.STARTED);
         expect(ds1.compareTo((Node)anyObject())).andReturn(-1).anyTimes();
+        ds1.remove();
+//        expect(ds1.getStatus()).andReturn(Status.STARTED);
+//        ds1.stop();
         
         expect(ds2.getName()).andReturn("ds2").anyTimes();
         ds2.setParent((Node) anyObject());
@@ -142,6 +150,10 @@ public class SystemDataSourceReferenceValuesTest extends RavenCoreTestCase
         expect(ds2.getIndex()).andReturn(2);
         expect(ds2.getParent()).andReturn(dataSources).anyTimes();
         expect(ds2.compareTo((Node)anyObject())).andReturn(1).anyTimes();
+//        expect(ds2.getStatus()).andReturn(Status.STARTED);
+//        ds2.stop();
+        expect(ds2.getPath()).andReturn("ds2");
+        ds2.remove();
 //        expect(ds2.getPath()).andReturn("ds2Path").times(3);
         
         replay(ds1, ds2);

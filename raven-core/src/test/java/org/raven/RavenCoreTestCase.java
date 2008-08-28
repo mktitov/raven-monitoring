@@ -18,6 +18,7 @@
 package org.raven;
 
 import org.apache.tapestry.ioc.RegistryBuilder;
+import org.junit.After;
 import org.junit.Before;
 import org.raven.conf.Configurator;
 import org.raven.tree.Tree;
@@ -50,5 +51,11 @@ public class RavenCoreTestCase extends ServiceTestCase
         tree = registry.getService(Tree.class);
         assertNotNull(tree);
         tree.reloadTree();
+    }
+
+    @After
+    public void finalizeTest()
+    {
+        tree.stop(tree.getRootNode());
     }
 }

@@ -33,13 +33,9 @@ public class TestTableDataConsumer extends BaseNode implements DataConsumer
 
     public Object refereshData() 
     {
-        TableImpl table = new TableImpl();
-        table.addValue("col3", "val_3_1");
-        table.addValue("col4", "val_4_1");
-        table.addValue("col3", "val_3_2");
-        table.addValue("col4", "val_4_2");
-    
-        return table;
+        return new TableImpl(new String[]{"col3", "col4"})
+                .addRow(new Object[]{"val_3_1", "val_4_1"})
+                .addRow(new Object[]{"val_3_2", "val_4_2"});
     }
     
 }

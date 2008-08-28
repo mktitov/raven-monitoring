@@ -230,7 +230,9 @@ public class SnmpNodeTest extends ServiceTestCase
         assertTrue(consumer.getData() instanceof Table);
         
         Table table = (Table) consumer.getData();
-        Object val = table.getValue("1.3.6.1.2.1.2.2.1.2", 0);
+        int ind = table.getColumnIndex("1.3.6.1.2.1.2.2.1.2");
+        assertTrue(ind>0);
+        Object val = table.getRowIterator().next()[ind];
         assertNotNull(val);
         assertEquals("lo", converter.convert(String.class, val, null));
     }
