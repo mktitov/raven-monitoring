@@ -188,6 +188,36 @@ public abstract class AbstractDataSource
         executorService.remove(new Task(dataConsumer));
     }
 
+    @Parameter(readOnly=true)
+    public Integer getActiveThreads()
+    {
+        return Status.STARTED!=getStatus()? 0 : executorService.getActiveCount();
+    }
+
+    @Parameter(readOnly=true)
+    public Integer getThreadsInPool()
+    {
+        return Status.STARTED!=getStatus()? 0 : executorService.getPoolSize();
+    }
+
+    @Parameter(readOnly=true)
+    public Long getTaskCount()
+    {
+        return Status.STARTED!=getStatus()? 0 : executorService.getTaskCount();
+    }
+
+    @Parameter(readOnly=true)
+    public Long getCompletedTaskCount()
+    {
+        return Status.STARTED!=getStatus()? 0 : executorService.getCompletedTaskCount();
+    }
+
+    @Parameter(readOnly=true)
+    public Integer getLargestPoolSize()
+    {
+        return Status.STARTED!=getStatus()? 0: executorService.getLargestPoolSize();
+    }
+
     public Integer getCorePoolSize()
     {
         return corePoolSize;
