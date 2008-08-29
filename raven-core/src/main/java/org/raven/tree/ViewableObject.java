@@ -15,36 +15,20 @@
  *  under the License.
  */
 
-package org.raven;
-
-import org.weda.internal.annotations.Service;
-import org.weda.services.TypeConverter;
+package org.raven.tree;
 
 /**
  *
  * @author Mikhail Titov
  */
-public enum ImageFormat 
+public interface ViewableObject
 {
-    PNG("image/png"), GIF("image/gif"), JPEG("image/jpeg");
-    
-    @Service
-    private static TypeConverter converter;
-
-    private final String mimeType;
-
-    private ImageFormat(String mimeType)
-    {
-        this.mimeType = mimeType;
-    }
-    
-    public String asString()
-    {
-        return converter.convert(String.class, this, null);
-    }
-
-    public String getMimeType()
-    {
-        return mimeType;
-    }
+    /**
+     * Retruns the mime type of the {@link #getData()}
+     */
+    public String getMimeType();
+    /**
+     * Returns the data contained by this object.
+     */
+    public Object getData();
 }

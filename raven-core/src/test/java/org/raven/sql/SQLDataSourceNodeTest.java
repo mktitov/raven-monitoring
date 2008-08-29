@@ -47,6 +47,10 @@ public class SQLDataSourceNodeTest extends RavenCoreTestCase
         createNodes();
         sqlds.start();
         assertEquals(Status.STARTED, sqlds.getStatus());
+        
+        NodeAttribute taskCountAttr = sqlds.getNodeAttribute("taskCount");
+        assertNotNull(taskCountAttr);
+        assertTrue(taskCountAttr.isReadonly());
 
         dataConsumer.setDataSource(sqlds);
         NodeAttribute attr = dataConsumer.getNodeAttribute(SQLDataSourceNode.QUERY_ATTRIBUTE);

@@ -18,6 +18,9 @@
 package org.raven;
 
 import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.IOUtils;
 import org.apache.tapestry.ioc.RegistryBuilder;
@@ -37,9 +40,10 @@ import org.raven.rrd.graph.RRGraphNode;
 import org.raven.rrd.graph.RRLine;
 import org.raven.snmp.SnmpNode;
 import org.raven.tree.Node.Status;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.Tree;
+import org.raven.tree.ViewableObject;
 import org.raven.tree.store.TreeStore;
-import org.weda.constraints.ConstraintException;
 
 /**
  *
@@ -91,7 +95,11 @@ public class RealTest extends ServiceTestCase
     private void saveGraph(String filename, RRGraphNode gr) throws Exception
     {
         FileOutputStream file = new FileOutputStream(filename);
-        IOUtils.copy(gr.render(null, null), file);
+        Map<String, NodeAttribute> attrs = gr.getRefreshAttributes();
+        List<ViewableObject> objects = gr.getViewableObjects(attrs);
+        assertNotNull(objects);
+        assertEquals(1, objects.size());
+        IOUtils.copy((InputStream)objects.get(0).getData(), file);
         file.close();
     }
 

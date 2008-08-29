@@ -15,36 +15,26 @@
  *  under the License.
  */
 
-package org.raven;
+package org.raven.tree;
 
-import org.weda.internal.annotations.Service;
-import org.weda.services.TypeConverter;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
  * @author Mikhail Titov
  */
-public enum ImageFormat 
+public interface Viewable extends Node
 {
-    PNG("image/png"), GIF("image/gif"), JPEG("image/jpeg");
-    
-    @Service
-    private static TypeConverter converter;
-
-    private final String mimeType;
-
-    private ImageFormat(String mimeType)
-    {
-        this.mimeType = mimeType;
-    }
-    
-    public String asString()
-    {
-        return converter.convert(String.class, this, null);
-    }
-
-    public String getMimeType()
-    {
-        return mimeType;
-    }
+    /**
+     * Returns the list of the attributes the values of which will be used in the view refresh
+     * operation.
+     * @see #getViewableObjects(refreshAttributes)
+     */
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception;
+    /**
+     * Returns the list of the viewable objects contained by this node
+     */
+    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes)
+            throws Exception;
 }

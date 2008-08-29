@@ -73,6 +73,7 @@ public class NodeAttributeImpl
     private ParentAttributeValueHandler valueHandler;
     
     private boolean initialized = false;
+    private boolean fireEvents = true;
 
     public NodeAttributeImpl()
     {
@@ -136,6 +137,10 @@ public class NodeAttributeImpl
     public void setRequired(boolean required)
     {
         this.required = required;
+    }
+
+    public void setFireEvents(boolean fireEvents) {
+        this.fireEvents = fireEvents;
     }
 
     public <T> T getRealValue()
@@ -398,12 +403,14 @@ public class NodeAttributeImpl
 
     public void valueChanged(Object oldValue, Object newValue)
     {
-        owner.fireAttributeValueChanged(this, oldValue, newValue);
+        if (fireEvents)
+            owner.fireAttributeValueChanged(this, oldValue, newValue);
     }
 
     public void expressionInvalidated(Object oldValue)
     {
-        owner.fireAttributeValueChanged(this, oldValue, null);
+        if (fireEvents)
+            owner.fireAttributeValueChanged(this, oldValue, null);
     }
 
     public String getPath() 

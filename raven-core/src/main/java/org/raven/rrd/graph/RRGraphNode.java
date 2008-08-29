@@ -21,18 +21,26 @@ import org.raven.ImageFormat;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.jrobin.core.Util;
 import org.jrobin.graph.RrdGraph;
 import org.jrobin.graph.RrdGraphDef;
-import org.raven.DynamicImageNode;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.expr.impl.IfNode;
 import org.raven.rrd.data.RRDNode;
 import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
+import org.raven.tree.Viewable;
+import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.NodeAttributeImpl;
+import org.raven.tree.impl.ViewableObjectImpl;
 import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
 
@@ -42,9 +50,9 @@ import org.weda.annotations.constraints.NotNull;
  */
 @NodeClass(childNodes=IfNode.class)
 @Description("Plots the graph using RRDataSource nodes as data sources")
-public class RRGraphNode extends BaseNode implements DynamicImageNode
+public class RRGraphNode extends BaseNode implements Viewable
 {
-    public final static String SARTTIME_ATTRIBUTE = "startTime";
+    public final static String STARTIME_ATTRIBUTE = "startTime";
     public final static String ENDTIME_ATTRIBUTE = "endTime";
     public final static String TITLE_ATTRIBUTE = "title";
     public final static String HEIGHT_ATTRIBUTE = "height";
@@ -97,21 +105,53 @@ public class RRGraphNode extends BaseNode implements DynamicImageNode
     @Parameter 
     @Description("Sets the 10**unitsExponent scaling of the y-axis values")
     private Integer unitsExponent;
-    
-    public InputStream render()
+
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
     {
-        return render(null, null);
+        if (getStatus()!=Status.STARTED)
+            return null;
+
+        String attrDesc = 
+                descriptorRegistry.getPropertyDescriptor(this.getClass(), STARTIME_ATTRIBUTE)
+                .getDescription();
+        int id=1;
+        NodeAttributeImpl startTimeAttr = new NodeAttributeImpl(
+                STARTIME_ATTRIBUTE, String.class, startTime, attrDesc);
+        startTimeAttr.setId(id++);
+        startTimeAttr.setOwner(this);
+        startTimeAttr.setFireEvents(false);
+        startTimeAttr.setValue(startTime);
+        startTimeAttr.init();
+
+        attrDesc = 
+                descriptorRegistry.getPropertyDescriptor(this.getClass(), ENDTIME_ATTRIBUTE)
+                .getDescription();
+        NodeAttributeImpl endTimeAttr = new NodeAttributeImpl(
+                ENDTIME_ATTRIBUTE, String.class, endTime, attrDesc);
+        endTimeAttr.setId(id++);
+        endTimeAttr.setOwner(this);
+        endTimeAttr.setFireEvents(false);
+        endTimeAttr.setValue(endTime);
+        endTimeAttr.init();
+        
+        Map<String, NodeAttribute> attrs = new HashMap<String, NodeAttribute>();
+        attrs.put(startTimeAttr.getName(), startTimeAttr);
+        attrs.put(endTimeAttr.getName(), endTimeAttr);
+
+        return attrs;
     }
-    
-    public InputStream render(String startTime, String endTime)
+
+    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes)
     {
+        if (Status.STARTED!=getStatus())
+            return null;
+        
+        String startTime = refreshAttributes.get(STARTIME_ATTRIBUTE).getRealValue();
+        String endTime = refreshAttributes.get(ENDTIME_ATTRIBUTE).getRealValue();
         try
         {
-            if (getStatus()!=Status.STARTED)
-                throw new NodeError("Node not started");
-            
             GraphDef def = createGraphDef(startTime, endTime);
-            
+
             for (int i=0; i<def.rrdNodes.size(); ++i)
             {
                 RRDNode rrd = def.rrdNodes.get(i);
@@ -123,25 +163,30 @@ public class RRGraphNode extends BaseNode implements DynamicImageNode
                             String.format("Error lock rrd (%s) node for read.", rrd.getPath()));
                 }
             }
-            
+
             try
             {
                 RrdGraph graph = new RrdGraph(def.graphDef);
-                return new ByteArrayInputStream(graph.getRrdGraphInfo().getBytes());
+                ViewableObject viewableObject = 
+                        new ViewableObjectImpl(
+                            imageFormat.getMimeType()
+                            , new ByteArrayInputStream(graph.getRrdGraphInfo().getBytes()));
+                return Arrays.asList(viewableObject);
             }
             finally
             {
                 for (RRDNode rrd: def.rrdNodes)
                     rrd.getReadLock().unlock();
             }
-        } 
+        }
         catch (Exception ex)
         {
             throw new NodeError(
                     String.format("Error generating graph (%s)", getPath()), ex);
         }
+        
     }
-
+    
     public String getEndTime()
     {
         return endTime;
@@ -220,12 +265,6 @@ public class RRGraphNode extends BaseNode implements DynamicImageNode
         if (unitsExponent!=null)
             gdef.setUnitsExponent(unitsExponent);
 
-//        String strt = this.startTime;
-//        if (startTime==null && strt==null)
-//            throw new NodeError("startTime attribute must be seted");
-//        if (endTime==null && this.endTime==null)
-//            throw new NodeError("endTime attribute must be seted");
-
         String start = startTime==null? this.startTime==null? "end-1d" : this.startTime : startTime;
         String end = endTime==null? this.endTime==null? "now" : this.endTime : endTime;
 
@@ -234,70 +273,74 @@ public class RRGraphNode extends BaseNode implements DynamicImageNode
         gdef.setStartTime(timeInterval[0]);
         gdef.setEndTime(timeInterval[1]);
 
-        for (Node node: getSortedChildrens())
+        Collection<Node> gElements = getEffectiveChildrens();
+        if (gElements!=null)
         {
-            if (node.getStatus()!=Status.STARTED)
-                continue;
+            for (Node node: gElements)
+            {
+                if (node.getStatus()!=Status.STARTED)
+                    continue;
 
-            if (node instanceof RRDef)
-            {
-                RRDef def = (RRDef) node;
-                RRDNode rrd = (RRDNode) def.getDataSource().getParent();
-                graphDef.rrdNodes.add(rrd);
-                gdef.datasource(
-                        def.getName(), rrd.getDatabaseFileName()
-                        , def.getDataSource().getName()
-                        , def.getConsolidationFunction().asString());
-            } 
-            else if (node instanceof RRCDef)
-            {
-                RRCDef cdef = (RRCDef) node;
-                gdef.datasource(cdef.getName(), cdef.getExpression());
-            }
-            else if (node instanceof RRLine)
-            {
-                RRLine line = (RRLine) node;
-                if (line.getDataDefinition().getStatus()==Status.STARTED)
-                    gdef.line(
-                            line.getDataDefinition().getName(), line.getColor().getColor()
-                            , line.getLegend(), line.getWidth());
-            }
-            else if (node instanceof RRStack)
-            {
-                RRStack stack = (RRStack) node;
-                if (stack.getDataDefinition().getStatus()==Status.STARTED)
-                    gdef.stack(
-                            stack.getDataDefinition().getName(), stack.getColor().getColor()
-                            , stack.getLegend());
-            }
-            else if (node instanceof RRArea)
-            {
-                RRArea area = (RRArea) node;
-                if (area.getDataDefinition().getStatus()==Status.STARTED)
-                    gdef.area(
-                            area.getDataDefinition().getName(), area.getColor().getColor()
-                            , area.getLegend());
-            }
-            else if (node instanceof RRComment)
-            {
-                RRComment comment = (RRComment) node;
-                gdef.comment(comment.getComment());
-            }
-            else if (node instanceof RRGPrint)
-            {
-                RRGPrint gprint = (RRGPrint) node;
-                if (gprint.getDataDefinition().getStatus()==Status.STARTED)
-                    gdef.gprint(
-                            gprint.getDataDefinition().getName()
-                            , gprint.getConsolidationFunction().asString()
-                            , gprint.getFormat());
-            }
-            else if (node instanceof RRHRule)
-            {
-                RRHRule hrule = (RRHRule) node;
-                gdef.hrule(
-                        hrule.getValue(), hrule.getColor().getColor(), hrule.getLegend()
-                        , hrule.getWidth());
+                if (node instanceof RRDef)
+                {
+                    RRDef def = (RRDef) node;
+                    RRDNode rrd = (RRDNode) def.getDataSource().getParent();
+                    graphDef.rrdNodes.add(rrd);
+                    gdef.datasource(
+                            def.getName(), rrd.getDatabaseFileName()
+                            , def.getDataSource().getName()
+                            , def.getConsolidationFunction().asString());
+                }
+                else if (node instanceof RRCDef)
+                {
+                    RRCDef cdef = (RRCDef) node;
+                    gdef.datasource(cdef.getName(), cdef.getExpression());
+                }
+                else if (node instanceof RRLine)
+                {
+                    RRLine line = (RRLine) node;
+                    if (line.getDataDefinition().getStatus()==Status.STARTED)
+                        gdef.line(
+                                line.getDataDefinition().getName(), line.getColor().getColor()
+                                , line.getLegend(), line.getWidth());
+                }
+                else if (node instanceof RRStack)
+                {
+                    RRStack stack = (RRStack) node;
+                    if (stack.getDataDefinition().getStatus()==Status.STARTED)
+                        gdef.stack(
+                                stack.getDataDefinition().getName(), stack.getColor().getColor()
+                                , stack.getLegend());
+                }
+                else if (node instanceof RRArea)
+                {
+                    RRArea area = (RRArea) node;
+                    if (area.getDataDefinition().getStatus()==Status.STARTED)
+                        gdef.area(
+                                area.getDataDefinition().getName(), area.getColor().getColor()
+                                , area.getLegend());
+                }
+                else if (node instanceof RRComment)
+                {
+                    RRComment comment = (RRComment) node;
+                    gdef.comment(comment.getComment());
+                }
+                else if (node instanceof RRGPrint)
+                {
+                    RRGPrint gprint = (RRGPrint) node;
+                    if (gprint.getDataDefinition().getStatus()==Status.STARTED)
+                        gdef.gprint(
+                                gprint.getDataDefinition().getName()
+                                , gprint.getConsolidationFunction().asString()
+                                , gprint.getFormat());
+                }
+                else if (node instanceof RRHRule)
+                {
+                    RRHRule hrule = (RRHRule) node;
+                    gdef.hrule(
+                            hrule.getValue(), hrule.getColor().getColor(), hrule.getLegend()
+                            , hrule.getWidth());
+                }
             }
         }
         return graphDef;

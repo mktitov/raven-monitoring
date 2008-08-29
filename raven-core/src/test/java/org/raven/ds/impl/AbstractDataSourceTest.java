@@ -22,6 +22,7 @@ import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.ds.impl.objects.TestDataConsumer;
 import org.raven.ds.impl.objects.TestDataSource;
+import org.raven.tree.NodeAttribute;
 
 /**
  *
@@ -39,6 +40,10 @@ public class AbstractDataSourceTest extends RavenCoreTestCase
         configurator.getTreeStore().saveNode(dataSource);
         
         dataSource.init();
+
+        NodeAttribute attr = dataSource.getNodeAttribute("taskCount");
+        assertNotNull(attr);
+        assertTrue(attr.isReadonly());
         
         TestDataConsumer dataConsumer = new TestDataConsumer();
         dataConsumer.setName("consumer");

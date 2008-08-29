@@ -19,6 +19,9 @@ package org.raven.rrd.graph;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.IOUtils;
 import org.jrobin.core.Util;
@@ -33,6 +36,7 @@ import org.raven.rrd.data.RRDataSource;
 import org.raven.rrd.objects.TestDataSource;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.ViewableObject;
 
 /**
  *
@@ -75,7 +79,7 @@ public class RRGraphNodeTest extends RavenCoreTestCase
         
         RRGraphNode graph = createGraphNode(rrds, rrds2);
         long start = Util.getTime()-1;
-        graph.getNodeAttribute(RRGraphNode.SARTTIME_ATTRIBUTE).setValue(""+start);
+        graph.getNodeAttribute(RRGraphNode.STARTIME_ATTRIBUTE).setValue(""+start);
       
         rrd.start();
         assertEquals(Status.STARTED, rrd.getStatus());
@@ -87,12 +91,16 @@ public class RRGraphNodeTest extends RavenCoreTestCase
         
         File file1 = new File("target/g1.png");
         File file2 = new File("target/g2.png");
-                
-        IOUtils.copy(graph.render(null, null), new FileOutputStream(file1));
+
+        Map<String, NodeAttribute> attrs = graph.getRefreshAttributes();
+        List<ViewableObject> objects = graph.getViewableObjects(attrs);
+        assertNotNull(objects);
+        assertEquals(1, objects.size());
+        IOUtils.copy((InputStream)objects.get(0).getData(), new FileOutputStream(file1));
         
         TimeUnit.SECONDS.sleep(5);
         
-        IOUtils.copy(graph.render(null, null), new FileOutputStream(file2));
+        IOUtils.copy((InputStream)objects.get(0).getData(), new FileOutputStream(file1));
     }
 
     private RRGraphNode createGraphNode(RRDataSource rrds, RRDataSource rrds2) throws Exception
