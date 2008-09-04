@@ -43,7 +43,8 @@ public class TestDataSource extends BaseNode implements DataSource
         super(name);
     }
     
-    public void getDataImmediate(DataConsumer dataConsumer)
+    public void getDataImmediate(
+            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
     {
         Table table = createTable();
         

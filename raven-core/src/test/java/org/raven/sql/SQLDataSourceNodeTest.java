@@ -65,14 +65,14 @@ public class SQLDataSourceNodeTest extends RavenCoreTestCase
         dataConsumer.start();
         assertEquals(Status.STARTED, dataConsumer.getStatus());
 
-        Object data = dataConsumer.refereshData();
+        Object data = dataConsumer.refereshData(null);
         assertNotNull(data);
         assertTrue(data instanceof ResultSet);
 
         attr.setValue(SQLDataSourceNode.ResultType.SINGLE.toString());
         attr.save();
 
-        data = dataConsumer.refereshData();
+        data = dataConsumer.refereshData(null);
         assertNotNull(data);
         assertTrue(data instanceof Number);
     }

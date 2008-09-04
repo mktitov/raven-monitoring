@@ -17,7 +17,9 @@
 
 package org.raven.ds;
 
+import java.util.Collection;
 import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
 
 /**
  * The node that recieves data from the one or more {@link DataSource data sources}
@@ -34,5 +36,5 @@ public interface DataConsumer extends Node
     /**
      * Refreshes data.
      */
-    public Object refereshData();
+    public Object refereshData(Collection<NodeAttribute> sessionAttributes);
 }

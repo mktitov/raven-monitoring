@@ -161,9 +161,10 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
     }
 
     @Override
-    public void getDataImmediate(DataConsumer dataConsumer)
+    public void getDataImmediate(
+            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
     {
-        super.getDataImmediate(dataConsumer);
+        super.getDataImmediate(dataConsumer, sessionAttributes);
     }
 
     public void configure()
@@ -177,7 +178,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
                 needTableForConfiguration = true;
                 try
                 {
-                    getDataSource().getDataImmediate(this);
+                    getDataSource().getDataImmediate(this, null);
                 } finally
                 {
                     needTableForConfiguration = false;
@@ -295,7 +296,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
         needTableForConfiguration = true;
         table = null;
         try{
-            getDataSource().getDataImmediate(this);
+            getDataSource().getDataImmediate(this, null);
         }finally{
             needTableForConfiguration = false;
         }

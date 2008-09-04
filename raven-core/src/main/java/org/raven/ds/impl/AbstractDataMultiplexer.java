@@ -61,7 +61,7 @@ public abstract class AbstractDataMultiplexer<T, R> extends DataPipeImpl
                         && Status.STARTED==child.getStatus())
                     {
                         DataConsumer dataConsumer = (DataConsumer)child;
-                        Object secData = dataConsumer.refereshData();
+                        Object secData = dataConsumer.refereshData(null);
                         if (secData!=null)
                         {
                             if (!(dataType.isAssignableFrom(secData.getClass())))

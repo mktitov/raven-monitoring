@@ -71,7 +71,7 @@ public class TableMultiplexerNodeTest extends RavenCoreTestCase
         tableConsumer.start();
         assertEquals(Status.STARTED, tableConsumer.getStatus());
         
-        Object tabObj = tableConsumer.refereshData();
+        Object tabObj = tableConsumer.refereshData(null);
         assertNotNull(tabObj);
         assertTrue(tabObj instanceof Table);
         Table table = (Table) tabObj;

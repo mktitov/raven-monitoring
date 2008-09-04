@@ -19,6 +19,8 @@ package org.raven.ds.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -82,9 +84,19 @@ public abstract class AbstractDataSource
         fillConsumerAttributes(consumerAttributes);
     }
 
-    public void getDataImmediate(DataConsumer dataConsumer)
+    public void getDataImmediate(
+            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
     {
-        if (!checkDataConsumer(dataConsumer))
+        Map<String, NodeAttribute> attributes = new HashMap<String, NodeAttribute>();
+        Collection<NodeAttribute> nodeAttributes = dataConsumer.getNodeAttributes();
+        if (nodeAttributes!=null)
+            for (NodeAttribute attr: nodeAttributes)
+                attributes.put(attr.getName(), attr);
+        if (sessionAttributes!=null)
+            for (NodeAttribute attr: sessionAttributes)
+                attributes.put(attr.getName(), attr);
+
+        if (!checkDataConsumer(dataConsumer, attributes))
         {
             if (logger.isDebugEnabled())
                 logger.debug(String.format(
@@ -258,10 +270,11 @@ public abstract class AbstractDataSource
         }
     }
     
-    protected boolean checkDataConsumer(DataConsumer consumer)
+    protected boolean checkDataConsumer(
+            DataConsumer consumer, Map<String, NodeAttribute> attributes)
     {
         return  consumer.getStatus()==Status.STARTED 
-                && Helper.checkAttributes(this, consumerAttributes, consumer);
+                && Helper.checkAttributes(this, consumerAttributes, consumer, attributes);
     }
     
     private class Task implements Runnable
@@ -275,7 +288,7 @@ public abstract class AbstractDataSource
 
         public void run()
         {
-            getDataImmediate(dataConsumer);
+            getDataImmediate(dataConsumer, null);
         }
 
         @Override

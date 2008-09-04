@@ -35,7 +35,8 @@ public class TestDataSource3 extends BaseNode implements DataSource
         return false;
     }
 
-    public void getDataImmediate(DataConsumer dataConsumer) {
+    public void getDataImmediate(
+            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes) {
     }
 
     public Collection<NodeAttribute> generateAttributes() 

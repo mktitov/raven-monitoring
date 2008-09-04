@@ -18,6 +18,7 @@
 package org.raven;
 
 import java.util.Collection;
+import java.util.Map;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 
@@ -30,10 +31,11 @@ public class Helper
     private Helper(){}
     
     public static boolean checkAttributes(
-            Node whoCheck, Collection<NodeAttribute> reqAttrs, Node testNode)
+            Node whoCheck, Collection<NodeAttribute> reqAttrs
+            , Node testNode, Map<String, NodeAttribute> testNodeAttributes)
     {
         for (NodeAttribute attr: reqAttrs)
-            if (testNode.getNodeAttribute(attr.getName())==null)
+            if (!testNodeAttributes.containsKey(attr.getName()))
             {
                 whoCheck.getLogger().error(
                         String.format(

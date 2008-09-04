@@ -30,7 +30,8 @@ import org.raven.tree.impl.BaseNode;
  */
 public class TestTableDataSource extends BaseNode implements DataSource
 {
-    public void getDataImmediate(DataConsumer dataConsumer) 
+    public void getDataImmediate(
+            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes) 
     {
         ColumnBasedTable table = new ColumnBasedTable();
         table.addValue("col1", "val_1_1");

@@ -220,7 +220,7 @@ public class SnmpNodeTest extends ServiceTestCase
         
         consumer.start();
         assertEquals(Status.STARTED, consumer.getStatus());
-        snmpNode.getDataImmediate(consumer);
+        snmpNode.getDataImmediate(consumer, null);
         TimeUnit.SECONDS.sleep(3);
         
         snmpNode.stop();

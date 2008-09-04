@@ -17,9 +17,11 @@
 
 package org.raven.table.objects;
 
+import java.util.Collection;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
 import org.raven.table.TableImpl;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
 
 /**
@@ -31,7 +33,7 @@ public class TestTableDataConsumer extends BaseNode implements DataConsumer
     public void setData(DataSource dataSource, Object data) {
     }
 
-    public Object refereshData() 
+    public Object refereshData(Collection<NodeAttribute> sessionAttributes) 
     {
         return new TableImpl(new String[]{"col3", "col4"})
                 .addRow(new Object[]{"val_3_1", "val_4_1"})

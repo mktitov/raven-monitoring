@@ -17,9 +17,11 @@
 
 package org.raven.ds.impl;
 
+import java.util.Collection;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.Description;
@@ -64,11 +66,11 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
     
     protected abstract void doSetData(DataSource dataSource, Object data);
 
-    public Object refereshData() 
+    public Object refereshData(Collection<NodeAttribute> sessionAttributes) 
     {
         if (Status.STARTED==getStatus())
         {
-            dataSource.getDataImmediate(this);
+            dataSource.getDataImmediate(this, sessionAttributes);
             return data;
         }
         else
