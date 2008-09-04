@@ -19,14 +19,14 @@ package org.raven.ui;
 
 public class RowExplorer 
 {
-	private NodeWrapper current = null;
+	//private NodeWrapper current = null;
 	private String rowName = "row";
 //	private String id;
 	
 	public String getRefresh()
 	{
-	    current = (NodeWrapper) SessionBean.getElValue(rowName);
-		return current.getNode().getPath(); 
+	    ViewableObjectWrapper vo = (ViewableObjectWrapper) SessionBean.getElValue(rowName);
+		return vo.getId(); 
 	}
 	
 //	public String toString() { 	return getRefresh(); }

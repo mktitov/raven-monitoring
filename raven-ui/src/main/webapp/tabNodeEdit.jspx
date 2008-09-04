@@ -36,43 +36,78 @@
     <!-- ********************* -->
     <!-- attribute create -->
     <!-- ********************* -->
-    <tr:panelCaptionGroup rendered="#{cNode.allowNodeEdit}" captionText="#{msgs.attributeCreate}" >
+    <tr:panelCaptionGroup 
+    	rendered="#{cNode.allowNodeEdit}" 
+    	captionText="#{msgs.attributeCreate}" >
         <tr:panelFormLayout>
-            <tr:inputText label="#{msgs.name}" value="#{cNode.newAttribute.name}" >
+            <tr:inputText 
+            	label="#{msgs.name}" 
+            	value="#{cNode.newAttribute.name}" >
                 <tr:validateRegExp pattern="#{sBean.nodeNamePattern}"/>
             </tr:inputText>
-            <tr:selectOneChoice label="#{msgs.type}" value="#{cNode.newAttribute.attrClass}" >
+            <tr:selectOneChoice 
+            	label="#{msgs.type}" 
+            	value="#{cNode.newAttribute.attrClass}" >
                 <f:selectItems value="#{cNode.newAttribute.selectItems}" />
             </tr:selectOneChoice>
-            <tr:selectBooleanCheckbox label="#{msgs.required}" value="#{cNode.newAttribute.required}" />
+            <tr:selectBooleanCheckbox 
+            	label="#{msgs.required}" 
+            	value="#{cNode.newAttribute.required}" />
             
-            <tr:inputText columns="90" label="#{msgs.dsc}"  value="#{cNode.newAttribute.description}" ></tr:inputText>
+            <tr:inputText 
+            	columns="90" 
+            	label="#{msgs.dsc}" 
+            	value="#{cNode.newAttribute.description}" ></tr:inputText>
             <!-- 		
             <tr:inputListOfValues  
                 label="#{msgs.type}" value="#{sBean.newNodeType}"
                 action="dialog:chooseType" 
                 windowWidth="500" windowHeight="400"/>
             -->
-            <tr:commandButton text="#{msgs.create}" action="#{cNode.createAttribute}"/>        
+            <tr:commandButton 
+            	text="#{msgs.create}" 
+            	action="#{cNode.createAttribute}"/>        
         </tr:panelFormLayout>
     </tr:panelCaptionGroup>    
     
     <!-- ********************* -->
     <!-- existing attributes -->
     <!-- ********************* -->
-    <tr:panelCaptionGroup rendered="#{cNode.allowNodeEdit}"  captionText="#{msgs.nodeAttributes}"  >
-        <tr:message binding="#{cNodeAttrs.message}" for="attrs" messageType="error" />
-        <tr:table allDetailsEnabled="true" binding="#{cNodeAttrs.table}" 
-             width="90%" rowSelection="multiple" summary="Nodes" value="#{cNode.attributes}" 
-             var="row" rows="20" id="attrs" partialTriggers="subtypes">
-            
-            <tr:column headerText="*" shortDesc="#{msgs.dscEnableRenameAttr}" >
-                <tr:selectBooleanCheckbox onclick="submit();" shortDesc="#{msgs.dscEnableRenameAttr}" value="#{row.edit}" rendered="#{row.allowDelete}"></tr:selectBooleanCheckbox>
+    <tr:panelCaptionGroup 
+    	rendered="#{cNode.allowNodeEdit}"  
+    	captionText="#{msgs.nodeAttributes}"  >
+        <tr:message 
+        	binding="#{cNodeAttrs.message}" 
+        	for="attrs" 
+        	messageType="error" />
+<!-- attributes table -->
+        <tr:table 
+        	allDetailsEnabled="true" 
+        	binding="#{cNodeAttrs.table}" 
+            width="90%" 
+            rowSelection="multiple" 
+            summary="Nodes" 
+            value="#{cNode.attributes}" 
+            var="row" 
+            rows="12" 
+            id="attrs" 
+            partialTriggers="subtypes">
+<!-- on\off changing dsc and name of attribute -->            
+            <tr:column 
+            	headerText="*" 
+            	shortDesc="#{msgs.dscEnableRenameAttr}" >
+                <tr:selectBooleanCheckbox 
+                	onclick="submit();" 
+                	shortDesc="#{msgs.dscEnableRenameAttr}" 
+                	value="#{row.edit}" 
+                	rendered="#{row.allowDelete}"/>
             </tr:column>
 <!-- name of attribute-->            
             <tr:column headerText="#{msgs.name}">
 				<tr:panelHorizontalLayout>
-                <tr:outputText rendered="#{!row.edit and !row.attribute.required}" value="#{row.name}"/>
+                <tr:outputText 
+                	rendered="#{!row.edit and !row.attribute.required}" 
+                	value="#{row.name}"/>
                 <tr:outputFormatted 
                 		rendered="#{!row.edit and row.attribute.required}"
 						inlineStyle="font-weight: bold;" 
@@ -82,13 +117,23 @@
                 		rendered="#{!row.edit and row.attribute.required and (row.attribute.value == null) }"
                 		value=" *"/>
 			
-                <tr:inputText columns="8" rendered="#{row.edit}" required="true" value="#{row.name}"/>
+                <tr:inputText 
+                	columns="8" 
+                	rendered="#{row.edit}" 
+                	required="true" 
+                	value="#{row.name}"/>
 				</tr:panelHorizontalLayout>
             </tr:column>
 <!-- value of attribute-->
             <tr:column headerText="#{msgs.value}">
-                <tr:inputText readOnly="#{row.expressionSupported}" rendered="#{row.expressionSupported or (row.selectItems == null)}" value="#{row.value}" columns="30" />
-                <tr:selectOneChoice rendered="#{!row.expressionSupported and !(row.selectItems == null)}" value="#{row.value}" >
+                <tr:inputText 
+                	readOnly="#{row.expressionSupported}" 
+                	rendered="#{row.expressionSupported or (row.selectItems == null)}" 
+                	value="#{row.value}" 
+                	columns="30" />
+                <tr:selectOneChoice 
+                	rendered="#{!row.expressionSupported and !(row.selectItems == null)}" 
+                	value="#{row.value}" >
                     <f:selectItems value="#{row.selectItems}" />
                 </tr:selectOneChoice>
             </tr:column>
@@ -119,7 +164,9 @@
             <f:facet name="detailStamp">
                 <tr:panelGroupLayout layout="vertical"  >
 				<tr:panelCaptionGroup captionText="#{msgs.dsc}">
-	                <tr:outputText rendered="#{!row.edit}" value="#{row.description}"/>
+	                <tr:outputText 
+	                	rendered="#{!row.edit}" 
+	                	value="#{row.description}"/>
     	            <tr:inputText 
     	            	columns="60"  rows="2"
     	            	rendered="#{row.edit}"  
@@ -134,17 +181,20 @@
 					windowWidth="300" windowHeight="300"
 					columns="40" label="#{msgs.expression}"
 				>
-					<f:attribute name="#{editExpression.paramName}" value="#{row}" />
+					<f:attribute 
+						name="#{editExpression.paramName}" 
+						value="#{row}" />
 				</tr:inputListOfValues>
 
-				<tr:inputListOfValues rendered="#{row.enableSelectNodeDialog}"
-						value="#{row.expression}"
-						returnListener="#{row.selectNodeHandleReturn}" 
-						action="dialog:selectNode"
-						actionListener="#{row.setNode}"
-						immediate="true" 
-						windowWidth="500" windowHeight="400"
-						columns="40" label="#{msgs.node}"
+				<tr:inputListOfValues 
+					rendered="#{row.enableSelectNodeDialog}"
+					value="#{row.expression}"
+					returnListener="#{row.selectNodeHandleReturn}" 
+					action="dialog:selectNode"
+					actionListener="#{row.setNode}"
+					immediate="true" 
+					windowWidth="500" windowHeight="400"
+					columns="40" label="#{msgs.node}"
 				>
 				</tr:inputListOfValues>
 <!-- 
@@ -166,7 +216,10 @@
 
 				</tr:group>
 --> 				
-	            <tr:selectOneChoice label="#{msgs.expression}" rendered="#{row.expressionSupported and !(row.selectItems == null)}" value="#{row.expression}" >
+	            <tr:selectOneChoice 
+	            	label="#{msgs.expression}" 
+	            	rendered="#{row.expressionSupported and !(row.selectItems == null)}" 
+	            	value="#{row.expression}" >
     	            <f:selectItems value="#{row.selectItems}" />
                 </tr:selectOneChoice>
 				
@@ -184,11 +237,59 @@
             
         </tr:table>
         <tr:panelButtonBar halign="left" >
-            <tr:commandButton shortDesc="#{msgs.dscDelSelAttr}" disabled="#{!cNode.allowNodeEdit}" text="#{msgs.delete}" action="#{cNodeAttrs.deleteAttributes}"  />
+            <tr:commandButton 
+            	shortDesc="#{msgs.dscDelSelAttr}" 
+            	disabled="#{!cNode.allowNodeEdit}" 
+            	text="#{msgs.delete}" 
+            	action="#{cNodeAttrs.deleteAttributes}"  />
             <tr:spacer width="60"></tr:spacer>
-            <tr:commandButton shortDesc="#{msgs.dscSaveAttr}" disabled="#{!cNode.allowNodeEdit}" text="#{msgs.save}" action="#{cNodeAttrs.saveAttributes}"  />
-            <tr:commandButton shortDesc="#{msgs.dscCancelAttr}" disabled="#{!cNode.allowNodeEdit}" text="#{msgs.cancel}" action="#{cNode.cancel}" />
+            <tr:commandButton 
+            	shortDesc="#{msgs.dscSaveAttr}" 
+            	disabled="#{!cNode.allowNodeEdit}" 
+            	text="#{msgs.save}" 
+            	action="#{cNodeAttrs.saveAttributes}"  />
+            <tr:commandButton 
+            	shortDesc="#{msgs.dscCancelAttr}" 
+            	disabled="#{!cNode.allowNodeEdit}" 
+            	text="#{msgs.cancel}" 
+            	action="#{cNode.cancel}" />
         </tr:panelButtonBar>
+    </tr:panelCaptionGroup>
+	
+	<tr:spacer height="20" />
+        
+<!-- ********************* -->
+<!-- read only attributes -->
+<!-- ********************* -->
+    <tr:panelCaptionGroup 
+    	rendered="#{cNode.allowNodeEdit}"  
+    	captionText="#{msgs.readOnlyAttributes}"  >
+<!-- read only attributes table -->
+        <tr:table 
+        	allDetailsEnabled="true" 
+        	width="90%" 
+            rowSelection="none" 
+            summary="RONodes" 
+            value="#{cNode.readOnlyAttributes}" 
+            var="row" 
+            rows="12" 
+            id="roattrs" 
+            partialTriggers="subtypes">
+<!-- name of attribute-->            
+            <tr:column headerText="#{msgs.name}">
+                <tr:outputText value="#{row.name}"/>
+            </tr:column>
+<!-- value of attribute-->
+            <tr:column headerText="#{msgs.value}">
+                <tr:outputText value="#{row.value}" /> 
+            </tr:column>
+<!-- description of attribute in detailStamp -->
+            <f:facet name="detailStamp">
+				<tr:panelCaptionGroup captionText="#{msgs.dsc}">
+	                <tr:outputText value="#{row.description}"/>
+				</tr:panelCaptionGroup>
+            </f:facet>
+        </tr:table>
     </tr:panelCaptionGroup>        
-    
+
 </jsp:root>

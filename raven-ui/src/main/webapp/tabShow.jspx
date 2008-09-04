@@ -30,6 +30,11 @@
 		interval="#{sBean.refreshViewIntevalMS}" 
 		pollListener="#{sBean.pollReloadRightFrame}" />
 
+<tr:poll 
+		id="testPoll" 
+		interval="10000" 
+		 />
+
 <!-- 
 action="#{sBean.reloadRightFrame}"
  -->
@@ -61,22 +66,34 @@ action="#{sBean.reloadRightFrame}"
 partialTriggers=":poolStatus"
  --> 
  <tr:column id="sw_column" align="center">
-  <tr:switcher id="switcher" facetName="#{row.nodeShowType}" defaultFacet="default">
+  <tr:switcher 
+  	id="switcher" 
+  	facetName="#{row.mimeGroup}" 
+  	defaultFacet="default">
   	<f:facet name="default"/>
-  
-	<f:facet name="GraphNode">
-  		<tr:panelGroupLayout layout="vertical" id="pgl_2" >
-		<tr:commandLink text="#{row.nodePath}" actionListener="#{sBean.selectNode}">
-			<f:attribute name="nodePath" value="#{row.nodePath}"></f:attribute>
+
+  	<f:facet name="nodeUrl">
+		<tr:commandLink 
+			text="#{row.nodePath}" 
+			actionListener="#{sBean.selectNode}">
+			<f:attribute 
+				name="nodePath" 
+				value="#{row.nodePath}"/>
 		</tr:commandLink>
+	</f:facet>
+
+  
+	<f:facet name="image">
 		<!-- forceIdIndex="true" forceId="true" id="graph" -->
-	    	<s:graphicImageDynamic 
-	   			forceId="true" forceIdIndex="true"
-      			id="graph_x_list" 
-    	    	imageRendererClass="#{sBean.ravenImageRenderer}" > 
-         		<f:param name="nodePath" value="#{rowExplorer.refresh}"></f:param>
-      		</s:graphicImageDynamic>
-    </tr:panelGroupLayout>
+    	<s:graphicImageDynamic  
+   			forceId="true" forceIdIndex="true"
+   			id="graph_x_list" 
+   	    	imageRendererClass="#{sBean.ravenViewableImageRenderer}" > 
+       		<f:param 
+       			name="ViewableObject" 
+       			value="#{row.id}"/>
+   		</s:graphicImageDynamic>
+<!-- value="#{rowExplorer.refresh}" -->
   </f:facet >
   
 </tr:switcher>

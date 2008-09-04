@@ -21,12 +21,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import javax.faces.event.ActionEvent;
 import org.apache.myfaces.trinidad.component.core.layout.CoreShowDetailItem;
 import org.apache.myfaces.trinidad.event.ReturnEvent;
 import org.raven.conf.impl.AccessControl;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.Viewable;
+import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +45,7 @@ public class NodeWrapper extends AbstractNodeWrapper
     protected Logger logger = LoggerFactory.getLogger(NodeWrapper.class);	
 	private List<NodeAttribute> savedAttrs = null;
 	private List<Attr> editingAttrs = null;
+	private List<NodeAttribute> readOnlyAttributes = null;
 	private NewAttribute newAttribute = null;
 	private CoreShowDetailItem showTab; 
 	private CoreShowDetailItem nodeEditTab; 
@@ -131,12 +135,56 @@ public class NodeWrapper extends AbstractNodeWrapper
 		return childAttrs;
 	}
 */
+	
+	public Map<String,NodeAttribute> getRefreshAttributesMap()
+	{
+		Viewable viewable;
+		if (getNode() instanceof Viewable) viewable = (Viewable) getNode();
+			else return null;
+		
+		SessionBean sb = (SessionBean) SessionBean.getElValue(SessionBean.BEAN_NAME);
+		RefreshAttributesStorage rs = sb.getRefreshAttributesStorage();
+		Map<String,NodeAttribute> ra = rs.get(getNodePath());
+		if(ra!=null) return ra;
+		try {
+			ra = viewable.getRefreshAttributes();
+		} catch (Exception e) {
+			logger.error("on load refresh attributes: ",e);
+			return null;
+		}
+		rs.put(getNodePath(), ra);
+		return ra;
+	}
+	
+	public List<ViewableObjectWrapper> getViewableObjects()
+	{
+		Viewable viewable;
+		List<ViewableObject> vol = null;
+		List<ViewableObjectWrapper> vowl = null;
+		if (getNode() instanceof Viewable) viewable = (Viewable) getNode();
+			else return new ArrayList<ViewableObjectWrapper>();
+		try {
+			 vol = viewable.getViewableObjects(getRefreshAttributesMap());
+		} catch (Exception e) {
+			logger.error("on load viewable objects: ",e);
+		}
+		vowl = new ArrayList<ViewableObjectWrapper>();
+		if(vol!=null)
+			for(ViewableObject vo : vol)
+				vowl.add(new ViewableObjectWrapper(vo));
+		return vowl;
+	}
+	
 	public void  loadAttributes() throws TooManyReferenceValuesException
 	{
 		savedAttrs = getNodeAttributes();
 		editingAttrs = new ArrayList<Attr>();
+		readOnlyAttributes = new ArrayList<NodeAttribute>();
 		for(NodeAttribute na : savedAttrs)
-			editingAttrs.add(new Attr(na));
+		{	
+			if(na.isReadonly()) readOnlyAttributes.add(na);
+			else editingAttrs.add(new Attr(na));
+		}	
 		for(Attr a : editingAttrs)
 			a.findChildren(editingAttrs);
 		//logger.info("loadAttributes()");
@@ -345,7 +393,43 @@ public class NodeWrapper extends AbstractNodeWrapper
 		  return al;
 	  }
 	  
-	  public List<NodeWrapper> getIndexedNodes()
+	  public List<ViewableObjectWrapper> getIndexedNodes()
+	  {
+		  ArrayList<ViewableObjectWrapper> al = new ArrayList<ViewableObjectWrapper>();
+		  Collection<Node> c = getNode().getSortedChildrens();
+		  if(c!=null) 
+		  {
+			  SessionBean sb = (SessionBean) SessionBean.getElValue(SessionBean.BEAN_NAME);
+			  ViewableObjectsStorage vos = sb.getViewableObjectsStorage();
+			  ArrayList<Node> aln = new ArrayList<Node>();
+			  aln.addAll(c);
+			  if (getNode() instanceof Viewable) {
+				  aln.add(0, getNode() );
+			}
+			  
+			  Iterator<Node> it = aln.iterator();
+			  while(it.hasNext())
+			  {
+				  Node n = it.next();
+				  if(getUserAcl().getAccessForNode(n) <= AccessControl.TRANSIT) continue;
+				  NodeWrapper nw = new NodeWrapper();
+				  nw.setNode(n);
+				  List<ViewableObjectWrapper> lst = nw.getViewableObjects();
+				  if(lst==null || lst.isEmpty()) continue;
+				  al.add(new ViewableObjectWrapper(nw.getNode()));
+				  al.addAll(lst);
+				  for(ViewableObjectWrapper wr : lst)
+				  {
+					  if(wr.isImage()) 
+						  vos.put(wr);
+				  }
+			  }	  
+		  }
+		  return al;
+	  }
+
+/*
+ * 	  public List<NodeWrapper> getIndexedNodes()
 	  {
 		  ArrayList<NodeWrapper> al = new ArrayList<NodeWrapper>();
 		  if(getNodeShowType()!=null) al.add(this);
@@ -362,11 +446,16 @@ public class NodeWrapper extends AbstractNodeWrapper
 				  if(getUserAcl().getAccessForNode(n) <= AccessControl.TRANSIT) continue;
 				  NodeWrapper nw = new NodeWrapper();
 				  nw.setNode(n);
+				  List<ViewableObjectWrapper> lst = nw.getViewableObjects();
+				  if(lst==null || lst.isEmpty()) continue;
 				  if(nw.getNodeShowType()!=null) al.add(nw);
 			  }	  
 		  }
 		  return al;
 	  }
+	  
+ * 
+ */
 	  
 	  public String getNodeShowType()
 	  {
@@ -421,6 +510,16 @@ public class NodeWrapper extends AbstractNodeWrapper
 
 	public boolean isHasUnsavedChanges() {
 		return hasUnsavedChanges;
+	}
+
+	public List<NodeAttribute> getReadOnlyAttributes() throws TooManyReferenceValuesException 
+	{
+		if(readOnlyAttributes==null) loadAttributes();
+		return readOnlyAttributes;
+	}
+
+	public void setReadOnlyAttributes(List<NodeAttribute> readOnlyAttributes) {
+		this.readOnlyAttributes = readOnlyAttributes;
 	}
 
 }

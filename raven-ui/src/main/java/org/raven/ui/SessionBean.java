@@ -72,6 +72,8 @@ public class SessionBean
 	private CoreTree coreTree = null;
 //	private TemplateNode templateNode = null; 
 	private NewNodeFromTemplate template;
+	private RefreshAttributesStorage refreshAttributesStorage;
+	private ViewableObjectsStorage viewableObjectsStorage;
 	
 	//public String getSelectNodeParam() { return SELECT_NODE_PARAM; }
 	
@@ -109,6 +111,8 @@ public class SessionBean
 		
 		CopyMoveNodeBean cmnb = (CopyMoveNodeBean) getElValue(CopyMoveNodeBean.BEAN_NAME);
 		cmnb.getTreeModel().toString();
+		setRefreshAttributesStorage(new RefreshAttributesStorage());
+		setViewableObjectsStorage(new ViewableObjectsStorage());
 	}
 
 	public void reloadLeftFrame()
@@ -334,6 +338,11 @@ public class SessionBean
 		return "ok";
 	}
 
+	public static SessionBean getInstance()
+	{
+		return (SessionBean) SessionBean.getElValue(BEAN_NAME);
+	}
+	
 	public int deleteNode(NodeWrapper node)
 	{
 		return deleteNode(node.getNode());
@@ -380,6 +389,9 @@ public class SessionBean
 	
 	@SuppressWarnings("unchecked")
 	public Class getRavenImageRenderer() { return RavenImageRenderer.class; }
+
+	@SuppressWarnings("unchecked")
+	public Class getRavenViewableImageRenderer() { return RavenViewableImageRenderer.class; }
 	
 	public void setNewNodeType(String o) { newNodeType = o; }
 	public String getNewNodeType() { return newNodeType; }
@@ -412,6 +424,22 @@ public class SessionBean
 
 	public int getRefreshViewIntevalMS() {
 		return refreshViewInteval*1000;
+	}
+
+	public void setRefreshAttributesStorage(RefreshAttributesStorage refreshAttributesStorage) {
+		this.refreshAttributesStorage = refreshAttributesStorage;
+	}
+
+	public RefreshAttributesStorage getRefreshAttributesStorage() {
+		return refreshAttributesStorage;
+	}
+
+	public void setViewableObjectsStorage(ViewableObjectsStorage viewableObjectsStorage) {
+		this.viewableObjectsStorage = viewableObjectsStorage;
+	}
+
+	public ViewableObjectsStorage getViewableObjectsStorage() {
+		return viewableObjectsStorage;
 	}
 	
 }

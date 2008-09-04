@@ -21,10 +21,17 @@
     <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>          
 <!-- binding="#{cNodeAttrs.table}" -->    
 
-        <tr:table allDetailsEnabled="true" rowBandingInterval="1"
-        	 rendered="#{cNode.useChildAttributesView and row.hasChildren}"  
-             width="90%" summary="Nodes" value="#{row.childAttributes}" 
-             var="rowz" rows="20" id="attrsz" partialTriggers="subtypes">
+        <tr:table 
+        	allDetailsEnabled="true" 
+        	rowBandingInterval="1"
+        	rendered="#{cNode.useChildAttributesView and row.hasChildren}"  
+            width="90%" 
+            summary="Nodes" 
+            value="#{row.childAttributes}" 
+            var="rowz" 
+            rows="12" 
+            id="attrsz" 
+            partialTriggers="subtypes">
 
 <!-- name of attribute-->            
             <tr:column headerText="#{msgs.name}">
