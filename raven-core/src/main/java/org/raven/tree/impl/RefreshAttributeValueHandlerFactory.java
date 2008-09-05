@@ -15,30 +15,28 @@
  *  under the License.
  */
 
-package org.raven.ds.impl.objects;
+package org.raven.tree.impl;
 
-import java.util.Collection;
-import java.util.Map;
-import org.raven.ds.DataConsumer;
-import org.raven.ds.impl.AbstractDataSource;
+import org.raven.tree.AttributeValueHandler;
+import org.raven.tree.AttributeValueHandlerFactory;
 import org.raven.tree.NodeAttribute;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class TestDataSource extends AbstractDataSource
+public class RefreshAttributeValueHandlerFactory implements AttributeValueHandlerFactory
 {
-    @Override
-    public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
+    public final static String TYPE = "RefreshAttribute";
+
+    public AttributeValueHandler createValueHandler(NodeAttribute attribute)
     {
+        return null;
     }
 
-    @Override
-    public void gatherDataForConsumer(
-            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
+    public String getName()
     {
-        dataConsumer.setData(this, null);
+        return "Refresh attribute";
     }
-    
+
 }

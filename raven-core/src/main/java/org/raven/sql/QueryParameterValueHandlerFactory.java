@@ -15,37 +15,27 @@
  *  under the License.
  */
 
-package org.raven.rrd.objects;
+package org.raven.sql;
 
-import java.util.Collection;
-import java.util.Map;
-import org.raven.ds.DataConsumer;
-import org.raven.ds.impl.AbstractDataSource;
+import org.raven.tree.AttributeValueHandler;
+import org.raven.tree.AttributeValueHandlerFactory;
 import org.raven.tree.NodeAttribute;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class TestDataSource extends AbstractDataSource
+public class QueryParameterValueHandlerFactory implements AttributeValueHandlerFactory
 {
-    private double value = 1.;
-    private double value2 = 100.;
+    public final static String TYPE = "QueryParameter";
     
-    @Override
-    public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
+    public AttributeValueHandler createValueHandler(NodeAttribute attribute)
     {
+        return null;
     }
 
-    @Override
-    public void gatherDataForConsumer(
-            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
+    public String getName()
     {
-        if (dataConsumer.getName().equals("ds"))
-            dataConsumer.setData(this, value++);
-        else
-            dataConsumer.setData(this, value2--);
-        System.out.println(">>>value"+value);
+        return "Query parameter";
     }
-    
 }

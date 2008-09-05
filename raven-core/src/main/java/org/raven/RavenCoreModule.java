@@ -43,6 +43,7 @@ import org.raven.impl.StringToAttributeReferenceConverter;
 import org.raven.impl.StringToClassConverter;
 import org.raven.impl.StringToNodeConverter;
 import org.raven.impl.StringToTemplateVariableConverter;
+import org.raven.sql.QueryParameterValueHandlerFactory;
 import org.raven.template.TemplateVariable;
 import org.raven.template.TemplateVariableReferenceValues;
 import org.raven.template.TemplateVariableValueHandlerFactory;
@@ -56,6 +57,7 @@ import org.raven.tree.impl.AttributeReferenceValueHandlerFactory;
 import org.raven.tree.impl.AttributeValueHandlerRegistryImpl;
 import org.raven.tree.impl.NodePathResolverImpl;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
+import org.raven.tree.impl.RefreshAttributeValueHandlerFactory;
 import org.raven.tree.impl.TreeImpl;
 import org.raven.tree.store.impl.H2TreeStore;
 import org.weda.internal.services.ResourceProvider;
@@ -155,6 +157,12 @@ public class RavenCoreModule
         conf.add(
             ExpressionAttributeValueHandlerFactory.TYPE
             , new ExpressionAttributeValueHandlerFactory());
+        conf.add(
+            QueryParameterValueHandlerFactory.TYPE
+            , new QueryParameterValueHandlerFactory());
+        conf.add(
+            RefreshAttributeValueHandlerFactory.TYPE
+            , new RefreshAttributeValueHandlerFactory());
     }
     
     public static void contributeAttributeReferenceValues(

@@ -106,7 +106,7 @@ public abstract class AbstractDataSource
         }
         try
         {
-            gatherDataForConsumer(dataConsumer);
+            gatherDataForConsumer(dataConsumer, attributes);
         }
         catch (Exception e)
         {
@@ -115,7 +115,8 @@ public abstract class AbstractDataSource
         }
     }
 
-    public abstract void gatherDataForConsumer(DataConsumer dataConsumer) throws Exception;
+    public abstract void gatherDataForConsumer(
+            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception;
     
     /**
      * Use this method to add attributes that consumers must have and set. The filled collection

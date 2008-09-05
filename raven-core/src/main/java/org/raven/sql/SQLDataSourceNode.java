@@ -20,6 +20,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Collection;
+import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.dbcp.ConnectionPool;
@@ -29,7 +30,9 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.DataSourcesNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
+import org.raven.tree.impl.RefreshAttributeValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.beans.ObjectUtils;
 import org.weda.internal.annotations.Message;
 
 /**
@@ -68,18 +71,27 @@ public class SQLDataSourceNode extends AbstractDataSource {
     }
 
     @Override
-    public void gatherDataForConsumer(DataConsumer dataConsumer) throws Exception
+    public void gatherDataForConsumer(
+            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
     {
         Connection connection = getConnection(dataConsumer);
         if (connection==null)
             return;
         try
         {
-            String query = dataConsumer.getNodeAttribute(QUERY_ATTRIBUTE).getValue();
-            ResultType resultType =
-                    dataConsumer.getNodeAttribute(RESULT_TYPE_ATTRIBUTE).getRealValue();
-            Statement st = connection.createStatement();
-            ResultSet rs = st.executeQuery(query);
+            String query = attributes.get(QUERY_ATTRIBUTE).getValue();
+            ResultType resultType = attributes.get(RESULT_TYPE_ATTRIBUTE).getRealValue();
+            NamedParameterStatement st = new NamedParameterStatement(connection, query);
+            if (attributes!=null)
+                for (NodeAttribute attr: attributes.values())
+                    if (ObjectUtils.in(
+                            attr.getValueHandlerType()
+                            , RefreshAttributeValueHandlerFactory.TYPE
+                            , QueryParameterValueHandlerFactory.TYPE))
+                    {
+                        st.setObject(attr.getName(), attr.getRealValue());
+                    }
+            ResultSet rs = st.executeQuery();
             try{
                 Object result = null;
                 if (resultType==ResultType.SINGLE)

@@ -18,6 +18,10 @@
 package org.raven.sql;
 
 import java.sql.ResultSet;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.conf.Config;
@@ -29,6 +33,8 @@ import org.raven.sql.objects.SqlDataConsumer;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.DataSourcesNode;
+import org.raven.tree.impl.NodeAttributeImpl;
+import org.raven.tree.impl.RefreshAttributeValueHandlerFactory;
 import org.raven.tree.impl.SystemNode;
 
 /**
@@ -75,6 +81,82 @@ public class SQLDataSourceNodeTest extends RavenCoreTestCase
         data = dataConsumer.refereshData(null);
         assertNotNull(data);
         assertTrue(data instanceof Number);
+    }
+
+    @Test
+    public void queryParameterTest() throws Exception
+    {
+        createNodes();
+
+        NodeAttribute taskCountAttr = sqlds.getNodeAttribute("taskCount");
+        assertNotNull(taskCountAttr);
+        assertTrue(taskCountAttr.isReadonly());
+
+        dataConsumer.setDataSource(sqlds);
+        NodeAttribute attr = dataConsumer.getNodeAttribute(SQLDataSourceNode.QUERY_ATTRIBUTE);
+        assertNotNull(attr);
+        attr.setValue("select count(*) from nodes where name=:nodeName");
+        attr.save();
+        dataConsumer.getNodeAttribute(SQLDataSourceNode.RESULT_TYPE_ATTRIBUTE)
+                .setValue(SQLDataSourceNode.ResultType.SINGLE.toString());
+        dataConsumer.getNodeAttribute(AbstractDataSource.INTERVAL_ATTRIBUTE).setValue("1000");
+        NodeAttribute queryParam =
+                new NodeAttributeImpl("nodeName", String.class, "dataConsumer", null);
+        queryParam.setValueHandlerType(QueryParameterValueHandlerFactory.TYPE);
+        queryParam.setOwner(dataConsumer);
+        queryParam.save();
+        dataConsumer.addNodeAttribute(queryParam);
+        queryParam.init();
+
+        dataConsumer.start();
+        assertEquals(Status.STARTED, dataConsumer.getStatus());
+
+        Object data = dataConsumer.refereshData(null);
+        assertNotNull(data);
+        assertTrue(data instanceof Number);
+        assertEquals(1, ((Number)data).intValue());
+
+    }
+
+    @Test
+    public void refreshAttributeTest() throws Exception
+    {
+        createNodes();
+
+        NodeAttribute taskCountAttr = sqlds.getNodeAttribute("taskCount");
+        assertNotNull(taskCountAttr);
+        assertTrue(taskCountAttr.isReadonly());
+
+        dataConsumer.setDataSource(sqlds);
+        NodeAttribute attr = dataConsumer.getNodeAttribute(SQLDataSourceNode.QUERY_ATTRIBUTE);
+        assertNotNull(attr);
+        attr.setValue("select name from nodes where name=:nodeName");
+        attr.save();
+        dataConsumer.getNodeAttribute(SQLDataSourceNode.RESULT_TYPE_ATTRIBUTE)
+                .setValue(SQLDataSourceNode.ResultType.SINGLE.toString());
+        dataConsumer.getNodeAttribute(AbstractDataSource.INTERVAL_ATTRIBUTE).setValue("1000");
+        NodeAttribute queryParam =
+                new NodeAttributeImpl("nodeName", String.class, "dataConsumer", null);
+        queryParam.setValueHandlerType(QueryParameterValueHandlerFactory.TYPE);
+        queryParam.setOwner(dataConsumer);
+        queryParam.save();
+        dataConsumer.addNodeAttribute(queryParam);
+        queryParam.init();
+        
+        NodeAttribute refreshAttr =
+                new NodeAttributeImpl("nodeName", String.class, "", null);
+        refreshAttr.setValueHandlerType(RefreshAttributeValueHandlerFactory.TYPE);
+        refreshAttr.setOwner(dataConsumer);
+        refreshAttr.init();
+        List<NodeAttribute> sessionAttributes = Arrays.asList(refreshAttr);
+
+        dataConsumer.start();
+        assertEquals(Status.STARTED, dataConsumer.getStatus());
+
+        Object data = dataConsumer.refereshData(sessionAttributes);
+        assertNotNull(data);
+        assertTrue(data instanceof String);
+        assertEquals("", data);
     }
 
     private void createNodes() throws Exception

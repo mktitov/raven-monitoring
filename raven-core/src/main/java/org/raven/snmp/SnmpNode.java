@@ -19,6 +19,7 @@ package org.raven.snmp;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import org.raven.table.Table;
 import org.raven.annotations.NodeClass;
@@ -62,18 +63,18 @@ public class SnmpNode extends AbstractDataSource
     public static final String OID_TYPE_ATTR = "OID-Type";
     
     @Override
-    public void gatherDataForConsumer(DataConsumer dataConsumer) throws Exception 
+    public void gatherDataForConsumer(
+            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception 
     {
         if (logger.isDebugEnabled())
             logger.debug(String.format(
                     "Gathering data for data consumer (%s)", dataConsumer.getPath()));
-        String host = dataConsumer.getNodeAttribute(HOST_ATTR).getRealValue();
-        Integer port = dataConsumer.getNodeAttribute(PORT_ATTR).getRealValue();
-        SnmpVersion version = dataConsumer.getNodeAttribute(VERSION_ATTR).getRealValue();
-        String community = dataConsumer.getNodeAttribute(COMMUNITY_ATTR).getRealValue();
-        String oid = dataConsumer.getNodeAttribute(OID_ATTR).getRealValue();
-        boolean isTable =
-                dataConsumer.getNodeAttribute(OID_TYPE_ATTR).getRealValue()==OidType.TABLE;
+        String host = attributes.get(HOST_ATTR).getRealValue();
+        Integer port = attributes.get(PORT_ATTR).getRealValue();
+        SnmpVersion version = attributes.get(VERSION_ATTR).getRealValue();
+        String community = attributes.get(COMMUNITY_ATTR).getRealValue();
+        String oid = attributes.get(OID_ATTR).getRealValue();
+        boolean isTable = attributes.get(OID_TYPE_ATTR).getRealValue()==OidType.TABLE;
 
         UdpAddress address = new UdpAddress(host+"/"+port);
         CommunityTarget target = new CommunityTarget(address, new OctetString(community));
