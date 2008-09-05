@@ -30,7 +30,7 @@ import org.raven.tree.impl.BaseNode;
  */
 public class TestTableDataSource extends BaseNode implements DataSource
 {
-    public void getDataImmediate(
+    public boolean getDataImmediate(
             DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes) 
     {
         ColumnBasedTable table = new ColumnBasedTable();
@@ -41,6 +41,8 @@ public class TestTableDataSource extends BaseNode implements DataSource
         table.freeze();
         
         dataConsumer.setData(this, table);
+
+        return true;
     }
 
     public Collection<NodeAttribute> generateAttributes() 

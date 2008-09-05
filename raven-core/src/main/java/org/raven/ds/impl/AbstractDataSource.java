@@ -84,7 +84,7 @@ public abstract class AbstractDataSource
         fillConsumerAttributes(consumerAttributes);
     }
 
-    public void getDataImmediate(
+    public boolean getDataImmediate(
             DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
     {
         Map<String, NodeAttribute> attributes = new HashMap<String, NodeAttribute>();
@@ -102,20 +102,21 @@ public abstract class AbstractDataSource
                 logger.debug(String.format(
                         "Skiping gathering data for data consumer (%s). Data consumer not ready"
                         , dataConsumer.getPath()));
-            return;
+            return false;
         }
         try
         {
-            gatherDataForConsumer(dataConsumer, attributes);
+            return gatherDataForConsumer(dataConsumer, attributes);
         }
         catch (Exception e)
         {
             logger.error(String.format(
                     "Error gathering data for consumer (%s)", dataConsumer.getPath()), e);
+            return false;
         }
     }
 
-    public abstract void gatherDataForConsumer(
+    public abstract boolean gatherDataForConsumer(
             DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception;
     
     /**

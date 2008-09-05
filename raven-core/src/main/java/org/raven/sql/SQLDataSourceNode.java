@@ -71,12 +71,12 @@ public class SQLDataSourceNode extends AbstractDataSource {
     }
 
     @Override
-    public void gatherDataForConsumer(
+    public boolean gatherDataForConsumer(
             DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
     {
         Connection connection = getConnection(dataConsumer);
         if (connection==null)
-            return;
+            return false;
         try
         {
             String query = attributes.get(QUERY_ATTRIBUTE).getValue();
@@ -102,6 +102,7 @@ public class SQLDataSourceNode extends AbstractDataSource {
                 else
                     result = rs;
                 dataConsumer.setData(this, result);
+                return true;
             }finally{
                 if (rs!=null)
                     rs.close();

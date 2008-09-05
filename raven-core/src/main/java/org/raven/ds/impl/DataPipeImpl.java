@@ -93,10 +93,10 @@ public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
                     ((DataConsumer)node).setData(this, this.data);
     }
 
-    public void getDataImmediate(
+    public boolean getDataImmediate(
             DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
     {
-        getDataSource().getDataImmediate(this, sessionAttributes);
+        return getDataSource().getDataImmediate(this, sessionAttributes);
     }
 
     @Override

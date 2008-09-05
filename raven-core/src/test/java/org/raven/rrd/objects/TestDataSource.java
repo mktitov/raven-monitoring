@@ -38,7 +38,7 @@ public class TestDataSource extends AbstractDataSource
     }
 
     @Override
-    public void gatherDataForConsumer(
+    public boolean gatherDataForConsumer(
             DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
     {
         if (dataConsumer.getName().equals("ds"))
@@ -46,6 +46,7 @@ public class TestDataSource extends AbstractDataSource
         else
             dataConsumer.setData(this, value2--);
         System.out.println(">>>value"+value);
+        return true;
     }
     
 }

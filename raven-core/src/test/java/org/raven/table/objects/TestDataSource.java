@@ -43,12 +43,14 @@ public class TestDataSource extends BaseNode implements DataSource
         super(name);
     }
     
-    public void getDataImmediate(
+    public boolean getDataImmediate(
             DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
     {
         Table table = createTable();
         
         dataConsumer.setData(this, table);
+
+        return true;
     }
     
     public void pushData() throws Exception

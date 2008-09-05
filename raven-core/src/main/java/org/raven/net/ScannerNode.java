@@ -15,35 +15,41 @@
  *  under the License.
  */
 
-package org.raven.rrd.objects;
+package org.raven.net;
 
-import java.util.Collection;
-import org.raven.ds.DataConsumer;
-import org.raven.ds.DataSource;
-import org.raven.tree.NodeAttribute;
-import org.raven.tree.impl.BaseNode;
+import org.raven.ds.impl.*;
+import java.util.concurrent.TimeUnit;
+import org.raven.annotations.Parameter;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class TestDataSource3 extends BaseNode implements DataSource
+public class ScannerNode extends DataPipeImpl
 {
+    @Parameter(defaultValue="5")
+    @NotNull
+    private Integer threadCount;
 
-    @Override
-    public boolean isAutoStart() {
-        return false;
-    }
+    @Parameter()
+    @NotNull
+    private String ipRanges;
 
-    public boolean getDataImmediate(
-            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
-    {
-        return true;
-    }
+    @Parameter()
+    @NotNull
+    private Integer interval;
 
-    public Collection<NodeAttribute> generateAttributes() 
-    {
-        return null;
-    }
+    @Parameter()
+    @NotNull
+    private TimeUnit intervalUnit;
+
+    @Parameter(defaultValue="true")
+    @NotNull()
+    private Boolean ipAddressFilter;
+
+    @Parameter(defaultValue="host")
+    @NotNull()
+    private String hostAttributeName;
 
 }

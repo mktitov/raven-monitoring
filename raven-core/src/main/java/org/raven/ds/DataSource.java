@@ -31,8 +31,9 @@ public interface DataSource extends Node, AttributesGenerator
     /**
      * Immediate gathers data for data consumer.
      * @param dataConsumer data consumer for which data will gather
-     * @param sessionAttributes the session attributes for the data consumer. 
+     * @param sessionAttributes the session attributes for the data consumer.
+     * @return <b>true</b> if data got successfull, else <b>false</b 
      */
-    public void getDataImmediate(
+    public boolean getDataImmediate(
             DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes);
 }

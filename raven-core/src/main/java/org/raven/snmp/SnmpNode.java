@@ -56,6 +56,7 @@ public class SnmpNode extends AbstractDataSource
     public final static String ROW_INDEX_COLUMN_NAME = "index";
     
     public static final String PORT_ATTR = "snmp-port";
+    public static final String TIMEOUT_ATTR = "snmp-timeout";
     public static final String VERSION_ATTR = "snmp-version";
     public static final String COMMUNITY_ATTR = "snmp-community";
     public static final String HOST_ATTR = "host";
@@ -63,7 +64,7 @@ public class SnmpNode extends AbstractDataSource
     public static final String OID_TYPE_ATTR = "OID-Type";
     
     @Override
-    public void gatherDataForConsumer(
+    public boolean gatherDataForConsumer(
             DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception 
     {
         if (logger.isDebugEnabled())
@@ -100,6 +101,7 @@ public class SnmpNode extends AbstractDataSource
         {
             snmp.close();
         }
+        return true;
     }
 
     @Override
@@ -113,6 +115,11 @@ public class SnmpNode extends AbstractDataSource
         consumerAttributes.add(attr);
         
         attr = new NodeAttributeImpl(PORT_ATTR, Integer.class, 161, "The snmp port");
+        attr.setRequired(true);
+        consumerAttributes.add(attr);
+        
+        attr = new NodeAttributeImpl(
+                TIMEOUT_ATTR, Integer.class, 2000, "The timeout in milliseconds");
         attr.setRequired(true);
         consumerAttributes.add(attr);
         

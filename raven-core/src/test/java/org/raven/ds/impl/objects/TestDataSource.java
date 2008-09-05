@@ -35,10 +35,11 @@ public class TestDataSource extends AbstractDataSource
     }
 
     @Override
-    public void gatherDataForConsumer(
+    public boolean gatherDataForConsumer(
             DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
     {
         dataConsumer.setData(this, null);
+        return true;
     }
     
 }

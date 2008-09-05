@@ -15,35 +15,16 @@
  *  under the License.
  */
 
-package org.raven.rrd.objects;
-
-import java.util.Collection;
-import org.raven.ds.DataConsumer;
-import org.raven.ds.DataSource;
-import org.raven.tree.NodeAttribute;
-import org.raven.tree.impl.BaseNode;
+package org.raven.net;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class TestDataSource3 extends BaseNode implements DataSource
+public class InvalidIpException extends Exception
 {
-
-    @Override
-    public boolean isAutoStart() {
-        return false;
-    }
-
-    public boolean getDataImmediate(
-            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
+    public InvalidIpException(String ipAddress)
     {
-        return true;
+        super(String.format("Invalid ip address (%s)", ipAddress));
     }
-
-    public Collection<NodeAttribute> generateAttributes() 
-    {
-        return null;
-    }
-
 }

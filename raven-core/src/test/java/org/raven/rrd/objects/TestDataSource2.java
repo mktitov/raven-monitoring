@@ -30,9 +30,10 @@ import org.raven.tree.impl.BaseNode;
 public class TestDataSource2 extends BaseNode implements DataSource
 {
 
-    public void getDataImmediate(
+    public boolean getDataImmediate(
             DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
     {
+        return true;
     }
 
     public Collection<NodeAttribute> generateAttributes() {

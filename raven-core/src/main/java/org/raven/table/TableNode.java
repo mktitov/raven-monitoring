@@ -161,10 +161,10 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
     }
 
     @Override
-    public void getDataImmediate(
+    public boolean getDataImmediate(
             DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
     {
-        super.getDataImmediate(dataConsumer, sessionAttributes);
+        return super.getDataImmediate(dataConsumer, sessionAttributes);
     }
 
     public void configure()
