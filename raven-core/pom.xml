@@ -55,8 +55,8 @@
             <artifactId>h2</artifactId>
         </dependency>
         <dependency>
-          <groupId>org.jrobin</groupId>
-          <artifactId>jrobin</artifactId>
+            <groupId>org.jrobin</groupId>
+            <artifactId>jrobin</artifactId>
         </dependency>
         <dependency>
             <groupId>org.snmp4j</groupId>
@@ -65,6 +65,10 @@
         <dependency>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
         </dependency>
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
