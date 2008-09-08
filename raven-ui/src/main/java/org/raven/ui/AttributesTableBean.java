@@ -108,19 +108,19 @@ public class AttributesTableBean
 	}
 	public String saveAttributes()
 	{
-		NodeWrapper nw = (NodeWrapper) SessionBean.getElValue(NodeWrapper.BEAN_NAME);
+		NodeWrapper nw = SessionBean.getNodeWrapper();
 		return saveAttributes(nw,true);
 	}
 
 	public void saveAttributesWithoutWrite(ActionEvent ae)
 	{
-		NodeWrapper nw = (NodeWrapper) SessionBean.getElValue(NodeWrapper.BEAN_NAME);
+		NodeWrapper nw = SessionBean.getNodeWrapper();
 		saveAttributes(nw,false);
 	}
 	
 	public void saveAttributesWithoutWrite(ValueChangeEvent vce)
 	{
-		NodeWrapper nw = (NodeWrapper) SessionBean.getElValue(NodeWrapper.BEAN_NAME);
+		NodeWrapper nw = SessionBean.getNodeWrapper();
 		saveAttributes(nw,false);
 	}
 	

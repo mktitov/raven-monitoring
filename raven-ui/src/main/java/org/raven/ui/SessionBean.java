@@ -343,6 +343,11 @@ public class SessionBean
 		return (SessionBean) SessionBean.getElValue(BEAN_NAME);
 	}
 	
+	public static NodeWrapper getNodeWrapper()
+	{
+		return (NodeWrapper) SessionBean.getElValue(NodeWrapper.BEAN_NAME);
+	}
+	
 	public int deleteNode(NodeWrapper node)
 	{
 		return deleteNode(node.getNode());

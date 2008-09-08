@@ -13,7 +13,13 @@ public class RenameNodeBean
 		SessionBean sb = (SessionBean) SessionBean.getElValue(SessionBean.BEAN_NAME);
 		sb.reloadBothFrames();
 	}
-*/	  
+*/	 
+	
+	public static RenameNodeBean getInstance()
+	{
+		return (RenameNodeBean) SessionBean.getElValue(BEAN_NAME);
+	}
+	
 	public String save()
 	{
 		if(name==null || name.length()==0) 

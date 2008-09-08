@@ -19,6 +19,7 @@ package org.raven.ui;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,8 @@ public class NodeWrapper extends AbstractNodeWrapper
     protected Logger logger = LoggerFactory.getLogger(NodeWrapper.class);	
 	private List<NodeAttribute> savedAttrs = null;
 	private List<Attr> editingAttrs = null;
+	//private List<NodeAttribute> savedRefreshAttrs = null;
+	private Map<String,Attr> editingRefreshAttrs = null;
 	private List<NodeAttribute> readOnlyAttributes = null;
 	private NewAttribute newAttribute = null;
 	private CoreShowDetailItem showTab; 
@@ -66,10 +69,101 @@ public class NodeWrapper extends AbstractNodeWrapper
 		this();
 		this.setNode(node);
 	}
+
+/*	
+	  public List<ViewableObjectWrapper> getIndexedNodesX()
+	  {
+		  ArrayList<ViewableObjectWrapper> al = new ArrayList<ViewableObjectWrapper>();
+		  Collection<Node> c = getNode().getSortedChildrens();
+		  if(c!=null) 
+		  {
+			  SessionBean sb = SessionBean.getInstance();
+			  ViewableObjectsStorage vos = sb.getViewableObjectsStorage();
+			  ArrayList<Node> aln = new ArrayList<Node>();
+			  aln.addAll(c);
+			  if ( isViewable() ) 
+				  aln.add(0, getNode() );
+			  
+			  Iterator<Node> it = aln.iterator();
+			  while(it.hasNext())
+			  {
+				  Node n = it.next();
+				  if(getUserAcl().getAccessForNode(n) <= AccessControl.TRANSIT) continue;
+				  NodeWrapper nw = new NodeWrapper();
+				  nw.setNode(n);
+				  List<ViewableObjectWrapper> lst = nw.getViewableObjects();
+				  if(lst==null || lst.isEmpty()) continue;
+				  al.add(new ViewableObjectWrapper(nw.getNode()));
+				  al.addAll(lst);
+				  for(ViewableObjectWrapper wr : lst)
+				  {
+					  if(wr.isImage()) 
+						  vos.put(wr);
+				  }
+			  }	  
+		  }
+		  return al;
+	  }
+*/
+	public String getRefreshAttributesTitle()
+	{
+		String mesName = null;
+		if( isNodeAndChildViewable() ) mesName = "refreshAttributesOfNodeAndChildren";
+		else if( isNodeViewableOnly() ) mesName = "refreshAttributesOfNode";
+				else if( isChildViewableOnly() ) mesName = "refreshAttributesOfChildren";
+		if(mesName==null) return "";
+		return Messages.getUiMessage(mesName);
+	}
+
+	public boolean isNeedShowRefreshAttributes()
+	{
+		  return isViewable() || isChildViewable();
+	}
+	
+	public boolean isNodeAndChildViewable()
+	{
+		  return isViewable() && isChildViewable();
+	}
+
+	public boolean isNodeViewableOnly()
+	{
+		return isViewable() && !isChildViewable();
+	}
+
+	public boolean isChildViewableOnly()
+	{
+		return !isViewable() && isChildViewable();
+	}
+	
+	public boolean isChildViewable()
+	{
+		Collection<Node> c = getNode().getSortedChildrens();
+		if(c!=null) 
+		{
+			Iterator<Node> it = c.iterator();
+			while(it.hasNext())
+			{
+				Node n = it.next();
+				if(getUserAcl().getAccessForNode(n) <= AccessControl.TRANSIT) continue;
+				NodeWrapper nw = new NodeWrapper();
+				nw.setNode(n);
+				if(nw.isViewable()) return true;
+				//Map<String,NodeAttribute> lst = nw.getRefreshAttributesMap();
+			}	  
+		}
+		return false;
+	}
+	
+	public boolean isViewable()
+	{
+		if( getNode() instanceof Viewable ) 
+			return true;
+		return false;
+	}
 	
 	public void setNameInDialog(ActionEvent event)
 	{
-		RenameNodeBean b = (RenameNodeBean) SessionBean.getElValue(RenameNodeBean.BEAN_NAME);
+		RenameNodeBean b = RenameNodeBean.getInstance();
 		b.setName(getNode().getName());
 	}
 	
@@ -81,8 +175,7 @@ public class NodeWrapper extends AbstractNodeWrapper
 			Node n = getNode();
 			n.setName(ret);
 			n.save();
-			SessionBean sb = (SessionBean) SessionBean.getElValue(SessionBean.BEAN_NAME);
-			sb.reloadBothFrames();
+			SessionBean.getInstance().reloadBothFrames();
 		}
 	}
 	
@@ -99,7 +192,6 @@ public class NodeWrapper extends AbstractNodeWrapper
 	{
 		if(getClassDesc()!=null && getTree()!=null)
 			newAttribute = new NewAttribute(getTree().getNodeAttributesTypes(getNode()),getClassDesc());
-		
 	}
 	
 	public String nodeStart()
@@ -139,10 +231,10 @@ public class NodeWrapper extends AbstractNodeWrapper
 	public Map<String,NodeAttribute> getRefreshAttributesMap()
 	{
 		Viewable viewable;
-		if (getNode() instanceof Viewable) viewable = (Viewable) getNode();
+		if ( isViewable() ) viewable = (Viewable) getNode();
 			else return null;
 		
-		SessionBean sb = (SessionBean) SessionBean.getElValue(SessionBean.BEAN_NAME);
+		SessionBean sb = SessionBean.getInstance();
 		RefreshAttributesStorage rs = sb.getRefreshAttributesStorage();
 		Map<String,NodeAttribute> ra = rs.get(getNodePath());
 		if(ra!=null) return ra;
@@ -156,12 +248,21 @@ public class NodeWrapper extends AbstractNodeWrapper
 		return ra;
 	}
 	
+	public List<NodeAttribute> getRefreshAttributes()
+	{
+		List<NodeAttribute> nal = new ArrayList<NodeAttribute>();
+		Map<String,NodeAttribute> map = getRefreshAttributesMap();
+		if(map!=null)
+			nal.addAll(map.values());
+		return nal;
+	}
+	
 	public List<ViewableObjectWrapper> getViewableObjects()
 	{
 		Viewable viewable;
 		List<ViewableObject> vol = null;
 		List<ViewableObjectWrapper> vowl = null;
-		if (getNode() instanceof Viewable) viewable = (Viewable) getNode();
+		if ( isViewable() ) viewable = (Viewable) getNode();
 			else return new ArrayList<ViewableObjectWrapper>();
 		try {
 			 vol = viewable.getViewableObjects(getRefreshAttributesMap());
@@ -175,15 +276,61 @@ public class NodeWrapper extends AbstractNodeWrapper
 		return vowl;
 	}
 	
-	public void  loadAttributes() throws TooManyReferenceValuesException
+	public List<NodeWrapper> getViewableNodes()
 	{
+	  Collection<Node> c = getNode().getSortedChildrens();
+	  ArrayList<Node> nodes = new ArrayList<Node>();
+	  ArrayList<NodeWrapper> wrappers = new ArrayList<NodeWrapper>();
+	  
+	  if(c!=null) 
+	  {
+		  nodes.addAll(c);
+		  if ( isViewable() ) 
+			  nodes.add(0, getNode() );
+		  Iterator<Node> it = nodes.iterator();
+		  while(it.hasNext())
+		  {
+			  Node n = it.next();
+			  NodeWrapper nw = new NodeWrapper(n);
+			  if(!nw.isAllowNodeRead()) continue;
+			  wrappers.add( nw );
+		  }	  
+	  }
+	  return wrappers;
+}
+	
+	public void loadRefreshAttributes() 
+	{
+		List<NodeWrapper> wrappers = getViewableNodes();
+		editingRefreshAttrs = new HashMap<String,Attr>();
+		for(NodeWrapper nw : wrappers)
+		{
+			List<NodeAttribute> nal = nw.getRefreshAttributes();
+			for(NodeAttribute na : nal)
+				try {
+					editingRefreshAttrs.put(na.getName(),new Attr(na));
+				} catch (TooManyReferenceValuesException e) {
+					logger.error("on load refresh attributes : ",e);
+				}
+		}
+	}
+	
+	public void  loadAttributes() 
+	{
+		loadRefreshAttributes();
 		savedAttrs = getNodeAttributes();
 		editingAttrs = new ArrayList<Attr>();
 		readOnlyAttributes = new ArrayList<NodeAttribute>();
 		for(NodeAttribute na : savedAttrs)
 		{	
 			if(na.isReadonly()) readOnlyAttributes.add(na);
-			else editingAttrs.add(new Attr(na));
+			else
+				try {
+					editingAttrs.add(new Attr(na));
+				} catch (TooManyReferenceValuesException e) {
+					logger.error("on load attributes: ",e);
+					return;
+				}
 		}	
 		for(Attr a : editingAttrs)
 			a.findChildren(editingAttrs);
@@ -196,7 +343,6 @@ public class NodeWrapper extends AbstractNodeWrapper
 	  {
 		  return save(false);
 	  }
-
 	
 	  public String save(boolean write)
 	  {
@@ -269,11 +415,82 @@ public class NodeWrapper extends AbstractNodeWrapper
 			  }
 		  }
 		  if(ret.length()!=0) ret.toString();
-		  try { loadAttributes(); }
-		  catch (TooManyReferenceValuesException e) { logger.info("on loadAttributes ", e); }
+		  loadAttributes(); 
 		  return null;
 	  }
-	
+
+	  public String saveRefreshAttributes()
+	  {
+		  int save = 0;
+		  StringBuffer ret = new StringBuffer();
+		  
+		  Iterator<String> keys = editingRefreshAttrs.keySet().iterator();
+		  while(keys.hasNext())
+		  {
+			  String key = keys.next();
+			  Attr at = editingRefreshAttrs.get(key);
+			  List<NodeWrapper> nwlist = getViewableNodes();
+			  for(NodeWrapper nw : nwlist)
+			  {
+				  Map<String,NodeAttribute> map = nw.getRefreshAttributesMap();
+				  if(map==null) continue;
+				  if(map.containsKey(key))
+				  {
+					  NodeAttribute na = map.get(key);
+					  String val = getNotNull(na.getValue());
+					  if( !at.isExpressionSupported() &&  !val.equals(at.getValue()) ) save |=1;
+					  if( at.isExpressionSupported() &&  ! ObjectUtils.equals(na.getRawValue(), at.getExpression()) ) save |=8;
+		              if( !ObjectUtils.equals(na.getValueHandlerType(), at.getValueHandlerType())) save |=16;
+		              if(at.isTemplateExpression() != na.isTemplateExpression()) save |=32;
+
+					  if(save==0) continue;
+		              
+					  try 
+					  { 
+						  if( (save&1) !=0 ) na.setValue(at.getValue());
+						  if( (save&8) !=0 ) na.setValue(at.getExpression());
+		                  if( (save&16) !=0) na.setValueHandlerType(at.getValueHandlerType());
+		                  if( (save&32) !=0) na.setTemplateExpression(at.isTemplateExpression());
+					  }
+					  catch(ConstraintException e) 
+					  {
+						  String t = Messages.getString("org.raven.ui.messages", "attribute",new Object[] {});
+						  if(ret.length()!=0) ret.append(". ");
+						  ret.append(t+" '"+at.getName()+"' : "+e.getMessage());
+						  logger.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
+					  }
+					  catch(TypeConverterException e) 
+					  {
+						  String t = Messages.getString("org.raven.ui.messages", "attribute",new Object[] {});
+						  if(ret.length()!=0) ret.append(". ");
+						  ret.append(t+" '"+at.getName()+"' : "+e.getMessage());
+						  logger.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
+					  }
+					  catch(Throwable e) 
+					  {
+						  String t = Messages.getString("org.raven.ui.messages", "attribute",new Object[] {});
+						  if(ret.length()!=0) ret.append(". ");
+						  ret.append(t+" '"+at.getName()+"' : "+e.getMessage());
+						  logger.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
+					  }
+					  finally 
+					  { 
+						  at.setValue(na.getValue());
+						  at.setDescription(na.getDescription());
+						  at.setName(na.getName());
+		                  at.setValueHandlerType(na.getValueHandlerType());
+		                  at.setTemplateExpression(na.isTemplateExpression());
+					  }
+				  }
+			  }
+			  
+		  }
+		  if(ret.length()!=0) ret.toString();
+		  loadRefreshAttributes();
+		  return null;
+	  }
+	  
+	  
 	  public String cancel() throws TooManyReferenceValuesException //ActionEvent event
 	  {
 		  getAttributes();
@@ -396,24 +613,15 @@ public class NodeWrapper extends AbstractNodeWrapper
 	  public List<ViewableObjectWrapper> getIndexedNodes()
 	  {
 		  ArrayList<ViewableObjectWrapper> al = new ArrayList<ViewableObjectWrapper>();
-		  Collection<Node> c = getNode().getSortedChildrens();
-		  if(c!=null) 
+		  List<NodeWrapper> wrappers = getViewableNodes();
+		  if(wrappers!=null && !wrappers.isEmpty()) 
 		  {
-			  SessionBean sb = (SessionBean) SessionBean.getElValue(SessionBean.BEAN_NAME);
+			  SessionBean sb = SessionBean.getInstance();
 			  ViewableObjectsStorage vos = sb.getViewableObjectsStorage();
-			  ArrayList<Node> aln = new ArrayList<Node>();
-			  aln.addAll(c);
-			  if (getNode() instanceof Viewable) {
-				  aln.add(0, getNode() );
-			}
-			  
-			  Iterator<Node> it = aln.iterator();
+			  Iterator<NodeWrapper> it = wrappers.iterator();
 			  while(it.hasNext())
 			  {
-				  Node n = it.next();
-				  if(getUserAcl().getAccessForNode(n) <= AccessControl.TRANSIT) continue;
-				  NodeWrapper nw = new NodeWrapper();
-				  nw.setNode(n);
+				  NodeWrapper nw = it.next();
 				  List<ViewableObjectWrapper> lst = nw.getViewableObjects();
 				  if(lst==null || lst.isEmpty()) continue;
 				  al.add(new ViewableObjectWrapper(nw.getNode()));
@@ -520,6 +728,13 @@ public class NodeWrapper extends AbstractNodeWrapper
 
 	public void setReadOnlyAttributes(List<NodeAttribute> readOnlyAttributes) {
 		this.readOnlyAttributes = readOnlyAttributes;
+	}
+
+	public List<Attr> getEditingRefreshAttrs() {
+		if(editingRefreshAttrs==null )
+				loadRefreshAttributes();
+		
+		return new ArrayList<Attr>(editingRefreshAttrs.values());
 	}
 
 }

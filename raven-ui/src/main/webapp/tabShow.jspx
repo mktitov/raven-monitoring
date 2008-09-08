@@ -14,47 +14,166 @@
  *  limitations under the License.
  *  under the License.
  -->
- 
 <jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
           xmlns:f="http://java.sun.com/jsf/core"
           xmlns:h="http://java.sun.com/jsf/html"
           xmlns:tr="http://myfaces.apache.org/trinidad" 
           xmlns:t="http://myfaces.apache.org/tomahawk" 
           xmlns:s="http://myfaces.apache.org/sandbox" >
-<f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>    
+<f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
+    
 <tr:panelHorizontalLayout halign="left" id="phl_1"  >
- 
-<tr:poll 
+	<tr:poll 
 		id="viewRefresh" 
 		rendered="#{sBean.refreshViewInteval > 0}" 
 		interval="#{sBean.refreshViewIntevalMS}" 
 		pollListener="#{sBean.pollReloadRightFrame}" />
-
-<tr:poll 
+	<tr:poll 
 		id="testPoll" 
 		interval="10000" 
 		 />
-
 <!-- 
 action="#{sBean.reloadRightFrame}"
  -->
-
-<tr:commandButton 
+	<tr:commandButton 
 		shortDesc="#{msgs.dscRefreshAndApply}"
 		partialSubmit="true"
 		action="#{sBean.reloadRightFrame}" 
 		text="#{msgs.refresh}" 
 		id="refresh_A"  >
-</tr:commandButton>
-<tr:inputNumberSpinbox
-	value="#{sBean.refreshViewInteval}"
- 	columns="2" 
-	label="#{msgs.refreshInterval}" 
-	minimum="0" 
-	maximum="60" 
-	stepSize="5" >
-</tr:inputNumberSpinbox>
+	</tr:commandButton>
+	<tr:inputNumberSpinbox
+		value="#{sBean.refreshViewInteval}"
+ 		columns="2" 
+		label="#{msgs.refreshInterval}" 
+		minimum="0" 
+		maximum="60" 
+		stepSize="5" >
+	</tr:inputNumberSpinbox>
 </tr:panelHorizontalLayout>
+
+<tr:spacer height="5" />
+
+<tr:panelAccordion 
+	discloseNone="true" 
+	rendered="#{cNode.needShowRefreshAttributes}" >
+	<tr:showDetailItem text="#{cNode.refreshAttributesTitle}">
+    <!-- ********************* -->
+    <!-- refresh attributes -->
+    <!-- ********************* -->
+        <tr:message 
+        	binding="#{cNodeRefreshAttrs.message}" 
+        	for="attrs" 
+        	messageType="error" />
+	<!-- refresh attributes table -->
+        <tr:table 
+        	allDetailsEnabled="true" 
+            width="90%" 
+            rowSelection="none" 
+            value="#{cNode.editingRefreshAttrs}" 
+            var="row" 
+            rows="12" 
+            id="attrs" 
+            partialTriggers="subtypes">
+		<!-- name of attribute-->            
+            <tr:column headerText="#{msgs.name}">
+				<tr:panelHorizontalLayout>
+                <tr:outputText 
+                	rendered="#{!row.attribute.required}" 
+                	value="#{row.name}"/>
+                <tr:outputFormatted 
+                		rendered="#{row.attribute.required}"
+						inlineStyle="font-weight: bold;" 
+                		value="#{row.name}"/>
+                <tr:outputFormatted 
+                		inlineStyle="color: #cc0000;" 
+                		rendered="#{row.attribute.required and (row.attribute.value == null) }"
+                		value=" *"/>
+				</tr:panelHorizontalLayout>
+            </tr:column>
+	<!-- value of attribute-->
+            <tr:column headerText="#{msgs.value}">
+                <tr:inputText 
+                	readOnly="#{row.expressionSupported}" 
+                	rendered="#{row.expressionSupported or (row.selectItems == null)}" 
+                	value="#{row.value}" 
+                	columns="30" />
+                <tr:selectOneChoice 
+                	rendered="#{!row.expressionSupported and !(row.selectItems == null)}" 
+                	value="#{row.value}" >
+                    <f:selectItems value="#{row.selectItems}" />
+                </tr:selectOneChoice>
+            </tr:column>
+	<!-- type of attribute-->
+            <tr:column headerText="#{msgs.type}">
+                <tr:outputText value="#{row.classDisplayName}"/>
+            </tr:column>
+	<!-- subtype of attribute-->
+            <tr:column headerText="#{msgs.subtype}">
+                <tr:selectOneChoice 
+                	valueChangeListener="#{row.applySubType}"
+					onchange="submit();"            
+                	value="#{row.valueHandlerType}">
+                    <f:selectItems value="#{row.valueHandlerTypes}" />
+                </tr:selectOneChoice>
+            </tr:column>
+	<!-- detailStamp of attribute-->
+            <f:facet name="detailStamp">
+                <tr:panelGroupLayout layout="vertical"  >
+				<tr:panelCaptionGroup captionText="#{msgs.dsc}">
+	                <tr:outputText value="#{row.description}"/>
+				</tr:panelCaptionGroup>
+				<tr:inputListOfValues 
+					rendered="#{row.enableEditValueDialog}"
+					value="#{row.expression}" 
+					action="dialog:editExpression"
+					actionListener="#{editExpression.selectAttr}"
+					windowWidth="300" windowHeight="300"
+					columns="40" label="#{msgs.expression}"
+				>
+					<f:attribute 
+						name="#{editExpression.paramName}" 
+						value="#{row}" />
+				</tr:inputListOfValues>
+
+				<tr:inputListOfValues 
+					rendered="#{row.enableSelectNodeDialog}"
+					value="#{row.expression}"
+					returnListener="#{row.selectNodeHandleReturn}" 
+					action="dialog:selectNode"
+					actionListener="#{row.setNode}"
+					immediate="true" 
+					windowWidth="500" windowHeight="400"
+					columns="40" label="#{msgs.node}"
+				>
+				</tr:inputListOfValues>
+	            <tr:selectOneChoice 
+	            	label="#{msgs.expression}" 
+	            	rendered="#{row.expressionSupported and !(row.selectItems == null)}" 
+	            	value="#{row.expression}" >
+    	            <f:selectItems value="#{row.selectItems}" />
+                </tr:selectOneChoice>
+			</tr:panelGroupLayout>
+            </f:facet>
+        </tr:table>
+		<tr:spacer height="5" />
+<!-- Button bar for refresh attributes -->
+        <tr:panelButtonBar halign="left" >
+            <tr:commandButton 
+            	shortDesc="#{msgs.dscSaveAttr}" 
+            	text="#{msgs.save}" 
+            	action="#{cNodeRefreshAttrs.saveAttributes}"  />
+            <tr:commandButton 
+            	shortDesc="#{msgs.dscCancelAttr}" 
+            	text="#{msgs.cancel}" 
+            	action="#{cNode.cancel}" />
+        </tr:panelButtonBar>
+  	</tr:showDetailItem>
+</tr:panelAccordion>
+<tr:spacer height="5" />
+<!-- ********************************* -->
+<!-- Show viewable nodes               -->
+<!-- ********************************* -->
 <tr:table width="100%" 
 		horizontalGridVisible="false" 
 		verticalGridVisible="false"
@@ -71,7 +190,7 @@ partialTriggers=":poolStatus"
   	facetName="#{row.mimeGroup}" 
   	defaultFacet="default">
   	<f:facet name="default"/>
-
+<!-- show nodeUrl --> 
   	<f:facet name="nodeUrl">
 		<tr:commandLink 
 			text="#{row.nodePath}" 
@@ -81,8 +200,7 @@ partialTriggers=":poolStatus"
 				value="#{row.nodePath}"/>
 		</tr:commandLink>
 	</f:facet>
-
-  
+<!-- show image --> 
 	<f:facet name="image">
 		<!-- forceIdIndex="true" forceId="true" id="graph" -->
     	<s:graphicImageDynamic  

@@ -62,6 +62,12 @@
     <managed-bean-class>org.raven.ui.AttributesTableBean</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
+  
+  <managed-bean>
+    <managed-bean-name>cNodeRefreshAttrs</managed-bean-name>
+    <managed-bean-class>org.raven.ui.RefreshAttributesTableBean</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
 
   <managed-bean>
     <managed-bean-name>templateAttrs</managed-bean-name>

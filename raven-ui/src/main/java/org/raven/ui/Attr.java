@@ -152,8 +152,7 @@ public class Attr
 		valueHandlerType = (String) vce.getNewValue();
 		NodeWrapper nw = (NodeWrapper) SessionBean.getElValue(NodeWrapper.BEAN_NAME);
 		nw.saveWithoutWrite();
-		try { nw.loadAttributes(); } 
-		catch(TooManyReferenceValuesException e) {logger.error("On loadAttributes:",e);}
+		nw.loadAttributes();
 	}
 	
 	public void applyTemplateExpression(ValueChangeEvent vce)
@@ -162,8 +161,7 @@ public class Attr
 		templateExpression = b.booleanValue();
 		NodeWrapper nw = (NodeWrapper) SessionBean.getElValue(NodeWrapper.BEAN_NAME);
 		nw.saveWithoutWrite();
-		try { nw.loadAttributes(); } 
-		catch(TooManyReferenceValuesException e) {logger.error("On loadAttributes:",e);}
+		nw.loadAttributes();
 	}
 	
 	public void addChild(Attr a) 
