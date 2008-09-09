@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.net.objects.TestScannerConsumer;
@@ -88,7 +87,7 @@ public class ScannerNodeTest extends RavenCoreTestCase
         assertTrue(rows.contains("10.50.2.0"));
     }
     
-//    @Test 
+    @Test 
     public void ipAddressFilterTest() throws Exception
     {
         TestScannerDataSource ds = new TestScannerDataSource();
@@ -132,7 +131,7 @@ public class ScannerNodeTest extends RavenCoreTestCase
         assertEquals(0, rows.size());
     }
 
-//    @Test
+    @Test
     public void snmpScanTest() throws Exception
     {
         SnmpNode snmp = new SnmpNode();
@@ -168,7 +167,7 @@ public class ScannerNodeTest extends RavenCoreTestCase
         
         scanner.start();
         assertEquals(Status.STARTED, scanner.getStatus());
-        TimeUnit.SECONDS.sleep(2);
+        TimeUnit.SECONDS.sleep(10);
 
         Table table = consumer.getTable();
         assertNotNull(table);

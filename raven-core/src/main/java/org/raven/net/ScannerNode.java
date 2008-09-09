@@ -244,8 +244,10 @@ public class ScannerNode extends DataPipeImpl
         public void oneJobDone()
         {
             int count = activeWorkers.decrementAndGet();
+            if (logger.isDebugEnabled())
+                logger.debug("Active workers count - "+count);
             if (count==0)
-                setData(dataSource, ipTable);
+                setData((DataSource)dataConsumer, ipTable);
         }
 
         public boolean isJobDone()
