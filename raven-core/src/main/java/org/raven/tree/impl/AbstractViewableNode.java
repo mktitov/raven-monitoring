@@ -15,28 +15,23 @@
  *  under the License.
  */
 
-package org.raven.tree;
+package org.raven.tree.impl;
 
-import java.util.List;
 import java.util.Map;
+import org.raven.tree.NodeAttribute;
+import org.raven.tree.Viewable;
+import org.raven.util.NodeUtils;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface Viewable extends Node
+public abstract class AbstractViewableNode extends BaseNode implements Viewable
 {
-    public final static String RAVEN_TABLE_MIMETYPE = "raven/table";
 
-    /**
-     * Returns the list of the attributes the values of which will be used in the view refresh
-     * operation.
-     * @see #getViewableObjects(refreshAttributes)
-     */
-    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception;
-    /**
-     * Returns the list of the viewable objects contained by this node
-     */
-    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes)
-            throws Exception;
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
+    {
+        return NodeUtils.extractRefereshAttributes(this);
+    }
+
 }
