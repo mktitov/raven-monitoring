@@ -22,15 +22,19 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.script.Bindings;
 import org.raven.ds.impl.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
 import org.raven.table.TableImpl;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodeError;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.weda.annotations.constraints.NotNull;
 
@@ -67,22 +71,45 @@ public class ScannerNode extends DataPipeImpl
     private Iterator<String> ipRangeIterator;
     private TableImpl ipTable;
     private String ip;
+    private WorkerExecutor executor;
+    private boolean dataSended;
 
     @Override
-    protected void doStart() throws Exception
+    public boolean start() throws NodeError
     {
-        super.doStart();
-        scan();
+        boolean started =  super.start();
+        if (started)
+            try {
+                scan();
+            } catch (Exception ex) {
+                throw new NodeError(String.format("Error starting node (%s)", getPath()), ex);
+            }
+        return started;
+    }
+
+    @Override
+    public synchronized void stop() throws NodeError
+    {
+        if (executor!=null && !executor.isJobDone())
+        {
+            try {
+                TimeUnit.SECONDS.sleep(1);
+                executor.shutdown();
+            } catch (InterruptedException ex) {
+                throw new NodeError(String.format("Error stoping node (%s)", getPath()), ex);
+            }
+        }
+        super.stop();
     }
     
     private void scan() throws Exception
     {
+        dataSended = false;
         ipRangeIterator = formIpIterator();
         ipTable = new TableImpl(new String[]{"ip"});
 
-        for (int i=0; i<threadCount; ++i)
-            new Worker(getDataSource(), this);
-        setData(this, ipTable);
+        executor = new WorkerExecutor(getDataSource(), this);
+
     }
 
     public String getHostAttributeName() {
@@ -133,6 +160,13 @@ public class ScannerNode extends DataPipeImpl
         this.threadCount = threadCount;
     }
 
+    @Override
+    protected void doSetData(DataSource dataSource, Object data)
+    {
+        if (dataSource==this)
+            super.doSetData(dataSource, data);
+    }
+
     private synchronized String getNextIp()
     {
         return ipRangeIterator.hasNext()? ipRangeIterator.next() : null;
@@ -180,25 +214,74 @@ public class ScannerNode extends DataPipeImpl
     private synchronized void addIp(String ip)
     {
         ipTable.addRow(new Object[]{ip});
+        if (logger.isDebugEnabled())
+            logger.debug(String.format("Ip (%s) added to the table", ip));
+    }
+
+    private class WorkerExecutor
+    {
+        private final DataSource dataSource;
+        private final DataConsumer dataConsumer;
+        private final Thread[] workers;
+        private final AtomicInteger activeWorkers;
+
+        public WorkerExecutor(DataSource dataSource, DataConsumer dataConsumer)
+        {
+            this.dataSource = dataSource;
+            this.dataConsumer = dataConsumer;
+
+            int workersCount = threadCount;
+            activeWorkers = new AtomicInteger(workersCount);
+            workers = new Thread[workersCount];
+            for (int i=0; i<workersCount; ++i)
+            {
+                Thread workerThread = new Thread(new Worker(dataSource, dataConsumer, this));
+                workers[i] = workerThread;
+                workerThread.start();
+            }
+        }
+
+        public void oneJobDone()
+        {
+            int count = activeWorkers.decrementAndGet();
+            if (count==0)
+                setData(dataSource, ipTable);
+        }
+
+        public boolean isJobDone()
+        {
+            return activeWorkers.get()<=0;
+        }
+
+        public void shutdown()
+        {
+            for (int i=0; i<workers.length; ++i)
+                if (workers[i].isAlive())
+                    workers[i].interrupt();
+        }
+
     }
 
     private class Worker implements Runnable
     {
         private final DataSource dataSource;
         private final DataConsumer dataConsumer;
+        private final WorkerExecutor executor;
 
-        public Worker(DataSource dataSource, DataConsumer dataConsumer)
+        public Worker(DataSource dataSource, DataConsumer dataConsumer, WorkerExecutor executor)
         {
             this.dataSource = dataSource;
             this.dataConsumer = dataConsumer;
+            this.executor = executor;
         }
-
 
         public void run()
         {
             String ip = getNextIp();
             while (getStatus()==Status.STARTED && ip!=null && checkIp(ip) )
             {
+                if (logger.isDebugEnabled())
+                    logger.debug("Scanning ip "+ip);
                 try
                 {
                     Collection<NodeAttribute> sessAttribute = getSessionAttributes(ip);
@@ -210,9 +293,10 @@ public class ScannerNode extends DataPipeImpl
                 }catch (Exception e)
                 {
                     getLogger().error(
-                            String.format("Error scanning ip (%s). %s", ip, e.getMessage()));
+                            String.format("Error scanning ip (%s). %s", ip, e.getMessage()), e);
                 }
             }
+            executor.oneJobDone();
         }
     }
 }

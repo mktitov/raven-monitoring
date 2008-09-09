@@ -187,6 +187,8 @@ public abstract class AbstractDataSource
     protected void addDataConsumer(DataConsumer dataConsumer)
     {
         int interval = (Integer)dataConsumer.getNodeAttribute(INTERVAL_ATTRIBUTE).getRealValue();
+        if (interval<=0)
+            return;
         TimeUnit unit = dataConsumer.getNodeAttribute(INTERVAL_UNIT_ATTRIBUTE).getRealValue();
         
         executorService.scheduleAtFixedRate(new Task(dataConsumer), 0, interval, unit);

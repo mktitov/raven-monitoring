@@ -42,7 +42,7 @@ public class ParameterFieldTransformerWorker implements FieldTransformWorker
             {
                 String body = String.format(
                         "{ " +
-                        "   $_ = ($r)%2$s.getParameterValue(this, \"%1$s\", this.%1$s);" +
+                        "   $_ = ($r)%2$s.getParameterValue($0, \"%1$s\", $0.%1$s);" +
                         "}"
                         , fieldAccess.getFieldName(), NodeListenerExecutorHelper.class.getName());
                 
@@ -53,7 +53,7 @@ public class ParameterFieldTransformerWorker implements FieldTransformWorker
                 String body = String.format(
                         "{ " +
                         "   $proceed($1);" +
-                        "   %2$s.setParameterValue(this, \"%1$s\", ($w)this.%1$s);" +
+                        "   %2$s.setParameterValue($0, \"%1$s\", ($w)$0.%1$s);" +
                         "} "
                         , fieldAccess.getFieldName(), NodeListenerExecutorHelper.class.getName());
                 fieldAccess.replace(body);

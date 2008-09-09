@@ -76,11 +76,12 @@ public class SnmpNode extends AbstractDataSource
         String community = attributes.get(COMMUNITY_ATTR).getRealValue();
         String oid = attributes.get(OID_ATTR).getRealValue();
         boolean isTable = attributes.get(OID_TYPE_ATTR).getRealValue()==OidType.TABLE;
+        Long timeout = attributes.get(TIMEOUT_ATTR).getRealValue();
 
         UdpAddress address = new UdpAddress(host+"/"+port);
         CommunityTarget target = new CommunityTarget(address, new OctetString(community));
         target.setRetries(1);
-        target.setTimeout(2000);
+        target.setTimeout(timeout);
         target.setVersion(version.asInt());
 
         PDU pdu = new PDU();
@@ -119,7 +120,7 @@ public class SnmpNode extends AbstractDataSource
         consumerAttributes.add(attr);
         
         attr = new NodeAttributeImpl(
-                TIMEOUT_ATTR, Integer.class, 2000, "The timeout in milliseconds");
+                TIMEOUT_ATTR, Long.class, 2000, "The timeout in milliseconds");
         attr.setRequired(true);
         consumerAttributes.add(attr);
         
