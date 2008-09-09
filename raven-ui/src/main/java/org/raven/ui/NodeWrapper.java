@@ -210,7 +210,7 @@ public class NodeWrapper extends AbstractNodeWrapper
 		return "ok";
 	}
 	
-	public List<Attr> getAttributes() throws TooManyReferenceValuesException
+	public List<Attr> getAttributes() 
 	{
 		if(editingAttrs==null) loadAttributes();
 		if(!useChildAttributesView) return editingAttrs;
@@ -308,7 +308,7 @@ public class NodeWrapper extends AbstractNodeWrapper
 			List<NodeAttribute> nal = nw.getRefreshAttributes();
 			for(NodeAttribute na : nal)
 				try {
-					editingRefreshAttrs.put(na.getName(),new Attr(na));
+					editingRefreshAttrs.put(na.getName(),new Attr(na,true));
 				} catch (TooManyReferenceValuesException e) {
 					logger.error("on load refresh attributes : ",e);
 				}
@@ -491,10 +491,16 @@ public class NodeWrapper extends AbstractNodeWrapper
 	  }
 	  
 	  
-	  public String cancel() throws TooManyReferenceValuesException //ActionEvent event
+	  public String cancel() //ActionEvent event
 	  {
 		  getAttributes();
 		  setHasUnsavedChanges(false);
+		  return "";
+	  }
+
+	  public String cancelRefreshAttributes() //ActionEvent event
+	  {
+		  loadRefreshAttributes();
 		  return "";
 	  }
 	  

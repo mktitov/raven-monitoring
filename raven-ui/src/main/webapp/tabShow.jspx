@@ -166,7 +166,7 @@ action="#{sBean.reloadRightFrame}"
             <tr:commandButton 
             	shortDesc="#{msgs.dscCancelAttr}" 
             	text="#{msgs.cancel}" 
-            	action="#{cNode.cancel}" />
+            	action="#{cNode.cancelRefreshAttributes}" />
         </tr:panelButtonBar>
   	</tr:showDetailItem>
 </tr:panelAccordion>

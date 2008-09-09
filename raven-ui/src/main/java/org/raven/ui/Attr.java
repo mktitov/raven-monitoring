@@ -62,6 +62,7 @@ public class Attr
 	private List<Attr> children = new ArrayList<Attr>();
 	private boolean hasChildren = false;
 	private boolean templateExpression = false;
+	private boolean refreshAttribute = false;
 
 	@SuppressWarnings("unchecked")
 	public Attr(NodeAttribute na) throws TooManyReferenceValuesException
@@ -93,6 +94,12 @@ public class Attr
         templateExpression = na.isTemplateExpression();
 	}
 
+	public Attr(NodeAttribute na, boolean ra) throws TooManyReferenceValuesException
+	{
+		this(na);
+		setRefreshAttribute(ra);
+	}
+	
 	public boolean isEnableValueDialog()
 	{
 		try {
@@ -150,18 +157,28 @@ public class Attr
 	public void applySubType(ValueChangeEvent vce)
 	{
 		valueHandlerType = (String) vce.getNewValue();
-		NodeWrapper nw = (NodeWrapper) SessionBean.getElValue(NodeWrapper.BEAN_NAME);
-		nw.saveWithoutWrite();
-		nw.loadAttributes();
+		NodeWrapper nw = SessionBean.getNodeWrapper();
+		if(isRefreshAttribute()) 
+			nw.saveRefreshAttributes();
+		else
+		{
+			nw.saveWithoutWrite();
+			nw.loadAttributes();
+		}
 	}
 	
 	public void applyTemplateExpression(ValueChangeEvent vce)
 	{
 		Boolean b = (Boolean) vce.getNewValue();
 		templateExpression = b.booleanValue();
-		NodeWrapper nw = (NodeWrapper) SessionBean.getElValue(NodeWrapper.BEAN_NAME);
-		nw.saveWithoutWrite();
-		nw.loadAttributes();
+		NodeWrapper nw = SessionBean.getNodeWrapper();
+		if(isRefreshAttribute())
+			nw.saveRefreshAttributes();
+		else
+		{
+			nw.saveWithoutWrite();
+			nw.loadAttributes();
+		}	
 	}
 	
 	public void addChild(Attr a) 
@@ -271,6 +288,14 @@ public class Attr
 	public void setTemplateExpression(boolean templateExpression) 
 	{ 
 		this.templateExpression = templateExpression; 
+	}
+
+	public void setRefreshAttribute(boolean refreshAttribute) {
+		this.refreshAttribute = refreshAttribute;
+	}
+
+	public boolean isRefreshAttribute() {
+		return refreshAttribute;
 	}
 
     
