@@ -15,6 +15,7 @@
  *  under the License.
  -->
 <jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
+		  xmlns:c="http://java.sun.com/jsp/jstl/core" 
           xmlns:f="http://java.sun.com/jsf/core"
           xmlns:h="http://java.sun.com/jsf/html"
           xmlns:tr="http://myfaces.apache.org/trinidad" 
@@ -28,11 +29,12 @@
 		rendered="#{sBean.refreshViewInteval > 0}" 
 		interval="#{sBean.refreshViewIntevalMS}" 
 		pollListener="#{sBean.pollReloadRightFrame}" />
+<!--
 	<tr:poll 
 		id="testPoll" 
 		interval="10000" 
 		 />
-<!-- 
+ 
 action="#{sBean.reloadRightFrame}"
  -->
 	<tr:commandButton 
@@ -189,7 +191,9 @@ partialTriggers=":poolStatus"
   	id="switcher" 
   	facetName="#{row.mimeGroup}" 
   	defaultFacet="default">
+
   	<f:facet name="default"/>
+
 <!-- show nodeUrl --> 
   	<f:facet name="nodeUrl">
 		<tr:commandLink 
@@ -211,8 +215,16 @@ partialTriggers=":poolStatus"
        			name="ViewableObject" 
        			value="#{row.id}"/>
    		</s:graphicImageDynamic>
-<!-- value="#{rowExplorer.refresh}" -->
   </f:facet >
+
+<!-- show table --> 
+	<f:facet name="ravenTable">
+			<h:outputText escape="false" value="#{row.htmlTable}" />
+<!--
+			<tr:group binding="#{ravenTable.group}" />
+-->			 
+  	</f:facet >
+
   
 </tr:switcher>
 </tr:column> 

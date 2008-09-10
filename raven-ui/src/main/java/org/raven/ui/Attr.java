@@ -102,12 +102,8 @@ public class Attr
 	
 	public boolean isEnableValueDialog()
 	{
-		try {
-			if(expressionSupported && (getSelectItems() == null) ) 
+		if(expressionSupported && (getSelectItems() == null) ) 
 				return true;
-		} catch (TooManyReferenceValuesException e) {
-			logger.warn("isEnableEditValueDialog : ",e);
-		}
 		return false;
 	}
 
@@ -217,9 +213,14 @@ public class Attr
 	public int getId() { return id; }
 	public void setId(int id) { this.id = id; }
 
-	public List<SelectItem> getSelectItems() throws TooManyReferenceValuesException 
+	public List<SelectItem> getSelectItems()  
     { 
-		List<ReferenceValue> lst = attribute.getReferenceValues();
+		List<ReferenceValue> lst = null;
+		try {
+			lst = attribute.getReferenceValues();
+		} catch (TooManyReferenceValuesException e) {
+			logger.error("xmm: ",e);
+		}
 		if(lst!=null)
 		{
             selectItems = new ArrayList<SelectItem>();
