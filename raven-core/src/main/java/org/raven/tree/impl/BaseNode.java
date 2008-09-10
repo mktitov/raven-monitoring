@@ -960,11 +960,11 @@ public class BaseNode implements Node, NodeListener
         attr.setRawValue(param.getDefaultValue());
         attr.setType(param.getType());
         attr.setValueHandlerType(param.getValueHandlerType());
-        addNodeAttribute(attr);
-
         configurator.getTreeStore().saveNodeAttribute(attr);
-        
         attr.init();
+        
+        addNodeAttribute(attr);
+        
     }
     
     void removeChildAttributes(String parentName, Collection<NodeAttribute> leaveAttributes)

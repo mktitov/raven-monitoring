@@ -108,10 +108,12 @@ public abstract class AbstractDataSource
         {
             return gatherDataForConsumer(dataConsumer, attributes);
         }
-        catch (Exception e)
+        catch (Throwable e)
         {
-            logger.error(String.format(
-                    "Error gathering data for consumer (%s)", dataConsumer.getPath()), e);
+            if (logger.isDebugEnabled())
+                logger.debug(String.format(
+                        "Error gathering data for consumer (%s). %s"
+                        , dataConsumer.getPath(), e.getMessage()));
             return false;
         }
     }

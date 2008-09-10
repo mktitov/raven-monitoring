@@ -35,7 +35,7 @@ import org.raven.tree.Node.Status;
  */
 public class ScannerNodeTest extends RavenCoreTestCase
 {
-    @Test 
+    @Test
     public void simpleTest() throws Exception
     {
         TestScannerDataSource ds = new TestScannerDataSource();
@@ -56,6 +56,7 @@ public class ScannerNodeTest extends RavenCoreTestCase
         scanner.setIpRanges("10.50.1.0-10.50.1.1, 10.50.2.0-10.50.2.0");
         scanner.setInterval(0);
         scanner.setIntervalUnit(TimeUnit.SECONDS);
+        scanner.setResolveHostnames(false);
 
         TestScannerConsumer consumer = new TestScannerConsumer();
         consumer.setName("consumer");
@@ -108,6 +109,7 @@ public class ScannerNodeTest extends RavenCoreTestCase
         scanner.setInterval(0);
         scanner.setIntervalUnit(TimeUnit.SECONDS);
         scanner.setIpAddressFilter(false);
+        scanner.setResolveHostnames(false);
 
         TestScannerConsumer consumer = new TestScannerConsumer();
         consumer.setName("consumer");
@@ -147,13 +149,15 @@ public class ScannerNodeTest extends RavenCoreTestCase
         tree.getRootNode().addChildren(scanner);
         scanner.save();
         scanner.init();
-        scanner.setThreadCount(1);
-        scanner.setIpRanges("10.50.1.16-10.50.1.16, 10.50.1.85-10.50.1.85");
+        scanner.setThreadCount(10);
+//        scanner.setIpRanges("10.50.0.0-10.50.255.255");
+        scanner.setIpRanges("10.50.1.0-10.50.1.255");
         scanner.setInterval(0);
         scanner.setIntervalUnit(TimeUnit.SECONDS);
         scanner.setDataSource(snmp);
-        scanner.getNodeAttribute(SnmpNode.TIMEOUT_ATTR).setValue("200");
-        scanner.getNodeAttribute(SnmpNode.OID_ATTR).setValue("1.3.6.1.2.1.25.3.2.1.1.1");
+        scanner.getNodeAttribute(SnmpNode.TIMEOUT_ATTR).setValue("100");
+//        scanner.getNodeAttribute(SnmpNode.OID_ATTR).setValue("1.3.6.1.2.1.25.3.2.1.1.1");
+        scanner.getNodeAttribute(SnmpNode.OID_ATTR).setValue("1.3.6.1.2.1.25.3.5.1.1.1");
         scanner.getNodeAttribute(SnmpNode.HOST_ATTR).setValue("dummyValue");
         
         TestScannerConsumer consumer = new TestScannerConsumer();
@@ -167,9 +171,22 @@ public class ScannerNodeTest extends RavenCoreTestCase
         
         scanner.start();
         assertEquals(Status.STARTED, scanner.getStatus());
-        TimeUnit.SECONDS.sleep(10);
+        
+        while (scanner.isScanning())
+            TimeUnit.MILLISECONDS.sleep(100);
 
         Table table = consumer.getTable();
         assertNotNull(table);
+
+        System.out.println("start time: "+scanner.getScanningStartTime());
+        System.out.println("duration: "+scanner.getScanningDuration());
+        System.out.println("scanned ips: "+scanner.getIpsScanned());
+        System.out.println("ips found: "+scanner.getIpsFound());
+        System.out.println("speed ips/sec: "+scanner.getScanningSpeed());
+        for (Iterator<Object[]> it=table.getRowIterator(); it.hasNext();)
+        {
+            Object[] row = it.next();
+            System.out.println("Printer ip: "+row[0]+"; hostname: "+row[1]);
+        }
     }
 }

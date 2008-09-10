@@ -17,32 +17,42 @@
 
 package org.raven.net;
 
+import java.net.InetAddress;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Map;
 import javax.script.Bindings;
 import org.raven.ds.impl.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.collections.iterators.IteratorChain;
+import org.apache.commons.lang.time.DurationFormatUtils;
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
 import org.raven.table.TableImpl;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
+import org.raven.tree.Viewable;
+import org.raven.tree.ViewableObject;
+import org.raven.tree.impl.DataSourcesNode;
 import org.raven.tree.impl.NodeAttributeImpl;
+import org.raven.tree.impl.ViewableObjectImpl;
 import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class ScannerNode extends DataPipeImpl
+@NodeClass(parentNode=DataSourcesNode.class)
+public class ScannerNode extends DataPipeImpl implements Viewable
 {
     @Parameter(defaultValue="5")
     @NotNull
@@ -68,11 +78,21 @@ public class ScannerNode extends DataPipeImpl
     @NotNull()
     private String hostAttributeName;
 
+    @Parameter(defaultValue="true")
+    @NotNull()
+    private Boolean resolveHostnames;
+
     private Iterator<String> ipRangeIterator;
     private TableImpl ipTable;
     private String ip;
     private WorkerExecutor executor;
-    private boolean dataSended;
+    private AtomicLong scanStartTime;
+    private AtomicLong scanEndTime;
+    private boolean resolveHostnamesCopy;
+    @Parameter(readOnly=true)
+    private AtomicLong ipsScanned;
+    @Parameter(readOnly=true)
+    private AtomicLong ipsFound;
 
     @Override
     public boolean start() throws NodeError
@@ -104,12 +124,62 @@ public class ScannerNode extends DataPipeImpl
     
     private void scan() throws Exception
     {
-        dataSended = false;
         ipRangeIterator = formIpIterator();
-        ipTable = new TableImpl(new String[]{"ip"});
+        resolveHostnamesCopy = resolveHostnames;
+        if (resolveHostnamesCopy)
+            ipTable = new TableImpl(new String[]{"ip", "hostname"});
+        else    
+            ipTable = new TableImpl(new String[]{"ip"});
 
+        scanStartTime = new AtomicLong(System.currentTimeMillis());
+        scanEndTime = new AtomicLong();
+        ipsScanned = new AtomicLong();
+        ipsFound = new AtomicLong();
         executor = new WorkerExecutor(getDataSource(), this);
+    }
 
+    public boolean isScanning()
+    {
+        return executor!=null && !executor.isJobDone();
+    }
+
+    @Parameter(readOnly=true)
+    public String getScanningDuration()
+    {
+        long dur = getScanDurationInMillisec();
+        return dur==0? "" : DurationFormatUtils.formatDuration(dur, "H:m:s.S", true);
+    }
+
+    @Parameter(readOnly=true)
+    public String getScanningStartTime()
+    {
+        long startTime = scanStartTime==null? 0l : scanStartTime.get();
+        if (startTime==0)
+            return "";
+        else
+        {
+            SimpleDateFormat fmt = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+            return fmt.format(new Date(startTime));
+        }
+    }
+
+    public AtomicLong getIpsScanned()
+    {
+        return ipsScanned;
+    }
+
+    public AtomicLong getIpsFound()
+    {
+        return ipsFound;
+    }
+
+    @Parameter(readOnly=true)
+    public Long getScanningSpeed()
+    {
+        if (scanStartTime==null || scanStartTime.get()==0)
+            return 0l;
+        long dur = getScanDurationInMillisec();
+        return dur==0? 0 : ipsScanned.get()/(dur/1000);
     }
 
     public String getHostAttributeName() {
@@ -160,16 +230,44 @@ public class ScannerNode extends DataPipeImpl
         this.threadCount = threadCount;
     }
 
+    public Boolean getResolveHostnames() {
+        return resolveHostnames;
+    }
+
+    public void setResolveHostnames(Boolean resolveHostnames) {
+        this.resolveHostnames = resolveHostnames;
+    }
+
     @Override
     protected void doSetData(DataSource dataSource, Object data)
     {
         if (dataSource==this)
             super.doSetData(dataSource, data);
     }
+    
+    private long getScanDurationInMillisec()
+    {
+        long time = 0;
+        long startTime = scanStartTime==null? 0l : scanStartTime.get();
+        if (startTime>=0)
+        {
+            if (scanEndTime==null || scanEndTime.get()==0)
+                time = System.currentTimeMillis();
+            else
+                time = scanEndTime.get();
+        }
+        return startTime==0? 0 : time-startTime;
+    }
 
     private synchronized String getNextIp()
     {
-        return ipRangeIterator.hasNext()? ipRangeIterator.next() : null;
+        if (ipRangeIterator.hasNext())
+        {
+            ipsScanned.incrementAndGet();
+            return ipRangeIterator.next();
+        }
+        else
+            return null;
     }
 
     private Collection<NodeAttribute> getSessionAttributes(String ip) throws Exception
@@ -211,11 +309,30 @@ public class ScannerNode extends DataPipeImpl
         bindings.put("ip", ip);
     }
 
-    private synchronized void addIp(String ip)
+    private synchronized void addIp(String ip, String hostname)
     {
-        ipTable.addRow(new Object[]{ip});
+        if (resolveHostnamesCopy)
+            ipTable.addRow(new Object[]{ip, hostname});
+        else
+            ipTable.addRow(new Object[]{ip});
+        ipsFound.incrementAndGet();
         if (logger.isDebugEnabled())
             logger.debug(String.format("Ip (%s) added to the table", ip));
+    }
+
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
+    {
+        return null;
+    }
+
+    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) 
+            throws Exception
+    {
+        if (ipTable==null)
+            return null;
+        ViewableObject obj = new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, ipTable);
+        
+        return Arrays.asList(obj);
     }
 
     private class WorkerExecutor
@@ -247,7 +364,10 @@ public class ScannerNode extends DataPipeImpl
             if (logger.isDebugEnabled())
                 logger.debug("Active workers count - "+count);
             if (count==0)
+            {
+                scanEndTime.set(System.currentTimeMillis());
                 setData((DataSource)dataConsumer, ipTable);
+            }
         }
 
         public boolean isJobDone()
@@ -288,7 +408,15 @@ public class ScannerNode extends DataPipeImpl
                 {
                     Collection<NodeAttribute> sessAttribute = getSessionAttributes(ip);
                     if (dataSource.getDataImmediate(dataConsumer, sessAttribute))
-                        addIp(ip);
+                    {
+                        if (resolveHostnamesCopy)
+                        {
+                            InetAddress addr = InetAddress.getByName(ip);
+                            addIp(ip, addr.getCanonicalHostName());
+                        }
+                        else
+                            addIp(ip, null);
+                    }
 
                     TimeUnit.MILLISECONDS.sleep(1);
                     ip = getNextIp();

@@ -153,7 +153,8 @@ public class SnmpNode extends AbstractDataSource
         pdu = response.getResponse();
         if (pdu==null)
             throw new NodeError("Response timeout");
-        
+        if (pdu.getErrorIndex()!=0)
+            throw new NodeError(pdu.getErrorStatusText());
         return pdu.get(0).getVariable();
     }
 
@@ -171,6 +172,8 @@ public class SnmpNode extends AbstractDataSource
             pdu = response.getResponse();
             if (pdu==null)
                 throw new NodeError("Response timeout");
+            if (pdu.getErrorIndex()!=0)
+                throw new NodeError(pdu.getErrorStatusText());
             VariableBinding var = pdu.get(0);
             
             if (var.getOid().startsWith(tableOID))

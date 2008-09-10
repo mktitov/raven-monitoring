@@ -77,7 +77,7 @@ public class SnmpNodeTest extends ServiceTestCase
     @Test 
     public void snmp4j() throws Exception
     {
-        UdpAddress addr = new UdpAddress("127.0.0.1/161");
+        UdpAddress addr = new UdpAddress("ipcc.komi.mts.ru/161");
         
         CommunityTarget target = new CommunityTarget(addr, new OctetString("public"));
         target.setRetries(1);
@@ -85,7 +85,7 @@ public class SnmpNodeTest extends ServiceTestCase
         target.setVersion(SnmpConstants.version1);
         
         PDU pdu = new PDU();
-        pdu.add(new VariableBinding(new OID(".1.3.6.1.4.1.2021.10.1.3.1")));
+        pdu.add(new VariableBinding(new OID("1.3.6.1.2.1.25.3.2.1.1.1")));
         pdu.setType(PDU.GET);
         
         TransportMapping transport = new DefaultUdpTransportMapping();
