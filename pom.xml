@@ -299,7 +299,7 @@
             <dependency>
                 <groupId>com.h2database</groupId>
                 <artifactId>h2</artifactId>
-                <version>1.0.70</version>
+                <version>1.0.77</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
