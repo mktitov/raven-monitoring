@@ -121,6 +121,17 @@ public class ScannerNode extends DataPipeImpl implements Viewable
         }
         super.stop();
     }
+
+    @Override
+    public boolean getDataImmediate(
+            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes) 
+    {
+        if (ipTable!=null && executor.isJobDone())
+            setData(this, ipTable);
+        else
+            setData(this, null);
+        return true;
+    }
     
     private void scan() throws Exception
     {

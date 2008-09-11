@@ -27,11 +27,18 @@ public class ViewableObjectImpl implements ViewableObject
 {
     private final String mimeType;
     private final Object data;
+    private final boolean cacheData;
 
-    public ViewableObjectImpl(String mimeType, Object data)
+    public ViewableObjectImpl(String mimeType, Object data, boolean cacheData)
     {
         this.mimeType = mimeType;
         this.data = data;
+        this.cacheData = cacheData;
+    }
+
+    public ViewableObjectImpl(String mimeType, Object data)
+    {
+        this(mimeType, data, false);
     }
 
     public Object getData()
@@ -42,5 +49,10 @@ public class ViewableObjectImpl implements ViewableObject
     public String getMimeType()
     {
         return mimeType;
+    }
+
+    public boolean cacheData()
+    {
+        return cacheData;
     }
 }

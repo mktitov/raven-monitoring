@@ -15,24 +15,12 @@
  *  under the License.
  */
 
-package org.raven.tree;
+package org.raven.sched.impl;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface ViewableObject
-{
-    /**
-     * Retruns the mime type of the {@link #getData()}
-     */
-    public String getMimeType();
-    /**
-     * Returns the data contained by this object.
-     */
-    public Object getData();
-    /**
-     * If returns <code>true</code> then data must be cached by user interface layer.
-     */
-    public boolean cacheData();
+public class SchedulersNode {
+
 }
