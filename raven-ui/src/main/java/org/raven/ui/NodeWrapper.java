@@ -111,7 +111,7 @@ public class NodeWrapper extends AbstractNodeWrapper
 		if( isNodeAndChildViewable() ) mesName = "refreshAttributesOfNodeAndChildren";
 		else if( isNodeViewableOnly() ) mesName = "refreshAttributesOfNode";
 				else if( isChildViewableOnly() ) mesName = "refreshAttributesOfChildren";
-		if(mesName==null) return "";
+						else return "";
 		return Messages.getUiMessage(mesName);
 	}
 
@@ -318,19 +318,23 @@ public class NodeWrapper extends AbstractNodeWrapper
 	public void  loadAttributes() 
 	{
 		loadRefreshAttributes();
-		savedAttrs = getNodeAttributes();
+		List<NodeAttribute> attrList = getNodeAttributes();
 		editingAttrs = new ArrayList<Attr>();
 		readOnlyAttributes = new ArrayList<NodeAttribute>();
-		for(NodeAttribute na : savedAttrs)
+		savedAttrs = new ArrayList<NodeAttribute>(); 
+		for(NodeAttribute na : attrList)
 		{	
 			if(na.isReadonly()) readOnlyAttributes.add(na);
 			else
+			{
+				savedAttrs.add(na);
 				try {
 					editingAttrs.add(new Attr(na));
 				} catch (TooManyReferenceValuesException e) {
 					logger.error("on load attributes: ",e);
 					return;
 				}
+			}	
 		}	
 		for(Attr a : editingAttrs)
 			a.findChildren(editingAttrs);
