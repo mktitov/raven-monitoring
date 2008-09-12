@@ -72,11 +72,11 @@ public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
     @Override
     protected void doSetData(DataSource dataSource, Object data)
     {
-        if (skipFirstCycle && getPreviuosDataTimeMillis()==0)
-            return;
         Class convertTo = convertValueToType;
         if (convertTo!=null)
             this.data = converter.convert(convertTo, this.data, null);
+        if (skipFirstCycle && getPreviuosDataTimeMillis()==0)
+            return;
         Object newData = this.data;
         NodeAttribute attr = getNodeAttribute(EXPRESSION_ATTRIBUTE);
         if (attr.getRawValue()!=null && attr.getRawValue().trim().length()>0)
