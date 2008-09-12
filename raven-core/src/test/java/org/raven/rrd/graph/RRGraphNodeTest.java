@@ -17,6 +17,7 @@
 
 package org.raven.rrd.graph;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -96,11 +97,11 @@ public class RRGraphNodeTest extends RavenCoreTestCase
         List<ViewableObject> objects = graph.getViewableObjects(attrs);
         assertNotNull(objects);
         assertEquals(1, objects.size());
-        IOUtils.copy((InputStream)objects.get(0).getData(), new FileOutputStream(file1));
+        IOUtils.copy(new ByteArrayInputStream((byte[])objects.get(0).getData()), new FileOutputStream(file1));
         
         TimeUnit.SECONDS.sleep(5);
         
-        IOUtils.copy((InputStream)objects.get(0).getData(), new FileOutputStream(file1));
+        IOUtils.copy(new ByteArrayInputStream((byte[])objects.get(0).getData()), new FileOutputStream(file1));
     }
 
     private RRGraphNode createGraphNode(RRDataSource rrds, RRDataSource rrds2) throws Exception

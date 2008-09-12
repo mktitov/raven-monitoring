@@ -28,6 +28,7 @@ import org.raven.conf.Config;
 import org.raven.conf.Configurator;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.dbcp.impl.JDBCConnectionPoolNode;
+import org.raven.ds.impl.AbstractDataConsumer.ResetDataPolicy;
 import org.raven.ds.impl.AbstractDataSource;
 import org.raven.sql.objects.SqlDataConsumer;
 import org.raven.tree.Node.Status;
@@ -67,6 +68,7 @@ public class SQLDataSourceNodeTest extends RavenCoreTestCase
         assertNotNull(attr);
         assertEquals(SQLDataSourceNode.ResultType.TABLE, attr.getRealValue());
         dataConsumer.getNodeAttribute(AbstractDataSource.INTERVAL_ATTRIBUTE).setValue("1000");
+        dataConsumer.setResetDataPolicy(ResetDataPolicy.DONT_RESET_DATA);
 
         dataConsumer.start();
         assertEquals(Status.STARTED, dataConsumer.getStatus());
@@ -100,6 +102,7 @@ public class SQLDataSourceNodeTest extends RavenCoreTestCase
         dataConsumer.getNodeAttribute(SQLDataSourceNode.RESULT_TYPE_ATTRIBUTE)
                 .setValue(SQLDataSourceNode.ResultType.SINGLE.toString());
         dataConsumer.getNodeAttribute(AbstractDataSource.INTERVAL_ATTRIBUTE).setValue("1000");
+        dataConsumer.setResetDataPolicy(ResetDataPolicy.DONT_RESET_DATA);
         NodeAttribute queryParam =
                 new NodeAttributeImpl("nodeName", String.class, "dataConsumer", null);
         queryParam.setValueHandlerType(QueryParameterValueHandlerFactory.TYPE);
@@ -128,6 +131,7 @@ public class SQLDataSourceNodeTest extends RavenCoreTestCase
         assertTrue(taskCountAttr.isReadonly());
 
         dataConsumer.setDataSource(sqlds);
+        dataConsumer.setResetDataPolicy(ResetDataPolicy.DONT_RESET_DATA);
         NodeAttribute attr = dataConsumer.getNodeAttribute(SQLDataSourceNode.QUERY_ATTRIBUTE);
         assertNotNull(attr);
         attr.setValue("select name from nodes where name=:nodeName");

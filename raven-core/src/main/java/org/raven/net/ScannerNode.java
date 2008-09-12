@@ -82,6 +82,10 @@ public class ScannerNode extends DataPipeImpl implements Viewable
     @NotNull()
     private Boolean resolveHostnames;
 
+    @Parameter(defaultValue="5")
+    @NotNull()
+    private Integer resolveNameRetryCount;
+
     private Iterator<String> ipRangeIterator;
     private TableImpl ipTable;
     private String ip;
@@ -191,6 +195,14 @@ public class ScannerNode extends DataPipeImpl implements Viewable
             return 0l;
         long dur = getScanDurationInMillisec();
         return dur==0? 0 : ipsScanned.get()/(dur/1000);
+    }
+
+    public Integer getResolveNameRetryCount() {
+        return resolveNameRetryCount;
+    }
+
+    public void setResolveNameRetryCount(Integer resolveNameRetryCount) {
+        this.resolveNameRetryCount = resolveNameRetryCount;
     }
 
     public String getHostAttributeName() {
@@ -352,6 +364,7 @@ public class ScannerNode extends DataPipeImpl implements Viewable
         private final DataConsumer dataConsumer;
         private final Thread[] workers;
         private final AtomicInteger activeWorkers;
+        private final int retryCount = resolveNameRetryCount;
 
         public WorkerExecutor(DataSource dataSource, DataConsumer dataConsumer)
         {
@@ -363,7 +376,8 @@ public class ScannerNode extends DataPipeImpl implements Viewable
             workers = new Thread[workersCount];
             for (int i=0; i<workersCount; ++i)
             {
-                Thread workerThread = new Thread(new Worker(dataSource, dataConsumer, this));
+                Thread workerThread =
+                        new Thread(new Worker(dataSource, dataConsumer, this, retryCount));
                 workers[i] = workerThread;
                 workerThread.start();
             }
@@ -400,12 +414,16 @@ public class ScannerNode extends DataPipeImpl implements Viewable
         private final DataSource dataSource;
         private final DataConsumer dataConsumer;
         private final WorkerExecutor executor;
+        private final int retryCount;
 
-        public Worker(DataSource dataSource, DataConsumer dataConsumer, WorkerExecutor executor)
+        public Worker(
+                DataSource dataSource, DataConsumer dataConsumer, WorkerExecutor executor
+                , int retryCount)
         {
             this.dataSource = dataSource;
             this.dataConsumer = dataConsumer;
             this.executor = executor;
+            this.retryCount = retryCount;
         }
 
         public void run()
@@ -423,7 +441,15 @@ public class ScannerNode extends DataPipeImpl implements Viewable
                         if (resolveHostnamesCopy)
                         {
                             InetAddress addr = InetAddress.getByName(ip);
-                            addIp(ip, addr.getCanonicalHostName());
+                            String hostname = null;
+                            for (int i=0; i<retryCount+1; ++i)
+                            {
+                                hostname = addr.getCanonicalHostName();
+                                if (!ip.equals(hostname))
+                                    break;
+                                TimeUnit.MILLISECONDS.sleep(10);
+                            }
+                            addIp(ip, hostname);
                         }
                         else
                             addIp(ip, null);

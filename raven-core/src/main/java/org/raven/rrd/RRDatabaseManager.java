@@ -35,6 +35,7 @@ import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.beans.ObjectUtils;
@@ -67,7 +68,8 @@ public class RRDatabaseManager extends BaseNode
     private Integer dataSourcesPerDatabase;
     
     private final static String STARING_POINT_ATTR_NAME = "startingPoint";
-    @Parameter @NotNull
+    @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
+    @NotNull
     @Description(
         "The node from which database manager take a control on data source nodes with seted " +
         "dataType attribute value")

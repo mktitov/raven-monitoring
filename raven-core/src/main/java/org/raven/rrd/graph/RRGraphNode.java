@@ -19,13 +19,13 @@ package org.raven.rrd.graph;
 
 import org.raven.ImageFormat;
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import org.jrobin.core.Util;
 import org.jrobin.graph.RrdGraph;
 import org.jrobin.graph.RrdGraphDef;
@@ -155,12 +155,12 @@ public class RRGraphNode extends BaseNode implements Viewable
             for (int i=0; i<def.rrdNodes.size(); ++i)
             {
                 RRDNode rrd = def.rrdNodes.get(i);
-                if (!rrd.getReadLock().tryLock())
+                if (!rrd.getReadLock().tryLock(5, TimeUnit.SECONDS))
                 {
                     for (int j=0; j<i; ++j)
                         def.rrdNodes.get(j).getReadLock().unlock();
-                    throw new NodeError(
-                            String.format("Error lock rrd (%s) node for read.", rrd.getPath()));
+
+                    return null;
                 }
             }
 
@@ -170,7 +170,7 @@ public class RRGraphNode extends BaseNode implements Viewable
                 ViewableObject viewableObject = 
                         new ViewableObjectImpl(
                             imageFormat.getMimeType()
-                            , new ByteArrayInputStream(graph.getRrdGraphInfo().getBytes()));
+                            , graph.getRrdGraphInfo().getBytes());
                 return Arrays.asList(viewableObject);
             }
             finally

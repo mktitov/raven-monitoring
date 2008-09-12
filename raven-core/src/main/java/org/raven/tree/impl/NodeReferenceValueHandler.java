@@ -17,6 +17,8 @@
 
 package org.raven.tree.impl;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
@@ -111,11 +113,14 @@ public class NodeReferenceValueHandler
         resolveNode(data);
         initNodeReference(node, pathElements);
         
-        if (!slaveMode)
-            fireValueChangedEvent(oldNode, node);
+//        if (!slaveMode)
+//            fireValueChangedEvent(oldNode, node);
         
         if (!ObjectUtils.equals(this.data, oldData) && !slaveMode)
+        {
+            fireValueChangedEvent(oldNode, node);
             attribute.save();
+        }
         
 //        expressionValid = true;
     }
@@ -127,16 +132,14 @@ public class NodeReferenceValueHandler
 
     public Object handleData() 
     {
-//        if (!isExpressionValid())
-//        {
-//            try {
-//                validateExpression();
-//            } catch (Exception ex) {
-//                attribute.getOwner().getLogger().warn(String.format(
-//                        "Error in node (%s) attribute (%s). Invalid path to the node (%s)."
-//                        , attribute.getOwner().getPath(), attribute.getName(), data));
-//            }
-//        }
+        if (!isExpressionValid())
+            try {
+                validateExpression();
+            } catch (Exception ex) {
+                attribute.getOwner().getLogger().warn(String.format(
+                        "Expression (%s) revalidation failed for attribute (%s) of the node (%s)"
+                        , data, attribute.getName(), attribute.getOwner().getPath()));
+            }
         return node;
         
     }

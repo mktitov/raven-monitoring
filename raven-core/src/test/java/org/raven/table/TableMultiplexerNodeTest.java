@@ -66,6 +66,7 @@ public class TableMultiplexerNodeTest extends RavenCoreTestCase
         tree.getRootNode().addChildren(tableConsumer);
         tableConsumer.save();
         tableConsumer.init();
+        tableConsumer.setResetDataPolicy(AbstractDataConsumer.ResetDataPolicy.DONT_RESET_DATA);
         tableConsumer.getNodeAttribute(
                 AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(mux.getPath());
         tableConsumer.start();

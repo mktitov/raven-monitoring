@@ -33,6 +33,7 @@ import org.raven.expr.ExpressionCompiler;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.expr.impl.ExpressionCompilerImpl;
 import org.raven.impl.AttributeReferenceToStringConverter;
+import org.raven.impl.BooleanReferenceValues;
 import org.raven.impl.ClassToStringConverter;
 import org.raven.impl.EnumReferenceValues;
 import org.raven.impl.NodeAccessToNodeConverter;
@@ -174,9 +175,13 @@ public class RavenCoreModule
             , new SystemDataSourceReferenceValues()
             , "after:"+EnumReferenceValues.class.getSimpleName());
         conf.add(
+            BooleanReferenceValues.class.getSimpleName()
+            , new BooleanReferenceValues()
+            , "after:"+SystemDataSourceReferenceValues.class.getSimpleName());
+        conf.add(
             TemplateVariableReferenceValues.class.getSimpleName()
             , new TemplateVariableReferenceValues()
-            , "after:"+SystemDataSourceReferenceValues.class.getSimpleName());
+            , "after:"+BooleanReferenceValues.class.getSimpleName());
         conf.add(
             DataPipeConvertToTypesReferenceValues.class.getSimpleName()
             , new DataPipeConvertToTypesReferenceValues()

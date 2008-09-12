@@ -17,7 +17,9 @@
 
 package org.raven.ds.impl;
 
+import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Date;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
@@ -35,12 +37,70 @@ import org.weda.annotations.constraints.NotNull;
 public abstract class AbstractDataConsumer extends ContainerNode implements DataConsumer
 {
     public final static String DATASOURCE_ATTRIBUTE = "dataSource";
+
+    public enum ResetDataPolicy {
+        DONT_RESET_DATA, RESET_LAST_DATA, RESET_PREVIOUS_DATA, RESET_LAST_AND_PREVIOUS_DATA};
     
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     @NotNull 
     @Description("The data source")
     private DataSource dataSource;
+
+    @Parameter(defaultValue="RESET_LAST_AND_PREVIOUS_DATA")
+//    @Parameter()
+    @NotNull
+    private ResetDataPolicy resetDataPolicy;
+
     protected Object data;
+    private long lastDataTime;
+    private Object previousData;
+    private long previousDataTime;
+
+    public ResetDataPolicy getResetDataPolicy() {
+        return resetDataPolicy;
+    }
+
+    public void setResetDataPolicy(ResetDataPolicy resetDataPolicy) {
+        this.resetDataPolicy = resetDataPolicy;
+    }
+
+    @Parameter(readOnly=true)
+    public Object getLastData()
+    {
+        return data;
+    }
+
+    @Parameter(readOnly=true)
+    public long getLastDataTimeMillis()
+    {
+        return lastDataTime;
+    }
+
+    @Parameter(readOnly=true)
+    public String getLastDataTime()
+    {
+        return lastDataTime==0?
+            "" : new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").format(new Date(lastDataTime));
+    }
+
+    @Parameter(readOnly=true)
+    public Object getPreviousData()
+    {
+        return previousData;
+    }
+
+    @Parameter(readOnly=true)
+    public long getPreviuosDataTimeMillis()
+    {
+        return previousDataTime;
+    }
+
+    @Parameter(readOnly=true)
+    public String getPreviousDataTime()
+    {
+        return previousDataTime==0?
+            "" : new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").format(new Date(previousDataTime));
+    }
 
     public DataSource getDataSource()
     {
@@ -60,8 +120,25 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
                     , getPath(), dataSource.getPath()));
             return;
         }
+        this.previousData = this.data;
+        this.previousDataTime = this.lastDataTime;
         this.data = data;
-        doSetData(dataSource, data);    
+        this.lastDataTime = System.currentTimeMillis();
+        try{
+            doSetData(dataSource, data);
+        }finally
+        {
+//            previousData = data;
+//            previousDataTime = lastDataTime;
+
+            switch(resetDataPolicy)
+            {
+                case RESET_LAST_AND_PREVIOUS_DATA: this.data = null; previousData = null; break;
+                case RESET_LAST_DATA: this.data = null; break;
+                case RESET_PREVIOUS_DATA: this.previousData = null; break;
+            }
+        }
+
     }
     
     protected abstract void doSetData(DataSource dataSource, Object data);
