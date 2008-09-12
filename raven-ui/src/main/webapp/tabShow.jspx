@@ -28,7 +28,7 @@
 		id="viewRefresh" 
 		rendered="#{sBean.refreshViewInteval > 0}" 
 		interval="#{sBean.refreshViewIntevalMS}" 
-		pollListener="#{sBean.pollReloadRightFrame}" />
+		pollListener="#{cNode.pollRefresh}" />
 <!--
 	<tr:poll 
 		id="testPoll" 
@@ -40,7 +40,7 @@ action="#{sBean.reloadRightFrame}"
 	<tr:commandButton 
 		shortDesc="#{msgs.dscRefreshAndApply}"
 		partialSubmit="true"
-		action="#{sBean.reloadRightFrame}" 
+		action="#{cNode.onRefresh}" 
 		text="#{msgs.refresh}" 
 		id="refresh_A"  >
 	</tr:commandButton>
@@ -67,7 +67,9 @@ action="#{sBean.reloadRightFrame}"
         	binding="#{cNodeRefreshAttrs.message}" 
         	for="attrs" 
         	messageType="error" />
-	<!-- refresh attributes table -->
+	<!-- refresh attributes table
+	partialTriggers="subtypes" 
+-->
         <tr:table 
         	allDetailsEnabled="true" 
             width="90%" 
@@ -75,8 +77,7 @@ action="#{sBean.reloadRightFrame}"
             value="#{cNode.editingRefreshAttrs}" 
             var="row" 
             rows="12" 
-            id="attrs" 
-            partialTriggers="subtypes">
+            id="attrs" >
 		<!-- name of attribute-->            
             <tr:column headerText="#{msgs.name}">
 				<tr:panelHorizontalLayout>
@@ -180,7 +181,7 @@ action="#{sBean.reloadRightFrame}"
 		horizontalGridVisible="false" 
 		verticalGridVisible="false"
  		var="row"
- 		value="#{cNode.indexedNodes}"  
+ 		value="#{cNode.viewableObjects}"  
  		id="showTable" >
 <!-- 
 :::refresh_A ::poolStatus
@@ -204,8 +205,10 @@ partialTriggers=":poolStatus"
 				value="#{row.nodePath}"/>
 		</tr:commandLink>
 	</f:facet>
-<!-- show image --> 
+<!-- show image -->
 	<f:facet name="image">
+		<tr:group> 
+		<tr:outputText value="#{row.fromDate}"/>
 		<!-- forceIdIndex="true" forceId="true" id="graph" -->
     	<s:graphicImageDynamic  
    			forceId="true" forceIdIndex="true"
@@ -215,14 +218,19 @@ partialTriggers=":poolStatus"
        			name="ViewableObject" 
        			value="#{row.id}"/>
    		</s:graphicImageDynamic>
+		</tr:group>
   </f:facet >
 
 <!-- show table --> 
 	<f:facet name="ravenTable">
+		<tr:group> 
+		<tr:outputText value="#{row.fromDate}"/>
+
 			<h:outputText escape="false" value="#{row.htmlTable}" />
 <!--
 			<tr:group binding="#{ravenTable.group}" />
 -->			 
+</tr:group>
   	</f:facet >
 
   

@@ -1,24 +1,31 @@
 package org.raven.ui;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
 
-import org.apache.myfaces.trinidad.component.core.data.CoreColumn;
-import org.apache.myfaces.trinidad.component.core.output.CoreOutputText;
 import org.raven.table.Table;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.Node;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ViewableObjectWrapper 
 {
+	public static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+	protected Logger logger = LoggerFactory.getLogger(ViewableObjectWrapper.class);
 	public static final String NODE_URL = "nodeUrl";
 	public static final String RAVEN_TABLE_GR = "ravenTable";
 	private ViewableObject viewableObject = null;
 	private Node node = null;
+	private long fd = 0;
+	private String htmlTable = null;
 	
 	public ViewableObjectWrapper(ViewableObject vo)
 	{
 		viewableObject = vo;
+		fd = System.currentTimeMillis();
 	}
 	
 	public ViewableObjectWrapper(Node node)
@@ -49,10 +56,15 @@ public class ViewableObjectWrapper
 			return true;
 		return false;
 	}
-	
-	public String getHtmlTable()
+
+	public String getFromDate()
 	{
-		if(!isTable()) return null;
+	    SimpleDateFormat f = new SimpleDateFormat(DATE_FORMAT);
+		return f.format(new Date(fd));
+	}
+	
+	private String makeHtmlTable()
+	{
 		StringBuffer sb = new StringBuffer();
 		Table table = (Table) viewableObject.getData(); 
 		sb.append("<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\" ><thead><tr>");
@@ -79,6 +91,21 @@ public class ViewableObjectWrapper
 		}
 		sb.append("</tbody></table>");
 		return sb.toString();
+	}
+	
+	public String getHtmlTable()
+	{
+		if(!isTable())
+		{
+			logger.error("VO is not table !");
+			return null;
+		}
+		if(htmlTable==null)
+		{
+			htmlTable = makeHtmlTable();
+			logger.info("created htmlTable "+htmlTable);
+		}	
+		return htmlTable;
 	}
 	
 	public String getMimeGroup()
@@ -123,6 +150,14 @@ public class ViewableObjectWrapper
 
 	public Node getNode() {
 		return node;
+	}
+
+//	public void setFd(long fd) {
+//		this.fd = fd;
+//	}
+
+	public long getFd() {
+		return fd;
 	}
 	
 }

@@ -4,30 +4,25 @@ import java.util.HashMap;
 
 public class ViewableObjectsStorage 
 {
-	HashMap<String, StorageUnit> storage = new HashMap<String, StorageUnit>();
+	HashMap<String, ViewableObjectWrapper> storage = new HashMap<String, ViewableObjectWrapper>();
 	
 	public void put(ViewableObjectWrapper vo)
 	{
 		if(vo!=null)
-			storage.put(vo.toString(), new StorageUnit(vo));
+			storage.put(vo.toString(), vo);
 	}
 	
 	public ViewableObjectWrapper get(String id)
 	{
-		StorageUnit su = storage.remove(id);
-		if(su!=null)
-		{
-			return su.vobject;
-		}	
-		return null;
+		return storage.get(id);
 	}
-	
-	public String getId()
+
+	public void remove(String id)
 	{
-		return toString();
+		storage.remove(id);
 	}
 	
-	// ???????
+/*
 	private class StorageUnit
 	{
 		long fd;
@@ -39,5 +34,5 @@ public class ViewableObjectsStorage
 			vobject = o;
 		}
 	}
-
+*/
 }

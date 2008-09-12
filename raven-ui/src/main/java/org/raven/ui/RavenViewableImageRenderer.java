@@ -32,22 +32,8 @@ public class RavenViewableImageRenderer implements ImageRenderer
 	public void renderResource(ResponseStream out) throws IOException 
 	{
 		if(vow==null) return;
-		InputStream is;
-		try {
-		is = (InputStream) vow.getData();
-		} catch(ClassCastException e)
-		{
-			logger.error("getData returns not InputStream : ",e);
-			return;
-		}
-		int bufLen = 100000;
-		byte[] ba = new byte[bufLen];
-		int cnt;
-		while( (cnt = is.read(ba))!=-1 )
-		{
-			if(cnt==0) continue;
-			out.write(ba, 0, cnt);
-		}
+		byte[] data = (byte[]) vow.getData();
+		out.write(data, 0, data.length);
 	}
 
 	public void setContext(FacesContext fc, ResourceContext rc) throws Exception 
@@ -55,7 +41,6 @@ public class RavenViewableImageRenderer implements ImageRenderer
 		String par_value = fc.getExternalContext().getRequestParameterMap().get(PARAM_NAME);
 		vow = SessionBean.getInstance().getViewableObjectsStorage().get(par_value);
 		if(vow==null) logger.error("ViewableObjectWrapper is null !");
-
 	}
 
     @SuppressWarnings("unchecked")

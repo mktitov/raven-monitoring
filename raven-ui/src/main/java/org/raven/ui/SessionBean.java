@@ -74,6 +74,7 @@ public class SessionBean
 	private NewNodeFromTemplate template;
 	private RefreshAttributesStorage refreshAttributesStorage;
 	private ViewableObjectsStorage viewableObjectsStorage;
+	private ViewableObjectsByNode viewableObjectsHash; 
 	
 	//public String getSelectNodeParam() { return SELECT_NODE_PARAM; }
 	
@@ -113,6 +114,7 @@ public class SessionBean
 		cmnb.getTreeModel().toString();
 		setRefreshAttributesStorage(new RefreshAttributesStorage());
 		setViewableObjectsStorage(new ViewableObjectsStorage());
+		setViewableObjectsHash(new ViewableObjectsByNode());
 	}
 
 	public void reloadLeftFrame()
@@ -445,6 +447,14 @@ public class SessionBean
 
 	public ViewableObjectsStorage getViewableObjectsStorage() {
 		return viewableObjectsStorage;
+	}
+
+	public void setViewableObjectsHash(ViewableObjectsByNode viewableObjectsHash) {
+		this.viewableObjectsHash = viewableObjectsHash;
+	}
+
+	public ViewableObjectsByNode getViewableObjectsHash() {
+		return viewableObjectsHash;
 	}
 	
 }
