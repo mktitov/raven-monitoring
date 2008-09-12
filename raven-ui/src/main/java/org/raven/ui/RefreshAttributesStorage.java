@@ -56,7 +56,6 @@ public class RefreshAttributesStorage
 			logger.error("on load refresh attributes: ",e);
 			return null;
 		}
-		logger.info("RA write to map: "+ra+" size"+ra.size());
 		put(nw.getNodeId(), ra);
 		return ra;
 	}
