@@ -13,14 +13,17 @@ import org.slf4j.LoggerFactory;
 public class ViewableObjectsByNode 
 {
 	protected Logger logger = LoggerFactory.getLogger(ViewableObjectsByNode.class);
+	private static final int tryRemoveOldAfter = 100;
+	private static final long howOld = 1000*60*60*2;
+	private long accessCount = 0;
 	private HashMap<Integer,List<ViewableObjectWrapper>> vomap = 
 					new HashMap<Integer, List<ViewableObjectWrapper>>();
-	
 	
 	private List<ViewableObjectWrapper> getObjectsByNode(NodeWrapper nw,boolean reload)
 	{
 		if(!nw.isViewable()) 
-			return new ArrayList<ViewableObjectWrapper>(); 
+			return new ArrayList<ViewableObjectWrapper>();
+		removeOld();
 		List<ViewableObjectWrapper> no = null;
 		no = vomap.get(nw.getNodeId());
 		if(reload) 
@@ -60,18 +63,42 @@ public class ViewableObjectsByNode
 		logger.info("getObjects found "+lst.size());
 		return lst;
 	}
-	
-	public void remove(NodeWrapper nw)
+
+	public void remove(int id)
 	{
-		logger.info("remove "+nw.getNodePath());
+		logger.info("remove by id="+id);
 		ViewableObjectsStorage vos = SessionBean.getInstance().getViewableObjectsStorage();
-		List<ViewableObjectWrapper> wrList = vomap.remove(nw.getNodeId());
+		List<ViewableObjectWrapper> wrList = vomap.remove(id);
 		if(wrList==null) return;
 		for(ViewableObjectWrapper wr :  wrList)
 			if(wr.isImage())
 				vos.remove(wr.getId());
 	}
+	
+	public void remove(NodeWrapper nw)
+	{
+		remove(nw.getNodeId());
+	}
 
+	private void removeOld()
+	{
+		if(++accessCount < tryRemoveOldAfter) return;
+		accessCount = 0;
+		Iterator<Integer> it =  vomap.keySet().iterator();
+		ArrayList<Integer> killList = new ArrayList<Integer>(); 
+		while(it.hasNext())
+		{
+			Integer i = it.next();
+			ViewableObjectWrapper w = vomap.get(i).get(0);
+			if(w==null || System.currentTimeMillis() - w.getFd() > howOld)
+				killList.add(i);
+		}
+		it =  killList.iterator();
+		while(it.hasNext())
+			remove(it.next());
+	}
+	
+	
 	/**
 	 * Loads viewable objects for the node, saves images in ViewableObjectsStorage.
 	 * @return list of viewable objects 

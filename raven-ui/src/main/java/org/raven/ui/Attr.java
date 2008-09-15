@@ -40,7 +40,7 @@ import org.weda.services.ClassDescriptorRegistry;
 import javax.faces.event.ActionEvent;
 //import org.apache.myfaces.trinidad.component.core.nav.CoreCommandButton;
 
-public class Attr 
+public class Attr implements Comparable<Attr>  
 {
     @Service
     private static Tree tree;
@@ -299,5 +299,8 @@ public class Attr
 		return refreshAttribute;
 	}
 
-    
+	public int compareTo(Attr o) {
+		return getName().compareTo(o.getName());
+	}
+	
 }

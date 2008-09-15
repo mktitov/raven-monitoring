@@ -26,8 +26,8 @@
 <tr:panelHorizontalLayout halign="left" id="phl_1"  >
 	<tr:poll 
 		id="viewRefresh" 
-		rendered="#{sBean.refreshViewInteval > 0}" 
-		interval="#{sBean.refreshViewIntevalMS}" 
+		rendered="#{cNode.refreshViewInteval > 0}" 
+		interval="#{cNode.refreshViewIntevalMS}" 
 		pollListener="#{cNode.pollRefresh}" />
 <!--
 	<tr:poll 
@@ -45,7 +45,7 @@ action="#{sBean.reloadRightFrame}"
 		id="refresh_A"  >
 	</tr:commandButton>
 	<tr:inputNumberSpinbox
-		value="#{sBean.refreshViewInteval}"
+		value="#{cNode.refreshViewInteval}"
  		columns="2" 
 		label="#{msgs.refreshInterval}" 
 		minimum="0" 
@@ -208,7 +208,9 @@ partialTriggers=":poolStatus"
 <!-- show image -->
 	<f:facet name="image">
 		<tr:group> 
-		<tr:outputText value="#{row.fromDate}"/>
+		<tr:outputFormatted 
+			inlineStyle="COLOR: green; FONT-STYLE: italic;" 
+			value="&lt;small&gt;#{row.fromDate}&lt;/small&gt;"/>
 		<!-- forceIdIndex="true" forceId="true" id="graph" -->
     	<s:graphicImageDynamic  
    			forceId="true" forceIdIndex="true"
@@ -224,8 +226,9 @@ partialTriggers=":poolStatus"
 <!-- show table --> 
 	<f:facet name="ravenTable">
 		<tr:group> 
-		<tr:outputText value="#{row.fromDate}"/>
-
+		<tr:outputFormatted 
+			inlineStyle="COLOR: green; FONT-STYLE: italic;" 
+			value="&lt;small&gt;#{row.fromDate}&lt;/small&gt;"/>
 			<h:outputText escape="false" value="#{row.htmlTable}" />
 <!--
 			<tr:group binding="#{ravenTable.group}" />

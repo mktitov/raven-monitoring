@@ -19,6 +19,8 @@ package org.raven.ui;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -38,7 +40,8 @@ import org.weda.constraints.ConstraintException;
 import org.weda.constraints.TooManyReferenceValuesException;
 import org.weda.converter.TypeConverterException;
 
-public class NodeWrapper extends AbstractNodeWrapper
+public class NodeWrapper extends AbstractNodeWrapper 
+implements Comparator<NodeAttribute>
 {
 	public static final String BEAN_NAME = "cNode";
     protected Logger logger = LoggerFactory.getLogger(NodeWrapper.class);	
@@ -56,6 +59,7 @@ public class NodeWrapper extends AbstractNodeWrapper
 	private boolean useChildAttributesView = true;
 	private boolean hasUnsavedChanges = false;
 	private boolean needRefreshVO = false;
+	private int refreshViewInteval = 0;
 		
 	public NodeWrapper() 
 	{
@@ -167,6 +171,7 @@ public class NodeWrapper extends AbstractNodeWrapper
 	{
 		editingAttrs = null;
 		createNewAttribute();
+		setRefreshViewInteval(0);
 //		FacesContext context = FacesContext.getCurrentInstance();
 //		AttributesTableBean atb = (AttributesTableBean) context.getELContext().getELResolver().getValue(context.getELContext(), null, AttributesTableBean.BEAN_NAME);
 //		if(atb != null && atb.getMessage() !=null) atb.getMessage().setMessage("");
@@ -284,6 +289,7 @@ public class NodeWrapper extends AbstractNodeWrapper
 	{
 		loadRefreshAttributes();
 		List<NodeAttribute> attrList = getNodeAttributes();
+		Collections.sort(attrList, this);
 		editingAttrs = new ArrayList<Attr>();
 		readOnlyAttributes = new ArrayList<NodeAttribute>();
 		savedAttrs = new ArrayList<NodeAttribute>(); 
@@ -650,7 +656,9 @@ public class NodeWrapper extends AbstractNodeWrapper
 		if(editingRefreshAttrs==null )
 				loadRefreshAttributes();
 		
-		return new ArrayList<Attr>(editingRefreshAttrs.values());
+		List<Attr> la =  new ArrayList<Attr>(editingRefreshAttrs.values());
+		Collections.sort(la);
+		return la;
 	}
 
 	public void setNeedRefreshVO() {
@@ -665,4 +673,21 @@ public class NodeWrapper extends AbstractNodeWrapper
 		return needRefreshVO;
 	}
 
+	public int compare(NodeAttribute o1, NodeAttribute o2) {
+		return o1.getName().compareTo(o2.getName());
+	}
+
+	public void setRefreshViewInteval(int refreshViewInteval) {
+		this.refreshViewInteval = refreshViewInteval;
+	}
+
+	public int getRefreshViewInteval() {
+		return refreshViewInteval;
+	}
+
+	public int getRefreshViewIntevalMS() {
+		return refreshViewInteval*1000;
+	}
+	
+	
 }

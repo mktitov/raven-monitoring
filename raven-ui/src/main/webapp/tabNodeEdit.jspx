@@ -263,7 +263,7 @@
 <!-- ********************* -->
     <tr:panelCaptionGroup 
     	rendered="#{cNode.allowNodeEdit}"  
-    	captionText="#{msgs.readOnlyAttributes}"  >
+    	captionText="#{msgs.statistics}"  >
 <!-- read only attributes table -->
         <tr:table 
         	allDetailsEnabled="true" 

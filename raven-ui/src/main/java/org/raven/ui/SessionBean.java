@@ -64,7 +64,6 @@ public class SessionBean
 	private String title = "RAVEN";
 //	private ClassDescriptorRegistry classDsc = null;
 	private boolean refreshTree = true;
-	private int refreshViewInteval = 0;
 
 	private String newNodeType = null;
 	private String newNodeName = null;
@@ -420,18 +419,6 @@ public class SessionBean
 
 	public NewNodeFromTemplate getTemplate() { return template;	}
 	public void setTemplate(NewNodeFromTemplate template) { this.template = template; }
-
-	public void setRefreshViewInteval(int refreshViewInteval) {
-		this.refreshViewInteval = refreshViewInteval;
-	}
-
-	public int getRefreshViewInteval() {
-		return refreshViewInteval;
-	}
-
-	public int getRefreshViewIntevalMS() {
-		return refreshViewInteval*1000;
-	}
 
 	public void setRefreshAttributesStorage(RefreshAttributesStorage refreshAttributesStorage) {
 		this.refreshAttributesStorage = refreshAttributesStorage;
