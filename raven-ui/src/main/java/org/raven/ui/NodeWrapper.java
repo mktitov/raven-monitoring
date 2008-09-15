@@ -59,7 +59,7 @@ implements Comparator<NodeAttribute>
 	private boolean useChildAttributesView = true;
 	private boolean hasUnsavedChanges = false;
 	private boolean needRefreshVO = false;
-	private int refreshViewInteval = 0;
+	//private int refreshViewInteval = 0;
 		
 	public NodeWrapper() 
 	{
@@ -171,7 +171,6 @@ implements Comparator<NodeAttribute>
 	{
 		editingAttrs = null;
 		createNewAttribute();
-		setRefreshViewInteval(0);
 //		FacesContext context = FacesContext.getCurrentInstance();
 //		AttributesTableBean atb = (AttributesTableBean) context.getELContext().getELResolver().getValue(context.getELContext(), null, AttributesTableBean.BEAN_NAME);
 //		if(atb != null && atb.getMessage() !=null) atb.getMessage().setMessage("");
@@ -677,16 +676,21 @@ implements Comparator<NodeAttribute>
 		return o1.getName().compareTo(o2.getName());
 	}
 
-	public void setRefreshViewInteval(int refreshViewInteval) {
-		this.refreshViewInteval = refreshViewInteval;
+	public void setRefreshViewInteval(long refreshViewInteval) 
+	{
+		RefreshIntervalStorage s = SessionBean.getInstance().getRefreshIntervalStorage();
+		s.setInterval(this, refreshViewInteval);
 	}
 
-	public int getRefreshViewInteval() {
-		return refreshViewInteval;
+	public long getRefreshViewInteval() 
+	{
+		RefreshIntervalStorage s = SessionBean.getInstance().getRefreshIntervalStorage();
+		return s.getInterval(this);
 	}
 
-	public int getRefreshViewIntevalMS() {
-		return refreshViewInteval*1000;
+	public long getRefreshViewIntevalMS() 
+	{
+		return getRefreshViewInteval()*1000;
 	}
 	
 	

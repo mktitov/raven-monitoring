@@ -101,10 +101,7 @@ public class ViewableObjectWrapper
 			return null;
 		}
 		if(htmlTable==null)
-		{
 			htmlTable = makeHtmlTable();
-			logger.info("created htmlTable "+htmlTable);
-		}	
 		return htmlTable;
 	}
 	

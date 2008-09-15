@@ -73,7 +73,8 @@ public class SessionBean
 	private NewNodeFromTemplate template;
 	private RefreshAttributesStorage refreshAttributesStorage;
 	private ViewableObjectsStorage viewableObjectsStorage;
-	private ViewableObjectsByNode viewableObjectsHash; 
+	private ViewableObjectsByNode viewableObjectsHash;
+	private RefreshIntervalStorage refreshIntervalStorage;
 	
 	//public String getSelectNodeParam() { return SELECT_NODE_PARAM; }
 	
@@ -114,6 +115,8 @@ public class SessionBean
 		setRefreshAttributesStorage(new RefreshAttributesStorage());
 		setViewableObjectsStorage(new ViewableObjectsStorage());
 		setViewableObjectsHash(new ViewableObjectsByNode());
+		setRefreshIntervalStorage(new RefreshIntervalStorage());
+		viewableObjectsHash.setViewableObjectsStorage(getViewableObjectsStorage());
 	}
 
 	public void reloadLeftFrame()
@@ -442,6 +445,14 @@ public class SessionBean
 
 	public ViewableObjectsByNode getViewableObjectsHash() {
 		return viewableObjectsHash;
+	}
+
+	public void setRefreshIntervalStorage(RefreshIntervalStorage refreshIntervalStorage) {
+		this.refreshIntervalStorage = refreshIntervalStorage;
+	}
+
+	public RefreshIntervalStorage getRefreshIntervalStorage() {
+		return refreshIntervalStorage;
 	}
 	
 }

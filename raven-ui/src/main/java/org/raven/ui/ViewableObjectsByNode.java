@@ -18,6 +18,7 @@ public class ViewableObjectsByNode
 	private long accessCount = 0;
 	private HashMap<Integer,List<ViewableObjectWrapper>> vomap = 
 					new HashMap<Integer, List<ViewableObjectWrapper>>();
+	private ViewableObjectsStorage viewableObjectsStorage;
 	
 	private List<ViewableObjectWrapper> getObjectsByNode(NodeWrapper nw,boolean reload)
 	{
@@ -67,12 +68,12 @@ public class ViewableObjectsByNode
 	public void remove(int id)
 	{
 		logger.info("remove by id="+id);
-		ViewableObjectsStorage vos = SessionBean.getInstance().getViewableObjectsStorage();
+		//ViewableObjectsStorage vos = SessionBean.getInstance().getViewableObjectsStorage();
 		List<ViewableObjectWrapper> wrList = vomap.remove(id);
 		if(wrList==null) return;
 		for(ViewableObjectWrapper wr :  wrList)
 			if(wr.isImage())
-				vos.remove(wr.getId());
+				viewableObjectsStorage.remove(wr.getId());
 	}
 	
 	public void remove(NodeWrapper nw)
@@ -117,16 +118,24 @@ public class ViewableObjectsByNode
 			catch (Exception e) { logger.error("on load viewable objects: ",e);}
 		if(vol==null)
 			return vowl;
-		ViewableObjectsStorage vos = SessionBean.getInstance().getViewableObjectsStorage();
+		//ViewableObjectsStorage vos = SessionBean.getInstance().getViewableObjectsStorage();
 		for(ViewableObject vo : vol)
 		{
 			ViewableObjectWrapper wr = new ViewableObjectWrapper(vo);
 			if(wr.isImage()) 
-				vos.put(wr);
+				viewableObjectsStorage.put(wr);
 			vowl.add(wr);
 		}
 		logger.info("loading objects: "+vowl.size());
 		return vowl;
+	}
+
+	public void setViewableObjectsStorage(ViewableObjectsStorage viewableObjectsStorage) {
+		this.viewableObjectsStorage = viewableObjectsStorage;
+	}
+
+	public ViewableObjectsStorage getViewableObjectsStorage() {
+		return viewableObjectsStorage;
 	}
 
 }
