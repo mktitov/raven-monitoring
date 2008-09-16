@@ -18,7 +18,6 @@
 package org.raven.rrd.graph;
 
 import org.raven.ImageFormat;
-import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -40,7 +39,6 @@ import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeAttributeImpl;
-import org.raven.tree.impl.ViewableObjectImpl;
 import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
 
@@ -148,6 +146,14 @@ public class RRGraphNode extends BaseNode implements Viewable
         
         String startTime = refreshAttributes.get(STARTIME_ATTRIBUTE).getRealValue();
         String endTime = refreshAttributes.get(ENDTIME_ATTRIBUTE).getRealValue();
+
+        ViewableObject viewableObject = new GraphViewableObject(this, startTime, endTime);
+        
+        return Arrays.asList(viewableObject);
+    }
+
+    public byte[] render(String startTime, String endTime)
+    {
         try
         {
             GraphDef def = createGraphDef(startTime, endTime);
@@ -163,15 +169,10 @@ public class RRGraphNode extends BaseNode implements Viewable
                     return null;
                 }
             }
-
             try
             {
                 RrdGraph graph = new RrdGraph(def.graphDef);
-                ViewableObject viewableObject = 
-                        new ViewableObjectImpl(
-                            imageFormat.getMimeType(), graph.getRrdGraphInfo().getBytes()
-                            , true, width, height);
-                return Arrays.asList(viewableObject);
+                return graph.getRrdGraphInfo().getBytes();
             }
             finally
             {
@@ -184,7 +185,6 @@ public class RRGraphNode extends BaseNode implements Viewable
             throw new NodeError(
                     String.format("Error generating graph (%s)", getPath()), ex);
         }
-        
     }
     
     public String getEndTime()
