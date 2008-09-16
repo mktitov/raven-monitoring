@@ -25,11 +25,12 @@ public class ViewableObjectWrapper
 	public ViewableObjectWrapper(ViewableObject vo)
 	{
 		viewableObject = vo;
-		fd = System.currentTimeMillis();
+		setFd();
 	}
 	
 	public ViewableObjectWrapper(Node node)
 	{
+		setFd();
 		this.node = node;
 	}
 
@@ -136,6 +137,7 @@ public class ViewableObjectWrapper
 	
 	public Object getData()
 	{
+		logger.info("get data");
 		if(!isViewable()) return node.getPath();
 		return viewableObject.getData();
 	}
@@ -150,11 +152,18 @@ public class ViewableObjectWrapper
 		return viewableObject;
 	}
 
-	public Node getNode() {
+	public Node getNode() 
+	{
 		return node;
 	}
 
-	public long getFd() {
+	private void setFd() 
+	{
+		fd = System.currentTimeMillis();
+	}
+	
+	public long getFd() 
+	{
 		return fd;
 	}
 	

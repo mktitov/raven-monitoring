@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 public class RefreshAttributesStorage 
 {
 	protected Logger logger = LoggerFactory.getLogger(RefreshAttributesStorage.class);
-	private static final int tryRemoveOldAfter = 100;
+	private static final int tryRemoveOldAfter = 10;
 	private static final long howOld = 1000*60*60*24*2;
 	private long accessCount = 0;
 	private HashMap<Integer, StorageUnit> storage = 
@@ -56,7 +56,10 @@ public class RefreshAttributesStorage
 		{
 			Integer i = it.next();
 			if(System.currentTimeMillis() - storage.get(i).getLastAccess() > howOld)
+			{
+				logger.info("cur="+System.currentTimeMillis()+" la="+storage.get(i).getLastAccess());
 				killList.add(i);
+			}	
 		}
 		it =  killList.iterator();
 		while(it.hasNext())
@@ -97,16 +100,17 @@ public class RefreshAttributesStorage
 			setLastAccess();
 		}
 		
-		public void setMap(Map<String,NodeAttribute> map) {
-			this.map = map;
-		}
+//		public void setMap(Map<String,NodeAttribute> map) 
+//		{
+//			this.map = map;
+//		}
 		public Map<String,NodeAttribute> getMap() 
 		{
 			setLastAccess();
 			return map;
 		}
 
-		public void setLastAccess() 
+		private void setLastAccess() 
 		{
 			this.lastAccess = System.currentTimeMillis();
 		}
