@@ -117,7 +117,13 @@ public class ParentAttributeValueHandler
                 return result;
             } 
             else
-                return getParentAttribute()==null? null : getParentAttribute().getRealValue();
+            {
+                NodeAttribute pAttr = getParentAttribute();
+                if (pAttr==null)
+                    return null;
+                else
+                    return converter.convert(attribute.getType(), pAttr.getRealValue(), null);
+            }
         }
     }
 

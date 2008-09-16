@@ -33,15 +33,15 @@ public class NumberToNumberConverter extends AbstractConverter<Number, Number>
 
     public Number convert(Number value, Class realTargetType, String format)
     {
-        if (Integer.class.equals(realTargetType))
+        if (Integer.class.equals(realTargetType) || Integer.TYPE.equals(realTargetType))
             return value.intValue();
-        else if (Short.class.equals(realTargetType))
+        else if (Short.class.equals(realTargetType) || Short.TYPE.equals(realTargetType))
             return value.shortValue();
-        else if (Long.class.equals(realTargetType))
+        else if (Long.class.equals(realTargetType) || Long.TYPE.equals(realTargetType))
             return value.longValue();
-        else if (Double.class.equals(realTargetType))
+        else if (Double.class.equals(realTargetType) || Double.TYPE.equals(realTargetType))
             return value.doubleValue();
-        else if (Float.class.equals(realTargetType))
+        else if (Float.class.equals(realTargetType) || Float.TYPE.equals(realTargetType))
             return value.floatValue();
         else
             return value;

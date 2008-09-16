@@ -35,4 +35,8 @@ public interface ViewableObject
      * If returns <code>true</code> then data must be cached by user interface layer.
      */
     public boolean cacheData();
+
+    public int getWidth();
+    
+    public int getHeight();
 }

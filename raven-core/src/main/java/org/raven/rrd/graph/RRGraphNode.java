@@ -169,8 +169,8 @@ public class RRGraphNode extends BaseNode implements Viewable
                 RrdGraph graph = new RrdGraph(def.graphDef);
                 ViewableObject viewableObject = 
                         new ViewableObjectImpl(
-                            imageFormat.getMimeType()
-                            , graph.getRrdGraphInfo().getBytes());
+                            imageFormat.getMimeType(), graph.getRrdGraphInfo().getBytes()
+                            , true, width, height);
                 return Arrays.asList(viewableObject);
             }
             finally

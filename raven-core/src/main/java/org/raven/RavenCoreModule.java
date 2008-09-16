@@ -39,6 +39,7 @@ import org.raven.impl.EnumReferenceValues;
 import org.raven.impl.NodeAccessToNodeConverter;
 import org.raven.impl.NodeAttributeToStringConverter;
 import org.raven.impl.NodeToStringConverter;
+import org.raven.impl.NumberToNumberConverter;
 import org.raven.impl.SnmpVariableToNumberConverter;
 import org.raven.impl.StringToAttributeReferenceConverter;
 import org.raven.impl.StringToClassConverter;
@@ -120,6 +121,7 @@ public class RavenCoreModule
         conf.add(new NodeToStringConverter());
         conf.add(new NodeAttributeToStringConverter());
         conf.add(new StringToNodeConverter());
+        conf.add(new NumberToNumberConverter());
         conf.add(new SnmpVariableToNumberConverter());
         conf.add(new StringToAttributeReferenceConverter());
         conf.add(new AttributeReferenceToStringConverter());
