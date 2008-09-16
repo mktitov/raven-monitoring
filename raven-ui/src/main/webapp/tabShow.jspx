@@ -182,7 +182,10 @@ action="#{sBean.reloadRightFrame}"
 		verticalGridVisible="false"
  		var="row"
  		value="#{cNode.viewableObjects}"  
- 		id="showTable" >
+ 		id="showTable"
+ 		immediate="true"
+ 		
+ 		 >
 <!-- 
 :::refresh_A ::poolStatus
 partialTriggers=":poolStatus"
@@ -212,8 +215,10 @@ partialTriggers=":poolStatus"
 			inlineStyle="COLOR: green; FONT-STYLE: italic;" 
 			value="&lt;small&gt;#{row.fromDate}&lt;/small&gt;"/>
 		<!-- forceIdIndex="true" forceId="true" id="graph" -->
-    	<s:graphicImageDynamic  
-   			forceId="true" forceIdIndex="true"
+    	<s:graphicImageDynamic
+    		width="#{row.width}"
+    		height="#{row.height}"
+			forceId="true" forceIdIndex="true"
    			id="graph_x_list" 
    	    	imageRendererClass="#{sBean.ravenViewableImageRenderer}" > 
        		<f:param 

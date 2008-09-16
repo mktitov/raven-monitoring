@@ -43,7 +43,7 @@ public class ViewableObjectsByNode
 
 	public List<ViewableObjectWrapper> getObjects(NodeWrapper nw)
 	{
-		logger.info("getObjects for"+nw.getNodePath());
+		logger.info("getObjects for "+nw.getNodePath());
 		boolean reload = nw.isNeedRefreshVO();
 		nw.setNeedRefreshVO(false);
 //		if( ! vomap.containsKey(nw.getNodeId()) ) 
@@ -62,6 +62,7 @@ public class ViewableObjectsByNode
 			lst.addAll(getObjectsByNode(x,reload));
 		}
 		logger.info("getObjects found "+lst.size());
+		logger.info("end getObjects for "+nw.getNodePath());
 		return lst;
 	}
 

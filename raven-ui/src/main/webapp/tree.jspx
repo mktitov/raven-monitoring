@@ -22,11 +22,14 @@
           xmlns:tr="http://myfaces.apache.org/trinidad"
           xmlns:trh="http://myfaces.apache.org/trinidad/html" 
           >
-          
-   <jsp:directive.page pageEncoding="utf-8" contentType="text/html;charset=utf-8"/>
+ <jsp:output omit-xml-declaration="true" doctype-root-element="HTML"
+              doctype-system="http://www.w3.org/TR/html4/loose.dtd"
+              doctype-public="-//W3C//DTD HTML 4.01 Transitional//EN"/>
+  <jsp:directive.page pageEncoding="utf-8" contentType="text/html;charset=utf-8"/>
   <f:view>
   <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
     <tr:document title="tree">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
        <tr:form id="treeform">
        <!-- 
        <tr:panelGroupLayout layout="horizontal">
@@ -43,22 +46,34 @@
         partialTriggers="::pooltree :reftree"
         onclick="parent.frames.frame1.document.treeform.reftree.focus();"
  -->
-       	<tr:poll pollListener="#{sBean.onTreePoll}" id="pooltree" interval="#{sBean.refreshTreeInterval}" ></tr:poll>
-        <tr:tree partialTriggers="::pooltree" id="tree1" var="node" binding="#{sBean.coreTree}"  value="#{sBean.treeModel}"  >
+       	<tr:poll 
+       		pollListener="#{sBean.onTreePoll}" 
+       		id="pooltree" 
+       		interval="#{sBean.refreshTreeInterval}" />
+        <tr:tree 
+        	partialTriggers="::pooltree" 
+        	id="tree1" 
+        	var="node" 
+        	binding="#{sBean.coreTree}" 
+        	value="#{sBean.treeModel}"  >
  		<f:facet name="nodeStamp">
  		<tr:group >
- 		<tr:commandLink
- 		id="pSub_link"
- 		immediate="true"
- 		partialSubmit="true" 
- 		actionListener="#{sBean.show}"
- 		>
-		<tr:outputText value="#{node.name}"/>
- 		</tr:commandLink>
- 		<tr:image source="/images/#{node.status}.png" shortDesc="help2" />
- 		<!--
- 		  
-      			<tr:chooseDate  ></tr:chooseDate> -->
+ 			<tr:commandLink
+	 			id="pSub_link" 
+ 				immediate="true"
+ 				partialSubmit="true" 
+ 				actionListener="#{sBean.show}" 
+ 				>
+				<tr:outputText 
+					rendered="#{node.template}"
+					inlineStyle="color: grey; font-weight: bold; font-style: italic;" 
+					value="#{node.name}"/>
+				<tr:outputText
+					rendered="#{!node.template}"
+					value="#{node.name}"/>
+ 			</tr:commandLink>
+ 			<tr:image source="/images/#{node.status}.png" shortDesc="help2" />
+ 		<!-- <tr:chooseDate  ></tr:chooseDate> -->
  		</tr:group>
   		</f:facet>
         

@@ -28,6 +28,7 @@ import org.raven.conf.Configurator;
 import org.raven.conf.impl.UserAcl;
 import org.raven.template.TemplateNode;
 import org.raven.tree.Node;
+import org.raven.tree.NodeError;
 import org.raven.tree.Tree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -332,7 +333,12 @@ public class SessionBean
 		}
 		Node n = (Node) o;
 		n.setName(getNewNodeName());
-		wrapper.getNode().addChildren(n);
+		try {
+			wrapper.getNode().addChildren(n);
+		} catch(NodeError e) 
+		{
+			logger.error("",e);
+		}
 		configurator.getTreeStore().saveNode(n);
 		n.init();
 		if(n.isAutoStart()) n.start();

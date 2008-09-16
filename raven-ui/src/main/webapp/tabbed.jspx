@@ -19,7 +19,7 @@
 <jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
           xmlns:f="http://java.sun.com/jsf/core"
           xmlns:tr="http://myfaces.apache.org/trinidad" >
-    <jsp:directive.page pageEncoding="utf-8" contentType="text/html;charset=utf-8"/>
+    <jsp:directive.page pageEncoding="utf-8" contentType="text/html; charset=utf-8"/>
     <f:view>
         <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
         <tr:document title="TabbedPanel" >
@@ -29,41 +29,63 @@
                 <tr:poll id="poolStatus" ></tr:poll>
                 -->
                 <tr:panelGroupLayout layout="vertical">
-                    <tr:panelCaptionGroup id="pcg"  captionText="#{msgs.nodeStatus}" >
-                        <tr:panelGroupLayout layout="vertical" id="pgl_1" >
+                    <tr:panelCaptionGroup 
+                    	id="pcg"  
+                    	captionText="#{msgs.nodeStatus}" >
+                        <tr:panelGroupLayout 
+                        	layout="vertical" 
+                        	id="pgl_1" >
                               <tr:group>
-                                <tr:outputText value="#{msgs.node}:"></tr:outputText>
-                                <tr:spacer width="10"></tr:spacer>
-                                <tr:outputFormatted value="&lt;b&gt;#{cNode.nodePath}&lt;/b&gt;"></tr:outputFormatted>
+                                <tr:outputText value="#{msgs.node}:" />
+                                <tr:spacer width="10" />
+                                <tr:outputText 
+                                	inlineStyle="font-weight: bold;" 
+                                	value="#{cNode.nodePath}" />
                             </tr:group>
                             
                             <tr:group>
                                <tr:outputText value="ID:"></tr:outputText>
-                                <tr:spacer width="10"></tr:spacer>
-                                <tr:outputFormatted value="&lt;b&gt;#{cNode.node.id}&lt;/b&gt;"></tr:outputFormatted>
-                                <tr:spacer width="20"></tr:spacer>
-                               <tr:outputText value="#{msgs.status}:"></tr:outputText>
-                                <tr:spacer width="10"></tr:spacer>
-                                <tr:outputFormatted value="&lt;b&gt;#{cNode.nodeStatusText}&lt;/b&gt;"></tr:outputFormatted>
+                               <tr:spacer width="10"></tr:spacer>
+                               <tr:outputText 
+                                	inlineStyle="font-weight: bold;"
+                                	value="#{cNode.node.id}" />
+                               <tr:spacer width="20" />
+                               <tr:outputText value="#{msgs.status}:" />
+                               <tr:spacer width="10" />
+                               <tr:outputText 
+                               		inlineStyle="font-weight: bold;"
+                               		value="#{cNode.nodeStatusText}" />
                             </tr:group>
                         </tr:panelGroupLayout>
                     </tr:panelCaptionGroup>
                     <tr:separator></tr:separator>
                     
-                    <tr:panelTabbed position="above" id="panelTabbed1" inlineStyle="width: 100%" >
-                        <tr:showDetailItem binding="#{cNode.showTab}" text="#{msgs.nodeView}" id="item1">
+                    <tr:panelTabbed 
+                    	position="above" 
+                    	id="panelTabbed1" 
+                    	inlineStyle="width: 100%" >
+                        <tr:showDetailItem 
+                        	binding="#{cNode.showTab}" 
+                        	text="#{msgs.nodeView}" 
+                        	id="item1">
                             <f:subview id="v1">
                                 <tr:separator></tr:separator>
                                 <jsp:include page="tabShow.jspx" flush="true"/>
                             </f:subview>
                         </tr:showDetailItem>
-                        <tr:showDetailItem binding="#{cNode.nodeEditTab}" text="#{msgs.attributes}" id="item2">
+                        <tr:showDetailItem 
+                        	binding="#{cNode.nodeEditTab}" 
+                        	text="#{msgs.attributes}" 
+                        	id="item2">
                             <f:subview id="v2">
                                 <tr:separator></tr:separator>
                                 <jsp:include page="tabNodeEdit.jspx" flush="true"/>
                             </f:subview>
                         </tr:showDetailItem>
-                        <tr:showDetailItem binding="#{cNode.treeEditTab}" text="#{msgs.treeEdit}" id="item3">
+                        <tr:showDetailItem 
+                        	binding="#{cNode.treeEditTab}" 
+                        	text="#{msgs.treeEdit}" 
+                        	id="item3">
                             <f:subview id="v3">
                                 <tr:separator></tr:separator>
                                 <jsp:include page="tabTreeEdit.jspx" flush="true"/>

@@ -1,11 +1,8 @@
 package org.raven.ui;
 
 import java.io.IOException;
-import java.io.InputStream;
-
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseStream;
-
 import org.apache.myfaces.custom.dynamicResources.ResourceContext;
 import org.apache.myfaces.custom.graphicimagedynamic.ImageRenderer;
 import org.slf4j.Logger;
@@ -23,6 +20,18 @@ public class RavenViewableImageRenderer implements ImageRenderer
 		return -1; 
 	}
 
+	public int getHeight() 
+	{ 
+		if(vow==null) return 0;
+		return vow.getViewableObject().getHeight(); 
+	}
+	
+	public int getWidth() 
+	{ 
+		if(vow==null) return 0;
+		return vow.getViewableObject().getWidth(); 
+	}
+	
 	public String getContentType() 
 	{
 		if(vow==null) return "none";
@@ -33,7 +42,8 @@ public class RavenViewableImageRenderer implements ImageRenderer
 	{
 		if(vow==null) return;
 		byte[] data = (byte[]) vow.getData();
-		out.write(data, 0, data.length);
+		if(data!=null)
+			out.write(data, 0, data.length);
 	}
 
 	public void setContext(FacesContext fc, ResourceContext rc) throws Exception 

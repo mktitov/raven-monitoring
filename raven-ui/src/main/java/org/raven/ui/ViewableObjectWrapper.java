@@ -38,6 +38,18 @@ public class ViewableObjectWrapper
 		return toString();
 	}
 	
+	public String getHeight() 
+	{ 
+		if(viewableObject==null) return "";
+		return ""+viewableObject.getHeight(); 
+	}
+	
+	public String getWidth() 
+	{ 
+		if(viewableObject==null) return "";
+		return ""+viewableObject.getWidth(); 
+	}
+	
 	public boolean isViewable()
 	{
 		if(viewableObject==null) return false;
@@ -52,7 +64,8 @@ public class ViewableObjectWrapper
 	
 	public boolean isTable()
 	{
-		if(isViewable() && viewableObject.getMimeType().equals(Viewable.RAVEN_TABLE_MIMETYPE)) 
+		if(isViewable() && 
+				viewableObject.getMimeType().equals(Viewable.RAVEN_TABLE_MIMETYPE)) 
 			return true;
 		return false;
 	}
@@ -90,6 +103,7 @@ public class ViewableObjectWrapper
 			sb.append("</tr>");
 		}
 		sb.append("</tbody></table>");
+		logger.info("table created");
 		return sb.toString();
 	}
 	
@@ -132,26 +146,13 @@ public class ViewableObjectWrapper
 		return null;
 	}
 	
-	
-//	public void setViewableObject(ViewableObject viewableObject) {
-//		this.viewableObject = viewableObject;
-//	}
-
 	public ViewableObject getViewableObject() {
 		return viewableObject;
 	}
 
-//	public void setNode(Node node) {
-//		this.node = node;
-//	}
-
 	public Node getNode() {
 		return node;
 	}
-
-//	public void setFd(long fd) {
-//		this.fd = fd;
-//	}
 
 	public long getFd() {
 		return fd;
