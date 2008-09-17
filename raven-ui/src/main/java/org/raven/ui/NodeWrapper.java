@@ -171,7 +171,8 @@ implements Comparator<NodeAttribute>
 	{
 		editingAttrs = null;
 		createNewAttribute();
-//		FacesContext context = FacesContext.getCurrentInstance();
+		editingRefreshAttrs = null;
+		//loadRefreshAttributes();
 //		AttributesTableBean atb = (AttributesTableBean) context.getELContext().getELResolver().getValue(context.getELContext(), null, AttributesTableBean.BEAN_NAME);
 //		if(atb != null && atb.getMessage() !=null) atb.getMessage().setMessage("");
 	}
