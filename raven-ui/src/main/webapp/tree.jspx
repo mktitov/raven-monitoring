@@ -66,10 +66,11 @@
  				>
 				<tr:outputText 
 					rendered="#{node.template}"
-					inlineStyle="color: grey; font-weight: bold; font-size: smaller;" 
+					inlineStyle="color: grey; font-weight: bold; font-size: 70%;" 
 					value="#{node.name}"/>
 				<tr:outputText
 					rendered="#{!node.template}"
+					inlineStyle="font-size: 80%;" 
 					value="#{node.name}"/>
  			</tr:commandLink>
  			<tr:image source="/images/#{node.status}.png" shortDesc="help2" />
