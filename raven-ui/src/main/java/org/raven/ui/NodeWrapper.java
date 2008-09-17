@@ -31,6 +31,7 @@ import org.apache.myfaces.trinidad.event.PollEvent;
 import org.apache.myfaces.trinidad.event.ReturnEvent;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodeError;
 import org.raven.tree.Viewable;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.slf4j.Logger;
@@ -187,7 +188,11 @@ implements Comparator<NodeAttribute>
 	{
 		if( ! isAllowControl() ) return "err";
 		if(!isCanNodeStart()) return "err";
-		getNode().start();
+		try { getNode().start(); }
+		catch (NodeError e)
+		{
+			logger.error("on start "+getNodeName()+" : "+e.getMessage());
+		}
 		return "ok";
 	}
 
@@ -195,7 +200,11 @@ implements Comparator<NodeAttribute>
 	{
 		if( ! isAllowControl() ) return "err";
 		if(!isCanNodeStop()) return "err";
-		getNode().stop();
+		try { getNode().stop(); }
+		catch (NodeError e)
+		{
+			logger.error("on stop "+getNodeName()+" : "+e.getMessage());
+		}
 		return "ok";
 	}
 	

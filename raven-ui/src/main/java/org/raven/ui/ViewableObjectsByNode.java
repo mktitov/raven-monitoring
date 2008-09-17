@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 public class ViewableObjectsByNode 
 {
 	protected Logger logger = LoggerFactory.getLogger(ViewableObjectsByNode.class);
-	private static final int tryRemoveOldAfter = 10;
+	private static final int tryRemoveOldAfter = 100;
 	private static final long howOld = 1000*60*60*2;
 	private long accessCount = 0;
 	private HashMap<Integer,List<ViewableObjectWrapper>> vomap = 
