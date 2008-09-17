@@ -19,6 +19,10 @@ package org.raven.rrd.data;
 
 import org.raven.rrd.objects.TestDataSource;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.jrobin.core.Archive;
 import org.jrobin.core.Datasource;
@@ -27,12 +31,13 @@ import org.jrobin.core.FetchRequest;
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.Util;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.conf.Configurator;
+import org.raven.table.Table;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.constraints.ConstraintException;
 import org.weda.services.TypeConverter;
@@ -55,7 +60,7 @@ public class RRDNodeTest extends RavenCoreTestCase
 //        assertNotNull(tree);
     }
     
-    @Test 
+    @Test
     public void test() throws ConstraintException, Exception
     {
         TestDataSource ds = new TestDataSource();
@@ -287,5 +292,83 @@ public class RRDNodeTest extends RavenCoreTestCase
         tree.remove(rrd);
         
         assertFalse(dbFile.exists());
+    }
+
+    @Test
+    public void getArchivedData_test() throws Exception
+    {
+        TestDataSource ds = new TestDataSource();
+        ds.setName("dataSource");
+        tree.getRootNode().addChildren(ds);
+        store.saveNode(ds);
+        ds.init();
+        
+        RRDNode rrd = new RRDNode();
+        rrd.setName("rrd");
+        tree.getRootNode().addChildren(rrd);
+        store.saveNode(rrd);
+        rrd.init();
+        NodeAttribute attr = rrd.getNodeAttribute("step");
+        attr.setValue("2");
+        store.saveNodeAttribute(attr);
+        assertEquals(Status.INITIALIZED, rrd.getStatus());
+        
+        RRDataSource rrds = new RRDataSource();
+        rrds.setName("ds");
+        rrd.addChildren(rrds);
+        store.saveNode(rrds);
+        rrds.init();
+        attr = rrds.getNodeAttribute("dataSource");
+        attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
+        attr.setValue(ds.getPath());
+        store.saveNodeAttribute(attr);
+        attr = rrds.getNodeAttribute("interval");
+        attr.setValue("2");
+        store.saveNodeAttribute(attr);
+        attr = rrds.getNodeAttribute("intervalUnit");
+        attr.setValue(TimeUnit.SECONDS.toString());
+        store.saveNodeAttribute(attr);
+        attr = rrds.getNodeAttribute("dataSourceType");
+        attr.setValue("GAUGE");
+        store.saveNodeAttribute(attr);
+                
+        RRArchive rra = new RRArchive();
+        rra.setName("archive");
+        rrd.addChildren(rra);
+        store.saveNode(rra);
+        rra.init();
+        attr = rra.getNodeAttribute("rows");
+        attr.setValue("100");
+        store.saveNodeAttribute(attr);
+        rra.start();
+        assertEquals(Status.STARTED, rra.getStatus());
+      
+        long start = Util.getTime()-1;
+        rrds.start();
+        assertEquals(Status.STARTED, rrds.getStatus());
+        rrd.start();
+        assertEquals(Status.STARTED, rrd.getStatus());
+        ds.start();
+        assertEquals(Status.STARTED, ds.getStatus());
+        
+        TimeUnit.SECONDS.sleep(9);
+
+        Table table = rrd.getArchivedData(rrds, ""+start, "now");
+        assertNotNull(table);
+        List<Object[]> values = new ArrayList<Object[]>();
+        for (Iterator<Object[]> it=table.getRowIterator(); it.hasNext();)
+            values.add(it.next());
+        assertTrue(values.size()>5);
+        
+        table = rrds.getArchivedData(""+start, "now");
+        assertNotNull(table);
+
+        Map<String, NodeAttribute> refereshAttributes = rrds.getRefreshAttributes();
+        List<ViewableObject> viewableObjects = rrds.getViewableObjects(refereshAttributes);
+        assertNotNull(viewableObjects);
+        assertTrue(viewableObjects.size()>=1);
+        Object data = viewableObjects.get(viewableObjects.size()-1).getData();
+        assertNotNull(data);
+        assertTrue(data instanceof Table);
     }
 }

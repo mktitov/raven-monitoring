@@ -17,18 +17,18 @@
 
 package org.raven.ds;
 
-import org.raven.table.Table;
-
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataArchive
+public class ArchiveException extends Exception
 {
-    /**
-     * Returns the list of the data for the period [fromDate, toDate]
-     * @param fromDate the starting date in the period
-     * @param toDate the end of the period
-     */
-    public Table getArchivedData(String fromDate, String toDate) throws ArchiveException;
+    public ArchiveException(String message, Throwable cause)
+    {
+        super(message, cause);
+    }
+
+    public ArchiveException(String message) {
+        super(message);
+    }
 }

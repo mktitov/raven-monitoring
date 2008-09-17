@@ -17,12 +17,26 @@
 
 package org.raven.rrd.data;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.ArchiveException;
+import org.raven.ds.DataArchive;
 import org.raven.ds.impl.DataPipeImpl;
+import org.raven.table.Table;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.Viewable;
+import org.raven.tree.ViewableObject;
+import org.raven.tree.impl.NodeAttributeImpl;
+import org.raven.tree.impl.ViewableObjectImpl;
 import org.weda.annotations.Description;
+import org.weda.internal.Messages;
+import org.weda.internal.annotations.Service;
+import org.weda.internal.services.MessagesRegistry;
 
 /**
  *
@@ -30,10 +44,16 @@ import org.weda.annotations.Description;
  */
 @NodeClass(parentNode=RRDNode.class)
 @Description("Round robin database data source node")
-public class RRDataSource extends DataPipeImpl
+public class RRDataSource extends DataPipeImpl implements DataArchive, Viewable
 {
     public final static String DATASOURCETYPE_ATTRIBUTE = "dataSourceType";
-    
+
+    public final static String FROMDATE_ATTRIBUTE = "fromDate";
+    public final static String TODATE_ATTRIBUTE = "toDate";
+
+    @Service
+    private MessagesRegistry messages;
+
     @Parameter(defaultValue="GAUGE")
     @Description("The data source type (GAUGE | COUNTER | DERIVE | ABSOLUTE)")    
     private String dataSourceType;
@@ -83,5 +103,50 @@ public class RRDataSource extends DataPipeImpl
     public Double getMinValue()
     {
         return minValue;
+    }
+
+    public Table getArchivedData(String fromDate, String toDate) throws ArchiveException
+    {
+        return ((RRDNode)getEffectiveParent()).getArchivedData(this, fromDate, toDate);
+    }
+
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
+    {
+        Map<String, NodeAttribute> attrs = new HashMap<String, NodeAttribute>();
+
+        Messages dataArchiveMessages = messages.getMessages(DataArchive.class);
+
+        NodeAttributeImpl attr =new NodeAttributeImpl(
+                FROMDATE_ATTRIBUTE, String.class
+                , "end-1d", dataArchiveMessages.get("fromDateDescription"));
+        attr.setId(-1);
+        attr.setOwner(this);
+        attr.init();
+
+        attrs.put(attr.getName(), attr);
+
+        attr = new NodeAttributeImpl(
+                TODATE_ATTRIBUTE, String.class
+                , "now", dataArchiveMessages.get("toDateDescription"));
+        attr.setId(-2);
+        attr.setOwner(this);
+        attr.init();
+
+        attrs.put(attr.getName(), attr);
+
+        return attrs;
+    }
+
+    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes)
+            throws Exception
+    {
+        String fromDate = refreshAttributes.get(FROMDATE_ATTRIBUTE).getRealValue();
+        String toDate = refreshAttributes.get(TODATE_ATTRIBUTE).getRealValue();
+
+        Table table = getArchivedData(fromDate, toDate);
+        ViewableObject viewableObject =
+                new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table);
+
+        return Arrays.asList(viewableObject);
     }
 }

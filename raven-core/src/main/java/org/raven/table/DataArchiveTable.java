@@ -15,20 +15,29 @@
  *  under the License.
  */
 
-package org.raven.ds;
+package org.raven.table;
 
-import org.raven.table.Table;
+import java.util.Date;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataArchive
+public class DataArchiveTable extends TableImpl
 {
+    public DataArchiveTable()
+    {
+        super(new String[]{"timestamp", "value"});
+    }
+
     /**
-     * Returns the list of the data for the period [fromDate, toDate]
-     * @param fromDate the starting date in the period
-     * @param toDate the end of the period
+     * Add data with corresponding timestamp to the table.
+     * @param timestamp the value timestamp
+     * @param value the data
      */
-    public Table getArchivedData(String fromDate, String toDate) throws ArchiveException;
+    public void addData(Date timestamp, Object value)
+    {
+        addRow(new Object[]{timestamp, value});
+    }
+
 }

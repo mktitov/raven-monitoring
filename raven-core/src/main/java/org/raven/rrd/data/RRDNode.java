@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -31,6 +32,8 @@ import org.jrobin.core.ArcDef;
 import org.jrobin.core.Archive;
 import org.jrobin.core.Datasource;
 import org.jrobin.core.DsDef;
+import org.jrobin.core.FetchData;
+import org.jrobin.core.FetchRequest;
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.RrdDef;
 import org.jrobin.core.RrdException;
@@ -40,8 +43,11 @@ import org.jrobin.core.Util;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
+import org.raven.ds.ArchiveException;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
+import org.raven.rrd.ConsolidationFunction;
+import org.raven.table.DataArchiveTable;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
@@ -130,6 +136,47 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
         } catch (Exception e)
         {
             logger.error(String.format("Error stoping node (%s)", getPath()), e);
+        }
+    }
+
+    public DataArchiveTable getArchivedData(DataSource dataSource, String fromDate, String toDate)
+            throws ArchiveException
+    {
+        try {
+            if (getStatus()!=Status.STARTED)
+                throw new Exception("node must be in STARTED state.");
+            Lock readLock = getReadLock();
+            if (readLock.tryLock(5, TimeUnit.SECONDS)) 
+            {
+                try
+                {
+                    long[] timeRange = Util.getTimestamps(fromDate, toDate);
+                    FetchRequest fetchRequest = db.createFetchRequest(
+                            ConsolidationFunction.AVERAGE.name()
+                            , timeRange[0], timeRange[1]);
+                    fetchRequest.setFilter(dataSource.getName());
+                    FetchData fetchData = fetchRequest.fetchData();
+                    double[] values = fetchData.getValues(dataSource.getName());
+                    long[] timestamps = fetchData.getTimestamps();
+                    DataArchiveTable table = new DataArchiveTable();
+                    for (int i=0; i<fetchData.getRowCount(); ++i)
+                        table.addData(Util.getDate(timestamps[i]), values[i]);
+
+                    return table;
+                }
+                finally
+                {
+                    readLock.unlock();
+                }
+            }
+            else
+                throw new Exception("Error getting read lock for database.");
+        } catch (Exception ex)
+        {
+            throw new ArchiveException(
+                    String.format("Error extracting data from round robin db (%s). %s"
+                        , getPath(), ex.getMessage())
+                    , ex);
         }
     }
 
@@ -778,6 +825,4 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
                 syncArchive((RRArchive) node, true);
         }
     }
-    
-    
 }
