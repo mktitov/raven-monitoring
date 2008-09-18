@@ -52,7 +52,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=DataSourcesNode.class)
-public class ScannerNode extends DataPipeImpl implements Viewable
+public class NetworkScannerNode extends DataPipeImpl implements Viewable
 {
     @Parameter(defaultValue="5")
     @NotNull

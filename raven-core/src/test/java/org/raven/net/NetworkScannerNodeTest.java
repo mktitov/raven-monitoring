@@ -33,7 +33,7 @@ import org.raven.tree.Node.Status;
  *
  * @author Mikhail Titov
  */
-public class ScannerNodeTest extends RavenCoreTestCase
+public class NetworkScannerNodeTest extends RavenCoreTestCase
 {
     @Test
     public void simpleTest() throws Exception
@@ -46,7 +46,7 @@ public class ScannerNodeTest extends RavenCoreTestCase
         ds.start();
         assertEquals(Status.STARTED, ds.getStatus());
 
-        ScannerNode scanner = new ScannerNode();
+        NetworkScannerNode scanner = new NetworkScannerNode();
         scanner.setName("scanner");
         tree.getRootNode().addChildren(scanner);
         scanner.save();
@@ -99,7 +99,7 @@ public class ScannerNodeTest extends RavenCoreTestCase
         ds.start();
         assertEquals(Status.STARTED, ds.getStatus());
 
-        ScannerNode scanner = new ScannerNode();
+        NetworkScannerNode scanner = new NetworkScannerNode();
         scanner.setName("scanner");
         tree.getRootNode().addChildren(scanner);
         scanner.save();
@@ -144,7 +144,7 @@ public class ScannerNodeTest extends RavenCoreTestCase
         snmp.start();
         assertEquals(Status.STARTED, snmp.getStatus());
 
-        ScannerNode scanner = new ScannerNode();
+        NetworkScannerNode scanner = new NetworkScannerNode();
         scanner.setName("scanner");
         tree.getRootNode().addChildren(scanner);
         scanner.save();
