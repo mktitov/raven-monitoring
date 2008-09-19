@@ -17,7 +17,7 @@
 
 package org.raven.rrd.data;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -110,6 +110,7 @@ public class RRDataSource extends DataPipeImpl implements DataArchive, Viewable
         return ((RRDNode)getEffectiveParent()).getArchivedData(this, fromDate, toDate);
     }
 
+    @Override
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
     {
         Map<String, NodeAttribute> attrs = new HashMap<String, NodeAttribute>();
@@ -137,9 +138,12 @@ public class RRDataSource extends DataPipeImpl implements DataArchive, Viewable
         return attrs;
     }
 
+    @Override
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes)
             throws Exception
     {
+        List<ViewableObject> viewableObjects = super.getViewableObjects(refreshAttributes);
+        
         String fromDate = refreshAttributes.get(FROMDATE_ATTRIBUTE).getRealValue();
         String toDate = refreshAttributes.get(TODATE_ATTRIBUTE).getRealValue();
 
@@ -147,6 +151,11 @@ public class RRDataSource extends DataPipeImpl implements DataArchive, Viewable
         ViewableObject viewableObject =
                 new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table);
 
-        return Arrays.asList(viewableObject);
+        List<ViewableObject> result = new ArrayList<ViewableObject>(2);
+        if (viewableObjects!=null)
+            result.addAll(viewableObjects);
+        result.add(viewableObject);
+
+        return result;
     }
 }

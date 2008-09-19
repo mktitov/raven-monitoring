@@ -18,23 +18,36 @@
 package org.raven.ds.impl;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
+import org.raven.table.Table;
+import org.raven.table.TableImpl;
+import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.Viewable;
+import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
+import org.raven.tree.impl.ViewableObjectImpl;
 import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.beans.ObjectUtils;
 
 /**
  * Data consumer that collects data from one data source.
  * 
  * @author Mikhail Titov
  */
-public abstract class AbstractDataConsumer extends ContainerNode implements DataConsumer
+public abstract class AbstractDataConsumer extends ContainerNode implements DataConsumer, Viewable
 {
     public final static String DATASOURCE_ATTRIBUTE = "dataSource";
 
@@ -157,6 +170,38 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
             return null;
         }
     }
+
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
+    {
+        return null;
+    }
+
+    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) 
+            throws Exception
+    {
+        if (!ObjectUtils.in(getStatus(), Status.STARTED, Status.INITIALIZED))
+            return null;
+        
+        TableImpl table = new TableImpl(new String[]{"node path", "node status"});
+        List<Node> dataSources = new ArrayList<Node>();
+        dataSources.add(this);
+        Node node = this;
+        while (node instanceof AbstractDataConsumer)
+        {
+            node = ((AbstractDataConsumer)node).getDataSource();
+            dataSources.add(node);
+        }
+        for (ListIterator<Node> it=dataSources.listIterator(dataSources.size()); it.hasPrevious();)
+        {
+            node = it.previous();
+            table.addRow(new Object[]{node.getPath(), node.getStatus()});
+        }
+
+        ViewableObject object = new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table);
+
+        return Arrays.asList(object);
+    }
+
     
     
 }
