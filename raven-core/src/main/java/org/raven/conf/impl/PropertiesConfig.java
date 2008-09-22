@@ -82,7 +82,7 @@ public class PropertiesConfig implements Config
 	 * Returns a PropertiesConfig object.
 	 * @throws java.io.IOException
 	 */
-    public static final PropertiesConfig getInstance() throws IOException 
+    public static final synchronized PropertiesConfig getInstance() throws IOException 
     {
         if (instance == null) instance = new PropertiesConfig();
         return instance;

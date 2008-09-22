@@ -40,13 +40,13 @@ public class AccessControl {
 	private String regExp = "";
 	private int right = 0;
 	
-	public AccessControl(String rule)
+	private AccessControl(String rule)
 	{
 		String[] x = rule.split(":");
 		if(x.length==2) loadData(x[0],x[1]);
 	}
 
-	public AccessControl(String resource, String right) { loadData(resource, right); }
+	private AccessControl(String resource, String right) { loadData(resource, right); }
 	
 	private void loadData(String resource, String rightString)
 	{

@@ -152,7 +152,7 @@ public class UserAcl
 	
 	public boolean isEmpty()
 	{
-		if(acl.size()!=0) return false;
+		if(acl.getACCount()!=0) return false;
 		return true;
 	}
 }

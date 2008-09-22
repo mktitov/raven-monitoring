@@ -21,6 +21,7 @@ public class ViewableObjectWrapper
 	private Node node = null;
 	private long fd = 0;
 	private String htmlTable = null;
+	private byte[] image = null;
 	
 	public ViewableObjectWrapper(ViewableObject vo)
 	{
@@ -139,6 +140,11 @@ public class ViewableObjectWrapper
 	{
 		logger.info("get data");
 		if(!isViewable()) return node.getPath();
+		if(isImage())
+		{
+			if(image==null) image = (byte[]) viewableObject.getData();
+			return image;
+		}
 		return viewableObject.getData();
 	}
 	

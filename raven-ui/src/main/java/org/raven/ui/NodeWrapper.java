@@ -259,7 +259,8 @@ implements Comparator<NodeAttribute>
 	
 	public List<NodeWrapper> getViewableNodes()
 	{
-	  Collection<Node> c = getNode().getSortedChildrens();
+	  //Collection<Node> c = getNode().getSortedChildrens();
+	  Collection<Node> c = getNode().getEffectiveChildrens();
 	  ArrayList<NodeWrapper> wrappers = new ArrayList<NodeWrapper>();
 	  if(c!=null) 
 	  {

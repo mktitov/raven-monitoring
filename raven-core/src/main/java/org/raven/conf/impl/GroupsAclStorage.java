@@ -44,15 +44,25 @@ public class GroupsAclStorage
 		HashMap<String, AccessControlList> acln = new HashMap<String, AccessControlList>();
 		for(int i=1; ;i++)
 		{
-			String val = config.getStringProperty(GROUP_PARAM_NAME+i, null);
-			logger.info("found group info: {}",val);
-			if(val==null || val.length()==0) break;
-			String[] va = val.split(";");
-			if(va.length<2) continue;
-			AccessControlList acl = new AccessControlList(va,1);
-			acln.put(va[0], acl);
+			String gname = GROUP_PARAM_NAME+i;
+			String val = config.getStringProperty(gname, null);
+			StringBuffer sb = new StringBuffer();
+			if(val!=null && val.length()>0)
+				sb.append(val);
+			for(int k=1; ;k++)
+			{
+				String v = config.getStringProperty(gname+"-"+k, null);
+				if(v==null || v.length()==0) break;
+				sb.append(";");
+				sb.append(v);
+			}
+			if(sb.length()==0) break;
+			AccessControlList acl = new AccessControlList(sb.toString());
+			if(acl.isValid())
+				acln.put(acl.getGroup(), acl);
 			if(logger.isInfoEnabled())
-				logger.info("group name: {}  acl: {}",va[0],acl.toString());
+				logger.info("group name: {}  acl: {}",acl.getGroup(),acl.toString());
+			
 		}
 		lastUpdate = config.getLastUpdate();
 		aclMap = acln;
@@ -62,7 +72,7 @@ public class GroupsAclStorage
 	 * Returns a GroupsAclStorage object.
 	 * @param config configurations parameters storage.
 	 */
-    public static final GroupsAclStorage getInstance(Config config)  
+    public static final synchronized GroupsAclStorage getInstance(Config config)  
     {
         if( instance == null ) instance = new GroupsAclStorage(config);
         return instance;
