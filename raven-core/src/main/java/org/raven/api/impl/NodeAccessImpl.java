@@ -23,6 +23,10 @@ import java.util.HashMap;
 import java.util.Map;
 import org.raven.api.NodeAccess;
 import org.raven.api.NodeAttributeAccess;
+import org.raven.ds.DataSource;
+import org.raven.rrd.data.RRDataSource;
+import org.raven.rrd.graph.RRDef;
+import org.raven.rrd.graph.RRGraphNode;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 
@@ -90,9 +94,45 @@ public class NodeAccessImpl implements NodeAccess
         return node;
     }
 
-//    public Map<String, NodeAttributeAccess> getAttrs()
-//    {
-//        if (attrs==null)
-//    }
+    public RRGraphNode findGraph()
+    {
+        return findRRGraphNode(node);
+    }
 
+    private RRGraphNode findRRGraphNode(Node node)
+    {
+        RRDataSource rrds = findRRDataSource(node);
+
+        if (rrds==null)
+            return null;
+        
+        Collection<Node> deps = rrds.getDependentNodes();
+        if (deps!=null)
+            for (Node dep: deps)
+                if (dep instanceof RRDef)
+                    return (RRGraphNode) dep.getEffectiveParent();
+
+        return null;
+    }
+
+    private RRDataSource findRRDataSource(Node node)
+    {
+        if (!(node instanceof DataSource))
+            return null;
+        else if (node instanceof RRDataSource)
+            return ((RRDataSource)node);
+        else
+        {
+            Collection<Node> deps = node.getDependentNodes();
+            if (deps!=null)
+                for (Node dep: deps)
+                {
+                    RRDataSource rrds = findRRDataSource(dep);
+                    if (rrds!=null)
+                        return rrds;
+                }
+        }
+
+        return null;
+    }
 }

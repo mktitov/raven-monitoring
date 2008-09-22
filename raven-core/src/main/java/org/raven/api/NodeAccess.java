@@ -18,6 +18,7 @@
 package org.raven.api;
 
 import java.util.Map;
+import org.raven.rrd.graph.RRGraphNode;
 import org.raven.tree.Node;
 
 /**
@@ -34,4 +35,5 @@ public interface NodeAccess
     public NodeAttributeAccess getAttr(String attributeName);
     public NodeAttributeAccess getAt(String attributeName);
     public Node asNode();
+    public RRGraphNode findGraph();
 }

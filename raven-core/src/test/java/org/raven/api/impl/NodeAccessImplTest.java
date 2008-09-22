@@ -1,0 +1,67 @@
+/*
+ *  Copyright 2008 Mikhail Titov.
+ * 
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ * 
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *  under the License.
+ */
+
+package org.raven.api.impl;
+
+import org.junit.Test;
+import org.raven.RavenCoreTestCase;
+import org.raven.ds.impl.DataPipeImpl;
+import org.raven.rrd.data.RRDataSource;
+import org.raven.rrd.graph.RRDef;
+import org.raven.rrd.graph.RRGraphNode;
+
+/**
+ *
+ * @author Mikhail Titov
+ */
+public class NodeAccessImplTest extends RavenCoreTestCase
+{
+    @Test
+    public void findGraphTest()
+    {
+        DataPipeImpl pipe = new DataPipeImpl();
+        pipe.setName("pipe");
+        tree.getRootNode().addChildren(pipe);
+        pipe.save();
+        pipe.init();
+
+        RRDataSource rrds = new RRDataSource();
+        rrds.setName("rrds");
+        tree.getRootNode().addChildren(rrds);
+        rrds.save();
+        rrds.init();
+        rrds.setDataSource(pipe);
+
+        RRGraphNode graphNode = new RRGraphNode();
+        graphNode.setName("graph");
+        tree.getRootNode().addChildren(graphNode);
+        graphNode.save();
+        graphNode.init();
+
+        RRDef def = new RRDef();
+        def.setName("def");
+        graphNode.addChildren(def);
+        def.save();
+        def.init();
+        def.setDataSource(rrds);
+
+        NodeAccessImpl nodeAccess = new NodeAccessImpl(pipe);
+        RRGraphNode foundGraph = nodeAccess.findGraph();
+        assertNotNull(foundGraph);
+        assertSame(graphNode, foundGraph);
+    }
+}

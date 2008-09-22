@@ -851,7 +851,7 @@ public class BaseNode implements Node, NodeListener
         } catch (Exception e)
         {
             logger.error(String.format(
-                    "Error generating child attributes for (%s) attribute"), attr.getName());
+                    "Error generating child attributes for (%s) attribute", attr.getName()));
         }
     }
 

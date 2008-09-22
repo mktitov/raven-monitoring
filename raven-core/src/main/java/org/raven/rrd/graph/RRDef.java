@@ -59,4 +59,14 @@ public class RRDef extends LeafNode implements DataDefinition
     {
         return dataSource;
     }
+
+    public void setConsolidationFunction(ConsolidationFunction consolidationFunction)
+    {
+        this.consolidationFunction = consolidationFunction;
+    }
+
+    public void setDataSource(RRDataSource dataSource)
+    {
+        this.dataSource = dataSource;
+    }
 }

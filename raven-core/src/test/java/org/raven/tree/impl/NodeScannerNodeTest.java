@@ -264,4 +264,20 @@ public class NodeScannerNodeTest extends RavenCoreTestCase
         assertSame(node1_1, rows.get(2)[0]);
         assertSame(node2, rows.get(3)[0]);
    }
+
+    @Test
+    public void excludeScannedNodeTest() throws Exception
+    {
+        scanner.getNodeAttribute("includeAdditionalNodes").setValue(
+                "scanningNode.name=='node1'? scanningNode.parent : null");
+        scanner.setExcludeScannedNode(true);
+        scanner.scannNodes();
+        assertSame(scanner, consumer.getDataSource());
+        Object data = consumer.getData();
+        assertNotNull(data);
+        assertTrue(data instanceof Table);
+        List<Object[]> rows = RavenUtils.tableAsList((Table) data);
+        assertEquals(1, rows.size());
+        assertSame(nodeForScan, rows.get(0)[0]);
+    }
 }

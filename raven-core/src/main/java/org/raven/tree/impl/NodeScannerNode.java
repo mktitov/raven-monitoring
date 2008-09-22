@@ -72,6 +72,10 @@ public class NodeScannerNode extends BaseNode implements DataSource
     @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE, defaultValue="null")
     private Object includeAdditionalNodes;
 
+    @Parameter(defaultValue="false")
+    @NotNull
+    private Boolean excludeScannedNode;
+
     private Node scanningNode;
 
     public synchronized void scannNodes()
@@ -82,11 +86,13 @@ public class NodeScannerNode extends BaseNode implements DataSource
         int counter = 0;
         int maxCount = maxRowCount<=0? Integer.MAX_VALUE : maxRowCount;
         TableImpl table = new TableImpl(new String[]{"node", "node weight"});
+        boolean _excludeScannedNode = excludeScannedNode;
         for (NodeInfo nodeInfo: foundNodes)
         {
             if (counter++>=maxCount)
                 break;
-            table.addRow(new Object[]{nodeInfo.node, nodeInfo.nodeWeight});
+            if (!_excludeScannedNode)
+                table.addRow(new Object[]{nodeInfo.node, nodeInfo.nodeWeight});
             addAdditionalNodes(table, nodeInfo.node);
         }
         sendTableToConsumers(table);
@@ -154,6 +160,14 @@ public class NodeScannerNode extends BaseNode implements DataSource
 
     public void setStartingPoint(Node startingPoint) {
         this.startingPoint = startingPoint;
+    }
+
+    public Boolean getExcludeScannedNode() {
+        return excludeScannedNode;
+    }
+
+    public void setExcludeScannedNode(Boolean excludeScannedNode) {
+        this.excludeScannedNode = excludeScannedNode;
     }
 
     public boolean getDataImmediate(
