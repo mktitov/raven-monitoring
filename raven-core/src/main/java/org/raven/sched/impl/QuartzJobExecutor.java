@@ -15,26 +15,23 @@
  *  under the License.
  */
 
-package org.raven.tree;
+package org.raven.sched.impl;
 
-import java.util.Collection;
+import org.quartz.Job;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
+import org.raven.sched.Schedulable;
 
 /**
- * 
+ *
  * @author Mikhail Titov
  */
-//TODO: add method checkAttributesValues(Collection<NodeAttribute>)
-public interface AttributesGenerator 
+public class QuartzJobExecutor implements Job
 {
-    /**
-     * Generates and adds attributes to the node passed in <code>owner</code> parameter. 
-     * 
-     * @param owner the owner of generated attributes
-     * @param parentAttribute the name of the parent attribute
-     * 
-     * @see NodeAttribute#getOwner() 
-     * @see NodeAttribute#getParentAttribute() 
-     */
-//    public void generateAttributes(Node owner, String parentAttribute);
-    public Collection<NodeAttribute> generateAttributes();
+    public void execute(JobExecutionContext context) throws JobExecutionException
+    {
+        Schedulable node = (Schedulable) context.getJobDetail().getJobDataMap().get(
+                QuartzScheduler.NODE_ATTRIBUTE_NAME);
+        node.executeScheduledJob();
+    }
 }

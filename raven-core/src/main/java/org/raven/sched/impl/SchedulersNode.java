@@ -17,10 +17,18 @@
 
 package org.raven.sched.impl;
 
+import org.raven.tree.impl.BaseNode;
+
 /**
  *
  * @author Mikhail Titov
  */
-public class SchedulersNode {
+public class SchedulersNode extends BaseNode
+{
+    public final static String NAME = "Schedulers";
 
+    public SchedulersNode()
+    {
+        super(NAME);
+    }
 }

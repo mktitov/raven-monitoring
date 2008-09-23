@@ -28,6 +28,7 @@ import org.raven.RavenCoreModule;
 import org.raven.ServiceTestCase;
 import org.raven.conf.Configurator;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
+import org.raven.sched.impl.SchedulersNode;
 import org.raven.template.TemplatesNode;
 import org.raven.tree.AttributeReference;
 import org.raven.tree.InvalidPathException;
@@ -881,6 +882,10 @@ public class TreeServiceTest extends ServiceTestCase
 
         Node systemNode = tree.getNode(Node.NODE_SEPARATOR+SystemNode.NAME);
         assertNotNull(systemNode);
+
+        SchedulersNode schedulersNode = 
+                (SchedulersNode) systemNode.getChildren(SchedulersNode.NAME);
+        assertNotNull(schedulersNode);
         
         DataSourcesNode dataSourcesNode = 
                 (DataSourcesNode) systemNode.getChildren(DataSourcesNode.NAME);
