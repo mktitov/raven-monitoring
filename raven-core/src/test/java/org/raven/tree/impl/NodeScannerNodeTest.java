@@ -23,6 +23,7 @@ import org.raven.RavenCoreTestCase;
 import org.raven.impl.RavenUtils;
 import org.raven.table.Table;
 import org.raven.tree.Node.Status;
+import org.raven.DummyScheduler;
 import org.raven.tree.impl.objects.NodeScannerNodeConsumer;
 
 /**
@@ -39,6 +40,13 @@ public class NodeScannerNodeTest extends RavenCoreTestCase
     @Before
     public void beforeTest()
     {
+        DummyScheduler scheduler = new DummyScheduler();
+        scheduler.setName("scheduler");
+        tree.getRootNode().addChildren(scheduler);
+        scheduler.save();
+        scheduler.init();
+        scheduler.start();
+
         nodeForScan = new ContainerNode("nodeForScan");
         tree.getRootNode().addChildren(nodeForScan);
         nodeForScan.save();
@@ -51,6 +59,7 @@ public class NodeScannerNodeTest extends RavenCoreTestCase
         tree.getRootNode().addChildren(scanner);
         scanner.save();
         scanner.init();
+        scanner.setScheduler(scheduler);
         scanner.setStartingPoint(nodeForScan);
         scanner.setSortByNodeWeight(false);
         scanner.setNodeFilter(true);

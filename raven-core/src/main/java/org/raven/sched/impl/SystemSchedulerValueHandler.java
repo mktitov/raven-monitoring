@@ -15,20 +15,20 @@
  *  under the License.
  */
 
-package org.raven.ds;
+package org.raven.sched.impl;
 
-import org.raven.table.DataArchiveTable;
+import org.raven.ds.impl.SystemDataSourceValueHandler;
+import org.raven.tree.InvalidPathException;
+import org.raven.tree.NodeAttribute;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataArchive
+public class SystemSchedulerValueHandler extends SystemDataSourceValueHandler
 {
-    /**
-     * Returns the list of the data for the period [fromDate, toDate]
-     * @param fromDate the starting date in the period
-     * @param toDate the end of the period
-     */
-    public DataArchiveTable getArchivedData(String fromDate, String toDate) throws ArchiveException;
+    public SystemSchedulerValueHandler(NodeAttribute attribute) throws InvalidPathException
+    {
+        super(attribute);
+    }
 }

@@ -15,20 +15,21 @@
  *  under the License.
  */
 
-package org.raven.ds;
+package org.raven;
 
-import org.raven.table.DataArchiveTable;
+import java.util.Collection;
+import org.raven.sched.Scheduler;
+import org.raven.tree.NodeAttribute;
+import org.raven.tree.impl.BaseNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataArchive
+public class DummyScheduler extends BaseNode implements Scheduler
 {
-    /**
-     * Returns the list of the data for the period [fromDate, toDate]
-     * @param fromDate the starting date in the period
-     * @param toDate the end of the period
-     */
-    public DataArchiveTable getArchivedData(String fromDate, String toDate) throws ArchiveException;
+    public Collection<NodeAttribute> generateAttributes()
+    {
+        return null;
+    }
 }

@@ -26,6 +26,7 @@ import org.raven.annotations.Parameter;
 import org.raven.ds.ArchiveException;
 import org.raven.ds.DataArchive;
 import org.raven.ds.impl.DataPipeImpl;
+import org.raven.table.DataArchiveTable;
 import org.raven.table.Table;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -105,7 +106,7 @@ public class RRDataSource extends DataPipeImpl implements DataArchive, Viewable
         return minValue;
     }
 
-    public Table getArchivedData(String fromDate, String toDate) throws ArchiveException
+    public DataArchiveTable getArchivedData(String fromDate, String toDate) throws ArchiveException
     {
         return ((RRDNode)getEffectiveParent()).getArchivedData(this, fromDate, toDate);
     }

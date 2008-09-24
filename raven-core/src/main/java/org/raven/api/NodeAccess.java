@@ -18,7 +18,9 @@
 package org.raven.api;
 
 import java.util.Map;
+import org.raven.ds.ArchiveException;
 import org.raven.rrd.graph.RRGraphNode;
+import org.raven.table.DataArchiveTable;
 import org.raven.tree.Node;
 
 /**
@@ -27,6 +29,7 @@ import org.raven.tree.Node;
  */
 public interface NodeAccess 
 {
+    public int getId();
     public NodeAccess getParent();
     public String getName();
     public String getPath();
@@ -36,4 +39,5 @@ public interface NodeAccess
     public NodeAttributeAccess getAt(String attributeName);
     public Node asNode();
     public RRGraphNode findGraph();
+    public DataArchiveTable getArchivedData(String fromDate, String toDate) throws ArchiveException;
 }

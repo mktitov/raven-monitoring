@@ -18,6 +18,7 @@
 package org.raven.table;
 
 import java.util.Date;
+import java.util.Iterator;
 
 /**
  *
@@ -40,4 +41,21 @@ public class DataArchiveTable extends TableImpl
         addRow(new Object[]{timestamp, value});
     }
 
+    public Object sum() throws ConsolidationFunctionException
+    {
+        SumFunction sum = new SumFunction();
+        boolean firstCycle=true;
+        for (Iterator<Object[]> row=getRowIterator(); row.hasNext();)
+        {
+            Object value = row.next()[1];
+            if (firstCycle)
+            {
+                sum.startCalculation(value.getClass());
+                firstCycle = false;
+            }
+            sum.nextCalculation(value);
+        }
+        sum.finishCalculation();
+        return sum.getResultValue();
+    }
 }

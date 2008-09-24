@@ -68,6 +68,14 @@ public class QuartzSchedulerTest extends RavenCoreTestCase
         node.stop();
         counter = node.getCounter();
         assertTrue(counter>=2 && counter<=3);
+        
+        node.resetCounter();
+        schedule.setValue("0/10 * * * * ? 2040");
+        node.start();
+        schedule.setValue("0/2 * * * * ?");
+        TimeUnit.SECONDS.sleep(5);
+        node.stop();
+        assertTrue(counter>=2 && counter<=3);
 
         node.resetCounter();
         node.start();

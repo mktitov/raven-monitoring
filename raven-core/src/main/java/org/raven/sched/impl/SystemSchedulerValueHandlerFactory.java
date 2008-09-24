@@ -15,7 +15,7 @@
  *  under the License.
  */
 
-package org.raven.ds.impl;
+package org.raven.sched.impl;
 
 import org.raven.RavenRuntimeException;
 import org.raven.tree.AttributeValueHandler;
@@ -28,13 +28,13 @@ import org.raven.tree.NodePathResolver;
  *
  * @author Mikhail Titov
  */
-public class SystemDataSourceValueHandlerFactory implements AttributeValueHandlerFactory
+public class SystemSchedulerValueHandlerFactory implements AttributeValueHandlerFactory
 {
-    public final static String TYPE = "SystemDataSource";
+    public final static String TYPE = "SystemScheduler";
     
     private final NodePathResolver pathResolver;
 
-    public SystemDataSourceValueHandlerFactory(NodePathResolver pathResolver)
+    public SystemSchedulerValueHandlerFactory(NodePathResolver pathResolver)
     {
         this.pathResolver = pathResolver;
     }
@@ -43,12 +43,12 @@ public class SystemDataSourceValueHandlerFactory implements AttributeValueHandle
     {
         try
         {
-            return new SystemDataSourceValueHandler(attribute);
+            return new SystemSchedulerValueHandler(attribute);
         } 
         catch (InvalidPathException ex)
         {
             throw new RavenRuntimeException(String.format(
-                    "Error creating reference to system datasource value handler for attribute (%s)"
+                    "Error creating reference to system scheduler value handler for attribute (%s)"
                     , pathResolver.getAbsolutePath(attribute))
                     , ex);
         }
@@ -56,7 +56,6 @@ public class SystemDataSourceValueHandlerFactory implements AttributeValueHandle
 
     public String getName()
     {
-        return "System Data Source";
+        return "System scheduler";
     }
-
 }

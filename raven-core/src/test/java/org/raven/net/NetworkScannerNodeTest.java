@@ -21,7 +21,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import org.junit.Before;
 import org.junit.Test;
+import org.raven.DummyScheduler;
 import org.raven.RavenCoreTestCase;
 import org.raven.net.objects.TestScannerConsumer;
 import org.raven.net.objects.TestScannerDataSource;
@@ -35,6 +37,19 @@ import org.raven.tree.Node.Status;
  */
 public class NetworkScannerNodeTest extends RavenCoreTestCase
 {
+    private DummyScheduler scheduler;
+    
+    @Before
+    public void beforeTest()
+    {
+        scheduler = new DummyScheduler();
+        scheduler.setName("scheduler");
+        tree.getRootNode().addChildren(scheduler);
+        scheduler.save();
+        scheduler.init();
+        scheduler.start();
+    }
+
     @Test
     public void simpleTest() throws Exception
     {
@@ -51,6 +66,7 @@ public class NetworkScannerNodeTest extends RavenCoreTestCase
         tree.getRootNode().addChildren(scanner);
         scanner.save();
         scanner.init();
+        scanner.setScheduler(scheduler);
         scanner.setDataSource(ds);
         scanner.setThreadCount(5);
         scanner.setIpRanges("10.50.1.0-10.50.1.1, 10.50.2.0-10.50.2.0");
@@ -69,6 +85,7 @@ public class NetworkScannerNodeTest extends RavenCoreTestCase
 
         scanner.start();
         assertEquals(Status.STARTED, Status.STARTED);
+        scanner.executeScheduledJob();
         TimeUnit.SECONDS.sleep(1);
 
         List<String> ips = ds.getIps();
@@ -104,6 +121,7 @@ public class NetworkScannerNodeTest extends RavenCoreTestCase
         tree.getRootNode().addChildren(scanner);
         scanner.save();
         scanner.init();
+        scanner.setScheduler(scheduler);
         scanner.setDataSource(ds);
         scanner.setIpRanges("10.50.1.0-10.50.1.1, 10.50.2.0-10.50.2.0");
         scanner.setInterval(0);
@@ -122,6 +140,7 @@ public class NetworkScannerNodeTest extends RavenCoreTestCase
 
         scanner.start();
         assertEquals(Status.STARTED, Status.STARTED);
+        scanner.executeScheduledJob();
         TimeUnit.SECONDS.sleep(1);
 
         Table table = consumer.getTable();
@@ -149,6 +168,7 @@ public class NetworkScannerNodeTest extends RavenCoreTestCase
         tree.getRootNode().addChildren(scanner);
         scanner.save();
         scanner.init();
+        scanner.setScheduler(scheduler);
         scanner.setThreadCount(10);
 //        scanner.setIpRanges("10.50.0.0-10.50.255.255");
         scanner.setIpRanges("10.50.1.0-10.50.1.255");
@@ -171,6 +191,7 @@ public class NetworkScannerNodeTest extends RavenCoreTestCase
         
         scanner.start();
         assertEquals(Status.STARTED, scanner.getStatus());
+        scanner.executeScheduledJob();
         
         while (scanner.isScanning())
             TimeUnit.MILLISECONDS.sleep(100);

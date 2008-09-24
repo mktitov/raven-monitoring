@@ -23,10 +23,12 @@ import java.util.HashMap;
 import java.util.Map;
 import org.raven.api.NodeAccess;
 import org.raven.api.NodeAttributeAccess;
+import org.raven.ds.ArchiveException;
 import org.raven.ds.DataSource;
 import org.raven.rrd.data.RRDataSource;
 import org.raven.rrd.graph.RRDef;
 import org.raven.rrd.graph.RRGraphNode;
+import org.raven.table.DataArchiveTable;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 
@@ -43,6 +45,11 @@ public class NodeAccessImpl implements NodeAccess
     public NodeAccessImpl(Node node)
     {
         this.node = node;
+    }
+
+    public int getId()
+    {
+        return node.getId();
     }
     
     public NodeAccess getParent()
@@ -97,6 +104,14 @@ public class NodeAccessImpl implements NodeAccess
     public RRGraphNode findGraph()
     {
         return findRRGraphNode(node);
+    }
+
+    public DataArchiveTable getArchivedData(String fromDate, String toDate) throws ArchiveException
+    {
+        RRDataSource rrds = findRRDataSource(node);
+        if (rrds==null)
+            return null;
+        return rrds.getArchivedData(fromDate, toDate);
     }
 
     private RRGraphNode findRRGraphNode(Node node)

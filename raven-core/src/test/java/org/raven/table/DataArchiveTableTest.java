@@ -15,20 +15,27 @@
  *  under the License.
  */
 
-package org.raven.ds;
+package org.raven.table;
 
-import org.raven.table.DataArchiveTable;
+import java.util.Date;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataArchive
+public class DataArchiveTableTest extends Assert
 {
-    /**
-     * Returns the list of the data for the period [fromDate, toDate]
-     * @param fromDate the starting date in the period
-     * @param toDate the end of the period
-     */
-    public DataArchiveTable getArchivedData(String fromDate, String toDate) throws ArchiveException;
+    @Test
+    public void sumTest() throws Exception
+    {
+        DataArchiveTable table = new DataArchiveTable();
+        table.addData(new Date(), 1);
+        table.addData(new Date(), 2);
+        Object sum = table.sum();
+        assertNotNull(sum);
+        assertTrue(sum instanceof Number);
+        assertEquals(3, ((Number)sum).intValue());
+    }
 }

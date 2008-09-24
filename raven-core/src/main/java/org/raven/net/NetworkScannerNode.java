@@ -31,12 +31,17 @@ import org.raven.ds.impl.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.commons.lang.time.DurationFormatUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
+import org.raven.sched.Schedulable;
+import org.raven.sched.Scheduler;
+import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
 import org.raven.table.TableImpl;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
@@ -44,6 +49,7 @@ import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.DataSourcesNode;
 import org.raven.tree.impl.NodeAttributeImpl;
+import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.tree.impl.ViewableObjectImpl;
 import org.weda.annotations.constraints.NotNull;
 
@@ -52,8 +58,12 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=DataSourcesNode.class)
-public class NetworkScannerNode extends DataPipeImpl implements Viewable
+public class NetworkScannerNode extends DataPipeImpl implements Viewable, Schedulable
 {
+    @Parameter(valueHandlerType=SystemSchedulerValueHandlerFactory.TYPE)
+    @NotNull()
+    private Scheduler scheduler;
+
     @Parameter(defaultValue="5")
     @NotNull
     private Integer threadCount;
@@ -98,17 +108,15 @@ public class NetworkScannerNode extends DataPipeImpl implements Viewable
     @Parameter(readOnly=true)
     private AtomicLong ipsFound;
 
-    @Override
-    public boolean start() throws NodeError
+    private Lock lock = new ReentrantLock();
+
+    public void executeScheduledJob()
     {
-        boolean started =  super.start();
-        if (started)
-            try {
-                scan();
-            } catch (Exception ex) {
-                throw new NodeError(String.format("Error starting node (%s)", getPath()), ex);
-            }
-        return started;
+        try {
+            scan();
+        } catch (Exception ex) {
+            throw new NodeError(String.format("Error starting node (%s)", getPath()), ex);
+        }
     }
 
     @Override
@@ -139,20 +147,38 @@ public class NetworkScannerNode extends DataPipeImpl implements Viewable
     
     private void scan() throws Exception
     {
-        ipRangeIterator = formIpIterator();
-        resolveHostnamesCopy = resolveHostnames;
-        if (resolveHostnamesCopy)
-            ipTable = new TableImpl(new String[]{"ip", "hostname"});
-        else    
-            ipTable = new TableImpl(new String[]{"ip"});
+        if (lock.tryLock())
+        {
+            try
+            {
+                ipRangeIterator = formIpIterator();
+                resolveHostnamesCopy = resolveHostnames;
+                if (resolveHostnamesCopy)
+                    ipTable = new TableImpl(new String[]{"ip", "hostname"});
+                else
+                    ipTable = new TableImpl(new String[]{"ip"});
 
-        scanStartTime = new AtomicLong(System.currentTimeMillis());
-        scanEndTime = new AtomicLong();
-        ipsScanned = new AtomicLong();
-        ipsFound = new AtomicLong();
-        executor = new WorkerExecutor(getDataSource(), this);
+                scanStartTime = new AtomicLong(System.currentTimeMillis());
+                scanEndTime = new AtomicLong();
+                ipsScanned = new AtomicLong();
+                ipsFound = new AtomicLong();
+                executor = new WorkerExecutor(getDataSource(), this);
+            }finally
+            {
+                lock.unlock();
+            }
+        }
     }
 
+    public Scheduler getScheduler() {
+        return scheduler;
+    }
+
+    public void setScheduler(Scheduler scheduler) {
+        this.scheduler = scheduler;
+    }
+
+    @Parameter(readOnly=true)
     public boolean isScanning()
     {
         return executor!=null && !executor.isJobDone();

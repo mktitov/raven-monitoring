@@ -24,9 +24,14 @@ import java.util.TreeSet;
 import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.api.NodeAccess;
+import org.raven.api.impl.NodeAccessImpl;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
+import org.raven.sched.Schedulable;
+import org.raven.sched.Scheduler;
+import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
 import org.raven.table.TableImpl;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -39,11 +44,15 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass()
-public class NodeScannerNode extends BaseNode implements DataSource
+public class NodeScannerNode extends BaseNode implements DataSource, Schedulable
 {
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     @NotNull
     private Node startingPoint;
+
+    @Parameter(valueHandlerType=SystemSchedulerValueHandlerFactory.TYPE)
+    @NotNull
+    private Scheduler scheduler;
 
     @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
     @NotNull
@@ -78,6 +87,11 @@ public class NodeScannerNode extends BaseNode implements DataSource
 
     private Node scanningNode;
 
+    public void executeScheduledJob()
+    {
+        scannNodes();
+    }
+    
     public synchronized void scannNodes()
     {
         Scanner scanner = new Scanner();
@@ -96,6 +110,14 @@ public class NodeScannerNode extends BaseNode implements DataSource
             addAdditionalNodes(table, nodeInfo.node);
         }
         sendTableToConsumers(table);
+    }
+
+    public Scheduler getScheduler() {
+        return scheduler;
+    }
+
+    public void setScheduler(Scheduler scheduler) {
+        this.scheduler = scheduler;
     }
 
     public Boolean getSubtreeFilter() {
@@ -186,7 +208,7 @@ public class NodeScannerNode extends BaseNode implements DataSource
     {
         super.formExpressionBindings(bindings);
 
-        bindings.put("scanningNode", scanningNode);
+        bindings.put("scanningNode", new NodeAccessImpl(scanningNode));
     }
 
     private void addAdditionalNodes(TableImpl table, Node node)
@@ -195,21 +217,31 @@ public class NodeScannerNode extends BaseNode implements DataSource
         Object add = includeAdditionalNodes;
         if (add==null)
             return;
-        if (add instanceof Node)
-            table.addRow(new Object[]{add, null});
-        else if (add instanceof Collection)
+        if (add instanceof Collection)
         {
             for (Object obj: (Collection)add)
-                if (obj instanceof Node)
-                    table.addRow(new Object[]{obj, null});
+                addNodeToTable(table, obj);
         }
         else if (  add.getClass().isArray() 
                 && !add.getClass().getComponentType().isPrimitive())
         {
             for (Object obj: (Object[])add)
-                if (obj instanceof Node)
-                    table.addRow(new Object[]{obj, null});
-        }
+                addNodeToTable(table, obj);
+        } 
+        else
+            addNodeToTable(table, add);
+    }
+
+    private boolean addNodeToTable(TableImpl table, Object obj)
+    {
+        if (obj instanceof Node)
+            table.addRow(new Object[]{obj, null});
+        else if (obj instanceof NodeAccess)
+            table.addRow(new Object[]{((NodeAccess)obj).asNode(), null});
+        else
+            return false;
+
+        return true;
     }
 
     private void sendTableToConsumers(TableImpl table)

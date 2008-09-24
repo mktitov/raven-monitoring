@@ -150,6 +150,21 @@ public class QuartzScheduler extends BaseNode implements Scheduler
         }
     }
 
+    @Override
+    public synchronized void nodeAttributeValueChanged(
+            Node node, NodeAttribute attribute, Object oldValue, Object newValue)
+    {
+        if (getStatus()==Status.STARTED 
+            && node!=this
+            && node instanceof Schedulable
+            && node.getStatus()==Status.STARTED
+            && attribute.getName().equals(SCHEDULE_ATTRIBUTE))
+        {
+            removeJob((Schedulable)node);
+            addJob((Schedulable) node);
+        }
+    }
+
     public Collection<NodeAttribute> generateAttributes()
     {
         NodeAttribute attr = new NodeAttributeImpl(

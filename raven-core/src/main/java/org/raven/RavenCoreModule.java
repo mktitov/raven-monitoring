@@ -45,6 +45,9 @@ import org.raven.impl.StringToAttributeReferenceConverter;
 import org.raven.impl.StringToClassConverter;
 import org.raven.impl.StringToNodeConverter;
 import org.raven.impl.StringToTemplateVariableConverter;
+import org.raven.sched.impl.SystemSchedulerReferenceValues;
+import org.raven.sched.impl.SystemSchedulerValueHandler;
+import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
 import org.raven.sql.QueryParameterValueHandlerFactory;
 import org.raven.template.TemplateVariable;
 import org.raven.template.TemplateVariableReferenceValues;
@@ -166,6 +169,9 @@ public class RavenCoreModule
         conf.add(
             RefreshAttributeValueHandlerFactory.TYPE
             , new RefreshAttributeValueHandlerFactory());
+        conf.add(
+            SystemSchedulerValueHandlerFactory.TYPE
+            , new SystemSchedulerValueHandlerFactory(pathResolver));
     }
     
     public static void contributeAttributeReferenceValues(
@@ -177,9 +183,13 @@ public class RavenCoreModule
             , new SystemDataSourceReferenceValues()
             , "after:"+EnumReferenceValues.class.getSimpleName());
         conf.add(
+            SystemSchedulerReferenceValues.class.getSimpleName()
+            , new SystemSchedulerReferenceValues()
+            , "after:"+SystemDataSourceReferenceValues.class.getSimpleName());
+        conf.add(
             BooleanReferenceValues.class.getSimpleName()
             , new BooleanReferenceValues()
-            , "after:"+SystemDataSourceReferenceValues.class.getSimpleName());
+            , "after:"+SystemSchedulerReferenceValues.class.getSimpleName());
         conf.add(
             TemplateVariableReferenceValues.class.getSimpleName()
             , new TemplateVariableReferenceValues()

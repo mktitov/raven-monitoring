@@ -15,20 +15,17 @@
  *  under the License.
  */
 
-package org.raven.ds;
-
-import org.raven.table.DataArchiveTable;
+package org.raven.table;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataArchive
+public interface ConsolidationFunction
 {
-    /**
-     * Returns the list of the data for the period [fromDate, toDate]
-     * @param fromDate the starting date in the period
-     * @param toDate the end of the period
-     */
-    public DataArchiveTable getArchivedData(String fromDate, String toDate) throws ArchiveException;
+    public void startCalculation(Class valueType) throws ConsolidationFunctionException;
+    public void nextCalculation(Object nextValue) throws ConsolidationFunctionException;
+    public void finishCalculation() throws ConsolidationFunctionException;
+    public Object getResultValue() throws ConsolidationFunctionException;
+
 }
