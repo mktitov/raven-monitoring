@@ -45,7 +45,7 @@ import org.weda.internal.annotations.Message;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=SchedulersNode.class)
-public class QuartzScheduler extends BaseNode implements Scheduler, AttributesGenerator
+public class QuartzScheduler extends BaseNode implements Scheduler
 {
     public final static String NODE_ATTRIBUTE_NAME = "NODE";
     public final static String SCHEDULE_ATTRIBUTE = "schedule";
@@ -74,13 +74,14 @@ public class QuartzScheduler extends BaseNode implements Scheduler, AttributesGe
     {
         super.doStart();
 
+        scheduler = null;
         int _threadCount = threadCount;
         if (_threadCount<1)
             throw new Exception("The value of the attribute threadCount must be greater than 1");
         
         Properties props = new Properties();
         props.put("org.quartz.threadPool.class", SimpleThreadPool.class.getName());
-        props.put("org.quartz.threadPool.threadCount", _threadCount);
+        props.put("org.quartz.threadPool.threadCount", ""+_threadCount);
         StdSchedulerFactory factory = new StdSchedulerFactory(props);
         factory.initialize();
         scheduler = factory.getScheduler();
@@ -98,7 +99,8 @@ public class QuartzScheduler extends BaseNode implements Scheduler, AttributesGe
     {
         try
         {
-            scheduler.shutdown(false);
+            if (scheduler!=null)
+                scheduler.shutdown(false);
         }
         catch (SchedulerException ex)
         {
@@ -125,15 +127,18 @@ public class QuartzScheduler extends BaseNode implements Scheduler, AttributesGe
         boolean result = super.removeDependentNode(dependentNode);
         
         if (result && dependentNode instanceof Schedulable)
+        {
             dependentNode.removeListener(this);
+            removeJob((Schedulable)dependentNode);
+        }
 
         return result;
     }
 
     @Override
-    public void nodeStatusChanged(Node node, Status oldStatus, Status newStatus)
+    public synchronized void nodeStatusChanged(Node node, Status oldStatus, Status newStatus)
     {
-        if (node!=this && node instanceof Schedulable)
+        if (getStatus()==Status.STARTED && node!=this && node instanceof Schedulable)
         {
             synchronized(this)
             {
@@ -163,7 +168,7 @@ public class QuartzScheduler extends BaseNode implements Scheduler, AttributesGe
                     "" + node.getId(), scheduler.DEFAULT_GROUP, schedule);
             JobDetail jobDetail = new JobDetail(
                     ""+node.getId(), scheduler.DEFAULT_GROUP, QuartzJobExecutor.class);
-            jobDetail.getJobDataMap().put(SCHEDULE_ATTRIBUTE, node);
+            jobDetail.getJobDataMap().put(NODE_ATTRIBUTE_NAME, node);
             scheduler.scheduleJob(jobDetail, trigger);
         } catch (ParseException ex)
         {

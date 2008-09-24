@@ -17,13 +17,14 @@
 
 package org.raven.sched;
 
+import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface Scheduler extends Node
+public interface Scheduler extends Node, AttributesGenerator
 {
 
 }
