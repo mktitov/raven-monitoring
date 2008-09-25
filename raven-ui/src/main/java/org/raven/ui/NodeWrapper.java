@@ -124,7 +124,8 @@ implements Comparator<NodeAttribute>
 	public List<NodeWrapper> getViewableChilddren()
 	{
 		List<NodeWrapper> ret = new ArrayList<NodeWrapper>();
-		Collection<Node> c = getNode().getSortedChildrens();
+		//Collection<Node> c = getNode().getSortedChildrens();
+		Collection<Node> c = getNode().getEffectiveChildrens();
 		if(c!=null) 
 		{
 			Iterator<Node> it = c.iterator();
