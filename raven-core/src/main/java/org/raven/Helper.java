@@ -18,6 +18,7 @@
 package org.raven;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -44,5 +45,16 @@ public class Helper
                 return false;
             }
         return true;
+    }
+
+    public static boolean checkAttributes(
+            Node whoCheck, Collection<NodeAttribute> reqAttrs, Node testNode)
+    {
+        Map<String, NodeAttribute> attrs = new HashMap<String, NodeAttribute>();
+        Collection<NodeAttribute> testNodeAttrs = testNode.getNodeAttributes();
+        if (testNodeAttrs!=null)
+            for (NodeAttribute attr: testNodeAttrs)
+                attrs.put(attr.getName(), attr);
+        return checkAttributes(whoCheck, reqAttrs, testNode, attrs);
     }
 }

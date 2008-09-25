@@ -31,7 +31,7 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass
 public class ReferenceNode extends BaseNode
 {
-    @Parameter
+    @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     @NotNull
     private Node reference;
 
@@ -51,7 +51,9 @@ public class ReferenceNode extends BaseNode
         if (!isConditionalNode())
             return null;
         Node refNode = reference;
-        if (refNode!=null && refNode.isConditionalNode())
+        if (refNode==null)
+            return null;
+        else if (refNode.isConditionalNode())
             return refNode.getEffectiveChildrens();
         else
             return Arrays.asList(refNode);

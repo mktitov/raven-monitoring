@@ -48,6 +48,8 @@ public class QuartzSchedulerTest extends RavenCoreTestCase
         NodeAttribute schedule = node.getNodeAttribute(QuartzScheduler.SCHEDULE_ATTRIBUTE);
         assertNotNull(schedule);
         schedule.setValue("0/2 * * * * ?");
+        schedule.save();
+
         node.start();
         assertEquals(Status.STARTED, node.getStatus());
 
@@ -85,6 +87,34 @@ public class QuartzSchedulerTest extends RavenCoreTestCase
         node.stop();
         counter = node.getCounter();
         assertTrue(counter<=1);
+        
+    }
+
+    @Test
+    public void scheduleAttributeTest() throws Exception
+    {
+         QuartzScheduler scheduler = new QuartzScheduler();
+        scheduler.setName("scheduler");
+        tree.getRootNode().addChildren(scheduler);
+        scheduler.save();
+        scheduler.init();
+
+        SchedulableNode node = new SchedulableNode();
+        node.setName("node");
+        tree.getRootNode().addChildren(node);
+        node.save();
+        node.init();
+        node.setScheduler(scheduler);
+        NodeAttribute schedule = node.getNodeAttribute(QuartzScheduler.SCHEDULE_ATTRIBUTE);
+        assertNotNull(schedule);
+        schedule.setValue("0/2 * * * * ?");
+        schedule.save();
+
+        tree.reloadTree();
+        node = (SchedulableNode) tree.getNode(node.getPath());
+        assertNotNull(node);
+        schedule = node.getNodeAttribute(QuartzScheduler.SCHEDULE_ATTRIBUTE);
+        assertNotNull(schedule);
         
     }
 }

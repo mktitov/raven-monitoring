@@ -423,7 +423,7 @@ public class H2TreeStore implements TreeStore
                 "  value_handler_type varchar(128), " +
                 "  parameter_name varchar(128), " +
                 "  parent_attribute varchar(128), " +
-                "  description varchar(256), " +
+                "  description varchar(2048), " +
                 "  foreign key (owner) references %s (id) on delete cascade" +
                 ")"
                 , NODE_ATTRIBUTES_TABLE_NAME, NODES_TABLE_NAME));

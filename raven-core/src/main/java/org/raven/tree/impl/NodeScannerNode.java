@@ -55,15 +55,12 @@ public class NodeScannerNode extends BaseNode implements DataSource, Schedulable
     private Scheduler scheduler;
 
     @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
-    @NotNull
     private Boolean subtreeFilter;
     
     @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
-    @NotNull
     private Boolean nodeFilter;
 
     @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE, defaultValue="0")
-    @NotNull
     private Object nodeWeight;
 
     @Parameter(defaultValue="false")
@@ -279,11 +276,20 @@ public class NodeScannerNode extends BaseNode implements DataSource, Schedulable
 
             scanningNode = node;
 
-            if (!subtreeFilter)
+            Boolean _subtreeFilter = subtreeFilter;
+            if (_subtreeFilter==null || !subtreeFilter)
                 return ScanOperation.SKIP_NODE;
 
-            if (nodeFilter)
+            Boolean _nodeFilter = nodeFilter;
+            if (_nodeFilter!=null && _nodeFilter)
+            {
+                Object _nodeWeight = nodeWeight;
+                if (logger.isDebugEnabled())
+                    logger.debug(String.format(
+                            "Adding node (%s) to table. Node weight (%s)"
+                            , node.getPath(), _nodeWeight));
                 foundNodes.add(new NodeInfo(node, nodeWeight));
+            }
 
             return ScanOperation.CONTINUE;
         }
@@ -303,6 +309,8 @@ public class NodeScannerNode extends BaseNode implements DataSource, Schedulable
         public int compareTo(NodeInfo o)
         {
             if (!(nodeWeight instanceof Comparable))
+                return -1;
+            else if (o.nodeWeight==null)
                 return 1;
             else
                 return ((Comparable)nodeWeight).compareTo(o.nodeWeight);
