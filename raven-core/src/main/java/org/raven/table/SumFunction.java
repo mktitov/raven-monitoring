@@ -53,7 +53,9 @@ public class SumFunction implements ConsolidationFunction
             if (realNumber)
             {
                 double prevValue = resultValue==null? 0.0 : ((Number)resultValue).doubleValue();
-                resultValue = prevValue + ((Number)nextValue).doubleValue();
+                double val = ((Number)nextValue).doubleValue();
+                resultValue =(
+                        Double.isNaN(prevValue)? 0.: prevValue) + (Double.isNaN(val)? 0. : val);
             }
             else
             {

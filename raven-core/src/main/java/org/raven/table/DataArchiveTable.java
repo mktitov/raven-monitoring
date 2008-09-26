@@ -19,6 +19,8 @@ package org.raven.table;
 
 import java.util.Date;
 import java.util.Iterator;
+import org.weda.internal.annotations.Service;
+import org.weda.services.TypeConverter;
 
 /**
  *
@@ -26,6 +28,9 @@ import java.util.Iterator;
  */
 public class DataArchiveTable extends TableImpl
 {
+    @Service
+    private static TypeConverter converter;
+
     public DataArchiveTable()
     {
         super(new String[]{"timestamp", "value"});
@@ -44,16 +49,11 @@ public class DataArchiveTable extends TableImpl
     public Object sum() throws ConsolidationFunctionException
     {
         SumFunction sum = new SumFunction();
-        boolean firstCycle=true;
+        sum.startCalculation(Double.class);
         for (Iterator<Object[]> row=getRowIterator(); row.hasNext();)
         {
             Object value = row.next()[1];
-            if (firstCycle)
-            {
-                sum.startCalculation(value.getClass());
-                firstCycle = false;
-            }
-            sum.nextCalculation(value);
+            sum.nextCalculation(converter.convert(Double.class, value, null));
         }
         sum.finishCalculation();
         return sum.getResultValue();

@@ -18,19 +18,21 @@
 package org.raven.table;
 
 import java.util.Date;
-import org.junit.Assert;
 import org.junit.Test;
+import org.raven.RavenCoreTestCase;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class DataArchiveTableTest extends Assert
+public class DataArchiveTableTest extends RavenCoreTestCase
 {
     @Test
     public void sumTest() throws Exception
     {
         DataArchiveTable table = new DataArchiveTable();
+        table.addData(new Date(), Double.NaN);
+        table.addData(new Date(), null);
         table.addData(new Date(), 1);
         table.addData(new Date(), 2);
         Object sum = table.sum();

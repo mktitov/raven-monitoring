@@ -19,9 +19,14 @@ package org.raven.tree.impl;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
+import org.raven.tree.Viewable;
+import org.raven.tree.ViewableObject;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -29,7 +34,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass
-public class ReferenceNode extends BaseNode
+public class ReferenceNode extends BaseNode implements Viewable
 {
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     @NotNull
@@ -79,4 +84,22 @@ public class ReferenceNode extends BaseNode
         this.useInTemplate = useInTemplate;
     }
 
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
+    {
+        Node _reference = reference;
+        if (isConditionalNode() && _reference instanceof Viewable)
+            return ((Viewable)_reference).getRefreshAttributes();
+        else
+            return null;
+    }
+
+    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes)
+            throws Exception
+    {
+        Node _reference = reference;
+        if (isConditionalNode() && _reference instanceof Viewable)
+            return ((Viewable)_reference).getViewableObjects(refreshAttributes);
+        else
+            return null;
+    }
 }
