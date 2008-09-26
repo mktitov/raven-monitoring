@@ -206,6 +206,20 @@ public class NodeScannerNodeTest extends RavenCoreTestCase
         assertEquals(2, rows.get(1)[1]);
         assertSame(node1_1, rows.get(2)[0]);
         assertEquals(1, rows.get(2)[1]);
+        
+        scanner.setReverseOrder(true);
+        scanner.setMaxRowCount(2);
+        scanner.scannNodes();
+        assertSame(scanner, consumer.getDataSource());
+        data = consumer.getData();
+        assertNotNull(data);
+        assertTrue(data instanceof Table);
+        rows = RavenUtils.tableAsList((Table) data);
+        assertEquals(2, rows.size());
+        assertSame(node1, rows.get(0)[0]);
+        assertEquals(3, rows.get(0)[1]);
+        assertSame(node2, rows.get(1)[0]);
+        assertEquals(2, rows.get(1)[1]);
     }
 
     @Test

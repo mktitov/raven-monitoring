@@ -73,7 +73,7 @@ public class NodeScannerNode extends BaseNode implements DataSource, Schedulable
 
     @Parameter(defaultValue="0")
     @NotNull
-    private int maxRowCount;
+    private Integer maxRowCount;
 
     @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE, defaultValue="null")
     private Object includeAdditionalNodes;
@@ -133,11 +133,11 @@ public class NodeScannerNode extends BaseNode implements DataSource, Schedulable
         this.includeAdditionalNodes = includeAdditionalNodes;
     }
 
-    public int getMaxRowCount() {
+    public Integer getMaxRowCount() {
         return maxRowCount;
     }
 
-    public void setMaxRowCount(int maxRowCount) {
+    public void setMaxRowCount(Integer maxRowCount) {
         this.maxRowCount = maxRowCount;
     }
 
