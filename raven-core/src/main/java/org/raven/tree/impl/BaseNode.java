@@ -1147,7 +1147,7 @@ public class BaseNode implements Node, NodeListener
     @Override
     public String toString()
     {
-        return name;
+        return getPath();
     }
 
     public void formExpressionBindings(Bindings bindings) 

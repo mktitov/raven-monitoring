@@ -18,8 +18,11 @@
 package org.raven.tree.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
@@ -37,6 +40,8 @@ import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.ScanOperation;
 import org.raven.tree.ScannedNodeHandler;
+import org.raven.tree.Viewable;
+import org.raven.tree.ViewableObject;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -44,7 +49,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass()
-public class NodeScannerNode extends BaseNode implements DataSource, Schedulable
+public class NodeScannerNode extends BaseNode implements DataSource, Schedulable, Viewable
 {
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     @NotNull
@@ -84,6 +89,8 @@ public class NodeScannerNode extends BaseNode implements DataSource, Schedulable
 
     private Node scanningNode;
 
+    private TableImpl table;
+
     public void executeScheduledJob()
     {
         scannNodes();
@@ -96,7 +103,7 @@ public class NodeScannerNode extends BaseNode implements DataSource, Schedulable
         Collection<NodeInfo> foundNodes = scanner.foundNodes;
         int counter = 0;
         int maxCount = maxRowCount<=0? Integer.MAX_VALUE : maxRowCount;
-        TableImpl table = new TableImpl(new String[]{"node", "node weight"});
+        table = new TableImpl(new String[]{"node", "node weight"});
         boolean _excludeScannedNode = excludeScannedNode;
         for (NodeInfo nodeInfo: foundNodes)
         {
@@ -250,6 +257,22 @@ public class NodeScannerNode extends BaseNode implements DataSource, Schedulable
                     ((DataConsumer)depNode).setData(this, table);
     }
 
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
+    {
+        return null;
+    }
+
+    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) 
+            throws Exception
+    {
+        if (table==null)
+            return null;
+
+        ViewableObject object = new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table);
+
+        return Arrays.asList(object);
+    }
+
     private class Scanner implements ScannedNodeHandler
     {
         private final Collection<NodeInfo> foundNodes;
@@ -284,11 +307,23 @@ public class NodeScannerNode extends BaseNode implements DataSource, Schedulable
             if (_nodeFilter!=null && _nodeFilter)
             {
                 Object _nodeWeight = nodeWeight;
-                if (logger.isDebugEnabled())
-                    logger.debug(String.format(
-                            "Adding node (%s) to table. Node weight (%s)"
-                            , node.getPath(), _nodeWeight));
-                foundNodes.add(new NodeInfo(node, nodeWeight));
+                if (_nodeWeight==null && sort)
+                {
+                    if (logger.isDebugEnabled())
+                    {
+                        logger.debug(String.format(
+                                "Skipping scanning node (%s) because of null node weight"
+                                , scanningNode.getPath()));
+                    }
+                }
+                else
+                {
+                    if (logger.isDebugEnabled())
+                        logger.debug(String.format(
+                                "Adding node (%s) to table. Node weight (%s)"
+                                , node.getPath(), _nodeWeight));
+                    foundNodes.add(new NodeInfo(node, nodeWeight));
+                }
             }
 
             return ScanOperation.CONTINUE;
@@ -313,7 +348,13 @@ public class NodeScannerNode extends BaseNode implements DataSource, Schedulable
             else if (o.nodeWeight==null)
                 return 1;
             else
-                return ((Comparable)nodeWeight).compareTo(o.nodeWeight);
+            {
+                int res = ((Comparable)nodeWeight).compareTo(o.nodeWeight);
+                if (res==0)
+                    return 1;
+                else
+                    return res;
+            }
         }
     }
 }
