@@ -369,6 +369,7 @@ implements Comparator<NodeAttribute>
 				  {
 					  getConfigurator().getTreeStore().saveNodeAttribute(na);
 					  setHasUnsavedChanges(false);
+					  this.afterWriteAttrubutes();
 				  }	  
 				  	else setHasUnsavedChanges(true);
 			  }
@@ -535,6 +536,21 @@ implements Comparator<NodeAttribute>
 		public void afterDeleteAttrubutes()
 		{
 			onSetNode();
+			restartNode();
+		}
+		
+		public void afterWriteAttrubutes()
+		{
+			restartNode();
+		}
+		
+		public void restartNode()
+		{
+			if(getNode().getStatus() == Node.Status.STARTED)
+			{
+				getNode().stop();
+				getNode().start();
+			}
 		}
 		
 		public String deleteAttrubutes(List<Attr> attrs)

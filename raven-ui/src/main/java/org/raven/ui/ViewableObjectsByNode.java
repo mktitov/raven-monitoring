@@ -48,18 +48,32 @@ public class ViewableObjectsByNode
 		nw.setNeedRefreshVO(false);
 //		if( ! vomap.containsKey(nw.getNodeId()) ) 
 //			needReloadChildren = true;
-		List<ViewableObjectWrapper> lst = getObjectsByNode(nw,reload);
+		List<ViewableObjectWrapper> lst = new ArrayList<ViewableObjectWrapper>(); 
+		List<ViewableObjectWrapper> no = getObjectsByNode(nw,reload);
+		if(no != null)
+		{
+			logger.info("from {} loaded {} VO ",nw.getNodePath(),no.size());
+			lst.addAll(no);
+		}
 		if(!nw.isChildViewable()) //.isNeedShowRefreshAttributes())
+		{
+			logger.info("Node {} has not viewable children",nw.getNodePath());
 			return lst;
+		}	
 		//if(nw.isViewable())
 		List<NodeWrapper> c = nw.getViewableChilddren();
 		if(c==null)
 			return lst;
+		logger.info("Node {} has {} viewable children",nw.getNodePath(),c.size());
 		Iterator<NodeWrapper> it = c.iterator();
 		while(it.hasNext())
 		{
 			NodeWrapper x = it.next();
-			lst.addAll(getObjectsByNode(x,reload));
+//			lst.addAll(getObjectsByNode(x,reload));
+			List<ViewableObjectWrapper> zz = getObjectsByNode(x,reload);
+			logger.info("from {} loaded2 {} VO ",x.getNodePath(),zz.size());
+			lst.addAll(zz);
+			
 		}
 		logger.info("getObjects found "+lst.size());
 		logger.info("end getObjects for "+nw.getNodePath());

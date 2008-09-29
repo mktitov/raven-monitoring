@@ -105,6 +105,7 @@ public class AttributesTableBean
 	public void saveAttributes(ValueChangeEvent vce)	
 	{
 		saveAttributes();
+		
 	}
 	public String saveAttributes()
 	{

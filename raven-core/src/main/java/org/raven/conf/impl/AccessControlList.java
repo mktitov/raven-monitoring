@@ -157,11 +157,11 @@ public class AccessControlList implements Comparator<AccessControl>
 		String path = node.getPath();
     	Iterator<AccessControl> it = acl.iterator();
     	int curRight = AccessControl.NONE;
-    	logger.info("access for node '"+node.getPath()+"'");
+    	//logger.info("access for node '"+node.getPath()+"'");
     	while(it.hasNext())
     	{
     		AccessControl ac = it.next();
-        	logger.info("AC "+ac.getRegExp()+" "+ac.getRight()+" "+ac.getResource());
+        	//logger.info("AC "+ac.getRegExp()+" "+ac.getRight()+" "+ac.getResource());
     		int right = ac.getRight();
     		if(ac.getResource().startsWith(path+Node.NODE_SEPARATOR))
     			if(right > AccessControl.NONE )
@@ -178,10 +178,10 @@ public class AccessControlList implements Comparator<AccessControl>
     	}
     	if( curRight>AccessControl.NONE && dropByFilter(node))
     	{
-    		logger.info("droped by filter "+node.getPath());
+    		//logger.info("droped by filter "+node.getPath());
     		return AccessControl.NONE;
     	}
-		logger.info("node rigth = "+curRight+" for "+node.getPath());
+		//logger.info("node rigth = "+curRight+" for "+node.getPath());
     	return curRight;
     }
 
