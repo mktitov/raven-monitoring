@@ -17,10 +17,19 @@
 
 package org.raven.tree.impl;
 
+import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.commons.vfs.FileSystemException;
+import org.apache.commons.vfs.FileSystemManager;
+import org.apache.commons.vfs.VFS;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataConsumer;
+import org.raven.ds.DataSource;
 import org.raven.sched.Schedulable;
 import org.raven.sched.Scheduler;
+import org.raven.tree.NodeAttribute;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -28,7 +37,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass
-public class FileContentNode extends BaseNode implements Schedulable
+public class FileContentNode extends BaseNode implements DataSource
 {
     @Parameter @NotNull
     private Scheduler scheduler;
@@ -52,6 +61,40 @@ public class FileContentNode extends BaseNode implements Schedulable
     @Parameter(defaultValue="false")
     @NotNull
     private Boolean removeFileAfterProcessing;
+
+    public boolean getDataImmediate(
+            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public Collection<NodeAttribute> generateAttributes()
+    {
+    }
+
+
+    public void executeScheduledJob()
+    {
+        try
+        {
+            FileSystemManager manager = VFS.getManager();
+            
+        }
+        catch (FileSystemException ex)
+        {
+            Logger.getLogger(FileContentNode.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public Scheduler getScheduler()
+    {
+        return scheduler;
+    }
+
+    public void setScheduler(Scheduler scheduler)
+    {
+        this.scheduler = scheduler;
+    }
 
     public Boolean getAddFileNameToFirstColumn() {
         return addFileNameToFirstColumn;
@@ -99,10 +142,5 @@ public class FileContentNode extends BaseNode implements Schedulable
 
     public void setUrl(String url) {
         this.url = url;
-    }
-
-    public void executeScheduledJob()
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
