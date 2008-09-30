@@ -68,7 +68,9 @@
                     <f:selectItems value="#{rowz.valueHandlerTypes}" />
                 </tr:selectOneChoice>
             </tr:column>
-            <tr:column rendered="#{cNode.node.template}" headerText="#{msgs.templateExpression}" >
+            <tr:column 
+            	rendered="#{cNode.node.template}" 
+            	headerText="#{msgs.templateExpression}" >
                 <tr:selectBooleanCheckbox 
 					valueChangeListener="#{rowz.applyTemplateExpression}"  
 					onchange="submit();"                	
@@ -83,7 +85,10 @@
             <f:facet name="detailStamp">
                 <tr:panelGroupLayout layout="vertical">
 				<tr:panelCaptionGroup captionText="#{msgs.dsc}">
-	                <tr:outputText rendered="#{!rowz.edit}" value="#{rowz.description}"/>
+	                <tr:outputText 
+	                	escape="false" 
+	                	rendered="#{!rowz.edit}" 
+	                	value="#{rowz.description}"/>
     	            <tr:inputText 
     	            	columns="60" rows="2" 
     	            	rendered="#{rowz.edit}"  
@@ -100,7 +105,10 @@
 				>
 					<f:attribute name="#{editExpression.paramName}" value="#{rowz}" />
 				</tr:inputListOfValues>
-	            <tr:selectOneChoice label="#{msgs.expression}" rendered="#{rowz.expressionSupported and !(rowz.selectItems == null)}" value="#{rowz.expression}" >
+	            <tr:selectOneChoice 
+	            	label="#{msgs.expression}" 
+	            	rendered="#{rowz.expressionSupported and !(rowz.selectItems == null)}" 
+	            	value="#{rowz.expression}" >
     	            <f:selectItems value="#{rowz.selectItems}" />
                 </tr:selectOneChoice>
                 </tr:panelGroupLayout>					

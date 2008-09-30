@@ -184,7 +184,6 @@ action="#{sBean.reloadRightFrame}"
  		value="#{cNode.viewableObjects}"  
  		id="showTable"
  		immediate="true"
- 		
  		 >
 <!-- 
 :::refresh_A ::poolStatus
@@ -225,20 +224,27 @@ partialTriggers=":poolStatus"
        			name="ViewableObject" 
        			value="#{row.id}"/>
    		</s:graphicImageDynamic>
+		<tr:spacer height="6" />
 		</tr:group>
   </f:facet >
 
 <!-- show table --> 
 	<f:facet name="ravenTable">
 		<tr:group> 
+        <tr:panelHorizontalLayout halign="center" valign="top" >
 		<tr:outputFormatted 
 			inlineStyle="COLOR: green; FONT-STYLE: italic;" 
 			value="&lt;small&gt;#{row.fromDate}&lt;/small&gt;"/>
-			<h:outputText escape="false" value="#{row.htmlTable}" />
+		<h:outputText  
+			escape="false" 
+			value="#{row.htmlTable}" />
 <!--
 			<tr:group binding="#{ravenTable.group}" />
--->			 
-</tr:group>
+			
+-->
+        </tr:panelHorizontalLayout>
+		<tr:spacer height="6" />
+	</tr:group>
   	</f:facet >
 
   

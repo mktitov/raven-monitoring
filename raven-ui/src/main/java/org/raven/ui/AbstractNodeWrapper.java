@@ -21,6 +21,8 @@ package org.raven.ui;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import org.raven.conf.Configurator;
@@ -33,7 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weda.services.ClassDescriptorRegistry;
 
-public abstract class AbstractNodeWrapper 
+public abstract class AbstractNodeWrapper
 {
     protected Logger logger = LoggerFactory.getLogger(AbstractNodeWrapper.class);	
 	private UserAcl userAcl = null;
@@ -139,6 +141,7 @@ public abstract class AbstractNodeWrapper
 			String dsc = classDesc.getClassDescriptor(c).getDescription();
 			al.add(new NodeType(c.getCanonicalName(),dispName, dsc));
 		}
+		Collections.sort(al, new NodeTypeComparator());
 		return al;
 	}
 
@@ -153,6 +156,7 @@ public abstract class AbstractNodeWrapper
 			//String dsc = classDesc.getClassDescriptor(n.getClass()).getDescription();
 			al.add(new NodeType(n.getPath(),n.getName(), ""));
 		}
+		Collections.sort(al, new NodeTypeComparator());
 		return al;
 	}
 	

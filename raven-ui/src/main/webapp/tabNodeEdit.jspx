@@ -164,7 +164,8 @@
             <f:facet name="detailStamp">
                 <tr:panelGroupLayout layout="vertical"  >
 				<tr:panelCaptionGroup captionText="#{msgs.dsc}">
-	                <tr:outputText 
+	                <tr:outputText
+	                	escape="false" 
 	                	rendered="#{!row.edit}" 
 	                	value="#{row.description}"/>
     	            <tr:inputText 
