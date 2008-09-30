@@ -25,7 +25,7 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.dbcp.ConnectionPool;
 import org.raven.ds.DataConsumer;
-import org.raven.ds.impl.AbstractDataSource;
+import org.raven.ds.impl.AbstractThreadedDataSource;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.DataSourcesNode;
 import org.raven.tree.impl.NodeAttributeImpl;
@@ -40,7 +40,7 @@ import org.weda.internal.annotations.Message;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=DataSourcesNode.class)
-public class SQLDataSourceNode extends AbstractDataSource {
+public class SQLDataSourceNode extends AbstractThreadedDataSource {
 
     public enum ResultType {
         SINGLE, TABLE

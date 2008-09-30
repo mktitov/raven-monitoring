@@ -20,14 +20,14 @@ package org.raven.rrd.objects;
 import java.util.Collection;
 import java.util.Map;
 import org.raven.ds.DataConsumer;
-import org.raven.ds.impl.AbstractDataSource;
+import org.raven.ds.impl.AbstractThreadedDataSource;
 import org.raven.tree.NodeAttribute;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class TestDataSource extends AbstractDataSource
+public class TestDataSource extends AbstractThreadedDataSource
 {
     private double value = 1.;
     private double value2 = 100.;

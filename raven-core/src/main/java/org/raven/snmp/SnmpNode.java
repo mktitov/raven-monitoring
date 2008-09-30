@@ -24,7 +24,7 @@ import java.util.Set;
 import org.raven.table.Table;
 import org.raven.annotations.NodeClass;
 import org.raven.ds.DataConsumer;
-import org.raven.ds.impl.AbstractDataSource;
+import org.raven.ds.impl.AbstractThreadedDataSource;
 import org.raven.table.ColumnBasedTable;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
@@ -49,7 +49,7 @@ import org.weda.annotations.Description;
  */
 @NodeClass(parentNode=DataSourcesNode.class)
 @Description("The data source node that gathers data using snmp.")
-public class SnmpNode extends AbstractDataSource
+public class SnmpNode extends AbstractThreadedDataSource
 {
     public enum OidType {SINGLE, TABLE};
     

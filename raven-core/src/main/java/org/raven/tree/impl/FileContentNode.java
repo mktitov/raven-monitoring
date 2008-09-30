@@ -17,130 +17,181 @@
 
 package org.raven.tree.impl;
 
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.commons.vfs.FileSystemException;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.vfs.FileSystemManager;
 import org.apache.commons.vfs.VFS;
+import org.apache.commons.vfs.FileObject;
+import org.apache.commons.vfs.FileType;
+import org.apache.commons.vfs.Selectors;
 import org.raven.annotations.NodeClass;
-import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
-import org.raven.ds.DataSource;
-import org.raven.sched.Schedulable;
-import org.raven.sched.Scheduler;
+import org.raven.ds.impl.AbstractDataSource;
+import org.raven.table.ColumnBasedTable;
 import org.raven.tree.NodeAttribute;
-import org.weda.annotations.constraints.NotNull;
+import org.weda.internal.annotations.Message;
 
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass
-public class FileContentNode extends BaseNode implements DataSource
+public class FileContentNode extends AbstractDataSource
 {
-    @Parameter @NotNull
-    private Scheduler scheduler;
+    public static String URL_ATTRIBUTE = "url";
+    public static String FILEMASK_ATTRIBUTE = "fileMask";
+    public static String COLUMNDELIMITER_ATTRIBUTE = "columnDelimiter";
+    public static String ROWDELIMITER_ATTRIBUTE = "rowDelimiter";
+    public static String ADDFILENAMETOFIRSTCOLUMN_ATTRIBUTE = "addFileNameToFirstColumn";
+    public static String REMOVEFILEAFTERPROCESSING_ATTRIBUTE = "removeFileAfterProcessing";
 
-    @Parameter @NotNull
-    private String url;
+    @Message
+    private static String urlDescription;
 
-    @Parameter @NotNull
-    private String fileMask;
+    @Message
+    private static String fileMaskDescription;
 
-    @Parameter(defaultValue="\\s+")
-    private String columnDelimiter;
+    @Message
+    private static String columnDelimiterDescription;
 
-    @Parameter(defaultValue="\\r?\\n")
-    private String rowDelimiter;
+    @Message
+    private static String rowDelimiterDescription;
 
-    @Parameter(defaultValue="false")
-    @NotNull
-    private Boolean addFileNameToFirstColumn;
+    @Message
+    private static String addFileNameToFirstColumnDescription;
 
-    @Parameter(defaultValue="false")
-    @NotNull
-    private Boolean removeFileAfterProcessing;
+    @Message
+    private static String removeFileAfterProcessingDescription;
 
-    public boolean getDataImmediate(
-            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
+    @Override
+    public boolean gatherDataForConsumer(
+            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes)
+        throws Exception
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        String url = attributes.get(URL_ATTRIBUTE).getRealValue();
+        String fileMask = attributes.get(FILEMASK_ATTRIBUTE).getRealValue();
+        String columnDelimiter = attributes.get(COLUMNDELIMITER_ATTRIBUTE).getRealValue();
+        String rowDelimiter = attributes.get(ROWDELIMITER_ATTRIBUTE).getRealValue();
+        Boolean addFileNameToFirstColumn =
+                attributes.get(ADDFILENAMETOFIRSTCOLUMN_ATTRIBUTE).getRealValue();
+        Boolean removeFileAfterProcessing =
+                attributes.get(REMOVEFILEAFTERPROCESSING_ATTRIBUTE).getRealValue();
+
+
+        FileSystemManager fsManager = VFS.getManager();
+        FileObject baseFile = fsManager.resolveFile(url);
+        List<FileObject> files = new ArrayList<FileObject>();
+        if (baseFile.getType()==FileType.FILE)
+            files.add(baseFile);
+        else
+        {
+            FileObject[] childs = baseFile.findFiles(Selectors.SELECT_FILES);
+            Pattern mask = null;
+            if (fileMask!=null && fileMask.trim().length()>0)
+                mask = Pattern.compile(fileMask);
+            
+            if (childs!=null && childs.length!=0)
+                for (FileObject fileObject: childs)
+                    if (mask==null || mask.matcher(fileObject.getName().getBaseName()).matches())
+                        files.add(fileObject);
+        }
+        if (files.size()>0)
+            for (FileObject file: files)
+                try
+                {
+                    processFile(
+                        dataConsumer, file, columnDelimiter, rowDelimiter, addFileNameToFirstColumn
+                        , removeFileAfterProcessing);
+                }
+                catch(Throwable e)
+                {
+                    logger.error(String.format(
+                            "Error in node (%s). Error processing file (%s). %s"
+                            , getPath(), file));
+                }
+
+        return true;
     }
 
-    public Collection<NodeAttribute> generateAttributes()
+    @Override
+    public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
     {
+        NodeAttribute attr = new NodeAttributeImpl(
+                URL_ATTRIBUTE, String.class, null, urlDescription);
+        attr.setRequired(true);
+        consumerAttributes.add(attr);
+
+        attr = new NodeAttributeImpl(FILEMASK_ATTRIBUTE, String.class, null, fileMaskDescription);
+        consumerAttributes.add(attr);
+
+        attr = new NodeAttributeImpl(
+                COLUMNDELIMITER_ATTRIBUTE, String.class, "\\s+", columnDelimiterDescription);
+        consumerAttributes.add(attr);
+
+        attr = new NodeAttributeImpl(
+                ROWDELIMITER_ATTRIBUTE, String.class, "\\r?\\n", rowDelimiterDescription);
+        consumerAttributes.add(attr);
+
+        attr = new NodeAttributeImpl(
+                ADDFILENAMETOFIRSTCOLUMN_ATTRIBUTE, Boolean.class, false
+                , addFileNameToFirstColumnDescription);
+        attr.setRequired(true);
+        consumerAttributes.add(attr);
+
+        attr = new NodeAttributeImpl(
+                REMOVEFILEAFTERPROCESSING_ATTRIBUTE, Boolean.class, false
+                , removeFileAfterProcessingDescription);
+        attr.setRequired(true);
+        consumerAttributes.add(attr);
     }
 
-
-    public void executeScheduledJob()
+    private void processFile(
+            DataConsumer dataConsumer, FileObject file, String columnDelimiter, String rowDelimiter
+            , boolean addFileNameToFirstColumn, boolean removeFileAfterProcessing)
+        throws Exception
     {
+        InputStream is = file.getContent().getInputStream();
+        String data = IOUtils.toString(is);
+        String[] rows;
+        if (rowDelimiter!=null && rowDelimiter.trim().length()>0)
+            rows = data.split(rowDelimiter);
+        else
+            rows = new String[]{data};
+        ColumnBasedTable table = new ColumnBasedTable();
+        Pattern columnDelimiterPattern = null;
+        if (columnDelimiter!=null)
+            columnDelimiterPattern = Pattern.compile(columnDelimiter);
+        for (String row: rows)
+        {
+            int col = 1;
+            if (addFileNameToFirstColumn)
+                table.addValue(""+(col++), file.getName().getBaseName());
+            if (columnDelimiter==null)
+                table.addValue(""+(col++), row);
+            else
+            {
+                String[] cols = columnDelimiterPattern.split(row);
+                if (cols!=null)
+                    for (String colValue: cols)
+                        table.addValue(""+(col++), colValue);
+            }
+        }
+
+        table.freeze();
+        
         try
         {
-            FileSystemManager manager = VFS.getManager();
-            
+            dataConsumer.setData(this, table);
         }
-        catch (FileSystemException ex)
+        finally
         {
-            Logger.getLogger(FileContentNode.class.getName()).log(Level.SEVERE, null, ex);
+            if (removeFileAfterProcessing)
+                file.delete();
         }
-    }
-    
-    public Scheduler getScheduler()
-    {
-        return scheduler;
-    }
-
-    public void setScheduler(Scheduler scheduler)
-    {
-        this.scheduler = scheduler;
-    }
-
-    public Boolean getAddFileNameToFirstColumn() {
-        return addFileNameToFirstColumn;
-    }
-
-    public void setAddFileNameToFirstColumn(Boolean addFileNameToFirstColumn) {
-        this.addFileNameToFirstColumn = addFileNameToFirstColumn;
-    }
-
-    public String getColumnDelimiter() {
-        return columnDelimiter;
-    }
-
-    public void setColumnDelimiter(String columnDelimiter) {
-        this.columnDelimiter = columnDelimiter;
-    }
-
-    public String getFileMask() {
-        return fileMask;
-    }
-
-    public void setFileMask(String fileMask) {
-        this.fileMask = fileMask;
-    }
-
-    public Boolean getRemoveFileAfterProcessing() {
-        return removeFileAfterProcessing;
-    }
-
-    public void setRemoveFileAfterProcessing(Boolean removeFileAfterProcessing) {
-        this.removeFileAfterProcessing = removeFileAfterProcessing;
-    }
-
-    public String getRowDelimiter() {
-        return rowDelimiter;
-    }
-
-    public void setRowDelimiter(String rowDelimiter) {
-        this.rowDelimiter = rowDelimiter;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
     }
 }

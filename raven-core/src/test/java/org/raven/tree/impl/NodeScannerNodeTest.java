@@ -20,7 +20,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
-import org.raven.impl.RavenUtils;
+import org.raven.RavenUtils;
 import org.raven.table.Table;
 import org.raven.tree.Node.Status;
 import org.raven.DummyScheduler;

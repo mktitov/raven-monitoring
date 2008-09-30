@@ -15,31 +15,33 @@
  *  under the License.
  */
 
-package org.raven.ds.impl.objects;
+package org.raven;
 
-import java.util.Collection;
-import java.util.Map;
-import org.raven.ds.DataConsumer;
-import org.raven.ds.impl.AbstractThreadedDataSource;
-import org.raven.tree.NodeAttribute;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import org.raven.table.Table;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class TestDataSource extends AbstractThreadedDataSource
+public class RavenUtils
 {
-    @Override
-    public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
+    private RavenUtils(){ }
+
+    public static List<Object[]> tableAsList(Table table)
     {
+        if (table==null)
+            return null;
+        else
+        {
+            List<Object[]> result = new ArrayList<Object[]>();
+            for (Iterator<Object[]> it=table.getRowIterator(); it.hasNext();)
+                result.add(it.next());
+
+            return result;
+        }
     }
 
-    @Override
-    public boolean gatherDataForConsumer(
-            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
-    {
-        dataConsumer.setData(this, null);
-        return true;
-    }
-    
 }

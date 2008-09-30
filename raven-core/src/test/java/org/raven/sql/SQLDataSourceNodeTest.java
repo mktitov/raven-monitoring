@@ -29,7 +29,7 @@ import org.raven.conf.Configurator;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.dbcp.impl.JDBCConnectionPoolNode;
 import org.raven.ds.impl.AbstractDataConsumer.ResetDataPolicy;
-import org.raven.ds.impl.AbstractDataSource;
+import org.raven.ds.impl.AbstractThreadedDataSource;
 import org.raven.sql.objects.SqlDataConsumer;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
@@ -67,7 +67,7 @@ public class SQLDataSourceNodeTest extends RavenCoreTestCase
         attr = dataConsumer.getNodeAttribute(SQLDataSourceNode.RESULT_TYPE_ATTRIBUTE);
         assertNotNull(attr);
         assertEquals(SQLDataSourceNode.ResultType.TABLE, attr.getRealValue());
-        dataConsumer.getNodeAttribute(AbstractDataSource.INTERVAL_ATTRIBUTE).setValue("1000");
+        dataConsumer.getNodeAttribute(AbstractThreadedDataSource.INTERVAL_ATTRIBUTE).setValue("1000");
         dataConsumer.setResetDataPolicy(ResetDataPolicy.DONT_RESET_DATA);
 
         dataConsumer.start();
@@ -101,7 +101,7 @@ public class SQLDataSourceNodeTest extends RavenCoreTestCase
         attr.save();
         dataConsumer.getNodeAttribute(SQLDataSourceNode.RESULT_TYPE_ATTRIBUTE)
                 .setValue(SQLDataSourceNode.ResultType.SINGLE.toString());
-        dataConsumer.getNodeAttribute(AbstractDataSource.INTERVAL_ATTRIBUTE).setValue("1000");
+        dataConsumer.getNodeAttribute(AbstractThreadedDataSource.INTERVAL_ATTRIBUTE).setValue("1000");
         dataConsumer.setResetDataPolicy(ResetDataPolicy.DONT_RESET_DATA);
         NodeAttribute queryParam =
                 new NodeAttributeImpl("nodeName", String.class, "dataConsumer", null);
@@ -138,7 +138,7 @@ public class SQLDataSourceNodeTest extends RavenCoreTestCase
         attr.save();
         dataConsumer.getNodeAttribute(SQLDataSourceNode.RESULT_TYPE_ATTRIBUTE)
                 .setValue(SQLDataSourceNode.ResultType.SINGLE.toString());
-        dataConsumer.getNodeAttribute(AbstractDataSource.INTERVAL_ATTRIBUTE).setValue("1000");
+        dataConsumer.getNodeAttribute(AbstractThreadedDataSource.INTERVAL_ATTRIBUTE).setValue("1000");
         NodeAttribute queryParam =
                 new NodeAttributeImpl("nodeName", String.class, "dataConsumer", null);
         queryParam.setValueHandlerType(QueryParameterValueHandlerFactory.TYPE);

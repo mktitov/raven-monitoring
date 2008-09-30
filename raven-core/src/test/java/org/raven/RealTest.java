@@ -29,7 +29,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.raven.conf.Configurator;
 import org.raven.ds.impl.AbstractDataConsumer;
-import org.raven.ds.impl.AbstractDataSource;
+import org.raven.ds.impl.AbstractThreadedDataSource;
 import org.raven.rrd.ConsolidationFunction;
 import org.raven.rrd.RRColor;
 import org.raven.rrd.data.RRArchive;
@@ -111,7 +111,7 @@ public class RealTest extends ServiceTestCase
         store.saveNode(rrs);
         rrs.init();
         rrs.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(snmp.getPath());
-        rrs.getNodeAttribute(AbstractDataSource.INTERVAL_ATTRIBUTE).setValue("1");
+        rrs.getNodeAttribute(AbstractThreadedDataSource.INTERVAL_ATTRIBUTE).setValue("1");
         rrs.getNodeAttribute(SnmpNode.HOST_ATTR).setValue("localhost");
         rrs.getNodeAttribute(SnmpNode.OID_ATTR).setValue(oid);
         

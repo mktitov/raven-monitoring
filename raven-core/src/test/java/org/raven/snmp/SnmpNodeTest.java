@@ -27,7 +27,7 @@ import org.raven.RavenCoreModule;
 import org.raven.ServiceTestCase;
 import org.raven.conf.Configurator;
 import org.raven.ds.impl.AbstractDataConsumer;
-import org.raven.ds.impl.AbstractDataSource;
+import org.raven.ds.impl.AbstractThreadedDataSource;
 import org.raven.snmp.objects.SnmpDataConsumer;
 import org.raven.table.Table;
 import org.raven.tree.Node.Status;
@@ -171,8 +171,8 @@ public class SnmpNodeTest extends ServiceTestCase
         
         consumer.getNodeAttribute(
                 AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(snmpNode.getPath());
-        consumer.getNodeAttribute(AbstractDataSource.INTERVAL_ATTRIBUTE).setValue("2");
-        consumer.getNodeAttribute(AbstractDataSource.INTERVAL_UNIT_ATTRIBUTE).setValue(
+        consumer.getNodeAttribute(AbstractThreadedDataSource.INTERVAL_ATTRIBUTE).setValue("2");
+        consumer.getNodeAttribute(AbstractThreadedDataSource.INTERVAL_UNIT_ATTRIBUTE).setValue(
                 TimeUnit.SECONDS.toString());
         consumer.getNodeAttribute(SnmpNode.HOST_ATTR).setValue("localhost");
         consumer.getNodeAttribute(SnmpNode.OID_ATTR).setValue("1.3.6.1.2.1.1.3.0");
@@ -210,8 +210,8 @@ public class SnmpNodeTest extends ServiceTestCase
         
         consumer.getNodeAttribute(
                 AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(snmpNode.getPath());
-        consumer.getNodeAttribute(AbstractDataSource.INTERVAL_ATTRIBUTE).setValue("2");
-        consumer.getNodeAttribute(AbstractDataSource.INTERVAL_UNIT_ATTRIBUTE).setValue(
+        consumer.getNodeAttribute(AbstractThreadedDataSource.INTERVAL_ATTRIBUTE).setValue("2");
+        consumer.getNodeAttribute(AbstractThreadedDataSource.INTERVAL_UNIT_ATTRIBUTE).setValue(
                 TimeUnit.SECONDS.toString());
         consumer.getNodeAttribute(SnmpNode.HOST_ATTR).setValue("localhost");
         consumer.getNodeAttribute(SnmpNode.OID_ATTR).setValue(".1.3.6.1.2.1.2.2");

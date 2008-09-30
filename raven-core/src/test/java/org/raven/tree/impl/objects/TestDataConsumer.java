@@ -15,33 +15,32 @@
  *  under the License.
  */
 
-package org.raven.impl;
+package org.raven.tree.impl.objects;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import org.raven.table.Table;
+import org.raven.ds.DataSource;
+import org.raven.ds.impl.AbstractDataConsumer;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class RavenUtils
+public class TestDataConsumer extends AbstractDataConsumer
 {
-    private RavenUtils(){ }
+    private DataSource ds;
 
-    public static List<Object[]> tableAsList(Table table)
+    @Override
+    protected void doSetData(DataSource dataSource, Object data)
     {
-        if (table==null)
-            return null;
-        else
-        {
-            List<Object[]> result = new ArrayList<Object[]>();
-            for (Iterator<Object[]> it=table.getRowIterator(); it.hasNext();)
-                result.add(it.next());
-
-            return result;
-        }
+        ds = dataSource;
     }
 
+    public DataSource getDs() {
+        return ds;
+    }
+
+    public void reset()
+    {
+        ds = null;
+        data = null;
+    }
 }
