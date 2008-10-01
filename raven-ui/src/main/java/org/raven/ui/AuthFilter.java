@@ -18,7 +18,7 @@
 package org.raven.ui;
 
 import org.apache.tapestry.ioc.Registry;
-import org.raven.RavenRegistry;
+import org.raven.ui.RavenRegistry;
 import org.raven.conf.Config;
 import org.raven.conf.Configurator;
 

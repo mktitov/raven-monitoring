@@ -24,7 +24,7 @@ import org.apache.myfaces.custom.dynamicResources.ResourceContext;
 import org.apache.myfaces.custom.graphicimagedynamic.ImageRenderer;
 import org.apache.tapestry.ioc.Registry;
 import org.raven.DynamicImageNode;
-import org.raven.RavenRegistry;
+import org.raven.ui.RavenRegistry;
 import org.raven.tree.Tree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

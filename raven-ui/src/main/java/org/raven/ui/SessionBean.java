@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.ArrayList;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
-import org.raven.RavenRegistry;
+import org.raven.ui.RavenRegistry;
 import org.raven.conf.Configurator;
 import org.raven.conf.impl.UserAcl;
 import org.raven.template.TemplateNode;

@@ -26,7 +26,7 @@ import javax.faces.model.SelectItem;
 
 import org.apache.myfaces.trinidad.event.ReturnEvent;
 import org.apache.tapestry.ioc.Registry;
-import org.raven.RavenRegistry;
+import org.raven.ui.RavenRegistry;
 import org.raven.tree.InvalidPathException;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Tree;
