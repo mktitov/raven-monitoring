@@ -19,20 +19,19 @@ package org.raven.rrd.graph;
 
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
-import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=RRGraphNode.class)
-@Description("Plots requested data as a line, using specified the color and width.")
+//@Description("Plots requested data as a line, using specified the color and width.")
 public class RRLine extends RRArea
 {
     public final static String WIDTH_ATTRIBUTE = "width";
     
     @Parameter(defaultValue="1")
-    @Description("The width of the line")
+//    @Description("The width of the line")
     private Float width;
 
     public Float getWidth()

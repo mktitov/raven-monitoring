@@ -44,8 +44,8 @@ public class TableTest extends Assert
     {
         ColumnBasedTable table = new ColumnBasedTable();
         table.addValue("col1", "1_1");
-        table.addValue("col1", "1_2");
         table.addValue("col2", "2_1");
+        table.addValue("col1", "1_2");
         table.addValue("col2", "2_2");
         table.freeze();
         checkTable(table);

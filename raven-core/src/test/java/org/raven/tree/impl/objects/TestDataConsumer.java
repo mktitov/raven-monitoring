@@ -17,6 +17,8 @@
 
 package org.raven.tree.impl.objects;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 
@@ -27,11 +29,17 @@ import org.raven.ds.impl.AbstractDataConsumer;
 public class TestDataConsumer extends AbstractDataConsumer
 {
     private DataSource ds;
+    private List dataList = new ArrayList();
 
     @Override
     protected void doSetData(DataSource dataSource, Object data)
     {
         ds = dataSource;
+        dataList.add(data);
+    }
+
+    public List getDataList() {
+        return dataList;
     }
 
     public DataSource getDs() {

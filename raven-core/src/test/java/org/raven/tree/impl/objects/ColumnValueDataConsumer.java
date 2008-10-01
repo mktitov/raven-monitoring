@@ -15,33 +15,30 @@
  *  under the License.
  */
 
-package org.raven.table;
+package org.raven.tree.impl.objects;
 
-import java.util.List;
-import org.raven.annotations.NodeClass;
-import org.raven.ds.DataConsumer;
-import org.raven.ds.DataPipe;
-import org.raven.ds.impl.AbstractDataMultiplexer;
+import org.raven.ds.DataSource;
+import org.raven.ds.impl.AbstractDataConsumer;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(childNodes={DataConsumer.class, DataPipe.class})
-//@Description("Allows to mulitiplex several tables in one table.")
-public class TableMultiplexerNode extends AbstractDataMultiplexer<Table, Table>
+public class ColumnValueDataConsumer extends AbstractDataConsumer
 {
-    public TableMultiplexerNode() 
+    public DataSource sourceDataSource = null;
+    public Object value = null;
+    public int executionCount = 0;
+    
+    @Override
+    public void setData(DataSource dataSource, Object data)
     {
-        super(Table.class);
+        sourceDataSource = dataSource;
+        value = data;
+        ++executionCount;
     }
 
     @Override
-    public Table multiplex(List<Table> listOfData) 
-    {
-        if (listOfData.size()==1)
-            return listOfData.get(0);
-
-        return new TableMultiplexer(listOfData);
+    protected void doSetData(DataSource dataSource, Object data) {
     }
 }

@@ -36,7 +36,6 @@ import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
-import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.beans.ObjectUtils;
 
@@ -45,7 +44,7 @@ import org.weda.beans.ObjectUtils;
  * @author Mikhail Titov
  */
 @NodeClass
-@Description("Automaticly stores data from data sources to round robin databases")
+//@Description("Automaticly stores data from data sources to round robin databases")
 public class RRDatabaseManager extends BaseNode
 {
     public static final String DEFAULT_DATABASE_TEMPLATE = "DEFAULT";
@@ -60,24 +59,24 @@ public class RRDatabaseManager extends BaseNode
     
     @Parameter(defaultValue=DEFAULT_DATA_TYPE_ATTRIBUTE_NAME)
     @NotNull
-    @Description("The attribute name by which value data pipes will in one database")
+//    @Description("The attribute name by which value data pipes will in one database")
     private String dataTypeAttributeName;
     
     @Parameter @NotNull
-    @Description("The count of data sources per database")
+//    @Description("The count of data sources per database")
     private Integer dataSourcesPerDatabase;
     
     private final static String STARING_POINT_ATTR_NAME = "startingPoint";
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     @NotNull
-    @Description(
-        "The node from which database manager take a control on data source nodes with seted " +
-        "dataType attribute value")
+//    @Description(
+//        "The node from which database manager take a control on data source nodes with seted " +
+//        "dataType attribute value")
     private Node startingPoint;
     
     @Parameter (defaultValue="STOP_DATABASES")
     @NotNull
-    @Description("Defines the remove policy")
+//    @Description("Defines the remove policy")
     private RemovePolicy removePolicy;
     
     private Lock lock;

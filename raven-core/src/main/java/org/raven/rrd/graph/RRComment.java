@@ -20,7 +20,6 @@ package org.raven.rrd.graph;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.tree.impl.LeafNode;
-import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -28,12 +27,13 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov 
  */
 @NodeClass(parentNode=RRGraphNode.class)
-@Description("Comment to be printed on the graph")
+//@Description("Comment to be printed on the graph")
 public class RRComment extends LeafNode
 {
     public final static String COMMENT_ATTRIBUTE = "comment";
     
-    @Parameter @NotNull @Description("Comment to be printed on the graph")
+    @Parameter @NotNull
+//    @Description("Comment to be printed on the graph")
     private String comment;
 
     public String getComment()

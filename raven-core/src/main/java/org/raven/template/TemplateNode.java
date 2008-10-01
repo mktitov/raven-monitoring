@@ -17,12 +17,8 @@
 
 package org.raven.template;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
-import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.Description;
 

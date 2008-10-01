@@ -15,30 +15,25 @@
  *  under the License.
  */
 
-package org.raven.table.objects;
+package org.raven.rrd;
 
-import org.raven.ds.DataSource;
-import org.raven.ds.impl.AbstractDataConsumer;
+import org.weda.internal.annotations.Service;
+import org.weda.services.TypeConverter;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class ColumnValueDataConsumer extends AbstractDataConsumer
+public enum DataSourceType
 {
-    public DataSource sourceDataSource = null;
-    public Object value = null;
-    public int executionCount = 0;
+    GAUGE, COUNTER, DERIVE, ABSOLUTE;
     
-    @Override
-    public void setData(DataSource dataSource, Object data)
+    @Service
+    private static TypeConverter converter;
+            
+    public String asString()
     {
-        sourceDataSource = dataSource;
-        value = data;
-        ++executionCount;
+        return converter.convert(String.class, this, null);
     }
-
-    @Override
-    protected void doSetData(DataSource dataSource, Object data) {
-    }
+    
 }

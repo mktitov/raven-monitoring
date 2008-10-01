@@ -38,6 +38,7 @@ public class TableViewNode extends AbstractDataConsumer implements Viewable
 {
     private ThreadLocal<Table> table = new ThreadLocal<Table>();
 
+    @Override
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) 
             throws Exception
     {
@@ -61,6 +62,7 @@ public class TableViewNode extends AbstractDataConsumer implements Viewable
         table.set(tableData);
     }
 
+    @Override
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
     {
         return NodeUtils.extractRefereshAttributes(this);

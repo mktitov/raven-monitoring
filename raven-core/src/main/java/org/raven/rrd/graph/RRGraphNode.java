@@ -47,7 +47,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass(childNodes=IfNode.class)
-@Description("Plots the graph using RRDataSource nodes as data sources")
+//@Description("Plots the graph using RRDataSource nodes as data sources")
 public class RRGraphNode extends BaseNode implements Viewable
 {
     public final static String STARTIME_ATTRIBUTE = "startTime";
@@ -66,42 +66,43 @@ public class RRGraphNode extends BaseNode implements Viewable
     private String title;
     
     @Parameter(defaultValue="end-1d")
-    @Description("The time when the graph should begin")
+//    @Description("The time when the graph should begin")
     private String startTime;
     
     @Parameter(defaultValue="now")
-    @Description("The time when the graph should end")
+//    @Description("The time when the graph should end")
     private String endTime;
     
     @Parameter @NotNull
-    @Description("The height of the drawing area within the graph")
+//    @Description("The height of the drawing area within the graph")
     private Integer height;
     
-    @Parameter @NotNull @Description("The width of the drawing area within the graph")
+//    @Parameter @NotNull @Description("The width of the drawing area within the graph")
     private Integer width;
     
     @Parameter(defaultValue="PNG")
-    @NotNull @Description("The image format (PNG, GIF, JPEG)")
+    @NotNull
+//    @Description("The image format (PNG, GIF, JPEG)")
     private ImageFormat imageFormat;
     
     @Parameter 
-    @Description("Sets vertical label on the left side of the graph")
+//    @Description("Sets vertical label on the left side of the graph")
     private String verticalLabel;
     
     @Parameter 
-    @Description("Sets the upper limit of a graph")
+//    @Description("Sets the upper limit of a graph")
     private Double maxValue;
     
     @Parameter 
-    @Description("Sets the lower limit of a grap.")
+//    @Description("Sets the lower limit of a grap.")
     private Double minValue;
     
     @Parameter 
-    @Description("Sets unit to be displayed on y axis")
+//    @Description("Sets unit to be displayed on y axis")
     private String unit;
     
     @Parameter 
-    @Description("Sets the 10**unitsExponent scaling of the y-axis values")
+//    @Description("Sets the 10**unitsExponent scaling of the y-axis values")
     private Integer unitsExponent;
 
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception

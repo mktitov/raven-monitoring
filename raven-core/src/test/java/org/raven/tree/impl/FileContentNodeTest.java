@@ -53,6 +53,9 @@ public class FileContentNodeTest extends RavenCoreTestCase
         FileUtils.forceMkdir(filesDir);
         file1 = new File(filesDir.getAbsolutePath()+"/file1.txt");
         FileUtils.writeStringToFile(file1, "col1-1 col1-2\ncol2-1 col2-2");
+
+        file2 = new File(filesDir.getAbsolutePath()+"/file2.txt");
+        FileUtils.writeStringToFile(file2, "col1-1 col1-2");
     }
 
     @Before
@@ -162,5 +165,84 @@ public class FileContentNodeTest extends RavenCoreTestCase
 
         assertFalse(file1.exists());
     }
+
+    @Test
+    public void readManyFilesTest() throws Exception
+    {
+        consumer.getNodeAttribute(
+                FileContentNode.URL_ATTRIBUTE).setValue(filesDir.getAbsolutePath());
+        consumer.start();
+        assertEquals(Status.STARTED, consumer.getStatus());
+
+        consumer.refereshData(null);
+        List dataList = consumer.getDataList();
+        assertEquals(2, dataList.size());
+        for (int i=0; i<dataList.size(); ++i)
+        {
+            Object data = dataList.get(i);
+            assertNotNull(data);
+            assertTrue(data instanceof Table);
+            List<Object[]> rows = RavenUtils.tableAsList((Table)data);
+            if (i==0)
+                assertEquals(2, rows.size());
+            else
+                assertEquals(1, rows.size());
+            assertEquals("col1-1", rows.get(0)[0]);
+            assertEquals("col1-2", rows.get(0)[1]);
+            if (i==0)
+            {
+                assertEquals("col2-1", rows.get(1)[0]);
+                assertEquals("col2-2", rows.get(1)[1]);
+            }
+        }
+        assertTrue(file1.exists());
+        assertTrue(file2.exists());
+    }
     
+    @Test
+    public void readManyFilesWithFileMaskTest() throws Exception
+    {
+        consumer.getNodeAttribute(
+                FileContentNode.URL_ATTRIBUTE).setValue(filesDir.getAbsolutePath());
+        consumer.getNodeAttribute(FileContentNode.FILEMASK_ATTRIBUTE).setValue("^file2.*");
+        consumer.start();
+        assertEquals(Status.STARTED, consumer.getStatus());
+
+        consumer.refereshData(null);
+        List dataList = consumer.getDataList();
+        assertEquals(1, dataList.size());
+        for (int i=0; i<dataList.size(); ++i)
+        {
+            Object data = dataList.get(i);
+            assertNotNull(data);
+            assertTrue(data instanceof Table);
+            List<Object[]> rows = RavenUtils.tableAsList((Table)data);
+            assertEquals(1, rows.size());
+            assertEquals("col1-1", rows.get(0)[0]);
+            assertEquals("col1-2", rows.get(0)[1]);
+        }
+
+        assertTrue(file1.exists());
+        assertTrue(file2.exists());
+
+    }
+    
+    @Test
+    public void readManyFilesWithFileMask_removeAfterProcessingTest() throws Exception
+    {
+        consumer.getNodeAttribute(
+                FileContentNode.URL_ATTRIBUTE).setValue(filesDir.getAbsolutePath());
+        consumer.getNodeAttribute(FileContentNode.FILEMASK_ATTRIBUTE).setValue("^file2.*");
+        consumer.getNodeAttribute(
+                FileContentNode.REMOVEFILEAFTERPROCESSING_ATTRIBUTE).setValue("true");
+        consumer.start();
+        assertEquals(Status.STARTED, consumer.getStatus());
+
+        consumer.refereshData(null);
+        List dataList = consumer.getDataList();
+        assertEquals(1, dataList.size());
+
+        assertTrue(file1.exists());
+        assertFalse(file2.exists());
+    }
 }

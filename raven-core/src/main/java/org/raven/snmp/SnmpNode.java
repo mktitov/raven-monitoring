@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.raven.table.Table;
 import org.raven.annotations.NodeClass;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.impl.AbstractThreadedDataSource;
@@ -41,14 +40,14 @@ import org.snmp4j.smi.OctetString;
 import org.snmp4j.smi.UdpAddress;
 import org.snmp4j.smi.VariableBinding;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
-import org.weda.annotations.Description;
+import org.weda.internal.annotations.Message;
 
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=DataSourcesNode.class)
-@Description("The data source node that gathers data using snmp.")
+//@Description("The data source node that gathers data using snmp.")
 public class SnmpNode extends AbstractThreadedDataSource
 {
     public enum OidType {SINGLE, TABLE};
@@ -62,6 +61,21 @@ public class SnmpNode extends AbstractThreadedDataSource
     public static final String HOST_ATTR = "host";
     public static final String OID_ATTR = "OID";
     public static final String OID_TYPE_ATTR = "OID-Type";
+
+    @Message
+    private static String hostDescription;
+    @Message
+    private static String snmpPort;
+    @Message
+    private static String timeoutDescription;
+    @Message
+    private static String snmpCommunityDescription;
+    @Message
+    private static String oidDescription;
+    @Message
+    private static String snmpVersionDescription;
+    @Message
+    private static String oidTypeDescription;
     
     @Override
     public boolean gatherDataForConsumer(
@@ -108,38 +122,36 @@ public class SnmpNode extends AbstractThreadedDataSource
     @Override
     public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
     {
-        NodeAttributeImpl attr = 
-                new NodeAttributeImpl(
-                    HOST_ATTR, String.class, null
-                    , "The ip address or the domain name of the device");
+        NodeAttributeImpl attr =
+                new NodeAttributeImpl(HOST_ATTR, String.class, null, hostDescription);
         attr.setRequired(true);
         consumerAttributes.add(attr);
         
-        attr = new NodeAttributeImpl(PORT_ATTR, Integer.class, 161, "The snmp port");
-        attr.setRequired(true);
-        consumerAttributes.add(attr);
-        
-        attr = new NodeAttributeImpl(
-                TIMEOUT_ATTR, Long.class, 2000, "The timeout in milliseconds");
+        attr = new NodeAttributeImpl(PORT_ATTR, Integer.class, 161, snmpPort);
         attr.setRequired(true);
         consumerAttributes.add(attr);
         
         attr = new NodeAttributeImpl(
-                COMMUNITY_ATTR, String.class, "public", "The snmp community name");
-        attr.setRequired(true);
-        consumerAttributes.add(attr);
-        
-        attr = new NodeAttributeImpl(OID_ATTR, String.class, null, "The Object Identifier Class");
+                TIMEOUT_ATTR, Long.class, 2000, timeoutDescription);
         attr.setRequired(true);
         consumerAttributes.add(attr);
         
         attr = new NodeAttributeImpl(
-                VERSION_ATTR, SnmpVersion.class, SnmpVersion.V1, "The version of the SNMP");
+                COMMUNITY_ATTR, String.class, "public", snmpCommunityDescription);
+        attr.setRequired(true);
+        consumerAttributes.add(attr);
+        
+        attr = new NodeAttributeImpl(OID_ATTR, String.class, null, oidDescription );
         attr.setRequired(true);
         consumerAttributes.add(attr);
         
         attr = new NodeAttributeImpl(
-               OID_TYPE_ATTR, OidType.class, OidType.SINGLE, "The type of the OID");
+                VERSION_ATTR, SnmpVersion.class, SnmpVersion.V1, snmpVersionDescription);
+        attr.setRequired(true);
+        consumerAttributes.add(attr);
+        
+        attr = new NodeAttributeImpl(
+               OID_TYPE_ATTR, OidType.class, OidType.SINGLE, oidTypeDescription);
         attr.setRequired(true);
         consumerAttributes.add(attr);
     }

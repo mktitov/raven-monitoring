@@ -35,11 +35,11 @@ public class IfNode extends BaseNode
     public final static String USEDINTEMPLATE_ATTRIBUTE = "usedInTemplate";
     
     @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE, defaultValue="false")
-    @Description("The expression that must return boolean value")
+//    @Description("The expression that must return boolean value")
     private Boolean expression;
     
     @Parameter(defaultValue="true")
-    @Description("If true then condition work in the template")
+//    @Description("If true then condition work in the template")
     private Boolean usedInTemplate;
 
     @Override

@@ -25,7 +25,7 @@ import org.weda.annotations.Description;
  *
  * @author Mikhail Titov
  */
-@NodeClass
+//@NodeClass
 @Description("The dashboard")
 public class DashboardNode extends BaseNode 
 {

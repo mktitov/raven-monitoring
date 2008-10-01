@@ -15,33 +15,35 @@
  *  under the License.
  */
 
-package org.raven.table;
+package org.raven.ds.impl;
 
-import java.util.List;
 import org.raven.annotations.NodeClass;
-import org.raven.ds.DataConsumer;
-import org.raven.ds.DataPipe;
-import org.raven.ds.impl.AbstractDataMultiplexer;
+import org.raven.annotations.Parameter;
+import org.raven.sched.Schedulable;
+import org.raven.sched.Scheduler;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(childNodes={DataConsumer.class, DataPipe.class})
-//@Description("Allows to mulitiplex several tables in one table.")
-public class TableMultiplexerNode extends AbstractDataMultiplexer<Table, Table>
+@NodeClass
+public class SchedulableDataPipe extends DataPipeImpl implements Schedulable
 {
-    public TableMultiplexerNode() 
+    @Parameter @NotNull
+    private Scheduler scheduler;
+
+    public void executeScheduledJob()
     {
-        super(Table.class);
+        getDataSource().getDataImmediate(this, null);
     }
 
-    @Override
-    public Table multiplex(List<Table> listOfData) 
-    {
-        if (listOfData.size()==1)
-            return listOfData.get(0);
-
-        return new TableMultiplexer(listOfData);
+    public Scheduler getScheduler() {
+        return scheduler;
     }
+
+    public void setScheduler(Scheduler scheduler) {
+        this.scheduler = scheduler;
+    }
+
 }

@@ -15,8 +15,9 @@
  *  under the License.
  */
 
-package org.raven.table;
+package org.raven.tree.impl;
 
+import org.raven.table.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -36,15 +37,13 @@ import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.ds.impl.DataPipeImpl;
+import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.template.TemplateExpressionNodeTuner;
 import org.raven.template.TemplateNode;
 import org.raven.tree.ConfigurableNode;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
-import org.raven.tree.impl.NodeAttributeImpl;
-import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
-import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.beans.ObjectUtils;
 import org.weda.converter.TypeConverterException;
@@ -53,8 +52,7 @@ import org.weda.converter.TypeConverterException;
  * @author Mikhail Titov
  */
 @NodeClass(anyChildTypes=true)
-@Description("Allows to create child nodes dynamically")
-public class TableNode extends DataPipeImpl implements ConfigurableNode
+public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
 {
     public final static String INDEX_COLUMN_VALUE = "tableIndexColumnValue";
 
@@ -62,27 +60,28 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
     public final static String ADDPOLICY_ATTRIBUTE = "addPolicy";
     public final static String REMOVEPOLICY_ATTRIBUTE = "removePolicy";
     private final static String ROW_EXPRESSION_VARIABLE = "row";
-    
+    private final static String INDEX_COLUMN_VALUE_VARIABLE ="indexColumnValue";
+    private final static String ROWNUM_VARIABLE = "rownum";
+
     public enum AddPolicy {DO_NOTHING, AUTO_ADD, AUTO_ADD_AND_START}
-    public enum RemovePolicy {DO_NOTHING, STOP_NODE, AUTO_REMOVE}
+    public enum RemovePolicy {DO_NOTHING, STOP_NODE, AUTO_REMOVE, REMOVE_BEFORE_PROCESSING}
     
-    @Parameter
-    @NotNull
-    @Description("The table column name which is the index column for this node")
+    @Parameter @NotNull
     private String indexColumnName;
+
+    @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
+    private String indexExpression;
     
     @Parameter(defaultValue="DO_NOTHING")
     @NotNull
-    @Description("Add policy")
     private AddPolicy addPolicy;
     
     @Parameter(defaultValue="STOP_NODE")
     @NotNull
-    @Description("Remove policy")
     private RemovePolicy removePolicy;
     
     private Lock dataLock;
-    private TableNodeTemplate template;
+    private NodeGeneratorNodeTemplate template;
     private boolean needTableForConfiguration;
     private Table table;
     private Map<String, Object> expressionBindings;
@@ -103,10 +102,10 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
     {
         super.doInit();
         
-        template = (TableNodeTemplate) getChildren(TableNodeTemplate.NAME);
+        template = (NodeGeneratorNodeTemplate) getChildren(NodeGeneratorNodeTemplate.NAME);
         if (template==null)
         {
-            template = new TableNodeTemplate();
+            template = new NodeGeneratorNodeTemplate();
             addChildren(template);
             configurator.getTreeStore().saveNode(template);
             template.init();
@@ -119,6 +118,14 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
         return indexColumnName;
     }
 
+    public String getIndexExpression() {
+        return indexExpression;
+    }
+
+    public void setIndexExpression(String indexExpression) {
+        this.indexExpression = indexExpression;
+    }
+
     public AddPolicy getAddPolicy()
     {
         return addPolicy;
@@ -127,6 +134,18 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
     public RemovePolicy getRemovePolicy()
     {
         return removePolicy;
+    }
+
+    public void setAddPolicy(AddPolicy addPolicy) {
+        this.addPolicy = addPolicy;
+    }
+
+    public void setIndexColumnName(String indexColumnName) {
+        this.indexColumnName = indexColumnName;
+    }
+
+    public void setRemovePolicy(RemovePolicy removePolicy) {
+        this.removePolicy = removePolicy;
     }
 
     @Override
@@ -228,7 +247,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
                 if (dep instanceof DataConsumer && !dep.isTemplate())
                 {
                     NodeAttribute colName = dep.getNodeAttribute(
-                            TableNodeTemplate.TABLE_COLUMN_NAME);
+                            NodeGeneratorNodeTemplate.TABLE_COLUMN_NAME);
                     if (colName == null || colName.getValue() == null)
                     {
                         ((DataConsumer) dep).setData(this, data);
@@ -309,6 +328,8 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
 
     private void processData(Object data) throws Exception
     {
+        if (RemovePolicy.REMOVE_BEFORE_PROCESSING==removePolicy)
+            removeGeneratedNodes();
         Set<Node> deps = getDependentNodes()==null? null : new HashSet<Node>(getDependentNodes());
 //        if (deps==null || deps.size()==0)
 //            return;
@@ -317,15 +338,20 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
         Map<String, Node> indexValues = getIndexValues();
         Set<String> indexesInTable = new HashSet<String>();
         Table tab = (Table) data;
+        int rownum = 1;
         for (Iterator<Object[]> it = tab.getRowIterator(); it.hasNext();)
         {
             Object[] tableRow = it.next();
             Map<String, Object> namedRow = new HashMap<String, Object>();
             for (int col=0; col<tab.getColumnNames().length; ++col)
                 namedRow.put(tab.getColumnNames()[col], tableRow[col]);
+            expressionBindings.put(ROWNUM_VARIABLE, rownum++);
             expressionBindings.put(ROW_EXPRESSION_VARIABLE, namedRow);
             Object val = namedRow.get(indexColumnName);
-            String indexColumnValue = converter.convert(String.class, val, null);
+            expressionBindings.put(INDEX_COLUMN_VALUE_VARIABLE, val);
+            String indexColumnValue = indexExpression;
+            if (indexColumnValue==null)
+                    indexColumnValue = converter.convert(String.class, val, null);
 
             indexesInTable.add(indexColumnValue);
 
@@ -379,14 +405,14 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
         Map<String, Node> indexValues = new HashMap<String, Node>();
         if (getChildrens()!=null)
             for (Node child: getChildrens())
-                if (!(child instanceof TableNodeTemplate))
+                if (!(child instanceof NodeGeneratorNodeTemplate))
                     indexValues.put(getIndexValue(child), child);
         return indexValues;
     }
     
     private String getIndexValue(Node node)
     {
-        while (!(node.getParent() instanceof TableNode)) 
+        while (!(node.getParent() instanceof NodeGeneratorNode))
             node = node.getParent();
         
         NodeAttribute indexAttr = node.getNodeAttribute(INDEX_COLUMN_VALUE);
@@ -395,7 +421,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
     
     private String getTableCoumnName(Node node)
     {
-        return node.getNodeAttribute(TableNodeTemplate.TABLE_COLUMN_NAME).getValue();
+        return node.getNodeAttribute(NodeGeneratorNodeTemplate.TABLE_COLUMN_NAME).getValue();
     }
 
     private void sendDataToConsumers(
@@ -414,7 +440,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
     }
 
     //TODO: преобразовать в NodeTuner
-    private void tuneNode(TableNode tableNode, StrSubstitutor subst, Node newNode) throws Exception
+    private void tuneNode(NodeGeneratorNode tableNode, StrSubstitutor subst, Node newNode) throws Exception
     {
         String newName = subst.replace(newNode.getName());
         if (!newName.equals(newNode.getName()))
@@ -424,7 +450,7 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
         }
         
         NodeAttribute columnNameAttr = 
-                newNode.getNodeAttribute(TableNodeTemplate.TABLE_COLUMN_NAME);
+                newNode.getNodeAttribute(NodeGeneratorNodeTemplate.TABLE_COLUMN_NAME);
         if (columnNameAttr!=null)
         {
             if (columnNameAttr.getRawValue()==null)
@@ -487,5 +513,16 @@ public class TableNode extends DataPipeImpl implements ConfigurableNode
             bindings.put(TemplateNode.TEMPLATE_EXPRESSION_BINDING, this);
         }
     }
-    
+
+    private void removeGeneratedNodes()
+    {
+        Collection<Node> childs = getChildrens();
+        if (childs!=null)
+        {
+            childs = new ArrayList<Node>(childs);
+            for (Node child: childs)
+                if (child.getNodeAttribute(INDEX_COLUMN_VALUE)!=null)
+                    tree.remove(child);
+        }
+    }
 }

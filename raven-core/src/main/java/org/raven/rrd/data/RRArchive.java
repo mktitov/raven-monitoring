@@ -21,14 +21,13 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.rrd.ConsolidationFunction;
 import org.raven.tree.impl.LeafNode;
-import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=RRDNode.class)
-@Description("Round robin archive node")
+//@Description("Round robin archive node")
 public class RRArchive extends LeafNode
 {
     public final static String ROWS_ATTRIBUTE = "rows";
@@ -37,20 +36,20 @@ public class RRArchive extends LeafNode
     public final static String STEPS_ATTRIBUTE = "steps";
     
     @Parameter(defaultValue="AVERAGE")
-    @Description("Consolidation function. Valid values are 'AVERAGE', 'MIN', 'MAX' and 'LAST'")
+//    @Description("Consolidation function. Valid values are 'AVERAGE', 'MIN', 'MAX' and 'LAST'")
     private ConsolidationFunction consolidationFunction;
     
-    @Parameter(defaultValue="0.99")
-    @Description("X-files factor. Valid values are between 0 and 1")
+    @Parameter(defaultValue="0.5")
+//    @Description("X-files factor. Valid values are between 0 and 1")
     private Double xff;
     
     @Parameter(defaultValue="1")
-    @Description("Number of archive steps")
+//    @Description("Number of archive steps")
     private Integer steps;
     
     @Parameter
     @NotNull
-    @Description("Number of archive rows")
+//    @Description("Number of archive rows")
     private Integer rows;
     
     public ConsolidationFunction getConsolidationFunction()

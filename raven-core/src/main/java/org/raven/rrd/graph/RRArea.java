@@ -29,9 +29,9 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=RRGraphNode.class)
-@Description(
-    "Plots requested data in the form of the filled area starting" +
-    " from zero, using the color specified.")
+//@Description(
+//    "Plots requested data in the form of the filled area starting" +
+//    " from zero, using the color specified.")
 public class RRArea extends LeafNode
 {
     public final static String DATADEFINITION_ATTRIBUTE = "dataDefinition";
@@ -40,16 +40,16 @@ public class RRArea extends LeafNode
     
     @Parameter
     @NotNull
-    @Description("The reference to the data defenition node")
+//    @Description("The reference to the data defenition node")
     private DataDefinition dataDefinition;
     
     @Parameter()
-    @Description("The color of the line")
+//    @Description("The color of the line")
     @NotNull
     private RRColor color;
     
     @Parameter
-    @Description("The legend of the line")
+//    @Description("The legend of the line")
     @NotNull
     private String legend;
     

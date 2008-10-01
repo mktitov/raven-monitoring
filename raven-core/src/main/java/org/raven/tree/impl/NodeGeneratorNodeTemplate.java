@@ -15,29 +15,28 @@
  *  under the License.
  */
 
-package org.raven.table;
+package org.raven.tree.impl;
 
 import org.raven.annotations.NodeClass;
 import org.raven.template.TemplateEntry;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
-import org.raven.tree.impl.NodeAttributeImpl;
 import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=TableNode.class, anyChildTypes=true)
+@NodeClass(parentNode=NodeGeneratorNode.class, anyChildTypes=true)
 @Description("The template for creation child nodes in the TableNode")
-public class TableNodeTemplate extends TemplateEntry
+public class NodeGeneratorNodeTemplate extends TemplateEntry
 {
     public final static String NAME="Template";
     public final static String TABLE_COLUMN_NAME = "tableColumnName";
     public final static String TABLE_INDEX_COLUMN_NAME = "indexTableColumnName";
 
-    public TableNodeTemplate()
+    public NodeGeneratorNodeTemplate()
     {
         setName(NAME);
         setSubtreeListener(true);

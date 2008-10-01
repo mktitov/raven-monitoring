@@ -26,6 +26,7 @@ import org.raven.annotations.Parameter;
 import org.raven.ds.ArchiveException;
 import org.raven.ds.DataArchive;
 import org.raven.ds.impl.DataPipeImpl;
+import org.raven.rrd.DataSourceType;
 import org.raven.table.DataArchiveTable;
 import org.raven.table.Table;
 import org.raven.tree.Node;
@@ -44,9 +45,10 @@ import org.weda.internal.services.MessagesRegistry;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=RRDNode.class)
-@Description("Round robin database data source node")
+//@Description("Round robin database data source node")
 public class RRDataSource extends DataPipeImpl implements DataArchive, Viewable
 {
+
     public final static String DATASOURCETYPE_ATTRIBUTE = "dataSourceType";
 
     public final static String FROMDATE_ATTRIBUTE = "fromDate";
@@ -56,19 +58,18 @@ public class RRDataSource extends DataPipeImpl implements DataArchive, Viewable
     private MessagesRegistry messages;
 
     @Parameter(defaultValue="GAUGE")
-    @Description("The data source type (GAUGE | COUNTER | DERIVE | ABSOLUTE)")    
-    private String dataSourceType;
+    private DataSourceType dataSourceType;
     
     @Parameter
-    @Description("The data source heartbeat")
+//    @Description("The data source heartbeat")
     private Long heartbeat;
     
     @Parameter(defaultValue="NaN")
-    @Description("Minimal acceptable value")
+//    @Description("Minimal acceptable value")
     private Double minValue;
 
     @Parameter(defaultValue="NaN")
-    @Description("Maximal acceptable value")
+//    @Description("Maximal acceptable value")
     private Double maxValue;
 
     @Override
@@ -86,7 +87,7 @@ public class RRDataSource extends DataPipeImpl implements DataArchive, Viewable
         }
     }
 
-    public String getDataSourceType()
+    public DataSourceType getDataSourceType()
     {
         return dataSourceType;
     }

@@ -21,7 +21,6 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.rrd.RRColor;
 import org.raven.tree.impl.LeafNode;
-import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -29,7 +28,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=RRGraphNode.class)
-@Description("Draws a horizontal rule into the graph and optionally adds a legend")
+//@Description("Draws a horizontal rule into the graph and optionally adds a legend")
 public class RRHRule extends LeafNode
 {
     public final static String VALUE_ATTRIBUTE = "value";
@@ -37,17 +36,20 @@ public class RRHRule extends LeafNode
     public final static String LEGEND_ATTRIBUTE = "legend";
     public final static String WIDTH_ATTRIBUTE = "width";
     
-    @Parameter @NotNull @Description("Position of the rule")
+    @Parameter @NotNull
+//    @Description("Position of the rule")
     private Double value;
     
-    @Parameter @NotNull @Description("The color of the rule")
+    @Parameter @NotNull
+//    @Description("The color of the rule")
     private RRColor color;
     
-    @Parameter @Description("Legend text. If null, legend text will be omitted")
+    @Parameter
+//    @Description("Legend text. If null, legend text will be omitted")
     private String legend;
     
     @Parameter(defaultValue="1") 
-    @Description("Rule width")
+//    @Description("Rule width")
     private float width;
 
     public RRColor getColor()

@@ -35,9 +35,9 @@ import org.weda.annotations.Description;
  * @author Mikhail Titov
  */
 @NodeClass()
-@Description(
-    "The node takes data from data source and gives data to back to the data consumers " +
-    "connected to this node")
+//@Description(
+//    "The node takes data from data source and gives data to back to the data consumers " +
+//    "connected to this node")
 public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
 {
     public final static String CONVERT_VALUE_TO_TYPE_ATTRIBUTE = "convertValueToType";
@@ -45,14 +45,14 @@ public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
     public final static String DATA_ATTRIBUTE = "data";
     
     @Parameter()
-    @Description(
-        "Allows to convert data to the selected type before sending data to the data consumers")
+//    @Description(
+//        "Allows to convert data to the selected type before sending data to the data consumers")
     private Class convertValueToType;
     
     @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
-    @Description(
-        "Allows to transform data to another data using this expression before sending data to " +
-        "consumers. Expression executes after data converting (see convertValueToType parameter)")
+//    @Description(
+//        "Allows to transform data to another data using this expression before sending data to " +
+//        "consumers. Expression executes after data converting (see convertValueToType parameter)")
     private String expression;
 
     @Parameter(defaultValue="false")

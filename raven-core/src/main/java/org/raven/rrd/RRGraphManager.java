@@ -70,15 +70,15 @@ public class RRGraphManager extends BaseNode
     public final static long LOCK_TIMEOUT = 500;
     
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
-    @Description("The node from which graph manager take a control on dataSources")
+//    @Description("The node from which graph manager take a control on dataSources")
     @NotNull
     private Node startingPoint;
     
     @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
-    @Description(
-        "The expression that will be call on each dataSource. " +
-        "If expression returns true then dataSource will be added to the graph. " +
-        "The (dataSource) parameter will be in the expression context")
+//    @Description(
+//        "The expression that will be call on each dataSource. " +
+//        "If expression returns true then dataSource will be added to the graph. " +
+//        "The (dataSource) parameter will be in the expression context")
     private Boolean filterExpression;
     
     private RRGraphManagerTemplate template;

@@ -63,19 +63,19 @@ import org.weda.beans.ObjectUtils;
  * @author Mikhail Titov
  */
 @NodeClass()
-@Description("Saves data in round robin database")
+//@Description("Saves data in round robin database")
 public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 {
     @Parameter(defaultValue="300") 
-    @Description("The base interval in seconds with which data will be fed into the RRD")
+//    @Description("The base interval in seconds with which data will be fed into the RRD")
     private Long step;
     
     @Parameter
-    @Description("The file name of the rrd database")
+//    @Description("The file name of the rrd database")
     private String databaseFileName;
     
     @Parameter(defaultValue="false")
-    @Description("Backup database file before structure change operations")
+//    @Description("Backup database file before structure change operations")
     private Boolean backup;
     
     private AtomicBoolean databaseInitialized;
@@ -417,7 +417,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
             attr.save();
         }
         DsDef def = new DsDef(
-                ds.getName(), ds.getDataSourceType(), ds.getHeartbeat()
+                ds.getName(), ds.getDataSourceType().asString(), ds.getHeartbeat()
                 , ds.getMinValue(), ds.getMaxValue());
         return def;
     }
