@@ -77,7 +77,8 @@ public class RRGraphNode extends BaseNode implements Viewable
 //    @Description("The height of the drawing area within the graph")
     private Integer height;
     
-//    @Parameter @NotNull @Description("The width of the drawing area within the graph")
+    @Parameter @NotNull
+//    @Description("The width of the drawing area within the graph")
     private Integer width;
     
     @Parameter(defaultValue="PNG")
