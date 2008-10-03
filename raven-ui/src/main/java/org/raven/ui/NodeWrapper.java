@@ -283,8 +283,11 @@ implements Comparator<NodeAttribute>
 	public void loadRefreshAttributes() 
 	{
 		List<NodeWrapper> wrappers = getViewableNodes();
-		NodeWrapper tmp = wrappers.remove(0);
-		wrappers.add(tmp);
+		if(wrappers.size()>1)
+		{
+			NodeWrapper tmp = wrappers.remove(0);
+			wrappers.add(tmp);
+		}
 		editingRefreshAttrs = new HashMap<String,Attr>();
 		for(NodeWrapper nw : wrappers)
 		{
