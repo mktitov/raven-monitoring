@@ -20,6 +20,7 @@ package org.raven.tree.impl;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import jcifs.smb.SmbFile;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemOptions;
@@ -85,17 +86,24 @@ public class FileContentNodeTest extends RavenCoreTestCase
         consumer.setResetDataPolicy(ResetDataPolicy.DONT_RESET_DATA);
     }
 
-//    @Test
+    @Test
     public void test() throws Exception
     {
-        StaticUserAuthenticator auth = new StaticUserAuthenticator("PRICER3", "statreader", "oerfhm");
-        FileSystemOptions opts = new FileSystemOptions();
-        DefaultFileSystemConfigBuilder.getInstance().setUserAuthenticator(opts, auth);
-        FileObject fo = VFS.getManager().resolveFile("smb://10.50.2.37/statBackup/test", opts);
-        assertEquals(FileType.FOLDER, fo.getType());
+        jcifs.Config.setProperty( "jcifs.netbios.wins", "10.50.12.17");
+//        NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("domain", "username", "password");
+        SmbFile file = new SmbFile("smb://statreader:oerfhm@10.50.2.37/statBackup/test/");
+        assertNotNull(file);
+//        assertTrue(file.get
+
+//-Djcifs.netbios.wins=10.50.12.17//        StaticUserAuthenticator auth = new StaticUserAuthenticator("", "statreader", "oerfhm");
+//        FileSystemOptions opts = new FileSystemOptions();
+//        DefaultFileSystemConfigBuilder.getInstance().setUserAuthenticator(opts, auth);
+//        FileObject fo = VFS.getManager().resolveFile("smb://10.50.2.37/statBackup/test", opts);
+//        assertEquals(FileType.FOLDER, fo.getType());
+//        SmbFile file =
     }
 
-    @Test
+//    @Test
     public void oneFileReadTest() throws Exception
     {
 //        consumer.getNodeAttribute(FileContentNode.URL_ATTRIBUTE).setValue(file1.getAbsolutePath());
