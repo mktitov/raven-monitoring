@@ -39,7 +39,7 @@ public class ColumnBasedTable extends AbstractTable
         columnNames = new String[columnNamesList.size()];
         columnNamesList.toArray(columnNames);
         columnNamesList = null;
-        rowCount = cols.get(columnNames[1]).size();
+        rowCount = cols.get(columnNames[0]).size();
     }
 
     public void addValue(String columnName, Object value)

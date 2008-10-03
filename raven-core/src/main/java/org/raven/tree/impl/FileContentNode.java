@@ -30,6 +30,7 @@ import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileType;
 import org.apache.commons.vfs.Selectors;
 import org.raven.annotations.NodeClass;
+import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.impl.AbstractDataSource;
 import org.raven.table.ColumnBasedTable;
@@ -40,7 +41,7 @@ import org.weda.internal.annotations.Message;
  *
  * @author Mikhail Titov
  */
-@NodeClass
+@NodeClass(parentNode=DataSourcesNode.class)
 public class FileContentNode extends AbstractDataSource
 {
     public static String URL_ATTRIBUTE = "url";
@@ -49,6 +50,9 @@ public class FileContentNode extends AbstractDataSource
     public static String ROWDELIMITER_ATTRIBUTE = "rowDelimiter";
     public static String ADDFILENAMETOFIRSTCOLUMN_ATTRIBUTE = "addFileNameToFirstColumn";
     public static String REMOVEFILEAFTERPROCESSING_ATTRIBUTE = "removeFileAfterProcessing";
+
+    @Parameter
+    private String dummy;
 
     @Message
     private static String urlDescription;
@@ -67,6 +71,14 @@ public class FileContentNode extends AbstractDataSource
 
     @Message
     private static String removeFileAfterProcessingDescription;
+
+    public String getDummy() {
+        return dummy;
+    }
+
+    public void setDummy(String dummy) {
+        this.dummy = dummy;
+    }
 
     @Override
     public boolean gatherDataForConsumer(
@@ -112,7 +124,7 @@ public class FileContentNode extends AbstractDataSource
                 {
                     logger.error(String.format(
                             "Error in node (%s). Error processing file (%s). %s"
-                            , getPath(), file));
+                            , getPath(), file, e.getMessage()), e);
                 }
 
         return true;

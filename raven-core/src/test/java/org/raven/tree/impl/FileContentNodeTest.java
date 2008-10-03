@@ -21,6 +21,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.vfs.FileObject;
+import org.apache.commons.vfs.FileSystemOptions;
+import org.apache.commons.vfs.FileType;
+import org.apache.commons.vfs.VFS;
+import org.apache.commons.vfs.auth.StaticUserAuthenticator;
+import org.apache.commons.vfs.impl.DefaultFileSystemConfigBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
@@ -79,10 +85,24 @@ public class FileContentNodeTest extends RavenCoreTestCase
         consumer.setResetDataPolicy(ResetDataPolicy.DONT_RESET_DATA);
     }
 
+//    @Test
+    public void test() throws Exception
+    {
+        StaticUserAuthenticator auth = new StaticUserAuthenticator("PRICER3", "statreader", "oerfhm");
+        FileSystemOptions opts = new FileSystemOptions();
+        DefaultFileSystemConfigBuilder.getInstance().setUserAuthenticator(opts, auth);
+        FileObject fo = VFS.getManager().resolveFile("smb://10.50.2.37/statBackup/test", opts);
+        assertEquals(FileType.FOLDER, fo.getType());
+    }
+
     @Test
     public void oneFileReadTest() throws Exception
     {
-        consumer.getNodeAttribute(FileContentNode.URL_ATTRIBUTE).setValue(file1.getAbsolutePath());
+//        consumer.getNodeAttribute(FileContentNode.URL_ATTRIBUTE).setValue(file1.getAbsolutePath());
+        consumer.getNodeAttribute(FileContentNode.URL_ATTRIBUTE).setValue(
+                "smb://statreader:oerfhm@10.50.2.37/statBackup/test");
+//        consumer.getNodeAttribute(FileContentNode.URL_ATTRIBUTE).setValue(
+//                "smb://tim:F071f07tim@10.50.1.85/dvd");
         consumer.start();
         assertEquals(Status.STARTED, consumer.getStatus());
 
@@ -99,7 +119,7 @@ public class FileContentNodeTest extends RavenCoreTestCase
         assertTrue(file1.exists());
     }
 
-    @Test
+//    @Test
     public void oneFileReadAsOneRowTest() throws Exception
     {
         consumer.getNodeAttribute(FileContentNode.URL_ATTRIBUTE).setValue(file1.getAbsolutePath());
@@ -120,7 +140,7 @@ public class FileContentNodeTest extends RavenCoreTestCase
         assertTrue(file1.exists());
     }
     
-    @Test
+//    @Test
     public void addFileNameToFirstColumnTest() throws Exception
     {
         consumer.getNodeAttribute(FileContentNode.URL_ATTRIBUTE).setValue(file1.getAbsolutePath());
@@ -144,7 +164,7 @@ public class FileContentNodeTest extends RavenCoreTestCase
         assertTrue(file1.exists());
     }
 
-    @Test
+//    @Test
     public void removeFileAfterProcessingTest() throws Exception
     {
         consumer.getNodeAttribute(FileContentNode.URL_ATTRIBUTE).setValue(file1.getAbsolutePath());
@@ -166,7 +186,7 @@ public class FileContentNodeTest extends RavenCoreTestCase
         assertFalse(file1.exists());
     }
 
-    @Test
+//    @Test
     public void readManyFilesTest() throws Exception
     {
         consumer.getNodeAttribute(
@@ -199,7 +219,7 @@ public class FileContentNodeTest extends RavenCoreTestCase
         assertTrue(file2.exists());
     }
     
-    @Test
+//    @Test
     public void readManyFilesWithFileMaskTest() throws Exception
     {
         consumer.getNodeAttribute(
@@ -227,7 +247,7 @@ public class FileContentNodeTest extends RavenCoreTestCase
 
     }
     
-    @Test
+//    @Test
     public void readManyFilesWithFileMask_removeAfterProcessingTest() throws Exception
     {
         consumer.getNodeAttribute(
