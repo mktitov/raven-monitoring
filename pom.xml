@@ -166,6 +166,10 @@
                             <include>**/*Test.java</include>
                         </includes>
                         <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                        <argLine>-Djava.protocol.handler.pkgs=jcifs -Djcifs.util.loglevel=3 ${argLine}</argLine>
+                        <!--
+                        <useSystemClassLoader>true</useSystemClassLoader>
+                        -->
                     </configuration>
                 </plugin>
                 <plugin>
@@ -248,6 +252,14 @@
                 <version>2.3</version>
                 <scope>test</scope>
             </dependency>
+            <!--
+            <dependency>
+                <groupId>org.samba.jcifs</groupId>
+                <artifactId>jcifs</artifactId>
+                <version>1.2.6</version>
+                <scope>compile</scope>
+            </dependency>
+            -->
             <dependency>
                 <groupId>javax.servlet</groupId>
                 <artifactId>servlet-api</artifactId>
@@ -305,7 +317,7 @@
             <dependency>
                 <groupId>org.samba.jcifs</groupId>
                 <artifactId>jcifs</artifactId>
-                <version>1.2.15</version>
+                <version>1.2.19</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
@@ -348,6 +360,12 @@
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
                 <version>1.1.1</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>commons-httpclient</groupId>
+                <artifactId>commons-httpclient</artifactId>
+                <version>2.0.2</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
