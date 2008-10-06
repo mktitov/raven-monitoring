@@ -166,7 +166,9 @@
                             <include>**/*Test.java</include>
                         </includes>
                         <redirectTestOutputToFile>true</redirectTestOutputToFile>
-                        <argLine>-Djava.protocol.handler.pkgs=jcifs -Djcifs.util.loglevel=3 ${argLine}</argLine>
+						<!--
+                        <argLine>-Djava.protocol.handler.pkgs=jcifs -Djcifs.util.loglevel=3</argLine>
+						-->
                         <!--
                         <useSystemClassLoader>true</useSystemClassLoader>
                         -->
