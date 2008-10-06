@@ -17,8 +17,14 @@
 
 package org.raven.tree.impl.objects;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.commons.io.IOUtils;
+import org.raven.RavenRuntimeException;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 
@@ -32,10 +38,19 @@ public class TestDataConsumer extends AbstractDataConsumer
     private List dataList = new ArrayList();
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data)
+    protected void doSetData(DataSource dataSource, Object data) 
     {
         ds = dataSource;
-        dataList.add(data);
+        if (data==null)
+            dataList.add(null);
+        else
+            try
+        {
+            dataList.add(IOUtils.toString((InputStream) data));
+        } catch (IOException ex)
+        {
+            throw new RavenRuntimeException("error", ex);
+        }
     }
 
     public List getDataList() {

@@ -29,10 +29,9 @@ import java.util.Map;
  */
 public class ColumnBasedTable extends AbstractTable
 {
-    private final Map<String, List<Object>> cols = new HashMap<String, List<Object>>(); 
-    private List<String> columnNamesList = new ArrayList<String>();
+    protected final Map<String, List<Object>> cols = new HashMap<String, List<Object>>();
+    protected List<String> columnNamesList = new ArrayList<String>();
     private int rowCount;
-    private int curRow = 0;
 
     public void freeze()
     {
@@ -51,41 +50,8 @@ public class ColumnBasedTable extends AbstractTable
             values = new ArrayList<Object>();
             cols.put(columnName, values);
         }
-        if (curRow==values.size())
-            curRow++;
-        else if (values.size()+1<curRow)
-        {
-            for (int i=1; i<curRow-values.size(); ++i)
-                values.add(null);
-        }
         values.add(value);
     }
-
-//    private Object getValue(String columnName, int row)
-//    {
-//        if (ROWNUM_COLUMN_NAME.equals(columnName))
-//            return row;
-//
-//        List<Object> values = cols.get(columnName);
-//        if (values==null)
-//            return null;
-//        else
-//            return row>=values.size()? null : values.get(row);
-//    }
-//
-//    public Map<String, Object> getRow(int row)
-//    {
-//        Map<String, Object> res = new HashMap<String, Object>();
-//        res.put(ROWNUM_COLUMN_NAME, row);
-//        for (String columnName: columnNamesList)
-//            res.put(columnName, getValue(columnName, row));
-//        return res;
-//    }
-
-//    public int getRowCount()
-//    {
-//        return cols.size()==0? 0 : cols.get(columnNamesList.get(1)).size();
-//    }
 
     public Iterator<Object[]> getRowIterator() 
     {

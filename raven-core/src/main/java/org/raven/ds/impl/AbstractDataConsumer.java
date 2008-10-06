@@ -60,7 +60,6 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
     private DataSource dataSource;
 
     @Parameter(defaultValue="RESET_LAST_AND_PREVIOUS_DATA")
-//    @Parameter()
     @NotNull
     private ResetDataPolicy resetDataPolicy;
 
@@ -141,9 +140,6 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
             doSetData(dataSource, data);
         }finally
         {
-//            previousData = data;
-//            previousDataTime = lastDataTime;
-
             switch(resetDataPolicy)
             {
                 case RESET_LAST_AND_PREVIOUS_DATA: this.data = null; previousData = null; break;
@@ -151,7 +147,6 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
                 case RESET_PREVIOUS_DATA: this.previousData = null; break;
             }
         }
-
     }
     
     protected abstract void doSetData(DataSource dataSource, Object data);

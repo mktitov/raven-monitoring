@@ -36,6 +36,7 @@ import org.raven.impl.AttributeReferenceToStringConverter;
 import org.raven.impl.BooleanReferenceValues;
 import org.raven.impl.ClassToStringConverter;
 import org.raven.impl.EnumReferenceValues;
+import org.raven.impl.InputStreamToStringConverter;
 import org.raven.impl.NodeAccessToNodeConverter;
 import org.raven.impl.NodeAttributeToStringConverter;
 import org.raven.impl.NodeToStringConverter;
@@ -132,6 +133,7 @@ public class RavenCoreModule
         conf.add(new NodeAccessToNodeConverter());
         conf.add(new StringToClassConverter());
         conf.add(new ClassToStringConverter());
+        conf.add(new InputStreamToStringConverter());
     }
     
     public static void contributeTree(MappedConfiguration<Class, AttributeReferenceValues> conf)

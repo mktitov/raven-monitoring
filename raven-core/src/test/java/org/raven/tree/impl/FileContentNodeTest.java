@@ -89,18 +89,19 @@ public class FileContentNodeTest extends RavenCoreTestCase
     @Test
     public void test() throws Exception
     {
-        jcifs.Config.setProperty( "jcifs.netbios.wins", "10.50.12.17");
-//        NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("domain", "username", "password");
-        SmbFile file = new SmbFile("smb://statreader:oerfhm@10.50.2.37/statBackup/test/");
-        assertNotNull(file);
+//        jcifs.Config.setProperty( "jcifs.netbios.wins", "10.50.12.17");
+////        NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("domain", "username", "password");
+//        SmbFile file = new SmbFile("smb://statreader:oerfhm@10.50.2.37/statBackup/test/");
+//        assertNotNull(file);
 //        assertTrue(file.get
 
-//-Djcifs.netbios.wins=10.50.12.17//        StaticUserAuthenticator auth = new StaticUserAuthenticator("", "statreader", "oerfhm");
+//        StaticUserAuthenticator auth = new StaticUserAuthenticator("", "statreader", "oerfhm");
 //        FileSystemOptions opts = new FileSystemOptions();
 //        DefaultFileSystemConfigBuilder.getInstance().setUserAuthenticator(opts, auth);
 //        FileObject fo = VFS.getManager().resolveFile("smb://10.50.2.37/statBackup/test", opts);
 //        assertEquals(FileType.FOLDER, fo.getType());
-//        SmbFile file =
+        FileObject fo = VFS.getManager().resolveFile("http://www.mts.ru");
+        assertNotNull(fo);
     }
 
 //    @Test
