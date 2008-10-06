@@ -41,7 +41,7 @@ import org.weda.internal.annotations.Message;
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=DataSourcesNode.class)
+//@NodeClass(parentNode=DataSourcesNode.class)
 public class FileContentNode extends AbstractDataSource
 {
     public static String URL_ATTRIBUTE = "url";

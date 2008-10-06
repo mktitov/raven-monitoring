@@ -18,7 +18,9 @@
 package org.raven.tree.impl;
 
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.raven.annotations.NodeClass;
@@ -86,6 +88,26 @@ public class RegexpDataConverterNode extends AbstractDataPipe
         this.rowDelimiter = rowDelimiter;
     }
 
+    public Boolean getUseRegexpGroupsInColumnDelimiter()
+    {
+        return useRegexpGroupsInColumnDelimiter;
+    }
+
+    public void setUseRegexpGroupsInColumnDelimiter(Boolean useRegexpGroupsInColumnDelimiter)
+    {
+        this.useRegexpGroupsInColumnDelimiter = useRegexpGroupsInColumnDelimiter;
+    }
+
+    public Boolean getUseRegexpGroupsInRowsDelimiter()
+    {
+        return useRegexpGroupsInRowsDelimiter;
+    }
+
+    public void setUseRegexpGroupsInRowsDelimiter(Boolean useRegexpGroupsInRowsDelimiter)
+    {
+        this.useRegexpGroupsInRowsDelimiter = useRegexpGroupsInRowsDelimiter;
+    }
+
     @Override
     protected void doSetData(DataSource dataSource, Object data)
     {
@@ -118,7 +140,7 @@ public class RegexpDataConverterNode extends AbstractDataPipe
 
         table.freeze();
 
-        sendDataToConsumers(data);
+        sendDataToConsumers(table);
     }
 
     @Override
@@ -132,7 +154,7 @@ public class RegexpDataConverterNode extends AbstractDataPipe
     {
         String[] cols = null;
         if (_columnDelimiter==null)
-            cols = new String[]{};
+            cols = new String[]{row};
         else
         {
             if (!_useRegexpGroupsInColumnDelimiter)
@@ -140,11 +162,19 @@ public class RegexpDataConverterNode extends AbstractDataPipe
             else
             {
                 Matcher matcher = columnPattern.matcher(row);
-                if (matcher.groupCount()>0)
+                List<String> colsList = new ArrayList<String>();
+                while (matcher.find())
                 {
-                    cols = new String[matcher.groupCount()];
-                    for (int i=0; i<matcher.groupCount(); ++i)
-                        cols[i]=matcher.group(i+1);
+                    if (matcher.groupCount()>0)
+                    {
+                        for (int i=0; i<matcher.groupCount(); ++i)
+                            colsList.add(matcher.group(i+1));
+                    }
+                }
+                if (colsList.size()>0)
+                {
+                    cols = new String[colsList.size()];
+                    colsList.toArray(cols);
                 }
             }
         }
@@ -162,12 +192,19 @@ public class RegexpDataConverterNode extends AbstractDataPipe
             {
                 Pattern rowPattern = Pattern.compile(_rowDelimiter);
                 Matcher rowMatcher = rowPattern.matcher(str);
-                if (rowMatcher.groupCount()>0)
+                List<String> rowsList = new ArrayList<String>(512);
+                while (rowMatcher.find())
                 {
-                    rows = new String[rowMatcher.groupCount()];
-                    for (int i=1; i<=rowMatcher.groupCount(); ++i)
-                        rows[i-1]=rowMatcher.group(i);
-                        
+                    if (rowMatcher.groupCount()>0)
+                    {
+                        for (int i=1; i<=rowMatcher.groupCount(); ++i)
+                            rowsList.add(rowMatcher.group(i));
+                    }
+                }
+                if (rowsList.size()>0)
+                {
+                    rows = new String[rowsList.size()];
+                    rowsList.toArray(rows);
                 }
             }
             else

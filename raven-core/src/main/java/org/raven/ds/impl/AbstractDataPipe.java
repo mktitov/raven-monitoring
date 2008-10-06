@@ -85,7 +85,7 @@ public abstract class AbstractDataPipe extends AbstractDataConsumer implements D
     public boolean gatherDataForConsumer(
             DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
     {
-        return getDataSource().getDataImmediate(dataConsumer, consumerAttributes);
+        return getDataSource().getDataImmediate(this, null);
     }
     
     /**

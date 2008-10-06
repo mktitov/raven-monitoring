@@ -80,6 +80,14 @@ public class FileReaderNode extends AbstractDataSource
                 for (FileObject fileObject: childs)
                     if (mask==null || mask.matcher(fileObject.getName().getBaseName()).matches())
                         files.add(fileObject);
+                    else
+                    {
+                        if (logger.isDebugEnabled())
+                            logger.debug(String.format(
+                                    "Ignoring file (%s). Not matches to file mask"
+                                    , fileObject.getName().getBaseName()));
+                    }
+                        
         }
         if (files.size()>0)
             for (FileObject file: files)
@@ -120,6 +128,8 @@ public class FileReaderNode extends AbstractDataSource
             DataConsumer dataConsumer, FileObject file, boolean removeAfterProcessing)
         throws Exception
     {
+        if (logger.isDebugEnabled())
+            logger.debug(String.format("Proccessing file (%s)", file.getName().getBaseName()));
         InputStream is = file.getContent().getInputStream();
         try
         {

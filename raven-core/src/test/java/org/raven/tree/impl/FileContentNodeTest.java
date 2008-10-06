@@ -86,7 +86,7 @@ public class FileContentNodeTest extends RavenCoreTestCase
         consumer.setResetDataPolicy(ResetDataPolicy.DONT_RESET_DATA);
     }
 
-    @Test
+//    @Test
     public void test() throws Exception
     {
 //        jcifs.Config.setProperty( "jcifs.netbios.wins", "10.50.12.17");

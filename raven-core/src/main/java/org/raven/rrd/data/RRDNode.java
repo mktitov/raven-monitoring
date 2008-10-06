@@ -55,7 +55,6 @@ import org.raven.tree.NodeError;
 import org.raven.tree.NodeListener;
 import org.raven.tree.NodeShutdownError;
 import org.raven.tree.impl.BaseNode;
-import org.weda.annotations.Description;
 import org.weda.beans.ObjectUtils;
 
 /**
