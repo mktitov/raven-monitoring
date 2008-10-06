@@ -371,6 +371,12 @@
                 <scope>compile</scope>
             </dependency>
             <dependency>
+                <groupId>commons-net</groupId>
+                <artifactId>commons-net</artifactId>
+                <version>1.4.1</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
                 <groupId>commons-vfs</groupId>
                 <artifactId>commons-vfs</artifactId>
                 <version>1.0</version>
