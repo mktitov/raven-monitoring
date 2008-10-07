@@ -17,9 +17,15 @@
 
 package org.raven.net;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import jcifs.smb.SmbFile;
 import org.raven.annotations.NodeClass;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.impl.NodeAttributeImpl;
+import org.weda.internal.annotations.Message;
 
 /**
  *
@@ -28,26 +34,109 @@ import org.raven.tree.NodeAttribute;
 @NodeClass
 public class SmbFileReader extends AbstractFileReader
 {
-    private String urlDescription;
+    public static String SMBFILEMASK_ATTRIBUTE = "smbFileMaskDescription";
+
+    @Message
+    private static String urlDescription;
+
+    @Message
+    private static String smbFileMaskDescription;
 
     @Override
     protected String getUrlDescription()
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return urlDescription;
     }
 
     @Override
     protected FileWrapper resolveFile(String url, Map<String, NodeAttribute> attrs)
             throws FileReaderException
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        try
+        {
+            SmbFile file = new SmbFile(url);
+            if (!file.exists())
+                throw new FileReaderException("File not exists");
+            SmbFileWrapper fileWrapper = new SmbFileWrapper(file);
+
+            return fileWrapper;
+        }
+        catch(Throwable e)
+        {
+            throw new FileReaderException(String.format(
+                    "Error resolving file (%s). %s", url, e.getMessage()), e);
+        }
     }
 
     @Override
     protected FileWrapper[] getChildrens(
-            FileWrapper file, FilenameFilter filenameFilter, Map<String, NodeAttribute> attributes)
+            FileWrapper fileWrapper, FilenameFilter filenameFilter,
+            Map<String, NodeAttribute> attributes)
         throws FileReaderException
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        try
+        {
+            NodeAttribute smbFileMaskAttr = attributes.get(SMBFILEMASK_ATTRIBUTE);
+            String smbFileMask = null;
+            if (smbFileMaskAttr!=null)
+                smbFileMask = smbFileMaskAttr.getRealValue();
+
+            SmbFile[] files = null;
+            SmbFile smbFile = ((SmbFileWrapper)fileWrapper).getSmbFile();
+            if (smbFileMask!=null)
+                files = smbFile.listFiles(smbFileMask);
+            else
+            {
+                files = smbFile.listFiles();
+                if (files!=null)
+                {
+                    List<SmbFile> smbFiles = new ArrayList<SmbFile>(files.length);
+                    for (SmbFile file: files)
+                        if (   file.isFile()
+                            && (filenameFilter==null || filenameFilter.filter(file.getName())))
+                        {
+                            smbFiles.add(file);
+                        }
+                    if (smbFiles.size()==0)
+                        files = null;
+                    else
+                    {
+                        files = new SmbFile[smbFiles.size()];
+                        smbFiles.toArray(files);
+                    }
+                }
+            }
+
+            if (files!=null && files.length==0)
+                return null;
+            else
+            {
+                FileWrapper[] fileWrappers = new FileWrapper[files.length];
+                for (int i=0; i<files.length; ++i)
+                    fileWrappers[i] = new SmbFileWrapper(files[i]);
+                
+                return fileWrappers;
+            }
+        }
+        catch(Throwable e)
+        {
+            throw new FileReaderException(String.format(
+                    "Error reading files from directory (%s). %s"
+                        , fileWrapper.getName(), e.getMessage())
+                    , e);
+        }
     }
+
+    @Override
+    public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
+    {
+        super.fillConsumerAttributes(consumerAttributes);
+
+        NodeAttributeImpl attr = new NodeAttributeImpl(
+                SMBFILEMASK_ATTRIBUTE, String.class, null, smbFileMaskDescription);
+        attr.setRequired(false);
+        consumerAttributes.add(attr);
+    }
+
+
 }

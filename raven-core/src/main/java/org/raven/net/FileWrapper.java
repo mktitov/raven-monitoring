@@ -37,15 +37,15 @@ public interface FileWrapper
     /**
      * Returns the input stream of the file 
      */
-    public InputStream getInputStream();
+    public InputStream getInputStream() throws Exception;
     /**
      * Closes the file
      */
-    public void close();
+    public void close() throws Exception;
     /**
      * Removes the file.
      */
-    public void remove();
+    public void remove() throws Exception;
     /**
      * Returns the children files of this file.
      */

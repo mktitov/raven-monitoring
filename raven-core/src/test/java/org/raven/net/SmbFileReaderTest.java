@@ -15,14 +15,12 @@
  *  under the License.
  */
 
-package org.raven.tree.impl;
+package org.raven.net;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
@@ -34,33 +32,33 @@ import org.raven.tree.impl.objects.TestDataConsumer;
  *
  * @author Mikhail Titov
  */
-public class FileReaderNodeTest extends RavenCoreTestCase
+public class SmbFileReaderTest extends RavenCoreTestCase
 {
     private File filesDir, file1, file2;
-    private FileReaderNode fileReader;
+    private SmbFileReader fileReader;
     private TestDataConsumer consumer;
-    
+
     @Before
     public void prepareFiles() throws Exception
     {
-        filesDir = new File("target/file-content-files");
-        try{
-            FileUtils.deleteDirectory(filesDir);
-        }catch(IOException e)
-        {
-        }
+        filesDir = new File("c:/tmp/test");
+        File[] files = filesDir.listFiles();
+        if (files!=null)
+            for (File file: files)
+                file.delete();
+
         FileUtils.forceMkdir(filesDir);
         file1 = new File(filesDir.getAbsolutePath()+"/file1.txt");
-        FileUtils.writeStringToFile(file1, "col1-1 col1-2\ncol2-1 col2-2");
+        FileUtils.writeStringToFile(file1, "file1");
 
         file2 = new File(filesDir.getAbsolutePath()+"/file2.txt");
-        FileUtils.writeStringToFile(file2, "col1-1 col1-2");
+        FileUtils.writeStringToFile(file2, "file2");
     }
-
+    
     @Before
     public void prepareNodes()
     {
-        fileReader = new FileReaderNode();
+        fileReader = new SmbFileReader();
         fileReader.setName("fileContent");
         tree.getRootNode().addChildren(fileReader);
         fileReader.save();
@@ -77,83 +75,63 @@ public class FileReaderNodeTest extends RavenCoreTestCase
         consumer.setDataSource(fileReader);
         consumer.setResetDataPolicy(ResetDataPolicy.DONT_RESET_DATA);
     }
+    
+//    @Test
+    public void readOneFileTest() throws Exception
+    {
+        consumer.getNodeAttribute(SmbFileReader.URL_ATTRIBUTE).setValue(
+                "smb://timtest:Atest_12345678@10.50.1.85/test/"+file1.getName());
+        consumer.start();
+        assertEquals(Status.STARTED, consumer.getStatus());
+
+        consumer.refereshData(null);
+        List dataList = consumer.getDataList();
+        assertEquals(1, dataList.size());
+        assertEquals("file1", dataList.get(0));
+    }
 
     @Test
-    public void oneFileReadTest() throws Exception
+    public void readAllFilesFromDir() throws Exception
     {
-//        consumer.getNodeAttribute(FileContentNode.URL_ATTRIBUTE).setValue(file1.getAbsolutePath());
-        consumer.getNodeAttribute(FileContentNode.URL_ATTRIBUTE).setValue(
+        consumer.getNodeAttribute(SmbFileReader.URL_ATTRIBUTE).setValue(
                 "smb://timtest:Atest_12345678@10.50.1.85/test/");
         consumer.start();
         assertEquals(Status.STARTED, consumer.getStatus());
 
         consumer.refereshData(null);
         List dataList = consumer.getDataList();
-        assertNotNull(dataList);
-        assertEquals(1, dataList.size());
-        Object data = dataList.get(0);
-
-        assertEquals("col1-1 col1-2\ncol2-1 col2-2", data);
-
-        assertTrue(file1.exists());
-    }
-
-    @Test
-    public void manyFilesReadTest() throws Exception
-    {
-        consumer.getNodeAttribute(FileContentNode.URL_ATTRIBUTE).setValue(
-                filesDir.getAbsolutePath());
-        consumer.start();
-        assertEquals(Status.STARTED, consumer.getStatus());
-
-        consumer.refereshData(null);
-        List dataList = consumer.getDataList();
-        assertNotNull(dataList);
         assertEquals(2, dataList.size());
-
-        assertEquals("col1-1 col1-2\ncol2-1 col2-2", dataList.get(0));
-        assertEquals("col1-1 col1-2", dataList.get(1));
-
-        assertTrue(file1.exists());
+        assertTrue(dataList.contains("file1"));
+        assertTrue(dataList.contains("file2"));
     }
 
     @Test
-    public void manyFilesReadWithFileMaskTest() throws Exception
+    public void smbFileMaskTest() throws Exception
     {
-        consumer.getNodeAttribute(FileReaderNode.URL_ATTRIBUTE).setValue(
-                filesDir.getAbsolutePath());
-        consumer.getNodeAttribute(FileReaderNode.FILEMASK_ATTRIBUTE).setValue("^file1.*");
+        consumer.getNodeAttribute(SmbFileReader.URL_ATTRIBUTE).setValue(
+                "smb://timtest:Atest_12345678@10.50.1.85/test/");
+        consumer.getNodeAttribute(SmbFileReader.SMBFILEMASK_ATTRIBUTE).setValue("file2*");
         consumer.start();
         assertEquals(Status.STARTED, consumer.getStatus());
 
         consumer.refereshData(null);
         List dataList = consumer.getDataList();
-        assertNotNull(dataList);
         assertEquals(1, dataList.size());
-
-        assertEquals("col1-1 col1-2\ncol2-1 col2-2", dataList.get(0));
-
-        assertTrue(file1.exists());
+        assertEquals("file2", dataList.get(0));
     }
 
     @Test
-    public void removeFileAfterProcessingTest() throws Exception
+    public void regexpFileMaskTest() throws Exception
     {
-        consumer.getNodeAttribute(FileReaderNode.URL_ATTRIBUTE).setValue(file1.getAbsolutePath());
-        consumer.getNodeAttribute(
-                FileReaderNode.REMOVEFILEAFTERPROCESSING_ATTRIBUTE).setValue("true");
+        consumer.getNodeAttribute(SmbFileReader.URL_ATTRIBUTE).setValue(
+                "smb://timtest:Atest_12345678@10.50.1.85/test/");
+        consumer.getNodeAttribute(SmbFileReader.REGEXP_FILEMASK_ATTRIBUTE).setValue("^file1.*");
         consumer.start();
         assertEquals(Status.STARTED, consumer.getStatus());
 
         consumer.refereshData(null);
         List dataList = consumer.getDataList();
-        assertNotNull(dataList);
         assertEquals(1, dataList.size());
-        Object data = dataList.get(0);
-
-        assertEquals("col1-1 col1-2\ncol2-1 col2-2", data);
-
-        assertFalse(file1.exists());
-        
+        assertEquals("file1", dataList.get(0));
     }
 }
