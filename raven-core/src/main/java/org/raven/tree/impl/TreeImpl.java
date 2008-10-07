@@ -31,6 +31,7 @@ import org.raven.conf.Configurator;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.impl.ClassNameComparator;
 import org.raven.impl.NodeClassTransformerWorker;
+import org.raven.log.impl.NodeLoggerNode;
 import org.raven.sched.impl.SchedulersNode;
 import org.raven.template.TemplateVariable;
 import org.raven.template.TemplatesNode;
@@ -88,6 +89,7 @@ public class TreeImpl implements Tree
     private TemplatesNode templatesNode;
     private ConnectionPoolsNode connectionPoolsNode;
     private SchedulersNode schedulersNode;
+    private NodeLoggerNode nodeLoggerNode;
 
     public TreeImpl(
             AttributeReferenceValues attributeReferenceValues
@@ -376,6 +378,14 @@ public class TreeImpl implements Tree
             systemNode = new SystemNode();
             rootNode.addChildren(systemNode);
             treeStore.saveNode(systemNode);
+        }
+
+        nodeLoggerNode = (NodeLoggerNode) systemNode.getChildren(NodeLoggerNode.NAME);
+        if (nodeLoggerNode==null)
+        {
+            nodeLoggerNode = new NodeLoggerNode();
+            systemNode.addChildren(nodeLoggerNode);
+            treeStore.saveNode(nodeLoggerNode);
         }
 
         schedulersNode = (SchedulersNode) systemNode.getChildren(SchedulersNode.NAME);

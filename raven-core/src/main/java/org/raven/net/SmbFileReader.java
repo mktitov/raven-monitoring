@@ -28,6 +28,8 @@ import org.raven.tree.NodeAttribute;
 @NodeClass
 public class SmbFileReader extends AbstractFileReader
 {
+    private String urlDescription;
+
     @Override
     protected String getUrlDescription()
     {

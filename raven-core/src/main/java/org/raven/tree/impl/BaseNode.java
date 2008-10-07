@@ -40,7 +40,7 @@ import org.raven.tree.NodeParameter;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
 import org.raven.template.TemplateEntry;
-import org.raven.tree.LogLevel;
+import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttributeListener;
 import org.raven.tree.NodeListener;
 import org.raven.tree.NodePathResolver;

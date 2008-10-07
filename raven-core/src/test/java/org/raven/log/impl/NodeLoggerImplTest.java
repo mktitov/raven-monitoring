@@ -15,13 +15,23 @@
  *  under the License.
  */
 
-package org.raven.tree;
+package org.raven.log.impl;
+
+import org.junit.Test;
+import org.raven.RavenCoreTestCase;
+import org.raven.log.NodeLogger;
 
 /**
  *
  * @author Mikhail Titov
  */
-public enum LogLevel
+public class NodeLoggerImplTest extends RavenCoreTestCase
 {
-    TRACE, DEBUG, INFO, WARN, ERROR
+    @Test
+    public void serviceTest() throws Exception
+    {
+        NodeLogger nodeLogger = registry.getService(NodeLogger.class);
+        assertNotNull(nodeLogger);
+        assertNotNull(nodeLogger.getNodeLoggerNode());
+    }
 }

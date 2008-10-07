@@ -46,6 +46,8 @@ import org.raven.impl.StringToAttributeReferenceConverter;
 import org.raven.impl.StringToClassConverter;
 import org.raven.impl.StringToNodeConverter;
 import org.raven.impl.StringToTemplateVariableConverter;
+import org.raven.log.NodeLogger;
+import org.raven.log.impl.NodeLoggerImpl;
 import org.raven.sched.impl.SystemSchedulerReferenceValues;
 import org.raven.sched.impl.SystemSchedulerValueHandler;
 import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
@@ -76,6 +78,7 @@ public class RavenCoreModule
 {
     public static void bind(ServiceBinder binder)
     {
+        binder.bind(NodeLogger.class, NodeLoggerImpl.class);
         binder.bind(Configurator.class, ConfiguratorImpl.class);
         binder.bind(ExpressionCompiler.class, ExpressionCompilerImpl.class);
     }
