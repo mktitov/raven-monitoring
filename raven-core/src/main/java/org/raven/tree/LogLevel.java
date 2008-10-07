@@ -15,25 +15,13 @@
  *  under the License.
  */
 
-package org.raven.template;
-
-import org.raven.annotations.NodeClass;
-import org.raven.tree.impl.BaseNode;
-import org.weda.annotations.Description;
+package org.raven.tree;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=TemplateNode.class)
-@Description("Holds the template variables")
-public class TemplateVariablesNode extends BaseNode
+public enum LogLevel
 {
-
-    @Override
-    protected boolean includeLogLevel()
-    {
-        return false;
-    }
-
+    TRACE, DEBUG, INFO, WARN, ERROR
 }

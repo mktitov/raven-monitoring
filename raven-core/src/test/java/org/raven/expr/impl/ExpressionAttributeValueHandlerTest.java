@@ -152,8 +152,8 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
     {
         Node node = new BaseNode("node");
         tree.getRootNode().addChildren(node);
-        node.init();
         node.save();
+        node.init();
         
         NodeAttribute attr = new NodeAttributeImpl("attr", Integer.class, "1+1", null);
         attr.setOwner(node);

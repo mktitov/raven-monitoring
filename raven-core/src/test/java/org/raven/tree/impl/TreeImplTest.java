@@ -22,8 +22,10 @@ import java.util.Collections;
 import java.util.List;
 import org.apache.tapestry.ioc.RegistryBuilder;
 import org.easymock.IArgumentMatcher;
+import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
+import org.raven.RavenCoreTestCase;
 import org.raven.ServiceTestCase;
 import org.raven.conf.Configurator;
 import org.raven.impl.NodeClassTransformerWorker;
@@ -43,15 +45,8 @@ import static org.easymock.EasyMock.*;
  *
  * @author Mikhail Titov
  */
-public class TreeImplTest extends ServiceTestCase
+public class TreeImplTest extends RavenCoreTestCase
 {
-
-    @Override
-    protected void configureRegistry(RegistryBuilder builder)
-    {
-        builder.add(RavenCoreModule.class);
-    }
-    
     @Test
     public void getReferenceValuesForAttribute() throws IOException, Exception
     {
@@ -61,18 +56,18 @@ public class TreeImplTest extends ServiceTestCase
         
         AttributeReferenceValues referenceValues = 
                 createMock("AttributeReferenceValues", AttributeReferenceValues.class);
-        Configurator configurator = createMock("Configurator", Configurator.class);
-        TreeStore store = createMock("TreeStore", TreeStore.class);
+//        Configurator configurator = createMock("Configurator", Configurator.class);
+//        TreeStore store = createMock("TreeStore", TreeStore.class);
         ResourceProvider resourceProvider = createMock("ResourceProvider", ResourceProvider.class);
         NodePathResolver pathResolver = createMock("NodePathResolver", NodePathResolver.class);
         AttributeValueHandlerRegistry valueHandlerRegistry = 
                 createMock("AttributeValueHandlerRegistry", AttributeValueHandlerRegistry.class);
         
-        expect(configurator.getTreeStore()).andReturn(store).anyTimes();
-        ContainerNode rootNode = new ContainerNode("");
-        expect(store.getRootNode()).andReturn(rootNode);
-        store.saveNode(isA(Node.class));
-        expectLastCall().anyTimes();
+//        expect(configurator.getTreeStore()).andReturn(store).anyTimes();
+//        ContainerNode rootNode = new ContainerNode("");
+//        expect(store.getRootNode()).andReturn(rootNode);
+//        store.saveNode(isA(Node.class));
+//        expectLastCall().anyTimes();
         resourceProvider.getResourceStrings(NodeClassTransformerWorker.NODES_TYPES_RESOURCE);
         expectLastCall().andReturn(Collections.EMPTY_LIST);
         referenceValues.getReferenceValues(
@@ -82,7 +77,7 @@ public class TreeImplTest extends ServiceTestCase
                 (NodeAttribute)notNull(), matchCollection());
         expectLastCall().andReturn(true);
                 
-        replay(referenceValues, configurator, store, resourceProvider, valueHandlerRegistry);
+        replay(referenceValues, resourceProvider, valueHandlerRegistry);
         
         TreeImpl tree = new TreeImpl(
                 referenceValues, configurator, resourceProvider, pathResolver
@@ -99,7 +94,7 @@ public class TreeImplTest extends ServiceTestCase
 //        assertSame(twoList, tree.getReferenceValuesForAttribute(integerAttr));
 //        assertNull(tree.getReferenceValuesForAttribute(stringAttr));
         
-        verify(referenceValues, configurator, store, resourceProvider, valueHandlerRegistry);
+        verify(referenceValues, resourceProvider, valueHandlerRegistry);
     }
     
     private static ReferenceValueCollection matchCollection()

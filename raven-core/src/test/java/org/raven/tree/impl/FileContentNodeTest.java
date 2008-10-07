@@ -128,7 +128,7 @@ public class FileContentNodeTest extends RavenCoreTestCase
         assertTrue(file1.exists());
     }
 
-//    @Test
+    @Test
     public void oneFileReadAsOneRowTest() throws Exception
     {
         consumer.getNodeAttribute(FileContentNode.URL_ATTRIBUTE).setValue(file1.getAbsolutePath());

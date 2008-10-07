@@ -40,6 +40,7 @@ import org.raven.tree.NodeParameter;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
 import org.raven.template.TemplateEntry;
+import org.raven.tree.LogLevel;
 import org.raven.tree.NodeAttributeListener;
 import org.raven.tree.NodeListener;
 import org.raven.tree.NodePathResolver;
@@ -62,6 +63,8 @@ import org.weda.services.TypeConverter;
  */
 public class BaseNode implements Node, NodeListener
 {
+    public final static String LOGLEVEL_ATTRIBUTE = "logLevel";
+
     protected Logger logger = LoggerFactory.getLogger(Node.class);
     
     @Service
@@ -74,6 +77,9 @@ public class BaseNode implements Node, NodeListener
     protected static Tree tree;
     @Service
     protected static NodePathResolver pathResolver;
+
+    @Parameter(defaultValue="WARN")
+    private LogLevel logLevel;
     
     private int id;
     
@@ -114,6 +120,11 @@ public class BaseNode implements Node, NodeListener
         this();
         this.name = name;
     }
+
+    protected boolean includeLogLevel()
+    {
+        return true;
+    }
     
     protected void initFields()
     {
@@ -128,6 +139,16 @@ public class BaseNode implements Node, NodeListener
         nodeAttributes = new ConcurrentHashMap<String, NodeAttribute>();
         childrens = new ConcurrentHashMap<String, Node>();
         index = 0;
+    }
+
+    public LogLevel getLogLevel()
+    {
+        return logLevel;
+    }
+
+    public void setLogLevel(LogLevel logLevel)
+    {
+        this.logLevel = logLevel;
     }
 
     public Logger getLogger()
@@ -951,6 +972,8 @@ public class BaseNode implements Node, NodeListener
     private void createNodeAttribute(NodeParameter param) 
         throws Exception
     {
+        if (LOGLEVEL_ATTRIBUTE.equals(param.getName()) && (getParent()==null || !includeLogLevel()))
+            return;
         NodeAttributeImpl attr = new NodeAttributeImpl();
         attr.setOwner(this);
         attr.setName(param.getDisplayName());

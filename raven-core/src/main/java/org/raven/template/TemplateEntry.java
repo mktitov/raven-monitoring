@@ -29,4 +29,9 @@ import org.weda.annotations.Description;
 @Description("Holds the subtree of template nodes")
 public class TemplateEntry extends BaseNode
 {
+    @Override
+    protected boolean includeLogLevel()
+    {
+        return false;
+    }
 }

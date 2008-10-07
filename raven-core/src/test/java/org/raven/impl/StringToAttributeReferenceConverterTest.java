@@ -41,6 +41,7 @@ public class StringToAttributeReferenceConverterTest extends RavenCoreTestCase
         
         ContainerNode node = new ContainerNode("node");
         tree.getRootNode().addChildren(node);
+        node.save();
         node.init();
         NodeAttribute attr = new NodeAttributeImpl("attr", String.class, null, null);
         attr.setOwner(node);

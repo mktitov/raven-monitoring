@@ -225,7 +225,7 @@ public class TreeServiceTest extends ServiceTestCase
         tree.getRootNode().addChildren(node2);
         
         assertTrue(node1.getDependentNodes().isEmpty());
-        
+        node2.save();
         node2.init();
         attr.setValue(node1.getPath());
         
@@ -234,7 +234,8 @@ public class TreeServiceTest extends ServiceTestCase
         assertEquals(1, dependentNodes.size());
         assertSame(node2, dependentNodes.iterator().next());
         assertEquals(Node.Status.INITIALIZED, node2.getStatus());
-        
+
+        node1.save();
         node1.init();
         
         assertEquals(Node.Status.INITIALIZED, node1.getStatus());
@@ -261,7 +262,7 @@ public class TreeServiceTest extends ServiceTestCase
         
         assertEquals(Node.Status.INITIALIZED, node.getStatus());
         assertNotNull(node.getNodeAttributes());
-        assertEquals(2, node.getNodeAttributes().size());
+        assertEquals(3, node.getNodeAttributes().size());
         
         checkAttributes(node, null);
         
@@ -371,9 +372,11 @@ public class TreeServiceTest extends ServiceTestCase
         
         ContainerNode node = new ContainerNode("node");
         ContainerNode childNode = new ContainerNode("child");
+        node.init();
+        node.save();
         node.addChildren(childNode);
         
-        node.init();
+        childNode.save();
         childNode.init();
         
         assertEquals(childNode, node.getChildren("child"));
@@ -755,13 +758,13 @@ public class TreeServiceTest extends ServiceTestCase
         
         ContainerNode node2 = new ContainerNode("node");
         node1.addChildren(node2);
-        node2.init();
         node2.save();
+        node2.init();
         
         ContainerNode node3 = new ContainerNode("node3");
         node1.addChildren(node3);
-        node3.init();
         node3.save();
+        node3.init();
         
         List<Node> searchResult = tree.search(node, new SearchOptionsImpl(), new SearchFilter() {
             public boolean filter(Node node) {
@@ -855,7 +858,7 @@ public class TreeServiceTest extends ServiceTestCase
     private void checkAttributes(NodeWithParameters node, String value)
     {
         assertNotNull(node.getNodeAttributes());
-        assertEquals(2, node.getNodeAttributes().size());
+        assertEquals(3, node.getNodeAttributes().size());
 
         NodeAttribute stringAttr = node.getNodeAttribute("stringParameter");
         assertNotNull(stringAttr);

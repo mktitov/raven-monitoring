@@ -45,6 +45,7 @@ public class IfNodeTest extends RavenCoreTestCase
         ifNode.init();
         Node child = new BaseNode("child");
         ifNode.addChildren(child);
+        child.save();
         child.init();
         
         ifNode.getNodeAttribute(IfNode.USEDINTEMPLATE_ATTRIBUTE).setValue("true");
@@ -73,6 +74,7 @@ public class IfNodeTest extends RavenCoreTestCase
         ifNode.init();
         Node child = new BaseNode("child");
         ifNode.addChildren(child);
+        child.save();
         child.init();
         
         ifNode.getNodeAttribute(IfNode.USEDINTEMPLATE_ATTRIBUTE).setValue("false");
