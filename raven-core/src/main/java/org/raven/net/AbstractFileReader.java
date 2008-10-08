@@ -18,7 +18,9 @@
 package org.raven.net;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.impl.AbstractDataSource;
@@ -35,12 +37,16 @@ public abstract class AbstractFileReader extends AbstractDataSource
     public static String URL_ATTRIBUTE = "url";
     public static String REGEXP_FILEMASK_ATTRIBUTE = "regexpFileMask";
     public static String REMOVEFILEAFTERPROCESSING_ATTRIBUTE = "removeFileAfterProcessing";
+    public static String ADDFILENAMETOSTREAM_ATTRIBUTE = "addFilenameToStream";
     
     @Message
     private static String regexpFileMaskDescription;
     
     @Message
     private static String removeFileAfterProcessingDescription;
+    
+    @Message
+    private static String addFilenameToStreamDescription;
 
     @Override
     public boolean gatherDataForConsumer(
@@ -50,6 +56,8 @@ public abstract class AbstractFileReader extends AbstractDataSource
         String fileMask = attributes.get(REGEXP_FILEMASK_ATTRIBUTE).getRealValue();
         Boolean removeAfterProcessing =
                 attributes.get(REMOVEFILEAFTERPROCESSING_ATTRIBUTE).getRealValue();
+//        Boolean addFilenameToStream = attributes.get(ADDFILENAMETOSTREAM_ATTRIBUTE).getRealValue();
+        boolean addFilenameToStream = false;
 
         FileWrapper file = resolveFile(url, attributes);
 
@@ -58,10 +66,21 @@ public abstract class AbstractFileReader extends AbstractDataSource
             files = new FileWrapper[]{file};
         else
         {
-            FilenameFilter filter = null;
-            if (fileMask!=null)
+            files = getChildrens(file, attributes);
+            if (fileMask!=null && files!=null)
+            {
+                FilenameFilter filter = null;
                 filter = new RegexpFilenameFilter(fileMask, getLogger());
-            files = getChildrens(file, filter, attributes);
+                List<FileWrapper> filesList = new ArrayList<FileWrapper>(files.length);
+                for (FileWrapper fileWrapper: files)
+                    if (filter.filter(fileWrapper.getName()))
+                        filesList.add(fileWrapper);
+                if (filesList.size()>0)
+                {
+                    files = new FileWrapper[filesList.size()];
+                    filesList.toArray(files);
+                }
+            }
         }
 
         if (files!=null && files.length>0)
@@ -69,13 +88,16 @@ public abstract class AbstractFileReader extends AbstractDataSource
             try
             {
                 for (FileWrapper fileWrapper: files)
-                    processFile(dataConsumer, fileWrapper, removeAfterProcessing);
+                    if (fileWrapper.getType()==FileWrapper.FileType.FILE)
+                        processFile(
+                                dataConsumer, fileWrapper, addFilenameToStream
+                                , removeAfterProcessing);
             }
             catch (Throwable e)
             {
                 logger.error(String.format(
                         "Error in node (%s). Error processing file (%s). %s"
-                        , getPath(), file, e.getMessage()), e);
+                        , getPath(), file.getName(), e.getMessage()), e);
                 
             }
         }
@@ -86,7 +108,6 @@ public abstract class AbstractFileReader extends AbstractDataSource
                         "No files found for url (%s) using regexp file name filter (%s)"
                         , url, fileMask));
         }
-
         
         return true;
     }
@@ -108,6 +129,12 @@ public abstract class AbstractFileReader extends AbstractDataSource
                 , removeFileAfterProcessingDescription);
         attr.setRequired(true);
         consumerAttributes.add(attr);
+
+//        attr = new NodeAttributeImpl(
+//                ADDFILENAMETOSTREAM_ATTRIBUTE, Boolean.class, false
+//                , addFilenameToStreamDescription);
+//        attr.setRequired(true);
+//        consumerAttributes.add(attr);
     }
 
     protected abstract String getUrlDescription();
@@ -116,16 +143,21 @@ public abstract class AbstractFileReader extends AbstractDataSource
         throws FileReaderException;
 
     protected abstract FileWrapper[] getChildrens(
-            FileWrapper file, FilenameFilter filenameFilter, Map<String, NodeAttribute> attributes)
+            FileWrapper file, Map<String, NodeAttribute> attributes)
         throws FileReaderException;
 
     private void processFile(
-            DataConsumer dataConsumer, FileWrapper file, Boolean removeAfterProcessing)
+            DataConsumer dataConsumer, FileWrapper file,
+            Boolean addFilenameToStream, Boolean removeAfterProcessing)
         throws Exception
     {
         if (logger.isDebugEnabled())
             logger.debug(String.format("Proccessing file (%s)", file.getName()));
         InputStream is = file.getInputStream();
+        if (addFilenameToStream)
+        {
+            
+        }
         try
         {
             dataConsumer.setData(this, is);

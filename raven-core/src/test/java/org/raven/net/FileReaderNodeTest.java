@@ -15,8 +15,9 @@
  *  under the License.
  */
 
-package org.raven.tree.impl;
+package org.raven.net;
 
+import org.raven.tree.impl.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -81,9 +82,9 @@ public class FileReaderNodeTest extends RavenCoreTestCase
     @Test
     public void oneFileReadTest() throws Exception
     {
-//        consumer.getNodeAttribute(FileContentNode.URL_ATTRIBUTE).setValue(file1.getAbsolutePath());
-        consumer.getNodeAttribute(FileContentNode.URL_ATTRIBUTE).setValue(
-                "smb://timtest:Atest_12345678@10.50.1.85/test/");
+        consumer.getNodeAttribute(FileReaderNode.URL_ATTRIBUTE).setValue(file1.getAbsolutePath());
+//        consumer.getNodeAttribute(FileContentNode.URL_ATTRIBUTE).setValue(
+//                "smb://timtest:Atest_12345678@10.50.1.85/test/");
         consumer.start();
         assertEquals(Status.STARTED, consumer.getStatus());
 
@@ -101,7 +102,7 @@ public class FileReaderNodeTest extends RavenCoreTestCase
     @Test
     public void manyFilesReadTest() throws Exception
     {
-        consumer.getNodeAttribute(FileContentNode.URL_ATTRIBUTE).setValue(
+        consumer.getNodeAttribute(FileReaderNode.URL_ATTRIBUTE).setValue(
                 filesDir.getAbsolutePath());
         consumer.start();
         assertEquals(Status.STARTED, consumer.getStatus());

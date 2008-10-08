@@ -36,15 +36,15 @@ public class EnumReferenceValues implements AttributeReferenceValues
     @Service
     private static TypeConverter converter;
     
-    public List<String> getReferenceValues(NodeAttribute attr)
-    {
-        Object[] values = attr.getType().getEnumConstants();
-        List<String> result = new ArrayList<String>(values.length);
-        for (Object value: values)
-            result.add(converter.convert(String.class, value, null));
-        
-        return result;
-    }
+//    public List<String> getReferenceValues(NodeAttribute attr)
+//    {
+//        Object[] values = attr.getType().getEnumConstants();
+//        List<String> result = new ArrayList<String>(values.length);
+//        for (Object value: values)
+//            result.add(converter.convert(String.class, value, null));
+//
+//        return result;
+//    }
 
     public boolean getReferenceValues(NodeAttribute attr, ReferenceValueCollection referenceValues) 
             throws TooManyReferenceValuesException

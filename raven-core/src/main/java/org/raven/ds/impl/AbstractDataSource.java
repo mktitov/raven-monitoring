@@ -70,7 +70,7 @@ public abstract class AbstractDataSource extends BaseNode implements DataSource
         }
         catch (Throwable e)
         {
-            if (logger.isDebugEnabled())
+            if (logger.isErrorEnabled())
                 logger.error(String.format(
                         "Error gathering data for consumer (%s). %s"
                         , dataConsumer.getPath(), e.getMessage()), e);

@@ -21,7 +21,7 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.rrd.RRColor;
 import org.raven.tree.impl.LeafNode;
-import org.weda.annotations.Description;
+import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -38,7 +38,7 @@ public class RRArea extends LeafNode
     public final static String COLOR_ATTRIBUTE = "color";
     public final static String LEGEND_ATTRIBUTE = "legend";
     
-    @Parameter
+    @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     @NotNull
 //    @Description("The reference to the data defenition node")
     private DataDefinition dataDefinition;

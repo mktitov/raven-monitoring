@@ -24,6 +24,7 @@ import java.util.Map;
 import jcifs.smb.SmbFile;
 import org.raven.annotations.NodeClass;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.impl.DataSourcesNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.weda.internal.annotations.Message;
 
@@ -31,7 +32,7 @@ import org.weda.internal.annotations.Message;
  *
  * @author Mikhail Titov
  */
-@NodeClass
+@NodeClass(parentNode=DataSourcesNode.class)
 public class SmbFileReader extends AbstractFileReader
 {
     public static String SMBFILEMASK_ATTRIBUTE = "smbFileMaskDescription";
@@ -70,8 +71,7 @@ public class SmbFileReader extends AbstractFileReader
 
     @Override
     protected FileWrapper[] getChildrens(
-            FileWrapper fileWrapper, FilenameFilter filenameFilter,
-            Map<String, NodeAttribute> attributes)
+            FileWrapper fileWrapper, Map<String, NodeAttribute> attributes)
         throws FileReaderException
     {
         try
@@ -86,26 +86,7 @@ public class SmbFileReader extends AbstractFileReader
             if (smbFileMask!=null)
                 files = smbFile.listFiles(smbFileMask);
             else
-            {
                 files = smbFile.listFiles();
-                if (files!=null)
-                {
-                    List<SmbFile> smbFiles = new ArrayList<SmbFile>(files.length);
-                    for (SmbFile file: files)
-                        if (   file.isFile()
-                            && (filenameFilter==null || filenameFilter.filter(file.getName())))
-                        {
-                            smbFiles.add(file);
-                        }
-                    if (smbFiles.size()==0)
-                        files = null;
-                    else
-                    {
-                        files = new SmbFile[smbFiles.size()];
-                        smbFiles.toArray(files);
-                    }
-                }
-            }
 
             if (files!=null && files.length==0)
                 return null;

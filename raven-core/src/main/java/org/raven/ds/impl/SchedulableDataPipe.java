@@ -21,6 +21,7 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.sched.Schedulable;
 import org.raven.sched.Scheduler;
+import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -30,7 +31,8 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass
 public class SchedulableDataPipe extends DataPipeImpl implements Schedulable
 {
-    @Parameter @NotNull
+    @Parameter(valueHandlerType=SystemSchedulerValueHandlerFactory.TYPE)
+    @NotNull
     private Scheduler scheduler;
 
     public void executeScheduledJob()

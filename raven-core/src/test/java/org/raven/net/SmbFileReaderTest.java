@@ -18,7 +18,6 @@
 package org.raven.net;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
@@ -76,7 +75,7 @@ public class SmbFileReaderTest extends RavenCoreTestCase
         consumer.setResetDataPolicy(ResetDataPolicy.DONT_RESET_DATA);
     }
     
-//    @Test
+    @Test
     public void readOneFileTest() throws Exception
     {
         consumer.getNodeAttribute(SmbFileReader.URL_ATTRIBUTE).setValue(
@@ -88,6 +87,9 @@ public class SmbFileReaderTest extends RavenCoreTestCase
         List dataList = consumer.getDataList();
         assertEquals(1, dataList.size());
         assertEquals("file1", dataList.get(0));
+
+        assertTrue(file1.exists());
+        assertTrue(file2.exists());
     }
 
     @Test
@@ -103,6 +105,9 @@ public class SmbFileReaderTest extends RavenCoreTestCase
         assertEquals(2, dataList.size());
         assertTrue(dataList.contains("file1"));
         assertTrue(dataList.contains("file2"));
+        
+        assertTrue(file1.exists());
+        assertTrue(file2.exists());
     }
 
     @Test
@@ -118,6 +123,9 @@ public class SmbFileReaderTest extends RavenCoreTestCase
         List dataList = consumer.getDataList();
         assertEquals(1, dataList.size());
         assertEquals("file2", dataList.get(0));
+        
+        assertTrue(file1.exists());
+        assertTrue(file2.exists());
     }
 
     @Test
@@ -133,5 +141,50 @@ public class SmbFileReaderTest extends RavenCoreTestCase
         List dataList = consumer.getDataList();
         assertEquals(1, dataList.size());
         assertEquals("file1", dataList.get(0));
+        
+        assertTrue(file1.exists());
+        assertTrue(file2.exists());
+    }
+
+    @Test
+    public void smbFileMaskWithregexpFileMaskTest() throws Exception
+    {
+        File file3 = new File(filesDir.getAbsolutePath()+"/file3");
+        FileUtils.writeStringToFile(file3, "file3");
+        consumer.getNodeAttribute(SmbFileReader.URL_ATTRIBUTE).setValue(
+                "smb://timtest:Atest_12345678@10.50.1.85/test/");
+        consumer.getNodeAttribute(SmbFileReader.REGEXP_FILEMASK_ATTRIBUTE).setValue("^file[13].*");
+        consumer.getNodeAttribute(SmbFileReader.SMBFILEMASK_ATTRIBUTE).setValue("*.txt");
+        consumer.start();
+        assertEquals(Status.STARTED, consumer.getStatus());
+
+        consumer.refereshData(null);
+        List dataList = consumer.getDataList();
+        assertEquals(1, dataList.size());
+        assertEquals("file1", dataList.get(0));
+        
+        assertTrue(file1.exists());
+        assertTrue(file2.exists());
+        assertTrue(file3.exists());
+    }
+
+    @Test
+    public void removeAfterProcessTest() throws Exception
+    {
+         consumer.getNodeAttribute(SmbFileReader.URL_ATTRIBUTE).setValue(
+                "smb://timtest:Atest_12345678@10.50.1.85/test/");
+         consumer.getNodeAttribute(
+                 SmbFileReader.REMOVEFILEAFTERPROCESSING_ATTRIBUTE).setValue("true");
+        consumer.start();
+        assertEquals(Status.STARTED, consumer.getStatus());
+
+        consumer.refereshData(null);
+        List dataList = consumer.getDataList();
+        assertEquals(2, dataList.size());
+        assertTrue(dataList.contains("file1"));
+        assertTrue(dataList.contains("file2"));
+        
+        assertFalse(file1.exists());
+        assertFalse(file2.exists());
     }
 }
