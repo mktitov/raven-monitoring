@@ -30,6 +30,7 @@ import org.raven.tree.Node;
 public interface NodeAccess 
 {
     public int getId();
+    public int getIndex();
     public NodeAccess getParent();
     public String getName();
     public String getPath();

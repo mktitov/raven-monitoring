@@ -51,6 +51,11 @@ public class NodeAccessImpl implements NodeAccess
     {
         return node.getId();
     }
+
+    public int getIndex()
+    {
+        return node.getIndex();
+    }
     
     public NodeAccess getParent()
     {

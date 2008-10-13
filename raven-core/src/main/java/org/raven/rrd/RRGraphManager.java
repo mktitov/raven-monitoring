@@ -51,6 +51,7 @@ import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.impl.NodeListenerAdapter;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
+import org.raven.tree.impl.ScanOptionsImpl;
 import org.raven.tree.impl.SearchOptionsImpl;
 import org.raven.tree.impl.filters.NodeNameSearchFilter;
 import org.weda.annotations.Description;
@@ -329,9 +330,13 @@ public class RRGraphManager extends BaseNode
             try
             {
                 //scan subtree for existing RRGraphNode for dataSources
-                tree.scanSubtree(this, new ExistingDataSourcesScanner(), null);
+                tree.scanSubtree(
+                        this, new ExistingDataSourcesScanner(), ScanOptionsImpl.EMPTY_OPTIONS);
                 //scan subtree from starting point to find new data sources and create RRGraphNode
-                tree.scanSubtree(startingPoint, new NewDataSourcesScanner(), null, Status.STARTED);
+                tree.scanSubtree(
+                        startingPoint
+                        , new NewDataSourcesScanner()
+                        , new ScanOptionsImpl().setStatuses(Status.STARTED));
             }
             finally
             {

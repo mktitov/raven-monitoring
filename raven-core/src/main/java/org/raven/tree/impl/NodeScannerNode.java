@@ -99,7 +99,7 @@ public class NodeScannerNode extends BaseNode implements DataSource, Schedulable
     public synchronized void scannNodes()
     {
         Scanner scanner = new Scanner();
-        tree.scanSubtree(startingPoint, scanner, null);
+        tree.scanSubtree(startingPoint, scanner, ScanOptionsImpl.EMPTY_OPTIONS);
         Collection<NodeInfo> foundNodes = scanner.foundNodes;
         int counter = 0;
         int maxCount = maxRowCount<=0? Integer.MAX_VALUE : maxRowCount;

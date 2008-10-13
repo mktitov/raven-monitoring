@@ -686,14 +686,14 @@ public class TreeServiceTest extends ServiceTestCase
         expect(handler.nodeScanned(child)).andReturn(ScanOperation.CONTINUE);
         replay(handler);
         
-        tree.scanSubtree(parent1, handler, null);
+        tree.scanSubtree(parent1, handler, ScanOptionsImpl.EMPTY_OPTIONS);
         
         verify(handler);
         
         handler = createMock(ScannedNodeHandler.class);
         expect(handler.nodeScanned(child)).andReturn(ScanOperation.CONTINUE);
         replay(handler);
-        tree.scanSubtree(parent1, handler, null, Status.STARTED);
+        tree.scanSubtree(parent1, handler, new ScanOptionsImpl().setStatuses(Status.STARTED));
         
         verify(handler);
     }
@@ -723,13 +723,16 @@ public class TreeServiceTest extends ServiceTestCase
         expect(handler.nodeScanned(child)).andReturn(ScanOperation.CONTINUE);
         replay(handler);
         
-        tree.scanSubtree(parent1, handler, new Class[]{ContainerNode.class});
+        tree.scanSubtree(parent1, handler, new ScanOptionsImpl().setNodeTypes(ContainerNode.class));
         
         verify(handler);
         
         handler = createMock(ScannedNodeHandler.class);
         replay(handler);
-        tree.scanSubtree(parent1, handler, new Class[]{ContainerNode.class}, Status.STARTED);
+        tree.scanSubtree(
+                parent1, handler
+                , new ScanOptionsImpl()
+                    .setNodeTypes(ContainerNode.class).setStatuses(Status.STARTED));
         verify(handler);
         
         handler = createMock(ScannedNodeHandler.class);
@@ -737,7 +740,10 @@ public class TreeServiceTest extends ServiceTestCase
         replay(handler);
         child.start();
         assertEquals(Status.STARTED, child.getStatus());
-        tree.scanSubtree(parent1, handler, new Class[]{ContainerNode.class}, Status.STARTED);
+        tree.scanSubtree(
+                parent1, handler
+                , new ScanOptionsImpl()
+                    .setNodeTypes(ContainerNode.class).setStatuses(Status.STARTED));
         verify(handler);
     }
     

@@ -118,7 +118,5 @@ public interface Tree
      *      if the parameter was not seted then any node will be passed to the node handler.
      */
     public boolean scanSubtree(
-            Node startingPoint, ScannedNodeHandler handler
-            , Class<? extends Node>[] nodeTypes
-            , Node.Status... nodeStatuses);
+            Node startingPoint, ScannedNodeHandler handler, ScanOptions options);
 }

@@ -46,6 +46,7 @@ import org.raven.tree.NodePathResolver;
 import org.raven.tree.NodeTuner;
 import org.raven.tree.PathInfo;
 import org.raven.tree.ScanOperation;
+import org.raven.tree.ScanOptions;
 import org.raven.tree.ScannedNodeHandler;
 import org.raven.tree.SearchFilter;
 import org.raven.tree.SearchOptions;
@@ -256,7 +257,7 @@ public class TreeImpl implements Tree
     {
         List<Node> result = new ArrayList<Node>();
         ScannedNodeHandler handler = new SearchScannedNodeHandler(result, options, filter);
-        scanSubtree(searchFromNode, handler, null, null);
+        scanSubtree(searchFromNode, handler, ScanOptionsImpl.EMPTY_OPTIONS);
         return result;
     }
     
@@ -281,23 +282,25 @@ public class TreeImpl implements Tree
     }
 
     public boolean scanSubtree(
-            Node startingPoint, ScannedNodeHandler handler
-            , Class<? extends Node>[] nodeTypes, Status... statuses)
+            Node startingPoint, ScannedNodeHandler handler, ScanOptions options)
     {
-        Collection<Node> childrens = startingPoint.getChildrens();
+        Collection<Node> childrens = options.sortBeforeScan()?
+            startingPoint.getSortedChildrens() : startingPoint.getChildrens();
         if (childrens!=null)
             for (Node node: childrens)
             {
                 ScanOperation operation = ScanOperation.CONTINUE;
-                if (   (nodeTypes==null || ObjectUtils.in(node.getClass(), nodeTypes))
-                    && (   statuses==null || statuses.length==0 
-                        || ObjectUtils.in(node.getStatus(), statuses)))
+                if (   (   options.includeNodeTypes()==null 
+                        || ObjectUtils.in(node.getClass(), options.includeNodeTypes()))
+                    && (   options.includeStatuses()==null
+                        || options.includeStatuses().length==0 
+                        || ObjectUtils.in(node.getStatus(), options.includeStatuses())))
                 {
                     operation = handler.nodeScanned(node);
                 }
                 if (operation==ScanOperation.CONTINUE)
                 {
-                    boolean continueScan = scanSubtree(node, handler, nodeTypes, statuses);
+                    boolean continueScan = scanSubtree(node, handler, options);
                     if (!continueScan)
                         return false;
                 }
