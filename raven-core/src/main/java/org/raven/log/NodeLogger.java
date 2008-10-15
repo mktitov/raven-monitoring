@@ -17,7 +17,11 @@
 
 package org.raven.log;
 
+import java.util.Date;
+import java.util.List;
+
 import org.raven.log.impl.NodeLoggerNode;
+import org.raven.tree.Node;
 
 /**
  *
@@ -27,4 +31,9 @@ public interface NodeLogger
 {
     void setNodeLoggerNode(NodeLoggerNode nodeLoggerNode);
     NodeLoggerNode getNodeLoggerNode();
+    
+    public void write(Node node, LogLevel level, String message);
+    
+    public List<NodeLogRecord> getRecords(Date from,Date to, Node node, LogLevel level);
+    
 }

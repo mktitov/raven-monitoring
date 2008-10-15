@@ -23,7 +23,17 @@ import java.util.List;
 import java.util.ArrayList;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
-import org.raven.ui.RavenRegistry;
+import org.raven.ui.attr.RefreshAttributesStorage;
+import org.raven.ui.attr.RefreshIntervalStorage;
+import org.raven.ui.filter.AuthFilter;
+import org.raven.ui.node.CopyMoveNodeBean;
+import org.raven.ui.node.NewNodeFromTemplate;
+import org.raven.ui.node.NodeWrapper;
+import org.raven.ui.util.RavenImageRenderer;
+import org.raven.ui.util.RavenRegistry;
+import org.raven.ui.util.RavenViewableImageRenderer;
+import org.raven.ui.vo.ViewableObjectsByNode;
+import org.raven.ui.vo.ViewableObjectsStorage;
 import org.raven.conf.Configurator;
 import org.raven.conf.impl.UserAcl;
 import org.raven.template.TemplateNode;
@@ -92,7 +102,8 @@ public class SessionBean
 
 	public SessionBean() 
 	{
-//		FacesContext fc = FacesContext.getCurrentInstance();
+		//FacesContext fc = FacesContext.getCurrentInstance();
+		//fc.getExternalContext().getRequestLocale()
 	    wrapper = (NodeWrapper) getElValue(NodeWrapper.BEAN_NAME);
 	    initNodeWrapper(wrapper);
 		

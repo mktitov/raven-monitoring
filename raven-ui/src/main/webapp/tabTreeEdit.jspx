@@ -23,7 +23,9 @@
 <!-- ********************* -->
 <!-- create new node -->
 <!-- ********************* -->
-<tr:panelHorizontalLayout halign="start" valign="top">
+<tr:panelHorizontalLayout 
+	halign="start" 
+	valign="top">
 	<tr:panelCaptionGroup 
 		captionText="#{msgs.nodeCreate}" 
 		rendered="#{cNode.allowCreateSubNode}">
@@ -61,17 +63,32 @@
 
 <tr:separator></tr:separator>
 
-<tr:panelHorizontalLayout  inlineStyle="width:100%;" halign="center" valign="top">
+<tr:panelHorizontalLayout  
+	inlineStyle="width:100%;" 
+	halign="center" 
+	valign="top">
 <!-- ********************* -->
 <!-- existing nodes -->
 <!-- ********************* -->
-<tr:panelCaptionGroup inlineStyle="width:90%;"  captionText="#{msgs.children}"
- rendered="#{cNode.allowCreateSubNode}" 
+<tr:panelCaptionGroup 
+	inlineStyle="width:90%;"  
+	captionText="#{msgs.children}"
+ 	rendered="#{cNode.allowCreateSubNode}" 
   >
-    <tr:message binding="#{subNodes.message}" for="delSubNode" messageType="error" />
-  	<tr:table width="100%" summary="Nodes"  rowBandingInterval="1"
-  		value="#{cNode.childrenList}" binding="#{subNodes.table}"
-  		var="row" rows="20" rowSelection="multiple" id="delSubNode" >
+    <tr:message 
+    	binding="#{subNodes.message}" 
+    	for="delSubNode" 
+    	messageType="error" />
+  	<tr:table 
+  		width="100%" 
+  		summary="Nodes"  
+  		rowBandingInterval="1"
+  		value="#{cNode.childrenList}" 
+  		binding="#{subNodes.table}"
+  		var="row" 
+  		rows="20" 
+  		rowSelection="multiple" 
+  		id="delSubNode" >
     	<tr:column headerText="#{msgs.name}">
 	      <tr:outputText value="#{row.nodeName}"/>
         </tr:column>
@@ -97,14 +114,18 @@
 			immediate="true" 
 			useWindow="true" windowWidth="500" windowHeight="400" />        
 
- 	<tr:commandButton text="#{msgs.delete}" actionListener="#{subNodes.deleteNodes}"/>
+ 	<tr:commandButton 
+ 		text="#{msgs.delete}" 
+ 		actionListener="#{subNodes.deleteNodes}"/>
 
 </tr:panelCaptionGroup>
 <!-- ********************* -->
 <!-- existing dependencies -->
 <!-- ********************* -->
-<tr:panelCaptionGroup  inlineStyle="width:90%;" captionText="#{msgs.dependencies}"
- rendered="#{cNode.allowNodeRead}"
+<tr:panelCaptionGroup  
+	inlineStyle="width:90%;" 
+	captionText="#{msgs.dependencies}"
+ 	rendered="#{cNode.allowNodeRead}"
   >
   	<tr:table width="100%" value="#{cNode.dependencies}" 
   		var="row" rows="20" rowSelection="none" >

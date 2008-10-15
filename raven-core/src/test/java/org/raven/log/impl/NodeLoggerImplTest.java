@@ -17,9 +17,19 @@
 
 package org.raven.log.impl;
 
+import java.util.Date;
+import java.util.List;
+
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
+import org.raven.conf.Configurator;
+import org.raven.dbcp.impl.JDBCConnectionPoolNode;
+import org.raven.log.LogLevel;
+import org.raven.log.NodeLogRecord;
 import org.raven.log.NodeLogger;
+import org.raven.tree.Node.Status;
+import org.raven.tree.impl.ContainerNode;
+import org.raven.tree.impl.SystemNode;
 
 /**
  *
@@ -34,4 +44,69 @@ public class NodeLoggerImplTest extends RavenCoreTestCase
         assertNotNull(nodeLogger);
         assertNotNull(nodeLogger.getNodeLoggerNode());
     }
+
+    @Test
+    public void writeTest() throws Exception
+    {
+        NodeLogger nodeLogger = registry.getService(NodeLogger.class);
+        
+        JDBCConnectionPoolNode pool = new JDBCConnectionPoolNode();
+        pool.setName("pool");
+        tree.getRootNode().addChildren(pool);
+        pool.save();
+        pool.init();
+        pool.setUserName("sa");
+        pool.setPassword("");
+        pool.setUrl(configurator.getConfig().getStringProperty(Configurator.TREE_STORE_URL, null));
+        pool.setDriver("org.h2.Driver");
+        pool.start();
+        assertEquals(Status.STARTED, pool.getStatus());
+        
+        NodeLoggerNode nodeLoggerNode = nodeLogger.getNodeLoggerNode();
+        nodeLoggerNode.setConnectionPool(pool);
+        nodeLoggerNode.start();
+        assertEquals(Status.STARTED, nodeLoggerNode.getStatus());
+        
+        ContainerNode node = new ContainerNode("nodeA");
+        tree.getRootNode().addChildren(node);
+        ContainerNode node2 = new ContainerNode("nodeB");
+        tree.getRootNode().addChildren(node2);
+        node.save();
+        node.init();
+        node2.save();
+        node2.init();
+        
+        node.setLogLevel(LogLevel.DEBUG);
+        node2.setLogLevel(LogLevel.DEBUG);
+        
+        node.debug("test debug {} {}", "1", "arg2");
+        node2.debug("test debug {} {}", "1", "arg2");
+        Thread.sleep(200);
+        node.info("test info {} {}", "2", "arg2");
+        node2.info("test info {} {}", "2", "arg2");
+        Thread.sleep(200);
+        node.warn("test warn {} {}", "3", "arg2");
+        node2.warn("test warn {} {}", "3", "arg2");
+        Thread.sleep(200);
+        node.error("test error {} {}", "4", "arg2");
+        node2.error("test error {} {}", "4", "arg2");
+        Thread.sleep(200);
+        node.error("test error2 {} {}", "4", "arg2");
+        Thread.sleep(1000);
+        Date td = new Date();
+        Date fd = new Date(NodeLoggerImpl.addDays(td.getTime(), -1));
+        
+        List<NodeLogRecord> lst;
+        lst = nodeLogger.getRecords(fd, td, node, LogLevel.DEBUG);
+        for(NodeLogRecord nl : lst)
+        	System.out.println(nl);
+    	System.out.println("---------------------");
+        lst = nodeLogger.getRecords(fd, td, null, LogLevel.DEBUG);
+        for(NodeLogRecord nl : lst)
+        	System.out.println(nl);
+        
+        
+    }
+    
+    
 }
