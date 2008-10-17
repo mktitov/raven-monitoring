@@ -1,7 +1,11 @@
 package org.raven.log;
 
+import org.raven.util.Utl;
+
 public class NodeLogRecord 
 {
+	public static final int MAX_SHORT_MES_LENGTH = 200;
+	public static final String SHORT_MES_TAIL = "...";
 	private long fd;
 	private int nodeId;
 	private LogLevel level;
@@ -35,6 +39,12 @@ public class NodeLogRecord
 	public long getFd() {
 		return fd;
 	}
+
+	public String getFdString() 
+	{
+		return Utl.formatDate(fd);
+	}
+	
 	public void setFd(long time) {
 		this.fd = time;
 	}
@@ -50,9 +60,20 @@ public class NodeLogRecord
 	public void setLevel(LogLevel level) {
 		this.level = level;
 	}
+
 	public String getMessage() {
 		return message;
 	}
+	
+	public String getShortMessage() 
+	{
+		if(message==null) return null;
+		int len = message.length();
+		if(len>MAX_SHORT_MES_LENGTH)
+			return message.substring(0, MAX_SHORT_MES_LENGTH)+SHORT_MES_TAIL;
+		return message;
+	}
+	
 	public void setMessage(String message) {
 		this.message = message;
 	}

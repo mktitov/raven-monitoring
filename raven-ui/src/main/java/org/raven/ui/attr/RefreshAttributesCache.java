@@ -10,9 +10,9 @@ import org.raven.ui.node.NodeWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RefreshAttributesStorage 
+public class RefreshAttributesCache 
 {
-	protected Logger logger = LoggerFactory.getLogger(RefreshAttributesStorage.class);
+	protected Logger logger = LoggerFactory.getLogger(RefreshAttributesCache.class);
 	private static final int tryRemoveOldAfter = 100;
 	private static final long howOld = 1000*60*60*24*2;
 	private long accessCount = 0;

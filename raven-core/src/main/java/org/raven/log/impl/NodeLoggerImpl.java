@@ -173,12 +173,12 @@ public class NodeLoggerImpl extends LogTablesManager implements NodeLogger, Runn
 		return recs;
 	}
 	
-	public List<NodeLogRecord> getRecords(Date fd, Date td, Node node,LogLevel level) 
+	public List<NodeLogRecord> getRecords(Date fd, Date td, Integer nodeId,LogLevel level) 
 	{
 		String sql;
 		Object[] args;
 		List<String> names;
-		if(node ==null)
+		if(nodeId ==null)
 		{
 			sql = sSelLogsFromSingleTable;
 			args = new Object[]{fd,td,level.ordinal()};
@@ -186,7 +186,7 @@ public class NodeLoggerImpl extends LogTablesManager implements NodeLogger, Runn
 		else
 		{
 			sql = sSelLogsFromSingleTableN;
-			args = new Object[]{fd,td,level.ordinal(),node.getId()};
+			args = new Object[]{fd,td,level.ordinal(),nodeId};
 		}
 		names = getTablesNames(fd.getTime(), td.getTime());
 		return selectLogRecordsMT(names, sql, args);

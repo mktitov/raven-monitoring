@@ -78,6 +78,11 @@ public class NodeLoggerImplTest extends RavenCoreTestCase
         
         node.setLogLevel(LogLevel.DEBUG);
         node2.setLogLevel(LogLevel.DEBUG);
+
+        List<NodeLogRecord> lst;
+        Date td = new Date();
+        Date fd = new Date(NodeLoggerImpl.addDays(td.getTime(), -1));
+        lst = nodeLogger.getRecords(fd, td, node.getId(), LogLevel.DEBUG);
         
         node.debug("test debug {} {}", "1", "arg2");
         node2.debug("test debug {} {}", "1", "arg2");
@@ -93,11 +98,8 @@ public class NodeLoggerImplTest extends RavenCoreTestCase
         Thread.sleep(200);
         node.error("test error2 {} {}", "4", "arg2");
         Thread.sleep(1000);
-        Date td = new Date();
-        Date fd = new Date(NodeLoggerImpl.addDays(td.getTime(), -1));
         
-        List<NodeLogRecord> lst;
-        lst = nodeLogger.getRecords(fd, td, node, LogLevel.DEBUG);
+        lst = nodeLogger.getRecords(fd, td, node.getId(), LogLevel.DEBUG);
         for(NodeLogRecord nl : lst)
         	System.out.println(nl);
     	System.out.println("---------------------");

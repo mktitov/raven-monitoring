@@ -23,8 +23,11 @@ import java.util.List;
 import java.util.ArrayList;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
-import org.raven.ui.attr.RefreshAttributesStorage;
-import org.raven.ui.attr.RefreshIntervalStorage;
+
+import org.raven.ui.attr.LogViewAttributesCache;
+import org.raven.ui.attr.RefreshAttributesCache;
+import org.raven.ui.attr.RefreshIntervalCache;
+import org.raven.ui.cache.LogsCache;
 import org.raven.ui.filter.AuthFilter;
 import org.raven.ui.node.CopyMoveNodeBean;
 import org.raven.ui.node.NewNodeFromTemplate;
@@ -82,10 +85,12 @@ public class SessionBean
 	private CoreTree coreTree = null;
 //	private TemplateNode templateNode = null; 
 	private NewNodeFromTemplate template;
-	private RefreshAttributesStorage refreshAttributesStorage;
-	private ViewableObjectsStorage viewableObjectsStorage;
+	private RefreshAttributesCache refreshAttributesCache;
+	private ViewableObjectsStorage viewableObjectsCache;
 	private ViewableObjectsByNode viewableObjectsHash;
-	private RefreshIntervalStorage refreshIntervalStorage;
+	private RefreshIntervalCache refreshIntervalCache;
+	private LogViewAttributesCache logViewAttributesCache;
+	private LogsCache logsCache; 
 	
 	//public String getSelectNodeParam() { return SELECT_NODE_PARAM; }
 	
@@ -124,11 +129,13 @@ public class SessionBean
 		
 		CopyMoveNodeBean cmnb = (CopyMoveNodeBean) getElValue(CopyMoveNodeBean.BEAN_NAME);
 		cmnb.getTreeModel().toString();
-		setRefreshAttributesStorage(new RefreshAttributesStorage());
-		setViewableObjectsStorage(new ViewableObjectsStorage());
+		setRefreshAttributesCache(new RefreshAttributesCache());
+		setViewableObjectsCache(new ViewableObjectsStorage());
 		setViewableObjectsHash(new ViewableObjectsByNode());
-		setRefreshIntervalStorage(new RefreshIntervalStorage());
-		viewableObjectsHash.setViewableObjectsStorage(getViewableObjectsStorage());
+		setRefreshIntervalCache(new RefreshIntervalCache());
+		setLogViewAttributesCache(new LogViewAttributesCache());
+		setLogsCache(new LogsCache(getLogViewAttributesCache()));
+		viewableObjectsHash.setViewableObjectsStorage(getViewableObjectsCache());
 	}
 
 	public void reloadLeftFrame()
@@ -440,20 +447,20 @@ public class SessionBean
 	public NewNodeFromTemplate getTemplate() { return template;	}
 	public void setTemplate(NewNodeFromTemplate template) { this.template = template; }
 
-	public void setRefreshAttributesStorage(RefreshAttributesStorage refreshAttributesStorage) {
-		this.refreshAttributesStorage = refreshAttributesStorage;
+	public void setRefreshAttributesCache(RefreshAttributesCache refreshAttributesStorage) {
+		this.refreshAttributesCache = refreshAttributesStorage;
 	}
 
-	public RefreshAttributesStorage getRefreshAttributesStorage() {
-		return refreshAttributesStorage;
+	public RefreshAttributesCache getRefreshAttributesCache() {
+		return refreshAttributesCache;
 	}
 
-	public void setViewableObjectsStorage(ViewableObjectsStorage viewableObjectsStorage) {
-		this.viewableObjectsStorage = viewableObjectsStorage;
+	public void setViewableObjectsCache(ViewableObjectsStorage viewableObjectsStorage) {
+		this.viewableObjectsCache = viewableObjectsStorage;
 	}
 
-	public ViewableObjectsStorage getViewableObjectsStorage() {
-		return viewableObjectsStorage;
+	public ViewableObjectsStorage getViewableObjectsCache() {
+		return viewableObjectsCache;
 	}
 
 	public void setViewableObjectsHash(ViewableObjectsByNode viewableObjectsHash) {
@@ -464,12 +471,28 @@ public class SessionBean
 		return viewableObjectsHash;
 	}
 
-	public void setRefreshIntervalStorage(RefreshIntervalStorage refreshIntervalStorage) {
-		this.refreshIntervalStorage = refreshIntervalStorage;
+	public void setRefreshIntervalCache(RefreshIntervalCache refreshIntervalStorage) {
+		this.refreshIntervalCache = refreshIntervalStorage;
 	}
 
-	public RefreshIntervalStorage getRefreshIntervalStorage() {
-		return refreshIntervalStorage;
+	public RefreshIntervalCache getRefreshIntervalCache() {
+		return refreshIntervalCache;
+	}
+
+	public void setLogViewAttributesCache(LogViewAttributesCache logViewAttributesStorage) {
+		this.logViewAttributesCache = logViewAttributesStorage;
+	}
+
+	public LogViewAttributesCache getLogViewAttributesCache() {
+		return logViewAttributesCache;
+	}
+
+	public void setLogsCache(LogsCache logsCache) {
+		this.logsCache = logsCache;
+	}
+
+	public LogsCache getLogsCache() {
+		return logsCache;
 	}
 	
 }

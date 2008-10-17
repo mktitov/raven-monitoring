@@ -97,6 +97,13 @@
                                 <jsp:include page="tabControl.jspx" flush="true"/>
                             </f:subview>
                         </tr:showDetailItem>
+                        <tr:showDetailItem text="#{msgs.log}" id="item5">
+                            <f:subview id="v5">
+                                <tr:separator></tr:separator>
+                                <jsp:include page="tabLogs.jspx" flush="true"/>
+                            </f:subview>
+                        </tr:showDetailItem>
+
                     </tr:panelTabbed>
                 </tr:panelGroupLayout>		 
             </tr:form>

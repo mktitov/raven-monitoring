@@ -23,7 +23,10 @@
     <!--           
     <tr:panelCaptionGroup captionText="Create node" rendered="#{cNode.allowNodeEdit}">
         <tr:panelFormLayout>
-            <tr:inputText label="Name" value="#{sBean.newNodeName}" ></tr:inputText>
+            <tr:inputText 
+            	label="Name" 
+            	value="#{sBean.newNodeName}" >
+            </tr:inputText>
             <tr:inputListOfValues  
                 label="Type" value="#{sBean.newNodeType}"
                 action="dialog:chooseType" 

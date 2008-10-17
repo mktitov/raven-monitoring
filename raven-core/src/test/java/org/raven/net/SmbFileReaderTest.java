@@ -21,6 +21,7 @@ import java.io.File;
 import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.ds.impl.AbstractDataConsumer.ResetDataPolicy;
@@ -75,6 +76,7 @@ public class SmbFileReaderTest extends RavenCoreTestCase
         consumer.setResetDataPolicy(ResetDataPolicy.DONT_RESET_DATA);
     }
     
+    @Ignore
     @Test
     public void readOneFileTest() throws Exception
     {
@@ -92,6 +94,7 @@ public class SmbFileReaderTest extends RavenCoreTestCase
         assertTrue(file2.exists());
     }
 
+    @Ignore
     @Test
     public void readAllFilesFromDir() throws Exception
     {
@@ -110,6 +113,7 @@ public class SmbFileReaderTest extends RavenCoreTestCase
         assertTrue(file2.exists());
     }
 
+    @Ignore
     @Test
     public void smbFileMaskTest() throws Exception
     {
@@ -128,6 +132,7 @@ public class SmbFileReaderTest extends RavenCoreTestCase
         assertTrue(file2.exists());
     }
 
+    @Ignore
     @Test
     public void regexpFileMaskTest() throws Exception
     {
@@ -146,6 +151,7 @@ public class SmbFileReaderTest extends RavenCoreTestCase
         assertTrue(file2.exists());
     }
 
+    @Ignore
     @Test
     public void smbFileMaskWithregexpFileMaskTest() throws Exception
     {
@@ -168,6 +174,7 @@ public class SmbFileReaderTest extends RavenCoreTestCase
         assertTrue(file3.exists());
     }
 
+    @Ignore
     @Test
     public void removeAfterProcessTest() throws Exception
     {

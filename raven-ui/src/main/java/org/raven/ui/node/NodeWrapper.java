@@ -26,10 +26,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.faces.event.ActionEvent;
+import javax.faces.model.SelectItem;
+
 import org.apache.myfaces.trinidad.component.core.layout.CoreShowDetailItem;
 import org.apache.myfaces.trinidad.event.PollEvent;
 import org.apache.myfaces.trinidad.event.ReturnEvent;
-import org.raven.cache.CacheValueContainer;
+import org.raven.log.LogLevel;
+import org.raven.log.NodeLogRecord;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
@@ -37,9 +40,12 @@ import org.raven.tree.Viewable;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.ui.SessionBean;
 import org.raven.ui.attr.Attr;
+import org.raven.ui.attr.LogViewAttributes;
+import org.raven.ui.attr.LogViewAttributesCache;
 import org.raven.ui.attr.NewAttribute;
-import org.raven.ui.attr.RefreshAttributesStorage;
-import org.raven.ui.attr.RefreshIntervalStorage;
+import org.raven.ui.attr.RefreshAttributesCache;
+import org.raven.ui.attr.RefreshIntervalCache;
+import org.raven.ui.cache.LogsCache;
 import org.raven.ui.util.Messages;
 import org.raven.ui.vo.ViewableObjectWrapper;
 import org.slf4j.Logger;
@@ -53,7 +59,16 @@ public class NodeWrapper extends AbstractNodeWrapper
 implements Comparator<NodeAttribute>
 {
 	public static final String BEAN_NAME = "cNode";
-    protected Logger logger = LoggerFactory.getLogger(NodeWrapper.class);	
+    protected static Logger logger = LoggerFactory.getLogger(NodeWrapper.class);
+
+    private static final SelectItem[] logsSI = { new SelectItem(LogLevel.TRACE),
+		new SelectItem(LogLevel.DEBUG),	
+		new SelectItem(LogLevel.INFO),	
+		new SelectItem(LogLevel.WARN),	
+		new SelectItem(LogLevel.ERROR)	
+		};
+    
+    
 	private List<NodeAttribute> savedAttrs = null;
 	private List<Attr> editingAttrs = null;
 	//private List<NodeAttribute> savedRefreshAttrs = null;
@@ -76,6 +91,12 @@ implements Comparator<NodeAttribute>
 		SessionBean.initNodeWrapper(this);
 	}
 
+	public SelectItem[] getLogLevelSelectItems()  
+    { 
+		return logsSI; 
+    }
+	
+	
 	public NodeWrapper(Node node) 
 	{
 		this();
@@ -231,7 +252,7 @@ implements Comparator<NodeAttribute>
 	public Map<String,NodeAttribute> getRefreshAttributesMap()
 	{
 		SessionBean sb = SessionBean.getInstance();
-		RefreshAttributesStorage rs = sb.getRefreshAttributesStorage();
+		RefreshAttributesCache rs = sb.getRefreshAttributesCache();
 		return rs.get(this);
 	}
 	
@@ -263,7 +284,7 @@ implements Comparator<NodeAttribute>
 	
 	public void removeRAFromHash()
 	{
-		SessionBean.getInstance().getRefreshAttributesStorage().remove(this);
+		SessionBean.getInstance().getRefreshAttributesCache().remove(this);
 	}
 	
 	public List<NodeWrapper> getViewableNodes()
@@ -723,7 +744,7 @@ implements Comparator<NodeAttribute>
 	 */
 	public void setRefreshViewInteval(long refreshViewInteval) 
 	{
-		RefreshIntervalStorage s = SessionBean.getInstance().getRefreshIntervalStorage();
+		RefreshIntervalCache s = SessionBean.getInstance().getRefreshIntervalCache();
 		s.put(this.getNodeId(), refreshViewInteval*1000);
 	}
 
@@ -738,9 +759,66 @@ implements Comparator<NodeAttribute>
 
 	public long getRefreshViewIntevalMS() 
 	{
-		RefreshIntervalStorage s = SessionBean.getInstance().getRefreshIntervalStorage();
+		RefreshIntervalCache s = SessionBean.getInstance().getRefreshIntervalCache();
 		return s.get(this.getNodeId());
 	}
 	
+	public String getLogViewFd()
+	{
+		LogViewAttributesCache lvac = SessionBean.getInstance().getLogViewAttributesCache();
+		return lvac.get(getNodeId()).getFd();
+	}
+
+	public void setLogViewFd(String fd)
+	{
+		LogViewAttributesCache lvac = SessionBean.getInstance().getLogViewAttributesCache();
+		LogViewAttributes lva = lvac.get(getNodeId());
+		lva.setFd(fd);
+	}
+
+	public String getLogViewTd()
+	{
+		LogViewAttributesCache lvac = SessionBean.getInstance().getLogViewAttributesCache();
+		return lvac.get(getNodeId()).getTd();
+	}
+
+	public void setLogViewTd(String td)
+	{
+		LogViewAttributesCache lvac = SessionBean.getInstance().getLogViewAttributesCache();
+		LogViewAttributes lva = lvac.get(getNodeId());
+		lva.setTd(td);
+	}
+	
+	public LogLevel getLogLevel()
+	{
+		LogViewAttributesCache lvac = SessionBean.getInstance().getLogViewAttributesCache();
+		LogViewAttributes lva = lvac.get(getNodeId());
+		return lva.getLevel();
+	}
+
+	public void setLogLevel(LogLevel level)
+	{
+		LogViewAttributesCache lvac = SessionBean.getInstance().getLogViewAttributesCache();
+		LogViewAttributes lva = lvac.get(getNodeId());
+		lva.setLevel(level);
+	}
+	
+	public List<NodeLogRecord> getLogsForNode()
+	{
+		if(getNode().getParent()!=null)
+		{
+			LogsCache lvac = SessionBean.getInstance().getLogsCache();
+			List<NodeLogRecord> ret = lvac.get(getNodeId());
+			if(ret!=null) return ret;
+		}
+		return new ArrayList<NodeLogRecord>();
+	}
+	
+	public String clearLogForNode()
+	{
+		LogsCache lvac = SessionBean.getInstance().getLogsCache();
+		lvac.remove(getNodeId());
+		return null;
+	}
 	
 }

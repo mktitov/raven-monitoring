@@ -42,6 +42,7 @@ public class TableViewNode extends AbstractDataConsumer implements Viewable
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) 
             throws Exception
     {
+    	logger.info("get VO for "+getName());
         refereshData(refreshAttributes.values());
 
         if (table.get()==null)

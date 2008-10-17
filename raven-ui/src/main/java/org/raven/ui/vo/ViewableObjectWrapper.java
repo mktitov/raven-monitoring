@@ -1,19 +1,16 @@
 package org.raven.ui.vo;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Iterator;
-
 import org.raven.table.Table;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.Node;
+import org.raven.util.Utl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ViewableObjectWrapper 
 {
-	public static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 	protected Logger logger = LoggerFactory.getLogger(ViewableObjectWrapper.class);
 	public static final String NODE_URL = "nodeUrl";
 	public static final String RAVEN_TABLE_GR = "ravenTable";
@@ -74,8 +71,7 @@ public class ViewableObjectWrapper
 
 	public String getFromDate()
 	{
-	    SimpleDateFormat f = new SimpleDateFormat(DATE_FORMAT);
-		return f.format(new Date(fd));
+		return Utl.formatDate(fd);
 	}
 	
 	private String makeHtmlTable()

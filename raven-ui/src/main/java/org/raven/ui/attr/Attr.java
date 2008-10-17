@@ -233,6 +233,7 @@ public class Attr implements Comparable<Attr>
         
         return selectItems; 
     }
+	
 	public void setSelectItems(List<SelectItem> selectItems) throws TooManyReferenceValuesException 
     {
     }

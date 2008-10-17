@@ -18,6 +18,7 @@ import java.util.List;
 
 import javax.sql.rowset.CachedRowSet;
 import org.raven.dbcp.ConnectionPool;
+import org.raven.tree.Node;
 //import org.raven.log.impl.NodeLoggerNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -235,8 +236,9 @@ public abstract class LogTablesManager
 	protected List<String> getTablesNames(long fd, long td)
 	{
 		List<String> ret = new ArrayList<String>();
-		if(fd>=td) return ret;
+		if(!isMetaInited() || fd>=td) return ret;
 		List<Long> lst = new ArrayList<Long>();
+		//Set<Long> set = metaTableRecords.keySet();
 		Iterator<Long> it = metaTableRecords.keySet().iterator();
 		while(it.hasNext())
 		{
@@ -355,6 +357,9 @@ public abstract class LogTablesManager
 
 	public synchronized boolean isMetaInited() 
 	{
+//		if(getPool()==null || getPool().getConnection()==null)
+   		if(getPool()==null || getPool().getStatus()!=Node.Status.STARTED)
+			return false;
 		if(metaInited) return true;
 		if(createMetaTable() && loadMetaTable()) 
 				metaInited = true;
@@ -362,8 +367,8 @@ public abstract class LogTablesManager
 		return metaInited;
 	}
 
-	public synchronized void setMetaInited(boolean inited) {
-		this.metaInited = inited;
-	}
+//	public synchronized void setMetaInited(boolean inited) {
+//		this.metaInited = inited;
+//	}
 	
 }

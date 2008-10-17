@@ -4,10 +4,10 @@ import org.raven.cache.AbstractCache;
 //import org.slf4j.Logger;
 //import org.slf4j.LoggerFactory;
 
-public class RefreshIntervalStorage extends AbstractCache<Integer, Long> 
+public class RefreshIntervalCache extends AbstractCache<Integer, Long> 
 {
 //	protected static Logger logger = LoggerFactory.getLogger(RefreshIntervalStorage.class);
-	public RefreshIntervalStorage()
+	public RefreshIntervalCache()
 	{
 		super();
 		setCheckInterval(1000*60*3);

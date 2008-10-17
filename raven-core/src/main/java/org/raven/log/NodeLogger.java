@@ -34,6 +34,6 @@ public interface NodeLogger
     
     public void write(Node node, LogLevel level, String message);
     
-    public List<NodeLogRecord> getRecords(Date from,Date to, Node node, LogLevel level);
+    public List<NodeLogRecord> getRecords(Date from,Date to, Integer nodeId, LogLevel level);
     
 }
