@@ -54,7 +54,6 @@ import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.tree.impl.ScanOptionsImpl;
 import org.raven.tree.impl.SearchOptionsImpl;
 import org.raven.tree.impl.filters.NodeNameSearchFilter;
-import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -336,7 +335,9 @@ public class RRGraphManager extends BaseNode
                 tree.scanSubtree(
                         startingPoint
                         , new NewDataSourcesScanner()
-                        , new ScanOptionsImpl().setStatuses(Status.STARTED));
+                        , new ScanOptionsImpl()
+                            .setStatuses(Status.STARTED)
+                            .setSortBeforeScan(true));
             }
             finally
             {
