@@ -60,7 +60,7 @@
                     </tr:panelCaptionGroup>
                     <tr:separator></tr:separator>
                     
-                    <tr:panelTabbed 
+                    <tr:panelTabbed  
                     	position="above" 
                     	id="panelTabbed1" 
                     	inlineStyle="width: 100%" >
@@ -73,7 +73,7 @@
                                 <jsp:include page="tabShow.jspx" flush="true"/>
                             </f:subview>
                         </tr:showDetailItem>
-                        <tr:showDetailItem 
+                        <tr:showDetailItem  
                         	binding="#{cNode.nodeEditTab}" 
                         	text="#{msgs.attributes}" 
                         	id="item2">
@@ -100,7 +100,7 @@
                         <tr:showDetailItem text="#{msgs.log}" id="item5">
                             <f:subview id="v5">
                                 <tr:separator></tr:separator>
-                                <jsp:include page="tabLogs.jspx" flush="true"/>
+                                <jsp:include page="tabLogsTab.jspx" flush="true"/>
                             </f:subview>
                         </tr:showDetailItem>
 

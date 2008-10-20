@@ -30,15 +30,15 @@
 		<tr:panelFormLayout>
 			<tr:inputText 
 				label="#{msgs.dateFrom}" 
-				value="#{cNode.logViewFd}" >
+				value="#{cNode.allLogViewFd}" >
 			</tr:inputText>
 			<tr:inputText 
 				label="#{msgs.dateTo}" 
-				value="#{cNode.logViewTd}" >
+				value="#{cNode.allLogViewTd}" >
 			</tr:inputText>
                 <tr:selectOneChoice 
                 	label="#{msgs.level}" 
-                	value="#{cNode.logLevel}" >
+                	value="#{cNode.allLogLevel}" >
                     <f:selectItems value="#{cNode.logLevelSelectItems}" />
                 </tr:selectOneChoice>
    		</tr:panelFormLayout>
@@ -49,16 +49,15 @@
 <tr:commandButton 
 	id="refresh" 
 	text="#{msgs.refresh}" 
-	action="#{cNode.clearLogForNode}" />        
+	action="#{cNode.clearLogForAllNodes}" />        
        
 <tr:separator></tr:separator>
 
 <tr:table 
-		
   		width="100%" 
   		summary="NodesLogs"  
   		rowBandingInterval="1"
-  		value="#{cNode.logsForNode}" 
+  		value="#{cNode.logsForAllNodes}" 
   		var="row" 
   		rowSelection="none" 
   		id="NodesLogs" >
@@ -91,6 +90,11 @@
 	      		rendered="#{row.level=='ERROR'}"
 				inlineStyle="color: red; font-weight: bold; "	       
 	      		value="#{row.level}"/>
+        </tr:column>
+    	<tr:column headerText="#{msgs.node}">
+	      	<tr:outputText
+	    		inlineStyle="font-size: 80%;"	       
+		      	value="#{row.nodePath}"/>
         </tr:column>
     	<tr:column headerText="#{msgs.message}">
 	      	<tr:outputText

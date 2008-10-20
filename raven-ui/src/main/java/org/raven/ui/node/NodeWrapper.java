@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import javax.faces.event.ActionEvent;
 import javax.faces.model.SelectItem;
-
 import org.apache.myfaces.trinidad.component.core.layout.CoreShowDetailItem;
 import org.apache.myfaces.trinidad.event.PollEvent;
 import org.apache.myfaces.trinidad.event.ReturnEvent;
@@ -67,7 +66,7 @@ implements Comparator<NodeAttribute>
 		new SelectItem(LogLevel.WARN),	
 		new SelectItem(LogLevel.ERROR)	
 		};
-    
+    private static final int ALL_NODES = -1;
     
 	private List<NodeAttribute> savedAttrs = null;
 	private List<Attr> editingAttrs = null;
@@ -756,7 +755,10 @@ implements Comparator<NodeAttribute>
 	{
 		return getRefreshViewIntevalMS()/1000;
 	}
-
+	/**
+	 * 
+	 * @return - the interval (milliseconds)
+	 */
 	public long getRefreshViewIntevalMS() 
 	{
 		RefreshIntervalCache s = SessionBean.getInstance().getRefreshIntervalCache();
@@ -776,6 +778,20 @@ implements Comparator<NodeAttribute>
 		lva.setFd(fd);
 	}
 
+	public String getAllLogViewFd()
+	{
+		LogViewAttributesCache lvac = SessionBean.getInstance().getLogViewAttributesCache();
+		return lvac.get(ALL_NODES).getFd();
+	}
+
+	public void setAllLogViewFd(String fd)
+	{
+		LogViewAttributesCache lvac = SessionBean.getInstance().getLogViewAttributesCache();
+		LogViewAttributes lva = lvac.get(ALL_NODES);
+		lva.setFd(fd);
+	}
+	
+	
 	public String getLogViewTd()
 	{
 		LogViewAttributesCache lvac = SessionBean.getInstance().getLogViewAttributesCache();
@@ -788,6 +804,19 @@ implements Comparator<NodeAttribute>
 		LogViewAttributes lva = lvac.get(getNodeId());
 		lva.setTd(td);
 	}
+
+	public String getAllLogViewTd()
+	{
+		LogViewAttributesCache lvac = SessionBean.getInstance().getLogViewAttributesCache();
+		return lvac.get(ALL_NODES).getTd();
+	}
+
+	public void setAllLogViewTd(String td)
+	{
+		LogViewAttributesCache lvac = SessionBean.getInstance().getLogViewAttributesCache();
+		LogViewAttributes lva = lvac.get(ALL_NODES);
+		lva.setTd(td);
+	}
 	
 	public LogLevel getLogLevel()
 	{
@@ -796,10 +825,24 @@ implements Comparator<NodeAttribute>
 		return lva.getLevel();
 	}
 
+	public LogLevel getAllLogLevel()
+	{
+		LogViewAttributesCache lvac = SessionBean.getInstance().getLogViewAttributesCache();
+		LogViewAttributes lva = lvac.get(ALL_NODES);
+		return lva.getLevel();
+	}
+	
 	public void setLogLevel(LogLevel level)
 	{
 		LogViewAttributesCache lvac = SessionBean.getInstance().getLogViewAttributesCache();
 		LogViewAttributes lva = lvac.get(getNodeId());
+		lva.setLevel(level);
+	}
+
+	public void setAllLogLevel(LogLevel level)
+	{
+		LogViewAttributesCache lvac = SessionBean.getInstance().getLogViewAttributesCache();
+		LogViewAttributes lva = lvac.get(ALL_NODES);
 		lva.setLevel(level);
 	}
 	
@@ -813,6 +856,18 @@ implements Comparator<NodeAttribute>
 		}
 		return new ArrayList<NodeLogRecord>();
 	}
+
+	public List<NodeLogRecord> getLogsForAllNodes()
+	{
+		if(getNode().getParent()!=null)
+		{
+			LogsCache lvac = SessionBean.getInstance().getLogsCache();
+			List<NodeLogRecord> ret = lvac.get(ALL_NODES);
+			if(ret!=null) return ret;
+		}
+		return new ArrayList<NodeLogRecord>();
+	}
+	
 	
 	public String clearLogForNode()
 	{
@@ -820,5 +875,13 @@ implements Comparator<NodeAttribute>
 		lvac.remove(getNodeId());
 		return null;
 	}
+
+	public String clearLogForAllNodes()
+	{
+		LogsCache lvac = SessionBean.getInstance().getLogsCache();
+		lvac.remove(ALL_NODES);
+		return null;
+	}
+	
 	
 }

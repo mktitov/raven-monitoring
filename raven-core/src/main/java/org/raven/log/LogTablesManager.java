@@ -9,7 +9,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -292,7 +291,12 @@ public abstract class LogTablesManager
 		Iterator<Long> it = metaTableRecords.keySet().iterator();
 		ArrayList<Long> al = new ArrayList<Long>();
 		while(it.hasNext())
-			al.add(it.next());
+		{
+			
+			Long dt = it.next();
+			if(dt<x)
+				al.add(it.next());
+		}	
 		it = al.iterator();
 		while(it.hasNext())
 		{
