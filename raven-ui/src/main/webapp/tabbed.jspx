@@ -91,13 +91,18 @@
                                 <jsp:include page="tabTreeEdit.jspx" flush="true"/>
                             </f:subview>
                         </tr:showDetailItem>
-                        <tr:showDetailItem text="#{msgs.control}" id="item4">
+                        <tr:showDetailItem 
+                        	text="#{msgs.control}" 
+                        	id="item4">
                             <f:subview id="v4">
                                 <tr:separator></tr:separator>
                                 <jsp:include page="tabControl.jspx" flush="true"/>
                             </f:subview>
                         </tr:showDetailItem>
-                        <tr:showDetailItem text="#{msgs.log}" id="item5">
+                        <tr:showDetailItem 
+                        	rendered="#{cNode.allowNodeEdit}" 
+                        	text="#{msgs.log}" 
+                        	id="item5">
                             <f:subview id="v5">
                                 <tr:separator></tr:separator>
                                 <jsp:include page="tabLogsTab.jspx" flush="true"/>

@@ -44,7 +44,9 @@ import org.raven.ui.attr.LogViewAttributesCache;
 import org.raven.ui.attr.NewAttribute;
 import org.raven.ui.attr.RefreshAttributesCache;
 import org.raven.ui.attr.RefreshIntervalCache;
-import org.raven.ui.cache.LogsCache;
+import org.raven.ui.log.LogByNode;
+import org.raven.ui.log.LogsByNodes;
+import org.raven.ui.log.LogsCache;
 import org.raven.ui.util.Messages;
 import org.raven.ui.vo.ViewableObjectWrapper;
 import org.slf4j.Logger;
@@ -867,7 +869,11 @@ implements Comparator<NodeAttribute>
 		}
 		return new ArrayList<NodeLogRecord>();
 	}
-	
+
+	public List<LogByNode> getLogsGroupedByNodes()
+	{
+		return (new LogsByNodes(getLogsForAllNodes())).getAll();
+	}
 	
 	public String clearLogForNode()
 	{

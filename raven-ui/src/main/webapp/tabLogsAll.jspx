@@ -37,6 +37,7 @@
 				value="#{cNode.allLogViewTd}" >
 			</tr:inputText>
                 <tr:selectOneChoice 
+                	id="aLvlList"
                 	label="#{msgs.level}" 
                 	value="#{cNode.allLogLevel}" >
                     <f:selectItems value="#{cNode.logLevelSelectItems}" />
@@ -107,5 +108,70 @@
 		      	value="&lt;pre&gt;#{row.message}&lt;/pre&gt;"/>
 	    </f:facet>
 </tr:table>
+
+<tr:separator></tr:separator>
+
+<tr:table 
+  		width="100%" 
+  		summary="LogsGroupByNodes"  
+  		value="#{cNode.logsGroupedByNodes}" 
+  		var="row" 
+  		rowSelection="none" 
+  		id="NodesLogs2" >
+    	<tr:column headerText="#{msgs.node}">
+	      	<tr:outputText
+	    		inlineStyle="font-weight: bold;"	       
+		      	value="#{row.nodePath}"/>
+        </tr:column>
+        <f:facet name="detailStamp">
+			<tr:table 
+  				width="100%" 
+		  		value="#{row.records}" 
+  				var="rowx" 
+  				rowSelection="none" >
+		    	<tr:column 
+    				inlineStyle="width:15%;" 
+    				headerText="#{msgs.date}">
+	    			<tr:outputText
+						inlineStyle="font-size: 80%;"	       
+			      		value="#{rowx.fdString}" />
+        		</tr:column>
+    			<tr:column 
+    				inlineStyle="width:7%;" 
+    				headerText="#{msgs.level}">
+	      			<tr:outputText
+	      				rendered="#{rowx.level=='TRACE'}"
+						inlineStyle="color: grey;"	       
+	      				value="#{rowx.level}"/>
+	      			<tr:outputText
+	      				rendered="#{rowx.level=='DEBUG'}"
+	      				value="#{rowx.level}"/>
+	      			<tr:outputText
+	      				rendered="#{rowx.level=='INFO'}"
+						inlineStyle="font-weight: bold; "	       
+	      				value="#{rowx.level}"/>
+	      			<tr:outputText
+	      				rendered="#{rowx.level=='WARN'}"
+						inlineStyle="color: green; font-weight: bold; "	       
+	      				value="#{rowx.level}"/>
+	      			<tr:outputText
+	      				rendered="#{rowx.level=='ERROR'}"
+						inlineStyle="color: red; font-weight: bold; "	       
+	      				value="#{rowx.level}"/>
+        		</tr:column>
+		    	<tr:column headerText="#{msgs.message}">
+	    		  	<tr:outputText
+	    				inlineStyle="font-size: 80%;"	       
+		      			value="#{rowx.shortMessage}"/>
+        			</tr:column>
+        		<f:facet name="detailStamp">
+	    		  	<tr:outputText escape="false"
+		    			inlineStyle="font-size: 80%;"	       
+				      	value="&lt;pre&gt;#{rowx.message}&lt;/pre&gt;"/>
+				    </f:facet>
+			</tr:table>
+	    </f:facet>
+</tr:table>
+
 
 </jsp:root>

@@ -178,6 +178,7 @@ public class NodeLoggerImpl extends LogTablesManager implements NodeLogger, Runn
 		String sql;
 		Object[] args;
 		List<String> names;
+		logAllowed();
 		if(nodeId ==null)
 		{
 			sql = sSelLogsFromSingleTable;

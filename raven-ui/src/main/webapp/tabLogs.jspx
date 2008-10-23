@@ -37,6 +37,7 @@
 				value="#{cNode.logViewTd}" >
 			</tr:inputText>
                 <tr:selectOneChoice 
+                	id="lvlList"
                 	label="#{msgs.level}" 
                 	value="#{cNode.logLevel}" >
                     <f:selectItems value="#{cNode.logLevelSelectItems}" />
@@ -54,7 +55,6 @@
 <tr:separator></tr:separator>
 
 <tr:table 
-		
   		width="100%" 
   		summary="NodesLogs"  
   		rowBandingInterval="1"

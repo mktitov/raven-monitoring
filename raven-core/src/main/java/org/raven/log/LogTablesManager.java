@@ -363,11 +363,28 @@ public abstract class LogTablesManager
 	{
 //		if(getPool()==null || getPool().getConnection()==null)
    		if(getPool()==null || getPool().getStatus()!=Node.Status.STARTED)
+   		{
+//   			logger.info("getPool is null or not started");
 			return false;
-		if(metaInited) return true;
-		if(createMetaTable() && loadMetaTable()) 
+   		}		
+//   		if(getPool()==null)
+//   			setPool(nodeLoggerNode.getConnectionPool());
+		if(metaInited)
+		{
+//   			logger.info("meta is already inited");
+			return true;
+		}	
+//		logger.info("meta init...");
+		if(createMetaTable() && loadMetaTable())
+		{
+//			logger.info("meta init ok");
 				metaInited = true;
-			else metaInited = false;
+		}		
+			else
+			{
+				logger.warn("meta info init error");
+				metaInited = false;
+			}
 		return metaInited;
 	}
 
