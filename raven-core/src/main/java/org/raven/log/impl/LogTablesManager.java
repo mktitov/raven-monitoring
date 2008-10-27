@@ -1,4 +1,4 @@
-package org.raven.log;
+package org.raven.log.impl;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -17,6 +17,7 @@ import java.util.List;
 
 import javax.sql.rowset.CachedRowSet;
 import org.raven.dbcp.ConnectionPool;
+import org.raven.log.NodeLogRecord;
 import org.raven.tree.Node;
 //import org.raven.log.impl.NodeLoggerNode;
 import org.slf4j.Logger;

@@ -1,4 +1,4 @@
-package org.raven.log;
+package org.raven.log.impl;
 
 import java.sql.Date;
 

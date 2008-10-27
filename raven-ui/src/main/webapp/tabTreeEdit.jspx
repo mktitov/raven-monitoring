@@ -20,36 +20,44 @@
           xmlns:f="http://java.sun.com/jsf/core"
           xmlns:tr="http://myfaces.apache.org/trinidad" >
 <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
+
+<tr:panelHorizontalLayout>
+	<tr:panelAccordion discloseNone="true" >
+		<tr:showDetailItem text="#{msgs.nodeCreate}">
 <!-- ********************* -->
 <!-- create new node -->
 <!-- ********************* -->
-<tr:panelHorizontalLayout 
-	halign="start" 
-	valign="top">
-	<tr:panelCaptionGroup 
-		captionText="#{msgs.nodeCreate}" 
-		rendered="#{cNode.allowCreateSubNode}">
-		<tr:panelFormLayout>
-			<tr:inputText 
-				label="#{msgs.name}" 
-				value="#{sBean.newNodeName}" >
-				<tr:validateRegExp pattern="#{sBean.nodeNamePattern}"/>
-			</tr:inputText>
-			<tr:inputListOfValues 
-				id="typeList"
-				label="#{msgs.type}" 
-				value="#{sBean.newNodeType}"
-        		action="dialog:chooseType" 
-        		windowWidth="500" windowHeight="400"/>
-			<tr:commandButton 
-				returnListener="#{sBean.template.handleReturn}" 
-				id="createNode" 
-				text="#{msgs.create}" 
-				action="#{sBean.createNode}" 
-				useWindow="true" windowWidth="500" windowHeight="400" />        
-   		</tr:panelFormLayout>
-	</tr:panelCaptionGroup>
-	<tr:spacer width="40"/>
+		<tr:panelHorizontalLayout 
+			halign="start" 
+			valign="top">
+			<tr:panelCaptionGroup 
+				captionText="#{msgs.nodeCreate}" 
+				rendered="#{cNode.allowCreateSubNode}">
+				<tr:panelFormLayout>
+					<tr:inputText 
+						label="#{msgs.name}" 
+						value="#{sBean.newNodeName}" >
+						<tr:validateRegExp pattern="#{sBean.nodeNamePattern}"/>
+					</tr:inputText>
+					<tr:inputListOfValues 
+						id="typeList"
+						label="#{msgs.type}" 
+						value="#{sBean.newNodeType}"
+		        		action="dialog:chooseType" 
+        				windowWidth="500" windowHeight="400"/>
+					<tr:commandButton 
+						returnListener="#{sBean.template.handleReturn}" 
+						id="createNode" 
+						text="#{msgs.create}" 
+						action="#{sBean.createNode}" 
+						useWindow="true" windowWidth="500" windowHeight="400" />        
+   				</tr:panelFormLayout>
+			</tr:panelCaptionGroup>
+			<tr:spacer width="40"/>
+		</tr:panelHorizontalLayout>       
+		</tr:showDetailItem>
+	</tr:panelAccordion>
+	<tr:spacer width="20"/>
 	<tr:commandButton 
 		id="renameNode"
 		text="#{msgs.renameNode}"
@@ -59,8 +67,7 @@
 		useWindow="true" windowWidth="400" windowHeight="300" 
 	>
 	</tr:commandButton> 
-</tr:panelHorizontalLayout>       
-
+</tr:panelHorizontalLayout>
 <tr:separator></tr:separator>
 
 <tr:panelHorizontalLayout  

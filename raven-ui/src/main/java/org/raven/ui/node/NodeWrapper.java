@@ -39,12 +39,12 @@ import org.raven.tree.Viewable;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.ui.SessionBean;
 import org.raven.ui.attr.Attr;
-import org.raven.ui.attr.LogViewAttributes;
-import org.raven.ui.attr.LogViewAttributesCache;
 import org.raven.ui.attr.NewAttribute;
 import org.raven.ui.attr.RefreshAttributesCache;
 import org.raven.ui.attr.RefreshIntervalCache;
 import org.raven.ui.log.LogByNode;
+import org.raven.ui.log.LogViewAttributes;
+import org.raven.ui.log.LogViewAttributesCache;
 import org.raven.ui.log.LogsByNodes;
 import org.raven.ui.log.LogsCache;
 import org.raven.ui.util.Messages;
@@ -888,6 +888,21 @@ implements Comparator<NodeAttribute>
 		lvac.remove(ALL_NODES);
 		return null;
 	}
+	
+	public void setGroupByNodes(boolean val)
+	{
+		LogViewAttributesCache lvac = SessionBean.getInstance().getLogViewAttributesCache();
+		LogViewAttributes lva = lvac.get(ALL_NODES);
+		lva.setGroupByNodes(val);
+	}
+
+	public boolean isGroupByNodes()
+	{
+		LogViewAttributesCache lvac = SessionBean.getInstance().getLogViewAttributesCache();
+		LogViewAttributes lva = lvac.get(ALL_NODES);
+		return lva.isGroupByNodes();
+	}
+	
 	
 	
 }

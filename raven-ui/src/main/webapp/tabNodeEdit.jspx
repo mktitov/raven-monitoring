@@ -36,6 +36,8 @@
     </tr:panelCaptionGroup>        
     
     -->
+<tr:panelAccordion discloseNone="true" >
+	<tr:showDetailItem text="#{msgs.attributeCreate}">
     <!-- ********************* -->
     <!-- attribute create -->
     <!-- ********************* -->
@@ -72,7 +74,9 @@
             	action="#{cNode.createAttribute}"/>        
         </tr:panelFormLayout>
     </tr:panelCaptionGroup>    
-    
+	</tr:showDetailItem>
+</tr:panelAccordion>
+<tr:separator></tr:separator>
     <!-- ********************* -->
     <!-- existing attributes -->
     <!-- ********************* -->

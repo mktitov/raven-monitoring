@@ -1,4 +1,4 @@
-package org.raven.ui.attr;
+package org.raven.ui.log;
 
 import org.jrobin.core.RrdException;
 import org.jrobin.core.Util;
@@ -11,6 +11,7 @@ public class LogViewAttributes
 	private String fd;
 	private String td;
 	private LogLevel level;
+	private boolean groupByNodes = false;
 
 	public LogViewAttributes()
 	{
@@ -94,6 +95,14 @@ public class LogViewAttributes
 	public boolean isLevelError()
 	{
 		return level == LogLevel.ERROR;
+	}
+
+	public void setGroupByNodes(boolean groupByNodes) {
+		this.groupByNodes = groupByNodes;
+	}
+
+	public boolean isGroupByNodes() {
+		return groupByNodes;
 	}
 	
 }

@@ -5,8 +5,6 @@ import java.util.List;
 import org.raven.cache.AbstractCache;
 import org.raven.log.NodeLogRecord;
 import org.raven.log.NodeLogger;
-import org.raven.ui.attr.LogViewAttributes;
-import org.raven.ui.attr.LogViewAttributesCache;
 import org.weda.internal.annotations.Service;
 
 public class LogsCache extends AbstractCache<Integer,List<NodeLogRecord>>

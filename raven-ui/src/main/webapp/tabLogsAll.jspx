@@ -27,7 +27,9 @@
 	halign="start" 
 	valign="top">
 	<tr:panelCaptionGroup captionText="#{msgs.logViewAttributes}" >
-		<tr:panelFormLayout>
+		<tr:panelFormLayout 
+				labelWidth="15%" 
+				rows="3" >
 			<tr:inputText 
 				label="#{msgs.dateFrom}" 
 				value="#{cNode.allLogViewFd}" >
@@ -36,13 +38,17 @@
 				label="#{msgs.dateTo}" 
 				value="#{cNode.allLogViewTd}" >
 			</tr:inputText>
-                <tr:selectOneChoice 
-                	id="aLvlList"
-                	label="#{msgs.level}" 
-                	value="#{cNode.allLogLevel}" >
-                    <f:selectItems value="#{cNode.logLevelSelectItems}" />
-                </tr:selectOneChoice>
-   		</tr:panelFormLayout>
+            <tr:selectOneChoice 
+	           	id="aLvlList"
+              	label="#{msgs.level}" 
+               	value="#{cNode.allLogLevel}" >
+    			<f:selectItems value="#{cNode.logLevelSelectItems}" />
+         	</tr:selectOneChoice>
+			<tr:selectBooleanCheckbox 
+				shortDesc="#{msgs.groupingByNodes}" 
+				label="#{msgs.grouping}" 
+				value="#{cNode.groupByNodes}"/>
+		</tr:panelFormLayout>
 	</tr:panelCaptionGroup>
 	<tr:spacer width="40"/>
 </tr:panelHorizontalLayout>
@@ -55,6 +61,7 @@
 <tr:separator></tr:separator>
 
 <tr:table 
+		rendered="#{!cNode.groupByNodes}"
   		width="100%" 
   		summary="NodesLogs"  
   		rowBandingInterval="1"
@@ -109,9 +116,8 @@
 	    </f:facet>
 </tr:table>
 
-<tr:separator></tr:separator>
-
-<tr:table 
+<tr:table
+		rendered="#{cNode.groupByNodes}" 
   		width="100%" 
   		summary="LogsGroupByNodes"  
   		value="#{cNode.logsGroupedByNodes}" 
@@ -125,6 +131,7 @@
         </tr:column>
         <f:facet name="detailStamp">
 			<tr:table 
+		  		rowBandingInterval="1"
   				width="100%" 
 		  		value="#{row.records}" 
   				var="rowx" 
@@ -168,7 +175,7 @@
 	    		  	<tr:outputText escape="false"
 		    			inlineStyle="font-size: 80%;"	       
 				      	value="&lt;pre&gt;#{rowx.message}&lt;/pre&gt;"/>
-				    </f:facet>
+				</f:facet>
 			</tr:table>
 	    </f:facet>
 </tr:table>

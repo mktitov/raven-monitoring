@@ -37,7 +37,6 @@ public class GraphViewableObject implements ViewableObject
         this.endTime = endTime;
     }
 
-    @Override
     public Object getData()
     {
         return graphNode.render(startTime, endTime);

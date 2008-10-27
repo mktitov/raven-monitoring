@@ -25,7 +25,6 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import javax.sql.rowset.CachedRowSet;
 import org.raven.log.LogLevel;
-import org.raven.log.LogTablesManager;
 import org.raven.log.NodeLogRecord;
 import org.raven.log.NodeLogger;
 import org.raven.tree.Node;
