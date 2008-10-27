@@ -97,8 +97,7 @@
             value="#{cNode.attributes}" 
             var="row" 
             rows="12" 
-            id="attrs" 
-            partialTriggers="subtypes">
+            id="attrs">
 <!-- on\off changing dsc and name of attribute -->            
             <tr:column 
             	headerText="*" 
@@ -281,8 +280,7 @@
             value="#{cNode.readOnlyAttributes}" 
             var="row" 
             rows="12" 
-            id="roattrs" 
-            partialTriggers="subtypes">
+            id="roattrs">
 <!-- name of attribute-->            
             <tr:column headerText="#{msgs.name}">
                 <tr:outputText value="#{row.name}"/>

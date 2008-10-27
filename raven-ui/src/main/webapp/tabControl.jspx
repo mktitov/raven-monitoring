@@ -26,8 +26,10 @@ partialTriggers="::poolStatus"
             <tr:spacer width="20"></tr:spacer>
 -->
 
-<tr:panelCaptionGroup partialTriggers=":::poolStatus" captionText="" >
-	<tr:panelButtonBar halign="left" rendered="#{cNode.allowControl}" >
+<tr:panelCaptionGroup captionText="" >
+	<tr:panelButtonBar 
+		halign="left" 
+		rendered="#{cNode.allowControl}" >
    		<tr:commandButton 
    			action="#{cNode.nodeStart}" 
    			disabled="#{! cNode.canNodeStart}"  
