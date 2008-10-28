@@ -134,8 +134,12 @@
 	captionText="#{msgs.dependencies}"
  	rendered="#{cNode.allowNodeRead}"
   >
-  	<tr:table width="100%" value="#{cNode.dependencies}" 
-  		var="row" rows="20" rowSelection="none" >
+  	<tr:table 
+  		width="100%" 
+  		value="#{cNode.dependencies}" 
+  		var="row" 
+  		rows="20" 
+  		rowSelection="none" >
     	<tr:column headerText="#{msgs.name}">
 	      <tr:outputText value="#{row.path}"/>
         </tr:column>

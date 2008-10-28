@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <skins xmlns="http://myfaces.apache.org/trinidad/skin">
     <skin>
-        <id>test.desktop</id>
-        <family>test</family>
+        <id>raven.desktop</id>
+        <family>raven</family>
         <render-kit-id>org.apache.myfaces.trinidad.desktop</render-kit-id>
-        <style-sheet-name>test.css</style-sheet-name>
+        <style-sheet-name>raven.css</style-sheet-name>
     </skin>
 </skins>

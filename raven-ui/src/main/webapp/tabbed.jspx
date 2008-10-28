@@ -23,7 +23,6 @@
     <f:view>
         <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
         <tr:document title="TabbedPanel" >
-            <tr:statusIndicator></tr:statusIndicator>
             <tr:form>
                 <!--  
                 <tr:poll id="poolStatus" ></tr:poll>
@@ -35,13 +34,20 @@
                         <tr:panelGroupLayout 
                         	layout="vertical" 
                         	id="pgl_1" >
-                              <tr:group>
-                                <tr:outputText value="#{msgs.node}:" />
+                          <tr:panelBorderLayout>
+                                	<f:facet name="start">
+                    		<tr:group>
+                            	<tr:outputText value="#{msgs.node}:" />
                                 <tr:spacer width="10" />
                                 <tr:outputText 
                                 	inlineStyle="font-weight: bold;" 
                                 	value="#{cNode.nodePath}" />
                             </tr:group>
+                                	</f:facet>
+                                	<f:facet name="end">
+							            <tr:statusIndicator></tr:statusIndicator>
+                                	</f:facet>
+                          </tr:panelBorderLayout>	
                             
                             <tr:group>
                                <tr:outputText value="ID:"></tr:outputText>
@@ -58,9 +64,8 @@
                             </tr:group>
                         </tr:panelGroupLayout>
                     </tr:panelCaptionGroup>
-                    <tr:separator></tr:separator>
                     
-                    <tr:panelTabbed  
+                    <tr:panelTabbed 
                     	position="above" 
                     	id="panelTabbed1" 
                     	inlineStyle="width: 100%" >
@@ -69,7 +74,6 @@
                         	text="#{msgs.nodeView}" 
                         	id="item1">
                             <f:subview id="v1">
-                                <tr:separator></tr:separator>
                                 <jsp:include page="tabShow.jspx" flush="true"/>
                             </f:subview>
                         </tr:showDetailItem>
@@ -78,7 +82,6 @@
                         	text="#{msgs.attributes}" 
                         	id="item2">
                             <f:subview id="v2">
-                                <tr:separator></tr:separator>
                                 <jsp:include page="tabNodeEdit.jspx" flush="true"/>
                             </f:subview>
                         </tr:showDetailItem>
@@ -87,7 +90,6 @@
                         	text="#{msgs.treeEdit}" 
                         	id="item3">
                             <f:subview id="v3">
-                                <tr:separator></tr:separator>
                                 <jsp:include page="tabTreeEdit.jspx" flush="true"/>
                             </f:subview>
                         </tr:showDetailItem>
@@ -95,7 +97,6 @@
                         	text="#{msgs.control}" 
                         	id="item4">
                             <f:subview id="v4">
-                                <tr:separator></tr:separator>
                                 <jsp:include page="tabControl.jspx" flush="true"/>
                             </f:subview>
                         </tr:showDetailItem>
@@ -104,7 +105,6 @@
                         	text="#{msgs.log}" 
                         	id="item5">
                             <f:subview id="v5">
-                                <tr:separator></tr:separator>
                                 <jsp:include page="tabLogsTab.jspx" flush="true"/>
                             </f:subview>
                         </tr:showDetailItem>

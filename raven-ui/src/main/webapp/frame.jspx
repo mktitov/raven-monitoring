@@ -40,7 +40,7 @@
 
  <frameset cols="20%,80%" >
   	<FRAME id="frame1" name="frame1" src="tree.jspx" frameborder="1"></FRAME>
-  	<frameset rows="90%,10%">
+  	<frameset rows="99%,1%">
   		<FRAME id="frame2" name="frame2" src="tabbed.jspx" frameborder="1"></FRAME>
   		<FRAME id="frame3" name="frame3" src="down.jspx" frameborder="1"></FRAME>
  	</frameset>

@@ -1,0 +1,76 @@
+/** panelTabbed **/
+/** ---------- **/
+/** .AFPanelTabbed:alias is included in af|panelTabbed::orientation-top and 
+    af|panelTabbed::orientation-bottom which are the styles on the table. **/
+.AFPanelTabbed:alias {
+  background-color:#A4CACA; 
+  text-align:center;
+}
+/** make the top tab bar have a solid border underneath **/
+af|panelTabbed::orientation-top
+{
+  border-bottom:2px solid #367FA8;border-top:2px solid #367FA8;
+}
+/** make the bottom tab bar have a solid border on top **/
+af|panelTabbed::orientation-bottom
+{
+  border-bottom:2px solid #367FA8;border-top:2px solid #367FA8;
+}
+
+af|panelTabbed::separator {
+  margin-width:4px;
+  border-top: #ADBCC5; solid 4pt ;
+  border-bottom: #ADBCC5; solid 4pt ;
+  BACKGROUND-COLOR: white;
+  PADDING-LEFT: 1px;}
+
+af|panelTabbed::tab {
+  font-weight:bold;
+  font-family:Tahoma; 
+  padding:4px 6px;
+}
+
+af|panelTabbed::tab-selected {
+  font-family:Tahoma;
+  padding:4px 6px; 
+  text-decoration: none; 
+  background-color:white
+}  
+
+af|panelTabbed::tab-selected {
+  font-family:Tahoma;
+  padding:4px 6px; 
+  text-decoration: none; 
+  background-color:white
+}  
+
+af|panelTabbed::tab-selected-link {
+  color:black;
+  text-decoration: none;
+}
+
+af|panelTabbed::tab-link {
+  color:black;
+  text-decoration: none;
+}
+
+af|panelTabbed::tab-link:hover
+{
+  -tr-rule-ref:selector(".MyLinkHoverColor:alias");
+}
+
+/* put some space in the
+first cell */
+af|panelTabbed::cell-start {
+  background-color:transparent; 
+  padding-left:10px;
+  width:50%;
+}
+af|panelTabbed::cell-end {
+  width:50%;
+}
+/** put some space between the tabs and the body */
+af|panelTabbed::body
+{
+  padding: 10px;
+}
