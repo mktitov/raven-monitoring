@@ -32,6 +32,8 @@ import org.weda.services.TypeConverter;
  */
 public class DataSample
 {
+	public enum SetResult {VALUE_SETTED, TIME_EXPIRED, INVALID_TIME};
+
 	@Service
 	private static TypeConverter converter;
 
@@ -59,22 +61,22 @@ public class DataSample
 		if (values==null)
 			return false;
 
-		Collection<Node> deps = rrdNode.getDependentNodes();
-		if (deps!=null)
-			for (Node dep: deps)
-				if (   dep instanceof RRDataSource
-					&& dep.getStatus()==Node.Status.STARTED
-					&& !values.containsKey(dep))
+		Collection<Node> dataSources = rrdNode.getChildrens();
+		if (dataSources!=null)
+		{
+			for (Node dataSource: dataSources)
+				if (   dataSource instanceof RRDataSource
+					&& dataSource.getStatus()==Node.Status.STARTED
+					&& !values.containsKey(dataSource))
 				{
 					return false;
 				}
-		else
-			return false;
+		}
 
 		return true;
 	}
 
-	public boolean checkAndSetValue(RRDataSource ds, Object value)
+	public SetResult checkAndSetValue(RRDataSource ds, Object value)
 	{
 		Object objVal = null;
 		long time = 0;
@@ -95,8 +97,10 @@ public class DataSample
 			sampleTime = time;
 		else
 		{
-			if (time!=sampleTime)
-				return false;
+			if (time>sampleTime)
+				return SetResult.TIME_EXPIRED;
+			else if (time<sampleTime)
+				return SetResult.INVALID_TIME;
 		}
 
 		Double doubleVal = converter.convert(Double.class, objVal, null);
@@ -104,6 +108,6 @@ public class DataSample
 			values = new HashMap<RRDataSource, Double>();
 		values.put(ds, doubleVal);
 
-		return true;
+		return SetResult.VALUE_SETTED;
 	}
 }

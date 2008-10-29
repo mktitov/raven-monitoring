@@ -55,6 +55,7 @@ import org.raven.tree.NodeError;
 import org.raven.tree.NodeListener;
 import org.raven.tree.NodeShutdownError;
 import org.raven.tree.impl.BaseNode;
+import org.weda.annotations.constraints.NotNull;
 import org.weda.beans.ObjectUtils;
 
 /**
@@ -65,17 +66,26 @@ import org.weda.beans.ObjectUtils;
 //@Description("Saves data in round robin database")
 public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 {
-    @Parameter(defaultValue="300") 
-//    @Description("The base interval in seconds with which data will be fed into the RRD")
+	public enum SampleUpdatePolicy {UPDATE_WHEN_READY, UPDATE_WHEN_TIME_EXPIRED};
+	
+    @Parameter(defaultValue="300")
+	@NotNull
     private Long step;
     
     @Parameter
-//    @Description("The file name of the rrd database")
     private String databaseFileName;
     
     @Parameter(defaultValue="false")
-//    @Description("Backup database file before structure change operations")
+	@NotNull
     private Boolean backup;
+
+	@Parameter(defaultValue="UPDATE_WHEN_READY")
+	@NotNull
+	private SampleUpdatePolicy sampleUpdatePolicy;
+
+	@Parameter(defaultValue="now")
+	@NotNull
+	private String startTime;
     
     private AtomicBoolean databaseInitialized;
     private RrdDb db;
@@ -83,6 +93,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
     private Map<String, String> newDsNames;
     private ReentrantLock newDsNamesLock;
     private Sample sample;
+	private DataSample dataSample;
             
     public RRDNode()
     {
@@ -286,19 +297,46 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
             {
                 if (databaseInitialized.get())
                 {
-                    long stepsBetween = (time-sample.getTime())/step+1;
-                    if (stepsBetween>0)
-                    {
-                        tuneSampleTime();
-                        sample.update();
-                        sample.setTime(sample.getTime()+stepsBetween*step);
-                    }
-                    Double value = converter.convert(Double.class, data, null);
-                    if (logger.isDebugEnabled())
-                        logger.debug(String.format(
-                                "Setting sample value (%s) for dataSource (%s)"
-                                , data, dataSource.getPath()));
-                    sample.setValue(dataSource.getName(), value);
+					if (dataSample==null)
+						dataSample = new DataSample(this);
+					DataSample.SetResult res =
+							dataSample.checkAndSetValue((RRDataSource)dataSource, data);
+					switch (res)
+					{
+						case INVALID_TIME: 
+							warn(String.format(
+									"The time for data (%s) for dataSource (%s) is less than " +
+									"sample time (%s)."
+									, data, dataSource.getPath(), dataSample.getSampleTime()));
+							break;
+						case TIME_EXPIRED:
+							if (isDebugEnabled())
+								debug("The time for current dataSample was expired. " +
+										"Need to save sample data");
+							saveSampleData();
+							setData(dataSource, data);
+							break;
+						case VALUE_SETTED:
+							if (   sampleUpdatePolicy==SampleUpdatePolicy.UPDATE_WHEN_READY
+								&& dataSample.isAllValuesSetted())
+							{
+								saveSampleData();
+							}
+							break;
+					}
+//                    long stepsBetween = (time-sample.getTime())/step+1;
+//                    if (stepsBetween>0)
+//                    {
+//                        tuneSampleTime();
+//                        sample.update();
+//                        sample.setTime(sample.getTime()+stepsBetween*step);
+//                    }
+//                    Double value = converter.convert(Double.class, data, null);
+//                    if (logger.isDebugEnabled())
+//                        logger.debug(String.format(
+//                                "Setting sample value (%s) for dataSource (%s)"
+//                                , data, dataSource.getPath()));
+//                    sample.setValue(dataSource.getName(), value);
                 }
             }
             finally
@@ -334,6 +372,16 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 //        RrdToolkit.
     }
 
+	public String getStartTime()
+	{
+		return startTime;
+	}
+
+	public void setStartTime(String startTime)
+	{
+		this.startTime = startTime;
+	}
+
     public Boolean isBackup()
     {
         return backup;
@@ -343,6 +391,16 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
     {
         this.backup = backup;
     }
+
+	public SampleUpdatePolicy getSampleUpdatePolicy()
+	{
+		return sampleUpdatePolicy;
+	}
+
+	public void setSampleUpdatePolicy(SampleUpdatePolicy sampleUpdatePolicy)
+	{
+		this.sampleUpdatePolicy = sampleUpdatePolicy;
+	}
 
     private void addArchive(RRArchive archive, boolean lock) throws Exception
     {
@@ -446,7 +504,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
         }
         RrdDef def = new RrdDef(
                 path.getAbsolutePath() + File.separator + getId() + ".jrrd"
-                , Util.getTime(), step);
+                , Util.getTimestamp(startTime), step);
 
         boolean hasDataSources = false;
         boolean hasArchives = false;
@@ -515,13 +573,33 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
         db = null;
     }
     
+	private void saveSampleData() throws IOException, RrdException
+	{
+		try
+		{
+			if (isDebugEnabled())
+				debug("Saving sample data to the database");
+			Sample dbSample = db.createSample(dataSample.getSampleTime()+1);
+			for (Map.Entry<RRDataSource, Double> valuesEntry: dataSample.getValues().entrySet())
+			{
+				dbSample.setValue(valuesEntry.getKey().getName(), valuesEntry.getValue());
+			}
+			dbSample.update();
+		}
+		finally
+		{
+			dataSample = null;
+		}
+	}
+
     private void tuneSampleTime() throws IOException
     {
         if (sample!=null && db!=null && sample.getTime()<=db.getHeader().getLastUpdateTime())
             sample.setTime(db.getHeader().getLastUpdateTime()+1);
     }
 
-    private void removeArchive(String consolidationFunction, int steps, boolean lock) throws Exception
+    private void removeArchive(String consolidationFunction, int steps, boolean lock)
+			throws Exception
     {
         if (lock)
             dbLock.writeLock().lock();

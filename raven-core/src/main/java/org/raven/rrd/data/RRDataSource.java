@@ -92,20 +92,40 @@ public class RRDataSource extends DataPipeImpl implements DataArchive, Viewable
         return dataSourceType;
     }
 
+	public void setDataSourceType(DataSourceType dataSourceType)
+	{
+		this.dataSourceType = dataSourceType;
+	}
+
     public Long getHeartbeat()
     {
         return heartbeat;
     }
+
+	public void setHeartbeat(Long heartbeat)
+	{
+		this.heartbeat = heartbeat;
+	}
 
     public Double getMaxValue()
     {
         return maxValue;
     }
 
+	public void setMaxValue(Double maxValue)
+	{
+		this.maxValue = maxValue;
+	}
+
     public Double getMinValue()
     {
         return minValue;
     }
+
+	public void setMinValue(Double minValue)
+	{
+		this.minValue = minValue;
+	}
 
     public DataArchiveTable getArchivedData(String fromDate, String toDate) throws ArchiveException
     {

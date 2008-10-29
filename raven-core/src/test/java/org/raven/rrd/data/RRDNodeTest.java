@@ -17,6 +17,7 @@
 
 package org.raven.rrd.data;
 
+import org.raven.ds.ArchiveException;
 import org.raven.rrd.objects.TestDataSource;
 import java.io.File;
 import java.util.ArrayList;
@@ -33,7 +34,11 @@ import org.jrobin.core.Util;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
+import org.raven.RavenUtils;
 import org.raven.conf.Configurator;
+import org.raven.rrd.DataSourceType;
+import org.raven.rrd.objects.PushDataSource;
+import org.raven.table.DataArchiveTable;
 import org.raven.table.Table;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
@@ -49,18 +54,17 @@ import org.weda.services.TypeConverter;
 public class RRDNodeTest extends RavenCoreTestCase
 {
     private TypeConverter converter;
+	private PushDataSource ds1, ds2;
+	private RRDataSource rrds1, rrds2;
+	private RRDNode rrdNode;
     
     @Before
     public void setupTest()
     {
-//        store.removeNodes();
-//        tree.reloadTree();
-        
         converter = registry.getService(TypeConverter.class);
-//        assertNotNull(tree);
     }
     
-    @Test
+//    @Test
     public void test() throws ConstraintException, Exception
     {
         TestDataSource ds = new TestDataSource();
@@ -229,7 +233,7 @@ public class RRDNodeTest extends RavenCoreTestCase
 
     }
     
-    @Test
+//    @Test
     public void removeTest() throws Exception
     {
         TestDataSource ds = new TestDataSource();
@@ -294,7 +298,7 @@ public class RRDNodeTest extends RavenCoreTestCase
         assertFalse(dbFile.exists());
     }
 
-    @Test
+//    @Test
     public void getArchivedData_test() throws Exception
     {
         TestDataSource ds = new TestDataSource();
@@ -371,4 +375,126 @@ public class RRDNodeTest extends RavenCoreTestCase
         assertNotNull(data);
         assertTrue(data instanceof Table);
     }
+
+//	@Test
+	public void updateWhenReady_oneDataSourceWithoutDataTest() throws Exception
+	{
+		createDatabase();
+
+		rrdNode.setSampleUpdatePolicy(RRDNode.SampleUpdatePolicy.UPDATE_WHEN_READY);
+		rrdNode.start();
+		assertEquals(Status.STARTED, rrdNode.getStatus());
+
+		long startTime = Util.normalize(Util.getTime(), 2);
+		ds1.pushData(100);
+		TimeUnit.SECONDS.sleep(3);
+
+		Double val = getValueFromArchive(startTime, rrds1);
+		assertTrue(val.isNaN());
+	}
+
+//	@Test
+	public void updateWhenReady_allDataSourcesWithDataTest() throws Exception
+	{
+		createDatabase();
+
+		rrdNode.setSampleUpdatePolicy(RRDNode.SampleUpdatePolicy.UPDATE_WHEN_READY);
+		rrdNode.start();
+		assertEquals(Status.STARTED, rrdNode.getStatus());
+		
+		long startTime = Util.normalize(Util.getTime(), 2);
+		ds1.pushData(100);
+		ds2.pushData(200);
+		TimeUnit.SECONDS.sleep(3);
+
+		Double val1 = getValueFromArchive(startTime, rrds1);
+		Double val2 = getValueFromArchive(startTime, rrds2);
+		assertEquals(new Double(100.), val1);
+		assertEquals(new Double(200.), val2);
+	}
+
+	@Test
+	public void updateWhenReady_oneDataSourceNotStartedTest() throws Exception
+	{
+		createDatabase();
+
+		rrdNode.setSampleUpdatePolicy(RRDNode.SampleUpdatePolicy.UPDATE_WHEN_READY);
+		rrdNode.start();
+		assertEquals(Status.STARTED, rrdNode.getStatus());
+
+		rrds2.stop();
+		assertEquals(Status.INITIALIZED, rrds2.getStatus());
+
+		long startTime = Util.normalize(Util.getTime(), 2);
+		ds1.pushData(100);
+		TimeUnit.SECONDS.sleep(3);
+
+		Double val1 = getValueFromArchive(startTime+1, rrds1);
+		assertEquals(new Double(100.), val1);
+	}
+
+	private Double getValueFromArchive(long time, RRDataSource rrds) throws ArchiveException
+	{
+		DataArchiveTable table = rrds.getArchivedData(""+time, ""+(time));
+		List<Object[]> rows = RavenUtils.tableAsList(table);
+		assertEquals(1, rows.size());
+		return (Double)rows.get(0)[1];
+	}
+
+	private void createDatabase() throws Exception
+	{
+        ds1 = new PushDataSource();
+        ds1.setName("dataSource1");
+        tree.getRootNode().addChildren(ds1);
+        store.saveNode(ds1);
+        ds1.init();
+		ds1.start();
+		assertEquals(Status.STARTED, ds1.getStatus());
+
+        ds2 = new PushDataSource();
+        ds2.setName("dataSource2");
+        tree.getRootNode().addChildren(ds2);
+        store.saveNode(ds2);
+        ds2.init();
+		ds2.start();
+		assertEquals(Status.STARTED, ds2.getStatus());
+
+        rrdNode = new RRDNode();
+        rrdNode.setName("rrd");
+        tree.getRootNode().addChildren(rrdNode);
+        store.saveNode(rrdNode);
+        rrdNode.init();
+        assertEquals(Status.INITIALIZED, rrdNode.getStatus());
+		rrdNode.setStep(2l);
+		rrdNode.setStartTime("now-1s");
+
+        rrds1 = new RRDataSource();
+        rrds1.setName("rrds1");
+        rrdNode.addChildren(rrds1);
+        store.saveNode(rrds1);
+        rrds1.init();
+		rrds1.setDataSource(ds1);
+		rrds1.setDataSourceType(DataSourceType.GAUGE);
+		rrds1.start();
+		assertEquals(Status.STARTED, rrds1.getStatus());
+
+        rrds2 = new RRDataSource();
+        rrds2.setName("rrds2");
+        rrdNode.addChildren(rrds2);
+        store.saveNode(rrds2);
+        rrds2.init();
+		rrds2.setDataSource(ds2);
+		rrds2.setDataSourceType(DataSourceType.GAUGE);
+		rrds2.start();
+		assertEquals(Status.STARTED, rrds2.getStatus());
+
+        RRArchive rra = new RRArchive();
+        rra.setName("archive");
+        rrdNode.addChildren(rra);
+        store.saveNode(rra);
+        rra.init();
+		rra.setRows(100);
+        rra.start();
+        assertEquals(Status.STARTED, rra.getStatus());
+	}
 }

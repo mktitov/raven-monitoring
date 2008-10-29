@@ -57,20 +57,40 @@ public class RRArchive extends LeafNode
         return consolidationFunction;
     }
 
+	public void setConsolidationFunction(ConsolidationFunction consolidationFunction)
+	{
+		this.consolidationFunction = consolidationFunction;
+	}
+
     public Integer getRows()
     {
         return rows;
     }
+
+	public void setRows(Integer rows)
+	{
+		this.rows = rows;
+	}
 
     public Integer getSteps()
     {
         return steps;
     }
 
+	public void setSteps(Integer steps)
+	{
+		this.steps = steps;
+	}
+
     public Double getXff()
     {
         return xff;
     }
+
+	public void setXff(Double xff)
+	{
+		this.xff = xff;
+	}
 
 //    public Integer getIndex()
 //    {
