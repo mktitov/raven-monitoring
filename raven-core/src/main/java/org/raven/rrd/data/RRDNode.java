@@ -578,12 +578,12 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 		try
 		{
 			if (isDebugEnabled())
-				debug("Saving sample data to the database");
+				debug("Saving sample data to the database. Sample time is "
+						+Util.getDate(dataSample.getSampleTime()+1));
 			Sample dbSample = db.createSample(dataSample.getSampleTime()+1);
 			for (Map.Entry<RRDataSource, Double> valuesEntry: dataSample.getValues().entrySet())
-			{
 				dbSample.setValue(valuesEntry.getKey().getName(), valuesEntry.getValue());
-			}
+			
 			dbSample.update();
 		}
 		finally

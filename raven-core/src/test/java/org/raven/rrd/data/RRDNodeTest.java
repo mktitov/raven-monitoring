@@ -32,6 +32,7 @@ import org.jrobin.core.FetchRequest;
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.Util;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.RavenUtils;
@@ -51,6 +52,7 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
+@Ignore
 public class RRDNodeTest extends RavenCoreTestCase
 {
     private TypeConverter converter;
@@ -64,7 +66,7 @@ public class RRDNodeTest extends RavenCoreTestCase
         converter = registry.getService(TypeConverter.class);
     }
     
-//    @Test
+    @Test
     public void test() throws ConstraintException, Exception
     {
         TestDataSource ds = new TestDataSource();
@@ -233,7 +235,7 @@ public class RRDNodeTest extends RavenCoreTestCase
 
     }
     
-//    @Test
+    @Test
     public void removeTest() throws Exception
     {
         TestDataSource ds = new TestDataSource();
@@ -298,7 +300,7 @@ public class RRDNodeTest extends RavenCoreTestCase
         assertFalse(dbFile.exists());
     }
 
-//    @Test
+    @Test
     public void getArchivedData_test() throws Exception
     {
         TestDataSource ds = new TestDataSource();
@@ -376,7 +378,7 @@ public class RRDNodeTest extends RavenCoreTestCase
         assertTrue(data instanceof Table);
     }
 
-//	@Test
+	@Test
 	public void updateWhenReady_oneDataSourceWithoutDataTest() throws Exception
 	{
 		createDatabase();
@@ -393,7 +395,7 @@ public class RRDNodeTest extends RavenCoreTestCase
 		assertTrue(val.isNaN());
 	}
 
-//	@Test
+	@Test
 	public void updateWhenReady_allDataSourcesWithDataTest() throws Exception
 	{
 		createDatabase();
@@ -429,8 +431,88 @@ public class RRDNodeTest extends RavenCoreTestCase
 		ds1.pushData(100);
 		TimeUnit.SECONDS.sleep(3);
 
-		Double val1 = getValueFromArchive(startTime+1, rrds1);
+		Double val1 = getValueFromArchive(startTime, rrds1);
 		assertEquals(new Double(100.), val1);
+	}
+
+	@Test
+	public void updateWhenTimeExpiredTest() throws Exception
+	{
+		createDatabase();
+
+		rrdNode.setSampleUpdatePolicy(RRDNode.SampleUpdatePolicy.UPDATE_WHEN_TIME_EXPIRED);
+		rrdNode.start();
+		assertEquals(Status.STARTED, rrdNode.getStatus());
+
+		long startTime = Util.normalize(Util.getTime(), 2);
+		ds1.pushData(100);
+		TimeUnit.SECONDS.sleep(3);
+		ds1.pushData(200.);
+
+		Double val1 = getValueFromArchive(startTime, rrds1);
+		assertEquals(new Double(100.), val1);
+	}
+
+	@Test
+	public void dataAndTimeTest() throws Exception
+	{
+		initDataFor_dataAndTimeTest();
+
+		rrdNode.setSampleUpdatePolicy(RRDNode.SampleUpdatePolicy.UPDATE_WHEN_READY);
+		rrdNode.start();
+		assertEquals(Status.STARTED, rrdNode.getStatus());
+
+		long now = Util.normalize(Util.getTime(), 1800);
+		long startTime = now-1800;
+		DataAndTime data = new DataAndTime(99., startTime);
+		ds1.pushData(data);
+		Double val1 = getValueFromArchive(startTime, rrds1);
+		assertEquals(new Double(99.), val1);
+
+		startTime = now;
+		data = new DataAndTime(10., startTime);
+		ds1.pushData(data);
+		val1 = getValueFromArchive(startTime, rrds1);
+		assertEquals(new Double(10.).intValue(), ((Double)val1).intValue());
+	}
+
+	private void initDataFor_dataAndTimeTest() throws Exception
+	{
+        ds1 = new PushDataSource();
+        ds1.setName("dataSource1");
+        tree.getRootNode().addChildren(ds1);
+        store.saveNode(ds1);
+        ds1.init();
+		ds1.start();
+		assertEquals(Status.STARTED, ds1.getStatus());
+
+        rrdNode = new RRDNode();
+        rrdNode.setName("rrd");
+        tree.getRootNode().addChildren(rrdNode);
+        store.saveNode(rrdNode);
+        rrdNode.init();
+        assertEquals(Status.INITIALIZED, rrdNode.getStatus());
+		rrdNode.setStep(1800l);
+		rrdNode.setStartTime("now-1h");
+
+        rrds1 = new RRDataSource();
+        rrds1.setName("rrds1");
+        rrdNode.addChildren(rrds1);
+        store.saveNode(rrds1);
+        rrds1.init();
+		rrds1.setDataSource(ds1);
+		rrds1.setDataSourceType(DataSourceType.GAUGE);
+		rrds1.start();
+		assertEquals(Status.STARTED, rrds1.getStatus());
+
+        RRArchive rra = new RRArchive();
+        rra.setName("archive");
+        rrdNode.addChildren(rra);
+        store.saveNode(rra);
+        rra.init();
+		rra.setRows(100);
+        rra.start();
+        assertEquals(Status.STARTED, rra.getStatus());
 	}
 
 	private Double getValueFromArchive(long time, RRDataSource rrds) throws ArchiveException

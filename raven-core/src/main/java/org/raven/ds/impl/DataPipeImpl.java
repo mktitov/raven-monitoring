@@ -85,8 +85,13 @@ public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
         if (getDependentNodes()!=null)
             for (Node node: getDependentNodes())
                 if (node.getStatus()==Status.STARTED && node instanceof DataConsumer)
-                    ((DataConsumer)node).setData(this, newData);
+                    sendDataToConsumer((DataConsumer)node, newData);
     }
+
+	protected void sendDataToConsumer(DataConsumer consumer, Object data)
+	{
+		consumer.setData(this, data);
+	}
 
     public boolean getDataImmediate(
             DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)

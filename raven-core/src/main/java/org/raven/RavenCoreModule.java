@@ -38,6 +38,7 @@ import org.raven.impl.CharsetReferenceValues;
 import org.raven.impl.ClassToStringConverter;
 import org.raven.impl.EnumReferenceValues;
 import org.raven.impl.InputStreamToStringConverter;
+import org.raven.impl.LocaleReferenceValues;
 import org.raven.impl.NodeAccessToNodeConverter;
 import org.raven.impl.NodeAttributeToStringConverter;
 import org.raven.impl.NodeToStringConverter;
@@ -46,6 +47,7 @@ import org.raven.impl.SnmpVariableToNumberConverter;
 import org.raven.impl.StringToAttributeReferenceConverter;
 import org.raven.impl.StringToCharsetConverter;
 import org.raven.impl.StringToClassConverter;
+import org.raven.impl.StringToLocaleConverter;
 import org.raven.impl.StringToNodeConverter;
 import org.raven.impl.StringToTemplateVariableConverter;
 import org.raven.log.NodeLogger;
@@ -140,6 +142,7 @@ public class RavenCoreModule
         conf.add(new ClassToStringConverter());
         conf.add(new InputStreamToStringConverter());
         conf.add(new StringToCharsetConverter());
+		conf.add(new StringToLocaleConverter());
     }
     
     public static void contributeTree(MappedConfiguration<Class, AttributeReferenceValues> conf)
@@ -210,5 +213,9 @@ public class RavenCoreModule
             CharsetReferenceValues.class.getSimpleName()
             , new CharsetReferenceValues()
             , "after:"+DataPipeConvertToTypesReferenceValues.class.getSimpleName());
+		conf.add(
+			LocaleReferenceValues.class.getSimpleName()
+			, new LocaleReferenceValues()
+			, "after:"+CharsetReferenceValues.class.getSimpleName());
     }
 }
