@@ -15,7 +15,7 @@
  *  under the License.
  */
 
-package org.raven.template;
+package org.raven.template.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;

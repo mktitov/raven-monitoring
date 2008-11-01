@@ -18,20 +18,31 @@
 package org.raven.template;
 
 import org.raven.annotations.NodeClass;
+import org.raven.annotations.Parameter;
+import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.tree.impl.BaseNode;
-import org.weda.annotations.Description;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=TemplateNode.class, anyChildTypes=true)
-@Description("Holds the subtree of template nodes")
-public class TemplateEntry extends BaseNode
+@NodeClass(importChildTypesFromParent=true)
+public class GroupNode extends BaseNode
 {
-    @Override
-    protected boolean includeLogLevel()
+    public final static String GROUPINGEXPRESSION_ATTRIBUTE = "groupingExpression";
+    
+    @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
+    @NotNull
+    private String groupingExpression;
+
+    public String getGroupingExpression()
     {
-        return false;
+        return groupingExpression;
     }
+
+	public void setGroupingExpression(String groupingExpression)
+	{
+		this.groupingExpression = groupingExpression;
+	}
 }

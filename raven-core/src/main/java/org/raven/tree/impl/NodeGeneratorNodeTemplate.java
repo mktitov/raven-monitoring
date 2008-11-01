@@ -18,7 +18,7 @@
 package org.raven.tree.impl;
 
 import org.raven.annotations.NodeClass;
-import org.raven.template.TemplateEntry;
+import org.raven.template.impl.TemplateEntry;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;

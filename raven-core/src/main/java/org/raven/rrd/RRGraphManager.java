@@ -17,6 +17,7 @@
 
 package org.raven.rrd;
 
+import org.raven.template.GroupNode;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -34,9 +35,9 @@ import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.rrd.data.RRDataSource;
 import org.raven.rrd.graph.RRDef;
 import org.raven.rrd.graph.RRGraphNode;
-import org.raven.template.TemplateEntry;
-import org.raven.template.TemplateExpressionNodeTuner;
-import org.raven.template.TemplateNode;
+import org.raven.template.impl.TemplateEntry;
+import org.raven.template.impl.TemplateExpressionNodeTuner;
+import org.raven.template.impl.TemplateNode;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
@@ -557,12 +558,14 @@ public class RRGraphManager extends BaseNode
         
         private void correctAttributeColor(NodeAttribute attr, NodeAttribute autoColorAttr) 
         {
-            try {
+            try
+			{
                 attr.setValue(null);
                 attr.setValueHandlerType(null);
                 attr.setValue(autoColorAttr.getValue());
                 attr.save();
-            } catch (Exception exception) 
+            }
+			catch (Exception exception)
             {
                 logger.error(String.format(
                         "Error seting color (%s) for attribute (%s) of the node (%s)", 

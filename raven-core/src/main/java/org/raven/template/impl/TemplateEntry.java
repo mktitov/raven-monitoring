@@ -15,21 +15,23 @@
  *  under the License.
  */
 
-package org.raven.template;
+package org.raven.template.impl;
 
-import org.raven.tree.NodeAttribute;
-import org.raven.tree.impl.AttributeReferenceImpl;
+import org.raven.annotations.NodeClass;
+import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
-@Description("Allows to reference to the template variable")
-public class TemplateVariable extends AttributeReferenceImpl
+@NodeClass(parentNode=TemplateNode.class, anyChildTypes=true)
+@Description("Holds the subtree of template nodes")
+public class TemplateEntry extends BaseNode
 {
-    public TemplateVariable(NodeAttribute attribute)
+    @Override
+    protected boolean includeLogLevel()
     {
-        super(attribute);
+        return false;
     }
 }

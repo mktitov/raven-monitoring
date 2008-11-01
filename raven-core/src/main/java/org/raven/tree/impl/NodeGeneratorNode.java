@@ -17,7 +17,6 @@
 
 package org.raven.tree.impl;
 
-import org.raven.table.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -33,20 +32,28 @@ import javax.script.Bindings;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.conf.Configurator;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.ds.impl.DataPipeImpl;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
-import org.raven.template.TemplateExpressionNodeTuner;
-import org.raven.template.TemplateNode;
+import org.raven.table.Table;
+import org.raven.template.GroupNode;
+import org.raven.template.GroupsOrganazier;
+import org.raven.template.impl.GroupsOrganizerNodeTuner;
+import org.raven.template.impl.TemplateNode;
 import org.raven.tree.ConfigurableNode;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
+import org.raven.tree.NodeTuner;
+import org.raven.tree.ScanOperation;
+import org.raven.tree.ScannedNodeHandler;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.beans.ObjectUtils;
 import org.weda.converter.TypeConverterException;
+import org.weda.internal.annotations.Service;
 /**
  *
  * @author Mikhail Titov
@@ -65,6 +72,9 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
 
     public enum AddPolicy {DO_NOTHING, AUTO_ADD, AUTO_ADD_AND_START}
     public enum RemovePolicy {DO_NOTHING, STOP_NODE, AUTO_REMOVE, REMOVE_BEFORE_PROCESSING}
+
+	@Service
+	private static GroupsOrganazier groupsOrganazier;
     
     @Parameter @NotNull
     private String indexColumnName;
@@ -79,7 +89,7 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
     @Parameter(defaultValue="STOP_NODE")
     @NotNull
     private RemovePolicy removePolicy;
-    
+
     private Lock dataLock;
     private NodeGeneratorNodeTemplate template;
     private boolean needTableForConfiguration;
@@ -275,25 +285,15 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
         return consumers;
     }
 
-    private void createNewNode(
-            Map<String, Object> values, Node templateNode, String indexValue, boolean autoStart)
+    private void createNewNode(Map<String, Object> values, String indexValue, boolean autoStart)
         throws Exception
     {
+
         StrSubstitutor subst = new StrSubstitutor(values);
 
-        Node newNode = tree.copy(
-                templateNode, this, null, new TemplateExpressionNodeTuner(), true, false, true);
-        NodeAttribute indexAttr = new NodeAttributeImpl(
-                INDEX_COLUMN_VALUE, String.class, indexValue, null);
-        indexAttr.setOwner(newNode);
-        newNode.addNodeAttribute(indexAttr);
-        indexAttr.init();
-        indexAttr.save();
-        
-        tuneNode(this, subst, newNode);
-        
-        if (autoStart)
-            tree.start(newNode, false);
+		NodeTuner tuner = new Tuner(indexValue, configurator);
+
+		groupsOrganazier.organize(this, template, tuner, null, autoStart);
     }
 
     private Node getTemplateNode()
@@ -351,7 +351,7 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
             expressionBindings.put(INDEX_COLUMN_VALUE_VARIABLE, val);
             String indexColumnValue = indexExpression;
             if (indexColumnValue==null)
-                    indexColumnValue = converter.convert(String.class, val, null);
+				indexColumnValue = converter.convert(String.class, val, null);
 
             indexesInTable.add(indexColumnValue);
 
@@ -375,11 +375,8 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
             || addPolicy==AddPolicy.AUTO_ADD_AND_START 
             || needTableForConfiguration)
         {
-            Node templateNode = getTemplateNode();
-            if (templateNode==null)
-                return;
             createNewNode(
-                    namedRow, templateNode, indexColumnValue
+                    namedRow, indexColumnValue
                     , addPolicy==AddPolicy.AUTO_ADD_AND_START && !needTableForConfiguration);
         }
     }
@@ -402,20 +399,22 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
 
     private Map<String, Node> getIndexValues()
     {
-        Map<String, Node> indexValues = new HashMap<String, Node>();
-        if (getChildrens()!=null)
-            for (Node child: getChildrens())
-                if (!(child instanceof NodeGeneratorNodeTemplate))
-                    indexValues.put(getIndexValue(child), child);
-        return indexValues;
+		SearchIndexedNodes handler = new SearchIndexedNodes();
+		tree.scanSubtree(this, handler, ScanOptionsImpl.EMPTY_OPTIONS);
+
+		return handler.getIndexedNodes();
     }
     
     private String getIndexValue(Node node)
     {
-        while (!(node.getParent() instanceof NodeGeneratorNode))
+		NodeAttribute indexAttr = null;
+        while ( (indexAttr = node.getNodeAttribute(INDEX_COLUMN_VALUE))==null )
+		{
             node = node.getParent();
+			if (node==this)
+				return null;
+		}
         
-        NodeAttribute indexAttr = node.getNodeAttribute(INDEX_COLUMN_VALUE);
         return indexAttr==null? null : indexAttr.getValue();
     }
     
@@ -525,4 +524,97 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
                     tree.remove(child);
         }
     }
+
+	private class SearchIndexedNodes implements ScannedNodeHandler
+	{
+		private final Map<String, Node> indexedNodes = new HashMap<String, Node>();
+
+		public Map<String, Node> getIndexedNodes()
+		{
+			return indexedNodes;
+		}
+
+		public ScanOperation nodeScanned(Node node)
+		{
+			if (NodeGeneratorNodeTemplate.class.equals(node.getClass()))
+				return ScanOperation.SKIP_NODE;
+			
+			NodeAttribute indexAttr = node.getNodeAttribute(INDEX_COLUMN_VALUE);
+			if (indexAttr!=null)
+			{
+				String indexValue = indexAttr.getValue();
+				if (indexValue!=null)
+				{
+					indexedNodes.put(indexValue, node);
+					return ScanOperation.SKIP_NODE;
+				}
+			}
+
+			return ScanOperation.CONTINUE;
+		}
+	}
+
+	private class Tuner extends GroupsOrganizerNodeTuner
+	{
+		private final String indexValue;
+		private final Configurator configurator;
+
+		public Tuner(String indexValue, Configurator configurator)
+		{
+			this.indexValue = indexValue;
+			this.configurator = configurator;
+		}
+
+		@Override
+		public void tuneNode(Node sourceNode, Node sourceClone)
+		{
+			super.tuneNode(sourceNode, sourceClone);
+
+			if (!(sourceNode instanceof GroupNode))
+			{
+				NodeAttribute indexAttr = new NodeAttributeImpl(
+						INDEX_COLUMN_VALUE, String.class, indexValue, null);
+				indexAttr.setOwner(sourceClone);
+				sourceClone.addNodeAttribute(indexAttr);
+			}
+		}
+
+		@Override
+		public void finishTuning(Node sourceClone)
+		{
+			super.finishTuning(sourceClone);
+
+			NodeAttribute columnNameAttr =
+					sourceClone.getNodeAttribute(NodeGeneratorNodeTemplate.TABLE_COLUMN_NAME);
+			if (columnNameAttr!=null)
+			{
+				if (columnNameAttr.getRawValue()==null)
+				{
+					sourceClone.removeNodeAttribute(columnNameAttr.getName());
+					configurator.getTreeStore().removeNodeAttribute(columnNameAttr.getId());
+				}
+				else if (sourceClone instanceof AbstractDataConsumer)
+				{
+					try
+					{
+						NodeAttribute dataSourceAttr = sourceClone.getNodeAttribute(
+								AbstractDataConsumer.DATASOURCE_ATTRIBUTE);
+						dataSourceAttr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
+						dataSourceAttr.setValue(getPath());
+						dataSourceAttr.save();
+					}
+					catch (Exception ex)
+					{
+						String message = 
+								String.format(
+									"Error configuring (%s) attribute for node (%s)"
+									, AbstractDataConsumer.DATASOURCE_ATTRIBUTE
+									, sourceClone.getPath());
+						error(message, ex);
+						throw new NodeError(message, ex);
+					}
+				}
+			}
+		}
+	}
 }

@@ -17,6 +17,7 @@
 
 package org.raven.rrd;
 
+import org.raven.template.GroupNode;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.ds.DataSource;

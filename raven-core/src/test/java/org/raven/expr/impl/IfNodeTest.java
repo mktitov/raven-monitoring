@@ -20,7 +20,7 @@ package org.raven.expr.impl;
 import java.util.Collection;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
-import org.raven.template.TemplateEntry;
+import org.raven.template.impl.TemplateEntry;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 

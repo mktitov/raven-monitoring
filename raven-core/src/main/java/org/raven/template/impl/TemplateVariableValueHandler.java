@@ -15,7 +15,7 @@
  *  under the License.
  */
 
-package org.raven.template;
+package org.raven.template.impl;
 
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.AttributeReferenceValueHandler;

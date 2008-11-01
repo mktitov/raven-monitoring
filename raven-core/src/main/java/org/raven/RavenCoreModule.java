@@ -56,9 +56,11 @@ import org.raven.sched.impl.SystemSchedulerReferenceValues;
 import org.raven.sched.impl.SystemSchedulerValueHandler;
 import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
 import org.raven.sql.QueryParameterValueHandlerFactory;
-import org.raven.template.TemplateVariable;
-import org.raven.template.TemplateVariableReferenceValues;
-import org.raven.template.TemplateVariableValueHandlerFactory;
+import org.raven.template.GroupsOrganazier;
+import org.raven.template.impl.GroupsOrganazierImpl;
+import org.raven.template.impl.TemplateVariable;
+import org.raven.template.impl.TemplateVariableReferenceValues;
+import org.raven.template.impl.TemplateVariableValueHandlerFactory;
 import org.raven.tree.AttributeReferenceValues;
 import org.raven.tree.AttributeValueHandlerFactory;
 import org.raven.tree.AttributeValueHandlerRegistry;
@@ -85,6 +87,7 @@ public class RavenCoreModule
         binder.bind(NodeLogger.class, NodeLoggerImpl.class);
         binder.bind(Configurator.class, ConfiguratorImpl.class);
         binder.bind(ExpressionCompiler.class, ExpressionCompilerImpl.class);
+		binder.bind(GroupsOrganazier.class, GroupsOrganazierImpl.class);
     }
     
     public static Configurator buildConfigurator(Map<String, Class> treeStoreEngines)

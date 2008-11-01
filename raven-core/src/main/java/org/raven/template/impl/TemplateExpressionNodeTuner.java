@@ -15,13 +15,10 @@
  *  under the License.
  */
 
-package org.raven.template;
+package org.raven.template.impl;
 
 import java.util.Collection;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.script.Bindings;
-import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 import org.raven.expr.Expression;
 import org.raven.expr.ExpressionCompiler;
@@ -30,7 +27,6 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
 import org.raven.tree.NodeTuner;
 import org.weda.beans.ObjectUtils;
-import org.weda.converter.TypeConverterException;
 import org.weda.internal.annotations.Service;
 import org.weda.services.TypeConverter;
 
@@ -43,9 +39,9 @@ public class TemplateExpressionNodeTuner implements NodeTuner
     public final static String TEMPLATE_EXPRESSION_PREFIX = "^t";
     
     @Service
-    private static ExpressionCompiler expressionCompiler;
+    protected static ExpressionCompiler expressionCompiler;
     @Service
-    private static TypeConverter converter;
+    protected static TypeConverter converter;
     
     public Node cloneNode(Node sourceNode) 
     {

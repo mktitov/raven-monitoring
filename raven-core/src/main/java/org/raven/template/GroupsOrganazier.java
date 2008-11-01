@@ -15,27 +15,20 @@
  *  under the License.
  */
 
-package org.raven.impl;
+package org.raven.template;
 
-import org.raven.template.impl.TemplateVariable;
-import org.raven.tree.AttributeReference;
+import org.raven.tree.Node;
+import org.raven.tree.NodeTuner;
 
 /**
+ * Allows to create "normal" nodes from template nodes which organized using
+ * {@link GroupNode} node types.
  *
  * @author Mikhail Titov
  */
-public class StringToTemplateVariableConverter extends StringToAttributeReferenceConverter
+public interface GroupsOrganazier
 {
-    @Override
-    public TemplateVariable convert(String value, Class realTargetType, String format)
-    {
-        AttributeReference attrRef = super.convert(value, realTargetType, format);
-        return new TemplateVariable(attrRef.getAttribute());
-    }
-
-    @Override
-    public Class getTargetType()
-    {
-        return TemplateVariable.class;
-    }
+	public void organize(
+			Node target, Node template, NodeTuner tuner, GroupsOrganizerListener listener
+			, boolean autoStart);
 }

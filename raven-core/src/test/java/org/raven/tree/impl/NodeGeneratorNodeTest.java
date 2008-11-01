@@ -17,11 +17,11 @@
 
 package org.raven.tree.impl;
 
-import org.raven.table.*;
 import org.junit.Before;
-import org.raven.*;
 import org.junit.Test;
+import org.raven.RavenCoreTestCase;
 import org.raven.ds.impl.AbstractDataConsumer;
+import org.raven.table.Table;
 import org.raven.tree.impl.objects.ColumnValueDataConsumer;
 import org.raven.tree.impl.objects.TestDataSource;
 import org.raven.tree.InvalidPathException;
@@ -98,7 +98,7 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
         
         NodeGeneratorNodeTemplate template =
                 (NodeGeneratorNodeTemplate) table.getChildren(NodeGeneratorNodeTemplate.NAME);
-        ContainerNode node = new ContainerNode("${column1}");
+        ContainerNode node = new ContainerNode("^t row['column1']");
         template.addChildren(node);
         store.saveNode(node);
         node.init();
@@ -108,9 +108,10 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
         node.addChildren(child);
         store.saveNode(child);
         NodeAttribute attr = 
-                new NodeAttributeImpl("${column2}", String.class, "test ${column1}", "${column1}");
+                new NodeAttributeImpl("child_attr", String.class, "'test '+row['column1']", null);
         attr.setOwner(child);
         child.addNodeAttribute(attr);
+		attr.setTemplateExpression(true);
         attr.init();
         store.saveNodeAttribute(attr);
         
@@ -354,7 +355,8 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
         NodeAttribute indexAttr = node.getNodeAttribute(NodeGeneratorNode.INDEX_COLUMN_VALUE);
         assertNotNull(indexAttr);
         assertEquals("value1_"+suffix, indexAttr.getValue());
-        NodeAttribute columnNameAttr = node.getNodeAttribute(NodeGeneratorNodeTemplate.TABLE_COLUMN_NAME);
+        NodeAttribute columnNameAttr =
+				node.getNodeAttribute(NodeGeneratorNodeTemplate.TABLE_COLUMN_NAME);
         assertNotNull(columnNameAttr);
         assertEquals("column1", columnNameAttr.getValue());
         
@@ -362,10 +364,9 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
         assertNotNull(child);
         assertEquals(status, child.getStatus());
         assertNull(child.getNodeAttribute(NodeGeneratorNodeTemplate.TABLE_COLUMN_NAME));
-        NodeAttribute attr = child.getNodeAttribute("value2_"+suffix);
+        NodeAttribute attr = child.getNodeAttribute("child_attr");
         assertNotNull(attr);
         assertEquals("test value1_"+suffix, attr.getValue());
-        assertEquals("value1_"+suffix, attr.getDescription());
     }
 
     private NodeAttribute checkColumnNameAttribute(

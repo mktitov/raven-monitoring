@@ -19,7 +19,7 @@ package org.raven.rrd;
 
 import org.raven.annotations.NodeClass;
 import org.raven.rrd.data.RRDNode;
-import org.raven.template.TemplateEntry;
+import org.raven.template.impl.TemplateEntry;
 
 /**
  *

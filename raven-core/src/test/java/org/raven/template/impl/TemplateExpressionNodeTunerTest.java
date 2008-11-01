@@ -15,8 +15,10 @@
  *  under the License.
  */
 
-package org.raven.template;
+package org.raven.template.impl;
 
+import org.raven.template.impl.TemplateExpressionNodeTuner;
+import org.raven.template.impl.TemplateNode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

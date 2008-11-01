@@ -15,8 +15,13 @@
  *  under the License.
  */
 
-package org.raven.template;
+package org.raven.template.impl;
 
+import org.raven.template.impl.TemplateVariableValueHandlerFactory;
+import org.raven.template.impl.TemplatesNode;
+import org.raven.template.impl.TemplateWizard;
+import org.raven.template.impl.TemplateVariablesNode;
+import org.raven.template.impl.TemplateNode;
 import org.apache.tapestry.ioc.RegistryBuilder;
 import org.junit.Test;
 import org.raven.RavenCoreModule;

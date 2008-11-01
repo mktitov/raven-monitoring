@@ -30,7 +30,7 @@ import org.raven.conf.Configurator;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.log.impl.NodeLoggerNode;
 import org.raven.sched.impl.SchedulersNode;
-import org.raven.template.TemplatesNode;
+import org.raven.template.impl.TemplatesNode;
 import org.raven.tree.AttributeReference;
 import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;

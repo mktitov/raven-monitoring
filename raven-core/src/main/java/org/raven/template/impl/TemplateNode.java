@@ -15,7 +15,7 @@
  *  under the License.
  */
 
-package org.raven.template;
+package org.raven.template.impl;
 
 import javax.script.Bindings;
 import org.raven.annotations.NodeClass;

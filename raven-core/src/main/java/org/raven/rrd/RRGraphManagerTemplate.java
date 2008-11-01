@@ -17,13 +17,14 @@
 
 package org.raven.rrd;
 
+import org.raven.template.GroupNode;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.raven.annotations.NodeClass;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.expr.impl.IfNode;
 import org.raven.rrd.graph.RRGraphNode;
-import org.raven.template.TemplateEntry;
+import org.raven.template.impl.TemplateEntry;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;

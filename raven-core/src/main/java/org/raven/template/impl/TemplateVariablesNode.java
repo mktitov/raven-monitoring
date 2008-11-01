@@ -15,29 +15,25 @@
  *  under the License.
  */
 
-package org.raven.rrd;
+package org.raven.template.impl;
 
 import org.raven.annotations.NodeClass;
-import org.raven.annotations.Parameter;
-import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.tree.impl.BaseNode;
-import org.weda.annotations.constraints.NotNull;
+import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(importChildTypesFromParent=true)
-public class GroupNode extends BaseNode
+@NodeClass(parentNode=TemplateNode.class)
+@Description("Holds the template variables")
+public class TemplateVariablesNode extends BaseNode
 {
-    public final static String GROUPINGEXPRESSION_ATTRIBUTE = "groupingExpression";
-    
-    @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
-    @NotNull
-    private String groupingExpression;
 
-    public String getGroupingExpression()
+    @Override
+    protected boolean includeLogLevel()
     {
-        return groupingExpression;
+        return false;
     }
+
 }

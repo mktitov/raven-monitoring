@@ -15,22 +15,32 @@
  *  under the License.
  */
 
-package org.raven.template;
+package org.raven.template.impl.objects;
 
+import java.util.HashMap;
+import java.util.Map;
+import javax.script.Bindings;
 import org.raven.tree.impl.BaseNode;
-import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
-@Description("The root for template")
-public class TemplatesNode extends BaseNode
+public class NodeWithExpressionVariables extends BaseNode
 {
-    public static String NAME = "Templates";
-    
-    public TemplatesNode()
-    {
-        setName(NAME);
-    }
+	private Map<String, Object> vars = new HashMap<String, Object>();
+
+	public void setVariable(String name, Object value)
+	{
+		vars.put(name, value);
+	}
+
+	@Override
+	public void formExpressionBindings(Bindings bindings)
+	{
+		super.formExpressionBindings(bindings);
+
+		bindings.putAll(vars);
+	}
+
 }

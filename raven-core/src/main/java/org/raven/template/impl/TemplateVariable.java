@@ -15,27 +15,21 @@
  *  under the License.
  */
 
-package org.raven.impl;
+package org.raven.template.impl;
 
-import org.raven.template.impl.TemplateVariable;
-import org.raven.tree.AttributeReference;
+import org.raven.tree.NodeAttribute;
+import org.raven.tree.impl.AttributeReferenceImpl;
+import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class StringToTemplateVariableConverter extends StringToAttributeReferenceConverter
+@Description("Allows to reference to the template variable")
+public class TemplateVariable extends AttributeReferenceImpl
 {
-    @Override
-    public TemplateVariable convert(String value, Class realTargetType, String format)
+    public TemplateVariable(NodeAttribute attribute)
     {
-        AttributeReference attrRef = super.convert(value, realTargetType, format);
-        return new TemplateVariable(attrRef.getAttribute());
-    }
-
-    @Override
-    public Class getTargetType()
-    {
-        return TemplateVariable.class;
+        super(attribute);
     }
 }
