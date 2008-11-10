@@ -17,6 +17,7 @@
 
 package org.raven.template.impl;
 
+import org.raven.RavenUtils;
 import org.raven.template.GroupNode;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -32,15 +33,29 @@ public class GroupsOrganizerNodeTuner extends TemplateExpressionNodeTuner
 	@Override
 	public Node cloneNode(Node sourceNode)
 	{
+		Node superClone = super.cloneNode(sourceNode);
+		sourceNode = superClone==null? sourceNode : superClone;
 		if (sourceNode instanceof GroupNode)
 		{
 			String groupName = getGroupName(sourceNode);
 			ContainerNode clone = new ContainerNode(groupName);
-
+			try
+			{
+				RavenUtils.copyAttributes(
+					sourceNode, clone, false, GroupNode.GROUPINGEXPRESSION_ATTRIBUTE);
+			}
+			catch (Exception e)
+			{
+				throw new NodeError(
+					String.format(
+						"Error coping attributes from node (%s) to the node (%s)"
+						, sourceNode.getPath(), clone.getPath())
+					, e);
+			}
 			return clone;
 		}
 		else
-			return null;
+			return superClone;
 	}
 
 	@Override

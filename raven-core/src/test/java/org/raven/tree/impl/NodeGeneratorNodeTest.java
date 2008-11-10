@@ -22,6 +22,7 @@ import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.table.Table;
+import org.raven.template.GroupNode;
 import org.raven.tree.impl.objects.ColumnValueDataConsumer;
 import org.raven.tree.impl.objects.TestDataSource;
 import org.raven.tree.InvalidPathException;
@@ -98,10 +99,12 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
         
         NodeGeneratorNodeTemplate template =
                 (NodeGeneratorNodeTemplate) table.getChildren(NodeGeneratorNodeTemplate.NAME);
-        ContainerNode node = new ContainerNode("^t row['column1']");
+        GroupNode node = new GroupNode();
+        node.setName("group");
         template.addChildren(node);
         store.saveNode(node);
         node.init();
+        node.setGroupingExpression("row['column1']");
         node.getNodeAttribute(NodeGeneratorNodeTemplate.TABLE_COLUMN_NAME).setValue("column1");
         
         ContainerNode child = new ContainerNode("child");
@@ -111,7 +114,7 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
                 new NodeAttributeImpl("child_attr", String.class, "'test '+row['column1']", null);
         attr.setOwner(child);
         child.addNodeAttribute(attr);
-		attr.setTemplateExpression(true);
+        attr.setTemplateExpression(true);
         attr.init();
         store.saveNodeAttribute(attr);
         
@@ -147,7 +150,7 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
         NodeGeneratorNodeTemplate template =
                 (NodeGeneratorNodeTemplate) table.getChildren(NodeGeneratorNodeTemplate.NAME);
         
-        ContainerNode node = new ContainerNode("node-${column1}");
+        ContainerNode node = new ContainerNode("^t 'node-'+row.column1");
         template.addChildren(node);
         store.saveNode(node);
         node.init();
@@ -268,7 +271,7 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
         NodeGeneratorNodeTemplate template =
                 (NodeGeneratorNodeTemplate) table.getChildren(NodeGeneratorNodeTemplate.NAME);
         
-        ContainerNode node = new ContainerNode("node-${column1}");
+        ContainerNode node = new ContainerNode("^t 'node-'+row.column1");
         template.addChildren(node);
         store.saveNode(node);
         node.init();
@@ -300,7 +303,7 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
         NodeGeneratorNodeTemplate template =
                 (NodeGeneratorNodeTemplate) table.getChildren(NodeGeneratorNodeTemplate.NAME);
         
-        ContainerNode node = new ContainerNode("node-${column1}");
+        ContainerNode node = new ContainerNode("^t \"node-${row.column1}\"");
         template.addChildren(node);
         store.saveNode(node);
         node.init();
@@ -352,9 +355,6 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
         Node node = table.getChildren("value1_"+suffix);        
         assertNotNull(node);
         assertEquals(status, node.getStatus());
-        NodeAttribute indexAttr = node.getNodeAttribute(NodeGeneratorNode.INDEX_COLUMN_VALUE);
-        assertNotNull(indexAttr);
-        assertEquals("value1_"+suffix, indexAttr.getValue());
         NodeAttribute columnNameAttr =
 				node.getNodeAttribute(NodeGeneratorNodeTemplate.TABLE_COLUMN_NAME);
         assertNotNull(columnNameAttr);
@@ -363,6 +363,9 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
         Node child = node.getChildren("child");
         assertNotNull(child);
         assertEquals(status, child.getStatus());
+        NodeAttribute indexAttr = child.getNodeAttribute(NodeGeneratorNode.INDEX_COLUMN_VALUE);
+        assertNotNull(indexAttr);
+        assertEquals("value1_"+suffix, indexAttr.getValue());
         assertNull(child.getNodeAttribute(NodeGeneratorNodeTemplate.TABLE_COLUMN_NAME));
         NodeAttribute attr = child.getNodeAttribute("child_attr");
         assertNotNull(attr);

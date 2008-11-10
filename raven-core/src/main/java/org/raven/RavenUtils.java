@@ -18,9 +18,14 @@
 package org.raven;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import org.apache.commons.lang.ArrayUtils;
 import org.raven.table.Table;
+import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
+import org.raven.tree.impl.BaseNode;
 
 /**
  *
@@ -43,5 +48,32 @@ public class RavenUtils
             return result;
         }
     }
+
+	public static void copyAttributes(
+			Node sourceNode, Node targetNode, boolean initAndSaveAttribute, String... excludeAttributes)
+		throws Exception
+	{
+		Collection<NodeAttribute> attrs = sourceNode.getNodeAttributes();
+		if (attrs!=null)
+		{
+			for (NodeAttribute attr: attrs)
+			{
+				if (   (   excludeAttributes==null
+					    || !ArrayUtils.contains(excludeAttributes, attr.getName()))
+					&& targetNode.getNodeAttribute(attr.getName())==null
+					&& !attr.getName().equals(BaseNode.LOGLEVEL_ATTRIBUTE))
+				{
+					NodeAttribute attrClone = (NodeAttribute) attr.clone();
+					attrClone.setOwner(targetNode);
+					targetNode.addNodeAttribute(attrClone);
+					if (initAndSaveAttribute)
+					{
+						attrClone.init();
+						attrClone.save();
+					}
+				}
+			}
+		}
+	}
 
 }
