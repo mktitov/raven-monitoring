@@ -91,6 +91,7 @@ public class TreeImpl implements Tree
     private ConnectionPoolsNode connectionPoolsNode;
     private SchedulersNode schedulersNode;
     private NodeLoggerNode nodeLoggerNode;
+	private QueuesNode queuesNode;
 
     public TreeImpl(
             AttributeReferenceValues attributeReferenceValues
@@ -414,6 +415,14 @@ public class TreeImpl implements Tree
             systemNode.addChildren(dataSourcesNode);
             treeStore.saveNode(dataSourcesNode);
         }
+
+		queuesNode = (QueuesNode) systemNode.getChildren(QueuesNode.NAME);
+		if (queuesNode==null)
+		{
+			queuesNode = new QueuesNode();
+			systemNode.addChildren(queuesNode);
+			treeStore.saveNode(queuesNode);
+		}
     }
 
     private void createTempatesSubtree()

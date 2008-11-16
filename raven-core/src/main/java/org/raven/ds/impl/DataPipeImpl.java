@@ -27,7 +27,6 @@ import org.raven.ds.DataSource;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
-import org.weda.annotations.Description;
 
 /**
  * Collects data from one data source and transmits it to all {@link DataConsumer data consumers} 

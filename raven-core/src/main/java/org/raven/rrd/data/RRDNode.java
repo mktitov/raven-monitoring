@@ -47,6 +47,7 @@ import org.raven.ds.ArchiveException;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
 import org.raven.rrd.ConsolidationFunction;
+import org.raven.rrd.RRIoQueueNode;
 import org.raven.table.DataArchiveTable;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
@@ -55,6 +56,7 @@ import org.raven.tree.NodeError;
 import org.raven.tree.NodeListener;
 import org.raven.tree.NodeShutdownError;
 import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.beans.ObjectUtils;
 
@@ -67,6 +69,10 @@ import org.weda.beans.ObjectUtils;
 public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 {
 	public enum SampleUpdatePolicy {UPDATE_WHEN_READY, UPDATE_WHEN_TIME_EXPIRED};
+
+	@Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
+	@NotNull()
+	private RRIoQueueNode ioQueue;
 	
     @Parameter(defaultValue="300")
 	@NotNull
@@ -289,6 +295,13 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 
     public void setData(DataSource dataSource, Object data)
     {
+		if (getStatus()!=Status.STARTED)
+			return;
+		ioQueue.pushWriteRequest((RRDataSource)dataSource,data);
+    }
+
+	public void setDataFromQueue(RRDataSource dataSource, Object data)
+	{
         try
         {
             long time = Util.getTime();
@@ -349,7 +362,17 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
             logger.error(
                     String.format("Error error saving new value to rrd node (%s)", getPath()), e);
         }
-    }
+	}
+
+	public RRIoQueueNode getIoQueue()
+	{
+		return ioQueue;
+	}
+
+	public void setIoQueue(RRIoQueueNode ioQueue)
+	{
+		this.ioQueue = ioQueue;
+	}
 
     public String getDatabaseFileName()
     {

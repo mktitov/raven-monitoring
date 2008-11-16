@@ -38,6 +38,7 @@ import org.raven.RavenCoreTestCase;
 import org.raven.RavenUtils;
 import org.raven.conf.Configurator;
 import org.raven.rrd.DataSourceType;
+import org.raven.rrd.RRIoQueueNode;
 import org.raven.rrd.objects.PushDataSource;
 import org.raven.table.DataArchiveTable;
 import org.raven.table.Table;
@@ -52,21 +53,29 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
-@Ignore
+//@Ignore
 public class RRDNodeTest extends RavenCoreTestCase
 {
     private TypeConverter converter;
 	private PushDataSource ds1, ds2;
 	private RRDataSource rrds1, rrds2;
 	private RRDNode rrdNode;
+	private RRIoQueueNode queueNode;
     
     @Before
     public void setupTest()
     {
         converter = registry.getService(TypeConverter.class);
+		queueNode = new RRIoQueueNode();
+		queueNode.setName("ioqueue");
+		tree.getRootNode().addChildren(queueNode);
+		queueNode.save();
+		queueNode.init();
+		queueNode.start();
+		assertEquals(Status.STARTED, queueNode.getStatus());
     }
     
-    @Test
+//    @Test
     public void test() throws ConstraintException, Exception
     {
         TestDataSource ds = new TestDataSource();
@@ -83,6 +92,7 @@ public class RRDNodeTest extends RavenCoreTestCase
         NodeAttribute attr = rrd.getNodeAttribute("step");
         attr.setValue("2");
         store.saveNodeAttribute(attr);
+		rrd.setIoQueue(queueNode);
         assertEquals(Status.INITIALIZED, rrd.getStatus());
         
         RRDataSource rrds = new RRDataSource();
@@ -235,7 +245,7 @@ public class RRDNodeTest extends RavenCoreTestCase
 
     }
     
-    @Test
+//    @Test
     public void removeTest() throws Exception
     {
         TestDataSource ds = new TestDataSource();
@@ -252,6 +262,7 @@ public class RRDNodeTest extends RavenCoreTestCase
         NodeAttribute attr = rrd.getNodeAttribute("step");
         attr.setValue("2");
         store.saveNodeAttribute(attr);
+		rrd.setIoQueue(queueNode);
         assertEquals(Status.INITIALIZED, rrd.getStatus());
         
         RRDataSource rrds = new RRDataSource();
@@ -300,7 +311,7 @@ public class RRDNodeTest extends RavenCoreTestCase
         assertFalse(dbFile.exists());
     }
 
-    @Test
+//    @Test
     public void getArchivedData_test() throws Exception
     {
         TestDataSource ds = new TestDataSource();
@@ -317,6 +328,7 @@ public class RRDNodeTest extends RavenCoreTestCase
         NodeAttribute attr = rrd.getNodeAttribute("step");
         attr.setValue("2");
         store.saveNodeAttribute(attr);
+		rrd.setIoQueue(queueNode);
         assertEquals(Status.INITIALIZED, rrd.getStatus());
         
         RRDataSource rrds = new RRDataSource();
@@ -378,7 +390,7 @@ public class RRDNodeTest extends RavenCoreTestCase
         assertTrue(data instanceof Table);
     }
 
-	@Test
+//	@Test
 	public void updateWhenReady_oneDataSourceWithoutDataTest() throws Exception
 	{
 		createDatabase();
@@ -407,7 +419,7 @@ public class RRDNodeTest extends RavenCoreTestCase
 		long startTime = Util.normalize(Util.getTime(), 2);
 		ds1.pushData(100);
 		ds2.pushData(200);
-		TimeUnit.SECONDS.sleep(3);
+		TimeUnit.SECONDS.sleep(300);
 
 		Double val1 = getValueFromArchive(startTime, rrds1);
 		Double val2 = getValueFromArchive(startTime, rrds2);
@@ -415,7 +427,7 @@ public class RRDNodeTest extends RavenCoreTestCase
 		assertEquals(new Double(200.), val2);
 	}
 
-	@Test
+//	@Test
 	public void updateWhenReady_oneDataSourceNotStartedTest() throws Exception
 	{
 		createDatabase();
@@ -435,7 +447,7 @@ public class RRDNodeTest extends RavenCoreTestCase
 		assertEquals(new Double(100.), val1);
 	}
 
-	@Test
+//	@Test
 	public void updateWhenTimeExpiredTest() throws Exception
 	{
 		createDatabase();
@@ -453,7 +465,7 @@ public class RRDNodeTest extends RavenCoreTestCase
 		assertEquals(new Double(100.), val1);
 	}
 
-	@Test
+//	@Test
 	public void dataAndTimeTest() throws Exception
 	{
 		initDataFor_dataAndTimeTest();
@@ -549,6 +561,7 @@ public class RRDNodeTest extends RavenCoreTestCase
         assertEquals(Status.INITIALIZED, rrdNode.getStatus());
 		rrdNode.setStep(2l);
 		rrdNode.setStartTime("now-1s");
+		rrdNode.setIoQueue(queueNode);
 
         rrds1 = new RRDataSource();
         rrds1.setName("rrds1");

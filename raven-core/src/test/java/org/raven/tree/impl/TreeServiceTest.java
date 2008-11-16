@@ -904,6 +904,9 @@ public class TreeServiceTest extends ServiceTestCase
                 (DataSourcesNode) systemNode.getChildren(DataSourcesNode.NAME);
         assertNotNull(dataSourcesNode);
 
+		QueuesNode queuesNode = (QueuesNode) systemNode.getChildren(QueuesNode.NAME);
+		assertNotNull(queuesNode);
+
         ConnectionPoolsNode connectionPoolsNode = 
                 (ConnectionPoolsNode) systemNode.getChildren(ConnectionPoolsNode.NAME);
         assertNotNull(connectionPoolsNode);
