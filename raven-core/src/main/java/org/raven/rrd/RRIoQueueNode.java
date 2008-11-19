@@ -80,6 +80,7 @@ public class RRIoQueueNode extends BaseNode
 		dbFlags = new HashSet<Integer>();
 		avgWriteTimeLock = new ReentrantLock();
 		avgRequestsLock = new ReentrantLock();
+		dbFlagsLock = new ReentrantLock();
 
 		resetStatisticFields();
 	}

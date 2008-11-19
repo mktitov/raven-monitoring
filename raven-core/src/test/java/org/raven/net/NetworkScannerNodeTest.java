@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.raven.DummyScheduler;
 import org.raven.RavenCoreTestCase;
@@ -35,6 +36,7 @@ import org.raven.tree.Node.Status;
  *
  * @author Mikhail Titov
  */
+@Ignore
 public class NetworkScannerNodeTest extends RavenCoreTestCase
 {
     private DummyScheduler scheduler;

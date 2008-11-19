@@ -31,6 +31,7 @@ import org.raven.RavenCoreTestCase;
 import org.raven.ds.DataSource;
 import org.raven.rrd.ConsolidationFunction;
 import org.raven.rrd.RRColor;
+import org.raven.rrd.RRIoQueueNode;
 import org.raven.rrd.data.RRArchive;
 import org.raven.rrd.data.RRDNode;
 import org.raven.rrd.data.RRDataSource;
@@ -53,12 +54,23 @@ public class RRGraphNodeTest extends RavenCoreTestCase
         tree.getRootNode().addChildren(ds);
         store.saveNode(ds);
         ds.init();
-        
+
+		RRIoQueueNode queueNode = new RRIoQueueNode();
+		queueNode.setName("ioqueue");
+		tree.getRootNode().addChildren(queueNode);
+		queueNode.save();
+		queueNode.init();
+		queueNode.setCorePoolSize(1);
+		queueNode.setMaximumPoolSize(1);
+		queueNode.start();
+		assertEquals(Status.STARTED, queueNode.getStatus());
+
         RRDNode rrd = new RRDNode();
         rrd.setName("rrd");
         tree.getRootNode().addChildren(rrd);
         store.saveNode(rrd);
         rrd.init();
+		rrd.setIoQueue(queueNode);
         NodeAttribute attr = rrd.getNodeAttribute("step");
         attr.setValue("1");
         store.saveNodeAttribute(attr);

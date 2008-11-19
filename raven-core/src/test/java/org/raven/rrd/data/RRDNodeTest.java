@@ -53,7 +53,7 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
-//@Ignore
+@Ignore
 public class RRDNodeTest extends RavenCoreTestCase
 {
     private TypeConverter converter;
@@ -71,11 +71,13 @@ public class RRDNodeTest extends RavenCoreTestCase
 		tree.getRootNode().addChildren(queueNode);
 		queueNode.save();
 		queueNode.init();
+		queueNode.setCorePoolSize(1);
+		queueNode.setMaximumPoolSize(1);
 		queueNode.start();
 		assertEquals(Status.STARTED, queueNode.getStatus());
     }
     
-//    @Test
+    @Test
     public void test() throws ConstraintException, Exception
     {
         TestDataSource ds = new TestDataSource();
@@ -245,7 +247,7 @@ public class RRDNodeTest extends RavenCoreTestCase
 
     }
     
-//    @Test
+    @Test
     public void removeTest() throws Exception
     {
         TestDataSource ds = new TestDataSource();
@@ -311,7 +313,7 @@ public class RRDNodeTest extends RavenCoreTestCase
         assertFalse(dbFile.exists());
     }
 
-//    @Test
+    @Test
     public void getArchivedData_test() throws Exception
     {
         TestDataSource ds = new TestDataSource();
@@ -390,7 +392,7 @@ public class RRDNodeTest extends RavenCoreTestCase
         assertTrue(data instanceof Table);
     }
 
-//	@Test
+	@Test
 	public void updateWhenReady_oneDataSourceWithoutDataTest() throws Exception
 	{
 		createDatabase();
@@ -419,7 +421,7 @@ public class RRDNodeTest extends RavenCoreTestCase
 		long startTime = Util.normalize(Util.getTime(), 2);
 		ds1.pushData(100);
 		ds2.pushData(200);
-		TimeUnit.SECONDS.sleep(300);
+		TimeUnit.SECONDS.sleep(3);
 
 		Double val1 = getValueFromArchive(startTime, rrds1);
 		Double val2 = getValueFromArchive(startTime, rrds2);
@@ -427,7 +429,7 @@ public class RRDNodeTest extends RavenCoreTestCase
 		assertEquals(new Double(200.), val2);
 	}
 
-//	@Test
+	@Test
 	public void updateWhenReady_oneDataSourceNotStartedTest() throws Exception
 	{
 		createDatabase();
@@ -447,7 +449,7 @@ public class RRDNodeTest extends RavenCoreTestCase
 		assertEquals(new Double(100.), val1);
 	}
 
-//	@Test
+	@Test
 	public void updateWhenTimeExpiredTest() throws Exception
 	{
 		createDatabase();
@@ -465,7 +467,7 @@ public class RRDNodeTest extends RavenCoreTestCase
 		assertEquals(new Double(100.), val1);
 	}
 
-//	@Test
+	@Test
 	public void dataAndTimeTest() throws Exception
 	{
 		initDataFor_dataAndTimeTest();
@@ -506,6 +508,7 @@ public class RRDNodeTest extends RavenCoreTestCase
         assertEquals(Status.INITIALIZED, rrdNode.getStatus());
 		rrdNode.setStep(1800l);
 		rrdNode.setStartTime("now-1h");
+		rrdNode.setIoQueue(queueNode);
 
         rrds1 = new RRDataSource();
         rrds1.setName("rrds1");

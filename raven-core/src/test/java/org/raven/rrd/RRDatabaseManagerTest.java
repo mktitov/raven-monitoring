@@ -50,6 +50,7 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
     DataSource source_i1 = null;
     DataSource source_i2 = null;
     DataSource source_i3 = null;
+	RRIoQueueNode queueNode;
     
     @Before
     public void prepareTest()
@@ -64,7 +65,16 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
         databaseManager.init();
         assertEquals(Status.INITIALIZED, databaseManager.getStatus());
         
-    }
+   		queueNode = new RRIoQueueNode();
+		queueNode.setName("ioqueue");
+		tree.getRootNode().addChildren(queueNode);
+		queueNode.save();
+		queueNode.init();
+		queueNode.setCorePoolSize(1);
+		queueNode.setMaximumPoolSize(1);
+		queueNode.start();
+		assertEquals(Status.STARTED, queueNode.getStatus());
+ }
     
     @Test
     public void initNodeTest()
@@ -463,6 +473,7 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
         templatesNode.addChildren(db);
         store.saveNode(db);
         db.init();
+		db.setIoQueue(queueNode);
         
         RRArchive archive = new RRArchive();
         archive.setName("archive");
