@@ -2,8 +2,8 @@ package org.raven.ui.node;
 
 import org.apache.myfaces.trinidad.context.RequestContext;
 import org.apache.myfaces.trinidad.event.ReturnEvent;
-import org.raven.template.TemplateNode;
-import org.raven.template.TemplateWizard;
+import org.raven.template.impl.TemplateWizard;
+import org.raven.template.impl.TemplateNode;
 import org.raven.tree.Node;
 import org.raven.ui.SessionBean;
 import org.weda.constraints.ConstraintException;

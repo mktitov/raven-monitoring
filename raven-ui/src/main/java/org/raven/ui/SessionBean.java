@@ -39,7 +39,7 @@ import org.raven.ui.vo.ViewableObjectsByNode;
 import org.raven.ui.vo.ViewableObjectsStorage;
 import org.raven.conf.Configurator;
 import org.raven.conf.impl.UserAcl;
-import org.raven.template.TemplateNode;
+import org.raven.template.impl.TemplateNode;
 import org.raven.tree.Node;
 import org.raven.tree.NodeError;
 import org.raven.tree.Tree;
