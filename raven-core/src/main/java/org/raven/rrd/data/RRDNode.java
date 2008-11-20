@@ -92,6 +92,9 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 	@Parameter(defaultValue="now")
 	@NotNull
 	private String startTime;
+
+	@Parameter(readOnly=true)
+	private long writesCount;
     
     private AtomicBoolean databaseInitialized;
     private RrdDb db;
@@ -117,6 +120,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
         newDsNamesLock = new ReentrantLock();
         sample = null;
         db = null;
+		writesCount = 0l;
     }
 
     public Lock getReadLock()
@@ -337,19 +341,6 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 							}
 							break;
 					}
-//                    long stepsBetween = (time-sample.getTime())/step+1;
-//                    if (stepsBetween>0)
-//                    {
-//                        tuneSampleTime();
-//                        sample.update();
-//                        sample.setTime(sample.getTime()+stepsBetween*step);
-//                    }
-//                    Double value = converter.convert(Double.class, data, null);
-//                    if (logger.isDebugEnabled())
-//                        logger.debug(String.format(
-//                                "Setting sample value (%s) for dataSource (%s)"
-//                                , data, dataSource.getPath()));
-//                    sample.setValue(dataSource.getName(), value);
                 }
             }
             finally
@@ -423,6 +414,17 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 	public void setSampleUpdatePolicy(SampleUpdatePolicy sampleUpdatePolicy)
 	{
 		this.sampleUpdatePolicy = sampleUpdatePolicy;
+	}
+
+	@Parameter(readOnly=true)
+	public int getValuesInSample()
+	{
+		return dataSample==null? 0 : dataSample.getValuesCount();
+	}
+
+	public long getWritesCount()
+	{
+		return writesCount;
 	}
 
     private void addArchive(RRArchive archive, boolean lock) throws Exception
@@ -608,6 +610,8 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 				dbSample.setValue(valuesEntry.getKey().getName(), valuesEntry.getValue());
 			
 			dbSample.update();
+
+			writesCount++;
 		}
 		finally
 		{

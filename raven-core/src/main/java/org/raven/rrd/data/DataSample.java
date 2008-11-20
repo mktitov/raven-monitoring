@@ -51,6 +51,11 @@ public class DataSample
 		return values==null? Collections.EMPTY_MAP : values;
 	}
 
+	public int getValuesCount()
+	{
+		return values==null? 0 : values.size();
+	}
+
 	public long getSampleTime()
 	{
 		return sampleTime;
