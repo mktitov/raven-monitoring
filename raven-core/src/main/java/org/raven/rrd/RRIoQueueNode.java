@@ -128,7 +128,7 @@ public class RRIoQueueNode extends BaseNode
 		pushLock.lock();
 		try
 		{
-			int queueSize = executor.getQueue().size();
+			int queueSize = executor.getQueue().size()+1;
 			if (maximumQueueSize==null)
 				maximumQueueSize = new AtomicInteger(queueSize);
 			else if (maximumQueueSize.get()>queueSize)
@@ -190,11 +190,6 @@ public class RRIoQueueNode extends BaseNode
 	public void setTimeUnit(TimeUnit timeUnit)
 	{
 		this.timeUnit = timeUnit;
-	}
-
-	public AtomicInteger getMaximumQueueSize()
-	{
-		return maximumQueueSize;
 	}
 
 	public void setMaximumQueueSize(AtomicInteger maximumQueueSize)
@@ -326,5 +321,4 @@ public class RRIoQueueNode extends BaseNode
 			calculateAvgWriteTime(System.currentTimeMillis()-startTime);
 		}
 	}
-
 }

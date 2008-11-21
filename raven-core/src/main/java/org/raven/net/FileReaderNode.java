@@ -66,6 +66,7 @@ public class FileReaderNode extends AbstractDataSource
                 attributes.get(REMOVEFILEAFTERPROCESSING_ATTRIBUTE).getRealValue();
 
         FileSystemManager fsManager = VFS.getManager();
+
         FileObject baseFile = fsManager.resolveFile(url);
         List<FileObject> files = new ArrayList<FileObject>();
         if (baseFile.getType()==FileType.FILE)
@@ -134,12 +135,14 @@ public class FileReaderNode extends AbstractDataSource
         InputStream is = file.getContent().getInputStream();
         try
         {
-            dataConsumer.setData(this, file.getContent().getInputStream());
+            dataConsumer.setData(this, is);
         }
         finally
         {
             is.close();
             file.close();
+			file.getFileSystem().getFileSystemManager().getFilesCache().removeFile(
+					file.getFileSystem(), file.getName());
 
             if (removeAfterProcessing)
                 file.delete();

@@ -41,7 +41,6 @@ public class DataAndTimeGenerator extends DataPipeImpl
 	private String datePattern;
 
 	@Parameter
-	@NotNull
 	private String date;
 
 	@Parameter
@@ -85,8 +84,15 @@ public class DataAndTimeGenerator extends DataPipeImpl
 			Locale _locale = locale;
 			if (_locale==null)
 				_locale = Locale.getDefault();
-			SimpleDateFormat formatter = new SimpleDateFormat(datePattern, _locale);
-			Date realDate = formatter.parse(date);
+			String _date = date;
+			Date realDate = null;
+			if (_date==null)
+				realDate = new Date();
+			else
+			{
+				SimpleDateFormat formatter = new SimpleDateFormat(datePattern, _locale);
+				realDate = formatter.parse(date);
+			}
 			DataAndTime dataAndTime = new DataAndTime(data, realDate.getTime()/1000);
 
 			super.sendDataToConsumer(consumer, dataAndTime);

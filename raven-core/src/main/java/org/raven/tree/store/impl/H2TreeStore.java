@@ -27,13 +27,13 @@ import java.sql.Types;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.store.TreeStore;
 import org.raven.tree.store.TreeStoreError;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -43,6 +43,8 @@ import org.raven.tree.store.TreeStoreError;
 //TODO: add autoStart to the Node functionality
 public class H2TreeStore implements TreeStore
 {
+	private final static Logger logger = LoggerFactory.getLogger(H2TreeStore.class);
+
     public static final int GET_NODES_FETCH_SIZE = 1000;
     public final static String NODES_TABLE_NAME = "NODES" ;
     public final static String NODE_ATTRIBUTES_TABLE_NAME = "NODE_ATTRIBUTES";
@@ -303,11 +305,12 @@ public class H2TreeStore implements TreeStore
             {
                 Node parentNode = cache.get(parentId);
                 if (parentNode==null)
-                    throw new TreeStoreError(String.format(
+					logger.error(String.format(
                             "Error adding node with id (%d) to the tree. " +
                             "Parent node (%d) not found."
                             , node.getId(), parentId));
-                parentNode.addChildren(node);
+				else
+					parentNode.addChildren(node);
             }
         }
                 
