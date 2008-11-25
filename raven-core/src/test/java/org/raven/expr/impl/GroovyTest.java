@@ -25,15 +25,17 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.SimpleBindings;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
  *
  * @author Mikhail Titov
  */
+@Ignore
 public class GroovyTest extends Assert
 {
-    @Test
+//    @Test
     public void test() throws Exception
     {
 //        Binding binding = new Binding();
@@ -54,14 +56,39 @@ public class GroovyTest extends Assert
         assertEquals(2, bindings.get("var"));
     }
     
-    @Test
+//    @Test
     public void test_compile() throws Exception
     {
-//        GroovyClassLoader loader = new GroovyClassLoader();
-//        Class compiledClass = loader.parseClass("println 'Hello World!'; x = 123; return foo * 10");
-//        assertNotNull(compiledClass);
-//        
-//        GroovyObject obj = (GroovyObject) compiledClass.newInstance();
-//        obj.invokeMethod("run", null);
+        GroovyClassLoader loader = new GroovyClassLoader();
+        Class compiledClass = loader.parseClass("'Hello '+greeting");
+        assertNotNull(compiledClass);
+
+		long startTime = System.currentTimeMillis();
+		for (int i=0; i<100000; ++i)
+		{
+			GroovyObject obj = (GroovyObject) compiledClass.newInstance();
+			obj.setProperty("greeting", "World!");
+			Object result = obj.invokeMethod("run", null);
+			assertEquals("Hello World!", result);
+		}
+		System.out.println("groovy class: "+(System.currentTimeMillis()-startTime));
+
+
+        ScriptEngineManager factory = new ScriptEngineManager();
+        ScriptEngine engine = factory.getEngineByExtension("groovy");
+        assertTrue(engine instanceof Compilable);
+        Compilable compilable = (Compilable) engine;
+        CompiledScript script = compilable.compile("'Hello '+greeting");
+		
+		startTime = System.currentTimeMillis();
+		for (int i=0; i<100000; ++i)
+		{
+			SimpleBindings bindings = new SimpleBindings();
+			bindings.put("greeting", "World!");
+			Object result = script.eval(bindings);
+			assertEquals("Hello World!", result);
+		}
+		System.out.println("groovy script: "+(System.currentTimeMillis()-startTime));
+		
     }
 }
