@@ -17,6 +17,9 @@
 
 package org.raven.rrd.data;
 
+import java.util.Date;
+import org.jrobin.core.Util;
+
 /**
  *
  * @author Mikhail Titov
@@ -41,4 +44,11 @@ public class DataAndTime
 	{
 		return time;
 	}
+
+	@Override
+	public String toString()
+	{
+		return new Date(time*1000).toString()+", "+data;
+	}
+
 }

@@ -1190,6 +1190,11 @@ public class BaseNode implements Node, NodeListener, Logger
             parent.formExpressionBindings(bindings);
     }
 
+	public boolean isLogLevelEnabled(LogLevel level)
+	{
+		return getLogLevel().ordinal() <= level.ordinal();
+	}
+
 	public void debug(String arg0) {
 		sl4jLogger.debug(arg0);
 		if(getLogLevel().ordinal() <= LogLevel.DEBUG.ordinal())

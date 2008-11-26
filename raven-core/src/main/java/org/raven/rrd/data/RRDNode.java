@@ -19,7 +19,9 @@ package org.raven.rrd.data;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -46,6 +48,7 @@ import org.raven.conf.Configurator;
 import org.raven.ds.ArchiveException;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
+import org.raven.log.LogLevel;
 import org.raven.rrd.ConsolidationFunction;
 import org.raven.rrd.RRIoQueueNode;
 import org.raven.table.DataArchiveTable;
@@ -331,9 +334,15 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 								debug("The time for current dataSample was expired. " +
 										"Need to save sample data");
 							saveSampleData();
-							setData(dataSource, data);
+							setDataFromQueue(dataSource, data);
 							break;
 						case VALUE_SETTED:
+							if (isLogLevelEnabled(LogLevel.DEBUG))
+							{
+								debug(String.format(
+										"Data (%s) from ds (%s) saved to sample"
+										, data, dataSource.getName()));
+							}
 							if (   sampleUpdatePolicy==SampleUpdatePolicy.UPDATE_WHEN_READY
 								&& dataSample.isAllValuesSetted())
 							{
@@ -425,6 +434,18 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 	public long getWritesCount()
 	{
 		return writesCount;
+	}
+
+	@Parameter(readOnly=true)
+	public String getLastUpdate() throws Exception
+	{
+		if (getStatus()==Status.STARTED)
+		{
+			SimpleDateFormat fmt = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+			return fmt.format(new Date(db.getLastUpdateTime()*1000));
+		}
+		else
+			return null;
 	}
 
     private void addArchive(RRArchive archive, boolean lock) throws Exception
@@ -592,8 +613,9 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
     
     private void closeDatabase() throws IOException, RrdException
     {
-        tuneSampleTime();
-        sample.update();
+//        tuneSampleTime();
+//        sample.update();
+		saveSampleData();
         db.close();
         db = null;
     }
@@ -602,16 +624,24 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 	{
 		try
 		{
-			if (isDebugEnabled())
-				debug("Saving sample data to the database. Sample time is "
-						+Util.getDate(dataSample.getSampleTime()+1));
-			Sample dbSample = db.createSample(dataSample.getSampleTime()+1);
-			for (Map.Entry<RRDataSource, Double> valuesEntry: dataSample.getValues().entrySet())
-				dbSample.setValue(valuesEntry.getKey().getName(), valuesEntry.getValue());
-			
-			dbSample.update();
+			if (dataSample==null || dataSample.getValuesCount()==0)
+			{
+				if (isLogLevelEnabled(LogLevel.DEBUG))
+					debug("Can't save sample data. Nothing to save.");
+			}
+			else
+			{
+				if (isLogLevelEnabled(LogLevel.DEBUG))
+					debug("Saving sample data to the database. Sample time is "
+							+Util.getDate(dataSample.getSampleTime()+1));
+				Sample dbSample = db.createSample(dataSample.getSampleTime()+1);
+				for (Map.Entry<RRDataSource, Double> valuesEntry: dataSample.getValues().entrySet())
+					dbSample.setValue(valuesEntry.getKey().getName(), valuesEntry.getValue());
 
-			writesCount++;
+				dbSample.update();
+
+				writesCount++;
+			}
 		}
 		finally
 		{

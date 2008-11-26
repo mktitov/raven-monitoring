@@ -42,4 +42,10 @@ public class RRCDef extends LeafNode implements DataDefinition
     {
         return expression;
     }
+
+	public void setExpression(String expression)
+	{
+		this.expression = expression;
+	}
+
 }

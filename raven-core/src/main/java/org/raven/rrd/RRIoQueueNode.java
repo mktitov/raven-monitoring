@@ -27,6 +27,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.log.LogLevel;
 import org.raven.rrd.data.RRDNode;
 import org.raven.rrd.data.RRDataSource;
 import org.raven.tree.NodeError;
@@ -125,6 +126,10 @@ public class RRIoQueueNode extends BaseNode
 			return;
 
 		}
+		if (isLogLevelEnabled(LogLevel.DEBUG))
+			debug(String.format(
+					"Recieved request for ds (%s) and value (%s)"
+					, dataSource.getPath(), data));
 		pushLock.lock();
 		try
 		{
@@ -290,6 +295,9 @@ public class RRIoQueueNode extends BaseNode
 			{
 				if (dbFlags.contains(rrdId))
 				{
+					if (isLogLevelEnabled(LogLevel.DEBUG))
+						debug(String.format(
+								"Rerequesting. ds (%s), value (%s)", dataSource.getPath(), data));
 					pushWriteRequest(dataSource, data);
 					return;
 				}
@@ -303,6 +311,10 @@ public class RRIoQueueNode extends BaseNode
 
 			try
 			{
+				if (isLogLevelEnabled(LogLevel.DEBUG))
+					debug(String.format(
+							"Sending data (%s) from ds (%s) to rrd (%s)"
+							, data, dataSource.getPath(), rrd.getPath()));
 				rrd.setDataFromQueue(dataSource, data);
 			}
 			finally

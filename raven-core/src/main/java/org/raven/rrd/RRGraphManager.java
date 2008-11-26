@@ -27,12 +27,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.script.Bindings;
+import org.apache.commons.lang.StringUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.api.impl.NodeAccessImpl;
 import org.raven.ds.DataSource;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.rrd.data.RRDataSource;
+import org.raven.rrd.graph.RRCDef;
 import org.raven.rrd.graph.RRDef;
 import org.raven.rrd.graph.RRGraphNode;
 import org.raven.template.impl.TemplateEntry;
@@ -394,6 +396,8 @@ public class RRGraphManager extends BaseNode
     {
         private final DataSource dataSource;
         private final RRDataSource rrds;
+		private final Map<String/*template rrdef name*/, String/*real name*/> defNames =
+				new HashMap<String, String>();
 
         public Tuner(DataSource dataSource, RRDataSource rrds) 
         {
@@ -429,6 +433,8 @@ public class RRGraphManager extends BaseNode
             {
                 //tunig nodes inside RRGraphNode
                 sourceClone.setName(sourceNode.getName()+"_"+dataSource.getId());
+				if (sourceNode instanceof RRDef)
+					defNames.put(sourceNode.getName(), sourceClone.getName());
             }
             
             //searching for attributes that referenced to the GraphNode childs
@@ -483,6 +489,26 @@ public class RRGraphManager extends BaseNode
                 }
                 dataSources.put(dataSource, (RRDef)nodeClone);
             }
+
+			if (nodeClone instanceof RRCDef && defNames.size()>0)
+			{
+				RRCDef cdef = (RRCDef) nodeClone;
+				String rpnExpr = cdef.getExpression();
+				if (rpnExpr!=null && rpnExpr.length()>0)
+				{
+					String[] templateNames = new String[defNames.size()];
+					String[] realNames = new String[templateNames.length];
+					int i=0;
+					for (Map.Entry<String, String> entry: defNames.entrySet())
+					{
+						templateNames[i] = entry.getKey();
+						realNames[i] = entry.getValue();
+						++i;
+					}
+					String newRpnExpr = StringUtils.replaceEach(rpnExpr, templateNames, realNames);
+					cdef.setExpression(newRpnExpr);
+				}
+			}
             
             if (nodeClone.getEffectiveParent() instanceof RRGraphNode)
             {

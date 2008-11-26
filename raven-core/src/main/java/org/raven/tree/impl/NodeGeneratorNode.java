@@ -288,8 +288,7 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
     private void createNewNode(Map<String, Object> values, String indexValue, boolean autoStart)
         throws Exception
     {
-
-        StrSubstitutor subst = new StrSubstitutor(values);
+//        StrSubstitutor subst = new StrSubstitutor(values);
 
 		NodeTuner tuner = new Tuner(indexValue, configurator);
 
