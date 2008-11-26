@@ -17,29 +17,23 @@
 
 package org.raven.expr.impl;
 
-import javax.script.ScriptException;
+import org.junit.Assert;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
 import org.raven.expr.Expression;
-import org.raven.expr.ExpressionCompiler;
-
+import org.raven.expr.ExpressionCache;
+import static org.easymock.EasyMock.*;
 /**
  *
  * @author Mikhail Titov
  */
-public class ExpressionCompilerServiceTest extends RavenCoreTestCase
+public class ExpressionCacheImplTest extends Assert
 {
-    @Test
-    public void test() throws ScriptException 
-    {
-        ExpressionCompiler compiler = registry.getService(ExpressionCompiler.class);
-        assertNotNull(compiler);
-        Expression expression = compiler.compile("1+9", "groovy");
-        assertNotNull(expression);
-		assertTrue(expression instanceof GroovyExpression);
-        assertEquals(10, expression.eval(null));
-
-		Expression expression2 = compiler.compile("1+9", "groovy");
-		assertSame(expression, expression2);
-    }
+	@Test
+	public void test()
+	{
+		Expression expression = createMock(Expression.class);
+		ExpressionCache cache = new ExpressionCacheImpl();
+		cache.putExpression("1+1", expression);
+		assertSame(expression, cache.getExpression("1+1"));
+	}
 }

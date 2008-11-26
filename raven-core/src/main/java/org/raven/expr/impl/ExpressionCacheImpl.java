@@ -17,29 +17,44 @@
 
 package org.raven.expr.impl;
 
-import javax.script.ScriptException;
-import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.raven.expr.Expression;
-import org.raven.expr.ExpressionCompiler;
+import org.raven.expr.ExpressionCache;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class ExpressionCompilerServiceTest extends RavenCoreTestCase
+public class ExpressionCacheImpl implements ExpressionCache
 {
-    @Test
-    public void test() throws ScriptException 
-    {
-        ExpressionCompiler compiler = registry.getService(ExpressionCompiler.class);
-        assertNotNull(compiler);
-        Expression expression = compiler.compile("1+9", "groovy");
-        assertNotNull(expression);
-		assertTrue(expression instanceof GroovyExpression);
-        assertEquals(10, expression.eval(null));
+	private final Map<String, Expression> cache = new HashMap<String, Expression>(1024);
+	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
-		Expression expression2 = compiler.compile("1+9", "groovy");
-		assertSame(expression, expression2);
-    }
+	public Expression getExpression(String key)
+	{
+		try
+		{
+			lock.readLock().lock();
+			return cache.get(key);
+		}
+		finally
+		{
+			lock.readLock().unlock();
+		}
+	}
+
+	public void putExpression(String key, Expression expression)
+	{
+		try
+		{
+			lock.writeLock().lock();
+			cache.put(key, expression);
+		}
+		finally
+		{
+			lock.writeLock().unlock();
+		}
+	}
 }

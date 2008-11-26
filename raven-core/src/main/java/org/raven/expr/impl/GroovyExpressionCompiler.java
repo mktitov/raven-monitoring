@@ -17,8 +17,7 @@
 
 package org.raven.expr.impl;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
+import groovy.lang.GroovyClassLoader;
 import javax.script.ScriptException;
 import org.raven.expr.Expression;
 import org.raven.expr.ExpressionCache;
@@ -28,27 +27,37 @@ import org.raven.expr.ExpressionCompiler;
  *
  * @author Mikhail Titov
  */
-public class ExpressionCompilerImpl implements ExpressionCompiler
+public class GroovyExpressionCompiler implements ExpressionCompiler
 {
-    private final ScriptEngineManager engineManager;
+	public final static String LANGUAGE = "groovy";
 	private final ExpressionCache cache;
+	private final GroovyClassLoader classLoader;
 
-    public ExpressionCompilerImpl(ExpressionCache cache)
-    {
-        this.engineManager = new ScriptEngineManager();
+	public GroovyExpressionCompiler(ExpressionCache cache)
+	{
 		this.cache = cache;
-    }
+		classLoader = new GroovyClassLoader();
+	}
 
-    public Expression compile(String expression, String language) throws ScriptException 
-    {
-        ScriptEngine engine = engineManager.getEngineByName(language);
-        if (engine==null)
-            throw new ScriptException(
-                    String.format("Expression engine not found for language (%s)", language));
+	public Expression compile(String expression, String language) throws ScriptException
+	{
+		if (!LANGUAGE.equals(language))
+			return null;
 
-		Expression expr = new ExpressionImpl(engine, expression);
-		cache.putExpression(expression, expr);
-		
-        return expr;
-    }
+		try
+		{
+			Class expressionClass = classLoader.parseClass(expression);
+			GroovyExpression groovyExpression = new GroovyExpression(expressionClass);
+			cache.putExpression(expression, groovyExpression);
+			
+			return groovyExpression;
+		}
+		catch(Exception e)
+		{
+			if (e instanceof ScriptException)
+				throw (ScriptException)e;
+			else
+				throw new ScriptException(e);
+		}
+	}
 }

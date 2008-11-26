@@ -17,7 +17,6 @@
 
 package org.raven.expr.impl;
 
-import java.util.logging.Level;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;

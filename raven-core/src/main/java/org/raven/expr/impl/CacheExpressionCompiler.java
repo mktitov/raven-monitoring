@@ -18,28 +18,25 @@
 package org.raven.expr.impl;
 
 import javax.script.ScriptException;
-import org.junit.Test;
-import org.raven.RavenCoreTestCase;
 import org.raven.expr.Expression;
+import org.raven.expr.ExpressionCache;
 import org.raven.expr.ExpressionCompiler;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class ExpressionCompilerServiceTest extends RavenCoreTestCase
+public class CacheExpressionCompiler implements ExpressionCompiler
 {
-    @Test
-    public void test() throws ScriptException 
-    {
-        ExpressionCompiler compiler = registry.getService(ExpressionCompiler.class);
-        assertNotNull(compiler);
-        Expression expression = compiler.compile("1+9", "groovy");
-        assertNotNull(expression);
-		assertTrue(expression instanceof GroovyExpression);
-        assertEquals(10, expression.eval(null));
+	private final ExpressionCache cache;
 
-		Expression expression2 = compiler.compile("1+9", "groovy");
-		assertSame(expression, expression2);
-    }
+	public CacheExpressionCompiler(ExpressionCache cache)
+	{
+		this.cache = cache;
+	}
+
+	public Expression compile(String expression, String language) throws ScriptException
+	{
+		return cache.getExpression(expression);
+	}
 }

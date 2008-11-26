@@ -18,6 +18,9 @@
 package org.raven.rrd.data;
 
 import java.io.File;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import org.jrobin.core.FetchData;
 import org.jrobin.core.FetchRequest;
@@ -26,15 +29,31 @@ import org.jrobin.core.RrdDef;
 import org.jrobin.core.Sample;
 import org.jrobin.core.Util;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
  *
  * @author Mikhail Titov
  */
+@Ignore
 public class RRDbTest extends Assert
 {
-    @Test
+
+	@Test
+	public void normalizeTest() throws ParseException
+	{
+		SimpleDateFormat fmt = new SimpleDateFormat("dd-MM-yyyy");
+		Date date = fmt.parse("17-11-2008");
+		long time = Util.normalize(date.getTime()/1000, 86400);
+		System.out.println((date.getTime()/1000)%86400);
+		System.out.println(Util.getTimestamp(2008, 11, 17)%86400);
+		System.out.println(date);
+		System.out.println(new Date(time*1000));
+		fail();
+	}
+
+//    @Test
     public void test() throws Exception
     {
         new File("target/test.rrd").delete();

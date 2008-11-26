@@ -29,9 +29,13 @@ import org.raven.ds.DataSource;
 import org.raven.ds.impl.DataPipeConvertToTypesReferenceValues;
 import org.raven.ds.impl.SystemDataSourceReferenceValues;
 import org.raven.ds.impl.SystemDataSourceValueHandlerFactory;
+import org.raven.expr.ExpressionCache;
 import org.raven.expr.ExpressionCompiler;
+import org.raven.expr.impl.CacheExpressionCompiler;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
+import org.raven.expr.impl.ExpressionCacheImpl;
 import org.raven.expr.impl.ExpressionCompilerImpl;
+import org.raven.expr.impl.GroovyExpressionCompiler;
 import org.raven.impl.AttributeReferenceToStringConverter;
 import org.raven.impl.BooleanReferenceValues;
 import org.raven.impl.CharsetReferenceValues;
@@ -86,8 +90,8 @@ public class RavenCoreModule
     {
         binder.bind(NodeLogger.class, NodeLoggerImpl.class);
         binder.bind(Configurator.class, ConfiguratorImpl.class);
-        binder.bind(ExpressionCompiler.class, ExpressionCompilerImpl.class);
 		binder.bind(GroupsOrganazier.class, GroupsOrganazierImpl.class);
+		binder.bind(ExpressionCache.class, ExpressionCacheImpl.class);
     }
     
     public static Configurator buildConfigurator(Map<String, Class> treeStoreEngines)
@@ -124,6 +128,12 @@ public class RavenCoreModule
     {
         return new AttributeValueHandlerRegistryImpl(factories);
     }
+
+	public static ExpressionCompiler buildExpressionCompiler(
+			ChainBuilder builder, List<ExpressionCompiler> commands)
+	{
+		return builder.build(ExpressionCompiler.class, commands);
+	}
     
     public static void contributeConfigurator(MappedConfiguration<String, Class> conf)
     {
@@ -221,4 +231,22 @@ public class RavenCoreModule
 			, new LocaleReferenceValues()
 			, "after:"+CharsetReferenceValues.class.getSimpleName());
     }
+
+	public static void contributeExpressionCompiler(
+			OrderedConfiguration<ExpressionCompiler> conf
+			, ExpressionCache expressionCache)
+	{
+		conf.add(
+				CacheExpressionCompiler.class.getName()
+				, new CacheExpressionCompiler(expressionCache)
+				, "before:*");
+		conf.add(
+				GroovyExpressionCompiler.class.getName()
+				, new GroovyExpressionCompiler(expressionCache)
+				, "after:"+CacheExpressionCompiler.class.getName());
+		conf.add(
+				ExpressionCompilerImpl.class.getName()
+				, new ExpressionCompilerImpl(expressionCache)
+				, "after:*");
+	}
 }

@@ -17,29 +17,39 @@
 
 package org.raven.expr.impl;
 
+import groovy.lang.GroovyObject;
+import java.util.Map;
+import javax.script.Bindings;
 import javax.script.ScriptException;
-import org.junit.Test;
-import org.raven.RavenCoreTestCase;
 import org.raven.expr.Expression;
-import org.raven.expr.ExpressionCompiler;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class ExpressionCompilerServiceTest extends RavenCoreTestCase
+public class GroovyExpression implements Expression
 {
-    @Test
-    public void test() throws ScriptException 
-    {
-        ExpressionCompiler compiler = registry.getService(ExpressionCompiler.class);
-        assertNotNull(compiler);
-        Expression expression = compiler.compile("1+9", "groovy");
-        assertNotNull(expression);
-		assertTrue(expression instanceof GroovyExpression);
-        assertEquals(10, expression.eval(null));
+	private final Class expressionClass;
 
-		Expression expression2 = compiler.compile("1+9", "groovy");
-		assertSame(expression, expression2);
-    }
+	public GroovyExpression(Class expressionClass)
+	{
+		this.expressionClass = expressionClass;
+	}
+
+	public Object eval(Bindings bindings) throws ScriptException
+	{
+		try
+		{
+			GroovyObject obj = (GroovyObject) expressionClass.newInstance();
+			if (bindings!=null && bindings.size()>0)
+			for (Map.Entry<String, Object> prop: bindings.entrySet())
+				obj.setProperty(prop.getKey(), prop.getValue());
+			
+			return obj.invokeMethod("run", null);
+		}
+		catch (Exception e)
+		{
+			throw new ScriptException(e);
+		}
+	}
 }

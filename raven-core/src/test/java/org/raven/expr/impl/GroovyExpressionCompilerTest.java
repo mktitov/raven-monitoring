@@ -1,5 +1,5 @@
 /*
- *  Copyright 2008 Mikhail Titov.
+ *  Copyright 2008 tim.
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -24,41 +24,47 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.raven.expr.Expression;
 import org.raven.expr.ExpressionCache;
-import org.raven.expr.ExpressionCompiler;
 import static org.easymock.EasyMock.*;
-/**
- *
- * @author Mikhail Titov
- */
-public class ExpressionCompilerImplTest extends Assert
+
+public class GroovyExpressionCompilerTest extends Assert
 {
     @Test
     public void simpleTest() throws ScriptException
     {
 		ExpressionCache cache = trainCache("1+1");
-        ExpressionCompiler compiler = new ExpressionCompilerImpl(cache);
+        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
         Expression expression = compiler.compile("1+1", "groovy");
         assertNotNull(expression);
         assertEquals(2, expression.eval(null));
 
 		verify(cache);
     }
-    
+
     @Test
     public void bindginsTest() throws ScriptException
     {
 		ExpressionCache cache = trainCache("var+=1");
-		
-        ExpressionCompiler compiler = new ExpressionCompilerImpl(cache);
+
+        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
         Expression expression = compiler.compile("var+=1", "groovy");
         assertNotNull(expression);
         Bindings bindings = new SimpleBindings();
         bindings.put("var", 1);
         assertEquals(2, expression.eval(bindings));
-        assertEquals(2, bindings.get("var"));
 
 		verify(cache);
     }
+
+	@Test
+	public void nonGroovyLanguageTest() throws Exception
+	{
+		ExpressionCache cache = createMock(ExpressionCache.class);
+		replay(cache);
+
+		GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
+		Expression expression = compiler.compile("some expression", "notGroovy");
+		assertNull(expression);
+	}
 
 	private ExpressionCache trainCache(String expressionSource)
 	{
