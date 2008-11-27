@@ -32,6 +32,7 @@ import org.raven.api.impl.NodeAccessImpl;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
+import org.raven.log.LogLevel;
 import org.raven.sched.Schedulable;
 import org.raven.sched.Scheduler;
 import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
@@ -98,6 +99,8 @@ public class NodeScannerNode extends BaseNode implements DataSource, Schedulable
     
     public synchronized void scannNodes()
     {
+		if (isLogLevelEnabled(LogLevel.DEBUG))
+			debug("Starting scanning subtree - "+startingPoint.getPath());
         Scanner scanner = new Scanner();
         tree.scanSubtree(startingPoint, scanner, ScanOptionsImpl.EMPTY_OPTIONS);
         Collection<NodeInfo> foundNodes = scanner.foundNodes;
@@ -238,14 +241,18 @@ public class NodeScannerNode extends BaseNode implements DataSource, Schedulable
 
     private boolean addNodeToTable(TableImpl table, Object obj)
     {
+		boolean result = true;
         if (obj instanceof Node)
             table.addRow(new Object[]{obj, null});
         else if (obj instanceof NodeAccess)
             table.addRow(new Object[]{((NodeAccess)obj).asNode(), null});
         else
-            return false;
+            result = false;
 
-        return true;
+		if (isLogLevelEnabled(LogLevel.DEBUG))
+			debug("Additional node added to the result table: "+obj.toString());
+
+        return result;
     }
 
     private void sendTableToConsumers(TableImpl table)
@@ -309,17 +316,17 @@ public class NodeScannerNode extends BaseNode implements DataSource, Schedulable
                 Object _nodeWeight = nodeWeight;
                 if (_nodeWeight==null && sort)
                 {
-                    if (logger.isDebugEnabled())
+                    if (isLogLevelEnabled(LogLevel.DEBUG))
                     {
-                        logger.debug(String.format(
+                        debug(String.format(
                                 "Skipping scanning node (%s) because of null node weight"
                                 , scanningNode.getPath()));
                     }
                 }
                 else
                 {
-                    if (logger.isDebugEnabled())
-                        logger.debug(String.format(
+                    if (isLogLevelEnabled(LogLevel.DEBUG))
+                        debug(String.format(
                                 "Adding node (%s) to table. Node weight (%s)"
                                 , node.getPath(), _nodeWeight));
                     foundNodes.add(new NodeInfo(node, nodeWeight));

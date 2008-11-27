@@ -21,6 +21,7 @@ import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import org.jrobin.core.FetchData;
 import org.jrobin.core.FetchRequest;
@@ -45,8 +46,9 @@ public class RRDbTest extends Assert
 	{
 		SimpleDateFormat fmt = new SimpleDateFormat("dd-MM-yyyy");
 		Date date = fmt.parse("17-11-2008");
-		long time = Util.normalize(date.getTime()/1000, 86400);
-		System.out.println((date.getTime()/1000)%86400);
+		long dateWithOffset = date.getTime()+TimeZone.getDefault().getRawOffset();
+		long time = Util.normalize(dateWithOffset/1000, 86400);
+		System.out.println((dateWithOffset/1000)%86400);
 		System.out.println(Util.getTimestamp(2008, 11, 17)%86400);
 		System.out.println(date);
 		System.out.println(new Date(time*1000));

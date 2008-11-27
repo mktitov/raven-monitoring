@@ -155,4 +155,12 @@ public class NodeAccessImpl implements NodeAccess
 
         return null;
     }
+
+	@Override
+	public String toString()
+	{
+		return node.toString();
+	}
+
+
 }
