@@ -163,7 +163,7 @@ public class AccessControlList implements Comparator<AccessControl>
     		AccessControl ac = it.next();
         	//logger.info("AC "+ac.getRegExp()+" "+ac.getRight()+" "+ac.getResource());
     		int right = ac.getRight();
-    		if(ac.getResource().startsWith(path+Node.NODE_SEPARATOR))
+    		if(ac.getResource().startsWith(path))
     			if(right > AccessControl.NONE )
     			{
     				curRight = AccessControl.TRANSIT;
