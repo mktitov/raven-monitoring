@@ -215,8 +215,6 @@ partialTriggers=":poolStatus"
 			value="&lt;small&gt;#{row.fromDate}&lt;/small&gt;"/>
 		<!-- forceIdIndex="true" forceId="true" id="graph" -->
     	<s:graphicImageDynamic
-    		width="#{row.width}"
-    		height="#{row.height}"
 			forceId="true" forceIdIndex="true"
    			id="graph_x_list" 
    	    	imageRendererClass="#{sBean.ravenViewableImageRenderer}" > 
