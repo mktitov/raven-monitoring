@@ -124,7 +124,7 @@ public class RRDatabaseManager extends BaseNode
             configurator.getTreeStore().saveNode(template);
             template.init();
         }
-        collectDatasources(this);
+//        collectDatasources(this);
     }
 
     @Override
@@ -134,7 +134,7 @@ public class RRDatabaseManager extends BaseNode
         if (startingPoint!=null)
             startingPoint.addListener(this);
 //        if (!initializing)
-            syncDatabases();
+		syncDatabases();
 //        initializing = false;
     }
 
@@ -258,7 +258,10 @@ public class RRDatabaseManager extends BaseNode
         {
             try
             {
-                Node startNode = startingPoint;
+				managedDatasources.clear();
+				collectDatasources(this);
+
+				Node startNode = startingPoint;
 
                 if (startNode==null)
                     return;

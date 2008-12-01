@@ -68,7 +68,6 @@ import org.weda.beans.ObjectUtils;
  * @author Mikhail Titov
  */
 @NodeClass()
-//@Description("Saves data in round robin database")
 public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 {
 	public enum SampleUpdatePolicy {UPDATE_WHEN_READY, UPDATE_WHEN_TIME_EXPIRED};
@@ -598,7 +597,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
             {
                 createDatabase();
             }
-            sample = db.createSample(Util.getTime()+step);
+//            sample = db.createSample(Util.getTime()+step);
         }finally
         {
             dbLock.writeLock().unlock();

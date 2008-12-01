@@ -38,6 +38,7 @@ import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.ds.impl.DataPipeImpl;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
+import org.raven.log.LogLevel;
 import org.raven.table.Table;
 import org.raven.template.GroupNode;
 import org.raven.template.GroupsOrganazier;
@@ -362,6 +363,9 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
         }
         if (indexesInTable.size()<indexValues.size())
         {
+			if (isLogLevelEnabled(LogLevel.WARN))
+				warn("Incoming table does not contains values for (%d) indexes"
+						, indexValues.size()-indexesInTable.size());
             processRemoveOperation(indexValues, indexesInTable);
         }
     }

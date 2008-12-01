@@ -42,6 +42,7 @@ import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodeError;
 import org.raven.tree.NodePathResolver;
 import org.raven.tree.NodeTuner;
 import org.raven.tree.PathInfo;
@@ -168,20 +169,27 @@ public class TreeImpl implements Tree
             createRootNode();
         
         createSystemNodes();
-        
-        logger.info("Initializing tree nodes.");
-        initNode(rootNode, null);
-        long operationTime = (System.currentTimeMillis()-curTime)/1000;
-        logger.info(String.format("Tree nodes initialized in %d seconds", operationTime));
-        
-        logger.info("Starting tree nodes");
-        long curTime2 = System.currentTimeMillis();
-        start(rootNode, true);
-        operationTime = (System.currentTimeMillis()-curTime2)/1000;
-        logger.info(String.format("Tree nodes started in %d seconds", operationTime));
-        
-        operationTime = (System.currentTimeMillis()-curTime)/1000;
-        logger.info(String.format("Tree reloaded in %d seconds", operationTime));
+
+		try
+		{
+			logger.info("Initializing tree nodes.");
+			initNode(rootNode, null);
+			long operationTime = (System.currentTimeMillis()-curTime)/1000;
+			logger.info(String.format("Tree nodes initialized in %d seconds", operationTime));
+
+			logger.info("Starting tree nodes");
+			long curTime2 = System.currentTimeMillis();
+			start(rootNode, true);
+			operationTime = (System.currentTimeMillis()-curTime2)/1000;
+			logger.info(String.format("Tree nodes started in %d seconds", operationTime));
+
+			operationTime = (System.currentTimeMillis()-curTime)/1000;
+			logger.info(String.format("Tree reloaded in %d seconds", operationTime));
+		}
+		catch(Throwable e)
+		{
+			logger.error("Error initializing or starting node", e);
+		}
     }
     
     public void shutdown()
@@ -264,12 +272,19 @@ public class TreeImpl implements Tree
     
     public void start(Node node, boolean autoStartOnly)
     {
-        if (node.getStatus()==Status.INITIALIZED && (!autoStartOnly || node.isAutoStart()))
-            node.start();
-        
-        if (node.getChildrens()!=null)
-            for (Node child: node.getChildrens())
-                start(child, autoStartOnly);
+		try
+		{
+			if (node.getStatus()==Status.INITIALIZED && (!autoStartOnly || node.isAutoStart()))
+				node.start();
+		}
+		catch(NodeError e)
+		{
+			logger.error("Error starting node (%s)", e);
+		}
+
+		if (node.getChildrens()!=null)
+			for (Node child: node.getChildrens())
+				start(child, autoStartOnly);
     }
 
     public void stop(Node node)

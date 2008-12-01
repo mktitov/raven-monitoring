@@ -141,8 +141,8 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
         assertEquals(Status.STARTED, databaseManager.getStatus());
         
         newDs = (DataSource) tree.getNode(newDs.getPath());
-        assertEquals(newDs.getStatus(), Status.INITIALIZED);
         assertNotNull(newDs);
+        assertEquals(newDs.getStatus(), Status.INITIALIZED);
         newDs.start();
         dependentNodes = newDs.getDependentNodes();
         assertNotNull(dependentNodes);

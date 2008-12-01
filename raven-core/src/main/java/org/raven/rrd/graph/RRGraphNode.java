@@ -62,8 +62,11 @@ public class RRGraphNode extends BaseNode implements Viewable
     public final static String UNIT_ATTRIBUTE = "unit";
     public final static String UNITEXPONENT_ATTRIBUTE = "unitExponent";
     
-    @Parameter @Description("Title")
+    @Parameter
     private String title;
+
+	@Parameter(defaultValue="false")
+	private Boolean enableAntialiasing;
     
     @Parameter(defaultValue="end-1d")
 //    @Description("The time when the graph should begin")
@@ -188,6 +191,16 @@ public class RRGraphNode extends BaseNode implements Viewable
                     String.format("Error generating graph (%s)", getPath()), ex);
         }
     }
+
+	public Boolean getEnableAntialiasing()
+	{
+		return enableAntialiasing;
+	}
+
+	public void setEnableAntialiasing(Boolean enableAntialiasing)
+	{
+		this.enableAntialiasing = enableAntialiasing;
+	}
     
     public String getEndTime()
     {
@@ -251,7 +264,9 @@ public class RRGraphNode extends BaseNode implements Viewable
         GraphDef graphDef = new GraphDef();
         RrdGraphDef gdef = new RrdGraphDef();
         graphDef.graphDef = gdef;
-        gdef.setShowSignature(false);
+        gdef.setShowSignature(true);
+		gdef.setSignature("Raven-monitoring");
+		gdef.setAntiAliasing(enableAntialiasing);
         gdef.setTitle(title);
         gdef.setWidth(width);
         gdef.setHeight(height);

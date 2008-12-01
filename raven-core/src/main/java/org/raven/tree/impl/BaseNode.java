@@ -92,6 +92,7 @@ public class BaseNode implements Node, NodeListener, Logger
     private String name;
     private byte level = 0;
     private int index = 0;
+	private int maxChildIndex = 0;
     
     private Node parent;
     
@@ -332,8 +333,11 @@ public class BaseNode implements Node, NodeListener, Logger
                     "Node (%s) already contains children node with name (%s)"
                     , getPath(), node.getName()));
         node.setParent(this);
-        if (node.getIndex()==0)
-            node.setIndex(childrens.size()+1);
+		int nodeIndex = node.getIndex();
+        if (nodeIndex==0)
+            node.setIndex(maxChildIndex++);
+		else if (maxChildIndex<nodeIndex)
+			maxChildIndex = nodeIndex;
         
         childrens.put(node.getName(), node);
         node.addListener(this);
