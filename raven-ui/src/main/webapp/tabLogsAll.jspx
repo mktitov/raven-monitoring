@@ -112,7 +112,7 @@
         <f:facet name="detailStamp">
 	      	<tr:outputText escape="false"
 	    		inlineStyle="font-size: 80%;"	       
-		      	value="&lt;pre&gt;#{row.message}&lt;/pre&gt;"/>
+		      	value="&lt;pre&gt;&lt;small&gt;&lt;small&gt;#{row.message}&lt;/small&gt;&lt;/small&gt;&lt;/pre&gt;"/>
 	    </f:facet>
 </tr:table>
 

@@ -1194,6 +1194,23 @@ public class BaseNode implements Node, NodeListener, Logger
             parent.formExpressionBindings(bindings);
     }
 
+	public static String getTrace(Throwable t)
+	{
+		 StringBuffer m = new StringBuffer("");
+		 m.append(t.getClass().getCanonicalName());
+		 m.append(": ");
+		 m.append(t.getMessage());
+		 m.append("\n");
+		 StackTraceElement[] stea = t.getStackTrace();
+		 for(StackTraceElement ste :stea)
+		 {
+			 m.append("at ");
+			 m.append(ste.toString());
+			 m.append("\n");
+		 }
+		return m.toString();
+	}
+    
 	public boolean isLogLevelEnabled(LogLevel level)
 	{
 		return getLogLevel().ordinal() <= level.ordinal();
@@ -1223,12 +1240,11 @@ public class BaseNode implements Node, NodeListener, Logger
 		}	
 	}
 
-	public void debug(String arg0, Throwable arg1) {
+	public void debug(String arg0, Throwable arg1) 
+	{
 		sl4jLogger.debug(arg0,arg1);
 		if(getLogLevel().ordinal() <= LogLevel.DEBUG.ordinal())
-		{
-			nodeLogger.write(this, LogLevel.DEBUG, arg0 +" : "+ arg1.toString());
-		}	
+			nodeLogger.write(this, LogLevel.DEBUG, arg0 +" : "+ getTrace(arg1));
 	}
 
 	public void debug(Marker arg0, String arg1) {
@@ -1284,12 +1300,11 @@ public class BaseNode implements Node, NodeListener, Logger
 		}	
 	}
 
-	public void trace(String arg0, Throwable arg1) {
+	public void trace(String arg0, Throwable arg1) 
+	{
 		sl4jLogger.trace(arg0,arg1);
 		if(getLogLevel().ordinal() <= LogLevel.TRACE.ordinal())
-		{
-			nodeLogger.write(this, LogLevel.TRACE, arg0 +" : "+ arg1.toString());
-		}	
+			nodeLogger.write(this, LogLevel.TRACE, arg0 +" : "+ getTrace(arg1));
 	}
 
 	public void trace(Marker arg0, String arg1) {
@@ -1345,12 +1360,11 @@ public class BaseNode implements Node, NodeListener, Logger
 		}	
 	}
 
-	public void info(String arg0, Throwable arg1) {
+	public void info(String arg0, Throwable arg1) 
+	{
 		sl4jLogger.info(arg0,arg1);
 		if(getLogLevel().ordinal() <= LogLevel.INFO.ordinal())
-		{
-			nodeLogger.write(this, LogLevel.INFO, arg0 +" : "+ arg1.toString());
-		}	
+			nodeLogger.write(this, LogLevel.INFO, arg0 +" : "+ getTrace(arg1));
 	}
 
 	public void info(Marker arg0, String arg1) {
@@ -1410,7 +1424,7 @@ public class BaseNode implements Node, NodeListener, Logger
 		sl4jLogger.warn(arg0,arg1);
 		if(getLogLevel().ordinal() <= LogLevel.WARN.ordinal())
 		{
-			nodeLogger.write(this, LogLevel.WARN, arg0 +" : "+ arg1.toString());
+			nodeLogger.write(this, LogLevel.WARN, arg0 +" : "+ getTrace(arg1));
 		}	
 	}
 
@@ -1467,12 +1481,11 @@ public class BaseNode implements Node, NodeListener, Logger
 		}	
 	}
 
-	public void error(String arg0, Throwable arg1) {
+	public void error(String arg0, Throwable arg1) 
+	{
 		sl4jLogger.error(arg0,arg1);
 		if(getLogLevel().ordinal() <= LogLevel.ERROR.ordinal())
-		{
-			nodeLogger.write(this, LogLevel.ERROR, arg0 +" : "+ arg1.toString());
-		}	
+			nodeLogger.write(this, LogLevel.ERROR, arg0 +" : "+ getTrace(arg1));
 	}
 
 	public void error(Marker arg0, String arg1) {
