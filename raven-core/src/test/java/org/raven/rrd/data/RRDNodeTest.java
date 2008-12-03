@@ -77,7 +77,7 @@ public class RRDNodeTest extends RavenCoreTestCase
 		assertEquals(Status.STARTED, queueNode.getStatus());
     }
     
-    @Test
+//    @Test
     public void test() throws ConstraintException, Exception
     {
         TestDataSource ds = new TestDataSource();
@@ -247,7 +247,7 @@ public class RRDNodeTest extends RavenCoreTestCase
 
     }
     
-    @Test
+//    @Test
     public void removeTest() throws Exception
     {
         TestDataSource ds = new TestDataSource();
@@ -392,7 +392,7 @@ public class RRDNodeTest extends RavenCoreTestCase
         assertTrue(data instanceof Table);
     }
 
-	@Test
+//	@Test
 	public void updateWhenReady_oneDataSourceWithoutDataTest() throws Exception
 	{
 		createDatabase();
@@ -409,7 +409,7 @@ public class RRDNodeTest extends RavenCoreTestCase
 		assertTrue(val.isNaN());
 	}
 
-	@Test
+//	@Test
 	public void updateWhenReady_allDataSourcesWithDataTest() throws Exception
 	{
 		createDatabase();
@@ -429,7 +429,7 @@ public class RRDNodeTest extends RavenCoreTestCase
 		assertEquals(new Double(200.), val2);
 	}
 
-	@Test
+//	@Test
 	public void updateWhenReady_oneDataSourceNotStartedTest() throws Exception
 	{
 		createDatabase();
@@ -449,7 +449,7 @@ public class RRDNodeTest extends RavenCoreTestCase
 		assertEquals(new Double(100.), val1);
 	}
 
-	@Test
+//	@Test
 	public void updateWhenTimeExpiredTest() throws Exception
 	{
 		createDatabase();
@@ -467,7 +467,7 @@ public class RRDNodeTest extends RavenCoreTestCase
 		assertEquals(new Double(100.), val1);
 	}
 
-	@Test
+//	@Test
 	public void dataAndTimeTest() throws Exception
 	{
 		initDataFor_dataAndTimeTest();

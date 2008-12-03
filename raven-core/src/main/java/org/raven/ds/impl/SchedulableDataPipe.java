@@ -17,11 +17,13 @@
 
 package org.raven.ds.impl;
 
+import java.util.Collection;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.sched.Schedulable;
 import org.raven.sched.Scheduler;
 import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
+import org.raven.tree.Node;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -29,7 +31,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass
-public class SchedulableDataPipe extends DataPipeImpl implements Schedulable
+public class SchedulableDataPipe extends DataPipeImpl implements Schedulable, Scheduler
 {
     @Parameter(valueHandlerType=SystemSchedulerValueHandlerFactory.TYPE)
     @NotNull
@@ -38,6 +40,12 @@ public class SchedulableDataPipe extends DataPipeImpl implements Schedulable
     public void executeScheduledJob()
     {
         getDataSource().getDataImmediate(this, null);
+
+		Collection<Node> deps = getDependentNodes();
+		if (deps!=null)
+			for (Node node: deps)
+				if (node instanceof Schedulable)
+					((Schedulable)node).executeScheduledJob();
     }
 
     public Scheduler getScheduler() {

@@ -182,8 +182,11 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
                     long[] timestamps = fetchData.getTimestamps();
                     DataArchiveTable table = new DataArchiveTable();
                     for (int i=0; i<fetchData.getRowCount(); ++i)
-                        table.addData(Util.getDate(timestamps[i]), values[i]);
-
+						if (   timeRange[0]<(timestamps[i]+db.getHeader().getStep())
+							&& timeRange[1]>=timestamps[i])
+						{
+							table.addData(Util.getDate(timestamps[i]), values[i]);
+						}
                     return table;
                 }
                 finally
@@ -632,8 +635,8 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 			{
 				if (isLogLevelEnabled(LogLevel.DEBUG))
 					debug("Saving sample data to the database. Sample time is "
-							+Util.getDate(dataSample.getSampleTime()+1));
-				Sample dbSample = db.createSample(dataSample.getSampleTime()+1);
+							+Util.getDate(dataSample.getSampleTime()));
+				Sample dbSample = db.createSample(dataSample.getSampleTime());
 				for (Map.Entry<RRDataSource, Double> valuesEntry: dataSample.getValues().entrySet())
 					dbSample.setValue(valuesEntry.getKey().getName(), valuesEntry.getValue());
 

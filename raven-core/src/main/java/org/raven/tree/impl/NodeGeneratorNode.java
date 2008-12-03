@@ -364,8 +364,9 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
         if (indexesInTable.size()<indexValues.size())
         {
 			if (isLogLevelEnabled(LogLevel.WARN))
-				warn("Incoming table does not contains values for (%d) indexes"
-						, indexValues.size()-indexesInTable.size());
+				warn(String.format(
+						"Incoming table does not contains values for (%d) indexes"
+						, indexValues.size()-indexesInTable.size()));
             processRemoveOperation(indexValues, indexesInTable);
         }
     }

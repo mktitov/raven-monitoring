@@ -20,6 +20,8 @@ package org.raven.dbcp.impl;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.dbcp.ConnectionFactory;
 import org.apache.commons.dbcp.DriverManagerConnectionFactory;
 import org.apache.commons.dbcp.PoolableConnectionFactory;
@@ -63,6 +65,7 @@ public class JDBCConnectionPoolNode extends BaseNode implements ConnectionPool
     private String validationQuery;
 
     private GenericObjectPool connectionPool;
+	private PoolingDriver poolingDriver;
 
 
     @Override
@@ -79,9 +82,24 @@ public class JDBCConnectionPoolNode extends BaseNode implements ConnectionPool
                 new PoolableConnectionFactory(
                     connectionFactory, connectionPool, null, validationQuery, false, autoCommit);
         Class.forName("org.apache.commons.dbcp.PoolingDriver");
-        PoolingDriver driver = (PoolingDriver) DriverManager.getDriver("jdbc:apache:commons:dbcp:");
-        driver.registerPool(getName(), connectionPool);
+        poolingDriver = (PoolingDriver) DriverManager.getDriver("jdbc:apache:commons:dbcp:");
+        poolingDriver.registerPool(getName(), connectionPool);
     }
+
+	@Override
+	public synchronized void stop() throws NodeError
+	{
+		try
+		{
+			poolingDriver.closePool(getName());
+		}
+		catch (SQLException ex)
+		{
+			error("Error stoping node", ex);
+			throw new NodeError(String.format("Error stoping node (%s)", getPath()), ex);
+		}
+		super.stop();
+	}
     
     public Connection getConnection() 
     {

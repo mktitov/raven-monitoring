@@ -15,15 +15,13 @@
  *  under the License.
  */
 
-package org.raven.dbcp;
+package org.raven.dbcp.impl;
 
 import java.sql.Connection;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.conf.Config;
 import org.raven.conf.Configurator;
-import org.raven.dbcp.impl.ConnectionPoolsNode;
-import org.raven.dbcp.impl.JDBCConnectionPoolNode;
 import org.raven.tree.Node.Status;
 import org.raven.tree.impl.SystemNode;
 
