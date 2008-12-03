@@ -167,7 +167,7 @@ public class AccessControlList implements Comparator<AccessControl>
     			if(right > AccessControl.NONE )
     			{
     				curRight = AccessControl.TRANSIT;
-    				continue;
+    				//continue;
     			}	
     		if( path.matches(ac.getRegExp()) && 
     				right>=curRight )

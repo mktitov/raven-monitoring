@@ -293,10 +293,8 @@ public abstract class LogTablesManager
 		ArrayList<Long> al = new ArrayList<Long>();
 		while(it.hasNext())
 		{
-			
 			Long dt = it.next();
-			if(dt<x)
-				al.add(it.next());
+			if(dt<x) al.add(dt);
 		}	
 		it = al.iterator();
 		while(it.hasNext())

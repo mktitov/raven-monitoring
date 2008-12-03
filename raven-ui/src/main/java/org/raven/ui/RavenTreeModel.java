@@ -45,13 +45,21 @@ public class RavenTreeModel extends ChildPropertyTreeModel
 		  if (o instanceof Object[]) olist = (Object[]) o;
 	    	else if (o instanceof List) olist = ((List) o).toArray();
 		  if(olist==null) return null;
-		  ArrayList<Node> ret = new ArrayList<Node>(); 
+		  ArrayList<Node> ret = new ArrayList<Node>();
+		  int access = AccessControl.NONE; 
 		  for(Object ob : olist)
 		  	{
 			  Node n = (Node) ob;
-			  if(userAcl.getAccessForNode(n)> AccessControl.NONE) ret.add(n);
+			  int acc = userAcl.getAccessForNode(n);
+			  if(acc > AccessControl.NONE)
+			  {
+				  access = acc;
+				  ret.add(n);
+			  }  
 		  	}  
 		  if(ret.size()==0) return null;
+		  if(ret.size()==1 && access == AccessControl.TRANSIT )
+			  return getChildData(ret.get(0));
 	    return ret;
 	  }
 	

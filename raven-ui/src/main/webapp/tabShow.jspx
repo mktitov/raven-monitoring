@@ -209,43 +209,38 @@ partialTriggers=":poolStatus"
 	</f:facet>
 <!-- show image -->
 	<f:facet name="image">
-		<tr:group> 
-		<tr:outputFormatted 
-			inlineStyle="COLOR: green; FONT-STYLE: italic;" 
-			value="&lt;small&gt;#{row.fromDate}&lt;/small&gt;"/>
-		<!-- forceIdIndex="true" forceId="true" id="graph" -->
-    	<s:graphicImageDynamic
-			forceId="true" forceIdIndex="true"
-   			id="graph_x_list" 
-   	    	imageRendererClass="#{sBean.ravenViewableImageRenderer}" > 
-       		<f:param 
-       			name="ViewableObject" 
-       			value="#{row.id}"/>
-   		</s:graphicImageDynamic>
-		<tr:spacer height="6" />
-		</tr:group>
+		<tr:panelGroupLayout layout="vertical"  > 
+			<tr:outputFormatted 
+				inlineStyle="COLOR: green; FONT-STYLE: italic;" 
+				value="&lt;small&gt;#{row.fromDate}&lt;/small&gt;"/>
+			<!-- forceIdIndex="true" forceId="true" id="graph" -->
+    		<s:graphicImageDynamic
+				forceId="true" 
+				forceIdIndex="true"
+   				id="graph_x_list" 
+   	    		imageRendererClass="#{sBean.ravenViewableImageRenderer}" > 
+       			<f:param 
+	       			name="ViewableObject" 
+    	   			value="#{row.id}"/>
+   			</s:graphicImageDynamic>
+			<tr:spacer height="6" />
+		</tr:panelGroupLayout>
   </f:facet >
 
 <!-- show table --> 
 	<f:facet name="ravenTable">
-		<tr:group> 
-        <tr:panelHorizontalLayout halign="center" valign="top" >
-		<tr:outputFormatted 
-			inlineStyle="COLOR: green; FONT-STYLE: italic;" 
-			value="&lt;small&gt;#{row.fromDate}&lt;/small&gt;"/>
-		<h:outputText  
-			escape="false" 
-			value="#{row.htmlTable}" />
-<!--
-			<tr:group binding="#{ravenTable.group}" />
-			
--->
-        </tr:panelHorizontalLayout>
-		<tr:spacer height="6" />
-	</tr:group>
+		<tr:panelGroupLayout layout="vertical"  > 
+		 	<tr:outputFormatted 
+					inlineStyle="COLOR: green; FONT-STYLE: italic;" 
+					value="&lt;small&gt;#{row.fromDate}&lt;/small&gt;"/>
+  <!--       	<tr:panelHorizontalLayout halign="center" valign="top" > -->
+				<h:outputText  
+					escape="false" 
+					value="#{row.htmlTable}" />
+	 <!--        </tr:panelHorizontalLayout>  -->
+			<tr:spacer height="6" />
+	 	</tr:panelGroupLayout> 
   	</f:facet >
-
-  
 </tr:switcher>
 </tr:column> 
 
