@@ -70,10 +70,11 @@
 </tr:panelHorizontalLayout>
 <tr:separator></tr:separator>
 
+<!-- 
 <tr:panelHorizontalLayout  
 	inlineStyle="width:100%;" 
 	halign="center" 
-	valign="top">
+	valign="top">  -->
 <!-- ********************* -->
 <!-- existing nodes -->
 <!-- ********************* -->
@@ -126,6 +127,7 @@
  		actionListener="#{subNodes.deleteNodes}"/>
 
 </tr:panelCaptionGroup>
+<tr:spacer height="10" />
 <!-- ********************* -->
 <!-- existing dependencies -->
 <!-- ********************* -->
@@ -141,14 +143,14 @@
   		rows="20" 
   		rowSelection="none" >
     	<tr:column headerText="#{msgs.name}">
-	      <tr:outputText value="#{row.path}"/>
+	      	<tr:outputText value="#{row.path}"/>
         </tr:column>
     	<tr:column headerText="#{msgs.type}">
-	      <tr:outputText value="#{row.class}"/>
+	      	<tr:outputText value="#{row.class}"/>
         </tr:column>
  	</tr:table>
 </tr:panelCaptionGroup>
 
-</tr:panelHorizontalLayout>
+<!-- </tr:panelHorizontalLayout>  -->
 
 </jsp:root>

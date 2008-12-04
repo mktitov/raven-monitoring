@@ -93,7 +93,7 @@ public class NodeLoggerImplTest extends RavenCoreTestCase
         node.warn("test warn {} {}", "3", "arg2");
         node2.warn("test warn {} {}", "3", "arg2");
         Thread.sleep(200);
-        node.error("test error {} {}", "4", "arg2");
+        node.getLogger().error("test errorZ", new java.lang.IllegalArgumentException("testTh"));
         node2.error("test error {} {}", "4", "arg2");
         Thread.sleep(200);
         node.error("test error2 {} {}", "4", "arg2");
