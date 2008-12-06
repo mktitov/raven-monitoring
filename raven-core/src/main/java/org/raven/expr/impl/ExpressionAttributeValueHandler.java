@@ -59,6 +59,11 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
         } catch (ScriptException ex) {}
     }
 
+	public Expression getExpression()
+	{
+		return expression;
+	}
+
     public void setData(String data) throws Exception 
     {
         if (ObjectUtils.equals(this.data, data))

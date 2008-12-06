@@ -47,6 +47,8 @@ public abstract class AbstractStatisticsDatabase
 		initConfigurationNodes();
 	}
 
+	public abstract void saveStatisticsValue(String[] key, String statisticName, Double value);
+
 	private void initConfigurationNodes()
 	{
 		statisticsDefinitions =
@@ -79,5 +81,17 @@ public abstract class AbstractStatisticsDatabase
 			routes.init();
 			routes.start();
 		}
+	}
+
+	private void processStatisticsValue(String[] key, String name, Double value)
+	{
+		StatisticsDefinitionNode statDef =
+				(StatisticsDefinitionNode) statisticsDefinitions.getChildren(name);
+//		if (statDef==null)
+//			if (is)
+		//process aggregations
+		//process routes
+
+		//process value
 	}
 }
