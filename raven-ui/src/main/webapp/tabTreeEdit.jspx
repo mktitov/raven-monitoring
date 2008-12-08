@@ -103,10 +103,14 @@
     	<tr:column headerText="#{msgs.type}">
 	      <tr:outputText value="#{row.classDisplayName}"/>
         </tr:column>
+    	<tr:column headerText="Index">
+	      <tr:outputText value="#{row.node.index}"/>
+        </tr:column>
+        
  	</tr:table>
 	<tr:spacer height="10" />
-
-	<tr:commandButton id="copyNode" 
+	<tr:panelButtonBar>
+		<tr:commandButton id="copyNode" 
 			partialSubmit="true"
 			returnListener="#{subNodes.copyHandleReturn}" 
 			text="#{msgs.copy}" 
@@ -114,7 +118,7 @@
 			immediate="true" 
 			useWindow="true" windowWidth="500" windowHeight="400" />        
 
-	<tr:commandButton id="moveNode" 
+		<tr:commandButton id="moveNode" 
 			partialSubmit="true"
 			returnListener="#{subNodes.moveHandleReturn}" 
 			text="#{msgs.move}" 
@@ -122,11 +126,21 @@
 			immediate="true" 
 			useWindow="true" windowWidth="500" windowHeight="400" />        
 
- 	<tr:commandButton 
- 		text="#{msgs.delete}" 
- 		actionListener="#{subNodes.deleteNodes}"/>
+ 		<tr:commandButton 
+	 		text="#{msgs.delete}" 
+ 			actionListener="#{subNodes.deleteNodes}"/>
 
-</tr:panelCaptionGroup>
+ 		<tr:commandButton 
+	 		text="UP" 
+ 			actionListener="#{subNodes.upNodes}"/>
+
+ 		<tr:commandButton 
+	 		text="DOWN" 
+ 			actionListener="#{subNodes.downNodes}"/>
+
+ 			
+	</tr:panelButtonBar>
+	</tr:panelCaptionGroup>
 <tr:spacer height="10" />
 <!-- ********************* -->
 <!-- existing dependencies -->

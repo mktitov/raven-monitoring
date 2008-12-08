@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import javax.faces.component.UIComponent;
-import javax.faces.context.FacesContext;
+//import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import org.apache.myfaces.trinidad.component.UIXTable;
 import org.apache.myfaces.trinidad.model.RowKeySet;
@@ -44,115 +44,277 @@ public class SubNodesTableBean
 		//  selected = Collections.EMPTY_LIST; 
 	  }
 
-	  @SuppressWarnings("unchecked")
+	  public static ArrayList<Object> getSeletedTableRowsData(UIXTable tbl, boolean clearState)
+	  {
+	    RowKeySet state = tbl.getSelectedRowKeys();
+	    ArrayList<Object> ret = new ArrayList<Object>();
+	    Object oldKey = tbl.getRowKey();
+	    for(Iterator<Object> it = state.iterator(); it.hasNext();)
+	    {
+	      tbl.setRowKey(it.next());
+	      ret.add(tbl.getRowData());
+	    }
+	    tbl.setRowKey(oldKey);
+	    if(clearState) state.clear();
+	    return ret;
+	  }
+
+	  public static ArrayList<Object> getSeletedTableRowsData(UIXTable tbl)
+	  {
+		  return getSeletedTableRowsData(tbl,true);
+	  }
+	  
+	  
 	  public boolean loadNodeWrappers(List<NodeWrapper> lst)
 	  {
 		lst.clear();
-		UIXTable tbl = (UIXTable) table;
-	    RowKeySet state;
-	    state = tbl.getSelectedRowKeys();
-	    Iterator it = state.iterator();
-	    Object oldKey = tbl.getRowKey();
+		ArrayList<Object> sel = getSeletedTableRowsData((UIXTable) table);
 	    NodeWrapper nw = null;
-	    while(it.hasNext())
+	    for(Iterator<Object> it = sel.iterator(); it.hasNext();)
 	    {
-	      tbl.setRowKey(it.next());
-	      nw = (NodeWrapper)tbl.getRowData();
+	      nw = (NodeWrapper)it.next();
 	      lst.add(nw);
 	    }
-	    tbl.setRowKey(oldKey);
 	    if(nw == null) return false;
-	    state.clear();
 	    return true;
 	  }
-	  
 	  
 	  public String copyNodes()
 	  {
 		 // CopyMoveNodeBean nb = (CopyMoveNodeBean) SessionBean.getElValue(CopyMoveNodeBean.BEAN_NAME);
-		  
 		  return "";
 	  }
 	  
 	  @SuppressWarnings("unchecked")
 	  public void deleteNodes2(ActionEvent action)
 	  {
-		//CopyMoveNodeBean nb = (CopyMoveNodeBean) SessionBean.getElValue(CopyMoveNodeBean.BEAN_NAME);
-		//loadNodeWrappers(nb);
-		UIXTable tbl = (UIXTable) table;
-	    RowKeySet state;
+		ArrayList<Object> sel = getSeletedTableRowsData((UIXTable) table);
 	    StringBuffer retb = new StringBuffer();
-	    state = tbl.getSelectedRowKeys();
-	    Iterator it = state.iterator();
-	    Object oldKey = tbl.getRowKey();
-	    SessionBean sb = (SessionBean) SessionBean.getElValue(SessionBean.BEAN_NAME);
+	    SessionBean sb = SessionBean.getInstance();
 	    NodeWrapper nw = null;
-	    while(it.hasNext())
+	    for(Iterator it = sel.iterator(); it.hasNext();)
 	    {
-	      tbl.setRowKey(it.next());
-	      nw = (NodeWrapper)tbl.getRowData();
-	      int x = sb.deleteNode(nw);
-	      if(x==-1)
-	      {
-	    	if(retb.length()==0) retb.append("This nodes have dependensies: ");
-	    	retb.append(" "+nw.getNodeName());
-	      } else it.remove();
-	      
+	    	nw = (NodeWrapper)it.next();
+	    	int x = sb.deleteNode(nw);
+	    	if(x==-1)
+	    	{
+	    		if(retb.length()==0) retb.append("This nodes have dependensies: ");
+	    		retb.append(" "+nw.getNodeName());
+	    	} else it.remove();
 	    }
-	    tbl.setRowKey(oldKey);
 	    if(nw == null)
 	    {
 	    	message.setMessage("No selected nodes !");
 	    	return;
 	    }
-	    state.clear();
-	    //tbl.setSelectedRowKeys(state);
+     	sb.afterDeleteNodes();
+	    if(message!=null) message.setMessage(retb.toString());
+	  }
+	  
+	  public void deleteNodes(ActionEvent action)
+	  {
+		ArrayList<Object> sel = getSeletedTableRowsData((UIXTable) table);
+	    StringBuffer retb = new StringBuffer();
+	    SessionBean sb = SessionBean.getInstance();
+	    NodeWrapper nw = null;
+	    for(Iterator<Object> it = sel.iterator(); it.hasNext();)
+	    {
+	    	nw = (NodeWrapper)it.next();
+	    	int x = sb.deleteNode(nw);
+	    	if(x==-1)
+	    	{
+	    		if(retb.length()==0) retb.append("This nodes have dependensies: ");
+	    		retb.append(" "+nw.getNodeName());
+	    	} else it.remove();
+	    }
+	    if(nw == null)
+	    {
+	    	message.setMessage("No selected nodes !");
+	    	return;
+	    }
 	    sb.afterDeleteNodes();
-	    
 	    if(message!=null) message.setMessage(retb.toString());
 	  }
 
-	  
-	  @SuppressWarnings("unchecked")
-	  public void deleteNodes(ActionEvent action)
+	  public void upNodes(ActionEvent action)
 	  {
-		UIXTable tbl = (UIXTable) table;
-	    RowKeySet state;
-	    StringBuffer retb = new StringBuffer();
-	    state = tbl.getSelectedRowKeys();
-	    Iterator it = state.iterator();
-	    Object oldKey = tbl.getRowKey();
-	    SessionBean sb = (SessionBean) SessionBean.getElValue(SessionBean.BEAN_NAME);
+		ArrayList<Object> sel = getSeletedTableRowsData((UIXTable) table, true);
 	    NodeWrapper nw = null;
-	    while(it.hasNext())
+	    List<NodeWrapper> nodes = null;
+	    int maxIndex=0;
+	    int minIndex=1;
+	    if( sel.size() > 0 ) 
 	    {
-	      tbl.setRowKey(it.next());
-	      nw = (NodeWrapper)tbl.getRowData();
-	      int x = sb.deleteNode(nw);
-	      if(x==-1)
-	      {
-	    	if(retb.length()==0) retb.append("This nodes have dependensies: ");
-	    	retb.append(" "+nw.getNodeName());
-	      } else it.remove();
-	      
+	    	NodeWrapper t = (NodeWrapper) sel.get(0);
+	    	NodeWrapper parent = new NodeWrapper(t.getNode().getParent());
+	    	nodes = parent.getChildrenList();
+	    	int ncnt = 0;
+	    	if(nodes!=null && (ncnt=nodes.size())>1)
+	    	{
+	    		maxIndex = nodes.get(ncnt-1).getNode().getIndex();
+	    		//minIndex = nodes.get(0).getNode().getIndex();
+	    	}
 	    }
-	    tbl.setRowKey(oldKey);
+	    if(maxIndex==0) return;
+	    
+	    for(Object it : sel) nodes.remove(it);
+	    for(Object ob : sel)
+	    {
+	    	nw = (NodeWrapper)ob;
+	    	int cidx = nw.getNode().getIndex();
+	    	int nup = -2;
+	    	int mx = nodes.size();
+	    	for(int i=0; i<mx; i++)
+	    		if(cidx<nodes.get(i).getNode().getIndex())
+	    		{
+	    			nup = i-1;
+	    			break;
+	    		}
+	    	if(nup==-2) nup = mx-1;
+	    	if(nup>=0) 
+	    	{
+	    		Node upnode = nodes.get(nup).getNode();
+	    		int upidx = upnode.getIndex();
+	    		if(upidx>=minIndex)
+	    		{
+	    			//if(cidx>minIndex) cidx--;
+	    			//if(upidx<maxIndex) upidx++;
+	    			nw.getNode().setIndex(upidx);
+	    			upnode.setIndex(cidx);
+	    			nw.getNode().save();
+	    			upnode.save();
+	    		}
+	    	}
+	    }
 	    if(nw == null)
 	    {
 	    	message.setMessage("No selected nodes !");
 	    	return;
 	    }
-	    state.clear();
-	    //tbl.setSelectedRowKeys(state);
-	    sb.afterDeleteNodes();
-	    
-	    if(message!=null) message.setMessage(retb.toString());
+	    SessionBean.getInstance().reloadBothFrames();
 	  }
+
+	  public void upDown(UIXTable table)
+	  {
+		ArrayList<Object> sel = getSeletedTableRowsData(table, true);
+	    NodeWrapper nw = null;
+	    List<NodeWrapper> nodes = null;
+	    int maxIndex=0;
+	    int minIndex=1;
+	    if( sel.size() > 0 ) 
+	    {
+	    	NodeWrapper t = (NodeWrapper) sel.get(0);
+	    	NodeWrapper parent = new NodeWrapper(t.getNode().getParent());
+	    	nodes = parent.getChildrenList();
+	    	int ncnt = 0;
+	    	if(nodes!=null && (ncnt=nodes.size())>1)
+	    	{
+	    		maxIndex = nodes.get(ncnt-1).getNode().getIndex();
+	    		//minIndex = nodes.get(0).getNode().getIndex();
+	    	}
+	    }
+	    if(maxIndex==0) return;
+	    
+	    for(Object it : sel) nodes.remove(it);
+	    for(Object ob : sel)
+	    {
+	    	nw = (NodeWrapper)ob;
+	    	int cidx = nw.getNode().getIndex();
+	    	int nup = -2;
+	    	int mx = nodes.size();
+	    	for(int i=0; i<mx; i++)
+	    		if(cidx<nodes.get(i).getNode().getIndex())
+	    		{
+	    			nup = i-1;
+	    			break;
+	    		}
+	    	if(nup==-2) nup = mx-1;
+	    	if(nup>=0) 
+	    	{
+	    		Node upnode = nodes.get(nup).getNode();
+	    		int upidx = upnode.getIndex();
+	    		if(upidx>=minIndex)
+	    		{
+	    			//if(cidx>minIndex) cidx--;
+	    			//if(upidx<maxIndex) upidx++;
+	    			nw.getNode().setIndex(upidx);
+	    			upnode.setIndex(cidx);
+	    			nw.getNode().save();
+	    			upnode.save();
+	    		}
+	    	}
+	    }
+	    if(nw == null)
+	    {
+	    	message.setMessage("No selected nodes !");
+	    	return;
+	    }
+	    SessionBean.getInstance().reloadBothFrames();
+	  }
+
+	  
+	  public void downNodes(ActionEvent action)
+	  {
+		ArrayList<Object> sel = getSeletedTableRowsData((UIXTable) table, true);
+	    NodeWrapper nw = null;
+	    List<NodeWrapper> nodes = null;
+	    int maxIndex=0;
+	    int minIndex=1;
+	    if( sel.size() > 0 ) 
+	    {
+	    	NodeWrapper t = (NodeWrapper) sel.get(0);
+	    	NodeWrapper parent = new NodeWrapper(t.getNode().getParent());
+	    	nodes = parent.getChildrenList();
+	    	int ncnt = 0;
+	    	if(nodes!=null && (ncnt=nodes.size())>1)
+	    	{
+	    		maxIndex = nodes.get(ncnt-1).getNode().getIndex();
+	    		//minIndex = nodes.get(0).getNode().getIndex();
+	    	}
+	    }
+	    if(maxIndex==0) return;
+	    for(Object it : sel) nodes.remove(it);
+	    for(Object ob : sel)
+	    {
+	    	nw = (NodeWrapper)ob;
+	    	int cidx = nw.getNode().getIndex();
+	    	int nup = -2;
+	    	int mx = nodes.size();
+	    	for(int i=mx-1; i>=0; i--)
+	    	//for(int i=0; i<mx; i++)	    		
+	    		if(cidx > nodes.get(i).getNode().getIndex())
+	    		{
+	    			nup = i+1;
+	    			break;
+	    		}
+	    	if(nup==-2) nup = 0;
+	    	if(nup>=0 && nup<nodes.size()) 
+	    	{
+	    		Node upnode = nodes.get(nup).getNode();
+	    		int upidx = upnode.getIndex();
+	    		if(upidx>=minIndex)
+	    		{
+	    			//if(cidx<maxIndex) cidx++;
+	    			//if(upidx>minIndex) upidx--;
+	    			nw.getNode().setIndex(upidx);
+	    			upnode.setIndex(cidx);
+	    			nw.getNode().save();
+	    			upnode.save();
+	    		}
+	    	}
+	    }
+	    if(nw == null)
+	    {
+	    	message.setMessage("No selected nodes !");
+	    	return;
+	    }
+	    SessionBean.getInstance().reloadBothFrames();
+	  }
+	  
 	  
 	  public String tryDelete(List<NodeWrapper> nodes)
 	  {
-	    SessionBean sb = (SessionBean) SessionBean.getElValue(SessionBean.BEAN_NAME);
-	    return sb.deleteNodes(nodes);
+	    return SessionBean.getInstance().deleteNodes(nodes);
 	  }
 
 	  public void moveHandleReturn(ReturnEvent event)

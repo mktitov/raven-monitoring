@@ -619,6 +619,15 @@ implements Comparator<NodeAttribute>
 		  return ret.toString();
 	  }
 
+	public boolean equals(Object x)
+	{
+		if (x!=null && x instanceof NodeWrapper) {
+			NodeWrapper xx = (NodeWrapper) x;
+			return(this.getNode().equals(xx.getNode()));
+		}
+		return false;
+	}
+		
 	/*
 	 * 	
 	 */
