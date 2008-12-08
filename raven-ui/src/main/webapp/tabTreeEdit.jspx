@@ -103,7 +103,7 @@
     	<tr:column headerText="#{msgs.type}">
 	      <tr:outputText value="#{row.classDisplayName}"/>
         </tr:column>
-    	<tr:column headerText="Index">
+    	<tr:column headerText="#{msgs.index}">
 	      <tr:outputText value="#{row.node.index}"/>
         </tr:column>
         
@@ -131,11 +131,11 @@
  			actionListener="#{subNodes.deleteNodes}"/>
 
  		<tr:commandButton 
-	 		text="UP" 
+	 		text="#{msgs.up}" 
  			actionListener="#{subNodes.upNodes}"/>
 
  		<tr:commandButton 
-	 		text="DOWN" 
+	 		text="#{msgs.down}" 
  			actionListener="#{subNodes.downNodes}"/>
 
  			
