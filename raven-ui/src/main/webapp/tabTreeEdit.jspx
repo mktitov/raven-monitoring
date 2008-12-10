@@ -87,14 +87,14 @@
     	binding="#{subNodes.message}" 
     	for="delSubNode" 
     	messageType="error" />
-  	<tr:table 
+  	<tr:table  
   		width="100%" 
   		summary="Nodes"  
   		rowBandingInterval="1"
   		value="#{cNode.childrenList}" 
   		binding="#{subNodes.table}"
   		var="row" 
-  		rows="20" 
+  		rows="16" 
   		rowSelection="multiple" 
   		id="delSubNode" >
     	<tr:column headerText="#{msgs.name}">
@@ -109,7 +109,7 @@
         
  	</tr:table>
 	<tr:spacer height="10" />
-	<tr:panelButtonBar>
+	<tr:panelButtonBar  >
 		<tr:commandButton id="copyNode" 
 			partialSubmit="true"
 			returnListener="#{subNodes.copyHandleReturn}" 
@@ -138,7 +138,13 @@
 	 		text="#{msgs.down}" 
  			actionListener="#{subNodes.downNodes}"/>
 
- 			
+ 		<tr:commandButton 
+	 		text="#{msgs.selectAll}" 
+ 			actionListener="#{subNodes.selectAllNodes}"/>
+
+ 		<tr:commandButton 
+	 		text="#{msgs.cancelSelect}" 
+ 			actionListener="#{subNodes.cancelSelectNodes}"/>
 	</tr:panelButtonBar>
 	</tr:panelCaptionGroup>
 <tr:spacer height="10" />

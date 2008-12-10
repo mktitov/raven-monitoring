@@ -36,7 +36,6 @@ import org.apache.myfaces.trinidad.event.ReturnEvent;
 public class SubNodesTableBean 
 {
 	  private UIComponent table = null;
-//	  private List<NodeWrapper> selected;
 	  private CoreMessage message = null;
 
 	  public SubNodesTableBean() 
@@ -51,7 +50,8 @@ public class SubNodesTableBean
 	    Object oldKey = tbl.getRowKey();
 	    for(Iterator<Object> it = state.iterator(); it.hasNext();)
 	    {
-	      tbl.setRowKey(it.next());
+	    	Object x = it.next();
+	      tbl.setRowKey(x);
 	      ret.add(tbl.getRowData());
 	    }
 	    tbl.setRowKey(oldKey);
@@ -104,7 +104,8 @@ public class SubNodesTableBean
 	    }
 	    if(nw == null)
 	    {
-	    	message.setMessage("No selected nodes !");
+	    	//"No selected nodes !"
+	    	message.setMessage(Messages.getUiMessage("noSelectedNodes"));
 	    	return;
 	    }
      	sb.afterDeleteNodes();
@@ -129,7 +130,7 @@ public class SubNodesTableBean
 	    }
 	    if(nw == null)
 	    {
-	    	message.setMessage("No selected nodes !");
+	    	message.setMessage(Messages.getUiMessage("noSelectedNodes"));
 	    	return;
 	    }
 	    sb.afterDeleteNodes();
@@ -138,25 +139,26 @@ public class SubNodesTableBean
 
 	  public void upNodes(ActionEvent action)
 	  {
+		  upDownNodes((UIXTable) table, true);
+		  /*
 		ArrayList<Object> sel = getSeletedTableRowsData((UIXTable) table, true);
 	    NodeWrapper nw = null;
 	    List<NodeWrapper> nodes = null;
 	    int maxIndex=0;
 	    int minIndex=1;
-	    if( sel.size() > 0 ) 
+	    NodeWrapper parent = null;
+	    if( sel.size() == 0 ) 
 	    {
-	    	NodeWrapper t = (NodeWrapper) sel.get(0);
-	    	NodeWrapper parent = new NodeWrapper(t.getNode().getParent());
-	    	nodes = parent.getChildrenList();
-	    	int ncnt = 0;
-	    	if(nodes!=null && (ncnt=nodes.size())>1)
-	    	{
-	    		maxIndex = nodes.get(ncnt-1).getNode().getIndex();
-	    		//minIndex = nodes.get(0).getNode().getIndex();
-	    	}
+	    	message.setMessage(Messages.getUiMessage("noSelectedNodes"));
+	    	return;
 	    }
+	    NodeWrapper t = (NodeWrapper) sel.get(0);
+	    parent = new NodeWrapper(t.getNode().getParent());
+	    nodes = parent.getChildrenList();
+	    int ncnt = 0;
+	    if(nodes!=null && (ncnt=nodes.size())>1)
+	    	maxIndex = nodes.get(ncnt-1).getNode().getIndex();
 	    if(maxIndex==0) return;
-	    
 	    for(Object it : sel) nodes.remove(it);
 	    for(Object ob : sel)
 	    {
@@ -177,8 +179,6 @@ public class SubNodesTableBean
 	    		int upidx = upnode.getIndex();
 	    		if(upidx>=minIndex)
 	    		{
-	    			//if(cidx>minIndex) cidx--;
-	    			//if(upidx<maxIndex) upidx++;
 	    			nw.getNode().setIndex(upidx);
 	    			upnode.setIndex(cidx);
 	    			nw.getNode().save();
@@ -186,35 +186,37 @@ public class SubNodesTableBean
 	    		}
 	    	}
 	    }
-	    if(nw == null)
+	    RowKeySet state = ((UIXTable) table).getSelectedRowKeys();
+	    nodes = parent.getChildrenList();
+	    for(Object it : sel)
 	    {
-	    	message.setMessage("No selected nodes !");
-	    	return;
+	    	int idx = nodes.indexOf(it);
+	    	if(idx>=0) state.add(new Integer(idx)); 
 	    }
 	    SessionBean.getInstance().reloadBothFrames();
+	    */
 	  }
 
-	  public void upDown(UIXTable table)
+	  public void upDownNodes(UIXTable table, boolean up)
 	  {
 		ArrayList<Object> sel = getSeletedTableRowsData(table, true);
 	    NodeWrapper nw = null;
 	    List<NodeWrapper> nodes = null;
 	    int maxIndex=0;
 	    int minIndex=1;
-	    if( sel.size() > 0 ) 
+	    NodeWrapper parent = null;
+	    if( sel.size() == 0 ) 
 	    {
-	    	NodeWrapper t = (NodeWrapper) sel.get(0);
-	    	NodeWrapper parent = new NodeWrapper(t.getNode().getParent());
-	    	nodes = parent.getChildrenList();
-	    	int ncnt = 0;
-	    	if(nodes!=null && (ncnt=nodes.size())>1)
-	    	{
-	    		maxIndex = nodes.get(ncnt-1).getNode().getIndex();
-	    		//minIndex = nodes.get(0).getNode().getIndex();
-	    	}
+	    	message.setMessage(Messages.getUiMessage("noSelectedNodes"));
+	    	return;
 	    }
+	    NodeWrapper t = (NodeWrapper) sel.get(0);
+	    parent = new NodeWrapper(t.getNode().getParent());
+	    nodes = parent.getChildrenList();
+	    int ncnt = 0;
+	    if(nodes!=null && (ncnt=nodes.size())>1)
+	    	maxIndex = nodes.get(ncnt-1).getNode().getIndex();
 	    if(maxIndex==0) return;
-	    
 	    for(Object it : sel) nodes.remove(it);
 	    for(Object ob : sel)
 	    {
@@ -225,18 +227,21 @@ public class SubNodesTableBean
 	    	for(int i=0; i<mx; i++)
 	    		if(cidx<nodes.get(i).getNode().getIndex())
 	    		{
-	    			nup = i-1;
+	    			if(up) nup = i-1;
+	    				else nup = i;
 	    			break;
 	    		}
-	    	if(nup==-2) nup = mx-1;
-	    	if(nup>=0) 
+	    	if(nup==-2)
+	    	{
+	    		if(up) nup = mx-1; 
+	    			else nup = mx;
+	    	}	    		
+	    	if(nup>=0 && nup<nodes.size()) 
 	    	{
 	    		Node upnode = nodes.get(nup).getNode();
 	    		int upidx = upnode.getIndex();
 	    		if(upidx>=minIndex)
 	    		{
-	    			//if(cidx>minIndex) cidx--;
-	    			//if(upidx<maxIndex) upidx++;
 	    			nw.getNode().setIndex(upidx);
 	    			upnode.setIndex(cidx);
 	    			nw.getNode().save();
@@ -244,34 +249,37 @@ public class SubNodesTableBean
 	    		}
 	    	}
 	    }
-	    if(nw == null)
+	    RowKeySet state = table.getSelectedRowKeys();
+	    nodes = parent.getChildrenList();
+	    for(Object it : sel)
 	    {
-	    	message.setMessage("No selected nodes !");
-	    	return;
+	    	int idx = nodes.indexOf(it);
+	    	if(idx>=0) state.add(new Integer(idx)); 
 	    }
 	    SessionBean.getInstance().reloadBothFrames();
 	  }
-
 	  
 	  public void downNodes(ActionEvent action)
 	  {
+		  upDownNodes((UIXTable) table, false);
+		  /*
 		ArrayList<Object> sel = getSeletedTableRowsData((UIXTable) table, true);
 	    NodeWrapper nw = null;
 	    List<NodeWrapper> nodes = null;
 	    int maxIndex=0;
 	    int minIndex=1;
-	    if( sel.size() > 0 ) 
+	    NodeWrapper parent = null;
+	    if( sel.size() == 0 )
 	    {
-	    	NodeWrapper t = (NodeWrapper) sel.get(0);
-	    	NodeWrapper parent = new NodeWrapper(t.getNode().getParent());
-	    	nodes = parent.getChildrenList();
-	    	int ncnt = 0;
-	    	if(nodes!=null && (ncnt=nodes.size())>1)
-	    	{
-	    		maxIndex = nodes.get(ncnt-1).getNode().getIndex();
-	    		//minIndex = nodes.get(0).getNode().getIndex();
-	    	}
+	    	message.setMessage(Messages.getUiMessage("noSelectedNodes"));
+	    	return;
 	    }
+	    NodeWrapper t = (NodeWrapper) sel.get(0);
+	    parent = new NodeWrapper(t.getNode().getParent());
+	    nodes = parent.getChildrenList();
+	    int ncnt = 0;
+	    if(nodes!=null && (ncnt=nodes.size())>1)
+	    	maxIndex = nodes.get(ncnt-1).getNode().getIndex();
 	    if(maxIndex==0) return;
 	    for(Object it : sel) nodes.remove(it);
 	    for(Object ob : sel)
@@ -280,22 +288,19 @@ public class SubNodesTableBean
 	    	int cidx = nw.getNode().getIndex();
 	    	int nup = -2;
 	    	int mx = nodes.size();
-	    	for(int i=mx-1; i>=0; i--)
-	    	//for(int i=0; i<mx; i++)	    		
-	    		if(cidx > nodes.get(i).getNode().getIndex())
+	    	for(int i=0; i<mx; i++)	    		
+	    		if(cidx < nodes.get(i).getNode().getIndex())
 	    		{
-	    			nup = i+1;
+	    			nup = i;
 	    			break;
 	    		}
-	    	if(nup==-2) nup = 0;
+	    	if(nup==-2) nup = mx;
 	    	if(nup>=0 && nup<nodes.size()) 
 	    	{
 	    		Node upnode = nodes.get(nup).getNode();
 	    		int upidx = upnode.getIndex();
 	    		if(upidx>=minIndex)
 	    		{
-	    			//if(cidx<maxIndex) cidx++;
-	    			//if(upidx>minIndex) upidx--;
 	    			nw.getNode().setIndex(upidx);
 	    			upnode.setIndex(cidx);
 	    			nw.getNode().save();
@@ -303,14 +308,33 @@ public class SubNodesTableBean
 	    		}
 	    	}
 	    }
-	    if(nw == null)
+	    RowKeySet state = ((UIXTable) table).getSelectedRowKeys();
+	    nodes = parent.getChildrenList();
+	    for(Object it : sel)
 	    {
-	    	message.setMessage("No selected nodes !");
-	    	return;
+	    	int idx = nodes.indexOf(it);
+	    	if(idx>=0) state.add(new Integer(idx)); 
 	    }
 	    SessionBean.getInstance().reloadBothFrames();
+	    */
 	  }
 	  
+	  public void selectAllNodes(ActionEvent action)
+	  {
+		  RowKeySet state = ((UIXTable) table).getSelectedRowKeys();
+		  state.clear();
+		  state.addAll();
+//		  int all = ((UIXTable) table).getRowCount();
+//		  for(int i=0;i<all;i++)
+		  SessionBean.getInstance().reloadBothFrames();
+	  }
+
+	  public void cancelSelectNodes(ActionEvent action)
+	  {
+		  RowKeySet state = ((UIXTable) table).getSelectedRowKeys();
+		  state.clear();
+		  SessionBean.getInstance().reloadBothFrames();
+	  }
 	  
 	  public String tryDelete(List<NodeWrapper> nodes)
 	  {
@@ -370,9 +394,6 @@ public class SubNodesTableBean
 			sb.reloadBothFrames();
 			if(message!=null) message.setMessage(retb.toString());
 		}
-
-	  
-	//  public List<Node> getSelected() { return selected; }
 	  
 	  public CoreMessage getMessage() { return message; }
 	  public void setMessage(CoreMessage message) { this.message = message; }
