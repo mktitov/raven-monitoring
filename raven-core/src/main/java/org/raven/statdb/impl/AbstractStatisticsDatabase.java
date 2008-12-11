@@ -27,7 +27,7 @@ import org.raven.statdb.StatisticsRecord;
 
 /**
  *
- * @author Mikhail Titov
+ * @author Mikhail Titov 
  */
 public abstract class AbstractStatisticsDatabase
 	extends AbstractDataConsumer implements StatisticsDatabase 
