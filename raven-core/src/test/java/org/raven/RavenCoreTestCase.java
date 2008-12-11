@@ -17,6 +17,9 @@
 
 package org.raven;
 
+import java.io.File;
+import java.io.IOException;
+import org.apache.commons.io.FileUtils;
 import org.apache.tapestry.ioc.RegistryBuilder;
 import org.junit.After;
 import org.junit.Before;
@@ -41,8 +44,12 @@ public class RavenCoreTestCase extends ServiceTestCase
     }
     
     @Before
-    public void initTest()
+    public void initTest() throws IOException
     {
+        File tmpDir = new File("target/tmp");
+        tmpDir.mkdirs();
+        System.setProperty("java.io.tmpdir", tmpDir.getAbsolutePath());
+//        FileUtils.deleteDirectory(new File("target/rrd"));
         configurator = registry.getService(Configurator.class);
         assertNotNull(configurator);
         store = configurator.getTreeStore();

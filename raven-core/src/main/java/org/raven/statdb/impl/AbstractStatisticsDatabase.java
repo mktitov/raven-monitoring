@@ -17,11 +17,15 @@
 
 package org.raven.statdb.impl;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.log.LogLevel;
+import org.raven.statdb.ProcessingInstruction;
+import org.raven.statdb.Rule;
+import org.raven.statdb.RuleProcessingResult;
 import org.raven.statdb.StatisticsDatabase;
 import org.raven.statdb.StatisticsRecord;
 
@@ -33,10 +37,9 @@ public abstract class AbstractStatisticsDatabase
 	extends AbstractDataConsumer implements StatisticsDatabase 
 {
 	protected StatisticsDefinitionsNode statisticsDefinitions;
-	protected AggregationsNode aggregations;
-	protected RoutesNode routes;
+    protected RulesNode rulesNode;
 
-	protected Map<String, Double> previousValues;
+    protected Map<String, Double> previousValues;
 
 	@Override
 	protected void initFields()
@@ -77,25 +80,15 @@ public abstract class AbstractStatisticsDatabase
 			statisticsDefinitions.start();
 		}
 
-		aggregations = (AggregationsNode) getChildren(AggregationsNode.NAME);
-		if (aggregations==null)
-		{
-			aggregations = new AggregationsNode();
-			addChildren(aggregations);
-			aggregations.save();
-			aggregations.init();
-			aggregations.start();
-		}
-
-		routes = (RoutesNode) getChildren(RoutesNode.NAME);
-		if (routes==null)
-		{
-			routes = new RoutesNode();
-			addChildren(routes);
-			routes.save();
-			routes.init();
-			routes.start();
-		}
+        rulesNode = (RulesNode) getChildren(RulesNode.NAME);
+        if (rulesNode==null)
+        {
+            rulesNode = new RulesNode();
+            addChildren(rulesNode);
+            rulesNode.save();
+            rulesNode.init();
+            rulesNode.start();
+        }
 	}
 
 	@Override
@@ -130,54 +123,86 @@ public abstract class AbstractStatisticsDatabase
 						, record.getKey(), dataSource.getPath()));
 			return;
 		}
-		for (Map.Entry<String, Double> value: record.getValues().entrySet())
-		{
-			try
-			{
-//				processStatisticsValue(key, value.getKey(), value.getValue());
-			}
-			catch(Throwable e)
-			{
-				logger.error(
-					String.format(
-						"Error processing statistics record value (%s) for statistics name (%s) " +
-						"and record key (%s). %s"
-						, value.getValue(), value.getKey(), record.getKey(), e.getMessage())
-					, e);
-			}
-		}
+        StringBuilder partialKeyBuf = new StringBuilder("/");
+        for (String subKey: key)
+        {
+            String partialKey = partialKeyBuf.toString();
+            Collection<Rule> rules = getRules(partialKey);
+            for (Map.Entry<String, Double> value: record.getValues().entrySet())
+            {
+                try
+                {
+    //				processStatisticsValue(key, value.getKey(), value.getValue());
+                }
+                catch(Throwable e)
+                {
+                    logger.error(
+                        String.format(
+                            "Error processing statistics record value (%s) for statistics name (%s) " +
+                            "and record key (%s). %s"
+                            , value.getValue(), value.getKey(), record.getKey(), e.getMessage())
+                        , e);
+                }
+            }
+            partialKeyBuf.append(subKey+"/");
+        }
 
 	}
 
-	private void processStatisticsValue(
-			String[] key, String name, Double value, StatisticsRecord record)
-		throws Exception
-	{
-		StatisticsDefinitionNode statDef =
-				(StatisticsDefinitionNode) statisticsDefinitions.getChildren(name);
-		if (statDef==null)
-			throw new Exception("Unknown statistics name");
+    private Collection<Rule> getRules(String partialKey)
+    {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
 
-		//process routes
+    private ProcessingInstruction processStatistics(
+            String partialKey, String name, Double value, StatisticsRecord record, boolean transit)
+    {
+        Collection<Rule> rules = getRules(partialKey);
+        if (rules!=null)
+        {
+            RuleProcessingResultImpl result =
+                    new RuleProcessingResultImpl(ProcessingInstruction.CONTINUE_PROCESSING, value);
+            for (Rule rule: rules)
+            {
+                rule.processRule(partialKey, value, record, result);
+                if (result.getInstruction()!=ProcessingInstruction.CONTINUE_PROCESSING)
+                    return result.getInstruction();
+                result.setInstruction(ProcessingInstruction.CONTINUE_PROCESSING);
+            }
+        }
 
-		boolean savePreviousValue = statDef.getSavePreviousValue();
-		String statisticsId = null;
-		Double previousValue = null;
-		if (savePreviousValue)
-			previousValue = previousValues.get(statisticsId);
+        return ProcessingInstruction.CONTINUE_PROCESSING;
+    }
 
-		Double newValue = statDef.calculateValue(value, previousValue, record);
-
-		if (savePreviousValue)
-			previousValues.put(statisticsId, value);
-
-		
-
-		//process aggregations
-		//process routes
-
-		//process value
-	}
+//	private void processStatisticsValue(
+//			String[] key, String name, Double value, StatisticsRecord record)
+//		throws Exception
+//	{
+//		StatisticsDefinitionNode statDef =
+//				(StatisticsDefinitionNode) statisticsDefinitions.getChildren(name);
+//		if (statDef==null)
+//			throw new Exception("Unknown statistics name");
+//
+//		//process routes
+//
+//		boolean savePreviousValue = statDef.getSavePreviousValue();
+//		String statisticsId = null;
+//		Double previousValue = null;
+//		if (savePreviousValue)
+//			previousValue = previousValues.get(statisticsId);
+//
+//		Double newValue = statDef.calculateValue(value, previousValue, record);
+//
+//		if (savePreviousValue)
+//			previousValues.put(statisticsId, value);
+//
+//
+//
+//		//process aggregations
+//		//process routes
+//
+//		//process value
+//	}
 
 	protected static String getStatisticsNameId(String key, String name)
 	{
