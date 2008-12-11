@@ -57,51 +57,6 @@
             <id>codehaus</id>
             <url>http://repository.codehaus.org</url>
         </repository>
-        <!--
-        <repository>
-            <id>DataNucleus_Repos</id>
-            <name>DataNucleus Repository</name>
-            <url>http://www.datanucleus.org/downloads/maven</url>
-            <layout>legacy</layout>
-        </repository>
-        -->
-        <!--
-        <repository>
-            <id>DataNucleus_Repos3</id>
-            <name>DataNucleus Repository</name>
-            <url>http://www.datanucleus.org/downloads/maven-nightly</url>
-            <layout>legacy</layout>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>DataNucleus_Repos2</id>
-            <name>DataNucleus Repository</name>
-            <url>http://www.datanucleus.org/downloads/maven2-nightly</url>
-        </repository>
-        <repository>
-            <id>jpox_Repos</id>
-            <name>jpox Repository</name>
-            <url>http://www.jpox.org/downloads/maven</url>
-            <layout>legacy</layout>
-        </repository>
-        <repository>
-            <id>jpox_Repos2</id>
-            <name>jpox Repository</name>
-            <url>http://www.jpox.org/downloads/maven2</url>
-        </repository>
-        <repository>
-            <id>Codehaus Snapshots</id>
-            <url>http://snapshots.repository.codehaus.org/</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-        </repository>
-        -->
     </repositories>
     <reporting>
         <plugins>
@@ -272,7 +227,7 @@
             <dependency>
                 <groupId>org.jrobin</groupId>
                 <artifactId>jrobin</artifactId>
-                <version>1.5.8</version>
+                <version>1.5.9</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
