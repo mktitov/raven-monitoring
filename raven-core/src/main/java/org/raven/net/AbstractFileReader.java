@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.impl.AbstractDataSource;
+import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.weda.internal.annotations.Message;
@@ -58,6 +59,11 @@ public abstract class AbstractFileReader extends AbstractDataSource
                 attributes.get(REMOVEFILEAFTERPROCESSING_ATTRIBUTE).getRealValue();
 //        Boolean addFilenameToStream = attributes.get(ADDFILENAMETOSTREAM_ATTRIBUTE).getRealValue();
         boolean addFilenameToStream = false;
+
+		if (isLogLevelEnabled(LogLevel.DEBUG))
+			debug(String.format(
+					"Reading file(s) for data consumer (%s) using url (%s)"
+					, dataConsumer.getPath(), url));
 
         FileWrapper file = resolveFile(url, attributes);
 
@@ -96,8 +102,8 @@ public abstract class AbstractFileReader extends AbstractDataSource
             catch (Throwable e)
             {
                 logger.error(String.format(
-                        "Error in node (%s). Error processing file (%s). %s"
-                        , getPath(), file.getName(), e.getMessage()), e);
+                        "Error processing file(s) for data consumer (%s) using url (%s). %s"
+                        , dataConsumer.getPath(), file.getName(), e.getMessage()), e);
                 
             }
         }
@@ -105,8 +111,9 @@ public abstract class AbstractFileReader extends AbstractDataSource
         {
             if (logger.isDebugEnabled())
                 logger.debug(String.format(
-                        "No files found for url (%s) using regexp file name filter (%s)"
-                        , url, fileMask));
+                        "No files found for data consumer (%s) for url (%s) using regexp " +
+						"file name filter (%s)"
+                        , dataConsumer.getPath(), url, fileMask));
         }
         
         return true;

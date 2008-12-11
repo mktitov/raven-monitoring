@@ -94,7 +94,8 @@ public class StatisticsDefinitionNode extends BaseNode
 		this.valueExpression = valueExpression;
 	}
 
-	public Double calculateValue(Double value, StatisticsRecord record) throws ScriptException
+	public Double calculateValue(Double value, Double previousValue, StatisticsRecord record)
+			throws ScriptException
 	{
 		Double newValue = value;
 		NodeAttribute expAttr = getNodeAttribute("valueExpression");
