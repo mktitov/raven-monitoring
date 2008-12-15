@@ -15,23 +15,36 @@
  *  under the License.
  */
 
-package org.raven.statdb;
+package org.raven.statdb.impl;
+
+import org.raven.statdb.Rule;
+import org.raven.statdb.RuleProcessingResult;
+import org.raven.statdb.StatisticsRecord;
+import org.raven.tree.impl.BaseNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface Rule
+public class TestRule extends BaseNode implements Rule
 {
-    /**
-     * Process the rule.
-     * @param key current processing sub key.
-	 * @param name the statistics name.
-     * @param value the statistics value.
-     * @param record the original statistics record.
-     * @param result rule must save result in this  variable
-     */
-    public void processRule(
-            String key, String name, Double value, StatisticsRecord record
-			, RuleProcessingResult result);
+	private Rule ruleMock;
+
+	public Rule getRuleMock()
+	{
+		return ruleMock;
+	}
+
+	public void setRuleMock(Rule ruleMock)
+	{
+		this.ruleMock = ruleMock;
+	}
+
+	public void processRule(
+			String key, String name, Double value, StatisticsRecord record
+			, RuleProcessingResult result)
+	{
+		ruleMock.processRule(key, name, value, record, result);
+	}
+
 }

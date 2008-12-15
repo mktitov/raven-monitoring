@@ -15,23 +15,39 @@
  *  under the License.
  */
 
-package org.raven.statdb;
+package org.raven.util;
+
+import java.util.HashMap;
+import java.util.Map;
+import javax.script.Bindings;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface Rule
+public class BindingSupport
 {
-    /**
-     * Process the rule.
-     * @param key current processing sub key.
-	 * @param name the statistics name.
-     * @param value the statistics value.
-     * @param record the original statistics record.
-     * @param result rule must save result in this  variable
-     */
-    public void processRule(
-            String key, String name, Double value, StatisticsRecord record
-			, RuleProcessingResult result);
+	ThreadLocal<Map<String, Object>> bindings = new ThreadLocal<Map<String, Object>>();
+
+	public void put(String bindingName, Object value)
+	{
+		Map<String, Object> binds = bindings.get();
+		if (binds==null)
+		{
+			binds = new HashMap<String, Object>();
+			bindings.set(binds);
+		}
+		binds.put(bindingName, value);
+	}
+
+	public void reset()
+	{
+		bindings.remove();
+	}
+
+	public void addTo(Bindings scriptBindings)
+	{
+		if (bindings.get()!=null)
+			scriptBindings.putAll(bindings.get());
+	}
 }

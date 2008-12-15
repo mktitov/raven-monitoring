@@ -17,17 +17,23 @@
 
 package org.raven.statdb.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.script.Bindings;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.log.LogLevel;
 import org.raven.statdb.ProcessingInstruction;
 import org.raven.statdb.Rule;
-import org.raven.statdb.RuleProcessingResult;
 import org.raven.statdb.StatisticsDatabase;
 import org.raven.statdb.StatisticsRecord;
+import org.raven.tree.Node;
+import org.raven.util.BindingSupport;
 
 /**
  *
@@ -40,6 +46,7 @@ public abstract class AbstractStatisticsDatabase
     protected RulesNode rulesNode;
 
     protected Map<String, Double> previousValues;
+	protected BindingSupport bindingSupport;
 
 	@Override
 	protected void initFields()
@@ -47,6 +54,7 @@ public abstract class AbstractStatisticsDatabase
 		super.initFields();
 
 		previousValues = new ConcurrentHashMap<String, Double>();
+		bindingSupport = new BindingSupport();
 	}
 
 	@Override
@@ -65,7 +73,12 @@ public abstract class AbstractStatisticsDatabase
 		initConfigurationNodes();
 	}
 
-	protected abstract void saveStatisticsValue(String[] key, String statisticName, Double value);
+	public RulesNode getRulesNode()
+	{
+		return rulesNode;
+	}
+
+	protected abstract void saveStatisticsValue(String key, String statisticName, Double value);
 
 	private void initConfigurationNodes()
 	{
@@ -106,7 +119,15 @@ public abstract class AbstractStatisticsDatabase
 
 		StatisticsRecord record = (StatisticsRecord) data;
 
-		String[] key = record.getKey().split("/");
+		if (record.getKey()==null || !record.getKey().startsWith("/"))
+		{
+			error(String.format(
+					"Invalid statistic record recieved from (%s). Key (%s) must not be null and " +
+					"must start from (/)", dataSource.getPath(), record.getKey()));
+			return;
+		}
+		
+		String[] key = record.getKey().substring(1).split("/");
 		if (key==null || key.length==0 || key[0].length()==0)
 		{
 			logger.error(String.format(
@@ -124,85 +145,84 @@ public abstract class AbstractStatisticsDatabase
 			return;
 		}
         StringBuilder partialKeyBuf = new StringBuilder("/");
+		Set<String> stopList = new HashSet<String>();
+		int i=0;
         for (String subKey: key)
         {
-            String partialKey = partialKeyBuf.toString();
-            Collection<Rule> rules = getRules(partialKey);
+			++i;
+            String partialKey = partialKeyBuf.append(subKey+"/").toString();
             for (Map.Entry<String, Double> value: record.getValues().entrySet())
             {
                 try
                 {
-    //				processStatisticsValue(key, value.getKey(), value.getValue());
+					if (!stopList.contains(value.getKey()))
+					{
+						ProcessingInstruction ins =
+								processStatistics(
+									partialKey, value.getKey(), value.getValue(), record
+									, key.length!=i);
+						if (ins==ProcessingInstruction.STOP_PROCESSING_KEY)
+							stopList.add(record.getKey());
+					}
                 }
                 catch(Throwable e)
                 {
                     logger.error(
                         String.format(
-                            "Error processing statistics record value (%s) for statistics name (%s) " +
-                            "and record key (%s). %s"
+                            "Error processing statistics record value (%s) " +
+							"for statistics name (%s) and record key (%s). %s"
                             , value.getValue(), value.getKey(), record.getKey(), e.getMessage())
                         , e);
                 }
             }
-            partialKeyBuf.append(subKey+"/");
         }
 
 	}
 
-    private Collection<Rule> getRules(String partialKey)
-    {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
     private ProcessingInstruction processStatistics(
             String partialKey, String name, Double value, StatisticsRecord record, boolean transit)
     {
-        Collection<Rule> rules = getRules(partialKey);
+		bindingSupport.put("key", partialKey);
+		bindingSupport.put("name", name);
+		bindingSupport.put("value", value);
+		bindingSupport.put("record", record);
+		Collection<Node> rules = rulesNode.getEffectiveChildrens();
+		bindingSupport.reset();
+		
         if (rules!=null)
         {
             RuleProcessingResultImpl result =
                     new RuleProcessingResultImpl(ProcessingInstruction.CONTINUE_PROCESSING, value);
-            for (Rule rule: rules)
+            for (Node ruleNode: rules)
             {
-                rule.processRule(partialKey, value, record, result);
-                if (result.getInstruction()!=ProcessingInstruction.CONTINUE_PROCESSING)
-                    return result.getInstruction();
-                result.setInstruction(ProcessingInstruction.CONTINUE_PROCESSING);
+				if (ruleNode instanceof Rule)
+				{
+					Rule rule = (Rule) ruleNode;
+					rule.processRule(partialKey, name, value, record, result);
+					if (result.getInstruction()!=ProcessingInstruction.CONTINUE_PROCESSING)
+						return result.getInstruction();
+					result.setInstruction(ProcessingInstruction.CONTINUE_PROCESSING);
+				}
+				else
+					error(String.format(
+							"Node (%s) is not a rule. Rule node must implement the (%s) interface"
+							, ruleNode.getPath(), Rule.class.getName()));
             }
         }
+
+		if (!transit)
+			saveStatisticsValue(partialKey, name, value);
 
         return ProcessingInstruction.CONTINUE_PROCESSING;
     }
 
-//	private void processStatisticsValue(
-//			String[] key, String name, Double value, StatisticsRecord record)
-//		throws Exception
-//	{
-//		StatisticsDefinitionNode statDef =
-//				(StatisticsDefinitionNode) statisticsDefinitions.getChildren(name);
-//		if (statDef==null)
-//			throw new Exception("Unknown statistics name");
-//
-//		//process routes
-//
-//		boolean savePreviousValue = statDef.getSavePreviousValue();
-//		String statisticsId = null;
-//		Double previousValue = null;
-//		if (savePreviousValue)
-//			previousValue = previousValues.get(statisticsId);
-//
-//		Double newValue = statDef.calculateValue(value, previousValue, record);
-//
-//		if (savePreviousValue)
-//			previousValues.put(statisticsId, value);
-//
-//
-//
-//		//process aggregations
-//		//process routes
-//
-//		//process value
-//	}
+	@Override
+	public void formExpressionBindings(Bindings bindings)
+	{
+		super.formExpressionBindings(bindings);
+
+		bindingSupport.addTo(bindings);
+	}
 
 	protected static String getStatisticsNameId(String key, String name)
 	{

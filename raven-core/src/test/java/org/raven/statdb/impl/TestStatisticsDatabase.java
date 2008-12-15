@@ -15,23 +15,30 @@
  *  under the License.
  */
 
-package org.raven.statdb;
+package org.raven.statdb.impl;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface Rule
+public class TestStatisticsDatabase extends AbstractStatisticsDatabase
 {
-    /**
-     * Process the rule.
-     * @param key current processing sub key.
-	 * @param name the statistics name.
-     * @param value the statistics value.
-     * @param record the original statistics record.
-     * @param result rule must save result in this  variable
-     */
-    public void processRule(
-            String key, String name, Double value, StatisticsRecord record
-			, RuleProcessingResult result);
+	private SaveStatisticsValue databaseMock;
+
+	public SaveStatisticsValue getDatabaseMock()
+	{
+		return databaseMock;
+	}
+
+	public void setDatabaseMock(SaveStatisticsValue databaseMock)
+	{
+		this.databaseMock = databaseMock;
+	}
+
+	@Override
+	protected void saveStatisticsValue(String key, String statisticName, Double value)
+	{
+		databaseMock.saveStatisticsValue(key, statisticName, value);
+	}
+
 }

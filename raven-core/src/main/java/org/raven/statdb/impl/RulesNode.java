@@ -17,12 +17,17 @@
 
 package org.raven.statdb.impl;
 
+import org.raven.annotations.NodeClass;
+import org.raven.expr.impl.IfNode;
+import org.raven.tree.Node;
+import org.raven.tree.Node.Status;
 import org.raven.tree.impl.BaseNode;
 
 /**
  *
  * @author Mikhail Titov
  */
+@NodeClass(childNodes={IfNode.class})
 public class RulesNode extends BaseNode
 {
     public final static String NAME = "Rules";
@@ -30,5 +35,18 @@ public class RulesNode extends BaseNode
     public RulesNode()
     {
         super(NAME);
+		setSubtreeListener(true);
     }
+
+	@Override
+	public void nodeStatusChanged(Node node, Status oldStatus, Status newStatus)
+	{
+		super.nodeStatusChanged(node, oldStatus, newStatus);
+		if (newStatus==Status.INITIALIZED && oldStatus==Status.CREATED && node instanceof IfNode)
+		{
+			((IfNode)node).setUsedInTemplate(false);
+		}
+	}
+
+	
 }

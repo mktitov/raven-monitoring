@@ -58,14 +58,23 @@ public class IfNode extends BaseNode
         return isTemplate()? res : !res;
     }
 
+	public void setExpression(Boolean expression)
+	{
+		this.expression = expression;
+	}
+
     public Boolean getExpression() 
     {
         return expression;
     }
 
+	public void setUsedInTemplate(Boolean usedInTemplate)
+	{
+		this.usedInTemplate = usedInTemplate;
+	}
+
     public Boolean getUsedInTemplate()
     {
         return usedInTemplate;
     }
-    
 }

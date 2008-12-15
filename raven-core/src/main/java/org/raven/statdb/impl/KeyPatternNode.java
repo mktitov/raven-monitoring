@@ -15,23 +15,31 @@
  *  under the License.
  */
 
-package org.raven.statdb;
+package org.raven.statdb.impl;
+
+import org.raven.annotations.NodeClass;
+import org.raven.annotations.Parameter;
+import org.raven.tree.impl.BaseNode;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface Rule
+@NodeClass
+public class KeyPatternNode extends BaseNode
 {
-    /**
-     * Process the rule.
-     * @param key current processing sub key.
-	 * @param name the statistics name.
-     * @param value the statistics value.
-     * @param record the original statistics record.
-     * @param result rule must save result in this  variable
-     */
-    public void processRule(
-            String key, String name, Double value, StatisticsRecord record
-			, RuleProcessingResult result);
+	@Parameter()
+	@NotNull
+	private String pattern;
+
+	public String getPattern()
+	{
+		return pattern;
+	}
+
+	public void setPattern(String pattern)
+	{
+		this.pattern = pattern;
+	}
 }

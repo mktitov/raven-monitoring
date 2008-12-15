@@ -32,7 +32,7 @@ public interface StatisticsRecord
 	public String getKey();
 	/**
 	 * Returns the values of statistics. The key in the map is statistics name the value is a
-	 * statistics value
+	 * statistics value. The method can return the null value.
 	 */
 	public Map<String, Double> getValues();
 	/**
