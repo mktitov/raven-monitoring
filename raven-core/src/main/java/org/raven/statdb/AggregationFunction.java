@@ -15,20 +15,13 @@
  *  under the License.
  */
 
-package org.raven.statdb.impl;
-
-import org.raven.tree.impl.BaseNode;
+package org.raven.statdb;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class RoutesNode extends BaseNode
+public enum AggregationFunction
 {
-	public final static String NAME = "Routes";
-
-	public RoutesNode()
-	{
-		super(NAME);
-	}
+	MIN, MAX, AVERAGE, SUM
 }

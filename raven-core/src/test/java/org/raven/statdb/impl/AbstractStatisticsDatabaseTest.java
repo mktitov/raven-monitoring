@@ -22,6 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.expr.impl.IfNode;
+import org.raven.log.LogLevel;
 import org.raven.rrd.objects.PushDataSource;
 import org.raven.statdb.ProcessingInstruction;
 import org.raven.statdb.Rule;
@@ -56,9 +57,30 @@ public class AbstractStatisticsDatabaseTest extends RavenCoreTestCase
 		tree.getRootNode().addChildren(db);
 		db.init();
 		db.setDataSource(ds);
+		db.setStep(5l);
+		db.setLogLevel(LogLevel.DEBUG);
 		db.start();
-
 		assertEquals(Status.STARTED, db.getStatus());
+
+		StatisticsDefinitionNode s1 = new StatisticsDefinitionNode();
+		s1.setName("s1");
+		s1.setParent(db.getStatisticsDefinitionsNode());
+		s1.save();
+		db.getStatisticsDefinitionsNode().addChildren(s1);
+		s1.init();
+		s1.setType("s");
+		s1.start();
+		assertEquals(Status.STARTED, s1.getStatus());
+
+		StatisticsDefinitionNode s2 = new StatisticsDefinitionNode();
+		s2.setName("s2");
+		s2.setParent(db.getStatisticsDefinitionsNode());
+		s2.save();
+		db.getStatisticsDefinitionsNode().addChildren(s2);
+		s2.init();
+		s2.setType("s");
+		s2.start();
+		assertEquals(Status.STARTED, s2.getStatus());
 	}
 
 	@Test
@@ -71,7 +93,7 @@ public class AbstractStatisticsDatabaseTest extends RavenCoreTestCase
 	@Test
 	public void saveStatisticsValueTest()
 	{
-		StatisticsRecordImpl rec = new StatisticsRecordImpl("/1/2/");
+		StatisticsRecordImpl rec = new StatisticsRecordImpl("/1/2/", 0);
 		rec.put("s1", 1.0);
 		rec.put("s2", 2.0);
 
@@ -82,9 +104,21 @@ public class AbstractStatisticsDatabaseTest extends RavenCoreTestCase
 	}
 
 	@Test
+	public void undefinedStatisticsTest()
+	{
+		StatisticsRecordImpl rec = new StatisticsRecordImpl("/1/2/", 0);
+		rec.put("s3", 1.0);
+
+		SaveStatisticsValue saveStatisticsValue = createMock(SaveStatisticsValue.class);
+		replay(saveStatisticsValue);
+		ds.pushData(rec);
+		verify(saveStatisticsValue);
+	}
+
+	@Test
 	public void rulesExecutionTest() throws Exception
 	{
-		StatisticsRecordImpl rec = new StatisticsRecordImpl("/1/2/");
+		StatisticsRecordImpl rec = new StatisticsRecordImpl("/1/2/", 0);
 		rec.put("s1", 1.0);
 		rec.put("s2", 2.0);
 		
@@ -92,13 +126,17 @@ public class AbstractStatisticsDatabaseTest extends RavenCoreTestCase
 		Rule rule2 = createMock("rule2", Rule.class);
 		SaveStatisticsValue saveStatisticsValue = createSaveStatisticsValueMock();
 		rule1.processRule(
-				eq("/1/"), eq("s1"), eq(1.0), same(rec), isA(RuleProcessingResultImpl.class));
+				eq("/1/"), eq("s1"), eq(1.0), same(rec)
+				, isA(RuleProcessingResultImpl.class), same(db));
 		rule1.processRule(
-				eq("/1/"), eq("s2"), eq(2.0), same(rec), isA(RuleProcessingResultImpl.class));
+				eq("/1/"), eq("s2"), eq(2.0), same(rec)
+				, isA(RuleProcessingResultImpl.class), same(db));
 		rule2.processRule(
-				eq("/1/2/"), eq("s1"), eq(1.0), same(rec), isA(RuleProcessingResultImpl.class));
+				eq("/1/2/"), eq("s1"), eq(1.0), same(rec)
+				, isA(RuleProcessingResultImpl.class), same(db));
 		rule2.processRule(
-				eq("/1/2/"), eq("s2"), eq(2.0), same(rec), isA(RuleProcessingResultImpl.class));
+				eq("/1/2/"), eq("s2"), eq(2.0), same(rec)
+				, isA(RuleProcessingResultImpl.class), same(db));
 		replay(rule1, rule2, saveStatisticsValue);
 
 		createIfNode("if1", "key=='/1/'", rule1);
@@ -112,7 +150,7 @@ public class AbstractStatisticsDatabaseTest extends RavenCoreTestCase
 	@Test
 	public void stopProcessingSubkeyTest() throws Exception
 	{
-		StatisticsRecordImpl rec = new StatisticsRecordImpl("/1/2/");
+		StatisticsRecordImpl rec = new StatisticsRecordImpl("/1/2/", 0);
 		rec.put("s1", 1.0);
 		rec.put("s2", 2.0);
 
@@ -121,9 +159,14 @@ public class AbstractStatisticsDatabaseTest extends RavenCoreTestCase
 		SaveStatisticsValue saveStatisticsValue = createSaveStatisticsValueMock();
 		rule1.processRule(
 				eq("/1/"), eq("s1"), eq(1.0), same(rec)
-				, changeProcessingInstruction(ProcessingInstruction.STOP_PROCESSING_SUBKEY));
+				, changeProcessingInstruction(ProcessingInstruction.STOP_PROCESSING_SUBKEY)
+				, same(db));
 		rule1.processRule(
-				eq("/1/"), eq("s2"), eq(2.0), same(rec), isA(RuleProcessingResultImpl.class));
+				eq("/1/"), eq("s2"), eq(2.0), same(rec), isA(RuleProcessingResultImpl.class)
+				, same(db));
+		rule2.processRule(
+				eq("/1/"), eq("s2"), eq(2.0), same(rec), isA(RuleProcessingResultImpl.class)
+				, same(db));
 		replay(rule1, rule2, saveStatisticsValue);
 
 		createIfNode("if1", "key=='/1/'", rule1, rule2);
@@ -136,7 +179,7 @@ public class AbstractStatisticsDatabaseTest extends RavenCoreTestCase
 	@Test
 	public void stopProcessingKeyTest() throws Exception
 	{
-		StatisticsRecordImpl rec = new StatisticsRecordImpl("/1/2/");
+		StatisticsRecordImpl rec = new StatisticsRecordImpl("/1/2/", 0);
 		rec.put("s1", 1.0);
 		rec.put("s2", 2.0);
 
@@ -146,9 +189,15 @@ public class AbstractStatisticsDatabaseTest extends RavenCoreTestCase
 		db.setDatabaseMock(saveStatisticsValue);
 		rule1.processRule(
 				eq("/1/"), eq("s1"), eq(1.0), same(rec)
-				, changeProcessingInstruction(ProcessingInstruction.STOP_PROCESSING_SUBKEY));
+				, changeProcessingInstruction(ProcessingInstruction.STOP_PROCESSING_KEY)
+				, same(db));
 		rule1.processRule(
-				eq("/1/"), eq("s2"), eq(2.0), same(rec), isA(RuleProcessingResultImpl.class));
+				eq("/1/"), eq("s2"), eq(2.0), same(rec), isA(RuleProcessingResultImpl.class)
+				, same(db));
+		rule2.processRule(
+				eq("/1/"), eq("s2"), eq(2.0), same(rec), isA(RuleProcessingResultImpl.class)
+				, same(db));
+		saveStatisticsValue.saveStatisticsValue("/1/2/", "s2", 2., 0);
 		replay(rule1, rule2, saveStatisticsValue);
 
 		createIfNode("if1", "key=='/1/'", rule1, rule2);
@@ -171,7 +220,7 @@ public class AbstractStatisticsDatabaseTest extends RavenCoreTestCase
 
 			public void appendTo(StringBuffer buffer)
 			{
-				throw new UnsupportedOperationException("Not supported yet.");
+//				throw new UnsupportedOperationException("Not supported yet.");
 			}
 		});
 
@@ -182,8 +231,8 @@ public class AbstractStatisticsDatabaseTest extends RavenCoreTestCase
 	{
 		SaveStatisticsValue mock = createMock(SaveStatisticsValue.class);
 		db.setDatabaseMock(mock);
-		mock.saveStatisticsValue("/1/2/", "s1", 1.0);
-		mock.saveStatisticsValue("/1/2/", "s2", 2.0);
+		mock.saveStatisticsValue("/1/2/", "s1", 1.0, 0);
+		mock.saveStatisticsValue("/1/2/", "s2", 2.0, 0);
 		return mock;
 	}
 

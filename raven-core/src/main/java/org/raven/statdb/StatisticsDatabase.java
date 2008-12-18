@@ -26,4 +26,18 @@ import org.raven.tree.Node;
  */
 public interface StatisticsDatabase extends Node, DataConsumer
 {
+	/**
+	 * Returns the database step in seconds
+	 */
+	long getStep();
+
+	/**
+	 * Saves the value of the given statistics to the database
+	 * @param key the statistics key
+	 * @param statisticName the statistics name
+	 * @param value the value of the statistics
+	 */
+	void saveStatisticsValue(String key, String statisticName, double value, long time);
+	
+	void processStatisticsRecord(Node source, StatisticsRecord record);
 }

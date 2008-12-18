@@ -23,5 +23,5 @@ package org.raven.statdb.impl;
  */
 public interface SaveStatisticsValue
 {
-	void saveStatisticsValue(String key, String statisticName, Double value);
+	void saveStatisticsValue(String key, String statisticName, Double value, long time);
 }

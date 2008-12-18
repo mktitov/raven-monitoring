@@ -36,7 +36,7 @@ public interface StatisticsRecord
 	 */
 	public Map<String, Double> getValues();
 	/**
-	 * Returns the statics time in milliseconds.
+	 * Returns the statics time in seconds.
 	 */
 	public long getTime();
 }

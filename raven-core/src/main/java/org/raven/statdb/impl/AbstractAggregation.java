@@ -17,29 +17,41 @@
 
 package org.raven.statdb.impl;
 
-import org.raven.annotations.NodeClass;
-import org.raven.annotations.Parameter;
-import org.raven.tree.impl.BaseNode;
-import org.weda.annotations.constraints.NotNull;
+import org.raven.statdb.Aggregation;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass
-public class KeyPatternNode extends BaseNode
+public abstract class AbstractAggregation implements Aggregation
 {
-	@Parameter()
-	@NotNull
-	private String pattern;
+	protected double value;
+	protected long time;
 
-	public String getPattern()
+	public AbstractAggregation(long time, double value)
 	{
-		return pattern;
+		this.time = time;
+		this.value = value;
 	}
 
-	public void setPattern(String pattern)
+	public void reset(long time, double value)
 	{
-		this.pattern = pattern;
+		this.value = value;
+		this.time = time;
+	}
+
+	public long getTime()
+	{
+		return time;
+	}
+
+	public void setTime(long time)
+	{
+		this.time = time;
+	}
+
+	public double getValue()
+	{
+		return value;
 	}
 }

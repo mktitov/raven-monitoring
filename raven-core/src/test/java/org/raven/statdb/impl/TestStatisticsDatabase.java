@@ -35,10 +35,9 @@ public class TestStatisticsDatabase extends AbstractStatisticsDatabase
 		this.databaseMock = databaseMock;
 	}
 
-	@Override
-	protected void saveStatisticsValue(String key, String statisticName, Double value)
+	public void saveStatisticsValue(String key, String statisticName, double value, long time)
 	{
-		databaseMock.saveStatisticsValue(key, statisticName, value);
+		databaseMock.saveStatisticsValue(key, statisticName, value, time);
 	}
 
 }

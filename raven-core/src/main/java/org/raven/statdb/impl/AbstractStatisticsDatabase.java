@@ -25,15 +25,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.script.Bindings;
+import org.jrobin.core.Util;
+import org.raven.annotations.Parameter;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.log.LogLevel;
 import org.raven.statdb.ProcessingInstruction;
 import org.raven.statdb.Rule;
+import org.raven.statdb.RuleProcessingResult;
 import org.raven.statdb.StatisticsDatabase;
 import org.raven.statdb.StatisticsRecord;
 import org.raven.tree.Node;
 import org.raven.util.BindingSupport;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
@@ -42,6 +46,10 @@ import org.raven.util.BindingSupport;
 public abstract class AbstractStatisticsDatabase
 	extends AbstractDataConsumer implements StatisticsDatabase 
 {
+	@Parameter
+	@NotNull
+	private long step;
+
 	protected StatisticsDefinitionsNode statisticsDefinitions;
     protected RulesNode rulesNode;
 
@@ -73,12 +81,25 @@ public abstract class AbstractStatisticsDatabase
 		initConfigurationNodes();
 	}
 
+	public void setStep(long step)
+	{
+		this.step = step;
+	}
+
+	public long getStep()
+	{
+		return step;
+	}
+
 	public RulesNode getRulesNode()
 	{
 		return rulesNode;
 	}
 
-	protected abstract void saveStatisticsValue(String key, String statisticName, Double value);
+	public StatisticsDefinitionsNode getStatisticsDefinitionsNode()
+	{
+		return statisticsDefinitions;
+	}
 
 	private void initConfigurationNodes()
 	{
@@ -119,20 +140,26 @@ public abstract class AbstractStatisticsDatabase
 
 		StatisticsRecord record = (StatisticsRecord) data;
 
+		processStatisticsRecord(dataSource, record);
+
+	}
+
+	public void processStatisticsRecord(Node source, StatisticsRecord record)
+	{
 		if (record.getKey()==null || !record.getKey().startsWith("/"))
 		{
 			error(String.format(
 					"Invalid statistic record recieved from (%s). Key (%s) must not be null and " +
-					"must start from (/)", dataSource.getPath(), record.getKey()));
+					"must start from (/)", source.getPath(), record.getKey()));
 			return;
 		}
-		
+
 		String[] key = record.getKey().substring(1).split("/");
 		if (key==null || key.length==0 || key[0].length()==0)
 		{
 			logger.error(String.format(
 					"Invalid statistics record key (%s) recieved from (%s)"
-					, record.getKey(), dataSource.getPath()));
+					, record.getKey(), source.getPath()));
 			return;
 		}
 
@@ -141,9 +168,25 @@ public abstract class AbstractStatisticsDatabase
 			if (isLogLevelEnabled(LogLevel.DEBUG))
 				logger.debug(String.format(
 						"Recieved empty statistic record for key (%s) from (%s)"
-						, record.getKey(), dataSource.getPath()));
+						, record.getKey(), source.getPath()));
 			return;
 		}
+
+		Set<String> disabledStatisticsNames = new HashSet<String>();
+		for (String statisticsName: record.getValues().keySet())
+		{
+			Node sdef = statisticsDefinitions.getChildren(statisticsName);
+			if (sdef==null || sdef.getStatus()!=Status.STARTED)
+			{
+				disabledStatisticsNames.add(statisticsName);
+				if (isLogLevelEnabled(LogLevel.DEBUG))
+					debug(String.format(
+							"Skiping processing value for statistics (%s) recieved from (%s). " +
+							"Statistics is not defined or disabled"
+							, statisticsName, source.getPath()));
+			}
+		}
+
         StringBuilder partialKeyBuf = new StringBuilder("/");
 		Set<String> stopList = new HashSet<String>();
 		int i=0;
@@ -155,17 +198,21 @@ public abstract class AbstractStatisticsDatabase
             {
                 try
                 {
+					if (disabledStatisticsNames.contains(value.getKey()))
+						continue;
+
 					if (!stopList.contains(value.getKey()))
 					{
-						ProcessingInstruction ins =
+						RuleProcessingResult res =
 								processStatistics(
 									partialKey, value.getKey(), value.getValue(), record
 									, key.length!=i);
-						if (ins==ProcessingInstruction.STOP_PROCESSING_KEY)
-							stopList.add(record.getKey());
+						value.setValue(res.getValue());
+						if (res.getInstruction()==ProcessingInstruction.STOP_PROCESSING_KEY)
+							stopList.add(value.getKey());
 					}
                 }
-                catch(Throwable e)
+                catch(Exception e)
                 {
                     logger.error(
                         String.format(
@@ -176,10 +223,9 @@ public abstract class AbstractStatisticsDatabase
                 }
             }
         }
-
 	}
 
-    private ProcessingInstruction processStatistics(
+    private RuleProcessingResult processStatistics(
             String partialKey, String name, Double value, StatisticsRecord record, boolean transit)
     {
 		bindingSupport.put("key", partialKey);
@@ -189,18 +235,18 @@ public abstract class AbstractStatisticsDatabase
 		Collection<Node> rules = rulesNode.getEffectiveChildrens();
 		bindingSupport.reset();
 		
+		RuleProcessingResultImpl result =
+				new RuleProcessingResultImpl(ProcessingInstruction.CONTINUE_PROCESSING, value);
         if (rules!=null)
         {
-            RuleProcessingResultImpl result =
-                    new RuleProcessingResultImpl(ProcessingInstruction.CONTINUE_PROCESSING, value);
             for (Node ruleNode: rules)
             {
 				if (ruleNode instanceof Rule)
 				{
 					Rule rule = (Rule) ruleNode;
-					rule.processRule(partialKey, name, value, record, result);
+					rule.processRule(partialKey, name, value, record, result, this);
 					if (result.getInstruction()!=ProcessingInstruction.CONTINUE_PROCESSING)
-						return result.getInstruction();
+						return result;
 					result.setInstruction(ProcessingInstruction.CONTINUE_PROCESSING);
 				}
 				else
@@ -211,9 +257,10 @@ public abstract class AbstractStatisticsDatabase
         }
 
 		if (!transit)
-			saveStatisticsValue(partialKey, name, value);
+			saveStatisticsValue(
+					partialKey, name, result.getValue(), Util.normalize(record.getTime(), step));
 
-        return ProcessingInstruction.CONTINUE_PROCESSING;
+        return result;
     }
 
 	@Override

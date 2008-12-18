@@ -15,16 +15,22 @@
  *  under the License.
  */
 
-package org.raven.statdb;
+package org.raven.statdb.impl;
 
 /**
  *
  * @author Mikhail Titov
  */
-public enum ProcessingInstruction
+public class MaxAggregation extends AbstractAggregation
 {
-    CONTINUE_PROCESSING,
-	SAVE_AND_CONTINUE_PROCESSING,
-    STOP_PROCESSING_KEY,
-    STOP_PROCESSING_SUBKEY
+	public MaxAggregation(long time, double value)
+	{
+		super(time, value);
+	}
+	
+	public void aggregate(double value)
+	{
+		if (Double.isNaN(this.value) || value>this.value)
+			this.value = value;
+	}
 }

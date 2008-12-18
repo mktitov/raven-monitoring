@@ -33,5 +33,5 @@ public interface Rule
      */
     public void processRule(
             String key, String name, Double value, StatisticsRecord record
-			, RuleProcessingResult result);
+			, RuleProcessingResult result, StatisticsDatabase database);
 }

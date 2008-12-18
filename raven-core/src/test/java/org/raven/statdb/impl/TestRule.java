@@ -19,6 +19,7 @@ package org.raven.statdb.impl;
 
 import org.raven.statdb.Rule;
 import org.raven.statdb.RuleProcessingResult;
+import org.raven.statdb.StatisticsDatabase;
 import org.raven.statdb.StatisticsRecord;
 import org.raven.tree.impl.BaseNode;
 
@@ -42,9 +43,9 @@ public class TestRule extends BaseNode implements Rule
 
 	public void processRule(
 			String key, String name, Double value, StatisticsRecord record
-			, RuleProcessingResult result)
+			, RuleProcessingResult result, StatisticsDatabase database)
 	{
-		ruleMock.processRule(key, name, value, record, result);
+		ruleMock.processRule(key, name, value, record, result, database);
 	}
 
 }

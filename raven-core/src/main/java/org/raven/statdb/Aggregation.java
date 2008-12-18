@@ -15,20 +15,17 @@
  *  under the License.
  */
 
-package org.raven.statdb.impl;
-
-import org.raven.tree.impl.BaseNode;
+package org.raven.statdb;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class AggregationsNode extends BaseNode
+public interface Aggregation
 {
-	public final static String NAME = "Aggregations";
-
-	public AggregationsNode()
-	{
-		super(NAME);
-	}
+	public void aggregate(double value);
+	public double getValue();
+	public void setTime(long time);
+	public long getTime();
+	public void reset(long time, double value);
 }
