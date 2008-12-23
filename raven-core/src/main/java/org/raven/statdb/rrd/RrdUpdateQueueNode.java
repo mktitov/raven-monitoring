@@ -17,8 +17,6 @@
 
 package org.raven.statdb.rrd;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -28,16 +26,19 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.RrdDbPool;
 import org.jrobin.core.Sample;
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.log.LogLevel;
 import org.raven.tree.NodeError;
 import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.QueuesNode;
 import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
+@NodeClass(parentNode=QueuesNode.class)
 public class RrdUpdateQueueNode extends BaseNode
 {
 	@Parameter(defaultValue="2")
@@ -305,49 +306,6 @@ public class RrdUpdateQueueNode extends BaseNode
 			}
 
 			calculateAvgWriteTime(System.currentTimeMillis()-startTime);
-
-//			RRDNode rrd = (RRDNode) dataSource.getEffectiveParent();
-//			int rrdId = rrd.getId();
-//			dbFlagsLock.lock();
-//			try
-//			{
-//				if (dbFlags.contains(rrdId))
-//				{
-//					if (isLogLevelEnabled(LogLevel.DEBUG))
-//						debug(String.format(
-//								"Rerequesting. ds (%s), value (%s)", dataSource.getPath(), data));
-//					pushUpdateRequest(dataSource, data);
-//					return;
-//				}
-//				else
-//					dbFlags.add(rrdId);
-//			}
-//			finally
-//			{
-//				dbFlagsLock.unlock();
-//			}
-//
-//			try
-//			{
-//				if (isLogLevelEnabled(LogLevel.DEBUG))
-//					debug(String.format(
-//							"Sending data (%s) from ds (%s) to rrd (%s)"
-//							, data, dataSource.getPath(), rrd.getPath()));
-//				rrd.setDataFromQueue(dataSource, data);
-//			}
-//			finally
-//			{
-//				dbFlagsLock.lock();
-//				try
-//				{
-//					dbFlags.remove(rrdId);
-//				}
-//				finally
-//				{
-//					dbFlagsLock.unlock();
-//				}
-//			}
-//
 		}
 	}
 
