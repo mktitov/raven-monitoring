@@ -101,7 +101,7 @@ public abstract class AbstractStatisticsDatabase
 		return statisticsDefinitions;
 	}
 
-	private void initConfigurationNodes()
+	protected void initConfigurationNodes()
 	{
 		statisticsDefinitions =
 			(StatisticsDefinitionsNode)getChildren(StatisticsDefinitionsNode.NAME);
@@ -144,6 +144,8 @@ public abstract class AbstractStatisticsDatabase
 
 	}
 
+	protected abstract boolean isStatisticsDefenitionValid(StatisticsDefinitionNode statDef);
+
 	public void processStatisticsRecord(Node source, StatisticsRecord record)
 	{
 		if (record.getKey()==null || !record.getKey().startsWith("/"))
@@ -176,7 +178,9 @@ public abstract class AbstractStatisticsDatabase
 		for (String statisticsName: record.getValues().keySet())
 		{
 			Node sdef = statisticsDefinitions.getChildren(statisticsName);
-			if (sdef==null || sdef.getStatus()!=Status.STARTED)
+			if (   sdef==null
+				|| sdef.getStatus()!=Status.STARTED
+				|| !isStatisticsDefenitionValid((StatisticsDefinitionNode) sdef))
 			{
 				disabledStatisticsNames.add(statisticsName);
 				if (isLogLevelEnabled(LogLevel.DEBUG))
@@ -227,6 +231,7 @@ public abstract class AbstractStatisticsDatabase
 
     private RuleProcessingResult processStatistics(
             String partialKey, String name, Double value, StatisticsRecord record, boolean transit)
+		throws Exception
     {
 		bindingSupport.put("key", partialKey);
 		bindingSupport.put("name", name);
@@ -257,8 +262,7 @@ public abstract class AbstractStatisticsDatabase
         }
 
 		if (!transit)
-			saveStatisticsValue(
-					partialKey, name, result.getValue(), Util.normalize(record.getTime(), step));
+			saveStatisticsValue(partialKey, name, result.getValue(), record.getTime());
 
         return result;
     }

@@ -550,9 +550,19 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
                 throw new Exception(String.format("Error creating directory (%s)", path));
 //            FileUtils.forceMkdir(path);
         }
-        RrdDef def = new RrdDef(
-                path.getAbsolutePath() + File.separator + getId() + ".jrrd"
-                , Util.getTimestamp(startTime), step);
+		String databasePath = path.getAbsolutePath() + File.separator + getId() + ".jrb";
+
+        db = createDatabase(databasePath);
+		if (db==null)
+			return;
+		setDatabaseFileName(db.getCanonicalPath());
+
+        databaseInitialized.set(true);
+    }
+
+	public RrdDb createDatabase(String databasePath) throws Exception
+	{
+        RrdDef def = new RrdDef(databasePath, Util.getTimestamp(startTime), step);
 
         boolean hasDataSources = false;
         boolean hasArchives = false;
@@ -564,7 +574,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
                 hasDataSources = true;
                 RRDataSource ds = (RRDataSource) node;
                 def.addDatasource(createDsDef(ds));
-            } 
+            }
             else if (node instanceof RRArchive)
             {
                 hasArchives = true;
@@ -575,16 +585,13 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 
         if (!hasDataSources || !hasArchives)
         {
-            return;
+            return null;
         }
 
         db = new RrdDb(def);
-        NodeAttribute dbAttr = getNodeAttribute("databaseFileName");
-        dbAttr.setValue(db.getCanonicalPath());
-        dbAttr.save();
 
-        databaseInitialized.set(true);
-    }
+		return db;
+	}
     
     private void initDataBase() throws Exception
     {

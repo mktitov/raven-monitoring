@@ -37,7 +37,8 @@ public interface StatisticsDatabase extends Node, DataConsumer
 	 * @param statisticName the statistics name
 	 * @param value the value of the statistics
 	 */
-	void saveStatisticsValue(String key, String statisticName, double value, long time);
+	void saveStatisticsValue(String key, String statisticName, double value, long time)
+			throws Exception;
 	
 	void processStatisticsRecord(Node source, StatisticsRecord record);
 }

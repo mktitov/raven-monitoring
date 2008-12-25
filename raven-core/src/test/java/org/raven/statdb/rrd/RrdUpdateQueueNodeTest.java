@@ -19,12 +19,16 @@ package org.raven.statdb.rrd;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.jrobin.core.ArcDef;
 import org.jrobin.core.DsDef;
+import org.jrobin.core.FetchRequest;
 import org.jrobin.core.RrdDb;
+import org.jrobin.core.RrdDbPool;
 import org.jrobin.core.RrdDef;
+import org.jrobin.core.RrdException;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
@@ -43,10 +47,6 @@ public class RrdUpdateQueueNodeTest extends RavenCoreTestCase
 			FileUtils.forceDelete(new File("target/u_rrd"));
 		}catch(Exception e){}
 		new File("target/u_rrd").mkdirs();
-	}
-
-	public void adter() throws IOException
-	{
 	}
 
 	@Test
@@ -68,13 +68,28 @@ public class RrdUpdateQueueNodeTest extends RavenCoreTestCase
 		createDb(path1);
 		createDb(path2);
 
-		queue.pushUpdateRequest(new RrdUpdateRequest(path1, 1, 1.));
-		queue.pushUpdateRequest(new RrdUpdateRequest(path2, 1, 10.));
-		queue.pushUpdateRequest(new RrdUpdateRequest(path1, 6, 2.));
-		queue.pushUpdateRequest(new RrdUpdateRequest(path2, 6, 11.));
+		queue.pushUpdateRequest(new RrdUpdateRequest(path1, 5, 1.));
+		queue.pushUpdateRequest(new RrdUpdateRequest(path2, 5, 10.));
+		TimeUnit.MILLISECONDS.sleep(500);
+		queue.pushUpdateRequest(new RrdUpdateRequest(path1, 10, 2.));
+		queue.pushUpdateRequest(new RrdUpdateRequest(path2, 10, 11.));
 
 		TimeUnit.SECONDS.sleep(1);
+
+		double[] values = fetchData(path1);
+		assertNotNull(values);
+		assertTrue(Arrays.equals(new double[]{1., 2.}, values));
 		
+		values = fetchData(path2);
+		assertNotNull(values);
+		assertTrue(Arrays.equals(new double[]{10., 11.}, values));
+	}
+
+	private double[] fetchData(String path) throws IOException, RrdException
+	{
+		RrdDb db = RrdDbPool.getInstance().requestRrdDb(path);
+		FetchRequest req = db.createFetchRequest("MAX", 5, 10);
+		return req.fetchData().getValues(0);
 	}
 
 	private void createDb(String path) throws Exception

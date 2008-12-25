@@ -83,9 +83,13 @@ public interface Configurator
      */
     public static final String H2_TREE_STORE_ENGINE = "h2";
     /**
-     * 
+     * The path where rrd database files will be stored
      */
     public static final String RRD_DATABASES_PATH = "rrd.databasesPath";
+	/**
+	 * The path where files of the statistics database based on round robin database will be stored.
+	 */
+	public static final String RRD_STAT_DATABASES_PATH = "rrd.statDatabasesPath";
 	
     /**
      * Returns the tree store.
