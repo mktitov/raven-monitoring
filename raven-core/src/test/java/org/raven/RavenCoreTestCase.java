@@ -44,7 +44,7 @@ public class RavenCoreTestCase extends ServiceTestCase
     }
     
     @Before
-    public void initTest() throws IOException
+    public void initTest() throws Exception
     {
         File tmpDir = new File("target/tmp");
         tmpDir.mkdirs();
@@ -52,6 +52,12 @@ public class RavenCoreTestCase extends ServiceTestCase
 //        FileUtils.deleteDirectory(new File("target/rrd"));
         configurator = registry.getService(Configurator.class);
         assertNotNull(configurator);
+		File statdbPath = new File(configurator.getConfig().getStringProperty(
+				Configurator.RRD_STAT_DATABASES_PATH, null));
+		try{
+			FileUtils.forceDelete(statdbPath);
+		}catch(Exception e){}
+		statdbPath.mkdirs();
         store = configurator.getTreeStore();
         store.removeNodes();
         

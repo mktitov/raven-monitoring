@@ -44,6 +44,7 @@ public class TestRule extends BaseNode implements Rule
 	public void processRule(
 			String key, String name, Double value, StatisticsRecord record
 			, RuleProcessingResult result, StatisticsDatabase database)
+		throws Exception
 	{
 		ruleMock.processRule(key, name, value, record, result, database);
 	}

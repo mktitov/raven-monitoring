@@ -86,6 +86,7 @@ public class AggregationRuleNode extends BaseNode implements Rule
 	public void processRule(
 			String key, String name, Double value, StatisticsRecord record
 			, RuleProcessingResult result, StatisticsDatabase database)
+		throws Exception
 	{
 		String aggregationKey = key+"#"+name;
 		aggregationsLock.readLock().lock();

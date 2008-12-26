@@ -18,13 +18,14 @@
 package org.raven.statdb.rrd;
 
 import java.io.File;
+import java.util.Collection;
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.RrdDbPool;
+import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
-import org.raven.rrd.data.DBPool;
-import org.raven.rrd.data.RRDNode;
 import org.raven.statdb.impl.AbstractStatisticsDatabase;
 import org.raven.statdb.impl.StatisticsDefinitionNode;
+import org.raven.tree.Node;
 
 /**
  *
@@ -34,9 +35,27 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 {
 	public static final String DATASOURCE_NAME="datasource";
 
+	@Parameter(defaultValue="now")
+	private String startTime;
+
 	private DatabaseTemplatesNode databaseTemplatesNode;
 	private File dbRoot;
 	private RrdDbPool pool;
+
+	public DatabaseTemplatesNode getDatabaseTemplatesNode()
+	{
+		return databaseTemplatesNode;
+	}
+
+	public String getStartTime()
+	{
+		return startTime;
+	}
+
+	public void setStartTime(String startTime)
+	{
+		this.startTime = startTime;
+	}
 
 	@Override
 	protected void initConfigurationNodes()
@@ -85,8 +104,8 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 	public void saveStatisticsValue(String key, String statisticsName, double value, long time)
 			throws Exception
 	{
-		File dbFile = new File(
-				dbRoot.getAbsolutePath()+File.separator+key+File.separator+statisticsName+".jrb");
+		String dbFileDir = dbRoot.getAbsolutePath()+File.separator+key;
+		File dbFile = new File(dbFileDir+File.separator+statisticsName+".jrb");
 		if (!dbFile.exists())
 			createDbFile(dbFile, statisticsName);
 		RrdDb db = pool.requestRrdDb(dbFile.getAbsolutePath());
@@ -100,32 +119,82 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 		}
 	}
 
-	private void createDbFile(File dbFile, String statisticsName) throws Exception
+	private void createDbFile(File dbFile, String statisticsName)
+			throws Exception
 	{
+		File dbFileDir = dbFile.getParentFile();
+		if (!dbFileDir.exists())
+		{
+			if (!dbFileDir.mkdirs())
+				throw new Exception(String.format(
+						"Error creating directory (%s)", dbFileDir.getAbsolutePath()));
+		}
 		StatisticsDefinitionNode statDef =
 				(StatisticsDefinitionNode) statisticsDefinitions.getChildren(statisticsName);
 		String statType = statDef.getType();
-		RRDNode template = (RRDNode) databaseTemplatesNode.getChildren(statType);
+		RrdDatabaseDefNode template =
+				(RrdDatabaseDefNode)databaseTemplatesNode.getChildren(statType);
 		RrdDb db = template.createDatabase(dbFile.getAbsolutePath());
-		if (db==null)
-			throw new Exception("Error creating database (%s) from template (%s)");
 		db.close();
 	}
 
 	@Override
 	protected boolean isStatisticsDefenitionValid(StatisticsDefinitionNode statDef)
 	{
-		RRDNode template = (RRDNode) databaseTemplatesNode.getChildren(statDef.getType());
+		RrdDatabaseDefNode template =
+				(RrdDatabaseDefNode) databaseTemplatesNode.getChildren(statDef.getType());
 		
 		if (template==null)
 		{
-			error("Invalid statistics (%s). Statistics does not have the database template");
+			error(String.format(
+					"Invalid statistics (%s). Statistics does not have the database template"
+					, statDef.getName()));
+			return false;
+		}
+
+		if (template.getStatus()!=Status.STARTED)
+		{
+			error(String.format("Invalid statistics (%s). Database template (%s) not started"
+					, statDef.getName(), template.getPath()));
 			return false;
 		}
 
 		boolean hasDatasources = false;
-		boolean hasArchived = false;
+		boolean hasArchives = false;
 
+		Collection<Node> childs = template.getChildrens();
+		if (childs!=null && childs.size()>0)
+		{
+			for (Node child: childs)
+			{
+				if (child.getStatus()!=Status.STARTED)
+					continue;
+				if (child instanceof RrdArchiveDefNode)
+					hasArchives = true;
+				else if (   child instanceof RrdDatasourceDefNode
+						 && DATASOURCE_NAME.equals(child.getName()))
+				{
+					hasDatasources = true;
+				}
+			}
+		}
+		if (!hasArchives)
+		{
+			error(String.format(
+					"Invalid statistics (%s). Database template (%s) must have at least " +
+					"one archive"
+					, statDef.getName(), template.getPath()));
+			return false;
+		}
+		if (!hasDatasources)
+		{
+			error(String.format(
+					"Invalid statistics (%s). Database template (%s) must have exactly " +
+					"one datasource with name (%s)"
+					, statDef.getName(), template.getPath(), DATASOURCE_NAME));
+			return false;
+
+		}
 
 		return true;
 	}

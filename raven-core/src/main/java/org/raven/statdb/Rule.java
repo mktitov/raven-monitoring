@@ -33,5 +33,6 @@ public interface Rule
      */
     public void processRule(
             String key, String name, Double value, StatisticsRecord record
-			, RuleProcessingResult result, StatisticsDatabase database);
+			, RuleProcessingResult result, StatisticsDatabase database)
+		throws Exception;
 }

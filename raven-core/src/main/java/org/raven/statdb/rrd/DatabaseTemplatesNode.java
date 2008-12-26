@@ -19,40 +19,40 @@ package org.raven.statdb.rrd;
 
 import org.raven.annotations.NodeClass;
 import org.raven.rrd.DataSourceType;
-import org.raven.rrd.data.RRDNode;
 import org.raven.rrd.data.RRDataSource;
 import org.raven.template.impl.TemplateEntry;
 import org.raven.tree.Node;
+import org.raven.tree.impl.BaseNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(childNodes={RRDNode.class})
-public class DatabaseTemplatesNode extends TemplateEntry
+@NodeClass(childNodes={RrdDatabaseDefNode.class})
+public class DatabaseTemplatesNode extends BaseNode
 {
 	public final static String NAME = "Database templates";
 
 	public DatabaseTemplatesNode()
 	{
-		super();
-		setName(NAME);
+		super(NAME);
 	}
 
 	@Override
-	public void childrenAdded(Node owner, Node children)
+	public void addChildren(Node children)
 	{
-		super.childrenAdded(owner, children);
+		super.addChildren(children);
 
 		if (children.getChildren(RrdStatisticsDatabaseNode.DATASOURCE_NAME)==null)
 		{
-			RRDataSource ds = new RRDataSource();
+			RrdDatasourceDefNode ds = new RrdDatasourceDefNode();
 			ds.setName(RrdStatisticsDatabaseNode.DATASOURCE_NAME);
 			ds.setParent(children);
 			ds.save();
 			children.addChildren(ds);
 			ds.init();
 			ds.setDataSourceType(DataSourceType.GAUGE);
+			ds.start();
 		}
 	}
 }

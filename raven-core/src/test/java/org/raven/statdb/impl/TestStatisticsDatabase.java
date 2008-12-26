@@ -40,4 +40,10 @@ public class TestStatisticsDatabase extends AbstractStatisticsDatabase
 		databaseMock.saveStatisticsValue(key, statisticName, value, time);
 	}
 
+	@Override
+	protected boolean isStatisticsDefenitionValid(StatisticsDefinitionNode statDef)
+	{
+		return true;
+	}
+
 }
