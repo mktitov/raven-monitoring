@@ -26,6 +26,8 @@ import org.raven.conf.Configurator;
 import org.raven.statdb.impl.AbstractStatisticsDatabase;
 import org.raven.statdb.impl.StatisticsDefinitionNode;
 import org.raven.tree.Node;
+import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
@@ -36,7 +38,12 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 	public static final String DATASOURCE_NAME="datasource";
 
 	@Parameter(defaultValue="now")
+	@NotNull
 	private String startTime;
+
+	@Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
+	@NotNull
+	private RrdUpdateQueueNode updateQueue;
 
 	private DatabaseTemplatesNode databaseTemplatesNode;
 	private File dbRoot;
@@ -55,6 +62,16 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 	public void setStartTime(String startTime)
 	{
 		this.startTime = startTime;
+	}
+
+	public RrdUpdateQueueNode getUpdateQueue()
+	{
+		return updateQueue;
+	}
+
+	public void setUpdateQueue(RrdUpdateQueueNode updateQueue)
+	{
+		this.updateQueue = updateQueue;
 	}
 
 	@Override
@@ -106,17 +123,20 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 	{
 		String dbFileDir = dbRoot.getAbsolutePath()+File.separator+key;
 		File dbFile = new File(dbFileDir+File.separator+statisticsName+".jrb");
+
 		if (!dbFile.exists())
 			createDbFile(dbFile, statisticsName);
-		RrdDb db = pool.requestRrdDb(dbFile.getAbsolutePath());
-		try
-		{
-			db.createSample(time).setValue(0, value).update();
-		}
-		finally
-		{
-			pool.release(db);
-		}
+
+		updateQueue.pushUpdateRequest(new RrdUpdateRequest(dbFile.getAbsolutePath(), time, value));
+//		RrdDb db = pool.requestRrdDb(dbFile.getAbsolutePath());
+//		try
+//		{
+//			db.createSample(time).setValue(0, value).update();
+//		}
+//		finally
+//		{
+//			pool.release(db);
+//		}
 	}
 
 	private void createDbFile(File dbFile, String statisticsName)

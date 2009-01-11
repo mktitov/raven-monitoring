@@ -68,7 +68,10 @@ public class RrdDatabaseDefNode extends BaseNode
 
 	public RrdDb createDatabase(String databasePath) throws Exception
 	{
-		long start = Util.getTimestamp(startTime);
+		String _startTime = startTime;
+		long start = 0l;
+		if (!"epoch".equals(_startTime))
+			start = Util.getTimestamp(startTime);
         RrdDef def = new RrdDef(databasePath, start, step);
 
         boolean hasDataSources = false;
