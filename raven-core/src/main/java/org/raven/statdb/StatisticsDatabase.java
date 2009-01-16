@@ -18,6 +18,9 @@
 package org.raven.statdb;
 
 import org.raven.ds.DataConsumer;
+import org.raven.statdb.query.Query;
+import org.raven.statdb.query.QueryExecutionException;
+import org.raven.statdb.query.QueryResult;
 import org.raven.tree.Node;
 
 /**
@@ -26,10 +29,12 @@ import org.raven.tree.Node;
  */
 public interface StatisticsDatabase extends Node, DataConsumer
 {
+	public final static String KEY_DELIMITER = "/";
+
 	/**
 	 * Returns the database step in seconds
 	 */
-	long getStep();
+	public long getStep();
 
 	/**
 	 * Saves the value of the given statistics to the database
@@ -37,8 +42,16 @@ public interface StatisticsDatabase extends Node, DataConsumer
 	 * @param statisticName the statistics name
 	 * @param value the value of the statistics
 	 */
-	void saveStatisticsValue(String key, String statisticName, double value, long time)
+	public void saveStatisticsValue(String key, String statisticName, double value, long time)
 			throws Exception;
 	
-	void processStatisticsRecord(Node source, StatisticsRecord record);
+	public void processStatisticsRecord(Node source, StatisticsRecord record);
+
+	/**
+	 * Executes query on this database.
+	 * @param query the query
+	 * @return The result of the query execution
+	 */
+	public QueryResult executeQuery(Query query) throws QueryExecutionException;
+
 }

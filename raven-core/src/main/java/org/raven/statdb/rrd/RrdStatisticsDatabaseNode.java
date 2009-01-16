@@ -18,15 +18,30 @@
 package org.raven.statdb.rrd;
 
 import java.io.File;
+import java.io.FileFilter;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.regex.Pattern;
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.RrdDbPool;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
+import org.raven.statdb.StatisticsDatabase;
 import org.raven.statdb.impl.AbstractStatisticsDatabase;
+import org.raven.statdb.impl.KeyValuesImpl;
+import org.raven.statdb.impl.QueryResultImpl;
 import org.raven.statdb.impl.StatisticsDefinitionNode;
+import org.raven.statdb.query.FromClause;
+import org.raven.statdb.query.KeyValues;
+import org.raven.statdb.query.Query;
+import org.raven.statdb.query.QueryExecutionException;
+import org.raven.statdb.query.QueryResult;
+import org.raven.statdb.query.SelectMode;
 import org.raven.tree.Node;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
+import org.raven.util.RegexpFileFilter;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -36,6 +51,7 @@ import org.weda.annotations.constraints.NotNull;
 public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 {
 	public static final String DATASOURCE_NAME="datasource";
+	public static final String REGEXP_KEY_EXPRESSION = "@r ";
 
 	@Parameter(defaultValue="now")
 	@NotNull
@@ -128,15 +144,78 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 			createDbFile(dbFile, statisticsName);
 
 		updateQueue.pushUpdateRequest(new RrdUpdateRequest(dbFile.getAbsolutePath(), time, value));
-//		RrdDb db = pool.requestRrdDb(dbFile.getAbsolutePath());
-//		try
-//		{
-//			db.createSample(time).setValue(0, value).update();
-//		}
-//		finally
-//		{
-//			pool.release(db);
-//		}
+	}
+
+	public QueryResult executeQuery(Query query) throws QueryExecutionException
+	{
+		try
+		{
+			Collection<KeyValues> keys = findKeys(dbRoot, query.getFromClause());
+			if (   query.getSelectClause().getSelectMode() == SelectMode.SELECT_KEYS_AND_DATA
+				&& keys.size()>0)
+			{
+				fetchStatisticsValues(query, keys);
+			}
+
+			return new QueryResultImpl(keys);
+		}
+		catch (Exception e)
+		{
+			String message = "Error executing query. "+e.getMessage();
+			error(message, e);
+			throw new QueryExecutionException(message, e);
+		}
+	}
+
+	private Collection<KeyValues> findKeys(File path, FromClause fromClause) throws Exception
+	{
+		String keyExpression = fromClause.getKeyExpression();
+		
+		if (keyExpression==null || keyExpression.trim().length()==0)
+			throw new Exception("Key expression can not be empty");
+
+		String[] elements = keyExpression.split(StatisticsDatabase.KEY_DELIMITER);
+		if (elements==null || elements.length<=1)
+			return Collections.EMPTY_LIST;
+		
+		FileFilter[] filters = new FileFilter[elements.length];
+		for (int i=0; i<elements.length; ++i)
+			if (elements[i].startsWith(REGEXP_KEY_EXPRESSION))
+				filters[i] = new RegexpFileFilter(elements[i].substring(3));
+
+		List<KeyValues> keys = new ArrayList<KeyValues>(100);
+
+		extractKeys(KEY_DELIMITER, elements, filters, 1, path, keys);
+
+		return keys.size()==0? Collections.EMPTY_LIST : keys;
+	}
+	
+	private void extractKeys(
+			String key, String[] elements, FileFilter[] filters, int elementPos, File path
+			, List<KeyValues> keys)
+	{
+		File[] files = null;
+		if (filters[elementPos]==null)
+		{
+			File file = new File(path.getAbsolutePath()+File.separator+elements[elementPos]);
+			if (file.exists())
+				files = new File[]{file};
+		}
+		else
+			files = path.listFiles(filters[elementPos]);
+
+		if (files==null || files.length==0)
+			return;
+
+		if ((elementPos+1)<elements.length)
+			for (File file: files)
+			{
+				String newKey = key + file.getName() + KEY_DELIMITER;
+				extractKeys(newKey, elements, filters, elementPos+1, file, keys);
+			}
+		else
+			for (File file: files)
+				keys.add(new KeyValuesImpl(key+file.getName()+KEY_DELIMITER));
 	}
 
 	private void createDbFile(File dbFile, String statisticsName)
