@@ -17,6 +17,10 @@
 
 package org.raven.statdb.impl;
 
+import org.raven.statdb.query.Query;
+import org.raven.statdb.query.QueryExecutionException;
+import org.raven.statdb.query.QueryResult;
+
 /**
  *
  * @author Mikhail Titov
@@ -45,5 +49,10 @@ public class TestStatisticsDatabase extends AbstractStatisticsDatabase
 	{
 		return true;
 	}
+
+    public QueryResult executeQuery(Query query) throws QueryExecutionException
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
 }

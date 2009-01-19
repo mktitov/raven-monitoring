@@ -20,15 +20,14 @@ package org.raven.statdb.rrd;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.jrobin.core.FetchRequest;
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.RrdDbPool;
 import org.jrobin.core.RrdException;
-import org.jrobin.core.Util;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
@@ -41,6 +40,9 @@ import org.raven.statdb.query.FromClause;
 import org.raven.statdb.query.KeyValues;
 import org.raven.statdb.query.Query;
 import org.raven.statdb.query.QueryResult;
+import org.raven.statdb.query.SelectClause;
+import org.raven.statdb.query.SelectMode;
+import org.raven.statdb.query.StatisticsValues;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import static org.easymock.EasyMock.*;
@@ -141,17 +143,20 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 	{
 		Query query = createMock(Query.class);
 		FromClause from = createMock(FromClause.class);
+        SelectClause select = createMock(SelectClause.class);
 		expect(query.getFromClause()).andReturn(from);
+        expect(query.getSelectClause()).andReturn(select);
+        expect(select.getSelectMode()).andReturn(SelectMode.SELECT_KEYS);
 		expect(from.getKeyExpression()).andReturn("/@r .*/").atLeastOnce();
 
-		replay(query, from);
+		replay(query, from, select);
 
 		QueryResult result = db.executeQuery(query);
 		assertNotNull(result);
 		assertNotNull(result.getKeyValues());
 		assertEquals(0, result.getKeyValues().size());
 
-		verify(query, from);
+		verify(query, from, select);
 	}
 
 	@Test
@@ -164,11 +169,14 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 
 		FromClause from = createMock(FromClause.class);
 		Query query = createMock(Query.class);
+        SelectClause select = createMock(SelectClause.class);
 		expect(query.getFromClause()).andReturn(from).times(2);
+        expect(query.getSelectClause()).andReturn(select).times(2);
+        expect(select.getSelectMode()).andReturn(SelectMode.SELECT_KEYS).times(2);
 		expect(from.getKeyExpression()).andReturn("/1/");
 		expect(from.getKeyExpression()).andReturn("/2/1");
 
-		replay(query, from);
+		replay(query, from, select);
 
 		QueryResult result = db.executeQuery(query);
 		assertNotNull(result);
@@ -182,7 +190,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 		assertEquals(1, result.getKeyValues().size());
 		assertEquals("/2/1/", result.getKeyValues().iterator().next().getKey());
 
-		verify(query, from);
+		verify(query, from, select);
 	}
 
 	@Test
@@ -198,11 +206,14 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 
 		FromClause from = createMock(FromClause.class);
 		Query query = createMock(Query.class);
+        SelectClause select = createMock(SelectClause.class);
 		expect(query.getFromClause()).andReturn(from).times(2);
+        expect(query.getSelectClause()).andReturn(select).times(2);
+        expect(select.getSelectMode()).andReturn(SelectMode.SELECT_KEYS).times(2);
 		expect(from.getKeyExpression()).andReturn("/@r [23]/1/");
 		expect(from.getKeyExpression()).andReturn("/@r [23]/@r ^2/");
 
-		replay(query, from);
+		replay(query, from, select);
 
 		QueryResult result = db.executeQuery(query);
 		assertNotNull(result);
@@ -220,8 +231,92 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 		assertEquals(1, result.getKeyValues().size());
 		assertEquals("/2/2/", result.getKeyValues().iterator().next().getKey());
 
-		verify(query, from);
+		verify(query, from, select);
 	}
+
+    @Test
+    public void query_selectAll_test() throws Exception
+    {
+		createStatisticsDef(db, "s1", "t1");
+		createStatisticsDef(db, "s2", "t2");
+
+		createDatabaseTemplate(db, "t1");
+		createDatabaseTemplate(db, "t2");
+
+		StatisticsRecord record = createRecord("/1/1/", 5, 1., 10.);
+		ds.pushData(record);
+		record = createRecord("/1/2/", 5, 5., 15.);
+		ds.pushData(record);
+
+		record = createRecord("/1/1/", 10, 2., 11.);
+		ds.pushData(record);
+		record = createRecord("/1/2/", 10, 6., 16.);
+		ds.pushData(record);
+
+		TimeUnit.SECONDS.sleep(1);
+
+		FromClause from = createMock(FromClause.class);
+		Query query = createMock(Query.class);
+        SelectClause select = createMock(SelectClause.class);
+
+		expect(query.getFromClause()).andReturn(from);
+        expect(query.getSelectClause()).andReturn(select);
+        expect(query.getStatisticsNames()).andReturn(new String[]{"s1", "s2"});
+        expect(query.getStartTime()).andReturn("5L");
+        expect(query.getEndTime()).andReturn("10L");
+        expect(query.getStep()).andReturn(5l);
+
+        expect(select.getSelectMode()).andReturn(SelectMode.SELECT_KEYS_AND_DATA);
+        
+		expect(from.getKeyExpression()).andReturn("/@r .*/@r .*/");
+
+        replay(query, from, select);
+        
+        QueryResult result = db.executeQuery(query);
+        assertNotNull(result);
+
+        Collection<KeyValues> keys = result.getKeyValues();
+        assertNotNull(keys);
+        assertEquals(2, keys.size());
+
+        KeyValues k11, k12; k11 = k12 = null;
+        for (KeyValues key: keys)
+            if (key.getKey().equals("/1/1/"))
+                k11 = key;
+            else
+                k12 = key;
+
+        assertNotNull(k11);
+        assertNotNull(k12);
+
+        checkStatisticsValues(k11, new double[]{1., 2.}, new double[]{10., 11.});
+        checkStatisticsValues(k12, new double[]{5., 6.}, new double[]{15., 16.});
+
+        verify(query, from, select);
+    }
+
+    private void checkStatisticsValues(KeyValues k11, double[] s1Values, double[] s2Values)
+    {
+        Collection<StatisticsValues> statisticsValueses = k11.getStatisticsValues();
+        assertNotNull(statisticsValueses);
+        assertEquals(2, statisticsValueses.size());
+
+        StatisticsValues s1, s2; s1 = s2 = null;
+        for (StatisticsValues values: statisticsValueses)
+            if (values.getStatisticsName().equals("s1"))
+                s1 = values;
+            else
+                s2 = values;
+
+        assertNotNull(s1);
+        assertNotNull(s2);
+
+        assertTrue(Arrays.equals(new long[]{5l, 10l}, s1.getTimestamps()));
+        assertTrue(Arrays.equals(s1Values, s1.getValues()));
+        
+        assertTrue(Arrays.equals(new long[]{5l, 10l}, s2.getTimestamps()));
+        assertTrue(Arrays.equals(s2Values, s2.getValues()));
+    }
 
 	private double[] fetchData(String path) throws IOException, RrdException
 	{

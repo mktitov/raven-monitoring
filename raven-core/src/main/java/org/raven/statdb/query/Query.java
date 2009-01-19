@@ -32,6 +32,16 @@ public interface Query
 	 * @see FromClause#getDatabase() 
 	 */
 	public Long getStep();
+    /**
+     * Returns the the "at" style start time.
+     * @see #getEndTime()
+     */
+    public String getStartTime();
+    /**
+     * Returns the the "at" style end time.
+     * @see #getStartTime()
+     */
+    public String getEndTime();
 	/**
 	 * Returns the maximum keys count in the query result.
 	 */

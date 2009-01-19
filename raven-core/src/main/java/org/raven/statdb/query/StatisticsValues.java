@@ -23,5 +23,8 @@ package org.raven.statdb.query;
  */
 public interface StatisticsValues
 {
-
+    public String getStatisticsName();
+    public long getStep();
+    public long[] getTimestamps();
+    public double[] getValues();
 }

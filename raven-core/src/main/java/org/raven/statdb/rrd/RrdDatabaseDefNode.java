@@ -103,6 +103,27 @@ public class RrdDatabaseDefNode extends BaseNode
 		return db;
 	}
 
+    public static long[] getTimePeriod(String startTime, String endTime) throws Exception
+    {
+        long[] period = new long[]{-1, -1};
+        if (startTime.endsWith("L"))
+            period[0] = Long.parseLong(startTime.substring(0, startTime.length()-1));
+        if (endTime.endsWith("L"))
+            period[1] = Long.parseLong(endTime.substring(0, endTime.length()-1));
+
+        if (period[0]==-1 && period[1]==-1)
+            period = Util.getTimestamps(startTime, endTime);
+        else
+        {
+            if (period[0]==-1)
+                period[0] = Util.getTimestamp(startTime);
+            if (period[1]==-1)
+                period[1] = Util.getTimestamp(endTime);
+        }
+
+        return period;
+    }
+
     private DsDef createDsDef(RrdDatasourceDefNode ds) throws Exception
     {
         if (ds.getHeartbeat()==null)

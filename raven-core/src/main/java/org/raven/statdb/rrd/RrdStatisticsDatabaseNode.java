@@ -19,13 +19,16 @@ package org.raven.statdb.rrd;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.regex.Pattern;
+import org.jrobin.core.FetchData;
+import org.jrobin.core.FetchRequest;
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.RrdDbPool;
+import org.jrobin.core.Util;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
 import org.raven.statdb.StatisticsDatabase;
@@ -33,12 +36,14 @@ import org.raven.statdb.impl.AbstractStatisticsDatabase;
 import org.raven.statdb.impl.KeyValuesImpl;
 import org.raven.statdb.impl.QueryResultImpl;
 import org.raven.statdb.impl.StatisticsDefinitionNode;
+import org.raven.statdb.impl.StatisticsValuesImpl;
 import org.raven.statdb.query.FromClause;
 import org.raven.statdb.query.KeyValues;
 import org.raven.statdb.query.Query;
 import org.raven.statdb.query.QueryExecutionException;
 import org.raven.statdb.query.QueryResult;
 import org.raven.statdb.query.SelectMode;
+import org.raven.statdb.query.StatisticsValues;
 import org.raven.tree.Node;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.util.RegexpFileFilter;
@@ -50,6 +55,7 @@ import org.weda.annotations.constraints.NotNull;
  */
 public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 {
+    public static final String DATABASE_FILE_EXTENSION = ".jrb";
 	public static final String DATASOURCE_NAME="datasource";
 	public static final String REGEXP_KEY_EXPRESSION = "@r ";
 
@@ -137,8 +143,7 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 	public void saveStatisticsValue(String key, String statisticsName, double value, long time)
 			throws Exception
 	{
-		String dbFileDir = dbRoot.getAbsolutePath()+File.separator+key;
-		File dbFile = new File(dbFileDir+File.separator+statisticsName+".jrb");
+		File dbFile = formStatisticsDbFile(key, statisticsName);
 
 		if (!dbFile.exists())
 			createDbFile(dbFile, statisticsName);
@@ -166,6 +171,31 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 			throw new QueryExecutionException(message, e);
 		}
 	}
+
+    private void fetchStatisticsValues(Query query, Collection<KeyValues> keys) throws Exception
+    {
+        String[] statNames = query.getStatisticsNames();
+        long[] timePeriod =
+                RrdDatabaseDefNode.getTimePeriod(query.getStartTime(), query.getEndTime());
+        long step = query.getStep();
+        for (KeyValues keyValues: keys)
+        {
+            for (String statName: statNames)
+            {
+                File dbFile = formStatisticsDbFile(keyValues.getKey(), statName);
+                if (dbFile.exists())
+                {
+                    RrdDb db = pool.requestRrdDb(dbFile.getAbsolutePath());
+                    FetchRequest request = db.createFetchRequest(
+                            "LAST", timePeriod[0], timePeriod[1], step);
+                    FetchData fData = request.fetchData();
+                    StatisticsValues values = new StatisticsValuesImpl(
+                            statName, fData.getStep(), fData.getTimestamps(), fData.getValues(0));
+                    ((KeyValuesImpl)keyValues).addStatisticsValues(values);
+                }
+            }
+        }
+    }
 
 	private Collection<KeyValues> findKeys(File path, FromClause fromClause) throws Exception
 	{
@@ -297,4 +327,10 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 
 		return true;
 	}
+
+    private File formStatisticsDbFile(String key, String statisticsName)
+    {
+		String dbFileDir = dbRoot.getAbsolutePath()+File.separator+key;
+        return new File(dbFileDir+File.separator+statisticsName+DATABASE_FILE_EXTENSION);
+    }
 }

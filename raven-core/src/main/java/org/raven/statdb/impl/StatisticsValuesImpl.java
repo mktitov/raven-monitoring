@@ -17,40 +17,45 @@
 
 package org.raven.statdb.impl;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import org.raven.statdb.query.KeyValues;
 import org.raven.statdb.query.StatisticsValues;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class KeyValuesImpl implements KeyValues
+public class StatisticsValuesImpl implements StatisticsValues
 {
-	private final String key;
-    private List<StatisticsValues> values;
+    private final String statisticsName;
+    private final long step;
+    private final long[] timestamps;
+    private final double[] values;
 
-	public KeyValuesImpl(String key)
-	{
-		this.key = key;
-	}
-
-	public String getKey()
-	{
-		return key;
-	}
-
-	public Collection<StatisticsValues> getStatisticsValues()
-	{
-		return values;
-	}
-
-    public void addStatisticsValues(StatisticsValues statisticsValues)
+    public StatisticsValuesImpl(
+            String statisticsName, long step, long[] timestamps, double[] values)
     {
-        if (values==null)
-            values = new ArrayList<StatisticsValues>(5);
-        values.add(statisticsValues);
+        this.statisticsName = statisticsName;
+        this.step = step;
+        this.timestamps = timestamps;
+        this.values = values;
+    }
+
+    public String getStatisticsName()
+    {
+        return statisticsName;
+    }
+
+    public long getStep()
+    {
+        return step;
+    }
+
+    public long[] getTimestamps()
+    {
+        return timestamps;
+    }
+
+    public double[] getValues()
+    {
+        return values;
     }
 }
