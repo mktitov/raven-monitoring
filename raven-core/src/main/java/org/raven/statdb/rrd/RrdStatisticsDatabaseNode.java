@@ -333,4 +333,30 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 		String dbFileDir = dbRoot.getAbsolutePath()+File.separator+key;
         return new File(dbFileDir+File.separator+statisticsName+DATABASE_FILE_EXTENSION);
     }
+
+    private static double[] realignData(
+            long[] ts, long queryStep, long[] dataTs, long dataStep, double[] data)
+    {
+        double[] result = new double[ts.length];
+
+        int j=0; 
+        long qs = queryStep-1;
+        long ds = dataStep-1;
+        for (int i=0; i<result.length; ++i)
+        {
+            while (between(dataTs[j], ts[i]-qs, ts[i]) || between(dataTs[j]-ds, ts[i]-qs, ts[i]))
+            {
+                ++j;
+            }
+            if (dataTs[j-1]>ts[i])
+                --j;
+        }
+
+        return result;
+    }
+
+    private static boolean between(long v, long lowerBound, long upperBound)
+    {
+        return v>=lowerBound && v<=upperBound;
+    }
 }
