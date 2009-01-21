@@ -1,5 +1,5 @@
 /*
- *  Copyright 2008 Mikhail Titov.
+ *  Copyright 2009 Mikhail Titov.
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,20 +17,23 @@
 
 package org.raven.statdb.impl;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 /**
  *
  * @author Mikhail Titov
  */
-public class MaxAggregation extends AbstractAggregation
+public class LastAggregationTest extends Assert
 {
-	public MaxAggregation(long time, double value)
-	{
-		super(time, value);
-	}
-	
-	public void aggregate(double value)
-	{
-        if (!Double.isNaN(value) && (Double.isNaN(this.value) || value>this.value))
-			this.value = value;
-	}
+    @Test
+    public void test()
+    {
+        LastAggregation agg = new LastAggregation(0, Double.NaN);
+        assertTrue(Double.isNaN(agg.getValue()));
+        agg.aggregate(0.);
+        assertEquals(0., agg.getValue(), 0.);
+        agg.aggregate(Double.NaN);
+        assertTrue(Double.isNaN(agg.getValue()));
+    }
 }

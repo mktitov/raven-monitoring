@@ -17,11 +17,32 @@
 
 package org.raven.statdb;
 
+import org.raven.statdb.impl.AverageAggregation;
+import org.raven.statdb.impl.LastAggregation;
+import org.raven.statdb.impl.MaxAggregation;
+import org.raven.statdb.impl.MinAggregation;
+import org.raven.statdb.impl.SumAggregation;
+
 /**
  *
  * @author Mikhail Titov
  */
 public enum AggregationFunction
 {
-	MIN, MAX, AVERAGE, SUM
+	MIN, MAX, AVERAGE, LAST, SUM;
+
+    public Aggregation createAggregation(long time, double initialValue)
+    {
+        switch (this)
+        {
+            case AVERAGE : return new AverageAggregation(time, initialValue);
+            case LAST    : return new LastAggregation(time, initialValue);
+            case MAX     : return new MaxAggregation(time, initialValue);
+            case MIN     : return new MinAggregation(time, initialValue);
+            case SUM     : return new SumAggregation(time, initialValue);
+        }
+
+        throw new UnsupportedOperationException(
+                "createFunction does not support the "+this.toString()+" aggregation");
+    }
 }

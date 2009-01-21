@@ -26,6 +26,7 @@ import org.raven.expr.Expression;
 import org.raven.expr.impl.ExpressionAttributeValueHandler;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.statdb.StatisticsRecord;
+import org.raven.statdb.ValueType;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.constraints.NotNull;
@@ -52,6 +53,10 @@ public class StatisticsDefinitionNode extends BaseNode
 	@NotNull
 	private Boolean savePreviousValue;
 
+    @Parameter(defaultValue="INTEGRATED")
+    @NotNull
+    private ValueType valueType;
+
 	private Double previuosValue;
 
 	public Boolean getSavePreviousValue()
@@ -73,6 +78,16 @@ public class StatisticsDefinitionNode extends BaseNode
 	{
 		this.type = type;
 	}
+
+    public ValueType getValueType()
+    {
+        return valueType;
+    }
+
+    public void setValueType(ValueType valueType)
+    {
+        this.valueType = valueType;
+    }
 
 	public Boolean getUseValueExpression()
 	{

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2008 Mikhail Titov.
+ *  Copyright 2009 Mikhail Titov.
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -21,16 +21,32 @@ package org.raven.statdb.impl;
  *
  * @author Mikhail Titov
  */
-public class MaxAggregation extends AbstractAggregation
+public class AverageAggregation extends SumAggregation
 {
-	public MaxAggregation(long time, double value)
-	{
-		super(time, value);
-	}
-	
-	public void aggregate(double value)
-	{
-        if (!Double.isNaN(value) && (Double.isNaN(this.value) || value>this.value))
-			this.value = value;
-	}
+    private int counter = 1;
+
+    public AverageAggregation(long time, double value)
+    {
+        super(time, value);
+    }
+
+    @Override
+    public void aggregate(double value)
+    {
+        super.aggregate(value);
+        ++counter;
+    }
+
+    @Override
+    public double getValue()
+    {
+        return value/counter;
+    }
+
+    @Override
+    public void reset(long time, double value)
+    {
+        super.reset(time, value);
+        counter = 1;
+    }
 }

@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +32,10 @@ import org.jrobin.core.RrdDbPool;
 import org.jrobin.core.Util;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
+import org.raven.statdb.Aggregation;
+import org.raven.statdb.AggregationFunction;
 import org.raven.statdb.StatisticsDatabase;
+import org.raven.statdb.ValueType;
 import org.raven.statdb.impl.AbstractStatisticsDatabase;
 import org.raven.statdb.impl.KeyValuesImpl;
 import org.raven.statdb.impl.QueryResultImpl;
@@ -335,17 +339,28 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
     }
 
     private static double[] realignData(
-            long[] ts, long queryStep, long[] dataTs, long dataStep, double[] data)
+            ValueType valueType, AggregationFunction aggType
+            , long[] ts, long queryStep, long[] dataTs, long dataStep, double[] data)
     {
         double[] result = new double[ts.length];
+        Arrays.fill(result, Double.NaN);
 
         int j=0; 
         long qs = queryStep-1;
         long ds = dataStep-1;
         for (int i=0; i<result.length; ++i)
         {
+            //создать aggregation function
+            Aggregation agg = null;
+            
             while (between(dataTs[j], ts[i]-qs, ts[i]) || between(dataTs[j]-ds, ts[i]-qs, ts[i]))
             {
+                if (agg==null)
+                {
+                    if (valueType==ValueType.INTEGRATED)
+                        agg = AggregationFunction.SUM.createAggregation(0, data[j]);
+
+                }
                 ++j;
             }
             if (dataTs[j-1]>ts[i])
