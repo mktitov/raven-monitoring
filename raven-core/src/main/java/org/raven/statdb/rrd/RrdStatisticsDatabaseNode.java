@@ -338,7 +338,7 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
         return new File(dbFileDir+File.separator+statisticsName+DATABASE_FILE_EXTENSION);
     }
 
-    private static double[] realignData(
+    static double[] realignData(
             ValueType valueType, AggregationFunction aggType
             , long[] ts, long queryStep, long[] dataTs, long dataStep, double[] data)
     {
@@ -348,23 +348,40 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
         int j=0; 
         long qs = queryStep-1;
         long ds = dataStep-1;
+        Aggregation agg;
+        double th, tl, val;
         for (int i=0; i<result.length; ++i)
         {
-            //создать aggregation function
-            Aggregation agg = null;
-            
-            while (between(dataTs[j], ts[i]-qs, ts[i]) || between(dataTs[j]-ds, ts[i]-qs, ts[i]))
+            agg = null;
+            while (j<data.length
+               && (between(dataTs[j], ts[i]-qs, ts[i]) || between(dataTs[j]-ds, ts[i]-qs, ts[i])))
             {
+                th = dataTs[j]>ts[i]? ts[i] : dataTs[j];
+                tl = dataTs[j]-ds<ts[i]-qs? ts[i]-queryStep : dataTs[j]-dataStep;
+                val = valueType==ValueType.ABSOLUTE? data[j] : data[j]/dataStep*(th-tl);
+                
                 if (agg==null)
                 {
-                    if (valueType==ValueType.INTEGRATED)
-                        agg = AggregationFunction.SUM.createAggregation(0, data[j]);
+                    AggregationFunction func = 
+                            valueType==ValueType.INTEGRATED? AggregationFunction.SUM : aggType;
+                    agg = func.createAggregation(0, val);
 
                 }
+                else
+                    agg.aggregate(val);
+                
                 ++j;
             }
-            if (dataTs[j-1]>ts[i])
-                --j;
+            if (j==0)
+            {
+                result[i] = Double.NaN;
+            }
+            else
+            {
+                if (dataTs[j-1]>ts[i])
+                    --j;
+                result[i] = agg!=null? agg.getValue() : Double.NaN;
+            }
         }
 
         return result;

@@ -33,7 +33,9 @@ import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.rrd.ConsolidationFunction;
 import org.raven.rrd.objects.PushDataSource;
+import org.raven.statdb.AggregationFunction;
 import org.raven.statdb.StatisticsRecord;
+import org.raven.statdb.ValueType;
 import org.raven.statdb.impl.StatisticsDefinitionNode;
 import org.raven.statdb.impl.StatisticsRecordImpl;
 import org.raven.statdb.query.FromClause;
@@ -137,6 +139,123 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 		assertEquals(2, values.length);
 		assertTrue(Arrays.equals(new double[]{15., 16.}, values));
 	}
+    //ValueType.INTEGRATED
+    //dataStep < queryStep and queryStep % dataStep == 0
+    @Test
+    public void realignDataTest1()
+    {
+        long[] ts = new long[]{4, 8};
+        long[] dataTs = new long[]{2, 4, 6, 8};
+        double[] data = new double[]{2., 4., 4., 8.};
+        double[] result = RrdStatisticsDatabaseNode.realignData(
+                ValueType.INTEGRATED, AggregationFunction.AVERAGE, ts, 4, dataTs, 2, data);
+        assertNotNull(result);
+        assertEquals(2, result.length);
+        assertTrue(Arrays.equals(new double[]{6., 12.}, result));
+    }
+
+    //ValueType.INTEGRATED
+    //dataStep < queryStep and queryStep % dataStep != 0
+    @Test
+    public void realignDataTest2()
+    {
+        long[] ts = new long[]{4, 8};
+        long[] dataTs = new long[]{3, 6, 9};
+        double[] data = new double[]{2., 3., 6.};
+        double[] result = RrdStatisticsDatabaseNode.realignData(
+                ValueType.INTEGRATED, AggregationFunction.AVERAGE, ts, 4, dataTs, 3, data);
+        assertNotNull(result);
+        assertEquals(2, result.length);
+        assertTrue(Arrays.equals(new double[]{3., 6.}, result));
+    }
+
+    //ValueType.INTEGRATED
+    //dataStep > queryStep and dataStep % queryStep == 0
+    @Test
+    public void realignDataTest3()
+    {
+        long[] ts = new long[]{2, 4};
+        long[] dataTs = new long[]{4};
+        double[] data = new double[]{4.};
+        double[] result = RrdStatisticsDatabaseNode.realignData(
+                ValueType.INTEGRATED, AggregationFunction.AVERAGE, ts, 2, dataTs, 4, data);
+        assertNotNull(result);
+        assertEquals(2, result.length);
+        assertTrue(Arrays.equals(new double[]{2., 2.}, result));
+    }
+
+    //ValueType.INTEGRATED
+    //dataStep > queryStep and dataStep % queryStep != 0
+    @Test
+    public void realignDataTest4()
+    {
+        long[] ts = new long[]{3, 6};
+        long[] dataTs = new long[]{4, 8};
+        double[] data = new double[]{4., 8.};
+        double[] result = RrdStatisticsDatabaseNode.realignData(
+                ValueType.INTEGRATED, AggregationFunction.AVERAGE, ts, 3, dataTs, 4, data);
+        assertNotNull(result);
+        assertEquals(2, result.length);
+        assertTrue(Arrays.equals(new double[]{3., 5.}, result));
+    }
+
+    //ValueType.ABSOLUTE
+    //dataStep < queryStep and queryStep % dataStep == 0
+    @Test
+    public void realignDataTest5()
+    {
+        long[] ts = new long[]{4, 8};
+        long[] dataTs = new long[]{2, 4, 6, 8};
+        double[] data = new double[]{2., 4., 4., 8.};
+        double[] result = RrdStatisticsDatabaseNode.realignData(
+                ValueType.ABSOLUTE, AggregationFunction.AVERAGE, ts, 4, dataTs, 2, data);
+        assertNotNull(result);
+        assertEquals(2, result.length);
+        assertTrue(Arrays.equals(new double[]{3., 6.}, result));
+    }
+
+    //ValueType.ABSOLUTE
+    //dataStep < queryStep and queryStep % dataStep != 0
+    @Test
+    public void realignDataTest6()
+    {
+        long[] ts = new long[]{4, 8};
+        long[] dataTs = new long[]{3, 6, 9};
+        double[] data = new double[]{2., 3., 6.};
+        double[] result = RrdStatisticsDatabaseNode.realignData(
+                ValueType.ABSOLUTE, AggregationFunction.AVERAGE, ts, 4, dataTs, 3, data);
+        assertNotNull(result);
+        assertEquals(2, result.length);
+        assertTrue(Arrays.equals(new double[]{2.5, 4.5}, result));
+    }
+
+    //dataTimestamp[0]>queryTimestamp[1]
+    @Test
+    public void realignDataTest7()
+    {
+        long[] ts = new long[]{4, 8};
+        long[] dataTs = new long[]{6, 8};
+        double[] data = new double[]{4., 8.};
+        double[] result = RrdStatisticsDatabaseNode.realignData(
+                ValueType.INTEGRATED, AggregationFunction.AVERAGE, ts, 4, dataTs, 2, data);
+        assertNotNull(result);
+        assertEquals(2, result.length);
+        assertTrue(Arrays.equals(new double[]{Double.NaN, 12.}, result));
+    }
+
+    //dataTimestamp[0]>queryTimestamp[1]
+    @Test
+    public void realignDataTest8()
+    {
+        long[] ts = new long[]{4, 8};
+        long[] dataTs = new long[]{2, 4};
+        double[] data = new double[]{4., 8.};
+        double[] result = RrdStatisticsDatabaseNode.realignData(
+                ValueType.INTEGRATED, AggregationFunction.AVERAGE, ts, 4, dataTs, 2, data);
+        assertNotNull(result);
+        assertEquals(2, result.length);
+        assertTrue(Arrays.equals(new double[]{12., Double.NaN}, result));
+    }
 
 	@Test
 	public void query_selectKeys_emptyDb_test() throws Exception
