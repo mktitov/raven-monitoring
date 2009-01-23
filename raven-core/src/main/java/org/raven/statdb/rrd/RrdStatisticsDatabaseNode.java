@@ -46,6 +46,7 @@ import org.raven.statdb.query.KeyValues;
 import org.raven.statdb.query.Query;
 import org.raven.statdb.query.QueryExecutionException;
 import org.raven.statdb.query.QueryResult;
+import org.raven.statdb.query.QueryStatisticsName;
 import org.raven.statdb.query.SelectMode;
 import org.raven.statdb.query.StatisticsValues;
 import org.raven.tree.Node;
@@ -178,24 +179,59 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 
     private void fetchStatisticsValues(Query query, Collection<KeyValues> keys) throws Exception
     {
-        String[] statNames = query.getStatisticsNames();
+        QueryStatisticsName[] statNames = query.getStatisticsNames();
+        ValueType[] valueTypes = new ValueType[statNames.length];
+        for (int i=0; i<statNames.length; ++i)
+        {
+            StatisticsDefinitionNode statDef = getStatisticsDefinitionNode(statNames[i].getName());
+            if (statDef==null)
+                throw new Exception(String.format("Invalid statistics name (%s)", statNames[i]));
+            valueTypes[i] = statDef.getValueType();
+        }
+        
+        //calculating and normalizing start and end time
+        long step = query.getStep();
         long[] timePeriod =
                 RrdDatabaseDefNode.getTimePeriod(query.getStartTime(), query.getEndTime());
-        long step = query.getStep();
+        timePeriod[0] = Util.normalize(timePeriod[0], step);
+        timePeriod[1] = Util.normalize(timePeriod[1], step);
+        //calculating timestamps
+        long[] timestamps = new long[(int)((timePeriod[1]-timePeriod[0])/step)+1];
+        for (int i=0; i<timestamps.length; ++i)
+            timestamps[i] = timePeriod[0]+(step*i);
+        
         for (KeyValues keyValues: keys)
         {
-            for (String statName: statNames)
+            for (int i=0; i<statNames.length; ++i)
             {
+                String statName = statNames[i].getName();
                 File dbFile = formStatisticsDbFile(keyValues.getKey(), statName);
                 if (dbFile.exists())
                 {
                     RrdDb db = pool.requestRrdDb(dbFile.getAbsolutePath());
-                    FetchRequest request = db.createFetchRequest(
-                            "LAST", timePeriod[0], timePeriod[1], step);
-                    FetchData fData = request.fetchData();
-                    StatisticsValues values = new StatisticsValuesImpl(
-                            statName, fData.getStep(), fData.getTimestamps(), fData.getValues(0));
-                    ((KeyValuesImpl)keyValues).addStatisticsValues(values);
+                    try
+                    {
+                        FetchRequest request = db.createFetchRequest(
+                                statNames[i].getAggregationFunction().toString()
+                                , timePeriod[0], timePeriod[1], step);
+                        FetchData fData = request.fetchData();
+                        double[] data = fData.getValues(0);
+                        long[] dataTs = fData.getTimestamps();
+                        if (fData.getStep()!=step || fData.getFirstTimestamp()!=timePeriod[0]
+                            || data.length!=timestamps.length)
+                        {
+                            data = realignData(
+                                    valueTypes[i], statNames[i].getAggregationFunction(), timestamps
+                                    , step, dataTs, fData.getStep(), data);
+                        }
+                        StatisticsValues values = new StatisticsValuesImpl(
+                                statName, step, timestamps, data);
+                        ((KeyValuesImpl)keyValues).addStatisticsValues(values);
+                    }
+                    finally
+                    {
+                        pool.release(db);
+                    }
                 }
             }
         }

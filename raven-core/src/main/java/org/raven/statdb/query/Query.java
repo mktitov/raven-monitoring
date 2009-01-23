@@ -49,7 +49,7 @@ public interface Query
 	/**
 	 * Returns the name of the statistics that will be take part in the query
 	 */
-	public String[] getStatisticsNames();
+	public QueryStatisticsName[] getStatisticsNames();
 	/**
 	 * Returns the query from clause
 	 */

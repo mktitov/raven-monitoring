@@ -42,6 +42,7 @@ import org.raven.statdb.query.FromClause;
 import org.raven.statdb.query.KeyValues;
 import org.raven.statdb.query.Query;
 import org.raven.statdb.query.QueryResult;
+import org.raven.statdb.query.QueryStatisticsName;
 import org.raven.statdb.query.SelectClause;
 import org.raven.statdb.query.SelectMode;
 import org.raven.statdb.query.StatisticsValues;
@@ -376,11 +377,17 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 
 		FromClause from = createMock(FromClause.class);
 		Query query = createMock(Query.class);
+        QueryStatisticsName s1name = createMock("s1", QueryStatisticsName.class);
+        QueryStatisticsName s2name = createMock("s2", QueryStatisticsName.class);
         SelectClause select = createMock(SelectClause.class);
 
 		expect(query.getFromClause()).andReturn(from);
         expect(query.getSelectClause()).andReturn(select);
-        expect(query.getStatisticsNames()).andReturn(new String[]{"s1", "s2"});
+        expect(query.getStatisticsNames()).andReturn(new QueryStatisticsName[]{s1name, s2name});
+        expect(s1name.getName()).andReturn("s1").atLeastOnce();
+        expect(s1name.getAggregationFunction()).andReturn(AggregationFunction.LAST).atLeastOnce();
+        expect(s2name.getName()).andReturn("s2").atLeastOnce();
+        expect(s2name.getAggregationFunction()).andReturn(AggregationFunction.LAST).atLeastOnce();
         expect(query.getStartTime()).andReturn("5L");
         expect(query.getEndTime()).andReturn("10L");
         expect(query.getStep()).andReturn(5l);
@@ -389,7 +396,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
         
 		expect(from.getKeyExpression()).andReturn("/@r .*/@r .*/");
 
-        replay(query, from, select);
+        replay(query, from, select, s1name, s2name);
         
         QueryResult result = db.executeQuery(query);
         assertNotNull(result);
@@ -411,7 +418,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
         checkStatisticsValues(k11, new double[]{1., 2.}, new double[]{10., 11.});
         checkStatisticsValues(k12, new double[]{5., 6.}, new double[]{15., 16.});
 
-        verify(query, from, select);
+        verify(query, from, select, s1name, s2name);
     }
 
     private void checkStatisticsValues(KeyValues k11, double[] s1Values, double[] s2Values)

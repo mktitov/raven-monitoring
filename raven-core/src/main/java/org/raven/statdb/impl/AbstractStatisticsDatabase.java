@@ -101,6 +101,11 @@ public abstract class AbstractStatisticsDatabase
 		return statisticsDefinitions;
 	}
 
+    public StatisticsDefinitionNode getStatisticsDefinitionNode(String statisticsName)
+    {
+        return (StatisticsDefinitionNode) statisticsDefinitions.getChildren(statisticsName);
+    }
+
 	protected void initConfigurationNodes()
 	{
 		statisticsDefinitions =
