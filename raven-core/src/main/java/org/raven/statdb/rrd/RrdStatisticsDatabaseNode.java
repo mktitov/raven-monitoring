@@ -237,6 +237,11 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
         }
     }
 
+    private void calculateSelectEntriesValues(Query query, Collection<KeyValues> keyValues)
+    {
+        
+    }
+
 	private Collection<KeyValues> findKeys(File path, FromClause fromClause) throws Exception
 	{
 		String keyExpression = fromClause.getKeyExpression();
