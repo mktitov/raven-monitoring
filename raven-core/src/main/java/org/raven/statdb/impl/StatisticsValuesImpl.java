@@ -26,32 +26,17 @@ import org.raven.statdb.query.StatisticsValues;
 public class StatisticsValuesImpl implements StatisticsValues
 {
     private final String statisticsName;
-    private final long step;
-    private final long[] timestamps;
     private final double[] values;
 
-    public StatisticsValuesImpl(
-            String statisticsName, long step, long[] timestamps, double[] values)
+    public StatisticsValuesImpl(String statisticsName, double[] values)
     {
         this.statisticsName = statisticsName;
-        this.step = step;
-        this.timestamps = timestamps;
         this.values = values;
     }
 
     public String getStatisticsName()
     {
         return statisticsName;
-    }
-
-    public long getStep()
-    {
-        return step;
-    }
-
-    public long[] getTimestamps()
-    {
-        return timestamps;
     }
 
     public double[] getValues()

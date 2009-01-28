@@ -21,12 +21,13 @@ import javax.script.SimpleBindings;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.statdb.query.SelectEntry;
+import org.raven.statdb.query.StatisticsValues;
 import static org.easymock.EasyMock.*;
 /**
  *
  * @author Mikhail Titov
  */
-public class SelectEntryAggregationsTest extends RavenCoreTestCase
+public class AggregationCalculationUnitTest extends RavenCoreTestCase
 {
     @Test
     public void checkAndCreate_noAggregations_test() throws Exception
@@ -35,7 +36,7 @@ public class SelectEntryAggregationsTest extends RavenCoreTestCase
         expect(selectEntry.getExpression()).andReturn("1+1");
         replay(selectEntry);
         
-        SelectEntryAggregations aggs = SelectEntryAggregations.checkAndCreate(selectEntry);
+        AggregationCalculationUnit aggs = AggregationCalculationUnit.checkAndCreate(selectEntry);
         assertNull(aggs);
 
         verify(selectEntry);
@@ -46,22 +47,25 @@ public class SelectEntryAggregationsTest extends RavenCoreTestCase
     {
         SelectEntry selectEntry = createMock(SelectEntry.class);
         expect(selectEntry.getExpression()).andReturn("$sum{name}");
+        expect(selectEntry.getName()).andReturn("entry1");
         replay(selectEntry);
 
-        SelectEntryAggregations aggs = SelectEntryAggregations.checkAndCreate(selectEntry);
+        AggregationCalculationUnit aggs = AggregationCalculationUnit.checkAndCreate(selectEntry);
         assertNotNull(aggs);
-        assertNotNull(aggs.getAggregations());
-        assertEquals(1, aggs.getAggregations().length);
-        SelectEntryAggregation agg = aggs.getAggregations()[0];
-        assertTrue(agg instanceof SelectEntryAggregation);
 
         SimpleBindings bindings = new SimpleBindings();
         bindings.put("name", 1);
-        aggs.aggregate(bindings);
+        aggs.calculate(bindings);
         bindings.put("name", 2.);
-        aggs.aggregate(bindings);
+        aggs.calculate(bindings);
 
-        assertEquals(3., (Double)aggs.eval(), 0.);
+        StatisticsValues statValues = aggs.getStatisticsValues();
+        assertNotNull(statValues);
+        assertNotNull("entry1", statValues.getStatisticsName());
+        assertNotNull(statValues.getValues());
+        assertEquals(1, statValues.getValues().length);
+
+        assertEquals(3., statValues.getValues()[0], 0.);
 
         verify(selectEntry);
     }
@@ -71,23 +75,25 @@ public class SelectEntryAggregationsTest extends RavenCoreTestCase
     {
         SelectEntry selectEntry = createMock(SelectEntry.class);
         expect(selectEntry.getExpression()).andReturn("1 +$sum{name+1} + $average{name} -0.5");
+        expect(selectEntry.getName()).andReturn("entry1");
         replay(selectEntry);
 
-        SelectEntryAggregations aggs = SelectEntryAggregations.checkAndCreate(selectEntry);
+        AggregationCalculationUnit aggs = AggregationCalculationUnit.checkAndCreate(selectEntry);
         assertNotNull(aggs);
-        assertNotNull(aggs.getAggregations());
-        assertEquals(2, aggs.getAggregations().length);
-        SelectEntryAggregation agg = aggs.getAggregations()[0];
-        assertNotNull(aggs.getAggregations()[0]);
-        assertNotNull(aggs.getAggregations()[1]);
 
         SimpleBindings bindings = new SimpleBindings();
         bindings.put("name", 1);
-        aggs.aggregate(bindings);
+        aggs.calculate(bindings);
         bindings.put("name", 2.);
-        aggs.aggregate(bindings);
+        aggs.calculate(bindings);
 
-        assertEquals(7., (Double)aggs.eval(), 0.);
+        StatisticsValues statValues = aggs.getStatisticsValues();
+        assertNotNull(statValues);
+        assertNotNull("entry1", statValues.getStatisticsName());
+        assertNotNull(statValues.getValues());
+        assertEquals(1, statValues.getValues().length);
+
+        assertEquals(7., statValues.getValues()[0], 0.);
 
         verify(selectEntry);
     }
@@ -97,27 +103,26 @@ public class SelectEntryAggregationsTest extends RavenCoreTestCase
     {
         SelectEntry selectEntry = createMock(SelectEntry.class);
         expect(selectEntry.getExpression()).andReturn("$sum{name}");
+        expect(selectEntry.getName()).andReturn("entry1");
         replay(selectEntry);
 
-        SelectEntryAggregations aggs = SelectEntryAggregations.checkAndCreate(selectEntry);
+        AggregationCalculationUnit aggs = AggregationCalculationUnit.checkAndCreate(selectEntry);
         assertNotNull(aggs);
-        assertNotNull(aggs.getAggregations());
-        assertEquals(1, aggs.getAggregations().length);
-        SelectEntryAggregation agg = aggs.getAggregations()[0];
-        assertTrue(agg instanceof SelectEntryAggregation);
 
         SimpleBindings bindings = new SimpleBindings();
         bindings.put("name", 1);
-        aggs.aggregate(bindings);
+        aggs.calculate(bindings);
         bindings.put("name", 2.);
-        aggs.aggregate(bindings);
+        aggs.calculate(bindings);
 
-        assertEquals(3., (Double)aggs.eval(), 0.);
+        StatisticsValues statValues = aggs.getStatisticsValues();
+        assertEquals(3., statValues.getValues()[0], 0.);
 
         aggs.reset();
         bindings.put("name", 1);
-        aggs.aggregate(bindings);
-        assertEquals(1., (Double)aggs.eval(), 0.);
+        aggs.calculate(bindings);
+        statValues = aggs.getStatisticsValues();
+        assertEquals(1., statValues.getValues()[0], 0.);
 
         verify(selectEntry);
     }

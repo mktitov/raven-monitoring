@@ -21,8 +21,10 @@ package org.raven.statdb.query;
  *
  * @author Mikhail Titov
  */
-public interface StatisticsValues
+public class CalculationUnitException extends Exception
 {
-    public String getStatisticsName();
-    public double[] getValues();
+    public CalculationUnitException(String message, Throwable cause)
+    {
+        super(message, cause);
+    }
 }

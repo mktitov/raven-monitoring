@@ -17,12 +17,15 @@
 
 package org.raven.statdb.query;
 
+import javax.script.Bindings;
+
 /**
  *
  * @author Mikhail Titov
  */
-public interface StatisticsValues
+public interface SelectEntryCalculationUnit
 {
-    public String getStatisticsName();
-    public double[] getValues();
+    public void calculate(Bindings bindings) throws CalculationUnitException;
+    public void reset();
+    public StatisticsValues getStatisticsValues() throws CalculationUnitException;
 }

@@ -228,8 +228,7 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
                                     valueTypes[i], statNames[i].getAggregationFunction(), timestamps
                                     , step, dataTs, fData.getStep(), data);
                         }
-                        StatisticsValues values = new StatisticsValuesImpl(
-                                statName, step, timestamps, data);
+                        StatisticsValues values = new StatisticsValuesImpl(statName, data);
                         ((KeyValuesImpl)keyValues).addStatisticsValues(values);
                     }
                     finally
