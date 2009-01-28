@@ -21,9 +21,18 @@ package org.raven.statdb.query;
  *
  * @author Mikhail Titov
  */
-public interface SelectClause
+public interface SelectEntry
 {
-	public SelectMode getSelectMode();
-
-    public boolean hasSelectEntries();
+    /**
+     * Returns the unique name of the entry. In the query result this will be a statistics name.
+     */
+    public String getName();
+    /**
+     * Returns the groovy expression for this select entry. Expression can contain aggregation
+     * functions in format writed below:
+     * <br/>
+     * <code>$aggregation_function_name{expression}</code>
+     * @return
+     */
+    public String getExpression();
 }

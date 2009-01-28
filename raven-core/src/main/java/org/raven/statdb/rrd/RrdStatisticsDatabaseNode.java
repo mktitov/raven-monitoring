@@ -47,6 +47,7 @@ import org.raven.statdb.query.Query;
 import org.raven.statdb.query.QueryExecutionException;
 import org.raven.statdb.query.QueryResult;
 import org.raven.statdb.query.QueryStatisticsName;
+import org.raven.statdb.query.SelectClause;
 import org.raven.statdb.query.SelectMode;
 import org.raven.statdb.query.StatisticsValues;
 import org.raven.tree.Node;
@@ -165,6 +166,9 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 				&& keys.size()>0)
 			{
 				fetchStatisticsValues(query, keys);
+                SelectClause selectClause = query.getSelectClause();
+                if (selectClause!=null && selectClause.hasSelectEntries())
+                    calculateSelectEntriesValues(query, keys);
 			}
 
 			return new QueryResultImpl(keys);

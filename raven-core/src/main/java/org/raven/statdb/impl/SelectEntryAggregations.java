@@ -21,10 +21,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.script.Bindings;
+import javax.script.ScriptException;
+import javax.script.SimpleBindings;
 import org.raven.expr.Expression;
 import org.raven.expr.ExpressionCompiler;
 import org.raven.expr.impl.GroovyExpressionCompiler;
 import org.raven.statdb.AggregationFunction;
+import org.raven.statdb.query.SelectEntry;
 import org.weda.internal.annotations.Service;
 import org.weda.services.TypeConverter;
 
@@ -35,21 +39,26 @@ import org.weda.services.TypeConverter;
 public class SelectEntryAggregations
 {
 	private static Pattern pattern = Pattern.compile("\\$(\\w+)\\{(.*?)\\}");
+    private static String AGGREGATION_PREFIX = "rm_agg_";
+
+    private final Expression expression;
+    private final SelectEntryAggregation[] aggregations;
+    private final SelectEntry selectEntry;
 
 	@Service
 	private static ExpressionCompiler expressionCompiler;
 	@Service
 	private static TypeConverter converter;
+
 	/**
 	 * Создает и возвращает экземпляр {@link SelectEntryAggregations} если в выражении присутствуют
 	 * агрегатные функции, иначе функция возвращает <code>null</code>
 	 * @param selectEntryExpression
-	 * @return
 	 */
-	public static SelectEntryAggregations checkAndCreate(String selectEntryExpression)
+	public static SelectEntryAggregations checkAndCreate(SelectEntry selectEntry)
 			throws Exception
 	{
-		Matcher m = pattern.matcher(selectEntryExpression);
+		Matcher m = pattern.matcher(selectEntry.getExpression());
 		StringBuffer resExpression = new StringBuffer();
 		int i=0;
 		List<SelectEntryAggregation> entryAggrgations = null;
@@ -82,8 +91,54 @@ public class SelectEntryAggregations
 		if (entryAggrgations!=null)
 		{
 			//Создаем selectEntryAggregations
+            m.appendTail(resExpression);
+            Expression entryExpression = expressionCompiler.compile(
+                    resExpression.toString(), GroovyExpressionCompiler.LANGUAGE);
+            SelectEntryAggregation[] aggArr = new SelectEntryAggregation[entryAggrgations.size()];
+            entryAggrgations.toArray(aggArr);
+            
+            return new SelectEntryAggregations(entryExpression, aggArr, selectEntry);
 		}
-
-		return null;
+        else
+            return null;
 	}
+
+    public SelectEntryAggregations(
+            Expression expression, SelectEntryAggregation[] aggregations, SelectEntry selectEntry)
+    {
+        this.expression = expression;
+        this.aggregations = aggregations;
+        this.selectEntry = selectEntry;
+    }
+
+    public SelectEntryAggregation[] getAggregations()
+    {
+        return aggregations;
+    }
+
+    public SelectEntry getSelectEntry()
+    {
+        return selectEntry;
+    }
+
+    public Object eval() throws ScriptException
+    {
+        SimpleBindings bindings = new SimpleBindings();
+        for (int i=0; i<aggregations.length; ++i)
+            bindings.put(AGGREGATION_PREFIX+(i+1), aggregations[i].getValue());
+
+        return expression.eval(bindings);
+    }
+
+    public void aggregate(Bindings bindings) throws ScriptException
+    {
+        for (SelectEntryAggregation aggregation: aggregations)
+            aggregation.aggregate(bindings);
+    }
+
+    public void reset()
+    {
+        for (SelectEntryAggregation aggregation: aggregations)
+            aggregation.reset();
+    }
 }
