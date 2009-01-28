@@ -382,7 +382,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
         SelectClause select = createMock(SelectClause.class);
 
 		expect(query.getFromClause()).andReturn(from);
-        expect(query.getSelectClause()).andReturn(select);
+        expect(query.getSelectClause()).andReturn(select).atLeastOnce();
         expect(query.getStatisticsNames()).andReturn(new QueryStatisticsName[]{s1name, s2name});
         expect(s1name.getName()).andReturn("s1").atLeastOnce();
         expect(s1name.getAggregationFunction()).andReturn(AggregationFunction.LAST).atLeastOnce();
@@ -393,6 +393,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
         expect(query.getStep()).andReturn(5l);
 
         expect(select.getSelectMode()).andReturn(SelectMode.SELECT_KEYS_AND_DATA);
+        expect(select.hasSelectEntries()).andReturn(false);
         
 		expect(from.getKeyExpression()).andReturn("/@r .*/@r .*/");
 
