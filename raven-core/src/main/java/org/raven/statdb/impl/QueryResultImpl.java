@@ -28,6 +28,8 @@ import org.raven.statdb.query.QueryResult;
 public class QueryResultImpl implements QueryResult
 {
 	private final Collection<KeyValues> keyValues;
+    private long step;
+    private long[] timestamps;
 
 	public QueryResultImpl(Collection<KeyValues> keyValues)
 	{
@@ -38,4 +40,29 @@ public class QueryResultImpl implements QueryResult
 	{
 		return keyValues;
 	}
+
+    public long getStep()
+    {
+        return step;
+    }
+
+    public void setStep(long step)
+    {
+        this.step = step;
+    }
+
+    public long[] getTimestamps()
+    {
+        return timestamps;
+    }
+
+    public void setTimestamps(long[] timestamps)
+    {
+        this.timestamps = timestamps;
+    }
+
+    public int getValuesCount()
+    {
+        return timestamps==null? 0 : timestamps.length;
+    }
 }

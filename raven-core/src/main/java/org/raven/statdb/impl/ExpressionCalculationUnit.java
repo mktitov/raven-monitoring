@@ -38,6 +38,7 @@ public class ExpressionCalculationUnit implements SelectEntryCalculationUnit
     @Service
     private static TypeConverter converter;
 
+    private final int valueCount;
     private double[] values;
     private int valuePos;
 
@@ -45,7 +46,7 @@ public class ExpressionCalculationUnit implements SelectEntryCalculationUnit
     {
         this.expression = expression;
         this.selectEntryName = selectEntryName;
-        values = new double[valueCount];
+        this.valueCount = valueCount;
         reset();
     }
 
@@ -66,7 +67,7 @@ public class ExpressionCalculationUnit implements SelectEntryCalculationUnit
 
     public void reset()
     {
-        Arrays.fill(values, Double.NaN);
+        values = new double[valueCount];
         valuePos = 0;
     }
 

@@ -19,12 +19,12 @@ package org.raven.statdb.rrd;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import javax.script.SimpleBindings;
 import org.jrobin.core.FetchData;
 import org.jrobin.core.FetchRequest;
 import org.jrobin.core.RrdDb;
@@ -32,11 +32,17 @@ import org.jrobin.core.RrdDbPool;
 import org.jrobin.core.Util;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
+import org.raven.expr.Expression;
+import org.raven.expr.ExpressionCompiler;
+import org.raven.expr.impl.GroovyExpressionCompiler;
 import org.raven.statdb.Aggregation;
 import org.raven.statdb.AggregationFunction;
 import org.raven.statdb.StatisticsDatabase;
 import org.raven.statdb.ValueType;
 import org.raven.statdb.impl.AbstractStatisticsDatabase;
+import org.raven.statdb.impl.AggregationCalculationUnit;
+import org.raven.statdb.impl.ConstantAggregationCalculationUnit;
+import org.raven.statdb.impl.ExpressionCalculationUnit;
 import org.raven.statdb.impl.KeyValuesImpl;
 import org.raven.statdb.impl.QueryResultImpl;
 import org.raven.statdb.impl.StatisticsDefinitionNode;
@@ -48,12 +54,15 @@ import org.raven.statdb.query.QueryExecutionException;
 import org.raven.statdb.query.QueryResult;
 import org.raven.statdb.query.QueryStatisticsName;
 import org.raven.statdb.query.SelectClause;
+import org.raven.statdb.query.SelectEntry;
+import org.raven.statdb.query.SelectEntryCalculationUnit;
 import org.raven.statdb.query.SelectMode;
 import org.raven.statdb.query.StatisticsValues;
 import org.raven.tree.Node;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.util.RegexpFileFilter;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.internal.annotations.Service;
 
 /**
  *
@@ -64,6 +73,9 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
     public static final String DATABASE_FILE_EXTENSION = ".jrb";
 	public static final String DATASOURCE_NAME="datasource";
 	public static final String REGEXP_KEY_EXPRESSION = "@r ";
+
+    @Service
+    private static ExpressionCompiler expressionCompiler;
 
 	@Parameter(defaultValue="now")
 	@NotNull
@@ -162,16 +174,17 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 		try
 		{
 			Collection<KeyValues> keys = findKeys(dbRoot, query.getFromClause());
+            QueryResultImpl queryResult = new QueryResultImpl(keys);
 			if (   query.getSelectClause().getSelectMode() == SelectMode.SELECT_KEYS_AND_DATA
 				&& keys.size()>0)
 			{
-				fetchStatisticsValues(query, keys);
+				fetchStatisticsValues(query, queryResult);
                 SelectClause selectClause = query.getSelectClause();
                 if (selectClause!=null && selectClause.hasSelectEntries())
-                    calculateSelectEntriesValues(query, keys);
+                    calculateSelectEntriesValues(query, queryResult);
 			}
 
-			return new QueryResultImpl(keys);
+			return queryResult;
 		}
 		catch (Exception e)
 		{
@@ -181,7 +194,7 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 		}
 	}
 
-    private void fetchStatisticsValues(Query query, Collection<KeyValues> keys) throws Exception
+    private void fetchStatisticsValues(Query query, QueryResultImpl queryResult) throws Exception
     {
         QueryStatisticsName[] statNames = query.getStatisticsNames();
         ValueType[] valueTypes = new ValueType[statNames.length];
@@ -203,8 +216,11 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
         long[] timestamps = new long[(int)((timePeriod[1]-timePeriod[0])/step)+1];
         for (int i=0; i<timestamps.length; ++i)
             timestamps[i] = timePeriod[0]+(step*i);
+
+        queryResult.setStep(step);
+        queryResult.setTimestamps(timestamps);
         
-        for (KeyValues keyValues: keys)
+        for (KeyValues keyValues: queryResult.getKeyValues())
         {
             for (int i=0; i<statNames.length; ++i)
             {
@@ -240,9 +256,58 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
         }
     }
 
-    private void calculateSelectEntriesValues(Query query, Collection<KeyValues> keyValues)
+    private void calculateSelectEntriesValues(Query query, QueryResultImpl queryResult)
+            throws Exception
     {
-        
+        SelectEntry[] selectEntrys = query.getSelectClause().getSelectEntries();
+        SelectEntryCalculationUnit[] units = new SelectEntryCalculationUnit[selectEntrys.length];
+        boolean hasAggregations = false;
+        for (int i=0; i<selectEntrys.length; ++i)
+        {
+            units[i] = AggregationCalculationUnit.checkAndCreate(selectEntrys[i]);
+            if (units[i]!=null)
+                hasAggregations = true;
+        }
+
+        if (hasAggregations)
+            for (int i=0; i<units.length; ++i)
+            {
+                if (units[i]==null)
+                {
+                    Expression expression = expressionCompiler.compile(
+                            selectEntrys[i].getExpression(), GroovyExpressionCompiler.LANGUAGE);
+                    units[i] = new ConstantAggregationCalculationUnit(
+                            selectEntrys[i].getName(), expression);
+                }
+            }
+        else
+            for (int i=0; i<units.length; ++i)
+            {
+                Expression expression = expressionCompiler.compile(
+                        selectEntrys[i].getExpression(), GroovyExpressionCompiler.LANGUAGE);
+                units[i] = new ExpressionCalculationUnit(
+                        expression, selectEntrys[i].getName(), queryResult.getValuesCount());
+            }
+
+        SimpleBindings bindings = new SimpleBindings();
+        for (KeyValues keyValues: queryResult.getKeyValues())
+        {
+            KeyValuesImpl kValues = (KeyValuesImpl) keyValues;
+            for (int i=0; i<queryResult.getValuesCount(); ++i)
+            {
+                bindings.clear();
+                for (StatisticsValues values: keyValues.getStatisticsValues())
+                    bindings.put(values.getStatisticsName(), values.getValues()[i]);
+                for (SelectEntryCalculationUnit unit: units)
+                    unit.calculate(bindings);
+            }
+            kValues.clear();
+            for (SelectEntryCalculationUnit unit: units)
+            {
+                kValues.addStatisticsValues(unit.getStatisticsValues());
+                unit.reset();
+            }
+        }
     }
 
 	private Collection<KeyValues> findKeys(File path, FromClause fromClause) throws Exception

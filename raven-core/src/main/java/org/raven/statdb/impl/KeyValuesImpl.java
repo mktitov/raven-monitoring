@@ -53,4 +53,10 @@ public class KeyValuesImpl implements KeyValues
             values = new ArrayList<StatisticsValues>(5);
         values.add(statisticsValues);
     }
+
+    public void clear()
+    {
+        if (values!=null)
+            values.clear();
+    }
 }
