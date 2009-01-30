@@ -358,23 +358,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
     @Test
     public void query_selectAll_test() throws Exception
     {
-		createStatisticsDef(db, "s1", "t1");
-		createStatisticsDef(db, "s2", "t2");
-
-		createDatabaseTemplate(db, "t1");
-		createDatabaseTemplate(db, "t2");
-
-		StatisticsRecord record = createRecord("/1/1/", 5, 1., 10.);
-		ds.pushData(record);
-		record = createRecord("/1/2/", 5, 5., 15.);
-		ds.pushData(record);
-
-		record = createRecord("/1/1/", 10, 2., 11.);
-		ds.pushData(record);
-		record = createRecord("/1/2/", 10, 6., 16.);
-		ds.pushData(record);
-
-		TimeUnit.SECONDS.sleep(1);
+        insertData();
 
 		FromClause from = createMock(FromClause.class);
 		Query query = createMock(Query.class);
@@ -426,23 +410,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
     @Test
     public void query_selectEntry_test() throws Exception
     {
-		createStatisticsDef(db, "s1", "t1");
-		createStatisticsDef(db, "s2", "t2");
-
-		createDatabaseTemplate(db, "t1");
-		createDatabaseTemplate(db, "t2");
-
-		StatisticsRecord record = createRecord("/1/1/", 5, 1., 10.);
-		ds.pushData(record);
-		record = createRecord("/1/2/", 5, 5., 15.);
-		ds.pushData(record);
-
-		record = createRecord("/1/1/", 10, 2., 11.);
-		ds.pushData(record);
-		record = createRecord("/1/2/", 10, 6., 16.);
-		ds.pushData(record);
-
-		TimeUnit.SECONDS.sleep(1);
+        insertData();
 
 		FromClause from = createMock(FromClause.class);
 		Query query = createMock(Query.class);
@@ -493,6 +461,88 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
         checkStatisticsValues(k12, new String[]{"e1"}, new double[]{20., 22.});
 
         verify(query, from, select, s1name, s2name, selectEntry);
+
+    }
+
+    @Test
+    public void query_aggregateSelectEntry_test() throws Exception
+    {
+        insertData();
+
+		FromClause from = createMock(FromClause.class);
+		Query query = createMock(Query.class);
+        QueryStatisticsName s1name = createMock("s1", QueryStatisticsName.class);
+        QueryStatisticsName s2name = createMock("s2", QueryStatisticsName.class);
+        SelectClause select = createMock(SelectClause.class);
+        SelectEntry selectEntry = createMock(SelectEntry.class);
+
+		expect(query.getFromClause()).andReturn(from);
+        expect(query.getSelectClause()).andReturn(select).atLeastOnce();
+        expect(query.getStatisticsNames()).andReturn(new QueryStatisticsName[]{s1name, s2name});
+        expect(s1name.getName()).andReturn("s1").atLeastOnce();
+        expect(s1name.getAggregationFunction()).andReturn(AggregationFunction.LAST).atLeastOnce();
+        expect(s2name.getName()).andReturn("s2").atLeastOnce();
+        expect(s2name.getAggregationFunction()).andReturn(AggregationFunction.LAST).atLeastOnce();
+        expect(query.getStartTime()).andReturn("5L");
+        expect(query.getEndTime()).andReturn("10L");
+        expect(query.getStep()).andReturn(5l);
+
+        expect(select.getSelectMode()).andReturn(SelectMode.SELECT_KEYS_AND_DATA);
+        expect(select.hasSelectEntries()).andReturn(true);
+        expect(select.getSelectEntries()).andReturn(new SelectEntry[]{selectEntry});
+        expect(selectEntry.getExpression()).andReturn("$sum{s1+s2}").atLeastOnce();
+        expect(selectEntry.getName()).andReturn("e1").atLeastOnce();
+
+		expect(from.getKeyExpression()).andReturn("/@r .*/@r .*/");
+
+        replay(query, from, select, s1name, s2name, selectEntry);
+
+        QueryResult result = db.executeQuery(query);
+        assertNotNull(result);
+
+        Collection<KeyValues> keys = result.getKeyValues();
+        assertEquals(1, result.getValuesCount());
+        assertArrayEquals(new long[]{10}, result.getTimestamps());
+        assertEquals(10, result.getStep());
+        assertNotNull(keys);
+        assertEquals(2, keys.size());
+
+        KeyValues k11, k12; k11 = k12 = null;
+        for (KeyValues key: keys)
+            if (key.getKey().equals("/1/1/"))
+                k11 = key;
+            else
+                k12 = key;
+
+        assertNotNull(k11);
+        assertNotNull(k12);
+
+        checkStatisticsValues(k11, new String[]{"e1"}, new double[]{24.});
+        checkStatisticsValues(k12, new String[]{"e1"}, new double[]{42.});
+
+        verify(query, from, select, s1name, s2name, selectEntry);
+
+    }
+
+    private void insertData() throws InterruptedException
+    {
+		createStatisticsDef(db, "s1", "t1");
+		createStatisticsDef(db, "s2", "t2");
+
+		createDatabaseTemplate(db, "t1");
+		createDatabaseTemplate(db, "t2");
+
+		StatisticsRecord record = createRecord("/1/1/", 5, 1., 10.);
+		ds.pushData(record);
+		record = createRecord("/1/2/", 5, 5., 15.);
+		ds.pushData(record);
+
+		record = createRecord("/1/1/", 10, 2., 11.);
+		ds.pushData(record);
+		record = createRecord("/1/2/", 10, 6., 16.);
+		ds.pushData(record);
+
+		TimeUnit.SECONDS.sleep(1);
 
     }
 

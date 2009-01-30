@@ -349,6 +349,14 @@ public class BaseNode implements Node, NodeListener, Logger
         fireChildrenAdded(node);
     }
 
+    public void addAndSaveChildren(Node node)
+    {
+        node.setParent(this);
+        node.save();
+        addChildren(node);
+        node.init();
+    }
+
     public void removeChildren(Node node)
     {
         if (logger.isDebugEnabled())

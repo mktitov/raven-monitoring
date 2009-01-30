@@ -65,4 +65,11 @@ public class QueryResultImpl implements QueryResult
     {
         return timestamps==null? 0 : timestamps.length;
     }
+
+    public void compressTime()
+    {
+        long lastTimestamp = timestamps[timestamps.length-1];
+        step = lastTimestamp-timestamps[0]+step;
+        timestamps = new long[]{lastTimestamp};
+    }
 }

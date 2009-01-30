@@ -270,6 +270,7 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
         }
 
         if (hasAggregations)
+        {
             for (int i=0; i<units.length; ++i)
             {
                 if (units[i]==null)
@@ -280,6 +281,7 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
                             selectEntrys[i].getName(), expression);
                 }
             }
+        }
         else
             for (int i=0; i<units.length; ++i)
             {
@@ -308,6 +310,9 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
                 unit.reset();
             }
         }
+
+        if (hasAggregations)
+            queryResult.compressTime();
     }
 
 	private Collection<KeyValues> findKeys(File path, FromClause fromClause) throws Exception

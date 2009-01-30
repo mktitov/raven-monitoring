@@ -135,6 +135,11 @@ public interface Node extends Cloneable, Comparable<Node>
      */
     public void addChildren(Node node);
     /**
+     * Adds children node to this node save it and makes initialization.
+     * @param node the children node
+     */
+    public void addAndSaveChildren(Node node);
+    /**
      * Removes children node from this node.
      * @param node the node which must be removed from this node.
      */
