@@ -180,8 +180,12 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 			{
 				fetchStatisticsValues(query, queryResult);
                 SelectClause selectClause = query.getSelectClause();
-                if (selectClause!=null && selectClause.hasSelectEntries())
-                    calculateSelectEntriesValues(query, queryResult);
+                if (selectClause!=null)
+                {
+                    SelectEntry[] selectEntries = selectClause.getSelectEntries();
+                    if (selectEntries!=null)
+                        calculateSelectEntriesValues(query, queryResult, selectEntries);
+                }
 			}
 
 			return queryResult;
@@ -256,15 +260,15 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
         }
     }
 
-    private void calculateSelectEntriesValues(Query query, QueryResultImpl queryResult)
+    private void calculateSelectEntriesValues(
+                Query query, QueryResultImpl queryResult, SelectEntry[] selectEntries)
             throws Exception
     {
-        SelectEntry[] selectEntrys = query.getSelectClause().getSelectEntries();
-        SelectEntryCalculationUnit[] units = new SelectEntryCalculationUnit[selectEntrys.length];
+        SelectEntryCalculationUnit[] units = new SelectEntryCalculationUnit[selectEntries.length];
         boolean hasAggregations = false;
-        for (int i=0; i<selectEntrys.length; ++i)
+        for (int i=0; i<selectEntries.length; ++i)
         {
-            units[i] = AggregationCalculationUnit.checkAndCreate(selectEntrys[i]);
+            units[i] = AggregationCalculationUnit.checkAndCreate(selectEntries[i]);
             if (units[i]!=null)
                 hasAggregations = true;
         }
@@ -276,9 +280,9 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
                 if (units[i]==null)
                 {
                     Expression expression = expressionCompiler.compile(
-                            selectEntrys[i].getExpression(), GroovyExpressionCompiler.LANGUAGE);
+                            selectEntries[i].getExpression(), GroovyExpressionCompiler.LANGUAGE);
                     units[i] = new ConstantAggregationCalculationUnit(
-                            selectEntrys[i].getName(), expression);
+                            selectEntries[i].getName(), expression);
                 }
             }
         }
@@ -286,9 +290,9 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
             for (int i=0; i<units.length; ++i)
             {
                 Expression expression = expressionCompiler.compile(
-                        selectEntrys[i].getExpression(), GroovyExpressionCompiler.LANGUAGE);
+                        selectEntries[i].getExpression(), GroovyExpressionCompiler.LANGUAGE);
                 units[i] = new ExpressionCalculationUnit(
-                        expression, selectEntrys[i].getName(), queryResult.getValuesCount());
+                        expression, selectEntries[i].getName(), queryResult.getValuesCount());
             }
 
         SimpleBindings bindings = new SimpleBindings();

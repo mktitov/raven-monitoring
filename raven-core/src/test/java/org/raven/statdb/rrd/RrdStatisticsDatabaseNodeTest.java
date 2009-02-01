@@ -378,7 +378,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
         expect(query.getStep()).andReturn(5l);
 
         expect(select.getSelectMode()).andReturn(SelectMode.SELECT_KEYS_AND_DATA);
-        expect(select.hasSelectEntries()).andReturn(false);
+        expect(select.getSelectEntries()).andReturn(null);
         
 		expect(from.getKeyExpression()).andReturn("/@r .*/@r .*/");
 
@@ -431,7 +431,6 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
         expect(query.getStep()).andReturn(5l);
 
         expect(select.getSelectMode()).andReturn(SelectMode.SELECT_KEYS_AND_DATA);
-        expect(select.hasSelectEntries()).andReturn(true);
         expect(select.getSelectEntries()).andReturn(new SelectEntry[]{selectEntry});
         expect(selectEntry.getExpression()).andReturn("s1+s2").atLeastOnce();
         expect(selectEntry.getName()).andReturn("e1").atLeastOnce();
@@ -488,7 +487,6 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
         expect(query.getStep()).andReturn(5l);
 
         expect(select.getSelectMode()).andReturn(SelectMode.SELECT_KEYS_AND_DATA);
-        expect(select.hasSelectEntries()).andReturn(true);
         expect(select.getSelectEntries()).andReturn(new SelectEntry[]{selectEntry});
         expect(selectEntry.getExpression()).andReturn("$sum{s1+s2}").atLeastOnce();
         expect(selectEntry.getName()).andReturn("e1").atLeastOnce();

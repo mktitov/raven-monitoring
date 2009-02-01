@@ -22,8 +22,9 @@ import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.statdb.AggregationFunction;
 import org.raven.statdb.query.QueryStatisticsName;
+import org.raven.statdb.query.SelectMode;
 import org.raven.tree.Node;
-
+import org.raven.tree.Node.Status;
 /**
  *
  * @author Mikhail Titov
@@ -52,8 +53,55 @@ public class QueryNodeTest extends RavenCoreTestCase
         statNameNode.setName("s1");
         statisticsNames.addAndSaveChildren(statNameNode);
         statNameNode.setAggregationFunction(AggregationFunction.LAST);
+        assertNull(query.getStatisticsNames());
+
+        statNameNode.start();
+        assertEquals(Status.STARTED, statNameNode.getStatus());
 
         assertArrayEquals(new QueryStatisticsName[]{statNameNode}, query.getStatisticsNames());
-        
+    }
+
+    @Test
+    public void fromClause_test() throws Exception
+    {
+        TestStatisticsDatabase db = new TestStatisticsDatabase();
+        db.setName("db");
+        tree.getRootNode().addAndSaveChildren(db);
+
+        Node fromNode = query.getChildren(FromClauseNode.NAME);
+        assertNotNull(fromNode);
+        assertTrue(fromNode instanceof FromClauseNode);
+        FromClauseNode from = (FromClauseNode) fromNode;
+        assertEquals(Status.INITIALIZED, from.getStatus());
+        from.setDatabase(db);
+        from.setKeyExpression("/.*/");
+        from.start();
+
+        assertEquals(Status.STARTED, from.getStatus());
+    }
+
+    @Test
+    public void selectClause_test() throws Exception
+    {
+        SelectClauseNode select = (SelectClauseNode) query.getSelectClause();
+        assertNotNull(select);
+        assertEquals(Status.STARTED, select.getStatus());
+        assertEquals(SelectMode.SELECT_KEYS_AND_DATA, select.getSelectMode());
+
+        assertNull(select.getSelectEntries());
+
+        SelectEntryNode entry = new SelectEntryNode();
+        entry.setName("e1");
+        select.addAndSaveChildren(entry);
+        entry.setExpression("s1");
+
+        assertNull(select.getSelectEntries());
+
+        entry.start();
+        assertEquals(Status.STARTED, entry.getStatus());
+
+        assertNotNull(select.getSelectEntries());
+        assertEquals(1, select.getSelectEntries().length);
+        assertSame(entry, select.getSelectEntries()[0]);
     }
 }

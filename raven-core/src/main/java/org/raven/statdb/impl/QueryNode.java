@@ -47,22 +47,39 @@ public class QueryNode  extends BaseNode implements Query
     @Parameter() 
     private Integer maximumKeyCount;
 
-    private StatisticsNamesNode statisticsNames;
+    private StatisticsNamesNode statisticsNamesNode;
+    private FromClauseNode fromClauseNode;
+    private SelectClauseNode selectClauseNode;
 
     @Override
     protected void doInit() throws Exception
     {
         super.doInit();
 
-        statisticsNames = (StatisticsNamesNode) getChildren(StatisticsNamesNode.NAME);
-        if (statisticsNames==null)
+        statisticsNamesNode = (StatisticsNamesNode) getChildren(StatisticsNamesNode.NAME);
+        if (statisticsNamesNode==null)
         {
-            statisticsNames = new StatisticsNamesNode();
-            statisticsNames.setParent(this);
-            statisticsNames.save();
-            addChildren(statisticsNames);
-            statisticsNames.init();
-            statisticsNames.start();
+            statisticsNamesNode = new StatisticsNamesNode();
+            statisticsNamesNode.setParent(this);
+            statisticsNamesNode.save();
+            addChildren(statisticsNamesNode);
+            statisticsNamesNode.init();
+            statisticsNamesNode.start();
+        }
+
+        fromClauseNode = (FromClauseNode) getChildren(FromClauseNode.NAME);
+        if (fromClauseNode==null)
+        {
+            fromClauseNode = new FromClauseNode();
+            this.addAndSaveChildren(fromClauseNode);
+        }
+
+        selectClauseNode = (SelectClauseNode) getChildren(SelectClauseNode.NAME);
+        if (selectClauseNode==null)
+        {
+            selectClauseNode = new SelectClauseNode();
+            addAndSaveChildren(selectClauseNode);
+            selectClauseNode.start();
         }
     }
 
@@ -108,31 +125,42 @@ public class QueryNode  extends BaseNode implements Query
 
     public StatisticsNamesNode getStatisticsNamesNode()
     {
-        return statisticsNames;
+        return statisticsNamesNode;
     }
 
     public QueryStatisticsName[] getStatisticsNames()
     {
-        Collection<Node> statNames = statisticsNames.getSortedChildrens();
+        Collection<Node> statNames = statisticsNamesNode.getSortedChildrens();
         if (statNames==null || statNames.size()==0)
             return null;
 
         QueryStatisticsName[] result = new QueryStatisticsName[statNames.size()];
         int i=0;
         for (Node statName: statNames)
-            result[i++] = (QueryStatisticsName) statName;
+            if (statName.getStatus().equals(Status.STARTED))
+                result[i++] = (QueryStatisticsName) statName;
+
+        if (i==0)
+            return null;
+
+        if (i<result.length)
+        {
+            QueryStatisticsName[] newResult = new QueryStatisticsName[i];
+            System.arraycopy(result, 0, newResult, 0, i);
+            result = newResult;
+        }
 
         return result;
     }
 
     public FromClause getFromClause()
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return fromClauseNode;
     }
 
     public SelectClause getSelectClause()
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return selectClauseNode;
     }
 
 }
