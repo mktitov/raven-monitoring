@@ -17,13 +17,11 @@
 
 package org.raven.sched.impl;
 
-import org.raven.ds.impl.SystemDataSourceValueHandlerFactory;
 import org.raven.tree.AttributeReferenceValues;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodePathResolver;
 import org.raven.tree.Tree;
-import org.raven.tree.impl.DataSourcesNode;
 import org.raven.tree.impl.SystemNode;
 import org.weda.constraints.ReferenceValue;
 import org.weda.constraints.ReferenceValueCollection;

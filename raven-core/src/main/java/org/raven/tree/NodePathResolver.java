@@ -49,4 +49,11 @@ public interface NodePathResolver
      * Returns the absolute path to the node attribue passed in the parameter.
      */
     public String getAbsolutePath(NodeAttribute attribute);
+    /**
+     * Create path for node names passed in parameter
+     * @param nodeNames the array of the node names
+     * @param absolute if true then method creates the absolute path else relative path
+     *      will be created
+     */
+    public String createPath(boolean absolute, String... nodeNames);
 }

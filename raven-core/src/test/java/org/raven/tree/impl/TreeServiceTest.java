@@ -28,6 +28,7 @@ import org.raven.RavenCoreModule;
 import org.raven.ServiceTestCase;
 import org.raven.conf.Configurator;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
+import org.raven.ds.impl.RecordSchemasNode;
 import org.raven.log.impl.NodeLoggerNode;
 import org.raven.sched.impl.SchedulersNode;
 import org.raven.template.impl.TemplatesNode;
@@ -911,8 +912,16 @@ public class TreeServiceTest extends ServiceTestCase
                 (ConnectionPoolsNode) systemNode.getChildren(ConnectionPoolsNode.NAME);
         assertNotNull(connectionPoolsNode);
         
+        SchemasNode schemasNode = (SchemasNode) systemNode.getChildren(SchemasNode.NAME);
+        assertNotNull(schemasNode);
+
+        RecordSchemasNode recordSchemasNode =
+                (RecordSchemasNode) schemasNode.getChildren(RecordSchemasNode.NAME);
+        assertNotNull(recordSchemasNode);
+        
         TemplatesNode templatesNode = 
                 (TemplatesNode) tree.getRootNode().getChildren(TemplatesNode.NAME);
         assertNotNull(templatesNode);
+
     }
 }

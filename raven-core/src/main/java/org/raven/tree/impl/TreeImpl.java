@@ -81,7 +81,6 @@ public class TreeImpl implements Tree
     private final NodePathResolver pathResolver;
     private final AttributeValueHandlerRegistry valueHandlerRegistry;
 
-//    private final Map<Class, AttributeReferenceValues> referenceValuesProviders;
     private final Map<Class, List<Class>> nodeTypes = new HashMap<Class, List<Class>>();
     private final Set<Class> anyChildTypeNodes = new HashSet<Class>();
     private final Set<Class> importParentChildTypeNodes = new HashSet<Class>();
@@ -93,6 +92,7 @@ public class TreeImpl implements Tree
     private SchedulersNode schedulersNode;
     private NodeLoggerNode nodeLoggerNode;
 	private QueuesNode queuesNode;
+    private SchemasNode schemasNode;
 
     public TreeImpl(
             AttributeReferenceValues attributeReferenceValues
@@ -438,6 +438,15 @@ public class TreeImpl implements Tree
 			systemNode.addChildren(queuesNode);
 			treeStore.saveNode(queuesNode);
 		}
+
+        schemasNode = (SchemasNode) systemNode.getChildren(SchemasNode.NAME);
+        if (schemasNode==null)
+        {
+            schemasNode = new SchemasNode();
+            schemasNode.setParent(systemNode);
+            treeStore.saveNode(schemasNode);
+            systemNode.addChildren(schemasNode);
+        }
     }
 
     private void createTempatesSubtree()

@@ -178,4 +178,24 @@ public class NodePathResolverImplTest extends Assert
         
         verify(tree, node);
     }
+
+    @Test
+    public void createAbsolutePathTest()
+    {
+        NodePathResolverImpl pathResolver = new NodePathResolverImpl();
+
+        char sep = Node.NODE_SEPARATOR;
+        String path = pathResolver.createPath(true, "node1", "node2");
+        assertEquals(sep+"\"node1\""+sep+"\"node2\""+sep, path);
+    }
+
+    @Test
+    public void createRelativePathTest()
+    {
+        NodePathResolverImpl pathResolver = new NodePathResolverImpl();
+
+        char sep = Node.NODE_SEPARATOR;
+        String path = pathResolver.createPath(false, "node1", "node2");
+        assertEquals("\"node1\""+sep+"\"node2\""+sep, path);
+    }
 }

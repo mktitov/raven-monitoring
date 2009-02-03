@@ -27,6 +27,7 @@ import org.raven.conf.Configurator;
 import org.raven.conf.impl.ConfiguratorImpl;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.DataPipeConvertToTypesReferenceValues;
+import org.raven.ds.impl.RecordSchemasNode;
 import org.raven.ds.impl.SystemDataSourceReferenceValues;
 import org.raven.ds.impl.SystemDataSourceValueHandlerFactory;
 import org.raven.expr.ExpressionCache;
@@ -73,6 +74,7 @@ import org.raven.tree.Tree;
 import org.raven.tree.impl.AttributeReferenceHandlerFactory;
 import org.raven.tree.impl.AttributeReferenceValueHandlerFactory;
 import org.raven.tree.impl.AttributeValueHandlerRegistryImpl;
+import org.raven.tree.impl.ChildrenNodesAsReferenceValues;
 import org.raven.tree.impl.NodePathResolverImpl;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.tree.impl.RefreshAttributeValueHandlerFactory;
@@ -230,6 +232,9 @@ public class RavenCoreModule
 			LocaleReferenceValues.class.getSimpleName()
 			, new LocaleReferenceValues()
 			, "after:"+CharsetReferenceValues.class.getSimpleName());
+        conf.add(
+            RecordSchemasNode.class.getSimpleName()
+            , new ChildrenNodesAsReferenceValues(attributeType, nodePath))
     }
 
 	public static void contributeExpressionCompiler(

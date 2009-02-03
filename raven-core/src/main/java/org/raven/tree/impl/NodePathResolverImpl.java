@@ -125,5 +125,14 @@ public class NodePathResolverImpl implements NodePathResolver
     {
         return getAbsolutePath(attribute.getOwner())+Node.ATTRIBUTE_SEPARATOR+attribute.getName();
     }
-    
+
+    public String createPath(boolean absolute, String... nodeNames)
+    {
+        StringBuilder buf = absolute?
+            new StringBuilder(""+Node.NODE_SEPARATOR) : new StringBuilder();
+        for (String nodeName: nodeNames)
+            buf.append(QUOTE+nodeName+QUOTE+Node.NODE_SEPARATOR);
+        
+        return buf.toString();
+    }
 }
