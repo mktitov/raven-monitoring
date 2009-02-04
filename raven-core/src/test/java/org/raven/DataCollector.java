@@ -15,25 +15,29 @@
  *  under the License.
  */
 
-package org.raven.ds;
+package org.raven;
+
+import java.util.ArrayList;
+import java.util.List;
+import org.raven.ds.DataSource;
+import org.raven.ds.impl.AbstractDataConsumer;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface RecordSchemaField
+public class DataCollector extends AbstractDataConsumer
 {
-    /**
-     * Returns the field name
-     */
-    public String getName();
-    /**
-     * Returns the field type
-     */
-    public RecordSchemaFieldType getFieldType();
-    /**
-     * Returns the field extension by its type or null if field does not have the extension of
-     * selected type.
-     */
-    public <E> E getFieldExtension (Class<E> extensionType);
+    private List<Object> dataList = new ArrayList<Object>();
+
+    @Override
+    protected void doSetData(DataSource dataSource, Object data)
+    {
+        dataList.add(data);
+    }
+
+    public List<Object> getDataList()
+    {
+        return dataList;
+    }
 }

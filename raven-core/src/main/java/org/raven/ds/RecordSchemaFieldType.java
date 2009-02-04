@@ -23,5 +23,19 @@ package org.raven.ds;
  */
 public enum RecordSchemaFieldType
 {
-    LONG, INTEGER, SHORT, BYTE, DOUBLE, FLOAT
+    LONG(Long.class), INTEGER(Integer.class), SHORT(Short.class), BYTE(Byte.class),
+    DOUBLE(Double.class), FLOAT(Float.class),
+    STRING(String.class);
+
+    private final Class type;
+
+    private RecordSchemaFieldType(Class type)
+    {
+        this.type = type;
+    }
+
+    public Class getType()
+    {
+        return type;
+    }
 }

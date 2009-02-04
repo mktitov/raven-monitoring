@@ -27,6 +27,7 @@ import org.raven.conf.Configurator;
 import org.raven.conf.impl.ConfiguratorImpl;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.DataPipeConvertToTypesReferenceValues;
+import org.raven.ds.impl.RecordSchemaValueTypeHandlerFactory;
 import org.raven.ds.impl.RecordSchemasNode;
 import org.raven.ds.impl.SystemDataSourceReferenceValues;
 import org.raven.ds.impl.SystemDataSourceValueHandlerFactory;
@@ -78,6 +79,8 @@ import org.raven.tree.impl.ChildrenNodesAsReferenceValues;
 import org.raven.tree.impl.NodePathResolverImpl;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.tree.impl.RefreshAttributeValueHandlerFactory;
+import org.raven.tree.impl.SchemasNode;
+import org.raven.tree.impl.SystemNode;
 import org.raven.tree.impl.TreeImpl;
 import org.raven.tree.store.impl.H2TreeStore;
 import org.weda.internal.services.ResourceProvider;
@@ -198,10 +201,14 @@ public class RavenCoreModule
         conf.add(
             SystemSchedulerValueHandlerFactory.TYPE
             , new SystemSchedulerValueHandlerFactory(pathResolver));
+        conf.add(
+            RecordSchemaValueTypeHandlerFactory.TYPE
+            , new RecordSchemaValueTypeHandlerFactory(pathResolver));
     }
     
     public static void contributeAttributeReferenceValues(
-            OrderedConfiguration<AttributeReferenceValues> conf)
+            OrderedConfiguration<AttributeReferenceValues> conf
+            , NodePathResolver pathResolver)
     {
         conf.add(EnumReferenceValues.class.getSimpleName(), new EnumReferenceValues(), "before:*");
         conf.add(
@@ -234,7 +241,11 @@ public class RavenCoreModule
 			, "after:"+CharsetReferenceValues.class.getSimpleName());
         conf.add(
             RecordSchemasNode.class.getSimpleName()
-            , new ChildrenNodesAsReferenceValues(attributeType, nodePath))
+            , new ChildrenNodesAsReferenceValues(
+                RecordSchemaValueTypeHandlerFactory.TYPE
+                , pathResolver.createPath(
+                    true, SystemNode.NAME, SchemasNode.NAME, RecordSchemasNode.NAME))
+            , "after:"+LocaleReferenceValues.class.getSimpleName());
     }
 
 	public static void contributeExpressionCompiler(

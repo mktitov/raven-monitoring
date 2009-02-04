@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import org.raven.annotations.NodeClass;
+import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.tree.Node;
@@ -50,5 +51,19 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema
         fields.toArray(result);
 
         return result;
+    }
+
+    public Record createRecord()
+    {
+        return new RecordImpl(this);
+    }
+
+    public RecordSchemaField getField(String fieldName)
+    {
+        Node field = getChildren(fieldName);
+        if (field==null || Status.STARTED!=field.getStatus())
+            return null;
+        else
+            return (RecordSchemaField)field;
     }
 }

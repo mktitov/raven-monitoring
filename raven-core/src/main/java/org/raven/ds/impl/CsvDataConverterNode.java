@@ -20,6 +20,8 @@ package org.raven.ds.impl;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
 import org.apache.commons.io.IOUtils;
@@ -28,8 +30,9 @@ import org.apache.commons.lang.text.StrTokenizer;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataSource;
+import org.raven.ds.Record;
+import org.raven.ds.RecordSchemaField;
 import org.raven.log.LogLevel;
-import org.raven.table.TableImpl;
 import org.raven.tree.NodeAttribute;
 import org.weda.annotations.constraints.NotNull;
 
@@ -45,6 +48,10 @@ public class CsvDataConverterNode extends AbstractDataPipe
     public final static String LINE_BINDING = "line";
     public final static String LINENUMBER_BINDING = "linenumber";
 
+    @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
+    @NotNull
+    private RecordSchemaNode recordSchema;
+
     @Parameter()
     private Charset dataEncoding;
     
@@ -56,9 +63,6 @@ public class CsvDataConverterNode extends AbstractDataPipe
 
     @Parameter(defaultValue="true")
     private Boolean lineFilter;
-
-    @Parameter()
-    private Integer columnNamesLineNumber;
 
     private Bindings localBindings;
 
@@ -77,10 +81,19 @@ public class CsvDataConverterNode extends AbstractDataPipe
             return;
         }
 
+        Map<String, Integer> fieldsColumns = getFieldsColumns();
+        if (fieldsColumns==null)
+        {
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug(String.format(
+                        "CsvRecordFieldExtension is not defind for fields in the record schema (%s)"
+                        , recordSchema.getName()));
+            return;
+        }
+
         InputStream dataStream = converter.convert(InputStream.class, data, null);
         Charset _charset = dataEncoding;
-        Integer _columnNamesLineNumber = columnNamesLineNumber;
-        TableImpl table  = null;
+        RecordSchemaNode _recordSchema = recordSchema;
         try
         {
             try
@@ -112,28 +125,21 @@ public class CsvDataConverterNode extends AbstractDataPipe
                     }
                     else
                     {
-                        tokenizer.reset(line);
-                        String[] tokens = tokenizer.getTokenArray();
-                        if (table==null)
+                        try
                         {
-                            String[] colNames = new String[tokens.length];
-                            for (int col=0; col<colNames.length;++col)
-                                colNames[col] = new Integer(col+1).toString();
-                            table = new TableImpl(colNames);
-                        }
-                        if (_columnNamesLineNumber!=null && _columnNamesLineNumber==linenum)
+                            tokenizer.reset(line);
+                            String[] tokens = tokenizer.getTokenArray();
+                            Record record = recordSchema.createRecord();
+                            for (Map.Entry<String, Integer> entry: fieldsColumns.entrySet())
+                                record.setValue(entry.getKey(), tokens[entry.getValue()-1]);
+                            sendDataToConsumers(record);
+                        }catch(Exception e)
                         {
-                            if (isLogLevelEnabled(LogLevel.DEBUG))
-                                debug(String.format("Found line with column headers: (%s)", line));
-                            table.replaceColumnNames(tokens);
+                            error("Error creating or sending record to consumers. ", e);
                         }
-                        else
-                            table.addRow(tokens);
                     }
                     linenum++;
                 }
-
-                sendDataToConsumers(table);
             }
             catch(Exception e)
             {
@@ -153,6 +159,16 @@ public class CsvDataConverterNode extends AbstractDataPipe
         if (localBindings!=null)
             bindings.putAll(localBindings);
         super.formExpressionBindings(bindings);
+    }
+
+    public RecordSchemaNode getRecordSchema()
+    {
+        return recordSchema;
+    }
+
+    public void setRecordSchema(RecordSchemaNode recordSchema)
+    {
+        this.recordSchema = recordSchema;
     }
 
     public Charset getDataEncoding()
@@ -195,13 +211,20 @@ public class CsvDataConverterNode extends AbstractDataPipe
         this.lineFilter = lineFilter;
     }
 
-    public Integer getColumnNamesLineNumber()
+    private Map<String, Integer> getFieldsColumns()
     {
-        return columnNamesLineNumber;
-    }
+        RecordSchemaField[] fields = recordSchema.getFields();
+        if (fields==null)
+            return null;
 
-    public void setColumnNamesLineNumber(Integer columnNamesLineNumber)
-    {
-        this.columnNamesLineNumber = columnNamesLineNumber;
+        Map<String, Integer> result = new HashMap<String, Integer>();
+        for (RecordSchemaField field: fields)
+        {
+            CsvRecordFieldExtension extension =
+                    field.getFieldExtension(CsvRecordFieldExtension.class);
+            if (extension!=null)
+                result.put(field.getName(), extension.getColumnNumber());
+        }
+        return result;
     }
 }

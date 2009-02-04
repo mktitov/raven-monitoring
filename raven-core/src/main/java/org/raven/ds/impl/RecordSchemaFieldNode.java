@@ -17,10 +17,12 @@
 
 package org.raven.ds.impl;
 
+import java.util.Collection;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
+import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.constraints.NotNull;
 
@@ -42,5 +44,19 @@ public class RecordSchemaFieldNode extends BaseNode implements RecordSchemaField
     public void setFieldType(RecordSchemaFieldType fieldType)
     {
         this.fieldType = fieldType;
+    }
+
+    public <E> E getFieldExtension(Class<E> extensionType)
+    {
+        Collection<Node> childs = getChildrens();
+        if (childs!=null && childs.size()>0)
+            for (Node child: childs)
+                if (   Status.STARTED==child.getStatus()
+                    && extensionType.isAssignableFrom(child.getClass()))
+                {
+                    return (E)child;
+                }
+
+        return null;
     }
 }

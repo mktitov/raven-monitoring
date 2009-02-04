@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009 Mikhail Titov.
+ *  Copyright 2009 Mikhail Titov .
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,25 +15,30 @@
  *  under the License.
  */
 
-package org.raven.ds;
+package org.raven.ds.impl;
+
+import org.raven.annotations.NodeClass;
+import org.raven.annotations.Parameter;
+import org.raven.tree.impl.BaseNode;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface RecordSchemaField
+@NodeClass(parentNode=RecordSchemaFieldNode.class)
+public class CsvRecordFieldExtension extends BaseNode
 {
-    /**
-     * Returns the field name
-     */
-    public String getName();
-    /**
-     * Returns the field type
-     */
-    public RecordSchemaFieldType getFieldType();
-    /**
-     * Returns the field extension by its type or null if field does not have the extension of
-     * selected type.
-     */
-    public <E> E getFieldExtension (Class<E> extensionType);
+    @Parameter @NotNull
+    private Integer columnNumber;
+
+    public Integer getColumnNumber()
+    {
+        return columnNumber;
+    }
+
+    public void setColumnNumber(Integer columnNumber)
+    {
+        this.columnNumber = columnNumber;
+    }
 }

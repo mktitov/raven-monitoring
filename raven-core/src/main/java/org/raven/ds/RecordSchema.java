@@ -31,4 +31,12 @@ public interface RecordSchema
      * Returns the fields of the schema.
      */
     public RecordSchemaField[] getFields();
+    /**
+     * Returns the record field description  by its name or null if schema does not contain field
+     */
+    public RecordSchemaField getField(String fieldName);
+    /**
+     * Creates the record based on this schema
+     */
+    public Record createRecord();
 }

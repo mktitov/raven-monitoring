@@ -21,19 +21,11 @@ package org.raven.ds;
  *
  * @author Mikhail Titov
  */
-public interface RecordSchemaField
+public class InvalidRecordFieldException extends RecordException
 {
-    /**
-     * Returns the field name
-     */
-    public String getName();
-    /**
-     * Returns the field type
-     */
-    public RecordSchemaFieldType getFieldType();
-    /**
-     * Returns the field extension by its type or null if field does not have the extension of
-     * selected type.
-     */
-    public <E> E getFieldExtension (Class<E> extensionType);
+    public InvalidRecordFieldException(String fieldName, String schemaName)
+    {
+        super(String.format(
+                "Field (%s) not defined in the record schema (%s)", fieldName, schemaName));
+    }
 }

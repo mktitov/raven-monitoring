@@ -20,7 +20,7 @@ package org.raven.ds;
 /**
  * @author Mikhail Titov
  */
-class RecordException extends Exception
+public class RecordException extends Exception
 {
     public RecordException(String message, Throwable cause)
     {

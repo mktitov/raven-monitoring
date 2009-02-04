@@ -15,25 +15,26 @@
  *  under the License.
  */
 
-package org.raven.ds;
+package org.raven.ds.impl;
+
+import org.raven.tree.InvalidPathException;
+import org.raven.tree.NodeAttribute;
+import org.raven.tree.impl.NodeReferenceValueHandler;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface RecordSchemaField
+public class RecordSchemaValueTypeHandler extends NodeReferenceValueHandler
 {
-    /**
-     * Returns the field name
-     */
-    public String getName();
-    /**
-     * Returns the field type
-     */
-    public RecordSchemaFieldType getFieldType();
-    /**
-     * Returns the field extension by its type or null if field does not have the extension of
-     * selected type.
-     */
-    public <E> E getFieldExtension (Class<E> extensionType);
+    public RecordSchemaValueTypeHandler(NodeAttribute attribute) throws InvalidPathException
+    {
+        super(attribute, true, false);
+    }
+
+    @Override
+    public boolean isReferenceValuesSupported()
+    {
+        return true;
+    }
 }

@@ -22,12 +22,12 @@ import java.nio.charset.Charset;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
+import org.raven.DataCollector;
 import org.raven.RavenCoreTestCase;
-import org.raven.RavenUtils;
-import org.raven.ds.impl.objects.TestDataConsumer;
+import org.raven.ds.Record;
+import org.raven.ds.RecordSchemaFieldType;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.rrd.objects.PushDataSource;
-import org.raven.table.Table;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 
@@ -37,13 +37,48 @@ import org.raven.tree.NodeAttribute;
  */
 public class CsvDataConverterNodeTest extends RavenCoreTestCase
 {
+    private RecordSchemaNode schema;
     private PushDataSource ds;
     private CsvDataConverterNode converter;
-    private TestDataConsumer consumer;
+    private DataCollector consumer;
     
     @Before
     public void prepare()
     {
+        schema = new RecordSchemaNode();
+        schema.setName("schema");
+        tree.getRootNode().addAndSaveChildren(schema);
+        schema.start();
+        assertEquals(Status.STARTED, schema.getStatus());
+
+        RecordSchemaFieldNode field1 = new RecordSchemaFieldNode();
+        field1.setName("field1");
+        schema.addAndSaveChildren(field1);
+        field1.setFieldType(RecordSchemaFieldType.INTEGER);
+        field1.start();
+        assertEquals(Status.STARTED, field1.getStatus());
+
+        CsvRecordFieldExtension csvExtension = new CsvRecordFieldExtension();
+        csvExtension.setName("csv");
+        field1.addAndSaveChildren(csvExtension);
+        csvExtension.setColumnNumber(1);
+        csvExtension.start();
+        assertEquals(Status.STARTED, csvExtension.getStatus());
+
+        field1 = new RecordSchemaFieldNode();
+        field1.setName("field2");
+        schema.addAndSaveChildren(field1);
+        field1.setFieldType(RecordSchemaFieldType.STRING);
+        field1.start();
+        assertEquals(Status.STARTED, field1.getStatus());
+
+        csvExtension = new CsvRecordFieldExtension();
+        csvExtension.setName("csv");
+        field1.addAndSaveChildren(csvExtension);
+        csvExtension.setColumnNumber(3);
+        csvExtension.start();
+        assertEquals(Status.STARTED, csvExtension.getStatus());
+
         ds = new PushDataSource();
         ds.setName("ds");
         tree.getRootNode().addAndSaveChildren(ds);
@@ -54,14 +89,14 @@ public class CsvDataConverterNodeTest extends RavenCoreTestCase
         converter.setName("converter");
         tree.getRootNode().addAndSaveChildren(converter);
         converter.setDataSource(ds);
+        converter.setRecordSchema(schema);
         converter.start();
         assertEquals(Status.STARTED, converter.getStatus());
 
-        consumer = new TestDataConsumer();
+        consumer = new DataCollector();
         consumer.setName("consumer");
         tree.getRootNode().addAndSaveChildren(consumer);
         consumer.setDataSource(converter);
-        consumer.setResetDataPolicy(AbstractDataConsumer.ResetDataPolicy.RESET_PREVIOUS_DATA);
         consumer.start();
         assertEquals(Status.STARTED, consumer.getStatus());
     }
@@ -71,38 +106,18 @@ public class CsvDataConverterNodeTest extends RavenCoreTestCase
     public void defaultConfigurationTest() throws Exception
     {
         ByteArrayInputStream stream = new ByteArrayInputStream(
-                "1,2,\"test,test\",3\n11,,,".getBytes());
+                "1,2,\"3\"\n11,,".getBytes());
         ds.pushData(stream);
-        Object data = consumer.getLastData();
-        assertNotNull(data);
-        assertTrue(data instanceof Table);
 
-        Table table = (Table) data;
-        assertArrayEquals(new String[]{"1", "2", "3", "4"}, table.getColumnNames());
-        List<Object[]> rows = RavenUtils.tableAsList(table);
-        assertNotNull(rows);
-        assertEquals(2, rows.size());
-        assertArrayEquals(new String[]{"1", "2", "test,test", "3"}, rows.get(0));
-        assertArrayEquals(new String[]{"11", null, null, null}, rows.get(1));
-    }
+        List dataList = consumer.getDataList();
+        assertEquals(2, dataList.size());
 
-    @Test
-    public void columnHeadersTest() throws Exception
-    {
-        converter.setColumnNamesLineNumber(1);
-        ByteArrayInputStream stream = new ByteArrayInputStream(
-                "col1,col2,col3,col4\n1,2,3,4".getBytes());
-        ds.pushData(stream);
-        Object data = consumer.getLastData();
-        assertNotNull(data);
-        assertTrue(data instanceof Table);
-
-        Table table = (Table) data;
-        assertArrayEquals(new String[]{"col1", "col2", "col3", "col4"}, table.getColumnNames());
-        List<Object[]> rows = RavenUtils.tableAsList(table);
-        assertNotNull(rows);
-        assertEquals(1, rows.size());
-        assertArrayEquals(new String[]{"1", "2", "3", "4"}, rows.get(0));
+        Record record = (Record) dataList.get(0);
+        assertEquals(1, record.getValue("field1"));
+        assertEquals("3", record.getValue("field2"));
+        record = (Record) dataList.get(1);
+        assertEquals(11, record.getValue("field1"));
+        assertNull(record.getValue("field2"));
     }
 
     @Test
@@ -116,15 +131,13 @@ public class CsvDataConverterNodeTest extends RavenCoreTestCase
         ByteArrayInputStream stream = new ByteArrayInputStream(
                 "#comment\na,b,c,d\n1,2,3,4".getBytes());
         ds.pushData(stream);
-        Object data = consumer.getLastData();
-        assertNotNull(data);
-        assertTrue(data instanceof Table);
+        
+        List dataList = consumer.getDataList();
+        assertEquals(1, dataList.size());
 
-        Table table = (Table) data;
-        List<Object[]> rows = RavenUtils.tableAsList(table);
-        assertNotNull(rows);
-        assertEquals(1, rows.size());
-        assertArrayEquals(new String[]{"1", "2", "3", "4"}, rows.get(0));
+        Record record = (Record) dataList.get(0);
+        assertEquals(1, record.getValue("field1"));
+        assertEquals("3", record.getValue("field2"));
     }
 
     @Test
@@ -135,14 +148,12 @@ public class CsvDataConverterNodeTest extends RavenCoreTestCase
         ByteArrayInputStream stream = new ByteArrayInputStream(
                 "1,2,\"test,тест\",3".getBytes(utfCharset));
         ds.pushData(stream);
-        Object data = consumer.getLastData();
-        assertNotNull(data);
-        assertTrue(data instanceof Table);
+        
+        List dataList = consumer.getDataList();
+        assertEquals(1, dataList.size());
 
-        Table table = (Table) data;
-        List<Object[]> rows = RavenUtils.tableAsList(table);
-        assertNotNull(rows);
-        assertEquals(1, rows.size());
-        assertArrayEquals(new String[]{"1", "2", "test,тест", "3"}, rows.get(0));
+        Record record = (Record) dataList.get(0);
+        assertEquals(1, record.getValue("field1"));
+        assertEquals("test,тест", record.getValue("field2"));
     }
 }
