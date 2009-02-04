@@ -1,0 +1,168 @@
+/*
+ *  Copyright 2009 Mikhail Titov.
+ * 
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ * 
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *  under the License.
+ */
+
+package org.raven.ds.impl;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.raven.annotations.NodeClass;
+import org.raven.annotations.Parameter;
+import org.raven.dbcp.ConnectionPool;
+import org.raven.ds.DataSource;
+import org.raven.ds.Record;
+import org.raven.ds.RecordException;
+import org.raven.ds.RecordSchemaField;
+import org.weda.annotations.constraints.NotNull;
+
+/**
+ *
+ * @author Mikhail Titov
+ */
+@NodeClass
+public class DatabaseRecordWriterNode extends AbstractDataConsumer
+{
+    @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
+    @NotNull
+    private RecordSchemaNode recordSchema;
+
+    @Parameter(valueHandlerType=ConnectionPoolValueHandlerFactory.TYPE)
+    @NotNull
+    private ConnectionPool connectionPool;
+
+    @Parameter @NotNull
+    private String tableName;
+
+    public ConnectionPool getConnectionPool()
+    {
+        return connectionPool;
+    }
+
+    public void setConnectionPool(ConnectionPool connectionPool)
+    {
+        this.connectionPool = connectionPool;
+    }
+
+    @Override
+    protected void doSetData(DataSource dataSource, Object data)
+    {
+        if (!(data instanceof Record))
+        {
+            error(String.format(
+                    "Invalid type (%s) recieved from data source (%s). The valid type is (%s) "
+                    , data==null? "null" : data.getClass().getName(), dataSource.getPath()
+                    , Record.class.getName()));
+            return;
+        }
+
+        Record record = (Record) data;
+
+        RecordSchemaNode _recordSchema = recordSchema;
+        if (!_recordSchema.equals(record.getSchema()))
+        {
+            error(String.format(
+                    "Invalid record schema recived from data source (%s). " +
+                    "Recieved schema is (%s), valid schema is (%s) "
+                    , dataSource.getPath(), record.getSchema().getName(), _recordSchema.getName()));
+            return;
+        }
+
+        RecordSchemaField[] fields = _recordSchema.getFields();
+        if (fields==null)
+        {
+            warn("Schema (%s) does not contains fields");
+            return;
+        }
+
+        try
+        {
+            processRecord(fields, record);
+
+        }
+        catch(Exception e)
+        {
+            error("Error writing record to database", e);
+        }
+    }
+
+    private void processRecord(RecordSchemaField[] fields, Record record) throws Exception
+    {
+        List<String> columnNames = new ArrayList<String>();
+        List<Object> values = new ArrayList<Object>();
+        for (RecordSchemaField field : fields)
+        {
+            DatabaseRecordFieldExtension extension =
+                    field.getFieldExtension(DatabaseRecordFieldExtension.class);
+            if (extension != null)
+            {
+                columnNames.add(extension.getColumnName());
+                values.add(record.getValue(field.getName()));
+            }
+        }
+        if (values.size() == 0)
+            throw new Exception(
+                    "Record does not contain fields that should be writen to the database");
+
+        Connection con = connectionPool.getConnection();
+        try
+        {
+            String query = createQuery(columnNames, values);
+                
+            PreparedStatement insert = con.prepareStatement(query);
+            try
+            {
+                for (int i=1; i<=values.size(); ++i)
+                    insert.setObject(i, values.get(i-1));
+
+                insert.executeUpdate();
+            }
+            finally
+            {
+                insert.close();
+            }
+        }
+        finally
+        {
+            con.close();
+        }
+    }
+
+    private String createQuery(List<String> columnNames, List<Object> values)
+    {
+        StringBuilder query = new StringBuilder("insert into " + tableName + " (+");
+        for (int i = 0; i < columnNames.size(); ++i)
+        {
+            if (i != 0)
+                query.append(", ");
+            query.append(columnNames.get(i));
+        }
+        query.append(") values (");
+        for (int i = 0; i < values.size(); ++i)
+        {
+            if (i != 0)
+                query.append(", ");
+            query.append("?");
+        }
+        query.append(")");
+
+        return query.toString();
+    }
+}

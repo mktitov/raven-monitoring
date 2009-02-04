@@ -25,6 +25,7 @@ import org.apache.tapestry.ioc.ServiceBinder;
 import org.apache.tapestry.ioc.services.ChainBuilder;
 import org.raven.conf.Configurator;
 import org.raven.conf.impl.ConfiguratorImpl;
+import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.DataPipeConvertToTypesReferenceValues;
 import org.raven.ds.impl.RecordSchemaValueTypeHandlerFactory;
@@ -246,6 +247,13 @@ public class RavenCoreModule
                 , pathResolver.createPath(
                     true, SystemNode.NAME, SchemasNode.NAME, RecordSchemasNode.NAME))
             , "after:"+LocaleReferenceValues.class.getSimpleName());
+        conf.add(
+            ConnectionPoolsNode.class.getSimpleName()
+            , new ChildrenNodesAsReferenceValues(
+                RecordSchemaValueTypeHandlerFactory.TYPE
+                , pathResolver.createPath(
+                    true, SystemNode.NAME, ConnectionPoolsNode.NAME))
+            , "after:"+RecordSchemasNode.class.getSimpleName());
     }
 
 	public static void contributeExpressionCompiler(
