@@ -15,32 +15,23 @@
  *  under the License.
  */
 
-package org.raven.ds;
+package org.raven.net;
 
-import java.sql.Timestamp;
-import org.raven.net.Ip;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  *
  * @author Mikhail Titov
  */
-public enum RecordSchemaFieldType
+public class IpTest extends Assert
 {
-    LONG(Long.class), INTEGER(Integer.class), SHORT(Short.class), BYTE(Byte.class),
-    DOUBLE(Double.class), FLOAT(Float.class),
-    STRING(String.class),
-    TIMESTAMP(Timestamp.class),
-    IP(Ip.class);
-
-    private final Class type;
-
-    private RecordSchemaFieldType(Class type)
+    @Test
+    public void parseTest() throws Exception
     {
-        this.type = type;
-    }
-
-    public Class getType()
-    {
-        return type;
+        Ip ip = Ip.parse("255.50.1.255");
+        Ip ip2 = Ip.parse(""+ip.getIp());
+        assertEquals("255.50.1.255", ip2.toString());
+        assertEquals(ip, ip2);
     }
 }

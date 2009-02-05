@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009 Mikhail Titov.
+ *  Copyright 2009 Mikhail Titov .
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,32 +15,31 @@
  *  under the License.
  */
 
-package org.raven.ds;
+package org.raven.ds.impl;
 
-import java.sql.Timestamp;
-import org.raven.net.Ip;
+import org.raven.annotations.NodeClass;
+import org.raven.annotations.Parameter;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-public enum RecordSchemaFieldType
+@NodeClass(
+    parentNode=RecordSchemaFieldNode.class, childNodes=ValuePrepareRecordFieldExtension.class)
+public class CvsRecordFieldExtension extends AbstractRecordFieldExtension
 {
-    LONG(Long.class), INTEGER(Integer.class), SHORT(Short.class), BYTE(Byte.class),
-    DOUBLE(Double.class), FLOAT(Float.class),
-    STRING(String.class),
-    TIMESTAMP(Timestamp.class),
-    IP(Ip.class);
+    @Parameter @NotNull
+    private Integer columnNumber;
 
-    private final Class type;
 
-    private RecordSchemaFieldType(Class type)
+    public Integer getColumnNumber()
     {
-        this.type = type;
+        return columnNumber;
     }
 
-    public Class getType()
+    public void setColumnNumber(Integer columnNumber)
     {
-        return type;
+        this.columnNumber = columnNumber;
     }
 }

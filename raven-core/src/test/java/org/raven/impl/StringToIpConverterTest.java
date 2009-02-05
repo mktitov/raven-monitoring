@@ -15,32 +15,31 @@
  *  under the License.
  */
 
-package org.raven.ds;
+package org.raven.impl;
 
-import java.sql.Timestamp;
+import org.junit.Test;
+import org.raven.RavenCoreTestCase;
+import org.raven.net.InvalidIpException;
 import org.raven.net.Ip;
+import org.weda.services.TypeConverter;
 
 /**
  *
  * @author Mikhail Titov
  */
-public enum RecordSchemaFieldType
+public class StringToIpConverterTest extends RavenCoreTestCase
 {
-    LONG(Long.class), INTEGER(Integer.class), SHORT(Short.class), BYTE(Byte.class),
-    DOUBLE(Double.class), FLOAT(Float.class),
-    STRING(String.class),
-    TIMESTAMP(Timestamp.class),
-    IP(Ip.class);
-
-    private final Class type;
-
-    private RecordSchemaFieldType(Class type)
+    @Test
+    public void instanceTest() throws InvalidIpException
     {
-        this.type = type;
+        StringToIpConverter converter = new StringToIpConverter();
+        assertEquals(Ip.parse("10.50.1.1"), converter.convert("10.50.1.1", null, null));
     }
 
-    public Class getType()
+    @Test
+    public void serviceTest() throws InvalidIpException
     {
-        return type;
+        TypeConverter converter = registry.getService(TypeConverter.class);
+        assertEquals(Ip.parse("10.50.1.1"), converter.convert(Ip.class, "10.50.1.1", null));
     }
 }

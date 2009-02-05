@@ -41,7 +41,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass
-public class CsvDataConverterNode extends AbstractDataPipe
+public class CvsRecordReaderNode extends AbstractDataPipe
 {
     public final static String LINEFILTER_ATTRIBUTE = "lineFilter";
 
@@ -81,7 +81,7 @@ public class CsvDataConverterNode extends AbstractDataPipe
             return;
         }
 
-        Map<String, Integer> fieldsColumns = getFieldsColumns();
+        Map<String, FieldInfo> fieldsColumns = getFieldsColumns();
         if (fieldsColumns==null)
         {
             if (isLogLevelEnabled(LogLevel.DEBUG))
@@ -130,8 +130,12 @@ public class CsvDataConverterNode extends AbstractDataPipe
                             tokenizer.reset(line);
                             String[] tokens = tokenizer.getTokenArray();
                             Record record = recordSchema.createRecord();
-                            for (Map.Entry<String, Integer> entry: fieldsColumns.entrySet())
-                                record.setValue(entry.getKey(), tokens[entry.getValue()-1]);
+                            for (Map.Entry<String, FieldInfo> entry: fieldsColumns.entrySet())
+                            {
+                                Object value = entry.getValue().prepareValue(
+                                        tokens[entry.getValue().getColumnNumber()-1]);
+                                record.setValue(entry.getKey(), value);
+                            }
                             sendDataToConsumers(record);
                         }catch(Exception e)
                         {
@@ -211,20 +215,42 @@ public class CsvDataConverterNode extends AbstractDataPipe
         this.lineFilter = lineFilter;
     }
 
-    private Map<String, Integer> getFieldsColumns()
+    private Map<String, FieldInfo> getFieldsColumns()
     {
         RecordSchemaField[] fields = recordSchema.getFields();
         if (fields==null)
             return null;
 
-        Map<String, Integer> result = new HashMap<String, Integer>();
+        Map<String, FieldInfo> result = new HashMap<String, FieldInfo>();
         for (RecordSchemaField field: fields)
         {
-            CsvRecordFieldExtension extension =
-                    field.getFieldExtension(CsvRecordFieldExtension.class);
+            CvsRecordFieldExtension extension =
+                    field.getFieldExtension(CvsRecordFieldExtension.class);
             if (extension!=null)
-                result.put(field.getName(), extension.getColumnNumber());
+                result.put(field.getName(), new FieldInfo(extension));
         }
         return result;
+    }
+
+    private class FieldInfo
+    {
+        private final int columnNumber;
+        private final CvsRecordFieldExtension extension;
+
+        public FieldInfo(CvsRecordFieldExtension extension)
+        {
+            this.extension = extension;
+            this.columnNumber = extension.getColumnNumber();
+        }
+
+        public int getColumnNumber()
+        {
+            return columnNumber;
+        }
+
+        public Object prepareValue(Object value)
+        {
+            return extension.prepareValue(value);
+        }
     }
 }

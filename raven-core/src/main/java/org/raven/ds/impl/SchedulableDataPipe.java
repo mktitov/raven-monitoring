@@ -20,6 +20,7 @@ package org.raven.ds.impl;
 import java.util.Collection;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.log.LogLevel;
 import org.raven.sched.Schedulable;
 import org.raven.sched.Scheduler;
 import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
@@ -39,6 +40,8 @@ public class SchedulableDataPipe extends DataPipeImpl implements Schedulable, Sc
 
     public void executeScheduledJob()
     {
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            debug("Initiating data gathering request");
         getDataSource().getDataImmediate(this, null);
 
 		Collection<Node> deps = getDependentNodes();

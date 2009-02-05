@@ -32,6 +32,7 @@ import org.apache.commons.vfs.VFS;
 import org.raven.annotations.NodeClass;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.impl.AbstractDataSource;
+import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
 import org.weda.internal.annotations.Message;
 
@@ -70,7 +71,7 @@ public class FileReaderNode extends AbstractDataSource
         FileObject baseFile = fsManager.resolveFile(url);
         List<FileObject> files = new ArrayList<FileObject>();
         if (baseFile.getType()==FileType.FILE)
-            files.add(baseFile);
+            addFileForProcessing(files, baseFile);
         else
         {
             FileObject[] childs = baseFile.findFiles(Selectors.SELECT_FILES);
@@ -81,13 +82,13 @@ public class FileReaderNode extends AbstractDataSource
             if (childs!=null && childs.length!=0)
                 for (FileObject fileObject: childs)
                     if (mask==null || mask.matcher(fileObject.getName().getBaseName()).matches())
-                        files.add(fileObject);
+                        addFileForProcessing(files, fileObject);
                     else
                     {
-                        if (logger.isDebugEnabled())
-                            logger.debug(String.format(
-                                    "Ignoring file (%s). Not matches to file mask"
-                                    , fileObject.getName().getBaseName()));
+                        if (isLogLevelEnabled(LogLevel.DEBUG))
+                            debug(String.format(
+                                    "Ignoring file (%s). Not matches to file mask (%s)"
+                                    , fileObject.getName().getBaseName(), fileMask));
                     }
                         
         }
@@ -99,13 +100,19 @@ public class FileReaderNode extends AbstractDataSource
                 }
                 catch(Throwable e)
                 {
-                    logger.error(String.format(
+                    error(String.format(
                             "Error in node (%s). Error processing file (%s). %s"
                             , getPath(), file, e.getMessage()), e);
                 }
-
         
         return true;
+    }
+
+    private void addFileForProcessing(List<FileObject> files, FileObject file)
+    {
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            debug(String.format("File (%s) added for processing", file.getName().getBaseName()));
+        files.add(file);
     }
 
     @Override
@@ -130,12 +137,14 @@ public class FileReaderNode extends AbstractDataSource
             DataConsumer dataConsumer, FileObject file, boolean removeAfterProcessing)
         throws Exception
     {
-        if (logger.isDebugEnabled())
-            logger.debug(String.format("Proccessing file (%s)", file.getName().getBaseName()));
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            debug(String.format("Proccessing file (%s)", file.getName().getBaseName()));
         InputStream is = file.getContent().getInputStream();
+        boolean fileProcessed = false;
         try
         {
             dataConsumer.setData(this, is);
+            fileProcessed = true;
         }
         finally
         {
@@ -144,7 +153,7 @@ public class FileReaderNode extends AbstractDataSource
 			file.getFileSystem().getFileSystemManager().getFilesCache().removeFile(
 					file.getFileSystem(), file.getName());
 
-            if (removeAfterProcessing)
+            if (fileProcessed && removeAfterProcessing)
                 file.delete();
         }
     }

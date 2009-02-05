@@ -109,7 +109,7 @@ public abstract class AbstractFileReader extends AbstractDataSource
         }
         else
         {
-            if (logger.isDebugEnabled())
+            if (isLogLevelEnabled(LogLevel.DEBUG))
                 logger.debug(String.format(
                         "No files found for data consumer (%s) for url (%s) using regexp " +
 						"file name filter (%s)"
@@ -158,7 +158,7 @@ public abstract class AbstractFileReader extends AbstractDataSource
             Boolean addFilenameToStream, Boolean removeAfterProcessing)
         throws Exception
     {
-        if (logger.isDebugEnabled())
+        if (isLogLevelEnabled(LogLevel.DEBUG))
             logger.debug(String.format("Proccessing file (%s)", file.getName()));
         InputStream is = file.getInputStream();
         if (addFilenameToStream)

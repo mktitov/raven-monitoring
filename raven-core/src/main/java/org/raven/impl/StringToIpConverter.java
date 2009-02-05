@@ -15,32 +15,38 @@
  *  under the License.
  */
 
-package org.raven.ds;
+package org.raven.impl;
 
-import java.sql.Timestamp;
+import org.raven.net.InvalidIpException;
 import org.raven.net.Ip;
+import org.weda.converter.TypeConverterException;
+import org.weda.converter.impl.AbstractConverter;
 
 /**
  *
  * @author Mikhail Titov
  */
-public enum RecordSchemaFieldType
+public class StringToIpConverter extends AbstractConverter<String, Ip>
 {
-    LONG(Long.class), INTEGER(Integer.class), SHORT(Short.class), BYTE(Byte.class),
-    DOUBLE(Double.class), FLOAT(Float.class),
-    STRING(String.class),
-    TIMESTAMP(Timestamp.class),
-    IP(Ip.class);
-
-    private final Class type;
-
-    private RecordSchemaFieldType(Class type)
+    public Ip convert(String value, Class realTargetType, String format)
     {
-        this.type = type;
+        try
+        {
+            return Ip.parse(value);
+        }
+        catch (InvalidIpException ex)
+        {
+            throw new TypeConverterException(ex);
+        }
     }
 
-    public Class getType()
+    public Class getSourceType()
     {
-        return type;
+        return String.class;
+    }
+
+    public Class getTargetType()
+    {
+        return Ip.class;
     }
 }

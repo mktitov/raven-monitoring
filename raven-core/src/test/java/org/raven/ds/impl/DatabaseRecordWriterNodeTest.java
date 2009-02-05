@@ -18,8 +18,11 @@
 package org.raven.ds.impl;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
@@ -27,7 +30,9 @@ import org.raven.conf.Config;
 import org.raven.conf.Configurator;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.dbcp.impl.JDBCConnectionPoolNode;
+import org.raven.ds.Record;
 import org.raven.ds.RecordSchemaFieldType;
+import org.raven.rrd.objects.PushDataSource;
 import org.raven.tree.Node.Status;
 import org.raven.tree.impl.SystemNode;
 
@@ -37,7 +42,9 @@ import org.raven.tree.impl.SystemNode;
  */
 public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
 {
-    RecordSchemaNode schema;
+    private RecordSchemaNode schema;
+    private PushDataSource ds;
+    private JDBCConnectionPoolNode pool;
 
     @Before
     public void prepare() throws Exception
@@ -49,7 +56,7 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
                 (ConnectionPoolsNode)
                 tree.getNode(SystemNode.NAME).getChildren(ConnectionPoolsNode.NAME);
         assertNotNull(poolsNode);
-        JDBCConnectionPoolNode pool = new JDBCConnectionPoolNode();
+        pool = new JDBCConnectionPoolNode();
         pool.setName("pool");
         poolsNode.addChildren(pool);
         pool.save();
@@ -87,7 +94,7 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
         field1 = new RecordSchemaFieldNode();
         field1.setName("field2");
         schema.addAndSaveChildren(field1);
-        field1.setFieldType(RecordSchemaFieldType.STRING);
+        field1.setFieldType(RecordSchemaFieldType.IP);
         field1.start();
         assertEquals(Status.STARTED, field1.getStatus());
 
@@ -98,12 +105,44 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
         dbExtension.start();
         assertEquals(Status.STARTED, dbExtension.getStatus());
 
+        ds = new PushDataSource();
+        ds.setName("ds");
+        tree.getRootNode().addAndSaveChildren(ds);
+        ds.start();
+        assertEquals(Status.STARTED, ds.getStatus());
+
+        DatabaseRecordWriterNode writer = new DatabaseRecordWriterNode();
+        writer.setName("writer");
+        tree.getRootNode().addAndSaveChildren(writer);
+        writer.setConnectionPool(pool);
+        writer.setRecordSchema(schema);
+        writer.setTableName("record_data");
+        writer.setDataSource(ds);
+        writer.start();
+        assertEquals(Status.STARTED, writer.getStatus());
     }
 
     @Test
     public void test() throws Exception
     {
-        
+        Record record = schema.createRecord();
+        record.setValue("field1", 10);
+        record.setValue("field2", "10.50.1.1");
+        ds.pushData(record);
+
+        Connection con = pool.getConnection();
+        Statement st = con.createStatement();
+        ResultSet rs = st.executeQuery("select col1, col2 from record_data");
+        List<Object[]> rows = new ArrayList<Object[]>();
+        while (rs.next())
+            rows.add(new Object[]{rs.getObject(1), rs.getObject(2)});
+        rs.close();
+        st.close();
+        con.close();
+
+        assertEquals(1, rows.size());
+        assertEquals(10, rows.get(0)[0]);
+        assertEquals("10.50.1.1", rows.get(0)[1]);
     }
 
     private void createTable(JDBCConnectionPoolNode pool) throws SQLException

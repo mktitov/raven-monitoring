@@ -19,17 +19,13 @@ package org.raven.ds.impl;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.dbcp.ConnectionPool;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
-import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchemaField;
 import org.weda.annotations.constraints.NotNull;
 
@@ -59,6 +55,26 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     public void setConnectionPool(ConnectionPool connectionPool)
     {
         this.connectionPool = connectionPool;
+    }
+
+    public RecordSchemaNode getRecordSchema()
+    {
+        return recordSchema;
+    }
+
+    public void setRecordSchema(RecordSchemaNode recordSchema)
+    {
+        this.recordSchema = recordSchema;
+    }
+
+    public String getTableName()
+    {
+        return tableName;
+    }
+
+    public void setTableName(String tableName)
+    {
+        this.tableName = tableName;
     }
 
     @Override
@@ -147,7 +163,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
 
     private String createQuery(List<String> columnNames, List<Object> values)
     {
-        StringBuilder query = new StringBuilder("insert into " + tableName + " (+");
+        StringBuilder query = new StringBuilder("insert into " + tableName + " (");
         for (int i = 0; i < columnNames.size(); ++i)
         {
             if (i != 0)

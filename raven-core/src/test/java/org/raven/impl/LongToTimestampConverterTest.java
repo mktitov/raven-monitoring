@@ -15,32 +15,33 @@
  *  under the License.
  */
 
-package org.raven.ds;
+package org.raven.impl;
 
 import java.sql.Timestamp;
-import org.raven.net.Ip;
+import org.junit.Test;
+import org.raven.RavenCoreTestCase;
+import org.weda.services.TypeConverter;
 
 /**
  *
  * @author Mikhail Titov
  */
-public enum RecordSchemaFieldType
+public class LongToTimestampConverterTest extends RavenCoreTestCase
 {
-    LONG(Long.class), INTEGER(Integer.class), SHORT(Short.class), BYTE(Byte.class),
-    DOUBLE(Double.class), FLOAT(Float.class),
-    STRING(String.class),
-    TIMESTAMP(Timestamp.class),
-    IP(Ip.class);
-
-    private final Class type;
-
-    private RecordSchemaFieldType(Class type)
+    @Test
+    public void instanceTest()
     {
-        this.type = type;
+        LongToTimestampConverter converter = new LongToTimestampConverter();
+        long time = System.currentTimeMillis();
+        assertEquals(new Timestamp(time), converter.convert(time, null, null));
     }
 
-    public Class getType()
+    @Test
+    public void serviceTest()
     {
-        return type;
+        TypeConverter converter = registry.getService(TypeConverter.class);
+        long time = System.currentTimeMillis();
+        assertEquals(new Timestamp(time), converter.convert(Timestamp.class, time, null));
     }
+
 }

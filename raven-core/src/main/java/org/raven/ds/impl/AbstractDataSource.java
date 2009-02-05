@@ -24,6 +24,7 @@ import java.util.Map;
 import org.raven.Helper;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
+import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
@@ -58,20 +59,24 @@ public abstract class AbstractDataSource extends BaseNode implements DataSource
 
         if (!checkDataConsumer(dataConsumer, attributes))
         {
-            if (logger.isDebugEnabled())
-                logger.debug(String.format(
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug(String.format(
                         "Skiping gathering data for data consumer (%s). Data consumer not ready"
                         , dataConsumer.getPath()));
             return false;
         }
         try
         {
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug(String.format(
+                        "Processing gathering data request for data consumer (%s)"
+                        , dataConsumer.getPath()));
             return gatherDataForConsumer(dataConsumer, attributes);
         }
         catch (Throwable e)
         {
-            if (logger.isErrorEnabled())
-                logger.error(String.format(
+            if (isLogLevelEnabled(LogLevel.ERROR))
+                error(String.format(
                         "Error gathering data for consumer (%s). %s"
                         , dataConsumer.getPath(), e.getMessage()), e);
             return false;

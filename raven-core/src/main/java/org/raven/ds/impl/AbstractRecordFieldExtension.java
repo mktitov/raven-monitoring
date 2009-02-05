@@ -15,32 +15,29 @@
  *  under the License.
  */
 
-package org.raven.ds;
+package org.raven.ds.impl;
 
-import java.sql.Timestamp;
-import org.raven.net.Ip;
+import java.util.Collection;
+import org.raven.tree.Node;
+import org.raven.tree.impl.BaseNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-public enum RecordSchemaFieldType
+public class AbstractRecordFieldExtension extends BaseNode
 {
-    LONG(Long.class), INTEGER(Integer.class), SHORT(Short.class), BYTE(Byte.class),
-    DOUBLE(Double.class), FLOAT(Float.class),
-    STRING(String.class),
-    TIMESTAMP(Timestamp.class),
-    IP(Ip.class);
-
-    private final Class type;
-
-    private RecordSchemaFieldType(Class type)
+    public Object prepareValue(Object value)
     {
-        this.type = type;
-    }
+        Collection<Node> childs = getChildrens();
+        
+        if (childs==null || childs.size()==0)
+            return value;
 
-    public Class getType()
-    {
-        return type;
+        for (Node child: childs)
+            if (child instanceof ValuePrepareRecordFieldExtension)
+                return ((ValuePrepareRecordFieldExtension)child).prepareValue(value);
+
+        return value;
     }
 }

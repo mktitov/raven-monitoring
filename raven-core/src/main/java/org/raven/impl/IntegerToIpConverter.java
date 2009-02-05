@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009 Mikhail Titov .
+ *  Copyright 2009 Mikhail Titov.
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,30 +15,29 @@
  *  under the License.
  */
 
-package org.raven.ds.impl;
+package org.raven.impl;
 
-import org.raven.annotations.NodeClass;
-import org.raven.annotations.Parameter;
-import org.raven.tree.impl.BaseNode;
-import org.weda.annotations.constraints.NotNull;
+import org.raven.net.Ip;
+import org.weda.converter.impl.AbstractConverter;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=RecordSchemaFieldNode.class)
-public class CsvRecordFieldExtension extends BaseNode
+public class IntegerToIpConverter extends AbstractConverter<Integer, Ip>
 {
-    @Parameter @NotNull
-    private Integer columnNumber;
-
-    public Integer getColumnNumber()
+    public Ip convert(Integer value, Class realTargetType, String format)
     {
-        return columnNumber;
+        return new Ip(value);
     }
 
-    public void setColumnNumber(Integer columnNumber)
+    public Class getSourceType()
     {
-        this.columnNumber = columnNumber;
+        return Integer.class;
+    }
+
+    public Class getTargetType()
+    {
+        return Ip.class;
     }
 }

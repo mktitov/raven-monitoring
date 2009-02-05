@@ -27,6 +27,7 @@ import org.raven.conf.Configurator;
 import org.raven.conf.impl.ConfiguratorImpl;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.ds.DataSource;
+import org.raven.ds.impl.ConnectionPoolValueHandlerFactory;
 import org.raven.ds.impl.DataPipeConvertToTypesReferenceValues;
 import org.raven.ds.impl.RecordSchemaValueTypeHandlerFactory;
 import org.raven.ds.impl.RecordSchemasNode;
@@ -45,7 +46,9 @@ import org.raven.impl.CharsetReferenceValues;
 import org.raven.impl.ClassToStringConverter;
 import org.raven.impl.EnumReferenceValues;
 import org.raven.impl.InputStreamToStringConverter;
+import org.raven.impl.IntegerToIpConverter;
 import org.raven.impl.LocaleReferenceValues;
+import org.raven.impl.LongToTimestampConverter;
 import org.raven.impl.NodeAccessToNodeConverter;
 import org.raven.impl.NodeAttributeToStringConverter;
 import org.raven.impl.NodeToStringConverter;
@@ -54,13 +57,13 @@ import org.raven.impl.SnmpVariableToNumberConverter;
 import org.raven.impl.StringToAttributeReferenceConverter;
 import org.raven.impl.StringToCharsetConverter;
 import org.raven.impl.StringToClassConverter;
+import org.raven.impl.StringToIpConverter;
 import org.raven.impl.StringToLocaleConverter;
 import org.raven.impl.StringToNodeConverter;
 import org.raven.impl.StringToTemplateVariableConverter;
 import org.raven.log.NodeLogger;
 import org.raven.log.impl.NodeLoggerImpl;
 import org.raven.sched.impl.SystemSchedulerReferenceValues;
-import org.raven.sched.impl.SystemSchedulerValueHandler;
 import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
 import org.raven.sql.QueryParameterValueHandlerFactory;
 import org.raven.template.GroupsOrganazier;
@@ -162,6 +165,9 @@ public class RavenCoreModule
         conf.add(new InputStreamToStringConverter());
         conf.add(new StringToCharsetConverter());
 		conf.add(new StringToLocaleConverter());
+        conf.add(new StringToIpConverter());
+        conf.add(new IntegerToIpConverter());
+        conf.add(new LongToTimestampConverter());
     }
     
     public static void contributeTree(MappedConfiguration<Class, AttributeReferenceValues> conf)
@@ -205,6 +211,9 @@ public class RavenCoreModule
         conf.add(
             RecordSchemaValueTypeHandlerFactory.TYPE
             , new RecordSchemaValueTypeHandlerFactory(pathResolver));
+        conf.add(
+            ConnectionPoolValueHandlerFactory.TYPE
+            , new ConnectionPoolValueHandlerFactory(pathResolver));
     }
     
     public static void contributeAttributeReferenceValues(
