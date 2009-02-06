@@ -43,4 +43,13 @@ public enum RecordSchemaFieldType
     {
         return type;
     }
+
+    public static Object getSqlObject(RecordSchemaFieldType type, Object value)
+    {
+        switch(type)
+        {
+            case IP: return value.toString();
+            default: return value;
+        }
+    }
 }

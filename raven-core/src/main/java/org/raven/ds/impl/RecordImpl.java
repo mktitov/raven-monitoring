@@ -65,7 +65,7 @@ public class RecordImpl implements Record
         catch(TypeConverterException e)
         {
             throw new RecordException(String.format(
-                    "Error setting value for field (%s)", fieldName), e);
+                    "Error setting value (%s) for field (%s)", value, fieldName), e);
         }
     }
 

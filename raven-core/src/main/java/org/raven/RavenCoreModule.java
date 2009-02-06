@@ -259,7 +259,7 @@ public class RavenCoreModule
         conf.add(
             ConnectionPoolsNode.class.getSimpleName()
             , new ChildrenNodesAsReferenceValues(
-                RecordSchemaValueTypeHandlerFactory.TYPE
+                ConnectionPoolValueHandlerFactory.TYPE
                 , pathResolver.createPath(
                     true, SystemNode.NAME, ConnectionPoolsNode.NAME))
             , "after:"+RecordSchemasNode.class.getSimpleName());

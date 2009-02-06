@@ -29,9 +29,9 @@ public class IpTest extends Assert
     @Test
     public void parseTest() throws Exception
     {
-        Ip ip = Ip.parse("255.50.1.255");
+        Ip ip = Ip.parse("255.50.1.250");
         Ip ip2 = Ip.parse(""+ip.getIp());
-        assertEquals("255.50.1.255", ip2.toString());
+        assertEquals("255.50.1.250", ip2.toString());
         assertEquals(ip, ip2);
     }
 }

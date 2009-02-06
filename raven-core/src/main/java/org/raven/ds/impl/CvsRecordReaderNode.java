@@ -64,7 +64,24 @@ public class CvsRecordReaderNode extends AbstractDataPipe
     @Parameter(defaultValue="true")
     private Boolean lineFilter;
 
+    @Parameter(readOnly=true)
+    private long validRecords;
+    @Parameter(readOnly=true)
+    private long errorRecords;
+
+    private long processingTime;
+
     private Bindings localBindings;
+
+    @Override
+    protected void initFields()
+    {
+        super.initFields();
+
+        validRecords = 0;
+        errorRecords = 0;
+        processingTime = 0;
+    }
 
     @Override
     public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
@@ -74,6 +91,7 @@ public class CvsRecordReaderNode extends AbstractDataPipe
     @Override
     protected void doSetData(DataSource dataSource, Object data)
     {
+        long start = System.currentTimeMillis();
         if (data==null)
         {
             if (isLogLevelEnabled(LogLevel.DEBUG))
@@ -137,9 +155,12 @@ public class CvsRecordReaderNode extends AbstractDataPipe
                                 record.setValue(entry.getKey(), value);
                             }
                             sendDataToConsumers(record);
-                        }catch(Exception e)
+                            ++validRecords;
+                        }catch(Throwable e)
                         {
+                            ++errorRecords;
                             error("Error creating or sending record to consumers. ", e);
+                            error(line);
                         }
                     }
                     linenum++;
@@ -154,6 +175,7 @@ public class CvsRecordReaderNode extends AbstractDataPipe
         }finally
         {
             localBindings = null;
+            processingTime += System.currentTimeMillis() - start;
         }
     }
 
@@ -163,6 +185,23 @@ public class CvsRecordReaderNode extends AbstractDataPipe
         if (localBindings!=null)
             bindings.putAll(localBindings);
         super.formExpressionBindings(bindings);
+    }
+
+    @Parameter(readOnly=true)
+    public double getRecordsPerSecond()
+    {
+        double count = validRecords+errorRecords;
+        return count==0.? 0. : processingTime/count*1000;
+    }
+
+    public long getErrorRecords()
+    {
+        return errorRecords;
+    }
+
+    public long getValidRecords()
+    {
+        return validRecords;
     }
 
     public RecordSchemaNode getRecordSchema()

@@ -39,8 +39,8 @@ public class Ip
         StringBuilder strIp = new StringBuilder();
         for (int i=0; i<4; ++i)
         {
-            if (i!=0) ip>>=8;
-            strIp.insert(0, (i!=3? ".":"")+(ip&mask));
+            if (i!=0) ip>>>=8;
+            strIp.append((i!=0? ".":"")+(ip&mask));
         }
         ipStr = strIp.toString();
     }
@@ -63,12 +63,12 @@ public class Ip
         else
         {
             int intIp = 0;
-            for (int i=1; i<=4; ++i)
+            for (int i=4; i>=1; --i)
             {
                 try{
                     short octet = Short.parseShort(ipMatcher.group(i));
                     if (octet>255) throw new InvalidIpException(ipStr);
-                    if (i!=1) intIp<<=8;
+                    if (i!=4) intIp<<=8;
                         intIp|=octet;
                 }catch(NumberFormatException e){
                     throw new InvalidIpException(ipStr);
