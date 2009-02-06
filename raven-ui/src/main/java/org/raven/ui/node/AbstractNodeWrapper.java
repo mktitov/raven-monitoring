@@ -135,7 +135,7 @@ public abstract class AbstractNodeWrapper
 		if(cls==null) return al;
 		for(Class c: cls)
 		{
-			String dispName = classDesc.getClassDescriptor(c).getDisplayName();
+			String dispName = classDesc.getClassDescriptor(c).getType().getSimpleName();
 			String dsc = classDesc.getClassDescriptor(c).getDescription();
 			al.add(new NodeType(c.getCanonicalName(),dispName, dsc));
 		}
