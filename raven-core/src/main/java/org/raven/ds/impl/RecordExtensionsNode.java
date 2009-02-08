@@ -15,29 +15,20 @@
  *  under the License.
  */
 
-package org.raven.ds;
+package org.raven.ds.impl;
+
+import org.raven.tree.impl.BaseNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface RecordSchema 
+public class RecordExtensionsNode extends BaseNode
 {
-    /**
-     * Return the record schema name.
-     */
-    public String getName();
-    /**
-     * Returns the fields of the schema.
-     */
-    public RecordSchemaField[] getFields();
-    /**
-     * Creates the record based on this schema
-     */
-    public Record createRecord() throws RecordException;
-    /**
-     * Returns the record extension by its type or null if the record does not contain the
-     * extension of the type passed in the parameter.
-     */
-    public <E> E getRecordExtension(Class<E> extensionType);
+    public final static String NAME = "extensions";
+
+    public RecordExtensionsNode()
+    {
+        super(NAME);
+    }
 }

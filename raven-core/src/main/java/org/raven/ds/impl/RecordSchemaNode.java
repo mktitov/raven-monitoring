@@ -20,13 +20,10 @@ package org.raven.ds.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.Record;
@@ -50,6 +47,22 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema
     private String includeFields;
     @Parameter
     private String excludeFields;
+
+    private RecordExtensionsNode recordExtensionsNode;
+
+    @Override
+    protected void doInit() throws Exception
+    {
+        super.doInit();
+
+        recordExtensionsNode = (RecordExtensionsNode) getChildren(RecordExtensionsNode.NAME);
+        if (recordExtensionsNode==null)
+        {
+            recordExtensionsNode = new RecordExtensionsNode();
+            this.addAndSaveChildren(this);
+            recordExtensionsNode.start();
+        }
+    }
 
     public RecordSchemaField[] getFields()
     {
@@ -87,7 +100,7 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema
         Collection<Node> childs = getSortedChildrens();
         if (childs!=null || childs.size()>0)
             for (Node child: childs)
-                if (child.getStatus()==Status.STARTED)
+                if (child instanceof RecordSchemaField && child.getStatus()==Status.STARTED)
                     fields.add((RecordSchemaField)child);
 
         if (fields.size()==0)
@@ -113,6 +126,25 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema
     public Record createRecord() throws RecordException
     {
         return new RecordImpl(this);
+    }
+
+    public <E> E getRecordExtension(Class<E> extensionType)
+    {
+        Collection<Node> childs = recordExtensionsNode.getChildrens();
+        if (childs!=null && childs.size()>0)
+            for (Node child: childs)
+                if (   Status.STARTED==child.getStatus()
+                    && extensionType.isAssignableFrom(child.getClass()))
+                {
+                    return (E)child;
+                }
+
+        return null;
+    }
+
+    public RecordExtensionsNode getRecordExtensionsNode()
+    {
+        return recordExtensionsNode;
     }
 
     public String getExcludeFields()
