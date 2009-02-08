@@ -31,13 +31,32 @@ import static org.easymock.EasyMock.*;
  */
 public class RecordImplTest extends RavenCoreTestCase
 {
+    @Test(expected=RecordException.class)
+    public void noFieldsInSchemaTest() throws Exception
+    {
+        RecordSchema schema = createMock(RecordSchema.class);
+        expect(schema.getFields()).andReturn(null);
+        replay(schema);
+
+        try
+        {
+            RecordImpl record = new RecordImpl(schema);
+        }
+        finally
+        {
+            verify(schema);
+        }
+    }
+
     @Test(expected=InvalidRecordFieldException.class)
     public void setUndefinedFieldValue_test() throws Exception
     {
         RecordSchema schema = createMock(RecordSchema.class);
-        expect(schema.getField("field1")).andReturn(null);
+        RecordSchemaField field = createMock(RecordSchemaField.class);
+        expect(schema.getFields()).andReturn(new RecordSchemaField[]{field});
+        expect(field.getName()).andReturn("field");
         expect(schema.getName()).andReturn("schema");
-        replay(schema);
+        replay(schema, field);
 
         try
         {
@@ -46,7 +65,7 @@ public class RecordImplTest extends RavenCoreTestCase
         }
         finally
         {
-            verify(schema);
+            verify(schema, field);
         }
     }
 
@@ -55,7 +74,8 @@ public class RecordImplTest extends RavenCoreTestCase
     {
         RecordSchema schema = createMock(RecordSchema.class);
         RecordSchemaField field = createMock(RecordSchemaField.class);
-        expect(schema.getField("field1")).andReturn(field).times(2);
+        expect(schema.getFields()).andReturn(new RecordSchemaField[]{field});
+        expect(field.getName()).andReturn("field1");
         expect(field.getFieldType()).andReturn(RecordSchemaFieldType.INTEGER);
         replay(schema, field);
 
@@ -72,7 +92,8 @@ public class RecordImplTest extends RavenCoreTestCase
     {
         RecordSchema schema = createMock(RecordSchema.class);
         RecordSchemaField field = createMock(RecordSchemaField.class);
-        expect(schema.getField("field1")).andReturn(field).times(2);
+        expect(schema.getFields()).andReturn(new RecordSchemaField[]{field});
+        expect(field.getName()).andReturn("field1");
         expect(field.getFieldType()).andReturn(RecordSchemaFieldType.INTEGER);
         replay(schema, field);
 
@@ -89,7 +110,8 @@ public class RecordImplTest extends RavenCoreTestCase
     {
         RecordSchema schema = createMock(RecordSchema.class);
         RecordSchemaField field = createMock(RecordSchemaField.class);
-        expect(schema.getField("field1")).andReturn(field);
+        expect(schema.getFields()).andReturn(new RecordSchemaField[]{field});
+        expect(field.getName()).andReturn("field1");
         expect(field.getFieldType()).andReturn(RecordSchemaFieldType.INTEGER);
         replay(schema, field);
 

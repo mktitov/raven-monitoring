@@ -52,4 +52,154 @@ public class RecordSchemaNodeTest extends RavenCoreTestCase
         assertEquals(1, schemaNode.getFields().length);
         assertSame(fieldNode, schemaNode.getFields()[0]);
     }
+
+    @Test
+    public void extendsSchemaTest() throws Exception
+    {
+        RecordSchemaNode schemaNode = new RecordSchemaNode();
+        schemaNode.setName("schema");
+        tree.getRootNode().addAndSaveChildren(schemaNode);
+        schemaNode.start();
+        assertEquals(Status.STARTED, schemaNode.getStatus());
+
+        assertNull(schemaNode.getFields());
+
+        RecordSchemaFieldNode fieldNode = new RecordSchemaFieldNode();
+        fieldNode.setName("field");
+        schemaNode.addAndSaveChildren(fieldNode);
+        fieldNode.setFieldType(RecordSchemaFieldType.INTEGER);
+        fieldNode.start();
+
+        RecordSchemaNode schemaNode2 = new RecordSchemaNode();
+        schemaNode2.setName("schema2");
+        tree.getRootNode().addAndSaveChildren(schemaNode2);
+        schemaNode2.setExtendsSchema(schemaNode);
+        schemaNode2.start();
+        assertEquals(Status.STARTED, schemaNode2.getStatus());
+        
+        assertNotNull(schemaNode2.getFields());
+        assertEquals(1, schemaNode2.getFields().length);
+        assertSame(fieldNode, schemaNode2.getFields()[0]);
+    }
+
+    @Test
+    public void includeFieldsTest() throws Exception
+    {
+        RecordSchemaNode schemaNode = new RecordSchemaNode();
+        schemaNode.setName("schema");
+        tree.getRootNode().addAndSaveChildren(schemaNode);
+        schemaNode.start();
+        assertEquals(Status.STARTED, schemaNode.getStatus());
+
+        assertNull(schemaNode.getFields());
+
+        RecordSchemaFieldNode fieldNode = new RecordSchemaFieldNode();
+        fieldNode.setName("field");
+        schemaNode.addAndSaveChildren(fieldNode);
+        fieldNode.setFieldType(RecordSchemaFieldType.INTEGER);
+        fieldNode.start();
+
+        RecordSchemaFieldNode fieldNode2 = new RecordSchemaFieldNode();
+        fieldNode2.setName("field2");
+        schemaNode.addAndSaveChildren(fieldNode2);
+        fieldNode2.setFieldType(RecordSchemaFieldType.INTEGER);
+        fieldNode2.start();
+
+        RecordSchemaFieldNode fieldNode3 = new RecordSchemaFieldNode();
+        fieldNode3.setName("field3");
+        schemaNode.addAndSaveChildren(fieldNode3);
+        fieldNode3.setFieldType(RecordSchemaFieldType.INTEGER);
+        fieldNode3.start();
+
+        RecordSchemaNode schemaNode2 = new RecordSchemaNode();
+        schemaNode2.setName("schema2");
+        tree.getRootNode().addAndSaveChildren(schemaNode2);
+        schemaNode2.setExtendsSchema(schemaNode);
+        schemaNode2.setIncludeFields("field2, field3");
+        schemaNode2.start();
+        assertEquals(Status.STARTED, schemaNode2.getStatus());
+
+        assertNotNull(schemaNode2.getFields());
+        assertEquals(2, schemaNode2.getFields().length);
+        assertSame(fieldNode2, schemaNode2.getFields()[0]);
+        assertSame(fieldNode3, schemaNode2.getFields()[1]);
+    }
+
+    @Test
+    public void excludeFieldsTest() throws Exception
+    {
+        RecordSchemaNode schemaNode = new RecordSchemaNode();
+        schemaNode.setName("schema");
+        tree.getRootNode().addAndSaveChildren(schemaNode);
+        schemaNode.start();
+        assertEquals(Status.STARTED, schemaNode.getStatus());
+
+        assertNull(schemaNode.getFields());
+
+        RecordSchemaFieldNode fieldNode = new RecordSchemaFieldNode();
+        fieldNode.setName("field");
+        schemaNode.addAndSaveChildren(fieldNode);
+        fieldNode.setFieldType(RecordSchemaFieldType.INTEGER);
+        fieldNode.start();
+
+        RecordSchemaFieldNode fieldNode2 = new RecordSchemaFieldNode();
+        fieldNode2.setName("field2");
+        schemaNode.addAndSaveChildren(fieldNode2);
+        fieldNode2.setFieldType(RecordSchemaFieldType.INTEGER);
+        fieldNode2.start();
+
+        RecordSchemaFieldNode fieldNode3 = new RecordSchemaFieldNode();
+        fieldNode3.setName("field3");
+        schemaNode.addAndSaveChildren(fieldNode3);
+        fieldNode3.setFieldType(RecordSchemaFieldType.INTEGER);
+        fieldNode3.start();
+
+        RecordSchemaNode schemaNode2 = new RecordSchemaNode();
+        schemaNode2.setName("schema2");
+        tree.getRootNode().addAndSaveChildren(schemaNode2);
+        schemaNode2.setExtendsSchema(schemaNode);
+        schemaNode2.setExcludeFields("field, field2");
+        schemaNode2.start();
+        assertEquals(Status.STARTED, schemaNode2.getStatus());
+
+        assertNotNull(schemaNode2.getFields());
+        assertEquals(1, schemaNode2.getFields().length);
+        assertSame(fieldNode3, schemaNode2.getFields()[0]);
+    }
+
+    @Test
+    public void parentFieldSubstituteTest() throws Exception
+    {
+        RecordSchemaNode schemaNode = new RecordSchemaNode();
+        schemaNode.setName("schema");
+        tree.getRootNode().addAndSaveChildren(schemaNode);
+        schemaNode.start();
+        assertEquals(Status.STARTED, schemaNode.getStatus());
+
+        assertNull(schemaNode.getFields());
+
+        RecordSchemaFieldNode fieldNode = new RecordSchemaFieldNode();
+        fieldNode.setName("field");
+        schemaNode.addAndSaveChildren(fieldNode);
+        fieldNode.setFieldType(RecordSchemaFieldType.INTEGER);
+        fieldNode.start();
+
+        RecordSchemaNode schemaNode2 = new RecordSchemaNode();
+        schemaNode2.setName("schema2");
+        tree.getRootNode().addAndSaveChildren(schemaNode2);
+        schemaNode2.setExtendsSchema(schemaNode);
+        schemaNode2.start();
+        assertEquals(Status.STARTED, schemaNode2.getStatus());
+
+        RecordSchemaFieldNode fieldNode2 = new RecordSchemaFieldNode();
+        fieldNode2.setName("field");
+        schemaNode2.addAndSaveChildren(fieldNode2);
+        fieldNode2.setFieldType(RecordSchemaFieldType.INTEGER);
+        fieldNode2.start();
+
+        assertNotNull(schemaNode2.getFields());
+        assertEquals(1, schemaNode2.getFields().length);
+        assertSame(fieldNode2, schemaNode2.getFields()[0]);
+    }
+
 }

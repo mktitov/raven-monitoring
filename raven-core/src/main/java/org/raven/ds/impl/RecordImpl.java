@@ -40,11 +40,22 @@ public class RecordImpl implements Record
 
     private final RecordSchema schema;
     private final Map<String, Object> values;
+    private final Map<String, RecordSchemaField> fields;
 
-    public RecordImpl(RecordSchema schema)
+    public RecordImpl(RecordSchema schema) throws RecordException
     {
         this.schema = schema;
+        RecordSchemaField[] schemaFields = schema.getFields();
+        if (schemaFields==null || schemaFields.length==0)
+            throw new RecordException("The record schema (%s) does contains fields");
+
         values = new HashMap<String, Object>();
+        fields = new HashMap<String, RecordSchemaField>();
+        for (RecordSchemaField field: schemaFields)
+        {
+//            values.put(field.getName(), null);
+            fields.put(field.getName(), field);
+        }
     }
 
     public RecordSchema getSchema()
@@ -54,7 +65,7 @@ public class RecordImpl implements Record
 
     public void setValue(String fieldName, Object value) throws RecordException
     {
-        RecordSchemaField field = schema.getField(fieldName);
+        RecordSchemaField field = fields.get(fieldName);
         if (field==null)
             throw new InvalidRecordFieldException(fieldName, schema.getName());
         try
@@ -71,7 +82,7 @@ public class RecordImpl implements Record
 
     public Object getValue(String fieldName) throws RecordException
     {
-        RecordSchemaField field = schema.getField(fieldName);
+        RecordSchemaField field = fields.get(fieldName);
         if (field==null)
             throw new InvalidRecordFieldException(fieldName, schema.getName());
 

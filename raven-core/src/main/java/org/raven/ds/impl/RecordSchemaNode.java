@@ -18,10 +18,19 @@
 package org.raven.ds.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.raven.annotations.NodeClass;
+import org.raven.annotations.Parameter;
 import org.raven.ds.Record;
+import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.tree.Node;
@@ -34,18 +43,66 @@ import org.raven.tree.impl.BaseNode;
 @NodeClass(parentNode=RecordSchemasNode.class)
 public class RecordSchemaNode extends BaseNode implements RecordSchema
 {
+    @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
+    private RecordSchemaNode extendsSchema;
+
+    @Parameter
+    private String includeFields;
+    @Parameter
+    private String excludeFields;
+
     public RecordSchemaField[] getFields()
     {
-        Collection<Node> childs = getChildrens();
-        if (childs==null || childs.size()==0)
-            return null;
-        List<RecordSchemaField> fields = new ArrayList<RecordSchemaField>(childs.size());
-        for (Node child: childs)
-            if (child.getStatus()==Status.STARTED)
-                fields.add((RecordSchemaField)child);
+        List<RecordSchemaField> fields = new ArrayList<RecordSchemaField>(32);
+        if (extendsSchema!=null)
+        {
+            RecordSchemaField[] parentFields = extendsSchema.getFields();
+            if (parentFields!=null)
+            {
+                if (includeFields!=null)
+                {
+                    String[] includeFieldsArr = includeFields.split("\\s*,\\s*");
+                    if (includeFieldsArr!=null && includeFieldsArr.length>0)
+                    {
+                        for (RecordSchemaField field: parentFields)
+                            if (Arrays.binarySearch(includeFieldsArr, field.getName())>=0)
+                                fields.add(field);
+                    }
+                }
+                else if (excludeFields!=null)
+                {
+                    String[] excludeFieldsArr = excludeFields.split("\\s*,\\s*");
+                    if (excludeFieldsArr!=null && excludeFieldsArr.length>0)
+                    {
+                        for (RecordSchemaField field: parentFields)
+                            if (Arrays.binarySearch(excludeFieldsArr, field.getName())<0)
+                                fields.add(field);
+                    }
+                }
+                else
+                    for (RecordSchemaField field: parentFields)
+                        fields.add(field);
+            }
+        }
+        Collection<Node> childs = getSortedChildrens();
+        if (childs!=null || childs.size()>0)
+            for (Node child: childs)
+                if (child.getStatus()==Status.STARTED)
+                    fields.add((RecordSchemaField)child);
 
         if (fields.size()==0)
             return null;
+
+        Set<String> fieldNames = new HashSet<String>();
+        ListIterator<RecordSchemaField> it = fields.listIterator(fields.size());
+        for (; it.hasPrevious();)
+        {
+            RecordSchemaField field = it.previous();
+            if (fieldNames.contains(field.getName()))
+                it.remove();
+            else
+                fieldNames.add(field.getName());
+        }
 
         RecordSchemaField[] result = new RecordSchemaField[fields.size()];
         fields.toArray(result);
@@ -53,17 +110,38 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema
         return result;
     }
 
-    public Record createRecord()
+    public Record createRecord() throws RecordException
     {
         return new RecordImpl(this);
     }
 
-    public RecordSchemaField getField(String fieldName)
+    public String getExcludeFields()
     {
-        Node field = getChildren(fieldName);
-        if (field==null || Status.STARTED!=field.getStatus())
-            return null;
-        else
-            return (RecordSchemaField)field;
+        return excludeFields;
+    }
+
+    public void setExcludeFields(String excludeFields)
+    {
+        this.excludeFields = excludeFields;
+    }
+
+    public RecordSchemaNode getExtendsSchema()
+    {
+        return extendsSchema;
+    }
+
+    public void setExtendsSchema(RecordSchemaNode extendsSchema)
+    {
+        this.extendsSchema = extendsSchema;
+    }
+
+    public String getIncludeFields()
+    {
+        return includeFields;
+    }
+
+    public void setIncludeFields(String includeFields)
+    {
+        this.includeFields = includeFields;
     }
 }
