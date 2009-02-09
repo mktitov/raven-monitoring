@@ -45,9 +45,6 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     @NotNull
     private ConnectionPool connectionPool;
 
-    @Parameter @NotNull
-    private String tableName;
-
     public ConnectionPool getConnectionPool()
     {
         return connectionPool;
@@ -66,16 +63,6 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     public void setRecordSchema(RecordSchemaNode recordSchema)
     {
         this.recordSchema = recordSchema;
-    }
-
-    public String getTableName()
-    {
-        return tableName;
-    }
-
-    public void setTableName(String tableName)
-    {
-        this.tableName = tableName;
     }
 
     @Override
@@ -102,6 +89,18 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
             return;
         }
 
+        DatabaseRecordExtension recordExtension =
+                _recordSchema.getRecordExtension(DatabaseRecordExtension.class);
+        if (recordExtension==null)
+        {
+            error(String.format(
+                    "Record schema (%s) does not have DatabaseRecordExtension"
+                    , _recordSchema.getName()));
+            return;
+        }
+
+        String tableName = recordExtension.getTableName();
+
         RecordSchemaField[] fields = _recordSchema.getFields();
         if (fields==null)
         {
@@ -111,7 +110,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
 
         try
         {
-            processRecord(fields, record);
+            processRecord(tableName, fields, record);
 
         }
         catch(Exception e)
@@ -120,7 +119,8 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         }
     }
 
-    private void processRecord(RecordSchemaField[] fields, Record record) throws Exception
+    private void processRecord(String tableName, RecordSchemaField[] fields, Record record)
+            throws Exception
     {
         List<String> columnNames = new ArrayList<String>();
         List<Object> values = new ArrayList<Object>();
@@ -142,7 +142,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         Connection con = connectionPool.getConnection();
         try
         {
-            String query = createQuery(columnNames, values);
+            String query = createQuery(tableName, columnNames, values);
                 
             PreparedStatement insert = con.prepareStatement(query);
             try
@@ -163,7 +163,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         }
     }
 
-    private String createQuery(List<String> columnNames, List<Object> values)
+    private String createQuery(String tableName, List<String> columnNames, List<Object> values)
     {
         StringBuilder query = new StringBuilder("insert into " + tableName + " (");
         for (int i = 0; i < columnNames.size(); ++i)

@@ -77,6 +77,13 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
         schema.start();
         assertEquals(Status.STARTED, schema.getStatus());
 
+        DatabaseRecordExtension recordExtension = new DatabaseRecordExtension();
+        recordExtension.setName("db");
+        schema.getRecordExtensionsNode().addAndSaveChildren(recordExtension);
+        recordExtension.setTableName("record_data");
+        recordExtension.start();
+        assertEquals(Status.STARTED, recordExtension.getStatus());
+
         RecordSchemaFieldNode field1 = new RecordSchemaFieldNode();
         field1.setName("field1");
         schema.addAndSaveChildren(field1);
@@ -116,7 +123,6 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
         tree.getRootNode().addAndSaveChildren(writer);
         writer.setConnectionPool(pool);
         writer.setRecordSchema(schema);
-        writer.setTableName("record_data");
         writer.setDataSource(ds);
         writer.start();
         assertEquals(Status.STARTED, writer.getStatus());

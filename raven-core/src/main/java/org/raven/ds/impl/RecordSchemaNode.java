@@ -59,7 +59,7 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema
         if (recordExtensionsNode==null)
         {
             recordExtensionsNode = new RecordExtensionsNode();
-            this.addAndSaveChildren(this);
+            this.addAndSaveChildren(recordExtensionsNode);
             recordExtensionsNode.start();
         }
     }
@@ -138,6 +138,10 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema
                 {
                     return (E)child;
                 }
+
+        RecordSchemaNode _extendsSchema = extendsSchema;
+        if (_extendsSchema!=null)
+            return _extendsSchema.getRecordExtension(extensionType);
 
         return null;
     }

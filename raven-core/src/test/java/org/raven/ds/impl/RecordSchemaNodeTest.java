@@ -78,7 +78,7 @@ public class RecordSchemaNodeTest extends RavenCoreTestCase
         schemaNode2.setExtendsSchema(schemaNode);
         schemaNode2.start();
         assertEquals(Status.STARTED, schemaNode2.getStatus());
-        
+
         assertNotNull(schemaNode2.getFields());
         assertEquals(1, schemaNode2.getFields().length);
         assertSame(fieldNode, schemaNode2.getFields()[0]);
@@ -215,13 +215,13 @@ public class RecordSchemaNodeTest extends RavenCoreTestCase
 
         RecordExtensionsNode extensionsNode = schemaNode.getRecordExtensionsNode();
         assertNotNull(extensionsNode);
-        assertEquals(Status.STARTED, extensionsNode);
+        assertEquals(Status.STARTED, extensionsNode.getStatus());
 
         assertNull(schemaNode.getRecordExtension(ContainerNode.class));
 
         ContainerNode ext1 = new ContainerNode("ext1");
         extensionsNode.addAndSaveChildren(ext1);
-        
+
         assertNull(schemaNode.getRecordExtension(ContainerNode.class));
 
         ext1.start();
@@ -232,10 +232,52 @@ public class RecordSchemaNodeTest extends RavenCoreTestCase
         LeafNode ext2 = new LeafNode("ext2");
         extensionsNode.addAndSaveChildren(ext2);
         ext2.start();
-        
+
         assertNotNull(schemaNode.getRecordExtension(ContainerNode.class));
         assertSame(ext1, schemaNode.getRecordExtension(ContainerNode.class));
         assertNotNull(schemaNode.getRecordExtension(LeafNode.class));
         assertSame(ext2, schemaNode.getRecordExtension(LeafNode.class));
+    }
+
+    @Test
+    public void getRecordExtensionWithExtendsSchema() throws Exception
+    {
+        RecordSchemaNode parentSchema = new RecordSchemaNode();
+        parentSchema.setName("parent");
+        tree.getRootNode().addAndSaveChildren(parentSchema);
+        parentSchema.start();
+        assertEquals(Status.STARTED, parentSchema.getStatus());
+
+        ContainerNode parentExt1 = new ContainerNode("ext1");
+        parentSchema.getRecordExtensionsNode().addAndSaveChildren(parentExt1);
+        parentExt1.start();
+        assertEquals(Status.STARTED, parentExt1.getStatus());
+
+        LeafNode parentExt2 = new LeafNode("ext2");
+        parentSchema.getRecordExtensionsNode().addAndSaveChildren(parentExt2);
+        parentExt2.start();
+        assertEquals(Status.STARTED, parentExt2.getStatus());
+
+        RecordSchemaNode schemaNode = new RecordSchemaNode();
+        schemaNode.setName("schema");
+        tree.getRootNode().addAndSaveChildren(schemaNode);
+        schemaNode.setExtendsSchema(parentSchema);
+        schemaNode.start();
+        assertEquals(Status.STARTED, schemaNode.getStatus());
+
+        RecordExtensionsNode extensionsNode = schemaNode.getRecordExtensionsNode();
+        assertNotNull(extensionsNode);
+        assertEquals(Status.STARTED, extensionsNode.getStatus());
+
+        ContainerNode ext1 = new ContainerNode("ext1");
+        extensionsNode.addAndSaveChildren(ext1);
+        ext1.start();
+        assertEquals(Status.STARTED, ext1.getStatus());
+
+        assertNotNull(schemaNode.getRecordExtension(ContainerNode.class));
+        assertSame(ext1, schemaNode.getRecordExtension(ContainerNode.class));
+
+        assertNotNull(schemaNode.getRecordExtension(LeafNode.class));
+        assertSame(parentExt2, schemaNode.getRecordExtension(LeafNode.class));
     }
 }
