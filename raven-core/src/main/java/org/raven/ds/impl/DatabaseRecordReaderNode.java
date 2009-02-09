@@ -17,9 +17,11 @@
 
 package org.raven.ds.impl;
 
+import java.util.List;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.dbcp.ConnectionPool;
+import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.constraints.NotNull;
@@ -43,13 +45,20 @@ public class DatabaseRecordReaderNode extends BaseNode
     @NotNull
     private Boolean provideFilterAttributesToConsumers;
 
+    private List<SelectField> selectFields;
+
+
     @Override
     protected void doStart() throws Exception
     {
         super.doStart();
 
-        RecordSchemaField[] fields = recordSchema.getFields();
-
+        RecordSchema _recordSchema = recordSchema;
+        RecordSchemaField[] fields = _recordSchema.getFields();
+        if (fields==null || fields.length==0)
+            throw new Exception(String.format(
+                    "Record schema (%s) does not contains fields", recordSchema.getName()));
+        
     }
 
     public ConnectionPool getConnectionPool()
@@ -80,5 +89,68 @@ public class DatabaseRecordReaderNode extends BaseNode
     public void setRecordSchema(RecordSchemaNode recordSchema)
     {
         this.recordSchema = recordSchema;
+    }
+
+    private class SelectField
+    {
+        private final String fieldName;
+        private final String columnName;
+
+        public SelectField(String fieldName, String columnName)
+        {
+            this.fieldName = fieldName;
+            this.columnName = columnName;
+        }
+
+        public String getColumnName()
+        {
+            return columnName;
+        }
+
+        public String getFieldName()
+        {
+            return fieldName;
+        }
+    }
+
+    private static class FilterField
+    {
+        private final FilterableRecordFieldExtension filterInfo;
+        private final DatabaseRecordFieldExtension dbInfo;
+        private final RecordSchemaField fieldInfo;
+
+        public FilterField(
+                FilterableRecordFieldExtension filterInfo
+                , DatabaseRecordFieldExtension dbInfo, RecordSchemaField fieldInfo)
+        {
+            this.filterInfo = filterInfo;
+            this.dbInfo = dbInfo;
+            this.fieldInfo = fieldInfo;
+        }
+        
+        public static FilterField create(RecordSchemaField field)
+        {
+            DatabaseRecordFieldExtension dbExt =
+                    field.getFieldExtension(DatabaseRecordFieldExtension.class);
+            FilterableRecordFieldExtension filterExt =
+                    field.getFieldExtension(FilterableRecordFieldExtension.class);
+
+            return dbExt==null || filterExt==null? null : new FilterField(filterExt, dbExt, field);
+        }
+
+        public DatabaseRecordFieldExtension getDbInfo()
+        {
+            return dbInfo;
+        }
+
+        public RecordSchemaField getFieldInfo()
+        {
+            return fieldInfo;
+        }
+
+        public FilterableRecordFieldExtension getFilterInfo()
+        {
+            return filterInfo;
+        }
     }
 }

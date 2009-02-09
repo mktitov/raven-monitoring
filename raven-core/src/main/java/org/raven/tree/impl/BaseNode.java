@@ -664,7 +664,7 @@ public class BaseNode implements Node, NodeListener, Logger
                 for (NodeAttribute attr: nodeAttributes.values())
                     if (attr.isRequired() && attr.getValue()==null)
                     {
-                        logger.info(String.format(
+                        error(String.format(
                                 "Error switching node (%s) to the STARTED state. " +
                                 "Value for required attribute (%s) not seted "
                                 , getPath(), attr.getName()));
@@ -672,11 +672,10 @@ public class BaseNode implements Node, NodeListener, Logger
                     }
             doStart();
             setStatus(Status.STARTED);
-        }catch (Exception e)
+        }
+        catch (Exception e)
         {
-            logger.error(
-                    String.format("Error starting node (%s)", getPath())
-                    , e);
+            error(String.format("Error starting node (%s)", getPath()), e);
             return false;
         }
         return true;
