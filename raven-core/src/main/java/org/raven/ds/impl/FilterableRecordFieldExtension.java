@@ -29,6 +29,8 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass(parentNode=RecordSchemaFieldNode.class)
 public class FilterableRecordFieldExtension extends BaseNode
 {
+    public final static String FILTER_VALUE_REQUIRED_ATTR = "filterValueRequired";
+
     @Parameter(defaultValue="false")
     @NotNull
     private Boolean filterValueRequired;
