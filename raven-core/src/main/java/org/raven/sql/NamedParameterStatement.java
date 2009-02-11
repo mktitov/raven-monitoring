@@ -31,8 +31,8 @@ import java.util.Map;
 /**
  * @author adam_crume
  */
-public class NamedParameterStatement {
-
+public class NamedParameterStatement
+{
     /** The statement this object is wrapping. */
     private final PreparedStatement statement;
     /** Maps parameter names to arrays of ints which are the parameter indices.

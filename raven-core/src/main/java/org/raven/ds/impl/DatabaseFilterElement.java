@@ -17,6 +17,11 @@
 
 package org.raven.ds.impl;
 
+import org.apache.commons.lang.text.StrMatcher;
+import org.apache.commons.lang.text.StrTokenizer;
+import org.weda.converter.TypeConverterException;
+import org.weda.services.TypeConverter;
+
 /**
  *
  * @author Mikhail TItov
@@ -62,106 +67,68 @@ public class DatabaseFilterElement
 
     private final static String[] BETWEEN_OPERATOR = new String[]{"[", "]"};
     private final static String[] IN_OPERATOR = new String[]{"{", "}"};
-    private final static String[] LIST_SEPARATORS = new String[]{"<,>", ","};
+    private final static char LIST_SEPARTOR = ',';
+    private final static char QUOTE_CHAR = '"';
 
-    protected static final String [] operators = {">=", "<=", "<>", "=", ">", "<"};
-    private String id;
+    protected static final String[] operators = {">=", "<=", "<>", "=", ">", "<"};
+
+    private final String columnName;
+    private final Class columnType;
+    private final String convertPattern;
+    private final TypeConverter converter;
+
     private ExpressionType expressionType = ExpressionType.EMPTY;
     private OperatorType operatorType;
-    private String property;
-    private boolean enabled = true;
-    private boolean useAliasAsProperty = false;
-    private Class propertyClass;
-    private String pattern;
-    private String objectAlias;
-    private String parameterName;
-    private String staticExpression;
-    private String expression;
     private String operator;
     private Object value;
-    private PropertyDescriptor propertyDescriptor;
-    //
-    @InjectHivemindObject private static ValueTypeConverter converter;
-    @InjectMessages private Messages messages;
 
-    public String getId(){
-        return id;
+    public DatabaseFilterElement(
+            String columnName, Class columnType, String convertPattern, TypeConverter converter)
+    {
+        this.columnName = columnName;
+        this.columnType = columnType;
+        this.convertPattern = convertPattern;
+        this.converter = converter;
     }
 
-    public void setId(String id){
-        this.id = id;
-    }
-
-    public Object getValue() {
+    public Object getValue()
+    {
         return value;
     }
 
-    public void setValue(Object value) {
-        this.value = value;
+    public String getColumnName()
+    {
+        return columnName;
     }
 
-    public String getStaticExpression() {
-        return staticExpression;
-    }
-
-    public void setStaticExpression(String staticExpression) {
-        this.staticExpression = staticExpression;
-    }
-
-    public String getProperty() {
-        return property;
-    }
-
-    public void setProperty(String name) {
-        property = name;
-    }
-
-    public void setPattern(String pattern) {
-        this.pattern=pattern;
-    }
-
-    public String getObjectAlias() {
-        return objectAlias;
-    }
-
-    public void setObjectAlias(String objectAlias) {
-        this.objectAlias=objectAlias;
-    }
-
-    public Object getParameterValue() {
-        return value;
-    }
-
-    public ExpressionType getExpressionType() {
+    public ExpressionType getExpressionType()
+    {
         return expressionType;
     }
 
-    public void setExpressionType(ExpressionType type) {
-        expressionType = type;
-    }
-
-    public String getOperator(){
+    public String getOperator()
+    {
         return operator;
     }
-
-    public void setOperator(String operator){
-        this.operator = operator;
-    }
-
-    public void setExpression(String expression)
-        throws QueryFilterElementException
+    
+    public void setExpression(String expression) throws DatabaseFilterElementException
     {
         expressionType = ExpressionType.OPERATOR;
         String[] values = null;
-        if( expression == null || expression.trim().length() == 0 ){
+        if( expression == null || expression.trim().length() == 0 )
+        {
             expressionType = ExpressionType.EMPTY;
             value = null;
             operator = null;
-        }else{
+        }
+        else
+        {
             expression = expression.trim();
-            //поищем следы #выражения
-            if       (expression.charAt(0) == '#'){
-                if (expression.length()==1){
+            //searching for track of the #expression
+            if       (expression.charAt(0) == '#')
+            {
+                if (expression.length()==1)
+                {
                     expressionType = ExpressionType.EMPTY;
                     value = null;
                     operator = null;
@@ -171,7 +138,7 @@ public class DatabaseFilterElement
                 }
             }else {
                 boolean isFound = false;
-                //попробуем найти оператор
+                //searching for operator
                 for( int i = 0; i < operators.length; ++i ){
                     if( expression.indexOf(operators[i]) == 0 ){
                         operator = operators[i];
@@ -182,18 +149,17 @@ public class DatabaseFilterElement
                         break;
                     }
                 }
-                //Если оператор не найден ==> тогда поищем следы оператора LIKE
+                //if operator not found ==> the searching for LIKE
                 if( !isFound ){
-                    //поищем оператор BETWEEN
+                    //searching for BETWEEN operator
                     if (   expression.startsWith(BETWEEN_OPERATOR[0])
                         && expression.endsWith(BETWEEN_OPERATOR[1]))
                     {
                         values = extractValuesFromList(
                                 expression.substring(1, expression.length()-1));
                         if (values==null || values.length!=2)
-                            throw new QueryFilterElementException(
-                                    messages.format(
-                                        "BetweenOperatorError", expression));
+                            throw new DatabaseFilterElementException(String.format(
+                                    "Invalid BETWEEN expression - (%s)", expression));
                         operatorType = OperatorType.BETWEEN;
                     }else if (   expression.startsWith(IN_OPERATOR[0])
                               && expression.endsWith(IN_OPERATOR[1]))
@@ -201,29 +167,27 @@ public class DatabaseFilterElement
                         values = extractValuesFromList(
                                 expression.substring(1, expression.length()-1));
                         if (values==null || values.length==0)
-                            throw new QueryFilterElementException(
-                                    messages.format(
-                                        "InOperatorError", expression));
+                            throw new DatabaseFilterElementException(String.format(
+                                    "Invalid IN expression - (%s)", expression));
                         operatorType = OperatorType.IN;
-                    }else if(    propertyClass.equals(java.lang.String.class)
-                             && (   expression.indexOf("%") != -1
-                                 || expression.indexOf("_") != -1 ) )
+                    }else if( expression.indexOf("%") != -1 || expression.indexOf("_") != -1)
                     {
                         isFound  = true;
                         value    = expression;
                         //operator = "LIKE";
                         operatorType = OperatorType.LIKE;
                     }else{
-                        //если следы оператора "LIKE" не обнаружены ==> считаем,
-                        //что это оператор равенства
+                        //if LIKE operator not found then its a equals operator
                         operator = "=";
                         value    = expression;
                         operatorType = operatorType.SIMPLE;
                     }
                 }
                 if (values == null)
-                    value = convertStringToValueType(value);
-                else {
+                {
+                    if (operatorType != OperatorType.LIKE)
+                        value = convertStringToValueType(value);
+                }else {
                     Object[] tempValues = new Object[values.length];
                     for (int i=0; i<values.length; ++i)
                         tempValues[i] = convertStringToValueType(values[i]);
@@ -231,87 +195,29 @@ public class DatabaseFilterElement
                 }
             }
         }
-        this.expression=expression;
-        if (log.isDebugEnabled())
-            log.debug(
-                    "Expression seted. Operator: "+operator+"; Value: "+value);
     }
 
     private static String[] extractValuesFromList(String listString)
-        throws QueryFilterElementException
     {
-        for (String separator: LIST_SEPARATORS)
-            if (listString.contains(separator))
-                return listString.trim().split("\\s*"+separator+"\\s*");
-        return null;
+        StrTokenizer tokenizer = new StrTokenizer(listString, LIST_SEPARTOR, QUOTE_CHAR);
+        tokenizer.setTrimmerMatcher(StrMatcher.trimMatcher());
+        return tokenizer.getTokenArray();
     }
 
-    private Object convertStringToValueType(Object value)
-        throws QueryFilterElementException
+    private Object convertStringToValueType(Object value) throws DatabaseFilterElementException
     {
-        try{
-            return
-                converter.convert(
-                    propertyClass
-                    , value
-                    , pattern == null?
-                        propertyDescriptor.getPattern() : pattern);
-        }catch(ValueTypeConverterException e){
-            throw new QueryFilterElementException(
-                messages.format(
-                    "ExpressionError"
-                    , expression, propertyDescriptor.getDisplayName())
-                , e);
+        try
+        {
+            return converter.convert(columnType, value, convertPattern);
+        }
+        catch(TypeConverterException e)
+        {
+            throw new DatabaseFilterElementException(e.getMessage(), e);
         }
     }
 
-    public void setPropertyDescriptor(PropertyDescriptor propertyDescriptor) {
-        this.propertyDescriptor=propertyDescriptor;
-        this.propertyClass=propertyDescriptor.getPropertyClass();
-    }
-
-    public PropertyDescriptor getPropertyDescriptor() {
-        return propertyDescriptor;
-    }
-
-    public String getExpression() {
-        return expression;
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    public boolean isUseAliasAsProperty() {
-        return useAliasAsProperty;
-    }
-
-    public void setUseAliasAsProperty(boolean useAliasAsProperty) {
-        this.useAliasAsProperty = useAliasAsProperty;
-    }
-
-    public Object clone() throws CloneNotSupportedException {
-        return super.clone();
-    }
-
-    public OperatorType getOperatorType() {
+    public OperatorType getOperatorType()
+    {
         return operatorType;
     }
-
-    public void setOperatorType(OperatorType operatorType) {
-        this.operatorType = operatorType;
-    }
-
-    public String getParameterName() {
-        return parameterName;
-    }
-
-    public void setParameterName(String parameterName) {
-        this.parameterName = parameterName;
-    }
-
 }
