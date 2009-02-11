@@ -159,7 +159,8 @@ public class DatabaseRecordQuery
                         field.getFieldExtension(DatabaseRecordFieldExtension.class);
                 if (dbFieldExtension!=null)
                 {
-                    selectFields.put(dbFieldExtension.getColumnName(), field.getName());
+                    selectFields.put(
+                            dbFieldExtension.getColumnName().toUpperCase(), field.getName());
                     columnNames.add(dbFieldExtension.getColumnName());
                 }
             }
@@ -169,7 +170,7 @@ public class DatabaseRecordQuery
                         String.format(
                             "Record schema does not containts fields with extension (%s)"
                             , DatabaseRecordExtension.class.getSimpleName()));
-            if (queryTemplate!=null)
+            if (queryTemplate==null)
             {
                 //constructing SELECT clause
                 queryBuf = new StringBuilder("\nSELECT ");
@@ -200,7 +201,8 @@ public class DatabaseRecordQuery
                     switch(filterElement.getExpressionType())
                     {
                         case COMPLETE:
-                            queryBuf.append("\n   AND ("+filterElement.getValue()+")");
+                            queryBuf.append("\n   AND ("+filterElement.getColumnName()+" "
+                                    +filterElement.getValue()+")");
                             break;
                         case OPERATOR:
                             switch (filterElement.getOperatorType())
@@ -213,11 +215,11 @@ public class DatabaseRecordQuery
                                     break;
                                 case LIKE:
                                     queryBuf.append("\n   AND "+filterElement.getColumnName()
-                                            +" like '"+filterElement.getValue()+"'");
+                                            +" LIKE '"+filterElement.getValue()+"'");
                                     break;
                                 case BETWEEN:
                                     queryBuf.append("\n   AND "+filterElement.getColumnName()
-                                            +" between ? and ?");
+                                            +" BETWEEN ? AND ?");
                                     Object[] betweenValues = (Object[]) filterElement.getValue();
                                     for (Object value: betweenValues)
                                         values.add(value);
@@ -311,7 +313,7 @@ public class DatabaseRecordQuery
                     for (int i=1; i<=metaData.getColumnCount(); ++i)
                     {
                         Object value = resultSet.getObject(i);
-                        String columnName = metaData.getColumnLabel(i);
+                        String columnName = metaData.getColumnLabel(i).toUpperCase();
                         String fieldName = fields.get(columnName);
                         if (fieldName==null)
                             throw new RecordIteratorError(String.format(
