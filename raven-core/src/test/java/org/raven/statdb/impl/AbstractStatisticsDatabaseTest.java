@@ -23,7 +23,7 @@ import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.expr.impl.IfNode;
 import org.raven.log.LogLevel;
-import org.raven.rrd.objects.PushDataSource;
+import org.raven.PushDataSource;
 import org.raven.statdb.ProcessingInstruction;
 import org.raven.statdb.Rule;
 import org.raven.statdb.RuleProcessingResult;

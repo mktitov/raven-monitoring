@@ -17,17 +17,23 @@
 
 package org.raven.ds.impl;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
+import org.raven.DataCollector;
 import org.raven.RavenCoreTestCase;
 import org.raven.conf.Config;
 import org.raven.conf.Configurator;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.dbcp.impl.JDBCConnectionPoolNode;
+import org.raven.ds.Record;
+import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
@@ -45,6 +51,8 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
     private FilterableRecordFieldExtension filterExtension;
     private DatabaseRecordFieldExtension dbExtension;
     private RecordSchemaFieldNode field;
+
+    private DataCollector collector;
 
     @Before
     public void prepare() throws Exception
@@ -74,6 +82,12 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         tree.getRootNode().addAndSaveChildren(schema);
         schema.start();
         assertEquals(Status.STARTED, schema.getStatus());
+
+        DatabaseRecordExtension dbRecExtension = new DatabaseRecordExtension();
+        dbRecExtension.setName("db");
+        schema.getRecordExtensionsNode().addAndSaveChildren(dbRecExtension);
+        dbRecExtension.setTableName("record_data");
+        assertTrue(dbRecExtension.start());
 
         field = new RecordSchemaFieldNode();
         field.setName("field1");
@@ -195,6 +209,142 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         reader.setProvideFilterAttributesToConsumers(true);
 
         checkFilterAttributes();
+    }
+
+    @Test
+    public void gatherDataTest() throws Exception
+    {
+        prepareCollector();
+        prepareData();
+
+        reader.setRecordSchema(schema);
+        reader.getNodeAttribute("field1").setValue(null);
+        assertTrue(reader.start());
+        reader.getDataImmediate(collector, null);
+
+        assertEquals(4, collector.getDataList().size());
+    }
+
+    @Test
+    public void gatherDataWithOrderByTest() throws Exception
+    {
+        prepareCollector();
+        prepareData();
+
+        reader.setRecordSchema(schema);
+        reader.getNodeAttribute("field1").setValue(null);
+        reader.setOrderByExpression("col1");
+        assertTrue(reader.start());
+        reader.getDataImmediate(collector, null);
+
+        assertEquals(4, collector.getDataList().size());
+
+        checkRecords(collector.getDataList(), "1", "3", "4", "5");
+    }
+
+    @Test
+    public void gatherDataWithWhereExpressionTest() throws Exception
+    {
+        prepareCollector();
+        prepareData();
+
+        reader.setRecordSchema(schema);
+        reader.getNodeAttribute("field1").setValue(null);
+        reader.setOrderByExpression("col1");
+        reader.setWhereExpression("col1 in ('3', '5')");
+        assertTrue(reader.start());
+        reader.getDataImmediate(collector, null);
+
+        assertEquals(2, collector.getDataList().size());
+
+        checkRecords(collector.getDataList(), "3", "5");
+    }
+
+    @Test
+    public void gatherDataWithQueryTemplateTest() throws Exception
+    {
+        prepareCollector();
+        prepareData();
+
+        reader.setRecordSchema(schema);
+        reader.getNodeAttribute("field1").setValue(null);
+        reader.setQuery("select * from record_data where col1 in ('1', '4') order by col1");
+        assertTrue(reader.start());
+        reader.getDataImmediate(collector, null);
+
+        assertEquals(2, collector.getDataList().size());
+
+        checkRecords(collector.getDataList(), "1", "4");
+    }
+
+    @Test
+    public void gatherDataWithFilterAttributesTest() throws SQLException, RecordException, Exception
+    {
+        prepareCollector();
+        prepareData();
+
+        reader.setRecordSchema(schema);
+        reader.setOrderByExpression("col1");
+        reader.getNodeAttribute("field1").setValue("{3, 5}");
+        assertTrue(reader.start());
+        reader.getDataImmediate(collector, null);
+
+        assertEquals(2, collector.getDataList().size());
+
+        checkRecords(collector.getDataList(), "3", "5");
+    }
+
+    @Test
+    public void gatherDataWithQueryTemplateAndFilterAttributesTest() throws Exception
+    {
+        prepareCollector();
+        prepareData();
+
+        reader.setRecordSchema(schema);
+        reader.setQuery("select * from record_data where 1=1 {#} order by col1");
+        reader.getNodeAttribute("field1").setValue("{1, 4}");
+        assertTrue(reader.start());
+        reader.getDataImmediate(collector, null);
+
+        assertEquals(2, collector.getDataList().size());
+
+        checkRecords(collector.getDataList(), "1", "4");
+    }
+
+    private void checkRecords(Collection records, String... values) throws RecordException
+    {
+        int i=0;
+        for (Object record: records)
+        {
+            assertEquals(values[i++], ((Record)record).getValue("field1"));
+        }
+    }
+
+    private void checkRecord(Record record, String field1Value) throws RecordException
+    {
+        assertEquals(field1Value, record.getValue("field1"));
+    }
+
+    private void prepareCollector()
+    {
+        collector = new DataCollector();
+        collector.setName("collector");
+        tree.getRootNode().addAndSaveChildren(collector);
+        collector.setDataSource(reader);
+        assertTrue(collector.start());
+    }
+
+    private void prepareData() throws SQLException
+    {
+        Connection con = pool.getConnection();
+        Statement st = con.createStatement();
+        st.executeUpdate("drop table if exists record_data");
+        st.executeUpdate("create table record_data(col1 varchar)");
+        
+        st.executeUpdate("insert into record_data (col1) values('3')");
+        st.executeUpdate("insert into record_data (col1) values('4')");
+        st.executeUpdate("insert into record_data (col1) values('1')");
+        st.executeUpdate("insert into record_data (col1) values('5')");
     }
 
     private void checkFilterAttribute(NodeAttribute attr)

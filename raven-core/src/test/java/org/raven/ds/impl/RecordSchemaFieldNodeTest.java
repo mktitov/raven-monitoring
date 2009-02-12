@@ -40,22 +40,30 @@ public class RecordSchemaFieldNodeTest extends RavenCoreTestCase
         field.start();
         assertEquals(Status.STARTED, field.getStatus());
 
-        assertNull(field.getFieldExtension(ContainerNode.class));
+        assertNull(field.getFieldExtension(ContainerNode.class, null));
 
         ContainerNode node1 = new ContainerNode("node1");
         field.addAndSaveChildren(node1);
 
-        assertNull(field.getFieldExtension(ContainerNode.class));
+        assertNull(field.getFieldExtension(ContainerNode.class, null));
 
         node1.start();
 
-        assertSame(node1, field.getFieldExtension(ContainerNode.class));
+        assertSame(node1, field.getFieldExtension(ContainerNode.class, null));
 
         LeafNode node2 = new LeafNode("node2");
         field.addAndSaveChildren(node2);
         node2.start();
 
-        assertSame(node1, field.getFieldExtension(ContainerNode.class));
-        assertSame(node2, field.getFieldExtension(LeafNode.class));
+        assertSame(node1, field.getFieldExtension(ContainerNode.class, null));
+        assertSame(node2, field.getFieldExtension(LeafNode.class, null));
+
+        ContainerNode node3 = new ContainerNode("node3");
+        field.addAndSaveChildren(node3);
+        assertTrue(node3.start());
+
+        assertSame(node1, field.getFieldExtension(ContainerNode.class, "node1"));
+        assertSame(node3, field.getFieldExtension(ContainerNode.class, "node3"));
+
     }
 }

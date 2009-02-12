@@ -36,8 +36,11 @@ public interface RecordSchema
      */
     public Record createRecord() throws RecordException;
     /**
-     * Returns the record extension by its type or null if the record does not contain the
+     * Returns the record extension by its type and name or null if the record does not contain the
      * extension of the type passed in the parameter.
+     * @param extensionType the type of the extension
+     * @param extensionName he name of the extension. If name is null then method returns the first
+     *      found extension.
      */
-    public <E> E getRecordExtension(Class<E> extensionType);
+    public <E> E getRecordExtension(Class<E> extensionType, String extensionName);
 }

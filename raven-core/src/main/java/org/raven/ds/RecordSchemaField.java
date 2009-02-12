@@ -32,8 +32,15 @@ public interface RecordSchemaField
      */
     public RecordSchemaFieldType getFieldType();
     /**
-     * Returns the field extension by its type or null if field does not have the extension of
-     * selected type.
+     * Returns the pattern which will be used when convertin string to the value of this field type.
      */
-    public <E> E getFieldExtension (Class<E> extensionType);
+    public String getPattern();
+    /**
+     * Returns the field extension by its type and name, or null if field does not have 
+     * the extension of selected type.
+     * @param extensionType the type of the extension
+     * @param extensionName he name of the extension. If name is null then method returns the first
+     *      found extension.
+     */
+    public <E> E getFieldExtension (Class<E> extensionType, String extensionName);
 }

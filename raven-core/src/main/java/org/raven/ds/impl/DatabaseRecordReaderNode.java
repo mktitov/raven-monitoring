@@ -32,11 +32,11 @@ import org.raven.dbcp.ConnectionPool;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
+import org.raven.ds.RecordSchemaFieldType;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeListener;
-import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.weda.annotations.constraints.NotNull;
 
@@ -55,6 +55,12 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
     @NotNull
     private RecordSchemaNode recordSchema;
 
+    @Parameter
+    private String databaseExtensionName;
+    
+    @Parameter
+    private String filterExtensionName;
+
     @Parameter(valueHandlerType=ConnectionPoolValueHandlerFactory.TYPE)
     @NotNull()
     private ConnectionPool connectionPool;
@@ -62,6 +68,22 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
     @Parameter(defaultValue="false")
     @NotNull
     private Boolean provideFilterAttributesToConsumers;
+
+    @Parameter
+    private String query;
+
+    @Parameter
+    private String whereExpression;
+
+    @Parameter
+    private String orderByExpression;
+
+    @Parameter
+    private Integer maxRows;
+
+    @Parameter
+    private Integer fetchSize;
+
 
     private List<SelectField> selectFields;
 
@@ -85,7 +107,7 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
     {
         super.doStart();
 
-        syncFilterFields(recordSchema);
+        syncFilterFields(recordSchema, true);
     }
 
     @Override
@@ -93,13 +115,36 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
         DataConsumer dataConsumer, Map<String, NodeAttribute> attributes)
             throws Exception
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        List<DatabaseFilterElement> filterElements = createFilterElements(attributes);
+        
+        DatabaseRecordQuery recordQuery = null;
+        String _query = query;
+        if (_query==null || query.trim().isEmpty())
+            recordQuery = new DatabaseRecordQuery(
+                    recordSchema, databaseExtensionName, filterElements, whereExpression
+                    , orderByExpression, connectionPool, maxRows, fetchSize);
+        else
+            recordQuery = new DatabaseRecordQuery(
+                    recordSchema, databaseExtensionName, filterElements, _query, connectionPool
+                    , maxRows, fetchSize);
+
+        DatabaseRecordQuery.RecordIterator it = recordQuery.execute();
+        try
+        {
+            while (it.hasNext())
+                dataConsumer.setData(this, it.next());
+            
+            return true;
+        }
+        finally
+        {
+            recordQuery.close();
+        }
     }
 
     @Override
     public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
@@ -116,7 +161,7 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
                 {
                     if (oldValue!=null)
                         ((RecordSchemaNode)oldValue).removeListener(this);
-                    syncFilterFields((RecordSchema)newValue);
+                    syncFilterFields((RecordSchema)newValue, false);
                     if (newValue!=null)
                         ((RecordSchemaNode)newValue).addListener(schemaListener);
                 }
@@ -164,26 +209,134 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
         this.recordSchema = recordSchema;
     }
 
-    private void syncFilterFields(RecordSchema recordSchema)
+    public String getDatabaseExtensionName()
+    {
+        return databaseExtensionName;
+    }
+
+    public void setDatabaseExtensionName(String databaseExtensionName)
+    {
+        this.databaseExtensionName = databaseExtensionName;
+    }
+
+    public String getFilterExtensionName()
+    {
+        return filterExtensionName;
+    }
+
+    public void setFilterExtensionName(String filterExtensionName)
+    {
+        this.filterExtensionName = filterExtensionName;
+    }
+
+    public String getOrderByExpression()
+    {
+        return orderByExpression;
+    }
+
+    public void setOrderByExpression(String orderByExpression)
+    {
+        this.orderByExpression = orderByExpression;
+    }
+
+    public String getQuery()
+    {
+        return query;
+    }
+
+    public void setQuery(String query)
+    {
+        this.query = query;
+    }
+
+    public String getWhereExpression()
+    {
+        return whereExpression;
+    }
+
+    public Integer getFetchSize()
+    {
+        return fetchSize;
+    }
+
+    public void setFetchSize(Integer fetchSize)
+    {
+        this.fetchSize = fetchSize;
+    }
+
+    public Integer getMaxRows()
+    {
+        return maxRows;
+    }
+
+    public void setMaxRows(Integer maxRows)
+    {
+        this.maxRows = maxRows;
+    }
+
+    public void setWhereExpression(String whereExpression)
+    {
+        this.whereExpression = whereExpression;
+    }
+
+    private List<DatabaseFilterElement> createFilterElements(Map<String, NodeAttribute> attributes)
+            throws DatabaseFilterElementException
+    {
+        List<DatabaseFilterElement> filterElements = null;
+        if (filterFields != null && filterFields.size() > 0)
+        {
+            filterElements = new ArrayList<DatabaseFilterElement>(filterFields.size());
+            for (FilterField field : filterFields.values())
+            {
+                String expression = null;
+                String fieldName = field.getFieldInfo().getName();
+                NodeAttribute consumerAttr = attributes.get(fieldName);
+                if (consumerAttr != null)
+                    expression = consumerAttr.getValue();
+                if (expression == null)
+                    expression = getNodeAttribute(fieldName).getValue();
+
+                Class fieldType = RecordSchemaFieldType.getSqlType(
+                        field.getFieldInfo().getFieldType());
+                DatabaseFilterElement element = new DatabaseFilterElement(
+                        field.getDbInfo().getColumnName(), fieldType
+                        , field.getFieldInfo().getPattern(), converter);
+                element.setExpression(expression);
+                if (element.getExpressionType() != DatabaseFilterElement.ExpressionType.EMPTY)
+                    filterElements.add(element);
+            }
+        }
+
+        return filterElements;
+    }
+
+    private void syncFilterFields(RecordSchema recordSchema, boolean insideStartLifeCycle)
+            throws Exception
     {
         filterFieldLock.lock();
         try
         {
+            boolean stop = false;
             RecordSchemaField[] fields = null;
             if (recordSchema!=null)
                 fields = recordSchema.getFields();
             filterFields = new HashMap<RecordSchemaField, FilterField>();
             Set<String> usedAttributes = new HashSet<String>();
+            String dbExtension = databaseExtensionName;
+            String filterExtension = filterExtensionName;
             if (fields!=null)
                 for (RecordSchemaField field: fields)
                 {
-                    FilterField filterField = FilterField.create(field);
+                    FilterField filterField = 
+                            FilterField.create(field, dbExtension, filterExtension);
                     if (filterField!=null)
                     {
                         filterFields.put(field, filterField);
                         try
                         {
-                            syncFilterFieldWithAttribute(filterField, null);
+                            NodeAttribute attr = syncFilterFieldWithAttribute(filterField, null);
+                            if (attr.isRequired() && attr.getValue()==null)
+                                stop = true;
                             usedAttributes.add(field.getName());
                         }
                         catch (Throwable ex)
@@ -195,6 +348,18 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
 
             removeUnusedFilterAttributes(usedAttributes);
 
+            if (stop)
+            {
+                if (insideStartLifeCycle)
+                    throw new Exception(
+                            "Node has filter attributes with not seted required values");
+                else if (Status.STARTED==getStatus())
+                {
+                    error("Stoping node because of there are filter attributes with not seted " +
+                            "required values");
+                    stop();
+                }
+            }
         }
         finally
         {
@@ -217,8 +382,9 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
         }
     }
 
-    private void syncFilterFieldWithAttribute(FilterField filterField, String oldFilterFieldName)
-            throws Exception
+    private NodeAttribute syncFilterFieldWithAttribute(
+            FilterField filterField, String oldFilterFieldName)
+        throws Exception
     {
         NodeAttribute filterAttr = getNodeAttribute(filterField.fieldInfo.getName());
         if (filterAttr==null && oldFilterFieldName!=null)
@@ -265,6 +431,8 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
             if (hasChanges)
                 filterAttr.save();
         }
+
+        return filterAttr;
     }
 
     public void removeFilterAttribute(NodeAttribute attr)
@@ -326,12 +494,13 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
             this.fieldInfo = fieldInfo;
         }
         
-        public static FilterField create(RecordSchemaField field)
+        public static FilterField create(
+                RecordSchemaField field, String dbExtension, String filterExtension)
         {
             DatabaseRecordFieldExtension dbExt =
-                    field.getFieldExtension(DatabaseRecordFieldExtension.class);
+                    field.getFieldExtension(DatabaseRecordFieldExtension.class, dbExtension);
             FilterableRecordFieldExtension filterExt =
-                    field.getFieldExtension(FilterableRecordFieldExtension.class);
+                    field.getFieldExtension(FilterableRecordFieldExtension.class, filterExtension);
 
             return dbExt==null || filterExt==null? null : new FilterField(filterExt, dbExt, field);
         }
@@ -375,17 +544,13 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
             filterFieldLock.lock();
             try
             {
-                if (!newStatus.equals(Status.STARTED))
-                    removeNodeAttribute(field.getName());
-                else
-                    try
-                    {
-                        syncFilterFieldWithAttribute(filterFields.get(field), null);
-                    }
-                    catch (Exception ex)
-                    {
-                        logErrorSyncFilterAttr(field.getName(), ex);
-                    }
+                try
+                {
+                    syncFilterFields(recordSchema, false);
+                } catch (Exception ex)
+                {
+                    error("Error syncing filter attributes");
+                }
             }
             finally
             {
@@ -400,17 +565,13 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
                 filterFieldLock.lock();
                 try
                 {
-                    RecordSchemaFieldNode field = (RecordSchemaFieldNode) node;
-                    if (Status.STARTED.equals(field.getStatus()))
-                        try
-                        {
-                            syncFilterFieldWithAttribute(filterFields.get(field), oldName);
-                        } catch (Exception ex)
-                        {
-                            logErrorSyncFilterAttr(field.getName(), ex);
-                        }
-                    else
-                        removeFilterAttribute(field.getName());
+                    try
+                    {
+                        syncFilterFields(recordSchema, false);
+                    } catch (Exception ex)
+                    {
+                        error("Error syncing filter attributes");
+                    }
                 }
                 finally
                 {
@@ -419,21 +580,13 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
             }
         }
 
-        public void nodeShutdowned(Node node)
-        {
-        }
+        public void nodeShutdowned(Node node) { }
 
-        public void childrenAdded(Node owner, Node children)
-        {
-        }
+        public void childrenAdded(Node owner, Node children) { }
 
-        public void dependendNodeAdded(Node node, Node dependentNode)
-        {
-        }
+        public void dependendNodeAdded(Node node, Node dependentNode) { }
 
-        public void nodeRemoved(Node removedNode)
-        {
-        }
+        public void nodeRemoved(Node removedNode) { }
 
         public void nodeAttributeNameChanged(
                 NodeAttribute attribute, String oldName, String newName)
@@ -448,23 +601,12 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
                 && FilterableRecordFieldExtension.FILTER_VALUE_REQUIRED_ATTR.equals(
                         attribute.getName()))
             {
-                FilterField filterField = filterFields.get(node.getEffectiveParent());
                 try
                 {
-                    syncFilterFieldWithAttribute(filterField, null);
-                    NodeAttribute attr = getNodeAttribute(filterField.getFieldInfo().getName());
-                    if (attr.isRequired() && attr.getValue()==null && Status.STARTED==getStatus())
-                    {
-                        warn(String.format(
-                                "Stoping node because of value for required attribute (%s) " +
-                                "not setted", attr.getName()));
-                        stop();
-                    }
-                        
-                }
-                catch (Exception ex)
+                    syncFilterFields(recordSchema, false);
+                } catch (Exception ex)
                 {
-                    logErrorSyncFilterAttr(filterField.getFieldInfo().getName(), ex);
+                    error("Error syncing filter attributes");
                 }
             }
         }

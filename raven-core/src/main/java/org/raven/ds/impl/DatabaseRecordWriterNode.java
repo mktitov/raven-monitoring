@@ -41,6 +41,9 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     @NotNull
     private RecordSchemaNode recordSchema;
 
+    @Parameter
+    private String databaseExtensionName;
+
     @Parameter(valueHandlerType=ConnectionPoolValueHandlerFactory.TYPE)
     @NotNull
     private ConnectionPool connectionPool;
@@ -63,6 +66,16 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     public void setRecordSchema(RecordSchemaNode recordSchema)
     {
         this.recordSchema = recordSchema;
+    }
+
+    public String getDatabaseExtensionName()
+    {
+        return databaseExtensionName;
+    }
+
+    public void setDatabaseExtensionName(String databaseExtensionName)
+    {
+        this.databaseExtensionName = databaseExtensionName;
     }
 
     @Override
@@ -89,8 +102,8 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
             return;
         }
 
-        DatabaseRecordExtension recordExtension =
-                _recordSchema.getRecordExtension(DatabaseRecordExtension.class);
+        DatabaseRecordExtension recordExtension =_recordSchema.getRecordExtension(
+                DatabaseRecordExtension.class, databaseExtensionName);
         if (recordExtension==null)
         {
             error(String.format(
@@ -126,8 +139,8 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         List<Object> values = new ArrayList<Object>();
         for (RecordSchemaField field : fields)
         {
-            DatabaseRecordFieldExtension extension =
-                    field.getFieldExtension(DatabaseRecordFieldExtension.class);
+            DatabaseRecordFieldExtension extension = field.getFieldExtension(
+                    DatabaseRecordFieldExtension.class, databaseExtensionName);
             if (extension != null)
             {
                 columnNames.add(extension.getColumnName());

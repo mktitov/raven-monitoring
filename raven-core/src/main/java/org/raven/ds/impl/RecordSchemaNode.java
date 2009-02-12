@@ -128,20 +128,21 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema
         return new RecordImpl(this);
     }
 
-    public <E> E getRecordExtension(Class<E> extensionType)
+    public <E> E getRecordExtension(Class<E> extensionType, String extensionName)
     {
         Collection<Node> childs = recordExtensionsNode.getChildrens();
         if (childs!=null && childs.size()>0)
             for (Node child: childs)
                 if (   Status.STARTED==child.getStatus()
-                    && extensionType.isAssignableFrom(child.getClass()))
+                    && extensionType.isAssignableFrom(child.getClass())
+                    && (extensionName==null || extensionName.equals(child.getName())))
                 {
                     return (E)child;
                 }
 
         RecordSchemaNode _extendsSchema = extendsSchema;
         if (_extendsSchema!=null)
-            return _extendsSchema.getRecordExtension(extensionType);
+            return _extendsSchema.getRecordExtension(extensionType, extensionName);
 
         return null;
     }

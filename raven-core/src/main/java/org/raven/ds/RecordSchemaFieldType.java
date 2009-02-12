@@ -52,4 +52,13 @@ public enum RecordSchemaFieldType
             default: return value;
         }
     }
+
+    public static Class getSqlType(RecordSchemaFieldType type)
+    {
+        switch(type)
+        {
+            case IP: return String.class;
+            default: return type.getType();
+        }
+    }
 }

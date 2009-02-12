@@ -36,6 +36,9 @@ public class RecordSchemaFieldNode extends BaseNode implements RecordSchemaField
     @Parameter @NotNull
     private RecordSchemaFieldType fieldType;
 
+    @Parameter
+    private String pattern;
+
     public RecordSchemaFieldType getFieldType()
     {
         return fieldType;
@@ -46,13 +49,24 @@ public class RecordSchemaFieldNode extends BaseNode implements RecordSchemaField
         this.fieldType = fieldType;
     }
 
-    public <E> E getFieldExtension(Class<E> extensionType)
+    public String getPattern()
+    {
+        return pattern;
+    }
+
+    public void setPattern(String pattern)
+    {
+        this.pattern = pattern;
+    }
+
+    public <E> E getFieldExtension(Class<E> extensionType, String extensionName)
     {
         Collection<Node> childs = getChildrens();
         if (childs!=null && childs.size()>0)
             for (Node child: childs)
                 if (   Status.STARTED==child.getStatus()
-                    && extensionType.isAssignableFrom(child.getClass()))
+                    && extensionType.isAssignableFrom(child.getClass())
+                    && (extensionName==null || extensionName.equals(child.getName())))
                 {
                     return (E)child;
                 }

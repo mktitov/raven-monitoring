@@ -217,26 +217,34 @@ public class RecordSchemaNodeTest extends RavenCoreTestCase
         assertNotNull(extensionsNode);
         assertEquals(Status.STARTED, extensionsNode.getStatus());
 
-        assertNull(schemaNode.getRecordExtension(ContainerNode.class));
+        assertNull(schemaNode.getRecordExtension(ContainerNode.class, null));
 
         ContainerNode ext1 = new ContainerNode("ext1");
         extensionsNode.addAndSaveChildren(ext1);
 
-        assertNull(schemaNode.getRecordExtension(ContainerNode.class));
+        assertNull(schemaNode.getRecordExtension(ContainerNode.class, null));
 
         ext1.start();
 
-        assertNotNull(schemaNode.getRecordExtension(ContainerNode.class));
-        assertSame(ext1, schemaNode.getRecordExtension(ContainerNode.class));
+        assertNotNull(schemaNode.getRecordExtension(ContainerNode.class, null));
+        assertSame(ext1, schemaNode.getRecordExtension(ContainerNode.class, null));
 
         LeafNode ext2 = new LeafNode("ext2");
         extensionsNode.addAndSaveChildren(ext2);
         ext2.start();
 
-        assertNotNull(schemaNode.getRecordExtension(ContainerNode.class));
-        assertSame(ext1, schemaNode.getRecordExtension(ContainerNode.class));
-        assertNotNull(schemaNode.getRecordExtension(LeafNode.class));
-        assertSame(ext2, schemaNode.getRecordExtension(LeafNode.class));
+        assertNotNull(schemaNode.getRecordExtension(ContainerNode.class, null));
+        assertSame(ext1, schemaNode.getRecordExtension(ContainerNode.class, null));
+        assertNotNull(schemaNode.getRecordExtension(LeafNode.class, null));
+        assertSame(ext2, schemaNode.getRecordExtension(LeafNode.class, null));
+
+        ContainerNode ext3 = new ContainerNode("ext3");
+        extensionsNode.addAndSaveChildren(ext3);
+        assertTrue(ext3.start());
+
+        assertNotNull(schemaNode.getRecordExtension(ContainerNode.class, null));
+        assertSame(ext1, schemaNode.getRecordExtension(ContainerNode.class, "ext1"));
+        assertSame(ext3, schemaNode.getRecordExtension(ContainerNode.class, "ext3"));
     }
 
     @Test
@@ -274,10 +282,10 @@ public class RecordSchemaNodeTest extends RavenCoreTestCase
         ext1.start();
         assertEquals(Status.STARTED, ext1.getStatus());
 
-        assertNotNull(schemaNode.getRecordExtension(ContainerNode.class));
-        assertSame(ext1, schemaNode.getRecordExtension(ContainerNode.class));
+        assertNotNull(schemaNode.getRecordExtension(ContainerNode.class, null));
+        assertSame(ext1, schemaNode.getRecordExtension(ContainerNode.class, null));
 
-        assertNotNull(schemaNode.getRecordExtension(LeafNode.class));
-        assertSame(parentExt2, schemaNode.getRecordExtension(LeafNode.class));
+        assertNotNull(schemaNode.getRecordExtension(LeafNode.class, null));
+        assertSame(parentExt2, schemaNode.getRecordExtension(LeafNode.class, null));
     }
 }

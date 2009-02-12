@@ -45,7 +45,10 @@ public class DatabaseRecordQuery
     private final String orderByExpression;
     private final String queryTemplate;
     private final ConnectionPool connectionPool;
+    private final String databaseExtensionName;
     private final String query;
+    private final int maxRows;
+    private final int fetchSize;
     private Collection values;
     private Map<String/*column name*/, String/*field name*/> selectFields;
     private Connection connection;
@@ -53,16 +56,22 @@ public class DatabaseRecordQuery
 
     public DatabaseRecordQuery(
             RecordSchema recordSchema
+            , String databaseExtensionName
             , Collection<DatabaseFilterElement> filterElements
             , String whereExpression
             , String orderByExpression
-            , ConnectionPool connectionPool)
+            , ConnectionPool connectionPool
+            , Integer maxRows
+            , Integer fetchSize)
         throws DatabaseRecordQueryException
     {
         this.recordSchema = recordSchema;
         this.whereExpression = whereExpression;
         this.connectionPool = connectionPool;
         this.orderByExpression = orderByExpression;
+        this.databaseExtensionName = databaseExtensionName;
+        this.maxRows = maxRows==null? 0 : maxRows;
+        this.fetchSize = fetchSize==null? 0 : fetchSize;
 
         this.queryTemplate = null;
 
@@ -75,13 +84,21 @@ public class DatabaseRecordQuery
     }
 
     public DatabaseRecordQuery(
-            RecordSchema recordSchema, Collection<DatabaseFilterElement> filterElements
-            , String queryTemplate, ConnectionPool connectionPool)
+            RecordSchema recordSchema
+            , String databaseExtensionName
+            , Collection<DatabaseFilterElement> filterElements
+            , String queryTemplate
+            , ConnectionPool connectionPool
+            , Integer maxRows
+            , Integer fetchSize)
         throws DatabaseRecordQueryException
     {
         this.recordSchema = recordSchema;
         this.queryTemplate = queryTemplate;
         this.connectionPool = connectionPool;
+        this.databaseExtensionName = databaseExtensionName;
+        this.maxRows = maxRows==null? 0 : maxRows;
+        this.fetchSize = fetchSize==null? 0 : fetchSize;
 
         whereExpression = null;
         orderByExpression = null;
@@ -95,6 +112,8 @@ public class DatabaseRecordQuery
         try
         {
             statement = connection.prepareStatement(query);
+            statement.setMaxRows(maxRows);
+            statement.setFetchSize(fetchSize);
             if (values!=null)
             {
                 int i=1;
@@ -140,8 +159,8 @@ public class DatabaseRecordQuery
             if (fields==null || fields.length==0)
                 throw new DatabaseRecordQueryException("Record schema does not contains fields");
 
-            DatabaseRecordExtension dbExtension =
-                    recordSchema.getRecordExtension(DatabaseRecordExtension.class);
+            DatabaseRecordExtension dbExtension = recordSchema.getRecordExtension(
+                    DatabaseRecordExtension.class, databaseExtensionName);
             if (dbExtension==null)
                 throw new DatabaseRecordQueryException(String.format(
                         "Record schema does not have (%s) extension"
@@ -155,8 +174,8 @@ public class DatabaseRecordQuery
             List<String> columnNames = new ArrayList<String>();
             for (RecordSchemaField field: fields)
             {
-                DatabaseRecordFieldExtension dbFieldExtension =
-                        field.getFieldExtension(DatabaseRecordFieldExtension.class);
+                DatabaseRecordFieldExtension dbFieldExtension = field.getFieldExtension(
+                            DatabaseRecordFieldExtension.class, databaseExtensionName);
                 if (dbFieldExtension!=null)
                 {
                     selectFields.put(

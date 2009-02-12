@@ -15,7 +15,7 @@
  *  under the License.
  */
 
-package org.raven.rrd.objects;
+package org.raven;
 
 import java.util.Collection;
 import org.raven.ds.DataConsumer;

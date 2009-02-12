@@ -52,6 +52,9 @@ public class CvsRecordReaderNode extends AbstractDataPipe
     @NotNull
     private RecordSchemaNode recordSchema;
 
+    @Parameter
+    private String cvsExtensionName;
+
     @Parameter()
     private Charset dataEncoding;
     
@@ -214,6 +217,16 @@ public class CvsRecordReaderNode extends AbstractDataPipe
         this.recordSchema = recordSchema;
     }
 
+    public String getCvsExtensionName()
+    {
+        return cvsExtensionName;
+    }
+
+    public void setCvsExtensionName(String cvsExtensionName)
+    {
+        this.cvsExtensionName = cvsExtensionName;
+    }
+
     public Charset getDataEncoding()
     {
         return dataEncoding;
@@ -264,7 +277,7 @@ public class CvsRecordReaderNode extends AbstractDataPipe
         for (RecordSchemaField field: fields)
         {
             CvsRecordFieldExtension extension =
-                    field.getFieldExtension(CvsRecordFieldExtension.class);
+                    field.getFieldExtension(CvsRecordFieldExtension.class, cvsExtensionName);
             if (extension!=null)
                 result.put(field.getName(), new FieldInfo(extension));
         }

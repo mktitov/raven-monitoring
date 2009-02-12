@@ -32,7 +32,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.rrd.ConsolidationFunction;
-import org.raven.rrd.objects.PushDataSource;
+import org.raven.PushDataSource;
 import org.raven.statdb.AggregationFunction;
 import org.raven.statdb.StatisticsRecord;
 import org.raven.statdb.ValueType;
