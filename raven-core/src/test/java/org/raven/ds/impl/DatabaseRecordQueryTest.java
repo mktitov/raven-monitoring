@@ -115,7 +115,8 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
     @Test
     public void queryConstructionTest_1() throws DatabaseRecordQueryException
     {
-        DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(schema, null, null, null, pool);
+        DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(
+                schema, null, null, null, pool, null, null);
         assertEquals(
                 "\nSELECT column1, column2\nFROM record_data\nWHERE 1=1", recordQuery.getQuery());
     }
@@ -129,7 +130,8 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
     @Test
     public void queryConstructionTest_2() throws Exception
     {
-        DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(schema, null, null, "2=2", null, pool);
+        DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(
+                schema, null, null, "2=2", null, pool, null, null);
         assertEquals(
                 "\nSELECT column1, column2\nFROM record_data\nWHERE 1=1\n   AND (2=2)"
                 , recordQuery.getQuery());
@@ -145,7 +147,7 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
     public void queryConstructionTest_3() throws Exception
     {
         DatabaseRecordQuery recordQuery =
-                new DatabaseRecordQuery(schema, null, null, null, "column1", pool);
+                new DatabaseRecordQuery(schema, null, null, null, "column1", pool, null, null);
         assertEquals(
                 "\nSELECT column1, column2\nFROM record_data\nWHERE 1=1\nORDER BY column1"
                 , recordQuery.getQuery());
@@ -164,7 +166,7 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
                 "column1", Integer.class, null, converter);
         filterElement.setExpression("#is not null");
         DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(
-                schema, null, Arrays.asList(filterElement), null, null, pool);
+                schema, null, Arrays.asList(filterElement), null, null, pool, null, null);
         assertEquals(
                 "\nSELECT column1, column2\nFROM record_data\nWHERE 1=1" +
                 "\n   AND (column1 is not null)"
@@ -184,7 +186,7 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
                 "column1", Integer.class, null, converter);
         filterElement.setExpression(">10");
         DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(
-                schema, null, Arrays.asList(filterElement), null, null, pool);
+                schema, null, Arrays.asList(filterElement), null, null, pool, null, null);
         assertEquals(
                 "\nSELECT column1, column2\nFROM record_data\nWHERE 1=1" +
                 "\n   AND column1>?"
@@ -204,7 +206,7 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
                 "column1", Integer.class, null, converter);
         filterElement.setExpression("10%");
         DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(
-                schema, null, Arrays.asList(filterElement), null, null, pool);
+                schema, null, Arrays.asList(filterElement), null, null, pool, null, null);
         assertEquals(
                 "\nSELECT column1, column2\nFROM record_data\nWHERE 1=1" +
                 "\n   AND column1 LIKE '10%'"
@@ -224,7 +226,7 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
                 "column1", Integer.class, null, converter);
         filterElement.setExpression("[1, 2]");
         DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(
-                schema, null, Arrays.asList(filterElement), null, null, pool);
+                schema, null, Arrays.asList(filterElement), null, null, pool, null, null);
         assertEquals(
                 "\nSELECT column1, column2\nFROM record_data\nWHERE 1=1" +
                 "\n   AND column1 BETWEEN ? AND ?"
@@ -243,7 +245,7 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
                 "column1", Integer.class, null, converter);
         filterElement.setExpression("{1, 2}");
         DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(
-                schema, null, Arrays.asList(filterElement), null, null, pool);
+                schema, null, Arrays.asList(filterElement), null, null, pool, null, null);
         assertEquals(
                 "\nSELECT column1, column2\nFROM record_data\nWHERE 1=1" +
                 "\n   AND column1 IN (?, ?)"
@@ -259,7 +261,7 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
     public void queryConstructionTest_9() throws Exception
     {
         DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(
-                schema, null, null, "select * from table", pool);
+                schema, null, null, "select * from table", pool, null, null);
         assertEquals("select * from table", recordQuery.getQuery());
     }
     /*
@@ -272,7 +274,7 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
     public void queryConstructionTest_10() throws Exception
     {
         DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(
-                schema, null, null, "select * from table where 1=1 {#}", pool);
+                schema, null, null, "select * from table where 1=1 {#}", pool, null, null);
         assertEquals("select * from table where 1=1 ", recordQuery.getQuery());
     }
     /*
@@ -289,7 +291,7 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
         filterElement.setExpression(">10");
         DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(
                     schema, null, Arrays.asList(filterElement)
-                    , "select * from table where 1=1 {#} order by column1", pool);
+                    , "select * from table where 1=1 {#} order by column1", pool, null, null);
         assertEquals(
                 "select * from table where 1=1 \n   AND column1>? order by column1"
                 , recordQuery.getQuery());
@@ -299,7 +301,8 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
     public void execute_noRecords() throws Exception
     {
         createTable(pool);
-        DatabaseRecordQuery query = new DatabaseRecordQuery(schema, null, null, null, pool);
+        DatabaseRecordQuery query = new DatabaseRecordQuery(
+                schema, null, null, null, pool, null, null);
 
         DatabaseRecordQuery.RecordIterator it = query.execute();
         assertNotNull(it);
@@ -323,7 +326,8 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
         filterElement2.setExpression("10");
 
         DatabaseRecordQuery query = new DatabaseRecordQuery(
-                schema, null, Arrays.asList(filterElement1, filterElement2), null, "column1", pool);
+                schema, null, Arrays.asList(filterElement1, filterElement2), null, "column1", pool
+                , null, null);
         
         DatabaseRecordQuery.RecordIterator it = query.execute();
         assertNotNull(it);
@@ -349,7 +353,8 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
         filterElement2.setExpression("10");
 
         DatabaseRecordQuery query = new DatabaseRecordQuery(
-                schema, null, Arrays.asList(filterElement1, filterElement2), null, "column1", pool);
+                schema, null, Arrays.asList(filterElement1, filterElement2), null, "column1", pool
+                , null, null);
 
         DatabaseRecordQuery.RecordIterator it = query.execute();
         assertNotNull(it);
@@ -358,6 +363,24 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
 
         testRecord(1, 10, recs.get(0));
         testRecord(3, 10, recs.get(1));
+    }
+
+    @Test
+    public void maxRowsTest() throws Exception
+    {
+        createTable(pool);
+        insertData(pool);
+
+        DatabaseRecordQuery query = new DatabaseRecordQuery(
+                schema, null, null, null, "column1", pool, 2, null);
+
+        DatabaseRecordQuery.RecordIterator it = query.execute();
+        assertNotNull(it);
+        List<Record> recs = iteratorToList(it);
+        assertEquals(2, recs.size());
+
+        testRecord(1, 10, recs.get(0));
+        testRecord(1, 11, recs.get(1));
     }
 
     private void createTable(JDBCConnectionPoolNode pool) throws SQLException
