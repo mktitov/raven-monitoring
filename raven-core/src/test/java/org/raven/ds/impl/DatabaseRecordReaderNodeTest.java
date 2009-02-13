@@ -261,6 +261,24 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
     }
 
     @Test
+    public void gatherDataWithMaxRowsTest() throws Exception
+    {
+        prepareCollector();
+        prepareData();
+
+        reader.setRecordSchema(schema);
+        reader.getNodeAttribute("field1").setValue(null);
+        reader.setOrderByExpression("col1");
+        reader.setMaxRows(2);
+        assertTrue(reader.start());
+        reader.getDataImmediate(collector, null);
+
+        assertEquals(2, collector.getDataList().size());
+
+        checkRecords(collector.getDataList(), "1", "3");
+    }
+
+    @Test
     public void gatherDataWithQueryTemplateTest() throws Exception
     {
         prepareCollector();
