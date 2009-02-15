@@ -49,7 +49,8 @@ public abstract class AbstractDataSource extends BaseNode implements DataSource
             DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes) 
     {
         Map<String, NodeAttribute> attributes = new HashMap<String, NodeAttribute>();
-        Collection<NodeAttribute> nodeAttributes = dataConsumer.getNodeAttributes();
+        Collection<NodeAttribute> nodeAttributes = 
+                dataConsumer instanceof Node? ((Node)dataConsumer).getNodeAttributes() : null;
         if (nodeAttributes!=null)
             for (NodeAttribute attr: nodeAttributes)
                 attributes.put(attr.getName(), attr);
@@ -102,7 +103,7 @@ public abstract class AbstractDataSource extends BaseNode implements DataSource
     protected boolean checkDataConsumer(
             DataConsumer consumer, Map<String, NodeAttribute> attributes)
     {
-        return  consumer.getStatus()==Status.STARTED 
+        return  !(consumer instanceof Node) || ((Node)consumer).getStatus()==Status.STARTED
                 && Helper.checkAttributes(this, consumerAttributes, consumer, attributes);
     }
 

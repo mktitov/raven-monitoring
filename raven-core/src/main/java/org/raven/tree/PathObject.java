@@ -1,5 +1,5 @@
 /*
- *  Copyright 2008 Mikhail Titov.
+ *  Copyright 2009 Mikhail Titov.
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,26 +15,16 @@
  *  under the License.
  */
 
-package org.raven.ds;
-
-import java.util.Collection;
-import org.raven.tree.NodeAttribute;
-import org.raven.tree.PathObject;
+package org.raven.tree;
 
 /**
- * The node that recieves data from the one or more {@link DataSource data sources}
+ *
  * @author Mikhail Titov
  */
-public interface DataConsumer extends PathObject
+public interface PathObject
 {
     /**
-     * Recieves data from the data source
-     * @param dataSource the data source from which data recieved
-     * @param data the data
+     * Returns the path of the object.
      */
-    public void setData(DataSource dataSource, Object data);
-    /**
-     * Refreshes data.
-     */
-    public Object refereshData(Collection<NodeAttribute> sessionAttributes);
+    public String getPath();
 }

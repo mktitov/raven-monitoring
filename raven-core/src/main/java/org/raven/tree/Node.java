@@ -64,7 +64,7 @@ import org.weda.annotations.Description;
  * @author Mikhail Titov
  */
 @Description("The node type")
-public interface Node extends Cloneable, Comparable<Node>
+public interface Node extends Cloneable, Comparable<Node>, PathObject
 {
     public enum Status {CREATED, INITIALIZED, STARTED, REMOVING, REMOVED}
     /**
@@ -123,10 +123,6 @@ public interface Node extends Cloneable, Comparable<Node>
      * Sets the node name.
      */
     public void setName(String name);
-    /**
-     * Returns the path to this node from the root. The node name separator is "/".
-     */
-    public String getPath();
     /**
      * Adds children node to this node. 
      * @throws NodeInitializationError if this node is not a {@link #isContainer() container}

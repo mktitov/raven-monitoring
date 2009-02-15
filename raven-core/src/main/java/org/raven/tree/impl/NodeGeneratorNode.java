@@ -436,14 +436,15 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
         if (list != null)
             for (DataConsumer consumer : list)
             {
-                String columnName = getTableCoumnName(consumer);
+                String columnName = getTableCoumnName((Node)consumer);
                 Object value = namedRow.get(columnName);
                 consumer.setData(this, value);
             }
     }
 
     //TODO: преобразовать в NodeTuner
-    private void tuneNode(NodeGeneratorNode tableNode, StrSubstitutor subst, Node newNode) throws Exception
+    private void tuneNode(NodeGeneratorNode tableNode, StrSubstitutor subst, Node newNode)
+            throws Exception
     {
         String newName = subst.replace(newNode.getName());
         if (!newName.equals(newNode.getName()))

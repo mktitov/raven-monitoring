@@ -160,7 +160,7 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
         }
         else
         {
-            getLogger().error(String.format(
+            error(String.format(
                     "Error refreshing data in the node (%s). Node NOT STARTED", getPath()));
             return null;
         }

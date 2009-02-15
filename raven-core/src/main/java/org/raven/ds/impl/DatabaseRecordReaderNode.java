@@ -133,7 +133,7 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
         {
             while (it.hasNext())
                 dataConsumer.setData(this, it.next());
-            
+            dataConsumer.setData(this, null);
             return true;
         }
         finally

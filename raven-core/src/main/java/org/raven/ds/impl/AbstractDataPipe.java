@@ -24,6 +24,7 @@ import java.util.Map;
 import org.raven.Helper;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
+import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 
@@ -47,7 +48,8 @@ public abstract class AbstractDataPipe extends AbstractDataConsumer implements D
             DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes) 
     {
         Map<String, NodeAttribute> attributes = new HashMap<String, NodeAttribute>();
-        Collection<NodeAttribute> nodeAttributes = dataConsumer.getNodeAttributes();
+        Collection<NodeAttribute> nodeAttributes = 
+                dataConsumer instanceof Node? ((Node)dataConsumer).getNodeAttributes() : null;
         if (nodeAttributes!=null)
             for (NodeAttribute attr: nodeAttributes)
                 attributes.put(attr.getName(), attr);
@@ -57,8 +59,8 @@ public abstract class AbstractDataPipe extends AbstractDataConsumer implements D
 
         if (!checkDataConsumer(dataConsumer, attributes))
         {
-            if (logger.isDebugEnabled())
-                logger.debug(String.format(
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug(String.format(
                         "Skiping gathering data for data consumer (%s). Data consumer not ready"
                         , dataConsumer.getPath()));
             return false;
@@ -69,8 +71,8 @@ public abstract class AbstractDataPipe extends AbstractDataConsumer implements D
         }
         catch (Throwable e)
         {
-            if (logger.isDebugEnabled())
-                logger.error(String.format(
+            if (isLogLevelEnabled(LogLevel.ERROR))
+                error(String.format(
                         "Error gathering data for consumer (%s). %s"
                         , dataConsumer.getPath(), e.getMessage()), e);
             return false;
@@ -99,7 +101,7 @@ public abstract class AbstractDataPipe extends AbstractDataConsumer implements D
     protected boolean checkDataConsumer(
             DataConsumer consumer, Map<String, NodeAttribute> attributes)
     {
-        return  consumer.getStatus()==Status.STARTED 
+        return  !(consumer instanceof Node) || ((Node)consumer).getStatus()==Status.STARTED
                 && Helper.checkAttributes(this, consumerAttributes, consumer, attributes);
     }
 

@@ -28,6 +28,7 @@ import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
+import org.raven.log.LogLevel;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -81,6 +82,13 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     @Override
     protected void doSetData(DataSource dataSource, Object data)
     {
+        if (data==null)
+        {
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug(String.format(
+                        "Recieved the end marker from record source (%s)", dataSource.getPath()));
+            return;
+        }
         if (!(data instanceof Record))
         {
             error(String.format(

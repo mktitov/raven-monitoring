@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Map;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.impl.AbstractThreadedDataSource;
+import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 
 /**
@@ -41,7 +42,7 @@ public class TestDataSource extends AbstractThreadedDataSource
     public boolean gatherDataForConsumer(
             DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
     {
-        if (dataConsumer.getName().equals("ds"))
+        if (((Node)dataConsumer).getName().equals("ds"))
             dataConsumer.setData(this, value++);
         else
             dataConsumer.setData(this, value2--);

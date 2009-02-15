@@ -23,6 +23,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -222,7 +223,7 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         assertTrue(reader.start());
         reader.getDataImmediate(collector, null);
 
-        assertEquals(4, collector.getDataList().size());
+        assertEquals(5, collector.getDataList().size());
     }
 
     @Test
@@ -236,8 +237,6 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         reader.setOrderByExpression("col1");
         assertTrue(reader.start());
         reader.getDataImmediate(collector, null);
-
-        assertEquals(4, collector.getDataList().size());
 
         checkRecords(collector.getDataList(), "1", "3", "4", "5");
     }
@@ -255,8 +254,6 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         assertTrue(reader.start());
         reader.getDataImmediate(collector, null);
 
-        assertEquals(2, collector.getDataList().size());
-
         checkRecords(collector.getDataList(), "3", "5");
     }
 
@@ -273,8 +270,6 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         assertTrue(reader.start());
         reader.getDataImmediate(collector, null);
 
-        assertEquals(2, collector.getDataList().size());
-
         checkRecords(collector.getDataList(), "1", "3");
     }
 
@@ -289,8 +284,6 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         reader.setQuery("select * from record_data where col1 in ('1', '4') order by col1");
         assertTrue(reader.start());
         reader.getDataImmediate(collector, null);
-
-        assertEquals(2, collector.getDataList().size());
 
         checkRecords(collector.getDataList(), "1", "4");
     }
@@ -307,8 +300,6 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         assertTrue(reader.start());
         reader.getDataImmediate(collector, null);
 
-        assertEquals(2, collector.getDataList().size());
-
         checkRecords(collector.getDataList(), "3", "5");
     }
 
@@ -324,18 +315,18 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         assertTrue(reader.start());
         reader.getDataImmediate(collector, null);
 
-        assertEquals(2, collector.getDataList().size());
-
         checkRecords(collector.getDataList(), "1", "4");
     }
 
     private void checkRecords(Collection records, String... values) throws RecordException
     {
         int i=0;
-        for (Object record: records)
-        {
-            assertEquals(values[i++], ((Record)record).getValue("field1"));
-        }
+        assertEquals(values.length+1, records.size());
+        Iterator it = records.iterator();
+        for (i=0; i<values.length; ++i)
+            assertEquals(values[i], ((Record)it.next()).getValue("field1"));
+
+        assertNull(it.next());
     }
 
     private void checkRecord(Record record, String field1Value) throws RecordException

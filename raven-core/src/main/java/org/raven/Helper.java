@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.PathObject;
 
 /**
  *
@@ -33,7 +34,7 @@ public class Helper
     
     public static boolean checkAttributes(
             Node whoCheck, Collection<NodeAttribute> reqAttrs
-            , Node testNode, Map<String, NodeAttribute> testNodeAttributes)
+            , PathObject testObject, Map<String, NodeAttribute> testNodeAttributes)
     {
         for (NodeAttribute attr: reqAttrs)
             if (!testNodeAttributes.containsKey(attr.getName()))
@@ -41,7 +42,7 @@ public class Helper
                 whoCheck.getLogger().error(
                         String.format(
                             "Node (%s) does not have required attribute (%s)"
-                            , testNode.getPath(), attr.getName()));
+                            , testObject.getPath(), attr.getName()));
                 return false;
             }
         return true;
