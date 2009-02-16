@@ -50,6 +50,6 @@ public class NodeUtils
                     clone.init();
                     refreshAttributes.put(clone.getName(), clone);
                 }
-        return refreshAttributes;
+        return refreshAttributes.size()==0? null : refreshAttributes;
     }
 }

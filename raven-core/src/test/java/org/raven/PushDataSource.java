@@ -30,7 +30,6 @@ import org.raven.tree.impl.BaseNode;
  */
 public class PushDataSource extends BaseNode implements DataSource
 {
-
 	public boolean getDataImmediate(
 			DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
 	{

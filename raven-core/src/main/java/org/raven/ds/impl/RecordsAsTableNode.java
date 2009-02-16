@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.raven.annotations.NodeClass;
+import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
@@ -30,49 +32,113 @@ import org.raven.ds.RecordSchemaField;
 import org.raven.log.LogLevel;
 import org.raven.table.TableImpl;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
+import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
+import org.raven.tree.impl.ViewableObjectImpl;
+import org.raven.util.NodeUtils;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class RecordsAsTableNode extends AbstractDataConsumer
+@NodeClass
+public class RecordsAsTableNode extends BaseNode implements Viewable
 {
-    @Override
-    protected void doSetData(DataSource dataSource, Object data)
+    public final static String DATA_SOURCE_ATTR = "dataSource";
+
+    @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
+    @NotNull
+    private DataSource dataSource;
+
+    @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
+    @NotNull
+    private RecordSchema recordSchema;
+
+    @Parameter
+    private String fieldsOrder;
+
+    public DataSource getDataSource()
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return dataSource;
     }
 
-    @Override
+    public void setDataSource(DataSource dataSource)
+    {
+        this.dataSource = dataSource;
+    }
+
+    public String getFieldsOrder()
+    {
+        return fieldsOrder;
+    }
+
+    public void setFieldsOrder(String fieldsOrder)
+    {
+        this.fieldsOrder = fieldsOrder;
+    }
+
+    public RecordSchema getRecordSchema()
+    {
+        return recordSchema;
+    }
+
+    public void setRecordSchema(RecordSchema recordSchema)
+    {
+        this.recordSchema = recordSchema;
+    }
+
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
     {
-        return super.getRefreshAttributes();
+        return NodeUtils.extractRefereshAttributes(this);
     }
 
-    @Override
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes)
             throws Exception
     {
-        return super.getViewableObjects(refreshAttributes);
-    }
+        Map<String, NodeAttribute> attrs = new HashMap<String, NodeAttribute>();
+        if (refreshAttributes!=null)
+            attrs.putAll(refreshAttributes);
+        for (NodeAttribute attr: getNodeAttributes())
+            if (   DATA_SOURCE_ATTR.equals(attr.getParentAttribute())
+                && !attrs.containsKey(attr.getName()))
+            {
+                attrs.put(attr.getName(), attr);
+            }
 
+        String _fieldsOrder = fieldsOrder;
+        String[] fieldsOrderArr = _fieldsOrder==null? null : _fieldsOrder.split("\\s*,\\s*");
+
+        RecordAsTableDataConsumer dataConsumer =
+                new RecordAsTableDataConsumer(recordSchema, fieldsOrderArr);
+
+        dataSource.getDataImmediate(dataConsumer, attrs.values());
+
+        ViewableObject table = new ViewableObjectImpl(
+                Viewable.RAVEN_TABLE_MIMETYPE, dataConsumer.getTable());
+        
+        return Arrays.asList(table);
+    }
+    
     public class RecordAsTableDataConsumer implements DataConsumer
     {
         private final TableImpl table;
         private final String[] fieldNames;
         private final Map<String, RecordSchemaField> fields;
+        private final RecordSchema recordSchema;
 
         public RecordAsTableDataConsumer(RecordSchema schema, String[] fieldsOrder)
         {
             fields = new HashMap<String, RecordSchemaField>();
+            this.recordSchema = schema;
             RecordSchemaField[] schemaFields = schema.getFields();
             if (fieldsOrder!=null)
             {
                 fieldNames = fieldsOrder;
                 String[] sortedNames = fieldsOrder.clone();
                 Arrays.sort(sortedNames);
-                int i=0;
                 for (RecordSchemaField field: schemaFields)
                     if (Arrays.binarySearch(sortedNames, field.getName())>=0)
                         fields.put(field.getName(), field);
@@ -90,6 +156,10 @@ public class RecordsAsTableNode extends AbstractDataConsumer
             table = new TableImpl(fieldNames);
         }
 
+        public TableImpl getTable()
+        {
+            return table;
+        }
 
         public void setData(DataSource dataSource, Object data)
         {
@@ -113,11 +183,29 @@ public class RecordsAsTableNode extends AbstractDataConsumer
 
             Record record = (Record) data;
 
+            if (!recordSchema.equals(record.getSchema()))
+            {
+                if (isLogLevelEnabled(LogLevel.ERROR))
+                    error(String.format(
+                            "Invalid record schema recived from (%s)", dataSource.getPath()));
+                return;
+            }
+
             Object[] row = new Object[fieldNames.length];
             for (int i=0; i<fieldNames.length; ++i)
-                row[i] = converter.convert(
-                        String.class, record.getValue(fieldNames[i])
-                        , fields.get(fieldNames[i]).getPattern());
+                try
+                {
+                    row[i] = converter.convert(
+                            String.class, record.getValue(fieldNames[i])
+                            , fields.get(fieldNames[i]).getPattern());
+                }
+                catch (Exception e)
+                {
+                    if (isLogLevelEnabled(LogLevel.ERROR))
+                        error("Error adding record value, recieved from (%s), to table", e);
+                }
+
+            table.addRow(row);
         }
 
         public Object refereshData(Collection<NodeAttribute> sessionAttributes)
@@ -129,7 +217,5 @@ public class RecordsAsTableNode extends AbstractDataConsumer
         {
             return RecordsAsTableNode.this.getPath();
         }
-
     }
-
 }

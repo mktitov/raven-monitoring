@@ -318,6 +318,36 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         checkRecords(collector.getDataList(), "1", "4");
     }
 
+    //provideFilterAttributesToConsumer==true
+    @Test
+    public void generateAttributesTest1() throws Exception
+    {
+        filterExtension.setFilterValueRequired(true);
+        reader.setRecordSchema(schema);
+        reader.setProvideFilterAttributesToConsumers(true);
+
+        Collection<NodeAttribute> attrs = reader.generateAttributes();
+        assertNotNull(attrs);
+        assertEquals(1, attrs.size());
+
+        NodeAttribute attr = attrs.iterator().next();
+        assertNotNull(attr);
+        assertEquals("field1", attr.getName());
+        assertEquals(String.class, attr.getType());
+        assertEquals("test", attr.getRawValue());
+        assertTrue(attr.isRequired());
+    }
+
+    //provideFilterAttributesToConsumer==false
+    @Test
+    public void generateAttributesTest2() throws Exception
+    {
+        reader.setRecordSchema(schema);
+        reader.setProvideFilterAttributesToConsumers(false);
+
+        assertNull(reader.generateAttributes());
+    }
+
     private void checkRecords(Collection records, String... values) throws RecordException
     {
         int i=0;

@@ -143,6 +143,30 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
     }
 
     @Override
+    public Collection<NodeAttribute> generateAttributes()
+    {
+        if (!provideFilterAttributesToConsumers)
+            return null;
+        else
+        {
+            Collection<NodeAttribute> result = new ArrayList<NodeAttribute>();
+            for (NodeAttribute attr: getNodeAttributes())
+                if (RECORD_SCHEMA_ATTR.equals(attr.getParentAttribute()))
+                {
+                    try{
+                        NodeAttribute clone = (NodeAttribute) attr.clone();
+                        result.add(clone);
+                    }
+                    catch (CloneNotSupportedException ex)
+                    {
+                    }
+                }
+
+            return result.size()==0? null : result;
+        }
+    }
+
+    @Override
     public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
     {
     }

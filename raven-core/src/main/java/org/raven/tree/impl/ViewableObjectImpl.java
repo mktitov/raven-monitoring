@@ -75,5 +75,4 @@ public class ViewableObjectImpl implements ViewableObject
     {
         return width;
     }
-
 }
