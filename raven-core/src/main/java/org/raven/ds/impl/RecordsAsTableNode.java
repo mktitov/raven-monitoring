@@ -31,6 +31,7 @@ import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.log.LogLevel;
 import org.raven.table.TableImpl;
+import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
@@ -48,6 +49,7 @@ import org.weda.annotations.constraints.NotNull;
 public class RecordsAsTableNode extends BaseNode implements Viewable
 {
     public final static String DATA_SOURCE_ATTR = "dataSource";
+    public final static String RECORD_SCHEMA_ATTR = "recordSchema";
 
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     @NotNull
@@ -56,6 +58,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
     @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
     @NotNull
     private RecordSchema recordSchema;
+
+    private Map<String, RecordSchemaField> fields;
 
     @Parameter
     private String fieldsOrder;
@@ -92,7 +96,27 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
 
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
     {
-        return NodeUtils.extractRefereshAttributes(this);
+        if (getStatus()!=Status.STARTED)
+            return null;
+        
+        Map<String, NodeAttribute> attrs = NodeUtils.extractRefereshAttributes(this);
+        if (attrs==null || attrs.isEmpty())
+            return null;
+
+        fields = new HashMap<String, RecordSchemaField>();
+        RecordSchemaField[] schemaFields = recordSchema.getFields();
+        if (schemaFields!=null)
+            for (RecordSchemaField field: schemaFields)
+                fields.put(field.getName(), field);
+        if (!fields.isEmpty())
+            for (NodeAttribute attr: attrs.values())
+            {
+                RecordSchemaField field = fields.get(attr.getName());
+                if (field!=null)
+                    attr.setDisplayName(field.getDisplayName());
+            }
+
+        return attrs;
     }
 
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes)
@@ -120,6 +144,29 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
                 Viewable.RAVEN_TABLE_MIMETYPE, dataConsumer.getTable());
         
         return Arrays.asList(table);
+    }
+
+    @Override
+    public void nodeAttributeValueChanged(
+            Node node, NodeAttribute attribute, Object oldValue, Object newValue)
+    {
+        super.nodeAttributeValueChanged(node, attribute, oldValue, newValue);
+
+        if (attribute.getName().equals(RECORD_SCHEMA_ATTR))
+        {
+            if (newValue==null)
+                fields = null;
+            else
+            {
+                fields = new HashMap<String, RecordSchemaField>();
+                RecordSchemaField[] schemaFields = ((RecordSchema)newValue).getFields();
+                if (schemaFields!=null)
+                    for (RecordSchemaField field: schemaFields)
+                        fields.put(field.getName(), field);
+                if (fields.isEmpty())
+                    fields = null;
+            }
+        }
     }
     
     public class RecordAsTableDataConsumer implements DataConsumer
@@ -153,7 +200,14 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
                 }
             }
 
-            table = new TableImpl(fieldNames);
+            String[] columnNames = new String[fieldNames.length];
+            for (int i=0; i<columnNames.length; ++i)
+            {
+                String displayName = fields.get(fieldNames[i]).getDisplayName();
+                columnNames[i] = displayName==null? fieldNames[i] : displayName;
+            }
+
+            table = new TableImpl(columnNames);
         }
 
         public TableImpl getTable()

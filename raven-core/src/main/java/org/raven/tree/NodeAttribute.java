@@ -21,6 +21,7 @@ import java.util.List;
 import org.raven.tree.store.TreeStore;
 import org.weda.constraints.ReferenceValue;
 import org.weda.constraints.TooManyReferenceValuesException;
+import org.weda.internal.impl.MessageComposer;
 
 /**
  * Holds information about node attribute
@@ -54,6 +55,14 @@ public interface NodeAttribute extends Cloneable
      */
     public String getName();
     /**
+     * Returns the display name of the attribute.
+     */
+    public String getDisplayName();
+    /**
+     * Sets the attribute display name.
+     */
+    public void setDisplayName(String displayName);
+    /**
      * Sets the attribute name. The name must be unique.
      */
     public void setName(String name);
@@ -66,9 +75,17 @@ public interface NodeAttribute extends Cloneable
      */
     public String getDescription();
     /**
-     * Sets the attribute description.
+     * Sets the description
      */
     public void setDescription(String description);
+    /**
+     * Sets the attribute description container.
+     */
+    public void setDescriptionContainer(MessageComposer composer);
+    /**
+     * Returns the attribute description container
+     */
+    public MessageComposer getDescriptionContainer();
     /**
      * If returns <code>true</code> if the value of this node attribute must be seted before 
      * {@link Node#start() node logic execution}.

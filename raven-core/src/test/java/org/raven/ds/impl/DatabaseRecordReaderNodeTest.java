@@ -336,6 +336,7 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         assertEquals(String.class, attr.getType());
         assertEquals("test", attr.getRawValue());
         assertTrue(attr.isRequired());
+        assertNotNull(attr.getDescription());
     }
 
     //provideFilterAttributesToConsumer==false

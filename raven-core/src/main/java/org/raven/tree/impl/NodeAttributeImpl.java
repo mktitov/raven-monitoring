@@ -36,6 +36,8 @@ import org.weda.constraints.ReferenceValue;
 import org.weda.constraints.TooManyReferenceValuesException;
 import org.weda.constraints.impl.ReferenceValueImpl;
 import org.weda.internal.annotations.Service;
+import org.weda.internal.impl.MessageComposer;
+import org.weda.internal.services.MessagesRegistry;
 import org.weda.services.TypeConverter;
 
 /**
@@ -53,11 +55,14 @@ public class NodeAttributeImpl
     private static Tree tree;
     @Service
     private static NodePathResolver pathResolver;
+    @Service
+    private static MessagesRegistry messagesRegistry;
 
     private int id;
     private String name;
+    private String displayName;
     private String parameterName;
-    private String description;
+    private MessageComposer descriptionContainer;
     private String parentAttribute;
     private Class type;
     private String value;
@@ -74,6 +79,7 @@ public class NodeAttributeImpl
     
     private boolean initialized = false;
     private boolean fireEvents = true;
+//    private MessageComposer description;
 
     public NodeAttributeImpl()
     {
@@ -82,9 +88,9 @@ public class NodeAttributeImpl
     public NodeAttributeImpl(String name, Class type, Object value, String description)
     {
         this.name = name;
-        this.description = description;
         this.type = type;
         this.value = converter.convert(String.class, value, null);
+        setDescription(description);
     }
     
     public void init() throws Exception
@@ -123,7 +129,22 @@ public class NodeAttributeImpl
 
     public String getDescription()
     {
-        return parameter==null? description : parameter.getDescription();
+        if (parameter!=null)
+            return parameter.getDescription();
+        else if (descriptionContainer!=null)
+            return descriptionContainer.toString();
+        else
+            return null;
+    }
+
+    public MessageComposer getDescriptionContainer()
+    {
+        return descriptionContainer;
+    }
+
+    public void setDescriptionContainer(MessageComposer descriptionContainer)
+    {
+        this.descriptionContainer = descriptionContainer;
     }
 
     public boolean isRequired()
@@ -220,7 +241,9 @@ public class NodeAttributeImpl
 
     public void setDescription(String description)
     {
-        this.description = description;
+        if (description==null)
+            this.descriptionContainer = null;
+        this.descriptionContainer = new MessageComposer(messagesRegistry).append(description);
     }
 
     public void setName(String name)
@@ -244,6 +267,19 @@ public class NodeAttributeImpl
             } else
                 this.name = name;
         }
+    }
+
+    public String getDisplayName()
+    {
+        if (displayName==null)
+            return name;
+        else
+            return messagesRegistry.getMessageOrString(displayName);
+    }
+
+    public void setDisplayName(String displayName)
+    {
+        this.displayName = displayName;
     }
 
     public Node getOwner()

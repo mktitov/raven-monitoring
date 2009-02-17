@@ -27,6 +27,8 @@ import java.sql.Types;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.text.StrTokenizer;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeAttributeImpl;
@@ -34,6 +36,9 @@ import org.raven.tree.store.TreeStore;
 import org.raven.tree.store.TreeStoreError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.weda.internal.annotations.Service;
+import org.weda.internal.impl.MessageComposer;
+import org.weda.internal.services.MessagesRegistry;
 
 /**
  *
@@ -44,6 +49,9 @@ import org.slf4j.LoggerFactory;
 public class H2TreeStore implements TreeStore
 {
 	private final static Logger logger = LoggerFactory.getLogger(H2TreeStore.class);
+
+    @Service
+    private static MessagesRegistry messagesRegistry;
 
     public static final int GET_NODES_FETCH_SIZE = 1000;
     public final static String NODES_TABLE_NAME = "NODES" ;
@@ -66,7 +74,8 @@ public class H2TreeStore implements TreeStore
         {
             initConnection(databaseUrl, username, password);
             initTables();
-        } catch (Exception ex)
+        }
+        catch (Exception ex)
         {
             throw new TreeStoreError("H2 Tree store initialization error", ex);
         }
@@ -347,7 +356,7 @@ public class H2TreeStore implements TreeStore
             attr.setParameterName(rs.getString(pos++));
             attr.setParentAttribute(rs.getString(pos++));
             if (attr.getParameterName()==null)
-                attr.setDescription(rs.getString(pos++));
+                attr.setDescriptionContainer(stringToMessageComposer(rs.getString(pos++)));
             
             node.addNodeAttribute(attr);
         }
@@ -475,10 +484,11 @@ public class H2TreeStore implements TreeStore
         else
             insertNodeAttributeStatement.setString(pos++, nodeAttribute.getParentAttribute());
         
-        if (nodeAttribute.getParameterName()!=null || nodeAttribute.getDescription()==null)
+        if (nodeAttribute.getParameterName()!=null || nodeAttribute.getDescriptionContainer()==null)
             insertNodeAttributeStatement.setNull(pos++, Types.VARCHAR);
         else
-            insertNodeAttributeStatement.setString(pos++, nodeAttribute.getDescription());
+            insertNodeAttributeStatement.setString(
+                    pos++, messageComposerToString(nodeAttribute.getDescriptionContainer()));
         
         insertNodeAttributeStatement.executeUpdate();
         ResultSet rs = insertNodeAttributeStatement.getGeneratedKeys();
@@ -560,10 +570,39 @@ public class H2TreeStore implements TreeStore
         if (nodeAttribute.getParameterName()!=null || nodeAttribute.getDescription()==null)
             updateNodeAttributeStatement.setNull(pos++, Types.VARCHAR);
         else
-            updateNodeAttributeStatement.setString(pos++, nodeAttribute.getDescription());
+            updateNodeAttributeStatement.setString(
+                    pos++, messageComposerToString(nodeAttribute.getDescriptionContainer()));
         
         updateNodeAttributeStatement.setInt(pos++, nodeAttribute.getId());
         
         updateNodeAttributeStatement.executeUpdate();
+    }
+
+    private static String messageComposerToString(MessageComposer composer)
+    {
+        if (composer==null)
+            return null;
+
+        StringBuilder builder = new StringBuilder();
+        for (String message: composer.getMessages())
+        {
+            if (builder.length()>0)
+                builder.append(',');
+            builder.append(StringEscapeUtils.escapeCsv(message));
+        }
+        return builder.toString();
+    }
+
+    private static MessageComposer stringToMessageComposer(String str)
+    {
+        if (str==null)
+            return null;
+
+        MessageComposer composer = new MessageComposer(messagesRegistry);
+        StrTokenizer tokenizer = new StrTokenizer(str);
+        while (tokenizer.hasNext())
+            composer.append(tokenizer.nextToken());
+
+        return composer;
     }
 }

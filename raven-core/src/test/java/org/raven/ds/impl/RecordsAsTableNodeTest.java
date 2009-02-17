@@ -56,6 +56,7 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         RecordSchemaFieldNode field1 = new RecordSchemaFieldNode();
         field1.setName("field1");
         schema.addAndSaveChildren(field1);
+        field1.setDisplayName("field1 displayName");
         field1.setFieldType(RecordSchemaFieldType.INTEGER);
         assertTrue(field1.start());
 
@@ -105,7 +106,7 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         assertNotNull(object.getData());
         assertTrue(object.getData() instanceof Table);
         Table table = (Table) object.getData();
-        assertArrayEquals(new String[]{"field1", "field2"}, table.getColumnNames());
+        assertArrayEquals(new String[]{"field1 displayName", "field2"}, table.getColumnNames());
         List<Object[]> rows = RavenUtils.tableAsList(table);
         assertEquals(2, rows.size());
         assertArrayEquals(new String[]{"1", "test1"}, rows.get(0));
@@ -142,7 +143,7 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         assertNotNull(object.getData());
         assertTrue(object.getData() instanceof Table);
         Table table = (Table) object.getData();
-        assertArrayEquals(new String[]{"field2", "field1"}, table.getColumnNames());
+        assertArrayEquals(new String[]{"field2", "field1 displayName"}, table.getColumnNames());
         List<Object[]> rows = RavenUtils.tableAsList(table);
         assertEquals(2, rows.size());
         assertArrayEquals(new String[]{"test1", "1"}, rows.get(0));
@@ -156,7 +157,7 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
     {
         assertNull(tableNode.getRefreshAttributes());
 
-        NodeAttributeImpl attr = new NodeAttributeImpl("filter1", String.class, null, null);
+        NodeAttributeImpl attr = new NodeAttributeImpl("field1", String.class, null, null);
         attr.setValueHandlerType(RefreshAttributeValueHandlerFactory.TYPE);
         attr.setOwner(tableNode);
         attr.setParentAttribute(RecordsAsTableNode.DATA_SOURCE_ATTR);
@@ -167,7 +168,8 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         Map<String, NodeAttribute> refreshAttrs = tableNode.getRefreshAttributes();
         assertNotNull(refreshAttrs);
         assertEquals(1, refreshAttrs.size());
-        assertNotNull(refreshAttrs.get("filter1"));
+        assertNotNull(refreshAttrs.get("field1"));
+        assertEquals("field1 displayName", refreshAttrs.get("field1").getDisplayName());
     }
 
     @Test

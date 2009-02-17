@@ -18,9 +18,9 @@
 package org.raven.tree.store.impl;
 
 import java.sql.SQLException;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.raven.ServiceTestCase;
 import org.raven.tree.Node;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeAttributeImpl;
@@ -30,7 +30,7 @@ import org.raven.tree.store.TreeStoreError;
  *
  * @author Mikhail Titov
  */
-public class H2TreeStoreTest extends Assert
+public class H2TreeStoreTest extends ServiceTestCase
 {
     private static H2TreeStore store;
     

@@ -33,11 +33,24 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass(parentNode=RecordSchemaNode.class)
 public class RecordSchemaFieldNode extends BaseNode implements RecordSchemaField
 {
+    @Parameter
+    private String displayName;
+
     @Parameter @NotNull
     private RecordSchemaFieldType fieldType;
 
     @Parameter
     private String pattern;
+
+    public String getDisplayName()
+    {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName)
+    {
+        this.displayName = displayName;
+    }
 
     public RecordSchemaFieldType getFieldType()
     {

@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.dbcp.ConnectionPool;
@@ -39,6 +41,9 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeListener;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.internal.annotations.Service;
+import org.weda.internal.impl.MessageComposer;
+import org.weda.internal.services.MessagesRegistry;
 
 /**
  *
@@ -47,9 +52,15 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass
 public class DatabaseRecordReaderNode extends AbstractDataSource
 {
+    public final static String TEMPLATE_MESSAGE_KEY = "template";
+    public final static String
+            FILTER_ATTRIBUTE_DESCRIPTION_MESSAGE_KEY = "filterAttributeDescription";
     public final static String RECORD_SCHEMA_ATTR = "recordSchema";
     public final static String
             PROVIDE_FILTER_ATTRIBUTES_TO_CONSUMERS_ATTR = "provideFilterAttributesToConsumers";
+
+    @Service
+    private static MessagesRegistry messagesRegistry;
 
     @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
     @NotNull
@@ -150,17 +161,32 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
         else
         {
             Collection<NodeAttribute> result = new ArrayList<NodeAttribute>();
-            for (NodeAttribute attr: getNodeAttributes())
-                if (RECORD_SCHEMA_ATTR.equals(attr.getParentAttribute()))
+            for (RecordSchemaField field: filterFields.keySet())
+            {
+                NodeAttribute attr = getNodeAttribute(field.getName());
+                if (attr!=null)
                 {
-                    try{
+                    try
+                    {
                         NodeAttribute clone = (NodeAttribute) attr.clone();
-                        result.add(clone);
                     }
                     catch (CloneNotSupportedException ex)
                     {
                     }
                 }
+            }
+//            for (NodeAttribute attr: getNodeAttributes())
+//                if (RECORD_SCHEMA_ATTR.equals(attr.getParentAttribute()))
+//                {
+//                    try
+//                    {
+//                        NodeAttribute clone = (NodeAttribute) attr.clone();
+//                        result.add(clone);
+//                    }
+//                    catch (CloneNotSupportedException ex)
+//                    {
+//                    }
+//                }
 
             return result.size()==0? null : result;
         }
@@ -415,6 +441,15 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
             filterAttr = getNodeAttribute(oldFilterFieldName);
 
         NodeAttribute schemaAttr = getNodeAttribute(RECORD_SCHEMA_ATTR);
+        MessageComposer description = new MessageComposer(messagesRegistry);
+        String pattern = filterField.getFieldInfo().getPattern();
+        if (pattern!=null)
+            description
+                .append(messagesRegistry.createMessageKeyForStringValue(
+                    getClass().getName(), TEMPLATE_MESSAGE_KEY))
+                .append(pattern).append("<p/>");
+        description.append(messagesRegistry.createMessageKeyForStringValue(
+                getClass().getName(), FILTER_ATTRIBUTE_DESCRIPTION_MESSAGE_KEY));
         if (filterAttr==null)
         {
             filterAttr = new NodeAttributeImpl(
@@ -427,6 +462,7 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
             filterAttr.setRequired(
                     filterField.getFilterInfo().getFilterValueRequired()
                     && !provideFilterAttributesToConsumers);
+            filterAttr.setDescriptionContainer(description);
             filterAttr.save();
             filterAttr.init();
             addNodeAttribute(filterAttr);
@@ -452,8 +488,9 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
                 filterAttr.setRequired(required);
                 hasChanges = true;
             }
-            if (hasChanges)
-                filterAttr.save();
+            filterAttr.setDescriptionContainer(description);
+//            if (hasChanges)
+            filterAttr.save();
         }
 
         return filterAttr;

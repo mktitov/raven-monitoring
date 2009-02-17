@@ -28,6 +28,10 @@ public interface RecordSchemaField
      */
     public String getName();
     /**
+     * The display name of the field
+     */
+    public String getDisplayName();
+    /**
      * Returns the field type
      */
     public RecordSchemaFieldType getFieldType();
