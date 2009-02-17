@@ -82,8 +82,10 @@ public class RefreshAttributesCache
 		removeOld();
 		Viewable viewable = (Viewable) nw.getNode();
 		Map<String,NodeAttribute> ra = get(nw.getNodeId());
+		boolean found = false;
 		if(ra!=null)
 		{
+			found = true;
 			logger.info("RA found in map: "+ra);
 			//return ra;
 			Map<String,NodeAttribute> rb = getRA(viewable);
@@ -92,7 +94,7 @@ public class RefreshAttributesCache
 					if(!ra.containsKey(name)) 
 						ra.put(name, rb.get(name));
 		} else ra = getRA(viewable);
-		put(nw.getNodeId(), ra);
+		if(!found) put(nw.getNodeId(), ra);
 		return ra;
 	}
 	
