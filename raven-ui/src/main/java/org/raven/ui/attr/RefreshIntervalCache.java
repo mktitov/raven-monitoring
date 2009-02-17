@@ -22,9 +22,8 @@ public class RefreshIntervalCache extends AbstractCache<Integer, Long>
 	
 	public Long put(Integer key, Long value)
 	{
-		long x = value.longValue();
-		if( x<0 ) x = 0;
-		return super.put(key, x);
+		if(value<0) value = 0L;
+		return super.put(key, value);
 	}
 	/*
 	protected Logger logger = LoggerFactory.getLogger(RefreshIntervalStorage.class);

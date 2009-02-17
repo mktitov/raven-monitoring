@@ -19,8 +19,8 @@ public abstract class AbstractCache<K,V>
 	{
 		if(value==null) return null;
 		CacheValueContainer<V> vc = map.put( key, new CacheValueContainer<V>(value));
-			if(vc==null) return null;
-			return vc.getValue();
+		if(vc==null) return null;
+		return vc.getValue();
 	}
 		
 	public CacheValueContainer<V> getVC(K key)
@@ -90,7 +90,8 @@ public abstract class AbstractCache<K,V>
 	{
 		if(deleteAfter < 0) deleteAfter = 0;
 		this.deleteAfter = deleteAfter;
-		}
+	}
+	
 	public long getDeleteAfter() {
 		return deleteAfter;
 	}

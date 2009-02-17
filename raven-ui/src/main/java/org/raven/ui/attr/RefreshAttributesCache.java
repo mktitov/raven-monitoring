@@ -66,6 +66,14 @@ public class RefreshAttributesCache
 		while(it.hasNext())
 			remove(it.next());
 	}
+
+	private Map<String,NodeAttribute> getRA(Viewable viewable)
+	{
+		Map<String,NodeAttribute> ra = null;
+		try { ra = viewable.getRefreshAttributes(); }
+		catch (Exception e){logger.error("on load refresh attributes: ",e);}
+		return ra;
+	}
 	
 	public Map<String,NodeAttribute> get(NodeWrapper nw)
 	{
@@ -77,14 +85,13 @@ public class RefreshAttributesCache
 		if(ra!=null)
 		{
 			logger.info("RA found in map: "+ra);
-			return ra;
-		}	
-		try { ra = viewable.getRefreshAttributes(); }
-		catch (Exception e) 
-		{
-			logger.error("on load refresh attributes: ",e);
-			return null;
-		}
+			//return ra;
+			Map<String,NodeAttribute> rb = getRA(viewable);
+			if(rb!=null)
+				for(String name : rb.keySet())
+					if(!ra.containsKey(name)) 
+						ra.put(name, rb.get(name));
+		} else ra = getRA(viewable);
 		put(nw.getNodeId(), ra);
 		return ra;
 	}
