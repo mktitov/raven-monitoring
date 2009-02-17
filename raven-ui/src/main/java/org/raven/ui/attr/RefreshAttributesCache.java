@@ -89,10 +89,20 @@ public class RefreshAttributesCache
 			logger.info("RA found in map: "+ra);
 			//return ra;
 			Map<String,NodeAttribute> rb = getRA(viewable);
-			if(rb!=null)
+			if(rb==null || rb.size()==0)
+			{
+				remove(nw);
+				ra = null;
+			}	
+			else
+			{
 				for(String name : rb.keySet())
 					if(!ra.containsKey(name)) 
 						ra.put(name, rb.get(name));
+				for(Iterator<String> it=ra.keySet().iterator();it.hasNext();)
+					if(!rb.containsKey(it.next())) 
+						it.remove();
+			}	
 		} else ra = getRA(viewable);
 		if(!found) put(nw.getNodeId(), ra);
 		return ra;
