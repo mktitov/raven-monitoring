@@ -161,32 +161,18 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
         else
         {
             Collection<NodeAttribute> result = new ArrayList<NodeAttribute>();
-            for (RecordSchemaField field: filterFields.keySet())
-            {
-                NodeAttribute attr = getNodeAttribute(field.getName());
-                if (attr!=null)
+            for (NodeAttribute attr: getNodeAttributes())
+                if (RECORD_SCHEMA_ATTR.equals(attr.getParentAttribute()))
                 {
                     try
                     {
                         NodeAttribute clone = (NodeAttribute) attr.clone();
+                        result.add(clone);
                     }
                     catch (CloneNotSupportedException ex)
                     {
                     }
                 }
-            }
-//            for (NodeAttribute attr: getNodeAttributes())
-//                if (RECORD_SCHEMA_ATTR.equals(attr.getParentAttribute()))
-//                {
-//                    try
-//                    {
-//                        NodeAttribute clone = (NodeAttribute) attr.clone();
-//                        result.add(clone);
-//                    }
-//                    catch (CloneNotSupportedException ex)
-//                    {
-//                    }
-//                }
 
             return result.size()==0? null : result;
         }
