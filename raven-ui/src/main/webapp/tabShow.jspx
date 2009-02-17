@@ -83,11 +83,11 @@ action="#{sBean.reloadRightFrame}"
 				<tr:panelHorizontalLayout>
                 <tr:outputText 
                 	rendered="#{!row.attribute.required}" 
-                	value="#{row.name}"/>
+                	value="#{row.displayName}"/>
                 <tr:outputFormatted 
                 		rendered="#{row.attribute.required}"
 						inlineStyle="font-weight: bold;" 
-                		value="#{row.name}"/>
+                		value="#{row.displayName}"/>
                 <tr:outputFormatted 
                 		inlineStyle="color: #cc0000;" 
                 		rendered="#{row.attribute.required and (row.attribute.value == null) }"

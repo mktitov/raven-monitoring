@@ -203,6 +203,8 @@ public class Attr implements Comparable<Attr>
 	public String getName() { return name; }
 	public void setName(String name) { this.name = name; }
 
+    public String getDisplayName() { return attribute.getDisplayName(); }
+
 	public String getValue() { return value; }
 	public void setValue(String value) 
 	{ 
