@@ -39,4 +39,9 @@ public interface Viewable extends Node
      */
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes)
             throws Exception;
+    /**
+     * If method returns <code>true</code> then user interface can automatically refresh viewable
+     * objects else user interface must refresh viewable objects only on user action.
+     */
+    public Boolean getAutoRefresh();
 }

@@ -461,11 +461,6 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
                 filterAttr.setName(filterField.getFieldInfo().getName());
                 hasChanges = true;
             }
-            if (!filterAttr.getType().equals(filterField.getFieldInfo().getFieldType().getType()))
-            {
-                filterAttr.setType(filterField.getFieldInfo().getFieldType().getType());
-                hasChanges = true;
-            }
             boolean required = 
                     filterField.getFilterInfo().getFilterValueRequired()
                     && !provideFilterAttributesToConsumers;

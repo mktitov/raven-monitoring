@@ -59,10 +59,24 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
     @NotNull
     private RecordSchema recordSchema;
 
-    private Map<String, RecordSchemaField> fields;
-
     @Parameter
     private String fieldsOrder;
+
+    @Parameter(defaultValue="false")
+    @NotNull
+    private Boolean autoRefresh;
+
+    private Map<String, RecordSchemaField> fields;
+
+    public Boolean getAutoRefresh()
+    {
+        return autoRefresh;
+    }
+
+    public void setAutoRefresh(Boolean autoRefresh)
+    {
+        this.autoRefresh = autoRefresh;
+    }
 
     public DataSource getDataSource()
     {

@@ -21,7 +21,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.ListIterator;
@@ -29,7 +28,6 @@ import java.util.Map;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
-import org.raven.table.Table;
 import org.raven.table.TableImpl;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -63,10 +61,24 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
     @NotNull
     private ResetDataPolicy resetDataPolicy;
 
+    @Parameter(defaultValue="true")
+    @NotNull
+    private Boolean autoRefresh;
+
     protected Object data;
     private long lastDataTime;
     private Object previousData;
     private long previousDataTime;
+
+    public Boolean getAutoRefresh()
+    {
+        return autoRefresh;
+    }
+
+    public void setAutoRefresh(Boolean autoRefresh)
+    {
+        this.autoRefresh = autoRefresh;
+    }
 
     public ResetDataPolicy getResetDataPolicy() {
         return resetDataPolicy;

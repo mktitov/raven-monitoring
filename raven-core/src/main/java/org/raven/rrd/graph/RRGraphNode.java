@@ -39,7 +39,6 @@ import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeAttributeImpl;
-import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -108,6 +107,11 @@ public class RRGraphNode extends BaseNode implements Viewable
     @Parameter 
 //    @Description("Sets the 10**unitsExponent scaling of the y-axis values")
     private Integer unitsExponent;
+
+    @Parameter(defaultValue="true")
+    @NotNull
+    private Boolean autoRefresh;
+    
 
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
     {
@@ -190,6 +194,16 @@ public class RRGraphNode extends BaseNode implements Viewable
             throw new NodeError(
                     String.format("Error generating graph (%s)", getPath()), ex);
         }
+    }
+
+    public Boolean getAutoRefresh()
+    {
+        return autoRefresh;
+    }
+
+    public void setAutoRefresh(Boolean autoRefresh)
+    {
+        this.autoRefresh = autoRefresh;
     }
 
 	public Boolean getEnableAntialiasing()

@@ -35,7 +35,6 @@ import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.impl.ViewableObjectImpl;
-import org.weda.annotations.Description;
 import org.weda.internal.Messages;
 import org.weda.internal.annotations.Service;
 import org.weda.internal.services.MessagesRegistry;

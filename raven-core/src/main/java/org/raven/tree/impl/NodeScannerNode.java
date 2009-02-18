@@ -264,6 +264,11 @@ public class NodeScannerNode extends BaseNode implements DataSource, Schedulable
                     ((DataConsumer)depNode).setData(this, table);
     }
 
+    public Boolean getAutoRefresh()
+    {
+        return true;
+    }
+
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
     {
         return null;

@@ -102,4 +102,14 @@ public class ReferenceNode extends BaseNode implements Viewable
         else
             return null;
     }
+
+    public Boolean getAutoRefresh()
+    {
+        Node _reference = reference;
+        if (isConditionalNode() && _reference instanceof Viewable)
+            return ((Viewable)_reference).getAutoRefresh();
+        else
+            return false;
+    }
+
 }
