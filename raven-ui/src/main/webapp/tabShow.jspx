@@ -111,7 +111,7 @@ action="#{sBean.reloadRightFrame}"
             <tr:column headerText="#{msgs.type}">
                 <tr:outputText value="#{row.classDisplayName}"/>
             </tr:column>
-	<!-- subtype of attribute-->
+	<!-- subtype of attribute
             <tr:column headerText="#{msgs.subtype}">
                 <tr:selectOneChoice 
                 	valueChangeListener="#{row.applySubType}"
@@ -120,11 +120,14 @@ action="#{sBean.reloadRightFrame}"
                     <f:selectItems value="#{row.valueHandlerTypes}" />
                 </tr:selectOneChoice>
             </tr:column>
+	-->            
 	<!-- detailStamp of attribute-->
             <f:facet name="detailStamp">
                 <tr:panelGroupLayout layout="vertical"  >
 				<tr:panelCaptionGroup captionText="#{msgs.dsc}">
-	                <tr:outputText value="#{row.description}"/>
+	                <tr:outputText
+	                	value="#{row.description}"
+	                	escape="false" />
 				</tr:panelCaptionGroup>
 				<tr:inputListOfValues 
 					rendered="#{row.enableEditValueDialog}"
