@@ -33,6 +33,8 @@ import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.impl.RefreshAttributeValueHandlerFactory;
+import org.weda.internal.Messages;
+import org.weda.internal.services.MessagesRegistry;
 import static org.easymock.EasyMock.*;
 
 /**
@@ -203,5 +205,64 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         assertEquals(2, attrs.size());
         assertNotNull(attrs.get("filter1"));
         assertNotNull(attrs.get("filter2"));
+    }
+
+    @Test
+    public void detailTableColumnTest() throws Exception
+    {
+        tableNode.setShowFieldsInDetailColumn(true);
+
+        Record record = createMock(Record.class);
+
+        expect(record.getSchema()).andReturn(schema);
+        expect(record.getValue("field1")).andReturn(1).times(2);
+        expect(record.getValue("field2")).andReturn("test1").times(2);
+
+        replay(record);
+
+        ds.addDataPortion(record);
+        ds.addDataPortion(null);
+
+        Collection<ViewableObject> objects = tableNode.getViewableObjects(null);
+        assertNotNull(objects);
+        assertEquals(1, objects.size());
+        ViewableObject object = objects.iterator().next();
+        assertNotNull(object);
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, object.getMimeType());
+        assertNotNull(object.getData());
+        assertTrue(object.getData() instanceof Table);
+        Table table = (Table) object.getData();
+        MessagesRegistry messagesRegistry = registry.getService(MessagesRegistry.class);
+        Messages messages = messagesRegistry.getMessages(RecordsAsTableNode.class);
+        String detailColumnName =messages.get("detailColumnName");
+        assertArrayEquals(
+                new String[]{"field1 displayName", "field2", detailColumnName}
+                , table.getColumnNames());
+        List<Object[]> rows = RavenUtils.tableAsList(table);
+        assertEquals(1, rows.size());
+        assertEquals("1", rows.get(0)[0]);
+        assertEquals("test1", rows.get(0)[1]);
+
+        Object detailObj = rows.get(0)[2];
+        assertNotNull(detailObj);
+        assertTrue(detailObj instanceof ViewableObject);
+        ViewableObject detail = (ViewableObject) detailObj;
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, detail.getMimeType());
+
+        Object detailData = detail.getData();
+        assertNotNull(detailData);
+        assertTrue(detailData instanceof Table);
+        Table detailTable = (Table) detailData;
+        assertArrayEquals(
+                new String[]{
+                        messages.get("fieldNameColumnName")
+                        , messages.get("fieldValueColumnName")}
+                , detailTable.getColumnNames());
+        List<Object[]> detailRows = RavenUtils.tableAsList(detailTable);
+        assertEquals(2, detailRows.size());
+        assertArrayEquals(new String[]{"field1", "1"}, detailRows.get(0));
+        assertArrayEquals(new String[]{"field2", "test1"}, detailRows.get(1));
+
+        verify(record);
     }
 }
