@@ -279,6 +279,13 @@
                 <scope>compile</scope>
             </dependency>
             <dependency>
+                <groupId>oracle</groupId>
+                <artifactId>oracle</artifactId>
+                <version>10.2.0.1</version>
+                <scope>compile</scope>
+            </dependency>
+
+            <dependency>
                 <groupId>org.samba.jcifs</groupId>
                 <artifactId>jcifs</artifactId>
                 <version>1.2.19</version>
