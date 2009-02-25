@@ -59,6 +59,10 @@
             <artifactId>postgresql</artifactId>
         </dependency>
         <dependency>
+            <groupId>oracle</groupId>
+            <artifactId>oracle</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.jrobin</groupId>
             <artifactId>jrobin</artifactId>
         </dependency>

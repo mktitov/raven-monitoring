@@ -20,8 +20,6 @@ package org.raven.dbcp.impl;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.commons.dbcp.ConnectionFactory;
 import org.apache.commons.dbcp.DriverManagerConnectionFactory;
 import org.apache.commons.dbcp.PoolableConnectionFactory;
@@ -82,6 +80,7 @@ public class JDBCConnectionPoolNode extends BaseNode implements ConnectionPool
                 new PoolableConnectionFactory(
                     connectionFactory, connectionPool, null, validationQuery, false, autoCommit);
         Class.forName("org.apache.commons.dbcp.PoolingDriver");
+        Class.forName(driver);
         poolingDriver = (PoolingDriver) DriverManager.getDriver("jdbc:apache:commons:dbcp:");
         poolingDriver.registerPool(getName(), connectionPool);
     }

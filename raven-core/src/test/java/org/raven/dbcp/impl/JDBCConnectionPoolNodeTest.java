@@ -51,7 +51,6 @@ public class JDBCConnectionPoolNodeTest extends RavenCoreTestCase
         pool.setPassword(conf.getStringProperty(Configurator.TREE_STORE_PASSWORD, null));
         pool.setUrl(conf.getStringProperty(Configurator.TREE_STORE_URL, null));
         pool.setDriver("org.h2.Driver");
-
         pool.start();
         assertEquals(Status.STARTED, pool.getStatus());
         Connection connection = pool.getConnection();
