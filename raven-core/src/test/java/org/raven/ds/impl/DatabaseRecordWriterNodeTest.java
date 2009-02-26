@@ -33,6 +33,7 @@ import org.raven.dbcp.impl.JDBCConnectionPoolNode;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.PushDataSource;
+import org.raven.log.LogLevel;
 import org.raven.tree.Node.Status;
 import org.raven.tree.impl.SystemNode;
 
@@ -45,6 +46,7 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
     private RecordSchemaNode schema;
     private PushDataSource ds;
     private JDBCConnectionPoolNode pool;
+    private DatabaseRecordWriterNode writer;
 
     @Before
     public void prepare() throws Exception
@@ -118,23 +120,49 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
         ds.start();
         assertEquals(Status.STARTED, ds.getStatus());
 
-        DatabaseRecordWriterNode writer = new DatabaseRecordWriterNode();
+        writer = new DatabaseRecordWriterNode();
         writer.setName("writer");
         tree.getRootNode().addAndSaveChildren(writer);
         writer.setConnectionPool(pool);
         writer.setRecordSchema(schema);
         writer.setDataSource(ds);
+        writer.setLogLevel(LogLevel.DEBUG);
         writer.start();
         assertEquals(Status.STARTED, writer.getStatus());
     }
 
     @Test
-    public void test() throws Exception
+    public void setData_test() throws Exception
     {
         Record record = schema.createRecord();
         record.setValue("field1", 10);
         record.setValue("field2", "10.50.1.1");
         ds.pushData(record);
+        ds.pushData(null);
+
+        Connection con = pool.getConnection();
+        Statement st = con.createStatement();
+        ResultSet rs = st.executeQuery("select col1, col2 from record_data");
+        List<Object[]> rows = new ArrayList<Object[]>();
+        while (rs.next())
+            rows.add(new Object[]{rs.getObject(1), rs.getObject(2)});
+        rs.close();
+        st.close();
+        con.close();
+
+        assertEquals(1, rows.size());
+        assertEquals(10, rows.get(0)[0]);
+        assertEquals("10.50.1.1", rows.get(0)[1]);
+    }
+
+    @Test
+    public void flushRecordsOnStop_test() throws Exception
+    {
+        Record record = schema.createRecord();
+        record.setValue("field1", 10);
+        record.setValue("field2", "10.50.1.1");
+        ds.pushData(record);
+        writer.stop();
 
         Connection con = pool.getConnection();
         Statement st = con.createStatement();

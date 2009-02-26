@@ -96,6 +96,11 @@ public class DatabaseFilterElement
         return value;
     }
 
+    public Class getColumnType()
+    {
+        return columnType;
+    }
+
     public String getColumnName()
     {
         return columnName;

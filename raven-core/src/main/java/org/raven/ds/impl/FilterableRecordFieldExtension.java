@@ -38,6 +38,19 @@ public class FilterableRecordFieldExtension extends BaseNode
     @Parameter()
     private String defaultValue;
 
+    @Parameter(defaultValue="true")
+    private Boolean caseSensitive;
+
+    public Boolean getCaseSensitive()
+    {
+        return caseSensitive;
+    }
+
+    public void setCaseSensitive(Boolean caseSensitive)
+    {
+        this.caseSensitive = caseSensitive;
+    }
+
     public String getDefaultValue()
     {
         return defaultValue;

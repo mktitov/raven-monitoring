@@ -26,6 +26,7 @@ import org.raven.annotations.Parameter;
 import org.raven.dbcp.ConnectionPool;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
+import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.log.LogLevel;
@@ -48,6 +49,44 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     @Parameter(valueHandlerType=ConnectionPoolValueHandlerFactory.TYPE)
     @NotNull
     private ConnectionPool connectionPool;
+
+    @Parameter(defaultValue="100")
+    @NotNull
+    private Integer recordBufferSize;
+
+    @Parameter(readOnly=true)
+    private long recordSetsRecieved;
+    @Parameter(readOnly=true)
+    private long recordsRecieved;
+    @Parameter(readOnly=true)
+    private long recordsSaved;
+
+    private List<Record> recordBuffer;
+
+    public long getRecordSetsRecieved()
+    {
+        return recordSetsRecieved;
+    }
+
+    public long getRecordsRecieved()
+    {
+        return recordsRecieved;
+    }
+
+    public long getRecordsSaved()
+    {
+        return recordsSaved;
+    }
+
+    public Integer getRecordBufferSize()
+    {
+        return recordBufferSize;
+    }
+
+    public void setRecordBufferSize(Integer recordBufferSize)
+    {
+        this.recordBufferSize = recordBufferSize;
+    }
 
     public ConnectionPool getConnectionPool()
     {
@@ -80,59 +119,68 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data)
+    protected void doStart() throws Exception
     {
-        if (data==null)
-        {
-            if (isLogLevelEnabled(LogLevel.DEBUG))
-                debug(String.format(
-                        "Recieved the end marker from record source (%s)", dataSource.getPath()));
-            return;
-        }
-        if (!(data instanceof Record))
-        {
-            error(String.format(
-                    "Invalid type (%s) recieved from data source (%s). The valid type is (%s) "
-                    , data==null? "null" : data.getClass().getName(), dataSource.getPath()
-                    , Record.class.getName()));
-            return;
-        }
+        super.doStart();
 
-        Record record = (Record) data;
+        recordSetsRecieved = 0l;
+        recordsRecieved = 0l;
+        recordsSaved = 0l;
+    }
 
-        RecordSchemaNode _recordSchema = recordSchema;
-        if (!_recordSchema.equals(record.getSchema()))
-        {
-            error(String.format(
-                    "Invalid record schema recived from data source (%s). " +
-                    "Recieved schema is (%s), valid schema is (%s) "
-                    , dataSource.getPath(), record.getSchema().getName(), _recordSchema.getName()));
-            return;
-        }
+    @Override
+    protected void doStop() throws Exception
+    {
+        super.doStop();
+        flushRecords();
+    }
 
-        DatabaseRecordExtension recordExtension =_recordSchema.getRecordExtension(
-                DatabaseRecordExtension.class, databaseExtensionName);
-        if (recordExtension==null)
-        {
-            error(String.format(
-                    "Record schema (%s) does not have DatabaseRecordExtension"
-                    , _recordSchema.getName()));
-            return;
-        }
-
-        String tableName = recordExtension.getTableName();
-
-        RecordSchemaField[] fields = _recordSchema.getFields();
-        if (fields==null)
-        {
-            warn("Schema (%s) does not contains fields");
-            return;
-        }
-
+    @Override
+    protected synchronized void doSetData(DataSource dataSource, Object data)
+    {
         try
         {
-            processRecord(tableName, fields, record);
+            if (data==null)
+            {
+                if (isLogLevelEnabled(LogLevel.DEBUG))
+                    debug(String.format(
+                            "Recieved the end marker from record source (%s)"
+                            , dataSource.getPath()));
+                ++recordSetsRecieved;
+                flushRecords();
+                return;
+            }
+            if (!(data instanceof Record))
+            {
+                error(String.format(
+                        "Invalid type (%s) recieved from data source (%s). The valid type is (%s) "
+                        , data==null? "null" : data.getClass().getName(), dataSource.getPath()
+                        , Record.class.getName()));
+                return;
+            }
 
+            Record record = (Record) data;
+
+            RecordSchemaNode _recordSchema = recordSchema;
+            if (!_recordSchema.equals(record.getSchema()))
+            {
+                error(String.format(
+                        "Invalid record schema recived from data source (%s). " +
+                        "Recieved schema is (%s), valid schema is (%s) "
+                        , dataSource.getPath(), record.getSchema().getName()
+                        , _recordSchema.getName()));
+                return;
+            }
+
+            ++recordsRecieved;
+
+            int _recordBufferSize = recordBufferSize;
+            if (recordBuffer==null)
+                recordBuffer = new ArrayList<Record>(_recordBufferSize);
+            recordBuffer.add(record);
+
+            if (recordBuffer.size()>=_recordBufferSize)
+                flushRecords();
         }
         catch(Exception e)
         {
@@ -140,11 +188,48 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         }
     }
 
-    private void processRecord(String tableName, RecordSchemaField[] fields, Record record)
-            throws Exception
+    private String createQuery(String tableName, List<String> columnNames)
     {
-        List<String> columnNames = new ArrayList<String>();
-        List<Object> values = new ArrayList<Object>();
+        StringBuilder query = new StringBuilder("insert into " + tableName + " (");
+        for (int i = 0; i < columnNames.size(); ++i)
+        {
+            if (i != 0)
+                query.append(", ");
+            query.append(columnNames.get(i));
+        }
+        query.append(") values (");
+        for (int i = 0; i < columnNames.size(); ++i)
+        {
+            if (i != 0)
+                query.append(", ");
+            query.append("?");
+        }
+        query.append(")");
+
+        return query.toString();
+    }
+
+    private synchronized void flushRecords() throws Exception
+    {
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            debug("Flushing records to the database");
+        
+        if (recordBuffer==null || recordBuffer.size()==0)
+        {
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug("Nothing to flush. Records buffer is empty.");
+            return;
+        }
+
+        RecordSchema _recordSchema = recordSchema;
+        RecordSchemaField[] fields = recordSchema.getFields();
+
+        if (fields==null || fields.length==0)
+            throw new Exception(String.format(
+                    "Schema (%s) does not contains fields", _recordSchema.getName()));
+
+        List<String> columnNames = new ArrayList<String>(fields.length);
+        List<RecordSchemaField> dbFields =  new ArrayList<RecordSchemaField>(fields.length);
         for (RecordSchemaField field : fields)
         {
             DatabaseRecordFieldExtension extension = field.getFieldExtension(
@@ -152,26 +237,66 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
             if (extension != null)
             {
                 columnNames.add(extension.getColumnName());
-                values.add(RecordSchemaFieldType.getSqlObject(
-                        field.getFieldType(), record.getValue(field.getName())));
+                dbFields.add(field);
             }
         }
-        if (values.size() == 0)
-            throw new Exception(
-                    "Record does not contain fields that should be writen to the database");
+
+        if (columnNames.size()==0)
+            throw new Exception(String.format(
+                    "Schema (%s) does not contains fields with (%s) extenstion"
+                    , _recordSchema.getName()));
+
+        DatabaseRecordExtension recordExtension =_recordSchema.getRecordExtension(
+                DatabaseRecordExtension.class, databaseExtensionName);
+        if (recordExtension==null)
+            throw new Exception(String.format(
+                    "Record schema (%s) does not have DatabaseRecordExtension"
+                    , _recordSchema.getName()));
+
+        String tableName = recordExtension.getTableName();
+
+        String updateQuery = createQuery(tableName, columnNames);
 
         Connection con = connectionPool.getConnection();
+        con.setAutoCommit(false);
         try
         {
-            String query = createQuery(tableName, columnNames, values);
-                
-            PreparedStatement insert = con.prepareStatement(query);
+            PreparedStatement insert = con.prepareStatement(updateQuery);
             try
             {
-                for (int i=1; i<=values.size(); ++i)
-                    insert.setObject(i, values.get(i-1));
+                boolean batchInsert = con.getMetaData().supportsBatchUpdates();
 
-                insert.executeUpdate();
+                if (isLogLevelEnabled(LogLevel.DEBUG))
+                    debug(String.format(
+                            "Database driver %ssupports batch updates"
+                            , batchInsert? "" : "does not "));
+
+                for (Record record: recordBuffer)
+                {
+                    int i=1;
+                    for (RecordSchemaField field: dbFields)
+                    {
+                        Object val = RecordSchemaFieldType.getSqlObject(
+                                field.getFieldType(), record.getValue(field.getName()));
+                        insert.setObject(i++, val);
+                    }
+                    if (batchInsert)
+                        insert.addBatch();
+                    else
+                        insert.executeUpdate();
+                }
+
+                if (batchInsert)
+                    insert.executeBatch();
+
+                con.commit();
+
+                if (isLogLevelEnabled(LogLevel.DEBUG))
+                    debug(String.format(
+                            "Flushed (%d) records to the database", recordBuffer.size()));
+                recordsSaved+=recordBuffer.size();
+
+                recordBuffer = null;
             }
             finally
             {
@@ -182,26 +307,5 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         {
             con.close();
         }
-    }
-
-    private String createQuery(String tableName, List<String> columnNames, List<Object> values)
-    {
-        StringBuilder query = new StringBuilder("insert into " + tableName + " (");
-        for (int i = 0; i < columnNames.size(); ++i)
-        {
-            if (i != 0)
-                query.append(", ");
-            query.append(columnNames.get(i));
-        }
-        query.append(") values (");
-        for (int i = 0; i < values.size(); ++i)
-        {
-            if (i != 0)
-                query.append(", ");
-            query.append("?");
-        }
-        query.append(")");
-
-        return query.toString();
     }
 }

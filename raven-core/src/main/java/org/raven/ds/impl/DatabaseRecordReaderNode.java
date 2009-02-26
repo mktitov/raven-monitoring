@@ -132,11 +132,13 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
         String _query = query;
         if (_query==null || query.trim().isEmpty())
             recordQuery = new DatabaseRecordQuery(
-                    recordSchema, databaseExtensionName, filterElements, whereExpression
+                    recordSchema, databaseExtensionName, filterExtensionName, filterElements
+                    , whereExpression
                     , orderByExpression, connectionPool, maxRows, fetchSize);
         else
             recordQuery = new DatabaseRecordQuery(
-                    recordSchema, databaseExtensionName, filterElements, _query, connectionPool
+                    recordSchema, databaseExtensionName, filterExtensionName
+                    , filterElements, _query, connectionPool
                     , maxRows, fetchSize);
 
         DatabaseRecordQuery.RecordIterator it = recordQuery.execute();
@@ -195,18 +197,18 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
             {
                 if (attribute.getName().equals(RECORD_SCHEMA_ATTR))
                 {
-                    if (oldValue!=null)
-                        ((RecordSchemaNode)oldValue).removeListener(this);
+//                    if (oldValue!=null)
+//                        ((RecordSchemaNode)oldValue).removeListener(this);
                     syncFilterFields((RecordSchema)newValue, false);
-                    if (newValue!=null)
-                        ((RecordSchemaNode)newValue).addListener(schemaListener);
+//                    if (newValue!=null)
+//                        ((RecordSchemaNode)newValue).addListener(schemaListener);
                 }
-                else if (   attribute.getName().equals(PROVIDE_FILTER_ATTRIBUTES_TO_CONSUMERS_ATTR)
-                         && Status.STARTED==getStatus())
-                {
-                    stop();
-                    start();
-                }
+//                else if (   attribute.getName().equals(PROVIDE_FILTER_ATTRIBUTES_TO_CONSUMERS_ATTR)
+//                         && Status.STARTED==getStatus())
+//                {
+//                    stop();
+//                    start();
+//                }
             }
         }
         catch(Throwable e)

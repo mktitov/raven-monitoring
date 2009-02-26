@@ -683,7 +683,19 @@ public class BaseNode implements Node, NodeListener, Logger
 
     public synchronized void stop() throws NodeError
     {
-        setStatus(Status.INITIALIZED);
+        try
+        {
+            doStop();
+            setStatus(Status.INITIALIZED);
+        }
+        catch(Exception e)
+        {
+            error(String.format("Error stoping node (%s)", getPath()), e);
+        }
+    }
+
+    protected void doStop() throws Exception
+    {
     }
 
     public synchronized void remove() 

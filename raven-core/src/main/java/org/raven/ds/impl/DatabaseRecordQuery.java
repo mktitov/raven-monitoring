@@ -25,9 +25,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.raven.dbcp.ConnectionPool;
 import org.raven.ds.Record;
@@ -49,6 +51,7 @@ public class DatabaseRecordQuery
     private final String query;
     private final int maxRows;
     private final int fetchSize;
+    private final String filterExtensionName;
     private Collection values;
     private Map<String/*column name*/, String/*field name*/> selectFields;
     private Connection connection;
@@ -57,6 +60,7 @@ public class DatabaseRecordQuery
     public DatabaseRecordQuery(
             RecordSchema recordSchema
             , String databaseExtensionName
+            , String filterExtensionName
             , Collection<DatabaseFilterElement> filterElements
             , String whereExpression
             , String orderByExpression
@@ -70,6 +74,7 @@ public class DatabaseRecordQuery
         this.connectionPool = connectionPool;
         this.orderByExpression = orderByExpression;
         this.databaseExtensionName = databaseExtensionName;
+        this.filterExtensionName = filterExtensionName;
         this.maxRows = maxRows==null? 0 : maxRows;
         this.fetchSize = fetchSize==null? 0 : fetchSize;
 
@@ -86,6 +91,7 @@ public class DatabaseRecordQuery
     public DatabaseRecordQuery(
             RecordSchema recordSchema
             , String databaseExtensionName
+            , String filterExtensionName
             , Collection<DatabaseFilterElement> filterElements
             , String queryTemplate
             , ConnectionPool connectionPool
@@ -97,6 +103,7 @@ public class DatabaseRecordQuery
         this.queryTemplate = queryTemplate;
         this.connectionPool = connectionPool;
         this.databaseExtensionName = databaseExtensionName;
+        this.filterExtensionName = filterExtensionName;
         this.maxRows = maxRows==null? 0 : maxRows;
         this.fetchSize = fetchSize==null? 0 : fetchSize;
 
@@ -171,6 +178,7 @@ public class DatabaseRecordQuery
             StringBuilder queryBuf = new StringBuilder();
 
             selectFields = new HashMap<String, String>();
+            Set<String> caseInSensitiveFields = new HashSet<String>();
             List<String> columnNames = new ArrayList<String>();
             for (RecordSchemaField field: fields)
             {
@@ -181,6 +189,10 @@ public class DatabaseRecordQuery
                     selectFields.put(
                             dbFieldExtension.getColumnName().toUpperCase(), field.getName());
                     columnNames.add(dbFieldExtension.getColumnName());
+                    FilterableRecordFieldExtension filterFieldExtension = field.getFieldExtension(
+                            FilterableRecordFieldExtension.class, filterExtensionName);
+                    if (filterFieldExtension!=null && !filterFieldExtension.getCaseSensitive())
+                        caseInSensitiveFields.add(dbFieldExtension.getColumnName());
                 }
             }
 
@@ -217,24 +229,29 @@ public class DatabaseRecordQuery
                 values = new ArrayList();
                 for (DatabaseFilterElement filterElement: filterElements)
                 {
+                    boolean caseSensitive = !caseInSensitiveFields.contains(
+                            filterElement.getColumnName());
+                    String columnNameExpr = getColumnNameExpression(filterElement, caseSensitive);
                     switch(filterElement.getExpressionType())
                     {
                         case COMPLETE:
-                            queryBuf.append("\n   AND ("+filterElement.getColumnName()+" "
-                                    +filterElement.getValue()+")");
+                            queryBuf.append(
+                                    "\n   AND ("+columnNameExpr+" "+filterElement.getValue()+")");
                             break;
                         case OPERATOR:
                             switch (filterElement.getOperatorType())
                             {
                                 case SIMPLE:
                                     queryBuf.append("\n   AND "
-                                            +filterElement.getColumnName()
+                                            +columnNameExpr
                                             +filterElement.getOperator()+"?");
-                                    values.add(filterElement.getValue());
+                                    values.add(getValue(filterElement.getValue(), caseSensitive));
                                     break;
                                 case LIKE:
-                                    queryBuf.append("\n   AND "+filterElement.getColumnName()
-                                            +" LIKE '"+filterElement.getValue()+"'");
+                                    queryBuf.append("\n   AND "+columnNameExpr
+                                            +" LIKE '"
+                                            +getValue(filterElement.getValue(), caseSensitive)
+                                            +"'");
                                     break;
                                 case BETWEEN:
                                     queryBuf.append("\n   AND "+filterElement.getColumnName()
@@ -245,14 +262,14 @@ public class DatabaseRecordQuery
                                     break;
                                 case IN:
                                     Object[] inValues = (Object[]) filterElement.getValue();
-                                    queryBuf.append("\n   AND "+filterElement.getColumnName()
+                                    queryBuf.append("\n   AND "+columnNameExpr
                                             +" IN (");
                                     for (int i=0; i<inValues.length; ++i)
                                     {
                                         if (i>0)
                                             queryBuf.append(", ");
                                         queryBuf.append("?");
-                                        values.add(inValues[i]);
+                                        values.add(getValue(inValues[i], caseSensitive));
                                     }
                                     queryBuf.append(")");
                                     break;
@@ -279,6 +296,18 @@ public class DatabaseRecordQuery
                         , recordSchema.getName())
                     , e);
         }
+    }
+
+    private String getColumnNameExpression(
+            DatabaseFilterElement filterElement, boolean caseSensitive)
+    {
+        return !caseSensitive && String.class.equals(filterElement.getColumnType())?
+                "upper("+filterElement.getColumnName()+")" : filterElement.getColumnName();
+    }
+
+    private Object getValue(Object value, boolean caseSensitive)
+    {
+        return (value instanceof String) && !caseSensitive? ((String)value).toUpperCase() : value;
     }
 
     public class RecordIterator implements Iterator<Record>
