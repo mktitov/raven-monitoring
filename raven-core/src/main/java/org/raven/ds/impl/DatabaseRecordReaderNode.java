@@ -26,8 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.dbcp.ConnectionPool;
@@ -38,6 +36,7 @@ import org.raven.ds.RecordSchemaFieldType;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodeError;
 import org.raven.tree.NodeListener;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.weda.annotations.constraints.NotNull;
@@ -95,6 +94,12 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
     @Parameter
     private Integer fetchSize;
 
+    @Parameter(readOnly=true)
+    private long validRecords;
+    @Parameter(readOnly=true)
+    private long errorRecords;
+
+    private long processingTime;
 
     private List<SelectField> selectFields;
 
@@ -111,6 +116,20 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
 
         filterFieldLock = new ReentrantLock();
         schemaListener = new SchemaListener();
+        
+        validRecords = 0l;
+        errorRecords = 0l;
+        processingTime = 0l;
+    }
+
+    @Override
+    public void init() throws NodeError
+    {
+        super.init();
+
+        RecordSchemaNode _recordSchema = recordSchema;
+        if (_recordSchema!=null)
+            _recordSchema.addListener(schemaListener);
     }
 
     @Override
@@ -119,6 +138,10 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
         super.doStart();
 
         syncFilterFields(recordSchema, true);
+        
+        validRecords = 0l;
+        errorRecords = 0l;
+        processingTime = 0l;
     }
 
     @Override
@@ -126,6 +149,9 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
         DataConsumer dataConsumer, Map<String, NodeAttribute> attributes)
             throws Exception
     {
+        long startTime = System.currentTimeMillis();
+        long realProcessingTime = processingTime;
+        long procStart = startTime;
         List<DatabaseFilterElement> filterElements = createFilterElements(attributes);
         
         DatabaseRecordQuery recordQuery = null;
@@ -142,15 +168,36 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
                     , maxRows, fetchSize);
 
         DatabaseRecordQuery.RecordIterator it = recordQuery.execute();
+        processingTime+=System.currentTimeMillis()-startTime;
         try
         {
-            while (it.hasNext())
-                dataConsumer.setData(this, it.next());
-            dataConsumer.setData(this, null);
-            return true;
+            try
+            {
+                startTime = System.currentTimeMillis();
+                int i=0;
+                while (it.hasNext())
+                {
+                    dataConsumer.setData(this, it.next());
+                    ++validRecords;
+                    if (i % 1000 == 0)
+                    {
+                        processingTime+=System.currentTimeMillis()-startTime;
+                        startTime = System.currentTimeMillis();
+                    }
+                }
+                dataConsumer.setData(this, null);
+
+                return true;
+            }
+            catch(Exception e)
+            {
+                ++errorRecords;
+                throw e;
+            }
         }
         finally
         {
+            processingTime = realProcessingTime + (System.currentTimeMillis()-procStart);
             recordQuery.close();
         }
     }
@@ -197,11 +244,11 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
             {
                 if (attribute.getName().equals(RECORD_SCHEMA_ATTR))
                 {
-//                    if (oldValue!=null)
-//                        ((RecordSchemaNode)oldValue).removeListener(this);
+                    if (oldValue!=null)
+                        ((RecordSchemaNode)oldValue).removeListener(schemaListener);
                     syncFilterFields((RecordSchema)newValue, false);
-//                    if (newValue!=null)
-//                        ((RecordSchemaNode)newValue).addListener(schemaListener);
+                    if (newValue!=null)
+                        ((RecordSchemaNode)newValue).addListener(schemaListener);
                 }
 //                else if (   attribute.getName().equals(PROVIDE_FILTER_ATTRIBUTES_TO_CONSUMERS_ATTR)
 //                         && Status.STARTED==getStatus())
@@ -217,6 +264,23 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
         }
     }
 
+    @Parameter(readOnly=true)
+    public double getRecordsPerSecond()
+    {
+        double count = validRecords+errorRecords;
+        return count==0.? 0. : processingTime/count*1000;
+    }
+
+    public long getErrorRecords()
+    {
+        return errorRecords;
+    }
+
+    public long getValidRecords()
+    {
+        return validRecords;
+    }
+    
     public ConnectionPool getConnectionPool()
     {
         return connectionPool;

@@ -168,6 +168,7 @@ public class CvsRecordReaderNode extends AbstractDataPipe
                     }
                     linenum++;
                 }
+                sendDataToConsumers(null);
             }
             catch(Exception e)
             {

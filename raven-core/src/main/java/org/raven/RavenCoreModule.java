@@ -53,6 +53,7 @@ import org.raven.impl.NodeAccessToNodeConverter;
 import org.raven.impl.NodeAttributeToStringConverter;
 import org.raven.impl.NodeToStringConverter;
 import org.raven.impl.NumberToNumberConverter;
+import org.raven.impl.OracleTimestampToTimestampConverter;
 import org.raven.impl.SnmpVariableToNumberConverter;
 import org.raven.impl.StringToAttributeReferenceConverter;
 import org.raven.impl.StringToCharsetConverter;
@@ -168,6 +169,7 @@ public class RavenCoreModule
         conf.add(new StringToIpConverter());
         conf.add(new IntegerToIpConverter());
         conf.add(new LongToTimestampConverter());
+        conf.add(new OracleTimestampToTimestampConverter());
     }
     
     public static void contributeTree(MappedConfiguration<Class, AttributeReferenceValues> conf)

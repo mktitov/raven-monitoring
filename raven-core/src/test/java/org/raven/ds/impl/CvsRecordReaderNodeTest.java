@@ -110,7 +110,7 @@ public class CvsRecordReaderNodeTest extends RavenCoreTestCase
         ds.pushData(stream);
 
         List dataList = consumer.getDataList();
-        assertEquals(2, dataList.size());
+        assertEquals(3, dataList.size());
 
         Record record = (Record) dataList.get(0);
         assertEquals(1, record.getValue("field1"));
@@ -133,7 +133,7 @@ public class CvsRecordReaderNodeTest extends RavenCoreTestCase
         ds.pushData(stream);
         
         List dataList = consumer.getDataList();
-        assertEquals(1, dataList.size());
+        assertEquals(2, dataList.size());
 
         Record record = (Record) dataList.get(0);
         assertEquals(1, record.getValue("field1"));
@@ -150,7 +150,7 @@ public class CvsRecordReaderNodeTest extends RavenCoreTestCase
         ds.pushData(stream);
         
         List dataList = consumer.getDataList();
-        assertEquals(1, dataList.size());
+        assertEquals(2, dataList.size());
 
         Record record = (Record) dataList.get(0);
         assertEquals(1, record.getValue("field1"));
