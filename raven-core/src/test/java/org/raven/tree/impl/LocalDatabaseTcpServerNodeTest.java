@@ -15,30 +15,25 @@
  *  under the License.
  */
 
-package org.raven.ds.impl;
+package org.raven.tree.impl;
 
-import org.raven.annotations.NodeClass;
-import org.raven.annotations.Parameter;
-import org.weda.annotations.constraints.NotNull;
+import java.text.ParseException;
+import org.junit.Test;
+import org.raven.RavenCoreTestCase;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(
-    parentNode=RecordSchemaFieldNode.class, childNodes=ValuePrepareRecordFieldExtension.class)
-public class DatabaseRecordFieldExtension extends AbstractRecordFieldExtension
+public class LocalDatabaseTcpServerNodeTest extends RavenCoreTestCase
 {
-    @Parameter() @NotNull
-    private String columnName;
-
-    public String getColumnName()
+    @Test
+    public void test() throws ParseException
     {
-        return columnName;
-    }
-
-    public void setColumnName(String columnName)
-    {
-        this.columnName = columnName;
+        LocalDatabaseTcpServerNode server = new LocalDatabaseTcpServerNode();
+        tree.getRootNode().addAndSaveChildren(server);
+        server.setPort(9093);
+        assertTrue(server.start());
+        server.stop();
     }
 }

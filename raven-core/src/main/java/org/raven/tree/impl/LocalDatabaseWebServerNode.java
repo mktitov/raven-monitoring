@@ -15,30 +15,30 @@
  *  under the License.
  */
 
-package org.raven.ds.impl;
+package org.raven.tree.impl;
 
+import java.sql.SQLException;
+import org.h2.tools.Server;
 import org.raven.annotations.NodeClass;
-import org.raven.annotations.Parameter;
-import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(
-    parentNode=RecordSchemaFieldNode.class, childNodes=ValuePrepareRecordFieldExtension.class)
-public class DatabaseRecordFieldExtension extends AbstractRecordFieldExtension
+@NodeClass(parentNode=LocalDatabaseNode.class)
+public class LocalDatabaseWebServerNode extends LocalDatabaseAbstractServerNode
 {
-    @Parameter() @NotNull
-    private String columnName;
+    public final static String NAME = "WEB Server";
 
-    public String getColumnName()
+    public LocalDatabaseWebServerNode()
     {
-        return columnName;
+        super("web");
+        setName(NAME);
     }
 
-    public void setColumnName(String columnName)
+    @Override
+    public Server createServer(String[] args) throws SQLException
     {
-        this.columnName = columnName;
+        return Server.createWebServer(args);
     }
 }

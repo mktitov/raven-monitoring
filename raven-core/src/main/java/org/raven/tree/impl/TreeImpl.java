@@ -93,6 +93,7 @@ public class TreeImpl implements Tree
     private NodeLoggerNode nodeLoggerNode;
 	private QueuesNode queuesNode;
     private SchemasNode schemasNode;
+    private LocalDatabaseNode localDatabaseNode;
 
     public TreeImpl(
             AttributeReferenceValues attributeReferenceValues
@@ -413,6 +414,15 @@ public class TreeImpl implements Tree
             schedulersNode = new SchedulersNode();
             systemNode.addChildren(schedulersNode);
             treeStore.saveNode(schedulersNode);
+        }
+
+        localDatabaseNode = (LocalDatabaseNode) systemNode.getChildren(LocalDatabaseNode.NAME);
+        if (localDatabaseNode==null)
+        {
+            localDatabaseNode = new LocalDatabaseNode();
+            localDatabaseNode.setParent(systemNode);
+            treeStore.saveNode(localDatabaseNode);
+            systemNode.addChildren(localDatabaseNode);
         }
         
         connectionPoolsNode = (ConnectionPoolsNode)systemNode.getChildren(ConnectionPoolsNode.NAME);

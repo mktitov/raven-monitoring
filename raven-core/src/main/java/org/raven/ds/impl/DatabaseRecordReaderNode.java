@@ -91,7 +91,7 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
     @Parameter
     private Integer maxRows;
 
-    @Parameter
+    @Parameter(defaultValue="100")
     private Integer fetchSize;
 
     @Parameter(readOnly=true)

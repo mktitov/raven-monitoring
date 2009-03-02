@@ -67,6 +67,7 @@ import org.weda.services.TypeConverter;
 public class BaseNode implements Node, NodeListener, Logger
 {
     public final static String LOGLEVEL_ATTRIBUTE = "logLevel";
+    public final static String AUTOSTART_ATTRIBUTE = "autoStart";
 
     private static Logger sl4jLogger = LoggerFactory.getLogger(Node.class);
     protected Logger logger; // = LoggerFactory.getLogger(Node.class);
@@ -103,7 +104,6 @@ public class BaseNode implements Node, NodeListener, Logger
     private Map<NodeAttribute, Set<NodeAttributeListener>> attributesListeners;
     private Lock attributeListenersLock;
     
-    private boolean autoStart = true;
     private boolean initializeAfterChildrens = false;
     private Status status;
     private Lock statusLock;
@@ -583,7 +583,17 @@ public class BaseNode implements Node, NodeListener, Logger
 
     public boolean isAutoStart()
     {
-        return autoStart;
+        if (ObjectUtils.in(getStatus(), Status.INITIALIZED, Status.STARTED))
+        {
+            NodeAttribute autoStartAttr = getNodeAttribute(AUTOSTART_ATTRIBUTE);
+            if (autoStartAttr!=null && Boolean.class.equals(autoStartAttr.getType()))
+            {
+                Boolean autoStart = autoStartAttr.getRealValue();
+                return autoStart==null? false : autoStart;
+            }
+        }
+        
+        return true;
     }
 
     public boolean isContainer()

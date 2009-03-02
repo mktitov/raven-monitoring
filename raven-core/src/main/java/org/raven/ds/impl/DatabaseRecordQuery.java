@@ -53,7 +53,7 @@ public class DatabaseRecordQuery
     private final int fetchSize;
     private final String filterExtensionName;
     private Collection values;
-    private Map<String/*column name*/, String/*field name*/> selectFields;
+    private Map<String/*column name*/, FieldInfo> selectFields;
     private Connection connection;
     private PreparedStatement statement;
 
@@ -177,7 +177,7 @@ public class DatabaseRecordQuery
 
             StringBuilder queryBuf = new StringBuilder();
 
-            selectFields = new HashMap<String, String>();
+            selectFields = new HashMap<String, FieldInfo>();
             Set<String> caseInSensitiveFields = new HashSet<String>();
             List<String> columnNames = new ArrayList<String>();
             for (RecordSchemaField field: fields)
@@ -186,8 +186,9 @@ public class DatabaseRecordQuery
                             DatabaseRecordFieldExtension.class, databaseExtensionName);
                 if (dbFieldExtension!=null)
                 {
+                    FieldInfo fieldInfo = new FieldInfo(field.getName(), dbFieldExtension);
                     selectFields.put(
-                            dbFieldExtension.getColumnName().toUpperCase(), field.getName());
+                            dbFieldExtension.getColumnName().toUpperCase(), fieldInfo);
                     columnNames.add(dbFieldExtension.getColumnName());
                     FilterableRecordFieldExtension filterFieldExtension = field.getFieldExtension(
                             FilterableRecordFieldExtension.class, filterExtensionName);
@@ -314,10 +315,11 @@ public class DatabaseRecordQuery
     {
         private final ResultSet resultSet;
         private final RecordSchema schema;
-        private final Map<String, String> fields;
+        private final Map<String, FieldInfo> fields;
         private Record next;
 
-        public RecordIterator(ResultSet resultSet, RecordSchema schema, Map<String, String> fields)
+        public RecordIterator(
+                ResultSet resultSet, RecordSchema schema, Map<String, FieldInfo> fields)
         {
             this.resultSet = resultSet;
             this.schema = schema;
@@ -360,12 +362,15 @@ public class DatabaseRecordQuery
                     ResultSetMetaData metaData = resultSet.getMetaData();
                     for (int i=1; i<=metaData.getColumnCount(); ++i)
                     {
-                        Object value = resultSet.getObject(i);
                         String columnName = metaData.getColumnLabel(i).toUpperCase();
-                        String fieldName = fields.get(columnName);
+                        FieldInfo fieldInfo = fields.get(columnName);
+                        Object value = resultSet.getObject(i);
+                        value = fieldInfo.getDbExtension().prepareValue(value);
+                        String fieldName = fields.get(columnName).getFieldName();
                         if (fieldName==null)
                             throw new RecordIteratorError(String.format(
                                     "Not found field for column name (%s)", columnName));
+
                         next.setValue(fieldName, value);
                     }
                 }
@@ -387,6 +392,28 @@ public class DatabaseRecordQuery
             {
                 throw new RecordIteratorError(ex);
             }
+        }
+    }
+
+    private class FieldInfo
+    {
+        private final String fieldName;
+        private final DatabaseRecordFieldExtension dbExtension;
+
+        public FieldInfo(String fieldName, DatabaseRecordFieldExtension dbExtension)
+        {
+            this.fieldName = fieldName;
+            this.dbExtension = dbExtension;
+        }
+
+        public DatabaseRecordFieldExtension getDbExtension()
+        {
+            return dbExtension;
+        }
+
+        public String getFieldName()
+        {
+            return fieldName;
         }
     }
 }

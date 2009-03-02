@@ -15,30 +15,24 @@
  *  under the License.
  */
 
-package org.raven.ds.impl;
+package org.raven.tree.impl;
 
-import org.raven.annotations.NodeClass;
-import org.raven.annotations.Parameter;
-import org.weda.annotations.constraints.NotNull;
+import org.junit.Test;
+import org.raven.RavenCoreTestCase;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(
-    parentNode=RecordSchemaFieldNode.class, childNodes=ValuePrepareRecordFieldExtension.class)
-public class DatabaseRecordFieldExtension extends AbstractRecordFieldExtension
+public class LocalDatabaseWebServerNodeTest extends RavenCoreTestCase
 {
-    @Parameter() @NotNull
-    private String columnName;
-
-    public String getColumnName()
+    @Test
+    public void test()
     {
-        return columnName;
-    }
-
-    public void setColumnName(String columnName)
-    {
-        this.columnName = columnName;
+        LocalDatabaseWebServerNode server = new LocalDatabaseWebServerNode();
+        tree.getRootNode().addAndSaveChildren(server);
+        server.setPort(8083);
+        assertTrue(server.start());
+        server.stop();
     }
 }

@@ -15,30 +15,18 @@
  *  under the License.
  */
 
-package org.raven.ds.impl;
-
-import org.raven.annotations.NodeClass;
-import org.raven.annotations.Parameter;
-import org.weda.annotations.constraints.NotNull;
+package org.raven.tree.impl;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(
-    parentNode=RecordSchemaFieldNode.class, childNodes=ValuePrepareRecordFieldExtension.class)
-public class DatabaseRecordFieldExtension extends AbstractRecordFieldExtension
+public class LocalDatabaseNode extends BaseNode
 {
-    @Parameter() @NotNull
-    private String columnName;
+    public final static String NAME = "Local database";
 
-    public String getColumnName()
+    public LocalDatabaseNode()
     {
-        return columnName;
-    }
-
-    public void setColumnName(String columnName)
-    {
-        this.columnName = columnName;
+        super(NAME);
     }
 }

@@ -900,6 +900,10 @@ public class TreeServiceTest extends ServiceTestCase
         SchedulersNode schedulersNode = 
                 (SchedulersNode) systemNode.getChildren(SchedulersNode.NAME);
         assertNotNull(schedulersNode);
+
+        LocalDatabaseNode localDatabaseNode =
+                (LocalDatabaseNode) systemNode.getChildren(LocalDatabaseNode.NAME);
+        assertNotNull(localDatabaseNode);
         
         DataSourcesNode dataSourcesNode = 
                 (DataSourcesNode) systemNode.getChildren(DataSourcesNode.NAME);

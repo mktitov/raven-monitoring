@@ -428,7 +428,7 @@ public class H2TreeStore implements TreeStore
                 "  id int auto_increment (1)," +
                 "  owner int," +
                 "  name varchar(128)," +
-                "  value varchar(256), " +
+                "  value varchar(4096), " +
                 "  attribute_type varchar(256), " +
                 "  required boolean, " +
                 "  template_expression boolean, " +
