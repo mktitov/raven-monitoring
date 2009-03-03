@@ -154,7 +154,7 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         checkFilterAttributes();
 
         dbExtension.stop();
-        assertTrue(getFilterAttributes().isEmpty());
+        assertFalse(getFilterAttributes().isEmpty());
         dbExtension.start();
         checkFilterAttributes();
 
@@ -258,6 +258,33 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
     }
 
     @Test
+    public void gatherDataWithWhereExpressionTest2() throws Exception
+    {
+        RecordSchemaFieldNode virtualField = new RecordSchemaFieldNode();
+        virtualField.setName("field2");
+        schema.addAndSaveChildren(virtualField);
+        virtualField.setFieldType(RecordSchemaFieldType.STRING);
+        assertTrue(virtualField.start());
+        FilterableRecordFieldExtension filterExt = new FilterableRecordFieldExtension();
+        filterExt.setName("filter");
+        virtualField.addAndSaveChildren(filterExt);
+        assertTrue(filterExt.start());
+
+        prepareCollector();
+        prepareData();
+
+        reader.setRecordSchema(schema);
+        reader.getNodeAttribute("field1").setValue(null);
+        reader.getNodeAttribute("field2").setValue("5");
+        reader.setOrderByExpression("col1");
+        reader.setWhereExpression("col1 ${field2}");
+        assertTrue(reader.start());
+        reader.getDataImmediate(collector, null);
+
+        checkRecords(collector.getDataList(), "5");
+    }
+
+    @Test
     public void gatherDataWithMaxRowsTest() throws Exception
     {
         prepareCollector();
@@ -266,6 +293,7 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         reader.setRecordSchema(schema);
         reader.getNodeAttribute("field1").setValue(null);
         reader.setOrderByExpression("col1");
+        reader.setFetchSize(2);
         reader.setMaxRows(2);
         assertTrue(reader.start());
         reader.getDataImmediate(collector, null);

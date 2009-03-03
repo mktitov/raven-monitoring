@@ -76,6 +76,7 @@ public class DatabaseFilterElement
     private final Class columnType;
     private final String convertPattern;
     private final TypeConverter converter;
+    private final boolean virtual;
 
     private ExpressionType expressionType = ExpressionType.EMPTY;
     private OperatorType operatorType;
@@ -83,12 +84,19 @@ public class DatabaseFilterElement
     private Object value;
 
     public DatabaseFilterElement(
-            String columnName, Class columnType, String convertPattern, TypeConverter converter)
+            String columnName, Class columnType, String convertPattern
+            , boolean virtual, TypeConverter converter)
     {
         this.columnName = columnName;
         this.columnType = columnType;
         this.convertPattern = convertPattern;
         this.converter = converter;
+        this.virtual = virtual;
+    }
+
+    public boolean isVirtual()
+    {
+        return virtual;
     }
 
     public Object getValue()

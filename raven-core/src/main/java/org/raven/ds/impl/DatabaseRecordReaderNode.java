@@ -401,8 +401,8 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
                 Class fieldType = RecordSchemaFieldType.getSqlType(
                         field.getFieldInfo().getFieldType());
                 DatabaseFilterElement element = new DatabaseFilterElement(
-                        field.getDbInfo().getColumnName(), fieldType
-                        , field.getFieldInfo().getPattern(), converter);
+                        field.getColumnName(), fieldType
+                        , field.getFieldInfo().getPattern(), field.isVirtual(), converter);
                 element.setExpression(expression);
                 if (element.getExpressionType() != DatabaseFilterElement.ExpressionType.EMPTY)
                     filterElements.add(element);
@@ -610,7 +610,17 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
             FilterableRecordFieldExtension filterExt =
                     field.getFieldExtension(FilterableRecordFieldExtension.class, filterExtension);
 
-            return dbExt==null || filterExt==null? null : new FilterField(filterExt, dbExt, field);
+            return filterExt==null? null : new FilterField(filterExt, dbExt, field);
+        }
+
+        public boolean isVirtual()
+        {
+            return dbInfo==null;
+        }
+
+        public String getColumnName()
+        {
+            return dbInfo==null? fieldInfo.getName() : dbInfo.getColumnName();
         }
 
         public DatabaseRecordFieldExtension getDbInfo()

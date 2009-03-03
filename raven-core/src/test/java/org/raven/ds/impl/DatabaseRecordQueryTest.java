@@ -169,7 +169,7 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
     public void queryConstructionTest_4() throws Exception
     {
         DatabaseFilterElement filterElement = new DatabaseFilterElement(
-                "column1", Integer.class, null, converter);
+                "column1", Integer.class, null, false, converter);
         filterElement.setExpression("#is not null");
         DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(
                 schema, null, null, Arrays.asList(filterElement), null, null, pool, null, null);
@@ -189,13 +189,13 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
     public void queryConstructionTest_5() throws Exception
     {
         DatabaseFilterElement filterElement = new DatabaseFilterElement(
-                "column1", Integer.class, null, converter);
+                "column1", Integer.class, null, false, converter);
         filterElement.setExpression(">10");
         DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(
                 schema, null, null, Arrays.asList(filterElement), null, null, pool, null, null);
         assertEquals(
                 "\nSELECT column1, column2\nFROM record_data\nWHERE 1=1" +
-                "\n   AND column1>?"
+                "\n   AND (column1>?)"
                 , recordQuery.getQuery());
     }
     
@@ -209,13 +209,13 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
     public void queryConstructionTest_6() throws Exception
     {
         DatabaseFilterElement filterElement = new DatabaseFilterElement(
-                "column1", Integer.class, null, converter);
+                "column1", Integer.class, null, false, converter);
         filterElement.setExpression("10%");
         DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(
                 schema, null, null, Arrays.asList(filterElement), null, null, pool, null, null);
         assertEquals(
                 "\nSELECT column1, column2\nFROM record_data\nWHERE 1=1" +
-                "\n   AND column1 LIKE '10%'"
+                "\n   AND (column1 LIKE '10%')"
                 , recordQuery.getQuery());
     }
     
@@ -229,13 +229,13 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
     public void queryConstructionTest_7() throws Exception
     {
         DatabaseFilterElement filterElement = new DatabaseFilterElement(
-                "column1", Integer.class, null, converter);
+                "column1", Integer.class, null, false, converter);
         filterElement.setExpression("[1, 2]");
         DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(
                 schema, null, null, Arrays.asList(filterElement), null, null, pool, null, null);
         assertEquals(
                 "\nSELECT column1, column2\nFROM record_data\nWHERE 1=1" +
-                "\n   AND column1 BETWEEN ? AND ?"
+                "\n   AND (column1 BETWEEN ? AND ?)"
                 , recordQuery.getQuery());
     }
     /*
@@ -248,13 +248,13 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
     public void queryConstructionTest_8() throws Exception
     {
         DatabaseFilterElement filterElement = new DatabaseFilterElement(
-                "column1", Integer.class, null, converter);
+                "column1", Integer.class, null, false, converter);
         filterElement.setExpression("{1, 2}");
         DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(
                 schema, null, null, Arrays.asList(filterElement), null, null, pool, null, null);
         assertEquals(
                 "\nSELECT column1, column2\nFROM record_data\nWHERE 1=1" +
-                "\n   AND column1 IN (?, ?)"
+                "\n   AND (column1 IN (?, ?))"
                 , recordQuery.getQuery());
     }
     /*
@@ -293,13 +293,13 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
     public void queryConstructionTest_11() throws Exception
     {
         DatabaseFilterElement filterElement = new DatabaseFilterElement(
-                "column1", Integer.class, null, converter);
+                "column1", Integer.class, null, false, converter);
         filterElement.setExpression(">10");
         DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(
                     schema, null, null, Arrays.asList(filterElement)
                     , "select * from table where 1=1 {#} order by column1", pool, null, null);
         assertEquals(
-                "select * from table where 1=1 \n   AND column1>? order by column1"
+                "select * from table where 1=1 \n   AND (column1>?) order by column1"
                 , recordQuery.getQuery());
     }
 
@@ -311,14 +311,14 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
     {
         filterExtension.setCaseSensitive(false);
         DatabaseFilterElement filterElement = new DatabaseFilterElement(
-                "column2", String.class, null, converter);
+                "column2", String.class, null, false, converter);
         filterElement.setExpression("a");
         DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(
                     schema, null, null, Arrays.asList(filterElement), null, null
                     , pool, null, null);
         assertEquals(
                 "\nSELECT column1, column2\nFROM record_data\nWHERE 1=1" +
-                "\n   AND upper(column2)=?"
+                "\n   AND (upper(column2)=?)"
                 , recordQuery.getQuery());
     }
 
@@ -330,7 +330,7 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
     {
         filterExtension.setCaseSensitive(false);
         DatabaseFilterElement filterElement = new DatabaseFilterElement(
-                "column2", String.class, null, converter);
+                "column2", String.class, null, false, converter);
         filterElement.setExpression("#expr");
         DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(
                     schema, null, null, Arrays.asList(filterElement), null, null
@@ -349,14 +349,14 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
     {
         filterExtension.setCaseSensitive(false);
         DatabaseFilterElement filterElement = new DatabaseFilterElement(
-                "column2", String.class, null, converter);
+                "column2", String.class, null, false, converter);
         filterElement.setExpression("%val");
         DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(
                     schema, null, null, Arrays.asList(filterElement), null, null
                     , pool, null, null);
         assertEquals(
                 "\nSELECT column1, column2\nFROM record_data\nWHERE 1=1" +
-                "\n   AND upper(column2) LIKE '%VAL'"
+                "\n   AND (upper(column2) LIKE '%VAL')"
                 , recordQuery.getQuery());
     }
 
@@ -368,14 +368,51 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
     {
         filterExtension.setCaseSensitive(false);
         DatabaseFilterElement filterElement = new DatabaseFilterElement(
-                "column2", String.class, null, converter);
+                "column2", String.class, null, false, converter);
         filterElement.setExpression("{val}");
         DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(
                     schema, null, null, Arrays.asList(filterElement), null, null
                     , pool, null, null);
         assertEquals(
                 "\nSELECT column1, column2\nFROM record_data\nWHERE 1=1" +
-                "\n   AND upper(column2) IN (?)"
+                "\n   AND (upper(column2) IN (?))"
+                , recordQuery.getQuery());
+    }
+
+    /*
+     * Virtual DatabaseFilterElement in the query template
+     */
+    @Test
+    public void queryConstructionTest_16() throws Exception
+    {
+        filterExtension.setCaseSensitive(false);
+        DatabaseFilterElement filterElement = new DatabaseFilterElement(
+                "column2", String.class, null, true, converter);
+        filterElement.setExpression("val");
+        DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(
+                    schema, null, null, Arrays.asList(filterElement)
+                    , "SELECT * FROM table WHERE col ${Column2}"
+                    , pool, null, null);
+        assertEquals("SELECT * FROM table WHERE col =?", recordQuery.getQuery());
+    }
+
+    /*
+     * Virtual DatabaseFilterElement in the query template
+     */
+    @Test
+    public void queryConstructionTest_17() throws Exception
+    {
+        filterExtension.setCaseSensitive(false);
+        DatabaseFilterElement filterElement = new DatabaseFilterElement(
+                "column2", String.class, null, true, converter);
+        filterElement.setExpression("val");
+        DatabaseRecordQuery recordQuery = new DatabaseRecordQuery(
+                    schema, null, null, Arrays.asList(filterElement)
+                    , "col ${coLumn2}", null
+                    , pool, null, null);
+        assertEquals(
+                "\nSELECT column1, column2\nFROM record_data\nWHERE 1=1" +
+                "\n   AND (col =?)"
                 , recordQuery.getQuery());
     }
 
@@ -400,9 +437,9 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
         insertData(pool);
 
         DatabaseFilterElement filterElement1 = new DatabaseFilterElement(
-                "column1", Integer.class, null, converter);
+                "column1", Integer.class, null, false, converter);
         DatabaseFilterElement filterElement2 = new DatabaseFilterElement(
-                "column2", String.class, null, converter);
+                "column2", String.class, null, false, converter);
 
         filterElement1.setExpression("[1,2]");
         filterElement2.setExpression("10");
@@ -427,15 +464,43 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
         insertData(pool);
 
         DatabaseFilterElement filterElement1 = new DatabaseFilterElement(
-                "column1", Integer.class, null, converter);
+                "column1", Integer.class, null, false, converter);
         DatabaseFilterElement filterElement2 = new DatabaseFilterElement(
-                "column2", String.class, null, converter);
+                "column2", String.class, null, false, converter);
 
         filterElement1.setExpression("{1,3}");
         filterElement2.setExpression("10");
 
         DatabaseRecordQuery query = new DatabaseRecordQuery(
                 schema, null, null, Arrays.asList(filterElement1, filterElement2), null, "column1"
+                , pool, null, null);
+
+        DatabaseRecordQuery.RecordIterator it = query.execute();
+        assertNotNull(it);
+        List<Record> recs = iteratorToList(it);
+        assertEquals(2, recs.size());
+
+        testRecord(1, "10", recs.get(0));
+        testRecord(3, "10", recs.get(1));
+    }
+
+    @Test
+    public void execute3Test() throws Exception
+    {
+        createTable(pool);
+        insertData(pool);
+
+        DatabaseFilterElement filterElement1 = new DatabaseFilterElement(
+                "column1", Integer.class, null, true, converter);
+        DatabaseFilterElement filterElement2 = new DatabaseFilterElement(
+                "column2", String.class, null, false, converter);
+
+        filterElement1.setExpression("{1,3}");
+        filterElement2.setExpression("10");
+
+        DatabaseRecordQuery query = new DatabaseRecordQuery(
+                schema, null, null, Arrays.asList(filterElement1, filterElement2)
+                , "column1 ${column1}", "column1"
                 , pool, null, null);
 
         DatabaseRecordQuery.RecordIterator it = query.execute();
@@ -458,7 +523,7 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
         insertData2(pool);
         
         DatabaseFilterElement filterElement2 = new DatabaseFilterElement(
-                "column2", String.class, null, converter);
+                "column2", String.class, null, false, converter);
 
         filterElement2.setExpression("aa");
 
@@ -485,7 +550,7 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
         insertData2(pool);
 
         DatabaseFilterElement filterElement2 = new DatabaseFilterElement(
-                "column2", String.class, null, converter);
+                "column2", String.class, null, false, converter);
 
         filterElement2.setExpression("{aa}");
 

@@ -34,7 +34,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
         
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", Integer.class, null, converter);
+                new DatabaseFilterElement("col", Integer.class, null, false, converter);
 
         for (String expression: new String[]{null, "", " "})
         {
@@ -52,7 +52,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
         
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", Integer.class, null, converter);
+                new DatabaseFilterElement("col", Integer.class, null, false, converter);
         
         element.setExpression("#test expression");
         assertEquals(DatabaseFilterElement.ExpressionType.COMPLETE, element.getExpressionType());
@@ -69,7 +69,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
 
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", Integer.class, null, converter);
+                new DatabaseFilterElement("col", Integer.class, null, false, converter);
 
         for (String operator: new String[]{">=", "<=", "<>", "=", ">", "<"})
         {
@@ -92,7 +92,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
 
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", Integer.class, "pattern", converter);
+                new DatabaseFilterElement("col", Integer.class, "pattern", false, converter);
 
         element.setExpression("1");
         assertEquals(DatabaseFilterElement.ExpressionType.OPERATOR, element.getExpressionType());
@@ -110,7 +110,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
 
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", Integer.class, null, converter);
+                new DatabaseFilterElement("col", Integer.class, null, false, converter);
 
         for (String expression: new String[]{"%1", "1%", "1_", "_1", "1%2_3"})
         {
@@ -133,7 +133,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
 
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", Integer.class, null, converter);
+                new DatabaseFilterElement("col", Integer.class, null, false, converter);
 
         element.setExpression("[1 , \"2\"]");
         assertEquals(DatabaseFilterElement.ExpressionType.OPERATOR, element.getExpressionType());
@@ -152,7 +152,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
 
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", Integer.class, null, converter);
+                new DatabaseFilterElement("col", Integer.class, null, false, converter);
 
         element.setExpression("{1 , \"2\"}");
         assertEquals(DatabaseFilterElement.ExpressionType.OPERATOR, element.getExpressionType());
@@ -170,7 +170,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
 
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", Integer.class, "pattern", converter);
+                new DatabaseFilterElement("col", Integer.class, "pattern", false, converter);
 
         element.setExpression("=1");
 

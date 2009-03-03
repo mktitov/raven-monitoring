@@ -31,6 +31,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.text.StrBuilder;
+import org.apache.commons.lang.text.StrLookup;
+import org.apache.commons.lang.text.StrSubstitutor;
 import org.raven.dbcp.ConnectionPool;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
@@ -175,7 +178,7 @@ public class DatabaseRecordQuery
 
             String tableName = dbExtension.getTableName();
 
-            StringBuilder queryBuf = new StringBuilder();
+            StrBuilder queryBuf = new StrBuilder();
 
             selectFields = new HashMap<String, FieldInfo>();
             Set<String> caseInSensitiveFields = new HashSet<String>();
@@ -190,10 +193,15 @@ public class DatabaseRecordQuery
                     selectFields.put(
                             dbFieldExtension.getColumnName().toUpperCase(), fieldInfo);
                     columnNames.add(dbFieldExtension.getColumnName());
-                    FilterableRecordFieldExtension filterFieldExtension = field.getFieldExtension(
-                            FilterableRecordFieldExtension.class, filterExtensionName);
-                    if (filterFieldExtension!=null && !filterFieldExtension.getCaseSensitive())
+                }
+                FilterableRecordFieldExtension filterFieldExtension = field.getFieldExtension(
+                        FilterableRecordFieldExtension.class, filterExtensionName);
+                if (filterFieldExtension!=null && !filterFieldExtension.getCaseSensitive())
+                {
+                    if (dbFieldExtension!=null)
                         caseInSensitiveFields.add(dbFieldExtension.getColumnName());
+                    else
+                        caseInSensitiveFields.add(field.getName());
                 }
             }
 
@@ -205,7 +213,7 @@ public class DatabaseRecordQuery
             if (queryTemplate==null)
             {
                 //constructing SELECT clause
-                queryBuf = new StringBuilder("\nSELECT ");
+                queryBuf = new StrBuilder("\nSELECT ");
                 boolean firstRow = true;
                 for (String columnName: columnNames)
                 {
@@ -225,6 +233,10 @@ public class DatabaseRecordQuery
                 queryBuf.append("\nWHERE 1=1");
             if (whereExpression!=null)
                 queryBuf.append("\n   AND ("+whereExpression+")");
+
+            //injecting ${var} parameter types
+
+            Map<String, FilterInfo> filterInfos = new HashMap<String, FilterInfo>();
             if (filterElements!=null && filterElements.size()>0)
             {
                 values = new ArrayList();
@@ -232,51 +244,16 @@ public class DatabaseRecordQuery
                 {
                     boolean caseSensitive = !caseInSensitiveFields.contains(
                             filterElement.getColumnName());
-                    String columnNameExpr = getColumnNameExpression(filterElement, caseSensitive);
-                    switch(filterElement.getExpressionType())
+                    filterInfos.put(
+                            filterElement.getColumnName().toUpperCase()
+                            , new FilterInfo(filterElement, caseSensitive));
+                    if (!filterElement.isVirtual())
                     {
-                        case COMPLETE:
-                            queryBuf.append(
-                                    "\n   AND ("+columnNameExpr+" "+filterElement.getValue()+")");
-                            break;
-                        case OPERATOR:
-                            switch (filterElement.getOperatorType())
-                            {
-                                case SIMPLE:
-                                    queryBuf.append("\n   AND "
-                                            +columnNameExpr
-                                            +filterElement.getOperator()+"?");
-                                    values.add(getValue(filterElement.getValue(), caseSensitive));
-                                    break;
-                                case LIKE:
-                                    queryBuf.append("\n   AND "+columnNameExpr
-                                            +" LIKE '"
-                                            +getValue(filterElement.getValue(), caseSensitive)
-                                            +"'");
-                                    break;
-                                case BETWEEN:
-                                    queryBuf.append("\n   AND "+filterElement.getColumnName()
-                                            +" BETWEEN ? AND ?");
-                                    Object[] betweenValues = (Object[]) filterElement.getValue();
-                                    for (Object value: betweenValues)
-                                        values.add(value);
-                                    break;
-                                case IN:
-                                    Object[] inValues = (Object[]) filterElement.getValue();
-                                    queryBuf.append("\n   AND "+columnNameExpr
-                                            +" IN (");
-                                    for (int i=0; i<inValues.length; ++i)
-                                    {
-                                        if (i>0)
-                                            queryBuf.append(", ");
-                                        queryBuf.append("?");
-                                        values.add(getValue(inValues[i], caseSensitive));
-                                    }
-                                    queryBuf.append(")");
-                                    break;
-                            }
-                            break;
+                        queryBuf.append(
+                                "\n   AND (${"+filterElement.getColumnName().toUpperCase()+"})");
                     }
+//                    queryBuf.append(
+//                            "\n   AND ("+createWhereEntry(filterElement, caseSensitive)+")");
                 }
             }
 
@@ -284,12 +261,15 @@ public class DatabaseRecordQuery
             if (queryTemplate==null && orderByExpression!=null)
                 queryBuf.append("\nORDER BY "+orderByExpression);
 
-            if (queryTemplate!=null)
-                return StringUtils.replace(queryTemplate, "{#}", queryBuf.toString());
-            else
-                return queryBuf.toString();
+            String resultQuery = queryTemplate==null?
+                queryBuf.toString()
+                : StringUtils.replace(queryTemplate, "{#}", queryBuf.toString());
+
+            StrSubstitutor subst = new StrSubstitutor(new ParameterLookup(filterInfos));
+            
+            return subst.replace(resultQuery);
         }
-        catch (Exception e)
+        catch (Throwable e)
         {
             throw new DatabaseRecordQueryException(
                     String.format(
@@ -299,11 +279,60 @@ public class DatabaseRecordQuery
         }
     }
 
+    private String createWhereEntry(DatabaseFilterElement filterElement, boolean caseSensitive)
+    {
+        String columnNameExpr = getColumnNameExpression(filterElement, caseSensitive);
+        StringBuilder queryBuf = new StringBuilder(columnNameExpr);
+        switch(filterElement.getExpressionType())
+        {
+            case COMPLETE:
+                queryBuf.append((columnNameExpr.isEmpty()? "":" ")+filterElement.getValue());
+                break;
+            case OPERATOR:
+                switch (filterElement.getOperatorType())
+                {
+                    case SIMPLE:
+                        queryBuf.append(filterElement.getOperator()+"?");
+                        values.add(getValue(filterElement.getValue(), caseSensitive));
+                        break;
+                    case LIKE:
+                        queryBuf.append(
+                                " LIKE '"
+                                +getValue(filterElement.getValue(), caseSensitive)
+                                +"'");
+                        break;
+                    case BETWEEN:
+                        queryBuf.append(" BETWEEN ? AND ?");
+                        Object[] betweenValues = (Object[]) filterElement.getValue();
+                        for (Object value: betweenValues)
+                            values.add(value);
+                        break;
+                    case IN:
+                        Object[] inValues = (Object[]) filterElement.getValue();
+                        queryBuf.append(" IN (");
+                        for (int i=0; i<inValues.length; ++i)
+                        {
+                            if (i>0)
+                                queryBuf.append(", ");
+                            queryBuf.append("?");
+                            values.add(getValue(inValues[i], caseSensitive));
+                        }
+                        queryBuf.append(")");
+                        break;
+                }
+                break;
+        }
+        return queryBuf.toString();
+    }
+
     private String getColumnNameExpression(
             DatabaseFilterElement filterElement, boolean caseSensitive)
     {
-        return !caseSensitive && String.class.equals(filterElement.getColumnType())?
-                "upper("+filterElement.getColumnName()+")" : filterElement.getColumnName();
+        if (filterElement.isVirtual())
+            return "";
+        else
+            return !caseSensitive && String.class.equals(filterElement.getColumnType())?
+                    "upper("+filterElement.getColumnName()+")" : filterElement.getColumnName();
     }
 
     private Object getValue(Object value, boolean caseSensitive)
@@ -415,5 +444,48 @@ public class DatabaseRecordQuery
         {
             return fieldName;
         }
+    }
+
+    private class FilterInfo
+    {
+        private final DatabaseFilterElement filterElement;
+        private final boolean caseSensitive;
+
+        public FilterInfo(DatabaseFilterElement filterElement, boolean caseSensitive)
+        {
+            this.filterElement = filterElement;
+            this.caseSensitive = caseSensitive;
+        }
+
+        public boolean isCaseSensitive()
+        {
+            return caseSensitive;
+        }
+
+        public DatabaseFilterElement getFilterElement()
+        {
+            return filterElement;
+        }
+    }
+
+    private class ParameterLookup extends StrLookup
+    {
+        private final Map<String, FilterInfo> filterElements;
+
+        public ParameterLookup(Map<String, FilterInfo> filterElements)
+        {
+            this.filterElements = filterElements;
+        }
+
+        @Override
+        public String lookup(String key)
+        {
+            FilterInfo filterInfo = filterElements.get(key.toUpperCase());
+            if (filterInfo==null)
+                throw new Error(String.format("Filter element (%s) was not defined"));
+            
+            return createWhereEntry(filterInfo.getFilterElement(), filterInfo.isCaseSensitive());
+        }
+        
     }
 }
