@@ -117,7 +117,7 @@ public class RecordSchemaNodeTest extends RavenCoreTestCase
         schemaNode2.setName("schema2");
         tree.getRootNode().addAndSaveChildren(schemaNode2);
         schemaNode2.setExtendsSchema(schemaNode);
-        schemaNode2.setIncludeFields("field2, field3");
+        schemaNode2.setIncludeFields("field3, field2");
         schemaNode2.start();
         assertEquals(Status.STARTED, schemaNode2.getStatus());
 

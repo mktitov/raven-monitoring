@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
+import org.apache.commons.lang.text.StrMatcher;
+import org.apache.commons.lang.text.StrTokenizer;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.Record;
@@ -74,7 +76,7 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema
             {
                 if (includeFields!=null)
                 {
-                    String[] includeFieldsArr = includeFields.split("\\s*,\\s*");
+                    String[] includeFieldsArr = splitAndSort(includeFields);
                     if (includeFieldsArr!=null && includeFieldsArr.length>0)
                     {
                         for (RecordSchemaField field: parentFields)
@@ -84,7 +86,7 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema
                 }
                 else if (excludeFields!=null)
                 {
-                    String[] excludeFieldsArr = excludeFields.split("\\s*,\\s*");
+                    String[] excludeFieldsArr =splitAndSort(excludeFields);
                     if (excludeFieldsArr!=null && excludeFieldsArr.length>0)
                     {
                         for (RecordSchemaField field: parentFields)
@@ -180,5 +182,14 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema
     public void setIncludeFields(String includeFields)
     {
         this.includeFields = includeFields;
+    }
+
+    private String[] splitAndSort(String str)
+    {
+        StrTokenizer tokenizer = new StrTokenizer(str, ',');
+        tokenizer.setTrimmerMatcher(StrMatcher.trimMatcher());
+        String[] result = tokenizer.getTokenArray();
+        Arrays.sort(result);
+        return result;
     }
 }
