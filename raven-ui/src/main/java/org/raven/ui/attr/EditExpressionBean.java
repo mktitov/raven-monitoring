@@ -48,7 +48,7 @@ public class EditExpressionBean
 
 	public void handleReturn(ReturnEvent event)
 	{
-		SessionBean sb = (SessionBean) SessionBean.getElValue(SessionBean.BEAN_NAME);
+		SessionBean sb = SessionBean.getInstance();
 		sb.reloadBothFrames();
 	}
 	  

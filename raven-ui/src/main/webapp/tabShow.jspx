@@ -42,16 +42,14 @@ action="#{sBean.reloadRightFrame}"
 		partialSubmit="true"
 		action="#{cNode.onRefresh}" 
 		text="#{msgs.refresh}" 
-		id="refresh_A"  >
-	</tr:commandButton>
+		id="refresh_A"  />
 	<tr:inputNumberSpinbox
 		value="#{cNode.refreshViewInteval}"
  		columns="2" 
 		label="#{msgs.refreshInterval}" 
 		minimum="0" 
 		maximum="60" 
-		stepSize="5" >
-	</tr:inputNumberSpinbox>
+		stepSize="5" />
 </tr:panelHorizontalLayout>
 
 <tr:spacer height="5" />
@@ -193,6 +191,7 @@ action="#{sBean.reloadRightFrame}"
 partialTriggers=":poolStatus"
  --> 
  <tr:column id="sw_column" align="center">
+ 
   <tr:switcher 
   	id="switcher" 
   	facetName="#{row.mimeGroup}" 
@@ -230,20 +229,214 @@ partialTriggers=":poolStatus"
 		</tr:panelGroupLayout>
   </f:facet >
 
-<!-- show table --> 
+<!-- show table varStatus="vStat2" -->  
 	<f:facet name="ravenTable">
-		<tr:panelGroupLayout layout="vertical"  > 
+		<tr:panelGroupLayout layout="vertical"  >
+		
 		 	<tr:outputFormatted 
 					inlineStyle="COLOR: green; FONT-STYLE: italic;" 
 					value="&lt;small&gt;#{row.fromDate}&lt;/small&gt;"/>
-  <!--       	<tr:panelHorizontalLayout halign="center" valign="top" > -->
-				<h:outputText  
+					
+  <!--      // 	<tr:panelHorizontalLayout halign="center" valign="top" > --> 
+	<!--      			<h:outputText  
 					escape="false" 
-					value="#{row.htmlTable}" />
-	 <!--        </tr:panelHorizontalLayout>  -->
+					value="#{row.htmlTable}" /> -->
+<!--	 //  </tr:panelHorizontalLayout>   
+items="#{row.tableColumnNames}"
+
+				varStatus="rowStatX"
+   	<tr:outputText value="#{row.tableColumnNames}"/>
+-->
+			<tr:table rowBandingInterval="1" 
+				id = "tableView"
+                value="#{row.tableData}"
+                rowSelection="none"
+                width="100%"
+                var="rowa"
+                varStatus="rowN" >
+                <tr:column 
+                	align="center" 
+                	rowHeader="true" 
+                	headerText="#" >
+                	<tr:outputText value="#{rowN.index+1}"/>
+                </tr:column>
+                <tr:column
+                	align="left"
+					rendered="#{row.valid[0]}"                      
+                   	headerText="#{row.tableColumnNames[0]}">
+                   	<tr:panelHorizontalLayout halign="left" >
+					<tr:outputText 
+						rendered="#{!rowa[0].table}"
+						value="#{rowa[0].item}"/>
+					<tr:commandLink 
+						useWindow="true"
+						text="#{rowa[0].string}"
+						rendered="#{rowa[0].table}"
+						action="dialog:showViewableObject"
+						actionListener="#{selectVO.select}"
+						windowWidth="500" windowHeight="400"
+					>
+					<f:attribute
+        				name="#{selectVO.paramName}"
+        				value="#{rowa[0].item}" />
+					</tr:commandLink>
+					</tr:panelHorizontalLayout>	
+              	</tr:column>
+	            <tr:column  align="start"
+                   	rendered="#{row.valid[1]}"
+                   	headerText="#{row.tableColumnNames[1]}">
+                   	<tr:panelHorizontalLayout halign="left" >
+					<tr:outputText 
+						rendered="#{!rowa[1].table}"
+						value="#{rowa[1].item}"/>
+					<tr:commandLink
+						useWindow="true"
+						text="#{rowa[1].string}"
+						rendered="#{rowa[1].table}"
+						action="dialog:showViewableObject"
+						actionListener="#{selectVO.select}"
+						windowWidth="500" windowHeight="400" >
+					<f:attribute
+        				name="#{selectVO.paramName}"
+        				value="#{rowa[1].item}" />
+					</tr:commandLink>
+					</tr:panelHorizontalLayout>	
+	           	</tr:column>
+                <tr:column  align="start"
+                   	rendered="#{row.valid[2]}"
+                   	headerText="#{row.tableColumnNames[2]}">
+                   	<tr:panelHorizontalLayout halign="left" >
+					<tr:outputText 
+						rendered="#{!rowa[2].table}"
+						value="#{rowa[2].item}"/>
+					<tr:commandLink
+						useWindow="true"
+						text="#{rowa[2].string}"
+						rendered="#{rowa[2].table}"
+						action="dialog:showViewableObject"
+						actionListener="#{selectVO.select}"
+						windowWidth="500" windowHeight="400"
+					>
+					<f:attribute
+        				name="#{selectVO.paramName}"
+        				value="#{rowa[2].item}" />
+					</tr:commandLink>
+					</tr:panelHorizontalLayout>	
+	            </tr:column>
+                <tr:column  align="start"
+                   	rendered="#{row.valid[3]}"
+                   	headerText="#{row.tableColumnNames[3]}">
+                   	<tr:panelHorizontalLayout halign="left" >
+					<tr:outputText 
+						rendered="#{!rowa[3].table}"
+						value="#{rowa[3].item}"/>
+					<tr:commandLink
+						useWindow="true"
+						text="#{rowa[3].string}"
+						rendered="#{rowa[3].table}"
+						action="dialog:showViewableObject"
+						actionListener="#{selectVO.select}"
+						windowWidth="500" windowHeight="400"
+					>
+					<f:attribute
+        				name="#{selectVO.paramName}"
+        				value="#{rowa[3].item}" />
+					</tr:commandLink>	
+                   	</tr:panelHorizontalLayout>
+	            </tr:column>
+                <tr:column  
+                   	rendered="#{row.valid[4]}"
+                   	headerText="#{row.tableColumnNames[4]}">
+                   	<tr:panelHorizontalLayout halign="left" >
+					<tr:outputText 
+						rendered="#{!rowa[4].table}"
+						value="#{rowa[4].item}"/>
+					<tr:commandLink
+						useWindow="true"
+						text="#{rowa[4].string}"
+						rendered="#{rowa[4].table}"
+						action="dialog:showViewableObject"
+						actionListener="#{selectVO.select}"
+						windowWidth="500" windowHeight="400"
+					>
+					<f:attribute
+        				name="#{selectVO.paramName}"
+        				value="#{rowa[4].item}" />
+					</tr:commandLink>
+					</tr:panelHorizontalLayout>	
+	            </tr:column>
+                <tr:column  
+                   	align="center" 
+                   	rendered="#{row.valid[5]}"
+                   	headerText="#{row.tableColumnNames[5]}">
+                   	<tr:panelHorizontalLayout halign="left" >
+					<tr:outputText 
+						rendered="#{!rowa[5].table}"
+						value="#{rowa[5].item}"/>
+					<tr:commandLink
+						useWindow="true"
+						text="#{rowa[5].string}"
+						rendered="#{rowa[5].table}"
+						action="dialog:showViewableObject"
+						actionListener="#{selectVO.select}"
+						windowWidth="500" windowHeight="400"
+					>
+					<f:attribute
+        				name="#{selectVO.paramName}"
+        				value="#{rowa[5].item}" />
+					</tr:commandLink>
+					</tr:panelHorizontalLayout>	
+	            </tr:column>
+                <tr:column  
+                   	align="center" 
+                   	rendered="#{row.valid[6]}"
+                   	headerText="#{row.tableColumnNames[6]}">
+                   	<tr:panelHorizontalLayout halign="left" >
+					<tr:outputText 
+						rendered="#{!rowa[6].table}"
+						value="#{rowa[6].item}"/>
+					<tr:commandLink
+						useWindow="true"
+						text="#{rowa[6].string}"
+						rendered="#{rowa[6].table}"
+						action="dialog:showViewableObject"
+						actionListener="#{selectVO.select}"
+						windowWidth="500" windowHeight="400"
+					>
+					<f:attribute
+        				name="#{selectVO.paramName}"
+        				value="#{rowa[6].item}" />
+					</tr:commandLink>	
+                	</tr:panelHorizontalLayout> 
+	            </tr:column>
+	              	
+<!--                       	
+				<tr:iterator    
+                  	varStatus="vStatZ" 
+                  	value="#{row.tableColumnNames}"
+                  	var="nameAZX" >
+                      	<tr:outputText value="!@ #{nameAZX} !@"/>
+               	</tr:iterator>
+ -->                      	
+ 				<tr:forEach    
+                  	varStatus="vStat" 
+                  	items="#{row.tableColumnNames}"
+                  	var="nameAZX" >
+                    <tr:column  
+                    	align="center" 
+                    	headerText="!! #{nameAZX} !!">
+                    	<tr:outputText value="!@ #{nameAZX} !@"/>
+                       	<tr:outputText value="#{rowa[vStat.index-1]}"/>
+                    </tr:column>
+               	</tr:forEach>
+               	
+           	</tr:table>
 			<tr:spacer height="6" />
-	 	</tr:panelGroupLayout> 
-  	</f:facet >
+	 	</tr:panelGroupLayout>
+	 	 
+  	</f:facet>
+  	
+  	
 </tr:switcher>
 </tr:column> 
 

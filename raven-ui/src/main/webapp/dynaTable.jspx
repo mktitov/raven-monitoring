@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>      
+      <jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:tr="http://myfaces.apache.org/trinidad"
+                xmlns:c="http://java.sun.com/jsp/jstl/core">
+        <jsp:directive.page contentType="text/html;charset=windows-1251"/>
+        <f:view>
+          <tr:document>
+            <tr:form>
+             <tr:panelHeader text="" inlineStyle="width:80%">
+              
+              <tr:panelHeader text="Dynamic Table Example">
+                <tr:separator></tr:separator>
+
+<!--
+                          binding="#{DynaTable.coreTable}"
+ rows="#{DynaTable.collectionModel.rowCount}"
+                           immediate="true"
+ -->
+
+                <tr:table varStatus="rowStatA"
+                          value="#{DynaTable.data}"
+                          rowSelection="none"
+                          width="100%"
+                          var="row">
+
+	<tr:column>
+ 
+                <tr:table varStatus="rowStatX"
+                          value="#{DynaTable.xdata}"
+                          rowSelection="none"
+                          width="100%"
+                          var="rowZ" >
+<tr:column>  
+ <tr:outputText value="@@@@ #{row} @@@@ #{rowStatX.index} }"/>
+				<tr:forEach items="#{row}" var="name" >
+                      <tr:outputText value="?? #{name} ??"/>
+                  </tr:forEach>
+                  <tr:iterator value="#{row}" var="name">
+                 		<tr:outputText value="?? #{name} ??"/>
+                  </tr:iterator>
+</tr:column>
+<!-- 
+                  <tr:column width="20" headerText="!!!!!">
+                    <tr:outputText value="#{row[0]}"/>
+                    <tr:outputText value="#{rowStatX.index}"/>
+                  </tr:column>
+                           
+	           	<tr:column width="20" headerText="???????"  >
+                	<tr:outputText value="#{rowStatX.index+1}"/>
+                </tr:column>
+                
+                sortable="true"
+                       	sortProperty="#{name}"
+ -->                
+				<tr:forEach 
+                  	varStatus="vStat" 
+                  	items="#{DynaTable.columnNames}" 
+                  	var="name">
+                    <tr:column sortable="true" 
+                    	align="center" 
+                    	headerText="#{name}">
+                      <tr:outputText value="#{rowZ[vStat.index]}"/>
+                    </tr:column>
+                  </tr:forEach>
+                </tr:table>
+</tr:column>               
+  </tr:table> 
+                <tr:separator></tr:separator>
+              
+                <tr:table partialTriggers=":addRow :addColumn"
+                          varStatus="rowStat"
+                          binding="#{DynaTable.coreTable}"
+                          value="#{DynaTable.collectionModel}"
+                          rows="#{DynaTable.collectionModel.rowCount}"
+                          rowSelection="single"
+                          immediate="true"
+                          width="100%"
+                          var="row">
+                 <!--          
+                  <tr:column width="20" rowHeader="true">
+                    <tr:outputText value="#{rowStat.index+1}"/>
+                  </tr:column>
+                  <c:forEach items="#{DynaTable.columnNames}" var="name">
+                    <tr:column headerText="#{name}" sortable="true"
+                               sortProperty="#{name}">
+                      <tr:inputText value="#{row[name]}"/>
+                    </tr:column>
+                  </c:forEach>
+                   -->
+                </tr:table>
+                  <tr:panelButtonBar>
+                    <tr:commandButton id="addColumn" text="Add Column"
+                                             partialSubmit="true"
+                                             actionListener="#{DynaTable.addColumn}"/>
+                    <tr:commandButton id="addRow" text="Add Row"
+                                             partialSubmit="true"
+                                             actionListener="#{DynaTable.addRow}"/>
+                  </tr:panelButtonBar>
+                
+              </tr:panelHeader>
+              </tr:panelHeader>
+              
+            </tr:form>
+          </tr:document>
+        </f:view>
+      </jsp:root>

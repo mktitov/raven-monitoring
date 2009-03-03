@@ -104,8 +104,20 @@
     <managed-bean-class>org.raven.ui.node.RenameNodeBean</managed-bean-class>
     <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
+
+  <managed-bean>
+    <managed-bean-name>selectVO</managed-bean-name>
+    <managed-bean-class>org.raven.ui.vo.SelectVOBean</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
   
 <!--  
+  <managed-bean>
+    <managed-bean-name>DynaTable</managed-bean-name>
+    <managed-bean-class>org.raven.ui.vo.DynamicTable</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+  
   <managed-bean>
     <managed-bean-name>ravenTable</managed-bean-name>
     <managed-bean-class>org.raven.ui.RavenTableBean</managed-bean-class>
@@ -171,6 +183,10 @@
     <navigation-case>
       <from-outcome>dialog:renameNode</from-outcome>
       <to-view-id>/renameNodeDialog.jspx</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>dialog:showViewableObject</from-outcome>
+      <to-view-id>/showViewableObjectDialog.jspx</to-view-id>
     </navigation-case>
   </navigation-rule>
 

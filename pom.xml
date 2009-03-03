@@ -230,34 +230,36 @@
                 <version>1.5.9</version>
                 <scope>compile</scope>
             </dependency>
+            <!--  
             <dependency>
                 <groupId>jstl</groupId>
                 <artifactId>jstl</artifactId>
                 <version>1.1.2</version>
                 <scope>compile</scope>
             </dependency>
+            -->
             <dependency>
                 <groupId>org.apache.myfaces.core</groupId>
                 <artifactId>myfaces-api</artifactId>
-                <version>1.2.3</version>
+                <version>1.2.6</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.myfaces.core</groupId>
                 <artifactId>myfaces-impl</artifactId>
-                <version>1.2.3</version>
+                <version>1.2.6</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.myfaces.trinidad</groupId>
                 <artifactId>trinidad-api</artifactId>
-                <version>1.2.7</version>
+                <version>1.2.10</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.myfaces.trinidad</groupId>
                 <artifactId>trinidad-impl</artifactId>
-                <version>1.2.7</version>
+                <version>1.2.10</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
@@ -380,6 +382,12 @@
                 <artifactId>geronimo-spec-jta</artifactId>
                 <version>1.0-M1</version>
             </dependency>
+            <dependency>
+    			<groupId>javax.servlet</groupId>
+    			<artifactId>jstl</artifactId>
+    			<version>1.2</version>
+    			<scope>compile</scope>
+			</dependency> 
             <!--
             <dependency>
                 <groupId>org.datanucleus</groupId>

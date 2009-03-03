@@ -1,6 +1,8 @@
 package org.raven.ui.vo;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import org.raven.table.Table;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
@@ -14,11 +16,15 @@ public class ViewableObjectWrapper
 	protected Logger logger = LoggerFactory.getLogger(ViewableObjectWrapper.class);
 	public static final String NODE_URL = "nodeUrl";
 	public static final String RAVEN_TABLE_GR = "ravenTable";
+	public static final int MAX_ARR_LEN = 30;
 	private ViewableObject viewableObject = null;
 	private Node node = null;
 	private long fd = 0;
 	private String htmlTable = null;
 	private byte[] image = null;
+	private List<TableItemWrapper[]> tableData  = null;
+//	private String[] tableColumnNames  = null;
+	private boolean[] valid = null;
 	
 	public ViewableObjectWrapper(ViewableObject vo)
 	{
@@ -117,6 +123,66 @@ public class ViewableObjectWrapper
 		return htmlTable;
 	}
 	
+	public List<TableItemWrapper[]> getTableData()
+	{
+		if(!isTable())
+		{
+			logger.error("VO isn't table !");
+			return null;
+		}
+		if(tableData==null)
+		{
+			tableData = new ArrayList<TableItemWrapper[]>();
+			Table table = (Table) viewableObject.getData(); 
+			for(Iterator<Object[]> it = table.getRowIterator();it.hasNext();)
+			{
+				Object[] a = it.next();
+				TableItemWrapper[] b = new TableItemWrapper[a.length];
+				for(int i=0; i<a.length; i++)
+					b[i] = new TableItemWrapper(a[i]);
+				tableData.add(b);
+			}	
+		}
+		logger.info("getTableData(): "+tableData.size());
+		return tableData;
+	}
+	
+	public String[]
+	   //    List
+	       getTableColumnNames()
+	{
+		if(!isTable())
+		{
+			logger.error("VO isn't table !!");
+			return null;
+		}
+		Table table = (Table) viewableObject.getData(); 
+		logger.info("getTableColumnNames(): "+table.getColumnNames().length);
+		
+		//List ar = new ArrayList();
+		//for(String x : table.getColumnNames()) ar.add(x);
+		return table.getColumnNames();
+		//return ar;
+	}
+
+    public boolean[] getValid()
+    {
+		if(!isTable())
+		{
+			logger.error("valid - VO isn't table !!");
+			return null;
+		}
+		if(valid==null)
+		{
+			valid = new boolean[MAX_ARR_LEN];
+			String[] x = getTableColumnNames();
+			for(int i=0;i<valid.length && i<MAX_ARR_LEN-1;i++)
+				if(i<x.length) valid[i]=true;
+				else valid[i]=false;
+		}
+		return valid;
+    }
+    
 	public String getMimeGroup()
 	{
 		if(!isViewable()) return NODE_URL;

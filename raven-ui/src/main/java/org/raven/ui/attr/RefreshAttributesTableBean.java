@@ -25,6 +25,7 @@ public class RefreshAttributesTableBean {
 		String ret = nw.saveRefreshAttributes();
 		if(ret!=null && message!=null) message.setMessage(ret);
 		else message.setMessage("");
+		nw.onRefresh();
 		return "";
 	}
 	

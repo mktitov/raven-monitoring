@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<!-- 
+ *  Copyright 2008 Sergey Pinevskiy.
+ * 
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ * 
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *  under the License.
+ -->
+
+<jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
+          xmlns:f="http://java.sun.com/jsf/core"
+          xmlns:s="http://myfaces.apache.org/sandbox"
+          xmlns:tr="http://myfaces.apache.org/trinidad" >
+<jsp:directive.page contentType="text/html;charset=utf-8"/>
+<f:view>
+<f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
+<tr:document title="#{msgs.detailInfo}" >
+
+<tr:form >
+<tr:messages/>
+
+<!-- ********************************* -->
+<!-- Show viewable node                -->
+<!-- ********************************* -->
+  <tr:switcher 
+  	id="switcher" 
+  	facetName="#{selectVO.object.mimeGroup}" 
+  	defaultFacet="default">
+
+  	<f:facet name="default"/>
+
+<!-- show nodeUrl --> 
+  	<f:facet name="nodeUrl">
+		<tr:commandLink 
+			text="#{row.nodePath}" 
+			actionListener="#{sBean.selectNode}">
+			<f:attribute 
+				name="nodePath" 
+				value="#{row.nodePath}"/>
+		</tr:commandLink>
+	</f:facet>
+<!-- show image -->
+	<f:facet name="image">
+		<tr:panelGroupLayout layout="vertical"  > 
+			<tr:outputFormatted 
+				inlineStyle="COLOR: green; FONT-STYLE: italic;" 
+				value="&lt;small&gt;#{selectVO.object.fromDate}&lt;/small&gt;"/>
+			<!-- forceIdIndex="true" forceId="true" id="graph" -->
+    		<s:graphicImageDynamic
+				forceId="true" 
+				forceIdIndex="true"
+   				id="graph_x_list" 
+   	    		imageRendererClass="#{sBean.ravenViewableImageRenderer}" > 
+       			<f:param 
+	       			name="ViewableObject" 
+    	   			value="#{selectVO.object.id}"/>
+   			</s:graphicImageDynamic>
+			<tr:spacer height="6" />
+		</tr:panelGroupLayout>
+  </f:facet >
+
+<!-- show table varStatus="vStat2" -->  
+	<f:facet name="ravenTable">
+		<tr:panelGroupLayout layout="vertical"  >
+		 	<tr:outputFormatted 
+					inlineStyle="COLOR: green; FONT-STYLE: italic;" 
+					value="&lt;small&gt;#{selectVO.object.fromDate}&lt;/small&gt;"/>
+			<tr:table 
+				rowBandingInterval="1"
+				varStatus="rowId"
+				id = "tableView"
+                value="#{selectVO.object.tableData}"
+                rowSelection="none"
+                width="100%"
+                var="rowa">
+                <!-- 
+                <tr:column
+					rendered="#{row.valid[0]}"                      
+                   	align="center" 
+                   	headerText="#{row.tableColumnNames[0]}">
+					<tr:outputText 
+						rendered="#{!rowa[0].table}"
+						value="#{rowa[0].item}"/>
+					<tr:commandLink
+						text="#{rowa[0].string}"
+						rendered="#{rowa[0].table}"
+						action="dialog:showViewableObject"
+						actionListener="#{selectVO.select}"
+						windowWidth="300" windowHeight="300"
+					>
+					<f:attribute
+        				name="#{selectVO.paramName}"
+        				value="#{rowa[0].item}" />
+					</tr:commandLink>	
+              	</tr:column>
+              	 -->
+                    <tr:column  
+                    	rowHeader="true" 
+                    	headerText="#">
+                    	<tr:outputText value="#{rowId.index+1}"/>
+					</tr:column>		                  	
+              	 
+				<tr:forEach    
+                  	varStatus="vStat" 
+                  	items="#{selectVO.object.tableColumnNames}"
+                  	var="name" >
+                    <tr:column headerText="#{name}">
+						<tr:outputText 
+							rendered="#{!rowa[vStat.index].table}"
+							value="#{rowa[vStat.index].item}"/>
+						<tr:commandLink
+							text="++#{vStat.index} #{rowa[vStat.index].string} ++"
+							rendered="#{rowa[vStat.index].table}"
+							action="dialog:showViewableObject"
+							actionListener="#{selectVO.select}"
+							windowWidth="500" windowHeight="400" >
+							<f:attribute
+        						name="#{selectVO.paramName}"
+        						value="#{rowa[vStat.index].item}" />
+						</tr:commandLink>	
+                    </tr:column>
+               	</tr:forEach>
+               	
+           	</tr:table>
+			<tr:spacer height="6" />
+	 	</tr:panelGroupLayout>
+	 	 
+  	</f:facet>
+</tr:switcher>
+	
+	<tr:panelButtonBar>
+    	<tr:commandButton text="#{msgs.close}" immediate="true" action="#{selectVO.cancel}"/>
+	</tr:panelButtonBar>
+</tr:form>
+
+</tr:document>
+</f:view>
+</jsp:root>

@@ -37,7 +37,7 @@
             </tr:showDetailItem>
             <tr:showDetailItem 
       	     	text="#{msgs.allNodes}" 
-              	id="item1">
+              	id="item2">
                 <f:subview id="v2_2">
                 	<tr:separator></tr:separator>
         	    	<jsp:include page="tabLogsAll.jspx" flush="true"/>
