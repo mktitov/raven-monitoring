@@ -235,6 +235,7 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         MessagesRegistry messagesRegistry = registry.getService(MessagesRegistry.class);
         Messages messages = messagesRegistry.getMessages(RecordsAsTableNode.class);
         String detailColumnName =messages.get("detailColumnName");
+        String detailLinkName = messages.get("detailValueViewLinkName");
         assertArrayEquals(
                 new String[]{"field1 displayName", "field2", detailColumnName}
                 , table.getColumnNames());
@@ -248,6 +249,7 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         assertTrue(detailObj instanceof ViewableObject);
         ViewableObject detail = (ViewableObject) detailObj;
         assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, detail.getMimeType());
+        assertEquals(detailLinkName, detail.toString());
 
         Object detailData = detail.getData();
         assertNotNull(detailData);
@@ -265,4 +267,64 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
 
         verify(record);
     }
+
+    @Test
+    public void detailTableColumnTest2() throws Exception
+    {
+        tableNode.setShowFieldsInDetailColumn(true);
+
+        Record record = createMock(Record.class);
+
+        expect(record.getSchema()).andReturn(schema);
+        expect(record.getValue("field1")).andReturn(1).times(2);
+        expect(record.getValue("field2")).andReturn("test1").times(2);
+
+        replay(record);
+
+        ds.addDataPortion(record);
+        ds.addDataPortion(null);
+
+        tableNode.setDetailColumnNumber(1);
+        Collection<ViewableObject> objects = tableNode.getViewableObjects(null);
+        assertNotNull(objects);
+        assertEquals(1, objects.size());
+        ViewableObject object = objects.iterator().next();
+        assertNotNull(object);
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, object.getMimeType());
+        assertNotNull(object.getData());
+        assertTrue(object.getData() instanceof Table);
+        Table table = (Table) object.getData();
+        MessagesRegistry messagesRegistry = registry.getService(MessagesRegistry.class);
+        Messages messages = messagesRegistry.getMessages(RecordsAsTableNode.class);
+        assertArrayEquals(
+                new String[]{"field1 displayName", "field2"}
+                , table.getColumnNames());
+        List<Object[]> rows = RavenUtils.tableAsList(table);
+        assertEquals(1, rows.size());
+        assertEquals("test1", rows.get(0)[1]);
+
+        Object detailObj = rows.get(0)[0];
+        assertNotNull(detailObj);
+        assertTrue(detailObj instanceof ViewableObject);
+        ViewableObject detail = (ViewableObject) detailObj;
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, detail.getMimeType());
+        assertEquals("1", detailObj.toString());
+
+        Object detailData = detail.getData();
+        assertNotNull(detailData);
+        assertTrue(detailData instanceof Table);
+        Table detailTable = (Table) detailData;
+        assertArrayEquals(
+                new String[]{
+                        messages.get("fieldNameColumnName")
+                        , messages.get("fieldValueColumnName")}
+                , detailTable.getColumnNames());
+        List<Object[]> detailRows = RavenUtils.tableAsList(detailTable);
+        assertEquals(2, detailRows.size());
+        assertArrayEquals(new String[]{"field1", "1"}, detailRows.get(0));
+        assertArrayEquals(new String[]{"field2", "test1"}, detailRows.get(1));
+
+        verify(record);
+    }
+
 }

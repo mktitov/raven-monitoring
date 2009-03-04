@@ -30,10 +30,16 @@ public class ViewableObjectImpl implements ViewableObject
     private final boolean cacheData;
     private final int width;
     private final int height;
+    private final String toStringValue;
 
     public ViewableObjectImpl(String mimeType, Object data)
     {
         this(mimeType, data, false);
+    }
+
+    public ViewableObjectImpl(String mimeType, Object data, String toStringValue)
+    {
+        this(mimeType, data, false, toStringValue);
     }
 
     public ViewableObjectImpl(String mimeType, Object data, boolean cacheData)
@@ -41,14 +47,27 @@ public class ViewableObjectImpl implements ViewableObject
         this(mimeType, data, cacheData, 0, 0);
     }
 
+    public ViewableObjectImpl(String mimeType, Object data, boolean cacheData, String toStringValue)
+    {
+        this(mimeType, data, cacheData, 0, 0, toStringValue);
+    }
+
     public ViewableObjectImpl(
             String mimeType, Object data, boolean cacheData, int width, int height) 
+    {
+        this(mimeType, data, cacheData, width, height, null);
+    }
+
+    public ViewableObjectImpl(
+            String mimeType, Object data, boolean cacheData, int width, int height
+            , String toStringValue)
     {
         this.mimeType = mimeType;
         this.data = data;
         this.cacheData = cacheData;
         this.width = width;
         this.height = height;
+        this.toStringValue = toStringValue;
     }
 
     public Object getData()
@@ -75,4 +94,11 @@ public class ViewableObjectImpl implements ViewableObject
     {
         return width;
     }
+
+    @Override
+    public String toString()
+    {
+        return toStringValue==null? super.toString() : toStringValue;
+    }
+
 }

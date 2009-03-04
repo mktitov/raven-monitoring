@@ -67,6 +67,9 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
     @NotNull
     private Boolean showFieldsInDetailColumn;
 
+    @Parameter
+    private Integer detailColumnNumber;
+
     @Parameter(defaultValue="false")
     @NotNull
     private Boolean autoRefresh;
@@ -77,8 +80,20 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
     private String fieldNameColumnName;
     @Message
     private String fieldValueColumnName;
+    @Message
+    private String detailValueViewLinkName;
 
     private Map<String, RecordSchemaField> fields;
+
+    public Integer getDetailColumnNumber()
+    {
+        return detailColumnNumber;
+    }
+
+    public void setDetailColumnNumber(Integer detailColumnNumber)
+    {
+        this.detailColumnNumber = detailColumnNumber;
+    }
 
     public Boolean getShowFieldsInDetailColumn()
     {
@@ -172,7 +187,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
         String[] fieldsOrderArr = _fieldsOrder==null? null : _fieldsOrder.split("\\s*,\\s*");
 
         RecordAsTableDataConsumer dataConsumer = new RecordAsTableDataConsumer(
-                fieldsOrderArr, detailColumnName, fieldNameColumnName, fieldValueColumnName);
+                fieldsOrderArr, detailColumnName, detailValueViewLinkName
+                , fieldNameColumnName, fieldValueColumnName, detailColumnNumber);
 
         dataSource.getDataImmediate(dataConsumer, attrs.values());
 
@@ -216,15 +232,20 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
         private final String detailColumnName;
         private final String fieldNameColumnName;
         private final String fieldValueColumnName;
+        private final String detailValueViewLinkName;
+        private final int detailColumnNumber;
 
         public RecordAsTableDataConsumer(
-                String[] fieldsOrder, String detailColumnName, String fieldNameColumnName
-                , String fieldValueColumnName)
+                String[] fieldsOrder, String detailColumnName, String detailValueViewLinkName
+                , String fieldNameColumnName
+                , String fieldValueColumnName
+                , Integer detailColumnNumber)
         {
             fields = new HashMap<String, RecordSchemaField>();
             this.recordSchema = RecordsAsTableNode.this.recordSchema;
             this.showFieldsInDetailColumn = RecordsAsTableNode.this.showFieldsInDetailColumn;
             this.detailColumnName = detailColumnName;
+            this.detailValueViewLinkName = detailValueViewLinkName;
             this.fieldNameColumnName = fieldNameColumnName;
             this.fieldValueColumnName = fieldValueColumnName;
             schemaFields = recordSchema.getFields();
@@ -247,7 +268,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
                 }
             }
 
-            int len = fieldNames.length + (showFieldsInDetailColumn? 1 : 0);
+            int len = fieldNames.length +
+                    (showFieldsInDetailColumn&&detailColumnNumber==null? 1 : 0);
             String[] columnNames = new String[len];
             for (int i=0; i<fieldNames.length; ++i)
             {
@@ -255,8 +277,10 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
                 columnNames[i] = displayName==null? fieldNames[i] : displayName;
             }
 
-            if (showFieldsInDetailColumn)
+            if (showFieldsInDetailColumn&&detailColumnNumber==null)
                 columnNames[columnNames.length-1] = detailColumnName;
+
+            this.detailColumnNumber = detailColumnNumber==null? -1 : detailColumnNumber-1;
 
             table = new TableImpl(columnNames);
         }
@@ -296,14 +320,18 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
                 return;
             }
             
-            int len = fieldNames.length + (showFieldsInDetailColumn? 1 : 0);
+            int len = fieldNames.length + (showFieldsInDetailColumn&&detailColumnNumber<0? 1 : 0);
             Object[] row = new Object[len];
             for (int i=0; i<fieldNames.length; ++i)
                 try
                 {
-                    row[i] = converter.convert(
+                    String value = converter.convert(
                             String.class, record.getValue(fieldNames[i])
                             , fields.get(fieldNames[i]).getPattern());
+                    if (showFieldsInDetailColumn && detailColumnNumber==i)
+                        row[i] = createDetailObject(value, record);
+                    else
+                        row[i] = value;
                 }
                 catch (Exception e)
                 {
@@ -311,32 +339,36 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
                         error("Error adding record value, recieved from (%s), to table", e);
                 }
 
-            if (showFieldsInDetailColumn)
-            {
-                TableImpl detailTable = new TableImpl(
-                        new String[]{fieldNameColumnName, fieldValueColumnName});
-                for (RecordSchemaField field: schemaFields)
-                {
-                    try
-                    {
-                        Object val = record.getValue(field.getName());
-                        val = converter.convert(String.class, val, field.getPattern());
-                        detailTable.addRow(new Object[]{field.getName(), val});
-                    }
-                    catch (Exception e)
-                    {
-                        if (isLogLevelEnabled(LogLevel.ERROR))
-                            error(String.format(
-                                    "Error adding field (%s) to detail table", field.getName())
-                                , e);
-                    }
-                }
-                ViewableObject detailObject = new ViewableObjectImpl(
-                        Viewable.RAVEN_TABLE_MIMETYPE, detailTable);
-                row[row.length-1] = detailObject;
-            }
+            if (showFieldsInDetailColumn && detailColumnNumber<0)
+                row[row.length-1] = createDetailObject(detailValueViewLinkName, record);
 
             table.addRow(row);
+        }
+
+        private ViewableObject createDetailObject(String displayValue, Record record)
+        {
+            TableImpl detailTable = new TableImpl(
+                    new String[]{fieldNameColumnName, fieldValueColumnName});
+            for (RecordSchemaField field: schemaFields)
+            {
+                try
+                {
+                    Object val = record.getValue(field.getName());
+                    val = converter.convert(String.class, val, field.getPattern());
+                    detailTable.addRow(new Object[]{field.getName(), val});
+                }
+                catch (Exception e)
+                {
+                    if (isLogLevelEnabled(LogLevel.ERROR))
+                        error(String.format(
+                                "Error adding field (%s) to detail table", field.getName())
+                            , e);
+                }
+            }
+            ViewableObject detailObject = new ViewableObjectImpl(
+                    Viewable.RAVEN_TABLE_MIMETYPE, detailTable, displayValue);
+            
+            return detailObject;
         }
 
         public Object refereshData(Collection<NodeAttribute> sessionAttributes)
