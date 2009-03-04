@@ -89,6 +89,14 @@ public class RecordImpl implements Record
         return values.get(fieldName);
     }
 
+    /**
+     * For groovy access
+     */
+    public Object getAt(String fieldName) throws RecordException
+    {
+        return getValue(fieldName);
+    }
+
     public Map<String, Object> getValues()
     {
         return Collections.unmodifiableMap(values);

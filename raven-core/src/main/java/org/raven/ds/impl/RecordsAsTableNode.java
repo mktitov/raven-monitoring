@@ -51,6 +51,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
 {
     public final static String DATA_SOURCE_ATTR = "dataSource";
     public final static String RECORD_SCHEMA_ATTR = "recordSchema";
+    public final static String RECORD_BINDING = "record";
+    public final static String VALUE_BINDING = "value";
 
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     @NotNull
@@ -186,9 +188,23 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
         String _fieldsOrder = fieldsOrder;
         String[] fieldsOrderArr = _fieldsOrder==null? null : _fieldsOrder.split("\\s*,\\s*");
 
+        Map<Integer, RecordsAsTableColumnValueNode> columnValues =
+                new HashMap<Integer, RecordsAsTableColumnValueNode>();
+        Collection<Node> childs = getChildrens();
+        if (childs!=null)
+            for (Node child: childs)
+                if (child instanceof RecordsAsTableColumnValueNode)
+                {
+                    RecordsAsTableColumnValueNode columnValue =
+                            (RecordsAsTableColumnValueNode) child;
+                    columnValues.put(columnValue.getColumnNumber()-1, columnValue);
+                }
+        if (columnValues.isEmpty())
+            columnValues = null;
+
         RecordAsTableDataConsumer dataConsumer = new RecordAsTableDataConsumer(
                 fieldsOrderArr, detailColumnName, detailValueViewLinkName
-                , fieldNameColumnName, fieldValueColumnName, detailColumnNumber);
+                , fieldNameColumnName, fieldValueColumnName, detailColumnNumber, columnValues);
 
         dataSource.getDataImmediate(dataConsumer, attrs.values());
 
@@ -234,12 +250,14 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
         private final String fieldValueColumnName;
         private final String detailValueViewLinkName;
         private final int detailColumnNumber;
+        private final Map<Integer, RecordsAsTableColumnValueNode> columnValues;
 
         public RecordAsTableDataConsumer(
                 String[] fieldsOrder, String detailColumnName, String detailValueViewLinkName
                 , String fieldNameColumnName
                 , String fieldValueColumnName
-                , Integer detailColumnNumber)
+                , Integer detailColumnNumber
+                , Map<Integer, RecordsAsTableColumnValueNode> columnValues)
         {
             fields = new HashMap<String, RecordSchemaField>();
             this.recordSchema = RecordsAsTableNode.this.recordSchema;
@@ -248,6 +266,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
             this.detailValueViewLinkName = detailValueViewLinkName;
             this.fieldNameColumnName = fieldNameColumnName;
             this.fieldValueColumnName = fieldValueColumnName;
+            this.columnValues = columnValues;
+            
             schemaFields = recordSchema.getFields();
             if (fieldsOrder!=null)
             {
@@ -322,22 +342,42 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
             
             int len = fieldNames.length + (showFieldsInDetailColumn&&detailColumnNumber<0? 1 : 0);
             Object[] row = new Object[len];
-            for (int i=0; i<fieldNames.length; ++i)
-                try
-                {
-                    String value = converter.convert(
-                            String.class, record.getValue(fieldNames[i])
-                            , fields.get(fieldNames[i]).getPattern());
-                    if (showFieldsInDetailColumn && detailColumnNumber==i)
-                        row[i] = createDetailObject(value, record);
-                    else
-                        row[i] = value;
-                }
-                catch (Exception e)
-                {
-                    if (isLogLevelEnabled(LogLevel.ERROR))
-                        error("Error adding record value, recieved from (%s), to table", e);
-                }
+            try
+            {
+                for (int i=0; i<fieldNames.length; ++i)
+                    try
+                    {
+                        Object value = record.getValue(fieldNames[i]);
+                        RecordsAsTableColumnValueNode columnValue =
+                                columnValues==null? null : columnValues.get(i);
+                        if (columnValue!=null)
+                        {
+                            columnValue = columnValues.get(i);
+                            columnValue.addBinding(VALUE_BINDING, value);
+                            columnValue.addBinding(RECORD_BINDING, record);
+                            value = columnValue.getColumnValue();
+                        }
+
+                        value = converter.convert(
+                                String.class, value
+                                , fields.get(fieldNames[i]).getPattern());
+                        if (showFieldsInDetailColumn && detailColumnNumber==i)
+                            row[i] = createDetailObject((String)value, record);
+                        else
+                            row[i] = value;
+                    }
+                    catch (Exception e)
+                    {
+                        if (isLogLevelEnabled(LogLevel.ERROR))
+                            error("Error adding record value, recieved from (%s), to table", e);
+                    }
+            }
+            finally
+            {
+                if (columnValues!=null)
+                    for (RecordsAsTableColumnValueNode columnValue: columnValues.values())
+                        columnValue.resetBindings();
+            }
 
             if (showFieldsInDetailColumn && detailColumnNumber<0)
                 row[row.length-1] = createDetailObject(detailValueViewLinkName, record);

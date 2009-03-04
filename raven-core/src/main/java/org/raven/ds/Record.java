@@ -46,6 +46,10 @@ public interface Record
      */
     public Object getValue(String fieldName) throws RecordException;
     /**
+     * Method for groovy access to the field value
+     */
+    public Object getAt(String fieldName) throws RecordException;
+    /**
      * Returns the fields values as immutable map
      */
     public Map<String, Object> getValues();

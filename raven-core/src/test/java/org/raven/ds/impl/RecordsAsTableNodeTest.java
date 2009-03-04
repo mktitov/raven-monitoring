@@ -327,4 +327,44 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         verify(record);
     }
 
+    @Test
+    public void columnValueTest() throws Exception
+    {
+        RecordsAsTableColumnValueNode columnValue = new RecordsAsTableColumnValueNode();
+        columnValue.setName("column 1 value");
+        tableNode.addAndSaveChildren(columnValue);
+        columnValue.setColumnNumber(1);
+        columnValue.getNodeAttribute("columnValue").setValue("value+record['field1']");
+        assertTrue(columnValue.start());
+
+        Record record = createMock(Record.class);
+
+        expect(record.getSchema()).andReturn(schema);
+        expect(record.getValue("field1")).andReturn(1).times(1);
+        expect(record.getAt("field1")).andReturn(1).times(1);
+        expect(record.getValue("field2")).andReturn("test1").times(1);
+
+        replay(record);
+
+        ds.addDataPortion(record);
+        ds.addDataPortion(null);
+
+        tableNode.setFieldsOrder("field2, field1");
+
+        Collection<ViewableObject> objects = tableNode.getViewableObjects(null);
+        assertNotNull(objects);
+        assertEquals(1, objects.size());
+        ViewableObject object = objects.iterator().next();
+        assertNotNull(object);
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, object.getMimeType());
+        assertNotNull(object.getData());
+        assertTrue(object.getData() instanceof Table);
+        Table table = (Table) object.getData();
+        assertArrayEquals(new String[]{"field2", "field1 displayName"}, table.getColumnNames());
+        List<Object[]> rows = RavenUtils.tableAsList(table);
+        assertEquals(1, rows.size());
+        assertArrayEquals(new String[]{"test11", "1"}, rows.get(0));
+
+        verify(record);
+    }
 }
