@@ -121,6 +121,7 @@ public class DatabaseRecordQuery
         connection = connectionPool.getConnection();
         try
         {
+            connection.setAutoCommit(false);
             statement = connection.prepareStatement(query);
             statement.setMaxRows(maxRows);
             statement.setFetchSize(fetchSize);
@@ -148,7 +149,14 @@ public class DatabaseRecordQuery
             if (statement != null)
                 statement.close();
             if (connection != null)
-                connection.close();
+            {
+                try{
+                    connection.commit();
+                }
+                finally{
+                    connection.close();
+                }
+            }
             statement = null;
             connection = null;
         }
@@ -415,6 +423,7 @@ public class DatabaseRecordQuery
         {
             try
             {
+//                resultSet.getStatement().getConnection().commit();
                 resultSet.close();
             }
             catch (SQLException ex)

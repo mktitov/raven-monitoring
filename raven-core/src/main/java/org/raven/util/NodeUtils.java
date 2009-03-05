@@ -20,9 +20,12 @@ package org.raven.util;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import org.raven.template.impl.TemplateExpression;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.RefreshAttributeValueHandlerFactory;
+import org.weda.internal.annotations.Service;
+import org.weda.services.TypeConverter;
 
 /**
  *
@@ -30,6 +33,8 @@ import org.raven.tree.impl.RefreshAttributeValueHandlerFactory;
  */
 public class NodeUtils
 {
+    @Service
+    private static TypeConverter converter;
     /**
      * Returns the map of cloned attributes which value handler type is
      * {@link RefreshAttributeValueHandlerFactory#TYPE}.
@@ -47,6 +52,8 @@ public class NodeUtils
                     NodeAttribute clone = (NodeAttribute) attr.clone();
                     clone.setOwner(node);
                     clone.setId(id--);
+                    Object val = TemplateExpression.eval(clone.getRawValue(), null);
+                    clone.setRawValue(converter.convert(String.class, val, null));
                     clone.init();
                     refreshAttributes.put(clone.getName(), clone);
                 }

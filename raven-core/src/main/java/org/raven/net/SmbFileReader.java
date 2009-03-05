@@ -99,6 +99,8 @@ public class SmbFileReader extends AbstractFileReader
         }
         catch(Throwable e)
         {
+            if ("The system cannot find the file specified.".equals(e.getMessage()))
+                return null;
             throw new FileReaderException(String.format(
                     "Error reading files from directory (%s). %s"
                         , fileWrapper.getName(), e.getMessage())

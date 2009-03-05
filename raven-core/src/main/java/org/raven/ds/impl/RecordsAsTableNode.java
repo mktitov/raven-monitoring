@@ -206,7 +206,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
                 fieldsOrderArr, detailColumnName, detailValueViewLinkName
                 , fieldNameColumnName, fieldValueColumnName, detailColumnNumber, columnValues);
 
-        dataSource.getDataImmediate(dataConsumer, attrs.values());
+        dataSource.getDataImmediate(dataConsumer, attrs==null? null : attrs.values());
 
         ViewableObject table = new ViewableObjectImpl(
                 Viewable.RAVEN_TABLE_MIMETYPE, dataConsumer.getTable());

@@ -17,8 +17,8 @@
 
 package org.raven;
 
-import org.apache.commons.lang.text.StrLookup;
-import org.apache.commons.lang.text.StrSubstitutor;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -31,20 +31,11 @@ public class StrSubstTest extends Assert
     @Test
     public void test()
     {
-        StrSubstitutor subst = new StrSubstitutor(new VarStrLookup());
-        String result = subst.replace("${num}, ${num}");
-        assertEquals("1, 2", result);
+        SimpleDateFormat fmt = new java.text.SimpleDateFormat("dd.MM.yyyy HH:mm");
+        Calendar c = Calendar.getInstance();
+        String d1 = fmt.format(c.getTime());
+        c.add(Calendar.HOUR, -1);
+        String d2 = fmt.format(c.getTime());
     }
 
-    public class VarStrLookup extends StrLookup
-    {
-        private String[] vals = new String[]{"1", "2"};
-        private int i=0;
-        
-        @Override
-        public String lookup(String key)
-        {
-            return vals[i++];
-        }
-    }
 }

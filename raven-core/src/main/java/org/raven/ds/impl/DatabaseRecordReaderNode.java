@@ -33,6 +33,7 @@ import org.raven.ds.DataConsumer;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
+import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
@@ -167,6 +168,8 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
                     , filterElements, _query, connectionPool
                     , maxRows, fetchSize);
 
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            debug("Executing query:\n"+recordQuery.getQuery());
         DatabaseRecordQuery.RecordIterator it = recordQuery.execute();
         processingTime+=System.currentTimeMillis()-startTime;
         try
