@@ -85,6 +85,7 @@ implements Comparator<NodeAttribute>
 	private boolean hasUnsavedChanges = false;
 	private boolean needRefreshVO = false;
 	//private int refreshViewInteval = 0;
+	private boolean refreshPressed = false;
 		
 	public NodeWrapper() 
 	{
@@ -672,6 +673,12 @@ implements Comparator<NodeAttribute>
 	
 	public String onRefresh()
 	{
+		refreshPressed = true;
+		return onRefreshX(); 
+	}
+
+	public String onRefreshX()
+	{
 		setNeedRefreshVO();
 		SessionBean.getInstance().reloadRightFrame();
 		return null; 
@@ -679,7 +686,7 @@ implements Comparator<NodeAttribute>
 	
 	public void pollRefresh(PollEvent event)
 	{
-		onRefresh();
+		onRefreshX();
 	}
 	
 	public CoreShowDetailItem getShowTab() { return showTab; }
@@ -910,6 +917,24 @@ implements Comparator<NodeAttribute>
 		LogViewAttributesCache lvac = SessionBean.getInstance().getLogViewAttributesCache();
 		LogViewAttributes lva = lvac.get(ALL_NODES);
 		return lva.isGroupByNodes();
+	}
+
+	public boolean isAutoRefresh()
+	{
+		Node node = getNode();
+		if(node instanceof Viewable) 
+		{
+			Viewable v = (Viewable) node;
+			Boolean b = v.getAutoRefresh();
+			if(b!=null && b==false) return false;
+		}
+		return true;
+	}
+	
+	public boolean isShowVO() 
+	{
+		if(refreshPressed) return true;
+		return isAutoRefresh();
 	}
 	
 	

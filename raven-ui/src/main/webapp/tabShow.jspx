@@ -23,12 +23,14 @@
           xmlns:s="http://myfaces.apache.org/sandbox" >
 <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
     
-<tr:panelHorizontalLayout halign="left" id="phl_1"  >
-	<tr:poll 
-		id="viewRefresh" 
-		rendered="#{cNode.refreshViewInteval > 0}" 
-		interval="#{cNode.refreshViewIntevalMS}" 
-		pollListener="#{cNode.pollRefresh}" />
+<tr:panelBorderLayout>    
+	<f:facet name="left">
+		<tr:panelHorizontalLayout halign="left" id="phl_1"  >
+			<tr:poll 
+				id="viewRefresh" 
+				rendered="#{cNode.autoRefresh and cNode.refreshViewInteval > 0}" 
+				interval="#{cNode.refreshViewIntevalMS}" 
+				pollListener="#{cNode.pollRefresh}" />
 <!--
 	<tr:poll 
 		id="testPoll" 
@@ -37,21 +39,32 @@
  
 action="#{sBean.reloadRightFrame}"
  -->
-	<tr:commandButton 
-		shortDesc="#{msgs.dscRefreshAndApply}"
-		partialSubmit="true"
-		action="#{cNode.onRefresh}" 
-		text="#{msgs.refresh}" 
-		id="refresh_A"  />
-	<tr:inputNumberSpinbox
-		value="#{cNode.refreshViewInteval}"
- 		columns="2" 
-		label="#{msgs.refreshInterval}" 
-		minimum="0" 
-		maximum="60" 
-		stepSize="5" />
-</tr:panelHorizontalLayout>
-
+			<tr:commandButton 
+				shortDesc="#{msgs.dscRefreshAndApply}"
+				partialSubmit="true"
+				action="#{cNode.onRefresh}" 
+				text="#{msgs.refresh}" 
+				id="refresh_A"  />
+			<tr:inputNumberSpinbox
+				value="#{cNode.refreshViewInteval}"
+ 				columns="2" 
+				label="#{msgs.refreshInterval}" 
+				minimum="0" 
+				maximum="60" 
+				stepSize="5" />
+		</tr:panelHorizontalLayout>
+	</f:facet>
+	<f:facet name="right">
+		<tr:panelHorizontalLayout halign="right" >
+			<tr:commandButton
+				shortDesc="#{msgs.expandCompress}" 
+				action="#{sBean.switchCollapsed}" 
+				immediate="true"
+    			text="+/-"
+    			onclick="top.switchFrameSet()"/>
+		</tr:panelHorizontalLayout>
+	</f:facet>
+</tr:panelBorderLayout>
 <tr:spacer height="5" />
 
 <tr:panelAccordion 
@@ -178,7 +191,8 @@ action="#{sBean.reloadRightFrame}"
 <!-- ********************************* -->
 <!-- Show viewable nodes               -->
 <!-- ********************************* -->
-<tr:table width="100%" 
+<tr:table width="100%"
+		rendered="#{cNode.showVO}" 
 		horizontalGridVisible="false" 
 		verticalGridVisible="false"
  		var="row"
@@ -265,7 +279,7 @@ items="#{row.tableColumnNames}"
 					rendered="#{row.valid[0]}"                      
                    	headerText="#{row.tableColumnNames[0]}">
                    	<tr:panelHorizontalLayout halign="left" >
-					<tr:outputText 
+					<tr:outputFormatted 
 						rendered="#{!rowa[0].table}"
 						value="#{rowa[0].item}"/>
 					<tr:commandLink 
@@ -286,7 +300,7 @@ items="#{row.tableColumnNames}"
                    	rendered="#{row.valid[1]}"
                    	headerText="#{row.tableColumnNames[1]}">
                    	<tr:panelHorizontalLayout halign="left" >
-					<tr:outputText 
+					<tr:outputFormatted 
 						rendered="#{!rowa[1].table}"
 						value="#{rowa[1].item}"/>
 					<tr:commandLink
@@ -306,7 +320,7 @@ items="#{row.tableColumnNames}"
                    	rendered="#{row.valid[2]}"
                    	headerText="#{row.tableColumnNames[2]}">
                    	<tr:panelHorizontalLayout halign="left" >
-					<tr:outputText 
+					<tr:outputFormatted 
 						rendered="#{!rowa[2].table}"
 						value="#{rowa[2].item}"/>
 					<tr:commandLink
@@ -327,7 +341,7 @@ items="#{row.tableColumnNames}"
                    	rendered="#{row.valid[3]}"
                    	headerText="#{row.tableColumnNames[3]}">
                    	<tr:panelHorizontalLayout halign="left" >
-					<tr:outputText 
+					<tr:outputFormatted 
 						rendered="#{!rowa[3].table}"
 						value="#{rowa[3].item}"/>
 					<tr:commandLink
@@ -348,7 +362,7 @@ items="#{row.tableColumnNames}"
                    	rendered="#{row.valid[4]}"
                    	headerText="#{row.tableColumnNames[4]}">
                    	<tr:panelHorizontalLayout halign="left" >
-					<tr:outputText 
+					<tr:outputFormatted 
 						rendered="#{!rowa[4].table}"
 						value="#{rowa[4].item}"/>
 					<tr:commandLink
@@ -366,11 +380,10 @@ items="#{row.tableColumnNames}"
 					</tr:panelHorizontalLayout>	
 	            </tr:column>
                 <tr:column  
-                   	align="center" 
                    	rendered="#{row.valid[5]}"
                    	headerText="#{row.tableColumnNames[5]}">
                    	<tr:panelHorizontalLayout halign="left" >
-					<tr:outputText 
+					<tr:outputFormatted 
 						rendered="#{!rowa[5].table}"
 						value="#{rowa[5].item}"/>
 					<tr:commandLink
@@ -388,11 +401,10 @@ items="#{row.tableColumnNames}"
 					</tr:panelHorizontalLayout>	
 	            </tr:column>
                 <tr:column  
-                   	align="center" 
                    	rendered="#{row.valid[6]}"
                    	headerText="#{row.tableColumnNames[6]}">
                    	<tr:panelHorizontalLayout halign="left" >
-					<tr:outputText 
+					<tr:outputFormatted 
 						rendered="#{!rowa[6].table}"
 						value="#{rowa[6].item}"/>
 					<tr:commandLink
@@ -406,6 +418,27 @@ items="#{row.tableColumnNames}"
 					<f:attribute
         				name="#{selectVO.paramName}"
         				value="#{rowa[6].item}" />
+					</tr:commandLink>	
+                	</tr:panelHorizontalLayout> 
+	            </tr:column>
+                <tr:column  
+                   	rendered="#{row.valid[7]}"
+                   	headerText="#{row.tableColumnNames[7]}">
+                   	<tr:panelHorizontalLayout halign="left" >
+					<tr:outputFormatted 
+						rendered="#{!rowa[7].table}"
+						value="#{rowa[7].item}"/>
+					<tr:commandLink
+						useWindow="true"
+						text="#{rowa[7].string}"
+						rendered="#{rowa[7].table}"
+						action="dialog:showViewableObject"
+						actionListener="#{selectVO.select}"
+						windowWidth="500" windowHeight="400"
+					>
+					<f:attribute
+        				name="#{selectVO.paramName}"
+        				value="#{rowa[7].item}" />
 					</tr:commandLink>	
                 	</tr:panelHorizontalLayout> 
 	            </tr:column>

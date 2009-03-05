@@ -29,40 +29,53 @@
                 <tr:poll id="poolStatus" ></tr:poll>
                 -->
                 <tr:panelGroupLayout layout="vertical">
-                    <tr:panelCaptionGroup 
+                    <tr:panelCaptionGroup
+                    	rendered="#{!sBean.collapsed}" 
                     	id="pcg"  
                     	captionText="#{msgs.nodeStatus}" >
                         <tr:panelGroupLayout 
                         	layout="vertical" 
                         	id="pgl_1" >
-                          <tr:panelBorderLayout>
-                                	<f:facet name="start">
-                    		<tr:group>
-                            	<tr:outputText value="#{msgs.node}:" />
-                                <tr:spacer width="10" />
-                                <tr:outputText 
-                                	inlineStyle="font-weight: bold;" 
-                                	value="#{cNode.nodePath}" />
-                            </tr:group>
-                                	</f:facet>
-                                	<f:facet name="end">
-							            <tr:statusIndicator></tr:statusIndicator>
-                                	</f:facet>
-                          </tr:panelBorderLayout>	
-                            
-                            <tr:group>
-                               <tr:outputText value="ID:"></tr:outputText>
-                               <tr:spacer width="10"></tr:spacer>
-                               <tr:outputText 
-                                	inlineStyle="font-weight: bold;"
-                                	value="#{cNode.node.id}" />
-                               <tr:spacer width="20" />
-                               <tr:outputText value="#{msgs.status}:" />
-                               <tr:spacer width="10" />
-                               <tr:outputText 
-                               		inlineStyle="font-weight: bold;"
-                               		value="#{cNode.nodeStatusText}" />
-                            </tr:group>
+                          	<tr:panelBorderLayout>
+                             	<f:facet name="start">
+                    				<tr:group>
+                            			<tr:outputText value="#{msgs.node}:" />
+                                		<tr:spacer width="10" />
+                                		<tr:outputText 
+                                			inlineStyle="font-weight: bold;" 
+                                			value="#{cNode.nodePath}" />
+                            		</tr:group>
+                               	</f:facet>
+                          	</tr:panelBorderLayout>	
+							<tr:panelBorderLayout>
+                             	<f:facet name="left">                            
+                            		<tr:group>
+                               			<tr:outputText value="ID:"/>
+                               			<tr:spacer width="10"/>
+                               			<tr:outputText 
+                                			inlineStyle="font-weight: bold;"
+                                			value="#{cNode.node.id}" />
+                               			<tr:spacer width="20" />
+                               			<tr:outputText value="#{msgs.status}:" />
+                               			<tr:spacer width="10" />
+                               			<tr:outputText 
+                               				inlineStyle="font-weight: bold;"
+                               				value="#{cNode.nodeStatusText}" />
+                            		</tr:group>
+                            	</f:facet>
+                                <f:facet name="right">
+                                	<tr:panelHorizontalLayout halign="end">
+                                	<!-- 
+	                   				<tr:commandButton 
+	                   						action="#{sBean.switchCollapsed}" 
+	                   						immediate="true"
+                          					text="switchFrameSet"
+                            				onclick="top.switchFrameSet()"/>
+                            				 -->
+							    	<tr:statusIndicator/>
+									</tr:panelHorizontalLayout>							    	
+                                </f:facet>
+                          	</tr:panelBorderLayout>
                         </tr:panelGroupLayout>
                     </tr:panelCaptionGroup>
                     
@@ -109,7 +122,6 @@
                                 <jsp:include page="tabLogsTab.jspx" flush="true"/>
                             </f:subview>
                         </tr:showDetailItem>
-
                     </tr:panelTabbed>
                 </tr:panelGroupLayout>		 
             </tr:form>

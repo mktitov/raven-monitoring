@@ -143,9 +143,11 @@
                     <f:selectItems value="#{row.selectItems}" />
                 </tr:selectOneChoice>
             </tr:column>
+<!-- type of attribute-->            
             <tr:column headerText="#{msgs.type}">
                 <tr:outputText value="#{row.classDisplayName}"/>
             </tr:column>
+<!-- subtype of attribute-->            
             <tr:column headerText="#{msgs.subtype}">
                 <tr:selectOneChoice 
                 	valueChangeListener="#{row.applySubType}"
@@ -175,10 +177,23 @@
 	                	rendered="#{!row.edit}" 
 	                	value="#{row.description}"/>
     	            <tr:inputText 
-    	            	columns="60"  rows="2"
+    	            	columns="100"
+    	            	rows="8"
     	            	rendered="#{row.edit}"  
     	            	value="#{row.description}"/>
 				</tr:panelCaptionGroup>
+				<tr:panelAccordion 
+					rendered="#{row.expressionSupported or (row.selectItems == null)}"
+					discloseNone="true" >
+        			<tr:showDetailItem text="#{msgs.multiLineEditor}">
+        			    <tr:inputText
+                    		rows="8" 
+                			readOnly="#{row.expressionSupported}" 
+                			rendered="#{row.expressionSupported or (row.selectItems == null)}" 
+                			value="#{row.value}" 
+                			columns="100" />
+        			</tr:showDetailItem>
+				</tr:panelAccordion>
 
 				<tr:inputListOfValues 
 					rendered="#{row.enableEditValueDialog}"
@@ -230,12 +245,12 @@
     	            <f:selectItems value="#{row.selectItems}" />
                 </tr:selectOneChoice>
 				
-				<tr:spacer height="10"/>
+				<tr:spacer height="5"/>
 				<tr:panelGroupLayout layout="horizontal">
 					<tr:spacer width="40"/>
 						<jsp:include page="childAttributes.jspx" flush="true"/>
 					</tr:panelGroupLayout>
-				<tr:spacer height="15"></tr:spacer>
+				<tr:spacer height="10"></tr:spacer>
 
                 </tr:panelGroupLayout>					
                 <!-- <tr:panelGroupLayout layout="vertical">

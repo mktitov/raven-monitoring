@@ -114,7 +114,7 @@
                   	items="#{selectVO.object.tableColumnNames}"
                   	var="name" >
                     <tr:column headerText="#{name}">
-						<tr:outputText 
+						<tr:outputFormatted 
 							rendered="#{!rowa[vStat.index].table}"
 							value="#{rowa[vStat.index].item}"/>
 						<tr:commandLink

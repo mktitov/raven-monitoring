@@ -91,6 +91,7 @@ public class SessionBean
 	private RefreshIntervalCache refreshIntervalCache;
 	private LogViewAttributesCache logViewAttributesCache;
 	private LogsCache logsCache; 
+	private boolean collapsed = false;
 	
 	//public String getSelectNodeParam() { return SELECT_NODE_PARAM; }
 	
@@ -494,5 +495,22 @@ public class SessionBean
 	public LogsCache getLogsCache() {
 		return logsCache;
 	}
+
+	private void setCollapsed(boolean collapsed) {
+		this.collapsed = collapsed; 
+	}
+
+	public String switchCollapsed() 
+	{
+		if(isCollapsed()) setCollapsed(false);
+			else setCollapsed(true);
+		return null;
+	}
+	
+	public boolean isCollapsed() {
+		return collapsed;
+	}
+	
+	
 	
 }

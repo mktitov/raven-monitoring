@@ -26,7 +26,24 @@
 <jsp:directive.page pageEncoding="utf-8" contentType="text/html;charset=utf-8"/>
 <f:view>
 <trh:html>
-	<trh:head title="#{sBean.title}"/>  
+	<trh:head title="#{sBean.title}">
+		<script>
+			var framesOn = true;
+			function switchFrameSet()
+			{
+				if (top.framesOn == true) //turn it off
+				{
+					document.body.cols = "0, *";
+					top.framesOn = false;
+				}
+				else //turn it on
+				{
+					document.body.cols = "20%, *";
+					top.framesOn = true;
+				}
+			}
+		</script>
+	</trh:head>  
 <!-- 
 	<trh:frameBorderLayout frameBorderWidth="2" frameSpacing="2" >
  		<f:facet name="left">
@@ -37,10 +54,10 @@
  		</f:facet>
 	</trh:frameBorderLayout>
 -->
-
+ 
  <frameset cols="20%,80%" >
   	<FRAME id="frame1" name="frame1" src="tree.jspx" frameborder="1"></FRAME>
-  	<frameset rows="99%,1%">
+  	<frameset rows="100%,0%">
   		<FRAME id="frame2" name="frame2" src="tabbed.jspx" frameborder="1"></FRAME>
   		<FRAME id="frame3" name="frame3" src="down.jspx" frameborder="1"></FRAME>
  	</frameset>
