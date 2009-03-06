@@ -17,8 +17,7 @@
 
 package org.raven;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -31,11 +30,8 @@ public class StrSubstTest extends Assert
     @Test
     public void test()
     {
-        SimpleDateFormat fmt = new java.text.SimpleDateFormat("dd.MM.yyyy HH:mm");
-        Calendar c = Calendar.getInstance();
-        String d1 = fmt.format(c.getTime());
-        c.add(Calendar.HOUR, -1);
-        String d2 = fmt.format(c.getTime());
+        String res = StringEscapeUtils.escapeCsv("dd.MM.yyyy HH:mm");
+        System.out.print(res);
     }
 
 }

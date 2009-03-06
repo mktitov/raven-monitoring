@@ -25,6 +25,9 @@ import org.raven.tree.Node;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.store.TreeStoreError;
+import org.weda.internal.annotations.Service;
+import org.weda.internal.impl.MessageComposer;
+import org.weda.internal.services.MessagesRegistry;
 
 /**
  *
@@ -33,7 +36,7 @@ import org.raven.tree.store.TreeStoreError;
 public class H2TreeStoreTest extends ServiceTestCase
 {
     private static H2TreeStore store;
-    
+
     @BeforeClass
     public static void initTests() throws TreeStoreError
     {
@@ -77,6 +80,8 @@ public class H2TreeStoreTest extends ServiceTestCase
     @Test
     public void saveAndLoadAttributes() throws Exception
     {
+        MessagesRegistry messagesRegistry = registry.getService(MessagesRegistry.class);
+
         store.removeNodes();
         
         ContainerNode node = new ContainerNode();
@@ -85,8 +90,8 @@ public class H2TreeStoreTest extends ServiceTestCase
         store.saveNode(node);
         
         NodeAttributeImpl attr = new NodeAttributeImpl();
-        attr.setDescription("description");
         attr.setName("name");
+        attr.setDescription("test");
         attr.setOwner(node);
         attr.setParameterName("parameterName");
         attr.setParentAttribute("parentAttribute");
@@ -138,23 +143,44 @@ public class H2TreeStoreTest extends ServiceTestCase
         
         attr1 = (NodeAttributeImpl) node1.getNodeAttribute("name1");
         assertNotNull(attr1);
-        assertEquals(attr.getId(), attr1.getId());
-        assertSame(node1, attr1.getOwner());
-        assertEquals("parameterName1", attr1.getParameterName());
-        assertEquals("parentAttribute1", attr1.getParentAttribute());
-        assertEquals(Integer.class, attr1.getType());
-        assertEquals("1", attr1.getRawValue());
-        assertTrue(attr1.isRequired());
-        assertFalse(attr1.isTemplateExpression());
-        assertEquals("changedValueHandlerType", attr1.getValueHandlerType());
         
         store.removeNodeAttribute(attr1.getId());
         node1 = (ContainerNode) store.getNode(node.getId());
         assertNotNull(node1);
         assertTrue(node1.getNodeAttributes().isEmpty());
-        
     }
     
+    @Test
+    public void saveAndLoadAttributes2() throws Exception
+    {
+        MessagesRegistry messagesRegistry = registry.getService(MessagesRegistry.class);
+
+        store.removeNodes();
+
+        ContainerNode node = new ContainerNode();
+        node.setName("node");
+
+        store.saveNode(node);
+
+        MessageComposer composer = new MessageComposer(messagesRegistry);
+        composer.append("message:1.2.3.4:test").append("dd.MM.yyyy HH:mm").append("</p>");
+        NodeAttributeImpl attr = new NodeAttributeImpl();
+        attr.setName("name");
+        attr.setDescriptionContainer(composer);
+        attr.setOwner(node);
+        attr.setType(String.class);
+        attr.setRequired(false);
+        attr.setRawValue("value");
+        attr.setValueHandlerType("valueHandlerType");
+        attr.setTemplateExpression(true);
+
+        store.saveNodeAttribute(attr);
+
+
+        NodeAttributeImpl attrClone = (NodeAttributeImpl) attr.clone();
+        
+    }
+
     @Test
     public void getRootNode() throws Exception
     {
