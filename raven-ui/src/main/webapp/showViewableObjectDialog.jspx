@@ -103,12 +103,48 @@
 					</tr:commandLink>	
               	</tr:column>
               	 -->
-                    <tr:column  
-                    	rowHeader="true" 
-                    	headerText="#">
+                    <tr:column 
+                    	width="4%" 
+                    	rowHeader="true"> 
+                		<f:facet name="header">
+                			<tr:panelPopup  
+                				title="#{msgs.export}"
+                				shortDesc="#{msgs.export}" 
+		                		text="#">
+  								<tr:panelGroupLayout layout="vertical">
+									<tr:commandLink
+									text="CSV"
+									immediate="true"
+									useWindow="true" 
+									actionListener="#{export.exportToCSV}"/>
+								<tr:commandLink
+	 								text="HTML"
+									immediate="true"
+									useWindow="true" 
+									actionListener="#{export.exportToHtml}"/>
+								<tr:commandLink
+	 								text="EXCEL"
+									immediate="true"
+									useWindow="true" 
+									actionListener="#{export.exportToExcel}"/>
+  						</tr:panelGroupLayout>
+</tr:panelPopup>
+                		<!-- 
+      						<tr:commandButton
+	      						partialSubmit="true"
+      							immediate="true"
+      							action="dialog:export"
+      							shortDesc="#{msgs.export}"
+      							actionListener="#{export.export}"
+                  				useWindow="true" 
+                  				windowHeight="300"
+                  				windowWidth="400"
+      							text="#"/>
+      							-->
+	    				</f:facet>
                     	<tr:outputText value="#{rowId.index+1}"/>
 					</tr:column>		                  	
-              	 
+              	  
 				<tr:forEach    
                   	varStatus="vStat" 
                   	items="#{selectVO.object.tableColumnNames}"
@@ -131,7 +167,7 @@
                	</tr:forEach>
                	
            	</tr:table>
-			<tr:spacer height="6" />
+			<tr:spacer height="15" />
 	 	</tr:panelGroupLayout>
 	 	 
   	</f:facet>

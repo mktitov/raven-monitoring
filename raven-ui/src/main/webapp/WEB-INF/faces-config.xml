@@ -110,6 +110,11 @@
     <managed-bean-class>org.raven.ui.vo.SelectVOBean</managed-bean-class>
     <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
+  <managed-bean>
+    <managed-bean-name>export</managed-bean-name>
+    <managed-bean-class>org.raven.ui.vo.ExportBean</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
   
 <!--  
   <managed-bean>
@@ -187,6 +192,10 @@
     <navigation-case>
       <from-outcome>dialog:showViewableObject</from-outcome>
       <to-view-id>/showViewableObjectDialog.jspx</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>dialog:export</from-outcome>
+      <to-view-id>/exportDialog.jspx</to-view-id>
     </navigation-case>
   </navigation-rule>
 

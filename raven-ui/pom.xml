@@ -99,6 +99,10 @@
     		<groupId>javax.servlet</groupId>
 			<artifactId>jstl</artifactId>
 		</dependency> 
+		<dependency>
+	    	<groupId>commons-lang</groupId>
+    		<artifactId>commons-lang</artifactId>
+		</dependency>  
         
     </dependencies>
     <properties>

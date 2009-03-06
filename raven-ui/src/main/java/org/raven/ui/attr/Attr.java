@@ -72,7 +72,8 @@ public class Attr implements Comparable<Attr>
 	{
 		attribute = na;
 		this.name = na.getName();
-		this.value = na.getValue();
+		try { this.value = na.getValue(); }
+		catch(Throwable e) {this.value = "";}	
 		this.description = na.getDescription();
 		this.id = na.getId();
 		Registry registry = RavenRegistry.getRegistry();

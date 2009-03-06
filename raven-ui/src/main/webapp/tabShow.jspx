@@ -111,7 +111,7 @@ action="#{sBean.reloadRightFrame}"
                 	readOnly="#{row.expressionSupported}" 
                 	rendered="#{row.expressionSupported or (row.selectItems == null)}" 
                 	value="#{row.value}" 
-                	columns="30" />
+                	columns="45" />
                 <tr:selectOneChoice 
                 	rendered="#{!row.expressionSupported and !(row.selectItems == null)}" 
                 	value="#{row.value}" >
@@ -268,10 +268,51 @@ items="#{row.tableColumnNames}"
                 width="100%"
                 var="rowa"
                 varStatus="rowN" >
-                <tr:column 
+                <tr:column width="4%"
                 	align="center" 
-                	rowHeader="true" 
-                	headerText="#" >
+                	rowHeader="true">
+                	<f:facet name="header">
+                	<tr:panelPopup 
+                		title="#{msgs.export}"
+                		shortDesc="#{msgs.export}" 
+                		text="#">
+  						<tr:panelGroupLayout layout="vertical">
+							<tr:commandLink
+								text="CSV"
+								immediate="true"
+								useWindow="true" 
+								actionListener="#{export.exportToCSV}"/>
+							<tr:commandLink
+	 							text="HTML"
+								immediate="true"
+								useWindow="true" 
+								actionListener="#{export.exportToHtml}"/>
+							<tr:commandLink
+	 							text="EXCEL"
+								immediate="true"
+								useWindow="true" 
+								actionListener="#{export.exportToExcel}"/>
+  						</tr:panelGroupLayout>
+					</tr:panelPopup>
+      			<!-- 		<tr:commandButton
+      						partialSubmit="true"
+      						immediate="true"
+      						action="dialog:export"
+      						shortDesc="#{msgs.export}"
+      						actionListener="#{export.export}"
+                  			useWindow="true" 
+                  			windowHeight="300"
+                  			windowWidth="400"
+      						text="#"/>
+                	
+                	
+      					<tr:commandButton
+      						shortDesc="exportToExcel"
+      						actionListener="#{sBean.exportToCSV}"
+                  			useWindow="true" 
+      						text="#"/>
+      						 -->
+    				</f:facet>
                 	<tr:outputText value="#{rowN.index+1}"/>
                 </tr:column>
                 <tr:column
@@ -282,7 +323,8 @@ items="#{row.tableColumnNames}"
 					<tr:outputFormatted 
 						rendered="#{!rowa[0].table}"
 						value="#{rowa[0].item}"/>
-					<tr:commandLink 
+					<tr:commandLink
+						partialSubmit="true" 
 						useWindow="true"
 						text="#{rowa[0].string}"
 						rendered="#{rowa[0].table}"
@@ -304,6 +346,7 @@ items="#{row.tableColumnNames}"
 						rendered="#{!rowa[1].table}"
 						value="#{rowa[1].item}"/>
 					<tr:commandLink
+						partialSubmit="true"
 						useWindow="true"
 						text="#{rowa[1].string}"
 						rendered="#{rowa[1].table}"
@@ -324,6 +367,7 @@ items="#{row.tableColumnNames}"
 						rendered="#{!rowa[2].table}"
 						value="#{rowa[2].item}"/>
 					<tr:commandLink
+						partialSubmit="true"
 						useWindow="true"
 						text="#{rowa[2].string}"
 						rendered="#{rowa[2].table}"
@@ -345,6 +389,7 @@ items="#{row.tableColumnNames}"
 						rendered="#{!rowa[3].table}"
 						value="#{rowa[3].item}"/>
 					<tr:commandLink
+						partialSubmit="true"
 						useWindow="true"
 						text="#{rowa[3].string}"
 						rendered="#{rowa[3].table}"
@@ -366,6 +411,7 @@ items="#{row.tableColumnNames}"
 						rendered="#{!rowa[4].table}"
 						value="#{rowa[4].item}"/>
 					<tr:commandLink
+						partialSubmit="true"
 						useWindow="true"
 						text="#{rowa[4].string}"
 						rendered="#{rowa[4].table}"
@@ -387,6 +433,7 @@ items="#{row.tableColumnNames}"
 						rendered="#{!rowa[5].table}"
 						value="#{rowa[5].item}"/>
 					<tr:commandLink
+						partialSubmit="true"
 						useWindow="true"
 						text="#{rowa[5].string}"
 						rendered="#{rowa[5].table}"
@@ -408,6 +455,7 @@ items="#{row.tableColumnNames}"
 						rendered="#{!rowa[6].table}"
 						value="#{rowa[6].item}"/>
 					<tr:commandLink
+						partialSubmit="true"
 						useWindow="true"
 						text="#{rowa[6].string}"
 						rendered="#{rowa[6].table}"
@@ -429,6 +477,7 @@ items="#{row.tableColumnNames}"
 						rendered="#{!rowa[7].table}"
 						value="#{rowa[7].item}"/>
 					<tr:commandLink
+						partialSubmit="true"
 						useWindow="true"
 						text="#{rowa[7].string}"
 						rendered="#{rowa[7].table}"

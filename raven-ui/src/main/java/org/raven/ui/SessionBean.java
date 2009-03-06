@@ -17,6 +17,8 @@
 
 package org.raven.ui;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.List;
@@ -35,6 +37,7 @@ import org.raven.ui.node.NodeWrapper;
 import org.raven.ui.util.RavenImageRenderer;
 import org.raven.ui.util.RavenRegistry;
 import org.raven.ui.util.RavenViewableImageRenderer;
+import org.raven.ui.vo.VOTableWrapper;
 import org.raven.ui.vo.ViewableObjectsByNode;
 import org.raven.ui.vo.ViewableObjectsStorage;
 import org.raven.conf.Configurator;
@@ -46,6 +49,7 @@ import org.raven.tree.Tree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weda.services.ClassDescriptorRegistry;
+import org.apache.myfaces.trinidad.component.core.data.CoreTable;
 import org.apache.myfaces.trinidad.component.core.data.CoreTree;
 import org.apache.myfaces.trinidad.model.TreeModel;
 import org.apache.myfaces.trinidad.render.ExtendedRenderKitService;
@@ -53,6 +57,8 @@ import org.apache.myfaces.trinidad.util.Service;
 import org.apache.tapestry.ioc.Registry;
 import org.raven.tree.InvalidPathException;
 import javax.faces.component.UIComponent;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.myfaces.trinidad.event.PollEvent;
 //import org.raven.tree.NodeAttribute;
 //import java.util.Set;
@@ -68,7 +74,7 @@ public class SessionBean
 {
 	public static final String BEAN_NAME = "sBean";
 	public static final String SELECT_NODE_PARAM = "nodePath";
-    protected Logger logger = LoggerFactory.getLogger(SessionBean.class);	
+    private Logger logger = LoggerFactory.getLogger(SessionBean.class);	
 	private UserAcl userAcl = null;
 	private Tree tree = null;
 	private RavenTreeModel treeModel = null;   
@@ -420,6 +426,72 @@ public class SessionBean
 		setNewNodeType("");
 		setNewNodeName("");
 	}
+/*
+	public void exportToExcel(ActionEvent actionEvent) 
+	{
+		UIComponent uic = actionEvent.getComponent();
+		try {
+			CoreTable ct = (CoreTable)uic.getParent().getParent();
+			logger.warn(ct.getId());
+			VOTableWrapper lst = (VOTableWrapper) ct.getValue();
+			 String contentType = "application/vnd.ms-excel";
+			    FacesContext fc = FacesContext.getCurrentInstance();
+//			    String filename = fc.getExternalContext().getUserPrincipal().getName() + "-" + System.currentTimeMillis()+ ".xls";
+			    String filename =  "table-" + System.currentTimeMillis()+ ".xls";
+			    HttpServletResponse response = (HttpServletResponse) fc.getExternalContext().getResponse();
+			    response.setHeader("Content-disposition", "attachment; filename=" + filename);
+			    response.setContentType(contentType);
+
+			    PrintWriter out = null;
+				try 
+				{
+					out = response.getWriter(); 
+			    	out.print(lst.makeHtmlTable().toString());
+				}
+				catch (IOException e) { logger.error("",e); }
+				finally { try {out.close();} catch(Exception e) {}}
+			    fc.responseComplete(); 			
+			
+			//ct.g
+		}
+		catch(ClassCastException e)
+		{
+			logger.error("!!! ",e);
+		}
+    }
+
+	public void exportToCSV(ActionEvent actionEvent) 
+	{
+		UIComponent uic = actionEvent.getComponent();
+		try {
+			CoreTable ct = (CoreTable)uic.getParent().getParent();
+			logger.warn(ct.getId());
+			VOTableWrapper lst = (VOTableWrapper) ct.getValue();
+			 String contentType = "text/csv";
+			    FacesContext fc = FacesContext.getCurrentInstance();
+//			    String filename = fc.getExternalContext().getUserPrincipal().getName() + "-" + System.currentTimeMillis()+ ".xls";
+			    String filename =  "table-" + System.currentTimeMillis()+ ".csv";
+			    HttpServletResponse response = (HttpServletResponse) fc.getExternalContext().getResponse();
+			    response.setHeader("Content-disposition", "attachment; filename=" + filename);
+			    response.setContentType(contentType);
+
+			    PrintWriter out = null;
+				try 
+				{
+					out = response.getWriter(); 
+			    	out.print(lst.makeCSV());
+				}
+				catch (IOException e) { logger.error("",e); }
+				finally { try {out.close();} catch(Exception e) {}}
+			    fc.responseComplete(); 			
+		}
+		catch(ClassCastException e)
+		{
+			logger.error("!!! ",e);
+		}
+    }
+ 
+ */
 	
 	@SuppressWarnings("unchecked")
 	public Class getRavenImageRenderer() { return RavenImageRenderer.class; }
