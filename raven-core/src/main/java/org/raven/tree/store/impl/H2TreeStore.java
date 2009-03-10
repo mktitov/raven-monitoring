@@ -17,6 +17,7 @@
 
 package org.raven.tree.store.impl;
 
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -27,6 +28,7 @@ import java.sql.Types;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Level;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.text.StrTokenizer;
 import org.raven.tree.Node;
@@ -56,7 +58,9 @@ public class H2TreeStore implements TreeStore
     public static final int GET_NODES_FETCH_SIZE = 1000;
     public final static String NODES_TABLE_NAME = "NODES" ;
     public final static String NODE_ATTRIBUTES_TABLE_NAME = "NODE_ATTRIBUTES";
-    
+    public final static String NODE_ATTRIBUTES_BINARY_DATA_TABLE_NAME
+            = "NODE_ATTRIBUTES_BINARY_DATA";
+
     private Connection connection; 
     
     private PreparedStatement insertNodeStatement;
@@ -67,6 +71,11 @@ public class H2TreeStore implements TreeStore
     private PreparedStatement updateNodeAttributeStatement;
     private PreparedStatement removeNodeAttributeStatement;
     private PreparedStatement selectNodeAttributesStatement;
+    private PreparedStatement hasBinaryDataStatement;
+    private PreparedStatement insertBinaryDataStatement;
+    private PreparedStatement getBinaryDataStatement;
+    private PreparedStatement updateBinaryDataStatement;
+    private PreparedStatement removeBinaryDataStatement;
     
     public void init(String databaseUrl, String username, String password) throws TreeStoreError
     {
@@ -204,6 +213,137 @@ public class H2TreeStore implements TreeStore
         }
     }
 
+    public synchronized InputStream getNodeAttributeBinaryData(NodeAttribute attr)
+    {
+        try
+        {
+            try
+            {
+                if (getBinaryDataStatement==null)
+                    getBinaryDataStatement = connection.prepareStatement(String .format(
+                            "select data from %s where id=?"
+                            , NODE_ATTRIBUTES_BINARY_DATA_TABLE_NAME));
+                getBinaryDataStatement.setInt(1, attr.getId());
+                ResultSet rs = getBinaryDataStatement.executeQuery();
+                try
+                {
+                    if (rs.next())
+                        return rs.getBinaryStream(1);
+                    else
+                        return null;
+                }
+                finally
+                {
+                    rs.close();
+                    connection.commit();
+                }
+            }
+            catch(Exception e)
+            {
+                connection.rollback();
+                throw e;
+            }
+        }
+        catch(Exception e)
+        {
+            throw new TreeStoreError(
+                    String.format(
+                        "Error getting binary data for attribute (%s)"
+                        , attr.getPath())
+                    , e);
+
+        }
+    }
+
+    public synchronized void saveNodeAttributeBinaryData(NodeAttribute attr, InputStream data)
+    {
+        try
+        {
+            try
+            {
+                if (!hasNodeAttributeBinaryData(attr))
+                    insertNodeAttributeBinaryData(attr, data);
+                else
+                    updateNodeAttributeBinaryData(attr, data);
+            }
+            catch (Exception e)
+            {
+                connection.rollback();
+                throw e;
+            }
+        }
+        catch(Exception e)
+        {
+            throw new TreeStoreError(
+                    String.format(
+                        "Error saveing binary data of the attribute (%s)"
+                        , attr.getPath())
+                    , e);
+            
+        }
+    }
+
+    private void insertNodeAttributeBinaryData(NodeAttribute attr, InputStream data)
+            throws SQLException
+    {
+        if (insertBinaryDataStatement==null)
+            insertBinaryDataStatement = connection.prepareStatement(String.format(
+                    "insert into %s (id, data) values (?,?)"
+                    , NODE_ATTRIBUTES_BINARY_DATA_TABLE_NAME));
+        insertBinaryDataStatement.setInt(1, attr.getId());
+        insertBinaryDataStatement.setBinaryStream(2, data);
+        insertBinaryDataStatement.executeUpdate();
+    }
+
+    private void updateNodeAttributeBinaryData(NodeAttribute attr, InputStream data) throws SQLException
+    {
+        if (updateBinaryDataStatement==null)
+            updateBinaryDataStatement = connection.prepareStatement(String.format(
+                    "update %s set data=? where id=?", NODE_ATTRIBUTES_BINARY_DATA_TABLE_NAME));
+        updateBinaryDataStatement.setBinaryStream(1, data);
+        updateBinaryDataStatement.setInt(2, attr.getId());
+        updateBinaryDataStatement.executeUpdate();
+    }
+    
+    public synchronized boolean hasNodeAttributeBinaryData(NodeAttribute attr)
+    {
+        try
+        {
+            try
+            {
+                if (hasBinaryDataStatement==null)
+                    hasBinaryDataStatement = connection.prepareStatement(String.format(
+                            "select count(*) from %s where id=?"
+                            , NODE_ATTRIBUTES_BINARY_DATA_TABLE_NAME));
+                hasBinaryDataStatement.setInt(1, attr.getId());
+                ResultSet rs = hasBinaryDataStatement.executeQuery();
+                try
+                {
+                    rs.next();
+                    return rs.getInt(1)>0;
+                }
+                finally
+                {
+                    rs.close();
+                    connection.commit();
+                }
+            }
+            catch(Exception e)
+            {
+                connection.rollback();
+                throw e;
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new TreeStoreError(
+                    String.format(
+                        "Error getting information about binary data for attribute (%s)"
+                        , attr.getPath())
+                    , ex);
+        }
+    }
+
     public synchronized void removeNodeAttribute(int id) throws TreeStoreError
     {
         try
@@ -231,6 +371,35 @@ public class H2TreeStore implements TreeStore
                     String.format(
                         "Error removing attribute with id (%d)", id)
                     , e);
+        }
+    }
+
+    public synchronized void removeNodeAttributeBinaryData(NodeAttribute attr)
+    {
+        try
+        {
+            try
+            {
+                if (removeBinaryDataStatement==null)
+                    removeBinaryDataStatement = connection.prepareStatement(String.format(
+                            "delete from %s where id=?", NODE_ATTRIBUTES_BINARY_DATA_TABLE_NAME));
+                removeBinaryDataStatement.setInt(1, attr.getId());
+                removeBinaryDataStatement.executeUpdate();
+                connection.commit();
+            }
+            catch(Exception e)
+            {
+                connection.rollback();
+                throw e;
+            }
+        }
+        catch (Exception e)
+        {
+            throw new TreeStoreError(
+                    String.format(
+                        "Error removing binary data of the attribute (%s)", attr.getPath())
+                    , e);
+            
         }
     }
 
@@ -296,6 +465,11 @@ public class H2TreeStore implements TreeStore
         {
             throw new TreeStoreError("Error while removing all nodes from the store.", e);
         }
+    }
+
+    public Connection getConnection()
+    {
+        return connection;
     }
 
     private Node createNode(ResultSet rs, Map<Integer, Node> cache) throws Exception
@@ -439,6 +613,13 @@ public class H2TreeStore implements TreeStore
                 "  foreign key (owner) references %s (id) on delete cascade" +
                 ")"
                 , NODE_ATTRIBUTES_TABLE_NAME, NODES_TABLE_NAME));
+        st.executeUpdate(String.format(
+                "create cached table if not exists %s (" +
+                "  id int not null," +
+                "  data blob," +
+                "  foreign key (id) references %s (id) on delete cascade" +
+                ")"
+                , NODE_ATTRIBUTES_BINARY_DATA_TABLE_NAME, NODE_ATTRIBUTES_TABLE_NAME));
         st.close();
     }
 

@@ -17,6 +17,7 @@
 
 package org.raven.tree.store;
 
+import java.io.InputStream;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 
@@ -57,6 +58,22 @@ public interface TreeStore
      * @throws TreeStoreError on any error.
      */
     public void saveNodeAttribute(NodeAttribute nodeAttribute) throws TreeStoreError;
+    /**
+     * Saves the attribute binary data
+     * @param attr the attribute which binary data must be saved
+     * @param data the input stream which contains binary data
+     */
+    public void saveNodeAttributeBinaryData(NodeAttribute attr, InputStream data);
+    /**
+     * Returns <b>true</b> if the attribute has binary data
+     * @param attr node attribute
+     */
+    public boolean hasNodeAttributeBinaryData(NodeAttribute attr);
+    /**
+     * Returns the binary data of the attribute or null if the attribute has not binary data
+     * @param attr Node attribute
+     */
+    public InputStream getNodeAttributeBinaryData(NodeAttribute attr);
     /**
      * Removes the node attribute by its id.
      * @throws org.raven.tree.store.TreeStoreError

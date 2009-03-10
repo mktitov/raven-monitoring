@@ -17,7 +17,14 @@
 
 package org.raven.tree.store.impl;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
+import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.raven.ServiceTestCase;
@@ -25,7 +32,6 @@ import org.raven.tree.Node;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.store.TreeStoreError;
-import org.weda.internal.annotations.Service;
 import org.weda.internal.impl.MessageComposer;
 import org.weda.internal.services.MessagesRegistry;
 
@@ -203,5 +209,154 @@ public class H2TreeStoreTest extends ServiceTestCase
         Node node2 = node.getChildren("child");
         assertNotNull(node2);
         
+    }
+
+    @Test
+    public void hasNodeAttributeBinaryData() throws SQLException
+    {
+        store.removeNodes();
+        ContainerNode node = new ContainerNode();
+        node.setName("node");
+        store.saveNode(node);
+        
+        NodeAttributeImpl attr = new NodeAttributeImpl();
+        attr.setName("name");
+        attr.setOwner(node);
+        attr.setType(String.class);
+        attr.setRequired(false);
+        attr.setRawValue("value");
+        attr.setTemplateExpression(true);
+        store.saveNodeAttribute(attr);
+
+        assertFalse(store.hasNodeAttributeBinaryData(attr));
+
+        Connection con = store.getConnection();
+        Statement st = con.createStatement();
+        st.executeUpdate(
+                String.format("insert into %s (id) values(%d)"
+                , H2TreeStore.NODE_ATTRIBUTES_BINARY_DATA_TABLE_NAME, attr.getId()));
+        con.commit();
+
+        assertTrue(store.hasNodeAttributeBinaryData(attr));
+    }
+
+    @Test
+    public void getNodeAttributeBinaryData() throws SQLException, IOException
+    {
+        store.removeNodes();
+        ContainerNode node = new ContainerNode();
+        node.setName("node");
+        store.saveNode(node);
+
+        NodeAttributeImpl attr = new NodeAttributeImpl();
+        attr.setName("name");
+        attr.setOwner(node);
+        attr.setType(String.class);
+        attr.setRequired(false);
+        attr.setRawValue("value");
+        attr.setTemplateExpression(true);
+        store.saveNodeAttribute(attr);
+
+        Connection con = store.getConnection();
+        PreparedStatement st = con.prepareStatement(String.format(
+                "insert into %s (id, data) values (?, ?)"
+                , H2TreeStore.NODE_ATTRIBUTES_BINARY_DATA_TABLE_NAME));
+        byte[] oArr = new byte[]{1,2,3};
+        ByteArrayInputStream data = new ByteArrayInputStream(oArr);
+        st.setInt(1, attr.getId());
+        st.setBinaryStream(2, data);
+        st.executeUpdate();
+        con.commit();
+
+        InputStream result = store.getNodeAttributeBinaryData(attr);
+        assertNotNull(result);
+        byte[] rArr = IOUtils.toByteArray(result);
+        assertArrayEquals(oArr, rArr);
+    }
+
+    @Test
+    public void insertNodeAttributeBinaryData() throws IOException
+    {
+        store.removeNodes();
+        ContainerNode node = new ContainerNode();
+        node.setName("node");
+        store.saveNode(node);
+
+        NodeAttributeImpl attr = new NodeAttributeImpl();
+        attr.setName("name");
+        attr.setOwner(node);
+        attr.setType(String.class);
+        attr.setRequired(false);
+        attr.setRawValue("value");
+        attr.setTemplateExpression(true);
+        store.saveNodeAttribute(attr);
+
+        byte[] oArr = new byte[]{1,2,3};
+        ByteArrayInputStream data = new ByteArrayInputStream(oArr);
+        store.saveNodeAttributeBinaryData(attr, data);
+
+        InputStream result = store.getNodeAttributeBinaryData(attr);
+        assertNotNull(result);
+        byte[] rArr = IOUtils.toByteArray(result);
+        assertArrayEquals(oArr, rArr);
+    }
+
+    @Test
+    public void updateNodeAttributeBinaryData() throws Exception
+    {
+        store.removeNodes();
+        ContainerNode node = new ContainerNode();
+        node.setName("node");
+        store.saveNode(node);
+
+        NodeAttributeImpl attr = new NodeAttributeImpl();
+        attr.setName("name");
+        attr.setOwner(node);
+        attr.setType(String.class);
+        attr.setRequired(false);
+        attr.setRawValue("value");
+        attr.setTemplateExpression(true);
+        store.saveNodeAttribute(attr);
+
+        byte[] oArr = new byte[]{1,2,3};
+        ByteArrayInputStream data = new ByteArrayInputStream(oArr);
+        store.saveNodeAttributeBinaryData(attr, data);
+        oArr = new byte[]{3,2,1};
+        data = new ByteArrayInputStream(oArr);
+        store.saveNodeAttributeBinaryData(attr, data);
+
+        InputStream result = store.getNodeAttributeBinaryData(attr);
+        assertNotNull(result);
+        byte[] rArr = IOUtils.toByteArray(result);
+        assertArrayEquals(oArr, rArr);
+    }
+
+    @Test
+    public void removeNodeAttributeBinaryData() throws Exception
+    {
+        store.removeNodes();
+        ContainerNode node = new ContainerNode();
+        node.setName("node");
+        store.saveNode(node);
+
+        NodeAttributeImpl attr = new NodeAttributeImpl();
+        attr.setName("name");
+        attr.setOwner(node);
+        attr.setType(String.class);
+        attr.setRequired(false);
+        attr.setRawValue("value");
+        attr.setTemplateExpression(true);
+        store.saveNodeAttribute(attr);
+
+        byte[] oArr = new byte[]{1,2,3};
+        ByteArrayInputStream data = new ByteArrayInputStream(oArr);
+        store.saveNodeAttributeBinaryData(attr, data);
+        oArr = new byte[]{3,2,1};
+        data = new ByteArrayInputStream(oArr);
+        store.saveNodeAttributeBinaryData(attr, data);
+
+        assertTrue(store.hasNodeAttributeBinaryData(attr));
+        store.removeNodeAttributeBinaryData(attr);
+        assertFalse(store.hasNodeAttributeBinaryData(attr));
     }
 }
