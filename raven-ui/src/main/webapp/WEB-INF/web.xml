@@ -22,7 +22,7 @@
     <param-name>com.sun.faces.expressionFactory</param-name>
     <param-value>org.apache.el.ExpressionFactoryImpl</param-value>
   </context-param>
- -->  
+ -->
   <filter>
     <filter-name>JcifsFilter</filter-name>
     <filter-class>org.raven.ui.filter.JcifsFilter</filter-class>

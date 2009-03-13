@@ -24,7 +24,7 @@
     <f:view>
         <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
         <tr:document title="TabbedPanel" >
-            <tr:form>
+            <tr:form usesUpload="true">
                 <!--  
                 <tr:poll id="poolStatus" ></tr:poll>
                 -->

@@ -182,8 +182,9 @@
     	            	rendered="#{row.edit}"  
     	            	value="#{row.description}"/>
 				</tr:panelCaptionGroup>
+
 				<tr:panelAccordion 
-					rendered="#{row.expressionSupported or (row.selectItems == null)}"
+					rendered="#{(row.expressionSupported or (row.selectItems == null)) and !row.fileAttribute}"
 					discloseNone="true" >
         			<tr:showDetailItem text="#{msgs.multiLineEditor}">
         			    <tr:inputText
@@ -196,7 +197,7 @@
 				</tr:panelAccordion>
 
 				<tr:inputListOfValues 
-					rendered="#{row.enableEditValueDialog}"
+					rendered="#{row.enableEditValueDialog and !row.fileAttribute}"
 					value="#{row.expression}" 
 					action="dialog:editExpression"
 					actionListener="#{editExpression.selectAttr}"
@@ -219,6 +220,9 @@
 					columns="40" label="#{msgs.node}"
 				>
 				</tr:inputListOfValues>
+                <tr:group rendered="#{row.fileAttribute}">
+                    <tr:inputFile label="#{msgs.file}" valueChangeListener="#{row.fileUploaded}"/>
+                </tr:group>
 <!-- 
 				<tr:group rendered="#{row.enableSelectNodeDialog}">
 					<tr:inputText 
@@ -237,6 +241,7 @@
 					</tr:commandButton>
 
 				</tr:group>
+
 --> 				
 	            <tr:selectOneChoice 
 	            	label="#{msgs.expression}" 

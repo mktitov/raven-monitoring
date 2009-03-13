@@ -30,8 +30,10 @@ import javax.faces.model.SelectItem;
 import org.apache.myfaces.trinidad.component.core.layout.CoreShowDetailItem;
 import org.apache.myfaces.trinidad.event.PollEvent;
 import org.apache.myfaces.trinidad.event.ReturnEvent;
+import org.apache.myfaces.trinidad.model.UploadedFile;
 import org.raven.log.LogLevel;
 import org.raven.log.NodeLogRecord;
+import org.raven.tree.DataFile;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
@@ -389,6 +391,7 @@ implements Comparator<NodeAttribute>
 			  if( at.isExpressionSupported() &&  ! ObjectUtils.equals(na.getRawValue(), at.getExpression()) ) save |=8;
               if( !ObjectUtils.equals(na.getValueHandlerType(), at.getValueHandlerType())) save |=16;
               if(at.isTemplateExpression() != na.isTemplateExpression()) save |=32;
+              if(at.isFileAttribute() && at.getFile()!=null) save |=64;
               if(isHasUnsavedChanges()) save |= 4096; 
 			  
 			  if(save==0) continue;
@@ -400,7 +403,15 @@ implements Comparator<NodeAttribute>
 				  if( (save&8) !=0 ) na.setValue(at.getExpression());
                   if( (save&16) !=0) na.setValueHandlerType(at.getValueHandlerType());
                   if( (save&32) !=0) na.setTemplateExpression(at.isTemplateExpression());
-				  
+				  if( (save&64) !=0)
+                  {
+                      UploadedFile file = at.getFile();
+                      DataFile dataFile = na.getRealValue();
+                      dataFile.setFilename(file.getFilename());
+                      dataFile.setMimeType(file.getContentType());
+                      dataFile.setDataStream(file.getInputStream());
+                      file.dispose();
+                  }
 				  if(write)
 				  {
 					  getConfigurator().getTreeStore().saveNodeAttribute(na);

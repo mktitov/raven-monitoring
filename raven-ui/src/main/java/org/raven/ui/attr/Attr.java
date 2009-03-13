@@ -41,6 +41,9 @@ import org.weda.constraints.TooManyReferenceValuesException;
 import org.weda.internal.annotations.Service;
 import org.weda.services.ClassDescriptorRegistry;
 import javax.faces.event.ActionEvent;
+import org.apache.myfaces.trinidad.model.UploadedFile;
+import org.raven.tree.DataFile;
+import org.raven.tree.impl.DataFileValueHandlerFactory;
 //import org.apache.myfaces.trinidad.component.core.nav.CoreCommandButton;
 
 public class Attr implements Comparable<Attr>  
@@ -66,6 +69,7 @@ public class Attr implements Comparable<Attr>
 	private boolean hasChildren = false;
 	private boolean templateExpression = false;
 	private boolean refreshAttribute = false;
+    private UploadedFile file;
 
 	@SuppressWarnings("unchecked")
 	public Attr(NodeAttribute na) throws TooManyReferenceValuesException
@@ -103,7 +107,28 @@ public class Attr implements Comparable<Attr>
 		this(na);
 		setRefreshAttribute(ra);
 	}
-	
+
+    public boolean isFileAttribute()
+    {
+        return DataFile.class.isAssignableFrom(attribute.getType())
+                && DataFileValueHandlerFactory.TYPE.equals(attribute.getValueHandlerType());
+    }
+
+    public UploadedFile getFile()
+    {
+        return file;
+    }
+
+    public void setFile(UploadedFile file)
+    {
+        this.file = file;
+    }
+
+    public void fileUploaded(ValueChangeEvent event)
+    {
+        file = (UploadedFile) event.getNewValue();
+    }
+
 	public boolean isEnableValueDialog()
 	{
 		if(expressionSupported && (getSelectItems() == null) ) 
