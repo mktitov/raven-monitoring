@@ -81,6 +81,7 @@ import org.raven.tree.impl.AttributeReferenceHandlerFactory;
 import org.raven.tree.impl.AttributeReferenceValueHandlerFactory;
 import org.raven.tree.impl.AttributeValueHandlerRegistryImpl;
 import org.raven.tree.impl.ChildrenNodesAsReferenceValues;
+import org.raven.tree.impl.DataFileValueHandlerFactory;
 import org.raven.tree.impl.NodePathResolverImpl;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.tree.impl.RefreshAttributeValueHandlerFactory;
@@ -216,6 +217,9 @@ public class RavenCoreModule
         conf.add(
             ConnectionPoolValueHandlerFactory.TYPE
             , new ConnectionPoolValueHandlerFactory(pathResolver));
+        conf.add(
+            DataFileValueHandlerFactory.TYPE
+            , new DataFileValueHandlerFactory(pathResolver));
     }
     
     public static void contributeAttributeReferenceValues(

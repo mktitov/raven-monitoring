@@ -261,6 +261,8 @@ public class H2TreeStore implements TreeStore
         {
             try
             {
+                if (data==null)
+                    removeNodeAttributeBinaryData(attr);
                 if (!hasNodeAttributeBinaryData(attr))
                     insertNodeAttributeBinaryData(attr, data);
                 else

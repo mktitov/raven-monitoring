@@ -916,7 +916,7 @@ public class BaseNode implements Node, NodeListener, Logger
         } catch (Exception e)
         {
             logger.error(String.format(
-                    "Error generating child attributes for (%s) attribute", attr.getName()));
+                    "Error generating child attributes for (%s) attribute", attr.getName()), e);
         }
     }
 
@@ -933,12 +933,11 @@ public class BaseNode implements Node, NodeListener, Logger
     
     private void syncParentAttributes(NodeAttribute parent) throws Exception
     {
-        if (parent.getValue() == null)
+        if (parent.getRealValue() == null)
             removeChildAttributes(parent.getName(), null);
         else
         {
-            AttributesGenerator attributesGenerator = (AttributesGenerator)converter.convert(
-                        parent.getType(), parent.getValue(), null);
+            AttributesGenerator attributesGenerator = (AttributesGenerator)parent.getRealValue();
 
             Collection<NodeAttribute> newAttrs = attributesGenerator.generateAttributes();
 
