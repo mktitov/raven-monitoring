@@ -35,9 +35,12 @@ import org.apache.commons.lang.text.StrBuilder;
 import org.apache.commons.lang.text.StrLookup;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.raven.dbcp.ConnectionPool;
+import org.raven.ds.BinaryFieldType;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
+import org.raven.ds.RecordSchemaFieldType;
+import org.weda.beans.ObjectUtils;
 
 /**
  *
@@ -59,6 +62,8 @@ public class DatabaseRecordQuery
     private Map<String/*column name*/, FieldInfo> selectFields;
     private Connection connection;
     private PreparedStatement statement;
+    private String tableName;
+    private String idColumnName;
 
     public DatabaseRecordQuery(
             RecordSchema recordSchema
@@ -133,7 +138,7 @@ public class DatabaseRecordQuery
             }
             ResultSet resultSet = statement.executeQuery();
 
-            return new RecordIterator(resultSet, recordSchema, selectFields);
+            return new RecordIterator(resultSet, recordSchema, selectFields, idColumnName);
         }
         catch(Throwable e)
         {
@@ -184,23 +189,32 @@ public class DatabaseRecordQuery
                         "Record schema does not have (%s) extension"
                         , DatabaseRecordExtension.class.getSimpleName()));
 
-            String tableName = dbExtension.getTableName();
+            tableName = dbExtension.getTableName();
 
             StrBuilder queryBuf = new StrBuilder();
 
             selectFields = new HashMap<String, FieldInfo>();
             Set<String> caseInSensitiveFields = new HashSet<String>();
             List<String> columnNames = new ArrayList<String>();
+            boolean hasBinaryFields = false;
             for (RecordSchemaField field: fields)
             {
                 DatabaseRecordFieldExtension dbFieldExtension = field.getFieldExtension(
                             DatabaseRecordFieldExtension.class, databaseExtensionName);
                 if (dbFieldExtension!=null)
                 {
-                    FieldInfo fieldInfo = new FieldInfo(field.getName(), dbFieldExtension);
+                    FieldInfo fieldInfo = new FieldInfo(field, dbFieldExtension);
                     selectFields.put(
                             dbFieldExtension.getColumnName().toUpperCase(), fieldInfo);
-                    columnNames.add(dbFieldExtension.getColumnName());
+                    IdRecordFieldExtension idExtension =
+                            field.getFieldExtension(IdRecordFieldExtension.class, null);
+                    if (idExtension!=null)
+                        idColumnName = dbFieldExtension.getColumnName();
+                    if (field.getFieldType().equals(RecordSchemaFieldType.BINARY))
+                        hasBinaryFields = true;
+                    else
+                        columnNames.add(dbFieldExtension.getColumnName());
+
                 }
                 FilterableRecordFieldExtension filterFieldExtension = field.getFieldExtension(
                         FilterableRecordFieldExtension.class, filterExtensionName);
@@ -218,6 +232,15 @@ public class DatabaseRecordQuery
                         String.format(
                             "Record schema does not containts fields with extension (%s)"
                             , DatabaseRecordExtension.class.getSimpleName()));
+            if (hasBinaryFields && idColumnName==null)
+                throw new DatabaseRecordQueryException(
+                        String.format(
+                            "Record schema (%s) has binary fields but does not contains " +
+                            "field with %s and %s extensions"
+                            , recordSchema.getName()
+                            , IdRecordFieldExtension.class.getSimpleName()
+                            , DatabaseRecordFieldExtension.class.getSimpleName()));
+
             if (queryTemplate==null)
             {
                 //constructing SELECT clause
@@ -353,14 +376,17 @@ public class DatabaseRecordQuery
         private final ResultSet resultSet;
         private final RecordSchema schema;
         private final Map<String, FieldInfo> fields;
+        private final String idColumnName;
         private Record next;
 
         public RecordIterator(
-                ResultSet resultSet, RecordSchema schema, Map<String, FieldInfo> fields)
+                ResultSet resultSet, RecordSchema schema, Map<String, FieldInfo> fields
+                , String idColumnName)
         {
             this.resultSet = resultSet;
             this.schema = schema;
             this.fields = fields;
+            this.idColumnName = idColumnName==null? null : idColumnName.toUpperCase();
 
             createNextRecord();
         }
@@ -397,19 +423,33 @@ public class DatabaseRecordQuery
                 {
                     next = schema.createRecord();
                     ResultSetMetaData metaData = resultSet.getMetaData();
+                    Object idColumnValue = null;
                     for (int i=1; i<=metaData.getColumnCount(); ++i)
                     {
                         String columnName = metaData.getColumnLabel(i).toUpperCase();
                         FieldInfo fieldInfo = fields.get(columnName);
-                        Object value = resultSet.getObject(i);
-                        value = fieldInfo.getDbExtension().prepareValue(value);
-                        String fieldName = fields.get(columnName).getFieldName();
-                        if (fieldName==null)
+                        if (fieldInfo==null)
                             throw new RecordIteratorError(String.format(
                                     "Not found field for column name (%s)", columnName));
-
-                        next.setValue(fieldName, value);
+                        if (RecordSchemaFieldType.BINARY!=fieldInfo.getField().getFieldType())
+                        {
+                            Object value = resultSet.getObject(i);
+                            if (idColumnName!=null && idColumnName.equals(columnName))
+                                idColumnValue=value;
+                            value = fieldInfo.getDbExtension().prepareValue(value);
+                            next.setValue(fieldInfo.getFieldName(), value);
+                        }
                     }
+                    if (idColumnValue!=null)
+                        for (FieldInfo fieldInfo: fields.values())
+                            if (fieldInfo.getField().getFieldType()==RecordSchemaFieldType.BINARY)
+                            {
+                                DatabaseBinaryDataReader reader = new DatabaseBinaryDataReader(
+                                        tableName, idColumnName
+                                        , fieldInfo.getDbExtension().getColumnName(), idColumnValue
+                                        , connectionPool);
+                                next.setValue(fieldInfo.getFieldName(), reader);
+                            }
                 }
             }
             catch(Exception e)
@@ -435,13 +475,18 @@ public class DatabaseRecordQuery
 
     private class FieldInfo
     {
-        private final String fieldName;
+        private final RecordSchemaField field;
         private final DatabaseRecordFieldExtension dbExtension;
 
-        public FieldInfo(String fieldName, DatabaseRecordFieldExtension dbExtension)
+        public FieldInfo(RecordSchemaField field, DatabaseRecordFieldExtension dbExtension)
         {
-            this.fieldName = fieldName;
+            this.field = field;
             this.dbExtension = dbExtension;
+        }
+
+        public RecordSchemaField getField()
+        {
+            return field;
         }
 
         public DatabaseRecordFieldExtension getDbExtension()
@@ -451,7 +496,7 @@ public class DatabaseRecordQuery
 
         public String getFieldName()
         {
-            return fieldName;
+            return field.getName();
         }
     }
 

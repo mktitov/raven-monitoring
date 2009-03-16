@@ -17,6 +17,7 @@
 
 package org.raven.ds;
 
+import java.io.InputStream;
 import java.sql.Timestamp;
 import org.raven.net.Ip;
 
@@ -30,7 +31,8 @@ public enum RecordSchemaFieldType
     DOUBLE(Double.class), FLOAT(Float.class),
     STRING(String.class),
     TIMESTAMP(Timestamp.class),
-    IP(Ip.class);
+    IP(Ip.class),
+    BINARY(BinaryFieldType.class);
 
     private final Class type;
 
@@ -45,11 +47,20 @@ public enum RecordSchemaFieldType
     }
 
     public static Object getSqlObject(RecordSchemaFieldType type, Object value)
+            throws RecordSchemaFieldTypeException
     {
-        switch(type)
+        try
         {
-            case IP: return value.toString();
-            default: return value;
+            switch(type)
+            {
+                case IP: return value.toString();
+                case BINARY: return ((BinaryFieldType)value).getData();
+                default: return value;
+            }
+        }
+        catch(BinaryFieldTypeException e)
+        {
+            throw new RecordSchemaFieldTypeException(e);
         }
     }
 
@@ -58,6 +69,7 @@ public enum RecordSchemaFieldType
         switch(type)
         {
             case IP: return String.class;
+            case BINARY: return InputStream.class;
             default: return type.getType();
         }
     }

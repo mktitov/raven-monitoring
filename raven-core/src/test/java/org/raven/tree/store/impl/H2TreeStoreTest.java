@@ -47,7 +47,7 @@ public class H2TreeStoreTest extends ServiceTestCase
     public static void initTests() throws TreeStoreError
     {
         store = new H2TreeStore();
-        store.init("jdbc:h2:tcp://localhost/~/test;TRACE_LEVEL_FILE=3", "sa", "");
+        store.init("jdbc:h2:tcp://localhost/~/test;", "sa", "");
     }
     
     @Test

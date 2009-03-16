@@ -17,12 +17,15 @@
 
 package org.raven.ds.impl;
 
+import java.io.ByteArrayInputStream;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
@@ -93,6 +96,11 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
         field.addAndSaveChildren(fieldExtension);
         fieldExtension.setColumnName("column1");
         assertTrue(fieldExtension.start());
+
+        IdRecordFieldExtension idExtension = new IdRecordFieldExtension();
+        idExtension.setName("id");
+        field.addAndSaveChildren(idExtension);
+        assertTrue(idExtension.start());
         
         field = new RecordSchemaFieldNode();
         field.setName("field2");
@@ -105,11 +113,24 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
         field.addAndSaveChildren(fieldExtension);
         fieldExtension.setColumnName("column2");
         assertTrue(fieldExtension.start());
-
+        
         filterExtension = new FilterableRecordFieldExtension();
         filterExtension.setName("filter");
         field.addAndSaveChildren(filterExtension);
         assertTrue(filterExtension.start());
+
+        field = new RecordSchemaFieldNode();
+        field.setName("field3");
+        schema.addAndSaveChildren(field);
+        field.setFieldType(RecordSchemaFieldType.BINARY);
+        assertTrue(field.start());
+
+        fieldExtension = new DatabaseRecordFieldExtension();
+        fieldExtension.setName("db");
+        field.addAndSaveChildren(fieldExtension);
+        fieldExtension.setColumnName("column3");
+        assertTrue(fieldExtension.start());
+        
     }
 
     /*
@@ -512,6 +533,37 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
         testRecord(3, "10", recs.get(1));
     }
 
+    @Test
+    public void execute4Test() throws Exception
+    {
+        createTable(pool);
+        insertData3(pool);
+
+        DatabaseFilterElement filterElement1 = new DatabaseFilterElement(
+                "column1", Integer.class, null, true, converter);
+        filterElement1.setExpression("1");
+
+        DatabaseRecordQuery query = new DatabaseRecordQuery(
+                schema, null, null, Arrays.asList(filterElement1)
+                , null, null
+                , pool, null, null);
+
+        DatabaseRecordQuery.RecordIterator it = query.execute();
+        assertNotNull(it);
+        List<Record> recs = iteratorToList(it);
+        assertEquals(1, recs.size());
+
+        Record rec = recs.get(0);
+        assertNotNull(rec);
+        assertEquals(1, rec.getValue("field1"));
+        Object val = rec.getValue("field3");
+        assertNotNull(val);
+        assertTrue(val instanceof DatabaseBinaryDataReader);
+        DatabaseBinaryDataReader reader = (DatabaseBinaryDataReader) val;
+        byte[] res = IOUtils.toByteArray(reader.getData());
+        assertArrayEquals(new byte[]{1,2,3}, res);
+    }
+
     /*
      * SIMPLE operator test 
      */
@@ -589,7 +641,7 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
         Connection con = pool.getConnection();
         Statement st = con.createStatement();
         st.executeUpdate("drop table if exists record_data");
-        st.executeUpdate("create table record_data(column1 int, column2 varchar)");
+        st.executeUpdate("create table record_data(column1 int, column2 varchar, column3 blob)");
     }
 
     private void insertData(JDBCConnectionPoolNode pool) throws SQLException
@@ -608,6 +660,19 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
         Statement st = con.createStatement();
         st.executeUpdate("insert into record_data (column1, column2) values(1,'Aa')");
         st.executeUpdate("insert into record_data (column1, column2) values(1,'bb')");
+    }
+
+    private void insertData3(JDBCConnectionPoolNode pool) throws SQLException
+    {
+        Connection con = pool.getConnection();
+        PreparedStatement st = con.prepareStatement(
+                "insert into record_data (column1, column3) values(?,?)");
+        ByteArrayInputStream is = new ByteArrayInputStream(new byte[]{1,2,3});
+        st.setInt(1, 1);
+//        st.setBytes(2, new byte[]{1,2,3});
+        st.setObject(2, is);
+        st.executeUpdate();
+        con.commit();
     }
 
     private List<Record> iteratorToList(DatabaseRecordQuery.RecordIterator it)
