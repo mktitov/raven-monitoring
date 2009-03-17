@@ -17,6 +17,7 @@
 
 package org.raven.ds.impl;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import org.raven.ds.BinaryFieldType;
 import org.raven.ds.BinaryFieldTypeException;
@@ -27,15 +28,20 @@ import org.raven.ds.BinaryFieldTypeException;
  */
 public class BinaryFieldValue implements BinaryFieldType
 {
+    private final byte[] data;
+
+    public BinaryFieldValue(byte[] data)
+    {
+        this.data = data;
+    }
 
     public InputStream getData() throws BinaryFieldTypeException
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return new ByteArrayInputStream(data);
     }
 
     public void closeResources() throws BinaryFieldTypeException
     {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 }

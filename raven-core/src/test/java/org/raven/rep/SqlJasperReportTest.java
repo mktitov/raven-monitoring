@@ -17,31 +17,17 @@
 
 package org.raven.rep;
 
-import org.raven.annotations.NodeClass;
-import org.raven.annotations.Parameter;
-import org.raven.tree.DataFile;
-import org.raven.tree.impl.BaseNode;
-import org.raven.tree.impl.DataFileValueHandlerFactory;
-import org.weda.annotations.constraints.NotNull;
+import org.junit.Test;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass
-public class JasperReportNode extends BaseNode
+public class SqlJasperReportTest
 {
-    @Parameter(valueHandlerType=DataFileValueHandlerFactory.TYPE)
-    @NotNull
-    private DataFile reportFile;
-
-    public DataFile getReportFile()
+    @Test
+    public void test()
     {
-        return reportFile;
-    }
 
-    public void setReportFile(DataFile reportFile)
-    {
-        this.reportFile = reportFile;
     }
 }

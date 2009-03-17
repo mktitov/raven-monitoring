@@ -103,6 +103,10 @@
             <artifactId>quartz</artifactId>
         </dependency>
         <dependency>
+            <groupId>jasperreports</groupId>
+            <artifactId>jasperreports</artifactId>
+        </dependency>
+        <dependency>
             <groupId>geronimo-spec</groupId>
             <artifactId>geronimo-spec-jta</artifactId>
         </dependency>
