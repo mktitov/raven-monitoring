@@ -104,6 +104,21 @@ public class DatabaseFilterElement
         return value;
     }
 
+    public void setValue(
+            Object value, ExpressionType expressionType, OperatorType operatorType, String operator)
+    {
+//        this.value = converter.convert(columnType, value, convertPattern);
+        this.value = value;
+        this.expressionType = expressionType;
+        this.operatorType = operatorType;
+        this.operator=operator;
+    }
+
+    public TypeConverter getConverter()
+    {
+        return converter;
+    }
+
     public Class getColumnType()
     {
         return columnType;
