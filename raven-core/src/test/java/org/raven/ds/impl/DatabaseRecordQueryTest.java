@@ -25,7 +25,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collection;
 import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
@@ -38,6 +37,7 @@ import org.raven.dbcp.impl.JDBCConnectionPoolNode;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchemaFieldType;
+import org.raven.ds.Records;
 import org.raven.tree.impl.SystemNode;
 import org.weda.services.TypeConverter;
 
@@ -683,8 +683,8 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
 
         Object val = rec.getValue("detailRecords");
         assertNotNull(val);
-        assertTrue(val instanceof Collection);
-        Collection<Record> detRecs = (Collection<Record>)val;
+        assertTrue(val instanceof Records);
+        Collection<Record> detRecs = ((Records)val).getRecords();
         assertEquals(1, detRecs.size());
         Record detailRec = detRecs.iterator().next();
         assertSame(detailSchema, detailRec.getSchema());

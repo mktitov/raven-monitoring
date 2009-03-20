@@ -52,5 +52,5 @@ public interface Record
     /**
      * Returns the fields values as immutable map
      */
-    public Map<String, Object> getValues();
+    public Map<String, Object> getValues() throws RecordException;
 }

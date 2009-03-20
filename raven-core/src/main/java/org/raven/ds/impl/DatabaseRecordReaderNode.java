@@ -161,12 +161,12 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
             recordQuery = new DatabaseRecordQuery(
                     recordSchema, databaseExtensionName, filterExtensionName, filterElements
                     , whereExpression
-                    , orderByExpression, connectionPool, maxRows, fetchSize);
+                    , orderByExpression, connectionPool, maxRows, fetchSize, converter);
         else
             recordQuery = new DatabaseRecordQuery(
                     recordSchema, databaseExtensionName, filterExtensionName
                     , filterElements, _query, connectionPool
-                    , maxRows, fetchSize);
+                    , maxRows, fetchSize, converter);
 
         if (isLogLevelEnabled(LogLevel.DEBUG))
             debug("Executing query:\n"+recordQuery.getQuery());

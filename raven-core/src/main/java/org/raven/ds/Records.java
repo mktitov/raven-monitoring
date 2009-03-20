@@ -17,23 +17,16 @@
 
 package org.raven.ds;
 
+import java.util.Collection;
+
 /**
+ * The container of records
  * @author Mikhail Titov
  */
-public class RecordException extends Exception
+public interface Records
 {
-    public RecordException(String message, Throwable cause)
-    {
-        super(message, cause);
-    }
-
-    public RecordException(String message)
-    {
-        super(message);
-    }
-
-    public RecordException(Throwable cause)
-    {
-        super(cause);
-    }
+    /**
+     * Returns the collection of records. Method can return an empty but never return null.
+     */
+    public Collection<Record> getRecords() throws RecordException;
 }

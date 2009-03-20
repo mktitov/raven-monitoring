@@ -19,7 +19,6 @@ package org.raven.ds;
 
 import java.io.InputStream;
 import java.sql.Timestamp;
-import java.util.Collection;
 import org.raven.net.Ip;
 
 /**
@@ -35,7 +34,7 @@ public enum RecordSchemaFieldType
     IP(Ip.class),
     BINARY(BinaryFieldType.class),
     RECORD(Record.class),
-    RECORDS(Collection.class);
+    RECORDS(Records.class);
 
     private final Class type;
 

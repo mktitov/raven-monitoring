@@ -15,25 +15,21 @@
  *  under the License.
  */
 
-package org.raven.ds;
+package org.raven.ds.impl;
 
 /**
+ *
  * @author Mikhail Titov
  */
-public class RecordException extends Exception
+public class DatabaseRecordReferenceException extends Exception
 {
-    public RecordException(String message, Throwable cause)
+    public DatabaseRecordReferenceException(String message, Throwable cause)
     {
         super(message, cause);
     }
 
-    public RecordException(String message)
+    public DatabaseRecordReferenceException(String message)
     {
         super(message);
-    }
-
-    public RecordException(Throwable cause)
-    {
-        super(cause);
     }
 }

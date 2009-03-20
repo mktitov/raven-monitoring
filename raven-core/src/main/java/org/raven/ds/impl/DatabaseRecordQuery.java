@@ -22,7 +22,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -41,8 +40,6 @@ import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
-import org.weda.beans.ObjectUtils;
-import org.weda.internal.annotations.Service;
 import org.weda.services.TypeConverter;
 
 /**
@@ -442,6 +439,7 @@ public class DatabaseRecordQuery
                     next = schema.createRecord();
                     ResultSetMetaData metaData = resultSet.getMetaData();
                     Object idColumnValue = null;
+                    Class idFieldType = null;
                     for (int i=1; i<=metaData.getColumnCount(); ++i)
                     {
                         String columnName = metaData.getColumnLabel(i).toUpperCase();
@@ -454,10 +452,13 @@ public class DatabaseRecordQuery
                         {
                             Object value = resultSet.getObject(i);
                             if (idColumnName!=null && idColumnName.equals(columnName))
+                            {
                                 idColumnValue=value;
+                                idFieldType = fieldType.getType();
+                            }
                             value = fieldInfo.getDbExtension().prepareValue(value);
                             if (RecordSchemaFieldType.RECORD.equals(fieldType))
-                                value = createRecordValue(fieldInfo, value);
+                                value = createRecordValue(fieldInfo, null, value);
                             next.setValue(fieldInfo.getFieldName(), value);
                         }
                     }
@@ -475,7 +476,8 @@ public class DatabaseRecordQuery
                             }
                             if (fieldType==RecordSchemaFieldType.RECORDS)
                             {
-                                Object value = createRecordValue(fieldInfo, idColumnValue);
+                                Object value = createRecordValue(
+                                        fieldInfo, idFieldType, idColumnValue);
                                 next.setValue(fieldInfo.getFieldName(), value);
                             }
                         }
@@ -501,7 +503,8 @@ public class DatabaseRecordQuery
             }
         }
 
-        private Object createRecordValue(FieldInfo fieldInfo, Object value) throws Exception
+        private Object createRecordValue(FieldInfo fieldInfo, Class fieldType, Object value)
+                throws Exception
         {
             RecordRelationFieldExtension recordExtension = fieldInfo.getField().getFieldExtension(
                     RecordRelationFieldExtension.class, null);
@@ -529,64 +532,30 @@ public class DatabaseRecordQuery
                         , relatedSchema.getName(), recordExtension.getRelatedField()
                         , fieldInfo.getFieldName(), recordSchema.getName()
                         , RecordRelationFieldExtension.class.getSimpleName()));
-            DatabaseRecordFieldExtension relatedFieldDbExtension =
-                    relatedField.getFieldExtension(DatabaseRecordFieldExtension.class, null);
-            if (relatedFieldDbExtension==null)
-                throw new Exception(String.format(
-                        "The field (%s) of the record schema (%s) does not have (%s) extension. " +
-                        "Field (%s) of the schema (%s) references to this field through (%s) " +
-                        "extension"
-                        , recordExtension.getRelatedField(), relatedSchema.getName()
-                        , DatabaseRecordFieldExtension.class.getSimpleName()
-                        , fieldInfo.getFieldName(), recordSchema.getName()
-                        , RecordRelationFieldExtension.class.getSimpleName()));
-            DatabaseRecordExtension relatedSchemaDbExtension =
-                        relatedSchema.getRecordExtension(DatabaseRecordExtension.class, null);
-            if (relatedSchemaDbExtension==null)
-                throw new Exception(String.format(
-                        "The record schema (%s) does not have (%s) extension. " +
-                        "Field (%s) of the schema (%s) references to this record " +
-                        "schema through (%s) extension"
-                        , relatedSchema.getName()
-                        , DatabaseRecordExtension.class.getSimpleName()
-                        , fieldInfo.getFieldName(), recordSchema.getName()
-                        , RecordRelationFieldExtension.class.getSimpleName()));
-
-            Collection<Record> recs = getRelatedRecords(
-                    relatedSchema, relatedField, relatedSchemaDbExtension.getTableName()
-                    , relatedFieldDbExtension.getColumnName(), value);
-            if (recs==null)
-                return null;
-            else
+            try
             {
-                if (fieldInfo.getField().getFieldType().equals(RecordSchemaFieldType.RECORD))
-                    return recs.iterator().next();
-                else
-                    return recs;
+                switch (fieldInfo.getField().getFieldType())
+                {
+                    case RECORD:
+                        return new DatabaseRecordReference(
+                                    connectionPool, relatedSchema, relatedField, value
+                                    , relatedField.getFieldType().getType(), converter);
+                    default:
+                        return new DatabaseRecordsReference(
+                                    connectionPool, relatedSchema, relatedField, value
+                                    , fieldType, converter);
+                }
             }
-        }
-
-        private Collection<Record> getRelatedRecords(
-                RecordSchema schema, RecordSchemaField field, String tableName
-                , String columnName, Object value)
-            throws DatabaseRecordQueryException
-        {
-            DatabaseFilterElement filter = new DatabaseFilterElement(
-                    columnName, field.getFieldType().getType(), null, false, converter);
-            filter.setValue(
-                    value, DatabaseFilterElement.ExpressionType.OPERATOR
-                    , DatabaseFilterElement.OperatorType.SIMPLE, "=");
-            DatabaseRecordQuery query = new DatabaseRecordQuery(
-                    schema, null, null, Arrays.asList(filter), null, null, connectionPool
-                    , maxRows, fetchSize, converter);
-            RecordIterator it = query.execute();
-            List<Record> recs = new ArrayList<Record>();
-            while (it.hasNext())
+            catch (Exception e)
             {
-                recs.add(it.next());
+                throw new Exception(
+                        String.format(
+                            "Error creating reference to record (%s) using field (%s) " +
+                            "from record (%s) using field (%s)"
+                            , relatedSchema.getName(), relatedField.getName()
+                            , schema.getName(), fieldInfo.getFieldName())
+                        , e);
             }
-
-            return recs.isEmpty()? null : recs;
         }
     }
 
