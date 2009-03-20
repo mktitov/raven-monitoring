@@ -19,6 +19,7 @@ package org.raven.ds.impl;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import org.raven.annotations.NodeClass;
@@ -54,6 +55,10 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     @NotNull
     private Integer recordBufferSize;
 
+    @Parameter(defaultValue="false")
+    @NotNull
+    private Boolean enableUpdates;
+
     @Parameter(readOnly=true)
     private long recordSetsRecieved;
     @Parameter(readOnly=true)
@@ -62,6 +67,16 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     private long recordsSaved;
 
     private List<Record> recordBuffer;
+
+    public Boolean getEnableUpdates()
+    {
+        return enableUpdates;
+    }
+
+    public void setEnableUpdates(Boolean enableUpdates)
+    {
+        this.enableUpdates = enableUpdates;
+    }
 
     public long getRecordSetsRecieved()
     {
@@ -209,6 +224,30 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         return query.toString();
     }
 
+    private String createSelectQuery(String tableName, String idColumnName)
+    {
+        return "SELECT count(*) FROM "+tableName+" WHERE "+idColumnName+"=?";
+    }
+
+    private String createUpdateQuery(
+            String tableName, List<String> columnNames, String idColumnName)
+    {
+        StringBuilder query = new StringBuilder("UPDATE "+tableName+"\nSET ");
+        boolean firstColumn = true;
+        for (String columnName: columnNames)
+            if (!idColumnName.equals(columnName))
+            {
+                if (!firstColumn)
+                    query.append(", ");
+                query.append(columnName+"=?");
+                if (firstColumn)
+                    firstColumn=false;
+            }
+        query.append("\nWHERE "+idColumnName+"=?");
+
+        return query.toString();
+    }
+
     private synchronized void flushRecords() throws Exception
     {
         if (isLogLevelEnabled(LogLevel.DEBUG))
@@ -230,6 +269,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
 
         List<String> columnNames = new ArrayList<String>(fields.length);
         List<RecordSchemaField> dbFields =  new ArrayList<RecordSchemaField>(fields.length);
+        String idColumnName = null;
         for (RecordSchemaField field : fields)
         {
             DatabaseRecordFieldExtension extension = field.getFieldExtension(
@@ -238,6 +278,10 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
             {
                 columnNames.add(extension.getColumnName());
                 dbFields.add(field);
+                IdRecordFieldExtension idExtension =
+                        field.getFieldExtension(IdRecordFieldExtension.class, null);
+                if (idExtension!=null)
+                    idColumnName=extension.getColumnName();
             }
         }
 
@@ -255,13 +299,20 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
 
         String tableName = recordExtension.getTableName();
 
-        String updateQuery = createQuery(tableName, columnNames);
+        String insertQuery = createQuery(tableName, columnNames);
+        String updateQuery = null;
+        String selectQuery = null;
+        if (idColumnName!=null && enableUpdates)
+        {
+            updateQuery = createUpdateQuery(tableName, columnNames, idColumnName);
+            selectQuery = createSelectQuery(tableName, idColumnName);
+        }
 
         Connection con = connectionPool.getConnection();
         con.setAutoCommit(false);
         try
         {
-            PreparedStatement insert = con.prepareStatement(updateQuery);
+            PreparedStatement insert = con.prepareStatement(insertQuery);
             try
             {
                 boolean batchInsert = con.getMetaData().supportsBatchUpdates();
@@ -306,6 +357,93 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         finally
         {
             con.close();
+        }
+    }
+
+    private class SchemaMeta
+    {
+        private final List<RecordSchemaField> dbFields;
+        private final List<String> columnNames;
+        private String idColumnName;
+        private final String insertQuery;
+        private String updateQuery;
+        private String selectQuery;
+        private boolean tryUpdate = false;
+        private boolean recordFound = false;
+
+        private PreparedStatement select;
+        private PreparedStatement insert;
+        private PreparedStatement update;
+
+        public SchemaMeta(RecordSchema recordSchema, boolean enableUpdates) throws Exception
+        {
+            RecordSchemaField[] fields = recordSchema.getFields();
+
+            if (fields==null || fields.length==0)
+                throw new Exception(String.format(
+                        "Schema (%s) does not contains fields", recordSchema.getName()));
+
+            columnNames = new ArrayList<String>(fields.length);
+            dbFields =  new ArrayList<RecordSchemaField>(fields.length);
+            idColumnName = null;
+            for (RecordSchemaField field : fields)
+            {
+                DatabaseRecordFieldExtension extension = field.getFieldExtension(
+                        DatabaseRecordFieldExtension.class, databaseExtensionName);
+                if (extension != null)
+                {
+                    columnNames.add(extension.getColumnName());
+                    dbFields.add(field);
+                    IdRecordFieldExtension idExtension =
+                            field.getFieldExtension(IdRecordFieldExtension.class, null);
+                    if (idExtension!=null)
+                        idColumnName=extension.getColumnName();
+                }
+            }
+
+            if (columnNames.size()==0)
+                throw new Exception(String.format(
+                        "Schema (%s) does not contains fields with (%s) extenstion"
+                        , recordSchema.getName()));
+
+            DatabaseRecordExtension recordExtension = recordSchema.getRecordExtension(
+                    DatabaseRecordExtension.class, databaseExtensionName);
+            if (recordExtension==null)
+                throw new Exception(String.format(
+                        "Record schema (%s) does not have DatabaseRecordExtension"
+                        , recordSchema.getName()));
+
+            String tableName = recordExtension.getTableName();
+
+            insertQuery = createQuery(tableName, columnNames);
+            updateQuery = null;
+            selectQuery = null;
+            if (idColumnName!=null && enableUpdates)
+            {
+                updateQuery = createUpdateQuery(tableName, columnNames, idColumnName);
+                selectQuery = createSelectQuery(tableName, idColumnName);
+                tryUpdate = true;
+            }
+        }
+
+        public void init(Connection connection) throws SQLException
+        {
+            insert = connection.prepareStatement(insertQuery);
+            if (updateQuery!=null)
+            {
+                update = connection.prepareStatement(updateQuery);
+                select = connection.prepareStatement(selectQuery);
+            }
+        }
+
+        public void findRecord(Record record)
+        {
+            if (!tryUpdate)
+                recordFound = false;
+            else
+            {
+                
+            }
         }
     }
 }
