@@ -19,14 +19,18 @@ package org.raven.ds.impl;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.dbcp.ConnectionPool;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
+import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
@@ -40,10 +44,6 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass
 public class DatabaseRecordWriterNode extends AbstractDataConsumer
 {
-    @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
-    @NotNull
-    private RecordSchemaNode recordSchema;
-
     @Parameter
     private String databaseExtensionName;
 
@@ -113,16 +113,6 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         this.connectionPool = connectionPool;
     }
 
-    public RecordSchemaNode getRecordSchema()
-    {
-        return recordSchema;
-    }
-
-    public void setRecordSchema(RecordSchemaNode recordSchema)
-    {
-        this.recordSchema = recordSchema;
-    }
-
     public String getDatabaseExtensionName()
     {
         return databaseExtensionName;
@@ -176,16 +166,16 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
 
             Record record = (Record) data;
 
-            RecordSchemaNode _recordSchema = recordSchema;
-            if (!_recordSchema.equals(record.getSchema()))
-            {
-                error(String.format(
-                        "Invalid record schema recived from data source (%s). " +
-                        "Recieved schema is (%s), valid schema is (%s) "
-                        , dataSource.getPath(), record.getSchema().getName()
-                        , _recordSchema.getName()));
-                return;
-            }
+//            RecordSchemaNode _recordSchema = recordSchema;
+//            if (!_recordSchema.equals(record.getSchema()))
+//            {
+//                error(String.format(
+//                        "Invalid record schema recived from data source (%s). " +
+//                        "Recieved schema is (%s), valid schema is (%s) "
+//                        , dataSource.getPath(), record.getSchema().getName()
+//                        , _recordSchema.getName()));
+//                return;
+//            }
 
             ++recordsRecieved;
 
@@ -260,85 +250,38 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
             return;
         }
 
-        RecordSchema _recordSchema = recordSchema;
-        RecordSchemaField[] fields = recordSchema.getFields();
-
-        if (fields==null || fields.length==0)
-            throw new Exception(String.format(
-                    "Schema (%s) does not contains fields", _recordSchema.getName()));
-
-        List<String> columnNames = new ArrayList<String>(fields.length);
-        List<RecordSchemaField> dbFields =  new ArrayList<RecordSchemaField>(fields.length);
-        String idColumnName = null;
-        for (RecordSchemaField field : fields)
-        {
-            DatabaseRecordFieldExtension extension = field.getFieldExtension(
-                    DatabaseRecordFieldExtension.class, databaseExtensionName);
-            if (extension != null)
-            {
-                columnNames.add(extension.getColumnName());
-                dbFields.add(field);
-                IdRecordFieldExtension idExtension =
-                        field.getFieldExtension(IdRecordFieldExtension.class, null);
-                if (idExtension!=null)
-                    idColumnName=extension.getColumnName();
-            }
-        }
-
-        if (columnNames.size()==0)
-            throw new Exception(String.format(
-                    "Schema (%s) does not contains fields with (%s) extenstion"
-                    , _recordSchema.getName()));
-
-        DatabaseRecordExtension recordExtension =_recordSchema.getRecordExtension(
-                DatabaseRecordExtension.class, databaseExtensionName);
-        if (recordExtension==null)
-            throw new Exception(String.format(
-                    "Record schema (%s) does not have DatabaseRecordExtension"
-                    , _recordSchema.getName()));
-
-        String tableName = recordExtension.getTableName();
-
-        String insertQuery = createQuery(tableName, columnNames);
-        String updateQuery = null;
-        String selectQuery = null;
-        if (idColumnName!=null && enableUpdates)
-        {
-            updateQuery = createUpdateQuery(tableName, columnNames, idColumnName);
-            selectQuery = createSelectQuery(tableName, idColumnName);
-        }
+        Map<RecordSchema, SchemaMeta> metas = new HashMap<RecordSchema, SchemaMeta>();
 
         Connection con = connectionPool.getConnection();
         con.setAutoCommit(false);
         try
         {
-            PreparedStatement insert = con.prepareStatement(insertQuery);
             try
             {
-                boolean batchInsert = con.getMetaData().supportsBatchUpdates();
+                boolean batchUpdate = con.getMetaData().supportsBatchUpdates();
 
                 if (isLogLevelEnabled(LogLevel.DEBUG))
                     debug(String.format(
                             "Database driver %ssupports batch updates"
-                            , batchInsert? "" : "does not "));
+                            , batchUpdate? "" : "does not "));
 
                 for (Record record: recordBuffer)
                 {
-                    int i=1;
-                    for (RecordSchemaField field: dbFields)
+                    SchemaMeta meta = metas.get(record.getSchema());
+                    if (meta==null)
                     {
-                        Object val = RecordSchemaFieldType.getSqlObject(
-                                field.getFieldType(), record.getValue(field.getName()));
-                        insert.setObject(i++, val);
+                        meta = new SchemaMeta(record.getSchema(), enableUpdates, batchUpdate);
+                        meta.init(con);
+                        metas.put(record.getSchema(), meta);
                     }
-                    if (batchInsert)
-                        insert.addBatch();
-                    else
-                        insert.executeUpdate();
+                    meta.updateRecord(record);
                 }
 
-                if (batchInsert)
-                    insert.executeBatch();
+                if (batchUpdate)
+                {
+                    for (SchemaMeta meta: metas.values())
+                        meta.executeBatch();
+                }
 
                 con.commit();
 
@@ -351,7 +294,8 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
             }
             finally
             {
-                insert.close();
+                for (SchemaMeta meta: metas.values())
+                    meta.close();
             }
         }
         finally
@@ -365,17 +309,21 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         private final List<RecordSchemaField> dbFields;
         private final List<String> columnNames;
         private String idColumnName;
+        private String idFieldName;
         private final String insertQuery;
         private String updateQuery;
         private String selectQuery;
         private boolean tryUpdate = false;
-        private boolean recordFound = false;
+        private final boolean batchUpdate;
 
         private PreparedStatement select;
         private PreparedStatement insert;
         private PreparedStatement update;
+        private boolean hasUpdates = false;
+        private boolean hasInserts = false;
 
-        public SchemaMeta(RecordSchema recordSchema, boolean enableUpdates) throws Exception
+        public SchemaMeta(RecordSchema recordSchema, boolean enableUpdates, boolean batchUpdate)
+                throws Exception
         {
             RecordSchemaField[] fields = recordSchema.getFields();
 
@@ -386,6 +334,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
             columnNames = new ArrayList<String>(fields.length);
             dbFields =  new ArrayList<RecordSchemaField>(fields.length);
             idColumnName = null;
+            this.batchUpdate = batchUpdate;
             for (RecordSchemaField field : fields)
             {
                 DatabaseRecordFieldExtension extension = field.getFieldExtension(
@@ -397,7 +346,10 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                     IdRecordFieldExtension idExtension =
                             field.getFieldExtension(IdRecordFieldExtension.class, null);
                     if (idExtension!=null)
+                    {
                         idColumnName=extension.getColumnName();
+                        idFieldName = field.getName();
+                    }
                 }
             }
 
@@ -436,13 +388,80 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
             }
         }
 
-        public void findRecord(Record record)
+        private boolean findRecord(Record record) throws RecordException, SQLException
         {
-            if (!tryUpdate)
-                recordFound = false;
-            else
+            if (tryUpdate)
             {
-                
+                Object indexVal = record.getValue(idFieldName);
+                if (indexVal!=null)
+                {
+                    select.setObject(1, indexVal);
+                    ResultSet rs = select.executeQuery();
+                    try
+                    {
+                        rs.next();
+                        int count = rs.getInt(1);
+                        
+                        return count>0;
+                    }
+                    finally
+                    {
+                        rs.close();
+                    }
+                }
+            }
+            return false;
+        }
+
+        public void updateRecord(Record record) throws Exception
+        {
+            boolean recordFound = findRecord(record);
+            PreparedStatement st = recordFound? update : insert;
+            int i=1;
+            Object idFieldValue = null;
+            for (RecordSchemaField field: dbFields)
+            {
+                Object val = RecordSchemaFieldType.getSqlObject(
+                        field, record.getValue(field.getName()));
+                if (!recordFound || !field.getName().equals(idFieldName))
+                {
+                    st.setObject(i++, val);
+                }
+                else
+                    idFieldValue = val;
+
+            }
+            if (recordFound)
+                st.setObject(dbFields.size(), idFieldValue);
+            
+            if (batchUpdate)
+                st.addBatch();
+            else
+                st.executeUpdate();
+            if (!hasInserts)
+                hasInserts = !recordFound;
+            if (!hasUpdates)
+                hasUpdates = recordFound;
+        }
+
+        public void executeBatch() throws Exception
+        {
+            if (batchUpdate)
+            {
+                if (hasInserts)
+                    insert.executeBatch();
+                if (hasUpdates)
+                    update.executeBatch();
+            }
+        }
+
+        public void close() throws SQLException
+        {
+            insert.close();
+            if (tryUpdate)
+            {
+                select.close();
+                update.close();
             }
         }
     }

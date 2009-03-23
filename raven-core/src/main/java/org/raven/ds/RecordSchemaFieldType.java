@@ -19,6 +19,7 @@ package org.raven.ds;
 
 import java.io.InputStream;
 import java.sql.Timestamp;
+import org.raven.ds.impl.RecordRelationFieldExtension;
 import org.raven.net.Ip;
 
 /**
@@ -48,19 +49,34 @@ public enum RecordSchemaFieldType
         return type;
     }
 
-    public static Object getSqlObject(RecordSchemaFieldType type, Object value)
+    public static Object getSqlObject(RecordSchemaField field, Object value)
             throws RecordSchemaFieldTypeException
     {
         try
         {
-            switch(type)
+            switch(field.getFieldType())
             {
                 case IP: return value.toString();
                 case BINARY: return ((BinaryFieldType)value).getData();
+                case RECORD:
+                {
+                    if (value==null)
+                        return null;
+                    Record record = (Record) value;
+                    RecordRelationFieldExtension relationExtension =
+                            field.getFieldExtension(RecordRelationFieldExtension.class, null);
+                    if (relationExtension==null)
+                        throw new RecordSchemaFieldTypeException(String.format(
+                                "Field (%s) does not contains extension (%s)"
+                                , field.getName()
+                                , RecordRelationFieldExtension.class.getSimpleName()));
+                    
+                    return record.getValue(relationExtension.getRelatedField());
+                }
                 default: return value;
             }
         }
-        catch(BinaryFieldTypeException e)
+        catch(Exception e)
         {
             throw new RecordSchemaFieldTypeException(e);
         }

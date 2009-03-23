@@ -100,6 +100,11 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
         dbExtension.start();
         assertEquals(Status.STARTED, dbExtension.getStatus());
 
+        IdRecordFieldExtension idExtension = new IdRecordFieldExtension();
+        idExtension.setName("id");
+        field1.addAndSaveChildren(idExtension);
+        assertTrue(idExtension.start());
+
         field1 = new RecordSchemaFieldNode();
         field1.setName("field2");
         schema.addAndSaveChildren(field1);
@@ -124,7 +129,6 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
         writer.setName("writer");
         tree.getRootNode().addAndSaveChildren(writer);
         writer.setConnectionPool(pool);
-        writer.setRecordSchema(schema);
         writer.setDataSource(ds);
         writer.setLogLevel(LogLevel.DEBUG);
         writer.start();
@@ -164,7 +168,38 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
         ds.pushData(record);
         writer.stop();
 
-        Connection con = pool.getConnection();
+        List<Object[]> rows = getRows(pool.getConnection());
+        assertEquals(1, rows.size());
+        assertEquals(10, rows.get(0)[0]);
+        assertEquals("10.50.1.1", rows.get(0)[1]);
+    }
+
+    @Test
+    public void update_test() throws Exception
+    {
+        Connection connection = pool.getConnection();
+        insertData(connection);
+        writer.setEnableUpdates(true);
+
+        List<Object[]> rows = getRows(pool.getConnection());
+        assertEquals(1, rows.size());
+        assertEquals(1, rows.get(0)[0]);
+        assertEquals("aaa", rows.get(0)[1]);
+
+        Record record = schema.createRecord();
+        record.setValue("field1", 1);
+        record.setValue("field2", "10.50.1.1");
+        ds.pushData(record);
+        writer.stop();
+
+        rows = getRows(pool.getConnection());
+        assertEquals(1, rows.size());
+        assertEquals(1, rows.get(0)[0]);
+        assertEquals("10.50.1.1", rows.get(0)[1]);
+    }
+
+    private List<Object[]> getRows(Connection con) throws SQLException
+    {
         Statement st = con.createStatement();
         ResultSet rs = st.executeQuery("select col1, col2 from record_data");
         List<Object[]> rows = new ArrayList<Object[]>();
@@ -174,9 +209,7 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
         st.close();
         con.close();
 
-        assertEquals(1, rows.size());
-        assertEquals(10, rows.get(0)[0]);
-        assertEquals("10.50.1.1", rows.get(0)[1]);
+        return rows;
     }
 
     private void createTable(JDBCConnectionPoolNode pool) throws SQLException
@@ -185,5 +218,12 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
         Statement st = con.createStatement();
         st.executeUpdate("drop table if exists record_data");
         st.executeUpdate("create table record_data(col1 int, col2 varchar)");
+    }
+
+    private void insertData(Connection connection) throws SQLException
+    {
+        Statement st = connection.createStatement();
+        st.executeUpdate("insert into record_data(col1,col2) values(1, 'aaa')");
+        connection.commit();
     }
 }
