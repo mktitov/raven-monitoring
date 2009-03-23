@@ -17,8 +17,13 @@
 
 package org.raven.template.impl;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.Description;
 
@@ -31,6 +36,7 @@ import org.weda.annotations.Description;
 public class TemplateNode extends BaseNode 
 {
     public static final String TEMPLATE_VARIABLES_EXPRESSION_BINDING = "vars";
+    public static final String VARIABLES_EXPRESSION_BINDINGS = "vars";
     public final static String VARIABLES_NODE = "Variables";
     public final static String ENTRY_NODE = "Entry";
     public final static String TEMPLATE_EXPRESSION_BINDING = "template";
@@ -88,6 +94,15 @@ public class TemplateNode extends BaseNode
     {
         super.formExpressionBindings(bindings);
         bindings.put(TEMPLATE_EXPRESSION_BINDING, this);
+        Collection<NodeAttribute> varsAttrs = variablesNode.getNodeAttributes();
+        Map<String, Object> vars = Collections.EMPTY_MAP;
+        if (varsAttrs!=null)
+        {
+            vars = new HashMap<String, Object>();
+            for (NodeAttribute var: varsAttrs)
+                vars.put(var.getName(), var.getRealValue());
+        }
+        bindings.put(VARIABLES_EXPRESSION_BINDINGS, vars);
     }
     
 }

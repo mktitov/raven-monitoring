@@ -29,11 +29,9 @@ import org.weda.annotations.Description;
 @Description("Holds the template variables")
 public class TemplateVariablesNode extends BaseNode
 {
-
     @Override
     protected boolean includeLogLevel()
     {
         return false;
     }
-
 }
