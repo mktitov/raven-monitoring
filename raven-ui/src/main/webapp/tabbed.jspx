@@ -18,13 +18,15 @@
 
 <jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
 		  xmlns:c="http://java.sun.com/jsp/jstl/core"
+		  xmlns:h="http://java.sun.com/jsf/html"
           xmlns:f="http://java.sun.com/jsf/core"
           xmlns:tr="http://myfaces.apache.org/trinidad" >
     <jsp:directive.page pageEncoding="utf-8" contentType="text/html; charset=utf-8"/>
     <f:view>
         <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
         <tr:document title="TabbedPanel" >
-            <tr:form usesUpload="true">
+        	<h:form id="form1"  enctype="multipart/form-data" >
+           <!--  <tr:form usesUpload="true"  >  -->
                 <!--  
                 <tr:poll id="poolStatus" ></tr:poll>
                 -->
@@ -124,7 +126,7 @@
                         </tr:showDetailItem>
                     </tr:panelTabbed>
                 </tr:panelGroupLayout>		 
-            </tr:form>
+            </h:form>
         </tr:document>
     </f:view>
 </jsp:root>

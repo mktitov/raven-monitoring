@@ -53,12 +53,14 @@
   			<trh:frame source="page2.jspx" name="contents" scrolling="yes"  />
  		</f:facet>
 	</trh:frameBorderLayout>
+	
+<FRAME id="frame2" name="frame2" src="tabbed.jspx" frameborder="1"></FRAME>	
 -->
  
  <frameset cols="20%,80%" >
   	<FRAME id="frame1" name="frame1" src="tree.jspx" frameborder="1"></FRAME>
   	<frameset rows="100%,0%">
-  		<FRAME id="frame2" name="frame2" src="tabbed.jspx" frameborder="1"></FRAME>
+  		<FRAME id="frame2" name="frame2" src="tab1NP.jspx" frameborder="1"></FRAME>
   		<FRAME id="frame3" name="frame3" src="down.jspx" frameborder="1"></FRAME>
  	</frameset>
  </frameset>

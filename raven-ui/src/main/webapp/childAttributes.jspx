@@ -19,8 +19,8 @@
           xmlns:f="http://java.sun.com/jsf/core"
           xmlns:tr="http://myfaces.apache.org/trinidad" >
     <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>          
-<!-- binding="#{cNodeAttrs.table}" -->    
-
+<!-- binding="#{cNodeAttrs.table}" -->     
+<!-- partialTriggers="subtypes" --> 
         <tr:table 
         	allDetailsEnabled="true" 
         	rowBandingInterval="1"
@@ -31,7 +31,8 @@
             var="rowz" 
             rows="12" 
             id="attrsz" 
-            partialTriggers="subtypes">
+            >
+            
 
 <!-- name of attribute-->            
             <tr:column headerText="#{msgs.name}">

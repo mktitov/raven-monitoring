@@ -41,7 +41,9 @@ import org.weda.constraints.TooManyReferenceValuesException;
 import org.weda.internal.annotations.Service;
 import org.weda.services.ClassDescriptorRegistry;
 import javax.faces.event.ActionEvent;
-import org.apache.myfaces.trinidad.model.UploadedFile;
+//import org.apache.myfaces.trinidad.model.UploadedFile;
+import org.apache.myfaces.custom.fileupload.UploadedFile;
+
 import org.raven.tree.DataFile;
 import org.raven.tree.impl.DataFileValueHandlerFactory;
 //import org.apache.myfaces.trinidad.component.core.nav.CoreCommandButton;
@@ -51,10 +53,11 @@ public class Attr implements Comparable<Attr>
     @Service
     private static Tree tree;
     
-    protected Logger logger = LoggerFactory.getLogger(Attr.class);
+    private Logger logger = LoggerFactory.getLogger(Attr.class);
     private NodeAttribute attribute;
 	private int id;
 	private String name;
+	private String oldValue;
 	private String value;
     private String valueHandlerType;
 	private String description;
@@ -76,8 +79,9 @@ public class Attr implements Comparable<Attr>
 	{
 		attribute = na;
 		this.name = na.getName();
-		try { this.value = na.getValue(); }
-		catch(Throwable e) {this.value = "";}	
+		try { value = na.getValue(); }
+		catch(Throwable e) {value = "";}
+		oldValue = value;
 		this.description = na.getDescription();
 		this.id = na.getId();
 		Registry registry = RavenRegistry.getRegistry();
@@ -100,12 +104,21 @@ public class Attr implements Comparable<Attr>
         } 
         else valueHandlerTypes = Collections.EMPTY_LIST;
         templateExpression = na.isTemplateExpression();
+        
 	}
 
 	public Attr(NodeAttribute na, boolean ra) throws TooManyReferenceValuesException
 	{
 		this(na);
 		setRefreshAttribute(ra);
+	}
+	
+	public boolean isValueChanged()
+	{
+		if(oldValue==null) 
+			if(value!=null) return true;
+				else return false;
+		return !oldValue.equals(value);
 	}
 
     public boolean isFileAttribute()
@@ -121,12 +134,14 @@ public class Attr implements Comparable<Attr>
 
     public void setFile(UploadedFile file)
     {
+    	logger.info("setFile: '{}'",file.getName());
         this.file = file;
     }
 
     public void fileUploaded(ValueChangeEvent event)
     {
-        file = (UploadedFile) event.getNewValue();
+    	UploadedFile f = (UploadedFile) event.getNewValue();
+    	setFile(f);
     }
 
 	public boolean isEnableValueDialog()
@@ -333,6 +348,14 @@ public class Attr implements Comparable<Attr>
 
 	public int compareTo(Attr o) {
 		return getName().compareTo(o.getName());
+	}
+
+	public void setOldValue(String oldValue) {
+		this.oldValue = oldValue;
+	}
+
+	public String getOldValue() {
+		return oldValue;
 	}
 	
 }

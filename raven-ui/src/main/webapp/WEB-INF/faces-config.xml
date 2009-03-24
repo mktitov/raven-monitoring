@@ -115,6 +115,11 @@
     <managed-bean-class>org.raven.ui.vo.ExportBean</managed-bean-class>
     <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
+  <managed-bean>
+    <managed-bean-name>test</managed-bean-name>
+    <managed-bean-class>org.raven.ui.util.TestBean</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
   
 <!--  
   <managed-bean>
@@ -162,9 +167,35 @@
     </navigation-case>
   </navigation-rule>
 
-  <!-- navigation rules for tabbed.jspx -->
+  <!-- navigation rules for tab{x}NP.jspx -->
   <navigation-rule>
-    <from-view-id>/tabbed.jspx</from-view-id>
+    <navigation-case>
+      <from-outcome>tabShow</from-outcome>
+      <to-view-id>/tab1NP.jspx</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>tabNodeEdit</from-outcome>
+      <to-view-id>/tab2NP.jspx</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>tabTreeEdit</from-outcome>
+      <to-view-id>/tab3NP.jspx</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>tabControl</from-outcome>
+      <to-view-id>/tab4NP.jspx</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>tabLogsTab</from-outcome>
+      <to-view-id>/tab5NP.jspx</to-view-id>
+    </navigation-case>
+  </navigation-rule>
+
+  <!-- navigation rules for tabbed.jspx 
+    <from-view-id>/tabbed.jspx</from-view-id>  
+  -->
+  <navigation-rule>
+
     <navigation-case>
       <from-outcome>dialog:chooseType</from-outcome>
       <to-view-id>/chooseTypeDialog.jspx</to-view-id>

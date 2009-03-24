@@ -116,7 +116,6 @@ public class UserAcl
 	    return glist;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public int getAccessForNode(Node node)
 	{
 		boolean refresh = false;

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<!-- 
+ *  Copyright 2009 Sergey Pinevskiy.
+ * 
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ * 
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *  under the License.
+ -->
+<jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
+          xmlns:f="http://java.sun.com/jsf/core"
+          xmlns:tr="http://myfaces.apache.org/trinidad" >
+<f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
+
+<tr:panelCaptionGroup 
+	rendered="#{!sBean.collapsed}" 
+    id="pcg"  
+    captionText="#{msgs.nodeStatus}" >
+    <tr:panelGroupLayout 
+    	layout="vertical" 
+        id="pgl_1" >
+        <tr:panelBorderLayout>
+        	<f:facet name="start">
+            	<tr:group>
+                	<tr:outputText value="#{msgs.node}:" />
+                    <tr:spacer width="10" />
+                    <tr:outputText
+ 						inlineStyle="font-weight: bold;" 
+                        value="#{cNode.nodePath}" />
+                </tr:group>
+         	</f:facet>
+		</tr:panelBorderLayout>	
+		<tr:panelBorderLayout>
+        	<f:facet name="left">                            
+            	<tr:group>
+                	<tr:outputText value="ID:"/>
+                    <tr:spacer width="10"/>
+                    <tr:outputText 
+                    	inlineStyle="font-weight: bold;"
+                        value="#{cNode.node.id}" />
+                    <tr:spacer width="20" />
+                    <tr:outputText value="#{msgs.status}:" />
+                    <tr:spacer width="10" />
+                    <tr:outputText 
+                    	inlineStyle="font-weight: bold;"
+                        value="#{cNode.nodeStatusText}" />
+       				</tr:group>
+			</f:facet>
+			<f:facet name="right">
+				<tr:panelHorizontalLayout halign="end">
+                                	<!-- 
+	                   				<tr:commandButton 
+	                   						action="#{sBean.switchCollapsed}" 
+	                   						immediate="true"
+                          					text="switchFrameSet"
+                            				onclick="top.switchFrameSet()"/>
+                            				 -->
+					<tr:statusIndicator/>
+				</tr:panelHorizontalLayout>							    	
+			</f:facet>
+		</tr:panelBorderLayout>
+	</tr:panelGroupLayout>
+</tr:panelCaptionGroup>
+
+</jsp:root>

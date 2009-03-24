@@ -18,7 +18,9 @@
 
 <jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
           xmlns:f="http://java.sun.com/jsf/core"
-          xmlns:tr="http://myfaces.apache.org/trinidad" >
+          xmlns:tr="http://myfaces.apache.org/trinidad"
+          xmlns:h="http://java.sun.com/jsf/html"
+          xmlns:t="http://myfaces.apache.org/tomahawk" >
     <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>          
     <!--           
     <tr:panelCaptionGroup captionText="Create node" rendered="#{cNode.allowNodeEdit}">
@@ -221,8 +223,40 @@
 				>
 				</tr:inputListOfValues>
                 <tr:group rendered="#{row.fileAttribute}">
+                
+                <t:inputFileUpload  
+                	id="fileupload"
+					value="#{row.file}"
+					storage="file"
+					maxlength="200000"/>
+					</tr:group>
+<!--					
+				   <tr:inputFile
+				   	id="uploadId" 
+				   	label="Upload:" 
+				   	valueChangeListener="#{test.fileUploaded}"
+				   	value="#{test.file}" />
+                </tr:group>
+				
+
+       				<tr:commandButton text="Begin" action="#{test.doUpload}"/>
+
+				   <tr:inputFile
+				   	id="uploadId" 
+				   	label="Upload:" 
+				   	valueChangeListener="#{row.fileUploaded}"
+				   	value="#{test.file}" />
+       				<tr:commandButton text="Begin" action="#{test.doUpload}"/>
+
+                <tr:group rendered="#{row.fileAttribute}">
                     <tr:inputFile label="#{msgs.file}" valueChangeListener="#{row.fileUploaded}"/>
                 </tr:group>
+
+                    <tr:inputFile label="#{msgs.file}" valueChangeListener="#{test.fileUploaded}"/>
+                <tr:group rendered="#{row.fileAttribute}">
+                    <tr:inputFile label="#{msgs.file}" valueChangeListener="#{row.fileUploaded}"/>
+                </tr:group>
+-->                
 <!-- 
 				<tr:group rendered="#{row.enableSelectNodeDialog}">
 					<tr:inputText 

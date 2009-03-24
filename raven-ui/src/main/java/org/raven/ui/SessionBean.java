@@ -17,16 +17,16 @@
 
 package org.raven.ui;
 
-import java.io.IOException;
-import java.io.PrintWriter;
+//import java.io.IOException;
+//import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
-
 import org.raven.ui.attr.RefreshAttributesCache;
+import org.raven.ui.RavenTreeModel;
 import org.raven.ui.attr.RefreshIntervalCache;
 import org.raven.ui.filter.AuthFilter;
 import org.raven.ui.log.LogViewAttributesCache;
@@ -37,7 +37,7 @@ import org.raven.ui.node.NodeWrapper;
 import org.raven.ui.util.RavenImageRenderer;
 import org.raven.ui.util.RavenRegistry;
 import org.raven.ui.util.RavenViewableImageRenderer;
-import org.raven.ui.vo.VOTableWrapper;
+//import org.raven.ui.vo.VOTableWrapper;
 import org.raven.ui.vo.ViewableObjectsByNode;
 import org.raven.ui.vo.ViewableObjectsStorage;
 import org.raven.conf.Configurator;
@@ -49,7 +49,7 @@ import org.raven.tree.Tree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weda.services.ClassDescriptorRegistry;
-import org.apache.myfaces.trinidad.component.core.data.CoreTable;
+//import org.apache.myfaces.trinidad.component.core.data.CoreTable;
 import org.apache.myfaces.trinidad.component.core.data.CoreTree;
 import org.apache.myfaces.trinidad.model.TreeModel;
 import org.apache.myfaces.trinidad.render.ExtendedRenderKitService;
@@ -57,7 +57,7 @@ import org.apache.myfaces.trinidad.util.Service;
 import org.apache.tapestry.ioc.Registry;
 import org.raven.tree.InvalidPathException;
 import javax.faces.component.UIComponent;
-import javax.servlet.http.HttpServletResponse;
+//import javax.servlet.http.HttpServletResponse;
 
 import org.apache.myfaces.trinidad.event.PollEvent;
 //import org.raven.tree.NodeAttribute;
@@ -369,8 +369,8 @@ public class SessionBean
 		if(n.isAutoStart()) n.start();
 		logger.warn("Added new node name={}",getNewNodeName());
 		clearNewNode();
-		wrapper.goToEditNewAttribute(n);
-		return "ok";
+		return wrapper.goToEditNewAttribute(n);
+		//return "ok";
 	}
 
 	public static SessionBean getInstance()

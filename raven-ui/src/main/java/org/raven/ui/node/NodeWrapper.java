@@ -30,7 +30,8 @@ import javax.faces.model.SelectItem;
 import org.apache.myfaces.trinidad.component.core.layout.CoreShowDetailItem;
 import org.apache.myfaces.trinidad.event.PollEvent;
 import org.apache.myfaces.trinidad.event.ReturnEvent;
-import org.apache.myfaces.trinidad.model.UploadedFile;
+//import org.apache.myfaces.trinidad.model.UploadedFile;
+import org.apache.myfaces.custom.fileupload.UploadedFile;
 import org.raven.log.LogLevel;
 import org.raven.log.NodeLogRecord;
 import org.raven.tree.DataFile;
@@ -41,6 +42,7 @@ import org.raven.tree.Viewable;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.ui.SessionBean;
 import org.raven.ui.attr.Attr;
+import org.raven.ui.node.AbstractNodeWrapper;
 import org.raven.ui.attr.NewAttribute;
 import org.raven.ui.attr.RefreshAttributesCache;
 import org.raven.ui.attr.RefreshIntervalCache;
@@ -348,9 +350,8 @@ implements Comparator<NodeAttribute>
 			else
 			{
 				savedAttrs.add(na);
-				try {
-					editingAttrs.add(new Attr(na));
-				} catch (TooManyReferenceValuesException e) {
+				try { editingAttrs.add(new Attr(na)); }
+				catch (TooManyReferenceValuesException e) {
 					logger.error("on load attributes: ",e);
 					return;
 				}
@@ -385,7 +386,12 @@ implements Comparator<NodeAttribute>
 			  if(na.getId()!=at.getId()) continue;
 			  String val = getNotNull(na.getValue());
 			  String dsc = getNotNull(na.getDescription());
-			  if( !at.isExpressionSupported() &&  !val.equals(at.getValue()) ) save |=1;
+//			  if( !at.isExpressionSupported() &&  !val.equals(at.getValue()) )
+			  if( !at.isExpressionSupported() &&  at.isValueChanged() )				  
+			  {
+				  save |=1;
+				  logger.info("old value: '{}', new value: '{}'",val,at.getValue());
+			  }	  
 			  if( !dsc.equals(at.getDescription()) ) save |=2;
 			  if( !na.getName().equals(at.getName()) ) save |=4;
 			  if( at.isExpressionSupported() &&  ! ObjectUtils.equals(na.getRawValue(), at.getExpression()) ) save |=8;
@@ -407,10 +413,11 @@ implements Comparator<NodeAttribute>
                   {
                       UploadedFile file = at.getFile();
                       DataFile dataFile = na.getRealValue();
-                      dataFile.setFilename(file.getFilename());
+                      dataFile.setFilename(file.getName());
                       dataFile.setMimeType(file.getContentType());
                       dataFile.setDataStream(file.getInputStream());
-                      file.dispose();
+                      logger.info("Uploaded: '{}'; size:{} ",file.getName(),file.getSize());                      
+                      //file.dispose();
                   }
 				  if(write)
 				  {
@@ -422,21 +429,21 @@ implements Comparator<NodeAttribute>
 			  }
 			  catch(ConstraintException e) 
 			  {
-				  String t = Messages.getString("org.raven.ui.messages", "attribute",new Object[] {});
+				  String t = Messages.getUiMessage("attribute");
 				  if(ret.length()!=0) ret.append(". ");
 				  ret.append(t+" '"+at.getName()+"' : "+e.getMessage());
 				  logger.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
 			  }
 			  catch(TypeConverterException e) 
 			  {
-				  String t = Messages.getString("org.raven.ui.messages", "attribute",new Object[] {});
+				  String t = Messages.getUiMessage("attribute");
 				  if(ret.length()!=0) ret.append(". ");
 				  ret.append(t+" '"+at.getName()+"' : "+e.getMessage());
 				  logger.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
 			  }
 			  catch(Throwable e) 
 			  {
-				  String t = Messages.getString("org.raven.ui.messages", "attribute",new Object[] {});
+				  String t = Messages.getUiMessage("attribute");
 				  if(ret.length()!=0) ret.append(". ");
 				  ret.append(t+" '"+at.getName()+"' : "+e.getMessage());
 				  logger.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
@@ -488,21 +495,21 @@ implements Comparator<NodeAttribute>
 					  }
 					  catch(ConstraintException e) 
 					  {
-						  String t = Messages.getString("org.raven.ui.messages", "attribute",new Object[] {});
+						  String t = Messages.getUiMessage("attribute");
 						  if(ret.length()!=0) ret.append(". ");
 						  ret.append(t+" '"+at.getName()+"' : "+e.getMessage());
 						  logger.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
 					  }
 					  catch(TypeConverterException e) 
 					  {
-						  String t = Messages.getString("org.raven.ui.messages", "attribute",new Object[] {});
+						  String t = Messages.getUiMessage("attribute");
 						  if(ret.length()!=0) ret.append(". ");
 						  ret.append(t+" '"+at.getName()+"' : "+e.getMessage());
 						  logger.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
 					  }
 					  catch(Throwable e) 
 					  {
-						  String t = Messages.getString("org.raven.ui.messages", "attribute",new Object[] {});
+						  String t = Messages.getUiMessage("attribute");
 						  if(ret.length()!=0) ret.append(". ");
 						  ret.append(t+" '"+at.getName()+"' : "+e.getMessage());
 						  logger.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
@@ -675,11 +682,13 @@ implements Comparator<NodeAttribute>
 	
 	public String goToEditNewAttribute(Node n)
 	{
+		/*
 		showTab.setDisclosed(false);
 		nodeEditTab.setDisclosed(true);
 		treeEditTab.setDisclosed(true);
+		*/
 		setNode(n);
-		return "";
+		return "tabNodeEdit";
 	}
 	
 	public String onRefresh()
