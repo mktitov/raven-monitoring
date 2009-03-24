@@ -33,6 +33,10 @@ public interface Query
 	 */
 	public Long getStep();
     /**
+     * Returns the select mode of the query
+     */
+    public SelectMode getSelectMode();
+    /**
      * Returns the the "at" style start time.
      * @see #getEndTime()
      */

@@ -15,25 +15,20 @@
  *  under the License.
  */
 
-package org.raven.statdb.query;
+package org.raven;
 
-import java.util.Collection;
-import org.raven.statdb.StatisticsDatabase;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
- * The result of the query execution.
- * @see Query
- * @see StatisticsDatabase#executeQuery(org.raven.statdb.query.Query) 
+ *
  * @author Mikhail Titov
  */
-public interface QueryResult
+public class RavenUtilsTest extends Assert
 {
-	public long[] getTimestamps();
-    public long getStep();
-    public int getValuesCount();
-    /**
-     * Returns the collection of key values. Method can return an empty collection but never
-     * returns <code>null</code>.
-     */
-    public Collection<KeyValues> getKeyValues();
+    @Test
+    public void split_test()
+    {
+        assertArrayEquals(new String[]{"1", "2", "3"}, RavenUtils.split("1, 2, \"3\""));
+    }
 }

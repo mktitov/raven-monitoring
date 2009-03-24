@@ -24,6 +24,7 @@ import org.raven.statdb.query.FromClause;
 import org.raven.statdb.query.Query;
 import org.raven.statdb.query.QueryStatisticsName;
 import org.raven.statdb.query.SelectClause;
+import org.raven.statdb.query.SelectMode;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.constraints.NotNull;
@@ -46,6 +47,10 @@ public class QueryNode  extends BaseNode implements Query
 
     @Parameter() 
     private Integer maximumKeyCount;
+
+    @Parameter(defaultValue="SELECT_KEYS_AND_DATA")
+    @NotNull
+    private SelectMode selectMode;
 
     private StatisticsNamesNode statisticsNamesNode;
     private FromClauseNode fromClauseNode;
@@ -81,6 +86,26 @@ public class QueryNode  extends BaseNode implements Query
             addAndSaveChildren(selectClauseNode);
             selectClauseNode.start();
         }
+    }
+
+    public FromClauseNode getFromClauseNode()
+    {
+        return fromClauseNode;
+    }
+
+    public void setFromClauseNode(FromClauseNode fromClauseNode)
+    {
+        this.fromClauseNode = fromClauseNode;
+    }
+
+    public SelectClauseNode getSelectClauseNode()
+    {
+        return selectClauseNode;
+    }
+
+    public void setSelectClauseNode(SelectClauseNode selectClauseNode)
+    {
+        this.selectClauseNode = selectClauseNode;
     }
 
     public Long getStep()
@@ -163,4 +188,13 @@ public class QueryNode  extends BaseNode implements Query
         return selectClauseNode;
     }
 
+    public SelectMode getSelectMode()
+    {
+        return selectMode;
+    }
+
+    public void setSelectMode(SelectMode selectMode)
+    {
+        this.selectMode = selectMode;
+    }
 }

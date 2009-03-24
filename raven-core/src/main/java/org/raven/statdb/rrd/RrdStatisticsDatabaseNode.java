@@ -175,7 +175,7 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 		{
 			Collection<KeyValues> keys = findKeys(dbRoot, query.getFromClause());
             QueryResultImpl queryResult = new QueryResultImpl(keys);
-			if (   query.getSelectClause().getSelectMode() == SelectMode.SELECT_KEYS_AND_DATA
+			if (   query.getSelectMode() == SelectMode.SELECT_KEYS_AND_DATA
 				&& keys.size()>0)
 			{
 				fetchStatisticsValues(query, queryResult);

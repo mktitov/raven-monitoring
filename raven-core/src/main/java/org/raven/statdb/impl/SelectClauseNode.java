@@ -19,13 +19,10 @@ package org.raven.statdb.impl;
 
 import java.util.Collection;
 import org.raven.annotations.NodeClass;
-import org.raven.annotations.Parameter;
 import org.raven.statdb.query.SelectClause;
 import org.raven.statdb.query.SelectEntry;
-import org.raven.statdb.query.SelectMode;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
-import org.weda.annotations.constraints.NotNull;
 
 /**
  *
@@ -36,23 +33,9 @@ public class SelectClauseNode extends BaseNode implements SelectClause
 {
     public final static String NAME = "Select";
 
-    @Parameter(defaultValue="SELECT_KEYS_AND_DATA")
-    @NotNull
-    private SelectMode selectMode;
-
     public SelectClauseNode()
     {
         super(NAME);
-    }
-
-    public SelectMode getSelectMode()
-    {
-        return selectMode;
-    }
-
-    public void setSelectMode(SelectMode selectMode)
-    {
-        this.selectMode = selectMode;
     }
 
     public boolean hasSelectEntries()

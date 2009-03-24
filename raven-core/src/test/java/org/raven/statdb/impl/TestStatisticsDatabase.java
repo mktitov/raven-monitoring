@@ -28,6 +28,7 @@ import org.raven.statdb.query.QueryResult;
 public class TestStatisticsDatabase extends AbstractStatisticsDatabase
 {
 	private SaveStatisticsValue databaseMock;
+    private ExecuteDatabaseQuery queryMock;
 
 	public SaveStatisticsValue getDatabaseMock()
 	{
@@ -52,7 +53,7 @@ public class TestStatisticsDatabase extends AbstractStatisticsDatabase
 
     public QueryResult executeQuery(Query query) throws QueryExecutionException
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return queryMock.executeQuery(query);
     }
 
 }

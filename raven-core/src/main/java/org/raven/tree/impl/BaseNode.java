@@ -309,15 +309,17 @@ public class BaseNode implements Node, NodeListener, Logger
         if (listeners.contains(listener))
             return;
         listeners.add(listener);
-        if (listener.isSubtreeListener() && childrens!=null)
-            for (Node children: childrens.values())
+        Collection<Node> childs = getChildrens();
+        if (listener.isSubtreeListener() && childs!=null)
+            for (Node children: childs)
                 children.addListener(listener);
     }
     
     public void removeListener(NodeListener listener)
     {
-        if (listeners.remove(listener) && listener.isSubtreeListener() && childrens!=null)
-            for (Node children: childrens.values())
+        Collection<Node> childs = getChildrens();
+        if (listeners.remove(listener) && listener.isSubtreeListener() && childs!=null)
+            for (Node children: childs)
                 children.removeListener(listener);
     }
     
@@ -491,7 +493,10 @@ public class BaseNode implements Node, NodeListener, Logger
     
     public List<Node> getSortedChildrens()
     {
-        List<Node> sortedChildrens = new ArrayList<Node>(childrens.values());
+        Collection<Node> childs = getChildrens();
+        if (childs==null)
+            return Collections.EMPTY_LIST;
+        List<Node> sortedChildrens = new ArrayList<Node>(childs);
         Collections.sort(sortedChildrens);
         return sortedChildrens;
     }
@@ -510,10 +515,7 @@ public class BaseNode implements Node, NodeListener, Logger
 
     public Collection<Node> getEffectiveChildrens() 
     {
-        if (childrens==null)
-            return null;
-        List<Node> sortedChildrens = new ArrayList<Node>(childrens.values());
-        Collections.sort(sortedChildrens);
+        List<Node> sortedChildrens = getSortedChildrens();
         for (int i=sortedChildrens.size()-1; i>=0; --i)
         {
             Node node = sortedChildrens.get(i);

@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.text.StrMatcher;
+import org.apache.commons.lang.text.StrTokenizer;
 import org.raven.table.Table;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -34,6 +36,17 @@ import org.raven.tree.impl.BaseNode;
 public class RavenUtils
 {
     private RavenUtils(){ }
+
+    public static String[] split(String str)
+    {
+        if (str==null)
+            return null;
+        StrTokenizer tokenizer = new StrTokenizer(str, ',');
+        tokenizer.setTrimmerMatcher(StrMatcher.trimMatcher());
+        tokenizer.setQuoteChar('"');
+
+        return tokenizer.getTokenArray();
+    }
 
     public static List<Object[]> tableAsList(Table table)
     {

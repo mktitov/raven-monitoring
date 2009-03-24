@@ -266,8 +266,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 		FromClause from = createMock(FromClause.class);
         SelectClause select = createMock(SelectClause.class);
 		expect(query.getFromClause()).andReturn(from);
-        expect(query.getSelectClause()).andReturn(select);
-        expect(select.getSelectMode()).andReturn(SelectMode.SELECT_KEYS);
+        expect(query.getSelectMode()).andReturn(SelectMode.SELECT_KEYS);
 		expect(from.getKeyExpression()).andReturn("/@r .*/").atLeastOnce();
 
 		replay(query, from, select);
@@ -292,8 +291,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 		Query query = createMock(Query.class);
         SelectClause select = createMock(SelectClause.class);
 		expect(query.getFromClause()).andReturn(from).times(2);
-        expect(query.getSelectClause()).andReturn(select).times(2);
-        expect(select.getSelectMode()).andReturn(SelectMode.SELECT_KEYS).times(2);
+        expect(query.getSelectMode()).andReturn(SelectMode.SELECT_KEYS).times(2);
 		expect(from.getKeyExpression()).andReturn("/1/");
 		expect(from.getKeyExpression()).andReturn("/2/1");
 
@@ -329,8 +327,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 		Query query = createMock(Query.class);
         SelectClause select = createMock(SelectClause.class);
 		expect(query.getFromClause()).andReturn(from).times(2);
-        expect(query.getSelectClause()).andReturn(select).times(2);
-        expect(select.getSelectMode()).andReturn(SelectMode.SELECT_KEYS).times(2);
+        expect(query.getSelectMode()).andReturn(SelectMode.SELECT_KEYS).times(2);
 		expect(from.getKeyExpression()).andReturn("/@r [23]/1/");
 		expect(from.getKeyExpression()).andReturn("/@r [23]/@r ^2/");
 
@@ -377,7 +374,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
         expect(query.getEndTime()).andReturn("10L");
         expect(query.getStep()).andReturn(5l);
 
-        expect(select.getSelectMode()).andReturn(SelectMode.SELECT_KEYS_AND_DATA);
+        expect(query.getSelectMode()).andReturn(SelectMode.SELECT_KEYS_AND_DATA);
         expect(select.getSelectEntries()).andReturn(null);
         
 		expect(from.getKeyExpression()).andReturn("/@r .*/@r .*/");
@@ -430,7 +427,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
         expect(query.getEndTime()).andReturn("10L");
         expect(query.getStep()).andReturn(5l);
 
-        expect(select.getSelectMode()).andReturn(SelectMode.SELECT_KEYS_AND_DATA);
+        expect(query.getSelectMode()).andReturn(SelectMode.SELECT_KEYS_AND_DATA);
         expect(select.getSelectEntries()).andReturn(new SelectEntry[]{selectEntry});
         expect(selectEntry.getExpression()).andReturn("s1+s2").atLeastOnce();
         expect(selectEntry.getName()).andReturn("e1").atLeastOnce();
@@ -486,7 +483,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
         expect(query.getEndTime()).andReturn("10L");
         expect(query.getStep()).andReturn(5l);
 
-        expect(select.getSelectMode()).andReturn(SelectMode.SELECT_KEYS_AND_DATA);
+        expect(query.getSelectMode()).andReturn(SelectMode.SELECT_KEYS_AND_DATA);
         expect(select.getSelectEntries()).andReturn(new SelectEntry[]{selectEntry});
         expect(selectEntry.getExpression()).andReturn("$sum{s1+s2}").atLeastOnce();
         expect(selectEntry.getName()).andReturn("e1").atLeastOnce();

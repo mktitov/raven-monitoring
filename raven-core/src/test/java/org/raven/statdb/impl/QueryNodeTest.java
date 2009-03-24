@@ -86,7 +86,7 @@ public class QueryNodeTest extends RavenCoreTestCase
         SelectClauseNode select = (SelectClauseNode) query.getSelectClause();
         assertNotNull(select);
         assertEquals(Status.STARTED, select.getStatus());
-        assertEquals(SelectMode.SELECT_KEYS_AND_DATA, select.getSelectMode());
+        assertEquals(SelectMode.SELECT_KEYS_AND_DATA, query.getSelectMode());
 
         assertNull(select.getSelectEntries());
 
