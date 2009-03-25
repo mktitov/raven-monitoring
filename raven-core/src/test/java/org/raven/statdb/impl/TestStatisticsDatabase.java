@@ -40,6 +40,16 @@ public class TestStatisticsDatabase extends AbstractStatisticsDatabase
 		this.databaseMock = databaseMock;
 	}
 
+    public ExecuteDatabaseQuery getQueryMock()
+    {
+        return queryMock;
+    }
+
+    public void setQueryMock(ExecuteDatabaseQuery queryMock)
+    {
+        this.queryMock = queryMock;
+    }
+
 	public void saveStatisticsValue(String key, String statisticName, double value, long time)
 	{
 		databaseMock.saveStatisticsValue(key, statisticName, value, time);

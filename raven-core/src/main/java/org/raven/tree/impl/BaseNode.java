@@ -105,6 +105,7 @@ public class BaseNode implements Node, NodeListener, Logger
     private Lock attributeListenersLock;
     
     private boolean initializeAfterChildrens = false;
+    private boolean startAfterChildrens = false;
     private Status status;
     private Lock statusLock;
     
@@ -309,10 +310,13 @@ public class BaseNode implements Node, NodeListener, Logger
         if (listeners.contains(listener))
             return;
         listeners.add(listener);
-        Collection<Node> childs = getChildrens();
-        if (listener.isSubtreeListener() && childs!=null)
-            for (Node children: childs)
-                children.addListener(listener);
+        if (listener.isSubtreeListener())
+        {
+            Collection<Node> childs = getChildrens();
+            if (childs!=null)
+                for (Node children: childs)
+                    children.addListener(listener);
+        }
     }
     
     public void removeListener(NodeListener listener)
@@ -581,6 +585,16 @@ public class BaseNode implements Node, NodeListener, Logger
     public void setInitializeAfterChildrens(boolean initializeAfterChildrens)
     {
         this.initializeAfterChildrens = initializeAfterChildrens;
+    }
+
+    public boolean isStartAfterChildrens()
+    {
+        return startAfterChildrens;
+    }
+
+    public void setStartAfterChildrens(boolean startAfterChildrens)
+    {
+        this.startAfterChildrens = startAfterChildrens;
     }
 
     public boolean isAutoStart()

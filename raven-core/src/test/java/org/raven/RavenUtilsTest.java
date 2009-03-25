@@ -27,8 +27,14 @@ import org.junit.Test;
 public class RavenUtilsTest extends Assert
 {
     @Test
-    public void split_test()
+    public void splitWithDefaultDelimiter_test()
     {
         assertArrayEquals(new String[]{"1", "2", "3"}, RavenUtils.split("1, 2, \"3\""));
+    }
+
+    @Test
+    public void split_test()
+    {
+        assertArrayEquals(new String[]{"1", "2", "3"}, RavenUtils.split("1/ 2/ \"3\"", "/"));
     }
 }

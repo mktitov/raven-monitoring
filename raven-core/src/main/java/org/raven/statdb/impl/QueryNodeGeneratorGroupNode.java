@@ -34,6 +34,16 @@ public class QueryNodeGeneratorGroupNode extends BaseNode
     @Parameter(readOnly=true)
     private String childsKeyExpression;
 
+    public QueryNodeGeneratorGroupNode()
+    {
+        setStartAfterChildrens(true);
+    }
+
+    public boolean isChildsInitialized()
+    {
+        return childsInitialized;
+    }
+
     public QueryNodeGeneratorNode getNodeGenerator()
     {
         return nodeGenerator;
@@ -55,14 +65,32 @@ public class QueryNodeGeneratorGroupNode extends BaseNode
     }
 
     @Override
-    public synchronized Collection<Node> getChildrens()
+    public Collection<Node> getChildrens()
     {
-        if (!childsInitialized)
+        initChildrens();
+        return super.getChildrens();
+    }
+
+    @Override
+    public Node getChildren(String name)
+    {
+        initChildrens();
+        return super.getChildren(name);
+    }
+
+    @Override
+    public int getChildrenCount()
+    {
+        initChildrens();
+        return super.getChildrenCount();
+    }
+
+    private void initChildrens()
+    {
+        if (Status.STARTED==getStatus() && !childsInitialized)
         {
             nodeGenerator.addChildrensFor(this);
             childsInitialized = true;
         }
-
-        return super.getChildrens();
     }
 }

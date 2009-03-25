@@ -18,12 +18,17 @@
 package org.raven.statdb.impl;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import javax.script.Bindings;
 import org.raven.RavenUtils;
 import org.raven.annotations.Parameter;
+import org.raven.log.LogLevel;
+import org.raven.sched.Schedulable;
+import org.raven.sched.Scheduler;
+import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
 import org.raven.statdb.StatisticsDatabase;
 import org.raven.statdb.query.KeyValues;
 import org.raven.statdb.query.QueryExecutionException;
@@ -31,6 +36,7 @@ import org.raven.statdb.query.QueryResult;
 import org.raven.template.GroupsOrganazier;
 import org.raven.template.impl.GroupsOrganizerNodeTuner;
 import org.raven.template.impl.TemplateEntry;
+import org.raven.template.impl.TemplateNode;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
@@ -41,8 +47,10 @@ import org.weda.internal.annotations.Service;
  *
  * @author Mikhail Titov
  */
-public class QueryNodeGeneratorNode extends BaseNode
+public class QueryNodeGeneratorNode extends BaseNode implements Schedulable
 {
+    public static final String GROUP_WITHOUT_NAME = "GROUP_WITHOUT_NAME";
+    public static final int LOCK_TIMEOUT = 500;
     public static final String TEMPLATE_NODE_NAME = "Template";
 
     @Service
@@ -67,10 +75,23 @@ public class QueryNodeGeneratorNode extends BaseNode
     @NotNull
     private String gropNames;
 
+    @Parameter(valueHandlerType=SystemSchedulerValueHandlerFactory.TYPE)
+    @NotNull
+    private Scheduler scheduler;
+
     private String[] groups;
     private String[] masks;
+    private Lock updateLock;
 
     private TemplateEntry queryNodeGeneratorTemplate;
+
+    @Override
+    protected void initFields()
+    {
+        super.initFields();
+
+        updateLock = new ReentrantLock();
+    }
 
     @Override
     protected void doInit() throws Exception
@@ -91,8 +112,7 @@ public class QueryNodeGeneratorNode extends BaseNode
         masks = RavenUtils.split(keyMasks);
 
         deletePreviousGroups();
-        String _startFromKey =
-                StatisticsDatabase.KEY_DELIMITER.equals(startFromKey)? "" : startFromKey;
+        String _startFromKey = startFromKey;
         createGroup(_startFromKey, this);
     }
 
@@ -102,6 +122,56 @@ public class QueryNodeGeneratorNode extends BaseNode
         super.doStop();
 
         deletePreviousGroups();
+    }
+    
+    public void executeScheduledJob()
+    {
+        if (getStatus().equals(Status.STARTED))
+        {
+            try
+            {
+                if (updateLock.tryLock(LOCK_TIMEOUT, TimeUnit.MILLISECONDS))
+                {
+                    try
+                    {
+                        deletePreviousGroups();
+                        createGroup(startFromKey, this);
+                    }
+                    finally
+                    {
+                        updateLock.unlock();
+                    }
+                }
+                else
+                {
+                    error("Error acquiring update lock for clean operation");
+                }
+            }
+            catch(InterruptedException e)
+            {
+                error("Error acquiring update lock", e);
+            }
+        }
+    }
+
+    @Override
+    public void formExpressionBindings(Bindings bindings)
+    {
+        super.formExpressionBindings(bindings);
+        if (!isTemplate())
+        {
+            bindings.put(TemplateNode.TEMPLATE_EXPRESSION_BINDING, this);
+        }
+    }
+
+    public Scheduler getScheduler()
+    {
+        return scheduler;
+    }
+
+    public void setScheduler(Scheduler scheduler)
+    {
+        this.scheduler = scheduler;
     }
 
     public String getDefaultKeyMask()
@@ -161,14 +231,74 @@ public class QueryNodeGeneratorNode extends BaseNode
 
     public void addChildrensFor(QueryNodeGeneratorGroupNode group)
     {
-        Collection<String> keys = getKeysForGroup(group);
-        if (keys==null)
-            return;
+        try
+        {
+            if (updateLock.tryLock(LOCK_TIMEOUT, TimeUnit.MILLISECONDS))
+            {
+                if (group.getStatus().equals(Status.REMOVED))
+                {
+                    if (isLogLevelEnabled(LogLevel.DEBUG))
+                        debug(String.format(
+                                "Skipped addind nodes operation to the group node (%s) " +
+                                "because of clean operation."
+                                , group.getPath()));
+                    return;
+                }
+                if (group.isChildsInitialized())
+                {
+                    if (isLogLevelEnabled(LogLevel.DEBUG))
+                        debug(String.format(
+                                "Skipped addind nodes operation to the group node (%s) " +
+                                "because of child nodes already added by other thread."
+                                , group.getPath()));
+                    return;
+                }
+                Collection<String> keys = getKeysForGroup(group);
+                if (keys==null)
+                    return;
 
-        
+                int level = getGroupNodeLevel(group);
+                String groupName = getGroupNodeName(level);
+                for (String key: keys)
+                {
+                    String childsKeyExpression = getChildsKeyExpression(key, level);
+                    String[] keyElements = RavenUtils.split(key, StatisticsDatabase.KEY_DELIMITER);
+                    String lastKeyElement = keyElements[keyElements.length-1];
+
+                    Tuner tuner = new  Tuner(level, groupName, childsKeyExpression, lastKeyElement);
+
+                    groupsOrganazier.organize(group, queryNodeGeneratorTemplate, tuner, null, true);
+                }
+            }
+            else
+                error(String.format(
+                        "Error acquiring update lock for adding childrens to the (%s) group node"
+                        , group.getPath()));
+        }
+        catch (InterruptedException e)
+        {
+                error(
+                    String.format(
+                        "Error acquiring update lock for adding childrens to the (%s) group node"
+                        , group.getPath())
+                    , e);
+        }
     }
 
     private void createGroup(String statisticsDatabaseKey, Node parentNode)
+    {
+        int level = getGroupNodeLevel(parentNode);
+        String groupName = getGroupNodeName(level);
+        String childsKeyExpression = getChildsKeyExpression(statisticsDatabaseKey, level);
+        QueryNodeGeneratorGroupNode group = new QueryNodeGeneratorGroupNode();
+        group.setName(groupName);
+        group.setNodeGenerator(this);
+        parentNode.addAndSaveChildren(group);
+        group.setChildsKeyExpression(childsKeyExpression);
+        group.start();
+    }
+
+    private int getGroupNodeLevel(Node parentNode)
     {
         int level = 0;
         Node currentNode = parentNode;
@@ -178,26 +308,24 @@ public class QueryNodeGeneratorNode extends BaseNode
                 ++level;
             currentNode = currentNode.getParent();
         }
-        String groupName = level>=groups.length? "GROUP_WITHOUT_NAME" : groups[level];
-        String keyMask = masks==null || level>=masks.length? defaultKeyMask : masks[level];
-        QueryNodeGeneratorGroupNode group = new QueryNodeGeneratorGroupNode();
-        group.setName(groupName);
-        group.setNodeGenerator(this);
-        parentNode.addAndSaveChildren(group);
-        group.setChildsKeyExpression(
-                statisticsDatabaseKey+StatisticsDatabase.KEY_DELIMITER+keyMask);
-        group.start();
+        return level;
     }
 
-    private void tuneNode(QueryNodeGeneratorGroupNode group)
+    private String getGroupNodeName(int level)
     {
-        
+        return level>=groups.length? GROUP_WITHOUT_NAME : groups[level];
+    }
+
+    private String getChildsKeyExpression(String key, int level)
+    {
+        String keyMask = masks==null || level>=masks.length? defaultKeyMask : masks[level];
+        return key+keyMask;
     }
 
     private void deletePreviousGroups()
     {
         Collection<Node> childs = getChildrens();
-        if (childs!=null && childs.isEmpty())
+        if (childs!=null && !childs.isEmpty())
         {
             for (Node child: childs)
                 if (child instanceof QueryNodeGeneratorGroupNode)
@@ -259,17 +387,51 @@ public class QueryNodeGeneratorNode extends BaseNode
 
     private class Tuner extends GroupsOrganizerNodeTuner
     {
-        @Override
-        public Node cloneNode(Node sourceNode)
+        public static final String GROUPNAME_BINDING = "groupName";
+        public static final String GROUPLEVEL_BINDING = "groupLevel";
+        public static final String LASTKEYELEMENT_BINDING = "lastKeyElement";
+        
+        private final int groupNodeLevel;
+        private final String groupName;
+        private final String childsKeyExpression;
+        private final String lastKeyElement;
+
+        public Tuner(
+                int groupNodeLevel, String groupName, String childsKeyExpression
+                , String lastKeyElement)
         {
-            Node newNode = super.cloneNode(sourceNode);
-            newNode = newNode==null? sourceNode : newNode;
-            if (newNode instanceof QueryNodeGeneratorGroupNode)
+            this.groupNodeLevel = groupNodeLevel;
+            this.groupName = groupName;
+            this.childsKeyExpression = childsKeyExpression;
+            this.lastKeyElement = lastKeyElement;
+        }
+
+        @Override
+        public void tuneNode(Node sourceNode, Node sourceClone)
+        {
+            super.tuneNode(sourceNode, sourceClone);
+
+            if (sourceClone instanceof QueryNodeGeneratorGroupNode)
             {
-                QueryNodeGeneratorGroupNode group = (QueryNodeGeneratorGroupNode) newNode;
+                QueryNodeGeneratorGroupNode group = (QueryNodeGeneratorGroupNode) sourceClone;
                 group.setNodeGenerator(QueryNodeGeneratorNode.this);
-                group.set
+                if (   sourceClone.getName()==null
+                    || sourceClone.getName().equals(sourceNode.getName()))
+                {
+                    group.setName(groupName);
+                    group.setChildsKeyExpression(childsKeyExpression);
+                }
             }
+        }
+
+        @Override
+        protected void formBindings(Bindings bindings)
+        {
+            super.formBindings(bindings);
+            QueryNodeGeneratorNode.this.formExpressionBindings(bindings);
+            bindings.put(GROUPNAME_BINDING, groupName);
+            bindings.put(GROUPLEVEL_BINDING, groupNodeLevel);
+            bindings.put(LASTKEYELEMENT_BINDING, lastKeyElement);
         }
     }
 }

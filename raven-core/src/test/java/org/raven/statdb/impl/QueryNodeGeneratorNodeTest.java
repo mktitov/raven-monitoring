@@ -17,13 +17,23 @@
 
 package org.raven.statdb.impl;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import org.easymock.IArgumentMatcher;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.PushDataSource;
 import org.raven.RavenCoreTestCase;
+import org.raven.statdb.StatisticsDatabase;
+import org.raven.statdb.query.KeyValues;
+import org.raven.statdb.query.Query;
+import org.raven.statdb.query.QueryResult;
+import org.raven.statdb.query.SelectMode;
 import org.raven.template.impl.TemplateEntry;
 import org.raven.tree.Node;
-
+import org.raven.tree.impl.ContainerNode;
+import static org.easymock.EasyMock.*;
 /**
  *
  * @author Mikhail Titov
@@ -53,7 +63,7 @@ public class QueryNodeGeneratorNodeTest extends RavenCoreTestCase
         generator.setName("generator");
         tree.getRootNode().addAndSaveChildren(generator);
         generator.setStatisticsDatabase(database);
-        generator.setGropNames("group1");
+        generator.setGropNames("group1, group2, group3");
     }
 
     @Test
@@ -71,7 +81,113 @@ public class QueryNodeGeneratorNodeTest extends RavenCoreTestCase
         Node node = generator.getChildren("group1");
         assertNotNull(node);
         assertTrue(node instanceof QueryNodeGeneratorGroupNode);
+        assertEquals(Node.Status.STARTED, node.getStatus());
         QueryNodeGeneratorGroupNode group = (QueryNodeGeneratorGroupNode) node;
         assertEquals("/@r .*", group.getChildsKeyExpression());
+    }
+
+    @Test
+    public void genrating_test()
+    {
+        initTemplate();
+        QueryResult queryResult = createQueryResult("/key1/", "/key2/");
+
+        ExecuteDatabaseQuery queryExecuter = createMock(ExecuteDatabaseQuery.class);
+        expect(queryExecuter.executeQuery(checkQuery("/@r .*", database)))
+                .andReturn(createQueryResult("/key1/", "/key2/"));
+
+        replay(queryExecuter);
+        database.setQueryMock(queryExecuter);
+
+        assertTrue(generator.start());
+        
+        Node group = generator.getChildren("group1");
+        Collection<Node> childs = group.getChildrens();
+        QueryNodeGeneratorGroupNode group2_1 = checkNode(group, "group2", "/key1/", "key1", 1);
+        QueryNodeGeneratorGroupNode group2_2 = checkNode(group, "group2", "/key2/", "key2", 1);
+
+        verify(queryExecuter);
+
+        reset(queryExecuter);
+        expect(queryExecuter.executeQuery(checkQuery("/key1/@r .*", database)))
+                .andReturn(createQueryResult("/key1/subkey1/"));
+        replay(queryExecuter);
+        checkNode(group2_1, "group3", "/key1/subkey1/", "subkey1", 2);
+        
+        verify(queryExecuter);
+        
+        reset(queryExecuter);
+        expect(queryExecuter.executeQuery(checkQuery("/key2/@r .*", database)))
+                .andReturn(createQueryResult("/key2/subkey1/"));
+        replay(queryExecuter);
+        checkNode(group2_2, "group3", "/key2/subkey1/", "subkey1", 2);
+
+        verify(queryExecuter);
+    }
+
+    private QueryNodeGeneratorGroupNode checkNode(
+            Node parentNode, String groupName, String key, String lastKeyElement, int level)
+    {
+        Node node = parentNode.getChildren(lastKeyElement);
+        assertNotNull(node);
+        assertStarted(node);
+
+        node = node.getChildren(groupName+":"+level);
+        assertNotNull(node);
+        assertStarted(node);
+        node = node.getParent().getChildren(groupName);
+        assertNotNull(node);
+        assertTrue(node instanceof QueryNodeGeneratorGroupNode);
+        QueryNodeGeneratorGroupNode group = (QueryNodeGeneratorGroupNode) node;
+        assertStarted(node);
+        assertSame(generator, group.getNodeGenerator());
+        assertEquals(key+"@r .*", group.getChildsKeyExpression());
+        
+        return group;
+    }
+
+    private QueryResult createQueryResult(String... keys)
+    {
+        List<KeyValues> keyValuesList = new ArrayList<KeyValues>();
+        for (String key: keys)
+            keyValuesList.add(new KeyValuesImpl(key));
+        QueryResultImpl result = new QueryResultImpl(keyValuesList);
+
+        return result;
+    }
+
+    private void initTemplate()
+    {
+        Node template = generator.getQueryNodeGeneratorTemplate();
+        ContainerNode tRoot = new ContainerNode("^t lastKeyElement");
+        template.addAndSaveChildren(tRoot);
+        ContainerNode node = new ContainerNode("^t groupName+':'+groupLevel");
+        tRoot.addAndSaveChildren(node);
+        QueryNodeGeneratorGroupNode group = new QueryNodeGeneratorGroupNode();
+        group.setName("group");
+        tRoot.addAndSaveChildren(group);
+    }
+
+    public static Query checkQuery(final String keyExpression, final StatisticsDatabase database)
+    {
+        reportMatcher(new IArgumentMatcher()
+        {
+            public boolean matches(Object argument)
+            {
+                assertNotNull(argument);
+                Query query = (Query) argument;
+                assertEquals(keyExpression, query.getFromClause().getKeyExpression());
+                assertEquals(SelectMode.SELECT_KEYS, query.getSelectMode());
+                assertSame(database, query.getFromClause().getDatabase());
+
+                return true;
+            }
+
+            public void appendTo(StringBuffer buffer)
+            {
+            }
+        });
+
+        return null;
     }
 }

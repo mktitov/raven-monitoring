@@ -275,8 +275,11 @@ public class TreeImpl implements Tree
     {
 		try
 		{
-			if (node.getStatus()==Status.INITIALIZED && (!autoStartOnly || node.isAutoStart()))
+			if (!node.isStartAfterChildrens() && node.getStatus()==Status.INITIALIZED
+                && (!autoStartOnly || node.isAutoStart()))
+            {
 				node.start();
+            }
 		}
 		catch(NodeError e)
 		{
@@ -286,6 +289,19 @@ public class TreeImpl implements Tree
 		if (node.getChildrens()!=null)
 			for (Node child: node.getChildrens())
 				start(child, autoStartOnly);
+
+		try
+		{
+			if (node.isStartAfterChildrens() && node.getStatus()==Status.INITIALIZED
+                && (!autoStartOnly || node.isAutoStart()))
+            {
+				node.start();
+            }
+		}
+		catch(NodeError e)
+		{
+			logger.error("Error starting node (%s)", e);
+		}
     }
 
     public void stop(Node node)

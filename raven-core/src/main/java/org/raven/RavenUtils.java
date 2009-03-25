@@ -35,13 +35,28 @@ import org.raven.tree.impl.BaseNode;
  */
 public class RavenUtils
 {
+    public static final String DEFAULT_SPLIT_DELIMITER = ",";
+    
     private RavenUtils(){ }
 
+    /**
+     * Splits the string using {@link #DEFAULT_SPLIT_DELIMITER DEFAULT_SPLIT_DELIMITER}.
+     * @return returns null if str is null or array of strings
+     */
     public static String[] split(String str)
+    {
+        return split(str,DEFAULT_SPLIT_DELIMITER);
+    }
+    
+    /**
+     * Splits the string.
+     * @return returns null if str is null or array of strings
+     */
+    public static String[] split(String str, String delimiter)
     {
         if (str==null)
             return null;
-        StrTokenizer tokenizer = new StrTokenizer(str, ',');
+        StrTokenizer tokenizer = new StrTokenizer(str, delimiter);
         tokenizer.setTrimmerMatcher(StrMatcher.trimMatcher());
         tokenizer.setQuoteChar('"');
 
@@ -63,7 +78,8 @@ public class RavenUtils
     }
 
 	public static void copyAttributes(
-			Node sourceNode, Node targetNode, boolean initAndSaveAttribute, String... excludeAttributes)
+			Node sourceNode, Node targetNode, boolean initAndSaveAttribute
+            , String... excludeAttributes)
 		throws Exception
 	{
 		Collection<NodeAttribute> attrs = sourceNode.getNodeAttributes();

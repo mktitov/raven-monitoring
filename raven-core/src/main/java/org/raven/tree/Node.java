@@ -236,6 +236,10 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
      */
     public boolean isInitializeAfterChildrens();
     /**
+     * If returns <code>true</code> then node will be started after child nodes else before.
+     */
+    public boolean isStartAfterChildrens();
+    /**
      * If method returns <code>true</code> then the method {@link #start()} will executed 
      * automaticaly after {@link #init()} method.
      */
