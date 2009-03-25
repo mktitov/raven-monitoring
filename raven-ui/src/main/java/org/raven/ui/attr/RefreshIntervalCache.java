@@ -1,10 +1,10 @@
 package org.raven.ui.attr;
 
-import org.raven.cache.AbstractCache;
+import org.raven.cache.SimpleAbstractCache;
 //import org.slf4j.Logger;
 //import org.slf4j.LoggerFactory;
 
-public class RefreshIntervalCache extends AbstractCache<Integer, Long> 
+public class RefreshIntervalCache extends SimpleAbstractCache<Integer, Long> 
 {
 //	protected static Logger logger = LoggerFactory.getLogger(RefreshIntervalStorage.class);
 	public RefreshIntervalCache()
@@ -20,7 +20,12 @@ public class RefreshIntervalCache extends AbstractCache<Integer, Long>
 		return new Long(0);
 	}
 	
-	public Long put(Integer key, Long value)
+//	protected Integer getStoreKey(Integer key) 
+//	{
+//		return key;
+//	}
+	
+	public Long put2(Integer key, Long value)
 	{
 		if(value<0) value = 0L;
 		return super.put(key, value);

@@ -2,7 +2,13 @@ package org.raven.cache;
 
 public class CacheValueContainer<V> 
 {
+	/**
+	 * Кешируемый объект.
+	 */
 	private V value;
+	/**
+	 * Время размешения объекта в кеше.
+	 */
 	private Long time;
 		
 	public CacheValueContainer(V value)

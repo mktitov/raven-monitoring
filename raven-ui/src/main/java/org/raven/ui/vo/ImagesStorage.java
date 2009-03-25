@@ -2,8 +2,7 @@ package org.raven.ui.vo;
 
 import java.util.HashMap;
 
-
-public class ViewableObjectsStorage 
+public class ImagesStorage 
 {
 	HashMap<String, ViewableObjectWrapper> storage = new HashMap<String, ViewableObjectWrapper>();
 	

@@ -145,9 +145,10 @@ action="#{sBean.reloadRightFrame}"
 					value="#{row.expression}" 
 					action="dialog:editExpression"
 					actionListener="#{editExpression.selectAttr}"
-					windowWidth="300" windowHeight="300"
-					columns="40" label="#{msgs.expression}"
-				>
+					windowWidth="300" 
+					windowHeight="300"
+					columns="40" 
+					label="#{msgs.expression}">
 					<f:attribute 
 						name="#{editExpression.paramName}" 
 						value="#{row}" />
@@ -160,9 +161,10 @@ action="#{sBean.reloadRightFrame}"
 					action="dialog:selectNode"
 					actionListener="#{row.setNode}"
 					immediate="true" 
-					windowWidth="500" windowHeight="400"
-					columns="40" label="#{msgs.node}"
-				>
+					windowWidth="500" 
+					windowHeight="400"
+					columns="40" 
+					label="#{msgs.node}">
 				</tr:inputListOfValues>
 	            <tr:selectOneChoice 
 	            	label="#{msgs.expression}" 
@@ -198,50 +200,51 @@ action="#{sBean.reloadRightFrame}"
  		var="row"
  		value="#{cNode.viewableObjects}"  
  		id="showTable"
- 		immediate="true"
- 		 >
+ 		immediate="true" >
 <!-- 
 :::refresh_A ::poolStatus
 partialTriggers=":poolStatus"
  --> 
- <tr:column id="sw_column" align="center">
+ <tr:column 
+ 	id="sw_column" 
+ 	align="center">
  
-  <tr:switcher 
-  	id="switcher" 
-  	facetName="#{row.mimeGroup}" 
-  	defaultFacet="default">
+  	<tr:switcher 
+  		id="switcher" 
+  		facetName="#{row.mimeGroup}" 
+  		defaultFacet="default">
 
-  	<f:facet name="default"/>
+  		<f:facet name="default"/>
 
 <!-- show nodeUrl --> 
-  	<f:facet name="nodeUrl">
-		<tr:commandLink 
-			text="#{row.nodePath}" 
-			actionListener="#{sBean.selectNode}">
-			<f:attribute 
-				name="nodePath" 
-				value="#{row.nodePath}"/>
-		</tr:commandLink>
-	</f:facet>
+	  	<f:facet name="nodeUrl">
+			<tr:commandLink 
+				text="#{row.nodePath}" 
+				actionListener="#{sBean.selectNode}">
+				<f:attribute 
+					name="nodePath" 
+					value="#{row.nodePath}"/>
+			</tr:commandLink>
+		</f:facet>
 <!-- show image -->
-	<f:facet name="image">
-		<tr:panelGroupLayout layout="vertical"  > 
+		<f:facet name="image">
+			<tr:panelGroupLayout layout="vertical"  > 
 			<tr:outputFormatted 
 				inlineStyle="COLOR: green; FONT-STYLE: italic;" 
 				value="&lt;small&gt;#{row.fromDate}&lt;/small&gt;"/>
 			<!-- forceIdIndex="true" forceId="true" id="graph" -->
-    		<s:graphicImageDynamic
-				forceId="true" 
-				forceIdIndex="true"
-   				id="graph_x_list" 
-   	    		imageRendererClass="#{sBean.ravenViewableImageRenderer}" > 
-       			<f:param 
-	       			name="ViewableObject" 
-    	   			value="#{row.id}"/>
-   			</s:graphicImageDynamic>
-			<tr:spacer height="6" />
-		</tr:panelGroupLayout>
-  </f:facet >
+    			<s:graphicImageDynamic
+					forceId="true" 
+					forceIdIndex="true"
+   					id="graph_x_list" 
+   	    			imageRendererClass="#{sBean.ravenViewableImageRenderer}" > 
+       				<f:param 
+	       				name="ViewableObject" 
+    	   				value="#{row.id}"/>
+   				</s:graphicImageDynamic>
+				<tr:spacer height="6" />
+			</tr:panelGroupLayout>
+  		</f:facet >
 
 <!-- show table varStatus="vStat2" -->  
 	<f:facet name="ravenTable">

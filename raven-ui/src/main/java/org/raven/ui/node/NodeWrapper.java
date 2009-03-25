@@ -209,6 +209,7 @@ implements Comparator<NodeAttribute>
 		editingAttrs = null;
 		createNewAttribute();
 		editingRefreshAttrs = null;
+		refreshPressed = false;
 		//loadRefreshAttributes();
 //		AttributesTableBean atb = (AttributesTableBean) context.getELContext().getELResolver().getValue(context.getELContext(), null, AttributesTableBean.BEAN_NAME);
 //		if(atb != null && atb.getMessage() !=null) atb.getMessage().setMessage("");
@@ -273,7 +274,7 @@ implements Comparator<NodeAttribute>
 		
 	public List<ViewableObjectWrapper> getViewableObjects()
 	{
-		List<ViewableObjectWrapper> x = SessionBean.getInstance().getViewableObjectsHash().getObjects(this);
+		List<ViewableObjectWrapper> x = SessionBean.getInstance().getViewableObjectsCache().getObjects(this);
 		logger.info("+++ ");
 		for(ViewableObjectWrapper v : x)
 		{
@@ -285,7 +286,7 @@ implements Comparator<NodeAttribute>
 	
 	public void removeVOFromHash()
 	{
-		SessionBean.getInstance().getViewableObjectsHash().remove(this);
+		SessionBean.getInstance().getViewableObjectsCache().remove(this);
 	}
 	
 	public void removeRAFromHash()
@@ -939,24 +940,34 @@ implements Comparator<NodeAttribute>
 		return lva.isGroupByNodes();
 	}
 
-	public boolean isAutoRefresh()
+	public static boolean isAutoRefresh(Node node)
 	{
-		Node node = getNode();
 		if(node instanceof Viewable) 
 		{
 			Viewable v = (Viewable) node;
 			Boolean b = v.getAutoRefresh();
-			if(b!=null && b==false) return false;
+			if(b==null || b==false) return false;
 		}
 		return true;
 	}
 	
-	public boolean isShowVO() 
+	public boolean isAutoRefresh()
 	{
-		if(refreshPressed) return true;
-		return isAutoRefresh();
+		return isAutoRefresh(getNode());
 	}
 	
-	
+	public boolean isShowVO() 
+	{
+		if(isRefreshPressed()) return true;
+		return isAutoRefresh();
+	}
+
+	public boolean isRefreshPressed() {
+		return refreshPressed;
+	}
+
+//	public void setRefreshPressed(boolean refreshPressed) {
+//		this.refreshPressed = refreshPressed;
+//	}
 	
 }

@@ -2,12 +2,12 @@ package org.raven.ui.log;
 
 import java.util.Date;
 import java.util.List;
-import org.raven.cache.AbstractCache;
+import org.raven.cache.SimpleAbstractCache;
 import org.raven.log.NodeLogRecord;
 import org.raven.log.NodeLogger;
 import org.weda.internal.annotations.Service;
 
-public class LogsCache extends AbstractCache<Integer,List<NodeLogRecord>>
+public class LogsCache extends SimpleAbstractCache<Integer,List<NodeLogRecord>>
 {
 	@Service
 	private NodeLogger nodeLogger;
@@ -20,6 +20,11 @@ public class LogsCache extends AbstractCache<Integer,List<NodeLogRecord>>
 		setCheckInterval(1000*60*5);
 		setDeleteAfter(1000*60*60*2);
 	}
+	
+//	protected Integer getStoreKey(Integer key) 
+//	{
+//		return key;
+//	}
 	
 	protected List<NodeLogRecord> getValue(Integer key) 
 	{

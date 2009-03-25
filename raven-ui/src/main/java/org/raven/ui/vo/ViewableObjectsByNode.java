@@ -13,13 +13,13 @@ import org.slf4j.LoggerFactory;
 
 public class ViewableObjectsByNode 
 {
-	protected Logger logger = LoggerFactory.getLogger(ViewableObjectsByNode.class);
+	private static Logger logger = LoggerFactory.getLogger(ViewableObjectsByNode.class);
 	private static final int tryRemoveOldAfter = 100;
 	private static final long howOld = 1000*60*60*2;
 	private long accessCount = 0;
 	private HashMap<Integer,List<ViewableObjectWrapper>> vomap = 
 					new HashMap<Integer, List<ViewableObjectWrapper>>();
-	private ViewableObjectsStorage viewableObjectsStorage;
+	private ImagesStorage viewableObjectsStorage;
 	
 	private List<ViewableObjectWrapper> getObjectsByNode(NodeWrapper nw,boolean reload)
 	{
@@ -146,11 +146,11 @@ public class ViewableObjectsByNode
 		return vowl;
 	}
 
-	public void setViewableObjectsStorage(ViewableObjectsStorage viewableObjectsStorage) {
+	public void setViewableObjectsStorage(ImagesStorage viewableObjectsStorage) {
 		this.viewableObjectsStorage = viewableObjectsStorage;
 	}
 
-	public ViewableObjectsStorage getViewableObjectsStorage() {
+	public ImagesStorage getViewableObjectsStorage() {
 		return viewableObjectsStorage;
 	}
 

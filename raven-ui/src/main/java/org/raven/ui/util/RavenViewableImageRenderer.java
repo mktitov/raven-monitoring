@@ -51,7 +51,8 @@ public class RavenViewableImageRenderer implements ImageRenderer
 	public void setContext(FacesContext fc, ResourceContext rc) throws Exception 
 	{
 		String par_value = fc.getExternalContext().getRequestParameterMap().get(PARAM_NAME);
-		vow = SessionBean.getInstance().getViewableObjectsCache().get(par_value);
+		
+		vow = SessionBean.getInstance().getImagesStorage().get(par_value);
 		if(vow==null) logger.error("ViewableObjectWrapper is null !");
 	}
 

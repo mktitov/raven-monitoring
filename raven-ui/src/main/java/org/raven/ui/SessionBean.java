@@ -17,8 +17,6 @@
 
 package org.raven.ui;
 
-//import java.io.IOException;
-//import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.List;
@@ -37,9 +35,8 @@ import org.raven.ui.node.NodeWrapper;
 import org.raven.ui.util.RavenImageRenderer;
 import org.raven.ui.util.RavenRegistry;
 import org.raven.ui.util.RavenViewableImageRenderer;
-//import org.raven.ui.vo.VOTableWrapper;
-import org.raven.ui.vo.ViewableObjectsByNode;
-import org.raven.ui.vo.ViewableObjectsStorage;
+import org.raven.ui.vo.VObyNode;
+import org.raven.ui.vo.ImagesStorage;
 import org.raven.conf.Configurator;
 import org.raven.conf.impl.UserAcl;
 import org.raven.template.impl.TemplateNode;
@@ -49,7 +46,6 @@ import org.raven.tree.Tree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weda.services.ClassDescriptorRegistry;
-//import org.apache.myfaces.trinidad.component.core.data.CoreTable;
 import org.apache.myfaces.trinidad.component.core.data.CoreTree;
 import org.apache.myfaces.trinidad.model.TreeModel;
 import org.apache.myfaces.trinidad.render.ExtendedRenderKitService;
@@ -57,18 +53,7 @@ import org.apache.myfaces.trinidad.util.Service;
 import org.apache.tapestry.ioc.Registry;
 import org.raven.tree.InvalidPathException;
 import javax.faces.component.UIComponent;
-//import javax.servlet.http.HttpServletResponse;
-
 import org.apache.myfaces.trinidad.event.PollEvent;
-//import org.raven.tree.NodeAttribute;
-//import java.util.Set;
-//import org.apache.myfaces.trinidad.event.FocusListener;
-//import org.apache.myfaces.trinidad.event.FocusEvent;
-//import org.apache.myfaces.trinidad.event.ReturnEvent;
-//import org.apache.myfaces.trinidad.model.RowKeySetImpl;
-//import org.apache.myfaces.trinidad.model.RowKeySetTreeImpl;
-//import javax.faces.component.UIParameter;
-//import com.sun.org.apache.xml.internal.security.Init;
 
 public class SessionBean 
 {
@@ -92,8 +77,8 @@ public class SessionBean
 //	private TemplateNode templateNode = null; 
 	private NewNodeFromTemplate template;
 	private RefreshAttributesCache refreshAttributesCache;
-	private ViewableObjectsStorage viewableObjectsCache;
-	private ViewableObjectsByNode viewableObjectsHash;
+	private ImagesStorage imagesStorage;
+	private VObyNode viewableObjectsCache;
 	private RefreshIntervalCache refreshIntervalCache;
 	private LogViewAttributesCache logViewAttributesCache;
 	private LogsCache logsCache; 
@@ -137,12 +122,12 @@ public class SessionBean
 		CopyMoveNodeBean cmnb = (CopyMoveNodeBean) getElValue(CopyMoveNodeBean.BEAN_NAME);
 		cmnb.getTreeModel().toString();
 		setRefreshAttributesCache(new RefreshAttributesCache());
-		setViewableObjectsCache(new ViewableObjectsStorage());
-		setViewableObjectsHash(new ViewableObjectsByNode());
+		setImagesStorage(new ImagesStorage());
+		setViewableObjectsCache(new VObyNode());
 		setRefreshIntervalCache(new RefreshIntervalCache());
 		setLogViewAttributesCache(new LogViewAttributesCache());
 		setLogsCache(new LogsCache(getLogViewAttributesCache()));
-		viewableObjectsHash.setViewableObjectsStorage(getViewableObjectsCache());
+		viewableObjectsCache.setImagesStorage(getImagesStorage());
 	}
 
 	public void reloadLeftFrame()
@@ -528,20 +513,20 @@ public class SessionBean
 		return refreshAttributesCache;
 	}
 
-	public void setViewableObjectsCache(ViewableObjectsStorage viewableObjectsStorage) {
-		this.viewableObjectsCache = viewableObjectsStorage;
+	public void setImagesStorage(ImagesStorage imagesStorage) {
+		this.imagesStorage = imagesStorage;
 	}
 
-	public ViewableObjectsStorage getViewableObjectsCache() {
+	public ImagesStorage getImagesStorage() {
+		return imagesStorage;
+	}
+
+	public void setViewableObjectsCache(VObyNode voCache) {
+		viewableObjectsCache = voCache;
+	}
+
+	public VObyNode getViewableObjectsCache() {
 		return viewableObjectsCache;
-	}
-
-	public void setViewableObjectsHash(ViewableObjectsByNode viewableObjectsHash) {
-		this.viewableObjectsHash = viewableObjectsHash;
-	}
-
-	public ViewableObjectsByNode getViewableObjectsHash() {
-		return viewableObjectsHash;
 	}
 
 	public void setRefreshIntervalCache(RefreshIntervalCache refreshIntervalStorage) {
