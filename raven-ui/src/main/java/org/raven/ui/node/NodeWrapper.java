@@ -946,7 +946,7 @@ implements Comparator<NodeAttribute>
 		{
 			Viewable v = (Viewable) node;
 			Boolean b = v.getAutoRefresh();
-			if(b==null || b==false) return false;
+			if(b!=null && b==false) return false;
 		}
 		return true;
 	}

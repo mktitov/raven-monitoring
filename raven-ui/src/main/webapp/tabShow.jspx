@@ -194,14 +194,14 @@ action="#{sBean.reloadRightFrame}"
 <!-- Show viewable nodes               -->
 <!-- ********************************* -->
 <tr:table width="100%"
-		rendered="#{cNode.showVO}" 
 		horizontalGridVisible="false" 
 		verticalGridVisible="false"
  		var="row"
  		value="#{cNode.viewableObjects}"  
  		id="showTable"
  		immediate="true" >
-<!-- 
+<!--
+rendered="#{cNode.showVO}" 
 :::refresh_A ::poolStatus
 partialTriggers=":poolStatus"
  --> 

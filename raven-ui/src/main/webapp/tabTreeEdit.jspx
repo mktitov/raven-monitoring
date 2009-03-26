@@ -97,11 +97,18 @@
   		rows="16" 
   		rowSelection="multiple" 
   		id="delSubNode" >
+		<f:facet name="detailStamp">
+			<tr:panelCaptionGroup captionText="#{msgs.dsc}">
+	        	<tr:outputText
+	            	escape="false" 
+	                value="#{row.classDescription}"/>
+			</tr:panelCaptionGroup>
+		</f:facet>				  		
     	<tr:column headerText="#{msgs.name}">
 	      <tr:outputText value="#{row.nodeName}"/>
         </tr:column>
     	<tr:column headerText="#{msgs.type}">
-	      <tr:outputText value="#{row.classDisplayName}"/>
+	      <tr:outputText value="#{row.classSimpleName}"/>
         </tr:column>
     	<tr:column headerText="#{msgs.index}">
 	      <tr:outputText value="#{row.node.index}"/>

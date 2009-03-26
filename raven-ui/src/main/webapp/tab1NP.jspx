@@ -36,12 +36,12 @@
               	<tr:commandNavigationItem
               		selected="true" 
               		action="tabShow" 
-              		text="#{msgs.nodeView}"
+              		text="#{msgs.view}"
               		immediate="true" 
               		partialSubmit="true" />
               	<tr:commandNavigationItem
               		action="tabNodeEdit" 
-              		text="#{msgs.attributes}" 
+              		text="#{msgs.setting}" 
               		partialSubmit="true"
               		immediate="true"/>
               	<tr:commandNavigationItem

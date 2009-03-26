@@ -135,9 +135,10 @@ public abstract class AbstractNodeWrapper
 		if(cls==null) return al;
 		for(Class c: cls)
 		{
-			String dispName = classDesc.getClassDescriptor(c).getType().getSimpleName();
+			String simpleName = classDesc.getClassDescriptor(c).getType().getSimpleName();
 			String dsc = classDesc.getClassDescriptor(c).getDescription();
-			al.add(new NodeType(c.getCanonicalName(),dispName, dsc));
+			String sdsc = classDesc.getClassDescriptor(c).getDisplayName();
+			al.add(new NodeType(c.getCanonicalName(),simpleName, dsc, sdsc));
 		}
 		Collections.sort(al, new NodeTypeComparator());
 		return al;
@@ -152,7 +153,7 @@ public abstract class AbstractNodeWrapper
 		{
 			//String dispName = classDesc.getClassDescriptor(n.getClass()).getDisplayName();
 			//String dsc = classDesc.getClassDescriptor(n.getClass()).getDescription();
-			al.add(new NodeType(n.getPath(),n.getName(), ""));
+			al.add(new NodeType(n.getPath(),n.getName(), "", ""));
 		}
 		Collections.sort(al, new NodeTypeComparator());
 		return al;
@@ -188,9 +189,19 @@ public abstract class AbstractNodeWrapper
 		  return al;
 	  }
 	  
-	  public String getClassDisplayName()
+	  public String getClassSimpleName()
+	  {
+		  return classDesc.getClassDescriptor(getNode().getClass()).getType().getSimpleName();
+	  }
+
+	  public String getClassShortDescription()
 	  {
 		  return classDesc.getClassDescriptor(getNode().getClass()).getDisplayName();
+	  }
+	  
+	  public String getClassDescription()
+	  {
+		  return classDesc.getClassDescriptor(getNode().getClass()).getDescription();
 	  }
 	  
 	  public abstract void onSetNode(); 

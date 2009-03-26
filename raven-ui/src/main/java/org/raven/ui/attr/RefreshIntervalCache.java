@@ -25,7 +25,7 @@ public class RefreshIntervalCache extends SimpleAbstractCache<Integer, Long>
 //		return key;
 //	}
 	
-	public Long put2(Integer key, Long value)
+	public Long put(Integer key, Long value)
 	{
 		if(value<0) value = 0L;
 		return super.put(key, value);

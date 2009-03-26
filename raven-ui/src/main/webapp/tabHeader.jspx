@@ -41,7 +41,7 @@
 		<tr:panelBorderLayout>
         	<f:facet name="left">                            
             	<tr:group>
-                	<tr:outputText value="ID:"/>
+                	<tr:outputText value="#{msgs.id}:"/>
                     <tr:spacer width="10"/>
                     <tr:outputText 
                     	inlineStyle="font-weight: bold;"

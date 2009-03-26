@@ -89,8 +89,14 @@ public abstract class AbstractCache<K,V,SK>
 	public V getFromCacheOnly(K key)
 	{
 		checkOld();
-		CacheValueContainer<V> vc = getValueContainer(getStoreKey(key));
-		if(vc==null) return null;
+		SK sk = getStoreKey(key);
+		CacheValueContainer<V> vc = getValueContainer(sk);
+		if(vc==null)
+		{
+	//		logger.info("not found in cache K: '{}', SK: '{}'",key,sk);
+			return null;
+		}
+	//	logger.info("found in cache K: '{}', SK: '{}'",key,sk);
 		return vc.getValue();
 	}	
 	
@@ -134,7 +140,13 @@ public abstract class AbstractCache<K,V,SK>
 	 */
 	public void clear()
 	{
-		map.clear();
+		Iterator<SK> it = map.keySet().iterator();
+		ArrayList<SK> killList = new ArrayList<SK>();
+		while(it.hasNext())
+			killList.add(it.next());
+		for(it = killList.iterator();it.hasNext();)
+			removeSK(it.next());
+	//	logger.info("cache cleared");
 	}
 
 	/**
@@ -147,6 +159,7 @@ public abstract class AbstractCache<K,V,SK>
 		V v = vc.getValue();
 		if(v==null) return;
 		afterRemove(v);
+//		logger.info("removed SK: '{}'",storeKey);
 	}
 
 	

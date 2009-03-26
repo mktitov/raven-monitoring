@@ -22,12 +22,14 @@ public class NodeType
 	private String className;
 	private String shortName;
 	private String description;
+	private String shortDescription;
 	
-	public NodeType(String className,String shortName, String description)
+	public NodeType(String className,String shortName, String description, String sd)
 	{
 		this.className = className;
 		this.description = description;
 		this.shortName =  shortName;
+		shortDescription = sd;
 	}
 	
 	public String getClassName() { return className; }
@@ -38,5 +40,13 @@ public class NodeType
 
 	public String getShortName() { return shortName; }
 	public void setShortName(String shortName) { this.shortName = shortName; }
+
+	public void setShortDescription(String shortDescription) {
+		this.shortDescription = shortDescription;
+	}
+
+	public String getShortDescription() {
+		return shortDescription;
+	}
 
 }

@@ -39,6 +39,19 @@
     
     -->
 <tr:panelAccordion discloseNone="true" >
+	<tr:showDetailItem text="#{msgs.dsc}">
+    <!-- ********************* -->
+    <!-- show node description -->
+    <!-- ********************* -->
+    <tr:panelCaptionGroup captionText="" >
+    	<tr:outputText
+	       	escape="false" 
+	        value="#{cNode.classDescription}"/>
+    </tr:panelCaptionGroup>    
+	</tr:showDetailItem>
+</tr:panelAccordion>
+    
+<tr:panelAccordion discloseNone="true" >
 	<tr:showDetailItem text="#{msgs.attributeCreate}">
     <!-- ********************* -->
     <!-- attribute create -->

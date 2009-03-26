@@ -46,7 +46,7 @@
 					    <tr:outputText value="#{row.shortName}"/>
         			</tr:column>
     				<tr:column headerText="#{msgs.dsc}">
-	      				<tr:outputText value="#{row.description}"/>
+	      				<tr:outputText value="#{row.shortDescription}"/>
         			</tr:column>
  				</tr:table>
 				<tr:panelButtonBar>

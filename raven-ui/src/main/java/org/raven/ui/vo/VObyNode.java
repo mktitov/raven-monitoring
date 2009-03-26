@@ -69,7 +69,12 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 		boolean reload = nw.isNeedRefreshVO();
 		nw.setNeedRefreshVO(false);
 		List<ViewableObjectWrapper> lst = new ArrayList<ViewableObjectWrapper>();
-		if(!nw.isShowVO()) return lst;
+		if(!nw.isShowVO())
+		{
+			List<ViewableObjectWrapper> no = getFromCacheOnly(nw);
+			if(no != null) lst.addAll(no);
+			return lst;
+		}	
 		
 		List<ViewableObjectWrapper> no = get(nw,reload);
 		if(no != null)
