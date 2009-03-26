@@ -341,7 +341,7 @@ public class BaseNode implements Node, NodeListener, Logger
         node.setParent(this);
 		int nodeIndex = node.getIndex();
         if (nodeIndex==0)
-            node.setIndex(maxChildIndex++);
+            node.setIndex(++maxChildIndex);
 		else if (maxChildIndex<nodeIndex)
 			maxChildIndex = nodeIndex;
         

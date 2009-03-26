@@ -23,6 +23,7 @@ import java.util.List;
 import org.easymock.IArgumentMatcher;
 import org.junit.Before;
 import org.junit.Test;
+import org.raven.DummyScheduler;
 import org.raven.PushDataSource;
 import org.raven.RavenCoreTestCase;
 import org.raven.statdb.StatisticsDatabase;
@@ -31,6 +32,7 @@ import org.raven.statdb.query.Query;
 import org.raven.statdb.query.QueryResult;
 import org.raven.statdb.query.SelectMode;
 import org.raven.template.impl.TemplateEntry;
+import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
 import org.raven.tree.impl.ContainerNode;
 import static org.easymock.EasyMock.*;
@@ -38,11 +40,12 @@ import static org.easymock.EasyMock.*;
  *
  * @author Mikhail Titov
  */
-public class QueryNodeGeneratorNodeTest extends RavenCoreTestCase
+public class SdbQueryNodeGeneratorNodeTest extends RavenCoreTestCase
 {
-    private QueryNodeGeneratorNode generator;
+    private SdbQueryNodeGeneratorNode generator;
     private TestStatisticsDatabase database;
     private PushDataSource datasource;
+    private DummyScheduler scheduler;
 
     @Before
     public void prepare()
@@ -59,11 +62,17 @@ public class QueryNodeGeneratorNodeTest extends RavenCoreTestCase
         database.setDataSource(datasource);
         assertTrue(database.start());
 
-        generator = new QueryNodeGeneratorNode();
+        scheduler = new DummyScheduler();
+        scheduler.setName("scheduler");
+        tree.getRootNode().addAndSaveChildren(scheduler);
+        assertTrue(scheduler.start());
+
+        generator = new SdbQueryNodeGeneratorNode();
         generator.setName("generator");
         tree.getRootNode().addAndSaveChildren(generator);
         generator.setStatisticsDatabase(database);
         generator.setGropNames("group1, group2, group3");
+        generator.setScheduler(scheduler);
     }
 
     @Test
@@ -87,7 +96,7 @@ public class QueryNodeGeneratorNodeTest extends RavenCoreTestCase
     }
 
     @Test
-    public void genrating_test()
+    public void generating_test()
     {
         initTemplate();
         QueryResult queryResult = createQueryResult("/key1/", "/key2/");
@@ -121,6 +130,34 @@ public class QueryNodeGeneratorNodeTest extends RavenCoreTestCase
                 .andReturn(createQueryResult("/key2/subkey1/"));
         replay(queryExecuter);
         checkNode(group2_2, "group3", "/key2/subkey1/", "subkey1", 2);
+
+        verify(queryExecuter);
+    }
+
+    @Test
+    public void cleanup_test() throws InvalidPathException
+    {
+        assertTrue(generator.start());
+        
+        initTemplate();
+        QueryResult queryResult = createQueryResult("/key1/", "/key2/");
+
+        ExecuteDatabaseQuery queryExecuter = createMock(ExecuteDatabaseQuery.class);
+        expect(queryExecuter.executeQuery(checkQuery("/@r .*", database)))
+                .andReturn(createQueryResult("/key1/", "/key2/")).times(2);
+        
+        replay(queryExecuter);
+
+        database.setQueryMock(queryExecuter);
+
+        Node node1 = tree.getNode("/generator/group1/key1/group2");
+        assertNotNull(node1);
+
+        generator.executeScheduledJob();
+
+        Node node2 = tree.getNode("/generator/group1/key1/group2");
+        assertNotNull(node2);
+        assertNotSame(node1, node2);
 
         verify(queryExecuter);
     }

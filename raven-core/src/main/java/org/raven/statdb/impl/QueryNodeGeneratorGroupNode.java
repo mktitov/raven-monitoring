@@ -28,7 +28,7 @@ import org.raven.tree.impl.BaseNode;
  */
 public class QueryNodeGeneratorGroupNode extends BaseNode
 {
-    private QueryNodeGeneratorNode nodeGenerator;
+    private SdbQueryNodeGeneratorNode nodeGenerator;
     private boolean childsInitialized = false;
     
     @Parameter(readOnly=true)
@@ -44,12 +44,12 @@ public class QueryNodeGeneratorGroupNode extends BaseNode
         return childsInitialized;
     }
 
-    public QueryNodeGeneratorNode getNodeGenerator()
+    public SdbQueryNodeGeneratorNode getNodeGenerator()
     {
         return nodeGenerator;
     }
 
-    public void setNodeGenerator(QueryNodeGeneratorNode nodeGenerator)
+    public void setNodeGenerator(SdbQueryNodeGeneratorNode nodeGenerator)
     {
         this.nodeGenerator = nodeGenerator;
     }

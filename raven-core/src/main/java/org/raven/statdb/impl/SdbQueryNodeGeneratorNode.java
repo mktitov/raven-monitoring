@@ -24,6 +24,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.script.Bindings;
 import org.raven.RavenUtils;
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.log.LogLevel;
 import org.raven.sched.Schedulable;
@@ -47,7 +48,8 @@ import org.weda.internal.annotations.Service;
  *
  * @author Mikhail Titov
  */
-public class QueryNodeGeneratorNode extends BaseNode implements Schedulable
+@NodeClass
+public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
 {
     public static final String GROUP_WITHOUT_NAME = "GROUP_WITHOUT_NAME";
     public static final int LOCK_TIMEOUT = 500;
@@ -414,7 +416,7 @@ public class QueryNodeGeneratorNode extends BaseNode implements Schedulable
             if (sourceClone instanceof QueryNodeGeneratorGroupNode)
             {
                 QueryNodeGeneratorGroupNode group = (QueryNodeGeneratorGroupNode) sourceClone;
-                group.setNodeGenerator(QueryNodeGeneratorNode.this);
+                group.setNodeGenerator(SdbQueryNodeGeneratorNode.this);
                 if (   sourceClone.getName()==null
                     || sourceClone.getName().equals(sourceNode.getName()))
                 {
@@ -428,7 +430,7 @@ public class QueryNodeGeneratorNode extends BaseNode implements Schedulable
         protected void formBindings(Bindings bindings)
         {
             super.formBindings(bindings);
-            QueryNodeGeneratorNode.this.formExpressionBindings(bindings);
+            SdbQueryNodeGeneratorNode.this.formExpressionBindings(bindings);
             bindings.put(GROUPNAME_BINDING, groupName);
             bindings.put(GROUPLEVEL_BINDING, groupNodeLevel);
             bindings.put(LASTKEYELEMENT_BINDING, lastKeyElement);
