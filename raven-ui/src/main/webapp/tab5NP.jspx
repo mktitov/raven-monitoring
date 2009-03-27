@@ -29,37 +29,39 @@
             	<jsp:include page="tabHeader.jspx" flush="true"/>
             </f:subview>
         
-            <tr:form usesUpload="true">
-            <tr:navigationPane 
-            	hint="tabs" 
-            	id="tabsExample">
+            <tr:form>
+            <tr:navigationPane hint="tabs">
               	<tr:commandNavigationItem
+              		rendered="#{cNode.allowNodeRead}"
               		action="tabShow" 
               		text="#{msgs.view}"
               		immediate="true" 
               		partialSubmit="true" />
               	<tr:commandNavigationItem
+              		rendered="#{cNode.allowNodeEdit}"
               		action="tabNodeEdit" 
               		text="#{msgs.setting}" 
               		partialSubmit="true"
               		immediate="true"/>
               	<tr:commandNavigationItem
+              		rendered="#{cNode.allowTreeEdit}"
               		action="tabTreeEdit" 
               		text="#{msgs.treeEdit}"
               		immediate="true" 
               		partialSubmit="true"/>
               	<tr:commandNavigationItem
+              		rendered="#{cNode.allowControl}"
               		action="tabControl" 
               		text="#{msgs.control}"
               		immediate="true" 
               		partialSubmit="true"/>
-              	<tr:commandNavigationItem
-              		selected="true"
+              	<tr:commandNavigationItem 
+              		selected="true" 
+              		rendered="#{cNode.allowNodeEdit}"
               		action="tabLogsTab"
               		text="#{msgs.log}" 
               		partialSubmit="true" 
-              		immediate="true"
-              		disabled="!#{cNode.allowNodeEdit}"/>
+              		immediate="true"/>
             </tr:navigationPane>
         	<f:subview id="body">
             	<jsp:include page="tabLogsTab.jspx" flush="true"/>
