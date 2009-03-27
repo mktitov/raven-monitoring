@@ -18,6 +18,8 @@
 package org.raven.conf.impl;
 
 import org.raven.conf.Config;
+
+import java.util.InvalidPropertiesFormatException;
 import java.util.Properties;
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,7 +48,7 @@ public class PropertiesConfig implements Config
 		fileName = System.getProperty(CONFIG_PROPERTY_NAME);
 		if(fileName==null) fileName = CONFIG_PROPERTY_NAME_DEFAULT;
 		confFile = new File(fileName);
-		load();
+		loadCfg();
 		lastCheck = System.currentTimeMillis();
 	}
 
@@ -54,7 +56,36 @@ public class PropertiesConfig implements Config
     {
         return properties;
     }
-	
+
+	/**
+	 * Loads data from xml properties file.
+	 * @throws java.io.IOException
+	 * @return <b>true</b> if config loaded
+	 */
+	private boolean loadXML() throws IOException
+	{
+		boolean ok = false;
+		FileInputStream propsFile = null;
+		try {
+			propsFile = new FileInputStream(fileName);
+			Properties props = new Properties();
+			props.loadFromXML(propsFile);
+			properties = props;
+			lastUpdate = confFile.lastModified();
+			ok = true;
+		}
+		catch(InvalidPropertiesFormatException e) {}
+		finally
+		{
+			if(propsFile!=null) 
+			{
+				propsFile.close(); 
+				if(ok) logger.info("xml config loaded");
+			}	
+		}	
+		return ok;
+	}
+    
 	/**
 	 * Loads data from properties file.
 	 * @throws java.io.IOException
@@ -76,6 +107,12 @@ public class PropertiesConfig implements Config
 				logger.info("config loaded");
 			}	
 		}
+	}
+	
+	private void loadCfg() throws IOException
+	{
+		if(!loadXML()) 
+			load();
 	}
 	
 	/**
@@ -101,7 +138,7 @@ public class PropertiesConfig implements Config
     		try 
     		{ 
     			logger.info("reloading config");
-    			load(); 
+    			loadCfg(); 
     		}
     		catch(IOException e) { logger.error("on reload config : ",e); }
     	lastCheck = dt; 
