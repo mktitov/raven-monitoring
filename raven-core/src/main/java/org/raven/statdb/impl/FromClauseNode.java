@@ -17,7 +17,6 @@
 
 package org.raven.statdb.impl;
 
-import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.statdb.StatisticsDatabase;
 import org.raven.statdb.query.FromClause;
@@ -29,7 +28,6 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass
 public class FromClauseNode extends BaseNode implements FromClause
 {
     public final static String NAME = "from";

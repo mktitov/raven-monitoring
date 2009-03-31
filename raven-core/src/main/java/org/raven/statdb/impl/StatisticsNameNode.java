@@ -28,7 +28,6 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass
 public class StatisticsNameNode extends BaseNode implements QueryStatisticsName
 {
     @Parameter @NotNull

@@ -17,7 +17,6 @@
 
 package org.raven.statdb.impl;
 
-import org.raven.statdb.StatisticsDatabase;
 import org.raven.statdb.query.FromClause;
 
 /**
@@ -27,21 +26,14 @@ import org.raven.statdb.query.FromClause;
 public class FromClauseImpl implements FromClause
 {
     private final String keyExpression;
-    private final StatisticsDatabase database;
 
-    public FromClauseImpl(String keyExpression, StatisticsDatabase statisticsDatabase)
+    public FromClauseImpl(String keyExpression)
     {
         this.keyExpression = keyExpression;
-        this.database = statisticsDatabase;
     }
 
     public String getKeyExpression()
     {
         return keyExpression;
-    }
-
-    public StatisticsDatabase getDatabase()
-    {
-        return database;
     }
 }

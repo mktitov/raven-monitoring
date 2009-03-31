@@ -24,7 +24,7 @@ import org.raven.tree.impl.BaseNode;
  *
  * @author Mikhail Titov
  */
-@NodeClass(childNodes=StatisticsNameNode.class)
+@NodeClass(childNodes=StatisticsNameNode.class, parentNode=SdbQueryNode.class)
 public class StatisticsNamesNode extends BaseNode
 {
     public final static String NAME = "Statistics name";

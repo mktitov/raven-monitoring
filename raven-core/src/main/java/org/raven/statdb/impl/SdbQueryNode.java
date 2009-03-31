@@ -26,6 +26,7 @@ import org.raven.statdb.query.QueryStatisticsName;
 import org.raven.statdb.query.SelectClause;
 import org.raven.statdb.query.SelectMode;
 import org.raven.tree.Node;
+import org.raven.tree.NodeError;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.constraints.NotNull;
 
@@ -34,7 +35,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass
-public class QueryNode  extends BaseNode implements Query
+public class SdbQueryNode  extends BaseNode implements Query
 {
     @Parameter() @NotNull
     private Long step;
@@ -60,32 +61,16 @@ public class QueryNode  extends BaseNode implements Query
     protected void doInit() throws Exception
     {
         super.doInit();
+        
+        generateNodes();
+    }
 
-        statisticsNamesNode = (StatisticsNamesNode) getChildren(StatisticsNamesNode.NAME);
-        if (statisticsNamesNode==null)
-        {
-            statisticsNamesNode = new StatisticsNamesNode();
-            statisticsNamesNode.setParent(this);
-            statisticsNamesNode.save();
-            addChildren(statisticsNamesNode);
-            statisticsNamesNode.init();
-            statisticsNamesNode.start();
-        }
+    @Override
+    protected void doStart() throws Exception
+    {
+        super.doStart();
 
-        fromClauseNode = (FromClauseNode) getChildren(FromClauseNode.NAME);
-        if (fromClauseNode==null)
-        {
-            fromClauseNode = new FromClauseNode();
-            this.addAndSaveChildren(fromClauseNode);
-        }
-
-        selectClauseNode = (SelectClauseNode) getChildren(SelectClauseNode.NAME);
-        if (selectClauseNode==null)
-        {
-            selectClauseNode = new SelectClauseNode();
-            addAndSaveChildren(selectClauseNode);
-            selectClauseNode.start();
-        }
+        generateNodes();
     }
 
     public FromClauseNode getFromClauseNode()
@@ -196,5 +181,32 @@ public class QueryNode  extends BaseNode implements Query
     public void setSelectMode(SelectMode selectMode)
     {
         this.selectMode = selectMode;
+    }
+
+    private void generateNodes()
+    {
+        statisticsNamesNode = (StatisticsNamesNode) getChildren(StatisticsNamesNode.NAME);
+        if (statisticsNamesNode == null)
+        {
+            statisticsNamesNode = new StatisticsNamesNode();
+            statisticsNamesNode.setParent(this);
+            statisticsNamesNode.save();
+            addChildren(statisticsNamesNode);
+            statisticsNamesNode.init();
+            statisticsNamesNode.start();
+        }
+        fromClauseNode = (FromClauseNode) getChildren(FromClauseNode.NAME);
+        if (fromClauseNode == null)
+        {
+            fromClauseNode = new FromClauseNode();
+            this.addAndSaveChildren(fromClauseNode);
+        }
+        selectClauseNode = (SelectClauseNode) getChildren(SelectClauseNode.NAME);
+        if (selectClauseNode == null)
+        {
+            selectClauseNode = new SelectClauseNode();
+            addAndSaveChildren(selectClauseNode);
+            selectClauseNode.start();
+        }
     }
 }

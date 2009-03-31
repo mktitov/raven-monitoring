@@ -33,9 +33,9 @@ public class SelectKeysQuery implements Query
 {
     private final FromClause fromClause;
 
-    public SelectKeysQuery(String keyExpression, StatisticsDatabase statisticsDatabase)
+    public SelectKeysQuery(String keyExpression)
     {
-        this.fromClause = new FromClauseImpl(keyExpression, statisticsDatabase);
+        this.fromClause = new FromClauseImpl(keyExpression);
     }
 
     public Long getStep()

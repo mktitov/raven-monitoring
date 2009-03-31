@@ -77,4 +77,9 @@ public class RavenCoreTestCase extends ServiceTestCase
     {
         assertEquals(Node.Status.STARTED, node.getStatus());
     }
+
+    public static void assertInititalized(Node node)
+    {
+        assertEquals(Node.Status.INITIALIZED, node.getStatus());
+    }
 }

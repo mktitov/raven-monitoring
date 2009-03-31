@@ -29,14 +29,14 @@ import org.raven.tree.Node.Status;
  *
  * @author Mikhail Titov
  */
-public class QueryNodeTest extends RavenCoreTestCase
+public class SdbQueryNodeTest extends RavenCoreTestCase
 {
-    private QueryNode query;
+    private SdbQueryNode query;
 
     @Before
     public void prepareTest()
     {
-        query = new QueryNode();
+        query = new SdbQueryNode();
         query.setName("query");
         tree.getRootNode().addAndSaveChildren(query);
     }

@@ -15,18 +15,13 @@
  *  under the License.
  */
 
-package org.raven.statdb.query;
-
-import org.raven.statdb.StatisticsDatabase;
+package org.raven.graph;
 
 /**
- * The from clause of the {@link Query}
+ *
  * @author Mikhail Titov
  */
-public interface FromClause
+public interface DataDef
 {
-	/**
-	 * Returns the key expression.
-	 */
-	public String getKeyExpression();
+    
 }

@@ -215,7 +215,6 @@ public class SdbQueryNodeGeneratorNodeTest extends RavenCoreTestCase
                 Query query = (Query) argument;
                 assertEquals(keyExpression, query.getFromClause().getKeyExpression());
                 assertEquals(SelectMode.SELECT_KEYS, query.getSelectMode());
-                assertSame(database, query.getFromClause().getDatabase());
 
                 return true;
             }

@@ -361,8 +361,7 @@ public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
             return null;
         }
 
-        SelectKeysQuery query =
-                new SelectKeysQuery(group.getChildsKeyExpression(), statisticsDatabase);
+        SelectKeysQuery query = new SelectKeysQuery(group.getChildsKeyExpression());
         try
         {
             QueryResult queryResult = statisticsDatabase.executeQuery(query);

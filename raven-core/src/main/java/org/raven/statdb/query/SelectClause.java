@@ -23,7 +23,5 @@ package org.raven.statdb.query;
  */
 public interface SelectClause
 {
-    public boolean hasSelectEntries();
-
     public SelectEntry[] getSelectEntries();
 }

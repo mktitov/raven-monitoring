@@ -192,7 +192,12 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 		}
 		catch (Exception e)
 		{
-			String message = "Error executing query. "+e.getMessage();
+            String message = null;
+            if (query instanceof Node)
+                message = String.format(
+                        "Error executing query (%s). %s", ((Node)query).getPath(), e.getMessage());
+            else
+                message = "Error executing query. "+e.getMessage();
 			error(message, e);
 			throw new QueryExecutionException(message, e);
 		}
@@ -201,6 +206,9 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
     private void fetchStatisticsValues(Query query, QueryResultImpl queryResult) throws Exception
     {
         QueryStatisticsName[] statNames = query.getStatisticsNames();
+        if (statNames==null || statNames.length==0)
+            throw new Exception(String.format("Query must contains statistics names"));
+
         ValueType[] valueTypes = new ValueType[statNames.length];
         for (int i=0; i<statNames.length; ++i)
         {

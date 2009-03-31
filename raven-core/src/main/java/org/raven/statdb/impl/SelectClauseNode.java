@@ -28,7 +28,7 @@ import org.raven.tree.impl.BaseNode;
  *
  * @author Mikhail Titov
  */
-@NodeClass(childNodes=SelectEntryNode.class)
+@NodeClass(childNodes=SelectEntryNode.class, parentNode=SdbQueryNode.class)
 public class SelectClauseNode extends BaseNode implements SelectClause
 {
     public final static String NAME = "Select";
@@ -36,11 +36,6 @@ public class SelectClauseNode extends BaseNode implements SelectClause
     public SelectClauseNode()
     {
         super(NAME);
-    }
-
-    public boolean hasSelectEntries()
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public SelectEntry[] getSelectEntries()
