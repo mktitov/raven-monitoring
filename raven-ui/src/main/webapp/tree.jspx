@@ -58,12 +58,12 @@
         	value="#{sBean.treeModel}"  >
  		<f:facet name="nodeStamp">
  		<tr:group >
+			<tr:image source="/images/#{node.status}.gif" shortDesc="#{node.status}" />
  			<tr:commandLink
 	 			id="pSub_link" 
  				immediate="true"
  				partialSubmit="true" 
- 				actionListener="#{sBean.show}" 
- 				>
+ 				actionListener="#{sBean.show}">
 				<tr:outputText 
 					rendered="#{node.template}"
 					inlineStyle="color: grey; font-weight: bold; font-size: 70%;" 
@@ -73,7 +73,6 @@
 					inlineStyle="font-size: 80%;" 
 					value="#{node.name}"/>
  			</tr:commandLink>
- 			<tr:image source="/images/#{node.status}.png" shortDesc="help2" />
  		<!-- <tr:chooseDate  ></tr:chooseDate> -->
  		</tr:group>
   		</f:facet>
