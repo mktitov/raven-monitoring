@@ -17,21 +17,26 @@
 
 package org.raven.graph;
 
-import org.jrobin.data.Plottable;
+import org.raven.rrd.ConsolidationFunction;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataDef
+public interface Print
 {
     /**
      * Returns the data definition name
      */
-    public String getName();
+    public String getDataDefName();
+
     /**
-     * Returns the data of the data definition
-     * @return
+     * Returns the consolidation function.
      */
-    public Plottable getData();
+    public ConsolidationFunction getConsolidationFunction();
+    
+    /**
+     * Returns the format expression. For example: <code>average = %10.3f %s</code>
+     */
+    public String getFormat();
 }

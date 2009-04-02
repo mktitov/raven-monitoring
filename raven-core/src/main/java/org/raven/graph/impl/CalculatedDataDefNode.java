@@ -15,23 +15,29 @@
  *  under the License.
  */
 
-package org.raven.graph;
+package org.raven.graph.impl;
 
-import org.jrobin.data.Plottable;
+import org.raven.annotations.Parameter;
+import org.raven.graph.CalculatedDataDef;
+import org.raven.tree.impl.BaseNode;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataDef
+public class CalculatedDataDefNode extends BaseNode implements CalculatedDataDef
 {
-    /**
-     * Returns the data definition name
-     */
-    public String getName();
-    /**
-     * Returns the data of the data definition
-     * @return
-     */
-    public Plottable getData();
+    @Parameter @NotNull
+    private String expression;
+
+    public String getExpression()
+    {
+        return expression;
+    }
+
+    public void setExpression(String expression)
+    {
+        this.expression = expression;
+    }
 }

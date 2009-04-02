@@ -17,21 +17,14 @@
 
 package org.raven.graph;
 
-import org.jrobin.data.Plottable;
-
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataDef
+public interface LineElement extends Element
 {
     /**
-     * Returns the data definition name
+     * Returns the width of the line
      */
-    public String getName();
-    /**
-     * Returns the data of the data definition
-     * @return
-     */
-    public Plottable getData();
+    public Double getWidth();
 }

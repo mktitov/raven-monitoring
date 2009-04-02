@@ -17,21 +17,12 @@
 
 package org.raven.graph;
 
-import org.jrobin.data.Plottable;
+import org.raven.tree.Node;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataDef
+public interface DataDefNode extends DataDef, Node
 {
-    /**
-     * Returns the data definition name
-     */
-    public String getName();
-    /**
-     * Returns the data of the data definition
-     * @return
-     */
-    public Plottable getData();
 }

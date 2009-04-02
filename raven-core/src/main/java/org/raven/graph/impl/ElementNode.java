@@ -15,23 +15,45 @@
  *  under the License.
  */
 
-package org.raven.graph;
+package org.raven.graph.impl;
 
-import org.jrobin.data.Plottable;
+import org.raven.annotations.Parameter;
+import org.raven.graph.Element;
+import org.raven.graph.GraphColor;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataDef
+public class ElementNode implements Element
 {
-    /**
-     * Returns the data definition name
-     */
-    public String getName();
-    /**
-     * Returns the data of the data definition
-     * @return
-     */
-    public Plottable getData();
+    @Parameter()
+    @NotNull
+    private GraphColor color;
+
+    @Parameter()
+    @NotNull()
+    private String legend;
+
+    public GraphColor getColor()
+    {
+        return color;
+    }
+
+    public void setColor(GraphColor color)
+    {
+        this.color = color;
+    }
+
+    public String getLegend()
+    {
+        return legend;
+    }
+
+    public void setLegend(String legend)
+    {
+        this.legend = legend;
+    }
+
 }

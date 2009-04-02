@@ -15,23 +15,29 @@
  *  under the License.
  */
 
-package org.raven.graph;
+package org.raven.graph.impl;
 
-import org.jrobin.data.Plottable;
+import org.raven.annotations.Parameter;
+import org.raven.graph.Comment;
+import org.raven.tree.impl.BaseNode;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataDef
+public class CommentNode extends BaseNode implements Comment
 {
-    /**
-     * Returns the data definition name
-     */
-    public String getName();
-    /**
-     * Returns the data of the data definition
-     * @return
-     */
-    public Plottable getData();
+    @Parameter @NotNull
+    private String comment;
+
+    public String getComment()
+    {
+        return comment;
+    }
+
+    public void setComment(String comment)
+    {
+        this.comment = comment;
+    }
 }

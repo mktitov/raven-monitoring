@@ -17,21 +17,14 @@
 
 package org.raven.graph;
 
-import org.jrobin.data.Plottable;
-
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataDef
+public interface HorizontalRule extends LineElement
 {
     /**
-     * Returns the data definition name
+     * Returns the rule position in the y-axis.
      */
-    public String getName();
-    /**
-     * Returns the data of the data definition
-     * @return
-     */
-    public Plottable getData();
+    public Double getRulePosition();
 }

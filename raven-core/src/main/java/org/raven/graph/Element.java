@@ -17,21 +17,18 @@
 
 package org.raven.graph;
 
-import org.jrobin.data.Plottable;
-
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataDef
+public interface Element
 {
     /**
-     * Returns the data definition name
+     * Returns the foreground color of the element.
      */
-    public String getName();
+    public GraphColor getColor();
     /**
-     * Returns the data of the data definition
-     * @return
+     * Returns the legend of the element
      */
-    public Plottable getData();
+    public String getLegend();
 }

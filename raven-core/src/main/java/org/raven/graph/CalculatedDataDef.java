@@ -17,21 +17,14 @@
 
 package org.raven.graph;
 
-import org.jrobin.data.Plottable;
-
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataDef
+public interface CalculatedDataDef
 {
     /**
-     * Returns the data definition name
+     * Returns the expression that makes new values based on values from values of others sources.
      */
-    public String getName();
-    /**
-     * Returns the data of the data definition
-     * @return
-     */
-    public Plottable getData();
+    public String getExpression();
 }

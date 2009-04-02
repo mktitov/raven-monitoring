@@ -15,23 +15,36 @@
  *  under the License.
  */
 
-package org.raven.graph;
+package org.raven.graph.impl;
 
-import org.jrobin.data.Plottable;
+import org.raven.annotations.Parameter;
+import org.raven.graph.DataDefNode;
+import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataDef
+public class DataDefConsumer extends BaseNode
 {
-    /**
-     * Returns the data definition name
-     */
-    public String getName();
-    /**
-     * Returns the data of the data definition
-     * @return
-     */
-    public Plottable getData();
+    @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
+    @NotNull
+    private DataDefNode dataDef;
+
+    public DataDefNode getDataDef()
+    {
+        return dataDef;
+    }
+
+    public void setDataDef(DataDefNode dataDef)
+    {
+        this.dataDef = dataDef;
+    }
+    
+    public String getDataDefName()
+    {
+        return dataDef.getName();
+    }
 }
