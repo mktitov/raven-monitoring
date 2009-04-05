@@ -19,7 +19,7 @@ package org.raven.graph.impl;
 
 import org.raven.annotations.Parameter;
 import org.raven.graph.Area;
-import org.raven.graph.DataDefNode;
+import org.raven.graph.GraphDataDefNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
 
@@ -31,10 +31,20 @@ public class AreaNode extends ElementNode implements Area
 {
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     @NotNull
-    private DataDefNode dataDef;
+    private GraphDataDefNode dataDef;
 
     public String getDataDefName()
     {
         return dataDef.getName();
+    }
+
+    public GraphDataDefNode getDataDef()
+    {
+        return dataDef;
+    }
+
+    public void setDataDef(GraphDataDefNode dataDef)
+    {
+        this.dataDef = dataDef;
     }
 }

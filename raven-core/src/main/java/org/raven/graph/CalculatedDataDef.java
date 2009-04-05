@@ -27,4 +27,8 @@ public interface CalculatedDataDef
      * Returns the expression that makes new values based on values from values of others sources.
      */
     public String getExpression();
+    /**
+     * Returns the name of the datasource
+     */
+    public String getName();
 }

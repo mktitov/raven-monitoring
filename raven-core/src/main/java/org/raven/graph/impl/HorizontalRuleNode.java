@@ -15,16 +15,28 @@
  *  under the License.
  */
 
-package org.raven.graph;
+package org.raven.graph.impl;
+
+import org.raven.annotations.Parameter;
+import org.raven.graph.HorizontalRule;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface LineElement extends Element
+public class HorizontalRuleNode extends LineElementNode implements HorizontalRule
 {
-    /**
-     * Returns the width of the line
-     */
-    public Float getWidth();
+    @Parameter() @NotNull
+    private Double rulePosition;
+
+    public Double getRulePosition()
+    {
+        return rulePosition;
+    }
+
+    public void setRulePosition(Double rulePosition)
+    {
+        this.rulePosition = rulePosition;
+    }
 }

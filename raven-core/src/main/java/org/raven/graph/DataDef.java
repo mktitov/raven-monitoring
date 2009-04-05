@@ -23,7 +23,7 @@ import org.jrobin.data.Plottable;
  *
  * @author Mikhail Titov
  */
-public interface DataDef
+public interface DataDef 
 {
     /**
      * Returns the data definition name
@@ -33,5 +33,5 @@ public interface DataDef
      * Returns the data of the data definition
      * @return
      */
-    public Plottable getData();
+    public Plottable getData(long startTime, long endTime);
 }

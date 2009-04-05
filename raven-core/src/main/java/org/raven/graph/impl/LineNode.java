@@ -15,16 +15,29 @@
  *  under the License.
  */
 
-package org.raven.graph;
+package org.raven.graph.impl;
+
+import org.raven.annotations.Parameter;
+import org.raven.graph.Line;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface LineElement extends Element
+public class LineNode extends AreaNode implements Line
 {
-    /**
-     * Returns the width of the line
-     */
-    public Float getWidth();
+    @Parameter(defaultValue="1.0")
+    @NotNull
+    private Float width;
+
+    public Float getWidth()
+    {
+        return width;
+    }
+
+    public void setWidth(Float width)
+    {
+        this.width = width;
+    }
 }

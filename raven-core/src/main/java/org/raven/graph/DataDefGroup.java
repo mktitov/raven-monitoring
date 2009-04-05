@@ -17,14 +17,16 @@
 
 package org.raven.graph;
 
+import java.util.Collection;
+
 /**
  *
  * @author Mikhail Titov
  */
-public interface LineElement extends Element
+public interface DataDefGroup
 {
     /**
-     * Returns the width of the line
+     * Return the collection of data definitions
      */
-    public Float getWidth();
+    public Collection<DataDef> getDataDefs(long startTime, long endTime);
 }

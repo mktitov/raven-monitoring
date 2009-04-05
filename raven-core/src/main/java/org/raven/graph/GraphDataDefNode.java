@@ -23,6 +23,7 @@ import org.raven.tree.Node;
  *
  * @author Mikhail Titov
  */
-public interface DataDefNode extends DataDef, Node
+public interface GraphDataDefNode extends Node
 {
+
 }

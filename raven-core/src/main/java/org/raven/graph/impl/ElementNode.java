@@ -20,13 +20,14 @@ package org.raven.graph.impl;
 import org.raven.annotations.Parameter;
 import org.raven.graph.Element;
 import org.raven.graph.GraphColor;
+import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class ElementNode implements Element
+public class ElementNode extends BaseNode implements Element
 {
     @Parameter()
     @NotNull

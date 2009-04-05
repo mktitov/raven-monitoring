@@ -15,16 +15,14 @@
  *  under the License.
  */
 
-package org.raven.graph;
+package org.raven.graph.impl;
+
+import org.raven.graph.Stack;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface LineElement extends Element
+public class StackNode extends AreaNode implements Stack
 {
-    /**
-     * Returns the width of the line
-     */
-    public Float getWidth();
 }

@@ -17,28 +17,35 @@
 
 package org.raven.graph.impl;
 
-import org.raven.annotations.Parameter;
-import org.raven.graph.CalculatedDataDef;
+import org.jrobin.core.RrdException;
+import org.jrobin.data.LinearInterpolator;
+import org.jrobin.data.Plottable;
+import org.raven.graph.DataDef;
 import org.raven.graph.GraphDataDefNode;
 import org.raven.tree.impl.BaseNode;
-import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class CalculatedDataDefNode extends BaseNode implements CalculatedDataDef, GraphDataDefNode
+public class TestDataDef extends BaseNode implements DataDef, GraphDataDefNode
 {
-    @Parameter @NotNull
-    private String expression;
-
-    public String getExpression()
+    public Plottable getData(long startTime, long endTime)
     {
-        return expression;
-    }
+        try
+        {
+            long[] timestamps = 
+                {startTime, startTime + 3600, startTime + 7200, startTime + 10800,
+                 startTime + 14400};
+            double[] values = {5., 9., 6., 11., 8.};
+            LinearInterpolator line = new LinearInterpolator(timestamps, values);
+//            line.setInterpolationMethod(LinearInterpolator.INTERPOLATE_LEFT);
 
-    public void setExpression(String expression)
-    {
-        this.expression = expression;
+            return line;
+        }
+        catch (RrdException ex)
+        {
+            throw new Error(ex);
+        }
     }
 }
