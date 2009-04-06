@@ -59,6 +59,7 @@
 	</tr:panelAccordion>
 	<tr:spacer width="20"/>
 	<tr:commandButton 
+		rendered="#{cNode.allowTreeEdit}"
 		id="renameNode"
 		text="#{msgs.renameNode}"
 		action="dialog:renameNode"
