@@ -87,6 +87,12 @@ public abstract class AbstractNodeWrapper
 		return true;
 	}
 
+	public boolean isAllowNodeRename()
+	{
+		if(getNode().getParent()==null) return false;
+		return isAllowTreeEdit();
+	}
+	
 	public boolean isAllowTreeEdit()
 	{
 		if( (userAcl.getAccessForNode(node) & AccessControl.TREE_EDIT) ==0 ) return false;

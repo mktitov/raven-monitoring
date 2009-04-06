@@ -194,7 +194,7 @@ implements Comparator<NodeAttribute>
 	
 	public void renameNodeHandleReturn(ReturnEvent event)
 	{
-		if(!isAllowTreeEdit()) return;
+		if(!isAllowNodeRename()) return;
 		String ret = (String) event.getReturnValue();
 		if(ret!=null && ret.length()>0)
 		{
