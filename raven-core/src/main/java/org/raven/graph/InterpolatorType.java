@@ -15,24 +15,13 @@
  *  under the License.
  */
 
-package org.raven.tree.impl;
-
-import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+package org.raven.graph;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class LocalDatabaseWebServerNodeTest extends RavenCoreTestCase
+public enum InterpolatorType
 {
-    @Test
-    public void test()
-    {
-        LocalDatabaseWebServerNode server = new LocalDatabaseWebServerNode();
-        tree.getRootNode().addAndSaveChildren(server);
-        server.setPort(8084);
-        assertTrue(server.start());
-        server.stop();
-    }
+    LINE_INTERPOLATOR, CUBIC_SPLINE_INTERPOLATOR
 }
