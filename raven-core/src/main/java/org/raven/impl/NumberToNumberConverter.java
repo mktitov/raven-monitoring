@@ -25,7 +25,6 @@ import org.weda.converter.impl.AbstractConverter;
  */
 public class NumberToNumberConverter extends AbstractConverter<Number, Number>
 {
-
     public NumberToNumberConverter()
     {
         super(true);
@@ -56,5 +55,4 @@ public class NumberToNumberConverter extends AbstractConverter<Number, Number>
     {
         return Number.class;
     }
-
 }

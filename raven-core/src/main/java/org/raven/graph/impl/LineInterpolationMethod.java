@@ -15,23 +15,30 @@
  *  under the License.
  */
 
-package org.raven.graph;
+package org.raven.graph.impl;
 
-import org.jrobin.data.Plottable;
+import org.jrobin.data.LinearInterpolator;
 
 /**
- *
+ * The wrapper
  * @author Mikhail Titov
  */
-public interface DataDef 
+public enum LineInterpolationMethod
 {
-    /**
-     * Returns the data definition name
-     */
-    public String getName();
-    /**
-     * Returns the data of the data definition
-     * @return
-     */
-    public Plottable getData(long startTime, long endTime) throws DataDefException;
+    INTERPOLATE_LEFT(LinearInterpolator.INTERPOLATE_LEFT),
+    INTERPOLATE_RIGHT(LinearInterpolator.INTERPOLATE_RIGHT),
+    INTERPOLATE_LINEAR(LinearInterpolator.INTERPOLATE_LINEAR),
+    INTERPOLATE_REGRESSION(LinearInterpolator.INTERPOLATE_REGRESSION);
+
+    private final int id;
+
+    private LineInterpolationMethod(int id)
+    {
+        this.id = id;
+    }
+
+    public int getId()
+    {
+        return id;
+    }
 }

@@ -17,41 +17,52 @@
 
 package org.raven.graph.impl;
 
+import java.util.Collection;
+import org.jrobin.data.LinearInterpolator;
 import org.jrobin.data.Plottable;
-import org.raven.annotations.Parameter;
 import org.raven.graph.DataDef;
-import org.raven.graph.InterpolatorType;
+import org.raven.graph.DataDefException;
+import org.raven.graph.DataSeries;
+import org.raven.graph.Interpolator;
+import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
-import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class AbstractDataDef extends BaseNode implements DataDef
+public abstract class AbstractDataDef extends BaseNode implements DataDef
 {
-    @Parameter(defaultValue="LINE_INTERPOLATOR")
-    @NotNull
-    private InterpolatorType interpolatorType;
-
-    public Plottable getData(long startTime, long endTime)
+    public Plottable getData(long startTime, long endTime) throws DataDefException
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        try
+        {
+            DataSeries dataSeries = formData(startTime, endTime);
+
+            Interpolator interpolator = null;
+            Collection<Node> childs = getChildrens();
+            if (childs!=null && !childs.isEmpty())
+                for (Node child: childs)
+                    if (child instanceof Interpolator)
+                    {
+                        interpolator = (Interpolator) child;
+                        break;
+                    }
+            Plottable result = null;
+            if (interpolator==null)
+            {
+                result = new LinearInterpolator(dataSeries.getTimestamps(), dataSeries.getValues());
+            }
+            else
+                result = interpolator.createIterpolator(
+                        dataSeries.getTimestamps(), dataSeries.getValues());
+            return result;
+        }
+        catch(Exception e)
+        {
+            throw new DataDefException(e);
+        }
     }
 
-    public InterpolatorType getInterpolatorType()
-    {
-        return interpolatorType;
-    }
-
-    public void setInterpolatorType(InterpolatorType interpolatorType)
-    {
-        this.interpolatorType = interpolatorType;
-    }
-
-    private void generateInterpolatorNode()
-    {
-        
-    }
-
+    public abstract DataSeries formData(long startTime, long endTime) throws Exception;
 }

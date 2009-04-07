@@ -17,21 +17,13 @@
 
 package org.raven.graph;
 
-import org.jrobin.data.Plottable;
-
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataDef 
+public interface DataSeries
 {
-    /**
-     * Returns the data definition name
-     */
-    public String getName();
-    /**
-     * Returns the data of the data definition
-     * @return
-     */
-    public Plottable getData(long startTime, long endTime) throws DataDefException;
+    public long[] getTimestamps();
+
+    public double[] getValues();
 }

@@ -24,6 +24,8 @@ import java.util.List;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.text.StrMatcher;
 import org.apache.commons.lang.text.StrTokenizer;
+import org.raven.ds.RecordSchema;
+import org.raven.ds.RecordSchemaField;
 import org.raven.table.Table;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -75,6 +77,24 @@ public class RavenUtils
 
             return result;
         }
+    }
+
+    /**
+     * Returns the record schema field or null if schema does not contains the field with name
+     * passed in parameter
+     * @param recordSchema record schema
+     * @param fieldName field name
+     */
+    public static RecordSchemaField getRecordSchemaField(
+            RecordSchema recordSchema, String fieldName)
+    {
+        RecordSchemaField[] fields = recordSchema.getFields();
+        if (fields!=null)
+            for (RecordSchemaField field: fields)
+                if (fieldName.equals(field.getName()))
+                    return field;
+
+        return null;
     }
 
 	public static void copyAttributes(

@@ -18,20 +18,18 @@
 package org.raven.graph;
 
 import org.jrobin.data.Plottable;
+import org.raven.tree.Node;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataDef 
+public interface Interpolator extends Node
 {
     /**
-     * Returns the data definition name
+     * Creates iterpolator for data passed in parameter
+     * @param timestamps the array of timestamps in seconds
+     * @param values the values
      */
-    public String getName();
-    /**
-     * Returns the data of the data definition
-     * @return
-     */
-    public Plottable getData(long startTime, long endTime) throws DataDefException;
+    public Plottable createIterpolator(long[] timestamps, double[] values) throws Exception;
 }

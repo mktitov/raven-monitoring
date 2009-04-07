@@ -15,23 +15,32 @@
  *  under the License.
  */
 
-package org.raven.graph;
+package org.raven.graph.impl;
 
-import org.jrobin.data.Plottable;
+import org.raven.graph.DataSeries;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataDef 
+public class DataSeriesImpl implements DataSeries
 {
-    /**
-     * Returns the data definition name
-     */
-    public String getName();
-    /**
-     * Returns the data of the data definition
-     * @return
-     */
-    public Plottable getData(long startTime, long endTime) throws DataDefException;
+    private final long[] timestamps;
+    private final double[] values;
+
+    public DataSeriesImpl(long[] timestemps, double[] values)
+    {
+        this.timestamps = timestemps;
+        this.values = values;
+    }
+
+    public long[] getTimestamps()
+    {
+        return timestamps;
+    }
+
+    public double[] getValues()
+    {
+        return values;
+    }
 }

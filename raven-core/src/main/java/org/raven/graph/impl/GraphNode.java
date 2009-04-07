@@ -157,10 +157,10 @@ public class GraphNode extends BaseNode implements Viewable
         }
         catch (Exception ex)
         {
-            String message = String.format("Error generating graph (%s)", getPath());
+            String message = "Error generating graph";
             if (isLogLevelEnabled(LogLevel.ERROR))
-                error(message, ex);
-            throw new NodeError(message, ex);
+                error(message+".", ex);
+            throw new NodeError(String.format(message+" (%s).",getPath()), ex);
         }
     }
     private RrdGraphDef createGraphDef(String startTime, String endTime) throws Exception
@@ -257,7 +257,8 @@ public class GraphNode extends BaseNode implements Viewable
         return gdef;
     }
 
-    private void addDataDef(RrdGraphDef graphDef, DataDef dataDef, long start, long end)
+    private void addDataDef(RrdGraphDef graphDef, DataDef dataDef, long start, long end) 
+            throws DataDefException
     {
         graphDef.datasource(dataDef.getName(), dataDef.getData(start, end));
     }

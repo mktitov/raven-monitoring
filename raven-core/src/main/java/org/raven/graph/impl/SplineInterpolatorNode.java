@@ -15,13 +15,21 @@
  *  under the License.
  */
 
-package org.raven.graph;
+package org.raven.graph.impl;
+
+import org.jrobin.data.CubicSplineInterpolator;
+import org.jrobin.data.Plottable;
+import org.raven.graph.Interpolator;
+import org.raven.tree.impl.BaseNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-public enum InterpolatorType
+public class SplineInterpolatorNode extends BaseNode implements Interpolator
 {
-    LINE_INTERPOLATOR, CUBIC_SPLINE_INTERPOLATOR
+    public Plottable createIterpolator(long[] timestamps, double[] values) throws Exception
+    {
+        return new CubicSplineInterpolator(timestamps, values);
+    }
 }

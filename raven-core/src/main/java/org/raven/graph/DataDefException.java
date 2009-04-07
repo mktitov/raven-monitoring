@@ -17,21 +17,25 @@
 
 package org.raven.graph;
 
-import org.jrobin.data.Plottable;
-
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataDef 
+public class DataDefException extends Exception
 {
-    /**
-     * Returns the data definition name
-     */
-    public String getName();
-    /**
-     * Returns the data of the data definition
-     * @return
-     */
-    public Plottable getData(long startTime, long endTime) throws DataDefException;
+
+    public DataDefException(Throwable cause)
+    {
+        super(cause);
+    }
+    
+    public DataDefException(String message, Throwable cause)
+    {
+        super(message, cause);
+    }
+
+    public DataDefException(String message)
+    {
+        super(message);
+    }
 }
