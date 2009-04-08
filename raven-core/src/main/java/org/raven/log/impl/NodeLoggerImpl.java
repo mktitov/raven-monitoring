@@ -1,5 +1,5 @@
 /*
- *  Copyright 2008 Mikhail Titov.
+ *  Copyright 2008 Sergey Pineskiy.
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -33,14 +33,14 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @author Mikhail Titov
+ * @author Sergey Pineskiy
  */
 public class NodeLoggerImpl extends LogTablesManager implements NodeLogger, Runnable
 {
 	private static Logger logger = LoggerFactory.getLogger(NodeLoggerImpl.class);
 //	public static final String DATE_FORMAT = "yyyyMMdd";
 //	private static SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
-	private static final int MAX_MESSAGE_LENGTH = 2048;
+	private static final int MAX_MESSAGE_LENGTH = 10240;
 	private static final int MAX_NODE_PATH_LENGTH = 256;
 	private static final String FD = "fd";
 	private static final String NODE_ID = "nodeId";
