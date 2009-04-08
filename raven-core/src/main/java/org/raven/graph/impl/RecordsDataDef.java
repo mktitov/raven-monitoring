@@ -17,19 +17,23 @@
 
 package org.raven.graph.impl;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import org.raven.RavenUtils;
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
-import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.impl.RecordSchemaNode;
 import org.raven.ds.impl.RecordSchemaValueTypeHandlerFactory;
 import org.raven.graph.DataSeries;
+import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
@@ -39,6 +43,9 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
+@NodeClass(
+    parentNode=GraphNode.class,
+    childNodes={LineInterpolatorNode.class, SplineInterpolatorNode.class})
 public class RecordsDataDef extends AbstractDataDef implements DataConsumer
 {
     public final static int INITIAL_ARAY_SIZE = 50;
@@ -87,21 +94,75 @@ public class RecordsDataDef extends AbstractDataDef implements DataConsumer
     {
         try
         {
+            String _timestampFieldName = timestampFieldName;
             RecordSchemaField timestampField = RavenUtils.getRecordSchemaField(
-                    recordSchema, timestampFieldName);
+                    recordSchema, _timestampFieldName);
             if (timestampField==null)
                 throw new Exception(String.format(
                         "Field (%s) not found in the record schema (%s)"
-                        , timestampFieldName, recordSchema.getPath()));
+                        , _timestampFieldName, recordSchema.getPath()));
             String pattern = timestampField.getPattern();
             if (pattern==null)
                 throw new Exception(String.format(
-                        "The pattern attribute in the field schema (%s) of the record schema (%s) " +
-                        "must have a value"
-                        , timestampFieldName, recordSchema.getPath()));
-            NodeAttributeImpl startTimeAttr = new NodeAttributeImpl(
-                    timestampFieldName, String.class, null, null);
-            dataSource.getDataImmediate(this, sessionAttributes);
+                        "The pattern attribute in the field schema (%s) of the record schema (%s) " 
+                        + "must have a value"
+                        , _timestampFieldName, recordSchema.getPath()));
+            SimpleDateFormat fmt = new SimpleDateFormat(pattern);
+            String tsExpr = String.format(
+                    "[%s, %s]"
+                    , fmt.format(new Date(startTime*1000))
+                    , fmt.format(new Date(endTime*1000)));
+
+            NodeAttribute tsAttr = new NodeAttributeImpl(
+                    _timestampFieldName, String.class, tsExpr, null);
+            tsAttr.init();
+
+            try
+            {
+                dataSource.getDataImmediate(this, Arrays.asList(tsAttr));
+
+                List<Record> recs = records.get();
+                if (!recs.isEmpty())
+                {
+                    long[] timestamps = new long[recs.size()];
+                    double[] values = new double[recs.size()];
+
+                    int i=0;
+                    String _valueFieldName = valueFieldName;
+                    for (Record rec: recs)
+                    {
+                        Object tsObj = rec.getValue(_timestampFieldName);
+                        Long ts = converter.convert(Long.class, tsObj, null)/1000;
+                        if (ts==null)
+                        {
+                            if (isLogLevelEnabled(LogLevel.DEBUG))
+                                debug("skiping data for null timestamp");
+                            continue;
+                        }
+                        else if (ts<=timestamps[i])
+                        {
+                            if (isLogLevelEnabled(LogLevel.DEBUG))
+                                debug(String.format(
+                                        "skiping data for timestamp (%d) because of timestamp " +
+                                        "equals or lower prevous timestamp"
+                                        , ts));
+                            continue;
+                        }
+                        timestamps[i] = converter.convert(Long.class, tsObj, null)/1000;
+                        Object valueObj = rec.getValue(_valueFieldName);
+                        values[i] = converter.convert(Double.class, valueObj, null);
+                        ++i;
+                    }
+
+                    return new DataSeriesImpl(timestamps, values);
+                }
+                else
+                    return new DataSeriesImpl(new long[]{}, new double[]{});
+            }
+            finally
+            {
+                records.remove();
+            }
         }
         catch (Exception e)
         {
@@ -112,7 +173,20 @@ public class RecordsDataDef extends AbstractDataDef implements DataConsumer
 
     public void setData(DataSource dataSource, Object data)
     {
-//        records;
+        if (data instanceof Record)
+            records.get().add((Record)data);
+        else if (data==null)
+        {
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug("Recieved end marker in record sequence");
+        }
+        else
+        {
+            if (isLogLevelEnabled(LogLevel.ERROR))
+            error(String.format(
+                    "Data type (%s) recieved from (%s) data source must be instance of (%s)"
+                    , data.getClass().getName(), dataSource.getPath(), Record.class.getName()));
+        }
     }
 
     public Object refereshData(Collection<NodeAttribute> sessionAttributes)
@@ -128,6 +202,16 @@ public class RecordsDataDef extends AbstractDataDef implements DataConsumer
     public void setDataSource(DataSource dataSource)
     {
         this.dataSource = dataSource;
+    }
+
+    public RecordSchemaNode getRecordSchema()
+    {
+        return recordSchema;
+    }
+
+    public void setRecordSchema(RecordSchemaNode recordSchema)
+    {
+        this.recordSchema = recordSchema;
     }
 
     public String getTimestampFieldName()

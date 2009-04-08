@@ -23,6 +23,7 @@ import org.jrobin.data.Plottable;
 import org.raven.graph.DataDef;
 import org.raven.graph.DataDefException;
 import org.raven.graph.DataSeries;
+import org.raven.graph.GraphDataDefNode;
 import org.raven.graph.Interpolator;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
@@ -31,7 +32,7 @@ import org.raven.tree.impl.BaseNode;
  *
  * @author Mikhail Titov
  */
-public abstract class AbstractDataDef extends BaseNode implements DataDef
+public abstract class AbstractDataDef extends BaseNode implements DataDef, GraphDataDefNode
 {
     public Plottable getData(long startTime, long endTime) throws DataDefException
     {
