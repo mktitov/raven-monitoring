@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @author Sergey Pineskiy
+ * @author Sergey Pinevskiy
  */
 public class NodeLoggerImpl extends LogTablesManager implements NodeLogger, Runnable
 {
