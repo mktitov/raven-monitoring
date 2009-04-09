@@ -26,7 +26,7 @@ import org.weda.services.TypeConverter;
  */
 public enum ConsolidationFunction 
 {
-    AVERAGE, MIN, MAX, LAST;
+    AVERAGE, MIN, MAX, FIRST, LAST, TOTAL;
     
     @Service
     private static TypeConverter converter;
