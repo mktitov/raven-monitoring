@@ -51,16 +51,29 @@ public abstract class AbstractCache<K,V,SK>
 	 */
 	public V put(K key,V value)
 	{
+		return put(key,value, 0);
+	}
+
+	/**
+	 * Размещает объект в кеше.
+	 * @param key ключ объекта.
+	 * @param value объект.
+	 * @return предыдущий объект, хранившийся в кеше и соответствующий данному ключу.
+	 */
+	public V put(K key,V value,long lifeTime)
+	{
 		if(value==null) return null;
 		SK sk = getStoreKey(key);
 		CacheValueContainer<V> vco = getVC(sk); 
 		if(vco!=null)
 			removeSK(sk);
-		map.put(sk, new CacheValueContainer<V>(value));
+		CacheValueContainer<V> v = new CacheValueContainer<V>(value);
+		if(lifeTime>0) v.setLifeTime(lifeTime);
+		map.put(sk, v);
 		if(vco==null) return null;
 		return vco.getValue();
 	}
-		
+	
 	/**
 	 * @param key ключ объекта.
 	 * @return CacheValueContainer, соответствующий ключу, без изменения времени занесения объекта в кеш.
@@ -197,8 +210,15 @@ public abstract class AbstractCache<K,V,SK>
 		{
 			SK key = it.next();
 			CacheValueContainer<V> vc = getVC(key);
-			if( vc!=null && isOld(vc.getTime(), ct) )
-				killList.add(key);
+			if(vc==null) continue;
+			long lt = vc.getLifeTime();
+			if( lt>0 )
+			{
+				if(ct-vc.getTime()<=lt ) continue;
+			}
+			else 
+				if( ! isOld(vc.getTime(), ct) ) continue;
+			killList.add(key);
 		}
 		for(it = killList.iterator();it.hasNext();)
 			removeSK(it.next());

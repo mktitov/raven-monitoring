@@ -10,6 +10,11 @@ public class CacheValueContainer<V>
 	 * Время размешения объекта в кеше.
 	 */
 	private Long time;
+	/**
+	 * Допустимое время жизни конкретного объекта в кеше.
+	 * Если <=0 , то игнорируется, используется значение <code>AbstractCache.deleteAfter</code>. 
+	 */
+	private Long lifeTime = 0L;
 		
 	public CacheValueContainer(V value)
 	{
@@ -37,6 +42,14 @@ public class CacheValueContainer<V>
 
 	public Long getTime() {
 		return time;
+	}
+
+	public void setLifeTime(Long lifeTime) {
+		this.lifeTime = lifeTime;
+	}
+
+	public Long getLifeTime() {
+		return lifeTime;
 	}
 	
 }
