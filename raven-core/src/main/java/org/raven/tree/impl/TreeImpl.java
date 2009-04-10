@@ -286,8 +286,9 @@ public class TreeImpl implements Tree
 			logger.error("Error starting node (%s)", e);
 		}
 
-		if (node.getChildrens()!=null)
-			for (Node child: node.getChildrens())
+        Collection<Node> childs = node.getSortedChildrens();
+		if (childs!=null)
+			for (Node child: childs)
 				start(child, autoStartOnly);
 
 		try
@@ -496,9 +497,10 @@ public class TreeImpl implements Tree
             if (nodeTuner!=null)
                 nodeTuner.finishTuning(node);
         }
-        if (node.getChildrens()!=null)
+        Collection<Node> childs = node.getSortedChildrens();
+        if (childs!=null)
         {
-            Iterator<Node> it = node.getChildrens().iterator();
+            Iterator<Node> it = childs.iterator();
             while (it.hasNext())
                 initNode(it.next(), nodeTuner);
         }
