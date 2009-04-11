@@ -31,6 +31,8 @@ public abstract class AbstractCache<K,V,SK>
 	 * который найден в кеше. 
 	 */
 	private boolean updateTimeOnGet = false;
+	
+	private boolean valueInserted = false;
 		
 	/**
 	 * Отвечает за получение объекта, отсутствующего в кеше.
@@ -112,10 +114,27 @@ public abstract class AbstractCache<K,V,SK>
 	//	logger.info("found in cache K: '{}', SK: '{}'",key,sk);
 		return vc.getValue();
 	}	
+
+	/**
+	 * Запрашивает объект через getValue() и кеширует.   
+	 * @param key ключ объекта.
+	 * @return найденный объект.
+	 */
+	protected V getValueX(K key)
+	{
+		V v = getValue(key);
+		if(!isValueInserted())
+		{
+			put(key,v);
+			return v;
+		}	
+		setValueInserted(false);
+		return getFromCacheOnly(key);
+	}
 	
 	/**
 	 * Ищет объект в кеше. Если не находит - запрашивает 
-	 * его через getValue() и кеширует.   
+	 * его через getValueX().   
 	 * @param key ключ объекта.
 	 * @return найденный объект.
 	 */
@@ -123,23 +142,19 @@ public abstract class AbstractCache<K,V,SK>
 	{
 		V v = getFromCacheOnly(key);
 		if(v!=null) return v;
-		v = getValue(key);
-		put(key,v);
-		return v;
+		return getValueX(key);
 	}	
 	
 	/**
 	 * Удаляет (если есть) объект из кеша, после чего запрашивает 
-	 * его через getValue() и кеширует.   
+	 * его через getValueX().   
 	 * @param key ключ объекта.
 	 * @return найденный объект.
 	 */
 	public V reload(K key)
 	{
 		remove(key);
-		V v = getValue(key);
-		put(key,v);
-		return v;
+		return getValueX(key);
 	}	
 
 	public V get(K key, boolean reload)
@@ -254,6 +269,14 @@ public abstract class AbstractCache<K,V,SK>
 		}
 		public boolean isUpdateTimeOnGet() {
 			return updateTimeOnGet;
+		}
+
+		public void setValueInserted(boolean valueInserted) {
+			this.valueInserted = valueInserted;
+		}
+
+		public boolean isValueInserted() {
+			return valueInserted;
 		}
 	
 	
