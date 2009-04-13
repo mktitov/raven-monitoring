@@ -23,6 +23,8 @@ import org.apache.tapestry.ioc.MappedConfiguration;
 import org.apache.tapestry.ioc.OrderedConfiguration;
 import org.apache.tapestry.ioc.ServiceBinder;
 import org.apache.tapestry.ioc.services.ChainBuilder;
+import org.raven.cache.TemporaryCacheManager;
+import org.raven.cache.TemporaryCacheManagerImpl;
 import org.raven.conf.Configurator;
 import org.raven.conf.impl.ConfiguratorImpl;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
@@ -55,6 +57,7 @@ import org.raven.impl.NodeAttributeToStringConverter;
 import org.raven.impl.NodeToStringConverter;
 import org.raven.impl.NumberToNumberConverter;
 import org.raven.impl.OracleTimestampToTimestampConverter;
+import org.raven.impl.SimpleCache;
 import org.raven.impl.SnmpVariableToNumberConverter;
 import org.raven.impl.StringToAttributeReferenceConverter;
 import org.raven.impl.StringToCharsetConverter;
@@ -90,6 +93,9 @@ import org.raven.tree.impl.SchemasNode;
 import org.raven.tree.impl.SystemNode;
 import org.raven.tree.impl.TreeImpl;
 import org.raven.tree.store.impl.H2TreeStore;
+import org.weda.internal.Cache;
+import org.weda.internal.CacheScope;
+import org.weda.internal.services.CacheManager;
 import org.weda.internal.services.ResourceProvider;
 
 /**
@@ -104,6 +110,11 @@ public class RavenCoreModule
         binder.bind(Configurator.class, ConfiguratorImpl.class);
 		binder.bind(GroupsOrganazier.class, GroupsOrganazierImpl.class);
 		binder.bind(ExpressionCache.class, ExpressionCacheImpl.class);
+    }
+
+    public static TemporaryCacheManager buildTemporaryCacheManager(CacheManager cacheManager)
+    {
+        return new TemporaryCacheManagerImpl(cacheManager);
     }
     
     public static Configurator buildConfigurator(Map<String, Class> treeStoreEngines)
@@ -290,4 +301,9 @@ public class RavenCoreModule
 				, new ExpressionCompilerImpl(expressionCache)
 				, "after:*");
 	}
+
+    public static void contributeCacheManager(MappedConfiguration<CacheScope, Cache> conf)
+    {
+        conf.add(CacheScope.GLOBAL, new SimpleCache());
+    }
 }

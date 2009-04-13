@@ -936,6 +936,11 @@ public class BaseNode implements Node, NodeListener, Logger
         }
     }
 
+    protected boolean allowAttributesGeneration(NodeAttribute attr)
+    {
+        return true;
+    }
+
     private void syncAttributesGenerators() throws Exception
     {
         if (nodeAttributes==null)
@@ -949,7 +954,7 @@ public class BaseNode implements Node, NodeListener, Logger
     
     private void syncParentAttributes(NodeAttribute parent) throws Exception
     {
-        if (parent.getRealValue() == null)
+        if (parent.getRealValue() == null || !allowAttributesGeneration(parent))
             removeChildAttributes(parent.getName(), null);
         else
         {

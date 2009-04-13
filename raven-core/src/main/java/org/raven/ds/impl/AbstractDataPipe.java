@@ -22,11 +22,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import org.raven.Helper;
+import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
@@ -34,7 +36,11 @@ import org.raven.tree.NodeAttribute;
  */
 public abstract class AbstractDataPipe extends AbstractDataConsumer implements DataSource
 {
-    private Collection<NodeAttribute> consumerAttributes;
+    protected Collection<NodeAttribute> consumerAttributes;
+
+    @Parameter(defaultValue="false")
+    @NotNull
+    private Boolean forwardDataSourceAttributes;
 
     @Override
     protected void initFields()
@@ -81,13 +87,40 @@ public abstract class AbstractDataPipe extends AbstractDataConsumer implements D
 
     public Collection<NodeAttribute> generateAttributes()
     {
-        return consumerAttributes;
+        Boolean _forwardDataSourceAttributes = forwardDataSourceAttributes;
+        DataSource _dataSource = getDataSource();
+        Collection genAttrs = consumerAttributes;
+        if (_forwardDataSourceAttributes!=null && _forwardDataSourceAttributes && _dataSource!=null)
+        {
+            Collection<NodeAttribute> dsAttrs = _dataSource.generateAttributes();
+            if (dsAttrs!=null && !dsAttrs.isEmpty())
+            {
+                Collection<NodeAttribute> attrs = new ArrayList<NodeAttribute>(dsAttrs);
+                attrs.addAll(consumerAttributes);
+
+                genAttrs = attrs;
+            }
+        }
+        return genAttrs;
     }
     
     public boolean gatherDataForConsumer(
             DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
     {
         return getDataSource().getDataImmediate(this, null);
+    }
+
+    @Override
+    protected boolean allowAttributesGeneration(NodeAttribute attr)
+    {
+        if (   attr.getName().equals(DATASOURCE_ATTRIBUTE)
+            && forwardDataSourceAttributes!=null
+            && forwardDataSourceAttributes)
+        {
+            return false;
+        }
+        else
+            return super.allowAttributesGeneration(attr);
     }
     
     /**
