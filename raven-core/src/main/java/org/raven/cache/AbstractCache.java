@@ -31,8 +31,12 @@ public abstract class AbstractCache<K,V,SK>
 	 * который найден в кеше. 
 	 */
 	private boolean updateTimeOnGet = false;
-	
-	private boolean valueInserted = false;
+	/**
+	 * Если true - значение, возвращаемое <code>getValue</code>, 
+	 * автоматически записывается в кеш с временем жизни = <code>deleteAfter</code>.
+	 * Если false, размещение объекта в кеше должно происходить внутри <code>getValue</code>.  
+	 */
+	private boolean autoPut = true;
 		
 	/**
 	 * Отвечает за получение объекта, отсутствующего в кеше.
@@ -116,20 +120,16 @@ public abstract class AbstractCache<K,V,SK>
 	}	
 
 	/**
-	 * Запрашивает объект через getValue() и кеширует.   
+	 * Запрашивает объект через <code>getValue()</code> и кеширует, если <code>autoPut</code>=true.   
 	 * @param key ключ объекта.
 	 * @return найденный объект.
 	 */
 	protected V getValueX(K key)
 	{
 		V v = getValue(key);
-		if(!isValueInserted())
-		{
+		if(isAutoPut())
 			put(key,v);
-			return v;
-		}	
-		setValueInserted(false);
-		return getFromCacheOnly(key);
+		return v;
 	}
 	
 	/**
@@ -271,13 +271,13 @@ public abstract class AbstractCache<K,V,SK>
 			return updateTimeOnGet;
 		}
 
-		public void setValueInserted(boolean valueInserted) {
-			this.valueInserted = valueInserted;
+		protected void setAutoPut(boolean autoPut) {
+			this.autoPut = autoPut;
 		}
 
-		public boolean isValueInserted() {
-			return valueInserted;
+		public boolean isAutoPut() {
+			return autoPut;
 		}
-	
+
 	
 }
