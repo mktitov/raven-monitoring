@@ -217,7 +217,8 @@ public abstract class AbstractCache<K,V,SK>
 	public void checkOld()
 	{
 		long ct = System.currentTimeMillis();
-		if(deleteAfter<=0 || ct-getLastCheck()< getCheckInterval()) return;
+		if(isAutoPut() && deleteAfter<=0) return;
+		if(ct-getLastCheck()< getCheckInterval()) return;
 		setLastCheck(ct);
 		Iterator<SK> it = map.keySet().iterator();
 		ArrayList<SK> killList = new ArrayList<SK>();
