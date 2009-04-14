@@ -17,14 +17,11 @@
 
 package org.raven.ds.impl;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.cache.TemporaryCache;
 import org.raven.cache.TemporaryCacheManager;
@@ -41,12 +38,15 @@ import org.weda.internal.CacheEntity;
 import org.weda.internal.CacheScope;
 import org.weda.internal.annotations.Message;
 import org.weda.internal.annotations.Service;
+import org.weda.internal.impl.MessageComposer;
 import org.weda.internal.services.CacheManager;
+import org.weda.internal.services.MessagesRegistry;
 
 /**
  *
  * @author Mikhail Titov
  */
+@NodeClass()
 public class CachePipeNode extends AbstractDataPipe
 {
     public static final String CONSUMER_TYPE_ATTR = "activeConsumer";
@@ -57,6 +57,8 @@ public class CachePipeNode extends AbstractDataPipe
     protected static CacheManager cacheManager;
     @Service
     protected static TemporaryCacheManager temporaryCacheManager;
+    @Service
+    protected static MessagesRegistry messages;
 
     @Parameter(defaultValue="SESSION")
     @NotNull
@@ -114,24 +116,16 @@ public class CachePipeNode extends AbstractDataPipe
     }
 
     @Override
-    public Collection<NodeAttribute> generateAttributes()
-    {
-        List<NodeAttribute> genAttrs = new ArrayList<NodeAttribute>();
-        NodeAttribute attr = new NodeAttributeImpl(
-                CONSUMER_TYPE_ATTR, Boolean.class, false, consumerTypeAttrDescription);
-        attr.setRequired(true);
-        genAttrs.add(attr);
-
-        Collection<NodeAttribute> dsAttrs = getDataSource().generateAttributes();
-        if (dsAttrs!=null && !dsAttrs.isEmpty())
-            genAttrs.addAll(dsAttrs);
-
-        return genAttrs;
-    }
-
-    @Override
     public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
     {
+        NodeAttribute attr = new NodeAttributeImpl(CONSUMER_TYPE_ATTR, Boolean.class, false, null);
+        attr.setRequired(true);
+        MessageComposer desc =
+                new MessageComposer(messages)
+                .append(messages.createMessageKeyForStringValue(
+                    this.getClass().getName(), CONSUMER_TYPE_ATTR));
+        attr.setDescriptionContainer(desc);
+        consumerAttributes.add(attr);
     }
 
     @Override
@@ -174,7 +168,8 @@ public class CachePipeNode extends AbstractDataPipe
                 long _waitTimeout = waitTimeout;
                 DataStore dataStore = null;
                 if (isLogLevelEnabled(LogLevel.DEBUG))
-                    debug(String.format("Data consumer (%s) is waiting for data"));
+                    debug(String.format(
+                            "Data consumer (%s) is waiting for data", dataConsumer.getPath()));
                 while (dataStore==null && waitInterval<=_waitTimeout)
                 {
                     TimeUnit.MILLISECONDS.sleep(100l);
@@ -190,13 +185,13 @@ public class CachePipeNode extends AbstractDataPipe
                                 , dataConsumer.getPath()));
                 }
                 else
-                    replayDataToConsumer(dataConsumer, dataState.getDataStore());
+                    replayDataToConsumer(dataConsumer, dataStore);
             }
         }
-        return super.gatherDataForConsumer(dataConsumer, attributes);
+        return true;
     }
 
-    private void cacheDataStore()
+    private synchronized void cacheDataStore()
     {
         temporaryCacheManager.getCache(cacheScope).put(
                 DATA_STORE_ATTR, localDataStore.get(), expirationTime);
@@ -252,7 +247,7 @@ public class CachePipeNode extends AbstractDataPipe
             {
                 Iterator it = dataStore.getDataIterator();
                 while (it.hasNext())
-                    dataConsumer.setData(this, data);
+                    dataConsumer.setData(this, it.next());
             }
             finally
             {

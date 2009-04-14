@@ -26,6 +26,8 @@ public class TemporaryCache extends AbstractCache
     public TemporaryCache()
     {
         setAutoPut(false);
+        setUpdateTimeOnGet(false);
+        setCheckInterval(1000l);
     }
 
     @Override

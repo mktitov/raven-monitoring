@@ -42,6 +42,16 @@ public abstract class AbstractDataPipe extends AbstractDataConsumer implements D
     @NotNull
     private Boolean forwardDataSourceAttributes;
 
+    public Boolean getForwardDataSourceAttributes()
+    {
+        return forwardDataSourceAttributes;
+    }
+
+    public void setForwardDataSourceAttributes(Boolean forwardDataSourceAttributes)
+    {
+        this.forwardDataSourceAttributes = forwardDataSourceAttributes;
+    }
+
     @Override
     protected void initFields()
     {
