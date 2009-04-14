@@ -47,7 +47,8 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass(childNodes=
     {
         IfNode.class, CommentNode.class, HorizontalRuleNode.class, CalculatedDataDefNode.class,
-        AreaNode.class, LineNode.class, StackNode.class, PrintNode.class, RecordsDataDef.class
+        AreaNode.class, LineNode.class, StackNode.class, PrintNode.class, RecordsDataDef.class,
+        SdbQueryResultDataDef.class
     })
 public class GraphNode extends BaseNode implements Viewable
 {

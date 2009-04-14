@@ -17,33 +17,17 @@
 
 package org.raven.graph.impl;
 
-import org.raven.graph.DataSeries;
+import org.junit.Test;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class DataSeriesImpl implements DataSeries
+public class SdbQueryResultDataDefTest
 {
-    public final static DataSeries EMPTY_DATA_SERIES =
-            new DataSeriesImpl(new long[]{}, new double[]{});
-
-    private final long[] timestamps;
-    private final double[] values;
-
-    public DataSeriesImpl(long[] timestemps, double[] values)
+    @Test
+    public void test()
     {
-        this.timestamps = timestemps;
-        this.values = values;
-    }
 
-    public long[] getTimestamps()
-    {
-        return timestamps;
-    }
-
-    public double[] getValues()
-    {
-        return values;
     }
 }

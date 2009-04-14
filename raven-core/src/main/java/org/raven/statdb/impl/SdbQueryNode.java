@@ -26,7 +26,6 @@ import org.raven.statdb.query.QueryStatisticsName;
 import org.raven.statdb.query.SelectClause;
 import org.raven.statdb.query.SelectMode;
 import org.raven.tree.Node;
-import org.raven.tree.NodeError;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.constraints.NotNull;
 

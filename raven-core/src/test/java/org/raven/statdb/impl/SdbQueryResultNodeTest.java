@@ -83,7 +83,6 @@ public class SdbQueryResultNodeTest extends RavenCoreTestCase
         assertNotNull(dataList);
         assertEquals(1, dataList.size());
         assertSame(queryResult, dataList.get(0));
-        assertSame(resultNode.getQueryNode(), db.getQuery());
 
         verify(queryResult);
     }
