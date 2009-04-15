@@ -17,8 +17,12 @@
 
 package org.raven.ui;
 
+import org.apache.tapestry.ioc.MappedConfiguration;
 import org.apache.tapestry.ioc.ServiceBinder;
 import org.raven.ui.services.LocaleService;
+import org.raven.ui.services.SessionCache;
+import org.weda.internal.Cache;
+import org.weda.internal.CacheScope;
 import org.weda.internal.services.Locale;
 
 /**
@@ -30,5 +34,10 @@ public class RavenUiModule
     public static void bind(ServiceBinder binder)
     {
         binder.bind(Locale.class, LocaleService.class);
+    }
+
+    public static void contributeCacheManager(MappedConfiguration<CacheScope, Cache> conf)
+    {
+        conf.add(CacheScope.SESSION, new SessionCache());
     }
 }
