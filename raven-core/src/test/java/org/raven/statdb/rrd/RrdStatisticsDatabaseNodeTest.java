@@ -37,7 +37,7 @@ import org.raven.statdb.AggregationFunction;
 import org.raven.statdb.StatisticsRecord;
 import org.raven.statdb.ValueType;
 import org.raven.statdb.impl.StatisticsDefinitionNode;
-import org.raven.statdb.impl.StatisticsRecordImpl;
+import org.raven.statdb.impl.AbstractStatisticsRecord;
 import org.raven.statdb.query.FromClause;
 import org.raven.statdb.query.KeyValues;
 import org.raven.statdb.query.Query;
@@ -620,7 +620,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 
 	private StatisticsRecord createRecord(String key, long time, double s1val, double s2val)
 	{
-		StatisticsRecordImpl rec = new StatisticsRecordImpl(key, time);
+		AbstractStatisticsRecord rec = new AbstractStatisticsRecord(key, time);
 		rec.put("s1", s1val);
 		rec.put("s2", s2val);
 

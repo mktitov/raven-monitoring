@@ -19,8 +19,10 @@ package org.raven;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.text.StrMatcher;
 import org.apache.commons.lang.text.StrTokenizer;
@@ -95,6 +97,20 @@ public class RavenUtils
                     return field;
 
         return null;
+    }
+
+    public static Map<String, RecordSchemaField> getRecordSchemaFields(RecordSchema recordSchema)
+    {
+        RecordSchemaField[] fields = recordSchema.getFields();
+        if (fields!=null)
+        {
+            Map<String, RecordSchemaField> fieldsMap = new HashMap<String, RecordSchemaField>();
+            for (RecordSchemaField field: fields)
+                fieldsMap.put(field.getName(), field);
+            return fieldsMap;
+        }
+        else
+            return null;
     }
 
 	public static void copyAttributes(

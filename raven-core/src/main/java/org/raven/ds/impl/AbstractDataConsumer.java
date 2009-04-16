@@ -28,6 +28,7 @@ import java.util.Map;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
+import org.raven.log.LogLevel;
 import org.raven.table.TableImpl;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -149,7 +150,14 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
         this.data = data;
         this.lastDataTime = System.currentTimeMillis();
         try{
-            doSetData(dataSource, data);
+            try
+            {
+                doSetData(dataSource, data);
+            }catch(Exception e)
+            {
+                if (isLogLevelEnabled(LogLevel.ERROR))
+                    error(String.format("Error processing data by consumer (%s)", getPath()), e);
+            }
         }finally
         {
             switch(resetDataPolicy)
@@ -161,7 +169,7 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
         }
     }
     
-    protected abstract void doSetData(DataSource dataSource, Object data);
+    protected abstract void doSetData(DataSource dataSource, Object data) throws Exception;
 
     public Object refereshData(Collection<NodeAttribute> sessionAttributes) 
     {

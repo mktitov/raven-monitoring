@@ -32,12 +32,14 @@ import org.jrobin.core.RrdDbPool;
 import org.jrobin.core.Util;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
+import org.raven.ds.Record;
 import org.raven.expr.Expression;
 import org.raven.expr.ExpressionCompiler;
 import org.raven.expr.impl.GroovyExpressionCompiler;
 import org.raven.statdb.Aggregation;
 import org.raven.statdb.AggregationFunction;
 import org.raven.statdb.StatisticsDatabase;
+import org.raven.statdb.StatisticsRecord;
 import org.raven.statdb.ValueType;
 import org.raven.statdb.impl.AbstractStatisticsDatabase;
 import org.raven.statdb.impl.AggregationCalculationUnit;
@@ -130,6 +132,12 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 			databaseTemplatesNode.start();
 		}
 	}
+
+    @Override
+    protected StatisticsRecord createStatisticsRecord(Record record) throws Exception
+    {
+        return new RrdStatisticsRecord(record, converter, this);
+    }
 
 	@Override
 	protected void doStart() throws Exception
@@ -395,67 +403,6 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 				(RrdDatabaseDefNode)databaseTemplatesNode.getChildren(statType);
 		RrdDb db = template.createDatabase(dbFile.getAbsolutePath());
 		db.close();
-	}
-
-	@Override
-	protected boolean isStatisticsDefenitionValid(StatisticsDefinitionNode statDef)
-	{
-		RrdDatabaseDefNode template =
-				(RrdDatabaseDefNode) databaseTemplatesNode.getChildren(statDef.getType());
-		
-		if (template==null)
-		{
-			error(String.format(
-					"Invalid statistics (%s). Statistics does not have the database template"
-					, statDef.getName()));
-			return false;
-		}
-
-		if (template.getStatus()!=Status.STARTED)
-		{
-			error(String.format("Invalid statistics (%s). Database template (%s) not started"
-					, statDef.getName(), template.getPath()));
-			return false;
-		}
-
-		boolean hasDatasources = false;
-		boolean hasArchives = false;
-
-		Collection<Node> childs = template.getChildrens();
-		if (childs!=null && childs.size()>0)
-		{
-			for (Node child: childs)
-			{
-				if (child.getStatus()!=Status.STARTED)
-					continue;
-				if (child instanceof RrdArchiveDefNode)
-					hasArchives = true;
-				else if (   child instanceof RrdDatasourceDefNode
-						 && DATASOURCE_NAME.equals(child.getName()))
-				{
-					hasDatasources = true;
-				}
-			}
-		}
-		if (!hasArchives)
-		{
-			error(String.format(
-					"Invalid statistics (%s). Database template (%s) must have at least " +
-					"one archive"
-					, statDef.getName(), template.getPath()));
-			return false;
-		}
-		if (!hasDatasources)
-		{
-			error(String.format(
-					"Invalid statistics (%s). Database template (%s) must have exactly " +
-					"one datasource with name (%s)"
-					, statDef.getName(), template.getPath(), DATASOURCE_NAME));
-			return false;
-
-		}
-
-		return true;
 	}
 
     private File formStatisticsDbFile(String key, String statisticsName)

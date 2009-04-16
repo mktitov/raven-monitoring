@@ -622,7 +622,7 @@ public class DatabaseRecordQuery
         {
             FilterInfo filterInfo = filterElements.get(key.toUpperCase());
             if (filterInfo==null)
-                throw new Error(String.format("Filter element (%s) was not defined"));
+                throw new Error(String.format("Filter element (%s) was not defined", key));
             
             return createWhereEntry(filterInfo.getFilterElement(), filterInfo.isCaseSensitive());
         }

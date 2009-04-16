@@ -93,7 +93,7 @@ public class AbstractStatisticsDatabaseTest extends RavenCoreTestCase
 	@Test
 	public void saveStatisticsValueTest()
 	{
-		StatisticsRecordImpl rec = new StatisticsRecordImpl("/1/2/", 0);
+		AbstractStatisticsRecord rec = new AbstractStatisticsRecord("/1/2/", 0);
 		rec.put("s1", 1.0);
 		rec.put("s2", 2.0);
 
@@ -106,7 +106,7 @@ public class AbstractStatisticsDatabaseTest extends RavenCoreTestCase
 	@Test
 	public void undefinedStatisticsTest()
 	{
-		StatisticsRecordImpl rec = new StatisticsRecordImpl("/1/2/", 0);
+		AbstractStatisticsRecord rec = new AbstractStatisticsRecord("/1/2/", 0);
 		rec.put("s3", 1.0);
 
 		SaveStatisticsValue saveStatisticsValue = createMock(SaveStatisticsValue.class);
@@ -118,7 +118,7 @@ public class AbstractStatisticsDatabaseTest extends RavenCoreTestCase
 	@Test
 	public void rulesExecutionTest() throws Exception
 	{
-		StatisticsRecordImpl rec = new StatisticsRecordImpl("/1/2/", 0);
+		AbstractStatisticsRecord rec = new AbstractStatisticsRecord("/1/2/", 0);
 		rec.put("s1", 1.0);
 		rec.put("s2", 2.0);
 		
@@ -150,7 +150,7 @@ public class AbstractStatisticsDatabaseTest extends RavenCoreTestCase
 	@Test
 	public void stopProcessingSubkeyTest() throws Exception
 	{
-		StatisticsRecordImpl rec = new StatisticsRecordImpl("/1/2/", 0);
+		AbstractStatisticsRecord rec = new AbstractStatisticsRecord("/1/2/", 0);
 		rec.put("s1", 1.0);
 		rec.put("s2", 2.0);
 
@@ -179,7 +179,7 @@ public class AbstractStatisticsDatabaseTest extends RavenCoreTestCase
 	@Test
 	public void stopProcessingKeyTest() throws Exception
 	{
-		StatisticsRecordImpl rec = new StatisticsRecordImpl("/1/2/", 0);
+		AbstractStatisticsRecord rec = new AbstractStatisticsRecord("/1/2/", 0);
 		rec.put("s1", 1.0);
 		rec.put("s2", 2.0);
 

@@ -17,17 +17,15 @@
 
 package org.raven.statdb.impl;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.script.Bindings;
-import org.jrobin.core.Util;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataSource;
+import org.raven.ds.Record;
 import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.log.LogLevel;
 import org.raven.statdb.ProcessingInstruction;
@@ -50,7 +48,6 @@ public abstract class AbstractStatisticsDatabase
 	@NotNull
 	private long step;
 
-	protected StatisticsDefinitionsNode statisticsDefinitions;
     protected RulesNode rulesNode;
 
     protected Map<String, Double> previousValues;
@@ -96,29 +93,8 @@ public abstract class AbstractStatisticsDatabase
 		return rulesNode;
 	}
 
-	public StatisticsDefinitionsNode getStatisticsDefinitionsNode()
-	{
-		return statisticsDefinitions;
-	}
-
-    public StatisticsDefinitionNode getStatisticsDefinitionNode(String statisticsName)
-    {
-        return (StatisticsDefinitionNode) statisticsDefinitions.getChildren(statisticsName);
-    }
-
 	protected void initConfigurationNodes()
 	{
-		statisticsDefinitions =
-			(StatisticsDefinitionsNode)getChildren(StatisticsDefinitionsNode.NAME);
-		if (statisticsDefinitions==null)
-		{
-			statisticsDefinitions = new StatisticsDefinitionsNode();
-			addChildren(statisticsDefinitions);
-			statisticsDefinitions.save();
-			statisticsDefinitions.init();
-			statisticsDefinitions.start();
-		}
-
         rulesNode = (RulesNode) getChildren(RulesNode.NAME);
         if (rulesNode==null)
         {
@@ -131,11 +107,12 @@ public abstract class AbstractStatisticsDatabase
 	}
 
 	@Override
-	protected void doSetData(DataSource dataSource, Object data)
+	protected void doSetData(DataSource dataSource, Object data) throws Exception
 	{
-		if (!(data instanceof StatisticsRecord))
+		if (!(data instanceof Record))
 		{
-			logger.warn(String.format(
+            if (isLogLevelEnabled(LogLevel.WARN))
+    			warn(String.format(
 					"Invalid data type recieved from (%s). The data must have (%s) type, " +
 					"but recieved (%s)"
 					, dataSource.getPath(), StatisticsRecord.class.getName()
@@ -143,63 +120,19 @@ public abstract class AbstractStatisticsDatabase
 			return;
 		}
 
-		StatisticsRecord record = (StatisticsRecord) data;
+		StatisticsRecord record = createStatisticsRecord((Record)data);
 
 		processStatisticsRecord(dataSource, record);
-
 	}
 
-	protected abstract boolean isStatisticsDefenitionValid(StatisticsDefinitionNode statDef);
+    protected abstract StatisticsRecord createStatisticsRecord(Record record) throws Exception;
 
 	public void processStatisticsRecord(Node source, StatisticsRecord record)
 	{
-		if (record.getKey()==null || !record.getKey().startsWith("/"))
-		{
-			error(String.format(
-					"Invalid statistic record recieved from (%s). Key (%s) must not be null and " +
-					"must start from (/)", source.getPath(), record.getKey()));
-			return;
-		}
-
-		String[] key = record.getKey().substring(1).split("/");
-		if (key==null || key.length==0 || key[0].length()==0)
-		{
-			logger.error(String.format(
-					"Invalid statistics record key (%s) recieved from (%s)"
-					, record.getKey(), source.getPath()));
-			return;
-		}
-
-		if (record.getValues()==null || record.getValues().isEmpty())
-		{
-			if (isLogLevelEnabled(LogLevel.DEBUG))
-				logger.debug(String.format(
-						"Recieved empty statistic record for key (%s) from (%s)"
-						, record.getKey(), source.getPath()));
-			return;
-		}
-
-		Set<String> disabledStatisticsNames = new HashSet<String>();
-		for (String statisticsName: record.getValues().keySet())
-		{
-			Node sdef = statisticsDefinitions.getChildren(statisticsName);
-			if (   sdef==null
-				|| sdef.getStatus()!=Status.STARTED
-				|| !isStatisticsDefenitionValid((StatisticsDefinitionNode) sdef))
-			{
-				disabledStatisticsNames.add(statisticsName);
-				if (isLogLevelEnabled(LogLevel.DEBUG))
-					debug(String.format(
-							"Skiping processing value for statistics (%s) recieved from (%s). " +
-							"Statistics is not defined or disabled"
-							, statisticsName, source.getPath()));
-			}
-		}
-
         StringBuilder partialKeyBuf = new StringBuilder("/");
 		Set<String> stopList = new HashSet<String>();
 		int i=0;
-        for (String subKey: key)
+        for (String subKey: record.getKeyElements())
         {
 			++i;
             String partialKey = partialKeyBuf.append(subKey+"/").toString();
@@ -207,15 +140,12 @@ public abstract class AbstractStatisticsDatabase
             {
                 try
                 {
-					if (disabledStatisticsNames.contains(value.getKey()))
-						continue;
-
 					if (!stopList.contains(value.getKey()))
 					{
 						RuleProcessingResult res =
 								processStatistics(
 									partialKey, value.getKey(), value.getValue(), record
-									, key.length!=i);
+									, record.getKeyElements().length!=i);
 						value.setValue(res.getValue());
 						if (res.getInstruction()==ProcessingInstruction.STOP_PROCESSING_KEY)
 							stopList.add(value.getKey());
@@ -223,8 +153,8 @@ public abstract class AbstractStatisticsDatabase
                 }
                 catch(Exception e)
                 {
-                    logger.error(
-                        String.format(
+                    if (isLogLevelEnabled(LogLevel.ERROR))
+                    error(String.format(
                             "Error processing statistics record value (%s) " +
 							"for statistics name (%s) and record key (%s). %s"
                             , value.getValue(), value.getKey(), record.getKey(), e.getMessage())

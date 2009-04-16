@@ -25,6 +25,8 @@ import java.util.Map;
  */
 public interface StatisticsRecord
 {
+    public final static String KEY_FIELD_NAME = "key";
+    public final static String TIME_FIELD_NAME = "time";
 	/**
 	 * Returns the statics key. The key may be composite. The delmiters of the key parts is
 	 * <b color="BLUE">/<b>
@@ -39,4 +41,6 @@ public interface StatisticsRecord
 	 * Returns the statics time in seconds.
 	 */
 	public long getTime();
+
+    public String[] getKeyElements();
 }
