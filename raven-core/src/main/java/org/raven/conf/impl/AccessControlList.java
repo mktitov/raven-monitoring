@@ -20,6 +20,7 @@ package org.raven.conf.impl;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -33,16 +34,17 @@ public class AccessControlList implements Comparator<AccessControl>
     protected Logger logger = LoggerFactory.getLogger(AccessControlList.class);
 	static final long serialVersionUID = 1;
 	public static final String LDAP_NAME_PARAM = "ldapName";
+	public static final String RES_NAME_PARAM = "res";
 	public static final String FILTER_PARAM = "filter";
-	private ArrayList<AccessControl> acl;
-	private Set<String> filters;
+	private ArrayList<AccessControl> acl = new ArrayList<AccessControl>();
+	private Set<String> filters = new HashSet<String>();
 	private boolean filtersLocked = false;
 	private String group = null;
 
 	public AccessControlList() 
 	{ 
-		acl = new ArrayList<AccessControl>();
-		filters = new HashSet<String>(); 
+	//	acl = new ArrayList<AccessControl>();
+		//filters = new HashSet<String>(); 
 	}
 	
 /*	public AccessControlList(String[] list, int startWith) 
@@ -54,9 +56,9 @@ public class AccessControlList implements Comparator<AccessControl>
 	}
 */
 	
-	public AccessControlList(String list) 
+	public AccessControlList(String list, HashMap<String,AccessResource> arm) 
 	{
-		this();
+		//this();
 		logger.info("Loading ACL from : {}",list);
 		String[] tokens = list.split(";"); 
 		for(String token : tokens)
@@ -67,15 +69,29 @@ public class AccessControlList implements Comparator<AccessControl>
 			if(x.length<2 || x[1]==null || x[1].length()==0 )
 				continue;
 			if(x[0].equals(LDAP_NAME_PARAM))
+			{
 				setGroup(x[1]);
-			else
-				if(x[0].equals(FILTER_PARAM)) 
-					addFilter(x[1]);
-				else 
-					//acl.add(new AccessControl(x[0],x[1]));
-					acl.addAll(AccessControl.getACs(token));
+				continue;
+			}
+			if(x[0].equals(FILTER_PARAM))
+			{	
+				addFilter(x[1]);
+				continue;
+			}
+			if(x[0].equals(RES_NAME_PARAM))
+			{
+				if(arm!=null)
+				{
+					AccessResource ar = arm.get(x[1]); 
+					if(ar!=null)
+						addAll(ar);
+				}
+				continue;
+			}
+			
+			acl.addAll(AccessControl.getACs(token));
 		}	
-		if(filters.size()==0) 
+		if(filters!=null && filters.size()==0) 
 			setFiltersLocked();
 		Collections.sort(acl, this);
 	}
@@ -89,6 +105,15 @@ public class AccessControlList implements Comparator<AccessControl>
     private void addAll(AccessControlList x) 
     {
     	for(AccessControl ac : x.acl)
+    		acl.add(ac);
+    	if(x.isFiltersLocked()) setFiltersLocked();
+    		else if(!isFiltersLocked())
+    				filters.addAll(x.getFilters());
+	}
+
+    private void addAll(AccessResource x) 
+    {
+    	for(AccessControl ac : x.getAcl())
     		acl.add(ac);
     	if(x.isFiltersLocked()) setFiltersLocked();
     		else if(!isFiltersLocked())

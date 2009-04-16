@@ -28,9 +28,11 @@ public class GroupsAclStorage
 {
     protected Logger logger = LoggerFactory.getLogger(GroupsAclStorage.class);
 	public static final String GROUP_PARAM_NAME = "auth.group";
+	public static final String RESOURSE_PARAM_NAME = "auth.resource";
 	private static GroupsAclStorage instance = null;
 	private Config config;
 	private HashMap<String, AccessControlList> aclMap = null;
+	private HashMap<String, AccessResource> arMap = null;
 	private long lastUpdate = 0;
 
 	protected GroupsAclStorage(Config config)
@@ -38,9 +40,39 @@ public class GroupsAclStorage
 		this.config = config;
 		load();
 	}
+
+	protected void loadAR()
+	{
+		HashMap<String, AccessResource> acln = new HashMap<String, AccessResource>();
+		for(int i=1; ;i++)
+		{
+			String gname = RESOURSE_PARAM_NAME+i;
+			String val = config.getStringProperty(gname, null);
+			StringBuffer sb = new StringBuffer();
+			if(val!=null && val.length()>0)
+				sb.append(val);
+			for(int k=1; ;k++)
+			{
+				String v = config.getStringProperty(gname+"-"+k, null);
+				if(v==null || v.length()==0) break;
+				sb.append(";");
+				sb.append(v);
+			}
+			if(sb.length()==0) break;
+			AccessResource ar = new AccessResource(sb.toString());
+			if(ar.isValid())
+				acln.put(ar.getName(), ar);
+			if(logger.isInfoEnabled())
+				logger.info("resource name: {}  acl: {}",ar.getName(),ar.toString());
+			
+		}
+		//lastUpdate = config.getLastUpdate();
+		arMap = acln;
+	}	
 	
 	protected void load()
 	{
+		loadAR();
 		HashMap<String, AccessControlList> acln = new HashMap<String, AccessControlList>();
 		for(int i=1; ;i++)
 		{
@@ -57,7 +89,7 @@ public class GroupsAclStorage
 				sb.append(v);
 			}
 			if(sb.length()==0) break;
-			AccessControlList acl = new AccessControlList(sb.toString());
+			AccessControlList acl = new AccessControlList(sb.toString(),arMap);
 			if(acl.isValid())
 				acln.put(acl.getGroup(), acl);
 			if(logger.isInfoEnabled())
