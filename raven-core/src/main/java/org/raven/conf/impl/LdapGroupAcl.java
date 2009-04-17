@@ -7,7 +7,7 @@ import java.util.List;
 public class LdapGroupAcl extends AccessControlList 
 {
 	public static final String LDAP_GROUP_PARAM = "ldapGroup";
-	public static final String RESOURCE_PARAM = "resource";
+	public static final String RESOURCE_PARAM = "res";
 	public static final String USER_PARAM = "user";
 	private String group = null;
 	private List<String> users = null;
