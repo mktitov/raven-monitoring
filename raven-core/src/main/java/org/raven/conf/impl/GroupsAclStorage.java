@@ -27,11 +27,12 @@ import org.slf4j.LoggerFactory;
 public class GroupsAclStorage  
 {
     protected Logger logger = LoggerFactory.getLogger(GroupsAclStorage.class);
+	public static final String AUTH_PREFIX = "auth.";
 	public static final String GROUP_PARAM_NAME = "auth.group";
-	public static final String RESOURSE_PARAM_NAME = "auth.resource";
+	public static final String RESOURSE_PARAM_NAME = "auth."+LdapGroupAcl.RESOURCE_PARAM;
 	private static GroupsAclStorage instance = null;
 	private Config config;
-	private HashMap<String, AccessControlList> aclMap = null;
+	private HashMap<String, LdapGroupAcl> aclMap = null;
 	private HashMap<String, AccessResource> arMap = null;
 	private long lastUpdate = 0;
 
@@ -73,7 +74,7 @@ public class GroupsAclStorage
 	protected void load()
 	{
 		loadAR();
-		HashMap<String, AccessControlList> acln = new HashMap<String, AccessControlList>();
+		HashMap<String, LdapGroupAcl> acln = new HashMap<String, LdapGroupAcl>();
 		for(int i=1; ;i++)
 		{
 			String gname = GROUP_PARAM_NAME+i;
@@ -89,11 +90,11 @@ public class GroupsAclStorage
 				sb.append(v);
 			}
 			if(sb.length()==0) break;
-			AccessControlList acl = new AccessControlList(sb.toString(),arMap);
+			LdapGroupAcl acl = new LdapGroupAcl(sb.toString(),arMap);
 			if(acl.isValid())
-				acln.put(acl.getGroup(), acl);
+				acln.put(acl.getLdapGroup(), acl);
 			if(logger.isInfoEnabled())
-				logger.info("group name: {}  acl: {}",acl.getGroup(),acl.toString());
+				logger.info("ldapGroup: {}  acl: {}",acl.getLdapGroup(),acl.toString());
 			
 		}
 		lastUpdate = config.getLastUpdate();
@@ -114,17 +115,22 @@ public class GroupsAclStorage
      * Returns summary AccessControlList for list of groups.
      * @param ls list of groups
      */
-    public synchronized AccessControlList getAclForGroups(List<String> ls)
+    public synchronized AccessControlList getAclForGroups(List<String> ls, String account)
     {
     	if(lastUpdate!=config.getLastUpdate())
     	{
     		logger.info("reloading ACL for groups");
     		load();
     	}	
-    	AccessControlList acl = new AccessControlList();
+    	LdapGroupAcl acl = new LdapGroupAcl();
     	Iterator<String> it = ls.iterator();
     	while(it.hasNext())
-    		acl.appendACL( aclMap.get(it.next()) );
+    	{
+    		LdapGroupAcl lga = aclMap.get(it.next());
+    		if(lga==null) continue;
+    		if(!lga.allowedUser(account)) continue;
+    		acl.appendACL( lga );
+    	}	
     	return acl;
     }
 

@@ -25,7 +25,10 @@
     
 <tr:panelBorderLayout>    
 	<f:facet name="left">
-		<tr:panelHorizontalLayout halign="left" id="phl_1"  >
+		<tr:panelHorizontalLayout
+			rendered="#{cNode.allowNodeRead}" 
+			halign="left" 
+			id="phl_1"  >
 			<tr:poll 
 				id="viewRefresh" 
 				rendered="#{cNode.autoRefresh and cNode.refreshViewInteval > 0}" 

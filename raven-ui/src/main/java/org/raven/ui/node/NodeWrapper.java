@@ -121,12 +121,14 @@ implements Comparator<NodeAttribute>
 
 	public boolean isNeedShowRefreshAttributes()
 	{
-		  return isViewable() || isChildViewable();
+		if(!isAllowNodeRead()) return false;		
+		return isViewable() || isChildViewable();
 	}
 	
 	public boolean isNodeAndChildViewable()
 	{
-		  return isViewable() && isChildViewable();
+		if(!isAllowNodeRead()) return false;
+		return isViewable() && isChildViewable();
 	}
 
 	public boolean isNodeViewableOnly()
@@ -141,6 +143,7 @@ implements Comparator<NodeAttribute>
 	
 	public boolean isChildViewable()
 	{
+		if(!isAllowNodeRead()) return false;
 		Collection<Node> c = getNode().getSortedChildrens();
 		if(c!=null) 
 		{
@@ -181,6 +184,7 @@ implements Comparator<NodeAttribute>
 	
 	public boolean isViewable()
 	{
+		if(!isAllowNodeRead()) return false;
 		if( getNode() instanceof Viewable ) 
 			return true;
 		return false;
@@ -275,6 +279,7 @@ implements Comparator<NodeAttribute>
 		
 	public List<ViewableObjectWrapper> getViewableObjects()
 	{
+		if(!isAllowNodeRead()) return new ArrayList<ViewableObjectWrapper>();
 		List<ViewableObjectWrapper> x = SessionBean.getInstance().getViewableObjectsCache().getObjects(this);
 		logger.info("+++ ");
 		for(ViewableObjectWrapper v : x)

@@ -20,7 +20,6 @@ package org.raven.conf.impl;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -29,48 +28,45 @@ import org.raven.tree.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AccessControlList implements Comparator<AccessControl> 
+public abstract class AccessControlList implements Comparator<AccessControl> 
 {
     protected Logger logger = LoggerFactory.getLogger(AccessControlList.class);
 	static final long serialVersionUID = 1;
-	public static final String LDAP_NAME_PARAM = "ldapName";
-	public static final String RES_NAME_PARAM = "res";
+	public static final String EXPRESSION_DELIMITER = ";";
+	public static final String PARAM_DELIMITER = ":";
+	public static final String NAME_PARAM = "name";
 	public static final String FILTER_PARAM = "filter";
+	public static final String AC_PARAM = "ac";
 	private ArrayList<AccessControl> acl = new ArrayList<AccessControl>();
 	private Set<String> filters = new HashSet<String>();
 	private boolean filtersLocked = false;
-	private String group = null;
+	//private String group = null;
+	private String name = null;
 
 	public AccessControlList() 
 	{ 
-	//	acl = new ArrayList<AccessControl>();
-		//filters = new HashSet<String>(); 
 	}
 	
-/*	public AccessControlList(String[] list, int startWith) 
+	public AccessControlList(String list) 
 	{
-		this();
-		for(int i=startWith; i < list.length; i++ )
-			acl.addAll(AccessControl.getACs(list[i]));
-		Collections.sort(acl, this);
+		init(list);
 	}
-*/
 	
-	public AccessControlList(String list, HashMap<String,AccessResource> arm) 
+	protected void init(String list)
 	{
 		//this();
 		logger.info("Loading ACL from : {}",list);
-		String[] tokens = list.split(";"); 
+		String[] tokens = list.split(EXPRESSION_DELIMITER); 
 		for(String token : tokens)
 		{
 			if(token==null || token.length()==0) 
 				continue;
-			String[] x = token.split(":");
+			String[] x = token.split(PARAM_DELIMITER);
 			if(x.length<2 || x[1]==null || x[1].length()==0 )
 				continue;
-			if(x[0].equals(LDAP_NAME_PARAM))
+			if(x[0].equals(NAME_PARAM))
 			{
-				setGroup(x[1]);
+				setName(x[1]);
 				continue;
 			}
 			if(x[0].equals(FILTER_PARAM))
@@ -78,23 +74,22 @@ public class AccessControlList implements Comparator<AccessControl>
 				addFilter(x[1]);
 				continue;
 			}
-			if(x[0].equals(RES_NAME_PARAM))
+			if(x[0].equals(AC_PARAM))
 			{
-				if(arm!=null)
-				{
-					AccessResource ar = arm.get(x[1]); 
-					if(ar!=null)
-						addAll(ar);
-				}
+				if(x[2]!=null && x[2].length()>0)
+					acl.addAll(AccessControl.getACs(x[1]+PARAM_DELIMITER+x[2]));
 				continue;
-			}
-			
-			acl.addAll(AccessControl.getACs(token));
+			}	
+			if(!applyExpression(x))
+				logger.warn("unknown ACL expression : "+token);
 		}	
 		if(filters!=null && filters.size()==0) 
 			setFiltersLocked();
-		Collections.sort(acl, this);
+		Collections.sort(acl, this);		
 	}
+	
+	protected abstract boolean applyExpression(String[] tokens);
+	public abstract boolean isValid();
 	
 	private void addFilter(String f)
 	{
@@ -102,7 +97,7 @@ public class AccessControlList implements Comparator<AccessControl>
 			filters.add(f);
 	}
 	
-    private void addAll(AccessControlList x) 
+    protected void addAll(AccessControlList x) 
     {
     	for(AccessControl ac : x.acl)
     		acl.add(ac);
@@ -111,6 +106,7 @@ public class AccessControlList implements Comparator<AccessControl>
     				filters.addAll(x.getFilters());
 	}
 
+/*    
     private void addAll(AccessResource x) 
     {
     	for(AccessControl ac : x.getAcl())
@@ -119,7 +115,7 @@ public class AccessControlList implements Comparator<AccessControl>
     		else if(!isFiltersLocked())
     				filters.addAll(x.getFilters());
 	}
-    
+   */
 	public int compare(AccessControl a, AccessControl b)
     {
     	if(a.getResource().length() > b.getResource().length()) return -1;
@@ -225,22 +221,9 @@ public class AccessControlList implements Comparator<AccessControl>
     {
     	return acl.size();
     }
-
-    public boolean isValid()
-    {
-    	if(group!=null && acl.size()>0) 
-    		return true;
-    	return false;
-    }
     
-	private void setGroup(String group)	
-	{
-		if(this.group == null)
-			this.group = group;
-	}
-
-	public String getGroup() {
-		return group;
+	public ArrayList<AccessControl> getAcl() {
+		return acl;
 	}
 
 	public Set<String> getFilters() {
@@ -255,6 +238,14 @@ public class AccessControlList implements Comparator<AccessControl>
 
 	public boolean isFiltersLocked() {
 		return filtersLocked;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getName() {
+		return name;
 	}
 
 }

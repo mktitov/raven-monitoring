@@ -89,7 +89,7 @@ public class SessionBean
 	public String getNodeNamePattern()
 	{
 		//return "[^\\Q~"+Node.NODE_SEPARATOR+Node.ATTRIBUTE_SEPARATOR+"\\E]+";
-		return "[^\"\\~\\"+Node.NODE_SEPARATOR+"\\"+Node.ATTRIBUTE_SEPARATOR+"]+";
+		return "[^:;\"\\~\\"+Node.NODE_SEPARATOR+"\\"+Node.ATTRIBUTE_SEPARATOR+"]+";
 	}
 	
 	public String getTitle()

@@ -60,7 +60,7 @@ public class UserAcl
 		gaStorage = GroupsAclStorage.getInstance(config);
 		storageTime = gaStorage.getLastUpdate();
 		groupsTime = System.currentTimeMillis();
-		acl = gaStorage.getAclForGroups(gList);
+		acl = gaStorage.getAclForGroups(gList,accountName);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -130,9 +130,9 @@ public class UserAcl
 			if(storageTime != gaStorage.getLastUpdate()) refresh = true;
 			if(refresh)
 			{
-				logger.info("refreshing ACL for account: {}",this.accountName);
+				logger.info("refreshing ACL for account: {}",accountName);
 				storageTime = gaStorage.getLastUpdate();
-				acl = gaStorage.getAclForGroups(gList);
+				acl = gaStorage.getAclForGroups(gList,accountName);
 				refreshed = true;
 			}
 			groupsTime = System.currentTimeMillis();

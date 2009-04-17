@@ -22,14 +22,16 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class AccessControl {
-	public static final int TREE_EDIT = 16;
+	public static final int TREE_EDIT = 32;
 	public static final char TREE_EDIT_SYMBOL = 't';
-	public static final int CONTROL = 8;
+	public static final int CONTROL = 16;
 	public static final char CONTROL_SYMBOL = 's';
-	public static final int WRITE = 4; 
+	public static final int WRITE = 8; 
 	public static final char WRITE_SYMBOL = 'w'; 
-	public static final int READ = 2; 
+	public static final int READ = 4; 
 	public static final char READ_SYMBOL = 'r'; 
+	public static final int VIEW = 2; 
+	public static final char VIEW_SYMBOL = 'v'; 
 	public static final int TRANSIT = 1; 
 	public static final int NONE = 0; 
 	public static final char NONE_SYMBOL = 'n'; 
@@ -52,7 +54,7 @@ public class AccessControl {
 		if(resource.endsWith("*"))
 		{
 			regExp = resource.substring(0, resource.length()-1);
-			regExp = Pattern.quote(regExp)+".*";
+			regExp = Pattern.quote(regExp)+".+";
 		}
 		else regExp = Pattern.quote(resource);
 		//regExp = this.resource.replaceAll("\\*", ".*");
@@ -67,6 +69,7 @@ public class AccessControl {
 			switch(cc)
 			{
 				case NONE_SYMBOL	: right = NONE; none= true; break;
+				case VIEW_SYMBOL	: right |= VIEW;  break;
 				case READ_SYMBOL	: right |= READ;  break;
 				case WRITE_SYMBOL  	: right |= READ|WRITE;  break;
 				case CONTROL_SYMBOL : right |= READ|CONTROL;  break;
