@@ -17,6 +17,8 @@
 
 package org.raven.statdb.impl;
 
+import org.raven.ds.Record;
+import org.raven.statdb.StatisticsRecord;
 import org.raven.statdb.query.Query;
 import org.raven.statdb.query.QueryExecutionException;
 import org.raven.statdb.query.QueryResult;
@@ -55,15 +57,15 @@ public class TestStatisticsDatabase extends AbstractStatisticsDatabase
 		databaseMock.saveStatisticsValue(key, statisticName, value, time);
 	}
 
-	@Override
-	protected boolean isStatisticsDefenitionValid(StatisticsDefinitionNode statDef)
-	{
-		return true;
-	}
-
     public QueryResult executeQuery(Query query) throws QueryExecutionException
     {
         return queryMock.executeQuery(query);
+    }
+
+    @Override
+    protected StatisticsRecord createStatisticsRecord(Record record) throws Exception
+    {
+        return new TestStatisticsRecord(record, converter, this);
     }
 
 }

@@ -27,6 +27,8 @@ import org.raven.annotations.Parameter;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.impl.AbstractDataConsumer;
+import org.raven.ds.impl.RecordSchemaNode;
+import org.raven.ds.impl.RecordSchemaValueTypeHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.statdb.ProcessingInstruction;
 import org.raven.statdb.Rule;
@@ -47,6 +49,10 @@ public abstract class AbstractStatisticsDatabase
 	@Parameter
 	@NotNull
 	private long step;
+
+    @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
+    @NotNull
+    private RecordSchemaNode recordSchema;
 
     protected RulesNode rulesNode;
 
@@ -87,6 +93,16 @@ public abstract class AbstractStatisticsDatabase
 	{
 		return step;
 	}
+
+    public RecordSchemaNode getRecordSchema()
+    {
+        return recordSchema;
+    }
+
+    public void setRecordSchema(RecordSchemaNode recordSchema)
+    {
+        this.recordSchema = recordSchema;
+    }
 
 	public RulesNode getRulesNode()
 	{

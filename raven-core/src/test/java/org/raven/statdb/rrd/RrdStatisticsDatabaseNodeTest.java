@@ -31,11 +31,15 @@ import org.jrobin.core.RrdException;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
+import org.raven.ds.RecordException;
 import org.raven.rrd.ConsolidationFunction;
 import org.raven.PushDataSource;
+import org.raven.ds.Record;
+import org.raven.ds.RecordSchemaFieldType;
+import org.raven.ds.impl.RecordSchemaFieldNode;
+import org.raven.ds.impl.RecordSchemaNode;
 import org.raven.statdb.AggregationFunction;
 import org.raven.statdb.StatisticsRecord;
-import org.raven.statdb.ValueType;
 import org.raven.statdb.impl.StatisticsDefinitionNode;
 import org.raven.statdb.impl.AbstractStatisticsRecord;
 import org.raven.statdb.query.FromClause;
@@ -59,10 +63,34 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 	private RrdStatisticsDatabaseNode db;
 	private PushDataSource ds;
 	private RrdUpdateQueueNode queue;
+    private RecordSchemaNode schema;
 
 	@Before
 	public void prepare()
 	{
+        schema = new RecordSchemaNode();
+        schema.setName("schema");
+        tree.getRootNode().addAndSaveChildren(schema);
+        assertTrue(schema.start());
+
+        createDatabaseTemplate("t1");
+        createDatabaseTemplate("t2");
+
+        RecordSchemaFieldNode timeField = new RecordSchemaFieldNode();
+        timeField.setName(StatisticsRecord.TIME_FIELD_NAME);
+        schema.addAndSaveChildren(timeField);
+        timeField.setFieldType(RecordSchemaFieldType.TIMESTAMP);
+        assertTrue(timeField.start());
+
+        RecordSchemaFieldNode keyField = new RecordSchemaFieldNode();
+        keyField.setName(StatisticsRecord.KEY_FIELD_NAME);
+        schema.addAndSaveChildren(keyField);
+        keyField.setFieldType(RecordSchemaFieldType.STRING);
+        assertTrue(keyField.start());
+
+        createField("s1", "t1");
+        createField("s2", "t2");
+
 		ds = new PushDataSource();
 		ds.setName("ds");
 		ds.setParent(tree.getRootNode());
@@ -99,14 +127,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 	@Test
 	public void updateTest() throws Exception
 	{
-
-		createStatisticsDef(db, "s1", "t1");
-		createStatisticsDef(db, "s2", "t2");
-
-		createDatabaseTemplate(db, "t1");
-		createDatabaseTemplate(db, "t2");
-
-		StatisticsRecord record = createRecord("/1/1/", 5, 1., 10.);
+		Record record = createRecord("/1/1/", 5, 1., 10.);
 		ds.pushData(record);
 		record = createRecord("/1/2/", 5, 5., 15.);
 		ds.pushData(record);
@@ -150,7 +171,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
         long[] dataTs = new long[]{2, 4, 6, 8};
         double[] data = new double[]{2., 4., 4., 8.};
         double[] result = RrdStatisticsDatabaseNode.realignData(
-                ValueType.INTEGRATED, AggregationFunction.AVERAGE, ts, 4, dataTs, 2, data);
+                true, AggregationFunction.AVERAGE, ts, 4, dataTs, 2, data);
         assertNotNull(result);
         assertEquals(2, result.length);
         assertTrue(Arrays.equals(new double[]{6., 12.}, result));
@@ -165,7 +186,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
         long[] dataTs = new long[]{3, 6, 9};
         double[] data = new double[]{2., 3., 6.};
         double[] result = RrdStatisticsDatabaseNode.realignData(
-                ValueType.INTEGRATED, AggregationFunction.AVERAGE, ts, 4, dataTs, 3, data);
+                true, AggregationFunction.AVERAGE, ts, 4, dataTs, 3, data);
         assertNotNull(result);
         assertEquals(2, result.length);
         assertTrue(Arrays.equals(new double[]{3., 6.}, result));
@@ -180,7 +201,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
         long[] dataTs = new long[]{4};
         double[] data = new double[]{4.};
         double[] result = RrdStatisticsDatabaseNode.realignData(
-                ValueType.INTEGRATED, AggregationFunction.AVERAGE, ts, 2, dataTs, 4, data);
+                true, AggregationFunction.AVERAGE, ts, 2, dataTs, 4, data);
         assertNotNull(result);
         assertEquals(2, result.length);
         assertTrue(Arrays.equals(new double[]{2., 2.}, result));
@@ -195,7 +216,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
         long[] dataTs = new long[]{4, 8};
         double[] data = new double[]{4., 8.};
         double[] result = RrdStatisticsDatabaseNode.realignData(
-                ValueType.INTEGRATED, AggregationFunction.AVERAGE, ts, 3, dataTs, 4, data);
+                true, AggregationFunction.AVERAGE, ts, 3, dataTs, 4, data);
         assertNotNull(result);
         assertEquals(2, result.length);
         assertTrue(Arrays.equals(new double[]{3., 5.}, result));
@@ -210,7 +231,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
         long[] dataTs = new long[]{2, 4, 6, 8};
         double[] data = new double[]{2., 4., 4., 8.};
         double[] result = RrdStatisticsDatabaseNode.realignData(
-                ValueType.ABSOLUTE, AggregationFunction.AVERAGE, ts, 4, dataTs, 2, data);
+                false, AggregationFunction.AVERAGE, ts, 4, dataTs, 2, data);
         assertNotNull(result);
         assertEquals(2, result.length);
         assertTrue(Arrays.equals(new double[]{3., 6.}, result));
@@ -225,7 +246,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
         long[] dataTs = new long[]{3, 6, 9};
         double[] data = new double[]{2., 3., 6.};
         double[] result = RrdStatisticsDatabaseNode.realignData(
-                ValueType.ABSOLUTE, AggregationFunction.AVERAGE, ts, 4, dataTs, 3, data);
+                false, AggregationFunction.AVERAGE, ts, 4, dataTs, 3, data);
         assertNotNull(result);
         assertEquals(2, result.length);
         assertTrue(Arrays.equals(new double[]{2.5, 4.5}, result));
@@ -239,7 +260,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
         long[] dataTs = new long[]{6, 8};
         double[] data = new double[]{4., 8.};
         double[] result = RrdStatisticsDatabaseNode.realignData(
-                ValueType.INTEGRATED, AggregationFunction.AVERAGE, ts, 4, dataTs, 2, data);
+                true, AggregationFunction.AVERAGE, ts, 4, dataTs, 2, data);
         assertNotNull(result);
         assertEquals(2, result.length);
         assertTrue(Arrays.equals(new double[]{Double.NaN, 12.}, result));
@@ -253,7 +274,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
         long[] dataTs = new long[]{2, 4};
         double[] data = new double[]{4., 8.};
         double[] result = RrdStatisticsDatabaseNode.realignData(
-                ValueType.INTEGRATED, AggregationFunction.AVERAGE, ts, 4, dataTs, 2, data);
+                true, AggregationFunction.AVERAGE, ts, 4, dataTs, 2, data);
         assertNotNull(result);
         assertEquals(2, result.length);
         assertTrue(Arrays.equals(new double[]{12., Double.NaN}, result));
@@ -519,15 +540,9 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 
     }
 
-    private void insertData() throws InterruptedException
+    private void insertData() throws InterruptedException, RecordException
     {
-		createStatisticsDef(db, "s1", "t1");
-		createStatisticsDef(db, "s2", "t2");
-
-		createDatabaseTemplate(db, "t1");
-		createDatabaseTemplate(db, "t2");
-
-		StatisticsRecord record = createRecord("/1/1/", 5, 1., 10.);
+		Record record = createRecord("/1/1/", 5, 1., 10.);
 		ds.pushData(record);
 		record = createRecord("/1/2/", 5, 5., 15.);
 		ds.pushData(record);
@@ -587,56 +602,52 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 		return req.fetchData().getValues(0);
 	}
 
-	private void createDatabaseTemplate(RrdStatisticsDatabaseNode db, String name)
+    private void createField(String fieldName, String databaseTemplateName)
+    {
+        RecordSchemaFieldNode field = new RecordSchemaFieldNode();
+        field.setName(fieldName);
+        schema.addAndSaveChildren(field);
+        field.setFieldType(RecordSchemaFieldType.DOUBLE);
+        assertTrue(field.start());
+
+        RrdDatabaseRecordFieldExtension dbExt = new RrdDatabaseRecordFieldExtension();
+        dbExt.setName("rrd");
+        field.addAndSaveChildren(db);
+        dbExt.setDatabaseTemplateName(databaseTemplateName);
+        assertTrue(dbExt.start());
+    }
+
+	private void createDatabaseTemplate(String name)
 	{
-		Node templates = db.getDatabaseTemplatesNode();
-		RrdDatabaseDefNode dbDef = new RrdDatabaseDefNode();
+		Node extensions = schema.getRecordExtensionsNode();
+		RrdDatabaseRecordExtension dbDef = new RrdDatabaseRecordExtension();
 		dbDef.setName(name);
-		dbDef.setParent(templates);
-		dbDef.save();
-		templates.addChildren(dbDef);
-		dbDef.init();
-		dbDef.start();
-		assertEquals(Status.STARTED, dbDef.getStatus());
+        extensions.addAndSaveChildren(dbDef);
+        assertTrue(dbDef.start());
 
 		RrdArchiveDefNode arcDef = new RrdArchiveDefNode();
 		arcDef.setName("archive");
-		arcDef.setParent(dbDef);
-		arcDef.save();
-		dbDef.addChildren(arcDef);
-		arcDef.init();
+        dbDef.addAndSaveChildren(arcDef);
 		arcDef.setRows(100);
 		arcDef.setSteps(1);
 		arcDef.setConsolidationFunction(ConsolidationFunction.LAST);
-		arcDef.start();
-		assertEquals(Status.STARTED, arcDef.getStatus());
+		assertTrue(arcDef.start());
 
 		Node dsDef = dbDef.getChildren(RrdStatisticsDatabaseNode.DATASOURCE_NAME);
 		assertNotNull(dsDef);
 		assertTrue(dsDef instanceof RrdDatasourceDefNode);
 		assertEquals(Status.STARTED, dsDef.getStatus());
-		
 	}
 
-	private StatisticsRecord createRecord(String key, long time, double s1val, double s2val)
+	private Record createRecord(String key, long time, double s1val, double s2val)
+            throws RecordException
 	{
-		AbstractStatisticsRecord rec = new AbstractStatisticsRecord(key, time);
-		rec.put("s1", s1val);
-		rec.put("s2", s2val);
-
+        Record rec = schema.createRecord();
+        rec.setValue(StatisticsRecord.TIME_FIELD_NAME, time*1000l);
+        rec.setValue(StatisticsRecord.KEY_FIELD_NAME, key);
+        rec.setValue("s1", s1val);
+        rec.setValue("s2", s2val);
+        
 		return rec;
-	}
-
-	private void createStatisticsDef(RrdStatisticsDatabaseNode db, String name, String type)
-	{
-		StatisticsDefinitionNode sDef =  new StatisticsDefinitionNode();
-		sDef.setName(name);
-		sDef.setParent(db.getStatisticsDefinitionsNode());
-		sDef.save();
-		db.getStatisticsDefinitionsNode().addChildren(sDef);
-		sDef.init();
-		sDef.setType(type);
-		sDef.start();
-		assertEquals(Status.STARTED, sDef.getStatus());
 	}
 }

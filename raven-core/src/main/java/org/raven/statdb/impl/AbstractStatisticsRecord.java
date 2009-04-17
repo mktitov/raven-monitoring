@@ -26,6 +26,7 @@ import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.statdb.StatisticsRecord;
 import org.raven.tree.Node;
+import org.weda.beans.ObjectUtils;
 import org.weda.services.TypeConverter;
 
 /**
@@ -83,7 +84,10 @@ public abstract class AbstractStatisticsRecord implements StatisticsRecord
         values = new HashMap<String, Double>();
         for (RecordSchemaField field: fields.values())
         {
-            if (isFieldValueValid(field))
+            if (!ObjectUtils.in(
+                    field.getName(), StatisticsRecord.KEY_FIELD_NAME
+                    , StatisticsRecord.TIME_FIELD_NAME)
+                && isFieldValueValid(field))
             {
                 Object valueObj = record.getValue(field.getName());
                 Double value = converter.convert(Double.class, valueObj, null);

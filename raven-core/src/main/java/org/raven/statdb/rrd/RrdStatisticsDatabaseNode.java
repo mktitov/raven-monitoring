@@ -30,12 +30,16 @@ import org.jrobin.core.FetchRequest;
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.RrdDbPool;
 import org.jrobin.core.Util;
+import org.raven.RavenUtils;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
 import org.raven.ds.Record;
+import org.raven.ds.RecordSchema;
+import org.raven.ds.RecordSchemaField;
 import org.raven.expr.Expression;
 import org.raven.expr.ExpressionCompiler;
 import org.raven.expr.impl.GroovyExpressionCompiler;
+import org.raven.rrd.DataSourceType;
 import org.raven.statdb.Aggregation;
 import org.raven.statdb.AggregationFunction;
 import org.raven.statdb.StatisticsDatabase;
@@ -217,15 +221,6 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
         if (statNames==null || statNames.length==0)
             throw new Exception(String.format("Query must contains statistics names"));
 
-        ValueType[] valueTypes = new ValueType[statNames.length];
-        for (int i=0; i<statNames.length; ++i)
-        {
-            StatisticsDefinitionNode statDef = getStatisticsDefinitionNode(statNames[i].getName());
-            if (statDef==null)
-                throw new Exception(String.format("Invalid statistics name (%s)", statNames[i]));
-            valueTypes[i] = statDef.getValueType();
-        }
-        
         //calculating and normalizing start and end time
         long step = query.getStep();
         long[] timePeriod =
@@ -249,6 +244,8 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
                 if (dbFile.exists())
                 {
                     RrdDb db = pool.requestRrdDb(dbFile.getAbsolutePath());
+                    boolean integratedValue = !db.getDatasource(0).getDsType().equals(
+                            DataSourceType.GAUGE.toString());
                     try
                     {
                         FetchRequest request = db.createFetchRequest(
@@ -261,8 +258,8 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
                             || data.length!=timestamps.length)
                         {
                             data = realignData(
-                                    valueTypes[i], statNames[i].getAggregationFunction(), timestamps
-                                    , step, dataTs, fData.getStep(), data);
+                                    integratedValue, statNames[i].getAggregationFunction()
+                                    , timestamps, step, dataTs, fData.getStep(), data);
                         }
                         StatisticsValues values = new StatisticsValuesImpl(statName, data);
                         ((KeyValuesImpl)keyValues).addStatisticsValues(values);
@@ -396,12 +393,30 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 				throw new Exception(String.format(
 						"Error creating directory (%s)", dbFileDir.getAbsolutePath()));
 		}
-		StatisticsDefinitionNode statDef =
-				(StatisticsDefinitionNode) statisticsDefinitions.getChildren(statisticsName);
-		String statType = statDef.getType();
-		RrdDatabaseDefNode template =
-				(RrdDatabaseDefNode)databaseTemplatesNode.getChildren(statType);
+        RecordSchema _schema = getRecordSchema();
+        RecordSchemaField statField = RavenUtils.getRecordSchemaField(_schema, statisticsName);
+        if (statField==null)
+            throw new Exception(String.format(
+                    "Record schema (%s) does not contains field (%s)"
+                    , _schema.getName(), statisticsName));
+        RrdDatabaseRecordFieldExtension fieldExt = statField.getFieldExtension(
+                RrdDatabaseRecordFieldExtension.class, null);
+        if (fieldExt==null)
+            throw new Exception(String.format(
+                    "The field (%s) of the record schema (%s) does not contains (%s) extension"
+                    , statisticsName, _schema.getName()
+                    , RrdDatabaseRecordFieldExtension.class.getSimpleName()));
+        RrdDatabaseRecordExtension template = _schema.getRecordExtension(
+                RrdDatabaseRecordExtension.class, fieldExt.getDatabaseTemplateName());
+        if (template==null)
+            throw new Exception(String.format(
+                    "Record schema (%s) does not contains extension (%s) with name (%s)"
+                    , _schema.getName()
+                    , RrdDatabaseRecordExtension.class.getSimpleName()
+                    , fieldExt.getDatabaseTemplateName()));
+                    
 		RrdDb db = template.createDatabase(dbFile.getAbsolutePath());
+        
 		db.close();
 	}
 
@@ -412,7 +427,7 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
     }
 
     static double[] realignData(
-            ValueType valueType, AggregationFunction aggType
+            boolean integratedValue, AggregationFunction aggType
             , long[] ts, long queryStep, long[] dataTs, long dataStep, double[] data)
     {
         double[] result = new double[ts.length];
@@ -431,12 +446,11 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
             {
                 th = dataTs[j]>ts[i]? ts[i] : dataTs[j];
                 tl = dataTs[j]-ds<ts[i]-qs? ts[i]-queryStep : dataTs[j]-dataStep;
-                val = valueType==ValueType.ABSOLUTE? data[j] : data[j]/dataStep*(th-tl);
+                val = !integratedValue? data[j] : data[j]/dataStep*(th-tl);
                 
                 if (agg==null)
                 {
-                    AggregationFunction func = 
-                            valueType==ValueType.INTEGRATED? AggregationFunction.SUM : aggType;
+                    AggregationFunction func = integratedValue? AggregationFunction.SUM : aggType;
                     agg = func.createAggregation(0, val);
 
                 }

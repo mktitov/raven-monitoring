@@ -17,6 +17,8 @@
 
 package org.raven.statdb.impl;
 
+import org.raven.ds.Record;
+import org.raven.statdb.StatisticsRecord;
 import org.raven.statdb.query.Query;
 import org.raven.statdb.query.QueryExecutionException;
 import org.raven.statdb.query.QueryResult;
@@ -40,13 +42,6 @@ public class TestStatisticsDatabase2  extends AbstractStatisticsDatabase
         this.result = result;
     }
 
-
-    @Override
-    protected boolean isStatisticsDefenitionValid(StatisticsDefinitionNode statDef)
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
     public void saveStatisticsValue(String key, String statisticName, double value, long time)
             throws Exception
     {
@@ -57,5 +52,11 @@ public class TestStatisticsDatabase2  extends AbstractStatisticsDatabase
     {
         this.query = query;
         return result;
+    }
+
+    @Override
+    protected StatisticsRecord createStatisticsRecord(Record record) throws Exception
+    {
+        return new TestStatisticsRecord(record, converter, this);
     }
 }
