@@ -41,7 +41,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass
-public class CvsRecordReaderNode extends AbstractDataPipe
+public class CsvRecordReaderNode extends AbstractDataPipe
 {
     public final static String LINEFILTER_ATTRIBUTE = "lineFilter";
 
@@ -277,8 +277,8 @@ public class CvsRecordReaderNode extends AbstractDataPipe
         Map<String, FieldInfo> result = new HashMap<String, FieldInfo>();
         for (RecordSchemaField field: fields)
         {
-            CvsRecordFieldExtension extension =
-                    field.getFieldExtension(CvsRecordFieldExtension.class, cvsExtensionName);
+            CsvRecordFieldExtension extension =
+                    field.getFieldExtension(CsvRecordFieldExtension.class, cvsExtensionName);
             if (extension!=null)
                 result.put(field.getName(), new FieldInfo(extension));
         }
@@ -288,9 +288,9 @@ public class CvsRecordReaderNode extends AbstractDataPipe
     private class FieldInfo
     {
         private final int columnNumber;
-        private final CvsRecordFieldExtension extension;
+        private final CsvRecordFieldExtension extension;
 
-        public FieldInfo(CvsRecordFieldExtension extension)
+        public FieldInfo(CsvRecordFieldExtension extension)
         {
             this.extension = extension;
             this.columnNumber = extension.getColumnNumber();

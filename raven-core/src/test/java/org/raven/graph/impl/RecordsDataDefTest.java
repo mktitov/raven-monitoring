@@ -74,7 +74,7 @@ public class RecordsDataDefTest extends RavenCoreTestCase
         assertTrue(dataDef.start());
 
         Timestamp ts1 = new Timestamp(System.currentTimeMillis());
-        TimeUnit.MILLISECONDS.sleep(100);
+//        TimeUnit.MILLISECONDS.sleep(100);
         Timestamp ts2 = new Timestamp(ts1.getTime()+5000);
         Timestamp ts3 = new Timestamp(ts1.getTime()+500);
 

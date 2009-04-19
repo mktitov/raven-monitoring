@@ -30,7 +30,7 @@ import org.weda.beans.ObjectUtils;
  *
  * @author Mikhail Titov
  */
-@NodeClass(anyChildTypes=true)
+@NodeClass()
 @Description("Allows to change value of the attribute by data reciving by this consumer")
 public class DataToAttributeValueConsumer extends AbstractDataConsumer
 {

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2008 Mikhail Titov.
+ *  Copyright 2009 Mikhail Titov .
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,21 +15,31 @@
  *  under the License.
  */
 
-package org.raven.dbcp.impl;
+package org.raven.ds.impl;
 
 import org.raven.annotations.NodeClass;
-import org.raven.tree.impl.BaseNode;
+import org.raven.annotations.Parameter;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class ConnectionPoolsNode extends BaseNode
+@NodeClass(
+    parentNode=RecordSchemaFieldNode.class, childNodes=ValuePrepareRecordFieldExtension.class)
+public class CsvRecordFieldExtension extends AbstractRecordFieldExtension
 {
-    public final static String NAME = "Connection pools";
+    @Parameter @NotNull
+    private Integer columnNumber;
 
-    public ConnectionPoolsNode()
+
+    public Integer getColumnNumber()
     {
-        super(NAME);
+        return columnNumber;
+    }
+
+    public void setColumnNumber(Integer columnNumber)
+    {
+        this.columnNumber = columnNumber;
     }
 }

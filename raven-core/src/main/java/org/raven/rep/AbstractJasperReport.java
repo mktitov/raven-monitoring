@@ -40,7 +40,6 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass
 public abstract class AbstractJasperReport extends AbstractDataSource implements Schedulable
 {
     @Parameter(valueHandlerType=DataFileValueHandlerFactory.TYPE)

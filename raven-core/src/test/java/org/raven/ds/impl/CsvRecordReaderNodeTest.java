@@ -35,11 +35,11 @@ import org.raven.tree.NodeAttribute;
  *
  * @author Mikhail Titov
  */
-public class CvsRecordReaderNodeTest extends RavenCoreTestCase
+public class CsvRecordReaderNodeTest extends RavenCoreTestCase
 {
     private RecordSchemaNode schema;
     private PushDataSource ds;
-    private CvsRecordReaderNode converter;
+    private CsvRecordReaderNode converter;
     private DataCollector consumer;
     
     @Before
@@ -58,7 +58,7 @@ public class CvsRecordReaderNodeTest extends RavenCoreTestCase
         field1.start();
         assertEquals(Status.STARTED, field1.getStatus());
 
-        CvsRecordFieldExtension csvExtension = new CvsRecordFieldExtension();
+        CsvRecordFieldExtension csvExtension = new CsvRecordFieldExtension();
         csvExtension.setName("csv");
         field1.addAndSaveChildren(csvExtension);
         csvExtension.setColumnNumber(1);
@@ -72,7 +72,7 @@ public class CvsRecordReaderNodeTest extends RavenCoreTestCase
         field1.start();
         assertEquals(Status.STARTED, field1.getStatus());
 
-        csvExtension = new CvsRecordFieldExtension();
+        csvExtension = new CsvRecordFieldExtension();
         csvExtension.setName("csv");
         field1.addAndSaveChildren(csvExtension);
         csvExtension.setColumnNumber(3);
@@ -85,7 +85,7 @@ public class CvsRecordReaderNodeTest extends RavenCoreTestCase
         ds.start();
         assertEquals(Status.STARTED, ds.getStatus());
 
-        converter = new CvsRecordReaderNode();
+        converter = new CsvRecordReaderNode();
         converter.setName("converter");
         tree.getRootNode().addAndSaveChildren(converter);
         converter.setDataSource(ds);
@@ -124,7 +124,7 @@ public class CvsRecordReaderNodeTest extends RavenCoreTestCase
     public void lineFilterTest() throws Exception
     {
         NodeAttribute filterAttr =
-                converter.getNodeAttribute(CvsRecordReaderNode.LINEFILTER_ATTRIBUTE);
+                converter.getNodeAttribute(CsvRecordReaderNode.LINEFILTER_ATTRIBUTE);
         assertNotNull(filterAttr);
         filterAttr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
         filterAttr.setValue("!line.startsWith('#') && linenumber!=2");

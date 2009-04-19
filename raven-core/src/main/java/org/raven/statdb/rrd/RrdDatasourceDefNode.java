@@ -26,7 +26,6 @@ import org.raven.tree.impl.BaseNode;
  *
  * @author Mikhail Titov
  */
-@NodeClass
 public class RrdDatasourceDefNode extends BaseNode
 {
     @Parameter(defaultValue="GAUGE")

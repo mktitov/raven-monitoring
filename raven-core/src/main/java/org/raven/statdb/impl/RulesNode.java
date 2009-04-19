@@ -22,12 +22,13 @@ import org.raven.expr.impl.IfNode;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.InvisibleNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(childNodes={IfNode.class})
+@NodeClass(parentNode=InvisibleNode.class, childNodes={IfNode.class})
 public class RulesNode extends BaseNode
 {
     public final static String NAME = "Rules";

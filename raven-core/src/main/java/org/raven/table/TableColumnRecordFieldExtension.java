@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009 Mikhail Titov .
+ *  Copyright 2009 Mikhail Titov.
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,10 +15,13 @@
  *  under the License.
  */
 
-package org.raven.ds.impl;
+package org.raven.table;
 
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.impl.AbstractRecordFieldExtension;
+import org.raven.ds.impl.RecordSchemaFieldNode;
+import org.raven.ds.impl.ValuePrepareRecordFieldExtension;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -27,11 +30,10 @@ import org.weda.annotations.constraints.NotNull;
  */
 @NodeClass(
     parentNode=RecordSchemaFieldNode.class, childNodes=ValuePrepareRecordFieldExtension.class)
-public class CvsRecordFieldExtension extends AbstractRecordFieldExtension
+public class TableColumnRecordFieldExtension extends AbstractRecordFieldExtension
 {
     @Parameter @NotNull
     private Integer columnNumber;
-
 
     public Integer getColumnNumber()
     {

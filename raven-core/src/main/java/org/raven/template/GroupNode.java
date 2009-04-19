@@ -21,13 +21,14 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.InvisibleNode;
 import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(importChildTypesFromParent=true)
+@NodeClass(parentNode=InvisibleNode.class, importChildTypesFromParent=true)
 public class GroupNode extends BaseNode
 {
     public final static String GROUPINGEXPRESSION_ATTRIBUTE = "groupingExpression";

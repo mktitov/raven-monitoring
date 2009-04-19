@@ -22,12 +22,13 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.InvisibleNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(importChildTypesFromParent=true, childNodes=IfNode.class)
+@NodeClass(parentNode=InvisibleNode.class, importChildTypesFromParent=true, childNodes=IfNode.class)
 public class IfNode extends BaseNode
 {
     public final static String EXPRESSION_ATTRIBUTE = "expression";

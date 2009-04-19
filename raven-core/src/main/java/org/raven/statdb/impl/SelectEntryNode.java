@@ -17,7 +17,6 @@
 
 package org.raven.statdb.impl;
 
-import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.statdb.query.SelectEntry;
 import org.raven.tree.impl.BaseNode;
@@ -27,7 +26,6 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass()
 public class SelectEntryNode extends BaseNode implements SelectEntry
 {
     @Parameter @NotNull

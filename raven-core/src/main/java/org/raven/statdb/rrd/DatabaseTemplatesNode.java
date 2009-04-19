@@ -17,10 +17,7 @@
 
 package org.raven.statdb.rrd;
 
-import org.raven.annotations.NodeClass;
 import org.raven.rrd.DataSourceType;
-import org.raven.rrd.data.RRDataSource;
-import org.raven.template.impl.TemplateEntry;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 
@@ -28,7 +25,7 @@ import org.raven.tree.impl.BaseNode;
  *
  * @author Mikhail Titov
  */
-@NodeClass(childNodes={RrdDatabaseDefNode.class})
+//@NodeClass(childNodes={RrdDatabaseDefNode.class})
 public class DatabaseTemplatesNode extends BaseNode
 {
 	public final static String NAME = "Database templates";

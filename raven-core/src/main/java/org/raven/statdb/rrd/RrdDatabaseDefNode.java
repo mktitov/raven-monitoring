@@ -28,13 +28,15 @@ import org.raven.annotations.Parameter;
 import org.raven.rrd.DataSourceType;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.InvisibleNode;
 import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(childNodes={RrdDatasourceDefNode.class, RrdArchiveDefNode.class})
+@NodeClass(parentNode=InvisibleNode.class,
+    childNodes={RrdDatasourceDefNode.class, RrdArchiveDefNode.class})
 public class RrdDatabaseDefNode extends BaseNode
 {
     @Parameter()
