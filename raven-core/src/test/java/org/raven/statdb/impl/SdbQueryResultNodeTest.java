@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.raven.DataCollector;
 import org.raven.PushDataSource;
 import org.raven.RavenCoreTestCase;
+import org.raven.ds.impl.RecordSchemaNode;
 import org.raven.statdb.query.QueryResult;
 import static org.easymock.EasyMock.*;
 /**
@@ -43,11 +44,17 @@ public class SdbQueryResultNodeTest extends RavenCoreTestCase
         tree.getRootNode().addAndSaveChildren(ds);
         assertTrue(ds.start());
 
+        RecordSchemaNode schema = new RecordSchemaNode();
+        schema.setName("schema");
+        tree.getRootNode().addAndSaveChildren(schema);
+        assertTrue(schema.start());
+
         db = new TestStatisticsDatabase2();
         db.setName("db");
         tree.getRootNode().addAndSaveChildren(db);
         db.setStep(10);
         db.setDataSource(ds);
+        db.setRecordSchema(schema);
         assertTrue(db.start());
 
         resultNode = new SdbQueryResultNode();

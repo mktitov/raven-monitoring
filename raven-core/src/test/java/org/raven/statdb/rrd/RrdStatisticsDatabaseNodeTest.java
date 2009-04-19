@@ -40,8 +40,6 @@ import org.raven.ds.impl.RecordSchemaFieldNode;
 import org.raven.ds.impl.RecordSchemaNode;
 import org.raven.statdb.AggregationFunction;
 import org.raven.statdb.StatisticsRecord;
-import org.raven.statdb.impl.StatisticsDefinitionNode;
-import org.raven.statdb.impl.AbstractStatisticsRecord;
 import org.raven.statdb.query.FromClause;
 import org.raven.statdb.query.KeyValues;
 import org.raven.statdb.query.Query;
@@ -120,6 +118,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 		db.setDataSource(ds);
 		db.setStartTime("epoch");
 		db.setUpdateQueue(queue);
+        db.setRecordSchema(schema);
 		db.start();
 		assertEquals(Status.STARTED, db.getStatus());
 	}
@@ -397,11 +396,11 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 
         expect(query.getSelectMode()).andReturn(SelectMode.SELECT_KEYS_AND_DATA);
         expect(select.getSelectEntries()).andReturn(null);
-        
+
 		expect(from.getKeyExpression()).andReturn("/@r .*/@r .*/");
 
         replay(query, from, select, s1name, s2name);
-        
+
         QueryResult result = db.executeQuery(query);
         assertNotNull(result);
 
@@ -612,7 +611,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 
         RrdDatabaseRecordFieldExtension dbExt = new RrdDatabaseRecordFieldExtension();
         dbExt.setName("rrd");
-        field.addAndSaveChildren(db);
+        field.addAndSaveChildren(dbExt);
         dbExt.setDatabaseTemplateName(databaseTemplateName);
         assertTrue(dbExt.start());
     }
@@ -623,6 +622,8 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 		RrdDatabaseRecordExtension dbDef = new RrdDatabaseRecordExtension();
 		dbDef.setName(name);
         extensions.addAndSaveChildren(dbDef);
+        dbDef.setStep(5l);
+        dbDef.setStartTime("epoch");
         assertTrue(dbDef.start());
 
 		RrdArchiveDefNode arcDef = new RrdArchiveDefNode();

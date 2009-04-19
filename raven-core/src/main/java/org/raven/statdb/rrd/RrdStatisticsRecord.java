@@ -34,8 +34,8 @@ import org.weda.services.TypeConverter;
 public class RrdStatisticsRecord extends AbstractStatisticsRecord
 {
     private final RrdDatabaseRecordExtension databaseDef;
-    private final Map<String, RrdDatabaseRecordExtension> fieldsDatabaseTemplates =
-            new HashMap<String, RrdDatabaseRecordExtension>();
+    private Map<String, RrdDatabaseRecordExtension> fieldsDatabaseTemplates;
+            
 
     public RrdStatisticsRecord(Record record, TypeConverter converter, Node owner) throws Exception
     {
@@ -106,6 +106,9 @@ public class RrdStatisticsRecord extends AbstractStatisticsRecord
                     , RrdStatisticsDatabaseNode.DATASOURCE_NAME));
 			return false;
 		}
+
+        if (fieldsDatabaseTemplates==null)
+            fieldsDatabaseTemplates = new HashMap<String, RrdDatabaseRecordExtension>();
 
         fieldsDatabaseTemplates.put(field.getName(), dbTemplate);
         

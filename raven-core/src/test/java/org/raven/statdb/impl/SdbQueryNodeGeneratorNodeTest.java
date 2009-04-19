@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.raven.DummyScheduler;
 import org.raven.PushDataSource;
 import org.raven.RavenCoreTestCase;
+import org.raven.ds.impl.RecordSchemaNode;
 import org.raven.statdb.StatisticsDatabase;
 import org.raven.statdb.query.KeyValues;
 import org.raven.statdb.query.Query;
@@ -55,11 +56,17 @@ public class SdbQueryNodeGeneratorNodeTest extends RavenCoreTestCase
         tree.getRootNode().addAndSaveChildren(datasource);
         assertTrue(datasource.start());
 
+        RecordSchemaNode schema = new RecordSchemaNode();
+        schema.setName("schema");
+        tree.getRootNode().addAndSaveChildren(schema);
+        assertTrue(schema.start());
+
         database = new TestStatisticsDatabase();
         database.setName("database");
         tree.getRootNode().addAndSaveChildren(database);
         database.setStep(5);
         database.setDataSource(datasource);
+        database.setRecordSchema(schema);
         assertTrue(database.start());
 
         scheduler = new DummyScheduler();

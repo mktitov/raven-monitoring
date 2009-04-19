@@ -25,6 +25,7 @@ import org.raven.ds.RecordException;
 import org.raven.expr.impl.IfNode;
 import org.raven.log.LogLevel;
 import org.raven.PushDataSource;
+import org.raven.ds.InvalidRecordFieldException;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.ds.impl.RecordSchemaFieldNode;
@@ -120,121 +121,116 @@ public class AbstractStatisticsDatabaseTest extends RavenCoreTestCase
 		verify(saveStatisticsValue);
 	}
 
-	@Test
+	@Test(expected=InvalidRecordFieldException.class)
 	public void undefinedStatisticsTest() throws RecordException
 	{
         Record rec = schema.createRecord();
         rec.setValue(StatisticsRecord.TIME_FIELD_NAME, 0l);
         rec.setValue(StatisticsRecord.KEY_FIELD_NAME, "/1/2/");
         rec.setValue("s3", 1.);
-
-		SaveStatisticsValue saveStatisticsValue = createMock(SaveStatisticsValue.class);
-		replay(saveStatisticsValue);
-		ds.pushData(rec);
-		verify(saveStatisticsValue);
 	}
 
-//	@Test
-//	public void rulesExecutionTest() throws Exception
-//	{
-//        Record rec = schema.createRecord();
-//        rec.setValue(StatisticsRecord.TIME_FIELD_NAME, 0l);
-//        rec.setValue(StatisticsRecord.KEY_FIELD_NAME, "/1/2/");
-//        rec.setValue("s1", 1.);
-//        rec.setValue("s2", 2.);
-//
-//		Rule rule1 = createMock("rule1", Rule.class);
-//		Rule rule2 = createMock("rule2", Rule.class);
-//		SaveStatisticsValue saveStatisticsValue = createSaveStatisticsValueMock();
-//		rule1.processRule(
-//				eq("/1/"), eq("s1"), eq(1.0), isA(TestStatisticsRecord.class)
-//				, isA(RuleProcessingResultImpl.class), same(db));
-//		rule1.processRule(
-//				eq("/1/"), eq("s2"), eq(2.0), isA(TestStatisticsRecord.class)
-//				, isA(RuleProcessingResultImpl.class), same(db));
-//		rule2.processRule(
-//				eq("/1/2/"), eq("s1"), eq(1.0), isA(TestStatisticsRecord.class)
-//				, isA(RuleProcessingResultImpl.class), same(db));
-//		rule2.processRule(
-//				eq("/1/2/"), eq("s2"), eq(2.0), isA(TestStatisticsRecord.class)
-//				, isA(RuleProcessingResultImpl.class), same(db));
-//		replay(rule1, rule2, saveStatisticsValue);
-//
-//		createIfNode("if1", "key=='/1/'", rule1);
-//		createIfNode("if2", "key=='/1/2/'", rule2);
-//
-//		ds.pushData(rec);
-//
-//		verify(rule1, rule2, saveStatisticsValue);
-//	}
-//
-//	@Test
-//	public void stopProcessingSubkeyTest() throws Exception
-//	{
-//        Record rec = schema.createRecord();
-//        rec.setValue(StatisticsRecord.TIME_FIELD_NAME, 0l);
-//        rec.setValue(StatisticsRecord.KEY_FIELD_NAME, "/1/2/");
-//        rec.setValue("s1", 1.);
-//        rec.setValue("s2", 2.);
-//
-//		Rule rule1 = createMock("rule1", Rule.class);
-//		Rule rule2 = createMock("rule2", Rule.class);
-//		SaveStatisticsValue saveStatisticsValue = createSaveStatisticsValueMock();
-//		rule1.processRule(
-//				eq("/1/"), eq("s1"), eq(1.0), isA(TestStatisticsRecord.class)
-//				, changeProcessingInstruction(ProcessingInstruction.STOP_PROCESSING_SUBKEY)
-//				, same(db));
-//		rule1.processRule(
-//				eq("/1/"), eq("s2"), eq(2.0), isA(TestStatisticsRecord.class)
-//                , isA(RuleProcessingResultImpl.class)
-//				, same(db));
-//		rule2.processRule(
-//				eq("/1/"), eq("s2"), eq(2.0), isA(TestStatisticsRecord.class)
-//                , isA(RuleProcessingResultImpl.class)
-//				, same(db));
-//		replay(rule1, rule2, saveStatisticsValue);
-//
-//		createIfNode("if1", "key=='/1/'", rule1, rule2);
-//
-//		ds.pushData(rec);
-//
-//		verify(rule1, rule2, saveStatisticsValue);
-//	}
-//
-//	@Test
-//	public void stopProcessingKeyTest() throws Exception
-//	{
-//        Record rec = schema.createRecord();
-//        rec.setValue(StatisticsRecord.TIME_FIELD_NAME, 0l);
-//        rec.setValue(StatisticsRecord.KEY_FIELD_NAME, "/1/2/");
-//        rec.setValue("s1", 1.);
-//        rec.setValue("s2", 2.);
-//
-//		Rule rule1 = createMock("rule1", Rule.class);
-//		Rule rule2 = createMock("rule2", Rule.class);
-//		SaveStatisticsValue saveStatisticsValue = createMock(SaveStatisticsValue.class);
-//		db.setDatabaseMock(saveStatisticsValue);
-//		rule1.processRule(
-//				eq("/1/"), eq("s1"), eq(1.0), isA(TestStatisticsRecord.class)
-//				, changeProcessingInstruction(ProcessingInstruction.STOP_PROCESSING_KEY)
-//				, same(db));
-//		rule1.processRule(
-//				eq("/1/"), eq("s2"), eq(2.0), isA(TestStatisticsRecord.class)
-//                , isA(RuleProcessingResultImpl.class)
-//				, same(db));
-//		rule2.processRule(
-//				eq("/1/"), eq("s2"), eq(2.0), isA(TestStatisticsRecord.class)
-//                , isA(RuleProcessingResultImpl.class)
-//				, same(db));
-//		saveStatisticsValue.saveStatisticsValue("/1/2/", "s2", 2., 0);
-//		replay(rule1, rule2, saveStatisticsValue);
-//
-//		createIfNode("if1", "key=='/1/'", rule1, rule2);
-//
-//		ds.pushData(rec);
-//
-//		verify(rule1, rule2, saveStatisticsValue);
-//	}
+	@Test
+	public void rulesExecutionTest() throws Exception
+	{
+        Record rec = schema.createRecord();
+        rec.setValue(StatisticsRecord.TIME_FIELD_NAME, 0l);
+        rec.setValue(StatisticsRecord.KEY_FIELD_NAME, "/1/2/");
+        rec.setValue("s1", 1.);
+        rec.setValue("s2", 2.);
+
+		Rule rule1 = createMock("rule1", Rule.class);
+		Rule rule2 = createMock("rule2", Rule.class);
+		SaveStatisticsValue saveStatisticsValue = createSaveStatisticsValueMock();
+		rule1.processRule(
+				eq("/1/"), eq("s1"), eq(1.0), isA(TestStatisticsRecord.class)
+				, isA(RuleProcessingResultImpl.class), same(db));
+		rule1.processRule(
+				eq("/1/"), eq("s2"), eq(2.0), isA(TestStatisticsRecord.class)
+				, isA(RuleProcessingResultImpl.class), same(db));
+		rule2.processRule(
+				eq("/1/2/"), eq("s1"), eq(1.0), isA(TestStatisticsRecord.class)
+				, isA(RuleProcessingResultImpl.class), same(db));
+		rule2.processRule(
+				eq("/1/2/"), eq("s2"), eq(2.0), isA(TestStatisticsRecord.class)
+				, isA(RuleProcessingResultImpl.class), same(db));
+		replay(rule1, rule2, saveStatisticsValue);
+
+		createIfNode("if1", "key=='/1/'", rule1);
+		createIfNode("if2", "key=='/1/2/'", rule2);
+
+		ds.pushData(rec);
+
+		verify(rule1, rule2, saveStatisticsValue);
+	}
+
+	@Test
+	public void stopProcessingSubkeyTest() throws Exception
+	{
+        Record rec = schema.createRecord();
+        rec.setValue(StatisticsRecord.TIME_FIELD_NAME, 0l);
+        rec.setValue(StatisticsRecord.KEY_FIELD_NAME, "/1/2/");
+        rec.setValue("s1", 1.);
+        rec.setValue("s2", 2.);
+
+		Rule rule1 = createMock("rule1", Rule.class);
+		Rule rule2 = createMock("rule2", Rule.class);
+		SaveStatisticsValue saveStatisticsValue = createSaveStatisticsValueMock();
+		rule1.processRule(
+				eq("/1/"), eq("s1"), eq(1.0), isA(TestStatisticsRecord.class)
+				, changeProcessingInstruction(ProcessingInstruction.STOP_PROCESSING_SUBKEY)
+				, same(db));
+		rule1.processRule(
+				eq("/1/"), eq("s2"), eq(2.0), isA(TestStatisticsRecord.class)
+                , isA(RuleProcessingResultImpl.class)
+				, same(db));
+		rule2.processRule(
+				eq("/1/"), eq("s2"), eq(2.0), isA(TestStatisticsRecord.class)
+                , isA(RuleProcessingResultImpl.class)
+				, same(db));
+		replay(rule1, rule2, saveStatisticsValue);
+
+		createIfNode("if1", "key=='/1/'", rule1, rule2);
+
+		ds.pushData(rec);
+
+		verify(rule1, rule2, saveStatisticsValue);
+	}
+
+	@Test
+	public void stopProcessingKeyTest() throws Exception
+	{
+        Record rec = schema.createRecord();
+        rec.setValue(StatisticsRecord.TIME_FIELD_NAME, 0l);
+        rec.setValue(StatisticsRecord.KEY_FIELD_NAME, "/1/2/");
+        rec.setValue("s1", 1.);
+        rec.setValue("s2", 2.);
+
+		Rule rule1 = createMock("rule1", Rule.class);
+		Rule rule2 = createMock("rule2", Rule.class);
+		SaveStatisticsValue saveStatisticsValue = createMock(SaveStatisticsValue.class);
+		db.setDatabaseMock(saveStatisticsValue);
+		rule1.processRule(
+				eq("/1/"), eq("s1"), eq(1.0), isA(TestStatisticsRecord.class)
+				, changeProcessingInstruction(ProcessingInstruction.STOP_PROCESSING_KEY)
+				, same(db));
+		rule1.processRule(
+				eq("/1/"), eq("s2"), eq(2.0), isA(TestStatisticsRecord.class)
+                , isA(RuleProcessingResultImpl.class)
+				, same(db));
+		rule2.processRule(
+				eq("/1/"), eq("s2"), eq(2.0), isA(TestStatisticsRecord.class)
+                , isA(RuleProcessingResultImpl.class)
+				, same(db));
+		saveStatisticsValue.saveStatisticsValue("/1/2/", "s2", 2., 0);
+		replay(rule1, rule2, saveStatisticsValue);
+
+		createIfNode("if1", "key=='/1/'", rule1, rule2);
+
+		ds.pushData(rec);
+
+		verify(rule1, rule2, saveStatisticsValue);
+	}
 
 	private RuleProcessingResult changeProcessingInstruction(
 			final ProcessingInstruction instruction)

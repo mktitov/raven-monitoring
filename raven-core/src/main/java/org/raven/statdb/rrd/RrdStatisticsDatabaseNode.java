@@ -91,14 +91,14 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 	@NotNull
 	private RrdUpdateQueueNode updateQueue;
 
-	private DatabaseTemplatesNode databaseTemplatesNode;
+//	private DatabaseTemplatesNode databaseTemplatesNode;
 	private File dbRoot;
 	private RrdDbPool pool;
 
-	public DatabaseTemplatesNode getDatabaseTemplatesNode()
-	{
-		return databaseTemplatesNode;
-	}
+//	public DatabaseTemplatesNode getDatabaseTemplatesNode()
+//	{
+//		return databaseTemplatesNode;
+//	}
 
 	public String getStartTime()
 	{
@@ -125,16 +125,16 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 	{
 		super.initConfigurationNodes();
 
-		databaseTemplatesNode = (DatabaseTemplatesNode) getChildren(DatabaseTemplatesNode.NAME);
-		if (databaseTemplatesNode==null)
-		{
-			databaseTemplatesNode = new DatabaseTemplatesNode();
-			databaseTemplatesNode.setParent(this);
-			databaseTemplatesNode.save();
-			addChildren(databaseTemplatesNode);
-			databaseTemplatesNode.init();
-			databaseTemplatesNode.start();
-		}
+//		databaseTemplatesNode = (DatabaseTemplatesNode) getChildren(DatabaseTemplatesNode.NAME);
+//		if (databaseTemplatesNode==null)
+//		{
+//			databaseTemplatesNode = new DatabaseTemplatesNode();
+//			databaseTemplatesNode.setParent(this);
+//			databaseTemplatesNode.save();
+//			addChildren(databaseTemplatesNode);
+//			databaseTemplatesNode.init();
+//			databaseTemplatesNode.start();
+//		}
 	}
 
     @Override

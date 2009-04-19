@@ -25,6 +25,7 @@ import org.jrobin.core.RrdException;
 import org.jrobin.core.Util;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.rrd.DataSourceType;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.constraints.NotNull;
@@ -43,6 +44,21 @@ public class RrdDatabaseDefNode extends BaseNode
 	@Parameter()
 	@NotNull
 	private String startTime;
+
+    @Override
+    protected void doInit() throws Exception
+    {
+        super.doInit();
+
+        generateNode();
+    }
+
+    @Override
+    protected void doStart() throws Exception
+    {
+        super.doStart();
+        generateNode();
+    }
 
 	public String getStartTime()
 	{
@@ -138,6 +154,20 @@ public class RrdDatabaseDefNode extends BaseNode
         String conFun = converter.convert(String.class, archive.getConsolidationFunction(), null);
         ArcDef def = new ArcDef(conFun, archive.getXff(), archive.getSteps(), archive.getRows());
         return def;
+    }
+
+    private void generateNode()
+    {
+        RrdDatasourceDefNode datasource =
+                (RrdDatasourceDefNode) getChildren(RrdStatisticsDatabaseNode.DATASOURCE_NAME);
+        if (datasource==null)
+        {
+            datasource = new RrdDatasourceDefNode();
+            datasource.setName(RrdStatisticsDatabaseNode.DATASOURCE_NAME);
+            addAndSaveChildren(datasource);
+            datasource.setDataSourceType(DataSourceType.GAUGE);
+            datasource.start();
+        }
     }
 
 }
