@@ -21,6 +21,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import javax.script.Bindings;
+import javax.script.SimpleBindings;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataSource;
@@ -41,12 +43,19 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass
 public class TableToRecordNode extends AbstractDataPipe
 {
+    public static final String ROW_BINDING_NAME = "row";
     @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
     @NotNull
     private RecordSchemaNode recordSchema;
 
     @Parameter
     private String tableColumnExtensionName;
+
+    @Override
+    protected void initFields()
+    {
+        super.initFields();
+    }
 
     public RecordSchemaNode getRecordSchema()
     {
@@ -104,13 +113,15 @@ public class TableToRecordNode extends AbstractDataPipe
         for (Iterator<Object[]> it = table.getRowIterator(); it.hasNext();)
         {
             Object[] row = it.next();
+            Bindings bindings = new SimpleBindings();
+            bindings.put(ROW_BINDING_NAME ,row);
             Record record = _recordSchema.createRecord();
             for (int i=0; i<row.length; ++i)
             {
                 FieldInfo fieldInfo = fieldCols.get(i);
                 if (fieldInfo!=null)
                 {
-                    Object val = fieldInfo.getColumnExtension().prepareValue(row[i]);
+                    Object val = fieldInfo.getColumnExtension().prepareValue(row[i], bindings);
                     record.setValue(fieldInfo.getField().getName(), val);
                 }
             }

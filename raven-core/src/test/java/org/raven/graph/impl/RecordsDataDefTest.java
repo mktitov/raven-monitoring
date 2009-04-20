@@ -22,7 +22,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import org.jrobin.data.Plottable;
 import org.junit.Test;
 import org.raven.PushOnDemandDataSource;
 import org.raven.RavenCoreTestCase;
@@ -74,10 +73,10 @@ public class RecordsDataDefTest extends RavenCoreTestCase
         dataDef.setValueFieldName("value");
         assertTrue(dataDef.start());
 
-        Timestamp ts1 = new Timestamp(System.currentTimeMillis());
-//        TimeUnit.MILLISECONDS.sleep(100);
+        long time = System.currentTimeMillis()/1000;
+        Timestamp ts1 = new Timestamp(System.currentTimeMillis()*1000l);
         Timestamp ts2 = new Timestamp(ts1.getTime()+5000);
-        Timestamp ts3 = new Timestamp(ts1.getTime()+500);
+        Timestamp ts3 = new Timestamp(ts1.getTime()+400);
 
         SimpleDateFormat fmt = new SimpleDateFormat("dd.MM.yyyy HH:mm");
         String tsStr = String.format(

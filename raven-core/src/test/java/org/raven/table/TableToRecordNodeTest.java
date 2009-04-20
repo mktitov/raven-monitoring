@@ -49,7 +49,7 @@ public class TableToRecordNodeTest extends RavenCoreTestCase
         assertTrue(schema.start());
 
         createField(schema, "f1", 0, null);
-        createField(schema, "f2", 2, "value+'_prepared'");
+        createField(schema, "f2", 2, "value+'_'+row[1]");
 
         TableToRecordNode tab2rec = new TableToRecordNode();
         tab2rec.setName("pipe");
@@ -75,7 +75,7 @@ public class TableToRecordNodeTest extends RavenCoreTestCase
         assertTrue(dataList.get(0) instanceof Record);
         Record rec = (Record) dataList.get(0);
         assertEquals("val1", rec.getValue("f1"));
-        assertEquals("val3_prepared", rec.getValue("f2"));
+        assertEquals("val3_val2", rec.getValue("f2"));
 
         assertNull(dataList.get(1));
     }

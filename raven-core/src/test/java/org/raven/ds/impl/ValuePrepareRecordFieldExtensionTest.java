@@ -43,11 +43,11 @@ public class ValuePrepareRecordFieldExtensionTest extends RavenCoreTestCase
     @Test
     public void convertToTypeTest() throws Exception
     {
-        assertEquals("test", valuePrepare.prepareValue("test"));
-        assertEquals(1, valuePrepare.prepareValue(1));
+        assertEquals("test", valuePrepare.prepareValue("test", null));
+        assertEquals(1, valuePrepare.prepareValue(1, null));
 
         valuePrepare.setConvertToType(Integer.class);
-        assertEquals(1, valuePrepare.prepareValue("1"));
+        assertEquals(1, valuePrepare.prepareValue("1", null));
     }
 
     @Test
@@ -56,6 +56,6 @@ public class ValuePrepareRecordFieldExtensionTest extends RavenCoreTestCase
         valuePrepare.setExpression("value+1");
         valuePrepare.setUseExpression(true);
 
-        assertEquals(2, valuePrepare.prepareValue(1));
+        assertEquals(2, valuePrepare.prepareValue(1, null));
     }
 }

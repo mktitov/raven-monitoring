@@ -40,6 +40,17 @@ public class BindingSupport
 		binds.put(bindingName, value);
 	}
 
+    public void putAll(Bindings bindMap)
+    {
+		Map<String, Object> binds = bindings.get();
+		if (binds==null)
+		{
+			binds = new HashMap<String, Object>();
+			bindings.set(binds);
+		}
+        binds.putAll(bindMap);
+    }
+
 	public void reset()
 	{
 		bindings.remove();

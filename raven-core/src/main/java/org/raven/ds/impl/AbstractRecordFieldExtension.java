@@ -18,6 +18,7 @@
 package org.raven.ds.impl;
 
 import java.util.Collection;
+import javax.script.Bindings;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 
@@ -27,7 +28,7 @@ import org.raven.tree.impl.BaseNode;
  */
 public class AbstractRecordFieldExtension extends BaseNode
 {
-    public Object prepareValue(Object value)
+    public Object prepareValue(Object value, Bindings bindings)
     {
         Collection<Node> childs = getChildrens();
         
@@ -36,7 +37,7 @@ public class AbstractRecordFieldExtension extends BaseNode
 
         for (Node child: childs)
             if (child instanceof ValuePrepareRecordFieldExtension)
-                return ((ValuePrepareRecordFieldExtension)child).prepareValue(value);
+                return ((ValuePrepareRecordFieldExtension)child).prepareValue(value, bindings);
 
         return value;
     }

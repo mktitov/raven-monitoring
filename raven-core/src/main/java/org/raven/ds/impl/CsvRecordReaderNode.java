@@ -303,7 +303,7 @@ public class CsvRecordReaderNode extends AbstractDataPipe
 
         public Object prepareValue(Object value)
         {
-            return extension.prepareValue(value);
+            return extension.prepareValue(value, null);
         }
     }
 }

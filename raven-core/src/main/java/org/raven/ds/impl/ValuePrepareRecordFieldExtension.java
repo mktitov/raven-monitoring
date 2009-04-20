@@ -82,7 +82,7 @@ public class ValuePrepareRecordFieldExtension extends BaseNode
         this.useExpression = useExpression;
     }
 
-    public Object prepareValue(Object value)
+    public Object prepareValue(Object value, Bindings bindings)
     {
         Class _convertToType = convertToType;
         if (_convertToType!=null)
@@ -91,6 +91,8 @@ public class ValuePrepareRecordFieldExtension extends BaseNode
         if (useExpression)
         {
             bindingSupport.put("value", value);
+            if (bindings!=null)
+                bindingSupport.putAll(bindings);
             try
             {
                 value = getNodeAttribute(EXPRESSION_ATTRIBUTE).getRealValue();

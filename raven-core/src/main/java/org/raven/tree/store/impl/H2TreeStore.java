@@ -782,7 +782,7 @@ public class H2TreeStore implements TreeStore
             return null;
 
         MessageComposer composer = new MessageComposer(messagesRegistry);
-        StrTokenizer tokenizer = new StrTokenizer(str);
+        StrTokenizer tokenizer = new StrTokenizer(str, ',', '"');
         while (tokenizer.hasNext())
             composer.append(tokenizer.nextToken());
 

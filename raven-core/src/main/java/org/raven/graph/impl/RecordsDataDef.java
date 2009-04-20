@@ -144,7 +144,7 @@ public class RecordsDataDef extends AbstractDataDef implements DataConsumer
                                 debug("skiping data for null timestamp");
                             continue;
                         }
-                        else if (ts<=timestamps[i])
+                        else if (i>0 && ts<=timestamps[i-1])
                         {
                             if (isLogLevelEnabled(LogLevel.DEBUG))
                                 debug(String.format(
@@ -153,10 +153,16 @@ public class RecordsDataDef extends AbstractDataDef implements DataConsumer
                                         , ts));
                             continue;
                         }
-                        timestamps[i] = converter.convert(Long.class, tsObj, null)/1000;
+                        timestamps[i] = ts;
                         Object valueObj = rec.getValue(_valueFieldName);
                         values[i] = converter.convert(Double.class, valueObj, null);
                         ++i;
+                    }
+
+                    if (i<recs.size())
+                    {
+                        timestamps = Arrays.copyOf(timestamps, i);
+                        values = Arrays.copyOf(values, i);
                     }
 
                     return new DataSeriesImpl(timestamps, values);

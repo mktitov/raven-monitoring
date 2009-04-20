@@ -456,7 +456,7 @@ public class DatabaseRecordQuery
                                 idColumnValue=value;
                                 idFieldType = fieldType.getType();
                             }
-                            value = fieldInfo.getDbExtension().prepareValue(value);
+                            value = fieldInfo.getDbExtension().prepareValue(value, null);
                             if (RecordSchemaFieldType.RECORD.equals(fieldType))
                                 value = createRecordValue(fieldInfo, null, value);
                             next.setValue(fieldInfo.getFieldName(), value);
