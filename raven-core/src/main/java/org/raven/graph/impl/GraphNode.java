@@ -99,9 +99,17 @@ public class GraphNode extends BaseNode implements Viewable
     @NotNull
     private Boolean autoRefresh;
 
+    @Parameter(defaultValue="true")
+    @NotNull
+    private Boolean generateRefreshAttributes;
+
+    @Parameter(defaultValue="false")
+    @NotNull
+    private Boolean detectTimeIntervalFromData;
+
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
     {
-        if (getStatus()!=Status.STARTED)
+        if (getStatus()!=Status.STARTED || !generateRefreshAttributes)
             return null;
 
         String attrDesc =
@@ -139,12 +147,23 @@ public class GraphNode extends BaseNode implements Viewable
         if (Status.STARTED!=getStatus())
             return null;
 
-        String startTime = refreshAttributes.get(STARTIME_ATTRIBUTE).getRealValue();
-        String endTime = refreshAttributes.get(ENDTIME_ATTRIBUTE).getRealValue();
+        String sTime = null;
+        String eTime = null;
+        if (refreshAttributes!=null && generateRefreshAttributes)
+        {
+            sTime = getAttributeValue(refreshAttributes, STARTIME_ATTRIBUTE);
+            eTime = getAttributeValue(refreshAttributes, ENDTIME_ATTRIBUTE);
+        }
 
-        ViewableObject viewableObject = new GraphViewableObject(this, startTime, endTime);
+        ViewableObject viewableObject = new GraphViewableObject(this, sTime, eTime);
 
         return Arrays.asList(viewableObject);
+    }
+
+    private String getAttributeValue(Map<String, NodeAttribute> attrs, String name)
+    {
+        NodeAttribute attr = attrs.get(name);
+        return attr==null? null : attr.getValue();
     }
 
     public byte[] render(String startTime, String endTime)
@@ -190,12 +209,22 @@ public class GraphNode extends BaseNode implements Viewable
         String start = startTime==null? this.startTime : startTime;
         String end = endTime==null? this.endTime : endTime;
 
-        long[] timeInterval = Util.getTimestamps(start, end);
-
-        gdef.setStartTime(timeInterval[0]);
-        gdef.setEndTime(timeInterval[1]);
+        Long[] timeInterval = null;
+        boolean _detectTimeIntervalFromData = detectTimeIntervalFromData;
+        if (_detectTimeIntervalFromData)
+            timeInterval = new Long[]{null, null};
+        else
+        {
+            long[] timeIntervalArr = Util.getTimestamps(start, end);
+            timeInterval = new Long[2];
+            for (int i=0; i<timeIntervalArr.length; ++i)
+                timeInterval[i] = timeIntervalArr[i];
+            gdef.setStartTime(timeInterval[0]);
+            gdef.setEndTime(timeInterval[1]);
+        }
 
         Collection<Node> gElements = getEffectiveChildrens();
+        long[] dataTimeInterval = new long[]{0,0};
         if (gElements!=null)
         {
             for (Node node: gElements)
@@ -204,7 +233,8 @@ public class GraphNode extends BaseNode implements Viewable
                     continue;
 
                 if (node instanceof DataDef)
-                    addDataDef(gdef, (DataDef)node, timeInterval[0], timeInterval[1]);
+                    addDataDef(
+                        gdef, (DataDef)node, timeInterval[0], timeInterval[1], dataTimeInterval);
 
                 if (node instanceof DataDefGroup)
                 {
@@ -212,7 +242,8 @@ public class GraphNode extends BaseNode implements Viewable
                             ((DataDefGroup)node).getDataDefs(timeInterval[0], timeInterval[1]);
                     if (dataDefs!=null && !dataDefs.isEmpty())
                         for (DataDef dataDef: dataDefs)
-                            addDataDef(gdef, dataDef, timeInterval[0], timeInterval[1]);
+                            addDataDef(gdef, dataDef, timeInterval[0], timeInterval[1]
+                                , dataTimeInterval);
                 } else if (node instanceof CalculatedDataDef)
                 {
                     CalculatedDataDef cdef = (CalculatedDataDef) node;
@@ -255,13 +286,44 @@ public class GraphNode extends BaseNode implements Viewable
                 }
             }
         }
+        if (_detectTimeIntervalFromData)
+        {
+            gdef.setStartTime(dataTimeInterval[0]);
+            gdef.setEndTime(dataTimeInterval[1]);
+        }
         return gdef;
     }
 
-    private void addDataDef(RrdGraphDef graphDef, DataDef dataDef, long start, long end) 
-            throws DataDefException
+    private void addDataDef(
+            RrdGraphDef graphDef, DataDef dataDef, Long start, Long end, long[] dataTimeInterval)
+        throws DataDefException
     {
-        graphDef.datasource(dataDef.getName(), dataDef.getData(start, end));
+        GraphData graphData = dataDef.getData(start, end);
+        graphDef.datasource(dataDef.getName(), graphData.getPlottable());
+        if (dataTimeInterval[0]==0 || dataTimeInterval[0]>graphData.getFirstTimestamp())
+            dataTimeInterval[0] = graphData.getFirstTimestamp();
+        if (dataTimeInterval[1]<graphData.getLastTimestamp())
+            dataTimeInterval[1] = graphData.getLastTimestamp();
+    }
+
+    public Boolean getDetectTimeIntervalFromData()
+    {
+        return detectTimeIntervalFromData;
+    }
+
+    public void setDetectTimeIntervalFromData(Boolean detectTimeIntervalFromData)
+    {
+        this.detectTimeIntervalFromData = detectTimeIntervalFromData;
+    }
+
+    public Boolean getGenerateRefreshAttributes()
+    {
+        return generateRefreshAttributes;
+    }
+
+    public void setGenerateRefreshAttributes(Boolean generateRefreshAttributes)
+    {
+        this.generateRefreshAttributes = generateRefreshAttributes;
     }
 
     public Boolean getAutoRefresh()

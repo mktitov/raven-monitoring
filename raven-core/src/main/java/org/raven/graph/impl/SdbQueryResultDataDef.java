@@ -90,17 +90,24 @@ public class SdbQueryResultDataDef extends AbstractDataDef implements DataConsum
     }
 
     @Override
-    public DataSeries formData(long startTime, long endTime) throws Exception
+    public DataSeries formData(Long startTime, Long endTime) throws Exception
     {
-        NodeAttribute startTimeAttr = new NodeAttributeImpl(
-                SdbQueryResultNode.STARTTIME_SESSION_ATTRIBUTE, String.class, startTime+"L", null);
-        startTimeAttr.init();
+        Collection<NodeAttribute> sessionAttributes = null;
+        if (startTime!=null && endTime!=null)
+        {
+            NodeAttribute startTimeAttr = new NodeAttributeImpl(
+                    SdbQueryResultNode.STARTTIME_SESSION_ATTRIBUTE, String.class
+                    , startTime+"L", null);
+            startTimeAttr.init();
 
-        NodeAttribute endTimeAttr = new NodeAttributeImpl(
-                SdbQueryResultNode.ENDTIME_SESSION_ATTRIBUTE, String.class, endTime+"L", null);
-        endTimeAttr.init();
+            NodeAttribute endTimeAttr = new NodeAttributeImpl(
+                    SdbQueryResultNode.ENDTIME_SESSION_ATTRIBUTE, String.class, endTime+"L", null);
+            endTimeAttr.init();
 
-        dataSource.getDataImmediate(this, Arrays.asList(startTimeAttr, endTimeAttr));
+            sessionAttributes = Arrays.asList(startTimeAttr, endTimeAttr);
+        }
+
+        dataSource.getDataImmediate(this, sessionAttributes);
 
         QueryResult _queryResult = queryResult.get();
         if (_queryResult==null)

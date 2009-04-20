@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.raven.PushOnDemandDataSource;
 import org.raven.RavenCoreTestCase;
 import org.raven.graph.DataDefException;
+import org.raven.graph.GraphData;
 import org.raven.statdb.impl.KeyValuesImpl;
 import org.raven.statdb.impl.QueryResultImpl;
 import org.raven.statdb.impl.SdbQueryResultNode;
@@ -63,11 +64,13 @@ public class SdbQueryResultDataDefTest extends RavenCoreTestCase
         def.setStatisticsName("s1");
         assertTrue(def.start());
 
-        Plottable data = def.getData(0l, 100l);
+        GraphData data = def.getData(0l, 100l);
         assertNotNull(data);
+        Plottable points = data.getPlottable();
+        assertNotNull(points);
 
-        assertEquals(10., data.getValue(0l), 0.);
-        assertEquals(20., data.getValue(100l), 0.);
+        assertEquals(10., points.getValue(0l), 0.);
+        assertEquals(20., points.getValue(100l), 0.);
 
         Map<String, NodeAttribute> attrs = ds.getLastSessionAttributes();
         assertNotNull(attrs);

@@ -46,4 +46,14 @@ public class DataSeriesImpl implements DataSeries
     {
         return values;
     }
+
+    public long getFirstTimeStamp()
+    {
+        return timestamps==null || timestamps.length==0? 0 : timestamps[0];
+    }
+
+    public long getLastTimeStamp()
+    {
+        return timestamps==null || timestamps.length==0? 0 : timestamps[timestamps.length-1];
+    }
 }

@@ -15,23 +15,40 @@
  *  under the License.
  */
 
-package org.raven.graph;
+package org.raven.graph.impl;
 
 import org.jrobin.data.Plottable;
+import org.raven.graph.GraphData;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataDef 
+public class GraphDataImpl implements GraphData
 {
-    /**
-     * Returns the data definition name
-     */
-    public String getName();
-    /**
-     * Returns the data of the data definition
-     * @return
-     */
-    public GraphData getData(Long startTime, Long endTime) throws DataDefException;
+    private final Plottable plottable;
+    private final long firstTimestamp;
+    private final long lastTimestamp;
+
+    public GraphDataImpl(Plottable plottable, long firstTimestamp, long lastTimestamp)
+    {
+        this.plottable = plottable;
+        this.firstTimestamp = firstTimestamp;
+        this.lastTimestamp = lastTimestamp;
+    }
+
+    public long getFirstTimestamp()
+    {
+        return firstTimestamp;
+    }
+
+    public long getLastTimestamp()
+    {
+        return lastTimestamp;
+    }
+
+    public Plottable getPlottable()
+    {
+        return plottable;
+    }
 }

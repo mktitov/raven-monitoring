@@ -19,8 +19,8 @@ package org.raven.graph.impl;
 
 import org.jrobin.core.RrdException;
 import org.jrobin.data.LinearInterpolator;
-import org.jrobin.data.Plottable;
 import org.raven.graph.DataDef;
+import org.raven.graph.GraphData;
 import org.raven.graph.GraphDataDefNode;
 import org.raven.tree.impl.BaseNode;
 
@@ -30,7 +30,7 @@ import org.raven.tree.impl.BaseNode;
  */
 public class TestDataDef extends BaseNode implements DataDef, GraphDataDefNode
 {
-    public Plottable getData(long startTime, long endTime)
+    public GraphData getData(Long startTime, Long endTime)
     {
         try
         {
@@ -41,7 +41,7 @@ public class TestDataDef extends BaseNode implements DataDef, GraphDataDefNode
             LinearInterpolator line = new LinearInterpolator(timestamps, values);
 //            line.setInterpolationMethod(LinearInterpolator.INTERPOLATE_LEFT);
 
-            return line;
+            return new GraphDataImpl(line, startTime, startTime + 14400);
         }
         catch (RrdException ex)
         {

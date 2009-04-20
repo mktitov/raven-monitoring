@@ -90,36 +90,41 @@ public class RecordsDataDef extends AbstractDataDef implements DataConsumer
     }
 
     @Override
-    public DataSeries formData(long startTime, long endTime) throws Exception
+    public DataSeries formData(Long startTime, Long endTime) throws Exception
     {
         try
         {
             String _timestampFieldName = timestampFieldName;
-            RecordSchemaField timestampField = RavenUtils.getRecordSchemaField(
-                    recordSchema, _timestampFieldName);
-            if (timestampField==null)
-                throw new Exception(String.format(
-                        "Field (%s) not found in the record schema (%s)"
-                        , _timestampFieldName, recordSchema.getPath()));
-            String pattern = timestampField.getPattern();
-            if (pattern==null)
-                throw new Exception(String.format(
-                        "The pattern attribute in the field schema (%s) of the record schema (%s) " 
-                        + "must have a value"
-                        , _timestampFieldName, recordSchema.getPath()));
-            SimpleDateFormat fmt = new SimpleDateFormat(pattern);
-            String tsExpr = String.format(
-                    "[%s, %s]"
-                    , fmt.format(new Date(startTime*1000))
-                    , fmt.format(new Date(endTime*1000)));
+            Collection<NodeAttribute> sessionAttributes = null;
+            if (startTime!=null && endTime!=null)
+            {
+                RecordSchemaField timestampField = RavenUtils.getRecordSchemaField(
+                        recordSchema, _timestampFieldName);
+                if (timestampField==null)
+                    throw new Exception(String.format(
+                            "Field (%s) not found in the record schema (%s)"
+                            , _timestampFieldName, recordSchema.getPath()));
+                String pattern = timestampField.getPattern();
+                if (pattern==null)
+                    throw new Exception(String.format(
+                            "The pattern attribute in the field schema (%s) of the " +
+                            "record schema (%s) must have a value"
+                            , _timestampFieldName, recordSchema.getPath()));
+                SimpleDateFormat fmt = new SimpleDateFormat(pattern);
+                String tsExpr = String.format(
+                        "[%s, %s]"
+                        , fmt.format(new Date(startTime*1000))
+                        , fmt.format(new Date(endTime*1000)));
 
-            NodeAttribute tsAttr = new NodeAttributeImpl(
-                    _timestampFieldName, String.class, tsExpr, null);
-            tsAttr.init();
+                NodeAttribute tsAttr = new NodeAttributeImpl(
+                        _timestampFieldName, String.class, tsExpr, null);
+                tsAttr.init();
+                sessionAttributes = Arrays.asList(tsAttr);
+            }
 
             try
             {
-                dataSource.getDataImmediate(this, Arrays.asList(tsAttr));
+                dataSource.getDataImmediate(this, sessionAttributes);
 
                 List<Record> recs = records.get();
                 if (!recs.isEmpty())

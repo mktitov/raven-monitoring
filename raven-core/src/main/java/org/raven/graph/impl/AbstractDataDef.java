@@ -23,6 +23,7 @@ import org.jrobin.data.Plottable;
 import org.raven.graph.DataDef;
 import org.raven.graph.DataDefException;
 import org.raven.graph.DataSeries;
+import org.raven.graph.GraphData;
 import org.raven.graph.GraphDataDefNode;
 import org.raven.graph.Interpolator;
 import org.raven.tree.Node;
@@ -34,7 +35,7 @@ import org.raven.tree.impl.BaseNode;
  */
 public abstract class AbstractDataDef extends BaseNode implements DataDef, GraphDataDefNode
 {
-    public Plottable getData(long startTime, long endTime) throws DataDefException
+    public GraphData getData(Long startTime, Long endTime) throws DataDefException
     {
         try
         {
@@ -49,15 +50,17 @@ public abstract class AbstractDataDef extends BaseNode implements DataDef, Graph
                         interpolator = (Interpolator) child;
                         break;
                     }
-            Plottable result = null;
+            Plottable plottable = null;
             if (interpolator==null)
             {
-                result = new LinearInterpolator(dataSeries.getTimestamps(), dataSeries.getValues());
+                plottable = new LinearInterpolator(
+                        dataSeries.getTimestamps(), dataSeries.getValues());
             }
             else
-                result = interpolator.createIterpolator(
+                plottable = interpolator.createIterpolator(
                         dataSeries.getTimestamps(), dataSeries.getValues());
-            return result;
+            return new GraphDataImpl(
+                    plottable, dataSeries.getFirstTimeStamp(), dataSeries.getLastTimeStamp());
         }
         catch(Exception e)
         {
@@ -65,5 +68,5 @@ public abstract class AbstractDataDef extends BaseNode implements DataDef, Graph
         }
     }
 
-    public abstract DataSeries formData(long startTime, long endTime) throws Exception;
+    public abstract DataSeries formData(Long startTime, Long endTime) throws Exception;
 }

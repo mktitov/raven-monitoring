@@ -17,15 +17,15 @@
 
 package org.raven.graph;
 
+import org.jrobin.data.Plottable;
+
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataSeries
+public interface GraphData
 {
-    public long getFirstTimeStamp();
-    public long getLastTimeStamp();
-    public long[] getTimestamps();
-
-    public double[] getValues();
+    public Plottable getPlottable();
+    public long getFirstTimestamp();
+    public long getLastTimestamp();
 }

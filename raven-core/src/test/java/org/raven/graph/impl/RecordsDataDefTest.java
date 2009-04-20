@@ -30,6 +30,7 @@ import org.raven.ds.Record;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.ds.impl.RecordSchemaFieldNode;
 import org.raven.ds.impl.RecordSchemaNode;
+import org.raven.graph.GraphData;
 import org.raven.tree.NodeAttribute;
 
 /**
@@ -99,9 +100,9 @@ public class RecordsDataDefTest extends RavenCoreTestCase
         rec.setValue("value", 2l);
         ds.addDataPortion(rec);
 
-        Plottable data = dataDef.getData(0, 10);
-        assertEquals(1., data.getValue(ts1.getTime()/1000), 0.);
-        assertEquals(2., data.getValue(ts2.getTime()/1000), 0.);
+        GraphData data = dataDef.getData(0l, 10l);
+        assertEquals(1., data.getPlottable().getValue(ts1.getTime()/1000), 0.);
+        assertEquals(2., data.getPlottable().getValue(ts2.getTime()/1000), 0.);
 
         Map<String, NodeAttribute> sessAttrs = ds.getLastSessionAttributes();
         assertNotNull(sessAttrs);
