@@ -147,11 +147,9 @@
             </tr:column>
 <!-- value of attribute-->
             <tr:column headerText="#{msgs.value}">
-                <tr:inputText 
-                	readOnly="#{row.expressionSupported}" 
+                <tr:outputText  
                 	rendered="#{row.expressionSupported or (row.selectItems == null)}" 
-                	value="#{row.value}" 
-                	columns="30" />
+                	value="#{row.value}"/>
                 <tr:selectOneChoice 
                 	rendered="#{!row.expressionSupported and !(row.selectItems == null)}" 
                 	value="#{row.value}" >
@@ -197,13 +195,14 @@
     	            	rendered="#{row.edit}"  
     	            	value="#{row.description}"/>
 				</tr:panelCaptionGroup>
-
+<!-- edit value of attribute-->
 				<tr:panelAccordion 
 					rendered="#{(row.expressionSupported or (row.selectItems == null)) and !row.fileAttribute}"
 					discloseNone="true" >
         			<tr:showDetailItem text="#{msgs.multiLineEditor}">
         			    <tr:inputText
                     		rows="8" 
+                    		wrap="hard"
                 			readOnly="#{row.expressionSupported}" 
                 			rendered="#{row.expressionSupported or (row.selectItems == null)}" 
                 			value="#{row.value}" 
