@@ -22,6 +22,9 @@ import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.Record;
+import org.raven.ds.RecordFieldValueGenerator;
+import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.weda.annotations.constraints.NotNull;
 
@@ -30,7 +33,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass
-public class RecordsGeneratorNode extends AbstractDataSource
+public class RecordGeneratorNode extends AbstractDataSource
 {
     @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
     @NotNull
@@ -47,16 +50,31 @@ public class RecordsGeneratorNode extends AbstractDataSource
     }
 
     @Override
-    public boolean gatherDataForConsumer(DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
+    public boolean gatherDataForConsumer(
+            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Collection<Node> childs = getChildrens();
+        if (childs!=null && !childs.isEmpty())
+        {
+            Record rec = recordSchema.createRecord();
+            for (Node child: childs)
+                if (child.getStatus().equals(Status.STARTED)
+                    && child instanceof RecordFieldValueGenerator)
+                {
+                    RecordFieldValueGenerator fieldValue = (RecordFieldValueGenerator) child;
+                    rec.setValue(fieldValue.getName(), fieldValue.getFieldValue());
+                }
+            dataConsumer.setData(this, rec);
+            return true;
+        }
+        else
+            throw new Exception(String.format(
+                    "Error generating record of type (%s) because of " +
+                    "not field value generators", recordSchema.getName()));
     }
 
     @Override
     public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
-
-    
 }

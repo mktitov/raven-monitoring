@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import javax.script.Bindings;
 import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
@@ -37,6 +38,7 @@ import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
+import org.raven.util.BindingSupport;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -49,6 +51,7 @@ import org.weda.annotations.constraints.NotNull;
 public class RecordsDataDef extends AbstractDataDef implements DataConsumer
 {
     public final static int INITIAL_ARAY_SIZE = 50;
+    public static final String RECORD_BINDING = "record";
 
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     @NotNull
@@ -64,7 +67,23 @@ public class RecordsDataDef extends AbstractDataDef implements DataConsumer
     @Parameter @NotNull
     private String valueFieldName;
 
+    @Parameter(defaultValue="false")
+    @NotNull
+    private Boolean useRecordFilter;
+
+    @Parameter
+    private Boolean recordFilter;
+
     private ThreadLocal<List<Record>> records;
+    private BindingSupport bindingSupport;
+
+    @Override
+    protected void initFields()
+    {
+        super.initFields();
+
+        bindingSupport = new BindingSupport();
+    }
 
     @Override
     protected void doStart() throws Exception
@@ -132,10 +151,19 @@ public class RecordsDataDef extends AbstractDataDef implements DataConsumer
                     long[] timestamps = new long[recs.size()];
                     double[] values = new double[recs.size()];
 
+                    boolean _useRecordFilter = useRecordFilter;
+
                     int i=0;
                     String _valueFieldName = valueFieldName;
                     for (Record rec: recs)
                     {
+                        if (_useRecordFilter)
+                        {
+                            bindingSupport.put(RECORD_BINDING, rec);
+                            Boolean leaveRecord = recordFilter;
+                            if (leaveRecord==null || !leaveRecord)
+                                continue;
+                        }
                         Object tsObj = rec.getValue(_timestampFieldName);
                         Long ts = converter.convert(Long.class, tsObj, null)/1000;
                         if (ts==null)
@@ -203,6 +231,33 @@ public class RecordsDataDef extends AbstractDataDef implements DataConsumer
     public Object refereshData(Collection<NodeAttribute> sessionAttributes)
     {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void formExpressionBindings(Bindings bindings)
+    {
+        super.formExpressionBindings(bindings);
+        bindingSupport.addTo(bindings);
+    }
+
+    public Boolean getRecordFilter()
+    {
+        return recordFilter;
+    }
+
+    public void setRecordFilter(Boolean recordFilter)
+    {
+        this.recordFilter = recordFilter;
+    }
+
+    public Boolean getUseRecordFilter()
+    {
+        return useRecordFilter;
+    }
+
+    public void setUseRecordFilter(Boolean useRecordFilter)
+    {
+        this.useRecordFilter = useRecordFilter;
     }
 
     public DataSource getDataSource()

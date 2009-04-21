@@ -21,7 +21,7 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import org.junit.Before;
 import org.junit.Test;
 import org.raven.PushOnDemandDataSource;
 import org.raven.RavenCoreTestCase;
@@ -29,6 +29,7 @@ import org.raven.ds.Record;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.ds.impl.RecordSchemaFieldNode;
 import org.raven.ds.impl.RecordSchemaNode;
+import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.graph.GraphData;
 import org.raven.tree.NodeAttribute;
 
@@ -38,15 +39,19 @@ import org.raven.tree.NodeAttribute;
  */
 public class RecordsDataDefTest extends RavenCoreTestCase
 {
-    @Test
-    public void test() throws Exception
+    RecordSchemaNode schema;
+    PushOnDemandDataSource ds;
+    RecordsDataDef dataDef;
+
+    @Before
+    public void prepare()
     {
-        PushOnDemandDataSource ds = new PushOnDemandDataSource();
+        ds = new PushOnDemandDataSource();
         ds.setName("ds");
         tree.getRootNode().addAndSaveChildren(ds);
         assertTrue(ds.start());
 
-        RecordSchemaNode schema = new RecordSchemaNode();
+        schema = new RecordSchemaNode();
         schema.setName("schema");
         tree.getRootNode().addAndSaveChildren(schema);
         assertTrue(schema.start());
@@ -64,7 +69,7 @@ public class RecordsDataDefTest extends RavenCoreTestCase
         valueField.setFieldType(RecordSchemaFieldType.LONG);
         assertTrue(valueField.start());
 
-        RecordsDataDef dataDef = new RecordsDataDef();
+        dataDef = new RecordsDataDef();
         dataDef.setName("dataDef");
         tree.getRootNode().addAndSaveChildren(dataDef);
         dataDef.setDataSource(ds);
@@ -73,7 +78,11 @@ public class RecordsDataDefTest extends RavenCoreTestCase
         dataDef.setValueFieldName("value");
         assertTrue(dataDef.start());
 
-        long time = System.currentTimeMillis()/1000;
+    }
+
+    @Test
+    public void test() throws Exception
+    {
         Timestamp ts1 = new Timestamp(System.currentTimeMillis()*1000l);
         Timestamp ts2 = new Timestamp(ts1.getTime()+5000);
         Timestamp ts3 = new Timestamp(ts1.getTime()+400);
@@ -109,5 +118,42 @@ public class RecordsDataDefTest extends RavenCoreTestCase
         assertNotNull(tsAttr);
         assertEquals(String.class, tsAttr.getType());
         assertEquals(tsStr, tsAttr.getValue());
+    }
+
+    @Test
+    public void filterTest() throws Exception
+    {
+        dataDef.setUseRecordFilter(true);
+        NodeAttribute filterAttr = dataDef.getNodeAttribute("recordFilter");
+        filterAttr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
+        filterAttr.setValue("record['value']<2");
+
+        Timestamp ts1 = new Timestamp(System.currentTimeMillis()*1000l);
+        Timestamp ts2 = new Timestamp(ts1.getTime()+5000);
+        Timestamp ts3 = new Timestamp(ts2.getTime()+5000);
+
+        SimpleDateFormat fmt = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+        String tsStr = String.format(
+                "[%s, %s]", fmt.format(new Date(0)), fmt.format(new Date(10000)));
+
+        Record rec = schema.createRecord();
+        rec.setValue("ts", ts1);
+        rec.setValue("value", 1l);
+        ds.addDataPortion(rec);
+
+        rec = schema.createRecord();
+        rec.setValue("ts", ts2);
+        rec.setValue("value", 2l);
+        ds.addDataPortion(rec);
+
+        rec = schema.createRecord();
+        rec.setValue("ts", ts3);
+        rec.setValue("value", 1l);
+        ds.addDataPortion(rec);
+
+        GraphData data = dataDef.getData(0l, 10l);
+        assertEquals(1., data.getPlottable().getValue(ts1.getTime()/1000), 0.);
+        assertEquals(1., data.getPlottable().getValue(ts2.getTime()/1000), 0.);
+        assertEquals(1., data.getPlottable().getValue(ts3.getTime()/1000), 0.);
     }
 }

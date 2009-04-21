@@ -19,29 +19,22 @@ package org.raven.ds.impl;
 
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
-import org.raven.tree.Node.Status;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class AbstractRecordFieldExtensionTest extends RavenCoreTestCase
+public class AttributeRecordFieldValueGeneratorTest extends RavenCoreTestCase
 {
     @Test
     public void test()
     {
-        AbstractRecordFieldExtension extension = new AbstractRecordFieldExtension();
-        extension.setName("ext");
+        AttributeRecordFieldValueGenerator fieldValue = new AttributeRecordFieldValueGenerator();
+        fieldValue.setName("fieldName");
+        tree.getRootNode().addAndSaveChildren(fieldValue);
+        fieldValue.setValue("1");
+        assertTrue(fieldValue.start());
 
-        assertEquals("1", extension.prepareValue("1", null));
-
-        ValuePrepareRecordFieldExtension valuePrepare = new ValuePrepareRecordFieldExtension();
-        valuePrepare.setName("prepare");
-        extension.addAndSaveChildren(valuePrepare);
-        valuePrepare.setConvertToType(Integer.class);
-        valuePrepare.start();
-        assertEquals(Status.STARTED, valuePrepare.getStatus());
-        
-        assertEquals(1, extension.prepareValue("1", null));
+        assertEquals("1", fieldValue.getFieldValue());
     }
 }

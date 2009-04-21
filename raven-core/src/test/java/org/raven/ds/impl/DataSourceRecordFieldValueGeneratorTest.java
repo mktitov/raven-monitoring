@@ -18,30 +18,32 @@
 package org.raven.ds.impl;
 
 import org.junit.Test;
+import org.raven.PushOnDemandDataSource;
 import org.raven.RavenCoreTestCase;
-import org.raven.tree.Node.Status;
+import org.raven.log.LogLevel;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class AbstractRecordFieldExtensionTest extends RavenCoreTestCase
+public class DataSourceRecordFieldValueGeneratorTest extends RavenCoreTestCase
 {
     @Test
     public void test()
     {
-        AbstractRecordFieldExtension extension = new AbstractRecordFieldExtension();
-        extension.setName("ext");
+        PushOnDemandDataSource ds = new PushOnDemandDataSource();
+        ds.setName("ds");
+        tree.getRootNode().addAndSaveChildren(ds);
+        ds.setLogLevel(LogLevel.DEBUG);
+        assertTrue(ds.start());
 
-        assertEquals("1", extension.prepareValue("1", null));
+        DataSourceRecordFieldValueGenerator fieldValue = new DataSourceRecordFieldValueGenerator();
+        fieldValue.setName("fieldValue");
+        tree.getRootNode().addAndSaveChildren(fieldValue);
+        fieldValue.setDataSource(ds);
+        assertTrue(fieldValue.start());
 
-        ValuePrepareRecordFieldExtension valuePrepare = new ValuePrepareRecordFieldExtension();
-        valuePrepare.setName("prepare");
-        extension.addAndSaveChildren(valuePrepare);
-        valuePrepare.setConvertToType(Integer.class);
-        valuePrepare.start();
-        assertEquals(Status.STARTED, valuePrepare.getStatus());
-        
-        assertEquals(1, extension.prepareValue("1", null));
+        ds.addDataPortion(1);
+        assertEquals(1, fieldValue.getFieldValue());
     }
 }
