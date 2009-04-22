@@ -143,24 +143,38 @@ public class Attr implements Comparable<Attr>
     	UploadedFile f = (UploadedFile) event.getNewValue();
     	setFile(f);
     }
+    
+    public boolean isEnableEditValue()
+    {
+    	if(expressionSupported || isFileAttribute() || getSelectItems() != null ) return false;
+    	return true; 
+    }
 
-	public boolean isEnableValueDialog()
+	private boolean isExpressionNoChoice()
 	{
 		if(expressionSupported && (getSelectItems() == null) ) 
 				return true;
 		return false;
 	}
 
-	public boolean isEnableEditValueDialog()
+	public boolean isEnableExpressionChoice()
 	{
-		if(isEnableValueDialog() && !isSubTypeNodeReference() ) 
+		if(expressionSupported && (getSelectItems() != null) ) 
+				return true;
+		return false;
+	}
+	
+	public boolean isEnableEditExpression()
+	{
+		if(isFileAttribute()) return false;
+		if(isExpressionNoChoice() && !isSubTypeNodeReference() ) 
 				return true;
 		return false;
 	}
 
 	public boolean isEnableSelectNodeDialog()
 	{
-		if(isEnableValueDialog() && isSubTypeNodeReference() ) 
+		if(isExpressionNoChoice() && isSubTypeNodeReference() ) 
 				return true;
 		return false;
 	}

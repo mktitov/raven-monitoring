@@ -195,33 +195,24 @@
     	            	rendered="#{row.edit}"  
     	            	value="#{row.description}"/>
 				</tr:panelCaptionGroup>
-<!-- edit value of attribute-->
-				<tr:panelAccordion 
-					rendered="#{(row.expressionSupported or (row.selectItems == null)) and !row.fileAttribute}"
-					discloseNone="true" >
-        			<tr:showDetailItem text="#{msgs.multiLineEditor}">
-        			    <tr:inputText
-                    		rows="8" 
-                    		wrap="hard"
-                			readOnly="#{row.expressionSupported}" 
-                			rendered="#{row.expressionSupported or (row.selectItems == null)}" 
-                			value="#{row.value}" 
-                			columns="100" />
-        			</tr:showDetailItem>
-				</tr:panelAccordion>
+<!-- edit value of attribute
+readOnly="#{row.expressionSupported}"
+-->
+			    <tr:inputText
+			    	label="#{msgs.value}"
+               		rows="7" 
+               		wrap="hard"
+            		rendered="#{row.enableEditValue}" 
+            		value="#{row.value}" 
+            		columns="100" />
 
-				<tr:inputListOfValues 
-					rendered="#{row.enableEditValueDialog and !row.fileAttribute}"
-					value="#{row.expression}" 
-					action="dialog:editExpression"
-					actionListener="#{editExpression.selectAttr}"
-					windowWidth="300" windowHeight="300"
-					columns="40" label="#{msgs.expression}"
-				>
-					<f:attribute 
-						name="#{editExpression.paramName}" 
-						value="#{row}" />
-				</tr:inputListOfValues>
+			    <tr:inputText
+			    	label="#{msgs.expression}"
+               		rows="7" 
+               		wrap="hard"
+            		rendered="#{row.enableEditExpression}" 
+            		value="#{row.expression}" 
+            		columns="100" />
 
 				<tr:inputListOfValues 
 					rendered="#{row.enableSelectNodeDialog}"
@@ -291,7 +282,7 @@
 --> 				
 	            <tr:selectOneChoice 
 	            	label="#{msgs.expression}" 
-	            	rendered="#{row.expressionSupported and !(row.selectItems == null)}" 
+	            	rendered="#{row.enableExpressionChoice}" 
 	            	value="#{row.expression}" >
     	            <f:selectItems value="#{row.selectItems}" />
                 </tr:selectOneChoice>
