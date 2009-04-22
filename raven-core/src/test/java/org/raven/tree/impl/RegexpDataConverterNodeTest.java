@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.RavenUtils;
 import org.raven.ds.impl.AbstractDataConsumer.ResetDataPolicy;
+import org.raven.log.LogLevel;
 import org.raven.table.Table;
 import org.raven.tree.Node.Status;
 import org.raven.tree.impl.objects.RegexpDataConsumer;
@@ -55,6 +56,7 @@ public class RegexpDataConverterNodeTest extends RavenCoreTestCase
         regexpNode.save();
         regexpNode.init();
         regexpNode.setDataSource(ds);
+        regexpNode.setLogLevel(LogLevel.TRACE);
 
         consumer = new RegexpDataConsumer();
         consumer.setName("consumer");

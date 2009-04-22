@@ -28,6 +28,7 @@ import org.raven.ds.RecordSchemaFieldType;
 import org.raven.ds.impl.RecordSchemaFieldNode;
 import org.raven.ds.impl.RecordSchemaNode;
 import org.raven.ds.impl.ValuePrepareRecordFieldExtension;
+import org.raven.log.LogLevel;
 
 /**
  *
@@ -56,6 +57,7 @@ public class TableToRecordNodeTest extends RavenCoreTestCase
         tree.getRootNode().addAndSaveChildren(tab2rec);
         tab2rec.setDataSource(ds);
         tab2rec.setRecordSchema(schema);
+        tab2rec.setLogLevel(LogLevel.DEBUG);
         assertTrue(tab2rec.start());
 
         DataCollector collector = new DataCollector();

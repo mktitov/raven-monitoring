@@ -137,11 +137,12 @@ public class TreeImpl implements Tree
     {
         if (node.isTemplate())
             return new Class[]{
-                String.class, Integer.class, Double.class, Node.class, AttributeReference.class
-                , TemplateVariable.class};
+                String.class, Integer.class, Double.class, Boolean.class, Node.class
+                , AttributeReference.class, TemplateVariable.class};
         else
             return new Class[]{
-                String.class, Integer.class, Double.class, Node.class, AttributeReference.class};
+                String.class, Integer.class, Double.class, Boolean.class, Node.class
+                , AttributeReference.class};
     }
 
     public Node getRootNode()

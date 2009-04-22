@@ -96,6 +96,9 @@ public class TableToRecordNode extends AbstractDataPipe
             return;
         }
 
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            debug("Trying to convert table to records");
+
         Table table = (Table) data;
         Map<Integer, FieldInfo> fieldCols = new HashMap<Integer, FieldInfo>();
         RecordSchema _recordSchema = recordSchema;
@@ -110,6 +113,13 @@ public class TableToRecordNode extends AbstractDataPipe
                 if (colExt!=null)
                     fieldCols.put(colExt.getColumnNumber(), new FieldInfo(field, colExt));
             }
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            debug(String.format(
+                    "Found (%d) fields in record schema (%s) with (%s) extension"
+                    , fieldCols.size()
+                    , _recordSchema.getName()
+                    , TableColumnRecordFieldExtension.class.getSimpleName()));
+        int recCount = 0;
         for (Iterator<Object[]> it = table.getRowIterator(); it.hasNext();)
         {
             Object[] row = it.next();
@@ -126,9 +136,11 @@ public class TableToRecordNode extends AbstractDataPipe
                 }
             }
             sendDataToConsumers(record);
-            sendDataToConsumers(null);
+            ++recCount;
         }
-
+        sendDataToConsumers(null);
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            debug(String.format("(%d) records sended to consumers", recCount));
     }
 
     private class FieldInfo

@@ -27,6 +27,7 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataPipe;
+import org.raven.log.LogLevel;
 import org.raven.table.BalancedColumnBasedTable;
 import org.raven.tree.NodeAttribute;
 import org.weda.annotations.constraints.NotNull;
@@ -112,16 +113,37 @@ public class RegexpDataConverterNode extends AbstractDataPipe
     protected void doSetData(DataSource dataSource, Object data)
     {
         Charset _dataEncoding = dataEncoding;
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+        {
+            debug(String.format(
+                    "Trying to convert data to table using (%s) charset"
+                    , _dataEncoding==null? "DEFAULT" : _dataEncoding.displayName()));
+        }
         String str = converter.convert(
                 String.class, data, _dataEncoding==null? null : _dataEncoding.name());
 
         if (str==null)
+        {
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug("Can't convert NULL data to table");
             return;
+        }
 
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            debug(String.format("Converting string of %d symbols length to the table", str.length()));
+        if (isLogLevelEnabled(LogLevel.TRACE))
+            trace(str);
+
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            debug("Dividing string data on rows");
         String[] rows = extractRows(str);
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            debug(String.format("(%d) rows extracted", rows==null? 0 : rows.length));
         if (rows==null)
             return;
 
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            debug("Creating table");
         BalancedColumnBasedTable table = new BalancedColumnBasedTable();
         String _columnDelimiter = columnDelimiter;
         Pattern columnPattern = null;
@@ -139,6 +161,11 @@ public class RegexpDataConverterNode extends AbstractDataPipe
         }
 
         table.freeze();
+
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            debug(String.format(
+                    "Table created. Row count - %d, cols count %d"
+                    , rows.length, table.getColumnNames().length));
 
         sendDataToConsumers(table);
     }

@@ -42,6 +42,8 @@ public abstract class AbstractDataPipe extends AbstractDataConsumer implements D
     @NotNull
     private Boolean forwardDataSourceAttributes;
 
+    private ThreadLocal<DataConsumer> requester;
+
     public Boolean getForwardDataSourceAttributes()
     {
         return forwardDataSourceAttributes;
@@ -58,11 +60,13 @@ public abstract class AbstractDataPipe extends AbstractDataConsumer implements D
         super.initFields();
         consumerAttributes = new ArrayList<NodeAttribute>();
         fillConsumerAttributes(consumerAttributes);
+        requester = new ThreadLocal<DataConsumer>();
     }
 
     public boolean getDataImmediate(
             DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes) 
     {
+        requester.set(dataConsumer);
         Map<String, NodeAttribute> attributes = new HashMap<String, NodeAttribute>();
         Collection<NodeAttribute> nodeAttributes = 
                 dataConsumer instanceof Node? ((Node)dataConsumer).getNodeAttributes() : null;
@@ -150,11 +154,24 @@ public abstract class AbstractDataPipe extends AbstractDataConsumer implements D
 
     protected void sendDataToConsumers(Object data)
     {
-        Collection<Node> deps = getDependentNodes();
-        if (deps!=null && deps.size()>0)
-            for (Node dep: deps)
-                if (dep.getStatus()==Status.STARTED && dep instanceof DataConsumer)
-                    ((DataConsumer)dep).setData(this, data);
+        DataConsumer consumer = requester.get();
+        if (consumer!=null)
+        {
+            requester.remove();
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug(String.format("Sending data to requester consumer (%s)", consumer.getPath()));
+            consumer.setData(this, data);
+        }
+        else
+        {
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug("Sending data to all consumers");
+            Collection<Node> deps = getDependentNodes();
+            if (deps!=null && deps.size()>0)
+                for (Node dep: deps)
+                    if (dep.getStatus()==Status.STARTED && dep instanceof DataConsumer)
+                        ((DataConsumer)dep).setData(this, data);
+        }
     }
 
 }
