@@ -67,35 +67,42 @@ public abstract class AbstractDataPipe extends AbstractDataConsumer implements D
             DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes) 
     {
         requester.set(dataConsumer);
-        Map<String, NodeAttribute> attributes = new HashMap<String, NodeAttribute>();
-        Collection<NodeAttribute> nodeAttributes = 
-                dataConsumer instanceof Node? ((Node)dataConsumer).getNodeAttributes() : null;
-        if (nodeAttributes!=null)
-            for (NodeAttribute attr: nodeAttributes)
-                attributes.put(attr.getName(), attr);
-        if (sessionAttributes!=null)
-            for (NodeAttribute attr: sessionAttributes)
-                attributes.put(attr.getName(), attr);
-
-        if (!checkDataConsumer(dataConsumer, attributes))
-        {
-            if (isLogLevelEnabled(LogLevel.DEBUG))
-                debug(String.format(
-                        "Skiping gathering data for data consumer (%s). Data consumer not ready"
-                        , dataConsumer.getPath()));
-            return false;
-        }
         try
         {
-            return gatherDataForConsumer(dataConsumer, attributes);
+            Map<String, NodeAttribute> attributes = new HashMap<String, NodeAttribute>();
+            Collection<NodeAttribute> nodeAttributes =
+                    dataConsumer instanceof Node? ((Node)dataConsumer).getNodeAttributes() : null;
+            if (nodeAttributes!=null)
+                for (NodeAttribute attr: nodeAttributes)
+                    attributes.put(attr.getName(), attr);
+            if (sessionAttributes!=null)
+                for (NodeAttribute attr: sessionAttributes)
+                    attributes.put(attr.getName(), attr);
+
+            if (!checkDataConsumer(dataConsumer, attributes))
+            {
+                if (isLogLevelEnabled(LogLevel.DEBUG))
+                    debug(String.format(
+                            "Skiping gathering data for data consumer (%s). Data consumer not ready"
+                            , dataConsumer.getPath()));
+                return false;
+            }
+            try
+            {
+                return gatherDataForConsumer(dataConsumer, attributes);
+            }
+            catch (Throwable e)
+            {
+                if (isLogLevelEnabled(LogLevel.ERROR))
+                    error(String.format(
+                            "Error gathering data for consumer (%s). %s"
+                            , dataConsumer.getPath(), e.getMessage()), e);
+                return false;
+            }
         }
-        catch (Throwable e)
+        finally
         {
-            if (isLogLevelEnabled(LogLevel.ERROR))
-                error(String.format(
-                        "Error gathering data for consumer (%s). %s"
-                        , dataConsumer.getPath(), e.getMessage()), e);
-            return false;
+            requester.remove();
         }
     }
 
@@ -157,7 +164,6 @@ public abstract class AbstractDataPipe extends AbstractDataConsumer implements D
         DataConsumer consumer = requester.get();
         if (consumer!=null)
         {
-            requester.remove();
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug(String.format("Sending data to requester consumer (%s)", consumer.getPath()));
             consumer.setData(this, data);

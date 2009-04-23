@@ -18,6 +18,7 @@
 package org.raven.statdb.impl;
 
 import java.util.Collection;
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
@@ -26,6 +27,7 @@ import org.raven.tree.impl.BaseNode;
  *
  * @author Mikhail Titov
  */
+@NodeClass()
 public class QueryNodeGeneratorGroupNode extends BaseNode
 {
     private SdbQueryNodeGeneratorNode nodeGenerator;

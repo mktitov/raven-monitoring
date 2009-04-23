@@ -23,9 +23,11 @@ import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.RavenUtils;
 import org.raven.ds.impl.AbstractDataConsumer.ResetDataPolicy;
+import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.table.Table;
 import org.raven.tree.Node.Status;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.objects.RegexpDataConsumer;
 import org.raven.tree.impl.objects.RegexpDataSource;
 
@@ -176,5 +178,24 @@ public class RegexpDataConverterNodeTest extends RavenCoreTestCase
         assertEquals("col1-2", rows.get(0)[1]);
         assertEquals("col2-1", rows.get(1)[0]);
         assertEquals("col2-2", rows.get(1)[1]);
+    }
+
+    @Test
+    public void useRowFilterTest() throws Exception
+    {
+        ds.setStringData("v1\nv2");
+        regexpNode.setUseRowFilter(true);
+        NodeAttribute filterAttr = regexpNode.getNodeAttribute("rowFilter");
+        filterAttr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
+        filterAttr.setValue("rownum>1");
+        assertTrue(regexpNode.start());
+
+        Object data = consumer.refereshData(null);
+        assertNotNull(data);
+        assertTrue(data instanceof Table);
+
+        List<Object[]> rows = RavenUtils.tableAsList((Table)data);
+        assertEquals(1, rows.size());
+        assertEquals("v2", rows.get(0)[0]);
     }
 }

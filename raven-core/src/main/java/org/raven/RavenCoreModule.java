@@ -46,6 +46,7 @@ import org.raven.impl.AttributeReferenceToStringConverter;
 import org.raven.impl.BooleanReferenceValues;
 import org.raven.impl.CharsetReferenceValues;
 import org.raven.impl.ClassToStringConverter;
+import org.raven.impl.DateToDateConverter;
 import org.raven.impl.DateToLongConverter;
 import org.raven.impl.EnumReferenceValues;
 import org.raven.impl.InputStreamToStringConverter;
@@ -184,6 +185,7 @@ public class RavenCoreModule
         conf.add(new LongToTimestampConverter());
         conf.add(new OracleTimestampToTimestampConverter());
         conf.add(new DateToLongConverter());
+        conf.add(new DateToDateConverter());
     }
     
     public static void contributeTree(MappedConfiguration<Class, AttributeReferenceValues> conf)

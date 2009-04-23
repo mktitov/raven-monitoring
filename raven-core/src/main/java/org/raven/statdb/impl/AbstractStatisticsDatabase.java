@@ -127,7 +127,9 @@ public abstract class AbstractStatisticsDatabase
 	{
 		if (!(data instanceof Record))
 		{
-            if (isLogLevelEnabled(LogLevel.WARN))
+            if (data==null && isLogLevelEnabled(LogLevel.DEBUG))
+                debug("Recieved end marker for records sequence");
+            if (data!=null && isLogLevelEnabled(LogLevel.WARN))
     			warn(String.format(
 					"Invalid data type recieved from (%s). The data must have (%s) type, " +
 					"but recieved (%s)"

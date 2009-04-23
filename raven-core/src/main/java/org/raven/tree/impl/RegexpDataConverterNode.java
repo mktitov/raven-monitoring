@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataSource;
@@ -30,6 +31,7 @@ import org.raven.ds.impl.AbstractDataPipe;
 import org.raven.log.LogLevel;
 import org.raven.table.BalancedColumnBasedTable;
 import org.raven.tree.NodeAttribute;
+import org.raven.util.BindingSupport;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -41,6 +43,8 @@ public class RegexpDataConverterNode extends AbstractDataPipe
 {
     public static String COLUMNDELIMITER_ATTRIBUTE = "columnDelimiter";
     public static String ROWDELIMITER_ATTRIBUTE = "rowDelimiter";
+    public static final String ROWNUM_BINDING = "rownum";
+    public static final String ROW_BINDING = "row";
 
     @Parameter(defaultValue="\\s+")
     private String columnDelimiter;
@@ -58,6 +62,42 @@ public class RegexpDataConverterNode extends AbstractDataPipe
 
     @Parameter()
     private Charset dataEncoding;
+
+    @Parameter()
+    private Boolean rowFilter;
+
+    @Parameter(defaultValue="false")
+    @NotNull
+    private Boolean useRowFilter;
+
+    private BindingSupport bindingSupport;
+
+    @Override
+    protected void initFields()
+    {
+        super.initFields();
+        bindingSupport = new BindingSupport();
+    }
+
+    public Boolean getRowFilter()
+    {
+        return rowFilter;
+    }
+
+    public void setRowFilter(Boolean rowFilter)
+    {
+        this.rowFilter = rowFilter;
+    }
+
+    public Boolean getUseRowFilter()
+    {
+        return useRowFilter;
+    }
+
+    public void setUseRowFilter(Boolean useRowFilter)
+    {
+        this.useRowFilter = useRowFilter;
+    }
 
     public String getColumnDelimiter()
     {
@@ -110,6 +150,13 @@ public class RegexpDataConverterNode extends AbstractDataPipe
     }
 
     @Override
+    public void formExpressionBindings(Bindings bindings)
+    {
+        super.formExpressionBindings(bindings);
+        bindingSupport.addTo(bindings);
+    }
+
+    @Override
     protected void doSetData(DataSource dataSource, Object data)
     {
         Charset _dataEncoding = dataEncoding;
@@ -130,7 +177,8 @@ public class RegexpDataConverterNode extends AbstractDataPipe
         }
 
         if (isLogLevelEnabled(LogLevel.DEBUG))
-            debug(String.format("Converting string of %d symbols length to the table", str.length()));
+            debug(String.format(
+                    "Converting string of %d symbols length to the table", str.length()));
         if (isLogLevelEnabled(LogLevel.TRACE))
             trace(str);
 
@@ -150,22 +198,50 @@ public class RegexpDataConverterNode extends AbstractDataPipe
         if (_columnDelimiter!=null)
             columnPattern = Pattern.compile(_columnDelimiter);
         boolean _useRegexpGroupsInColumnDelimiter = useRegexpGroupsInColumnDelimiter;
-        for (String row: rows)
+        boolean _useRowFilter = useRowFilter;
+        try
         {
-            int col = 1;
-            String cols[] = extractCols(
-                    row, _columnDelimiter, _useRegexpGroupsInColumnDelimiter, columnPattern);
-            if (cols!=null)
-                for (String colValue: cols)
-                    table.addValue(""+(col++), colValue);
+            int rownum=0;
+            int rowcount=0;
+            for (String row: rows)
+            {
+                ++rownum;
+                if (_useRowFilter)
+                {
+                    bindingSupport.put(ROW_BINDING, row);
+                    bindingSupport.put(ROWNUM_BINDING, rownum);
+                    Boolean _rowFilter = rowFilter;
+                    if (_rowFilter==null || !_rowFilter)
+                    {
+                        if (isLogLevelEnabled(LogLevel.TRACE))
+                            trace("SKIPPING ROW: "+row);
+                        continue;
+                    }
+                }
+                if (isLogLevelEnabled(LogLevel.TRACE))
+                    trace("PROCESSING ROW: "+row);
+                int col = 1;
+                String cols[] = extractCols(
+                        row, _columnDelimiter, _useRegexpGroupsInColumnDelimiter, columnPattern);
+                if (cols!=null)
+                {
+                    ++rowcount;
+                    for (String colValue: cols)
+                        table.addValue(""+(col++), colValue);
+                }
+            }
+
+            table.freeze();
+
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug(String.format(
+                        "Table created. Row count - %d, cols count %d"
+                        , rowcount, table.getColumnNames().length));
         }
-
-        table.freeze();
-
-        if (isLogLevelEnabled(LogLevel.DEBUG))
-            debug(String.format(
-                    "Table created. Row count - %d, cols count %d"
-                    , rows.length, table.getColumnNames().length));
+        finally
+        {
+            bindingSupport.reset();
+        }
 
         sendDataToConsumers(table);
     }

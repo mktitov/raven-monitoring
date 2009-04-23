@@ -237,39 +237,49 @@ public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
         {
             if (updateLock.tryLock(LOCK_TIMEOUT, TimeUnit.MILLISECONDS))
             {
-                if (group.getStatus().equals(Status.REMOVED))
+                try
                 {
-                    if (isLogLevelEnabled(LogLevel.DEBUG))
-                        debug(String.format(
-                                "Skipped addind nodes operation to the group node (%s) " +
-                                "because of clean operation."
-                                , group.getPath()));
-                    return;
+                    if (group.getStatus().equals(Status.REMOVED))
+                    {
+                        if (isLogLevelEnabled(LogLevel.DEBUG))
+                            debug(String.format(
+                                    "Skipped addind nodes operation to the group node (%s) " +
+                                    "because of clean operation."
+                                    , group.getPath()));
+                        return;
+                    }
+                    if (group.isChildsInitialized())
+                    {
+                        if (isLogLevelEnabled(LogLevel.DEBUG))
+                            debug(String.format(
+                                    "Skipped addind nodes operation to the group node (%s) " +
+                                    "because of child nodes already added by other thread."
+                                    , group.getPath()));
+                        return;
+                    }
+                    Collection<String> keys = getKeysForGroup(group);
+                    if (keys==null)
+                        return;
+
+                    int level = getGroupNodeLevel(group);
+                    String groupName = getGroupNodeName(level);
+                    for (String key: keys)
+                    {
+                        String childsKeyExpression = getChildsKeyExpression(key, level);
+                        String[] keyElements = RavenUtils.split(
+                                key, StatisticsDatabase.KEY_DELIMITER);
+                        String lastKeyElement = keyElements[keyElements.length-1];
+
+                        Tuner tuner = new Tuner(
+                                level, groupName, childsKeyExpression, lastKeyElement);
+
+                        groupsOrganazier.organize(
+                                group, queryNodeGeneratorTemplate, tuner, null, true);
+                    }
                 }
-                if (group.isChildsInitialized())
+                finally
                 {
-                    if (isLogLevelEnabled(LogLevel.DEBUG))
-                        debug(String.format(
-                                "Skipped addind nodes operation to the group node (%s) " +
-                                "because of child nodes already added by other thread."
-                                , group.getPath()));
-                    return;
-                }
-                Collection<String> keys = getKeysForGroup(group);
-                if (keys==null)
-                    return;
-
-                int level = getGroupNodeLevel(group);
-                String groupName = getGroupNodeName(level);
-                for (String key: keys)
-                {
-                    String childsKeyExpression = getChildsKeyExpression(key, level);
-                    String[] keyElements = RavenUtils.split(key, StatisticsDatabase.KEY_DELIMITER);
-                    String lastKeyElement = keyElements[keyElements.length-1];
-
-                    Tuner tuner = new  Tuner(level, groupName, childsKeyExpression, lastKeyElement);
-
-                    groupsOrganazier.organize(group, queryNodeGeneratorTemplate, tuner, null, true);
+                    updateLock.unlock();
                 }
             }
             else

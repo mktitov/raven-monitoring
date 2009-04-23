@@ -20,6 +20,7 @@ package org.raven.tree.impl;
 import java.util.ArrayList;
 import java.util.List;
 import org.raven.conf.Configurator;
+import org.raven.log.LogLevel;
 import org.raven.tree.AttributeReference;
 import org.raven.tree.AttributeValueHandler;
 import org.raven.tree.AttributeValueHandlerListener;
@@ -188,14 +189,26 @@ public class NodeAttributeImpl
 
     public String getValue()
     {
-        if (isReadonly())
-            return converter.convert(String.class, parameter.getValue(), parameter.getPattern());
-        else
+        try
         {
-            if (templateExpression)
-                return null;
+            if (isReadonly())
+                return converter.convert(
+                        String.class, parameter.getValue(), parameter.getPattern());
             else
-                return converter.convert(String.class, valueHandler.handleData(), null);
+            {
+                if (templateExpression)
+                    return null;
+                else
+                    return converter.convert(String.class, valueHandler.handleData(), null);
+            }
+        }
+        catch(Throwable e)
+        {
+            if (owner.isLogLevelEnabled(LogLevel.WARN))
+                owner.warn(
+                        String.format("Error getting value for attribute (%s)", getName())
+                        , e);
+            return null;
         }
     }
 

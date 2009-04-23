@@ -216,7 +216,4 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
 
         return Arrays.asList(object);
     }
-
-    
-    
 }

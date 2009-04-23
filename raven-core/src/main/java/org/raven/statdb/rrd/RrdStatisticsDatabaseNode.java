@@ -31,6 +31,7 @@ import org.jrobin.core.RrdDb;
 import org.jrobin.core.RrdDbPool;
 import org.jrobin.core.Util;
 import org.raven.RavenUtils;
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
 import org.raven.ds.Record;
@@ -74,6 +75,7 @@ import org.weda.internal.annotations.Service;
  *
  * @author Mikhail Titov
  */
+@NodeClass
 public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 {
     public static final String DATABASE_FILE_EXTENSION = ".jrb";
@@ -380,7 +382,8 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 			}
 		else
 			for (File file: files)
-				keys.add(new KeyValuesImpl(key+file.getName()+KEY_DELIMITER));
+                if (file.isDirectory())
+                    keys.add(new KeyValuesImpl(key+file.getName()+KEY_DELIMITER));
 	}
 
 	private void createDbFile(File dbFile, String statisticsName)
