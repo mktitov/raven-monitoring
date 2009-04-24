@@ -88,7 +88,8 @@ public class JcifsFilter extends NtlmHttpFilter {
     {
     	Registry registry = RavenRegistry.getRegistry();
         Tree tree = registry.getService(Tree.class);
-        tree.stop(tree.getRootNode());
+        tree.shutdown();
+        registry.shutdown();
     	super.destroy();
     }
 
