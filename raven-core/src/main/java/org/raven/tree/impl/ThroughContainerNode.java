@@ -1,5 +1,5 @@
 /*
- *  Copyright 2008 Mikhail Titov.
+ *  Copyright 2009 Mikhail Titov.
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,22 +18,12 @@
 package org.raven.tree.impl;
 
 import org.raven.annotations.NodeClass;
-import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(anyChildTypes=true)
-@Description("The node that can contains any type of children nodes")
-public class ContainerNode extends BaseNode
+@NodeClass(anyChildTypes=true, importChildTypesFromParent=true)
+public class ThroughContainerNode extends BaseNode
 {
-    public ContainerNode()
-    {
-    }
-
-    public ContainerNode(String name)
-    {
-        super(name);
-    }
 }

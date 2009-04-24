@@ -27,6 +27,7 @@ import org.raven.DummyScheduler;
 import org.raven.PushDataSource;
 import org.raven.RavenCoreTestCase;
 import org.raven.ds.impl.RecordSchemaNode;
+import org.raven.log.LogLevel;
 import org.raven.statdb.StatisticsDatabase;
 import org.raven.statdb.query.KeyValues;
 import org.raven.statdb.query.Query;
@@ -80,6 +81,7 @@ public class SdbQueryNodeGeneratorNodeTest extends RavenCoreTestCase
         generator.setStatisticsDatabase(database);
         generator.setGropNames("group1, group2, group3");
         generator.setScheduler(scheduler);
+        generator.setLogLevel(LogLevel.DEBUG);
     }
 
     @Test
@@ -96,9 +98,9 @@ public class SdbQueryNodeGeneratorNodeTest extends RavenCoreTestCase
         assertTrue(generator.start());
         Node node = generator.getChildren("group1");
         assertNotNull(node);
-        assertTrue(node instanceof QueryNodeGeneratorGroupNode);
+        assertTrue(node instanceof SdbQueryNodeGeneratorGroupNode);
         assertEquals(Node.Status.STARTED, node.getStatus());
-        QueryNodeGeneratorGroupNode group = (QueryNodeGeneratorGroupNode) node;
+        SdbQueryNodeGeneratorGroupNode group = (SdbQueryNodeGeneratorGroupNode) node;
         assertEquals("/@r .*", group.getChildsKeyExpression());
     }
 
@@ -119,8 +121,8 @@ public class SdbQueryNodeGeneratorNodeTest extends RavenCoreTestCase
         
         Node group = generator.getChildren("group1");
         Collection<Node> childs = group.getChildrens();
-        QueryNodeGeneratorGroupNode group2_1 = checkNode(group, "group2", "/key1/", "key1", 1);
-        QueryNodeGeneratorGroupNode group2_2 = checkNode(group, "group2", "/key2/", "key2", 1);
+        SdbQueryNodeGeneratorGroupNode group2_1 = checkNode(group, "group2", "/key1/", "key1", 1);
+        SdbQueryNodeGeneratorGroupNode group2_2 = checkNode(group, "group2", "/key2/", "key2", 1);
 
         verify(queryExecuter);
 
@@ -169,7 +171,7 @@ public class SdbQueryNodeGeneratorNodeTest extends RavenCoreTestCase
         verify(queryExecuter);
     }
 
-    private QueryNodeGeneratorGroupNode checkNode(
+    private SdbQueryNodeGeneratorGroupNode checkNode(
             Node parentNode, String groupName, String key, String lastKeyElement, int level)
     {
         Node node = parentNode.getChildren(lastKeyElement);
@@ -181,8 +183,8 @@ public class SdbQueryNodeGeneratorNodeTest extends RavenCoreTestCase
         assertStarted(node);
         node = node.getParent().getChildren(groupName);
         assertNotNull(node);
-        assertTrue(node instanceof QueryNodeGeneratorGroupNode);
-        QueryNodeGeneratorGroupNode group = (QueryNodeGeneratorGroupNode) node;
+        assertTrue(node instanceof SdbQueryNodeGeneratorGroupNode);
+        SdbQueryNodeGeneratorGroupNode group = (SdbQueryNodeGeneratorGroupNode) node;
         assertStarted(node);
         assertSame(generator, group.getNodeGenerator());
         assertEquals(key+"@r .*", group.getChildsKeyExpression());
@@ -207,7 +209,7 @@ public class SdbQueryNodeGeneratorNodeTest extends RavenCoreTestCase
         template.addAndSaveChildren(tRoot);
         ContainerNode node = new ContainerNode("^t groupName+':'+groupLevel");
         tRoot.addAndSaveChildren(node);
-        QueryNodeGeneratorGroupNode group = new QueryNodeGeneratorGroupNode();
+        SdbQueryNodeGeneratorGroupNode group = new SdbQueryNodeGeneratorGroupNode();
         group.setName("group");
         tRoot.addAndSaveChildren(group);
     }

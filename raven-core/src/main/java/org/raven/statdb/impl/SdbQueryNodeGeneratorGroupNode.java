@@ -27,8 +27,8 @@ import org.raven.tree.impl.BaseNode;
  *
  * @author Mikhail Titov
  */
-@NodeClass()
-public class QueryNodeGeneratorGroupNode extends BaseNode
+@NodeClass(parentNode=SdbQueryNodeGeneratorTemplateNode.class)
+public class SdbQueryNodeGeneratorGroupNode extends BaseNode
 {
     private SdbQueryNodeGeneratorNode nodeGenerator;
     private boolean childsInitialized = false;
@@ -36,7 +36,7 @@ public class QueryNodeGeneratorGroupNode extends BaseNode
     @Parameter(readOnly=true)
     private String childsKeyExpression;
 
-    public QueryNodeGeneratorGroupNode()
+    public SdbQueryNodeGeneratorGroupNode()
     {
         setStartAfterChildrens(true);
     }

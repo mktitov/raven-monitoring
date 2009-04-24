@@ -269,7 +269,9 @@ public class QuartzScheduler extends BaseNode implements Scheduler
     {
         try
         {
-            scheduler.deleteJob("" + node.getId(), scheduler.DEFAULT_GROUP);
+            org.quartz.Scheduler _scheduler = scheduler;
+            if (_scheduler!=null)
+                _scheduler.deleteJob("" + node.getId(), _scheduler.DEFAULT_GROUP);
         }
         catch (SchedulerException ex)
         {

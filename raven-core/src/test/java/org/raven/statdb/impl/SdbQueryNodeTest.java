@@ -73,7 +73,6 @@ public class SdbQueryNodeTest extends RavenCoreTestCase
         assertTrue(fromNode instanceof FromClauseNode);
         FromClauseNode from = (FromClauseNode) fromNode;
         assertEquals(Status.INITIALIZED, from.getStatus());
-        from.setDatabase(db);
         from.setKeyExpression("/.*/");
         from.start();
 

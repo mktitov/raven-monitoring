@@ -196,8 +196,10 @@ public class TreeImpl implements Tree
     
     public void shutdown()
     {
+        logger.info("Shutdowning the tree");
         if (rootNode!=null)
             shutdownNode(rootNode);
+        logger.info("Tree shutdowned");
     }
 
     public void remove(Node node)
@@ -387,10 +389,17 @@ public class TreeImpl implements Tree
 
     private void collectChildTypes(Node node, Set<Class> types) 
     {
-        Class nodeType = anyChildTypeNodes.contains(node.getClass())? Void.class : node.getClass();
-        List<Class> childTypes = nodeTypes.get(nodeType);
-        if (childTypes!=null)
-            types.addAll(childTypes);
+        Class[] typesArr = null;
+        if (anyChildTypeNodes.contains(node.getClass()))
+            typesArr = new Class[]{Void.class, node.getClass()};
+        else
+            typesArr = new Class[]{node.getClass()};
+        for (Class nodeType: typesArr)
+        {
+            List<Class> childTypes = nodeTypes.get(nodeType);
+            if (childTypes!=null)
+                types.addAll(childTypes);
+        }
         
         if (node.getParent()!=null && importParentChildTypeNodes.contains(node.getClass()))
             collectChildTypes(node.getParent(), types);
@@ -546,13 +555,19 @@ public class TreeImpl implements Tree
 
     private void shutdownNode(Node node)
     {
-       Collection<Node> childrens = node.getChildrens();
+       Collection<Node> childrens = node.getSortedChildrens();
        
        if (childrens!=null)
            for (Node children: childrens)
                shutdownNode(children);
-       
-       node.shutdown();
+
+       String nodePath = node.getPath();
+       try{
+           node.shutdown();
+       }catch(Throwable e)
+       {
+           logger.error(String.format("Error stoping node (%s)", nodePath), e);
+       }
     }
     
     private void addNodeType(Class nodeType)

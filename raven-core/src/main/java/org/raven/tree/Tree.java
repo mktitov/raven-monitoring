@@ -98,6 +98,10 @@ public interface Tree
      */
     public void stop(Node node);
     /**
+     * Shutdowns the tree
+     */
+    public void shutdown();
+    /**
      * Returns the list of the template nodes or empty list if no template nodes in the tree.
      */
     public List<Node> getTempltateNodes();

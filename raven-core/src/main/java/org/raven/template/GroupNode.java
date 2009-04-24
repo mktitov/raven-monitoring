@@ -22,7 +22,6 @@ import org.raven.annotations.Parameter;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.InvisibleNode;
-import org.weda.annotations.constraints.NotNull;
 
 /**
  *
@@ -34,7 +33,6 @@ public class GroupNode extends BaseNode
     public final static String GROUPINGEXPRESSION_ATTRIBUTE = "groupingExpression";
     
     @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
-    @NotNull
     private String groupingExpression;
 
     public String getGroupingExpression()

@@ -18,10 +18,8 @@
 package org.raven.statdb.impl;
 
 import org.raven.annotations.Parameter;
-import org.raven.statdb.StatisticsDatabase;
 import org.raven.statdb.query.FromClause;
 import org.raven.tree.impl.BaseNode;
-import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -34,10 +32,6 @@ public class FromClauseNode extends BaseNode implements FromClause
     
     @Parameter @NotNull
     private String keyExpression;
-
-    @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
-    @NotNull
-    private StatisticsDatabase database;
 
     public FromClauseNode()
     {
@@ -52,15 +46,5 @@ public class FromClauseNode extends BaseNode implements FromClause
     public void setKeyExpression(String keyExpression)
     {
         this.keyExpression = keyExpression;
-    }
-
-    public StatisticsDatabase getDatabase()
-    {
-        return database;
-    }
-
-    public void setDatabase(StatisticsDatabase database)
-    {
-        this.database = database;
     }
 }

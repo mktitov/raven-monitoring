@@ -41,6 +41,7 @@ import org.raven.template.impl.TemplateNode;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
+import org.raven.util.BindingSupport;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.internal.annotations.Service;
 
@@ -51,6 +52,11 @@ import org.weda.internal.annotations.Service;
 @NodeClass
 public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
 {
+    public static final String GROUPNAME_BINDING = "groupName";
+    public static final String GROUPLEVEL_BINDING = "groupLevel";
+    public static final String KEY_BINDING = "key";
+    public static final String LASTKEYELEMENT_BINDING = "lastKeyElement";
+    
     public static final String GROUP_WITHOUT_NAME = "GROUP_WITHOUT_NAME";
     public static final int LOCK_TIMEOUT = 500;
     public static final String TEMPLATE_NODE_NAME = "Template";
@@ -81,11 +87,15 @@ public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
     @NotNull
     private Scheduler scheduler;
 
+    @Parameter(readOnly=true)
+    private long sdbRequestsCount;
+
     private String[] groups;
     private String[] masks;
     private Lock updateLock;
+    private BindingSupport bindingSupport;
 
-    private TemplateEntry queryNodeGeneratorTemplate;
+    private SdbQueryNodeGeneratorTemplateNode queryNodeGeneratorTemplate;
 
     @Override
     protected void initFields()
@@ -93,6 +103,8 @@ public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
         super.initFields();
 
         updateLock = new ReentrantLock();
+        sdbRequestsCount = 0;
+        bindingSupport = new BindingSupport();
     }
 
     @Override
@@ -160,12 +172,18 @@ public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
     public void formExpressionBindings(Bindings bindings)
     {
         super.formExpressionBindings(bindings);
+        bindingSupport.addTo(bindings);
         if (!isTemplate())
         {
             bindings.put(TemplateNode.TEMPLATE_EXPRESSION_BINDING, this);
         }
     }
 
+    public long getSdbRequestsCount()
+    {
+        return sdbRequestsCount;
+    }
+    
     public Scheduler getScheduler()
     {
         return scheduler;
@@ -231,8 +249,10 @@ public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
         this.statisticsDatabase = statisticsDatabase;
     }
 
-    public void addChildrensFor(QueryNodeGeneratorGroupNode group)
+    public void addChildrensFor(SdbQueryNodeGeneratorGroupNode group)
     {
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            debug(String.format("Adding childrens to group (%s)", group.getPath()));
         try
         {
             if (updateLock.tryLock(LOCK_TIMEOUT, TimeUnit.MILLISECONDS))
@@ -257,6 +277,7 @@ public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
                                     , group.getPath()));
                         return;
                     }
+                    ++sdbRequestsCount;
                     Collection<String> keys = getKeysForGroup(group);
                     if (keys==null)
                         return;
@@ -273,8 +294,19 @@ public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
                         Tuner tuner = new Tuner(
                                 level, groupName, childsKeyExpression, lastKeyElement);
 
-                        groupsOrganazier.organize(
-                                group, queryNodeGeneratorTemplate, tuner, null, true);
+                        bindingSupport.put(GROUPNAME_BINDING, groupName);
+                        bindingSupport.put(GROUPLEVEL_BINDING, level);
+                        bindingSupport.put(LASTKEYELEMENT_BINDING, lastKeyElement);
+                        bindingSupport.put(KEY_BINDING, key);
+                        try
+                        {
+                            groupsOrganazier.organize(
+                                    group, queryNodeGeneratorTemplate, tuner, null, true);
+                        }
+                        finally
+                        {
+                            bindingSupport.reset();
+                        }
                     }
                 }
                 finally
@@ -302,7 +334,7 @@ public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
         int level = getGroupNodeLevel(parentNode);
         String groupName = getGroupNodeName(level);
         String childsKeyExpression = getChildsKeyExpression(statisticsDatabaseKey, level);
-        QueryNodeGeneratorGroupNode group = new QueryNodeGeneratorGroupNode();
+        SdbQueryNodeGeneratorGroupNode group = new SdbQueryNodeGeneratorGroupNode();
         group.setName(groupName);
         group.setNodeGenerator(this);
         parentNode.addAndSaveChildren(group);
@@ -316,7 +348,7 @@ public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
         Node currentNode = parentNode;
         while (currentNode!=this)
         {
-            if (currentNode instanceof QueryNodeGeneratorGroupNode)
+            if (currentNode instanceof SdbQueryNodeGeneratorGroupNode)
                 ++level;
             currentNode = currentNode.getParent();
         }
@@ -340,7 +372,7 @@ public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
         if (childs!=null && !childs.isEmpty())
         {
             for (Node child: childs)
-                if (child instanceof QueryNodeGeneratorGroupNode)
+                if (child instanceof SdbQueryNodeGeneratorGroupNode)
                 {
                     tree.remove(child);
                     break;
@@ -350,17 +382,18 @@ public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
 
     private void generateTemplateNode()
     {
-        queryNodeGeneratorTemplate = (TemplateEntry) getChildren(TEMPLATE_NODE_NAME);
+        queryNodeGeneratorTemplate =
+                (SdbQueryNodeGeneratorTemplateNode)getChildren(TEMPLATE_NODE_NAME);
         if (queryNodeGeneratorTemplate==null)
         {
-            queryNodeGeneratorTemplate = new TemplateEntry();
+            queryNodeGeneratorTemplate = new SdbQueryNodeGeneratorTemplateNode();
             queryNodeGeneratorTemplate.setName(TEMPLATE_NODE_NAME);
             addAndSaveChildren(queryNodeGeneratorTemplate);
             queryNodeGeneratorTemplate.start();
         }
     }
 
-    private Collection<String> getKeysForGroup(QueryNodeGeneratorGroupNode group)
+    private Collection<String> getKeysForGroup(SdbQueryNodeGeneratorGroupNode group)
     {
         StatisticsDatabase _database = statisticsDatabase;
         if (!_database.getStatus().equals(Status.STARTED))
@@ -398,10 +431,6 @@ public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
 
     private class Tuner extends GroupsOrganizerNodeTuner
     {
-        public static final String GROUPNAME_BINDING = "groupName";
-        public static final String GROUPLEVEL_BINDING = "groupLevel";
-        public static final String LASTKEYELEMENT_BINDING = "lastKeyElement";
-        
         private final int groupNodeLevel;
         private final String groupName;
         private final String childsKeyExpression;
@@ -422,9 +451,9 @@ public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
         {
             super.tuneNode(sourceNode, sourceClone);
 
-            if (sourceClone instanceof QueryNodeGeneratorGroupNode)
+            if (sourceClone instanceof SdbQueryNodeGeneratorGroupNode)
             {
-                QueryNodeGeneratorGroupNode group = (QueryNodeGeneratorGroupNode) sourceClone;
+                SdbQueryNodeGeneratorGroupNode group = (SdbQueryNodeGeneratorGroupNode) sourceClone;
                 group.setNodeGenerator(SdbQueryNodeGeneratorNode.this);
                 if (   sourceClone.getName()==null
                     || sourceClone.getName().equals(sourceNode.getName()))
@@ -440,9 +469,7 @@ public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
         {
             super.formBindings(bindings);
             SdbQueryNodeGeneratorNode.this.formExpressionBindings(bindings);
-            bindings.put(GROUPNAME_BINDING, groupName);
-            bindings.put(GROUPLEVEL_BINDING, groupNodeLevel);
-            bindings.put(LASTKEYELEMENT_BINDING, lastKeyElement);
+            bindingSupport.addTo(bindings);
         }
     }
 }
