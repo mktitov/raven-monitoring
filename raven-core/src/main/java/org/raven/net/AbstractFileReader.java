@@ -17,7 +17,10 @@
 
 package org.raven.net;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.SequenceInputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -28,6 +31,9 @@ import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.weda.internal.annotations.Message;
+import org.weda.internal.annotations.Service;
+import org.weda.internal.impl.MessageComposer;
+import org.weda.internal.services.MessagesRegistry;
 
 /**
  *
@@ -39,15 +45,10 @@ public abstract class AbstractFileReader extends AbstractDataSource
     public static String REGEXP_FILEMASK_ATTRIBUTE = "regexpFileMask";
     public static String REMOVEFILEAFTERPROCESSING_ATTRIBUTE = "removeFileAfterProcessing";
     public static String ADDFILENAMETOSTREAM_ATTRIBUTE = "addFilenameToStream";
-    
-    @Message
-    private static String regexpFileMaskDescription;
-    
-    @Message
-    private static String removeFileAfterProcessingDescription;
-    
-    @Message
-    private static String addFilenameToStreamDescription;
+    public static String FILENAMEENCODING_ATTRIBUTE = "filenameEncoding";
+
+    @Service
+    protected static MessagesRegistry messages;
 
     @Override
     public boolean gatherDataForConsumer(
@@ -57,8 +58,11 @@ public abstract class AbstractFileReader extends AbstractDataSource
         String fileMask = attributes.get(REGEXP_FILEMASK_ATTRIBUTE).getRealValue();
         Boolean removeAfterProcessing =
                 attributes.get(REMOVEFILEAFTERPROCESSING_ATTRIBUTE).getRealValue();
-//        Boolean addFilenameToStream = attributes.get(ADDFILENAMETOSTREAM_ATTRIBUTE).getRealValue();
-        boolean addFilenameToStream = false;
+        Boolean addFilenameToStream = attributes.get(ADDFILENAMETOSTREAM_ATTRIBUTE).getRealValue();
+        NodeAttribute fileEncodingAttr = attributes.get(FILENAMEENCODING_ATTRIBUTE);
+        Charset fileEncoding = Charset.defaultCharset();
+        if (fileEncoding!=null)
+            fileEncoding = fileEncodingAttr.getRealValue();
 
 		if (isLogLevelEnabled(LogLevel.DEBUG))
 			debug(String.format(
@@ -96,7 +100,7 @@ public abstract class AbstractFileReader extends AbstractDataSource
                 for (FileWrapper fileWrapper: files)
                     if (fileWrapper.getType()==FileWrapper.FileType.FILE)
                         processFile(
-                                dataConsumer, fileWrapper, addFilenameToStream
+                                dataConsumer, fileWrapper, addFilenameToStream, fileEncoding
                                 , removeAfterProcessing);
             }
             catch (Throwable e)
@@ -127,21 +131,33 @@ public abstract class AbstractFileReader extends AbstractDataSource
         attr.setRequired(true);
         consumerAttributes.add(attr);
 
-        attr = new NodeAttributeImpl(
-                REGEXP_FILEMASK_ATTRIBUTE, String.class, null, regexpFileMaskDescription);
+        attr = new NodeAttributeImpl(REGEXP_FILEMASK_ATTRIBUTE, String.class, null, null);
+        attr.setDescriptionContainer(createDesc(REGEXP_FILEMASK_ATTRIBUTE));
         consumerAttributes.add(attr);
 
         attr = new NodeAttributeImpl(
-                REMOVEFILEAFTERPROCESSING_ATTRIBUTE, Boolean.class, false
-                , removeFileAfterProcessingDescription);
+                REMOVEFILEAFTERPROCESSING_ATTRIBUTE, Boolean.class, false, null);
+        attr.setRequired(true);
+        attr.setDescriptionContainer(createDesc(REMOVEFILEAFTERPROCESSING_ATTRIBUTE));
+        consumerAttributes.add(attr);
+
+        attr = new NodeAttributeImpl(
+                ADDFILENAMETOSTREAM_ATTRIBUTE, Boolean.class, false, null);
+        attr.setDescriptionContainer(createDesc(ADDFILENAMETOSTREAM_ATTRIBUTE));
         attr.setRequired(true);
         consumerAttributes.add(attr);
 
-//        attr = new NodeAttributeImpl(
-//                ADDFILENAMETOSTREAM_ATTRIBUTE, Boolean.class, false
-//                , addFilenameToStreamDescription);
-//        attr.setRequired(true);
-//        consumerAttributes.add(attr);
+        attr = new NodeAttributeImpl(
+                FILENAMEENCODING_ATTRIBUTE, Charset.class, Charset.defaultCharset(), null);
+        attr.setDescriptionContainer(createDesc(FILENAMEENCODING_ATTRIBUTE));
+        consumerAttributes.add(attr);
+    }
+
+    private MessageComposer createDesc(String attrName)
+    {
+        return new MessageComposer(messages).append(
+                messages.createMessageKeyForStringValue(
+                    AbstractFileReader.class.getName(), attrName));
     }
 
     protected abstract String getUrlDescription();
@@ -155,7 +171,7 @@ public abstract class AbstractFileReader extends AbstractDataSource
 
     private void processFile(
             DataConsumer dataConsumer, FileWrapper file,
-            Boolean addFilenameToStream, Boolean removeAfterProcessing)
+            Boolean addFilenameToStream, Charset fileEncoding, Boolean removeAfterProcessing)
         throws Exception
     {
         if (isLogLevelEnabled(LogLevel.DEBUG))
@@ -163,7 +179,9 @@ public abstract class AbstractFileReader extends AbstractDataSource
         InputStream is = file.getInputStream();
         if (addFilenameToStream)
         {
-            
+            byte[] filename = new String(file.getName()+"\n").getBytes(fileEncoding);
+            ByteArrayInputStream filenameIs = new ByteArrayInputStream(filename);
+            is = new SequenceInputStream(filenameIs, is);
         }
         try
         {

@@ -18,6 +18,7 @@
 package org.raven.rrd.data;
 
 import java.io.File;
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -48,12 +49,34 @@ public class RRDbTest extends Assert
 		Date date = fmt.parse("17-11-2008");
 		long dateWithOffset = date.getTime()+TimeZone.getDefault().getRawOffset();
 		long time = Util.normalize(dateWithOffset/1000, 86400);
-		System.out.println((dateWithOffset/1000)%86400);
-		System.out.println(Util.getTimestamp(2008, 11, 17)%86400);
+        System.out.println((date.getTime()/1000l));
+		System.out.println((dateWithOffset/1000l));
+		System.out.println(Util.getTimestamp(2008, 11, 17));
+        System.out.println(new Timestamp(date.getTime()).getTime()/1000l);
 		System.out.println(date);
 		System.out.println(new Date(time*1000));
 		fail();
 	}
+
+    @Test
+    public void fetchTest() throws Exception
+    {
+        RrdDb db = new RrdDb("/home/tim/tmp/channel_blocks.jrb");
+        long[] time = Util.getTimestamps("now-5d", "now");
+        FetchRequest request = db.createFetchRequest("AVERAGE", time[0], time[1]);
+        FetchData fetchData = request.fetchData();
+        long[] ts = fetchData.getTimestamps();
+        long lastTs = Util.normalize(db.getHeader().getLastUpdateTime(), db.getHeader().getStep());
+        int ind = (int) ((lastTs - ts[0]) / db.getHeader().getStep());
+        double[] values = fetchData.getValues(0);
+        values[ind] = db.getDatasource(0).getLastValue();
+        assertNotNull(ts);
+    }
+
+    public void updateTest() throws Exception
+    {
+        
+    }
 
 //    @Test
     public void test() throws Exception

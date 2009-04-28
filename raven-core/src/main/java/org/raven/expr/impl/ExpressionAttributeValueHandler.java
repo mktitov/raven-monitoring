@@ -87,6 +87,8 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
             catch(ScriptException e)
             {
                 expressionValid = false;
+                attribute.getOwner().getLogger().warn(String.format(
+                        "Error compile expression (%s)", data), e);
                 fireExpressionInvalidatedEvent(value);
                 throw e;
             }
@@ -109,7 +111,7 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
             try {
                 value = expression.eval(bindings);
             } catch (ScriptException ex) {
-                logger.warn(String.format(
+                attribute.getOwner().getLogger().warn(String.format(
                         "Attribute (%s) getValue error. Error executing expression (%s). %s"
                         , pathResolver.getAbsolutePath(attribute), data, ex.getMessage()));
             }

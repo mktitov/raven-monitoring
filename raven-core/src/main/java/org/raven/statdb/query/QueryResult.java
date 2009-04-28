@@ -28,6 +28,7 @@ import org.raven.statdb.StatisticsDatabase;
  */
 public interface QueryResult
 {
+    public String[] getStatisticNames();
 	public long[] getTimestamps();
     public long getStep();
     public int getValuesCount();

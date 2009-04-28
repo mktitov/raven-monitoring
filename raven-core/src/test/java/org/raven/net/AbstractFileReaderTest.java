@@ -15,27 +15,19 @@
  *  under the License.
  */
 
-package org.raven.statdb.impl;
+package org.raven.net;
 
-import org.raven.ds.Record;
-import org.raven.ds.RecordSchemaField;
-import org.raven.tree.Node;
-import org.weda.services.TypeConverter;
+import org.junit.Test;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class TestStatisticsRecord extends AbstractStatisticsRecord
+public class AbstractFileReaderTest
 {
-    public TestStatisticsRecord(Record record, TypeConverter converter, Node owner) throws Exception
+    @Test
+    public void test()
     {
-        super(record, converter, owner, false);
-    }
-    
-    @Override
-    protected boolean isFieldValueValid(RecordSchemaField field)
-    {
-        return true;
+        
     }
 }

@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.TimeZone;
 import javax.script.SimpleBindings;
 import org.jrobin.core.FetchData;
 import org.jrobin.core.FetchRequest;
@@ -45,14 +46,12 @@ import org.raven.statdb.Aggregation;
 import org.raven.statdb.AggregationFunction;
 import org.raven.statdb.StatisticsDatabase;
 import org.raven.statdb.StatisticsRecord;
-import org.raven.statdb.ValueType;
 import org.raven.statdb.impl.AbstractStatisticsDatabase;
 import org.raven.statdb.impl.AggregationCalculationUnit;
 import org.raven.statdb.impl.ConstantAggregationCalculationUnit;
 import org.raven.statdb.impl.ExpressionCalculationUnit;
 import org.raven.statdb.impl.KeyValuesImpl;
 import org.raven.statdb.impl.QueryResultImpl;
-import org.raven.statdb.impl.StatisticsDefinitionNode;
 import org.raven.statdb.impl.StatisticsValuesImpl;
 import org.raven.statdb.query.FromClause;
 import org.raven.statdb.query.KeyValues;
@@ -93,9 +92,22 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 	@NotNull
 	private RrdUpdateQueueNode updateQueue;
 
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean useLocalTime;
+
 //	private DatabaseTemplatesNode databaseTemplatesNode;
 	private File dbRoot;
 	private RrdDbPool pool;
+
+    public Boolean getUseLocalTime()
+    {
+        return useLocalTime;
+    }
+
+    public void setUseLocalTime(Boolean useLocalTime)
+    {
+        this.useLocalTime = useLocalTime;
+    }
 
 //	public DatabaseTemplatesNode getDatabaseTemplatesNode()
 //	{
@@ -126,23 +138,12 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 	protected void initConfigurationNodes()
 	{
 		super.initConfigurationNodes();
-
-//		databaseTemplatesNode = (DatabaseTemplatesNode) getChildren(DatabaseTemplatesNode.NAME);
-//		if (databaseTemplatesNode==null)
-//		{
-//			databaseTemplatesNode = new DatabaseTemplatesNode();
-//			databaseTemplatesNode.setParent(this);
-//			databaseTemplatesNode.save();
-//			addChildren(databaseTemplatesNode);
-//			databaseTemplatesNode.init();
-//			databaseTemplatesNode.start();
-//		}
 	}
 
     @Override
     protected StatisticsRecord createStatisticsRecord(Record record) throws Exception
     {
-        return new RrdStatisticsRecord(record, converter, this);
+        return new RrdStatisticsRecord(record, converter, this, useLocalTime);
     }
 
 	@Override
@@ -236,7 +237,7 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 
         queryResult.setStep(step);
         queryResult.setTimestamps(timestamps);
-        
+
         for (KeyValues keyValues: queryResult.getKeyValues())
         {
             for (int i=0; i<statNames.length; ++i)
@@ -258,14 +259,9 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
                         long[] dataTs = fData.getTimestamps();
                         long lastTs = Util.normalize(db.getHeader().getLastUpdateTime(), step);
                         double lastValue = db.getDatasource(0).getLastValue();
-                        if (   lastTs<=timePeriod[1] && dataTs[dataTs.length-1]+step==lastTs
-                            && !Double.isNaN(lastValue))
-                        {
-                            dataTs = Arrays.copyOf(dataTs, dataTs.length+1);
-                            dataTs[dataTs.length-1] = lastTs;
-                            data = Arrays.copyOf(data, data.length+1);
-                            data[data.length-1] = lastValue;
-                        }
+                        int lastTsInd = (int) ((lastTs - timePeriod[0]) / step);
+                        if (lastTsInd>0 && lastTsInd<dataTs.length)
+                            data[lastTsInd]=lastValue;
                         if (fData.getStep()!=step || fData.getFirstTimestamp()!=timePeriod[0]
                             || data.length!=timestamps.length)
                         {
@@ -282,6 +278,13 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
                     }
                 }
             }
+        }
+
+        if (useLocalTime)
+        {
+            timestamps = queryResult.getTimestamps();
+            for (int i=0; i<timestamps.length; ++i)
+                timestamps[i] -= TimeZone.getDefault().getOffset(timestamps[i]*1000l);
         }
     }
 

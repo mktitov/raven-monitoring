@@ -35,11 +35,12 @@ public class RrdStatisticsRecord extends AbstractStatisticsRecord
 {
     private final RrdDatabaseRecordExtension databaseDef;
     private Map<String, RrdDatabaseRecordExtension> fieldsDatabaseTemplates;
-            
 
-    public RrdStatisticsRecord(Record record, TypeConverter converter, Node owner) throws Exception
+    public RrdStatisticsRecord(
+            Record record, TypeConverter converter, Node owner, boolean useLocalTime)
+        throws Exception
     {
-        super(record, converter, owner);
+        super(record, converter, owner, useLocalTime);
 
         databaseDef = schema.getRecordExtension(RrdDatabaseRecordExtension.class, null);
         if (databaseDef==null)

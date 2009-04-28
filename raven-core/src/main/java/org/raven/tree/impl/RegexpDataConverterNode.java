@@ -231,12 +231,20 @@ public class RegexpDataConverterNode extends AbstractDataPipe
                 }
             }
 
-            table.freeze();
+            if (rowcount==0)
+                table = null;
+            else
+                table.freeze();
 
             if (isLogLevelEnabled(LogLevel.DEBUG))
-                debug(String.format(
-                        "Table created. Row count - %d, cols count %d"
-                        , rowcount, table.getColumnNames().length));
+            {
+                if (table!=null)
+                    debug(String.format(
+                            "Table created. Row count - %d, cols count %d"
+                            , rowcount, table.getColumnNames().length));
+                else
+                    debug("Empty table created");
+            }
         }
         finally
         {

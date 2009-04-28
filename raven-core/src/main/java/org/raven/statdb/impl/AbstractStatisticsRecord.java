@@ -19,6 +19,7 @@ package org.raven.statdb.impl;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 import org.raven.RavenUtils;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
@@ -44,8 +45,9 @@ public abstract class AbstractStatisticsRecord implements StatisticsRecord
     
 	private final Map<String, Double> values;
 
-	public AbstractStatisticsRecord(Record record, TypeConverter converter, Node owner)
-            throws Exception
+	public AbstractStatisticsRecord(
+            Record record, TypeConverter converter, Node owner, boolean useLocalTime)
+        throws Exception
 	{
         this.converter = converter;
         this.owner = owner;
@@ -66,7 +68,8 @@ public abstract class AbstractStatisticsRecord implements StatisticsRecord
                 Long.class, record.getValue(StatisticsRecord.TIME_FIELD_NAME), null);
         if (timeField.getFieldType().equals(RecordSchemaFieldType.TIMESTAMP))
             _time /= 1000l;
-        
+        if (useLocalTime)
+            _time += TimeZone.getDefault().getOffset(_time*1000l)/1000l;
 
         key = converter.convert(
                 String.class, record.getValue(StatisticsRecord.KEY_FIELD_NAME), null);

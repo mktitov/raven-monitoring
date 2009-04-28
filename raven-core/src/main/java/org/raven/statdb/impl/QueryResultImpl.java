@@ -30,11 +30,22 @@ public class QueryResultImpl implements QueryResult
 	private final Collection<KeyValues> keyValues;
     private long step;
     private long[] timestamps;
+    private String[] statisticNames;
 
 	public QueryResultImpl(Collection<KeyValues> keyValues)
 	{
 		this.keyValues = keyValues;
 	}
+
+    public void setStatisticNames(String[] statisticNames)
+    {
+        this.statisticNames = statisticNames;
+    }
+
+    public String[] getStatisticNames()
+    {
+        return statisticNames;
+    }
 
 	public Collection<KeyValues> getKeyValues()
 	{
