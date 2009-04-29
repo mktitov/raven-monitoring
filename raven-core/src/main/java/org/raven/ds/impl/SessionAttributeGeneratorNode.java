@@ -18,35 +18,14 @@
 package org.raven.ds.impl;
 
 import org.raven.annotations.NodeClass;
-import org.raven.annotations.Parameter;
-import org.raven.ds.FieldValueGenerator;
 import org.raven.tree.impl.BaseNode;
-import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=RecordGeneratorNode.class)
-public class AttributeRecordFieldValueGenerator
-        extends BaseNode implements FieldValueGenerator
+@NodeClass(parentNode=SafeDataPipeNode.class)
+public class SessionAttributeGeneratorNode extends BaseNode
 {
-    public static final String VALUE_ATTRIBUTE = "value";
-    @Parameter @NotNull
-    private String value;
-
-    public String getValue()
-    {
-        return value;
-    }
-
-    public void setValue(String value)
-    {
-        this.value = value;
-    }
-
-    public Object getFieldValue()
-    {
-        return getNodeAttribute(VALUE_ATTRIBUTE).getRealValue();
-    }
+    
 }

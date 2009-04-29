@@ -23,7 +23,7 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.Record;
-import org.raven.ds.RecordFieldValueGenerator;
+import org.raven.ds.FieldValueGenerator;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.weda.annotations.constraints.NotNull;
@@ -59,9 +59,9 @@ public class RecordGeneratorNode extends AbstractDataSource
             Record rec = recordSchema.createRecord();
             for (Node child: childs)
                 if (child.getStatus().equals(Status.STARTED)
-                    && child instanceof RecordFieldValueGenerator)
+                    && child instanceof FieldValueGenerator)
                 {
-                    RecordFieldValueGenerator fieldValue = (RecordFieldValueGenerator) child;
+                    FieldValueGenerator fieldValue = (FieldValueGenerator) child;
                     rec.setValue(fieldValue.getName(), fieldValue.getFieldValue());
                 }
             dataConsumer.setData(this, rec);

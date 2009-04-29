@@ -18,29 +18,30 @@
 package org.raven.ds.impl;
 
 import java.util.Collection;
+import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataPipe;
 import org.raven.ds.DataSource;
-import org.raven.ds.FieldValueGenerator;
 import org.raven.tree.NodeAttribute;
-import org.raven.tree.impl.BaseNode;
-import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=RecordGeneratorNode.class)
-public class DataSourceRecordFieldValueGenerator
-        extends BaseNode implements FieldValueGenerator, DataConsumer
+@NodeClass
+public class SafeDataPipeNode extends AbstractDataSource implements DataPipe
 {
-    @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
-    @NotNull
+    @NotNull @Parameter
     private DataSource dataSource;
 
-    private ThreadLocal value;
+    @Parameter
+    private String expression;
+
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean useExpression;
 
     public DataSource getDataSource()
     {
@@ -52,25 +53,42 @@ public class DataSourceRecordFieldValueGenerator
         this.dataSource = dataSource;
     }
 
-    @Override
-    protected void initFields()
+    public String getExpression()
     {
-        super.initFields();
-
-        value = new ThreadLocal();
+        return expression;
     }
 
-    public Object getFieldValue()
+    public void setExpression(String expression)
     {
-        dataSource.getDataImmediate(this, null);
-        Object val = value.get();
-        value.remove();
-        return val;
+        this.expression = expression;
+    }
+
+    public Boolean getUseExpression()
+    {
+        return useExpression;
+    }
+
+    public void setUseExpression(Boolean useExpression)
+    {
+        this.useExpression = useExpression;
+    }
+
+    @Override
+    public boolean gatherDataForConsumer(
+            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public void setData(DataSource dataSource, Object data)
     {
-        value.set(data);
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public Object refereshData(Collection<NodeAttribute> sessionAttributes)

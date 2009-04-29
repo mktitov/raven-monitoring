@@ -17,13 +17,11 @@
 
 package org.raven.ds;
 
-import org.raven.tree.Node;
-
 /**
  *
  * @author Mikhail Titov
  */
-public interface RecordFieldValueGenerator extends Node
+public interface SessionAttributeGenerator extends FieldValueGenerator
 {
-    public Object getFieldValue();
+    public Class getAttributeType();
 }

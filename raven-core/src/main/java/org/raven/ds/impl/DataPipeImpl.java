@@ -27,6 +27,7 @@ import org.raven.ds.DataSource;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.util.BindingSupport;
 
 /**
  * Collects data from one data source and transmits it to all {@link DataConsumer data consumers} 
@@ -57,6 +58,16 @@ public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
     @Parameter(defaultValue="false")
     private Boolean skipFirstCycle;
 
+    private BindingSupport bindingSupport;
+
+    @Override
+    protected void initFields()
+    {
+        super.initFields();
+
+        bindingSupport = new BindingSupport();
+    }
+
     public Boolean getSkipFirstCycle()
     {
         return skipFirstCycle;
@@ -67,24 +78,36 @@ public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
         this.skipFirstCycle = skipFirstCycle;
     }
 
-
     @Override
     protected void doSetData(DataSource dataSource, Object data)
     {
-        Class convertTo = convertValueToType;
-        if (convertTo!=null)
-            this.data = converter.convert(convertTo, this.data, null);
-        if (skipFirstCycle && getPreviuosDataTimeMillis()==0)
-            return;
-        Object newData = this.data;
-        NodeAttribute attr = getNodeAttribute(EXPRESSION_ATTRIBUTE);
-        if (attr.getRawValue()!=null && attr.getRawValue().trim().length()>0)
-            newData = attr.getRealValue();
-        
-        if (getDependentNodes()!=null)
-            for (Node node: getDependentNodes())
-                if (node.getStatus()==Status.STARTED && node instanceof DataConsumer)
-                    sendDataToConsumer((DataConsumer)node, newData);
+        try
+        {
+            Class convertTo = convertValueToType;
+            if (convertTo!=null)
+                this.data = converter.convert(convertTo, this.data, null);
+            bindingSupport.put("lastData", this.data);
+            bindingSupport.put("previousData", getPreviousData());
+            bindingSupport.put("lastDataTimeMillis", getLastDataTimeMillis());
+            bindingSupport.put("previousDataTimeMillis", getPreviuosDataTimeMillis());
+            bindingSupport.put(
+                    "timeDiffMillis", getLastDataTimeMillis()-getPreviuosDataTimeMillis());
+            if (skipFirstCycle && getPreviuosDataTimeMillis()==0)
+                return;
+            Object newData = this.data;
+            NodeAttribute attr = getNodeAttribute(EXPRESSION_ATTRIBUTE);
+            if (attr.getRawValue()!=null && attr.getRawValue().trim().length()>0)
+                newData = attr.getRealValue();
+
+            if (getDependentNodes()!=null)
+                for (Node node: getDependentNodes())
+                    if (node.getStatus()==Status.STARTED && node instanceof DataConsumer)
+                        sendDataToConsumer((DataConsumer)node, newData);
+        }
+        finally
+        {
+            bindingSupport.reset();
+        }
     }
 
 	protected void sendDataToConsumer(DataConsumer consumer, Object data)
@@ -102,11 +125,7 @@ public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
     public void formExpressionBindings(Bindings bindings) 
     {
         super.formExpressionBindings(bindings);
-        bindings.put("lastData", data);
-        bindings.put("previousData", getPreviousData());
-        bindings.put("lastDataTimeMillis", getLastDataTimeMillis());
-        bindings.put("previousDataTimeMillis", getPreviuosDataTimeMillis());
-        bindings.put("timeDiffMillis", getLastDataTimeMillis()-getPreviuosDataTimeMillis());
+        bindingSupport.addTo(bindings);
     }
 
     public Collection<NodeAttribute> generateAttributes()
