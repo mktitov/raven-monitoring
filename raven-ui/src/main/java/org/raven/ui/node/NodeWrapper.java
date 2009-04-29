@@ -86,10 +86,11 @@ implements Comparator<NodeAttribute>
 	private CoreShowDetailItem selNodeTab; 
 	private CoreShowDetailItem selTemplateTab;
 	private boolean useChildAttributesView = true;
-	private boolean hasUnsavedChanges = false;
+//	private boolean hasUnsavedChanges = false;
 	private boolean needRefreshVO = false;
 	//private int refreshViewInteval = 0;
 	private boolean refreshPressed = false;
+	private List<Integer> unsavedChanges = new ArrayList<Integer>();
 		
 	public NodeWrapper() 
 	{
@@ -215,6 +216,7 @@ implements Comparator<NodeAttribute>
 		createNewAttribute();
 		editingRefreshAttrs = null;
 		refreshPressed = false;
+		clearAllUnsavedChanges();
 		//loadRefreshAttributes();
 //		AttributesTableBean atb = (AttributesTableBean) context.getELContext().getELResolver().getValue(context.getELContext(), null, AttributesTableBean.BEAN_NAME);
 //		if(atb != null && atb.getMessage() !=null) atb.getMessage().setMessage("");
@@ -405,7 +407,7 @@ implements Comparator<NodeAttribute>
               if( !ObjectUtils.equals(na.getValueHandlerType(), at.getValueHandlerType())) save |=16;
               if(at.isTemplateExpression() != na.isTemplateExpression()) save |=32;
               if(at.isFileAttribute() && at.getFile()!=null) save |=64;
-              if(isHasUnsavedChanges()) save |= 4096; 
+              if(hasUnsavedChanges(na.getId())) save |= 4096; 
 			  
 			  if(save==0) continue;
 			  try 
@@ -429,10 +431,10 @@ implements Comparator<NodeAttribute>
 				  if(write)
 				  {
 					  getConfigurator().getTreeStore().saveNodeAttribute(na);
-					  setHasUnsavedChanges(false);
+					  clearUnsavedChanges(na.getId());
 					  this.afterWriteAttrubutes();
 				  }	  
-				  	else setHasUnsavedChanges(true);
+				  	else addUnsavedChanges(na.getId());
 			  }
 			  catch(ConstraintException e) 
 			  {
@@ -542,7 +544,7 @@ implements Comparator<NodeAttribute>
 	  public String cancel() //ActionEvent event
 	  {
 		  getAttributes();
-		  setHasUnsavedChanges(false);
+		  clearAllUnsavedChanges();
 		  return "";
 	  }
 
@@ -739,13 +741,41 @@ implements Comparator<NodeAttribute>
 		this.useChildAttributesView = useChildAttributesView;
 	}
 
-	public void setHasUnsavedChanges(boolean hasUnsavedChanges) {
-		this.hasUnsavedChanges = hasUnsavedChanges;
+//	public void setHasUnsavedChanges(boolean hasUnsavedChanges) {
+//		this.hasUnsavedChanges = hasUnsavedChanges;
+//	}
+
+	
+	public boolean hasUnsavedChanges() 
+	{
+	 if(unsavedChanges.size()>0) return true;
+	 return false;
 	}
 
-	public boolean isHasUnsavedChanges() {
-		return hasUnsavedChanges;
+	public boolean hasUnsavedChanges(int attrId) 
+	{
+	 if(unsavedChanges.contains(attrId)) return true;
+	 return false;
 	}
+
+	public void clearUnsavedChanges(int attrId) 
+	{
+	 unsavedChanges.remove(new Integer(attrId));
+	}
+
+	public void clearAllUnsavedChanges() 
+	{
+	 unsavedChanges.clear();
+	}
+	
+	public void addUnsavedChanges(int attrId) 
+	{
+	 unsavedChanges.add(attrId);
+	}
+	
+//	public boolean isHasUnsavedChanges() {
+//		return hasUnsavedChanges;
+//	}
 
 	public List<NodeAttribute> getReadOnlyAttributes() throws TooManyReferenceValuesException 
 	{

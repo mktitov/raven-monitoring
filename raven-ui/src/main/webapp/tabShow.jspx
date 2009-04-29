@@ -143,6 +143,41 @@ action="#{sBean.reloadRightFrame}"
 	                	value="#{row.description}"
 	                	escape="false" />
 				</tr:panelCaptionGroup>
+
+			    <tr:inputText
+			    	label="#{msgs.expression}"
+               		rows="7" 
+               		wrap="hard"
+            		rendered="#{row.enableEditExpression}" 
+            		value="#{row.expression}" 
+            		columns="100" />
+
+				<tr:inputListOfValues 
+					rendered="#{row.enableSelectNodeDialog}"
+					value="#{row.expression}"
+					returnListener="#{row.selectNodeHandleReturn}" 
+					action="dialog:selectNode"
+					actionListener="#{row.setNode}"
+					immediate="true" 
+					windowWidth="500" windowHeight="400"
+					columns="40" label="#{msgs.node}"
+				>
+				</tr:inputListOfValues>
+                <tr:group rendered="#{row.fileAttribute}">
+                
+                <t:inputFileUpload  
+                	id="fileupload"
+					value="#{row.file}"
+					storage="file"
+					maxlength="200000"/>
+					</tr:group>
+	            <tr:selectOneChoice 
+	            	label="#{msgs.expression}" 
+	            	rendered="#{row.enableExpressionChoice}" 
+	            	value="#{row.expression}" >
+    	            <f:selectItems value="#{row.selectItems}" />
+                </tr:selectOneChoice>
+		<!-- 
 				<tr:inputListOfValues 
 					rendered="#{row.enableEditValueDialog}"
 					value="#{row.expression}" 
@@ -175,6 +210,7 @@ action="#{sBean.reloadRightFrame}"
 	            	value="#{row.expression}" >
     	            <f:selectItems value="#{row.selectItems}" />
                 </tr:selectOneChoice>
+ -->                
 			</tr:panelGroupLayout>
             </f:facet>
         </tr:table>

@@ -53,11 +53,23 @@
 
 <!-- value of attribute-->
             <tr:column headerText="#{msgs.value}">
+                <tr:outputText  
+                	rendered="#{rowz.expressionSupported or (rowz.selectItems == null)}" 
+                	value="#{rowz.value}"/>
+                <tr:selectOneChoice 
+                	rendered="#{!rowz.expressionSupported and !(rowz.selectItems == null)}" 
+                	value="#{rowz.value}" >
+                    <f:selectItems value="#{rowz.selectItems}" />
+                </tr:selectOneChoice>
+            </tr:column>
+<!-- 
+            <tr:column headerText="#{msgs.value}">
                 <tr:inputText readOnly="#{rowz.expressionSupported}" rendered="#{rowz.expressionSupported or (rowz.selectItems == null)}" value="#{rowz.value}" columns="30" />
                 <tr:selectOneChoice rendered="#{!rowz.expressionSupported and !(rowz.selectItems == null)}" value="#{rowz.value}" >
                     <f:selectItems value="#{rowz.selectItems}" />
                 </tr:selectOneChoice>
             </tr:column>
+-->            
             <tr:column headerText="#{msgs.type}">
                 <tr:outputText value="#{rowz.classDisplayName}"/>
             </tr:column>
@@ -95,7 +107,41 @@
     	            	rendered="#{rowz.edit}"  
     	            	value="#{rowz.description}"/>
 				</tr:panelCaptionGroup>
+			    <tr:inputText
+			    	label="#{msgs.value}"
+               		rows="7" 
+               		wrap="hard"
+            		rendered="#{rowz.enableEditValue}" 
+            		value="#{rowz.value}" 
+            		columns="100" />
 
+			    <tr:inputText
+			    	label="#{msgs.expression}"
+               		rows="7" 
+               		wrap="hard"
+            		rendered="#{rowz.enableEditExpression}" 
+            		value="#{rowz.expression}" 
+            		columns="100" />
+
+				<tr:inputListOfValues 
+					rendered="#{rowz.enableSelectNodeDialog}"
+					value="#{rowz.expression}"
+					returnListener="#{rowz.selectNodeHandleReturn}" 
+					action="dialog:selectNode"
+					actionListener="#{rowz.setNode}"
+					immediate="true" 
+					windowWidth="500" windowHeight="400"
+					columns="40" label="#{msgs.node}"
+				>
+				</tr:inputListOfValues>
+	            <tr:selectOneChoice 
+	            	label="#{msgs.expression}" 
+	            	rendered="#{rowz.enableExpressionChoice}" 
+	            	value="#{rowz.expression}" >
+    	            <f:selectItems value="#{rowz.selectItems}" />
+                </tr:selectOneChoice>
+				
+<!--  
 				<tr:inputListOfValues 
 					rendered="#{rowz.expressionSupported and (rowz.selectItems == null) }"
 					value="#{rowz.expression}" 
@@ -112,6 +158,7 @@
 	            	value="#{rowz.expression}" >
     	            <f:selectItems value="#{rowz.selectItems}" />
                 </tr:selectOneChoice>
+-->                
                 </tr:panelGroupLayout>					
                 <!-- <tr:panelGroupLayout layout="vertical">
                 </tr:panelGroupLayout>  -->

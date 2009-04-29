@@ -198,6 +198,7 @@
 <!-- edit value of attribute
 readOnly="#{row.expressionSupported}"
 -->
+
 			    <tr:inputText
 			    	label="#{msgs.value}"
                		rows="7" 
@@ -233,53 +234,6 @@ readOnly="#{row.expressionSupported}"
 					storage="file"
 					maxlength="200000"/>
 					</tr:group>
-<!--					
-				   <tr:inputFile
-				   	id="uploadId" 
-				   	label="Upload:" 
-				   	valueChangeListener="#{test.fileUploaded}"
-				   	value="#{test.file}" />
-                </tr:group>
-				
-
-       				<tr:commandButton text="Begin" action="#{test.doUpload}"/>
-
-				   <tr:inputFile
-				   	id="uploadId" 
-				   	label="Upload:" 
-				   	valueChangeListener="#{row.fileUploaded}"
-				   	value="#{test.file}" />
-       				<tr:commandButton text="Begin" action="#{test.doUpload}"/>
-
-                <tr:group rendered="#{row.fileAttribute}">
-                    <tr:inputFile label="#{msgs.file}" valueChangeListener="#{row.fileUploaded}"/>
-                </tr:group>
-
-                    <tr:inputFile label="#{msgs.file}" valueChangeListener="#{test.fileUploaded}"/>
-                <tr:group rendered="#{row.fileAttribute}">
-                    <tr:inputFile label="#{msgs.file}" valueChangeListener="#{row.fileUploaded}"/>
-                </tr:group>
--->                
-<!-- 
-				<tr:group rendered="#{row.enableSelectNodeDialog}">
-					<tr:inputText 
-						label="#{msgs.node}" 
-						value="#{row.expression}"  />
-					
-					<tr:commandButton
-						partialSubmit="true"
-						returnListener="#{row.selectNodeHandleReturn}" 
-						text=".."
-						action="dialog:selectNode"
-						actionListener="#{row.setNode}"
-						immediate="true" 
-						useWindow="true" windowWidth="500" windowHeight="400"
-						>
-					</tr:commandButton>
-
-				</tr:group>
-
---> 				
 	            <tr:selectOneChoice 
 	            	label="#{msgs.expression}" 
 	            	rendered="#{row.enableExpressionChoice}" 
