@@ -27,6 +27,7 @@ import org.raven.ds.Record;
 import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
+import org.raven.ds.RecordSchemaFieldType;
 import org.raven.ds.impl.AbstractDataPipe;
 import org.raven.ds.impl.RecordSchemaNode;
 import org.raven.ds.impl.RecordSchemaValueTypeHandlerFactory;
@@ -120,8 +121,16 @@ public class SdbQueryResultToRecordsNode extends AbstractDataPipe
         if (fields.containsKey(StatisticsRecord.KEY_FIELD_NAME))
             record.setValue(StatisticsRecord.KEY_FIELD_NAME, key);
 
-        if (time>=0 && fields.containsKey(StatisticsRecord.TIME_FIELD_NAME))
-            record.setValue(StatisticsRecord.TIME_FIELD_NAME, time);
+        if (time>=0)
+        {
+            RecordSchemaField timeField = fields.get(StatisticsRecord.TIME_FIELD_NAME);
+            if (timeField!=null)
+            {
+                if (timeField.getFieldType().equals(RecordSchemaFieldType.TIMESTAMP))
+                    time *= 1000l;
+                record.setValue(StatisticsRecord.TIME_FIELD_NAME, time);
+            }
+        }
 
         return record;
     }
