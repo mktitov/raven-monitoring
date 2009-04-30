@@ -17,18 +17,50 @@
 
 package org.raven.net;
 
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
+import java.util.Properties;
 import org.junit.Test;
+import org.raven.DataCollector;
+import org.raven.RavenCoreTestCase;
+import org.raven.conf.Configurator;
+import org.raven.log.LogLevel;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class LdapReaderNodeTest
+public class LdapReaderNodeTest extends RavenCoreTestCase
 {
-
     @Test
-    public void searchTest()
+    public void searchTest() throws Exception
     {
-        
+        Properties props = new Properties();
+        props.load(new FileInputStream(System.getProperty("user.home")+"/raven/raven.cfg"));
+
+        String ldapUrl = props.getProperty(Configurator.PROVIDER_URL);
+        String baseDN = props.getProperty(Configurator.SEARCH_CONTEXT);
+        String user = props.getProperty(Configurator.BIND_NAME);
+        String pass = props.getProperty(Configurator.BIND_PASSWORD);
+
+        LdapReaderNode reader = new LdapReaderNode();
+        reader.setName("reader");
+        tree.getRootNode().addAndSaveChildren(reader);
+        reader.setUrl(ldapUrl);
+        reader.setBaseDN(baseDN);
+        reader.setUserDN(user);
+        reader.setUserPassword(pass);
+        reader.setLogLevel(LogLevel.DEBUG);
+        assertTrue(reader.start());
+
+        DataCollector collector = new DataCollector();
+        collector.setName("collector");
+        tree.getRootNode().addAndSaveChildren(collector);
+        collector.setDataSource(reader);
+        assertTrue(collector.start());
+
+        collector.refereshData(null);
+        fail();
     }
 }
