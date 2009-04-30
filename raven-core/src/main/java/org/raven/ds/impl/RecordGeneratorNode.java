@@ -62,7 +62,7 @@ public class RecordGeneratorNode extends AbstractDataSource
                     && child instanceof FieldValueGenerator)
                 {
                     FieldValueGenerator fieldValue = (FieldValueGenerator) child;
-                    rec.setValue(fieldValue.getName(), fieldValue.getFieldValue());
+                    rec.setValue(fieldValue.getName(), fieldValue.getFieldValue(attributes));
                 }
             dataConsumer.setData(this, rec);
             return true;

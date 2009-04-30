@@ -17,11 +17,21 @@
 
 package org.raven.ds;
 
+import java.util.Collection;
+import org.raven.tree.NodeAttribute;
+
 /**
  *
  * @author Mikhail Titov
  */
 public interface SessionAttributeGenerator extends FieldValueGenerator
 {
+    /**
+     * Returns the session attribute type
+     */
     public Class getAttributeType();
+    /**
+     * Adds attributes for consumers
+     */
+    public void fillConsumerAttributes(Collection<NodeAttribute> attributes);
 }

@@ -35,6 +35,8 @@ import org.raven.tree.impl.BaseNode;
  */
 public abstract class AbstractDataSource extends BaseNode implements DataSource
 {
+    public final static String DATASOURCE_ATTRIBUTE = "dataSource";
+    
     private Collection<NodeAttribute> consumerAttributes;
 
     @Override
@@ -106,7 +108,7 @@ public abstract class AbstractDataSource extends BaseNode implements DataSource
         return  !(consumer instanceof Node) || ((Node)consumer).getStatus()==Status.STARTED
                 && Helper.checkAttributes(this, consumerAttributes, consumer, attributes);
     }
-
+    
     protected void sendDataToConsumers(Object data)
     {
         Collection<Node> deps = getDependentNodes();

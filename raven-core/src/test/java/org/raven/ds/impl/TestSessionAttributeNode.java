@@ -17,37 +17,38 @@
 
 package org.raven.ds.impl;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
-import org.raven.annotations.NodeClass;
-import org.raven.annotations.Parameter;
+import org.raven.ds.SessionAttributeGenerator;
 import org.raven.tree.NodeAttribute;
-import org.weda.annotations.constraints.NotNull;
+import org.raven.tree.impl.BaseNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=RecordGeneratorNode.class)
-public class AttributeRecordFieldValueGenerator
-        extends AbstractFieldValueGenerator
+public class TestSessionAttributeNode extends BaseNode implements SessionAttributeGenerator
 {
-    public static final String VALUE_ATTRIBUTE = "value";
-    @Parameter @NotNull
-    private String value;
+    private Collection<NodeAttribute> consumerAttrs = new ArrayList<NodeAttribute>();
 
-    public String getValue()
+    public void addConsumerAttribute(NodeAttribute attr)
     {
-        return value;
+        consumerAttrs.add(attr);
     }
 
-    public void setValue(String value)
+    public Class getAttributeType()
     {
-        this.value = value;
+        return Integer.class;
     }
 
-    @Override
-    protected Object doGetFieldValue(Map<String, NodeAttribute> sessionAttributes)
+    public void fillConsumerAttributes(Collection<NodeAttribute> attributes)
     {
-        return getNodeAttribute(VALUE_ATTRIBUTE).getRealValue();
+        attributes.addAll(consumerAttrs);
+    }
+
+    public Object getFieldValue(Map<String, NodeAttribute> sessionAttributes)
+    {
+        return 10;
     }
 }

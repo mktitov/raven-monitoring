@@ -17,14 +17,21 @@
 
 package org.raven.ds.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataPipe;
 import org.raven.ds.DataSource;
+import org.raven.ds.SessionAttributeGenerator;
+import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
+import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.impl.NodeAttributeImpl;
+import org.raven.util.BindingSupport;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -34,14 +41,33 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass
 public class SafeDataPipeNode extends AbstractDataSource implements DataPipe
 {
+    public static final String DATA_BINDING = "data";
+    public static final String EXPRESSION_ATTRIBUTE = "expression";
+    
     @NotNull @Parameter
     private DataSource dataSource;
 
-    @Parameter
+    @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
     private String expression;
 
     @NotNull @Parameter(defaultValue="false")
     private Boolean useExpression;
+
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean forwardDataSourceAttributes;
+
+    private ThreadLocal<DataConsumer> consumer;
+    private BindingSupport bindingSupport;
+
+    public Boolean getForwardDataSourceAttributes()
+    {
+        return forwardDataSourceAttributes;
+    }
+
+    public void setForwardDataSourceAttributes(Boolean forwardDataSourceAttributes)
+    {
+        this.forwardDataSourceAttributes = forwardDataSourceAttributes;
+    }
 
     public DataSource getDataSource()
     {
@@ -74,8 +100,115 @@ public class SafeDataPipeNode extends AbstractDataSource implements DataPipe
     }
 
     @Override
+    protected void initFields()
+    {
+        super.initFields();
+        consumer = new ThreadLocal<DataConsumer>();
+        bindingSupport = new BindingSupport();
+    }
+    
+    @Override
+    protected boolean allowAttributesGeneration(NodeAttribute attr)
+    {
+        if (   attr.getName().equals(DATASOURCE_ATTRIBUTE)
+            && forwardDataSourceAttributes!=null
+            && forwardDataSourceAttributes)
+        {
+            return false;
+        }
+        else
+            return super.allowAttributesGeneration(attr);
+    }
+
+    @Override
     public boolean gatherDataForConsumer(
             DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
+    {
+        consumer.set(dataConsumer);
+        try
+        {
+            Collection<Node> childs = getEffectiveChildrens();
+            if (childs!=null && !childs.isEmpty())
+                for (Node child: childs)
+                    if (   child.getStatus().equals(Status.STARTED)
+                        && child instanceof SessionAttributeGenerator)
+                    {
+                        SessionAttributeGenerator gen = (SessionAttributeGenerator)child;
+                        Object value = gen.getFieldValue(attributes);
+                        NodeAttributeImpl attr = new NodeAttributeImpl(
+                                gen.getName(), gen.getAttributeType(), value, null);
+                        attr.init();
+                        attributes.put(gen.getName(), attr);
+                    }
+
+            return dataSource.getDataImmediate(this, attributes.values());
+        }
+        finally
+        {
+            consumer.remove();
+        }
+    }
+
+    @Override
+    public Collection<NodeAttribute> generateAttributes()
+    {
+        Collection<NodeAttribute> consumerAttributes = new ArrayList<NodeAttribute>();
+        Boolean _forwardDataSourceAttributes = forwardDataSourceAttributes;
+        DataSource _dataSource = getDataSource();
+        if (_forwardDataSourceAttributes!=null && _forwardDataSourceAttributes && _dataSource!=null)
+        {
+            Collection<NodeAttribute> dsAttrs = _dataSource.generateAttributes();
+            if (dsAttrs!=null && !dsAttrs.isEmpty())
+                consumerAttributes.addAll(dsAttrs);
+        }
+
+        Collection<Node> childs = getEffectiveChildrens();
+        if (childs!=null && !childs.isEmpty())
+            for (Node child: childs)
+                if (   child.getStatus().equals(Status.STARTED)
+                    && child instanceof SessionAttributeGenerator)
+                {
+                    ((SessionAttributeGenerator)child).fillConsumerAttributes(consumerAttributes);
+                }
+            
+        return consumerAttributes.isEmpty()? null : consumerAttributes;
+    }
+
+    @Override
+    public void formExpressionBindings(Bindings bindings)
+    {
+        super.formExpressionBindings(bindings);
+        bindingSupport.addTo(bindings);
+    }
+
+    public void setData(DataSource dataSource, Object data)
+    {
+        if (useExpression)
+        {
+            bindingSupport.put(DATA_BINDING, data);
+            try
+            {
+                NodeAttribute exprAttr = getNodeAttribute(EXPRESSION_ATTRIBUTE);
+                data = exprAttr.getRealValue();
+            }
+            finally
+            {
+                bindingSupport.reset();
+            }
+        }
+        if (consumer.get()!=null)
+            consumer.get().setData(this, data);
+        else
+        {
+            Collection<Node> deps = getDependentNodes();
+            if (deps!=null && !deps.isEmpty())
+                for (Node dep: deps)
+                    if (dep instanceof DataConsumer)
+                        ((DataConsumer)dep).setData(this, data);
+        }
+    }
+
+    public Object refereshData(Collection<NodeAttribute> sessionAttributes)
     {
         throw new UnsupportedOperationException("Not supported yet.");
     }
@@ -83,16 +216,5 @@ public class SafeDataPipeNode extends AbstractDataSource implements DataPipe
     @Override
     public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public void setData(DataSource dataSource, Object data)
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public Object refereshData(Collection<NodeAttribute> sessionAttributes)
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

@@ -27,6 +27,7 @@ import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeAttributeImpl;
+import org.slf4j.Logger;
 import static org.easymock.EasyMock.*;
 /**
  *
@@ -40,19 +41,22 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         NodeAttribute attribute = createMock(NodeAttribute.class);
         Node node = createMock(Node.class);
         AttributeValueHandlerListener listener = createMock(AttributeValueHandlerListener.class);
+        Logger logger = createMock(Logger.class);
         
         expect(attribute.getRawValue()).andReturn(null);
         attribute.save();
         expectLastCall().times(3);
         listener.valueChanged(isNull(), eq(2));
-        expect(attribute.getOwner()).andReturn(node).times(4);
+        expect(attribute.getOwner()).andReturn(node).times(5);
         node.formExpressionBindings(isA(Bindings.class));
         expectLastCall().times(2);
+        expect(node.getLogger()).andReturn(logger);
         listener.expressionInvalidated(2);
         listener.valueChanged(2, null);
         listener.valueChanged(null, 10);
+        logger.warn(isA(String.class), isA(ScriptException.class));
         
-        replay(node, attribute, listener);
+        replay(node, attribute, listener, logger);
         
         ExpressionAttributeValueHandler handler = new ExpressionAttributeValueHandler(attribute);
         assertTrue(handler.isExpressionSupported());
@@ -74,7 +78,7 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         assertTrue(handler.isExpressionValid());
         assertEquals(10, handler.handleData());
         
-        verify(node, attribute, listener);
+        verify(node, attribute, listener, logger);
     }
     
     @Test 

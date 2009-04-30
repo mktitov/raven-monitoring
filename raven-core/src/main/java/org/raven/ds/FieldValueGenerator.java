@@ -17,7 +17,9 @@
 
 package org.raven.ds;
 
+import java.util.Map;
 import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
 
 /**
  *
@@ -25,5 +27,7 @@ import org.raven.tree.Node;
  */
 public interface FieldValueGenerator extends Node
 {
-    public Object getFieldValue();
+    public static String SESSION_ATTRIBUTES_BINDING="sessionAttributes";
+
+    public Object getFieldValue(Map<String, NodeAttribute> sessionAttributes);
 }

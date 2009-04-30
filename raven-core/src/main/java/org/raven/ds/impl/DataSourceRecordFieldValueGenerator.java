@@ -18,13 +18,12 @@
 package org.raven.ds.impl;
 
 import java.util.Collection;
+import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
-import org.raven.ds.FieldValueGenerator;
 import org.raven.tree.NodeAttribute;
-import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
 
@@ -34,8 +33,10 @@ import org.weda.annotations.constraints.NotNull;
  */
 @NodeClass(parentNode=RecordGeneratorNode.class)
 public class DataSourceRecordFieldValueGenerator
-        extends BaseNode implements FieldValueGenerator, DataConsumer
+        extends AbstractFieldValueGenerator implements DataConsumer
 {
+    public final static String DATASOURCE_ATTRIBUTE = "dataSource";
+
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     @NotNull
     private DataSource dataSource;
@@ -56,16 +57,7 @@ public class DataSourceRecordFieldValueGenerator
     protected void initFields()
     {
         super.initFields();
-
         value = new ThreadLocal();
-    }
-
-    public Object getFieldValue()
-    {
-        dataSource.getDataImmediate(this, null);
-        Object val = value.get();
-        value.remove();
-        return val;
     }
 
     public void setData(DataSource dataSource, Object data)
@@ -76,5 +68,15 @@ public class DataSourceRecordFieldValueGenerator
     public Object refereshData(Collection<NodeAttribute> sessionAttributes)
     {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    protected Object doGetFieldValue(Map<String, NodeAttribute> sessionAttributes)
+    {
+        dataSource.getDataImmediate(
+                this, sessionAttributes==null? null : sessionAttributes.values());
+        Object val = value.get();
+        value.remove();
+        return val;
     }
 }

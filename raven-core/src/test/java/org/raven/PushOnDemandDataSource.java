@@ -33,10 +33,16 @@ public class PushOnDemandDataSource extends AbstractDataSource
 {
     private List dataList = new ArrayList();
     private Map<String, NodeAttribute> lastSessionAttributes;
+    private Collection<NodeAttribute> consumerAttrs = new ArrayList<NodeAttribute>();
 
     public void addDataPortion(Object data)
     {
         dataList.add(data);
+    }
+
+    public void addConsumerAttribute(NodeAttribute attr)
+    {
+        consumerAttrs.add(attr);
     }
 
     public void resetData()
@@ -60,6 +66,12 @@ public class PushOnDemandDataSource extends AbstractDataSource
             dataConsumer.setData(this, data);
 
         return true;
+    }
+
+    @Override
+    public Collection<NodeAttribute> generateAttributes()
+    {
+        return consumerAttrs.isEmpty()? null : consumerAttrs;
     }
 
     @Override

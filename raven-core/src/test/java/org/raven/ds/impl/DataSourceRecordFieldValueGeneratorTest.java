@@ -44,6 +44,6 @@ public class DataSourceRecordFieldValueGeneratorTest extends RavenCoreTestCase
         assertTrue(fieldValue.start());
 
         ds.addDataPortion(1);
-        assertEquals(1, fieldValue.getFieldValue());
+        assertEquals(1, fieldValue.getFieldValue(null));
     }
 }
