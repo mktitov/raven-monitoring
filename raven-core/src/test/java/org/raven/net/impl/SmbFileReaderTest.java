@@ -15,8 +15,9 @@
  *  under the License.
  */
 
-package org.raven.net;
+package org.raven.net.impl;
 
+import org.raven.net.impl.SmbFileReader;
 import java.io.File;
 import java.util.List;
 import org.apache.commons.io.FileUtils;

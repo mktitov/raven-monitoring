@@ -17,7 +17,7 @@
 
 package org.raven.impl;
 
-import org.raven.net.Ip;
+import org.raven.net.impl.Ip;
 import org.weda.converter.impl.AbstractConverter;
 
 /**

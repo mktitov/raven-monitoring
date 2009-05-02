@@ -15,8 +15,9 @@
  *  under the License.
  */
 
-package org.raven.net;
+package org.raven.net.impl;
 
+import org.raven.net.*;
 import java.util.Collection;
 import java.util.Map;
 import jcifs.smb.SmbFile;

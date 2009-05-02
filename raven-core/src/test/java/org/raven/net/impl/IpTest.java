@@ -15,31 +15,24 @@
  *  under the License.
  */
 
-package org.raven.impl;
+package org.raven.net.impl;
 
-import org.junit.Test;
-import org.raven.RavenCoreTestCase;
-import org.raven.net.InvalidIpException;
 import org.raven.net.impl.Ip;
-import org.weda.services.TypeConverter;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class StringToIpConverterTest extends RavenCoreTestCase
+public class IpTest extends Assert
 {
     @Test
-    public void instanceTest() throws InvalidIpException
+    public void parseTest() throws Exception
     {
-        StringToIpConverter converter = new StringToIpConverter();
-        assertEquals(Ip.parse("10.50.1.1"), converter.convert("10.50.1.1", null, null));
-    }
-
-    @Test
-    public void serviceTest() throws InvalidIpException
-    {
-        TypeConverter converter = registry.getService(TypeConverter.class);
-        assertEquals(Ip.parse("10.50.1.1"), converter.convert(Ip.class, "10.50.1.1", null));
+        Ip ip = Ip.parse("255.50.1.250");
+        Ip ip2 = Ip.parse(""+ip.getIp());
+        assertEquals("255.50.1.250", ip2.toString());
+        assertEquals(ip, ip2);
     }
 }

@@ -15,27 +15,13 @@
  *  under the License.
  */
 
-package org.raven.snmp;
-
-import org.snmp4j.mp.SnmpConstants;
+package org.raven.net.impl;
 
 /**
  *
  * @author Mikhail Titov
  */
-public enum SnmpVersion 
+public interface FilenameFilter
 {
-    V1(SnmpConstants.version1), V2c(SnmpConstants.version2c), V3(SnmpConstants.version3);
-    
-    private final int version;
-
-    private SnmpVersion(int version)
-    {
-        this.version = version;
-    }
-    
-    public int asInt()
-    {
-        return version;
-    }
+    public boolean filter(String filename);
 }

@@ -15,8 +15,9 @@
  *  under the License.
  */
 
-package org.raven.snmp;
+package org.raven.net.impl;
 
+import org.raven.net.SnmpVersion;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;

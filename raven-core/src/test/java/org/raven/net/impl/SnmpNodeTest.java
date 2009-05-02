@@ -15,8 +15,9 @@
  *  under the License.
  */
 
-package org.raven.snmp;
+package org.raven.net.impl;
 
+import org.raven.net.impl.SnmpNode;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.apache.tapestry.ioc.RegistryBuilder;

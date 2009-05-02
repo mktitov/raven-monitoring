@@ -17,17 +17,11 @@
 
 package org.raven.net;
 
-import org.junit.Test;
-
 /**
  *
  * @author Mikhail Titov
  */
-public class AbstractFileReaderTest
+public interface AddressMatcher
 {
-    @Test
-    public void test()
-    {
-        
-    }
+    public boolean addressMatches(String address);
 }

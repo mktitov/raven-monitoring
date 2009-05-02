@@ -15,38 +15,16 @@
  *  under the License.
  */
 
-package org.raven.impl;
+package org.raven.net;
 
-import org.raven.net.InvalidIpException;
-import org.raven.net.impl.Ip;
-import org.weda.converter.TypeConverterException;
-import org.weda.converter.impl.AbstractConverter;
+import java.util.Map;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class StringToIpConverter extends AbstractConverter<String, Ip>
+public interface NetworkResponseContext
 {
-    public Ip convert(String value, Class realTargetType, String format)
-    {
-        try
-        {
-            return Ip.parse(value);
-        }
-        catch (InvalidIpException ex)
-        {
-            throw new TypeConverterException(ex);
-        }
-    }
-
-    public Class getSourceType()
-    {
-        return String.class;
-    }
-
-    public Class getTargetType()
-    {
-        return Ip.class;
-    }
+    public String getResponse(String requesterIp, Map<String, Object> params)
+            throws NetworkResponseServiceExeption;
 }

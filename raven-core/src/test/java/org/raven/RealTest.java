@@ -38,7 +38,7 @@ import org.raven.rrd.data.RRDataSource;
 import org.raven.rrd.graph.RRDef;
 import org.raven.rrd.graph.RRGraphNode;
 import org.raven.rrd.graph.RRLine;
-import org.raven.snmp.SnmpNode;
+import org.raven.net.impl.SnmpNode;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Tree;

@@ -17,32 +17,25 @@
 
 package org.raven.net;
 
-import java.util.regex.Pattern;
-import org.slf4j.Logger;
+import org.snmp4j.mp.SnmpConstants;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class RegexpFilenameFilter implements FilenameFilter
+public enum SnmpVersion 
 {
-    private final Pattern filemaskPattern;
-    private final Logger logger;
+    V1(SnmpConstants.version1), V2c(SnmpConstants.version2c), V3(SnmpConstants.version3);
+    
+    private final int version;
 
-    public RegexpFilenameFilter(String pattern, Logger logger)
+    private SnmpVersion(int version)
     {
-        this.logger = logger;
-        filemaskPattern = Pattern.compile(pattern);
+        this.version = version;
     }
-
-    public boolean filter(String filename)
+    
+    public int asInt()
     {
-        boolean res = filemaskPattern.matcher(filename).matches();
-        
-        if (!res && logger.isDebugEnabled())
-            logger.debug(String.format(
-                    "Ignoring file (%s). Not matches to regexp file mask", filename));
-            
-        return res;
+        return version;
     }
 }

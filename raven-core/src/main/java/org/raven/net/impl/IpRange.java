@@ -15,8 +15,9 @@
  *  under the License.
  */
 
-package org.raven.net;
+package org.raven.net.impl;
 
+import org.raven.net.*;
 import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

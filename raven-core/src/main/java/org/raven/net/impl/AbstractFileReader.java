@@ -15,8 +15,9 @@
  *  under the License.
  */
 
-package org.raven.net;
+package org.raven.net.impl;
 
+import org.raven.net.*;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.SequenceInputStream;

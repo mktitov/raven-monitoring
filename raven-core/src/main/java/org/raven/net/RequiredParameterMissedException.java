@@ -17,21 +17,15 @@
 
 package org.raven.net;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 /**
  *
  * @author Mikhail Titov
  */
-public class IpTest extends Assert
+public class RequiredParameterMissedException extends NetworkResponseServiceExeption
 {
-    @Test
-    public void parseTest() throws Exception
+    public RequiredParameterMissedException(String parameterName, String contextName)
     {
-        Ip ip = Ip.parse("255.50.1.250");
-        Ip ip2 = Ip.parse(""+ip.getIp());
-        assertEquals("255.50.1.250", ip2.toString());
-        assertEquals(ip, ip2);
+        super(String.format(
+                "Required parameter (%s) missed for context (%s)", parameterName, contextName));
     }
 }

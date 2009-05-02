@@ -20,7 +20,7 @@ package org.raven.ds;
 import java.io.InputStream;
 import java.sql.Timestamp;
 import org.raven.ds.impl.RecordRelationFieldExtension;
-import org.raven.net.Ip;
+import org.raven.net.impl.Ip;
 
 /**
  *

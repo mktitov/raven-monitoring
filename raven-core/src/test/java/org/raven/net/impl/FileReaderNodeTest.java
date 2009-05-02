@@ -15,8 +15,9 @@
  *  under the License.
  */
 
-package org.raven.net;
+package org.raven.net.impl;
 
+import org.raven.net.impl.FileReaderNode;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;

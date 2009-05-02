@@ -15,7 +15,7 @@
  *  under the License.
  */
 
-package org.raven.net;
+package org.raven.net.impl;
 
 import java.io.InputStream;
 import jcifs.smb.SmbException;

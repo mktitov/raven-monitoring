@@ -15,38 +15,20 @@
  *  under the License.
  */
 
-package org.raven.impl;
+package org.raven.net.impl;
 
-import org.raven.net.InvalidIpException;
-import org.raven.net.impl.Ip;
-import org.weda.converter.TypeConverterException;
-import org.weda.converter.impl.AbstractConverter;
+import org.raven.tree.impl.BaseNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class StringToIpConverter extends AbstractConverter<String, Ip>
+public class ParametersNode extends BaseNode
 {
-    public Ip convert(String value, Class realTargetType, String format)
-    {
-        try
-        {
-            return Ip.parse(value);
-        }
-        catch (InvalidIpException ex)
-        {
-            throw new TypeConverterException(ex);
-        }
-    }
+    public final static String NAME = "parameters";
 
-    public Class getSourceType()
+    public ParametersNode()
     {
-        return String.class;
-    }
-
-    public Class getTargetType()
-    {
-        return Ip.class;
+        super(NAME);
     }
 }

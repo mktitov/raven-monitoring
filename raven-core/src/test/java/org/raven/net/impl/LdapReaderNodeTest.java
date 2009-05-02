@@ -15,8 +15,9 @@
  *  under the License.
  */
 
-package org.raven.net;
+package org.raven.net.impl;
 
+import org.raven.net.impl.LdapReaderNode;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;

@@ -20,7 +20,7 @@ package org.raven.impl;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.net.InvalidIpException;
-import org.raven.net.Ip;
+import org.raven.net.impl.Ip;
 import org.weda.services.TypeConverter;
 
 /**

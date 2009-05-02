@@ -15,8 +15,9 @@
  *  under the License.
  */
 
-package org.raven.net;
+package org.raven.net.impl;
 
+import org.raven.net.impl.NetworkScannerNode;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -28,7 +29,7 @@ import org.raven.DummyScheduler;
 import org.raven.RavenCoreTestCase;
 import org.raven.net.objects.TestScannerConsumer;
 import org.raven.net.objects.TestScannerDataSource;
-import org.raven.snmp.SnmpNode;
+import org.raven.net.impl.SnmpNode;
 import org.raven.table.Table;
 import org.raven.tree.Node.Status;
 

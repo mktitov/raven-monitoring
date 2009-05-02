@@ -15,8 +15,10 @@
  *  under the License.
  */
 
-package org.raven.net;
+package org.raven.net.impl;
 
+import org.raven.net.*;
+import org.raven.net.impl.IpRange;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;

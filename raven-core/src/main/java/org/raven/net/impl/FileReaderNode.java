@@ -15,7 +15,7 @@
  *  under the License.
  */
 
-package org.raven.net;
+package org.raven.net.impl;
 
 import org.raven.tree.impl.*;
 import java.io.InputStream;

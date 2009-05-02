@@ -15,38 +15,26 @@
  *  under the License.
  */
 
-package org.raven.impl;
+package org.raven.net.impl;
 
-import org.raven.net.InvalidIpException;
-import org.raven.net.impl.Ip;
-import org.weda.converter.TypeConverterException;
-import org.weda.converter.impl.AbstractConverter;
+import java.util.Map;
+import org.raven.annotations.NodeClass;
+import org.raven.net.NetworkResponseService;
+import org.raven.net.NetworkResponseServiceExeption;
+import org.raven.tree.impl.BaseNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class StringToIpConverter extends AbstractConverter<String, Ip>
+@NodeClass
+public class NetworkResponseServiceNode extends BaseNode implements NetworkResponseService
 {
-    public Ip convert(String value, Class realTargetType, String format)
+
+    public String getResponse(String context, String requesterIp, Map<String, Object> params)
+            throws NetworkResponseServiceExeption
     {
-        try
-        {
-            return Ip.parse(value);
-        }
-        catch (InvalidIpException ex)
-        {
-            throw new TypeConverterException(ex);
-        }
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public Class getSourceType()
-    {
-        return String.class;
-    }
-
-    public Class getTargetType()
-    {
-        return Ip.class;
-    }
 }
