@@ -40,6 +40,7 @@ public class NetworkResponseContextNode
         extends SafeDataConsumer implements NetworkResponseContext
 {
     public static final String PARAMS_BINDING = "params";
+    
     @NotNull() @Parameter(defaultValue="false")
     private Boolean allowRequestsFromAnyIp;
 

@@ -32,6 +32,7 @@ import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.impl.ClassNameComparator;
 import org.raven.impl.NodeClassTransformerWorker;
 import org.raven.log.impl.NodeLoggerNode;
+import org.raven.net.impl.NetworkResponseServiceNode;
 import org.raven.sched.impl.SchedulersNode;
 import org.raven.template.impl.TemplateVariable;
 import org.raven.template.impl.TemplatesNode;
@@ -94,6 +95,7 @@ public class TreeImpl implements Tree
 	private QueuesNode queuesNode;
     private SchemasNode schemasNode;
     private LocalDatabaseNode localDatabaseNode;
+    private NetworkResponseServiceNode responseServiceNode;
 
     public TreeImpl(
             AttributeReferenceValues attributeReferenceValues
@@ -483,6 +485,16 @@ public class TreeImpl implements Tree
             schemasNode.setParent(systemNode);
             treeStore.saveNode(schemasNode);
             systemNode.addChildren(schemasNode);
+        }
+
+        responseServiceNode = (NetworkResponseServiceNode)
+                systemNode.getChildren(NetworkResponseServiceNode.NAME);
+        if (responseServiceNode==null)
+        {
+            responseServiceNode = new NetworkResponseServiceNode();
+            responseServiceNode.setParent(systemNode);
+            treeStore.saveNode(responseServiceNode);
+            systemNode.addChildren(responseServiceNode);
         }
     }
 

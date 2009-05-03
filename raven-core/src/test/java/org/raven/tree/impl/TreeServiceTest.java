@@ -30,6 +30,7 @@ import org.raven.conf.Configurator;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.ds.impl.RecordSchemasNode;
 import org.raven.log.impl.NodeLoggerNode;
+import org.raven.net.impl.NetworkResponseServiceNode;
 import org.raven.sched.impl.SchedulersNode;
 import org.raven.template.impl.TemplatesNode;
 import org.raven.tree.AttributeReference;
@@ -927,5 +928,8 @@ public class TreeServiceTest extends ServiceTestCase
                 (TemplatesNode) tree.getRootNode().getChildren(TemplatesNode.NAME);
         assertNotNull(templatesNode);
 
+        NetworkResponseServiceNode responseServiceNode = (NetworkResponseServiceNode) 
+                systemNode.getChildren(NetworkResponseServiceNode.NAME);
+        assertNotNull(responseServiceNode);
     }
 }

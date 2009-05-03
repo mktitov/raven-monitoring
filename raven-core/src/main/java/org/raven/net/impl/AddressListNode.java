@@ -25,7 +25,7 @@ import org.raven.tree.impl.BaseNode;
  */
 public class AddressListNode extends BaseNode
 {
-    public final static String NAME = "addressList";
+    public final static String NAME = "AddressList";
 
     public AddressListNode()
     {

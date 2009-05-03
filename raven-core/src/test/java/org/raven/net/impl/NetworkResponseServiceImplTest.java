@@ -23,10 +23,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.raven.PushOnDemandDataSource;
 import org.raven.RavenCoreTestCase;
+import org.raven.log.LogLevel;
 import org.raven.net.ContextUnavailableException;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.net.NetworkResponseServiceUnavailableException;
+import org.raven.tree.impl.SystemNode;
 
 /**
  *
@@ -43,15 +45,20 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase
         assertNotNull(responseService);
     }
 
-    @Test(expected=NetworkResponseServiceUnavailableException.class)
-    public void serviceUnavailableTest() throws NetworkResponseServiceExeption
-    {
-        responseService.getResponse("context", "1.1.1.1", null);
-    }
+//    @Test(expected=NetworkResponseServiceUnavailableException.class)
+//    public void serviceUnavailableTest() throws NetworkResponseServiceExeption
+//    {
+//        responseService.getResponse("context", "1.1.1.1", null);
+//    }
 
     @Test(expected=NetworkResponseServiceUnavailableException.class)
     public void serviceUnavailableTest2() throws NetworkResponseServiceExeption
     {
+        NetworkResponseServiceNode responseNode = (NetworkResponseServiceNode) 
+                tree.getRootNode().getChildren(SystemNode.NAME)
+                .getChildren(NetworkResponseServiceNode.NAME);
+        assertNotNull(responseNode);
+        responseNode.stop();
         NetworkResponseServiceNode responseServiceNode = new NetworkResponseServiceNode();
         responseServiceNode.setName("responseService");
         tree.getRootNode().addAndSaveChildren(responseServiceNode);
@@ -73,10 +80,11 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase
     @Test
     public void getResponseTest() throws NetworkResponseServiceExeption
     {
-        NetworkResponseServiceNode responseServiceNode = new NetworkResponseServiceNode();
-        responseServiceNode.setName("responseService");
-        tree.getRootNode().addAndSaveChildren(responseServiceNode);
-        assertTrue(responseServiceNode.start());
+        NetworkResponseServiceNode responseServiceNode = (NetworkResponseServiceNode)
+                tree.getRootNode().getChildren(SystemNode.NAME)
+                .getChildren(NetworkResponseServiceNode.NAME);
+        assertNotNull(responseServiceNode);
+        responseServiceNode.setLogLevel(LogLevel.TRACE);
 
         PushOnDemandDataSource ds = new PushOnDemandDataSource();
         ds.setName("ds");

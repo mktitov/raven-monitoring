@@ -18,7 +18,9 @@
 package org.raven.net.impl;
 
 import java.util.Map;
-import org.raven.annotations.NodeClass;
+import java.util.concurrent.atomic.AtomicLong;
+import org.raven.annotations.Parameter;
+import org.raven.log.LogLevel;
 import org.raven.net.ContextUnavailableException;
 import org.raven.net.NetworkResponseNode;
 import org.raven.net.NetworkResponseService;
@@ -30,18 +32,49 @@ import org.weda.internal.annotations.Service;
  *
  * @author Mikhail Titov
  */
-@NodeClass
 public class NetworkResponseServiceNode extends BaseNode implements NetworkResponseNode
 {
+    public final static String NAME = "NetworkResponseService";
+
     @Service
     private static NetworkResponseService networkResponseService;
 
+    @Parameter(readOnly=true)
+    private AtomicLong requestsCount;
+
+    @Parameter(readOnly=true)
+    private AtomicLong requestsWithErrors;
+
+    public NetworkResponseServiceNode()
+    {
+        super(NAME);
+    }
+
+    public AtomicLong getRequestsCount()
+    {
+        return requestsCount;
+    }
+
+    public AtomicLong getRequestsWithErrors()
+    {
+        return requestsWithErrors;
+    }
+
+    @Override
+    protected void initFields()
+    {
+        super.initFields();
+        requestsCount = new AtomicLong(0);
+        requestsWithErrors = new AtomicLong(0);
+    }
 
     @Override
     protected void doStart() throws Exception
     {
         super.doStart();
         networkResponseService.setNetworkResponseServiceNode(this);
+        requestsCount.set(0);
+        requestsWithErrors.set(0);
     }
 
     @Override
@@ -54,10 +87,66 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
     public String getResponse(String context, String requesterIp, Map<String, Object> params)
             throws NetworkResponseServiceExeption
     {
-        NetworkResponseContextNode contextNode = (NetworkResponseContextNode) getChildren(context);
-        if (contextNode==null || !contextNode.getStatus().equals(Status.STARTED))
-            throw new ContextUnavailableException(context);
-        
-        return contextNode.getResponse(requesterIp, params);
+        requestsCount.incrementAndGet();
+        String requestInfo = "";
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+        {
+            requestInfo = String.format(
+                    "Remote address (%s), context (%s), request parameters: %s"
+                    , requesterIp, context, paramsToString(params));
+            debug("Processing request. "+requestInfo);
+        }
+        try
+        {
+            NetworkResponseContextNode contextNode =
+                    (NetworkResponseContextNode) getChildren(context);
+            if (contextNode==null || !contextNode.getStatus().equals(Status.STARTED))
+               throw new ContextUnavailableException(context);
+
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug("Found context for request. "+requestInfo);
+            
+            String response = contextNode.getResponse(requesterIp, params);
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug("Request successfully processed. "+requestInfo);
+            if (isLogLevelEnabled(LogLevel.TRACE))
+                trace("Response for request. "+requestInfo+"\n>>>>\n"+response+"\n<<<<");
+            return response;
+        }
+        catch(NetworkResponseServiceExeption e)
+        {
+            requestsWithErrors.incrementAndGet();
+            if (isLogLevelEnabled(LogLevel.WARN))
+                warn(String.format(
+                        "Error processing request from (%s). %s", context, e.getMessage()));
+            throw e;
+        }
+        catch(RuntimeException e)
+        {
+            requestsWithErrors.incrementAndGet();
+            if (isLogLevelEnabled(LogLevel.ERROR))
+                error(
+                    String.format(
+                        "Error processing request from (%s). %s", context, e.getMessage())
+                    , e);
+            throw e;
+        }
+    }
+
+    private static String paramsToString(Map<String, Object> params)
+    {
+        if (params==null || params.isEmpty())
+            return "NO PARAMETERS";
+        StringBuilder buf = new StringBuilder();
+        boolean firstIteration = true;
+        for (Map.Entry<String, Object> param: params.entrySet())
+        {
+            buf.append(param.getKey()+" - ("+param.getValue()+")");
+            if (!firstIteration)
+                buf.append("; ");
+            if (firstIteration)
+                firstIteration = false;
+        }
+        return buf.toString();
     }
 }

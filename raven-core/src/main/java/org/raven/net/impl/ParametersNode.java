@@ -25,7 +25,7 @@ import org.raven.tree.impl.BaseNode;
  */
 public class ParametersNode extends BaseNode
 {
-    public final static String NAME = "parameters";
+    public final static String NAME = "Parameters";
 
     public ParametersNode()
     {
