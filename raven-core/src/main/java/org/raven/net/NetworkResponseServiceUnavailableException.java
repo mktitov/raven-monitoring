@@ -21,10 +21,10 @@ package org.raven.net;
  *
  * @author Mikhail Titov
  */
-public interface NetworkResponseService extends NetworkResponse
+public class NetworkResponseServiceUnavailableException extends NetworkResponseServiceExeption
 {
-    public NetworkResponseNode getNetworkResponseServiceNode();
-
-    public void setNetworkResponseServiceNode(NetworkResponseNode networkResponseNode);
-
+    public NetworkResponseServiceUnavailableException()
+    {
+        super("Network response service is unavailable now");
+    }
 }

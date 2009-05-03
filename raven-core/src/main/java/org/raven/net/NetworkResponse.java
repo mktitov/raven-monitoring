@@ -17,14 +17,14 @@
 
 package org.raven.net;
 
+import java.util.Map;
+
 /**
  *
  * @author Mikhail Titov
  */
-public interface NetworkResponseService extends NetworkResponse
+public interface NetworkResponse
 {
-    public NetworkResponseNode getNetworkResponseServiceNode();
-
-    public void setNetworkResponseServiceNode(NetworkResponseNode networkResponseNode);
-
+    public String getResponse(String context, String requesterIp, Map<String, Object> params)
+            throws NetworkResponseServiceExeption;
 }

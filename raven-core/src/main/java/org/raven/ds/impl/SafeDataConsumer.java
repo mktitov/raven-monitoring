@@ -18,9 +18,11 @@
 package org.raven.ds.impl;
 
 import java.util.Collection;
+import javax.script.Bindings;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
+import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
@@ -39,12 +41,13 @@ public class SafeDataConsumer extends BaseNode implements DataConsumer
     @NotNull @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     private DataSource dataSource;
 
-    @Parameter
+    @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
     private String expression;
 
     @NotNull @Parameter(defaultValue="false")
     private Boolean useExpression;
-    private BindingSupport bindingSupport;
+
+    protected BindingSupport bindingSupport;
     protected ThreadLocal data;
 
     @Override
@@ -114,6 +117,13 @@ public class SafeDataConsumer extends BaseNode implements DataConsumer
         {
             data.remove();
         }
+    }
+
+    @Override
+    public void formExpressionBindings(Bindings bindings)
+    {
+        super.formExpressionBindings(bindings);
+        bindingSupport.addTo(bindings);
     }
 
 }

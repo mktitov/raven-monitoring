@@ -17,14 +17,12 @@
 
 package org.raven.net;
 
+import org.raven.tree.Node;
+
 /**
  *
  * @author Mikhail Titov
  */
-public interface NetworkResponseService extends NetworkResponse
+public interface NetworkResponseNode extends NetworkResponse, Node
 {
-    public NetworkResponseNode getNetworkResponseServiceNode();
-
-    public void setNetworkResponseServiceNode(NetworkResponseNode networkResponseNode);
-
 }

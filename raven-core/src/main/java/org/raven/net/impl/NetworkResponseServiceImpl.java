@@ -18,46 +18,38 @@
 package org.raven.net.impl;
 
 import java.util.Map;
-import org.raven.annotations.NodeClass;
-import org.raven.net.ContextUnavailableException;
 import org.raven.net.NetworkResponseNode;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.NetworkResponseServiceExeption;
-import org.raven.tree.impl.BaseNode;
-import org.weda.internal.annotations.Service;
+import org.raven.net.NetworkResponseServiceUnavailableException;
+import org.raven.tree.Node.Status;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass
-public class NetworkResponseServiceNode extends BaseNode implements NetworkResponseNode
+public class NetworkResponseServiceImpl implements NetworkResponseService
 {
-    @Service
-    private static NetworkResponseService networkResponseService;
+    private NetworkResponseNode networkResponseServiceNode;
 
-
-    @Override
-    protected void doStart() throws Exception
+    public synchronized NetworkResponseNode getNetworkResponseServiceNode()
     {
-        super.doStart();
-        networkResponseService.setNetworkResponseServiceNode(this);
+        return networkResponseServiceNode;
     }
 
-    @Override
-    protected void doStop() throws Exception
+    public synchronized void setNetworkResponseServiceNode(
+            NetworkResponseNode networkResponseServiceNode)
     {
-        super.doStop();
-        networkResponseService.setNetworkResponseServiceNode(null);
+        this.networkResponseServiceNode = networkResponseServiceNode;
     }
-
+    
     public String getResponse(String context, String requesterIp, Map<String, Object> params)
             throws NetworkResponseServiceExeption
     {
-        NetworkResponseContextNode contextNode = (NetworkResponseContextNode) getChildren(context);
-        if (contextNode==null || !contextNode.getStatus().equals(Status.STARTED))
-            throw new ContextUnavailableException(context);
+        NetworkResponseNode serviceNode = getNetworkResponseServiceNode();
+        if (serviceNode==null || !serviceNode.getStatus().equals(Status.STARTED))
+            throw new NetworkResponseServiceUnavailableException();
         
-        return contextNode.getResponse(requesterIp, params);
+        return serviceNode.getResponse(context, requesterIp, params);
     }
 }

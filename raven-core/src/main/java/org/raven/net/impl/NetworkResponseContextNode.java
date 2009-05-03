@@ -22,16 +22,13 @@ import java.util.HashMap;
 import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
-import org.raven.ds.DataConsumer;
-import org.raven.ds.DataSource;
+import org.raven.ds.impl.SafeDataConsumer;
 import org.raven.net.AccessDeniedException;
 import org.raven.net.AddressMatcher;
 import org.raven.net.NetworkResponseContext;
 import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.net.RequiredParameterMissedException;
 import org.raven.tree.Node;
-import org.raven.tree.NodeAttribute;
-import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -40,29 +37,23 @@ import org.weda.annotations.constraints.NotNull;
  */
 @NodeClass(parentNode=NetworkResponseServiceNode.class, anyChildTypes=true)
 public class NetworkResponseContextNode
-        extends BaseNode implements NetworkResponseContext, DataConsumer
+        extends SafeDataConsumer implements NetworkResponseContext
 {
+    public static final String PARAMS_BINDING = "params";
     @NotNull() @Parameter(defaultValue="false")
     private Boolean allowRequestsFromAnyIp;
 
-    @NotNull @Parameter
-    private String context;
-
-
-    private DataSource dataSource;
-
     private AddressListNode addressListNode;
     private ParametersNode parametersNode;
-    private ThreadLocal value;
 
-    public String getContext()
+    public AddressListNode getAddressListNode()
     {
-        return context;
+        return addressListNode;
     }
 
-    public void setContext(String context)
+    public ParametersNode getParametersNode()
     {
-        this.context = context;
+        return parametersNode;
     }
 
     public Boolean getAllowRequestsFromAnyIp()
@@ -76,17 +67,9 @@ public class NetworkResponseContextNode
     }
 
     @Override
-    protected void initFields()
-    {
-        super.initFields();
-        value = new ThreadLocal();
-    }
-
-    @Override
     protected void doInit() throws Exception
     {
         super.doInit();
-
         generateNodes();
     }
 
@@ -94,7 +77,6 @@ public class NetworkResponseContextNode
     protected void doStart() throws Exception
     {
         super.doStart();
-
         generateNodes();
     }
 
@@ -122,12 +104,12 @@ public class NetworkResponseContextNode
                 if (node.getStatus().equals(Status.STARTED) && node instanceof ParameterNode)
                 {
                     ParameterNode param = (ParameterNode) node;
-                    Object value = params.get(param.getName());
+                    Object value = params==null? null : params.get(param.getName());
                     if (value==null && param.getRequired())
-                        throw new RequiredParameterMissedException(context, param.getName());
-                    value = converter.convert(param.getParameterType(), value, null);
+                        throw new RequiredParameterMissedException(param.getName(), getName());
+                    value = converter.convert(param.getParameterType(), value, param.getPattern());
                     if (value!=null)
-                        newParams.put(context, value);
+                        newParams.put(param.getName(), value);
                 }
 
         return newParams;
@@ -157,15 +139,10 @@ public class NetworkResponseContextNode
     {
         checkIp(requesterIp);
         params = checkParameters(params);
-    }
-
-    public void setData(DataSource dataSource, Object data)
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public Object refereshData(Collection<NodeAttribute> sessionAttributes)
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
+        bindingSupport.put(PARAMS_BINDING, params);
+        Object value = refereshData(null);
+        String result = converter.convert(String.class, value, null);
+        
+        return result;
     }
 }

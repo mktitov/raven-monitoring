@@ -21,10 +21,10 @@ package org.raven.net;
  *
  * @author Mikhail Titov
  */
-public interface NetworkResponseService extends NetworkResponse
+public class ContextUnavailableException extends NetworkResponseServiceExeption
 {
-    public NetworkResponseNode getNetworkResponseServiceNode();
-
-    public void setNetworkResponseServiceNode(NetworkResponseNode networkResponseNode);
-
+    public ContextUnavailableException(String context)
+    {
+        super(String.format("Context (%s) unavailable", context));
+    }
 }

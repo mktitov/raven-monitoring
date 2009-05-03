@@ -69,6 +69,8 @@ import org.raven.impl.StringToNodeConverter;
 import org.raven.impl.StringToTemplateVariableConverter;
 import org.raven.log.NodeLogger;
 import org.raven.log.impl.NodeLoggerImpl;
+import org.raven.net.NetworkResponseService;
+import org.raven.net.impl.NetworkResponseServiceImpl;
 import org.raven.sched.impl.SystemSchedulerReferenceValues;
 import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
 import org.raven.sql.QueryParameterValueHandlerFactory;
@@ -111,6 +113,7 @@ public class RavenCoreModule
         binder.bind(Configurator.class, ConfiguratorImpl.class);
 		binder.bind(GroupsOrganazier.class, GroupsOrganazierImpl.class);
 		binder.bind(ExpressionCache.class, ExpressionCacheImpl.class);
+        binder.bind(NetworkResponseService.class, NetworkResponseServiceImpl.class);
     }
 
     public static TemporaryCacheManager buildTemporaryCacheManager(CacheManager cacheManager)
