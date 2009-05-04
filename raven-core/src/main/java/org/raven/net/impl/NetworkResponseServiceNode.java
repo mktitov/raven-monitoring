@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.raven.annotations.Parameter;
 import org.raven.log.LogLevel;
 import org.raven.net.ContextUnavailableException;
+import org.raven.net.NetworkResponseContext;
 import org.raven.net.NetworkResponseNode;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.NetworkResponseServiceExeption;
@@ -87,30 +88,30 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
     public String getResponse(String context, String requesterIp, Map<String, Object> params)
             throws NetworkResponseServiceExeption
     {
-        requestsCount.incrementAndGet();
-        String requestInfo = "";
+        long requestId = requestsCount.incrementAndGet();
         if (isLogLevelEnabled(LogLevel.DEBUG))
         {
-            requestInfo = String.format(
+            String requestInfo = String.format(
+                    "[%d] Processing request. " +
                     "Remote address (%s), context (%s), request parameters: %s"
-                    , requesterIp, context, paramsToString(params));
-            debug("Processing request. "+requestInfo);
+                    , requestId, requesterIp, context, paramsToString(params));
+            debug(requestInfo);
         }
         try
         {
-            NetworkResponseContextNode contextNode =
-                    (NetworkResponseContextNode) getChildren(context);
+            NetworkResponseContext contextNode =
+                    (NetworkResponseContext) getChildren(context);
             if (contextNode==null || !contextNode.getStatus().equals(Status.STARTED))
                throw new ContextUnavailableException(context);
 
             if (isLogLevelEnabled(LogLevel.DEBUG))
-                debug("Found context for request. "+requestInfo);
+                debug(String.format("[%d] Found context for request", requestId));
             
             String response = contextNode.getResponse(requesterIp, params);
             if (isLogLevelEnabled(LogLevel.DEBUG))
-                debug("Request successfully processed. "+requestInfo);
+                debug(String.format("[%d] Request successfully processed", requestId));
             if (isLogLevelEnabled(LogLevel.TRACE))
-                trace("Response for request. "+requestInfo+"\n>>>>\n"+response+"\n<<<<");
+                trace(String.format("[%d] Request response \n>>>>\n%s\n<<<<", requestId, response));
             return response;
         }
         catch(NetworkResponseServiceExeption e)
@@ -118,7 +119,8 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
             requestsWithErrors.incrementAndGet();
             if (isLogLevelEnabled(LogLevel.WARN))
                 warn(String.format(
-                        "Error processing request from (%s). %s", context, e.getMessage()));
+                        "[%d] Error processing request from (%s). %s"
+                        , requestId, context, e.getMessage()));
             throw e;
         }
         catch(RuntimeException e)
@@ -127,7 +129,8 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
             if (isLogLevelEnabled(LogLevel.ERROR))
                 error(
                     String.format(
-                        "Error processing request from (%s). %s", context, e.getMessage())
+                        "[%d] Error processing request from (%s). %s"
+                        , requestId, context, e.getMessage())
                     , e);
             throw e;
         }
@@ -141,9 +144,9 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
         boolean firstIteration = true;
         for (Map.Entry<String, Object> param: params.entrySet())
         {
-            buf.append(param.getKey()+" - ("+param.getValue()+")");
             if (!firstIteration)
                 buf.append("; ");
+            buf.append(param.getKey()+" - ("+param.getValue()+")");
             if (firstIteration)
                 firstIteration = false;
         }

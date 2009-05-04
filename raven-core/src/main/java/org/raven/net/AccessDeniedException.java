@@ -25,15 +25,6 @@ public class AccessDeniedException extends NetworkResponseServiceExeption
 {
     public AccessDeniedException()
     {
-    }
-
-    public AccessDeniedException(String message, Throwable cause)
-    {
-        super(message, cause);
-    }
-
-    public AccessDeniedException(String message)
-    {
-        super(message);
+        super("Access denied.");
     }
 }

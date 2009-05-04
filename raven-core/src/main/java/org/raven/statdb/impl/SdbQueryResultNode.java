@@ -79,8 +79,8 @@ public class SdbQueryResultNode extends AbstractDataSource
     {
         QueryWrapper query = new QueryWrapper(
                 queryNode
-                , getAttributeValue(STARTTIME_SESSION_ATTRIBUTE)
-                , getAttributeValue(ENDTIME_SESSION_ATTRIBUTE));
+                , getAttributeValue(STARTTIME_SESSION_ATTRIBUTE, attributes)
+                , getAttributeValue(ENDTIME_SESSION_ATTRIBUTE, attributes));
         QueryResult queryResult = statisticsDatabase.executeQuery(query);
         dataConsumer.setData(this, queryResult);
         
@@ -119,9 +119,9 @@ public class SdbQueryResultNode extends AbstractDataSource
         }
     }
 
-    private String getAttributeValue(String attributeName)
+    private String getAttributeValue(String attributeName, Map<String, NodeAttribute> attrs)
     {
-        NodeAttribute attr = getNodeAttribute(attributeName);
+        NodeAttribute attr = attrs.get(attributeName);
         return attr==null? null : attr.getValue();
     }
 

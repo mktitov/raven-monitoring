@@ -23,51 +23,60 @@ import java.util.List;
 import java.util.Map;
 import org.raven.annotations.NodeClass;
 //import org.raven.annotations.Parameter;
-import org.raven.ds.DataSource;
-import org.raven.ds.impl.AbstractDataConsumer;
-import org.raven.table.Table;
+import org.raven.annotations.Parameter;
+import org.raven.ds.impl.SafeDataConsumer;
+import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.util.NodeUtils;
+import org.weda.annotations.constraints.NotNull;
 //import org.weda.annotations.constraints.NotNull;
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass(anyChildTypes=true)
-public class TableViewNode extends AbstractDataConsumer implements Viewable
+public class TableViewNode extends SafeDataConsumer implements Viewable
 {
-    private ThreadLocal<Table> table = new ThreadLocal<Table>();
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean autoRefresh;
 
     @Override
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) 
             throws Exception
     {
-    	logger.info("get VO for "+getName());
-        refereshData(refreshAttributes.values());
-
-        if (table.get()==null)
+        Object tableObj = refereshData(refreshAttributes==null? null : refreshAttributes.values());
+        if (!(tableObj instanceof Table))
+        {
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug(String.format(
+                        "Invalid data type recieved from (%s). Expected (%s) but recieved (%s)"
+                        , getDataSource().getPath()
+                        , tableObj==null? "NULL" : tableObj.getClass().getName()));
             return null;
+        }
 
-        ViewableObject tableObject = new ViewableObjectImpl(RAVEN_TABLE_MIMETYPE, table.get());
-        table.remove();
+        Table table = (Table) tableObj;
+
+        ViewableObject tableObject = new ViewableObjectImpl(RAVEN_TABLE_MIMETYPE, table);
 
         return Arrays.asList(tableObject);
-    }
-
-    @Override
-    protected void doSetData(DataSource dataSource, Object data)
-    {
-        if (data==null)
-            return;
-        Table tableData = converter.convert(Table.class, data, null);
-        table.set(tableData);
     }
 
     @Override
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
     {
         return NodeUtils.extractRefereshAttributes(this);
+    }
+
+    public void setAutoRefresh(Boolean autoRefresh)
+    {
+        this.autoRefresh = autoRefresh;
+    }
+
+    public Boolean getAutoRefresh()
+    {
+        return autoRefresh;
     }
 }

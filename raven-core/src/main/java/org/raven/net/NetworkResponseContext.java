@@ -18,12 +18,13 @@
 package org.raven.net;
 
 import java.util.Map;
+import org.raven.tree.Node;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface NetworkResponseContext
+public interface NetworkResponseContext extends Node
 {
     public String getResponse(String requesterIp, Map<String, Object> params)
             throws NetworkResponseServiceExeption;

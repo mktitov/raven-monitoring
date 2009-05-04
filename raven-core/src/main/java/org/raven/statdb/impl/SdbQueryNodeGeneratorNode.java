@@ -97,6 +97,11 @@ public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
 
     private SdbQueryNodeGeneratorTemplateNode queryNodeGeneratorTemplate;
 
+    public SdbQueryNodeGeneratorNode()
+    {
+        setStartAfterChildrens(true);
+    }
+
     @Override
     protected void initFields()
     {
@@ -251,6 +256,8 @@ public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
 
     public void addChildrensFor(SdbQueryNodeGeneratorGroupNode group)
     {
+        if (!getStatus().equals(Status.STARTED))
+            return;
         if (isLogLevelEnabled(LogLevel.DEBUG))
             debug(String.format("Adding childrens to group (%s)", group.getPath()));
         try

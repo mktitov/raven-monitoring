@@ -17,16 +17,17 @@
 
 package org.raven.net.impl;
 
-import org.raven.net.impl.LdapReaderNode;
-import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileInputStream;
+import java.util.List;
 import java.util.Properties;
 import org.junit.Test;
 import org.raven.DataCollector;
 import org.raven.RavenCoreTestCase;
+import org.raven.RavenUtils;
 import org.raven.conf.Configurator;
+import org.raven.ds.impl.AbstractDataConsumer.ResetDataPolicy;
 import org.raven.log.LogLevel;
+import org.raven.table.Table;
 
 /**
  *
@@ -59,9 +60,28 @@ public class LdapReaderNodeTest extends RavenCoreTestCase
         collector.setName("collector");
         tree.getRootNode().addAndSaveChildren(collector);
         collector.setDataSource(reader);
+        collector.setResetDataPolicy(ResetDataPolicy.DONT_RESET_DATA);
+        assertNotNull(collector.getNodeAttribute(LdapReaderNode.FILTER_ATTRIBUTE));
+        assertNotNull(collector.getNodeAttribute(LdapReaderNode.ATTRIBUTES_ATTRIBUTE));
+        assertNotNull(collector.getNodeAttribute(LdapReaderNode.FETCH_ATTRIBUTES_ATTRIBUTE));
+        assertNotNull(collector.getNodeAttribute(LdapReaderNode.START_SEARCH_FROM_ATTRIBUTE));
+        assertNotNull(collector.getNodeAttribute(LdapReaderNode.ADD_OBJECTDN_TO_RESULT_ATTRIBUTE));
+        collector.getNodeAttribute(LdapReaderNode.FILTER_ATTRIBUTE).setValue(
+                "(&(objectCategory=CN=Person,CN=Schema,CN=Configuration,DC=NW,DC=MTS,DC=RU)" +
+                "(mobile=9128672947))");
+        collector.getNodeAttribute(LdapReaderNode.START_SEARCH_FROM_ATTRIBUTE).setValue(
+                "OU=Отдел эксплуатации информационных технологий,OU=Блок ИТ," +
+                "OU=Коми,OU=MTSNWUSER,DC=USR,DC=NW,DC=MTS,DC=RU");
+//        collector.getNodeAttribute(LdapReaderNode.ATTRIBUTES_ATTRIBUTE).setValue("telephoneNumber");
+        collector.getNodeAttribute(LdapReaderNode.FETCH_ATTRIBUTES_ATTRIBUTE).setValue("false");
+        collector.getNodeAttribute(
+                LdapReaderNode.ADD_OBJECTDN_TO_RESULT_ATTRIBUTE).setValue("true");
         assertTrue(collector.start());
 
-        collector.refereshData(null);
-        fail();
+        Object obj = collector.refereshData(null);
+        assertNotNull(obj);
+        assertTrue(obj instanceof Table);
+        List<Object[]> rows = RavenUtils.tableAsList((Table)obj);
+        assertNotNull(rows);
     }
 }
