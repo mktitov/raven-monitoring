@@ -201,7 +201,9 @@ implements Comparator<NodeAttribute>
 	{
 		if(!isAllowNodeRename()) return;
 		String ret = (String) event.getReturnValue();
-		if(ret!=null && ret.length()>0)
+		if(ret==null) return;
+		ret = ret.trim();
+		if(ret.length()>0)
 		{
 			Node n = getNode();
 			n.setName(ret);

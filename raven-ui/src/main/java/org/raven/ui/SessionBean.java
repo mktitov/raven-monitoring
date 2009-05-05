@@ -488,7 +488,12 @@ public class SessionBean
 	public String getNewNodeType() { return newNodeType; }
 
 	public String getNewNodeName() { return newNodeName; }
-	public void setNewNodeName(String newNodeName) { this.newNodeName = newNodeName; }
+	public void setNewNodeName(String newName) 
+	{
+		newNodeName = newName;
+		if(newNodeName!=null) 
+			newNodeName = newNodeName.trim();
+	}
 
 	public boolean isRefreshTree() { return refreshTree; }
  	public void setRefreshTree(boolean refreshTree) { this.refreshTree = refreshTree; }
