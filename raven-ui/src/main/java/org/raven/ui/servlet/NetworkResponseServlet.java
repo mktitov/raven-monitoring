@@ -69,7 +69,25 @@ public class NetworkResponseServlet extends HttpServlet
             }
             String result = responseService.getResponse(
                     context, request.getRemoteAddr(), params);
-            response.setCharacterEncoding("UTF-8");
+            String charset = null;
+            String charsetsStr = request.getHeader("Accept-Charset");
+            if (charsetsStr!=null)
+            {
+                String[] charsets = charsetsStr.split("\\s*,\\s*");
+                if (charsets!=null && charsets.length>0)
+                {
+                    charset = charsets[0].split(";")[0];
+                    getServletContext().log(
+                            String.format("Charset (%s) selected from response", charset));
+                }
+            }
+            if (charset==null)
+            {
+                getServletContext().log(
+                        "Can't detect charset from request. Using default charset (UTF-8)");
+                charset = "UTF-8";
+            }
+            response.setCharacterEncoding(charset);
             PrintWriter out = response.getWriter();
             try
             {

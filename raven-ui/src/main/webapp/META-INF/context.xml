@@ -1,2 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Context path="/raven"/>
+<Context path="raven" override="true">
+    <Manager className="org.apache.catalina.session.StandardManager" pathname=""/>
+</Context>
