@@ -17,6 +17,7 @@
 
 package org.raven.ds.impl;
 
+import java.util.Arrays;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,20 +28,21 @@ import org.raven.RavenCoreTestCase;
 import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeAttributeImpl;
+import static org.junit.Assert.*;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class SafeDataPipeNodeTest extends RavenCoreTestCase
+public class AbstractSafeDataPipeTest extends RavenCoreTestCase
 {
-    private SafeDataPipeNode pipe;
+    private TestSafeDataPipe pipe;
     private DataCollector c1, c2;
 
     @Before
     public void prepare()
     {
-        pipe = new SafeDataPipeNode();
+        pipe = new TestSafeDataPipe();
         pipe.setName("pipe");
         tree.getRootNode().addAndSaveChildren(pipe);
         pipe.setLogLevel(LogLevel.DEBUG);
@@ -60,7 +62,7 @@ public class SafeDataPipeNodeTest extends RavenCoreTestCase
         c2.setResetDataPolicy(AbstractDataConsumer.ResetDataPolicy.DONT_RESET_DATA);
         c2.setDataSource(pipe);
         assertTrue(c2.start());
-        
+
     }
 
     @Test
@@ -161,7 +163,7 @@ public class SafeDataPipeNodeTest extends RavenCoreTestCase
         c1.setDataSource(null);
         c1.setDataSource(pipe);
         assertNotNull(c1.getNodeAttribute("testAttr"));
-        
+
         ds.addDataPortion("test");
         assertEquals("test", c1.refereshData(null));
         assertNotNull(ds.getLastSessionAttributes());
@@ -222,12 +224,38 @@ public class SafeDataPipeNodeTest extends RavenCoreTestCase
         attr = new NodeAttributeImpl("consAttr1", String.class, null, null);
         ds.addConsumerAttribute(attr);
         pipe.setForwardDataSourceAttributes(true);
-        
+
         c1.setDataSource(null);
         c1.setDataSource(pipe);
 
         assertNotNull(c1.getNodeAttribute("consAttr"));
         assertNotNull(c1.getNodeAttribute("consAttr1"));
+    }
+
+    @Test
+    public void preprocessTest() throws Exception
+    {
+        PushOnDemandDataSource ds = new PushOnDemandDataSource();
+        ds.setName("ds");
+        tree.getRootNode().addAndSaveChildren(ds);
+        ds.setLogLevel(LogLevel.DEBUG);
+        assertTrue(ds.start());
+
+        pipe.setDataSource(ds);
+        pipe.setUsePreProcess(true);
+        pipe.setPreProcess(
+                "sessAttrs['sessAttr'].realValue+sessAttrs['consAttr'].realValue");
+        assertTrue(pipe.start());
+
+        TestSessionAttributeNode sessAttr = new TestSessionAttributeNode();
+        sessAttr.setName("sessAttr");
+        pipe.addAndSaveChildren(sessAttr);
+        assertTrue(sessAttr.start());
+
+        NodeAttribute attr = new NodeAttributeImpl("consAttr", Integer.class, 1, null);
+        attr.init();
+        Object data = c1.refereshData(Arrays.asList(attr));
+        assertEquals(11, data);
     }
 
     private void testCollector(DataCollector collector, Object value)

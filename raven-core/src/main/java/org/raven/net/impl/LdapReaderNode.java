@@ -36,6 +36,7 @@ import org.raven.ds.impl.AbstractDataSource;
 import org.raven.log.LogLevel;
 import org.raven.table.ColumnBasedTable;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.impl.DataSourcesNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.internal.annotations.Service;
@@ -46,7 +47,7 @@ import org.weda.internal.services.MessagesRegistry;
  *
  * @author Mikhail Titov
  */
-@NodeClass
+@NodeClass(parentNode=DataSourcesNode.class)
 public class LdapReaderNode extends AbstractDataSource
 {
     public final static String FILTER_ATTRIBUTE = "filter";

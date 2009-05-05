@@ -17,17 +17,16 @@
 
 package org.raven.ds.impl;
 
-import org.raven.annotations.NodeClass;
 import org.raven.ds.DataSource;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass
-public class SafeDataPipeNode extends AbstractSafeDataPipe
+public class TestSafeDataPipe extends AbstractSafeDataPipe
 {
-    protected void doSetData(DataSource dataSource, Object data)
+    @Override
+    protected void doSetData(DataSource dataSource, Object data) throws Exception
     {
         sendDataToConsumers(data);
     }

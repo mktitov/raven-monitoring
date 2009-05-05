@@ -20,6 +20,7 @@ package org.raven.net.impl;
 import java.io.FileInputStream;
 import java.util.List;
 import java.util.Properties;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.raven.DataCollector;
 import org.raven.RavenCoreTestCase;
@@ -33,6 +34,7 @@ import org.raven.table.Table;
  *
  * @author Mikhail Titov
  */
+@Ignore
 public class LdapReaderNodeTest extends RavenCoreTestCase
 {
     @Test
