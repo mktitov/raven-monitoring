@@ -34,7 +34,7 @@ import org.raven.table.Table;
  *
  * @author Mikhail Titov
  */
-@Ignore
+//@Ignore
 public class LdapReaderNodeTest extends RavenCoreTestCase
 {
     @Test

@@ -49,7 +49,7 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
     private DataSource dataSource;
 
     @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
-    private String expression;
+    private Object expression;
 
     @NotNull @Parameter(defaultValue="false")
     private Boolean useExpression;
@@ -106,12 +106,12 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
         this.dataSource = dataSource;
     }
 
-    public String getExpression()
+    public Object getExpression()
     {
         return expression;
     }
 
-    public void setExpression(String expression)
+    public void setExpression(Object expression)
     {
         this.expression = expression;
     }
@@ -160,21 +160,32 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
                     if (   child.getStatus().equals(Status.STARTED)
                         && child instanceof SessionAttributeGenerator)
                     {
+                        if (isLogLevelEnabled(LogLevel.DEBUG))
+                            debug(String.format(
+                                    "Creating session attribute (%s)", child.getName()));
                         SessionAttributeGenerator gen = (SessionAttributeGenerator)child;
                         Object value = gen.getFieldValue(attributes);
                         NodeAttributeImpl attr = new NodeAttributeImpl(
                                 gen.getName(), gen.getAttributeType(), value, null);
                         attr.init();
                         attributes.put(gen.getName(), attr);
+                        if (isLogLevelEnabled(LogLevel.DEBUG))
+                            debug(String.format(
+                                    "Attribute information: type - (%s), value (%s)"
+                                    , gen.getAttributeType(), value));
                     }
 
             Object preprocessResult = null;
             if (usePreProcess)
             {
+                if (isLogLevelEnabled(LogLevel.DEBUG))
+                    debug("Preprocessing...");
                 bindingSupport.put(SESSIONATTRIBUTES_BINDING, attributes);
                 try
                 {
                     preprocessResult = getNodeAttribute(PREPROCESS_ATTRIBUTE).getRealValue();
+                    if (isLogLevelEnabled(LogLevel.DEBUG))
+                        debug(String.format("Preprocessed value is (%s)", preprocessResult));
                 }
                 finally
                 {

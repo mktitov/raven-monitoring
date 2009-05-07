@@ -23,6 +23,7 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
+import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
@@ -36,12 +37,40 @@ public class DataSourceRecordFieldValueGenerator
         extends AbstractFieldValueGenerator implements DataConsumer
 {
     public final static String DATASOURCE_ATTRIBUTE = "dataSource";
+    public static final String DATA_BINDING = "data";
+    public static final String EXPRESSION_ATTRIBUTE = "expression";
 
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     @NotNull
     private DataSource dataSource;
 
+    @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
+    private String expression;
+
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean useExpression;
+
     private ThreadLocal value;
+
+    public String getExpression()
+    {
+        return expression;
+    }
+
+    public void setExpression(String expression)
+    {
+        this.expression = expression;
+    }
+
+    public Boolean getUseExpression()
+    {
+        return useExpression;
+    }
+
+    public void setUseExpression(Boolean useExpression)
+    {
+        this.useExpression = useExpression;
+    }
 
     public DataSource getDataSource()
     {
@@ -77,6 +106,11 @@ public class DataSourceRecordFieldValueGenerator
                 this, sessionAttributes==null? null : sessionAttributes.values());
         Object val = value.get();
         value.remove();
+        if (useExpression)
+        {
+            bindingSupport.put(DATA_BINDING, val);
+            val = getNodeAttribute(EXPRESSION_ATTRIBUTE).getRealValue();
+        }
         return val;
     }
 }

@@ -107,5 +107,31 @@ public class CsvRecordWriterNodeTest extends RavenCoreTestCase
         assertNotNull(dataList.get(0));
         assertTrue(dataList.get(0) instanceof String);
         assertEquals("row1 05.05.2009", dataList.get(0));
+
+        writer.setFieldsOrder("f1");
+        consumer.getDataList().clear();
+        rec = schema.createRecord();
+        rec.setValue("f1", "row1");
+        rec.setValue("f2", ts);
+        ds.pushData(rec);
+        ds.pushData(null);
+        dataList = consumer.getDataList();
+        assertEquals(1, dataList.size());
+        assertNotNull(dataList.get(0));
+        assertTrue(dataList.get(0) instanceof String);
+        assertEquals("row1", dataList.get(0));
+
+        writer.setFieldsOrder("f2, f1");
+        consumer.getDataList().clear();
+        rec = schema.createRecord();
+        rec.setValue("f1", "row1");
+        rec.setValue("f2", ts);
+        ds.pushData(rec);
+        ds.pushData(null);
+        dataList = consumer.getDataList();
+        assertEquals(1, dataList.size());
+        assertNotNull(dataList.get(0));
+        assertTrue(dataList.get(0) instanceof String);
+        assertEquals("05.05.2009 row1", dataList.get(0));
     }
 }

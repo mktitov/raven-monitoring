@@ -20,6 +20,7 @@ package org.raven.ds.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
@@ -40,11 +41,14 @@ public class CsvRecordWriterNode extends AbstractSafeDataPipe
 {
     public static final int INITIAL_RECORDS_BUFFER_SIZE = 128;
 
-    @NotNull @Parameter
+    @NotNull @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
     private RecordSchemaNode recordSchema;
 
     @NotNull @Parameter(defaultValue=",")
     private String fieldSeparator;
+
+    @Parameter
+    private String fieldsOrder;
 
 //    @Parameter(defaultValue="\"")
 //    private String quoteChar;
@@ -62,6 +66,16 @@ public class CsvRecordWriterNode extends AbstractSafeDataPipe
     public RecordSchemaNode getRecordSchema()
     {
         return recordSchema;
+    }
+
+    public String getFieldsOrder()
+    {
+        return fieldsOrder;
+    }
+
+    public void setFieldsOrder(String fieldsOrder)
+    {
+        this.fieldsOrder = fieldsOrder;
     }
 
     public void setRecordSchema(RecordSchemaNode recordSchema)
@@ -106,7 +120,7 @@ public class CsvRecordWriterNode extends AbstractSafeDataPipe
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data) throws RecordException
+    protected void doSetData(DataSource dataSource, Object data) throws Exception
     {
         if (data==null)
         {
@@ -119,7 +133,30 @@ public class CsvRecordWriterNode extends AbstractSafeDataPipe
             Object res = null;
             if (recs!=null && !recs.isEmpty())
             {
-                RecordSchemaField[] fields = recordSchema.getFields();
+                RecordSchemaNode _recordSchema = recordSchema;
+                RecordSchemaField[] fields = null;
+                String _fieldsOrder = fieldsOrder;
+                if (_fieldsOrder!=null)
+                {
+                    String[] fieldsList = _fieldsOrder.split("\\s*,\\s*");
+                    if (fieldsList!=null && fieldsList.length>0)
+                    {
+                        Map<String, RecordSchemaField> allFields =
+                                RavenUtils.getRecordSchemaFields(_recordSchema);
+                        fields = new RecordSchemaField[fieldsList.length];
+                        for (int i=0; i<fields.length; ++i)
+                        {
+                            RecordSchemaField field = allFields.get(fieldsList[i]);
+                            if (field==null)
+                                throw new Exception(String.format(
+                                        "Record schema (%s) does not contains field (%s)"
+                                        , _recordSchema.getName(), fieldsList[i]));
+                            fields[i] = field;
+                        }
+                    }
+                }
+                if (fields==null)
+                    fields = _recordSchema.getFields();
                 if (fields!=null && fields.length>0)
                 {
                     String _fieldSeparator = fieldSeparator;

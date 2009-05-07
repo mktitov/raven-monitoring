@@ -27,7 +27,7 @@ import org.raven.tree.NodeAttribute;
  */
 public interface FieldValueGenerator extends Node
 {
-    public static String SESSION_ATTRIBUTES_BINDING="sessionAttributes";
+    public static String SESSION_ATTRIBUTES_BINDING="sessAttrs";
 
     public Object getFieldValue(Map<String, NodeAttribute> sessionAttributes);
 }

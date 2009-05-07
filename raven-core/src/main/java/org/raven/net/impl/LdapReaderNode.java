@@ -29,6 +29,7 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
+import org.apache.commons.lang.StringUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
@@ -130,6 +131,16 @@ public class LdapReaderNode extends AbstractDataSource
     public boolean gatherDataForConsumer(
             DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
     {
+        String filter = attributes.get(FILTER_ATTRIBUTE).getValue();
+        if (filter==null)
+        {
+            if (isLogLevelEnabled(LogLevel.ERROR))
+                error(String.format(
+                        "Error making request for (%s). Filter attribute value can not be null"
+                        , dataConsumer.getPath()));
+            return false;
+        }
+        
         NodeAttribute fetchAttrsAttr = attributes.get(FETCH_ATTRIBUTES_ATTRIBUTE);
         Boolean fetchAttrs = fetchAttrsAttr == null ?
             Boolean.FALSE: (Boolean) fetchAttrsAttr.getRealValue();
@@ -145,16 +156,28 @@ public class LdapReaderNode extends AbstractDataSource
         String startFromDN = getAttributeValue(START_SEARCH_FROM_ATTRIBUTE, attributes);
         if (startFromDN==null || startFromDN.trim().isEmpty())
             startFromDN = baseDN;
-        String filter = attributes.get(FILTER_ATTRIBUTE).getValue();
 
         if (isLogLevelEnabled(LogLevel.DEBUG))
             debug("Connecting to LDAP server");
         DirContext context = createContext(startFromDN);
-        if (isLogLevelEnabled(LogLevel.DEBUG))
-            debug("Connected");
-        ColumnBasedTable table = null;
         Boolean addObjectDNToResult =
                 attributes.get(ADD_OBJECTDN_TO_RESULT_ATTRIBUTE).getRealValue();
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+        {
+            debug("Connected");
+            String attrsStr = "";
+            if (attrs==null)
+                attrsStr = "ALL";
+            else if (attrs.length==0)
+                attrsStr = "DON'T FETCH";
+            else
+                attrsStr = StringUtils.join(attrs, ", ");
+            debug(String.format(
+                    "LDAP request parameters: \n  addObjectDNToResult (%s)\n  fetchAttributes (%s)" +
+                    "\n  startFromDN (%s)\n  filter >>>%s<<<\n  attributes (%s)"
+                    , addObjectDNToResult, fetchAttrs, startFromDN, filter, attrsStr));
+        }
+        ColumnBasedTable table = null;
         try
         {
             SearchControls control = new SearchControls();
@@ -168,6 +191,8 @@ public class LdapReaderNode extends AbstractDataSource
             {
                 ++rowsCount;
                 SearchResult searchResult = answer.next();
+                if (isLogLevelEnabled(LogLevel.TRACE))
+                    trace(String.format("row [%d] result: %s", rowsCount, searchResult.toString()));
                 if (addObjectDNToResult)
                     table.addValue(OBJECTDN_COLUMN_NAME, searchResult.getNameInNamespace());
                 Attributes objAttrs = searchResult.getAttributes();
@@ -193,6 +218,8 @@ public class LdapReaderNode extends AbstractDataSource
                 table.freeze();
             else
                 table = null;
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug(String.format("Fetched (%d) rows", rowsCount));
             dataConsumer.setData(this, table);
             
         }finally{
@@ -213,7 +240,7 @@ public class LdapReaderNode extends AbstractDataSource
     {
         NodeAttributeImpl attr = new NodeAttributeImpl(FILTER_ATTRIBUTE, String.class, null, null);
         attr.setDescriptionContainer(createDesc(FILTER_ATTRIBUTE));
-        attr.setRequired(true);
+//        attr.setRequired(true);
         consumerAttributes.add(attr);
 
         attr = new NodeAttributeImpl(ATTRIBUTES_ATTRIBUTE, String.class, null, null);

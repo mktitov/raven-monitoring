@@ -20,6 +20,7 @@ package org.raven.ds.impl;
 import java.util.Map;
 import javax.script.Bindings;
 import org.raven.ds.FieldValueGenerator;
+import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
 import org.raven.util.BindingSupport;
@@ -49,10 +50,15 @@ public abstract class AbstractFieldValueGenerator extends BaseNode implements Fi
 
     public Object getFieldValue(Map<String, NodeAttribute> sessionAttributes)
     {
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            debug("Forming field value");
         bindingSupport.put(SESSION_ATTRIBUTES_BINDING, sessionAttributes);
         try
         {
-            return doGetFieldValue(sessionAttributes);
+            Object val = doGetFieldValue(sessionAttributes);
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug(String.format("Field value formed - (%s)", val));
+            return val;
         }
         finally
         {

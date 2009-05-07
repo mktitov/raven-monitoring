@@ -46,4 +46,25 @@ public class DataSourceRecordFieldValueGeneratorTest extends RavenCoreTestCase
         ds.addDataPortion(1);
         assertEquals(1, fieldValue.getFieldValue(null));
     }
+
+    @Test
+    public void expressionTest()
+    {
+        PushOnDemandDataSource ds = new PushOnDemandDataSource();
+        ds.setName("ds");
+        tree.getRootNode().addAndSaveChildren(ds);
+        ds.setLogLevel(LogLevel.DEBUG);
+        assertTrue(ds.start());
+
+        DataSourceRecordFieldValueGenerator fieldValue = new DataSourceRecordFieldValueGenerator();
+        fieldValue.setName("fieldValue");
+        tree.getRootNode().addAndSaveChildren(fieldValue);
+        fieldValue.setDataSource(ds);
+        fieldValue.setExpression("data+1");
+        fieldValue.setUseExpression(true);
+        assertTrue(fieldValue.start());
+
+        ds.addDataPortion(1);
+        assertEquals(2, fieldValue.getFieldValue(null));
+    }
 }
