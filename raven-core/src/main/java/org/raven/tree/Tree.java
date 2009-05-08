@@ -79,6 +79,12 @@ public interface Tree
             Node source, Node destination, String newNodeName, NodeTuner nodeTuner
             , boolean store, boolean validateNodeType, boolean useEffectiveChildrens);
     /**
+     * Moves source node to the destination node
+     * @param source the node that must be moved
+     * @param destination the node to which source node will be moved
+     */
+    public void move(Node source, Node destination);
+    /**
      * Search for nodes that satisfy the node filter
      * @param options search options
      * @param filter filter options

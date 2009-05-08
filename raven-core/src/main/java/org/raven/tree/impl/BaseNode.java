@@ -363,6 +363,12 @@ public class BaseNode implements Node, NodeListener, Logger
         node.init();
     }
 
+    public void detachChildren(Node node)
+    {
+        if (childrens!=null)
+            childrens.remove(node.getName());
+    }
+
     public void removeChildren(Node node)
     {
         if (logger.isDebugEnabled())

@@ -268,6 +268,11 @@ public class TreeImpl implements Tree
         }
     }
 
+    public void move(Node source, Node destination)
+    {
+        ;
+    }
+
     public List<Node> search(Node searchFromNode, SearchOptions options, SearchFilter filter) 
     {
         List<Node> result = new ArrayList<Node>();
