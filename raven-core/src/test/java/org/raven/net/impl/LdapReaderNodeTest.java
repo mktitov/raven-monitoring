@@ -27,14 +27,16 @@ import org.raven.RavenCoreTestCase;
 import org.raven.RavenUtils;
 import org.raven.conf.Configurator;
 import org.raven.ds.impl.AbstractDataConsumer.ResetDataPolicy;
+import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.table.Table;
+import org.raven.tree.NodeAttribute;
 
 /**
  *
  * @author Mikhail Titov
  */
-//@Ignore
+@Ignore
 public class LdapReaderNodeTest extends RavenCoreTestCase
 {
     @Test
@@ -68,16 +70,22 @@ public class LdapReaderNodeTest extends RavenCoreTestCase
         assertNotNull(collector.getNodeAttribute(LdapReaderNode.FETCH_ATTRIBUTES_ATTRIBUTE));
         assertNotNull(collector.getNodeAttribute(LdapReaderNode.START_SEARCH_FROM_ATTRIBUTE));
         assertNotNull(collector.getNodeAttribute(LdapReaderNode.ADD_OBJECTDN_TO_RESULT_ATTRIBUTE));
+        assertNotNull(collector.getNodeAttribute(LdapReaderNode.USE_ROW_FILTER_ATTRIBUTE));
+        assertNotNull(collector.getNodeAttribute(LdapReaderNode.ROW_FILTER_ATTRIBUTE));
         collector.getNodeAttribute(LdapReaderNode.FILTER_ATTRIBUTE).setValue(
                 "(&(objectCategory=CN=Person,CN=Schema,CN=Configuration,DC=NW,DC=MTS,DC=RU)" +
-                "(mobile=9128672947))");
+                "(mobile=91286729*))");
         collector.getNodeAttribute(LdapReaderNode.START_SEARCH_FROM_ATTRIBUTE).setValue(
-                "OU=Отдел эксплуатации информационных технологий,OU=Блок ИТ," +
+                "OU=Блок ИТ," +
                 "OU=Коми,OU=MTSNWUSER,DC=USR,DC=NW,DC=MTS,DC=RU");
-//        collector.getNodeAttribute(LdapReaderNode.ATTRIBUTES_ATTRIBUTE).setValue("telephoneNumber");
-        collector.getNodeAttribute(LdapReaderNode.FETCH_ATTRIBUTES_ATTRIBUTE).setValue("false");
+        collector.getNodeAttribute(LdapReaderNode.ATTRIBUTES_ATTRIBUTE).setValue("mobile");
+        collector.getNodeAttribute(LdapReaderNode.FETCH_ATTRIBUTES_ATTRIBUTE).setValue("true");
         collector.getNodeAttribute(
                 LdapReaderNode.ADD_OBJECTDN_TO_RESULT_ATTRIBUTE).setValue("true");
+        collector.getNodeAttribute(LdapReaderNode.USE_ROW_FILTER_ATTRIBUTE).setValue("true");
+        NodeAttribute filterAttr = collector.getNodeAttribute(LdapReaderNode.ROW_FILTER_ATTRIBUTE);
+        filterAttr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
+        filterAttr.setValue("row['mobile']==~/[0-9]+/");
         assertTrue(collector.start());
 
         Object obj = collector.refereshData(null);
@@ -85,5 +93,6 @@ public class LdapReaderNodeTest extends RavenCoreTestCase
         assertTrue(obj instanceof Table);
         List<Object[]> rows = RavenUtils.tableAsList((Table)obj);
         assertNotNull(rows);
+        assertEquals(4, rows.size());
     }
 }

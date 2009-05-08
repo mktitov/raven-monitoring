@@ -17,9 +17,13 @@
 
 package org.raven.net.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -29,16 +33,24 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
+import javax.script.Bindings;
+import javax.script.SimpleBindings;
 import org.apache.commons.lang.StringUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.impl.AbstractDataSource;
+import org.raven.expr.Expression;
+import org.raven.expr.ExpressionCompiler;
+import org.raven.expr.impl.ExpressionAttributeValueHandler;
+import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
+import org.raven.expr.impl.GroovyExpressionCompiler;
 import org.raven.log.LogLevel;
 import org.raven.table.ColumnBasedTable;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.DataSourcesNode;
 import org.raven.tree.impl.NodeAttributeImpl;
+import org.raven.util.BindingSupport;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.internal.annotations.Service;
 import org.weda.internal.impl.MessageComposer;
@@ -56,11 +68,16 @@ public class LdapReaderNode extends AbstractDataSource
     public final static String FETCH_ATTRIBUTES_ATTRIBUTE = "fetchAttributes";
     public final static String START_SEARCH_FROM_ATTRIBUTE = "startFetchFromDN";
     public final static String ADD_OBJECTDN_TO_RESULT_ATTRIBUTE = "addObjectDNToResult";
+    public final static String ROW_FILTER_ATTRIBUTE = "rowFilter";
+    public final static String USE_ROW_FILTER_ATTRIBUTE = "useRowFilter";
 
     public static final String OBJECTDN_COLUMN_NAME = "objectDN";
     
     @Service
-    protected MessagesRegistry messages;
+    protected static MessagesRegistry messages;
+
+    @Service
+    protected static ExpressionCompiler expressionCompiler;
 
     @NotNull @Parameter
     private String url;
@@ -76,6 +93,15 @@ public class LdapReaderNode extends AbstractDataSource
 
     @NotNull @Parameter(defaultValue="simple")
     private String authType;
+
+    private BindingSupport bindingSupport;
+
+    @Override
+    protected void initFields()
+    {
+        super.initFields();
+        bindingSupport = new BindingSupport();
+    }
 
     public String getAuthType()
     {
@@ -178,6 +204,17 @@ public class LdapReaderNode extends AbstractDataSource
                     , addObjectDNToResult, fetchAttrs, startFromDN, filter, attrsStr));
         }
         ColumnBasedTable table = null;
+        boolean useRowFilter = (Boolean)attributes.get(USE_ROW_FILTER_ATTRIBUTE).getRealValue();
+        NodeAttribute rowFilterAttr = attributes.get(ROW_FILTER_ATTRIBUTE);
+        Expression filterExpression = null;
+        if (   useRowFilter && rowFilterAttr!=null && rowFilterAttr.getRawValue()!=null
+            && ExpressionAttributeValueHandlerFactory.TYPE.equals(
+                    rowFilterAttr.getValueHandlerType()))
+        {
+            filterExpression =
+                    ((ExpressionAttributeValueHandler)rowFilterAttr.getValueHandler())
+                    .getExpression();
+        }
         try
         {
             SearchControls control = new SearchControls();
@@ -187,14 +224,19 @@ public class LdapReaderNode extends AbstractDataSource
             NamingEnumeration<SearchResult> answer = context.search("", filter, control);
             table = new ColumnBasedTable();
             int rowsCount = 0;
+            Map<String, Object> row = null;
             while (answer.hasMore())
             {
-                ++rowsCount;
+                row = new HashMap<String, Object>();
+                List<String> colNames = new ArrayList<String>(16);
                 SearchResult searchResult = answer.next();
                 if (isLogLevelEnabled(LogLevel.TRACE))
                     trace(String.format("row [%d] result: %s", rowsCount, searchResult.toString()));
                 if (addObjectDNToResult)
-                    table.addValue(OBJECTDN_COLUMN_NAME, searchResult.getNameInNamespace());
+                {
+                    row.put(OBJECTDN_COLUMN_NAME, searchResult.getNameInNamespace());
+                    colNames.add(OBJECTDN_COLUMN_NAME);
+                }
                 Attributes objAttrs = searchResult.getAttributes();
                 NamingEnumeration<? extends Attribute> attrsIterator = objAttrs.getAll();
                 while (attrsIterator.hasMore())
@@ -211,8 +253,32 @@ public class LdapReaderNode extends AbstractDataSource
                         if (firstCycle)
                             firstCycle=false;
                     }
-                    table.addValue(objAttr.getID(), value.toString());
+                    row.put(objAttr.getID(), value.toString());
+                    colNames.add(objAttr.getID());
                 }
+                boolean skipRow = false;
+                if (useRowFilter)
+                {
+                    if (rowFilterAttr==null)
+                        skipRow = true;
+                    else if (filterExpression!=null)
+                    {
+                        SimpleBindings bindings = new SimpleBindings();
+                        rowFilterAttr.getOwner().formExpressionBindings(bindings);
+                        bindings.put("row", row);
+                        skipRow = !converter.convert(
+                                Boolean.class, filterExpression.eval(bindings), null);
+                    }
+                    else
+                        skipRow = !Boolean.TRUE.equals(rowFilterAttr.getRealValue());
+                }
+                if (!skipRow && !row.isEmpty())
+                {
+                    ++rowsCount;
+                    for (String colName: colNames)
+                        table.addValue(colName, row.get(colName));
+                }
+
             }
             if (rowsCount>0)
                 table.freeze();
@@ -227,6 +293,13 @@ public class LdapReaderNode extends AbstractDataSource
         }
         
         return true;
+    }
+
+    @Override
+    public void formExpressionBindings(Bindings bindings)
+    {
+        super.formExpressionBindings(bindings);
+        bindingSupport.addTo(bindings);
     }
 
     private String getAttributeValue(String attrName, Map<String, NodeAttribute> attrs)
@@ -258,6 +331,16 @@ public class LdapReaderNode extends AbstractDataSource
 
         attr = new NodeAttributeImpl(ADD_OBJECTDN_TO_RESULT_ATTRIBUTE, Boolean.class, false, null);
         attr.setDescriptionContainer(createDesc(ADD_OBJECTDN_TO_RESULT_ATTRIBUTE));
+        attr.setRequired(true);
+        consumerAttributes.add(attr);
+
+        attr = new NodeAttributeImpl(ROW_FILTER_ATTRIBUTE, Boolean.class, null, null);
+        attr.setDescriptionContainer(createDesc(ROW_FILTER_ATTRIBUTE));
+        attr.setRequired(false);
+        consumerAttributes.add(attr);
+        
+        attr = new NodeAttributeImpl(USE_ROW_FILTER_ATTRIBUTE, Boolean.class, false, null);
+        attr.setDescriptionContainer(createDesc(USE_ROW_FILTER_ATTRIBUTE));
         attr.setRequired(true);
         consumerAttributes.add(attr);
     }
