@@ -18,8 +18,13 @@
 package org.raven.ui;
 
 import org.apache.tapestry.ioc.MappedConfiguration;
+import org.apache.tapestry.ioc.OrderedConfiguration;
 import org.apache.tapestry.ioc.ServiceBinder;
+import org.raven.tree.AttributeReferenceValues;
+import org.raven.tree.AttributeValueHandlerFactory;
 import org.raven.ui.services.LocaleService;
+import org.raven.ui.services.SessionAttributeReferenceValues;
+import org.raven.ui.services.SessionAttributeValueHandlerFactory;
 import org.raven.ui.services.SessionCache;
 import org.weda.internal.Cache;
 import org.weda.internal.CacheScope;
@@ -39,5 +44,22 @@ public class RavenUiModule
     public static void contributeCacheManager(MappedConfiguration<CacheScope, Cache> conf)
     {
         conf.add(CacheScope.SESSION, new SessionCache());
+    }
+
+    public static void contributeAttributeValueHandlerRegistry(
+            MappedConfiguration<String, AttributeValueHandlerFactory> conf)
+    {
+        conf.add(
+            SessionAttributeValueHandlerFactory.TYPE
+            , new SessionAttributeValueHandlerFactory());
+    }
+
+    public static void contributeAttributeReferenceValues(
+            OrderedConfiguration<AttributeReferenceValues> conf)
+    {
+        conf.add(
+                SessionAttributeReferenceValues.class.getSimpleName()
+                , new SessionAttributeReferenceValues()
+                , "after:*");
     }
 }
