@@ -11,15 +11,19 @@ import org.slf4j.LoggerFactory;
 
 public class ViewableObjectWrapper 
 {
-	private Logger logger = LoggerFactory.getLogger(ViewableObjectWrapper.class);
+	private static final Logger logger = LoggerFactory.getLogger(ViewableObjectWrapper.class);
 	public static final String NODE_URL = "nodeUrl";
 	public static final String RAVEN_TABLE_GR = "ravenTable";
+	public static final String IMAGE = "image";
+	public static final String UID_DELIM = "@"; 
 	private ViewableObject viewableObject = null;
 	private Node node = null;
 	private long fd = 0;
 //	private String htmlTable = null;
 	private byte[] image = null;
 	private VOTableWrapper tableWrapper = null;
+	private int uid;
+	private int nodeId;
 //	private List<TableItemWrapper[]> tableData  = null;
 //	private String[] tableColumnNames  = null;
 //	private boolean[] valid = null;
@@ -39,6 +43,12 @@ public class ViewableObjectWrapper
 	public String getId()
 	{
 		return toString();
+	}
+
+	public String getIdVO()
+	{
+		if(viewableObject==null) return "";
+		return viewableObject.toString(); 
 	}
 	
 	public String getHeight() 
@@ -61,7 +71,7 @@ public class ViewableObjectWrapper
 
 	public boolean isImage()
 	{
-		if(isViewable() && getMimeGroup().equals("image")) return true;
+		if(isViewable() && getMimeGroup().equals(IMAGE)) return true;
 		return false;
 	}
 	
@@ -119,9 +129,11 @@ public class ViewableObjectWrapper
 	public String getMimeGroup()
 	{
 		if(!isViewable()) return NODE_URL;
-		if( isTable() ) 
-			return RAVEN_TABLE_GR;
-		String[] sa = viewableObject.getMimeType().split("/");
+		if( isTable() ) return RAVEN_TABLE_GR;
+		String mtype = viewableObject.getMimeType();
+		String[] sa = mtype.split("/");
+		//if(IMAGE.equals(sa[0])) return IMAGE;
+		//return mtype;
 		return sa[0];
 	}
 	
@@ -166,6 +178,34 @@ public class ViewableObjectWrapper
 	public long getFd() 
 	{
 		return fd;
+	}
+
+	public void setUid(int uid) 
+	{
+	//	logger.info("setUid():"+uid);
+		this.uid = uid;
+	}
+
+	public int getUid() 
+	{
+	//	logger.info("getUid():"+uid);
+		return uid;
+	}
+
+	public void setNodeId(int nodeId) 
+	{
+	//	logger.info("setNodeId():"+nodeId);
+		this.nodeId = nodeId;
+	}
+
+	public int getNodeId() 
+	{
+	//	logger.info("getNodeId():"+nodeId);
+		return nodeId;
+	}
+	
+	public String getComplexUid() {
+		return ""+getNodeId()+UID_DELIM+getUid();
 	}
 	
 }

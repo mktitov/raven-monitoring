@@ -32,16 +32,25 @@
 <!-- Show viewable node                -->
 <!-- ********************************* -->
   <tr:switcher 
-  	id="switcher" 
+ 	id="switcher" 
   	facetName="#{selectVO.object.mimeGroup}" 
   	defaultFacet="default">
-
-  	<f:facet name="default"/>
-
+  	<f:facet name="default">
+		<tr:commandLink
+          	text="#{msgs.file}: #{row.idVO}"
+           	actionListener="#{otherVO.export}">
+           	<f:attribute
+          		name="nodeId"
+        		value="#{row.nodeId}"/>
+			<f:attribute
+        	    name="uid"
+          		value="#{row.uid}"/>
+	   	</tr:commandLink>
+	</f:facet>
 <!-- show nodeUrl --> 
   	<f:facet name="nodeUrl">
 		<tr:commandLink 
-			text="#{row.nodePath}" 
+			text="#{msgs.node}: #{row.node.name}" 
 			actionListener="#{sBean.selectNode}">
 			<f:attribute 
 				name="nodePath" 

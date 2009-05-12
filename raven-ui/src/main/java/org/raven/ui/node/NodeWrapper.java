@@ -288,7 +288,7 @@ implements Comparator<NodeAttribute>
 		logger.info("+++ ");
 		for(ViewableObjectWrapper v : x)
 		{
-			logger.info(" id="+v.getId()+"  group="+v.getMimeGroup());
+			logger.info(" id="+v.getId()+"  group="+v.getMimeGroup()+"  nodeId="+v.getNodeId()+"  uid="+v.getUid());
 		}
 		logger.info("--- ");
 		return x;
@@ -334,6 +334,7 @@ implements Comparator<NodeAttribute>
 			NodeWrapper tmp = wrappers.remove(0);
 			wrappers.add(tmp);
 		}
+		if(editingRefreshAttrs!=null) editingRefreshAttrs.clear();
 		editingRefreshAttrs = new HashMap<String,Attr>();
 		for(NodeWrapper nw : wrappers)
 		{
@@ -352,6 +353,10 @@ implements Comparator<NodeAttribute>
 		loadRefreshAttributes();
 		List<NodeAttribute> attrList = getNodeAttributes();
 		Collections.sort(attrList, this);
+		//if(editingAttrs!=null) editingAttrs.clear();
+		//if(readOnlyAttributes!=null) readOnlyAttributes.clear();
+		//if(savedAttrs!=null) savedAttrs.clear();
+		
 		editingAttrs = new ArrayList<Attr>();
 		readOnlyAttributes = new ArrayList<NodeAttribute>();
 		savedAttrs = new ArrayList<NodeAttribute>(); 

@@ -116,6 +116,12 @@
     <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
   <managed-bean>
+    <managed-bean-name>otherVO</managed-bean-name>
+    <managed-bean-class>org.raven.ui.vo.OtherVOExportBean</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
     <managed-bean-name>test</managed-bean-name>
     <managed-bean-class>org.raven.ui.util.TestBean</managed-bean-class>
     <managed-bean-scope>session</managed-bean-scope>
