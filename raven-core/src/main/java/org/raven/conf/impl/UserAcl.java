@@ -40,6 +40,7 @@ public class UserAcl
 	protected Logger logger = LoggerFactory.getLogger(UserAcl.class);
 	public static final long expireInterval = 300000;
 	public static final String TEST_GROUP = "CN=testGroup,OU=testOU";
+	public static final String PUBLIC_GROUP = "CN=PUBLIC,OU=testOU";
 	
 	private String accountName;
 	private AccessControlList acl;
@@ -67,6 +68,7 @@ public class UserAcl
 	private GroupsList loadGroupsList()
 	{
 	    GroupsList glist = new GroupsList();
+	    glist.add(PUBLIC_GROUP);
 	    if(testMode)
 	    {
 	    	glist.add(TEST_GROUP);

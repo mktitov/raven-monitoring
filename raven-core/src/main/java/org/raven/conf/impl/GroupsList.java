@@ -56,8 +56,13 @@ public class GroupsList extends ArrayList<String>
 		 {
 			String tmp = m.group(1);
 		    if(tmp!=null && tmp.length()>0)
+		    {
 		    	super.add(tmp);
+		    	//logger.info("added group "+tmp);
+		    	return;
+		    }	
 		 } 
+		//logger.info("not added group "+fullName);
 	}
 	
 	public void sort()
