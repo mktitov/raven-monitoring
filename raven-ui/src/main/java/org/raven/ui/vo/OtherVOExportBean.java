@@ -3,6 +3,7 @@ package org.raven.ui.vo;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 //import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.tools.ant.input.InputRequest;
 import org.raven.cache.CacheValueContainer;
 import org.raven.tree.ViewableObject;
 import org.raven.ui.SessionBean;
@@ -61,7 +63,7 @@ public class OtherVOExportBean
 		response.setHeader("Content-disposition", "attachment; filename=" + fname);
 		response.setContentType(ct);
 
-		//PrintWriter out = null;
+		//PrintWriter pout = null;
 		OutputStream out = null;
 		try 
 		{
@@ -77,6 +79,8 @@ public class OtherVOExportBean
 				int len;
 				byte[] buf = new byte[blen];
 				InputStream is = (InputStream) data;
+				//java.io.
+				
 				while( (len=is.read(buf))!=-1 )
 					out.write(buf, 0, len); 
 			}

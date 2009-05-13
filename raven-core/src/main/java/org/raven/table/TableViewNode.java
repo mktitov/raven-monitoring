@@ -42,7 +42,7 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
     @NotNull @Parameter(defaultValue="false")
     private Boolean autoRefresh;
 
-    @Override
+    //@Override
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) 
             throws Exception
     {
@@ -64,7 +64,7 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
         return Arrays.asList(tableObject);
     }
 
-    @Override
+    //@Override
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
     {
         return NodeUtils.extractRefereshAttributes(this);
