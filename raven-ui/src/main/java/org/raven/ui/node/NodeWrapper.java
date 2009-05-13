@@ -32,6 +32,7 @@ import org.apache.myfaces.trinidad.event.PollEvent;
 import org.apache.myfaces.trinidad.event.ReturnEvent;
 //import org.apache.myfaces.trinidad.model.UploadedFile;
 import org.apache.myfaces.custom.fileupload.UploadedFile;
+import org.raven.conf.impl.AccessControl;
 import org.raven.log.LogLevel;
 import org.raven.log.NodeLogRecord;
 import org.raven.tree.DataFile;
@@ -110,6 +111,27 @@ implements Comparator<NodeAttribute>
 		this.setNode(node);
 	}
 
+	public List<Node> getUpperNodes()
+	//public NodesMenuModel getUpperNodes()
+	{
+		List<Node> rt = new ArrayList<Node>();
+		Node n = getNode();
+		if(n!=null && n.getParent()!=null) rt.add(n);
+		while(true)
+		{
+			n = n.getParent();
+			if(n==null || n.getParent()==null) break;
+			int ac = SessionBean.getUserAcl().getAccessForNode(n);
+			if(ac> AccessControl.NONE) rt.add(n);
+		}
+		Collections.reverse(rt);
+		//List<Node> ret = new ArrayList<Node>();
+		//for(int i=rt.size()-1;i>=0;i--)
+		//	ret.add(rt.get(i));
+		//return new NodesMenuModel(rt);
+		return rt;
+	}
+	
 	public String getRefreshAttributesTitle()
 	{
 		String mesName = null;

@@ -44,7 +44,7 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 			catch (Exception e) { logger.error("on load viewable objects: ",e);}
 		if(vol==null)
 		{
-			vowl.clear();
+			//vowl.clear();
 			return vowl;
 		}	
 		for(ViewableObject vo : vol)
