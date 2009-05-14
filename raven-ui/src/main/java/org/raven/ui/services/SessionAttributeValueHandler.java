@@ -21,6 +21,7 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpSession;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.AbstractAttributeValueHandler;
+import org.weda.beans.ObjectUtils;
 
 /**
  *
@@ -33,11 +34,16 @@ public class SessionAttributeValueHandler extends AbstractAttributeValueHandler
     public SessionAttributeValueHandler(NodeAttribute attribute)
     {
         super(attribute);
+        sessionAttributeName = attribute.getRawValue();
     }
 
     public void setData(String value) throws Exception
     {
-        sessionAttributeName = value;
+        if (!ObjectUtils.equals(value, sessionAttributeName))
+        {
+            sessionAttributeName = value;
+            attribute.save();
+        }
     }
 
     public String getData()
