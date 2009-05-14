@@ -32,6 +32,7 @@
         
             <!-- <tr:form usesUpload="true"> -->
             <h:form id="form1" enctype="multipart/form-data" >
+            <tr:panelGroupLayout layout="horizontal">
             <tr:navigationPane hint="tabs">
               	<tr:commandNavigationItem
               		rendered="#{cNode.allowNodeRead}"
@@ -65,6 +66,9 @@
               		partialSubmit="true" 
               		immediate="true"/>
             </tr:navigationPane>
+            <tr:spacer width="5"/>
+            <tr:statusIndicator/>
+            </tr:panelGroupLayout>
         	<f:subview id="body">
             	<jsp:include page="tabNodeEdit.jspx" flush="true"/>
             </f:subview>

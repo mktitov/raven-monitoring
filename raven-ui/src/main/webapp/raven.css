@@ -74,3 +74,10 @@ af|panelTabbed::body
 {
   padding: 10px;
 }
+
+af|statusIndicator::busy-icon {
+  content:url(/images/wheelred.gif);
+  width:16px;
+  height:16px
+}
+

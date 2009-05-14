@@ -23,7 +23,7 @@
           xmlns:s="http://myfaces.apache.org/sandbox" >
 <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
 
-<tr:spacer height="3" />
+<tr:spacer height="5" />
     
     
 <tr:panelBorderLayout>    

@@ -22,8 +22,7 @@
 
 <!-- captionText="#{msgs.nodeStatus}" -->
 <tr:form>
-<tr:panelCaptionGroup 
-	rendered="#{!sBean.collapsed}"
+<tr:panelCaptionGroup rendered="#{! sBean.collapsed}" 
     id="pcg"  
     captionText="#{msgs.currentNode}" >
     
@@ -37,79 +36,65 @@
 				selected="false"
 				text="#{node.name}"
       			actionListener="#{sBean.selectNode}">
-					<f:attribute 
-						name="nodePath" 
-						value="#{node.path}"/>
+				<f:attribute 
+					name="nodePath" 
+					value="#{node.path}"/>
      		</tr:commandNavigationItem>
         </tr:forEach>
 	</tr:breadCrumbs>
-	<tr:spacer height="3" />
+	<tr:spacer height="4" />
 
-	<tr:panelAccordion 
+	<tr:panelAccordion  
+		inlineStyle="font-size: 80%;"
 		discloseNone="true" 
 		rendered="#{cNode.allowTreeEdit}" >
-        <tr:showDetailItem text="#{msgs.detailInfo}">
-        	<tr:spacer height="3" />
-	        <tr:panelBorderLayout >
-    	    	<f:facet name="start">
-        	    	<tr:group>
-            	    	<tr:outputText value="#{msgs.node}:" />
-                	    <tr:spacer width="10" />
-                	    <tr:outputText
- 							inlineStyle="font-weight: bold;" 
-                   	     value="#{cNode.nodePath}" />
-                	</tr:group>
-         		</f:facet>
-			</tr:panelBorderLayout>	
-			<tr:panelBorderLayout >
-        		<f:facet name="left">                            
-           		 	<tr:group>
-          	 	     	<tr:outputText value="#{msgs.id}:"/>
-            	        <tr:spacer width="10"/>
-	                    <tr:outputText 
-    	                	inlineStyle="font-weight: bold;"
-                        	value="#{cNode.node.id}" />
-	                    <tr:spacer width="20" />
-    	                <tr:outputText value="#{msgs.status}:" />
-        	            <tr:spacer width="10" />
-            	        <tr:outputText 
-                	    	inlineStyle="font-weight: bold;"
-                    	    value="#{cNode.nodeStatusText}" />
-       					</tr:group>
-				</f:facet>
-				<f:facet name="right">
-					<tr:panelHorizontalLayout halign="end">
-                                	<!-- 
-	                   				<tr:commandButton 
-	                   						action="#{sBean.switchCollapsed}" 
-	                   						immediate="true"
-                          					text="switchFrameSet"
-                            				onclick="top.switchFrameSet()"/>
-                            				 -->
-						<tr:statusIndicator/>
-					</tr:panelHorizontalLayout>							    	
-				</f:facet>
-			</tr:panelBorderLayout>
+        <tr:showDetailItem text="#{msgs.detailInfo}"  >
+    		<tr:panelGroupLayout layout="vertical"> 
+        		<tr:spacer height="5" />
+       	    	<tr:group>
+           	    	<tr:outputText 
+           	    		value="#{msgs.node}:" 
+           	    		inlineStyle="font-size: 100%;" />
+               	    <tr:spacer width="10" />
+               	    <tr:outputText
+						inlineStyle="font-weight: bold; font-size: 100%;" 
+              	     	value="#{cNode.nodePath}" />
+               	</tr:group>
+       		 	<tr:group>
+       	 	     	<tr:outputText
+       	 	     		inlineStyle="font-size: 100%;" 
+       	 	     		value="#{msgs.id}:"/>
+           	        <tr:spacer width="10"/>
+                    <tr:outputText 
+  	                	inlineStyle="font-weight: bold; font-size: 100%;"
+                       	value="#{cNode.node.id}" />
+                    <tr:spacer width="20" />
+   	                <tr:outputText value="#{msgs.status}:" />
+       	            <tr:spacer width="10" />
+           	        <tr:outputText 
+               	    	inlineStyle="font-weight: bold; font-size: 100%;"
+                   	    value="#{cNode.nodeStatusText}" />
+      			</tr:group>
+      		</tr:panelGroupLayout>				
         </tr:showDetailItem>
 	</tr:panelAccordion>        
 	
 	</tr:panelGroupLayout>
 </tr:panelCaptionGroup>
 
-	<tr:breadCrumbs rendered="#{sBean.collapsed}">
-		<tr:forEach var="node" items="#{cNode.upperNodes}">
-			<tr:commandNavigationItem
-	    		partialSubmit="true" 
-				selected="false"
-				text="#{node.name}"
-      			actionListener="#{sBean.selectNode}">
-					<f:attribute 
-						name="nodePath" 
-						value="#{node.path}"/>
-     		</tr:commandNavigationItem>
-        </tr:forEach>
+<tr:breadCrumbs rendered="#{sBean.collapsed}" >
+	<tr:forEach var="node" items="#{cNode.upperNodes}">
+		<tr:commandNavigationItem
+    		partialSubmit="true" 
+			selected="false"
+			text="#{node.name}"
+   			actionListener="#{sBean.selectNode}">
+			<f:attribute 
+				name="nodePath" 
+				value="#{node.path}"/>
+   		</tr:commandNavigationItem>
+	</tr:forEach>
 </tr:breadCrumbs>
-<tr:spacer height="3" />
 </tr:form>
-
+<tr:spacer height="4" />
 </jsp:root>

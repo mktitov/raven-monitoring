@@ -30,39 +30,43 @@
             </f:subview>
         
             <tr:form>
-            <tr:navigationPane hint="tabs">
-              	<tr:commandNavigationItem
-              		rendered="#{cNode.allowNodeRead}"
-              		action="tabShow" 
-              		text="#{msgs.view}"
-              		immediate="true" 
-              		partialSubmit="true" />
-              	<tr:commandNavigationItem
-              		rendered="#{cNode.allowNodeEdit}"
-              		action="tabNodeEdit" 
-              		text="#{msgs.setting}" 
-              		partialSubmit="true"
-              		immediate="true"/>
-              	<tr:commandNavigationItem
-              		rendered="#{cNode.allowTreeEdit}"
-              		action="tabTreeEdit" 
-              		text="#{msgs.treeEdit}"
-              		immediate="true" 
-              		partialSubmit="true"/>
-              	<tr:commandNavigationItem
-              		selected="true" 
-              		rendered="#{cNode.allowControl}"
-              		action="tabControl" 
-              		text="#{msgs.control}"
-              		immediate="true" 
-              		partialSubmit="true"/>
-              	<tr:commandNavigationItem 
-              		rendered="#{cNode.allowNodeEdit}"
-              		action="tabLogsTab"
-              		text="#{msgs.log}" 
-              		partialSubmit="true" 
-              		immediate="true"/>
-            </tr:navigationPane>
+           		<tr:panelGroupLayout layout="horizontal">
+	            	<tr:navigationPane hint="tabs">
+              			<tr:commandNavigationItem
+              				rendered="#{cNode.allowNodeRead}"
+              				action="tabShow" 
+              				text="#{msgs.view}"
+              				immediate="true" 
+              				partialSubmit="true" />
+              			<tr:commandNavigationItem
+              				rendered="#{cNode.allowNodeEdit}"
+              				action="tabNodeEdit" 
+              				text="#{msgs.setting}" 
+              				partialSubmit="true"
+              				immediate="true"/>
+              			<tr:commandNavigationItem
+              				rendered="#{cNode.allowTreeEdit}"
+              				action="tabTreeEdit" 
+              				text="#{msgs.treeEdit}"
+              				immediate="true" 
+              				partialSubmit="true"/>
+              			<tr:commandNavigationItem
+              				selected="true" 
+              				rendered="#{cNode.allowControl}"
+              				action="tabControl" 
+              				text="#{msgs.control}"
+              				immediate="true" 
+              				partialSubmit="true"/>
+              			<tr:commandNavigationItem 
+              				rendered="#{cNode.allowNodeEdit}"
+              				action="tabLogsTab"
+              				text="#{msgs.log}" 
+              				partialSubmit="true" 
+              				immediate="true"/>
+            		</tr:navigationPane>
+                    <tr:spacer width="5"/>
+            		<tr:statusIndicator/>
+            	</tr:panelGroupLayout>
         	<f:subview id="body">
             	<jsp:include page="tabControl.jspx" flush="true"/>
             </f:subview>

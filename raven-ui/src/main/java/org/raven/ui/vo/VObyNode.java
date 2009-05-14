@@ -31,13 +31,13 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 		Viewable viewable;
 		int uid = 1;
 		List<ViewableObjectWrapper> vowl = new ArrayList<ViewableObjectWrapper>();
-		if ( ! nw.isViewable() )
-			return vowl;
+		//if ( ! nw.isViewable() )
+		//			return vowl;
 		ViewableObjectWrapper wrp = new ViewableObjectWrapper(nw.getNode());
 		wrp.setUid(uid++);
 		wrp.setNodeId(nw.getNodeId());
 		vowl.add(0, wrp );
-		
+		if ( ! nw.isViewable() ) return vowl;
 		viewable = (Viewable) nw.getNode();
 		List<ViewableObject> vol = null;
 		try { vol = viewable.getViewableObjects(nw.getRefreshAttributesMap());}
@@ -92,14 +92,16 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 			logger.info("from {} loaded {} VO ",nw.getNodePath(),no.size());
 			lst.addAll(no);
 		}
-		if(!nw.isChildViewable()) //.isNeedShowRefreshAttributes())
-		{
-			logger.info("Node {} has not viewable children",nw.getNodePath());
-			return lst;
-		}	
-		List<NodeWrapper> c = nw.getViewableChilddren();
+		
+	//	if(!nw.isChildViewable()) 
+	//	{
+	//		logger.info("Node {} has not viewable children",nw.getNodePath());
+	//		return lst;
+	//	}	
+	//	List<NodeWrapper> c = nw.getViewableChilddren();
+		List<NodeWrapper> c = nw.getChildrenList();
 		if(c==null) return lst;
-		logger.info("Node {} has {} viewable children",nw.getNodePath(),c.size());
+		//logger.info("Node {} has {} viewable children",nw.getNodePath(),c.size());
 		for(Iterator<NodeWrapper> it = c.iterator();it.hasNext();)
 		{
 			NodeWrapper x = it.next();
