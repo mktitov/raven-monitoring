@@ -20,6 +20,7 @@ package org.raven.tree.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -377,7 +378,11 @@ public class TreeImpl implements Tree
 
     public List<ReferenceValue> getAttributeValueHandlerTypes(NodeAttribute attr)
     {
-        return valueHandlerRegistry.getValueHandlerTypes();
+        List<ReferenceValue> types = valueHandlerRegistry.getValueHandlerTypes();
+        List<ReferenceValue> sortedTypes = new ArrayList<ReferenceValue>(types);
+        Collections.sort(sortedTypes, new ReferenceValueComparator());
+
+        return sortedTypes;
     }
 
     private void addChildsToParent(Class parent, Class... childs)
@@ -626,6 +631,16 @@ public class TreeImpl implements Tree
             }
             return ScanOperation.CONTINUE;
         }
-        
+    }
+
+    private class ReferenceValueComparator implements Comparator
+    {
+        public int compare(Object o1, Object o2)
+        {
+            ReferenceValue r1 = (ReferenceValue) o1;
+            ReferenceValue r2 = (ReferenceValue) o2;
+            
+            return r1.getValueAsString().compareTo(r2.getValueAsString());
+        }
     }
 }
