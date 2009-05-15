@@ -117,8 +117,6 @@ public class NetworkResponseContextNodeTest extends RavenCoreTestCase
     public void paramsTest() throws NetworkResponseServiceExeption
     {
         context.setAllowRequestsFromAnyIp(true);
-        context.setUseExpression(true);
-        context.setExpression("params['param']+1");
         assertTrue(context.start());
 
         ParameterNode parameter = new ParameterNode();
@@ -131,7 +129,7 @@ public class NetworkResponseContextNodeTest extends RavenCoreTestCase
         ds.addDataPortion("test");
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("param", "1");
-        assertEquals("2", context.getResponse("1.1.1.1", params));
+        assertEquals("test", context.getResponse("1.1.1.1", params));
     }
 
     @Test

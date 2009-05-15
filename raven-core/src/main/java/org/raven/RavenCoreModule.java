@@ -18,11 +18,11 @@ package org.raven;
 
 import java.util.List;
 import java.util.Map;
-import org.apache.tapestry.ioc.Configuration;
-import org.apache.tapestry.ioc.MappedConfiguration;
-import org.apache.tapestry.ioc.OrderedConfiguration;
-import org.apache.tapestry.ioc.ServiceBinder;
-import org.apache.tapestry.ioc.services.ChainBuilder;
+import org.apache.tapestry5.ioc.Configuration;
+import org.apache.tapestry5.ioc.MappedConfiguration;
+import org.apache.tapestry5.ioc.OrderedConfiguration;
+import org.apache.tapestry5.ioc.ServiceBinder;
+import org.apache.tapestry5.ioc.services.ChainBuilder;
 import org.raven.cache.TemporaryCacheManager;
 import org.raven.cache.TemporaryCacheManagerImpl;
 import org.raven.conf.Configurator;
@@ -110,9 +110,8 @@ public class RavenCoreModule
     public static void bind(ServiceBinder binder)
     {
         binder.bind(NodeLogger.class, NodeLoggerImpl.class);
-        binder.bind(Configurator.class, ConfiguratorImpl.class);
-		binder.bind(GroupsOrganazier.class, GroupsOrganazierImpl.class);
-		binder.bind(ExpressionCache.class, ExpressionCacheImpl.class);
+        binder.bind(GroupsOrganazier.class, GroupsOrganazierImpl.class);
+        binder.bind(ExpressionCache.class, ExpressionCacheImpl.class);
         binder.bind(NetworkResponseService.class, NetworkResponseServiceImpl.class);
     }
 

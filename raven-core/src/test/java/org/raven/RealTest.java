@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.IOUtils;
-import org.apache.tapestry.ioc.RegistryBuilder;
+import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;

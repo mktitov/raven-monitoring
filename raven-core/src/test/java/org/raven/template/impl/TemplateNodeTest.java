@@ -17,17 +17,10 @@
 
 package org.raven.template.impl;
 
-import org.raven.template.impl.TemplateNode;
-import org.apache.tapestry.ioc.RegistryBuilder;
 import org.junit.Test;
-import org.raven.RavenCoreModule;
 import org.raven.RavenCoreTestCase;
-import org.raven.ServiceTestCase;
-import org.raven.conf.Configurator;
 import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
-import org.raven.tree.Tree;
-import org.raven.tree.store.TreeStore;
 
 /**
  *

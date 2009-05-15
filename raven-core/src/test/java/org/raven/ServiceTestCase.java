@@ -17,9 +17,9 @@
 package org.raven;
 
 import org.raven.EnLocaleModule;
-import org.apache.tapestry.ioc.IOCUtilities;
-import org.apache.tapestry.ioc.Registry;
-import org.apache.tapestry.ioc.RegistryBuilder;
+import org.apache.tapestry5.ioc.IOCUtilities;
+import org.apache.tapestry5.ioc.Registry;
+import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

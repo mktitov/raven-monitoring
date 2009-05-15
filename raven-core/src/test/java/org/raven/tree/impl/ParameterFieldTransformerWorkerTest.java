@@ -17,7 +17,7 @@
 
 package org.raven.tree.impl;
 
-import org.apache.tapestry.ioc.RegistryBuilder;
+import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

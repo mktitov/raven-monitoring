@@ -94,8 +94,6 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase
         NetworkResponseContextNode context = new NetworkResponseContextNode();
         context.setName("context");
         responseServiceNode.addAndSaveChildren(context);
-        context.setUseExpression(true);
-        context.setExpression("params['param']+' '+data");
         context.setAllowRequestsFromAnyIp(true);
         context.setDataSource(ds);
         assertTrue(context.start());
@@ -110,6 +108,6 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase
         ds.addDataPortion("test");
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("param", "response");
-        assertEquals("response test", responseService.getResponse("context", "1.1.1.1", params));
+        assertEquals("test", responseService.getResponse("context", "1.1.1.1", params));
     }
 }

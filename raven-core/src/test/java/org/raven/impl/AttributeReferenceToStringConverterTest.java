@@ -17,7 +17,7 @@
 
 package org.raven.impl;
 
-import org.apache.tapestry.ioc.RegistryBuilder;
+import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.raven.RavenCoreModule;

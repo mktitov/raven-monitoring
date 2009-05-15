@@ -17,10 +17,9 @@
 
 package org.raven.net.impl;
 
-import org.raven.net.impl.SnmpNode;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import org.apache.tapestry.ioc.RegistryBuilder;
+import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -45,7 +44,6 @@ import org.snmp4j.smi.OctetString;
 import org.snmp4j.smi.UdpAddress;
 import org.snmp4j.smi.VariableBinding;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
-import org.weda.constraints.ConstraintException;
 import org.weda.services.TypeConverter;
 
 /**

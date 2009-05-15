@@ -22,7 +22,7 @@ import org.raven.template.impl.TemplatesNode;
 import org.raven.template.impl.TemplateWizard;
 import org.raven.template.impl.TemplateVariablesNode;
 import org.raven.template.impl.TemplateNode;
-import org.apache.tapestry.ioc.RegistryBuilder;
+import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
 import org.raven.ServiceTestCase;

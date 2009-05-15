@@ -17,7 +17,7 @@
 
 package org.raven;
 
-import org.apache.tapestry.ioc.MappedConfiguration;
+import org.apache.tapestry5.ioc.MappedConfiguration;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.impl.NodeClassTransformerWorker;

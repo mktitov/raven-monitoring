@@ -19,7 +19,7 @@ package org.raven.tree.impl;
 
 import java.util.List;
 import java.util.Set;
-import org.apache.tapestry.ioc.RegistryBuilder;
+import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.easymock.IArgumentMatcher;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -931,5 +931,8 @@ public class TreeServiceTest extends ServiceTestCase
         NetworkResponseServiceNode responseServiceNode = (NetworkResponseServiceNode) 
                 systemNode.getChildren(NetworkResponseServiceNode.NAME);
         assertNotNull(responseServiceNode);
+
+        ServicesNode servicesNode = (ServicesNode) systemNode.getChildren(ServicesNode.NAME);
+        assertNotNull(servicesNode);
     }
 }

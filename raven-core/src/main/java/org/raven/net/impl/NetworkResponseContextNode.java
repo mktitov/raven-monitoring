@@ -18,17 +18,14 @@
 package org.raven.net.impl;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
-import org.raven.ds.impl.SafeDataConsumer;
-import org.raven.net.AccessDeniedException;
-import org.raven.net.AddressMatcher;
-import org.raven.net.NetworkResponseContext;
+import org.raven.ds.DataConsumer;
+import org.raven.ds.DataSource;
 import org.raven.net.NetworkResponseServiceExeption;
-import org.raven.net.RequiredParameterMissedException;
-import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
+import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -37,113 +34,56 @@ import org.weda.annotations.constraints.NotNull;
  */
 @NodeClass(parentNode=NetworkResponseServiceNode.class, anyChildTypes=true)
 public class NetworkResponseContextNode
-        extends SafeDataConsumer implements NetworkResponseContext
+        extends AbstractNetworkResponseContext implements DataConsumer
 {
-    public static final String PARAMS_BINDING = "params";
+    @NotNull @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
+    private DataSource dataSource;
     
-    @NotNull() @Parameter(defaultValue="false")
-    private Boolean allowRequestsFromAnyIp;
+    private ThreadLocal value;
 
-    private AddressListNode addressListNode;
-    private ParametersNode parametersNode;
-
-    public AddressListNode getAddressListNode()
+    public DataSource getDataSource()
     {
-        return addressListNode;
+        return dataSource;
     }
 
-    public ParametersNode getParametersNode()
+    public void setDataSource(DataSource dataSource)
     {
-        return parametersNode;
-    }
-
-    public Boolean getAllowRequestsFromAnyIp()
-    {
-        return allowRequestsFromAnyIp;
-    }
-
-    public void setAllowRequestsFromAnyIp(Boolean allowRequestsFromAnyIp)
-    {
-        this.allowRequestsFromAnyIp = allowRequestsFromAnyIp;
+        this.dataSource = dataSource;
     }
 
     @Override
-    protected void doInit() throws Exception
+    protected void initFields()
     {
-        super.doInit();
-        generateNodes();
+        super.initFields();
+        value = new ThreadLocal();
     }
 
-    @Override
-    protected void doStart() throws Exception
-    {
-        super.doStart();
-        generateNodes();
-    }
-
-    private void checkIp(String requesterIp) throws AccessDeniedException
-    {
-        if (!allowRequestsFromAnyIp)
-        {
-            Collection<Node> addresses = addressListNode.getEffectiveChildrens();
-            if (addresses!=null && !addresses.isEmpty())
-                for (Node address: addresses)
-                    if (address instanceof AddressMatcher)
-                        if (((AddressMatcher)address).addressMatches(requesterIp))
-                            return;
-            throw new AccessDeniedException();
-        }
-    }
-
-    private Map<String, Object> checkParameters(Map<String, Object> params)
-            throws RequiredParameterMissedException
-    {
-        Map<String, Object> newParams = new HashMap<String, Object>();
-        Collection<Node> paramsList = parametersNode.getEffectiveChildrens();
-        if (paramsList!=null && !paramsList.isEmpty())
-            for (Node node: paramsList)
-                if (node.getStatus().equals(Status.STARTED) && node instanceof ParameterNode)
-                {
-                    ParameterNode param = (ParameterNode) node;
-                    Object value = params==null? null : params.get(param.getName());
-                    if (value==null && param.getRequired())
-                        throw new RequiredParameterMissedException(param.getName(), getName());
-                    value = converter.convert(param.getParameterType(), value, param.getPattern());
-                    if (value!=null)
-                        newParams.put(param.getName(), value);
-                }
-
-        return newParams;
-    }
-
-    private void generateNodes()
-    {
-        addressListNode = (AddressListNode) getChildren(AddressListNode.NAME);
-        if (addressListNode==null)
-        {
-            addressListNode = new AddressListNode();
-            this.addAndSaveChildren(addressListNode);
-            addressListNode.start();
-        }
-
-        parametersNode = (ParametersNode) getChildren(ParametersNode.NAME);
-        if (parametersNode==null)
-        {
-            parametersNode = new ParametersNode();
-            this.addAndSaveChildren(parametersNode);
-            parametersNode.start();
-        }
-    }
-
-    public String getResponse(String requesterIp, Map<String, Object> params)
+    public String doGetResponse(String requesterIp, Map<String, Object> params)
             throws NetworkResponseServiceExeption
     {
-        checkIp(requesterIp);
-        params = checkParameters(params);
-        bindingSupport.put(PARAMS_BINDING, params);
-        Object value = refereshData(null);
-        String result = converter.convert(String.class, value, null);
+        Object val = refereshData(null);
+        String result = converter.convert(String.class, val, null);
         
         return result;
+    }
+
+    public void setData(DataSource dataSource, Object data)
+    {
+        value.set(data);
+    }
+
+    public Object refereshData(Collection<NodeAttribute> sessionAttributes)
+    {
+        try
+        {
+            dataSource.getDataImmediate(this, sessionAttributes);
+            Object val = value.get();
+            
+            return val;
+        }
+        finally
+        {
+            value.remove();
+        }
     }
 }

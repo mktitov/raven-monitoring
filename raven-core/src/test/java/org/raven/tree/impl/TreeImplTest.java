@@ -20,7 +20,7 @@ package org.raven.tree.impl;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import org.apache.tapestry.ioc.RegistryBuilder;
+import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.easymock.IArgumentMatcher;
 import org.junit.Before;
 import org.junit.Test;

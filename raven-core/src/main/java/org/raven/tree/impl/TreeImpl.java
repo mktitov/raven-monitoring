@@ -97,6 +97,7 @@ public class TreeImpl implements Tree
     private SchemasNode schemasNode;
     private LocalDatabaseNode localDatabaseNode;
     private NetworkResponseServiceNode responseServiceNode;
+    private ServicesNode servicesNode;
 
     public TreeImpl(
             AttributeReferenceValues attributeReferenceValues
@@ -505,6 +506,15 @@ public class TreeImpl implements Tree
             responseServiceNode.setParent(systemNode);
             treeStore.saveNode(responseServiceNode);
             systemNode.addChildren(responseServiceNode);
+        }
+
+        servicesNode = (ServicesNode) systemNode.getChildren(ServicesNode.NAME);
+        if (servicesNode==null)
+        {
+            servicesNode = new ServicesNode();
+            servicesNode.setParent(systemNode);
+            treeStore.saveNode(servicesNode);
+            systemNode.addChildren(servicesNode);
         }
     }
 
