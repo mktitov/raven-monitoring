@@ -17,9 +17,9 @@
 
 package org.raven.ui;
 
-import org.apache.tapestry.ioc.MappedConfiguration;
-import org.apache.tapestry.ioc.OrderedConfiguration;
-import org.apache.tapestry.ioc.ServiceBinder;
+import org.apache.tapestry5.ioc.MappedConfiguration;
+import org.apache.tapestry5.ioc.OrderedConfiguration;
+import org.apache.tapestry5.ioc.ServiceBinder;
 import org.raven.tree.AttributeReferenceValues;
 import org.raven.tree.AttributeValueHandlerFactory;
 import org.raven.ui.services.LocaleService;

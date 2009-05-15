@@ -18,9 +18,9 @@
 package org.raven.ui.util;
 
 import org.raven.*;
-import org.apache.tapestry.ioc.IOCUtilities;
-import org.apache.tapestry.ioc.Registry;
-import org.apache.tapestry.ioc.RegistryBuilder;
+import org.apache.tapestry5.ioc.IOCUtilities;
+import org.apache.tapestry5.ioc.Registry;
+import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.raven.tree.Tree;
 import org.raven.ui.RavenUiModule;
 

@@ -22,7 +22,7 @@ import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseStream;
 import org.apache.myfaces.custom.dynamicResources.ResourceContext;
 import org.apache.myfaces.custom.graphicimagedynamic.ImageRenderer;
-import org.apache.tapestry.ioc.Registry;
+import org.apache.tapestry5.ioc.Registry;
 import org.raven.DynamicImageNode;
 import org.raven.tree.Tree;
 import org.slf4j.Logger;

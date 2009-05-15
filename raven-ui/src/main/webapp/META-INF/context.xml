@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Context path="raven" override="true">
-    <Manager className="org.apache.catalina.session.PersistentManager" saveOnRestart="false"/>
+<Context override="true" path="/raven">
+  <Manager className="org.apache.catalina.session.PersistentManager" saveOnRestart="false"/>
 </Context>

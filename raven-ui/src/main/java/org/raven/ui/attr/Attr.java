@@ -25,7 +25,7 @@ import javax.faces.event.ValueChangeEvent;
 import javax.faces.model.SelectItem;
 
 import org.apache.myfaces.trinidad.event.ReturnEvent;
-import org.apache.tapestry.ioc.Registry;
+import org.apache.tapestry5.ioc.Registry;
 import org.raven.ui.SessionBean;
 import org.raven.ui.node.NodeWrapper;
 import org.raven.ui.node.SelectNodeBean;

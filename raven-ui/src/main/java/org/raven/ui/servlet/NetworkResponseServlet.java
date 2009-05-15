@@ -26,7 +26,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.tapestry.ioc.Registry;
+import org.apache.tapestry5.ioc.Registry;
 import org.raven.net.AccessDeniedException;
 import org.raven.net.ContextUnavailableException;
 import org.raven.net.NetworkResponseService;

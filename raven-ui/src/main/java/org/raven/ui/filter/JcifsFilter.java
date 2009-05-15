@@ -26,7 +26,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import org.apache.tapestry.ioc.Registry;
+import org.apache.tapestry5.ioc.Registry;
 import org.raven.ui.util.RavenRegistry;
 import org.raven.conf.Config;
 import org.raven.conf.Configurator;
