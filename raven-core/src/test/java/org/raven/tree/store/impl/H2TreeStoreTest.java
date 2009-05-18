@@ -196,6 +196,7 @@ public class H2TreeStoreTest extends ServiceTestCase
         store.saveNode(rootNode);
         
         ContainerNode childNode = new ContainerNode("child");
+        childNode.setIndex(1);
         rootNode.addChildren(childNode);
         
         store.saveNode(childNode);

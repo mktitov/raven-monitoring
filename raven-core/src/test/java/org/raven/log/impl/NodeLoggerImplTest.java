@@ -20,6 +20,7 @@ package org.raven.log.impl;
 import java.util.Date;
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.conf.Configurator;
@@ -29,6 +30,7 @@ import org.raven.log.NodeLogRecord;
 import org.raven.log.NodeLogger;
 import org.raven.tree.Node.Status;
 import org.raven.tree.impl.ContainerNode;
+import org.raven.tree.impl.ServicesNode;
 import org.raven.tree.impl.SystemNode;
 
 /**
@@ -37,6 +39,33 @@ import org.raven.tree.impl.SystemNode;
  */
 public class NodeLoggerImplTest extends RavenCoreTestCase
 {
+    private NodeLoggerNode nodeLoggerNode;
+
+    @Before
+    public void prepare() throws Exception
+    {
+        JDBCConnectionPoolNode pool = new JDBCConnectionPoolNode();
+        pool.setName("pool");
+        tree.getRootNode().addChildren(pool);
+        pool.save();
+        pool.init();
+        pool.setUserName("sa");
+        pool.setPassword("");
+        pool.setUrl(configurator.getConfig().getStringProperty(Configurator.TREE_STORE_URL, null));
+        pool.setDriver("org.h2.Driver");
+        pool.start();
+        assertEquals(Status.STARTED, pool.getStatus());
+
+        nodeLoggerNode = (NodeLoggerNode) tree.getRootNode()
+                .getChildren(SystemNode.NAME)
+                .getChildren(ServicesNode.NAME)
+                .getChildren(NodeLoggerNode.NAME);
+        nodeLoggerNode.setConnectionPool(pool);
+        nodeLoggerNode.start();
+        assertEquals(Status.STARTED, nodeLoggerNode.getStatus());
+
+    }
+
     @Test
     public void serviceTest() throws Exception
     {
@@ -49,23 +78,6 @@ public class NodeLoggerImplTest extends RavenCoreTestCase
     public void writeTest() throws Exception
     {
         NodeLogger nodeLogger = registry.getService(NodeLogger.class);
-        
-        JDBCConnectionPoolNode pool = new JDBCConnectionPoolNode();
-        pool.setName("pool");
-        tree.getRootNode().addChildren(pool);
-        pool.save();
-        pool.init();
-        pool.setUserName("sa");
-        pool.setPassword("");
-        pool.setUrl(configurator.getConfig().getStringProperty(Configurator.TREE_STORE_URL, null));
-        pool.setDriver("org.h2.Driver");
-        pool.start();
-        assertEquals(Status.STARTED, pool.getStatus());
-        
-        NodeLoggerNode nodeLoggerNode = nodeLogger.getNodeLoggerNode();
-        nodeLoggerNode.setConnectionPool(pool);
-        nodeLoggerNode.start();
-        assertEquals(Status.STARTED, nodeLoggerNode.getStatus());
         
         ContainerNode node = new ContainerNode("nodeA");
         tree.getRootNode().addChildren(node);
@@ -106,9 +118,5 @@ public class NodeLoggerImplTest extends RavenCoreTestCase
         lst = nodeLogger.getRecords(fd, td, null, LogLevel.DEBUG);
         for(NodeLogRecord nl : lst)
         	System.out.println(nl);
-        
-        
     }
-    
-    
 }

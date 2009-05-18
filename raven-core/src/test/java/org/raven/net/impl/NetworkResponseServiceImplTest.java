@@ -28,6 +28,7 @@ import org.raven.net.ContextUnavailableException;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.net.NetworkResponseServiceUnavailableException;
+import org.raven.tree.impl.ServicesNode;
 import org.raven.tree.impl.SystemNode;
 
 /**
@@ -55,7 +56,9 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase
     public void serviceUnavailableTest2() throws NetworkResponseServiceExeption
     {
         NetworkResponseServiceNode responseNode = (NetworkResponseServiceNode) 
-                tree.getRootNode().getChildren(SystemNode.NAME)
+                tree.getRootNode()
+                .getChildren(SystemNode.NAME)
+                .getChildren(ServicesNode.NAME)
                 .getChildren(NetworkResponseServiceNode.NAME);
         assertNotNull(responseNode);
         responseNode.stop();
@@ -81,7 +84,9 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase
     public void getResponseTest() throws NetworkResponseServiceExeption
     {
         NetworkResponseServiceNode responseServiceNode = (NetworkResponseServiceNode)
-                tree.getRootNode().getChildren(SystemNode.NAME)
+                tree.getRootNode()
+                .getChildren(SystemNode.NAME)
+                .getChildren(ServicesNode.NAME)
                 .getChildren(NetworkResponseServiceNode.NAME);
         assertNotNull(responseServiceNode);
         responseServiceNode.setLogLevel(LogLevel.TRACE);

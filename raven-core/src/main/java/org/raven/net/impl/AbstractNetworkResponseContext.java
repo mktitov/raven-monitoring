@@ -28,6 +28,7 @@ import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.net.RequiredParameterMissedException;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
+import org.raven.util.OperationStatistic;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -40,8 +41,23 @@ public abstract class AbstractNetworkResponseContext
     @NotNull() @Parameter(defaultValue="false")
     private Boolean allowRequestsFromAnyIp;
 
+    @Parameter(readOnly=true)
+    private OperationStatistic requestsStat;
+
     private AddressListNode addressListNode;
     private ParametersNode parametersNode;
+
+    @Override
+    protected void initFields()
+    {
+        super.initFields();
+        requestsStat = new OperationStatistic();
+    }
+
+    public OperationStatistic getRequestsStat()
+    {
+        return requestsStat;
+    }
 
     public AddressListNode getAddressListNode()
     {
@@ -75,6 +91,8 @@ public abstract class AbstractNetworkResponseContext
     {
         super.doStart();
         generateNodes();
+
+        requestsStat.reset();
     }
 
     private void checkIp(String requesterIp) throws AccessDeniedException
@@ -134,11 +152,19 @@ public abstract class AbstractNetworkResponseContext
     public String getResponse(String requesterIp, Map<String, Object> params)
             throws NetworkResponseServiceExeption
     {
-        checkIp(requesterIp);
-        params = checkParameters(params);
-        String result = doGetResponse(requesterIp, params);
+        requestsStat.markOperationProcessingStart();
+        try
+        {
+            checkIp(requesterIp);
+            params = checkParameters(params);
+            String result = doGetResponse(requesterIp, params);
 
-        return result;
+            return result;
+        }
+        finally
+        {
+            requestsStat.markOperationProcessingEnd();
+        }
     }
 
     public abstract String doGetResponse(String requesterIp, Map<String, Object> params)

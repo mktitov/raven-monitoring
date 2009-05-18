@@ -340,10 +340,12 @@ public class BaseNode implements Node, NodeListener, Logger
                     , getPath(), node.getName()));
         node.setParent(this);
 		int nodeIndex = node.getIndex();
-        if (nodeIndex==0)
-            node.setIndex(++maxChildIndex);
-		else if (maxChildIndex<nodeIndex)
-			maxChildIndex = nodeIndex;
+        int newIndex = checkNodeIndex(nodeIndex);
+        if (nodeIndex!=newIndex)
+        {
+            node.setIndex(newIndex);
+            node.save();
+        }
         
         childrens.put(node.getName(), node);
         node.addListener(this);
@@ -353,6 +355,23 @@ public class BaseNode implements Node, NodeListener, Logger
                 if (listener.isSubtreeListener())
                     node.addListener(listener);
         fireChildrenAdded(node);
+    }
+
+    private int checkNodeIndex(int index)
+    {
+        int maxIndex = 0;
+        boolean hasIndex = false;
+        for (Node child: childrens.values())
+        {
+            if (maxIndex<child.getIndex())
+                maxIndex = child.getIndex();
+            if (index==child.getIndex())
+                hasIndex = true;
+        }
+        if (hasIndex || index==0)
+            return maxIndex+1;
+        else
+            return index;
     }
 
     public void addAndSaveChildren(Node node)

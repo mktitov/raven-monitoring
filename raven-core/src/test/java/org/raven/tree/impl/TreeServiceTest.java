@@ -895,9 +895,6 @@ public class TreeServiceTest extends ServiceTestCase
         Node systemNode = tree.getNode(Node.NODE_SEPARATOR+SystemNode.NAME);
         assertNotNull(systemNode);
 
-        NodeLoggerNode loggerNode = (NodeLoggerNode) systemNode.getChildren(NodeLoggerNode.NAME);
-        assertNotNull(loggerNode);
-
         SchedulersNode schedulersNode = 
                 (SchedulersNode) systemNode.getChildren(SchedulersNode.NAME);
         assertNotNull(schedulersNode);
@@ -928,11 +925,14 @@ public class TreeServiceTest extends ServiceTestCase
                 (TemplatesNode) tree.getRootNode().getChildren(TemplatesNode.NAME);
         assertNotNull(templatesNode);
 
-        NetworkResponseServiceNode responseServiceNode = (NetworkResponseServiceNode) 
-                systemNode.getChildren(NetworkResponseServiceNode.NAME);
-        assertNotNull(responseServiceNode);
-
         ServicesNode servicesNode = (ServicesNode) systemNode.getChildren(ServicesNode.NAME);
         assertNotNull(servicesNode);
+        
+        NetworkResponseServiceNode responseServiceNode = (NetworkResponseServiceNode)
+                servicesNode.getChildren(NetworkResponseServiceNode.NAME);
+        assertNotNull(responseServiceNode);
+
+        NodeLoggerNode loggerNode = (NodeLoggerNode) servicesNode.getChildren(NodeLoggerNode.NAME);
+        assertNotNull(loggerNode);
     }
 }

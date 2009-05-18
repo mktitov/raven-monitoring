@@ -46,10 +46,17 @@ public class NodeLoggerNode extends BaseNode
     }
 
     @Override
-    protected void doInit() throws Exception
+    protected void doStart() throws Exception
     {
-        super.doInit();
+        super.doStart();
         nodeLogger.setNodeLoggerNode(this);
+    }
+
+    @Override
+    protected void doStop() throws Exception
+    {
+        super.doStop();
+        nodeLogger.setNodeLoggerNode(null);
     }
 
     public ConnectionPool getConnectionPool()

@@ -89,6 +89,7 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
             throws NetworkResponseServiceExeption
     {
         long requestId = requestsCount.incrementAndGet();
+        NetworkResponseContext contextNode = null;
         if (isLogLevelEnabled(LogLevel.DEBUG))
         {
             String requestInfo = String.format(
@@ -99,19 +100,28 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
         }
         try
         {
-            NetworkResponseContext contextNode =
-                    (NetworkResponseContext) getChildren(context);
+            contextNode = (NetworkResponseContext) getChildren(context);
             if (contextNode==null || !contextNode.getStatus().equals(Status.STARTED))
                throw new ContextUnavailableException(context);
 
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug(String.format("[%d] Found context for request", requestId));
-            
+            if (contextNode.isLogLevelEnabled(LogLevel.DEBUG))
+                contextNode.getLogger().debug(String.format(
+                    "[%d] Processing request. " +
+                    "Remote address (%s), context (%s), request parameters: %s"
+                    , requestId, requesterIp, context, paramsToString(params)));
             String response = contextNode.getResponse(requesterIp, params);
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug(String.format("[%d] Request successfully processed", requestId));
+            if (contextNode.isLogLevelEnabled(LogLevel.DEBUG))
+                contextNode.getLogger().debug(
+                        String.format("[%d] Request successfully processed", requestId));
             if (isLogLevelEnabled(LogLevel.TRACE))
                 trace(String.format("[%d] Request response \n>>>>\n%s\n<<<<", requestId, response));
+            if (isLogLevelEnabled(LogLevel.TRACE))
+                contextNode.getLogger().trace(String.format(
+                        "[%d] Request response \n>>>>\n%s\n<<<<", requestId, response));
             return response;
         }
         catch(NetworkResponseServiceExeption e)
@@ -121,12 +131,22 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
                 warn(String.format(
                         "[%d] Error processing request from (%s). %s"
                         , requestId, context, e.getMessage()));
+            if (contextNode!=null && contextNode.isLogLevelEnabled(LogLevel.WARN))
+                contextNode.getLogger().warn(String.format(
+                        "[%d] Error processing request from (%s). %s"
+                        , requestId, context, e.getMessage()));
             throw e;
         }
         catch(RuntimeException e)
         {
             requestsWithErrors.incrementAndGet();
             if (isLogLevelEnabled(LogLevel.ERROR))
+                error(
+                    String.format(
+                        "[%d] Error processing request from (%s). %s"
+                        , requestId, context, e.getMessage())
+                    , e);
+            if (contextNode!=null && contextNode.isLogLevelEnabled(LogLevel.ERROR))
                 error(
                     String.format(
                         "[%d] Error processing request from (%s). %s"

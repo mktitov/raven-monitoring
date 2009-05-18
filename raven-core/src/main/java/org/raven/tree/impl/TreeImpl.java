@@ -440,14 +440,6 @@ public class TreeImpl implements Tree
             treeStore.saveNode(systemNode);
         }
 
-        nodeLoggerNode = (NodeLoggerNode) systemNode.getChildren(NodeLoggerNode.NAME);
-        if (nodeLoggerNode==null)
-        {
-            nodeLoggerNode = new NodeLoggerNode();
-            systemNode.addChildren(nodeLoggerNode);
-            treeStore.saveNode(nodeLoggerNode);
-        }
-
         schedulersNode = (SchedulersNode) systemNode.getChildren(SchedulersNode.NAME);
         if (schedulersNode==null)
         {
@@ -498,16 +490,6 @@ public class TreeImpl implements Tree
             systemNode.addChildren(schemasNode);
         }
 
-        responseServiceNode = (NetworkResponseServiceNode)
-                systemNode.getChildren(NetworkResponseServiceNode.NAME);
-        if (responseServiceNode==null)
-        {
-            responseServiceNode = new NetworkResponseServiceNode();
-            responseServiceNode.setParent(systemNode);
-            treeStore.saveNode(responseServiceNode);
-            systemNode.addChildren(responseServiceNode);
-        }
-
         servicesNode = (ServicesNode) systemNode.getChildren(ServicesNode.NAME);
         if (servicesNode==null)
         {
@@ -515,6 +497,25 @@ public class TreeImpl implements Tree
             servicesNode.setParent(systemNode);
             treeStore.saveNode(servicesNode);
             systemNode.addChildren(servicesNode);
+        }
+
+        responseServiceNode = (NetworkResponseServiceNode)
+                servicesNode.getChildren(NetworkResponseServiceNode.NAME);
+        if (responseServiceNode==null)
+        {
+            responseServiceNode = new NetworkResponseServiceNode();
+            responseServiceNode.setParent(servicesNode);
+            treeStore.saveNode(responseServiceNode);
+            servicesNode.addChildren(responseServiceNode);
+        }
+        
+        nodeLoggerNode = (NodeLoggerNode) servicesNode.getChildren(NodeLoggerNode.NAME);
+        if (nodeLoggerNode==null)
+        {
+            nodeLoggerNode = new NodeLoggerNode();
+            nodeLoggerNode.setParent(servicesNode);
+            treeStore.saveNode(nodeLoggerNode);
+            servicesNode.addChildren(nodeLoggerNode);
         }
     }
 

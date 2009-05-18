@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import javax.script.Bindings;
+import org.raven.log.LogLevel;
 import org.raven.tree.store.TreeStore;
 import org.slf4j.Logger;
 import org.weda.annotations.Description;
@@ -318,6 +319,8 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
     public <T> T getParentAttributeRealValue(String attributeName);
     
     public List<Node> getChildrenList();
+    
+	public boolean isLogLevelEnabled(LogLevel level);
     /**
      * Returns <code>true</code> if this node is in the template.
      */
