@@ -167,6 +167,7 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
                         Object value = gen.getFieldValue(attributes);
                         NodeAttributeImpl attr = new NodeAttributeImpl(
                                 gen.getName(), gen.getAttributeType(), value, null);
+                        attr.setOwner(this);
                         attr.init();
                         attributes.put(gen.getName(), attr);
                         if (isLogLevelEnabled(LogLevel.DEBUG))

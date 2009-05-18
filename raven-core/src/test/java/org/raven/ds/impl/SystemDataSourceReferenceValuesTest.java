@@ -23,7 +23,6 @@ import org.raven.RavenCoreTestCase;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.objects.TestDataSourceInterface;
 import org.raven.tree.Node;
-import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeListener;
 import org.raven.tree.NodePathResolver;

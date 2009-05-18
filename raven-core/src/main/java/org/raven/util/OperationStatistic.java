@@ -27,7 +27,6 @@ public class OperationStatistic
 {
     private long startTime;
     private long operationsCount;
-    private long operationProcessingStart;
     private long sumMillisPerOperation;
 
     @Message
@@ -41,13 +40,13 @@ public class OperationStatistic
         operationsCount = 0l;
     }
 
-    public synchronized void markOperationProcessingStart()
+    public synchronized long markOperationProcessingStart()
     {
-        operationProcessingStart = System.currentTimeMillis();
         ++operationsCount;
+        return System.currentTimeMillis();
     }
 
-    public synchronized void markOperationProcessingEnd()
+    public synchronized void markOperationProcessingEnd(long operationProcessingStart)
     {
         sumMillisPerOperation+=System.currentTimeMillis()-operationProcessingStart;
     }

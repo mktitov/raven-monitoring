@@ -20,6 +20,7 @@ package org.raven.net.impl;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import javax.script.Bindings;
 import org.raven.annotations.Parameter;
 import org.raven.net.AccessDeniedException;
 import org.raven.net.AddressMatcher;
@@ -28,6 +29,7 @@ import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.net.RequiredParameterMissedException;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
+import org.raven.util.BindingSupport;
 import org.raven.util.OperationStatistic;
 import org.weda.annotations.constraints.NotNull;
 
@@ -38,6 +40,7 @@ import org.weda.annotations.constraints.NotNull;
 public abstract class AbstractNetworkResponseContext
         extends BaseNode implements NetworkResponseContext
 {
+    public static final String PARAMS_BINDING = "params";
     @NotNull() @Parameter(defaultValue="false")
     private Boolean allowRequestsFromAnyIp;
 
@@ -46,12 +49,14 @@ public abstract class AbstractNetworkResponseContext
 
     private AddressListNode addressListNode;
     private ParametersNode parametersNode;
+    private BindingSupport bindingSupport;
 
     @Override
     protected void initFields()
     {
         super.initFields();
         requestsStat = new OperationStatistic();
+        bindingSupport = new BindingSupport();
     }
 
     public OperationStatistic getRequestsStat()
@@ -152,9 +157,10 @@ public abstract class AbstractNetworkResponseContext
     public String getResponse(String requesterIp, Map<String, Object> params)
             throws NetworkResponseServiceExeption
     {
-        requestsStat.markOperationProcessingStart();
+        long operationStart = requestsStat.markOperationProcessingStart();
         try
         {
+            bindingSupport.put(PARAMS_BINDING, params);
             checkIp(requesterIp);
             params = checkParameters(params);
             String result = doGetResponse(requesterIp, params);
@@ -163,10 +169,18 @@ public abstract class AbstractNetworkResponseContext
         }
         finally
         {
-            requestsStat.markOperationProcessingEnd();
+            requestsStat.markOperationProcessingEnd(operationStart);
+            bindingSupport.reset();
         }
     }
 
     public abstract String doGetResponse(String requesterIp, Map<String, Object> params)
             throws NetworkResponseServiceExeption;
+
+    @Override
+    public void formExpressionBindings(Bindings bindings)
+    {
+        super.formExpressionBindings(bindings);
+        bindingSupport.addTo(bindings);
+    }
 }
