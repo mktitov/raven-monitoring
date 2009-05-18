@@ -122,7 +122,7 @@ implements Comparator<NodeAttribute>
 			n = n.getParent();
 			if(n==null || n.getParent()==null) break;
 			int ac = SessionBean.getUserAcl().getAccessForNode(n);
-			if(ac> AccessControl.NONE) rt.add(n);
+			if(ac> AccessControl.TRANSIT) rt.add(n);
 		}
 		Collections.reverse(rt);
 		//List<Node> ret = new ArrayList<Node>();
