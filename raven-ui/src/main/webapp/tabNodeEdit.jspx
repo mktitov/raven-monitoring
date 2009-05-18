@@ -298,7 +298,7 @@ readOnly="#{row.expressionSupported}"
             </tr:column>
 <!-- value of attribute-->
             <tr:column headerText="#{msgs.value}">
-                <tr:outputText value="#{row.value}" /> 
+                <tr:outputFormatted value="#{row.value}"  /> 
             </tr:column>
 <!-- description of attribute in detailStamp -->
             <f:facet name="detailStamp">
