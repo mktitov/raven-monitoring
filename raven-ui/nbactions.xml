@@ -10,7 +10,7 @@
             </properties>
             <activatedProfiles>
                 <activatedProfile>default</activatedProfile>
-                <activatedProfile>with-onesec</activatedProfile>
+                
             </activatedProfiles>
         </action>
         <action>
