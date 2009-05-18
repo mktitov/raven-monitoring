@@ -65,4 +65,9 @@ public interface NodeListener extends NodeAttributeListener
      * @param removedNode the node which was removed.
      */
     public void nodeRemoved(Node removedNode);
+    /**
+     * Informs listener that node was moved from one node to another.
+     * @param node the moved node
+     */
+    public void nodeMoved(Node node);
 }

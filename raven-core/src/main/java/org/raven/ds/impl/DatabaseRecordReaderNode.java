@@ -736,5 +736,8 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
         {
             return false;
         }
+
+        public void nodeMoved(Node node) {
+        }
     }
 }

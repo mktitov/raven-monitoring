@@ -1192,6 +1192,10 @@ public class BaseNode implements Node, NodeListener, Logger
     public void dependendNodeAdded(Node node, Node dependentNode) {
     }
 
+    public void nodeMoved(Node node)
+    {
+    }
+    
     public void nodeRemoved(Node removedNode)
     {
     }

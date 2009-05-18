@@ -83,7 +83,7 @@ public interface Tree
      * @param source the node that must be moved
      * @param destination the node to which source node will be moved
      */
-    public void move(Node source, Node destination);
+    public void move(Node source, Node destination) throws TreeException;
     /**
      * Search for nodes that satisfy the node filter
      * @param options search options

@@ -45,6 +45,7 @@ import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
+import org.raven.tree.NodeListener;
 import org.raven.tree.NodePathResolver;
 import org.raven.tree.NodeTuner;
 import org.raven.tree.PathInfo;
@@ -55,6 +56,9 @@ import org.raven.tree.SearchFilter;
 import org.raven.tree.SearchOptions;
 import org.raven.tree.Tree;
 import org.raven.tree.TreeError;
+import org.raven.tree.TreeException;
+import org.raven.tree.UnableMoveRootException;
+import org.raven.tree.UnableMoveToSelfException;
 import org.raven.tree.store.TreeStore;
 import org.raven.tree.store.TreeStoreError;
 import org.slf4j.Logger;
@@ -270,9 +274,30 @@ public class TreeImpl implements Tree
         }
     }
 
-    public void move(Node source, Node destination)
+    public void move(Node source, Node destination) throws TreeException
     {
-        ;
+        Node sourceParent = source.getParent();
+        if (sourceParent==null)
+            throw new UnableMoveRootException();
+
+        Node node = destination;
+        while (node!=null && node!=source)
+            node = node.getParent();
+        if (node!=null)
+            throw new UnableMoveToSelfException(source, destination);
+
+        byte oldLevel = source.getLevel();
+        sourceParent.detachChildren(source);
+        destination.addChildren(source);
+        source.save();
+
+        if (source.getChildrenCount()>0)
+        {
+            boolean saveChilds = oldLevel!=source.getLevel();
+            ScannedNodeHandler handler = new SaveSubtreeHandler(saveChilds);
+            scanSubtree(source, handler, ScanOptionsImpl.EMPTY_OPTIONS);
+        }
+        
     }
 
     public List<Node> search(Node searchFromNode, SearchOptions options, SearchFilter filter) 
@@ -652,6 +677,27 @@ public class TreeImpl implements Tree
             ReferenceValue r2 = (ReferenceValue) o2;
             
             return r1.getValueAsString().compareTo(r2.getValueAsString());
+        }
+    }
+
+    private class SaveSubtreeHandler implements ScannedNodeHandler
+    {
+        private final boolean saveNodes;
+
+        public SaveSubtreeHandler(boolean saveNodes)
+        {
+            this.saveNodes = saveNodes;
+        }
+
+        public ScanOperation nodeScanned(Node node)
+        {
+            if (saveNodes)
+                node.save();
+            Collection<NodeListener> listeners = node.getListeners();
+            if (listeners!=null && listeners.isEmpty())
+                for (NodeListener listener: listeners)
+                    listener.nodeMoved(node);
+            return ScanOperation.CONTINUE;
         }
     }
 }

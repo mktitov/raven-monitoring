@@ -68,5 +68,8 @@ public class NodeListenerAdapter implements NodeListener
 
     public void dependendNodeAdded(Node node, Node dependentNode) {
     }
+
+    public void nodeMoved(Node node) {
+    }
     
 }

@@ -142,6 +142,10 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
      */
     public void removeChildren(Node node);
     /**
+     * Detaches children node from this node.
+     */
+    public void detachChildren(Node node);
+    /**
      * Returns nodes that belongs to this node. Method returns <code>null</code> if this node
      * has not childrens.
      */

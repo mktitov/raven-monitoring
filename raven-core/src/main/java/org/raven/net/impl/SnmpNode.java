@@ -26,6 +26,7 @@ import org.raven.annotations.NodeClass;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.impl.AbstractThreadedDataSource;
 import org.raven.table.ColumnBasedTable;
+import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
 import org.raven.tree.impl.DataSourcesNode;

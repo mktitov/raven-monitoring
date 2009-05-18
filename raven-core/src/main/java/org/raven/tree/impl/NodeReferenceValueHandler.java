@@ -17,8 +17,6 @@
 
 package org.raven.tree.impl;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
@@ -197,6 +195,10 @@ public class NodeReferenceValueHandler
         expressionValid = false;
         node = null;
         fireExpressionInvalidatedEvent(oldValue);
+    }
+    
+    public void nodeMoved(Node node) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public void nodeShutdowned(Node shutdownedNode)
