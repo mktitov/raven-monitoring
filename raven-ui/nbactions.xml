@@ -20,4 +20,15 @@
                 <goal>compile</goal>
             </goals>
         </action>
+        <action>
+            <actionName>CUSTOM-package with-onesec</actionName>
+            <displayName>package with-onesec</displayName>
+            <goals>
+                <goal>clean</goal>
+                <goal>package</goal>
+            </goals>
+            <activatedProfiles>
+                <activatedProfile>with-onesec</activatedProfile>
+            </activatedProfiles>
+        </action>
     </actions>
