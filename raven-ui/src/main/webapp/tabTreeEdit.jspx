@@ -139,18 +139,22 @@
  			actionListener="#{subNodes.deleteNodes}"/>
 
  		<tr:commandButton 
+ 			partialSubmit="true"
 	 		text="#{msgs.up}" 
  			actionListener="#{subNodes.upNodes}"/>
 
- 		<tr:commandButton 
+ 		<tr:commandButton
+ 			partialSubmit="true" 
 	 		text="#{msgs.down}" 
  			actionListener="#{subNodes.downNodes}"/>
 
  		<tr:commandButton 
+ 			partialSubmit="true"
 	 		text="#{msgs.selectAll}" 
  			actionListener="#{subNodes.selectAllNodes}"/>
 
- 		<tr:commandButton 
+ 		<tr:commandButton
+ 			partialSubmit="true" 
 	 		text="#{msgs.cancelSelect}" 
  			actionListener="#{subNodes.cancelSelectNodes}"/>
 	</tr:panelButtonBar>
