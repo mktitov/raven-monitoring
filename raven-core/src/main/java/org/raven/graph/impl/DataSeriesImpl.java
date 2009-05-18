@@ -31,10 +31,18 @@ public class DataSeriesImpl implements DataSeries
     private final long[] timestamps;
     private final double[] values;
 
-    public DataSeriesImpl(long[] timestemps, double[] values)
+    public DataSeriesImpl(long[] timestamps, double[] values)
     {
-        this.timestamps = timestemps;
-        this.values = values;
+        if (timestamps!=null && timestamps.length==1)
+        {
+            this.timestamps = new long[]{0, timestamps[0]};
+            this.values = new double[]{Double.NaN, values[0]};
+        }
+        else
+        {
+            this.timestamps = timestamps;
+            this.values = values;
+        }
     }
 
     public long[] getTimestamps()
@@ -55,5 +63,10 @@ public class DataSeriesImpl implements DataSeries
     public long getLastTimeStamp()
     {
         return timestamps==null || timestamps.length==0? 0 : timestamps[timestamps.length-1];
+    }
+
+    public int getValuesCount()
+    {
+        return timestamps==null || timestamps.length==0? 0 : timestamps.length;
     }
 }

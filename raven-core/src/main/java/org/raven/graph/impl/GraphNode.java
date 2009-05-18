@@ -288,7 +288,11 @@ public class GraphNode extends BaseNode implements Viewable
         }
         if (_detectTimeIntervalFromData)
         {
+            if (dataTimeInterval[0]==0)
+                dataTimeInterval[0] = Util.getTime();
             gdef.setStartTime(dataTimeInterval[0]);
+            if (dataTimeInterval[1]<=dataTimeInterval[0])
+                dataTimeInterval[1] = dataTimeInterval[0]+1;
             gdef.setEndTime(dataTimeInterval[1]);
         }
         return gdef;

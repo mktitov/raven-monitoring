@@ -187,7 +187,9 @@ public class RecordsDataDef extends AbstractDataDef implements DataConsumer
                         ++i;
                     }
 
-                    if (i<recs.size())
+                    if (i==0)
+                        return DataSeriesImpl.EMPTY_DATA_SERIES;
+                    else if (i<recs.size())
                     {
                         timestamps = Arrays.copyOf(timestamps, i);
                         values = Arrays.copyOf(values, i);
@@ -196,7 +198,7 @@ public class RecordsDataDef extends AbstractDataDef implements DataConsumer
                     return new DataSeriesImpl(timestamps, values);
                 }
                 else
-                    return new DataSeriesImpl(new long[]{}, new double[]{});
+                    return DataSeriesImpl.EMPTY_DATA_SERIES;
             }
             finally
             {

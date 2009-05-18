@@ -15,18 +15,21 @@
  *  under the License.
  */
 
-package org.raven.graph;
+package org.raven.graph.impl;
+
+import org.jrobin.data.Plottable;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataSeries
+public class NanPlottable extends Plottable
 {
-    public long getFirstTimeStamp();
-    public long getLastTimeStamp();
-    public long[] getTimestamps();
+    public static Plottable NAN_PLOTTABLE = new NanPlottable();
 
-    public double[] getValues();
-    public int getValuesCount();
+    @Override
+    public double getValue(long timestamp)
+    {
+        return Double.NaN;
+    }
 }

@@ -41,24 +41,30 @@ public abstract class AbstractDataDef extends BaseNode implements DataDef, Graph
         {
             DataSeries dataSeries = formData(startTime, endTime);
 
-            Interpolator interpolator = null;
-            Collection<Node> childs = getChildrens();
-            if (childs!=null && !childs.isEmpty())
-                for (Node child: childs)
-                    if (child instanceof Interpolator)
-                    {
-                        interpolator = (Interpolator) child;
-                        break;
-                    }
             Plottable plottable = null;
-            if (interpolator==null)
-            {
-                plottable = new LinearInterpolator(
-                        dataSeries.getTimestamps(), dataSeries.getValues());
-            }
+
+            if (dataSeries.getValuesCount()==0)
+                plottable = NanPlottable.NAN_PLOTTABLE;
             else
-                plottable = interpolator.createIterpolator(
-                        dataSeries.getTimestamps(), dataSeries.getValues());
+            {
+                Interpolator interpolator = null;
+                Collection<Node> childs = getChildrens();
+                if (childs!=null && !childs.isEmpty())
+                    for (Node child: childs)
+                        if (child instanceof Interpolator)
+                        {
+                            interpolator = (Interpolator) child;
+                            break;
+                        }
+                if (interpolator==null)
+                {
+                    plottable = new LinearInterpolator(
+                            dataSeries.getTimestamps(), dataSeries.getValues());
+                }
+                else
+                    plottable = interpolator.createIterpolator(
+                            dataSeries.getTimestamps(), dataSeries.getValues());
+            }
             return new GraphDataImpl(
                     plottable, dataSeries.getFirstTimeStamp(), dataSeries.getLastTimeStamp());
         }
