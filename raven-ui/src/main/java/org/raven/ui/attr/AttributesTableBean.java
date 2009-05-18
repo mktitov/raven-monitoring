@@ -117,6 +117,14 @@ public class AttributesTableBean
 		return saveAttributes(nw,true);
 	}
 
+	public String saveAttributesAndStart()
+	{
+		NodeWrapper nw = SessionBean.getNodeWrapper();
+		saveAttributes(nw,true);
+		nw.nodeStart();
+		return null;
+	}
+	
 	public void saveAttributesWithoutWrite(ActionEvent ae)
 	{
 		NodeWrapper nw = SessionBean.getNodeWrapper();

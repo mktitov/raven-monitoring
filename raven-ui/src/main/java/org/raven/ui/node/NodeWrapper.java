@@ -264,6 +264,20 @@ implements Comparator<NodeAttribute>
 		return "ok";
 	}
 
+	public String nodeStartRecursive()
+	{
+		if( ! isAllowControl() ) return "err";
+		if(!isCanNodeStart()) return "err";
+		try 
+		{
+			getTree().start(getNode(), true);
+		} catch (NodeError e)
+		{
+				logger.error("on start recursive:"+getNodeName()+" : "+e.getMessage());
+		}
+		return "ok";
+	}
+	
 	public String nodeStop()
 	{
 		if( ! isAllowControl() ) return "err";

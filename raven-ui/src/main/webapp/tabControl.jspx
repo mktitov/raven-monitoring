@@ -34,6 +34,10 @@ partialTriggers="::poolStatus"
    			action="#{cNode.nodeStart}" 
    			disabled="#{! cNode.canNodeStart}"  
    			text="#{msgs.start}" />
+   		<tr:commandButton 
+   			shortDesc="#{msgs.dscStartRecursive}" 
+   			action="#{cNode.nodeStartRecursive}" 
+   			text="#{msgs.startRecursive}" />
 		<tr:commandButton 
 			action="#{cNode.nodeStop}" 
 			disabled="#{! cNode.canNodeStop}" 

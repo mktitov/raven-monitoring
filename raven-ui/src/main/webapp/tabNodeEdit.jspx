@@ -267,6 +267,11 @@ readOnly="#{row.expressionSupported}"
             	text="#{msgs.save}" 
             	action="#{cNodeAttrs.saveAttributes}"  />
             <tr:commandButton 
+            	shortDesc="#{msgs.dscSaveAttrAndStart}"
+            	rendered="#{cNode.allowControl and cNode.allowNodeEdit}"  
+            	text="#{msgs.saveAndStart}" 
+            	action="#{cNodeAttrs.saveAttributesAndStart}"  />
+            <tr:commandButton 
             	shortDesc="#{msgs.dscCancelAttr}" 
             	disabled="#{!cNode.allowNodeEdit}" 
             	text="#{msgs.cancel}" 
