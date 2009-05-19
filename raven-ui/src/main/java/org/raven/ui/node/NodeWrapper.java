@@ -115,38 +115,32 @@ implements Comparator<NodeAttribute>
 	{
 		List<Node> rt = new ArrayList<Node>();
 		Node n = getNode();
-		if(n!=null && n.getParent()!=null) rt.add(n);
-		while(true)
+		if(n!=null && n.getParent()!=null) rt.add(n); 
+		while(n!=null && n.getParent()!=null)
 		{
 			n = n.getParent();
 			if(n==null || n.getParent()==null) break;
-			int ac = SessionBean.getUserAcl().getAccessForNode(n);
-			if(ac> AccessControl.TRANSIT) 
+		//	int ac = SessionBean.getUserAcl().getAccessForNode(n);
+		//	if(ac> AccessControl.TRANSIT) 
 			rt.add(n);
 		}
-		Collections.reverse(rt);
-		/*
+		//Collections.reverse(rt);
+		
 		List<Node> ret = new ArrayList<Node>();
 		for(int i=rt.size()-1;i>=0;i--)
 		{
 			n = rt.get(i);
-			int access = AccessControl.NONE; 
-			for(Node cn : n.getChildrenList())
+			int cnt = 0;
+			if(getUserAcl().getAccessForNode(n) == AccessControl.TRANSIT) 
 			{
-				int acc = getUserAcl().getAccessForNode(cn);
-				if(acc > AccessControl.NONE)
-				{
-					access = acc;
-					ret.add(cn);
-				}  
-			}  
-			if(ret.size()==0) return null;
-			if(ret.size()==1 && access == AccessControl.TRANSIT )
-				return getChildData(ret.get(0));			
-			ret.add(rt.get(i));
+				for(Node cn : n.getChildrenList())
+					if(getUserAcl().getAccessForNode(cn) > AccessControl.NONE)
+						cnt++;
+				if(cnt==1) continue;			
+			}	
+			ret.add(n);
 		}
-		*/	
-		return rt;
+		return ret;
 	}
 	
 	public String getRefreshAttributesTitle()
