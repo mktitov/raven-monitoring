@@ -8,10 +8,6 @@
             <properties>
                 <netbeans.deploy>true</netbeans.deploy>
             </properties>
-            <activatedProfiles>
-                <activatedProfile>default</activatedProfile>
-                
-            </activatedProfiles>
         </action>
         <action>
             <actionName>CUSTOM-compile</actionName>
