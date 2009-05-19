@@ -257,6 +257,8 @@ partialTriggers=":poolStatus"
   		defaultFacet="default">
 
   		<f:facet name="default">
+	  	  	<tr:panelHorizontalLayout halign="left" >
+	  	  	<tr:spacer width="30" />
 			<tr:commandLink 
 				text="#{msgs.file}: #{row.idVO}" 
 				actionListener="#{otherVO.export}">
@@ -267,6 +269,7 @@ partialTriggers=":poolStatus"
 					name="uid" 
 					value="#{row.uid}"/>
 			</tr:commandLink>
+			</tr:panelHorizontalLayout>
   		</f:facet>
 
 <!-- show nodeUrl --> 
@@ -285,6 +288,8 @@ partialTriggers=":poolStatus"
 		</f:facet>
 <!-- show image -->
 		<f:facet name="image">
+	  	  	<tr:panelHorizontalLayout halign="left" >
+	  	  	<tr:spacer width="30" />
 			<tr:panelGroupLayout layout="vertical"  > 
 			<tr:outputFormatted 
 				inlineStyle="COLOR: green; FONT-STYLE: italic;" 
@@ -301,10 +306,14 @@ partialTriggers=":poolStatus"
    				</s:graphicImageDynamic>
 				<tr:spacer height="6" />
 			</tr:panelGroupLayout>
+			</tr:panelHorizontalLayout>
   		</f:facet >
 
 <!-- show table varStatus="vStat2" -->  
 	<f:facet name="ravenTable">
+	  	  	<tr:panelHorizontalLayout halign="left" >
+	  	  	<tr:spacer width="30" />
+	
 		<tr:panelGroupLayout layout="vertical"  >
 		
 		 	<tr:outputFormatted 
@@ -575,7 +584,7 @@ items="#{row.tableColumnNames}"
            	</tr:table>
 			<tr:spacer height="6" />
 	 	</tr:panelGroupLayout>
-	 	 
+		</tr:panelHorizontalLayout>	 	 
   	</f:facet>
   	
   	
