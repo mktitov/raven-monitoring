@@ -311,7 +311,7 @@ partialTriggers=":poolStatus"
 
 <!-- show table varStatus="vStat2" -->  
 	<f:facet name="ravenTable">
-	  	  	<tr:panelHorizontalLayout halign="left" >
+	  	  	<tr:panelHorizontalLayout halign="left" inlineStyle="width:100%" >
 	  	  	<tr:spacer width="30" />
 	
 		<tr:panelGroupLayout layout="vertical"  >
