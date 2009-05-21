@@ -194,7 +194,7 @@ public class CachePipeNode extends AbstractDataPipe
     private synchronized void cacheDataStore()
     {
         temporaryCacheManager.getCache(cacheScope).put(
-                DATA_STORE_ATTR, localDataStore.get(), expirationTime);
+                getDataStoreId(), localDataStore.get(), expirationTime);
     }
 
     private synchronized DataState getDataState(Boolean activeConsumer, DataConsumer consumer)
@@ -206,7 +206,7 @@ public class CachePipeNode extends AbstractDataPipe
                     , (activeConsumer? "ACTIVE" : "PASSIVE")));
         
         TemporaryCache tempCache = temporaryCacheManager.getCache(cacheScope);
-        DataStore store = (DataStore) tempCache.get(DATA_STORE_ATTR);
+        DataStore store = (DataStore) tempCache.get(getDataStoreId());
         if (store!=null)
         {
             if (isLogLevelEnabled(LogLevel.DEBUG))
@@ -229,6 +229,11 @@ public class CachePipeNode extends AbstractDataPipe
                 return new DataState(false, null);
             }
         }
+    }
+
+    private String getDataStoreId()
+    {
+        return getId()+"_"+DATA_STORE_ATTR;
     }
 
     private void removePreparingFlag()
