@@ -25,18 +25,19 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 	 * Loads viewable objects for the node, saves images in ViewableObjectsStorage.
 	 * @return list of viewable objects 
 	 */
-	protected List<ViewableObjectWrapper> getValue(NodeWrapper nw)
+	protected List<ViewableObjectWrapper> getValue(NodeWrapper nwx)
 	{
-		logger.info("loading objects for "+nw.getNodePath());
+		logger.info("loading objects for "+nwx.getNodePath());
 		Viewable viewable;
 		int uid = 1;
 		List<ViewableObjectWrapper> vowl = new ArrayList<ViewableObjectWrapper>();
 		//if ( ! nw.isViewable() )
 		//			return vowl;
-		ViewableObjectWrapper wrp = new ViewableObjectWrapper(nw.getNode());
+		ViewableObjectWrapper wrp = new ViewableObjectWrapper(nwx.getNode());
 		wrp.setUid(uid++);
-		wrp.setNodeId(nw.getNodeId());
+		wrp.setNodeId(nwx.getNodeId());
 		vowl.add(0, wrp );
+		NodeWrapper nw = new NodeWrapper(nwx.getVoSource());
 		if ( ! nw.isViewable() ) return vowl;
 		viewable = (Viewable) nw.getNode();
 		List<ViewableObject> vol = null;

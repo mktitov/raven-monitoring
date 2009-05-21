@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class AccessControl {
+	public static final int ADMIN = 64;
+	public static final char ADMIN_SYMBOL = 'a';
 	public static final int TREE_EDIT = 32;
 	public static final char TREE_EDIT_SYMBOL = 't';
 	public static final int CONTROL = 16;
@@ -74,6 +76,7 @@ public class AccessControl {
 				case WRITE_SYMBOL  	: right |= READ|WRITE;  break;
 				case CONTROL_SYMBOL : right |= READ|CONTROL;  break;
 				case TREE_EDIT_SYMBOL : right |= READ|WRITE|TREE_EDIT;  break;
+				case ADMIN_SYMBOL : right |= READ|WRITE|TREE_EDIT|ADMIN;  break;
 			}
 			if(none) break;
 		}

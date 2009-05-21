@@ -33,7 +33,8 @@ import org.weda.internal.services.ProjectBuild;
 @WedaPluginModule
 public class TransformModule 
 {
-    public static void contributeClassTransformer(
+    @SuppressWarnings("unchecked")
+	public static void contributeClassTransformer(
             MappedConfiguration<Class, TransformWorker> conf, ProjectBuild buildInfo)
     {
         conf.add(Parameter.class, new ParameterFieldTransformerWorker());

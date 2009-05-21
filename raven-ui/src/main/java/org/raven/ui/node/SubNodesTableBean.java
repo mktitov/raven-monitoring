@@ -31,17 +31,20 @@ import org.raven.tree.Node;
 import org.raven.tree.Tree;
 import org.raven.ui.SessionBean;
 import org.raven.ui.util.Messages;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.myfaces.trinidad.event.ReturnEvent;
 
 public class SubNodesTableBean 
 {
-	  private UIComponent table = null;
-	  private CoreMessage message = null;
+	private static final Logger logger = LoggerFactory.getLogger(NodeWrapper.class);
+	private UIComponent table = null;
+	private CoreMessage message = null;
 
-	  public SubNodesTableBean() 
-	  {
+	public SubNodesTableBean() 
+	{
 		//  selected = Collections.EMPTY_LIST; 
-	  }
+	}
 
 	  public static ArrayList<Object> getSeletedTableRowsData(UIXTable tbl, boolean clearState)
 	  {
@@ -64,7 +67,11 @@ public class SubNodesTableBean
 		  return getSeletedTableRowsData(tbl,true);
 	  }
 	  
-	  
+	  /**
+	   * Loads selected nodes into the list.
+	   * @param lst
+	   * @return true if nodes has been loaded
+	   */
 	  public boolean loadNodeWrappers(List<NodeWrapper> lst)
 	  {
 		lst.clear();
@@ -98,14 +105,14 @@ public class SubNodesTableBean
 	    	int x = sb.deleteNode(nw);
 	    	if(x==-1)
 	    	{
-	    		if(retb.length()==0) retb.append("This nodes have dependensies: ");
+	    		if(retb.length()==0) retb.append(Messages.getUiMessage(Messages.NODES_HAVE_DEPEND)+" ");
 	    		retb.append(" "+nw.getNodeName());
 	    	} else it.remove();
 	    }
 	    if(nw == null)
 	    {
 	    	//"No selected nodes !"
-	    	message.setMessage(Messages.getUiMessage("noSelectedNodes"));
+	    	message.setMessage(Messages.getUiMessage(Messages.NO_SELECTED_NODES));
 	    	return;
 	    }
      	sb.afterDeleteNodes();
@@ -124,13 +131,13 @@ public class SubNodesTableBean
 	    	int x = sb.deleteNode(nw);
 	    	if(x==-1)
 	    	{
-	    		if(retb.length()==0) retb.append("This nodes have dependensies: ");
+	    		if(retb.length()==0) retb.append(Messages.getUiMessage(Messages.NODES_HAVE_DEPEND)+" ");
 	    		retb.append(" "+nw.getNodeName());
 	    	} else it.remove();
 	    }
 	    if(nw == null)
 	    {
-	    	message.setMessage(Messages.getUiMessage("noSelectedNodes"));
+	    	message.setMessage(Messages.getUiMessage(Messages.NO_SELECTED_NODES));
 	    	return;
 	    }
 	    sb.afterDeleteNodes();
@@ -207,7 +214,7 @@ public class SubNodesTableBean
 	    NodeWrapper parent = null;
 	    if( sel.size() == 0 ) 
 	    {
-	    	message.setMessage(Messages.getUiMessage("noSelectedNodes"));
+	    	message.setMessage(Messages.getUiMessage(Messages.NO_SELECTED_NODES));
 	    	return;
 	    }
 	    NodeWrapper t = (NodeWrapper) sel.get(0);
@@ -355,39 +362,58 @@ public class SubNodesTableBean
 		{
 		  	SessionBean sb = (SessionBean) SessionBean.getElValue(SessionBean.BEAN_NAME);
 		  	StringBuffer retb = new StringBuffer();
-		  	Node n = (Node) event.getReturnValue();
+		  	Node n = (Node) event.getReturnValue(); // dst node
 		  	if(n==null)
 		  	{
-		  		message.setMessage(Messages.getUiMessage("noSelectedNodes"));
+		  		message.setMessage(Messages.getUiMessage(Messages.NO_SELECTED_NODES));
 				sb.reloadBothFrames();
 		  		return;
 		  	}	
 		  	NodeWrapper nx = new NodeWrapper(n);
 		  	if(!nx.isAllowTreeEdit())
 		  	{
-		  		message.setMessage(Messages.getUiMessage("accessDenied"));
+		  		message.setMessage(Messages.getUiMessage(Messages.ACCESS_DENIED));
 				sb.reloadBothFrames();
 		  		return;
 		  	}	
 		  		
 		  	ArrayList<NodeWrapper> nws = new ArrayList<NodeWrapper>();
 		  	loadNodeWrappers(nws);
+		  	boolean flag = false;
 		  	for(NodeWrapper nw: nws)
-		  		if(n.getPath().startsWith(nw.getNode().getPath()))
+		  	{
+		  		String to = n.getPath();
+		  		String parent = nw.getNode().getParent().getPath();
+		  		String from = nw.getNode().getPath();
+		  		//logger.info("to="+to+" , from="+from+" , parent="+parent);
+		  		if(to.equalsIgnoreCase(parent))
 		  		{
-		  			message.setMessage(Messages.getUiMessage("inadmissibleDstNode"));
+		  			
+		  			flag = true;
+		  			continue;
+		  		}
+		  		if(to.startsWith(from))
+		  		{
+		  			message.setMessage(Messages.getUiMessage(Messages.BAD_DST_NODE));
 		  			sb.reloadBothFrames();
 		  			return;
-		  		}	
+		  		}
+		  	}	
 		  	
 		  	Tree tree = SessionBean.getTree();
 		  	for(NodeWrapper nw: nws)
 		  	{
 		  		if(copy)
-		  		try {tree.copy(nw.getNode(), n, null, null, true, true, false); }
+		  		try {
+		  			String newName = null;
+		  			if(flag) newName = nw.getNode().getName()+Messages.getUiMessage(Messages.NODES_COPY_POSTFIX);
+		  			//logger.info("newName="+newName);
+		  			tree.copy(nw.getNode(), n, newName, null, true, true, false);
+		  		}
 		  		catch(Exception e) 
 		  		{
-		  			if(retb.length()==0) retb.append(Messages.getUiMessage("nodesCantBeCopied"));
+		  			if(retb.length()==0) 
+		  				retb.append(Messages.getUiMessage(Messages.NODES_CANT_BE_COPIED));
 		  			retb.append(" "+nw.getNodeName());
 		  		}
 		  	}	

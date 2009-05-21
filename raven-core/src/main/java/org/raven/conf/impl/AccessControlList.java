@@ -118,10 +118,16 @@ public abstract class AccessControlList implements Comparator<AccessControl>
    */
 	public int compare(AccessControl a, AccessControl b)
     {
-    	if(a.getResource().length() > b.getResource().length()) return -1;
-    	if(a.getResource().length() < b.getResource().length()) return 1;
-    	if(a.getRight() > b.getRight()) return -1; 
-    	if(a.getRight() < b.getRight()) return 1; 
+		int rightA = a.getRight();
+		int rightB = b.getRight();
+		int adm = (rightA & AccessControl.ADMIN) - (rightB & AccessControl.ADMIN);
+		if(adm>0) return -1;
+		if(adm<0) return 1;
+		int lenCmp = a.getResource().length() - b.getResource().length();
+    	if(lenCmp>0) return -1;
+    	if(lenCmp<0) return 1;
+    	if(rightA > rightB) return -1; 
+    	if(rightA < rightB) return 1; 
     	return 0;
     }
     

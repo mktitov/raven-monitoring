@@ -5,6 +5,7 @@ import org.raven.table.Table;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.Node;
+import org.raven.ui.node.NodeWrapper;
 import org.raven.util.Utl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,7 @@ import org.slf4j.LoggerFactory;
 public class ViewableObjectWrapper 
 {
 	private static final Logger logger = LoggerFactory.getLogger(ViewableObjectWrapper.class);
+    public static final String NAVIGATE_TO = "navigateToNode";
 	public static final String NODE_URL = "nodeUrl";
 	public static final String RAVEN_TABLE_GR = "ravenTable";
 	public static final String IMAGE = "image";
@@ -158,6 +160,12 @@ public class ViewableObjectWrapper
 	public String getNodePath()
 	{
 		if(!isViewable()) return node.getPath();
+		return null;
+	}
+
+	public String getNavigateTo()
+	{
+		if(!isViewable()) return NodeWrapper.getNodeByAttr(node,NAVIGATE_TO).getPath();
 		return null;
 	}
 	

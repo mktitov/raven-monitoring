@@ -25,7 +25,12 @@ import org.weda.internal.exception.DeveloperError;
  */
 public class RavenRuntimeException extends DeveloperError
 {
-    public RavenRuntimeException(String msg) {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 2052904668356423896L;
+
+	public RavenRuntimeException(String msg) {
         super(msg);
     }
 

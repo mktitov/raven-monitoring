@@ -120,7 +120,8 @@ public class RavenCoreModule
         return new TemporaryCacheManagerImpl(cacheManager);
     }
     
-    public static Configurator buildConfigurator(Map<String, Class> treeStoreEngines)
+    @SuppressWarnings("unchecked")
+	public static Configurator buildConfigurator(Map<String, Class> treeStoreEngines)
     {
         return new ConfiguratorImpl(treeStoreEngines);
     }
@@ -161,12 +162,14 @@ public class RavenCoreModule
 		return builder.build(ExpressionCompiler.class, commands);
 	}
     
-    public static void contributeConfigurator(MappedConfiguration<String, Class> conf)
+    @SuppressWarnings("unchecked")
+	public static void contributeConfigurator(MappedConfiguration<String, Class> conf)
     {
         conf.add(Configurator.H2_TREE_STORE_ENGINE, H2TreeStore.class);
     }
     
-    public static void contributeTypeConverter(Configuration conf)
+    @SuppressWarnings("unchecked")
+	public static void contributeTypeConverter(Configuration conf)
     {
         conf.add(new NodeToStringConverter());
         conf.add(new NodeAttributeToStringConverter());
@@ -190,7 +193,8 @@ public class RavenCoreModule
         conf.add(new DateToDateConverter());
     }
     
-    public static void contributeTree(MappedConfiguration<Class, AttributeReferenceValues> conf)
+    @SuppressWarnings("unchecked")
+	public static void contributeTree(MappedConfiguration<Class, AttributeReferenceValues> conf)
     {
         conf.add(TemplateVariable.class, new TemplateVariableReferenceValues());
         conf.add(DataSource.class, new SystemDataSourceReferenceValues());

@@ -38,6 +38,7 @@ import org.raven.ui.vo.VObyNode;
 import org.raven.ui.vo.ImagesStorage;
 import org.raven.conf.Configurator;
 import org.raven.conf.impl.UserAcl;
+import org.raven.ui.util.Messages;
 import org.raven.template.impl.TemplateNode;
 import org.raven.tree.Node;
 import org.raven.tree.NodeError;
@@ -391,7 +392,7 @@ public class SessionBean
 			Node n = it.next().getNode();
 			if(n.getDependentNodes()!=null && !n.getDependentNodes().isEmpty())
 			{
-				if(ret.length()==0) ret.append("This nodes have dependensies: ");
+				if(ret.length()==0) ret.append(Messages.getUiMessage(Messages.NODES_HAVE_DEPEND)+" ");
 					else ret.append(", ");
 				ret.append(n.getName());
 				continue;

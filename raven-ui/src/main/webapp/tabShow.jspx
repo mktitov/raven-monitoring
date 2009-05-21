@@ -282,7 +282,7 @@ partialTriggers=":poolStatus"
 				actionListener="#{sBean.selectNode}">
 				<f:attribute 
 					name="nodePath" 
-					value="#{row.nodePath}"/>
+					value="#{row.navigateTo}"/>
 			</tr:commandLink>
 			</tr:panelHorizontalLayout>
 		</f:facet>

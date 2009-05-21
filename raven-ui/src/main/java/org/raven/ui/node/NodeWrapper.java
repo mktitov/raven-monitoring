@@ -65,7 +65,9 @@ public class NodeWrapper extends AbstractNodeWrapper
 implements Comparator<NodeAttribute>
 {
 	public static final String BEAN_NAME = "cNode";
-    protected static Logger logger = LoggerFactory.getLogger(NodeWrapper.class);
+    public static final String VO_SOURCE = "viewableObjectSource";
+	
+    protected static final Logger logger = LoggerFactory.getLogger(NodeWrapper.class);
 
     private static final SelectItem[] logsSI = { new SelectItem(LogLevel.TRACE),
 		new SelectItem(LogLevel.DEBUG),	
@@ -142,13 +144,32 @@ implements Comparator<NodeAttribute>
 		}
 		return ret;
 	}
+
+	public static Node getNodeByAttr(Node cnode, String attr)
+	{
+		logger.info("curNode "+cnode.getPath());
+		NodeAttribute na = cnode.getNodeAttribute(attr);
+		logger.info("curNode("+attr+")="+na);
+		if(na==null) return cnode;
+		Object n = na.getRealValue();
+		logger.info("RealValue="+n);
+		if(n==null) return cnode;
+		if (n instanceof Node) cnode = (Node) n;
+		else logger.warn("attribute {} of node {} is't instance of Node ",attr,cnode.getPath());
+		return cnode;
+	}
+
+	public Node getVoSource()
+	{
+		return getNodeByAttr(getNode(),VO_SOURCE);
+	}
 	
 	public String getRefreshAttributesTitle()
 	{
 		String mesName = null;
-		if( isNodeAndChildViewable() ) mesName = "refreshAttributesOfNodeAndChildren";
-		else if( isNodeViewableOnly() ) mesName = "refreshAttributesOfNode";
-				else if( isChildViewableOnly() ) mesName = "refreshAttributesOfChildren";
+		if( isNodeAndChildViewable() ) mesName = Messages.getUiMessage(Messages.RA_NODE_AND_CHILD);
+		else if( isNodeViewableOnly() ) mesName = Messages.getUiMessage(Messages.RA_NODE);
+				else if( isChildViewableOnly() ) mesName = Messages.getUiMessage(Messages.RA_CHILD);
 						else return "";
 		return Messages.getUiMessage(mesName);
 	}
@@ -680,14 +701,14 @@ implements Comparator<NodeAttribute>
 			  NodeAttribute na = getNode().getNodeAttribute(a.getName());
 			  if(na==null)
 			  {
-				  String t = Messages.getString("org.raven.ui.messages", "attributeNotFound",new Object[] {});
+				  String t = Messages.getUiMessage(Messages.ATTR_NOT_FOUND);
 				  ret.append(t + a.getName());
 				  break;
 			  }
 			  if(!a.isAllowDelete())
 			  //if(na.getParentAttribute()!=null || na.getParameterName()!=null)
 			  {
-				  String t = Messages.getString("org.raven.ui.messages", "attributesCantDeleted",new Object[] {});
+				  String t = Messages.getUiMessage(Messages.ATTR_CANT_DEL);
 				  if(ret.length()==0) ret.append(t); else ret.append(", ");
 				  ret.append(na.getName());
 				  continue;
@@ -743,6 +764,7 @@ implements Comparator<NodeAttribute>
 		  return x;
 	}
 	
+		
 	public String goToEditNewAttribute(Node n)
 	{
 		/*
