@@ -135,7 +135,8 @@
 			useWindow="true" windowWidth="500" windowHeight="400" />        
 
  		<tr:commandButton 
-	 		text="#{msgs.delete}" 
+	 		text="#{msgs.delete}"
+	 		onclick="if (!confirm('#{msgs.areYouSure}')) return false"
  			actionListener="#{subNodes.deleteNodes}"/>
 
  		<tr:commandButton 
