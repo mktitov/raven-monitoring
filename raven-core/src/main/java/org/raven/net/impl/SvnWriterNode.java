@@ -17,8 +17,16 @@
 
 package org.raven.net.impl;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.Map;
 import org.apache.commons.io.IOUtils;
@@ -32,9 +40,14 @@ import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.log.LogLevel;
+import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
+import org.tmatesoft.svn.core.internal.wc.DefaultSVNOptions;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
+import org.tmatesoft.svn.core.wc.SVNClientManager;
+import org.tmatesoft.svn.core.wc.SVNRevision;
+import org.tmatesoft.svn.core.wc.SVNWCUtil;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -62,6 +75,9 @@ public class SvnWriterNode extends AbstractDataConsumer
     private Charset sourceEncoding;
     @Parameter
     private Charset targetEncoding;
+
+    private SVNURL repUrl;
+    private File workDir;
 
     public Charset getSourceEncoding() {
         return sourceEncoding;
@@ -112,7 +128,7 @@ public class SvnWriterNode extends AbstractDataConsumer
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data) throws Exception
+    protected synchronized void doSetData(DataSource dataSource, Object data) throws Exception
     {
         if (data==null)
         {
@@ -141,25 +157,108 @@ public class SvnWriterNode extends AbstractDataConsumer
         if (fileData==null)
             throw new Exception("The value of the (%s) field can not be NULL");
 
-        setupSubversion();
+        SVNClientManager svnClient = setupSubversion();
 
 //        OutputStreamWriter writer = new OutputStreamWriter
+        Object inputStream = prepareInputStream(fileData);
+        File dataFile = new File(workDir, path);
+        boolean dataFileExists = dataFile.exists();
+        Object outputStream = prepareOutputStream(dataFile);
+        writeDataToFile(inputStream, outputStream);
+
+        commitChanges(svnClient, dataFile, dataFileExists);
     }
 
-    private void setupSubversion() throws SVNException
+    private void commitChanges(SVNClientManager svnClient, File dataFile, boolean newFile)
+            throws SVNException
     {
-        SVNURL svnurl = SVNURL.parseURIEncoded(repositoryUrl);
-        if ("file".equals(svnurl.getPath()))
-            createLocalRepository(svnurl);
-
-        
+        if (newFile)
+            svnClient.getWCClient().doAdd(
+                    dataFile, false, false, true, SVNDepth.INFINITY, false, true);
+        svnClient.getCommitClient().doCommit(
+                new File[]{workDir}, false
+                , ""
+                , null, null, false, true
+                , SVNDepth.UNKNOWN);
     }
 
-    private void createLocalRepository(SVNURL svnurl) throws SVNException
+    private Object prepareOutputStream(File dataFile) throws Exception
+    {
+        File parentFile = dataFile.getParentFile();
+        if (!parentFile.exists())
+            if (!parentFile.mkdirs())
+                throw new Exception(String.format(
+                        "Error creating directory (%s) in the work directory (%s)"
+                        , parentFile.getAbsolutePath(), workDir.getPath()));
+        
+        Object result = new FileOutputStream(dataFile, false);
+        Charset _targetEncoding = targetEncoding;
+        if (_targetEncoding!=null)
+            result = new OutputStreamWriter((OutputStream)result, _targetEncoding);
+
+        return result;
+    }
+
+    private Object prepareInputStream(Object fileData)
+    {
+        Object result = null;
+        if (fileData instanceof InputStream)
+            result = fileData;
+        if (fileData instanceof byte[])
+            result = new ByteArrayInputStream((byte[])fileData);
+        else
+            result = converter.convert(String.class, fileData, null);
+
+        Charset _sourceEncoding = sourceEncoding;
+        if (result instanceof InputStream && _sourceEncoding!=null)
+            result  = new InputStreamReader((InputStream)result, _sourceEncoding);
+        
+        return result;
+    }
+
+    private SVNClientManager setupSubversion() throws Exception
+    {
+        repUrl = SVNURL.parseURIEncoded(repositoryUrl);
+        if ("file".equals(repUrl.getProtocol()))
+            createLocalRepository(repUrl);
+
+        workDir = new File(workDirectory);
+        DefaultSVNOptions options = SVNWCUtil.createDefaultOptions(true);
+        SVNClientManager svnClient =
+                SVNClientManager.newInstance(options, username, password);
+
+        createWorkDir(svnClient, workDir);
+
+        return svnClient;
+    }
+
+    private SVNURL createLocalRepository(SVNURL svnurl) throws SVNException
     {
         File file = new File(svnurl.getPath());
         if (!file.exists())
+        {
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug(String.format("Creating local subversion repository (%s)", svnurl.getPath()));
             svnurl = SVNRepositoryFactory.createLocalRepository(file, true, false);
+        }
+        return svnurl;
+    }
+
+    private void createWorkDir(SVNClientManager svnClient, File workDir) throws Exception
+    {
+        if (!workDir.exists() || !(new File(workDir, ".svn").exists()))
+        {
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug(String.format("Initializing work directory (%s)", workDir.getPath()));
+            if (!workDir.exists())
+                if (!workDir.mkdirs())
+                    throw new Exception(String.format(
+                            "Error creating working directory (%s)", workDir.getAbsolutePath()));
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug("Checkouting to the work directory");
+            svnClient.getUpdateClient().doCheckout(
+                    repUrl, workDir, SVNRevision.HEAD, SVNRevision.HEAD, SVNDepth.INFINITY, false);
+        }
     }
 
     private void validateRecord(Record record) throws Exception
@@ -189,6 +288,32 @@ public class SvnWriterNode extends AbstractDataConsumer
             throw new Exception(String.format(
                     "Record schema (%s) validation error. %s"
                     , record.getSchema().getName(), e.getMessage()));
+        }
+    }
+
+    private void writeDataToFile(Object inputStream, Object outputStream) throws IOException
+    {
+        if (inputStream instanceof String)
+        {
+            Charset _targetEncoding = targetEncoding==null?
+                    Charset.defaultCharset() : targetEncoding;
+            if (outputStream instanceof OutputStream)
+                ((OutputStream)outputStream).write(((String)inputStream).getBytes(_targetEncoding));
+            else
+                ((Writer)outputStream).write((String)inputStream);
+        } else if (inputStream instanceof InputStream)
+        {
+            if (outputStream instanceof OutputStream)
+                IOUtils.copy((InputStream)inputStream, (OutputStream)outputStream);
+            else
+                IOUtils.copy((InputStream)inputStream, (Writer)outputStream);
+        }
+        else
+        {
+            if (outputStream instanceof OutputStream)
+                IOUtils.copy((Reader)inputStream, (OutputStream)outputStream);
+            else
+                IOUtils.copy((Reader)inputStream, (Writer)outputStream);
         }
     }
 }

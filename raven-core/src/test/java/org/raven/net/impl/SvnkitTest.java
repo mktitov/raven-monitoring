@@ -20,7 +20,6 @@ package org.raven.net.impl;
 import java.io.File;
 import java.io.IOException;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
@@ -43,23 +42,36 @@ public class SvnkitTest
     @Test
     public void test() throws SVNException, IOException
     {
-        SVNURL repUrl = SVNRepositoryFactory.createLocalRepository(
-                new File("/home/tim/tmp/svnrep"), true, true);
+        String myWorkingCopyPath = "/home/tim/tmp/wc";
+        File repFile = new File("/home/tim/tmp/svnrep");
+        File wcDir = new File(myWorkingCopyPath);
+        FileUtils.deleteDirectory(wcDir);
+        FileUtils.deleteDirectory(repFile);
+        SVNURL repUrl = SVNRepositoryFactory.createLocalRepository(repFile, true, true);
         FSRepositoryFactory.setup();
 //        SVNURL repUrl = SVNURL.parseURIEncoded("file:///./home/tim/tmp/svnrep");
         SVNURL url = repUrl.appendPath("MyRepos", false);
-        String myWorkingCopyPath = "/home/tim/tmp/wc";
         DefaultSVNOptions options = SVNWCUtil.createDefaultOptions(true);
-        SVNClientManager ourClientManager = SVNClientManager.newInstance(options, "test", "test");
-        long rev = ourClientManager.getCommitClient().doMkDir(
+        SVNClientManager svnClient = SVNClientManager.newInstance(options, "test", "test");
+        long rev = svnClient.getCommitClient().doMkDir(
                 new SVNURL[]{url}, "create dir message").getNewRevision();
         
 //        createLocalDirs();
 //        ourClientManager.getCommitClient().doImport(
 //                importDir, url, "initial import", null, true, true, SVNDepth.INFINITY);
-        File wcDir = new File(myWorkingCopyPath);
         wcDir.mkdirs();
-        ourClientManager.getUpdateClient().doCheckout(repUrl, wcDir, SVNRevision.HEAD, SVNRevision.HEAD, SVNDepth.INFINITY, false);
+        svnClient.getUpdateClient().doCheckout(
+                repUrl, wcDir, SVNRevision.HEAD, SVNRevision.HEAD, SVNDepth.INFINITY, false);
+
+        File file = new File(wcDir, "test/test.txt");
+        file.getParentFile().mkdirs();
+        FileUtils.writeStringToFile(file, "test string");
+
+        svnClient.getWCClient().doAdd(file, false, false, true, SVNDepth.INFINITY, false, true);
+        svnClient.getCommitClient().doCommit(new File[]{wcDir}, false, "added file test.txt", null, null, false, true, SVNDepth.UNKNOWN);
+
+        FileUtils.writeStringToFile(file, "test string\nmodified");
+        svnClient.getCommitClient().doCommit(new File[]{file}, false, "file modified", null, null, false, true, SVNDepth.UNKNOWN);
     }
 
     private void createLocalDirs() throws IOException
