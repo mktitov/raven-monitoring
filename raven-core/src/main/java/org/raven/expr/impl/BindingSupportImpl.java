@@ -15,17 +15,18 @@
  *  under the License.
  */
 
-package org.raven.util;
+package org.raven.expr.impl;
 
 import java.util.HashMap;
 import java.util.Map;
 import javax.script.Bindings;
+import org.raven.expr.BindingSupport;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class BindingSupport
+public class BindingSupportImpl implements BindingSupport
 {
 	ThreadLocal<Map<String, Object>> bindings = new ThreadLocal<Map<String, Object>>();
 

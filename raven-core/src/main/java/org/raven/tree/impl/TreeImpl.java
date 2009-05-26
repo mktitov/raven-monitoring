@@ -30,6 +30,7 @@ import java.util.Set;
 import org.raven.annotations.NodeClass;
 import org.raven.conf.Configurator;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
+import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.impl.ClassNameComparator;
 import org.raven.impl.NodeClassTransformerWorker;
 import org.raven.log.impl.NodeLoggerNode;
@@ -90,7 +91,7 @@ public class TreeImpl implements Tree
     private final Map<Class, List<Class>> nodeTypes = new HashMap<Class, List<Class>>();
     private final Set<Class> anyChildTypeNodes = new HashSet<Class>();
     private final Set<Class> importParentChildTypeNodes = new HashSet<Class>();
-    private Node rootNode;
+    private RootNode rootNode;
     private SystemNode systemNode;
     private DataSourcesNode dataSourcesNode;
     private TemplatesNode templatesNode;
@@ -174,7 +175,7 @@ public class TreeImpl implements Tree
         shutdown();
         rootNode = null;
     
-        rootNode = treeStore.getRootNode();
+        rootNode = (RootNode) treeStore.getRootNode();
         if (rootNode == null)
             createRootNode();
         
@@ -445,7 +446,7 @@ public class TreeImpl implements Tree
     
     private void createRootNode()
     {
-        rootNode = new ContainerNode("");
+        rootNode = new RootNode();
         treeStore.saveNode(rootNode);
     }
 
@@ -641,6 +642,16 @@ public class TreeImpl implements Tree
             importParentChildTypeNodes.add(nodeType);
         addChildsToParent(ann.parentNode(), nodeType);
         addChildsToParent(nodeType, ann.childNodes());
+    }
+
+    public void addGlobalBindings(String bindingSupportId, BindingSupportImpl bindingSupport)
+    {
+        rootNode.addBindingSupport(bindingSupportId, bindingSupport);
+    }
+
+    public void removeGlobalBindings(String bindingSupportId)
+    {
+        rootNode.removeBindingSupport(bindingSupportId);
     }
     
     private class SearchScannedNodeHandler implements ScannedNodeHandler

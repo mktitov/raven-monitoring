@@ -174,6 +174,11 @@ public class BaseNode implements Node, NodeListener, Logger
         return id;
     }
 
+    public String generateBindingSupportId()
+    {
+        return this.getClass().getName()+id;
+    }
+
 //    private void initDependentNodes()
 //    {
 //        if (dependentNodes != null)

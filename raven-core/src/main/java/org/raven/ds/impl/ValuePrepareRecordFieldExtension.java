@@ -21,7 +21,7 @@ import javax.script.Bindings;
 import org.raven.annotations.Parameter;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.tree.impl.BaseNode;
-import org.raven.util.BindingSupport;
+import org.raven.expr.impl.BindingSupportImpl;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -42,14 +42,14 @@ public class ValuePrepareRecordFieldExtension extends BaseNode
     @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
     private String expression;
 
-    private BindingSupport bindingSupport;
+    private BindingSupportImpl bindingSupport;
 
     @Override
     protected void initFields()
     {
         super.initFields();
         
-        bindingSupport = new BindingSupport();
+        bindingSupport = new BindingSupportImpl();
     }
 
     public Class getConvertToType()

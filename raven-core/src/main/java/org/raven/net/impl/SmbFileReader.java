@@ -119,6 +119,4 @@ public class SmbFileReader extends AbstractFileReader
         attr.setRequired(false);
         consumerAttributes.add(attr);
     }
-
-
 }

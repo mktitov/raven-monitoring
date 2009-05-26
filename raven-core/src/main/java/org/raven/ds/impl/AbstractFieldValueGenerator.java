@@ -23,7 +23,7 @@ import org.raven.ds.FieldValueGenerator;
 import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
-import org.raven.util.BindingSupport;
+import org.raven.expr.impl.BindingSupportImpl;
 
 /**
  *
@@ -31,13 +31,13 @@ import org.raven.util.BindingSupport;
  */
 public abstract class AbstractFieldValueGenerator extends BaseNode implements FieldValueGenerator
 {
-    protected BindingSupport bindingSupport;
+    protected BindingSupportImpl bindingSupport;
 
     @Override
     protected void doInit() throws Exception
     {
         super.doInit();
-        bindingSupport = new BindingSupport();
+        bindingSupport = new BindingSupportImpl();
     }
 
     @Override

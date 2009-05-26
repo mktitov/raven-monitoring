@@ -50,7 +50,7 @@ import org.raven.table.ColumnBasedTable;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.DataSourcesNode;
 import org.raven.tree.impl.NodeAttributeImpl;
-import org.raven.util.BindingSupport;
+import org.raven.expr.impl.BindingSupportImpl;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.internal.annotations.Service;
 import org.weda.internal.impl.MessageComposer;
@@ -94,13 +94,13 @@ public class LdapReaderNode extends AbstractDataSource
     @NotNull @Parameter(defaultValue="simple")
     private String authType;
 
-    private BindingSupport bindingSupport;
+    private BindingSupportImpl bindingSupport;
 
     @Override
     protected void initFields()
     {
         super.initFields();
-        bindingSupport = new BindingSupport();
+        bindingSupport = new BindingSupportImpl();
     }
 
     public String getAuthType()

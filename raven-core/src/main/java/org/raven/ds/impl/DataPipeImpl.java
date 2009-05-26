@@ -27,7 +27,7 @@ import org.raven.ds.DataSource;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
-import org.raven.util.BindingSupport;
+import org.raven.expr.impl.BindingSupportImpl;
 
 /**
  * Collects data from one data source and transmits it to all {@link DataConsumer data consumers} 
@@ -58,14 +58,14 @@ public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
     @Parameter(defaultValue="false")
     private Boolean skipFirstCycle;
 
-    private BindingSupport bindingSupport;
+    private BindingSupportImpl bindingSupport;
 
     @Override
     protected void initFields()
     {
         super.initFields();
 
-        bindingSupport = new BindingSupport();
+        bindingSupport = new BindingSupportImpl();
     }
 
     public Boolean getSkipFirstCycle()

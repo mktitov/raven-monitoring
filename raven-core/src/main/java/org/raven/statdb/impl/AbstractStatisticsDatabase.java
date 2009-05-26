@@ -36,7 +36,7 @@ import org.raven.statdb.RuleProcessingResult;
 import org.raven.statdb.StatisticsDatabase;
 import org.raven.statdb.StatisticsRecord;
 import org.raven.tree.Node;
-import org.raven.util.BindingSupport;
+import org.raven.expr.impl.BindingSupportImpl;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -57,7 +57,7 @@ public abstract class AbstractStatisticsDatabase
     protected RulesNode rulesNode;
 
     protected Map<String, Double> previousValues;
-	protected BindingSupport bindingSupport;
+	protected BindingSupportImpl bindingSupport;
 
 	@Override
 	protected void initFields()
@@ -65,7 +65,7 @@ public abstract class AbstractStatisticsDatabase
 		super.initFields();
 
 		previousValues = new ConcurrentHashMap<String, Double>();
-		bindingSupport = new BindingSupport();
+		bindingSupport = new BindingSupportImpl();
 	}
 
 	@Override

@@ -41,7 +41,7 @@ import org.raven.template.impl.TemplateNode;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
-import org.raven.util.BindingSupport;
+import org.raven.expr.impl.BindingSupportImpl;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.internal.annotations.Service;
 
@@ -93,7 +93,7 @@ public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
     private String[] groups;
     private String[] masks;
     private Lock updateLock;
-    private BindingSupport bindingSupport;
+    private BindingSupportImpl bindingSupport;
 
     private SdbQueryNodeGeneratorTemplateNode queryNodeGeneratorTemplate;
 
@@ -109,7 +109,7 @@ public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
 
         updateLock = new ReentrantLock();
         sdbRequestsCount = 0;
-        bindingSupport = new BindingSupport();
+        bindingSupport = new BindingSupportImpl();
     }
 
     @Override

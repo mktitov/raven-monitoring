@@ -43,6 +43,7 @@ import org.raven.log.LogLevel;
 import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
+import org.tmatesoft.svn.core.internal.io.fs.FSRepositoryFactory;
 import org.tmatesoft.svn.core.internal.wc.DefaultSVNOptions;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
@@ -59,6 +60,7 @@ public class SvnWriterNode extends AbstractDataConsumer
 {
     public static final String DATA_FIELD = "data";
     public static final String PATH_FIELD = "path";
+    
     @Parameter @NotNull
     private String repositoryUrl;
 
@@ -163,10 +165,10 @@ public class SvnWriterNode extends AbstractDataConsumer
         Object inputStream = prepareInputStream(fileData);
         File dataFile = new File(workDir, path);
         boolean dataFileExists = dataFile.exists();
-        Object outputStream = prepareOutputStream(dataFile);
+        Object outputStream = prepareOutputStream(inputStream, dataFile);
         writeDataToFile(inputStream, outputStream);
 
-        commitChanges(svnClient, dataFile, dataFileExists);
+        commitChanges(svnClient, dataFile, !dataFileExists);
     }
 
     private void commitChanges(SVNClientManager svnClient, File dataFile, boolean newFile)
@@ -182,7 +184,7 @@ public class SvnWriterNode extends AbstractDataConsumer
                 , SVNDepth.UNKNOWN);
     }
 
-    private Object prepareOutputStream(File dataFile) throws Exception
+    private Object prepareOutputStream(Object inputStream, File dataFile) throws Exception
     {
         File parentFile = dataFile.getParentFile();
         if (!parentFile.exists())
@@ -193,8 +195,12 @@ public class SvnWriterNode extends AbstractDataConsumer
         
         Object result = new FileOutputStream(dataFile, false);
         Charset _targetEncoding = targetEncoding;
-        if (_targetEncoding!=null)
-            result = new OutputStreamWriter((OutputStream)result, _targetEncoding);
+        if (_targetEncoding!=null || inputStream instanceof Reader)
+        {
+            result = _targetEncoding!=null? 
+                new OutputStreamWriter((OutputStream)result, _targetEncoding) :
+                new OutputStreamWriter((OutputStream)result);
+        }
 
         return result;
     }
@@ -204,7 +210,7 @@ public class SvnWriterNode extends AbstractDataConsumer
         Object result = null;
         if (fileData instanceof InputStream)
             result = fileData;
-        if (fileData instanceof byte[])
+        else if (fileData instanceof byte[])
             result = new ByteArrayInputStream((byte[])fileData);
         else
             result = converter.convert(String.class, fileData, null);
@@ -241,6 +247,7 @@ public class SvnWriterNode extends AbstractDataConsumer
                 debug(String.format("Creating local subversion repository (%s)", svnurl.getPath()));
             svnurl = SVNRepositoryFactory.createLocalRepository(file, true, false);
         }
+        FSRepositoryFactory.setup();
         return svnurl;
     }
 
@@ -301,7 +308,8 @@ public class SvnWriterNode extends AbstractDataConsumer
                 ((OutputStream)outputStream).write(((String)inputStream).getBytes(_targetEncoding));
             else
                 ((Writer)outputStream).write((String)inputStream);
-        } else if (inputStream instanceof InputStream)
+        }
+        else if (inputStream instanceof InputStream)
         {
             if (outputStream instanceof OutputStream)
                 IOUtils.copy((InputStream)inputStream, (OutputStream)outputStream);
@@ -315,5 +323,10 @@ public class SvnWriterNode extends AbstractDataConsumer
             else
                 IOUtils.copy((Reader)inputStream, (Writer)outputStream);
         }
+
+        if (outputStream instanceof OutputStream)
+            ((OutputStream)outputStream).close();
+        else
+            ((Writer)outputStream).close();
     }
 }

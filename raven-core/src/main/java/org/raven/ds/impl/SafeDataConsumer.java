@@ -26,7 +26,7 @@ import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
-import org.raven.util.BindingSupport;
+import org.raven.expr.impl.BindingSupportImpl;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -47,14 +47,14 @@ public class SafeDataConsumer extends BaseNode implements DataConsumer
     @NotNull @Parameter(defaultValue="false")
     private Boolean useExpression;
 
-    protected BindingSupport bindingSupport;
+    protected BindingSupportImpl bindingSupport;
     protected ThreadLocal data;
 
     @Override
     protected void initFields()
     {
         super.initFields();
-        bindingSupport = new BindingSupport();
+        bindingSupport = new BindingSupportImpl();
         data = new ThreadLocal();
     }
 

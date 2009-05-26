@@ -17,8 +17,10 @@
 
 package org.raven.net.impl;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,6 +32,13 @@ import org.raven.ds.RecordSchemaFieldType;
 import org.raven.ds.impl.RecordSchemaFieldNode;
 import org.raven.ds.impl.RecordSchemaNode;
 import org.raven.log.LogLevel;
+import org.tmatesoft.svn.core.SVNDepth;
+import org.tmatesoft.svn.core.SVNException;
+import org.tmatesoft.svn.core.SVNURL;
+import org.tmatesoft.svn.core.internal.wc.DefaultSVNOptions;
+import org.tmatesoft.svn.core.wc.SVNClientManager;
+import org.tmatesoft.svn.core.wc.SVNRevision;
+import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
 /**
  *
@@ -40,6 +49,10 @@ public class SvnWriterNodeTest extends RavenCoreTestCase
     private SvnWriterNode svn;
     private PushDataSource ds;
     private RecordSchemaNode schema;
+    private File repFile;
+    private File wcFile;
+    private File wc2File;
+    private File testFile;
 
     @Before
     public void prepare() throws IOException
@@ -58,7 +71,7 @@ public class SvnWriterNodeTest extends RavenCoreTestCase
         RecordSchemaFieldNode dataField = new RecordSchemaFieldNode();
         dataField.setName(SvnWriterNode.DATA_FIELD);
         schema.addAndSaveChildren(dataField);
-        dataField.setFieldType(RecordSchemaFieldType.STRING);
+        dataField.setFieldType(RecordSchemaFieldType.OBJECT);
         assertTrue(dataField.start());
 
         ds = new PushDataSource();
@@ -66,23 +79,31 @@ public class SvnWriterNodeTest extends RavenCoreTestCase
         tree.getRootNode().addAndSaveChildren(ds);
         assertTrue(ds.start());
 
-        File repFile = new File("target/svnrep");
+        repFile = new File("target/svnrep");
         if (repFile.exists())
             FileUtils.forceDelete(repFile);
+        wcFile = new File("target/svn_wc");
+        if (wcFile.exists())
+            FileUtils.forceDelete(wcFile);
+        wc2File = new File("target/svn_wc2");
+        if (wc2File.exists())
+            FileUtils.forceDelete(wc2File);
+        testFile = new File(wcFile, "test/file.txt");
+        
         svn = new SvnWriterNode();
         svn.setName("svn");
         tree.getRootNode().addAndSaveChildren(svn);
         svn.setUsername("test");
         svn.setPassword("test");
         svn.setRepositoryUrl("file://"+repFile.getAbsolutePath());
-        svn.setWorkDirectory("target/svn_wc");
+        svn.setWorkDirectory(wcFile.getAbsolutePath());
         svn.setDataSource(ds);
         svn.setLogLevel(LogLevel.DEBUG);
         assertTrue(svn.start());
     }
 
     @Test
-    public void localRepositoryCreationTest() throws RecordException
+    public void baseTest() throws RecordException, IOException, SVNException
     {
         Record rec = schema.createRecord();
         rec.setValue(SvnWriterNode.PATH_FIELD, "test/file.txt");
@@ -90,6 +111,92 @@ public class SvnWriterNodeTest extends RavenCoreTestCase
 
         ds.pushData(rec);
 
-//        assertTrue()
+        assertTrue(repFile.exists());
+        assertTrue(wcFile.exists());
+        assertTrue(new File(wcFile, ".svn").exists());
+
+        File testDir = new File(wcFile, "test");
+        assertTrue(testDir.exists());
+        testFile = new File(testDir, "file.txt");
+        assertTrue(testFile.exists());
+        assertEquals("file content", FileUtils.readFileToString(testFile));
+
+        assertTrue(new File(testDir, ".svn").exists());
+
+        rec = schema.createRecord();
+        rec.setValue(SvnWriterNode.PATH_FIELD, "test/file.txt");
+        rec.setValue(SvnWriterNode.DATA_FIELD, "file content modified");
+        ds.pushData(rec);
+
+        assertTrue(testFile.exists());
+        assertEquals("file content modified", FileUtils.readFileToString(testFile));
+
+        wc2File.mkdirs();
+        DefaultSVNOptions options = SVNWCUtil.createDefaultOptions(true);
+        SVNClientManager svnClient = SVNClientManager.newInstance(options, "test", "test");
+        SVNURL svnurl = SVNURL.parseURIDecoded(svn.getRepositoryUrl());
+        svnClient.getUpdateClient().doCheckout(
+                svnurl, wc2File, SVNRevision.HEAD, SVNRevision.HEAD, SVNDepth.INFINITY, false);
+        assertTrue(new File(wc2File, "test").exists());
+        File newTestFile = new File(wc2File, "test/file.txt");
+        assertTrue(newTestFile.exists());
+        assertEquals("file content modified", FileUtils.readFileToString(newTestFile));
+    }
+
+    @Test
+    public void stringDataTypeTest() throws Exception
+    {
+        svn.setTargetEncoding(Charset.forName("UTF-8"));
+        Record rec = schema.createRecord();
+        rec.setValue(SvnWriterNode.PATH_FIELD, "test/file.txt");
+        rec.setValue(SvnWriterNode.DATA_FIELD, "Содержимое файла");
+
+        ds.pushData(rec);
+
+        assertTrue(testFile.exists());
+        assertEquals("Содержимое файла", FileUtils.readFileToString(testFile, "UTF-8"));
+    }
+
+    @Test
+    public void byteDataTypeTest() throws Exception
+    {
+        Record rec = schema.createRecord();
+        rec.setValue(SvnWriterNode.PATH_FIELD, "test/file.txt");
+        rec.setValue(SvnWriterNode.DATA_FIELD, "Содержимое файла".getBytes("Cp1251"));
+        
+        ds.pushData(rec);
+        assertTrue(testFile.exists());
+        assertEquals("Содержимое файла", FileUtils.readFileToString(testFile, "Cp1251"));
+
+        svn.setSourceEncoding(Charset.forName("Cp1251"));
+        svn.setTargetEncoding(Charset.forName("UTF-8"));
+
+        ds.pushData(rec);
+        assertTrue(testFile.exists());
+        assertEquals("Содержимое файла", FileUtils.readFileToString(testFile, "UTF-8"));
+    }
+    
+    @Test
+    public void streamDataTypeTest() throws Exception
+    {
+        Record rec = schema.createRecord();
+        rec.setValue(SvnWriterNode.PATH_FIELD, "test/file.txt");
+        rec.setValue(
+                SvnWriterNode.DATA_FIELD
+                , new ByteArrayInputStream("Содержимое файла".getBytes("Cp1251")));
+
+        ds.pushData(rec);
+        assertTrue(testFile.exists());
+        assertEquals("Содержимое файла", FileUtils.readFileToString(testFile, "Cp1251"));
+
+        svn.setSourceEncoding(Charset.forName("Cp1251"));
+        svn.setTargetEncoding(Charset.forName("UTF-8"));
+
+        rec.setValue(
+                SvnWriterNode.DATA_FIELD
+                , new ByteArrayInputStream("Содержимое файла".getBytes("Cp1251")));
+        ds.pushData(rec);
+        assertTrue(testFile.exists());
+        assertEquals("Содержимое файла", FileUtils.readFileToString(testFile, "UTF-8"));
     }
 }

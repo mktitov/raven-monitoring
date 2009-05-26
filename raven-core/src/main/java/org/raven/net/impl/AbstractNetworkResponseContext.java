@@ -29,7 +29,7 @@ import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.net.RequiredParameterMissedException;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
-import org.raven.util.BindingSupport;
+import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.util.OperationStatistic;
 import org.weda.annotations.constraints.NotNull;
 
@@ -49,14 +49,14 @@ public abstract class AbstractNetworkResponseContext
 
     private AddressListNode addressListNode;
     private ParametersNode parametersNode;
-    private BindingSupport bindingSupport;
+    private BindingSupportImpl bindingSupport;
 
     @Override
     protected void initFields()
     {
         super.initFields();
         requestsStat = new OperationStatistic();
-        bindingSupport = new BindingSupport();
+        bindingSupport = new BindingSupportImpl();
     }
 
     public OperationStatistic getRequestsStat()

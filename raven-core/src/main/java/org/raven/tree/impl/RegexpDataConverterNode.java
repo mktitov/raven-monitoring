@@ -31,7 +31,7 @@ import org.raven.ds.impl.AbstractDataPipe;
 import org.raven.log.LogLevel;
 import org.raven.table.BalancedColumnBasedTable;
 import org.raven.tree.NodeAttribute;
-import org.raven.util.BindingSupport;
+import org.raven.expr.impl.BindingSupportImpl;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -70,13 +70,13 @@ public class RegexpDataConverterNode extends AbstractDataPipe
     @NotNull
     private Boolean useRowFilter;
 
-    private BindingSupport bindingSupport;
+    private BindingSupportImpl bindingSupport;
 
     @Override
     protected void initFields()
     {
         super.initFields();
-        bindingSupport = new BindingSupport();
+        bindingSupport = new BindingSupportImpl();
     }
 
     public Boolean getRowFilter()

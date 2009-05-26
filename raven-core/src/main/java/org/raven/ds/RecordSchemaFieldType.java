@@ -35,7 +35,8 @@ public enum RecordSchemaFieldType
     IP(Ip.class),
     BINARY(BinaryFieldType.class),
     RECORD(Record.class),
-    RECORDS(Records.class);
+    RECORDS(Records.class),
+    OBJECT(Object.class);
 
     private final Class type;
 

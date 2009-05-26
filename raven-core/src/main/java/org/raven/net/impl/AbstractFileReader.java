@@ -17,6 +17,7 @@
 
 package org.raven.net.impl;
 
+import javax.script.Bindings;
 import org.raven.net.*;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -31,7 +32,7 @@ import org.raven.ds.impl.AbstractDataSource;
 import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeAttributeImpl;
-import org.weda.internal.annotations.Message;
+import org.raven.expr.impl.BindingSupportImpl;
 import org.weda.internal.annotations.Service;
 import org.weda.internal.impl.MessageComposer;
 import org.weda.internal.services.MessagesRegistry;
@@ -42,14 +43,24 @@ import org.weda.internal.services.MessagesRegistry;
  */
 public abstract class AbstractFileReader extends AbstractDataSource
 {
-    public static String URL_ATTRIBUTE = "url";
-    public static String REGEXP_FILEMASK_ATTRIBUTE = "regexpFileMask";
-    public static String REMOVEFILEAFTERPROCESSING_ATTRIBUTE = "removeFileAfterProcessing";
-    public static String ADDFILENAMETOSTREAM_ATTRIBUTE = "addFilenameToStream";
-    public static String FILENAMEENCODING_ATTRIBUTE = "filenameEncoding";
+    public static final String FILENAME_BINDING = "fileName";
+    public static final String URL_ATTRIBUTE = "url";
+    public static final String REGEXP_FILEMASK_ATTRIBUTE = "regexpFileMask";
+    public static final String REMOVEFILEAFTERPROCESSING_ATTRIBUTE = "removeFileAfterProcessing";
+    public static final String ADDFILENAMETOSTREAM_ATTRIBUTE = "addFilenameToStream";
+    public static final String FILENAMEENCODING_ATTRIBUTE = "filenameEncoding";
 
     @Service
     protected static MessagesRegistry messages;
+
+    private BindingSupportImpl bindingSupport;
+
+    @Override
+    protected void initFields()
+    {
+        super.initFields();
+        bindingSupport = new BindingSupportImpl();
+    }
 
     @Override
     public boolean gatherDataForConsumer(
@@ -184,17 +195,27 @@ public abstract class AbstractFileReader extends AbstractDataSource
             ByteArrayInputStream filenameIs = new ByteArrayInputStream(filename);
             is = new SequenceInputStream(filenameIs, is);
         }
+        bindingSupport.put(FILENAME_BINDING, file.getName());
+        tree.addGlobalBindings(generateBindingSupportId(), bindingSupport);
         try
         {
             dataConsumer.setData(this, is);
         }
         finally
         {
+            tree.removeGlobalBindings(generateBindingSupportId());
             is.close();
             file.close();
 
             if (removeAfterProcessing)
                 file.remove();
         }
+    }
+
+    @Override
+    public void formExpressionBindings(Bindings bindings)
+    {
+        super.formExpressionBindings(bindings);
+        bindingSupport.addTo(bindings);
     }
 }

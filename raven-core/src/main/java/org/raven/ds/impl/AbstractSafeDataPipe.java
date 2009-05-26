@@ -31,7 +31,7 @@ import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeAttributeImpl;
-import org.raven.util.BindingSupport;
+import org.raven.expr.impl.BindingSupportImpl;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -64,7 +64,7 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
     private Boolean usePreProcess;
 
     protected ThreadLocal<DataConsumer> consumer;
-    protected BindingSupport bindingSupport;
+    protected BindingSupportImpl bindingSupport;
 
     public String getPreProcess()
     {
@@ -131,7 +131,7 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
     {
         super.initFields();
         consumer = new ThreadLocal<DataConsumer>();
-        bindingSupport = new BindingSupport();
+        bindingSupport = new BindingSupportImpl();
     }
 
     @Override
