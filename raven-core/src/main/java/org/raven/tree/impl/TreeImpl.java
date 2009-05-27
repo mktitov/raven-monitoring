@@ -30,7 +30,7 @@ import java.util.Set;
 import org.raven.annotations.NodeClass;
 import org.raven.conf.Configurator;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
-import org.raven.expr.impl.BindingSupportImpl;
+import org.raven.expr.BindingSupport;
 import org.raven.impl.ClassNameComparator;
 import org.raven.impl.NodeClassTransformerWorker;
 import org.raven.log.impl.NodeLoggerNode;
@@ -644,7 +644,7 @@ public class TreeImpl implements Tree
         addChildsToParent(nodeType, ann.childNodes());
     }
 
-    public void addGlobalBindings(String bindingSupportId, BindingSupportImpl bindingSupport)
+    public void addGlobalBindings(String bindingSupportId, BindingSupport bindingSupport)
     {
         rootNode.addBindingSupport(bindingSupportId, bindingSupport);
     }

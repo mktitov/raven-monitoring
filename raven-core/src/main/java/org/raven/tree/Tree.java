@@ -18,7 +18,7 @@
 package org.raven.tree;
 
 import java.util.List;
-import org.raven.expr.impl.BindingSupportImpl;
+import org.raven.expr.BindingSupport;
 import org.weda.constraints.ReferenceValue;
 /**
  * The tree of nodes. 
@@ -135,7 +135,7 @@ public interface Tree
      * @param bindingSupportId the unique binding support identificator
      * @param bindingSupport binding support to add
      */
-    public void addGlobalBindings(String bindingSupportId, BindingSupportImpl bindingSupport);
+    public void addGlobalBindings(String bindingSupportId, BindingSupport bindingSupport);
     /**
      * Removes global binding support from the tree
      * @param bindingSupportId the id of the binding support to remove

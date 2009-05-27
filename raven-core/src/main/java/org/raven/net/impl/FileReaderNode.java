@@ -32,6 +32,8 @@ import org.apache.commons.vfs.VFS;
 import org.raven.annotations.NodeClass;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.impl.AbstractDataSource;
+import org.raven.expr.BindingSupport;
+import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
 import org.weda.internal.annotations.Message;
@@ -141,6 +143,10 @@ public class FileReaderNode extends AbstractDataSource
             debug(String.format("Proccessing file (%s)", file.getName().getBaseName()));
         InputStream is = file.getContent().getInputStream();
         boolean fileProcessed = false;
+        BindingSupport bindingSupport = new BindingSupportImpl();
+        bindingSupport.put("fileName", file.getName().getBaseName());
+        String bindingsId = generateBindingSupportId();
+        tree.addGlobalBindings(bindingsId, bindingSupport);
         try
         {
             dataConsumer.setData(this, is);
@@ -148,6 +154,7 @@ public class FileReaderNode extends AbstractDataSource
         }
         finally
         {
+            tree.removeGlobalBindings(bindingsId);
             is.close();
             file.close();
 			file.getFileSystem().getFileSystemManager().getFilesCache().removeFile(

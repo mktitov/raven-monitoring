@@ -69,6 +69,11 @@ public class DatabaseRecordReference extends AbstractDatabaseRecordReference imp
         return getValue(fieldName);
     }
 
+    public void putAt(String fieldName, Object value) throws RecordException
+    {
+        setValue(fieldName, value);
+    }
+
     public Map<String, Object> getValues() throws RecordException
     {
         if (!initialized)
