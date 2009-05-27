@@ -120,4 +120,20 @@ public class BaseNodeTest extends Assert
         
         verify(child1, condChild, condChildChild, child3);
     }
+
+    @Test
+    public void dynamicTest()
+    {
+        BaseNode root = new BaseNode();
+        assertFalse(root.isDynamic());
+        assertFalse(root.isChildrensDynamic());
+
+        BaseNode child = new BaseNode();
+        child.setParent(root);
+        assertFalse(child.isDynamic());
+        assertFalse(child.isChildrensDynamic());
+
+        root.setChildrensDynamic(true);
+        assertTrue(child.isDynamic());
+    }
 }

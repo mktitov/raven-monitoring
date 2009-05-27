@@ -106,6 +106,7 @@ public class BaseNode implements Node, NodeListener, Logger
     
     private boolean initializeAfterChildrens = false;
     private boolean startAfterChildrens = false;
+    private boolean childrensDynamic = false;
     private Status status;
     private Lock statusLock;
     
@@ -625,6 +626,29 @@ public class BaseNode implements Node, NodeListener, Logger
     public void setStartAfterChildrens(boolean startAfterChildrens)
     {
         this.startAfterChildrens = startAfterChildrens;
+    }
+
+
+    public boolean isDynamic() 
+    {
+        return parent==null? false : parent.isChildrensDynamic();
+    }
+
+    public void setChildrensDynamic(boolean childrensDynamic)
+    {
+        this.childrensDynamic = childrensDynamic;
+    }
+
+    public boolean isChildrensDynamic()
+    {
+        boolean dynamic = childrensDynamic;
+        Node nodeParent = parent;
+        while (!dynamic && nodeParent!=null)
+        {
+            dynamic = nodeParent.isChildrensDynamic();
+            nodeParent = nodeParent.getParent();
+        }
+        return dynamic;
     }
 
     public boolean isAutoStart()
@@ -1639,5 +1663,4 @@ public class BaseNode implements Node, NodeListener, Logger
 	public boolean isWarnEnabled(Marker arg0) {
 		return sl4jLogger.isWarnEnabled(arg0);
 	}
-	
 }

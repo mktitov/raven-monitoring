@@ -28,7 +28,6 @@ import java.sql.Types;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.logging.Level;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.text.StrTokenizer;
 import org.raven.tree.Node;
@@ -76,6 +75,8 @@ public class H2TreeStore implements TreeStore
     private PreparedStatement getBinaryDataStatement;
     private PreparedStatement updateBinaryDataStatement;
     private PreparedStatement removeBinaryDataStatement;
+
+    private int dynamicNodeId=0;
     
     public void init(String databaseUrl, String username, String password) throws TreeStoreError
     {
@@ -92,27 +93,38 @@ public class H2TreeStore implements TreeStore
 
     public synchronized void saveNode(Node node) throws TreeStoreError
     {
-        try
+        if (node.isDynamic())
+        {
+            if (node.getId()==0)
+            {
+                dynamicNodeId = dynamicNodeId==Integer.MIN_VALUE? -1 : dynamicNodeId-1;
+                node.setId(dynamicNodeId);
+            }
+        }
+        else
         {
             try
             {
-                if (node.getId()==0)
-                    insertNode(node);
-                else
-                    updateNode(node);
+                try
+                {
+                    if (node.getId()==0)
+                        insertNode(node);
+                    else
+                        updateNode(node);
 
-                connection.commit();
-                
-            }catch(Exception e)
+                    connection.commit();
+
+                }catch(Exception e)
+                {
+                    connection.rollback();
+                }
+            } catch (SQLException ex)
             {
-                connection.rollback();
+                throw new TreeStoreError(
+                        String.format(
+                            "Error saving node %s", node.getPath())
+                        , ex);
             }
-        } catch (SQLException ex)
-        {
-            throw new TreeStoreError(
-                    String.format(
-                        "Error saving node %s", node.getPath())
-                    , ex);
         }
     }
 
@@ -185,7 +197,7 @@ public class H2TreeStore implements TreeStore
 
     public synchronized void saveNodeAttribute(NodeAttribute nodeAttribute) throws TreeStoreError
     {
-        if (nodeAttribute.isReadonly())
+        if (nodeAttribute.getOwner().isDynamic() || nodeAttribute.isReadonly())
             return;
         try
         {
@@ -257,6 +269,8 @@ public class H2TreeStore implements TreeStore
 
     public synchronized void saveNodeAttributeBinaryData(NodeAttribute attr, InputStream data)
     {
+        if (attr.getOwner().isDynamic())
+            throw new TreeStoreError("Can not save binary data for attribute of the DYNAMIC node");
         try
         {
             try
@@ -647,9 +661,7 @@ public class H2TreeStore implements TreeStore
             insertNodeAttributeStatement.setString(pos++, nodeAttribute.getRawValue());
             
         insertNodeAttributeStatement.setString(pos++, nodeAttribute.getType().getName());
-        
         insertNodeAttributeStatement.setBoolean(pos++, nodeAttribute.isRequired());
-        
         insertNodeAttributeStatement.setBoolean(pos++, nodeAttribute.isTemplateExpression());
         
         if (nodeAttribute.getValueHandlerType()==null)

@@ -125,6 +125,15 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
      */
     public void setName(String name);
     /**
+     * Returns <code>true</code> if this node is dynamic (must not be stored in the database)
+     */
+    public boolean isDynamic();
+    /**
+     * Returns <code>true</code> if childrens of this node are dynamic (must not be stored
+     * in the database)
+     */
+    public boolean isChildrensDynamic();
+    /**
      * Adds children node to this node. 
      * @throws NodeInitializationError if this node is not a {@link #isContainer() container}
      *      or node type not one of the types returned by method {@link #getChildNodeTypes()}
