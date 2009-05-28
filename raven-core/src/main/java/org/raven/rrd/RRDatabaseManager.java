@@ -120,9 +120,7 @@ public class RRDatabaseManager extends BaseNode
         if (template==null)
         {
             template = new RRDatabaseManagerTemplate();
-            addChildren(template);
-            configurator.getTreeStore().saveNode(template);
-            template.init();
+            addAndSaveChildren(template);
         }
 //        collectDatasources(this);
     }
@@ -381,9 +379,7 @@ public class RRDatabaseManager extends BaseNode
         {
             databasesEntry = new DatabasesEntry();
             databasesEntry.setName(dataType);
-            addChildren(databasesEntry);
-            configurator.getTreeStore().saveNode(databasesEntry);
-            databasesEntry.init();
+            addAndSaveChildren(databasesEntry);
             databasesEntry.start();
         }
         return databasesEntry;

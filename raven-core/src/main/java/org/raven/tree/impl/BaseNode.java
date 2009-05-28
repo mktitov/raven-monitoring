@@ -892,7 +892,7 @@ public class BaseNode implements Node, NodeListener, Logger
 
     public void save()
     {
-        configurator.getTreeStore().saveNode(this);
+        tree.saveNode(this);
     }
 
     private void extractNodeParameters()
@@ -1101,7 +1101,7 @@ public class BaseNode implements Node, NodeListener, Logger
         attr.setRawValue(param.getDefaultValue());
         attr.setType(param.getType());
         attr.setValueHandlerType(param.getValueHandlerType());
-        configurator.getTreeStore().saveNodeAttribute(attr);
+        tree.saveNodeAttribute(attr);
         attr.init();
         
         addNodeAttribute(attr);

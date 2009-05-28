@@ -259,7 +259,7 @@ public class TreeServiceTest extends ServiceTestCase
         
         tree.getRootNode().addChildren(node);
         
-        store.saveNode(node);
+        tree.saveNode(node);
         
         node.init();
         
@@ -274,7 +274,7 @@ public class TreeServiceTest extends ServiceTestCase
         
         checkAttributes(node, "value");
         
-        store.saveNodeAttribute(attr);
+        tree.saveNodeAttribute(attr);
         
         tree.reloadTree();
         
@@ -399,27 +399,27 @@ public class TreeServiceTest extends ServiceTestCase
         Node node = new AttributesGeneratorNode();
         node.setName("genNode");
         tree.getRootNode().addChildren(node);
-        store.saveNode(node);
+        tree.saveNode(node);
         node.init();
         
         NodeWithNodeParameter node1 = new NodeWithNodeParameter();
         node1.setName("node");
         tree.getRootNode().addChildren(node1);
-        store.saveNode(node1);
+        tree.saveNode(node1);
         node1.init();
         
         NodeAttribute attr = node1.getNodeAttribute("node");
         assertNotNull(attr);
         attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
         attr.setValue(Node.NODE_SEPARATOR+"genNode");
-        store.saveNodeAttribute(attr);
+        tree.saveNodeAttribute(attr);
         
         attr = node1.getNodeAttribute("gAttr");
         assertNotNull(attr);
         assertEquals("node", attr.getParentAttribute());
         assertSame(node, node1.getNode());
         attr.setValue("testVal");
-        store.saveNodeAttribute(attr);
+        tree.saveNodeAttribute(attr);
         
         tree.reloadTree();
         
@@ -443,7 +443,7 @@ public class TreeServiceTest extends ServiceTestCase
 //        assertEquals(node, node1.getNode());
         
         node1.getNodeAttribute("node").setValue(null);
-        store.saveNodeAttribute(node1.getNodeAttribute("node"));
+        tree.saveNodeAttribute(node1.getNodeAttribute("node"));
         attr = node1.getNodeAttribute("gAttr");
         assertNull(attr);
         
@@ -464,21 +464,21 @@ public class TreeServiceTest extends ServiceTestCase
         
         ContainerNode node = new ContainerNode("node");
         tree.getRootNode().addChildren(node);
-        store.saveNode(node);
+        tree.saveNode(node);
         NodeAttribute attr = new NodeAttributeImpl("attr", Integer.class, null, null);
         attr.setOwner(node);
         node.addNodeAttribute(attr);
-        store.saveNodeAttribute(attr);
+        tree.saveNodeAttribute(attr);
         
         ContainerNode node2 = new ContainerNode("node2");
         tree.getRootNode().addChildren(node2);
-        store.saveNode(node2);
+        tree.saveNode(node2);
         String attrPath = converter.convert(String.class, new AttributeReferenceImpl(attr), null);
         NodeAttribute refAttr = new NodeAttributeImpl("ref", AttributeReference.class, null, null);
         refAttr.setOwner(node2);
         node2.addNodeAttribute(refAttr);
         refAttr.setValue(attrPath);
-        store.saveNodeAttribute(refAttr);
+        tree.saveNodeAttribute(refAttr);
         
 ////        assertTrue(refAttr.isAttributeReference());
 ////        AttributeReference ref = refAttr.getAttributeReference();
@@ -502,7 +502,7 @@ public class TreeServiceTest extends ServiceTestCase
         assertEquals(new Integer(1), refAttr.getRealValue());
         verify(listener);
         node2.removeListener(listener);
-        store.saveNodeAttribute(attr);
+        tree.saveNodeAttribute(attr);
         
         tree.reloadTree();
         
@@ -522,17 +522,17 @@ public class TreeServiceTest extends ServiceTestCase
         
         ContainerNode node = new ContainerNode("node");
         tree.getRootNode().addChildren(node);
-        store.saveNode(node);
+        tree.saveNode(node);
         node.init();
         NodeAttribute attr = new NodeAttributeImpl("attr", Integer.class, null, null);
         attr.setOwner(node);
         node.addNodeAttribute(attr);
-        store.saveNodeAttribute(attr);
+        tree.saveNodeAttribute(attr);
         
         NodeWithIntegerParameter node2 = new NodeWithIntegerParameter();
         node2.setName("node2");
         tree.getRootNode().addChildren(node2);
-        store.saveNode(node2);
+        tree.saveNode(node2);
         node2.init();
         assertEquals(Status.INITIALIZED, node2.getStatus());
         
@@ -540,13 +540,13 @@ public class TreeServiceTest extends ServiceTestCase
         ref.setType(AttributeReference.class);
         String attrPath = converter.convert(String.class, new AttributeReferenceImpl(attr), null);
         ref.setValue(attrPath);
-        store.saveNodeAttribute(ref);
+        tree.saveNodeAttribute(ref);
         
         assertNull(ref.getValue());
         assertNull(node2.getParameter());
         
         attr.setValue("1");
-        store.saveNodeAttribute(attr);
+        tree.saveNodeAttribute(attr);
         assertEquals("1", ref.getValue());
         assertEquals(new Integer(1), node2.getParameter());
         
@@ -570,13 +570,13 @@ public class TreeServiceTest extends ServiceTestCase
         
         ContainerNode node = new ContainerNode("node");
         tree.getRootNode().addChildren(node);
-        store.saveNode(node);
+        tree.saveNode(node);
         node.init();
         
         NodeAttribute attr = new NodeAttributeImpl("attr", String.class, null, null);
         attr.setOwner(node);        
         node.addNodeAttribute(attr);
-        store.saveNodeAttribute(attr);
+        tree.saveNodeAttribute(attr);
         
         NodeAttributeListener attrListener = 
                 createMock("AttributeListener", NodeAttributeListener.class);
@@ -604,7 +604,7 @@ public class TreeServiceTest extends ServiceTestCase
         
         Node node = new ContainerNode("node");
         tree.getRootNode().addChildren(node);
-        store.saveNode(node);
+        tree.saveNode(node);
         node.init();
         
         Node sysNode = tree.getRootNode().getChildren(SystemNode.NAME);
@@ -612,27 +612,27 @@ public class TreeServiceTest extends ServiceTestCase
         attr.setOwner(node);
         node.addNodeAttribute(attr);
         attr.init();
-        store.saveNodeAttribute(attr);
+        tree.saveNodeAttribute(attr);
         
         Node child = new ContainerNode("child");
         node.addChildren(child);
-        store.saveNode(child);
+        tree.saveNode(child);
         child.init();
         
 //        NodeAttribute attrRef = new NodeAttributeImpl("ref", AttributeReference.class, null, null);
 //        attrRef.setOwner(child);
 //        child.addNodeAttribute(attrRef);
 //        attrRef.setValue(converter.convert(String.class, new AttributeReferenceImpl(attr), null));
-//        store.saveNodeAttribute(attrRef);
+//        tree.saveNodeAttribute(attrRef);
 //        
 //        NodeAttribute nodeRef = new NodeAttributeImpl("nodeRef", Node.class, node.getPath(), null);
 //        nodeRef.setOwner(child);
 //        child.addNodeAttribute(nodeRef);
-//        store.saveNodeAttribute(nodeRef);
+//        tree.saveNodeAttribute(nodeRef);
         
         Node copyDest = new ContainerNode("copy");
         tree.getRootNode().addChildren(copyDest);
-        store.saveNode(copyDest);
+        tree.saveNode(copyDest);
         copyDest.init();
         
         NodeListener listener = createMock(NodeListener.class);

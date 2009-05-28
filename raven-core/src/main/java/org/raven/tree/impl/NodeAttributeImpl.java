@@ -365,7 +365,7 @@ public class NodeAttributeImpl
 
     public void save()
     {
-        configurator.getTreeStore().saveNodeAttribute(this);
+        tree.saveNodeAttribute(this);
     }
 
     public void shutdown() 

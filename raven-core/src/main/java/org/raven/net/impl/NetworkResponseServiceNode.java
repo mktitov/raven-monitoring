@@ -119,7 +119,7 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
                         String.format("[%d] Request successfully processed", requestId));
             if (isLogLevelEnabled(LogLevel.TRACE))
                 trace(String.format("[%d] Request response \n>>>>\n%s\n<<<<", requestId, response));
-            if (isLogLevelEnabled(LogLevel.TRACE))
+            if (contextNode.isLogLevelEnabled(LogLevel.TRACE))
                 contextNode.getLogger().trace(String.format(
                         "[%d] Request response \n>>>>\n%s\n<<<<", requestId, response));
             return response;

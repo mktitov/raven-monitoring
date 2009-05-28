@@ -37,7 +37,7 @@ public class TemplateNodeTest extends RavenCoreTestCase
         TemplateNode template = new TemplateNode();
         template.setName("template");
         tree.getRootNode().addChildren(template);
-        store.saveNode(template);
+        tree.saveNode(template);
         template.init();
         
         Node varNode = template.getVariablesNode();

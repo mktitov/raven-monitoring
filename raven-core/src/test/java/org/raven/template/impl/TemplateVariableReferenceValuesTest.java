@@ -45,21 +45,21 @@ public class TemplateVariableReferenceValuesTest extends RavenCoreTestCase
         TemplateNode template = new TemplateNode();
         template.setName("template");
         tree.getRootNode().addChildren(template);
-        store.saveNode(template);
+        tree.saveNode(template);
         template.init();
         TemplateEntry entry = template.getEntryNode();
         TemplateVariablesNode vars = template.getVariablesNode();
         
         ContainerNode node = new ContainerNode("node");
         entry.addChildren(node);
-        store.saveNode(node);
+        tree.saveNode(node);
         node.init();
         NodeAttribute attr = new NodeAttributeImpl("attr", String.class, null, null);
         attr.setValueHandlerType(TemplateVariableValueHandlerFactory.TYPE);
         attr.setOwner(node);
         node.addNodeAttribute(attr);
         attr.init();
-        store.saveNodeAttribute(attr);
+        tree.saveNodeAttribute(attr);
         
         assertNull(tree.getReferenceValuesForAttribute(attr));
         

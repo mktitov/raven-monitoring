@@ -17,6 +17,7 @@
 
 package org.raven.tree.impl;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.raven.annotations.NodeClass;
 import org.raven.conf.Configurator;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
@@ -91,6 +93,8 @@ public class TreeImpl implements Tree
     private final Map<Class, List<Class>> nodeTypes = new HashMap<Class, List<Class>>();
     private final Set<Class> anyChildTypeNodes = new HashSet<Class>();
     private final Set<Class> importParentChildTypeNodes = new HashSet<Class>();
+    private final AtomicInteger dynamicNodeId = new AtomicInteger();
+    private final AtomicInteger dynamicAttributeId = new AtomicInteger();
     private RootNode rootNode;
     private SystemNode systemNode;
     private DataSourcesNode dataSourcesNode;
@@ -447,7 +451,7 @@ public class TreeImpl implements Tree
     private void createRootNode()
     {
         rootNode = new RootNode();
-        treeStore.saveNode(rootNode);
+        saveNode(rootNode);
     }
 
     private void createSystemNodes()
@@ -463,7 +467,7 @@ public class TreeImpl implements Tree
         {
             systemNode = new SystemNode();
             rootNode.addChildren(systemNode);
-            treeStore.saveNode(systemNode);
+            saveNode(systemNode);
         }
 
         schedulersNode = (SchedulersNode) systemNode.getChildren(SchedulersNode.NAME);
@@ -471,7 +475,7 @@ public class TreeImpl implements Tree
         {
             schedulersNode = new SchedulersNode();
             systemNode.addChildren(schedulersNode);
-            treeStore.saveNode(schedulersNode);
+            saveNode(schedulersNode);
         }
 
         localDatabaseNode = (LocalDatabaseNode) systemNode.getChildren(LocalDatabaseNode.NAME);
@@ -479,7 +483,7 @@ public class TreeImpl implements Tree
         {
             localDatabaseNode = new LocalDatabaseNode();
             localDatabaseNode.setParent(systemNode);
-            treeStore.saveNode(localDatabaseNode);
+            saveNode(localDatabaseNode);
             systemNode.addChildren(localDatabaseNode);
         }
         
@@ -488,7 +492,7 @@ public class TreeImpl implements Tree
         {
             connectionPoolsNode = new ConnectionPoolsNode();
             systemNode.addChildren(connectionPoolsNode);
-            treeStore.saveNode(connectionPoolsNode);
+            saveNode(connectionPoolsNode);
         }
         
         dataSourcesNode = (DataSourcesNode) systemNode.getChildren(DataSourcesNode.NAME);
@@ -496,7 +500,7 @@ public class TreeImpl implements Tree
         {
             dataSourcesNode = new DataSourcesNode();
             systemNode.addChildren(dataSourcesNode);
-            treeStore.saveNode(dataSourcesNode);
+            saveNode(dataSourcesNode);
         }
 
 		queuesNode = (QueuesNode) systemNode.getChildren(QueuesNode.NAME);
@@ -504,7 +508,7 @@ public class TreeImpl implements Tree
 		{
 			queuesNode = new QueuesNode();
 			systemNode.addChildren(queuesNode);
-			treeStore.saveNode(queuesNode);
+			saveNode(queuesNode);
 		}
 
         schemasNode = (SchemasNode) systemNode.getChildren(SchemasNode.NAME);
@@ -512,7 +516,7 @@ public class TreeImpl implements Tree
         {
             schemasNode = new SchemasNode();
             schemasNode.setParent(systemNode);
-            treeStore.saveNode(schemasNode);
+            saveNode(schemasNode);
             systemNode.addChildren(schemasNode);
         }
 
@@ -521,7 +525,7 @@ public class TreeImpl implements Tree
         {
             servicesNode = new ServicesNode();
             servicesNode.setParent(systemNode);
-            treeStore.saveNode(servicesNode);
+            saveNode(servicesNode);
             systemNode.addChildren(servicesNode);
         }
 
@@ -531,7 +535,7 @@ public class TreeImpl implements Tree
         {
             responseServiceNode = new NetworkResponseServiceNode();
             responseServiceNode.setParent(servicesNode);
-            treeStore.saveNode(responseServiceNode);
+            saveNode(responseServiceNode);
             servicesNode.addChildren(responseServiceNode);
         }
         
@@ -540,7 +544,7 @@ public class TreeImpl implements Tree
         {
             nodeLoggerNode = new NodeLoggerNode();
             nodeLoggerNode.setParent(servicesNode);
-            treeStore.saveNode(nodeLoggerNode);
+            saveNode(nodeLoggerNode);
             servicesNode.addChildren(nodeLoggerNode);
         }
     }
@@ -552,7 +556,7 @@ public class TreeImpl implements Tree
         {
             templatesNode = new TemplatesNode();
             rootNode.addChildren(templatesNode);
-            treeStore.saveNode(templatesNode);
+            saveNode(templatesNode);
         }
     }
 
@@ -586,7 +590,7 @@ public class TreeImpl implements Tree
             , final boolean store)
     {
         if (store)
-            configurator.getTreeStore().saveNode(clone);
+            saveNode(clone);
         Collection<NodeAttribute> attrs = clone.getNodeAttributes();
         if (attrs!=null)
         {
@@ -602,7 +606,7 @@ public class TreeImpl implements Tree
 //                            + attr.getRawValue().substring(sourcePath.length()));
 //                }
                 if (store)
-                    configurator.getTreeStore().saveNodeAttribute(attr);
+                    saveNodeAttribute(attr);
             }
         }
         
@@ -652,6 +656,36 @@ public class TreeImpl implements Tree
     public void removeGlobalBindings(String bindingSupportId)
     {
         rootNode.removeBindingSupport(bindingSupportId);
+    }
+
+    public void saveNode(Node node)
+    {
+        if (node.isDynamic())
+        {
+            if (node.getId()==0)
+                node.setId(dynamicNodeId.decrementAndGet());
+        }
+        else
+            treeStore.saveNode(node);
+    }
+
+    public void saveNodeAttribute(NodeAttribute attribute)
+    {
+        if (attribute.getOwner().isDynamic())
+        {
+            if (attribute.getId()==0)
+                attribute.setId(dynamicAttributeId.decrementAndGet());
+        }
+        else
+            treeStore.saveNodeAttribute(attribute);
+    }
+
+    public void saveNodeAttributeBinaryData(NodeAttribute attribute, InputStream data)
+    {
+        if (attribute.getOwner().isDynamic())
+            throw new TreeError("Can not save binary data for attribute of the DYNAMIC node");
+        else
+            treeStore.saveNodeAttributeBinaryData(attribute, data);
     }
     
     private class SearchScannedNodeHandler implements ScannedNodeHandler

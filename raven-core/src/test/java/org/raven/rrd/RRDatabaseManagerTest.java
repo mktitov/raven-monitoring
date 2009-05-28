@@ -26,7 +26,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.ds.DataSource;
-import org.raven.ds.impl.DataPipeImpl;
 import org.raven.rrd.data.RRArchive;
 import org.raven.rrd.data.RRDNode;
 import org.raven.rrd.data.RRDataSource;
@@ -61,7 +60,7 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
         databaseManager = new RRDatabaseManager();
         databaseManager.setName("db manager");
         tree.getRootNode().addChildren(databaseManager);
-        store.saveNode(databaseManager);
+        tree.saveNode(databaseManager);
         databaseManager.init();
         assertEquals(Status.INITIALIZED, databaseManager.getStatus());
         
@@ -393,7 +392,7 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
     {
         Node sourcesRoot = new BaseNode("sources");
         tree.getRootNode().addChildren(sourcesRoot);
-        store.saveNode(sourcesRoot);
+        tree.saveNode(sourcesRoot);
         sourcesRoot.init();
         
         source_d1 = createSource(sourcesRoot, "source_d1", "default");
@@ -401,7 +400,7 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
         
         Node groupNode = new BaseNode("other sources");
         sourcesRoot.addChildren(groupNode);
-        store.saveNode(groupNode);
+        tree.saveNode(groupNode);
         groupNode.init();
         
         source_i2 = createSource(groupNode, "source_i2", "interface");
@@ -416,7 +415,7 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
         DataSource source = new TestDataSource2();
         source.setName(sourceName);
         parent.addChildren(source);
-        store.saveNode(source);
+        tree.saveNode(source);
         source.init();
         
         NodeAttribute dataTypeAttr = new NodeAttributeImpl(
@@ -439,7 +438,7 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
         DataSource source = new TestDataSource3();
         source.setName(sourceName);
         parent.addChildren(source);
-        store.saveNode(source);
+        tree.saveNode(source);
         source.init();
         
         NodeAttribute dataTypeAttr = new NodeAttributeImpl(
@@ -471,14 +470,14 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
         RRDNode db = new RRDNode();
         db.setName(databaseName);
         templatesNode.addChildren(db);
-        store.saveNode(db);
+        tree.saveNode(db);
         db.init();
 		db.setIoQueue(queueNode);
         
         RRArchive archive = new RRArchive();
         archive.setName("archive");
         db.addChildren(archive);
-        store.saveNode(archive);
+        tree.saveNode(archive);
         archive.init();
         archive.getNodeAttribute(RRArchive.ROWS_ATTRIBUTE).setValue("100");
         archive.getNodeAttribute(RRArchive.ROWS_ATTRIBUTE).save();
@@ -486,7 +485,7 @@ public class RRDatabaseManagerTest extends RavenCoreTestCase
         RRDataSource datasource = new RRDataSource();
         datasource.setName("datasource");
         db.addChildren(datasource);
-        store.saveNode(datasource);
+        tree.saveNode(datasource);
         datasource.init();
     }
 }

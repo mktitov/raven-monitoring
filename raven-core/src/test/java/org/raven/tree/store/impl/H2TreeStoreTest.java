@@ -82,7 +82,7 @@ public class H2TreeStoreTest extends ServiceTestCase
         Node removedNode = store.getNode(updatedNode.getId());
         assertNull(removedNode);
     }
-    
+
     @Test
     public void saveAndLoadAttributes() throws Exception
     {
@@ -182,9 +182,7 @@ public class H2TreeStoreTest extends ServiceTestCase
 
         store.saveNodeAttribute(attr);
 
-
         NodeAttributeImpl attrClone = (NodeAttributeImpl) attr.clone();
-        
     }
 
     @Test

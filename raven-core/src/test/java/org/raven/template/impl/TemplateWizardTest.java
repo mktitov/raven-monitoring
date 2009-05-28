@@ -68,7 +68,7 @@ public class TemplateWizardTest extends ServiceTestCase
         TemplateNode template = new TemplateNode();
         template.setName("template");
         templates.addChildren(template);
-        store.saveNode(template);
+        tree.saveNode(template);
         template.init();
         template.start();
         assertEquals(Node.Status.STARTED, template.getStatus());
@@ -92,7 +92,7 @@ public class TemplateWizardTest extends ServiceTestCase
         //Creating template entry
         Node node = new ContainerNode("node");
         template.getEntryNode().addChildren(node);
-        store.saveNode(node);
+        tree.saveNode(node);
         node.init();
         
         NodeAttribute stringAttr =
@@ -106,7 +106,7 @@ public class TemplateWizardTest extends ServiceTestCase
         
         Node child = new LeafNode("^t vars['stringVar']");
         node.addChildren(child);
-        store.saveNode(child);
+        tree.saveNode(child);
         child.init();
         NodeAttribute integerAttr = 
                 new NodeAttributeImpl("integerAttr", Integer.class, null, null);

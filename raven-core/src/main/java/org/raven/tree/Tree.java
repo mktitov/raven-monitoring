@@ -17,9 +17,14 @@
 
 package org.raven.tree;
 
+import java.io.InputStream;
 import java.util.List;
+import org.raven.conf.Configurator;
 import org.raven.expr.BindingSupport;
+import org.raven.tree.store.TreeStore;
+import org.raven.tree.store.TreeStoreError;
 import org.weda.constraints.ReferenceValue;
+
 /**
  * The tree of nodes. 
  * 
@@ -44,6 +49,33 @@ public interface Tree
      * Remove node passed in parameter and all child nodes
      */
     public void remove(Node node);
+    /**
+     * Saves the node state using {@link Configurator#getTreeStore() tree store service}
+     * if and only if the node is not {@link Node#isDynamic() dynamic}.
+     * If node is dynamic then node will not saved in tree store
+     * and node will get the unique negative id number.
+     * @param node the node which state must be saved
+     * 
+     * @see Configurator#getTreeStore()
+     * @see TreeStore
+     * @throws TreeStoreError
+     */
+    public void saveNode(Node node);
+    /**
+     * Saves the node attribute state using {@link Configurator#getTreeStore() tree store service}
+     * if and only if the node owned by the attribute is not {@link Node#isDynamic() dynamic}
+     * @param attribute the attribute which state must be saved using tree store service
+     * @throws TreeStoreError
+     */
+    public void saveNodeAttribute(NodeAttribute attribute);
+    /**
+     * Saves node attribute binary data.
+     * @param attribute
+     * @param data
+     * @throws TreeError if the owner of the attribute is {@link Node#isDynamic() dynamic}
+     * @throws TreeStoreError
+     */
+    public void saveNodeAttributeBinaryData(NodeAttribute attribute, InputStream data);
     /**
      * Reloads tree from tree store.
      */

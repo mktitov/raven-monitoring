@@ -20,7 +20,6 @@ package org.raven.rrd.graph;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -52,7 +51,7 @@ public class RRGraphNodeTest extends RavenCoreTestCase
         TestDataSource ds = new TestDataSource();
         ds.setName("dataSource");
         tree.getRootNode().addChildren(ds);
-        store.saveNode(ds);
+        tree.saveNode(ds);
         ds.init();
 
 		RRIoQueueNode queueNode = new RRIoQueueNode();
@@ -68,12 +67,12 @@ public class RRGraphNodeTest extends RavenCoreTestCase
         RRDNode rrd = new RRDNode();
         rrd.setName("rrd");
         tree.getRootNode().addChildren(rrd);
-        store.saveNode(rrd);
+        tree.saveNode(rrd);
         rrd.init();
 		rrd.setIoQueue(queueNode);
         NodeAttribute attr = rrd.getNodeAttribute("step");
         attr.setValue("1");
-        store.saveNodeAttribute(attr);
+        tree.saveNodeAttribute(attr);
         assertEquals(Status.INITIALIZED, rrd.getStatus());
         
         RRDataSource rrds = createRRDataSource("ds", rrd, ds);
@@ -82,11 +81,11 @@ public class RRGraphNodeTest extends RavenCoreTestCase
         RRArchive rra = new RRArchive();
         rra.setName("archive");
         rrd.addChildren(rra);
-        store.saveNode(rra);
+        tree.saveNode(rra);
         rra.init();
         attr = rra.getNodeAttribute("rows");
         attr.setValue("100");
-        store.saveNodeAttribute(attr);
+        tree.saveNodeAttribute(attr);
         rra.start();
         assertEquals(Status.STARTED, rra.getStatus());
         
@@ -121,13 +120,13 @@ public class RRGraphNodeTest extends RavenCoreTestCase
         RRGraphNode gnode = new RRGraphNode();
         gnode.setName("graph");
         tree.getRootNode().addChildren(gnode);
-        store.saveNode(gnode);
+        tree.saveNode(gnode);
         gnode.init();
         
         RRDef def = new RRDef();
         def.setName("ds");
         gnode.addChildren(def);
-        store.saveNode(def);
+        tree.saveNode(def);
         def.init();
         def.getNodeAttribute(RRDef.CONSOLIDATIONFUNCTION_ATTRIBUTE).setValue("AVERAGE");
         def.getNodeAttribute(RRDef.DATASOURCE_ATTRIBUTE).setValue(rrds.getPath());
@@ -137,7 +136,7 @@ public class RRGraphNodeTest extends RavenCoreTestCase
         RRDef def2 = new RRDef();
         def2.setName("ds2");
         gnode.addChildren(def2);
-        store.saveNode(def2);
+        tree.saveNode(def2);
         def2.init();
         def2.getNodeAttribute(RRDef.CONSOLIDATIONFUNCTION_ATTRIBUTE).setValue("AVERAGE");
         def2.getNodeAttribute(RRDef.DATASOURCE_ATTRIBUTE).setValue(rrds2.getPath());
@@ -147,7 +146,7 @@ public class RRGraphNodeTest extends RavenCoreTestCase
         RRCDef cdef = new RRCDef();
         cdef.setName("cdef");
         gnode.addChildren(cdef);
-        store.saveNode(cdef);
+        tree.saveNode(cdef);
         cdef.init();
         cdef.getNodeAttribute(RRCDef.EXPRESSION_ATTRIBUTE).setValue("ds2,30,-");
         cdef.start();
@@ -156,7 +155,7 @@ public class RRGraphNodeTest extends RavenCoreTestCase
         RRCDef cdef2 = new RRCDef();
         cdef2.setName("cdef2");
         gnode.addChildren(cdef2);
-        store.saveNode(cdef2);
+        tree.saveNode(cdef2);
         cdef2.init();
         cdef2.getNodeAttribute(RRCDef.EXPRESSION_ATTRIBUTE).setValue("0,10,+");
         cdef2.start();
@@ -166,7 +165,7 @@ public class RRGraphNodeTest extends RavenCoreTestCase
         RRArea area = new RRArea();
         area.setName("area");
         gnode.addChildren(area);
-        store.saveNode(area);
+        tree.saveNode(area);
         area.init();
         area.getNodeAttribute(RRArea.COLOR_ATTRIBUTE).setValue(RRColor.GREEN.toString());
         area.getNodeAttribute(RRArea.DATADEFINITION_ATTRIBUTE).setValue(cdef.getPath());
@@ -177,7 +176,7 @@ public class RRGraphNodeTest extends RavenCoreTestCase
         RRLine line = new RRLine();
         line.setName("line1");
         gnode.addChildren(line);
-        store.saveNode(line);
+        tree.saveNode(line);
         line.init();
         line.getNodeAttribute(RRLine.COLOR_ATTRIBUTE).setValue(RRColor.BLUE.toString());
         line.getNodeAttribute(RRLine.DATADEFINITION_ATTRIBUTE).setValue(def.getPath());
@@ -189,7 +188,7 @@ public class RRGraphNodeTest extends RavenCoreTestCase
         RRStack stack = new RRStack();
         stack.setName("stack");
         gnode.addChildren(stack);
-        store.saveNode(stack);
+        tree.saveNode(stack);
         stack.init();
         stack.getNodeAttribute(RRArea.COLOR_ATTRIBUTE).setValue(RRColor.ORANGE.toString());
         stack.getNodeAttribute(RRArea.DATADEFINITION_ATTRIBUTE).setValue(cdef2.getPath());
@@ -200,7 +199,7 @@ public class RRGraphNodeTest extends RavenCoreTestCase
         RRLine line2 = new RRLine();
         line2.setName("line2");
         gnode.addChildren(line2);
-        store.saveNode(line2);
+        tree.saveNode(line2);
         line2.init();
         line2.getNodeAttribute(RRArea.COLOR_ATTRIBUTE).setValue(RRColor.RED.toString());
         line2.getNodeAttribute(RRArea.DATADEFINITION_ATTRIBUTE).setValue(def2.getPath());
@@ -212,7 +211,7 @@ public class RRGraphNodeTest extends RavenCoreTestCase
         RRHRule hrule = new RRHRule();
         hrule.setName("hrule");
         gnode.addChildren(hrule);
-        store.saveNode(hrule);
+        tree.saveNode(hrule);
         hrule.init();
         hrule.getNodeAttribute(RRHRule.VALUE_ATTRIBUTE).setValue("50");
         hrule.getNodeAttribute(RRHRule.COLOR_ATTRIBUTE).setValue(RRColor.DARK_GRAY.toString());
@@ -224,7 +223,7 @@ public class RRGraphNodeTest extends RavenCoreTestCase
         RRGPrint gprint = new RRGPrint();
         gprint.setName("gprint");
         gnode.addChildren(gprint);
-        store.saveNode(gprint);
+        tree.saveNode(gprint);
         gprint.init();
         gprint.getNodeAttribute(RRGPrint.DATADEFINITION_ATTRIBUTE).setValue(def2.getPath());
         gprint.getNodeAttribute(RRGPrint.CONSOLIDATIONFUNCTION_ATTRIBUTE)
@@ -236,7 +235,7 @@ public class RRGraphNodeTest extends RavenCoreTestCase
         RRComment comment = new RRComment();
         comment.setName("comment1");
         gnode.addChildren(comment);
-        store.saveNode(comment);
+        tree.saveNode(comment);
         comment.init();
         comment.getNodeAttribute(RRComment.COMMENT_ATTRIBUTE).setValue("The first comment");
         comment.start();
@@ -245,7 +244,7 @@ public class RRGraphNodeTest extends RavenCoreTestCase
         comment = new RRComment();
         comment.setName("comment2");
         gnode.addChildren(comment);
-        store.saveNode(comment);
+        tree.saveNode(comment);
         comment.init();
         comment.getNodeAttribute(RRComment.COMMENT_ATTRIBUTE).setValue("The second comment");
         comment.start();
@@ -269,20 +268,20 @@ public class RRGraphNodeTest extends RavenCoreTestCase
         RRDataSource rrds = new RRDataSource();
         rrds.setName(name);
         rrd.addChildren(rrds);
-        store.saveNode(rrds);
+        tree.saveNode(rrds);
         rrds.init();
         NodeAttribute attr = rrds.getNodeAttribute("dataSource");
         attr.setValue(ds.getPath());
-        store.saveNodeAttribute(attr);
+        tree.saveNodeAttribute(attr);
         attr = rrds.getNodeAttribute("interval");
         attr.setValue("1");
-        store.saveNodeAttribute(attr);
+        tree.saveNodeAttribute(attr);
         attr = rrds.getNodeAttribute("intervalUnit");
         attr.setValue(TimeUnit.SECONDS.toString());
-        store.saveNodeAttribute(attr);
+        tree.saveNodeAttribute(attr);
         attr = rrds.getNodeAttribute("dataSourceType");
         attr.setValue("GAUGE");
-        store.saveNodeAttribute(attr);
+        tree.saveNodeAttribute(attr);
                 
         rrds.start();
         assertEquals(Status.STARTED, rrds.getStatus());

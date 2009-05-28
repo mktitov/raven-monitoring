@@ -37,7 +37,7 @@ public class AbstractDataSourceTest extends RavenCoreTestCase
         dataSource.setName("ds");
         tree.getRootNode().addChildren(dataSource);
         
-        configurator.getTreeStore().saveNode(dataSource);
+        tree.saveNode(dataSource);
         
         dataSource.init();
 
@@ -49,7 +49,7 @@ public class AbstractDataSourceTest extends RavenCoreTestCase
         dataConsumer.setName("consumer");
         tree.getRootNode().addChildren(dataConsumer);
         
-        configurator.getTreeStore().saveNode(dataConsumer);
+        tree.saveNode(dataConsumer);
         
         dataConsumer.init();
         

@@ -108,7 +108,7 @@ public class RealTest extends ServiceTestCase
         RRDataSource rrs = new RRDataSource();
         rrs.setName(name);
         rrd.addChildren(rrs);
-        store.saveNode(rrs);
+        tree.saveNode(rrs);
         rrs.init();
         rrs.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(snmp.getPath());
         rrs.getNodeAttribute(AbstractThreadedDataSource.INTERVAL_ATTRIBUTE).setValue("1");
@@ -136,7 +136,7 @@ public class RealTest extends ServiceTestCase
         RRGraphNode gr = new RRGraphNode();
         gr.setName(name);
         tree.getRootNode().addChildren(gr);
-        store.saveNode(gr);
+        tree.saveNode(gr);
         gr.init();
         
         gr.getNodeAttribute(RRGraphNode.TITLE_ATTRIBUTE).setValue(name);
@@ -151,7 +151,7 @@ public class RealTest extends ServiceTestCase
             RRDef def = new RRDef();
             def.setName(dsName);
             gr.addChildren(def);
-            store.saveNode(def);
+            tree.saveNode(def);
             def.init();
             def.getNodeAttribute(RRDef.DATASOURCE_ATTRIBUTE)
                     .setValue(rrd.getChildren(dsName).getPath());
@@ -161,7 +161,7 @@ public class RealTest extends ServiceTestCase
             RRLine line = new RRLine();
             line.setName(dsName+"-line");
             gr.addChildren(line);
-            store.saveNode(line);
+            tree.saveNode(line);
             line.init();
             line.getNodeAttribute(RRLine.COLOR_ATTRIBUTE)
                     .setValue(RRColor.values()[cInd++].toString());
@@ -182,14 +182,14 @@ public class RealTest extends ServiceTestCase
         rrd = new RRDNode();
         rrd.setName("rrd");
         tree.getRootNode().addChildren(rrd);
-        store.saveNode(rrd);
+        tree.saveNode(rrd);
         rrd.init();
         rrd.setStep(60l);
         
         RRArchive rra = new RRArchive();
         rra.setName("archive");
         rrd.addChildren(rra);
-        store.saveNode(rra);
+        tree.saveNode(rra);
         rra.init();
         rra.getNodeAttribute(RRArchive.CONSOLIDATIONFUNCTION_ATTRIBUTE).setValue(
                 ConsolidationFunction.AVERAGE.toString());
@@ -225,7 +225,7 @@ public class RealTest extends ServiceTestCase
         snmp = new SnmpNode();
         snmp.setName("snmp");
         tree.getRootNode().addChildren(snmp);
-        store.saveNode(snmp);
+        tree.saveNode(snmp);
         snmp.init();
         snmp.start();
         assertEquals(Status.STARTED, snmp.getStatus());

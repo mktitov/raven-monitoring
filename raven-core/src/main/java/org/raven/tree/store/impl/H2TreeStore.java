@@ -93,38 +93,27 @@ public class H2TreeStore implements TreeStore
 
     public synchronized void saveNode(Node node) throws TreeStoreError
     {
-        if (node.isDynamic())
-        {
-            if (node.getId()==0)
-            {
-                dynamicNodeId = dynamicNodeId==Integer.MIN_VALUE? -1 : dynamicNodeId-1;
-                node.setId(dynamicNodeId);
-            }
-        }
-        else
+        try
         {
             try
             {
-                try
-                {
-                    if (node.getId()==0)
-                        insertNode(node);
-                    else
-                        updateNode(node);
+                if (node.getId()==0)
+                    insertNode(node);
+                else
+                    updateNode(node);
 
-                    connection.commit();
+                connection.commit();
 
-                }catch(Exception e)
-                {
-                    connection.rollback();
-                }
-            } catch (SQLException ex)
+            }catch(Exception e)
             {
-                throw new TreeStoreError(
-                        String.format(
-                            "Error saving node %s", node.getPath())
-                        , ex);
+                connection.rollback();
             }
+        } catch (SQLException ex)
+        {
+            throw new TreeStoreError(
+                    String.format(
+                        "Error saving node %s", node.getPath())
+                    , ex);
         }
     }
 
@@ -197,7 +186,7 @@ public class H2TreeStore implements TreeStore
 
     public synchronized void saveNodeAttribute(NodeAttribute nodeAttribute) throws TreeStoreError
     {
-        if (nodeAttribute.getOwner().isDynamic() || nodeAttribute.isReadonly())
+        if (nodeAttribute.isReadonly())
             return;
         try
         {
@@ -269,8 +258,6 @@ public class H2TreeStore implements TreeStore
 
     public synchronized void saveNodeAttributeBinaryData(NodeAttribute attr, InputStream data)
     {
-        if (attr.getOwner().isDynamic())
-            throw new TreeStoreError("Can not save binary data for attribute of the DYNAMIC node");
         try
         {
             try

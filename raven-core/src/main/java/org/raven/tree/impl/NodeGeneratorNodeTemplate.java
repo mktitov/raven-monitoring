@@ -63,7 +63,6 @@ public class NodeGeneratorNodeTemplate extends TemplateEntry
                             "Error creating attribute (%s)", TABLE_COLUMN_NAME, ex));
                 }
                 attr.save();
-                configurator.getTreeStore().saveNodeAttribute(attr);
             }
         }
     }

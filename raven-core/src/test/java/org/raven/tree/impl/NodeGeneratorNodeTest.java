@@ -48,7 +48,7 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
         table = new NodeGeneratorNode();
         table.setName("tableNode");
         tree.getRootNode().addChildren(table);
-        store.saveNode(table);
+        tree.saveNode(table);
         table.init();
     }
     
@@ -76,7 +76,7 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
                 (NodeGeneratorNodeTemplate) table.getChildren(NodeGeneratorNodeTemplate.NAME);
         ContainerNode node = new ContainerNode("node");
         template.addChildren(node);
-        store.saveNode(node);
+        tree.saveNode(node);
         node.init();
         
         NodeAttribute columnNameAttr = 
@@ -93,7 +93,7 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
     {
         TestDataSource ds = new TestDataSource("dataSource");
         tree.getRootNode().addChildren(ds);
-        store.saveNode(ds);
+        tree.saveNode(ds);
         ds.init();
         ds.start();
         
@@ -102,21 +102,21 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
         GroupNode node = new GroupNode();
         node.setName("group");
         template.addChildren(node);
-        store.saveNode(node);
+        tree.saveNode(node);
         node.init();
         node.setGroupingExpression("row['column1']");
         node.getNodeAttribute(NodeGeneratorNodeTemplate.TABLE_COLUMN_NAME).setValue("column1");
         
         ContainerNode child = new ContainerNode("child");
         node.addChildren(child);
-        store.saveNode(child);
+        tree.saveNode(child);
         NodeAttribute attr = 
                 new NodeAttributeImpl("child_attr", String.class, "'test '+row['column1']", null);
         attr.setOwner(child);
         child.addNodeAttribute(attr);
         attr.setTemplateExpression(true);
         attr.init();
-        store.saveNodeAttribute(attr);
+        tree.saveNodeAttribute(attr);
         
         table.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(ds.getPath());
         table.getNodeAttribute(NodeGeneratorNode.INDEXCOLUMNNAME_ATTRIBUTE).setValue("column1");
@@ -137,13 +137,13 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
     {
         TestDataSource ds = new TestDataSource("dataSource");
         tree.getRootNode().addChildren(ds);
-        store.saveNode(ds);
+        tree.saveNode(ds);
         ds.init();
         ds.start();
         
         table.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(ds.getPath());
         table.getNodeAttribute(NodeGeneratorNode.INDEXCOLUMNNAME_ATTRIBUTE).setValue("column1");
-        store.saveNode(table);
+        tree.saveNode(table);
         table.start();
         assertEquals(Status.STARTED, table.getStatus());
         
@@ -152,31 +152,31 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
         
         ContainerNode node = new ContainerNode("^t 'node-'+row.column1");
         template.addChildren(node);
-        store.saveNode(node);
+        tree.saveNode(node);
         node.init();
         
         ColumnValueDataConsumer c1 = new ColumnValueDataConsumer();
         c1.setName("c1");
         node.addChildren(c1);
-        store.saveNode(c1);
+        tree.saveNode(c1);
         c1.init();
         c1.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE)
                 .setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
         c1.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(table.getPath());
-        store.saveNodeAttribute(c1.getNodeAttribute("dataSource"));
+        tree.saveNodeAttribute(c1.getNodeAttribute("dataSource"));
         
         ColumnValueDataConsumer c2 = new ColumnValueDataConsumer();
         c2.setName("c2");
         node.addChildren(c2);
-        store.saveNode(c2);
+        tree.saveNode(c2);
         c2.init();
 //        c2.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(table.getPath());
-//        store.saveNodeAttribute(c2.getNodeAttribute("dataSource"));
+//        tree.saveNodeAttribute(c2.getNodeAttribute("dataSource"));
         NodeAttribute colAttr = c2.getNodeAttribute(NodeGeneratorNodeTemplate.TABLE_COLUMN_NAME);
         assertNotNull(colAttr);
         colAttr.setValue("column2");
         
-        store.saveNodeAttribute(colAttr);
+        tree.saveNodeAttribute(colAttr);
         
         table.configure();
         
@@ -256,7 +256,7 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
     {
         TestDataSource ds = new TestDataSource("dataSource");
         tree.getRootNode().addChildren(ds);
-        store.saveNode(ds);
+        tree.saveNode(ds);
         ds.init();
         ds.start();
         
@@ -264,7 +264,7 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
         table.getNodeAttribute(NodeGeneratorNode.INDEXCOLUMNNAME_ATTRIBUTE).setValue("column1");
         table.setAddPolicy(NodeGeneratorNode.AddPolicy.AUTO_ADD_AND_START);
         table.setRemovePolicy(NodeGeneratorNode.RemovePolicy.REMOVE_BEFORE_PROCESSING);
-        store.saveNode(table);
+        tree.saveNode(table);
         table.start();
         assertEquals(Status.STARTED, table.getStatus());
         
@@ -273,7 +273,7 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
         
         ContainerNode node = new ContainerNode("^t 'node-'+row.column1");
         template.addChildren(node);
-        store.saveNode(node);
+        tree.saveNode(node);
         node.init();
 
         ds.pushData();
@@ -288,7 +288,7 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
     {
         TestDataSource ds = new TestDataSource("dataSource");
         tree.getRootNode().addChildren(ds);
-        store.saveNode(ds);
+        tree.saveNode(ds);
         ds.init();
         ds.start();
         
@@ -296,7 +296,7 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
         table.getNodeAttribute(NodeGeneratorNode.INDEXCOLUMNNAME_ATTRIBUTE).setValue("column1");
         table.setIndexExpression("''+rownum");
         table.setAddPolicy(NodeGeneratorNode.AddPolicy.AUTO_ADD_AND_START);
-        store.saveNode(table);
+        tree.saveNode(table);
         table.start();
         assertEquals(Status.STARTED, table.getStatus());
         
@@ -305,7 +305,7 @@ public class NodeGeneratorNodeTest extends RavenCoreTestCase
         
         ContainerNode node = new ContainerNode("^t \"node-${row.column1}\"");
         template.addChildren(node);
-        store.saveNode(node);
+        tree.saveNode(node);
         node.init();
 
         ds.pushDataWithOneRow();

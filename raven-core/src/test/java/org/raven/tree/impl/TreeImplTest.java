@@ -17,24 +17,21 @@
 
 package org.raven.tree.impl;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
-import org.apache.tapestry5.ioc.RegistryBuilder;
+import org.apache.commons.io.IOUtils;
 import org.easymock.IArgumentMatcher;
-import org.junit.Before;
 import org.junit.Test;
-import org.raven.RavenCoreModule;
 import org.raven.RavenCoreTestCase;
-import org.raven.ServiceTestCase;
-import org.raven.conf.Configurator;
 import org.raven.impl.NodeClassTransformerWorker;
 import org.raven.tree.AttributeReferenceValues;
 import org.raven.tree.AttributeValueHandlerRegistry;
-import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodePathResolver;
-import org.raven.tree.store.TreeStore;
+import org.raven.tree.TreeError;
 import org.weda.constraints.ReferenceValue;
 import org.weda.constraints.TooManyReferenceValuesException;
 import org.weda.internal.services.ResourceProvider;
@@ -47,6 +44,103 @@ import static org.easymock.EasyMock.*;
  */
 public class TreeImplTest extends RavenCoreTestCase
 {
+    @Test
+    public void saveNodeTest()
+    {
+        BaseNode container = new BaseNode("container");
+        tree.saveNode(container);
+        assertTrue(container.getId()>0);
+    }
+
+    @Test
+    public void saveDynamicNodeTest()
+    {
+        BaseNode container = new BaseNode("container");
+        container.setChildrensDynamic(true);
+
+        BaseNode child = new BaseNode("child");
+        child.setParent(container);
+        tree.saveNode(child);
+        assertEquals(-1, child.getId());
+        
+        child = new BaseNode("child2");
+        child.setParent(container);
+        tree.saveNode(child);
+        assertEquals(-2, child.getId());
+    }
+
+    @Test
+    public void saveNodeAttributeTest()
+    {
+        BaseNode container = new BaseNode("container");
+        tree.saveNode(container);
+        assertTrue(container.getId()>0);
+
+        NodeAttributeImpl attr = new NodeAttributeImpl("test", String.class, "value", "desc");
+        attr.setOwner(container);
+        tree.saveNodeAttribute(attr);
+        assertTrue(attr.getId()>0);
+    }
+
+    @Test
+    public void saveDynamicNodeAttributeTest()
+    {
+        BaseNode container = new BaseNode("container");
+        container.setChildrensDynamic(true);
+
+        BaseNode child = new BaseNode("child");
+        child.setParent(container);
+        tree.saveNode(child);
+        assertEquals(-1, child.getId());
+
+        NodeAttributeImpl attr = new NodeAttributeImpl("test", String.class, "value", "desc");
+        attr.setOwner(child);
+        tree.saveNodeAttribute(attr);
+        assertEquals(-1, attr.getId());
+
+        attr = new NodeAttributeImpl("test2", String.class, "value", "desc");
+        attr.setOwner(child);
+        tree.saveNodeAttribute(attr);
+        assertEquals(-2, attr.getId());
+    }
+
+    @Test
+    public void saveNodeAttributeBinaryDataTest() throws IOException
+    {
+        BaseNode container = new BaseNode("container");
+        tree.saveNode(container);
+        
+        NodeAttributeImpl attr = new NodeAttributeImpl("test", String.class, "value", "desc");
+        attr.setOwner(container);
+        tree.saveNodeAttribute(attr);
+
+        byte[] data = new byte[]{1, 2, 3};
+        InputStream is = new ByteArrayInputStream(data);
+        tree.saveNodeAttributeBinaryData(attr, is);
+
+        is = configurator.getTreeStore().getNodeAttributeBinaryData(attr);
+        assertNotNull(is);
+        byte[] res = IOUtils.toByteArray(is);
+        assertArrayEquals(data, res);
+    }
+
+    @Test(expected=TreeError.class)
+    public void saveNodeAttributeBinaryData_dynamicNodeTest()
+    {
+        BaseNode container = new BaseNode("container");
+        container.setChildrensDynamic(true);
+
+        BaseNode child = new BaseNode("child");
+        child.setParent(container);
+
+        NodeAttributeImpl attr = new NodeAttributeImpl("test", String.class, "value", "desc");
+        attr.setOwner(child);
+
+        byte[] data = new byte[]{1, 2, 3};
+        InputStream is = new ByteArrayInputStream(data);
+        tree.saveNodeAttributeBinaryData(attr, is);
+    }
+
     @Test
     public void getReferenceValuesForAttribute() throws IOException, Exception
     {

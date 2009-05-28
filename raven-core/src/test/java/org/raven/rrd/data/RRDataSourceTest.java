@@ -36,19 +36,19 @@ public class RRDataSourceTest extends RavenCoreTestCase
         TestDataSource2 ds = new TestDataSource2();
         ds.setName("dataSource");
         tree.getRootNode().addChildren(ds);
-        store.saveNode(ds);
+        tree.saveNode(ds);
         ds.init();
         
         RRDNode rrd = new RRDNode();
         rrd.setName("rrd");
         tree.getRootNode().addChildren(rrd);
-        store.saveNode(rrd);
+        tree.saveNode(rrd);
         rrd.init();
         
         RRDataSource rrds = new RRDataSource();
         rrds.setName("ds");
         rrd.addChildren(rrds);
-        store.saveNode(rrds);
+        tree.saveNode(rrds);
         rrds.init();
         NodeAttribute attr = rrds.getNodeAttribute("dataSource");
         attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);

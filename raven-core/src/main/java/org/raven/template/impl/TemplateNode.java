@@ -62,7 +62,7 @@ public class TemplateNode extends BaseNode
             variablesNode = new TemplateVariablesNode();
             variablesNode.setName(VARIABLES_NODE);
             addChildren(variablesNode);
-            configurator.getTreeStore().saveNode(variablesNode);
+            tree.saveNode(variablesNode);
             variablesNode.init();
             variablesNode.start();
         }
@@ -73,7 +73,7 @@ public class TemplateNode extends BaseNode
             entryNode = new TemplateEntry();
             entryNode.setName(ENTRY_NODE);
             addChildren(entryNode);
-            configurator.getTreeStore().saveNode(entryNode);
+            tree.saveNode(entryNode);
             entryNode.init();   
             entryNode.start();
         }

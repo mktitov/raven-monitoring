@@ -118,7 +118,7 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
         {
             template = new NodeGeneratorNodeTemplate();
             addChildren(template);
-            configurator.getTreeStore().saveNode(template);
+            tree.saveNode(template);
             template.init();
             template.start();
         }
@@ -450,7 +450,7 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
         if (!newName.equals(newNode.getName()))
         {
             newNode.setName(newName);
-            configurator.getTreeStore().saveNode(newNode);
+            tree.saveNode(newNode);
         }
         
         NodeAttribute columnNameAttr = 
@@ -497,7 +497,7 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
                     attr.setDescription(newVal);
                 }
                 if (hasChanges)
-                    configurator.getTreeStore().saveNodeAttribute(attr);
+                    tree.saveNodeAttribute(attr);
             }
         }
         

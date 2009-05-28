@@ -157,7 +157,7 @@ public class SnmpNodeTest extends ServiceTestCase
         SnmpNode snmpNode = new SnmpNode();
         snmpNode.setName("snmp");
         tree.getRootNode().addChildren(snmpNode);
-        store.saveNode(snmpNode);
+        tree.saveNode(snmpNode);
         snmpNode.init();
         snmpNode.start();
         assertEquals(Status.STARTED, snmpNode.getStatus());
@@ -165,7 +165,7 @@ public class SnmpNodeTest extends ServiceTestCase
         SnmpDataConsumer consumer = new SnmpDataConsumer();
         consumer.setName("snmp-consumer");
         tree.getRootNode().addChildren(consumer);
-        store.saveNode(consumer);
+        tree.saveNode(consumer);
         consumer.init();
         
         consumer.getNodeAttribute(
@@ -196,7 +196,7 @@ public class SnmpNodeTest extends ServiceTestCase
         SnmpNode snmpNode = new SnmpNode();
         snmpNode.setName("snmp");
         tree.getRootNode().addChildren(snmpNode);
-        store.saveNode(snmpNode);
+        tree.saveNode(snmpNode);
         snmpNode.init();
         snmpNode.start();
         assertEquals(Status.STARTED, snmpNode.getStatus());
@@ -204,7 +204,7 @@ public class SnmpNodeTest extends ServiceTestCase
         SnmpDataConsumer consumer = new SnmpDataConsumer();
         consumer.setName("snmp-consumer");
         tree.getRootNode().addChildren(consumer);
-        store.saveNode(consumer);
+        tree.saveNode(consumer);
         consumer.init();
         
         consumer.getNodeAttribute(
