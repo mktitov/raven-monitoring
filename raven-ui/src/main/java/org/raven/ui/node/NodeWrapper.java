@@ -505,7 +505,7 @@ implements Comparator<NodeAttribute>
                   }
 				  if(write)
 				  {
-					  getConfigurator().getTreeStore().saveNodeAttribute(na);
+					  getTree().saveNodeAttribute(na);
 					  clearUnsavedChanges(na.getId());
 					  this.afterWriteAttrubutes();
 				  }	  
@@ -654,7 +654,7 @@ implements Comparator<NodeAttribute>
 		//	catch(ConstraintException e) { }
             na.init();
             na.save();
-			getConfigurator().getTreeStore().saveNodeAttribute(na);
+			getTree().saveNodeAttribute(na);
 			logger.warn("Added new attribute='{}' for node='{}'",na.getName(),getNode().getName());
 			onSetNode();
 			return "ok";

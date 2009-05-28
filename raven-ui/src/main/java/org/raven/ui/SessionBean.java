@@ -349,7 +349,7 @@ public class SessionBean
 		{
 			logger.error("",e);
 		}
-		configurator.getTreeStore().saveNode(n);
+		tree.saveNode(n);
 		n.init();
 		if(n.isAutoStart()) n.start();
 		logger.warn("Added new node name={}",getNewNodeName());
