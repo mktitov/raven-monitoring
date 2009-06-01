@@ -296,6 +296,7 @@ public class TreeImpl implements Tree
         destination.addChildren(source);
         source.save();
 
+        fireNodeMovedEvent(source);
         if (source.getChildrenCount()>0)
         {
             boolean saveChilds = oldLevel!=source.getLevel();
@@ -687,6 +688,14 @@ public class TreeImpl implements Tree
         else
             treeStore.saveNodeAttributeBinaryData(attribute, data);
     }
+
+    private void fireNodeMovedEvent(Node node)
+    {
+        Collection<NodeListener> listeners = node.getListeners();
+        if (listeners!=null && !listeners.isEmpty())
+            for (NodeListener listener: listeners)
+                listener.nodeMoved(node);
+    }
     
     private class SearchScannedNodeHandler implements ScannedNodeHandler
     {
@@ -738,10 +747,7 @@ public class TreeImpl implements Tree
         {
             if (saveNodes)
                 node.save();
-            Collection<NodeListener> listeners = node.getListeners();
-            if (listeners!=null && listeners.isEmpty())
-                for (NodeListener listener: listeners)
-                    listener.nodeMoved(node);
+            fireNodeMovedEvent(node);
             return ScanOperation.CONTINUE;
         }
     }

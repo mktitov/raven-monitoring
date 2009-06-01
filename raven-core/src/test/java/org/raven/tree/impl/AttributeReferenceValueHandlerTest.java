@@ -191,6 +191,34 @@ public class AttributeReferenceValueHandlerTest extends RavenCoreTestCase
         attr.setValue("20");
         assertEquals(20, valueHandler.handleData());
     }
+
+    @Test
+    public void moveTest() throws Exception
+    {
+        NodeAttribute refAttr = new NodeAttributeImpl("refAttr", Integer.class, null, null);
+        refAttr.setValueHandlerType(AttributeReferenceValueHandlerFactory.TYPE);
+        refAttr.setOwner(node);
+        node.addNodeAttribute(refAttr);
+        refAttr.init();
+        refAttr.setValue(childNode.getPath()+Node.ATTRIBUTE_SEPARATOR+attr.getName());
+        refAttr.save();
+
+        BaseNode newHome = new BaseNode("newHome");
+        tree.getRootNode().addAndSaveChildren(newHome);
+
+        tree.move(childNode, newHome);
+
+        assertEquals(10, refAttr.getRealValue());
+        String newPath = "/\"newHome\"/\"child\"@attr";
+        assertEquals(newPath, refAttr.getRawValue());
+
+        tree.reloadTree();
+
+        node = tree.getNode(node.getPath());
+        refAttr = node.getNodeAttribute("refAttr");
+        assertEquals(newPath, refAttr.getRawValue());
+        assertEquals(10, refAttr.getRealValue());
+    }
     
     @Test
     public void realTest() throws Exception

@@ -21,7 +21,6 @@ import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.tree.NodeAttribute;
-import org.weda.annotations.constraints.NotNull;
 
 /**
  *
@@ -32,7 +31,7 @@ public class AttributeRecordFieldValueGenerator
         extends AbstractFieldValueGenerator
 {
     public static final String VALUE_ATTRIBUTE = "value";
-    @Parameter @NotNull
+    @Parameter
     private String value;
 
     public String getValue()

@@ -19,7 +19,10 @@ package org.raven.tree.impl;
 
 import org.raven.tree.InvalidPathException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import org.apache.commons.lang.text.StrTokenizer;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -121,6 +124,46 @@ public class NodePathResolverImpl implements NodePathResolver
         return path.toString();
     }
 
+    public String getRelativePath(Node fromNode, Node toNode)
+    {
+        List<Node> fPath = new ArrayList<Node>();
+        fPath.add(fromNode);
+        Node parent = fromNode.getParent();
+        while (parent!=null)
+        {
+            fPath.add(parent);
+            parent = parent.getParent();
+        }
+
+        Node intersectionNode = null;
+        Node curNode = toNode;
+        List<Node> tPath = new ArrayList<Node>();
+        while (intersectionNode==null)
+        {
+            tPath.add(curNode);
+            for (Node node: fPath)
+                if (curNode.equals(node))
+                {
+                    intersectionNode = curNode;
+                    break;
+                }
+            if (intersectionNode==null)
+                curNode = curNode.getParent();
+        }
+
+        StringBuilder path = new StringBuilder();
+        curNode = fromNode;
+        for (Node node: fPath)
+            if (!node.equals(intersectionNode))
+                path.append(PARENT_REFERENCE+Node.NODE_SEPARATOR);
+
+        ListIterator<Node> it = tPath.listIterator(tPath.size()-1);
+        for (; it.hasPrevious();)
+            path.append(QUOTE+it.previous().getName()+QUOTE+Node.NODE_SEPARATOR);
+
+        return path.toString();
+    }
+
     public String getAbsolutePath(NodeAttribute attribute)
     {
         return getAbsolutePath(attribute.getOwner())+Node.ATTRIBUTE_SEPARATOR+attribute.getName();
@@ -134,5 +177,10 @@ public class NodePathResolverImpl implements NodePathResolver
             buf.append(QUOTE+nodeName+QUOTE+Node.NODE_SEPARATOR);
         
         return buf.toString();
+    }
+
+    public boolean isPathAbsolute(String path)
+    {
+        return path.charAt(0)==Node.NODE_SEPARATOR;
     }
 }

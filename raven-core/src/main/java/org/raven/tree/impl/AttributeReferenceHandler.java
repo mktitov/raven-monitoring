@@ -127,6 +127,27 @@ public class AttributeReferenceHandler extends NodeReferenceValueHandler
     }
 
     @Override
+    public void nodeMoved(Node node)
+    {
+        if (this.node!=null && ObjectUtils.in(node, this.node, attribute.getOwner()))
+        {
+            String newPath = pathResolver.isPathAbsolute(data)?
+                pathResolver.getAbsolutePath(this.node)
+                : pathResolver.getRelativePath(attribute.getOwner(), this.node);
+            try {
+                setData(newPath.substring(0, newPath.length()-1)
+                        +Node.ATTRIBUTE_SEPARATOR+referencedAttribute.getName());
+            } catch (Exception ex)
+            {
+                attribute.getOwner().getLogger().error(String.format(
+                        "Error reconstructing path for attribute (%s) after move operation"
+                        , attribute.getName())
+                    , ex);
+            }
+        }
+    }
+
+    @Override
     public boolean nodeAttributeRemoved(Node node, NodeAttribute removedAttribute)
     {
         if (ObjectUtils.equals(referencedAttribute, removedAttribute))

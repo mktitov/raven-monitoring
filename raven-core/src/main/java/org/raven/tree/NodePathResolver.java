@@ -46,6 +46,18 @@ public interface NodePathResolver
      */
     public String getAbsolutePath(Node node);
     /**
+     * Returns the relative path from the node <b>fromNode</b> to the node <b>toNode</b>.
+     * @param fromNode the begin of the path
+     * @param toNode the target of the path
+     */
+    public String getRelativePath(Node fromNode, Node toNode);
+    /**
+     * Return <b>true</b> if the path is absolute path or <b>false</b> if the path is relative.
+     * @param path the path to the node
+     * @return
+     */
+    public boolean isPathAbsolute(String path);
+    /**
      * Returns the absolute path to the node attribue passed in the parameter.
      */
     public String getAbsolutePath(NodeAttribute attribute);
@@ -56,4 +68,14 @@ public interface NodePathResolver
      *      will be created
      */
     public String createPath(boolean absolute, String... nodeNames);
+    /**
+     * Creates path from source node to the target node
+     * @param fromNode source node (
+     *      the information about source node is ignoring when <i>absolute==true</i>)
+     * @param toNode the target node
+     * @param absolute if true then absolute path will be created, else relative path will
+     *      be created
+     * @return
+     */
+//    public String createPath(Node fromNode, Node toNode, boolean absolute);
 }

@@ -17,6 +17,8 @@
 
 package org.raven.tree.impl;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
@@ -44,7 +46,7 @@ public class NodeReferenceValueHandler
         extends AbstractAttributeValueHandler implements NodeListener
 {
     @Service
-    private static NodePathResolver pathResolver;
+    protected static NodePathResolver pathResolver;
 
     protected String data = null;
     protected Node node = null;
@@ -58,6 +60,7 @@ public class NodeReferenceValueHandler
         super(attribute);
         resolveNode(attribute.getRawValue());
         initNodeReference(node, pathElements);
+        attribute.getOwner().addListener(this);
     }
 
     public NodeReferenceValueHandler(
@@ -144,6 +147,7 @@ public class NodeReferenceValueHandler
 
     public void close()
     {
+        attribute.getOwner().removeListener(this);
         cleanupNodeReference(node, null);
     }
 
@@ -197,8 +201,23 @@ public class NodeReferenceValueHandler
         fireExpressionInvalidatedEvent(oldValue);
     }
     
-    public void nodeMoved(Node node) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public void nodeMoved(Node node)
+    {
+        if (this.node!=null && ObjectUtils.in(node, this.node, attribute.getOwner()))
+        {
+            String newPath = pathResolver.isPathAbsolute(data)? 
+                pathResolver.getAbsolutePath(this.node)
+                : pathResolver.getRelativePath(attribute.getOwner(), this.node);
+            try {
+                setData(newPath);
+            } catch (Exception ex)
+            {
+                attribute.getOwner().getLogger().error(String.format(
+                        "Error reconstructing path for attribute (%s) after move operation"
+                        , attribute.getName())
+                    , ex);
+            }
+        }
     }
 
     public void nodeShutdowned(Node shutdownedNode)

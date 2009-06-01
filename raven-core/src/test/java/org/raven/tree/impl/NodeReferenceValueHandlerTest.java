@@ -142,7 +142,96 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
         assertEquals(data, valueHandler.getData());
         assertEquals(childNode, valueHandler.handleData());
     }
+
+    @Test
+    public void referenceMovedTest1() throws Exception
+    {
+        NodeAttribute attr = new NodeAttributeImpl("ref", Node.class, childNode.getPath(), null);
+        attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
+        attr.setOwner(node);
+        node.addNodeAttribute(attr);
+        attr.save();
+        attr.init();
+
+        Node newHome = new BaseNode("newHome");
+        tree.getRootNode().addAndSaveChildren(newHome);
+        tree.move(childNode, newHome);
+
+        assertEquals(newHome, childNode.getParent());
+        String newPath = "/\"newHome\"/\"child\"/";
+        assertEquals(newPath, childNode.getPath());
+        assertEquals(newPath, attr.getValue());
+
+        tree.reloadTree();
+
+        node = tree.getNode(node.getPath());
+        assertNotNull(node);
+        attr = node.getNodeAttribute("ref");
+        assertNotNull(attr);
+        assertEquals(newPath, attr.getValue());
+        assertEquals(childNode, attr.getRealValue());
+    }
     
+    @Test
+    public void referenceMovedTest2() throws Exception
+    {
+        NodeAttribute attr = new NodeAttributeImpl("ref", Node.class, childNode.getPath(), null);
+        attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
+        attr.setOwner(node);
+        node.addNodeAttribute(attr);
+        attr.save();
+        attr.init();
+
+        Node newHome = new BaseNode("newHome");
+        tree.getRootNode().addAndSaveChildren(newHome);
+        tree.move(parentNode, newHome);
+
+        assertEquals(parentNode, childNode.getParent());
+        assertEquals(newHome, parentNode.getParent());
+        String newPath = "/\"newHome\"/\"parent\"/\"child\"/";
+        assertEquals(newPath, childNode.getPath());
+        assertEquals(newPath, attr.getValue());
+
+        tree.reloadTree();
+
+        node = tree.getNode(node.getPath());
+        assertNotNull(node);
+        attr = node.getNodeAttribute("ref");
+        assertNotNull(attr);
+        assertEquals(newPath, attr.getValue());
+        assertEquals(childNode, attr.getRealValue());
+    }
+
+    @Test
+    public void selfMovedTest() throws Exception
+    {
+        NodeAttribute attr = new NodeAttributeImpl("ref", Node.class, "../parent/child", null);
+        attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
+        attr.setOwner(node);
+        node.addNodeAttribute(attr);
+        attr.save();
+        attr.init();
+
+        assertEquals(childNode, attr.getRealValue());
+
+        Node newHome = new BaseNode("newHome");
+        tree.getRootNode().addAndSaveChildren(newHome);
+        tree.move(node, newHome);
+
+        assertEquals(newHome, node.getParent());
+        String newPath = "../../\"parent\"/\"child\"/";
+        assertEquals(newPath, attr.getRawValue());
+
+        tree.reloadTree();
+
+        node = tree.getNode(node.getPath());
+        assertNotNull(node);
+        attr = node.getNodeAttribute("ref");
+        assertNotNull(attr);
+        assertEquals(newPath, attr.getRawValue());
+        assertEquals(childNode, attr.getRealValue());
+    }
+
     @Test
     public void realTest() throws Exception
     {
