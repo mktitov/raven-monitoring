@@ -403,18 +403,23 @@ public class SubNodesTableBean
 		  	Tree tree = SessionBean.getTree();
 		  	for(NodeWrapper nw: nws)
 		  	{
-		  		if(copy)
+  				String newName = null;
+  				if(flag) newName = nw.getNode().getName()+Messages.getUiMessage(Messages.NODES_COPY_POSTFIX);
+		  		
 		  		try {
-		  			String newName = null;
-		  			if(flag) newName = nw.getNode().getName()+Messages.getUiMessage(Messages.NODES_COPY_POSTFIX);
-		  			//logger.info("newName="+newName);
-		  			tree.copy(nw.getNode(), n, newName, null, true, true, false);
+		  			if(copy) tree.copy(nw.getNode(), n, newName, null, true, true, false);
+		  				else tree.move(nw.getNode(), n); 
 		  		}
 		  		catch(Exception e) 
 		  		{
-		  			if(retb.length()==0) 
-		  				retb.append(Messages.getUiMessage(Messages.NODES_CANT_BE_COPIED));
-		  			retb.append(" "+nw.getNodeName());
+		  		 if(retb.length()==0)
+		  		 {
+		  			 String ms;
+		  			 if(!copy) ms = Messages.NODES_CANT_BE_MOVED;
+		  			 	else ms = Messages.NODES_CANT_BE_COPIED;
+		  			 retb.append(Messages.getUiMessage(ms));
+		  		 }			
+		  		 retb.append(" "+nw.getNodeName());
 		  		}
 		  	}	
 			sb.reloadBothFrames();

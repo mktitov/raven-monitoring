@@ -32,6 +32,7 @@ import javax.faces.context.FacesContext;
 	{
 	   //private static final Logger logger = LoggerFactory.getLogger(Messages.class);	
 	   public static final String NODES_CANT_BE_COPIED = "nodesCantBeCopied";
+	   public static final String NODES_CANT_BE_MOVED = "nodesCantBeMoved";
 	   public static final String NODES_COPY_POSTFIX = "copyPostfix";
 	   public static final String NO_SELECTED_NODES = "noSelectedNodes";
 	   public static final String ACCESS_DENIED = "accessDenied";
