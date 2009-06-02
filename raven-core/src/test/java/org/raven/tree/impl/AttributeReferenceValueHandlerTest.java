@@ -206,7 +206,7 @@ public class AttributeReferenceValueHandlerTest extends RavenCoreTestCase
         BaseNode newHome = new BaseNode("newHome");
         tree.getRootNode().addAndSaveChildren(newHome);
 
-        tree.move(childNode, newHome);
+        tree.move(childNode, newHome, null);
 
         assertEquals(10, refAttr.getRealValue());
         String newPath = "/\"newHome\"/\"child\"@attr";

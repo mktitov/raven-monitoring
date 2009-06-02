@@ -29,9 +29,12 @@ import org.raven.RavenCoreTestCase;
 import org.raven.impl.NodeClassTransformerWorker;
 import org.raven.tree.AttributeReferenceValues;
 import org.raven.tree.AttributeValueHandlerRegistry;
+import org.raven.tree.InvalidPathException;
+import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodePathResolver;
 import org.raven.tree.TreeError;
+import org.raven.tree.TreeException;
 import org.weda.constraints.ReferenceValue;
 import org.weda.constraints.TooManyReferenceValuesException;
 import org.weda.internal.services.ResourceProvider;
@@ -139,6 +142,46 @@ public class TreeImplTest extends RavenCoreTestCase
         byte[] data = new byte[]{1, 2, 3};
         InputStream is = new ByteArrayInputStream(data);
         tree.saveNodeAttributeBinaryData(attr, is);
+    }
+
+    @Test
+    public void moveNodeTest() throws TreeException, InvalidPathException
+    {
+        Node parentNode = new BaseNode("parent");
+        tree.getRootNode().addAndSaveChildren(parentNode);
+        assertTrue(parentNode.start());
+
+        Node node = new BaseNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        assertTrue(node.start());
+
+        tree.move(node, parentNode, null);
+
+        tree.reloadTree();
+
+        Node newNode = tree.getNode("/parent/node");
+        assertNotNull(newNode);
+        assertEquals(node, newNode);
+    }
+
+    @Test
+    public void moveAndRenameNodeTest() throws TreeException, InvalidPathException
+    {
+        Node parentNode = new BaseNode("parent");
+        tree.getRootNode().addAndSaveChildren(parentNode);
+        assertTrue(parentNode.start());
+
+        Node node = new BaseNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        assertTrue(node.start());
+
+        tree.move(node, parentNode, "newName");
+
+        tree.reloadTree();
+
+        Node newNode = tree.getNode("/parent/newName");
+        assertNotNull(newNode);
+        assertEquals(node, newNode);
     }
 
     @Test

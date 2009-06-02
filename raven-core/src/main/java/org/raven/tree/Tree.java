@@ -115,8 +115,9 @@ public interface Tree
      * Moves source node to the destination node
      * @param source the node that must be moved
      * @param destination the node to which source node will be moved
+     * @param newSourceName new name of the source node
      */
-    public void move(Node source, Node destination) throws TreeException;
+    public void move(Node source, Node destination, String newSourceName) throws TreeException;
     /**
      * Search for nodes that satisfy the node filter
      * @param options search options

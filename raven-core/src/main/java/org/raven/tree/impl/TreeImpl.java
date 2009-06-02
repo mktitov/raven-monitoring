@@ -263,10 +263,6 @@ public class TreeImpl implements Tree
         }
         try
         {
-//            Node clone = (Node) source.clone();
-//            if (newNodeName!=null)
-//                clone.setName(newNodeName);
-//            destination.addChildren(clone);
             Node clone = source.cloneTo(destination, newNodeName, nodeTuner, useEffectiveChildrens);
             saveClonedNode(source, clone, destination.getPath(), clone, store);
             initNode(clone, nodeTuner);
@@ -279,7 +275,7 @@ public class TreeImpl implements Tree
         }
     }
 
-    public void move(Node source, Node destination) throws TreeException
+    public void move(Node source, Node destination, String newSourceName) throws TreeException
     {
         Node sourceParent = source.getParent();
         if (sourceParent==null)
@@ -293,6 +289,8 @@ public class TreeImpl implements Tree
 
         byte oldLevel = source.getLevel();
         sourceParent.detachChildren(source);
+        if (newSourceName!=null)
+            source.setName(newSourceName);
         destination.addChildren(source);
         source.save();
 

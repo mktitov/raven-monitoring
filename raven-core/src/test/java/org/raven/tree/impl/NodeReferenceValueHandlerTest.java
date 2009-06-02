@@ -155,7 +155,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
 
         Node newHome = new BaseNode("newHome");
         tree.getRootNode().addAndSaveChildren(newHome);
-        tree.move(childNode, newHome);
+        tree.move(childNode, newHome, null);
 
         assertEquals(newHome, childNode.getParent());
         String newPath = "/\"newHome\"/\"child\"/";
@@ -184,7 +184,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
 
         Node newHome = new BaseNode("newHome");
         tree.getRootNode().addAndSaveChildren(newHome);
-        tree.move(parentNode, newHome);
+        tree.move(parentNode, newHome, null);
 
         assertEquals(parentNode, childNode.getParent());
         assertEquals(newHome, parentNode.getParent());
@@ -216,7 +216,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
 
         Node newHome = new BaseNode("newHome");
         tree.getRootNode().addAndSaveChildren(newHome);
-        tree.move(node, newHome);
+        tree.move(node, newHome, null);
 
         assertEquals(newHome, node.getParent());
         String newPath = "../../\"parent\"/\"child\"/";

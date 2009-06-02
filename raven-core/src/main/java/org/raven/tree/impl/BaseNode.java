@@ -391,7 +391,11 @@ public class BaseNode implements Node, NodeListener, Logger
     public void detachChildren(Node node)
     {
         if (childrens!=null)
-            childrens.remove(node.getName());
+        {
+            Node removedNode = childrens.remove(node.getName());
+            if (removedNode!=null)
+                removedNode.removeListener(this);
+        }
     }
 
     public void removeChildren(Node node)
@@ -404,8 +408,10 @@ public class BaseNode implements Node, NodeListener, Logger
         {
             Node removedNode = childrens.remove(node.getName());
             if (removedNode!=null)
+            {
+                removedNode.removeListener(this);
                 removedNode.remove();
-//                fireNodeRemoved(removedNode);
+            }
         }
     }
     
