@@ -30,6 +30,7 @@ import org.raven.conf.impl.ConfiguratorImpl;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.ConnectionPoolValueHandlerFactory;
+import org.raven.ds.impl.DataConsumerAttributeValueHandlerFactory;
 import org.raven.ds.impl.DataPipeConvertToTypesReferenceValues;
 import org.raven.ds.impl.RecordSchemaValueTypeHandlerFactory;
 import org.raven.ds.impl.RecordSchemasNode;
@@ -241,6 +242,9 @@ public class RavenCoreModule
         conf.add(
             DataFileValueHandlerFactory.TYPE
             , new DataFileValueHandlerFactory(pathResolver));
+        conf.add(
+            DataConsumerAttributeValueHandlerFactory.TYPE
+            , new DataConsumerAttributeValueHandlerFactory());
     }
     
     public static void contributeAttributeReferenceValues(

@@ -139,6 +139,7 @@ public class SystemDataSourceReferenceValuesTest extends RavenCoreTestCase
         expect(ds1.getParent()).andReturn(dataSources).anyTimes();
 //        expect(ds1.getStatus()).andReturn(Status.STARTED);
         expect(ds1.compareTo((Node)anyObject())).andReturn(-1).anyTimes();
+        ds1.removeListener(dataSources);
         ds1.remove();
 //        expect(ds1.getStatus()).andReturn(Status.STARTED);
 //        ds1.stop();
@@ -152,6 +153,7 @@ public class SystemDataSourceReferenceValuesTest extends RavenCoreTestCase
 //        expect(ds2.getStatus()).andReturn(Status.STARTED);
 //        ds2.stop();
         expect(ds2.getPath()).andReturn("ds2");
+        ds2.removeListener(dataSources);
         ds2.remove();
 //        expect(ds2.getPath()).andReturn("ds2Path").times(3);
         

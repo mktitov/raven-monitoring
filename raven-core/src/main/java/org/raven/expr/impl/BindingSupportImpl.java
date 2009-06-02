@@ -30,12 +30,18 @@ public class BindingSupportImpl implements BindingSupport
 {
 	ThreadLocal<Map<String, Object>> bindings = new ThreadLocal<Map<String, Object>>();
 
+    public void enableScriptExecution()
+    {
+        put(ExpressionAttributeValueHandler.ENABLE_SCRIPT_EXECUTION_BINDING, true);
+    }
+
 	public void put(String bindingName, Object value)
 	{
 		Map<String, Object> binds = bindings.get();
 		if (binds==null)
 		{
 			binds = new HashMap<String, Object>();
+            binds.put(ExpressionAttributeValueHandler.ENABLE_SCRIPT_EXECUTION_BINDING, true);
 			bindings.set(binds);
 		}
 		binds.put(bindingName, value);
@@ -47,6 +53,7 @@ public class BindingSupportImpl implements BindingSupport
 		if (binds==null)
 		{
 			binds = new HashMap<String, Object>();
+            binds.put(ExpressionAttributeValueHandler.ENABLE_SCRIPT_EXECUTION_BINDING, true);
 			bindings.set(binds);
 		}
         binds.putAll(bindMap);

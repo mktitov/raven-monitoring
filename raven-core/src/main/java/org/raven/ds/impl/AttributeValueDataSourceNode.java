@@ -17,12 +17,18 @@
 
 package org.raven.ds.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import org.raven.Helper;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
+import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
+import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
 
@@ -33,6 +39,9 @@ import org.raven.tree.impl.BaseNode;
 @NodeClass
 public class AttributeValueDataSourceNode extends BaseNode implements DataSource
 {
+    @Parameter
+    private String requiredAttributes;
+
     @Parameter
     private String value;
 
@@ -57,6 +66,25 @@ public class AttributeValueDataSourceNode extends BaseNode implements DataSource
                         , dataConsumer.getPath()));
             return false;
         }
+        Map<String, NodeAttribute> attributes = new HashMap<String, NodeAttribute>();
+        Collection<NodeAttribute> nodeAttributes =
+                dataConsumer instanceof Node? ((Node)dataConsumer).getNodeAttributes() : null;
+        if (nodeAttributes!=null)
+            for (NodeAttribute attr: nodeAttributes)
+                attributes.put(attr.getName(), attr);
+        if (sessionAttributes!=null)
+            for (NodeAttribute attr: sessionAttributes)
+                attributes.put(attr.getName(), attr);
+
+        if (!checkDataConsumer(dataConsumer, attributes))
+        {
+            if (isLogLevelEnabled(LogLevel.WARN))
+                warn(String.format(
+                        "Skiping gathering data for data consumer (%s). Data consumer not ready"
+                        , dataConsumer.getPath()));
+            return false;
+        }
+            
         try
         {
             dataConsumer.setData(this, value);
@@ -71,8 +99,28 @@ public class AttributeValueDataSourceNode extends BaseNode implements DataSource
         }
     }
 
+    protected boolean checkDataConsumer(
+            DataConsumer consumer, Map<String, NodeAttribute> attributes)
+    {
+        return  !(consumer instanceof Node) || ((Node)consumer).getStatus()==Status.STARTED
+                && Helper.checkAttributes(this, generateAttributes(), consumer, attributes);
+    }
+
+
     public Collection<NodeAttribute> generateAttributes()
     {
-        return null;
+        ArrayList<NodeAttribute> consumerAttrs = null;
+        Collection<NodeAttribute> attrs = getNodeAttributes();
+        if (attrs!=null && !attrs.isEmpty())
+            for (NodeAttribute attr: attrs)
+                if (attr.getValueHandlerType().equals(
+                        DataConsumerAttributeValueHandlerFactory.TYPE))
+                {
+                    if (consumerAttrs==null)
+                        consumerAttrs = new ArrayList<NodeAttribute>();
+                    consumerAttrs.add(attr);
+                }
+            
+        return consumerAttrs;
     }
 }

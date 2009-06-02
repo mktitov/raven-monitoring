@@ -37,6 +37,8 @@ import org.weda.internal.annotations.Service;
  */
 public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandler
 {
+    public final static String ENABLE_SCRIPT_EXECUTION_BINDING = "enableScriptExecution";
+
     @Service
     private static ExpressionCompiler compiler;
     @Service
