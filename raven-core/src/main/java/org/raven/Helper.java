@@ -36,15 +36,16 @@ public class Helper
             Node whoCheck, Collection<NodeAttribute> reqAttrs
             , PathObject testObject, Map<String, NodeAttribute> testNodeAttributes)
     {
-        for (NodeAttribute attr: reqAttrs)
-            if (!testNodeAttributes.containsKey(attr.getName()))
-            {
-                whoCheck.getLogger().error(
-                        String.format(
-                            "Node (%s) does not have required attribute (%s)"
-                            , testObject.getPath(), attr.getName()));
-                return false;
-            }
+        if (reqAttrs!=null && !reqAttrs.isEmpty())
+            for (NodeAttribute attr: reqAttrs)
+                if (!testNodeAttributes.containsKey(attr.getName()))
+                {
+                    whoCheck.getLogger().error(
+                            String.format(
+                                "Node (%s) does not have required attribute (%s)"
+                                , testObject.getPath(), attr.getName()));
+                    return false;
+                }
         return true;
     }
 

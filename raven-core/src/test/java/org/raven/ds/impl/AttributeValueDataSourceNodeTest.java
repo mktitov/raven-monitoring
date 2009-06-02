@@ -19,6 +19,7 @@ package org.raven.ds.impl;
 
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
+import org.raven.tree.impl.NodeAttributeImpl;
 
 /**
  *
@@ -42,5 +43,25 @@ public class AttributeValueDataSourceNodeTest extends RavenCoreTestCase
         assertTrue(collector.start());
 
         assertEquals("test", collector.refereshData(null));
+    }
+
+    public void dataConsumerAttributesTest()
+    {
+        AttributeValueDataSourceNode ds = new AttributeValueDataSourceNode();
+        ds.setName("ds");
+        tree.getRootNode().addAndSaveChildren(ds);
+        ds.setValue("test");
+        assertTrue(ds.start());
+
+        NodeAttributeImpl consAttr = new NodeAttributeImpl("consAttr", String.class, "world", null);
+
+        SafeDataConsumer collector = new SafeDataConsumer();
+        collector.setName("collector");
+        tree.getRootNode().addAndSaveChildren(collector);
+        collector.setDataSource(ds);
+        assertTrue(collector.start());
+
+        assertEquals("test", collector.refereshData(null));
+        
     }
 }

@@ -46,6 +46,8 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         expect(attribute.getRawValue()).andReturn(null);
         attribute.save();
         expectLastCall().times(3);
+        expect(attribute.getValueHandlerType())
+                .andReturn(ExpressionAttributeValueHandlerFactory.TYPE).anyTimes();
         listener.valueChanged(isNull(), eq(2));
         expect(attribute.getOwner()).andReturn(node).times(5);
         node.formExpressionBindings(isA(Bindings.class));
@@ -90,6 +92,8 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         
         expect(attribute.getRawValue()).andReturn("1+1");
         expect(attribute.getOwner()).andReturn(node).times(2);
+        expect(attribute.getValueHandlerType())
+                .andReturn(ExpressionAttributeValueHandlerFactory.TYPE).anyTimes();
         node.formExpressionBindings(isA(Bindings.class));
         listener.valueChanged(null, 2);
         
@@ -111,6 +115,8 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         Node node = createMock(Node.class);
         
         expect(attribute.getRawValue()).andReturn(null);
+        expect(attribute.getValueHandlerType())
+                .andReturn(ExpressionAttributeValueHandlerFactory.TYPE).anyTimes();
         attribute.save();
         expect(attribute.getOwner()).andReturn(node).times(2);
         node.formExpressionBindings(formBindings());
@@ -135,6 +141,8 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         Node node = createMock(Node.class);
         
         expect(attribute.getRawValue()).andReturn(null);
+        expect(attribute.getValueHandlerType())
+                .andReturn(ExpressionAttributeValueHandlerFactory.TYPE).anyTimes();
         attribute.save();
         expect(attribute.getOwner()).andReturn(node).times(2);
         node.formExpressionBindings(isA(Bindings.class));
@@ -148,6 +156,33 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         Object result = handler.handleData();
         assertEquals("nodeName", result);
         
+        verify(node, attribute);
+    }
+
+    @Test
+    public void scriptTest() throws Exception
+    {
+        NodeAttribute attribute = createMock(NodeAttribute.class);
+        Node node = createMock(Node.class);
+
+        expect(attribute.getRawValue()).andReturn(null);
+        expect(attribute.getValueHandlerType())
+                .andReturn(ScriptAttributeValueHandlerFactory.TYPE).anyTimes();
+        attribute.save();
+        expect(attribute.getOwner()).andReturn(node).times(4);
+        node.formExpressionBindings(isA(Bindings.class));
+        node.formExpressionBindings(formBindings2());
+
+        replay(node, attribute);
+
+        ExpressionAttributeValueHandler handler = new ExpressionAttributeValueHandler(attribute);
+        handler.setData("var+1");
+
+        Object result = handler.handleData();
+        assertNull(result);
+        result = handler.handleData();
+        assertEquals(2, result);
+
         verify(node, attribute);
     }
     
@@ -181,6 +216,23 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
             public boolean matches(Object argument) {
                 Bindings bindings = (Bindings) argument;
                 bindings.put("var", 1);
+                return true;
+            }
+
+            public void appendTo(StringBuffer buffer) {
+            }
+        });
+        return null;
+    }
+
+    private static Bindings formBindings2()
+    {
+        reportMatcher(new IArgumentMatcher()
+        {
+            public boolean matches(Object argument) {
+                Bindings bindings = (Bindings) argument;
+                bindings.put("var", 1);
+                bindings.put(ExpressionAttributeValueHandler.ENABLE_SCRIPT_EXECUTION_BINDING, true);
                 return true;
             }
 

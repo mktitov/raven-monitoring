@@ -43,6 +43,7 @@ import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.expr.impl.ExpressionCacheImpl;
 import org.raven.expr.impl.ExpressionCompilerImpl;
 import org.raven.expr.impl.GroovyExpressionCompiler;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.impl.AttributeReferenceToStringConverter;
 import org.raven.impl.BooleanReferenceValues;
 import org.raven.impl.CharsetReferenceValues;
@@ -224,6 +225,9 @@ public class RavenCoreModule
         conf.add(
             ExpressionAttributeValueHandlerFactory.TYPE
             , new ExpressionAttributeValueHandlerFactory());
+        conf.add(
+            ScriptAttributeValueHandlerFactory.TYPE
+            , new ScriptAttributeValueHandlerFactory());
         conf.add(
             QueryParameterValueHandlerFactory.TYPE
             , new QueryParameterValueHandlerFactory());

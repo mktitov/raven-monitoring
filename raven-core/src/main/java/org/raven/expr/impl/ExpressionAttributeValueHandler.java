@@ -84,7 +84,7 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
         {
             try
             {
-                expression = compiler.compile(data, "groovy");
+                expression = compiler.compile(data, GroovyExpressionCompiler.LANGUAGE);
             }
             catch(ScriptException e)
             {
@@ -110,16 +110,24 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
             Bindings bindings = new SimpleBindings();
             bindings.put("node", new NodeAccessImpl(attribute.getOwner()));
             attribute.getOwner().formExpressionBindings(bindings);
-            try {
-                value = expression.eval(bindings);
-            } catch (ScriptException ex) {
-                attribute.getOwner().getLogger().warn(String.format(
-                        "Attribute (%s) getValue error. Error executing expression (%s). %s"
-                        , pathResolver.getAbsolutePath(attribute), data, ex.getMessage()));
+            if (   !attribute.getValueHandlerType().equals(ScriptAttributeValueHandlerFactory.TYPE)
+                || bindings.containsKey(ENABLE_SCRIPT_EXECUTION_BINDING))
+            {
+                try {
+                    bindings.remove(ENABLE_SCRIPT_EXECUTION_BINDING);
+                    value = expression.eval(bindings);
+                } catch (ScriptException ex) {
+                    attribute.getOwner().getLogger().warn(String.format(
+                            "Attribute (%s) getValue error. Error executing expression (%s). %s"
+                            , pathResolver.getAbsolutePath(attribute), data, ex.getMessage()));
+                }
             }
         }
-        if (!ObjectUtils.equals(value, oldValue))
+        if (   !attribute.getValueHandlerType().equals(ScriptAttributeValueHandlerFactory.TYPE)
+            && !ObjectUtils.equals(value, oldValue))
+        {
             fireValueChangedEvent(oldValue, value);
+        }
         return value;
     }
 
