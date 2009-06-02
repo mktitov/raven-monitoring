@@ -18,6 +18,7 @@
 package org.raven.ui.node;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import javax.faces.component.UIComponent;
@@ -147,61 +148,6 @@ public class SubNodesTableBean
 	  public void upNodes(ActionEvent action)
 	  {
 		  upDownNodes((UIXTable) table, true);
-		  /*
-		ArrayList<Object> sel = getSeletedTableRowsData((UIXTable) table, true);
-	    NodeWrapper nw = null;
-	    List<NodeWrapper> nodes = null;
-	    int maxIndex=0;
-	    int minIndex=1;
-	    NodeWrapper parent = null;
-	    if( sel.size() == 0 ) 
-	    {
-	    	message.setMessage(Messages.getUiMessage("noSelectedNodes"));
-	    	return;
-	    }
-	    NodeWrapper t = (NodeWrapper) sel.get(0);
-	    parent = new NodeWrapper(t.getNode().getParent());
-	    nodes = parent.getChildrenList();
-	    int ncnt = 0;
-	    if(nodes!=null && (ncnt=nodes.size())>1)
-	    	maxIndex = nodes.get(ncnt-1).getNode().getIndex();
-	    if(maxIndex==0) return;
-	    for(Object it : sel) nodes.remove(it);
-	    for(Object ob : sel)
-	    {
-	    	nw = (NodeWrapper)ob;
-	    	int cidx = nw.getNode().getIndex();
-	    	int nup = -2;
-	    	int mx = nodes.size();
-	    	for(int i=0; i<mx; i++)
-	    		if(cidx<nodes.get(i).getNode().getIndex())
-	    		{
-	    			nup = i-1;
-	    			break;
-	    		}
-	    	if(nup==-2) nup = mx-1;
-	    	if(nup>=0) 
-	    	{
-	    		Node upnode = nodes.get(nup).getNode();
-	    		int upidx = upnode.getIndex();
-	    		if(upidx>=minIndex)
-	    		{
-	    			nw.getNode().setIndex(upidx);
-	    			upnode.setIndex(cidx);
-	    			nw.getNode().save();
-	    			upnode.save();
-	    		}
-	    	}
-	    }
-	    RowKeySet state = ((UIXTable) table).getSelectedRowKeys();
-	    nodes = parent.getChildrenList();
-	    for(Object it : sel)
-	    {
-	    	int idx = nodes.indexOf(it);
-	    	if(idx>=0) state.add(new Integer(idx)); 
-	    }
-	    SessionBean.getInstance().reloadBothFrames();
-	    */
 	  }
 
 	  public void upDownNodes(UIXTable table, boolean up)
@@ -269,61 +215,6 @@ public class SubNodesTableBean
 	  public void downNodes(ActionEvent action)
 	  {
 		  upDownNodes((UIXTable) table, false);
-		  /*
-		ArrayList<Object> sel = getSeletedTableRowsData((UIXTable) table, true);
-	    NodeWrapper nw = null;
-	    List<NodeWrapper> nodes = null;
-	    int maxIndex=0;
-	    int minIndex=1;
-	    NodeWrapper parent = null;
-	    if( sel.size() == 0 )
-	    {
-	    	message.setMessage(Messages.getUiMessage("noSelectedNodes"));
-	    	return;
-	    }
-	    NodeWrapper t = (NodeWrapper) sel.get(0);
-	    parent = new NodeWrapper(t.getNode().getParent());
-	    nodes = parent.getChildrenList();
-	    int ncnt = 0;
-	    if(nodes!=null && (ncnt=nodes.size())>1)
-	    	maxIndex = nodes.get(ncnt-1).getNode().getIndex();
-	    if(maxIndex==0) return;
-	    for(Object it : sel) nodes.remove(it);
-	    for(Object ob : sel)
-	    {
-	    	nw = (NodeWrapper)ob;
-	    	int cidx = nw.getNode().getIndex();
-	    	int nup = -2;
-	    	int mx = nodes.size();
-	    	for(int i=0; i<mx; i++)	    		
-	    		if(cidx < nodes.get(i).getNode().getIndex())
-	    		{
-	    			nup = i;
-	    			break;
-	    		}
-	    	if(nup==-2) nup = mx;
-	    	if(nup>=0 && nup<nodes.size()) 
-	    	{
-	    		Node upnode = nodes.get(nup).getNode();
-	    		int upidx = upnode.getIndex();
-	    		if(upidx>=minIndex)
-	    		{
-	    			nw.getNode().setIndex(upidx);
-	    			upnode.setIndex(cidx);
-	    			nw.getNode().save();
-	    			upnode.save();
-	    		}
-	    	}
-	    }
-	    RowKeySet state = ((UIXTable) table).getSelectedRowKeys();
-	    nodes = parent.getChildrenList();
-	    for(Object it : sel)
-	    {
-	    	int idx = nodes.indexOf(it);
-	    	if(idx>=0) state.add(new Integer(idx)); 
-	    }
-	    SessionBean.getInstance().reloadBothFrames();
-	    */
 	  }
 	  
 	  public void selectAllNodes(ActionEvent action)
@@ -379,7 +270,8 @@ public class SubNodesTableBean
 		  		
 		  	ArrayList<NodeWrapper> nws = new ArrayList<NodeWrapper>();
 		  	loadNodeWrappers(nws);
-		  	boolean flag = false;
+		  	String copyPostfix = Messages.getUiMessage(Messages.NODES_COPY_POSTFIX);
+		  	HashMap<Integer,String> newNames = new HashMap<Integer, String>();
 		  	for(NodeWrapper nw: nws)
 		  	{
 		  		String to = n.getPath();
@@ -388,8 +280,7 @@ public class SubNodesTableBean
 		  		//logger.info("to="+to+" , from="+from+" , parent="+parent);
 		  		if(to.equalsIgnoreCase(parent))
 		  		{
-		  			
-		  			flag = true;
+		  			newNames.put(nw.getNodeId(), nw.getNode().getName()+copyPostfix);
 		  			continue;
 		  		}
 		  		if(to.startsWith(from))
@@ -403,12 +294,11 @@ public class SubNodesTableBean
 		  	Tree tree = SessionBean.getTree();
 		  	for(NodeWrapper nw: nws)
 		  	{
-  				String newName = null;
-  				if(flag) newName = nw.getNode().getName()+Messages.getUiMessage(Messages.NODES_COPY_POSTFIX);
+  				String newName = newNames.get(nw.getNodeId());
 		  		
 		  		try {
 		  			if(copy) tree.copy(nw.getNode(), n, newName, null, true, true, false);
-		  				else tree.move(nw.getNode(), n); 
+		  				else tree.move(nw.getNode(), n, newName); 
 		  		}
 		  		catch(Exception e) 
 		  		{
