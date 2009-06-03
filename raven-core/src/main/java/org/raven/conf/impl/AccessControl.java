@@ -76,7 +76,7 @@ public class AccessControl {
 				case WRITE_SYMBOL  	: right |= READ|WRITE;  break;
 				case CONTROL_SYMBOL : right |= READ|CONTROL;  break;
 				case TREE_EDIT_SYMBOL : right |= READ|WRITE|TREE_EDIT;  break;
-				case ADMIN_SYMBOL : right |= READ|WRITE|TREE_EDIT|ADMIN;  break;
+				case ADMIN_SYMBOL : right |= READ|WRITE|CONTROL|TREE_EDIT|ADMIN;  break;
 			}
 			if(none) break;
 		}
