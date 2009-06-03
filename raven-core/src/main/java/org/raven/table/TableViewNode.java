@@ -22,16 +22,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.raven.annotations.NodeClass;
-//import org.raven.annotations.Parameter;
 import org.raven.annotations.Parameter;
 import org.raven.ds.impl.SafeDataConsumer;
-import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.util.NodeUtils;
 import org.weda.annotations.constraints.NotNull;
-//import org.weda.annotations.constraints.NotNull;
+
 /**
  *
  * @author Mikhail Titov
@@ -46,22 +44,25 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) 
             throws Exception
     {
-        Object tableObj = refereshData(refreshAttributes==null? null : refreshAttributes.values());
-        if (!(tableObj instanceof Table))
-        {
-            if (isLogLevelEnabled(LogLevel.DEBUG))
-                debug(String.format(
-                        "Invalid data type recieved from (%s). Expected (%s) but recieved (%s)"
-                        , getDataSource().getPath()
-                        , tableObj==null? "NULL" : tableObj.getClass().getName()));
+        Object data = refereshData(refreshAttributes==null? null : refreshAttributes.values());
+//        if (!(tableObj instanceof Table))
+//        {
+//            if (isLogLevelEnabled(LogLevel.DEBUG))
+//                debug(String.format(
+//                        "Invalid data type recieved from (%s). Expected (%s) but recieved (%s)"
+//                        , getDataSource().getPath()
+//                        , tableObj==null? "NULL" : tableObj.getClass().getName()));
+//            return null;
+//        }
+
+        Table table = converter.convert(Table.class, data, null);
+        if (table==null)
             return null;
+        else
+        {
+            ViewableObject tableObject = new ViewableObjectImpl(RAVEN_TABLE_MIMETYPE, table);
+            return Arrays.asList(tableObject);
         }
-
-        Table table = (Table) tableObj;
-
-        ViewableObject tableObject = new ViewableObjectImpl(RAVEN_TABLE_MIMETYPE, table);
-
-        return Arrays.asList(tableObject);
     }
 
     //@Override

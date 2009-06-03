@@ -23,14 +23,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import javax.script.Bindings;
 import org.raven.Helper;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
-import org.raven.expr.BindingSupport;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
@@ -44,6 +42,7 @@ import org.raven.tree.impl.BaseNode;
 @NodeClass
 public class AttributeValueDataSourceNode extends BaseNode implements DataSource
 {
+    public static final String VALUE_ATTR = "value";
     @Parameter
     private String requiredAttributes;
 
@@ -138,7 +137,8 @@ public class AttributeValueDataSourceNode extends BaseNode implements DataSource
                 if (!consumerAttrNames.isEmpty())
                     for (String name: consumerAttrNames)
                         bindingSupport.put(name, values.get(name));
-                dataConsumer.setData(this, value);
+                NodeAttribute valueAttr = getNodeAttribute(VALUE_ATTR);
+                dataConsumer.setData(this, valueAttr.getRealValue());
                 return true;
             }
             finally
@@ -161,6 +161,13 @@ public class AttributeValueDataSourceNode extends BaseNode implements DataSource
     {
         return  !(consumer instanceof Node) || ((Node)consumer).getStatus()==Status.STARTED
                 && Helper.checkAttributes(this, consumerAttributes, consumer, attributes);
+    }
+
+    @Override
+    public void formExpressionBindings(Bindings bindings)
+    {
+        super.formExpressionBindings(bindings);
+        bindingSupport.addTo(bindings);
     }
 
 
@@ -188,10 +195,11 @@ public class AttributeValueDataSourceNode extends BaseNode implements DataSource
                         consumerAttrs = new ArrayList<NodeAttribute>();
                     try {
                         NodeAttribute clone = (NodeAttribute) attr.clone();
+                        clone.setValueHandlerType(null);
                         if (reqAttrs.contains(clone.getName()))
                             clone.setRequired(true);
                         consumerAttrs.add(clone);
-                    } catch (CloneNotSupportedException ex) {
+                    } catch (Exception ex) {
                         error(String.format("Error cloning attribute (%s)", attr.getName()), ex);
                     }
                 }

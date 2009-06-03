@@ -17,8 +17,12 @@
 
 package org.raven.ds.impl;
 
+import java.util.Arrays;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
+import org.raven.log.LogLevel;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeAttributeImpl;
 
 /**
@@ -45,15 +49,33 @@ public class AttributeValueDataSourceNodeTest extends RavenCoreTestCase
         assertEquals("test", collector.refereshData(null));
     }
 
-    public void dataConsumerAttributesTest()
+    @Test
+    public void dataConsumerAttributesTest() throws Exception
     {
         AttributeValueDataSourceNode ds = new AttributeValueDataSourceNode();
         ds.setName("ds");
         tree.getRootNode().addAndSaveChildren(ds);
-        ds.setValue("test");
+        NodeAttribute valAttr = ds.getNodeAttribute("value");
+        valAttr.setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        ds.setValue("'hello '+consAttr1+consAttr2");
+        NodeAttributeImpl consAttr =
+                new NodeAttributeImpl("consAttr1", String.class, "world", null);
+        consAttr.setOwner(ds);
+        consAttr.setValueHandlerType(DataConsumerAttributeValueHandlerFactory.TYPE);
+        consAttr.save();
+        consAttr.init();
+        ds.addNodeAttribute(consAttr);
+        NodeAttributeImpl consAttr2 =
+                new NodeAttributeImpl("consAttr2", String.class, "world", null);
+        consAttr2.setOwner(ds);
+        consAttr2.setValueHandlerType(DataConsumerAttributeValueHandlerFactory.TYPE);
+        consAttr2.save();
+        consAttr2.init();
+        ds.addNodeAttribute(consAttr2);
+        ds.setRequiredAttributes("consAttr1");
+        ds.setLogLevel(LogLevel.DEBUG);
         assertTrue(ds.start());
 
-        NodeAttributeImpl consAttr = new NodeAttributeImpl("consAttr", String.class, "world", null);
 
         SafeDataConsumer collector = new SafeDataConsumer();
         collector.setName("collector");
@@ -61,7 +83,21 @@ public class AttributeValueDataSourceNodeTest extends RavenCoreTestCase
         collector.setDataSource(ds);
         assertTrue(collector.start());
 
-        assertEquals("test", collector.refereshData(null));
-        
+        NodeAttribute attr;
+        attr = collector.getNodeAttribute("consAttr1");
+        assertNotNull(attr);
+        assertTrue(attr.isRequired());
+        assertNull(attr.getValueHandlerType());
+        attr.setValue("world");
+        attr = collector.getNodeAttribute("consAttr2");
+        assertNotNull(attr);
+        assertNull(attr.getValueHandlerType());
+        assertFalse(attr.isRequired());
+
+        attr = new NodeAttributeImpl("consAttr2", String.class, "!", null);
+        attr.setOwner(collector);
+        attr.init();
+
+        assertEquals("hello world!", collector.refereshData(Arrays.asList(attr)));
     }
 }

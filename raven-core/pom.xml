@@ -47,6 +47,10 @@
     </build>
     <dependencies>
         <dependency>
+            <groupId>org.apache.directory</groupId>
+            <artifactId>groovy-ldap</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.tmatesoft.svnkit</groupId>
             <artifactId>svnkit</artifactId>
         </dependency>
