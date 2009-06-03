@@ -161,15 +161,20 @@ public class SvnWriterNode extends AbstractDataConsumer
             throw new Exception("The value of the (%s) field can not be NULL");
 
         SVNClientManager svnClient = setupSubversion();
+        try
+        {
+            Object inputStream = prepareInputStream(fileData);
+            File dataFile = new File(workDir, path);
+            boolean dataFileExists = dataFile.exists();
+            Object outputStream = prepareOutputStream(inputStream, dataFile);
+            writeDataToFile(inputStream, outputStream);
 
-//        OutputStreamWriter writer = new OutputStreamWriter
-        Object inputStream = prepareInputStream(fileData);
-        File dataFile = new File(workDir, path);
-        boolean dataFileExists = dataFile.exists();
-        Object outputStream = prepareOutputStream(inputStream, dataFile);
-        writeDataToFile(inputStream, outputStream);
-
-        commitChanges(svnClient, dataFile, !dataFileExists);
+            commitChanges(svnClient, dataFile, !dataFileExists);
+        }
+        finally
+        {
+            svnClient.dispose();
+        }
     }
 
     private void commitChanges(SVNClientManager svnClient, File dataFile, boolean newFile)
@@ -233,8 +238,15 @@ public class SvnWriterNode extends AbstractDataConsumer
         DefaultSVNOptions options = SVNWCUtil.createDefaultOptions(true);
         SVNClientManager svnClient =
                 SVNClientManager.newInstance(options, username, password);
-
-        createWorkDir(svnClient, workDir);
+        try
+        {
+            createWorkDir(svnClient, workDir);
+        }
+        catch(Exception e)
+        {
+            svnClient.dispose();
+            throw e;
+        }
 
         return svnClient;
     }
