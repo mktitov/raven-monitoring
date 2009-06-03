@@ -260,6 +260,12 @@
             </dependency>
             -->
             <dependency>
+                <groupId>org.apache.directory</groupId>
+                <artifactId>groovy-ldap</artifactId>
+                <version>1.0</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.myfaces.core</groupId>
                 <artifactId>myfaces-api</artifactId>
                 <version>1.2.6</version>
@@ -292,7 +298,7 @@
             <dependency>
                 <groupId>com.h2database</groupId>
                 <artifactId>h2</artifactId>
-                <version>1.1.106</version>
+                <version>1.1.111</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
