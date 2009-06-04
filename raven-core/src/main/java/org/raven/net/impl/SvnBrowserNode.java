@@ -18,11 +18,8 @@
 package org.raven.net.impl;
 
 import java.io.File;
-import java.util.Collection;
 import org.raven.annotations.Parameter;
 import org.raven.log.LogLevel;
-import org.raven.tree.Node;
-import org.raven.tree.impl.AbstractDynamicNode;
 import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.internal.wc.DefaultSVNOptions;
@@ -35,7 +32,7 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-public class SvnBrowserNode extends AbstractDynamicNode
+public class SvnBrowserNode extends SvnDirectoryNode
 {
     @Parameter @NotNull
     private String repositoryUrl;
@@ -69,6 +66,11 @@ public class SvnBrowserNode extends AbstractDynamicNode
     {
         super.doStop();
         svnClient.dispose();
+        removeChildrens();
+    }
+
+    public SVNClientManager getSvnClient() {
+        return svnClient;
     }
 
     public File getBaseDir() {
@@ -152,11 +154,5 @@ public class SvnBrowserNode extends AbstractDynamicNode
             baseDir = workDir;
         else
             baseDir = new File(workDir, _initialPath);
-    }
-
-    @Override
-    protected Collection<Node> doGetChildrens()
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

@@ -18,6 +18,7 @@
 package org.raven.net.impl;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import org.raven.tree.Node;
 import org.raven.tree.impl.AbstractDynamicNode;
@@ -39,8 +40,37 @@ public class SvnDirectoryNode extends AbstractDynamicNode
             node = node.getParent();
         }
         SvnBrowserNode browser = (SvnBrowserNode) node;
+        
+        if (!browser.getStatus().equals(Status.STARTED))
+            return null;
+
         File dir = path.length()==0?
             browser.getBaseDir() : new File(browser.getBaseDir(), path.toString());
-        return null;
+
+        Collection<Node> nodes = null;
+
+        if (dir.exists())
+        {
+            File[] files = dir.listFiles();
+            if (files!=null && files.length>0)
+                for (File file: files)
+                {
+                    if (file.getName().startsWith(".svn"))
+                        continue;
+                    node = null;
+                    if (file.isDirectory())
+                        node = new SvnDirectoryNode();
+                    else
+                        node = new SvnFileNode();
+                    if (node!=null)
+                    {
+                        node.setName(file.getName());
+                        if (nodes==null)
+                            nodes = new ArrayList<Node>();
+                        nodes.add(node);
+                    }
+                }
+        }
+        return nodes;
     }
 }

@@ -29,6 +29,8 @@ import org.raven.tree.Node;
  */
 public abstract class AbstractDynamicNode extends BaseNode
 {
+    private boolean removing;
+
     public AbstractDynamicNode()
     {
         setChildrensDynamic(true);
@@ -43,10 +45,14 @@ public abstract class AbstractDynamicNode extends BaseNode
             for (Node newNode: newNodes)
             {
                 if (getChildren(newNode.getName())==null)
-                    addChildren(newNode);
+                {
+                    addAndSaveChildren(newNode);
+                    if (newNode.isAutoStart())
+                        newNode.start();
+                }
                 nodeNames.add(newNode.getName());
             }
-        Collection<Node> childs = getChildrens();
+        Collection<Node> childs = super.getChildrens();
         if (childs!=null && !childs.isEmpty())
         {
             childs = new ArrayList<Node>(childs);
@@ -56,6 +62,20 @@ public abstract class AbstractDynamicNode extends BaseNode
         }
         
         return super.getChildrens();
+    }
+
+    /**
+     * Removes all children nodes
+     */
+    public synchronized void removeChildrens()
+    {
+        Collection<Node> childs = super.getChildrens();
+        if (childs!=null && !childs.isEmpty())
+        {
+            Collection<Node> detachedChilds = new ArrayList<Node>(childs);
+            for (Node child: detachedChilds)
+                removeChildren(child);
+        }
     }
 
     protected abstract Collection<Node> doGetChildrens();
