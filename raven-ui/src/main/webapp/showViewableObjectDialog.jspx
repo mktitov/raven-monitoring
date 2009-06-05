@@ -160,8 +160,20 @@
                   	var="name" >
                     <tr:column headerText="#{name}">
 						<tr:outputFormatted 
-							rendered="#{!rowa[vStat.index].table}"
+							rendered="#{rowa[vStat.index].other}"
 							value="#{rowa[vStat.index].item}"/>
+						<tr:commandLink
+							rendered="#{rowa[vStat.index].file}" 
+							text="#{msgs.file}: #{rowa[vStat.index].wrapper.idVO}" 
+							actionListener="#{otherVO.export}">
+							<f:attribute 
+								name="nodeId" 
+								value="#{rowa[vStat.index].wrapper.nodeId}"/>
+							<f:attribute 
+								name="uid" 
+								value="#{rowa[vStat.index].wrapper.uid}"/>
+						</tr:commandLink>
+							
 						<tr:commandLink
 							text="++#{vStat.index} #{rowa[vStat.index].string} ++"
 							rendered="#{rowa[vStat.index].table}"

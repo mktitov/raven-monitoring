@@ -76,6 +76,13 @@ public class ViewableObjectWrapper
 		if(isViewable() && getMimeGroup().equals(IMAGE)) return true;
 		return false;
 	}
+
+	public boolean isFile()
+	{
+		if(!isViewable()) return false;
+		if(isImage() || isTable()) return false;
+		return true;
+	}
 	
 	public boolean isTable()
 	{
