@@ -49,8 +49,8 @@ public class TableItemWrapper
 			ViewableObject x = (ViewableObject) item;
 			if(x.getMimeType().equals(Viewable.RAVEN_TABLE_MIMETYPE)) 
 				return VO_TABLE;
-			if(x.getMimeType().startsWith(ViewableObjectWrapper.IMAGE)) 
-				return VO_IMAGE;
+			//if(x.getMimeType().startsWith(ViewableObjectWrapper.IMAGE)) 
+			//	return VO_IMAGE;
 			return VO_OTHER;
 		}
 		return OTHER;
