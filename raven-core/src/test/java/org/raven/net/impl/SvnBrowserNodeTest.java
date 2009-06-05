@@ -23,22 +23,28 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.PushDataSource;
 import org.raven.RavenCoreTestCase;
+import org.raven.RavenUtils;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.ds.impl.RecordSchemaFieldNode;
 import org.raven.ds.impl.RecordSchemaNode;
 import org.raven.log.LogLevel;
+import org.raven.table.Table;
 import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.FileViewableObject;
+import org.raven.tree.impl.NodeAttributeImpl;
 
 /**
  *
@@ -195,6 +201,115 @@ public class SvnBrowserNodeTest extends RavenCoreTestCase
     @Test
     public void revisionsNodeTest() throws Exception
     {
+        Record rec = schema.createRecord();
+        rec.setValue(SvnWriterNode.PATH_FIELD, "test/file.txt");
+        rec.setValue(SvnWriterNode.DATA_FIELD, "file content");
+        ds.pushData(rec);
+
+        svnBrowser.setInitialPath("test");
+        assertTrue(svnBrowser.start());
+        Node node = svnBrowser.getChildrens().iterator().next();
+        assertTrue(node instanceof SvnFileNode);
+        SvnFileRevisionsNode revisions = 
+                (SvnFileRevisionsNode) node.getChildren(SvnFileRevisionsNode.NAME);
+        assertNotNull(revisions);
+        assertStarted(revisions);
+
+        List<Object[]> rows = getRevisionsTable(revisions, null);
+        assertNotNull(rows);
+        assertEquals(1, rows.size());
         
+        rec.setValue(SvnWriterNode.PATH_FIELD, "test/file.txt");
+        rec.setValue(SvnWriterNode.DATA_FIELD, "file content\nmodified");
+        ds.pushData(rec);
+
+        rows = getRevisionsTable(revisions, null);
+        assertNotNull(rows);
+        assertEquals(2, rows.size());
+        assertEquals(2l, rows.get(0)[0]);
+        assertEquals(1l, rows.get(1)[0]);
+
+        checkFileContent(rows.get(0)[2], "file content\nmodified");
+        checkFileContent(rows.get(1)[2], "file content");
+
+        Object diffObj = rows.get(1)[3];
+        assertNotNull(diffObj);
+        assertTrue(diffObj instanceof SvnFileDiffViewableObject);
+        ViewableObject diff = (ViewableObject) diffObj;
+        assertEquals("text/x-diff", diff.getMimeType());
+        Object data = diff.getData();
+        assertNotNull(data);
+        assertTrue(data instanceof byte[]);
+        String diffRes = new String((byte[])data);
+        assertFalse(diffRes.isEmpty());
+    }
+
+    @Test
+    public void revisionsNodeRefreshAttributesTest() throws Exception
+    {
+        Record rec = schema.createRecord();
+        rec.setValue(SvnWriterNode.PATH_FIELD, "test/file.txt");
+        rec.setValue(SvnWriterNode.DATA_FIELD, "file content");
+        ds.pushData(rec);
+
+        rec.setValue(SvnWriterNode.PATH_FIELD, "test/file.txt");
+        rec.setValue(SvnWriterNode.DATA_FIELD, "file content\nline2");
+        ds.pushData(rec);
+
+        rec.setValue(SvnWriterNode.PATH_FIELD, "test/file.txt");
+        rec.setValue(SvnWriterNode.DATA_FIELD, "file content\nline2\nline3");
+        ds.pushData(rec);
+        
+        svnBrowser.setInitialPath("test");
+        assertTrue(svnBrowser.start());
+        
+        Node node = svnBrowser.getChildrens().iterator().next();
+        assertTrue(node instanceof SvnFileNode);
+        SvnFileRevisionsNode revisions =
+                (SvnFileRevisionsNode) node.getChildren(SvnFileRevisionsNode.NAME);
+        assertNotNull(revisions);
+        assertStarted(revisions);
+
+        NodeAttribute attr = new NodeAttributeImpl(
+                SvnFileRevisionsNode.FROM_REVISION_ATTR, Long.class, 2, null);
+        attr.setOwner(revisions);
+        attr.init();
+        Map<String, NodeAttribute> attrs = new HashMap<String, NodeAttribute>();
+        attrs.put(attr.getName(), attr);
+
+        List<Object[]> rows = getRevisionsTable(revisions, null);
+        assertNotNull(rows);
+        assertEquals(3, rows.size());
+        rows = getRevisionsTable(revisions, attrs);
+        assertNotNull(rows);
+        assertEquals(2, rows.size());
+    }
+
+    private void checkFileContent(Object contentObj, String expectContent)
+    {
+        assertNotNull(contentObj);
+        assertTrue(contentObj instanceof SvnFileContentVieableObject);
+        ViewableObject content = (ViewableObject) contentObj;
+        assertEquals("text/plain", content.getMimeType());
+        Object data = content.getData();
+        assertNotNull(data);
+        assertTrue(data instanceof byte[]);
+        byte[] buf = (byte[]) data;
+        assertEquals(expectContent, new String(buf));
+    }
+
+    private List<Object[]> getRevisionsTable(
+            SvnFileRevisionsNode revisionsNode, Map<String, NodeAttribute> refreshAttributes)
+        throws Exception
+    {
+        Collection<ViewableObject> objects = revisionsNode.getViewableObjects(refreshAttributes);
+        assertNotNull(objects);
+        assertEquals(1, objects.size());
+        ViewableObject object = objects.iterator().next();
+        assertNotNull(object);
+        Object data = object.getData();
+        assertNotNull(data);
+        assertTrue(data instanceof Table);
+        return RavenUtils.tableAsList((Table)data);
     }
 }

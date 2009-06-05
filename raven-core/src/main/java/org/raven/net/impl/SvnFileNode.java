@@ -32,12 +32,22 @@ public class SvnFileNode extends BaseNode
     protected void doStart() throws Exception
     {
         super.doStart();
+
         SvnFileContentNode content = (SvnFileContentNode) getChildren(SvnFileContentNode.NAME);
         if (content==null)
         {
             content = new SvnFileContentNode();
             addAndSaveChildren(content);
             content.start();
+        }
+
+        SvnFileRevisionsNode revisions =
+                (SvnFileRevisionsNode) getChildren(SvnFileRevisionsNode.NAME);
+        if (revisions==null)
+        {
+            revisions = new SvnFileRevisionsNode();
+            addAndSaveChildren(revisions);
+            revisions.start();
         }
     }
 
