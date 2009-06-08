@@ -33,7 +33,7 @@ import org.raven.tree.impl.FileViewableObject;
  */
 public class SvnFileContentNode extends BaseNode implements Viewable
 {
-    public final static String NAME = "content";
+    public final static String NAME = "Content";
 
     public SvnFileContentNode()
     {
@@ -48,7 +48,7 @@ public class SvnFileContentNode extends BaseNode implements Viewable
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes)
             throws Exception
     {
-        File file = ((SvnFileNode)getParent()).getFile();
+        File file = ((SvnNode)getParent()).getSvnFile();
         FileViewableObject fileObject = new FileViewableObject(file, this);
 
         return Arrays.asList((ViewableObject)fileObject);

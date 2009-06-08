@@ -22,12 +22,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import org.raven.tree.Node;
 import org.raven.tree.impl.AbstractDynamicNode;
+import org.tmatesoft.svn.core.wc.SVNClientManager;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class SvnDirectoryNode extends AbstractDynamicNode
+public class SvnDirectoryNode extends AbstractDynamicNode implements SvnNode
 {
     @Override
     protected Collection<Node> doGetChildrens()
@@ -47,7 +48,13 @@ public class SvnDirectoryNode extends AbstractDynamicNode
         File dir = path.length()==0?
             browser.getBaseDir() : new File(browser.getBaseDir(), path.toString());
 
-        Collection<Node> nodes = null;
+        Collection<Node> nodes = new ArrayList<Node>();
+        if (this==browser)
+        {
+            SvnFileRevisionsNode revisionsNode = new SvnFileRevisionsNode();
+            revisionsNode.setRevisionsForFile(false);
+            nodes.add(revisionsNode);
+        }
 
         if (dir.exists())
         {
@@ -65,12 +72,20 @@ public class SvnDirectoryNode extends AbstractDynamicNode
                     if (node!=null)
                     {
                         node.setName(file.getName());
-                        if (nodes==null)
-                            nodes = new ArrayList<Node>();
                         nodes.add(node);
                     }
                 }
         }
         return nodes;
+    }
+
+    public File getSvnFile()
+    {
+        return SvnNodeHelper.getSvnFile(this);
+    }
+
+    public SVNClientManager getSvnClient()
+    {
+        return SvnNodeHelper.getSvnClient(this);
     }
 }

@@ -17,7 +17,6 @@
 
 package org.raven.net.impl;
 
-import eu.medsea.mimeutil.MimeUtil;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -123,18 +122,18 @@ public class SvnBrowserNodeTest extends RavenCoreTestCase
 
         assertTrue(svnBrowser.start());
 
-        Collection<Node> nodes = svnBrowser.getChildrens();
+        List<Node> nodes = svnBrowser.getSortedChildrens();
         assertNotNull(nodes);
-        assertEquals(1, nodes.size());
-        Node testNode = nodes.iterator().next();
+        assertEquals(2, nodes.size());
+        Node testNode = nodes.get(1);
         assertTrue(testNode instanceof SvnDirectoryNode);
         assertStarted(testNode);
         assertEquals("test", testNode.getName());
 
-        nodes = testNode.getChildrens();
+        nodes = testNode.getSortedChildrens();
         assertNotNull(nodes);
         assertEquals(1, nodes.size());
-        Node fileNode = nodes.iterator().next();
+        Node fileNode = nodes.get(0);
         assertStarted(fileNode);
         assertTrue(fileNode instanceof SvnFileNode);
         assertEquals("file.txt", fileNode.getName());
@@ -142,7 +141,7 @@ public class SvnBrowserNodeTest extends RavenCoreTestCase
         rec.setValue(SvnWriterNode.PATH_FIELD, "test/file2.txt");
         rec.setValue(SvnWriterNode.DATA_FIELD, "file content");
         ds.pushData(rec);
-        nodes = testNode.getChildrens();
+        nodes = testNode.getSortedChildrens();
         assertNotNull(nodes);
         assertEquals(2, nodes.size());
         List<Node> nodesList = new ArrayList<Node>(nodes);
@@ -161,10 +160,10 @@ public class SvnBrowserNodeTest extends RavenCoreTestCase
         svnBrowser.setInitialPath("test");
         assertTrue(svnBrowser.start());
 
-        Collection<Node> nodes = svnBrowser.getChildrens();
+        List<Node> nodes = svnBrowser.getSortedChildrens();
         assertNotNull(nodes);
-        assertEquals(1, nodes.size());
-        Node fileNode = nodes.iterator().next();
+        assertEquals(2, nodes.size());
+        Node fileNode = nodes.get(1);
         assertStarted(fileNode);
         assertTrue(fileNode instanceof SvnFileNode);
         assertEquals("file.txt", fileNode.getName());
@@ -180,8 +179,9 @@ public class SvnBrowserNodeTest extends RavenCoreTestCase
 
         svnBrowser.setInitialPath("test");
         assertTrue(svnBrowser.start());
-        Node node = svnBrowser.getChildrens().iterator().next();
+        Node node = svnBrowser.getSortedChildrens().get(1);
         assertTrue(node instanceof SvnFileNode);
+        assertStarted(node);
         SvnFileContentNode content = (SvnFileContentNode) node.getChildren(SvnFileContentNode.NAME);
         assertNotNull(content);
         assertStarted(content);
@@ -208,7 +208,7 @@ public class SvnBrowserNodeTest extends RavenCoreTestCase
 
         svnBrowser.setInitialPath("test");
         assertTrue(svnBrowser.start());
-        Node node = svnBrowser.getChildrens().iterator().next();
+        Node node = svnBrowser.getSortedChildrens().get(1);
         assertTrue(node instanceof SvnFileNode);
         SvnFileRevisionsNode revisions = 
                 (SvnFileRevisionsNode) node.getChildren(SvnFileRevisionsNode.NAME);
@@ -245,7 +245,7 @@ public class SvnBrowserNodeTest extends RavenCoreTestCase
     }
 
     @Test
-    public void revisionsNodeRefreshAttributesTest() throws Exception
+    public void revisionsNodeRefreshAttributesTest1() throws Exception
     {
         Record rec = schema.createRecord();
         rec.setValue(SvnWriterNode.PATH_FIELD, "test/file.txt");
@@ -263,7 +263,7 @@ public class SvnBrowserNodeTest extends RavenCoreTestCase
         svnBrowser.setInitialPath("test");
         assertTrue(svnBrowser.start());
         
-        Node node = svnBrowser.getChildrens().iterator().next();
+        Node node = svnBrowser.getSortedChildrens().get(1);
         assertTrue(node instanceof SvnFileNode);
         SvnFileRevisionsNode revisions =
                 (SvnFileRevisionsNode) node.getChildren(SvnFileRevisionsNode.NAME);
@@ -283,6 +283,134 @@ public class SvnBrowserNodeTest extends RavenCoreTestCase
         rows = getRevisionsTable(revisions, attrs);
         assertNotNull(rows);
         assertEquals(2, rows.size());
+    }
+
+    @Test
+    public void revisionsNodeRefreshAttributesTest2() throws Exception
+    {
+        Record rec = schema.createRecord();
+        rec.setValue(SvnWriterNode.PATH_FIELD, "test/file.txt");
+        rec.setValue(SvnWriterNode.DATA_FIELD, "file content");
+        ds.pushData(rec);
+
+        rec.setValue(SvnWriterNode.PATH_FIELD, "test/file.txt");
+        rec.setValue(SvnWriterNode.DATA_FIELD, "file content\nline2");
+        ds.pushData(rec);
+
+        rec.setValue(SvnWriterNode.PATH_FIELD, "test/file.txt");
+        rec.setValue(SvnWriterNode.DATA_FIELD, "file content\nline2\nline3");
+        ds.pushData(rec);
+
+        svnBrowser.setInitialPath("test");
+        assertTrue(svnBrowser.start());
+
+        Node node = svnBrowser.getSortedChildrens().get(1);
+        assertTrue(node instanceof SvnFileNode);
+        SvnFileRevisionsNode revisions =
+                (SvnFileRevisionsNode) node.getChildren(SvnFileRevisionsNode.NAME);
+        assertNotNull(revisions);
+        assertStarted(revisions);
+
+        NodeAttribute attr = new NodeAttributeImpl(
+                SvnFileRevisionsNode.TO_REVISION_ATTR, Long.class, 2, null);
+        attr.setOwner(revisions);
+        attr.init();
+        Map<String, NodeAttribute> attrs = new HashMap<String, NodeAttribute>();
+        attrs.put(attr.getName(), attr);
+
+        List<Object[]> rows = getRevisionsTable(revisions, null);
+        assertNotNull(rows);
+        assertEquals(3, rows.size());
+        rows = getRevisionsTable(revisions, attrs);
+        assertNotNull(rows);
+        assertEquals(2, rows.size());
+    }
+
+    @Test
+    public void revisionsNodeRefreshAttributesTest3() throws Exception
+    {
+        Record rec = schema.createRecord();
+        rec.setValue(SvnWriterNode.PATH_FIELD, "test/file.txt");
+        rec.setValue(SvnWriterNode.DATA_FIELD, "file content");
+        ds.pushData(rec);
+
+        rec.setValue(SvnWriterNode.PATH_FIELD, "test/file.txt");
+        rec.setValue(SvnWriterNode.DATA_FIELD, "file content\nline2");
+        ds.pushData(rec);
+
+        rec.setValue(SvnWriterNode.PATH_FIELD, "test/file.txt");
+        rec.setValue(SvnWriterNode.DATA_FIELD, "file content\nline2\nline3");
+        ds.pushData(rec);
+
+        svnBrowser.setInitialPath("test");
+        assertTrue(svnBrowser.start());
+
+        Node node = svnBrowser.getSortedChildrens().get(1);
+        assertTrue(node instanceof SvnFileNode);
+        SvnFileRevisionsNode revisions =
+                (SvnFileRevisionsNode) node.getChildren(SvnFileRevisionsNode.NAME);
+        assertNotNull(revisions);
+        assertStarted(revisions);
+
+        Map<String, NodeAttribute> attrs = new HashMap<String, NodeAttribute>();
+        NodeAttribute attr = new NodeAttributeImpl(
+                SvnFileRevisionsNode.TO_REVISION_ATTR, Long.class, 2, null);
+        attr.setOwner(revisions);
+        attr.init();
+        attrs.put(attr.getName(), attr);
+        attr = new NodeAttributeImpl(
+                SvnFileRevisionsNode.FROM_REVISION_ATTR, Long.class, 2, null);
+        attr.setOwner(revisions);
+        attr.init();
+        attrs.put(attr.getName(), attr);
+
+        List<Object[]> rows = getRevisionsTable(revisions, null);
+        assertNotNull(rows);
+        assertEquals(3, rows.size());
+        rows = getRevisionsTable(revisions, attrs);
+        assertNotNull(rows);
+        assertEquals(1, rows.size());
+    }
+
+    @Test
+    public void directoryRevisionsTest() throws Exception
+    {
+        Record rec = schema.createRecord();
+        rec.setValue(SvnWriterNode.PATH_FIELD, "test/file.txt");
+        rec.setValue(SvnWriterNode.DATA_FIELD, "file content");
+        ds.pushData(rec);
+
+        rec.setValue(SvnWriterNode.PATH_FIELD, "test/file.txt");
+        rec.setValue(SvnWriterNode.DATA_FIELD, "file content\nline2");
+        ds.pushData(rec);
+
+        rec.setValue(SvnWriterNode.PATH_FIELD, "test/file2.txt");
+        rec.setValue(SvnWriterNode.DATA_FIELD, "file content\nline2");
+        ds.pushData(rec);
+
+        svnBrowser.setInitialPath("test");
+        assertTrue(svnBrowser.start());
+
+        Node node = svnBrowser.getSortedChildrens().get(0);
+        assertNotNull(node);
+        assertTrue(node instanceof SvnFileRevisionsNode);
+        SvnFileRevisionsNode revisionsNode = (SvnFileRevisionsNode) node;
+        assertFalse(revisionsNode.isRevisionsForFile());
+
+        Map<String, NodeAttribute> attrs = new HashMap<String, NodeAttribute>();
+        NodeAttribute attr = new NodeAttributeImpl(
+                SvnFileRevisionsNode.TO_REVISION_ATTR, Long.class, 1, null);
+        attr.setOwner(revisionsNode);
+        attr.init();
+        attrs.put(attr.getName(), attr);
+        attr = new NodeAttributeImpl(
+                SvnFileRevisionsNode.FROM_REVISION_ATTR, Long.class, 0, null);
+        attr.setOwner(revisionsNode);
+        attr.init();
+        attrs.put(attr.getName(), attr);
+        List<Object[]> rows = getRevisionsTable(revisionsNode, attrs);
+        assertNotNull(rows);
+        assertEquals(3, rows.size());
     }
 
     private void checkFileContent(Object contentObj, String expectContent)

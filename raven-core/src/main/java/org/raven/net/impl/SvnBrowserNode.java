@@ -23,6 +23,7 @@ import org.raven.log.LogLevel;
 import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.internal.wc.DefaultSVNOptions;
+import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
@@ -53,6 +54,7 @@ public class SvnBrowserNode extends SvnDirectoryNode
     private File workDir;
     private File baseDir;
     private SVNClientManager svnClient;
+    private SVNRepository repository;
 
     @Override
     protected void doStart() throws Exception

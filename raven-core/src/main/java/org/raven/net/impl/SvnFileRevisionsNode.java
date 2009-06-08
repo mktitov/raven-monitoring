@@ -36,6 +36,8 @@ import org.raven.tree.impl.ViewableObjectImpl;
 import org.tmatesoft.svn.core.ISVNLogEntryHandler;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
+import org.tmatesoft.svn.core.SVNLogEntryPath;
+import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.weda.internal.Messages;
@@ -49,10 +51,11 @@ import org.weda.internal.services.MessagesRegistry;
  */
 public class SvnFileRevisionsNode extends BaseNode implements Viewable
 {
+    public final static String NAME = "Revisions";
+    public static final int MAX_LOG_ENTRIES = 100;
+    
     public static final String FROM_DATE_ATTR = "fromDate";
     public static final String FROM_REVISION_ATTR = "fromRevision";
-    public static final int MAX_LOG_ENTRIES = 100;
-    public final static String NAME = "revisions";
     public static final String TO_DATE_ATTR = "toDate";
     public static final String TO_REVISION_ATTR = "toRevision";
 
@@ -67,10 +70,31 @@ public class SvnFileRevisionsNode extends BaseNode implements Viewable
     private static String fileColumnName;
     @Message
     private static String diffColumnName;
+    @Message
+    private static String filesColumnName;
+
+    private boolean revisionsForFile;
+    private SVNRepository repository;
 
     public SvnFileRevisionsNode()
     {
         super(NAME);
+    }
+
+    public SVNRepository getRepository() {
+        return repository;
+    }
+
+    public void setRepository(SVNRepository repository) {
+        this.repository = repository;
+    }
+
+    public boolean isRevisionsForFile() {
+        return revisionsForFile;
+    }
+
+    public void setRevisionsForFile(boolean revisionsForFile) {
+        this.revisionsForFile = revisionsForFile;
     }
 
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
@@ -88,29 +112,75 @@ public class SvnFileRevisionsNode extends BaseNode implements Viewable
     {
         SVNRevision fromRevision = getRevision(refreshAttributes, "from");
         SVNRevision toRevision = getRevision(refreshAttributes, "to");
-        SvnFileNode fileNode = (SvnFileNode) getParent();
+        if (toRevision!=SVNRevision.UNDEFINED || fromRevision!=SVNRevision.UNDEFINED)
+        {
+            if (toRevision==SVNRevision.UNDEFINED)
+                toRevision = SVNRevision.WORKING;
+            if (fromRevision==SVNRevision.UNDEFINED)
+                fromRevision = SVNRevision.create(1);
+        }
+        SvnNode fileNode = (SvnNode) getParent();
+        Collection<SVNLogEntry> entries;
         SVNClientManager svnClient = fileNode.getSvnClient();
-        File file = fileNode.getFile();
-        LogHandler logHandler = new LogHandler();
-        svnClient.getLogClient().doLog(
-            new File[]{file}, fromRevision, toRevision, true, false, MAX_LOG_ENTRIES,logHandler);
-        Collection<SVNLogEntry> entries = logHandler.getLogEntries();
+        File file = fileNode.getSvnFile();
+        if (repository==null)
+        {
+            LogHandler logHandler = new LogHandler();
+            svnClient.getLogClient().doLog(
+                isRevisionsForFile()? new File[]{file} : new File[]{}
+                , fromRevision, toRevision, true
+                , !isRevisionsForFile(), MAX_LOG_ENTRIES,logHandler);
+            entries = logHandler.getLogEntries();
+        }
+        else
+            entries = repository.log(new String[]{""}, null, 0, -1, true, true);
 
         if (entries.isEmpty())
             return null;
 
-        TableImpl table = new TableImpl(
+        TableImpl table;
+        if (isRevisionsForFile())
+            table = new TableImpl(
                 new String[]{revisionsColumnName, dateColumnName, fileColumnName, diffColumnName});
+        else
+            table = new TableImpl(
+                new String[]{revisionsColumnName, dateColumnName, filesColumnName});
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
         for (SVNLogEntry entry: entries)
         {
             long revision = entry.getRevision();
             String date = dateFormat.format(entry.getDate());
-            SvnFileContentVieableObject content =
-                    new SvnFileContentVieableObject(svnClient, file, revision, this);
-            SvnFileDiffViewableObject diff =
-                    new SvnFileDiffViewableObject(svnClient, revision, file, this);
-            table.addRow(new Object[]{revision, date, content, diff});
+            if (isRevisionsForFile())
+            {
+                SvnFileContentVieableObject content =
+                        new SvnFileContentVieableObject(svnClient, file, revision, this);
+                SvnFileDiffViewableObject diff =
+                        new SvnFileDiffViewableObject(svnClient, revision, file, this);
+                table.addRow(new Object[]{revision, date, content, diff});
+            }
+            else
+            {
+                StringBuilder paths = new StringBuilder("<pre>");
+                Map changedPaths = entry.getChangedPaths();
+                if (changedPaths!=null && !changedPaths.isEmpty())
+                {
+                    boolean first=true;
+                    for (Object pathObj: changedPaths.values())
+                    {
+                        SVNLogEntryPath path = (SVNLogEntryPath) pathObj;
+                        String pathInfo = "("+path.getType()+") "+path.getPath();
+                        if (!first)
+                            paths.append("\n"+pathInfo);
+                        else
+                        {
+                            first = false;
+                            paths.append(pathInfo);
+                        }
+                    }
+                }
+                paths.append("</pre>");
+                table.addRow(new Object[]{revision, date, paths.toString()});
+            }
         }
 
         ViewableObject obj = new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table);

@@ -18,7 +18,6 @@
 package org.raven.net.impl;
 
 import java.io.File;
-import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 
@@ -26,7 +25,7 @@ import org.tmatesoft.svn.core.wc.SVNClientManager;
  *
  * @author Mikhail Titov
  */
-public class SvnFileNode extends BaseNode
+public class SvnFileNode extends BaseNode implements SvnNode
 {
     @Override
     protected void doStart() throws Exception
@@ -47,29 +46,18 @@ public class SvnFileNode extends BaseNode
         {
             revisions = new SvnFileRevisionsNode();
             addAndSaveChildren(revisions);
+            revisions.setRevisionsForFile(true);
             revisions.start();
         }
     }
 
-    public File getFile()
+    public File getSvnFile()
     {
-        StringBuilder path = new StringBuilder();
-        Node node = this;
-        while (!(node instanceof SvnBrowserNode))
-        {
-            if (!(node.getParent() instanceof SvnBrowserNode))
-                path.insert(0, File.separator);
-            path.insert(0, node.getName());
-            node = node.getParent();
-        }
-        return new File(((SvnBrowserNode)node).getBaseDir(), path.toString());
+        return SvnNodeHelper.getSvnFile(this);
     }
 
     public SVNClientManager getSvnClient()
     {
-        Node node = getParent();
-        while (!(node instanceof SvnBrowserNode))
-            node = node.getParent();
-        return ((SvnBrowserNode)node).getSvnClient();
+        return SvnNodeHelper.getSvnClient(this);
     }
 }
