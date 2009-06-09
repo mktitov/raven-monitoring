@@ -56,7 +56,7 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=DataSourcesNode.class)
+@NodeClass
 public class SvnWriterNode extends AbstractDataConsumer
 {
     public static final String DATA_FIELD = "data";

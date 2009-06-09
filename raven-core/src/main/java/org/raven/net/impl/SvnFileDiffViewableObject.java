@@ -84,4 +84,9 @@ public class SvnFileDiffViewableObject implements ViewableObject
         return 0;
     }
 
+    @Override
+    public String toString() {
+        return file.getName()+"R"+revision+"-HEAD.diff";
+    }
+
 }

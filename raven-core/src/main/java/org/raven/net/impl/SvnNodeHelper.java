@@ -36,9 +36,9 @@ public class SvnNodeHelper
         StringBuilder path = new StringBuilder();
         while (!(node instanceof SvnBrowserNode))
         {
+            path.insert(0, node.getName());
             if (!(node.getParent() instanceof SvnBrowserNode))
                 path.insert(0, File.separator);
-            path.insert(0, node.getName());
             node = node.getParent();
         }
         return new File(((SvnBrowserNode)node).getBaseDir(), path.toString());

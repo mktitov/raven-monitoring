@@ -18,6 +18,7 @@
 package org.raven.net.impl;
 
 import java.io.File;
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.log.LogLevel;
 import org.tmatesoft.svn.core.SVNDepth;
@@ -33,6 +34,7 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
+@NodeClass
 public class SvnBrowserNode extends SvnDirectoryNode
 {
     @Parameter @NotNull

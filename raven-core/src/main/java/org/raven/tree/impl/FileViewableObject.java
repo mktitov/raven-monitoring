@@ -83,4 +83,11 @@ public class FileViewableObject implements ViewableObject
     {
         return 0;
     }
+
+    @Override
+    public String toString()
+    {
+        return file.getName();
+    }
+
 }

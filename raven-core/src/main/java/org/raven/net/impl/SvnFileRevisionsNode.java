@@ -216,6 +216,7 @@ public class SvnFileRevisionsNode extends BaseNode implements Viewable
     }
 
     private void putAttribute(String attrName, Class type, Map<String, NodeAttribute> attrs)
+            throws Exception
     {
         Messages messages = messagesRegistry.getMessages(this.getClass());
         String desc = messages.get(attrName+"Desc");
@@ -223,6 +224,7 @@ public class SvnFileRevisionsNode extends BaseNode implements Viewable
         NodeAttributeImpl attr = new NodeAttributeImpl(attrName, type, null, desc);
         attr.setOwner(this);
         attr.setDisplayName(displayName);
+        attr.init();
         attrs.put(attr.getName(), attr);
     }
 

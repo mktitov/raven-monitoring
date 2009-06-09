@@ -85,4 +85,11 @@ public class SvnFileContentVieableObject implements ViewableObject
     public int getHeight() {
         return 0;
     }
+
+    @Override
+    public String toString()
+    {
+        return file.getName();
+    }
+
 }
