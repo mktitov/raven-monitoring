@@ -41,13 +41,18 @@ public class SvnNodeHelper
                 path.insert(0, File.separator);
             node = node.getParent();
         }
-        return new File(((SvnBrowserNode)node).getBaseDir(), path.toString());
+        SvnBrowserNode browserNode = (SvnBrowserNode) node;
+        if (browserNode.getStatus().equals(Node.Status.STARTED))
+            return new File(browserNode.getBaseDir(), path.toString());
+        else
+            return null;
     }
 
     public final static SVNClientManager getSvnClient(Node node)
     {
         while (!(node instanceof SvnBrowserNode))
             node = node.getParent();
-        return ((SvnBrowserNode)node).getSvnClient();
+        return node.getStatus().equals(Node.Status.STARTED)? 
+                ((SvnBrowserNode)node).getSvnClient() : null;
     }
 }

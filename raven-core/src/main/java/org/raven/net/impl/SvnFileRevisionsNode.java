@@ -22,10 +22,15 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.FileFileFilter;
+import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.raven.table.TableImpl;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
@@ -122,8 +127,10 @@ public class SvnFileRevisionsNode extends BaseNode implements Viewable
         SvnNode fileNode = (SvnNode) getParent();
         Collection<SVNLogEntry> entries;
         SVNClientManager svnClient = fileNode.getSvnClient();
+        if (svnClient==null)
+            return null;
         File file = fileNode.getSvnFile();
-        if (repository==null)
+        if (isRevisionsForFile())
         {
             LogHandler logHandler = new LogHandler();
             svnClient.getLogClient().doLog(
@@ -133,7 +140,7 @@ public class SvnFileRevisionsNode extends BaseNode implements Viewable
             entries = logHandler.getLogEntries();
         }
         else
-            entries = repository.log(new String[]{""}, null, 0, -1, true, true);
+            entries = getLogEntriesRecursive(svnClient, fromRevision, toRevision, fileNode);
 
         if (entries.isEmpty())
             return null;
@@ -146,8 +153,11 @@ public class SvnFileRevisionsNode extends BaseNode implements Viewable
             table = new TableImpl(
                 new String[]{revisionsColumnName, dateColumnName, filesColumnName});
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+        int rows = 0;
         for (SVNLogEntry entry: entries)
         {
+            if (++rows>MAX_LOG_ENTRIES)
+                break;
             long revision = entry.getRevision();
             String date = dateFormat.format(entry.getDate());
             if (isRevisionsForFile())
@@ -228,18 +238,49 @@ public class SvnFileRevisionsNode extends BaseNode implements Viewable
         attrs.put(attr.getName(), attr);
     }
 
+    private Collection<SVNLogEntry> getLogEntriesRecursive(
+            SVNClientManager svnClient, SVNRevision fromRevision, SVNRevision toRevision
+            , SvnNode node)
+        throws SVNException
+    {
+        File dir = node.getSvnFile();
+        Collection<File> files = FileUtils.listFiles(
+                dir
+                , FileFilterUtils.trueFileFilter()
+                , FileFilterUtils.notFileFilter(FileFilterUtils.nameFileFilter(".svn")));
+        files.add(dir);
+        File[] filesArr = new File[files.size()];
+        files.toArray(filesArr);
+        LogHandler logHandler = new LogHandler();
+        svnClient.getLogClient().doLog(
+            filesArr
+            , fromRevision, toRevision, true
+            , true, MAX_LOG_ENTRIES,logHandler);
+        return logHandler.getLogEntries();
+    }
+
     private class LogHandler implements ISVNLogEntryHandler
     {
-        private Collection<SVNLogEntry> logEntries = new ArrayList<SVNLogEntry>();
+//        private Collection<SVNLogEntry> logEntries = new ArrayList<SVNLogEntry>();
+        private Map<Long, SVNLogEntry> logEntries =
+                new TreeMap<Long, SVNLogEntry>(new ReverseLongComparator());
 
         public Collection<SVNLogEntry> getLogEntries()
         {
-            return logEntries;
+            return logEntries.values();
         }
 
         public void handleLogEntry(SVNLogEntry logEntry) throws SVNException
         {
-            logEntries.add(logEntry);
+            logEntries.put(logEntry.getRevision(), logEntry);
+        }
+    }
+
+    private class ReverseLongComparator implements Comparator<Long>
+    {
+        public int compare(Long o1, Long o2)
+        {
+            return o2.compareTo(o1);
         }
     }
 }

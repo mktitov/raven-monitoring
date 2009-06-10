@@ -29,7 +29,7 @@ import org.raven.tree.Node;
  */
 public abstract class AbstractDynamicNode extends BaseNode
 {
-    private boolean removing;
+    private long lastAccessTime = 0;
 
     public AbstractDynamicNode()
     {
@@ -39,6 +39,7 @@ public abstract class AbstractDynamicNode extends BaseNode
     @Override
     public synchronized Collection<Node> getChildrens()
     {
+        lastAccessTime = System.currentTimeMillis();
         Collection<Node> newNodes = doGetChildrens();
         Set<String> nodeNames = new HashSet<String>();
         if (newNodes!=null && !newNodes.isEmpty())
@@ -75,6 +76,20 @@ public abstract class AbstractDynamicNode extends BaseNode
             Collection<Node> detachedChilds = new ArrayList<Node>(childs);
             for (Node child: detachedChilds)
                 removeChildren(child);
+        }
+    }
+
+    public synchronized void removeChildrensIfExpired(long expirationInterval)
+    {
+        if (lastAccessTime!=0 && (System.currentTimeMillis()-expirationInterval)>lastAccessTime)
+            removeChildrens();
+        else
+        {
+            Collection<Node> childs = super.getChildrens();
+            if (childs!=null && !childs.isEmpty())
+                for (Node child: childs)
+                    if (child instanceof AbstractDynamicNode)
+                        ((AbstractDynamicNode)child).removeChildrensIfExpired(expirationInterval);
         }
     }
 

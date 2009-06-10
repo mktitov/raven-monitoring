@@ -21,6 +21,9 @@ import java.io.File;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.log.LogLevel;
+import org.raven.sched.Schedulable;
+import org.raven.sched.Scheduler;
+import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
 import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.internal.wc.DefaultSVNOptions;
@@ -35,28 +38,33 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass
-public class SvnBrowserNode extends SvnDirectoryNode
+public class SvnBrowserNode extends SvnDirectoryNode implements Schedulable
 {
     @Parameter @NotNull
     private String repositoryUrl;
-
     @Parameter @NotNull
     private String workDirectory;
-
     @Parameter @NotNull
     private String username;
-
     @Parameter @NotNull
     private String password;
-
     @Parameter
     private String initialPath;
+    @Parameter
+    private Long childrenExpirationInterval;
+    @Parameter(valueHandlerType=SystemSchedulerValueHandlerFactory.TYPE)
+    private Scheduler expirationScheduler;
 
     private SVNURL repUrl;
     private File workDir;
     private File baseDir;
     private SVNClientManager svnClient;
     private SVNRepository repository;
+
+    public SvnBrowserNode()
+    {
+        setStartAfterChildrens(true);
+    }
 
     @Override
     protected void doStart() throws Exception
@@ -73,8 +81,25 @@ public class SvnBrowserNode extends SvnDirectoryNode
         removeChildrens();
     }
 
+    @Override
     public SVNClientManager getSvnClient() {
         return svnClient;
+    }
+
+    public Long getChildrenExpirationInterval() {
+        return childrenExpirationInterval;
+    }
+
+    public void setChildrenExpirationInterval(Long childrenExpirationInterval) {
+        this.childrenExpirationInterval = childrenExpirationInterval;
+    }
+
+    public Scheduler getExpirationScheduler() {
+        return expirationScheduler;
+    }
+
+    public void setExpirationScheduler(Scheduler expirationScheduler) {
+        this.expirationScheduler = expirationScheduler;
     }
 
     public File getBaseDir() {
@@ -158,5 +183,18 @@ public class SvnBrowserNode extends SvnDirectoryNode
             baseDir = workDir;
         else
             baseDir = new File(workDir, _initialPath);
+    }
+
+    public void executeScheduledJob()
+    {
+        if (getStatus().equals(Status.STARTED))
+        {
+            Long _expirationInterval = childrenExpirationInterval;
+            if (_expirationInterval!=null)
+                removeChildrensIfExpired(childrenExpirationInterval*1000);
+            else if (isLogLevelEnabled(LogLevel.WARN))
+                warn("Can not delete expired nodes because of value for the " +
+                        "(childrenExpirationInterval) attribute not setted");
+        }
     }
 }

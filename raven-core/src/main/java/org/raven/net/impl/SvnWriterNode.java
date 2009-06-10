@@ -40,7 +40,6 @@ import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.log.LogLevel;
-import org.raven.tree.impl.DataSourcesNode;
 import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;

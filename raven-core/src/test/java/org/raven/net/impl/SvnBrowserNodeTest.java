@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
@@ -38,6 +39,7 @@ import org.raven.ds.RecordSchemaFieldType;
 import org.raven.ds.impl.RecordSchemaFieldNode;
 import org.raven.ds.impl.RecordSchemaNode;
 import org.raven.log.LogLevel;
+import org.raven.sched.impl.QuartzScheduler;
 import org.raven.table.Table;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -372,7 +374,7 @@ public class SvnBrowserNodeTest extends RavenCoreTestCase
         assertEquals(1, rows.size());
     }
 
-//    @Test
+    @Test
     public void directoryRevisionsTest() throws Exception
     {
         Record rec = schema.createRecord();
@@ -404,13 +406,37 @@ public class SvnBrowserNodeTest extends RavenCoreTestCase
         attr.init();
         attrs.put(attr.getName(), attr);
         attr = new NodeAttributeImpl(
-                SvnFileRevisionsNode.FROM_REVISION_ATTR, Long.class, 0, null);
+                SvnFileRevisionsNode.FROM_REVISION_ATTR, Long.class, 3, null);
         attr.setOwner(revisionsNode);
         attr.init();
         attrs.put(attr.getName(), attr);
         List<Object[]> rows = getRevisionsTable(revisionsNode, attrs);
         assertNotNull(rows);
         assertEquals(3, rows.size());
+    }
+
+    @Test
+    public void childrenExpirationTest() throws Exception
+    {
+        QuartzScheduler scheduler = new QuartzScheduler();
+        scheduler.setName("scheduler");
+        tree.getRootNode().addAndSaveChildren(scheduler);
+        assertTrue(scheduler.start());
+
+        Record rec = schema.createRecord();
+        rec.setValue(SvnWriterNode.PATH_FIELD, "test/file.txt");
+        rec.setValue(SvnWriterNode.DATA_FIELD, "file content");
+        ds.pushData(rec);
+
+        assertTrue(svnBrowser.start());
+
+        svnBrowser.getChildrens();
+        assertNotNull(svnBrowser.getChildren("test"));
+
+        svnBrowser.setChildrenExpirationInterval(1l);
+        TimeUnit.SECONDS.sleep(2);
+        svnBrowser.executeScheduledJob();
+        assertNull(svnBrowser.getChildren("test"));
     }
 
     private void checkFileContent(Object contentObj, String expectContent)
