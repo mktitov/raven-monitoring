@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * Хранилище ACL для конкрентной LDAP-группы
+ * и, опционально, для конкрентных пользователей из данной группы
+ */
 public class LdapGroupAcl extends AccessControlList 
 {
 	public static final String LDAP_GROUP_PARAM = "ldapGroup";

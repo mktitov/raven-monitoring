@@ -36,9 +36,11 @@
 
 <body>
 	<tr:form>
-		<tr:goLink destination="frame.jspx" >
-			<tr:outputText value="#{sBean.title}"></tr:outputText>
-		</tr:goLink>
+		<tr:panelHorizontalLayout halign="center" valign="middle" >
+			<tr:goLink destination="frame.jspx" >
+				<tr:outputText inlineStyle="font-weight: bold; font-size: 200%" value="#{sBean.title}"></tr:outputText>
+			</tr:goLink>
+		</tr:panelHorizontalLayout>
 	</tr:form>
 </body>
 </f:view>

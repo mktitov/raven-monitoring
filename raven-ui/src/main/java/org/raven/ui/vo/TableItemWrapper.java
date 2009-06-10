@@ -5,14 +5,14 @@ import org.raven.tree.ViewableObject;
 
 public class TableItemWrapper 
 {
-	private static final int NONE = 0;
-	private static final int VO_TABLE = 1;
-	private static final int VO_IMAGE = 2;
-	private static final int VO_OTHER = 3;
-	private static final int OTHER = 4;
+	public static final int NONE = 0;
+	public static final int VO_TABLE = 1;
+	public static final int VO_IMAGE = 2;
+	public static final int VO_OTHER = 3;
+	public static final int OTHER = 4;
 	private Object item;
-	private ViewableObjectWrapper wrapper = null;
-	private boolean wrpInited = false;
+//	private ViewableObjectWrapper wrapper = null;
+//	private boolean wrpInited = false;
 	
 	public TableItemWrapper(Object x)
 	{
@@ -61,7 +61,7 @@ public class TableItemWrapper
 		if(getItemType()==VO_OTHER) return true;
 		return false; 
 	}
-	
+/*	
 	public ViewableObjectWrapper getWrapper()
 	{
 		if(!wrpInited)
@@ -72,5 +72,5 @@ public class TableItemWrapper
 		}
 		return wrapper;
 	}
-	
+*/	
 }

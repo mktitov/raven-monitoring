@@ -39,7 +39,7 @@ public abstract class AccessControlList implements Comparator<AccessControl>
 	public static final String AC_PARAM = "ac";
 	private ArrayList<AccessControl> acl = new ArrayList<AccessControl>();
 	private Set<String> filters = new HashSet<String>();
-	private boolean filtersLocked = false;
+	private boolean filtersDisabled = false;
 	//private String group = null;
 	private String name = null;
 
@@ -88,21 +88,33 @@ public abstract class AccessControlList implements Comparator<AccessControl>
 		Collections.sort(acl, this);		
 	}
 	
+	/**
+	 * Отвечает за разбор фрагмента строки описания группы 
+	 * (фрагмент - строка вида parameterName[PARAM_DELIMITER]parValue1[PARAM_DELIMITER]parValue2...).
+	 * Устанавливает значение найденного параметра. 
+	 * @param tokens - фрагмент, разбитый на строки (разделитель-PARAM_DELIMITER).  
+	 * @return <b>true</b> фрагмент успешно обработан, 
+	 * <br><b>false</b> обнаружен неизвестный parameterName или недопустимое значение параметра.
+	 */
 	protected abstract boolean applyExpression(String[] tokens);
 	public abstract boolean isValid();
 	
 	private void addFilter(String f)
 	{
-		if( !isFiltersLocked() ) 
+		if( !isFiltersDisabled() ) 
 			filters.add(f);
 	}
 	
+	/**
+	 * Пополняет ACL элементами из другого.
+	 * @param x добавляемый ACL.
+	 */
     protected void addAll(AccessControlList x) 
     {
     	for(AccessControl ac : x.acl)
     		acl.add(ac);
-    	if(x.isFiltersLocked()) setFiltersLocked();
-    		else if(!isFiltersLocked())
+    	if(x.isFiltersDisabled()) setFiltersLocked();
+    		else if(!isFiltersDisabled())
     				filters.addAll(x.getFilters());
 	}
 
@@ -155,7 +167,7 @@ public abstract class AccessControlList implements Comparator<AccessControl>
     
     public boolean dropByFilterNodeOnly(Node n)
     {
-    	if(isFiltersLocked()) return false;
+    	if(isFiltersDisabled()) return false;
     	Set<String> set = getClassesAndInterfaces(n.getClass());
     	Iterator<String> it = filters.iterator();
     	while(it.hasNext())
@@ -239,11 +251,11 @@ public abstract class AccessControlList implements Comparator<AccessControl>
 	public void setFiltersLocked() 
 	{
 		filters = null;
-		this.filtersLocked = true;
+		this.filtersDisabled = true;
 	}
 
-	public boolean isFiltersLocked() {
-		return filtersLocked;
+	public boolean isFiltersDisabled() {
+		return filtersDisabled;
 	}
 
 	public void setName(String name) {

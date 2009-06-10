@@ -17,8 +17,8 @@
 
 package org.raven.conf.impl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import org.raven.conf.Config;
 import org.slf4j.Logger;
@@ -32,7 +32,8 @@ public class GroupsAclStorage
 	public static final String RESOURSE_PARAM_NAME = "auth."+LdapGroupAcl.RESOURCE_PARAM;
 	private static GroupsAclStorage instance = null;
 	private Config config;
-	private HashMap<String, LdapGroupAcl> aclMap = null;
+	//private HashMap<String, LdapGroupAcl> aclMap = null;
+	private HashMap<String, List<LdapGroupAcl>> aclMap = null;
 	private HashMap<String, AccessResource> arMap = null;
 	private long lastUpdate = 0;
 
@@ -42,9 +43,21 @@ public class GroupsAclStorage
 		load();
 	}
 
+	protected static List<LdapGroupAcl> getGroupsForLdapGroupName(HashMap<String, List<LdapGroupAcl>> acln,String ldapGroupName)
+	{
+		List<LdapGroupAcl> lst = acln.get(ldapGroupName);
+		if(lst==null)
+		{
+			lst = new ArrayList<LdapGroupAcl>();
+			acln.put(ldapGroupName, lst);
+		}	
+		return lst;
+	}
+	
 	protected void loadAR()
 	{
 		HashMap<String, AccessResource> acln = new HashMap<String, AccessResource>();
+		int lastResNum = -100;
 		for(int i=1; ;i++)
 		{
 			String gname = RESOURSE_PARAM_NAME+i;
@@ -52,14 +65,25 @@ public class GroupsAclStorage
 			StringBuffer sb = new StringBuffer();
 			if(val!=null && val.length()>0)
 				sb.append(val);
+			int lastSubNum = -100;
 			for(int k=1; ;k++)
 			{
 				String v = config.getStringProperty(gname+"-"+k, null);
-				if(v==null || v.length()==0) break;
+				if(v==null || v.length()==0)
+				{
+					if(k-lastSubNum>10) break;
+					continue;
+				}
+				lastSubNum = k;
 				sb.append(";");
 				sb.append(v);
 			}
-			if(sb.length()==0) break;
+			if(sb.length()==0)
+			{
+				if(i-lastResNum>10)	break;
+				continue;
+			}
+			lastResNum = i;
 			AccessResource ar = new AccessResource(sb.toString());
 			if(ar.isValid())
 				acln.put(ar.getName(), ar);
@@ -74,7 +98,9 @@ public class GroupsAclStorage
 	protected void load()
 	{
 		loadAR();
-		HashMap<String, LdapGroupAcl> acln = new HashMap<String, LdapGroupAcl>();
+		//HashMap<String, LdapGroupAcl> acln = new HashMap<String, LdapGroupAcl>();
+		HashMap<String, List<LdapGroupAcl>> acln = new HashMap<String, List<LdapGroupAcl>>();
+		int lastGrpNum = -100;
 		for(int i=1; ;i++)
 		{
 			String gname = GROUP_PARAM_NAME+i;
@@ -82,17 +108,31 @@ public class GroupsAclStorage
 			StringBuffer sb = new StringBuffer();
 			if(val!=null && val.length()>0)
 				sb.append(val);
+			int lastSubNum = -100;
 			for(int k=1; ;k++)
 			{
 				String v = config.getStringProperty(gname+"-"+k, null);
-				if(v==null || v.length()==0) break;
+				if(v==null || v.length()==0)
+				{
+					if(k-lastSubNum>10) break;
+					continue;
+				}
+				lastSubNum = k;
 				sb.append(";");
 				sb.append(v);
 			}
-			if(sb.length()==0) break;
+			if(sb.length()==0)
+			{
+				if(i-lastGrpNum>10)	break;
+				continue;
+			}
+			lastGrpNum = i;
 			LdapGroupAcl acl = new LdapGroupAcl(sb.toString(),arMap);
 			if(acl.isValid())
-				acln.put(acl.getLdapGroup(), acl);
+			{
+				List<LdapGroupAcl> lst = getGroupsForLdapGroupName(acln,acl.getLdapGroup());
+				lst.add(acl);
+			}	
 			if(logger.isInfoEnabled())
 				logger.info("ldapGroup: {}  acl: {}",acl.getLdapGroup(),acl.toString());
 			
@@ -123,13 +163,16 @@ public class GroupsAclStorage
     		load();
     	}	
     	LdapGroupAcl acl = new LdapGroupAcl();
-    	Iterator<String> it = ls.iterator();
-    	while(it.hasNext())
+    	for(String grpName: ls)
     	{
-    		LdapGroupAcl lga = aclMap.get(it.next());
-    		if(lga==null) continue;
-    		if(!lga.allowedUser(account)) continue;
-    		acl.appendACL( lga );
+    		List<LdapGroupAcl> lgaLst = aclMap.get(grpName);
+    		if(lgaLst==null) continue;
+    		for(LdapGroupAcl lga: lgaLst)
+    		{
+    			if(lga==null) continue;
+    			if(!lga.allowedUser(account)) continue;
+    			acl.appendACL( lga );
+    		}	
     	}	
     	return acl;
     }

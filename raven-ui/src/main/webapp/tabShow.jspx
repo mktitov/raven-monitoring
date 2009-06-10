@@ -397,16 +397,12 @@ items="#{row.tableColumnNames}"
 						value="#{rowa[0].item}"/>
 					<tr:commandLink
 					    rendered="#{rowa[0].file}" 
-						text="#{msgs.file}: #{rowa[0].wrapper.idVO}" 
-						actionListener="#{otherVO.export}">
+						text="#{msgs.file}: #{rowa[0].string}" 
+						actionListener="#{otherVO.exportX}">
 						<f:attribute 
-							name="nodeId" 
-							value="#{rowa[0].wrapper.nodeId}"/>
-						<f:attribute 
-							name="uid" 
-							value="#{rowa[0].wrapper.uid}"/>
+							name="#{otherVO.paramVO}" 
+							value="#{rowa[0].item}"/>
 					</tr:commandLink>
-						
 					<tr:commandLink
 						partialSubmit="true" 
 						useWindow="true"
@@ -434,16 +430,12 @@ items="#{row.tableColumnNames}"
 						value="#{rowa[1].item}"/>
 					<tr:commandLink
 						rendered="#{rowa[1].file}" 
-						text="#{msgs.file}: #{rowa[1].wrapper.idVO}" 
-						actionListener="#{otherVO.export}">
+						text="#{msgs.file}: #{rowa[1].string}" 
+						actionListener="#{otherVO.exportX}">
 						<f:attribute 
-							name="nodeId" 
-							value="#{rowa[1].wrapper.nodeId}"/>
-						<f:attribute 
-							name="uid" 
-							value="#{rowa[1].wrapper.uid}"/>
+							name="#{otherVO.paramVO}" 
+							value="#{rowa[1].item}"/>
 					</tr:commandLink>
-						
 					<tr:commandLink
 						partialSubmit="true"
 						useWindow="true"
@@ -470,16 +462,12 @@ items="#{row.tableColumnNames}"
 						value="#{rowa[2].item}"/>
 					<tr:commandLink
 						rendered="#{rowa[2].file}" 
-						text="#{msgs.file}: #{rowa[2].wrapper.idVO}" 
-						actionListener="#{otherVO.export}">
+						text="#{msgs.file}: #{rowa[2].string}" 
+						actionListener="#{otherVO.exportX}">
 						<f:attribute 
-							name="nodeId" 
-							value="#{rowa[2].wrapper.nodeId}"/>
-						<f:attribute 
-							name="uid" 
-							value="#{rowa[2].wrapper.uid}"/>
+							name="#{otherVO.paramVO}" 
+							value="#{rowa[2].item}"/>
 					</tr:commandLink>
-						
 					<tr:commandLink
 						partialSubmit="true"
 						useWindow="true"
@@ -507,16 +495,12 @@ items="#{row.tableColumnNames}"
 						value="#{rowa[3].item}"/>
 					<tr:commandLink
 						rendered="#{rowa[3].file}" 
-						text="#{msgs.file}: #{rowa[3].wrapper.idVO}" 
-						actionListener="#{otherVO.export}">
+						text="#{msgs.file}: #{rowa[3].string}" 
+						actionListener="#{otherVO.exportX}">
 						<f:attribute 
-							name="nodeId" 
-							value="#{rowa[3].wrapper.nodeId}"/>
-						<f:attribute 
-							name="uid" 
-							value="#{rowa[3].wrapper.uid}"/>
+							name="#{otherVO.paramVO}" 
+							value="#{rowa[3].item}"/>
 					</tr:commandLink>
-					
 					<tr:commandLink
 						partialSubmit="true"
 						useWindow="true"
@@ -544,16 +528,12 @@ items="#{row.tableColumnNames}"
 						value="#{rowa[4].item}"/>
 					<tr:commandLink
 						rendered="#{rowa[4].file}" 
-						text="#{msgs.file}: #{rowa[4].wrapper.idVO}" 
-						actionListener="#{otherVO.export}">
+						text="#{msgs.file}: #{rowa[4].string}" 
+						actionListener="#{otherVO.exportX}">
 						<f:attribute 
-							name="nodeId" 
-							value="#{rowa[4].wrapper.nodeId}"/>
-						<f:attribute 
-							name="uid" 
-							value="#{rowa[4].wrapper.uid}"/>
+							name="#{otherVO.paramVO}" 
+							value="#{rowa[4].item}"/>
 					</tr:commandLink>
-						
 					<tr:commandLink
 						partialSubmit="true"
 						useWindow="true"
@@ -581,16 +561,12 @@ items="#{row.tableColumnNames}"
 						value="#{rowa[5].item}"/>
 					<tr:commandLink
 						rendered="#{rowa[5].file}" 
-						text="#{msgs.file}: #{rowa[5].wrapper.idVO}" 
-						actionListener="#{otherVO.export}">
+						text="#{msgs.file}: #{rowa[5].string}" 
+						actionListener="#{otherVO.exportX}">
 						<f:attribute 
-							name="nodeId" 
-							value="#{rowa[5].wrapper.nodeId}"/>
-						<f:attribute 
-							name="uid" 
-							value="#{rowa[5].wrapper.uid}"/>
+							name="#{otherVO.paramVO}" 
+							value="#{rowa[5].item}"/>
 					</tr:commandLink>
-						
 					<tr:commandLink
 						partialSubmit="true"
 						useWindow="true"
@@ -618,14 +594,11 @@ items="#{row.tableColumnNames}"
 						value="#{rowa[6].item}"/>
 					<tr:commandLink
 						rendered="#{rowa[6].file}" 
-						text="#{msgs.file}: #{rowa[6].wrapper.idVO}" 
-						actionListener="#{otherVO.export}">
+						text="#{msgs.file}: #{rowa[6].string}" 
+						actionListener="#{otherVO.exportX}">
 						<f:attribute 
-							name="nodeId" 
-							value="#{rowa[6].wrapper.nodeId}"/>
-						<f:attribute 
-							name="uid" 
-							value="#{rowa[6].wrapper.uid}"/>
+							name="#{otherVO.paramVO}" 
+							value="#{rowa[6].item}"/>
 					</tr:commandLink>
 					<tr:commandLink
 						partialSubmit="true"
@@ -654,14 +627,11 @@ items="#{row.tableColumnNames}"
 						value="#{rowa[7].item}"/>
 					<tr:commandLink
 						rendered="#{rowa[7].file}" 
-						text="#{msgs.file}: #{rowa[7].wrapper.idVO}" 
-						actionListener="#{otherVO.export}">
+						text="#{msgs.file}: #{rowa[7].string}" 
+						actionListener="#{otherVO.exportX}">
 						<f:attribute 
-							name="nodeId" 
-							value="#{rowa[7].wrapper.nodeId}"/>
-						<f:attribute 
-							name="uid" 
-							value="#{rowa[7].wrapper.uid}"/>
+							name="#{otherVO.paramVO}" 
+							value="#{rowa[7].item}"/>
 					</tr:commandLink>
 					<tr:commandLink
 						partialSubmit="true"
@@ -690,14 +660,11 @@ items="#{row.tableColumnNames}"
 						value="#{rowa[8].item}"/>
 					<tr:commandLink
 						rendered="#{rowa[8].file}" 
-						text="#{msgs.file}: #{rowa[8].wrapper.idVO}" 
-						actionListener="#{otherVO.export}">
+						text="#{msgs.file}: #{rowa[8].string}" 
+						actionListener="#{otherVO.exportX}">
 						<f:attribute 
-							name="nodeId" 
-							value="#{rowa[8].wrapper.nodeId}"/>
-						<f:attribute 
-							name="uid" 
-							value="#{rowa[8].wrapper.uid}"/>
+							name="#{otherVO.paramVO}" 
+							value="#{rowa[8].item}"/>
 					</tr:commandLink>
 					<tr:commandLink
 						partialSubmit="true"

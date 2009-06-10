@@ -22,23 +22,21 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import javax.faces.component.UIComponent;
-//import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import org.apache.myfaces.trinidad.component.UIXTable;
 import org.apache.myfaces.trinidad.model.RowKeySet;
 import org.apache.myfaces.trinidad.component.core.output.CoreMessage;
-//import org.apache.myfaces.trinidad.component.UIXCollection;
 import org.raven.tree.Node;
 import org.raven.tree.Tree;
 import org.raven.ui.SessionBean;
 import org.raven.ui.util.Messages;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.myfaces.trinidad.event.ReturnEvent;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 
 public class SubNodesTableBean 
 {
-	private static final Logger logger = LoggerFactory.getLogger(NodeWrapper.class);
+//	private static final Logger logger = LoggerFactory.getLogger(NodeWrapper.class);
 	private UIComponent table = null;
 	private CoreMessage message = null;
 
@@ -55,8 +53,8 @@ public class SubNodesTableBean
 	    for(Iterator<Object> it = state.iterator(); it.hasNext();)
 	    {
 	    	Object x = it.next();
-	      tbl.setRowKey(x);
-	      ret.add(tbl.getRowData());
+	    	tbl.setRowKey(x);
+	    	ret.add(tbl.getRowData());
 	    }
 	    tbl.setRowKey(oldKey);
 	    if(clearState) state.clear();
@@ -112,7 +110,6 @@ public class SubNodesTableBean
 	    }
 	    if(nw == null)
 	    {
-	    	//"No selected nodes !"
 	    	message.setMessage(Messages.getUiMessage(Messages.NO_SELECTED_NODES));
 	    	return;
 	    }
