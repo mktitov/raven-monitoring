@@ -18,6 +18,7 @@
 package org.raven.net.impl;
 
 import java.io.File;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -107,16 +108,17 @@ public class SvnFileRevisionsNode extends BaseNode implements Viewable
         TreeMap<String, NodeAttribute> attrs = new TreeMap<String, NodeAttribute>();
         putAttribute(FROM_REVISION_ATTR, Long.class, attrs);
         putAttribute(TO_REVISION_ATTR, Long.class, attrs);
-        putAttribute(FROM_DATE_ATTR, Long.class, attrs);
-        putAttribute(TO_DATE_ATTR, Long.class, attrs);
+        putAttribute(FROM_DATE_ATTR, String.class, attrs);
+        putAttribute(TO_DATE_ATTR, String.class, attrs);
         return attrs;
     }
 
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes)
             throws Exception
     {
-        SVNRevision fromRevision = getRevision(refreshAttributes, "from");
-        SVNRevision toRevision = getRevision(refreshAttributes, "to");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+        SVNRevision fromRevision = getRevision(refreshAttributes, "from", dateFormat);
+        SVNRevision toRevision = getRevision(refreshAttributes, "to", dateFormat);
         if (toRevision!=SVNRevision.UNDEFINED || fromRevision!=SVNRevision.UNDEFINED)
         {
             if (toRevision==SVNRevision.UNDEFINED)
@@ -152,7 +154,6 @@ public class SvnFileRevisionsNode extends BaseNode implements Viewable
         else
             table = new TableImpl(
                 new String[]{revisionsColumnName, dateColumnName, filesColumnName});
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
         int rows = 0;
         for (SVNLogEntry entry: entries)
         {
@@ -170,7 +171,7 @@ public class SvnFileRevisionsNode extends BaseNode implements Viewable
             }
             else
             {
-                StringBuilder paths = new StringBuilder("<pre>");
+                StringBuilder paths = new StringBuilder();
                 Map changedPaths = entry.getChangedPaths();
                 if (changedPaths!=null && !changedPaths.isEmpty())
                 {
@@ -180,7 +181,7 @@ public class SvnFileRevisionsNode extends BaseNode implements Viewable
                         SVNLogEntryPath path = (SVNLogEntryPath) pathObj;
                         String pathInfo = "("+path.getType()+") "+path.getPath();
                         if (!first)
-                            paths.append("\n"+pathInfo);
+                            paths.append("<br>"+pathInfo);
                         else
                         {
                             first = false;
@@ -188,7 +189,6 @@ public class SvnFileRevisionsNode extends BaseNode implements Viewable
                         }
                     }
                 }
-                paths.append("</pre>");
                 table.addRow(new Object[]{revision, date, paths.toString()});
             }
         }
@@ -202,14 +202,19 @@ public class SvnFileRevisionsNode extends BaseNode implements Viewable
         return false;
     }
 
-    private SVNRevision getRevision(Map<String, NodeAttribute> attrs, String prefix)
+    private SVNRevision getRevision(
+            Map<String, NodeAttribute> attrs, String prefix, SimpleDateFormat dateFormat)
+        throws ParseException
     {
         Object rev = getAttributeValue(attrs, prefix+"Revision");
         if (rev!=null)
             return SVNRevision.create((Long)rev);
         rev = getAttributeValue(attrs, prefix+"Date");
         if (rev!=null)
-            return SVNRevision.create((Date)rev);
+        {
+            Date date = dateFormat.parse((String)rev);
+            return SVNRevision.create(date);
+        }
         
         return SVNRevision.UNDEFINED;
     }

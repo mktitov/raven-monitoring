@@ -47,6 +47,10 @@
     </build>
     <dependencies>
         <dependency>
+            <groupId>org.productivity</groupId>
+            <artifactId>syslog4j</artifactId>
+        </dependency>
+        <dependency>
             <groupId>eu.medsea.mimeutil</groupId>
             <artifactId>mime-util</artifactId>
         </dependency>
