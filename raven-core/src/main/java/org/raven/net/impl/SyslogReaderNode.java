@@ -18,22 +18,19 @@
 package org.raven.net.impl;
 
 import java.util.Collection;
-import java.util.Map;
 import org.productivity.java.syslog4j.server.SyslogServer;
 import org.productivity.java.syslog4j.server.SyslogServerEventHandlerIF;
 import org.productivity.java.syslog4j.server.SyslogServerEventIF;
 import org.productivity.java.syslog4j.server.SyslogServerIF;
-import org.productivity.java.syslog4j.util.SyslogUtility;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
-import org.raven.ds.DataConsumer;
-import org.raven.ds.Record;
-import org.raven.ds.impl.AbstractDataSource;
 import org.raven.ds.impl.RecordSchemaNode;
 import org.raven.ds.impl.RecordSchemaValueTypeHandlerFactory;
-import org.raven.log.LogLevel;
-import org.raven.tree.NodeAttribute;
+import org.raven.net.SyslogMessageHandler;
+import org.raven.tree.Node;
+import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.DataSourcesNode;
+import org.raven.util.OperationStatistic;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -41,7 +38,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=DataSourcesNode.class)
-public class SyslogReaderNode extends AbstractDataSource implements SyslogServerEventHandlerIF
+public class SyslogReaderNode extends BaseNode implements SyslogServerEventHandlerIF
 {
     public enum SyslogProtocol {UDP, TCP};
 
@@ -51,15 +48,22 @@ public class SyslogReaderNode extends AbstractDataSource implements SyslogServer
     @NotNull @Parameter(defaultValue="514")
     private Integer port;
 
-    @NotNull @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
-    private RecordSchemaNode schema;
+    @Parameter(readOnly=true)
+    private OperationStatistic messagesStat;
 
     private SyslogServerIF syslogServer;
 
     @Override
+    protected void initFields()
+    {
+        super.initFields();
+        messagesStat = new OperationStatistic();
+    }
+
+    @Override
     protected void doStart() throws Exception
     {
-        super.doStart();
+         super.doStart();
         String _protocol = protocol.equals(SyslogProtocol.UDP)? "udp" : "tcp";
         syslogServer = SyslogServer.getInstance(_protocol);
         syslogServer.getConfig().setPort(port);
@@ -72,6 +76,11 @@ public class SyslogReaderNode extends AbstractDataSource implements SyslogServer
     {
         super.doStop();
         syslogServer.shutdown();
+    }
+
+    public OperationStatistic getMessagesStat()
+    {
+        return messagesStat;
     }
 
     public Integer getPort() {
@@ -90,47 +99,20 @@ public class SyslogReaderNode extends AbstractDataSource implements SyslogServer
         this.protocol = protocol;
     }
 
-    public RecordSchemaNode getSchema() {
-        return schema;
-    }
-
-    public void setSchema(RecordSchemaNode schema) {
-        this.schema = schema;
-    }
-
-    @Override
-    public boolean gatherDataForConsumer(
-            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
-    {
-        return true;
-    }
-
-    @Override
-    public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
-    {
-    }
-
     public void event(SyslogServerIF syslogServer, SyslogServerEventIF event)
     {
+        long startTime = messagesStat.markOperationProcessingStart();
         try
         {
-            Record rec = schema.createRecord();
-            rec.setValue(SyslogRecordSchemaNode.DATE_FIELD, event.getDate());
-            rec.setValue(SyslogRecordSchemaNode.HOST_FIELD, event.getHost());
-            rec.setValue(
-                    SyslogRecordSchemaNode.FACILITY_FIELD
-                    , SyslogUtility.getFacilityString(event.getFacility()));
-            rec.setValue(
-                    SyslogRecordSchemaNode.LEVEL_FIELD
-                    , SyslogUtility.getLevelString(event.getLevel()));
-            rec.setValue(SyslogRecordSchemaNode.MESSAGE_FIELD, event.getMessage());
-
-            sendDataToConsumers(rec);
+            Collection<Node> childs = getChildrens();
+            if (childs!=null && !childs.isEmpty())
+                for (Node child: childs)
+                    if (child instanceof SyslogMessageHandler)
+                        ((SyslogMessageHandler)child).handleEvent(event);
         }
-        catch(Exception e)
+        finally
         {
-            if (isLogLevelEnabled(LogLevel.ERROR))
-                error("Error handling syslog event", e);
+            messagesStat.markOperationProcessingEnd(startTime);
         }
     }
 }

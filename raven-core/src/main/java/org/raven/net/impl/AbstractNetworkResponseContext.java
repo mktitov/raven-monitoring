@@ -118,6 +118,8 @@ public abstract class AbstractNetworkResponseContext
             throws RequiredParameterMissedException
     {
         Map<String, Object> newParams = new HashMap<String, Object>();
+        if (params!=null)
+            newParams.putAll(params);
         Collection<Node> paramsList = parametersNode.getEffectiveChildrens();
         if (paramsList!=null && !paramsList.isEmpty())
             for (Node node: paramsList)
@@ -163,6 +165,7 @@ public abstract class AbstractNetworkResponseContext
             bindingSupport.put(PARAMS_BINDING, params);
             checkIp(requesterIp);
             params = checkParameters(params);
+            bindingSupport.put(PARAMS_BINDING, params);
             String result = doGetResponse(requesterIp, params);
 
             return result;

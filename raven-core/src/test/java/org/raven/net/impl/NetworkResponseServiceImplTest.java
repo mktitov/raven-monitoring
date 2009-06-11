@@ -23,11 +23,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.raven.PushOnDemandDataSource;
 import org.raven.RavenCoreTestCase;
+import org.raven.ds.impl.AttributeValueDataSourceNode;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.net.ContextUnavailableException;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.net.NetworkResponseServiceUnavailableException;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.ServicesNode;
 import org.raven.tree.impl.SystemNode;
 
@@ -115,4 +118,39 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase
         params.put("param", "response");
         assertEquals("test", responseService.getResponse("context", "1.1.1.1", params));
     }
+
+    @Test
+    public void getSubcontextTest() throws NetworkResponseServiceExeption, Exception
+    {
+        NetworkResponseServiceNode responseServiceNode = (NetworkResponseServiceNode)
+                tree.getRootNode()
+                .getChildren(SystemNode.NAME)
+                .getChildren(ServicesNode.NAME)
+                .getChildren(NetworkResponseServiceNode.NAME);
+        assertNotNull(responseServiceNode);
+        responseServiceNode.setLogLevel(LogLevel.TRACE);
+
+        NetworkResponseContextNode context = new NetworkResponseContextNode();
+        context.setName("context");
+        responseServiceNode.addAndSaveChildren(context);
+        context.setAllowRequestsFromAnyIp(true);
+
+        AttributeValueDataSourceNode ds = new AttributeValueDataSourceNode();
+        ds.setName("ds");
+        context.addAndSaveChildren(ds);
+        NodeAttribute expr = ds.getNodeAttribute("value");
+        expr.setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        expr.setValue("params['subcontext']");
+        assertTrue(ds.start());
+
+        context.setDataSource(ds);
+        assertTrue(context.start());
+        
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("param", "response");
+        assertEquals(
+                "subcontextName",
+                responseService.getResponse("context/subcontextName", "1.1.1.1", params));
+    }
+
 }

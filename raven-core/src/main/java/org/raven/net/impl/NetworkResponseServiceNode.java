@@ -36,6 +36,7 @@ import org.weda.internal.annotations.Service;
 public class NetworkResponseServiceNode extends BaseNode implements NetworkResponseNode
 {
     public final static String NAME = "NetworkResponseService";
+    public static final String SUBCONTEXT_PARAM = "subcontext";
 
     @Service
     private static NetworkResponseService networkResponseService;
@@ -100,7 +101,17 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
         }
         try
         {
+            int pos = context.indexOf('/');
+            if (pos>=0)
+            {
+                String subcontext = context.substring(pos+1);
+                context = context.substring(0, pos);
+                params.put(SUBCONTEXT_PARAM, subcontext);
+            }
             contextNode = (NetworkResponseContext) getChildren(context);
+            if (contextNode==null)
+            {
+            }
             if (contextNode==null || !contextNode.getStatus().equals(Status.STARTED))
                throw new ContextUnavailableException(context);
 

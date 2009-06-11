@@ -38,9 +38,10 @@ public class SyslogReaderNodeTest extends RavenCoreTestCase
 {
     private SyslogReaderNode reader;
     private DataCollector collector;
+    private DataCollector collector2;
 
     @Before
-    public void prepare()
+    public void prepare() throws Exception
     {
         SyslogRecordSchemaNode schema = new SyslogRecordSchemaNode();
         schema.setName("syslog schema");
@@ -52,14 +53,37 @@ public class SyslogReaderNodeTest extends RavenCoreTestCase
         tree.getRootNode().addAndSaveChildren(reader);
         reader.setProtocol(SyslogReaderNode.SyslogProtocol.UDP);
         reader.setPort(1514);
-        reader.setSchema(schema);
         assertTrue(reader.start());
 
+        SyslogMessageHandlerNode handler = new SyslogMessageHandlerNode();
+        handler.setName("handler1");
+        reader.addAndSaveChildren(handler);
+        handler.getNodeAttribute(SyslogMessageHandlerNode.ACCEPT_MESSAGE_EXPRESSION_ATTR)
+                .setValue(
+                    "facility=='ftp' && host=='localhost' " +
+                    "&& message.contains('hello world') && level=='INFO'");
+        handler.setRecordSchema(schema);
+        assertTrue(handler.start());
+
+        SyslogMessageHandlerNode handler2 = new SyslogMessageHandlerNode();
+        handler2.setName("handler2");
+        reader.addAndSaveChildren(handler2);
+        handler2.getNodeAttribute(SyslogMessageHandlerNode.ACCEPT_MESSAGE_EXPRESSION_ATTR)
+                .setValue("facility=='cron'");
+        handler2.setRecordSchema(schema);
+        assertTrue(handler2.start());
+        
         collector = new DataCollector();
         collector.setName("collector");
         tree.getRootNode().addAndSaveChildren(collector);
-        collector.setDataSource(reader);
+        collector.setDataSource(handler);
         assertTrue(collector.start());
+
+        collector2 = new DataCollector();
+        collector2.setName("collector2");
+        tree.getRootNode().addAndSaveChildren(collector2);
+        collector2.setDataSource(handler2);
+        assertTrue(collector2.start());
     }
 
     @Test
@@ -73,7 +97,7 @@ public class SyslogReaderNodeTest extends RavenCoreTestCase
         TimeUnit.SECONDS.sleep(1);
         syslog.info("hello world");
 
-        TimeUnit.SECONDS.sleep(1);
+        TimeUnit.SECONDS.sleep(2);
 
         List dataList = collector.getDataList();
         assertEquals(1, dataList.size());
@@ -94,5 +118,16 @@ public class SyslogReaderNodeTest extends RavenCoreTestCase
                 rec.getValue(SyslogRecordSchemaNode.LEVEL_FIELD));
         assertTrue(((String)rec.getValue(SyslogRecordSchemaNode.MESSAGE_FIELD))
                 .endsWith("hello world"));
+
+        assertEquals(0, collector2.getDataList().size());
+
+        collector.getDataList().clear();
+
+        syslog.getConfig().setFacility(SyslogConstants.FACILITY_CRON);
+        syslog.info("hello world");
+        TimeUnit.SECONDS.sleep(2);
+        
+        assertEquals(1, collector2.getDataList().size());
+        assertEquals(0, collector.getDataList().size());
     }
 }
