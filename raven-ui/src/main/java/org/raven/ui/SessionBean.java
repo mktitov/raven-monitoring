@@ -17,6 +17,8 @@
 
 package org.raven.ui;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.List;
@@ -37,6 +39,7 @@ import org.raven.ui.util.RavenViewableImageRenderer;
 import org.raven.ui.vo.VObyNode;
 import org.raven.ui.vo.ImagesStorage;
 import org.raven.conf.Configurator;
+import org.raven.conf.impl.AccessControl;
 import org.raven.conf.impl.UserAcl;
 import org.raven.ui.util.Messages;
 import org.raven.template.impl.TemplateNode;
@@ -257,6 +260,43 @@ public class SessionBean
 		  return "focus: "+coreTree.getFocusRowKey()+"  selected:"+z;
 		  */
 		  return "";
+	  }
+	  
+	  public List<String[]> getResourcesList()
+	  {
+		  HashMap<String,String> rl = userAcl.getResourcesList();
+		  List<String[]> ret = new ArrayList<String[]>();
+		  if(rl==null)
+		  {
+			  logger.error("ResourcesList is null !");
+			  return ret;
+		  }
+		  List<String> keys = new ArrayList<String>();
+		  for(String key: rl.keySet())
+			  keys.add(key);
+		  Collections.sort(keys);
+		  for(String key: keys)
+		  { 
+			  Node n = null;
+			  String nodePath = rl.get(key);
+			  try 
+			  {	
+				  n = tree.getNode(rl.get(key));
+				  if(userAcl.getAccessForNode(n)<AccessControl.READ) continue;
+				  ret.add( new String[] {key,nodePath} );
+			  }
+			  catch (InvalidPathException e) 
+			  { 
+				  logger.error("on load node "+nodePath,e);
+			  }
+		  }  
+		  return ret;
+	  }
+	  
+	  public void selectNodeAndMaximize(ActionEvent event)
+	  {
+		  selectNode(event);
+		  //switchCollapsed();	
 	  }
 	  
 	  public void selectNode(ActionEvent event)

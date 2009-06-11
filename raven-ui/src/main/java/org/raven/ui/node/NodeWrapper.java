@@ -167,9 +167,9 @@ implements Comparator<NodeAttribute>
 	public String getRefreshAttributesTitle()
 	{
 		String mesName = null;
-		if( isNodeAndChildViewable() ) mesName = Messages.getUiMessage(Messages.RA_NODE_AND_CHILD);
-		else if( isNodeViewableOnly() ) mesName = Messages.getUiMessage(Messages.RA_NODE);
-				else if( isChildViewableOnly() ) mesName = Messages.getUiMessage(Messages.RA_CHILD);
+		if( isNodeAndChildViewable() ) mesName = Messages.RA_NODE_AND_CHILD;
+		else if( isNodeViewableOnly() ) mesName = Messages.RA_NODE;
+				else if( isChildViewableOnly() ) mesName = Messages.RA_CHILD;
 						else return "";
 		return Messages.getUiMessage(mesName);
 	}
@@ -315,9 +315,9 @@ implements Comparator<NodeAttribute>
 		if( ! isAllowControl() ) return "err";
 		if(!isCanNodeStop()) return "err";
 		try { getNode().stop(); }
-		catch (NodeError e)
+		catch (NodeError e) 
 		{
-			logger.error("on stop "+getNodeName()+" : "+e.getMessage());
+			logger.error("on stop {} : {}",getNodeName(),e.getMessage()); 
 		}
 		return "ok";
 	}
@@ -331,7 +331,6 @@ implements Comparator<NodeAttribute>
 			if(a.getAttribute().getParentAttribute()==null) parentAttrs.add(a);
 		return parentAttrs;
 	}
-	
 	
 	public Map<String,NodeAttribute> getRefreshAttributesMap()
 	{
@@ -743,7 +742,8 @@ implements Comparator<NodeAttribute>
 		  while(it.hasNext())
 		  {
 			  NodeWrapper nw = new NodeWrapper(it.next());
-			  if(!nw.isAllowTreeEdit()) continue;
+			 // if(!nw.isAllowTreeEdit()) continue;
+			  if(!nw.isAllowNodeRead()) continue;
 			  al.add(nw);
 		  }	  
 		  return al;

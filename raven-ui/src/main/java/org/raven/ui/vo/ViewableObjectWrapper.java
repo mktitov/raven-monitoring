@@ -71,6 +71,12 @@ public class ViewableObjectWrapper
 		return true;
 	}
 
+	public boolean isNodeUrl()
+	{
+		if(node==null) return false;
+		return true;
+	}
+	
 	public boolean isImage()
 	{
 		if(isViewable() && getMimeGroup().equals(IMAGE)) return true;

@@ -50,6 +50,30 @@
        		pollListener="#{sBean.onTreePoll}" 
        		id="pooltree" 
        		interval="#{sBean.refreshTreeInterval}" />
+       	<tr:spacer height="3" />	
+       	<tr:panelPopup 
+       		title="title"
+ 			shortDesc="desc"
+ 			text="#{msgs.resources}">
+       		
+        	<tr:panelGroupLayout layout="vertical">
+       	        <tr:forEach 
+       	        	var="res" 
+       	        	items="#{sBean.resourcesList}">
+        	    	<tr:commandLink
+        	        	text="#{res[0]}"
+		 				partialSubmit="true" 
+	                    immediate="true"
+    	                actionListener="#{sBean.selectNodeAndMaximize}">
+        	            <f:attribute
+        					name="nodePath"
+        					value="#{res[1]}" 
+        				/>
+        			</tr:commandLink>
+				</tr:forEach>
+			</tr:panelGroupLayout>
+		</tr:panelPopup>	
+       	<tr:spacer height="3" />	
         <tr:tree 
         	partialTriggers="::pooltree" 
         	id="tree1" 

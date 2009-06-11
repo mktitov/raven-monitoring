@@ -1,7 +1,6 @@
 package org.raven.ui.vo;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import org.raven.cache.AbstractCache;
 import org.raven.tree.Viewable;
@@ -103,13 +102,19 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 		List<NodeWrapper> c = nw.getChildrenList();
 		if(c==null) return lst;
 		//logger.info("Node {} has {} viewable children",nw.getNodePath(),c.size());
-		for(Iterator<NodeWrapper> it = c.iterator();it.hasNext();)
+		boolean arFlag = false;
+		for(NodeWrapper x : c)
 		{
-			NodeWrapper x = it.next();
-			if(!nw.isRefreshPressed() && !x.isAutoRefresh()) continue;
+			if(!nw.isRefreshPressed() && !x.isAutoRefresh()) arFlag = true; //continue;
 			List<ViewableObjectWrapper> zz = get(x,reload);
-			logger.info("from {} loaded2 {} VO ",x.getNodePath(),zz.size());
-			lst.addAll(zz);
+			int cnt = 0;
+			for(ViewableObjectWrapper wr: zz)
+			{
+				if(arFlag && !wr.isNodeUrl()) continue;
+				lst.add(wr);
+				cnt++;
+			}
+			logger.info("from {} loaded2 {} VO ",x.getNodePath(),cnt);
 		}
 		logger.info("getObjects for {} found: {} ",nw.getNodePath(),lst.size());
 		return lst;

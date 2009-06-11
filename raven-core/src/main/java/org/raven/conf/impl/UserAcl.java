@@ -17,7 +17,9 @@
 
 package org.raven.conf.impl;
 
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
@@ -143,6 +145,24 @@ public class UserAcl
 	}
 
 	public String getAccountName() { return accountName; }
+	
+	public HashMap<String,String>  getResourcesList()
+	{
+		HashMap<String,String> rl = new HashMap<String,String>();
+		for(AccessResource ar : gaStorage.getResources().values())
+		{
+			String title = ar.getTitle();
+			if(title==null || title.length()==0) continue;
+			List<AccessControl> lst = ar.getAcl();
+			if(lst.size()==0) continue;
+			AccessControl ac = lst.get(0);
+			if(ac==null) continue;
+			String path = ac.getResource();
+			if(path.endsWith("*")) path = path.substring(0, path.length()-1);
+			rl.put(title, path);
+		}
+		return rl;
+	}
 
 	public boolean isRefreshed() 
 	{

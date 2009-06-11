@@ -37,11 +37,15 @@ public abstract class AccessControlList implements Comparator<AccessControl>
 	public static final String NAME_PARAM = "name";
 	public static final String FILTER_PARAM = "filter";
 	public static final String AC_PARAM = "ac";
+	public static final String DSC_PARAM = "dsc";
+	public static final String TITLE_PARAM = "title";
 	private ArrayList<AccessControl> acl = new ArrayList<AccessControl>();
 	private Set<String> filters = new HashSet<String>();
 	private boolean filtersDisabled = false;
 	//private String group = null;
 	private String name = null;
+	private String dsc = null;
+	private String title = null;
 
 	public AccessControlList() 
 	{ 
@@ -69,9 +73,19 @@ public abstract class AccessControlList implements Comparator<AccessControl>
 				setName(x[1]);
 				continue;
 			}
+			if(x[0].equals(DSC_PARAM))
+			{
+				setDsc(x[1]);
+				continue;
+			}
 			if(x[0].equals(FILTER_PARAM))
 			{	
 				addFilter(x[1]);
+				continue;
+			}
+			if(x[0].equals(TITLE_PARAM))
+			{	
+				setTitle(x[1]);
 				continue;
 			}
 			if(x[0].equals(AC_PARAM))
@@ -223,7 +237,7 @@ public abstract class AccessControlList implements Comparator<AccessControl>
 		//logger.info("node rigth = "+curRight+" for "+node.getPath());
     	return curRight;
     }
-
+	
     public String toString()
     {
     	StringBuffer sb = new StringBuffer();
@@ -264,6 +278,23 @@ public abstract class AccessControlList implements Comparator<AccessControl>
 
 	public String getName() {
 		return name;
+	}
+
+	public void setDsc(String dsc) {
+		this.dsc = dsc;
+	}
+
+	public String getDsc() {
+		return dsc;
+	}
+
+	public void setTitle(String title) {
+		if(title!=null) title = title.trim();
+		this.title = title;
+	}
+
+	public String getTitle() {
+		return title;
 	}
 
 }

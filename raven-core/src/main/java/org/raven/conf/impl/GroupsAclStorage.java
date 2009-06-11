@@ -28,8 +28,8 @@ public class GroupsAclStorage
 {
     protected Logger logger = LoggerFactory.getLogger(GroupsAclStorage.class);
 	public static final String AUTH_PREFIX = "auth.";
-	public static final String GROUP_PARAM_NAME = "auth.group";
-	public static final String RESOURSE_PARAM_NAME = "auth."+LdapGroupAcl.RESOURCE_PARAM;
+	public static final String GROUP_PARAM_NAME = AUTH_PREFIX+"group";
+	public static final String RESOURSE_PARAM_NAME = AUTH_PREFIX+LdapGroupAcl.RESOURCE_PARAM;
 	private static GroupsAclStorage instance = null;
 	private Config config;
 	//private HashMap<String, LdapGroupAcl> aclMap = null;
@@ -54,10 +54,13 @@ public class GroupsAclStorage
 		return lst;
 	}
 	
+	/**
+	 * Loads resources
+	 */
 	protected void loadAR()
 	{
 		HashMap<String, AccessResource> acln = new HashMap<String, AccessResource>();
-		int lastResNum = -100;
+		int lastResNum = 0;
 		for(int i=1; ;i++)
 		{
 			String gname = RESOURSE_PARAM_NAME+i;
@@ -65,7 +68,7 @@ public class GroupsAclStorage
 			StringBuffer sb = new StringBuffer();
 			if(val!=null && val.length()>0)
 				sb.append(val);
-			int lastSubNum = -100;
+			int lastSubNum = 0;
 			for(int k=1; ;k++)
 			{
 				String v = config.getStringProperty(gname+"-"+k, null);
@@ -95,12 +98,15 @@ public class GroupsAclStorage
 		arMap = acln;
 	}	
 	
+	/**
+	 * Loads groups
+	 */
 	protected void load()
 	{
 		loadAR();
 		//HashMap<String, LdapGroupAcl> acln = new HashMap<String, LdapGroupAcl>();
 		HashMap<String, List<LdapGroupAcl>> acln = new HashMap<String, List<LdapGroupAcl>>();
-		int lastGrpNum = -100;
+		int lastGrpNum = 0;
 		for(int i=1; ;i++)
 		{
 			String gname = GROUP_PARAM_NAME+i;
@@ -108,7 +114,7 @@ public class GroupsAclStorage
 			StringBuffer sb = new StringBuffer();
 			if(val!=null && val.length()>0)
 				sb.append(val);
-			int lastSubNum = -100;
+			int lastSubNum = 0;
 			for(int k=1; ;k++)
 			{
 				String v = config.getStringProperty(gname+"-"+k, null);
@@ -177,6 +183,11 @@ public class GroupsAclStorage
     	return acl;
     }
 
+    public synchronized HashMap<String,AccessResource> getResources()
+    {
+    	return arMap;
+    }
+    
 	public synchronized long getLastUpdate() { return config.getLastUpdate(); }
 	
 }
