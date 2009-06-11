@@ -64,6 +64,7 @@
         	        	text="#{res[0]}"
 		 				partialSubmit="true" 
 	                    immediate="true"
+	                    onclick="top.switchFrameSet()"
     	                actionListener="#{sBean.selectNodeAndMaximize}">
         	            <f:attribute
         					name="nodePath"
