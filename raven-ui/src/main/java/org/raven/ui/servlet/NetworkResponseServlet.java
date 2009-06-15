@@ -26,8 +26,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.tapestry5.ioc.Registry;
 import org.raven.net.AccessDeniedException;
+import org.raven.net.Authentication;
 import org.raven.net.ContextUnavailableException;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.NetworkResponseServiceUnavailableException;
@@ -56,46 +58,86 @@ public class NetworkResponseServlet extends HttpServlet
 
             context = context.substring(1);
 
-            Map<String, Object> params = null;
+            Authentication contextAuth = responseService.getAuthentication(context);
+            if (contextAuth!=null)
+            {
+                String requestAuth = request.getHeader("Authorization");
+                if (requestAuth==null)
+                {
+                    response.setHeader(
+                            "WWW-Authenticate", "BASIC realm=\"RAVEN simple request interface\"");
+                    response.sendError(response.SC_UNAUTHORIZED);
+                    return;
+                }
+                else
+                {
+                    String userAndPath = new String(Base64.decodeBase64(
+                            requestAuth.substring(6).getBytes()));
+                    String elems[] = userAndPath.split(":");
+                    if (elems.length!=2 
+                        || !contextAuth.getUser().equals(elems[0])
+                        || !contextAuth.getPassword().equals(elems[1]))
+                    {
+                        throw new AccessDeniedException();
+                    }
+                }
+            }
+
+            Map<String, Object> params = new HashMap<String, Object>();
+
+            Enumeration<String> headerNames = request.getHeaderNames();
+            if (headerNames!=null)
+                while (headerNames.hasMoreElements())
+                {
+                    String headerName = headerNames.nextElement();
+                    params.put(headerName, request.getHeader(headerName));
+                }
+
             Enumeration<String> reqParams = request.getParameterNames();
             if (reqParams!=null)
-            {
-                params = new HashMap<String, Object>();
                 while (reqParams.hasMoreElements())
                 {
                     String paramName = reqParams.nextElement();
                     params.put(paramName, request.getParameter(paramName));
                 }
-            }
+
+            boolean isPut = request.getMethod().equalsIgnoreCase("PUT");
+            if (isPut)
+                params.put(
+                        NetworkResponseService.REQUEST_CONTENT_PARAMETER, request.getInputStream());
+            
             String result = responseService.getResponse(
                     context, request.getRemoteAddr(), params);
-            String charset = null;
-            String charsetsStr = request.getHeader("Accept-Charset");
-            if (charsetsStr!=null)
+            if (!isPut)
             {
-                String[] charsets = charsetsStr.split("\\s*,\\s*");
-                if (charsets!=null && charsets.length>0)
+                String charset = null;
+                String charsetsStr = request.getHeader("Accept-Charset");
+                if (charsetsStr!=null)
                 {
-                    charset = charsets[0].split(";")[0];
-                    getServletContext().log(
-                            String.format("Charset (%s) selected from response", charset));
+                    String[] charsets = charsetsStr.split("\\s*,\\s*");
+                    if (charsets!=null && charsets.length>0)
+                    {
+                        charset = charsets[0].split(";")[0];
+                        getServletContext().log(
+                                String.format("Charset (%s) selected from response", charset));
+                    }
                 }
-            }
-            if (charset==null)
-            {
-                getServletContext().log(
-                        "Can't detect charset from request. Using default charset (UTF-8)");
-                charset = "UTF-8";
-            }
-            response.setCharacterEncoding(charset);
-            PrintWriter out = response.getWriter();
-            try
-            {
-                out.append(result);
-            }
-            finally
-            {
-                out.close();
+                if (charset==null)
+                {
+                    getServletContext().log(
+                            "Can't detect charset from request. Using default charset (UTF-8)");
+                    charset = "UTF-8";
+                }
+                response.setCharacterEncoding(charset);
+                PrintWriter out = response.getWriter();
+                try
+                {
+                    out.append(result);
+                }
+                finally
+                {
+                    out.close();
+                }
             }
         }
         catch(Throwable e)
@@ -123,6 +165,13 @@ public class NetworkResponseServlet extends HttpServlet
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
         throws ServletException, IOException
+    {
+        processRequest(request, response);
+    }
+
+    @Override
+    protected void doPut(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException
     {
         processRequest(request, response);
     }
