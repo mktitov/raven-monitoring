@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import org.raven.annotations.Parameter;
 import org.raven.log.LogLevel;
+import org.raven.net.Authentication;
 import org.raven.net.ContextUnavailableException;
 import org.raven.net.NetworkResponseContext;
 import org.raven.net.NetworkResponseNode;
@@ -86,6 +87,11 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
         networkResponseService.setNetworkResponseServiceNode(null);
     }
 
+    public Authentication getAuthentication(String context) throws NetworkResponseServiceExeption
+    {
+        return getContext(context, null).getAuthentication();
+    }
+    
     public String getResponse(String context, String requesterIp, Map<String, Object> params)
             throws NetworkResponseServiceExeption
     {
@@ -101,19 +107,7 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
         }
         try
         {
-            int pos = context.indexOf('/');
-            if (pos>=0)
-            {
-                String subcontext = context.substring(pos+1);
-                context = context.substring(0, pos);
-                params.put(SUBCONTEXT_PARAM, subcontext);
-            }
-            contextNode = (NetworkResponseContext) getChildren(context);
-            if (contextNode==null)
-            {
-            }
-            if (contextNode==null || !contextNode.getStatus().equals(Status.STARTED))
-               throw new ContextUnavailableException(context);
+            contextNode = getContext(context, params);
 
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug(String.format("[%d] Found context for request", requestId));
@@ -182,5 +176,23 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
                 firstIteration = false;
         }
         return buf.toString();
+    }
+
+    private NetworkResponseContext getContext(String context, Map<String, Object> params)
+            throws ContextUnavailableException
+    {
+        int pos = context.indexOf('/');
+        if (pos>=0)
+        {
+            String subcontext = context.substring(pos+1);
+            context = context.substring(0, pos);
+            if (params!=null)
+                params.put(SUBCONTEXT_PARAM, subcontext);
+        }
+        NetworkResponseContext contextNode = (NetworkResponseContext) getChildren(context);
+        if (contextNode==null || !contextNode.getStatus().equals(Status.STARTED))
+           throw new ContextUnavailableException(context);
+        else
+            return contextNode;
     }
 }

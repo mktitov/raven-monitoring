@@ -17,19 +17,18 @@
 
 package org.raven.net;
 
-import java.util.Map;
-
 /**
  *
  * @author Mikhail Titov
  */
-public interface NetworkResponse
+public interface Authentication
 {
-    public String getResponse(String context, String requesterIp, Map<String, Object> params)
-            throws NetworkResponseServiceExeption;
     /**
-     * Returns authentication object for context or null if context does not need
-     * authentication.
+     * Returns the user name.
      */
-    public Authentication getAuthentication(String context) throws NetworkResponseServiceExeption;
+    public String getUser();
+    /**
+     * Returns the user password.
+     */
+    public String getPassword();
 }

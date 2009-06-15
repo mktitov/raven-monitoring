@@ -24,14 +24,19 @@ import javax.script.Bindings;
 import org.raven.annotations.Parameter;
 import org.raven.net.AccessDeniedException;
 import org.raven.net.AddressMatcher;
+import org.raven.net.Authentication;
 import org.raven.net.NetworkResponseContext;
 import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.net.RequiredParameterMissedException;
 import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
 import org.raven.expr.impl.BindingSupportImpl;
+import org.raven.log.LogLevel;
+import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.util.OperationStatistic;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.beans.ObjectUtils;
 
 /**
  *
@@ -41,14 +46,21 @@ public abstract class AbstractNetworkResponseContext
         extends BaseNode implements NetworkResponseContext
 {
     public static final String PARAMS_BINDING = "params";
+    public static final String NEEDS_AUTHENTICATION_ATTR = "needsAuthentication";
+    public static final String USER_ATTR = "user";
+    public static final String PASSWORD_ATTR = "password";
+
     @NotNull() @Parameter(defaultValue="false")
     private Boolean allowRequestsFromAnyIp;
+
+    @NotNull() @Parameter(defaultValue="false")
+    private Boolean needsAuthentication;
 
     @Parameter(readOnly=true)
     private OperationStatistic requestsStat;
 
-    private AddressListNode addressListNode;
-    private ParametersNode parametersNode;
+    protected AddressListNode addressListNode;
+    protected ParametersNode parametersNode;
     private BindingSupportImpl bindingSupport;
 
     @Override
@@ -57,6 +69,42 @@ public abstract class AbstractNetworkResponseContext
         super.initFields();
         requestsStat = new OperationStatistic();
         bindingSupport = new BindingSupportImpl();
+    }
+
+    @Override
+    public void nodeAttributeValueChanged(
+            Node node, NodeAttribute attribute, Object oldValue, Object newValue)
+    {
+        super.nodeAttributeValueChanged(node, attribute, oldValue, newValue);
+        if (node==this 
+            && ObjectUtils.in(getStatus(), Status.STARTED, Status.INITIALIZED)
+            && attribute.getName().equals(NEEDS_AUTHENTICATION_ATTR))
+        {
+            if (Boolean.FALSE.equals(newValue))
+            {
+                removeNodeAttribute(USER_ATTR);
+                removeNodeAttribute(PASSWORD_ATTR);
+            }
+            else
+            {
+                try {
+                    createAuthAttr(USER_ATTR);
+                    createAuthAttr(PASSWORD_ATTR);
+                } catch (Exception ex)
+                {
+                    if (isLogLevelEnabled(LogLevel.ERROR))
+                        error("Error creating auth attribute.", ex);
+                }
+            }
+        }
+    }
+
+    public Boolean getNeedsAuthentication() {
+        return needsAuthentication;
+    }
+
+    public void setNeedsAuthentication(Boolean needsAuthentication) {
+        this.needsAuthentication = needsAuthentication;
     }
 
     public OperationStatistic getRequestsStat()
@@ -137,7 +185,7 @@ public abstract class AbstractNetworkResponseContext
         return newParams;
     }
 
-    private void generateNodes()
+    protected void generateNodes()
     {
         addressListNode = (AddressListNode) getChildren(AddressListNode.NAME);
         if (addressListNode==null)
@@ -154,6 +202,16 @@ public abstract class AbstractNetworkResponseContext
             this.addAndSaveChildren(parametersNode);
             parametersNode.start();
         }
+    }
+
+    public Authentication getAuthentication()
+    {
+        if (!needsAuthentication)
+            return null;
+        else
+            return new AuthenticationImpl(
+                    getNodeAttribute(USER_ATTR).getValue()
+                    , getNodeAttribute(PASSWORD_ATTR).getValue());
     }
 
     public String getResponse(String requesterIp, Map<String, Object> params)
@@ -185,5 +243,30 @@ public abstract class AbstractNetworkResponseContext
     {
         super.formExpressionBindings(bindings);
         bindingSupport.addTo(bindings);
+    }
+
+    protected void addParameter(String name, Class type, boolean required, String pattern)
+    {
+        ParameterNode param = new ParameterNode();
+        param.setName(name);
+        parametersNode.addAndSaveChildren(param);
+        param.setParameterType(type);
+        param.setRequired(required);
+        param.setPattern(pattern);
+        param.save();
+        param.start();
+    }
+
+    private NodeAttribute createAuthAttr(String attrName) throws Exception
+    {
+        NodeAttributeImpl attr = new NodeAttributeImpl(attrName, String.class, null, null);
+        attr.setRequired(true);
+        attr.setParentAttribute(NEEDS_AUTHENTICATION_ATTR);
+        attr.setOwner(this);
+        attr.init();
+        attr.save();
+        addNodeAttribute(attr);
+
+        return attr;
     }
 }

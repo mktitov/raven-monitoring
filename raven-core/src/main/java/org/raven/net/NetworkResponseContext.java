@@ -26,6 +26,17 @@ import org.raven.tree.Node;
  */
 public interface NetworkResponseContext extends Node
 {
+    /**
+     * Returns the response for the request from recieved from the <b>requesterIp</b>
+     *
+     * @throws org.raven.net.NetworkResponseServiceExeption
+     */
     public String getResponse(String requesterIp, Map<String, Object> params)
             throws NetworkResponseServiceExeption;
+
+    /**
+     * Returns not null if context needs authentication or null if context does not need
+     * authentication.
+     */
+    public Authentication getAuthentication();
 }

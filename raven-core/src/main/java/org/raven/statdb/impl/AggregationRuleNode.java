@@ -20,15 +20,13 @@ package org.raven.statdb.impl;
 import org.raven.statdb.AggregationFunction;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.jrobin.core.Util;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.log.LogLevel;
 import org.raven.statdb.Aggregation;
-import org.raven.statdb.ProcessingInstruction;
 import org.raven.statdb.Rule;
 import org.raven.statdb.RuleProcessingResult;
 import org.raven.statdb.StatisticsDatabase;
@@ -97,13 +95,16 @@ public class AggregationRuleNode extends BaseNode implements Rule
 			Aggregation aggregation = aggregations.get(aggregationKey);
 			long ntime = Util.normalize(record.getTime(), database.getStep());
 			if (aggregation==null)
-			{
-				createAggregation(aggregationKey, ntime, value);
-			}
+				aggregation = createAggregation(aggregationKey, ntime, value);
 			else
 			{
 				if (ntime>aggregation.getTime())
 				{
+                    if (isLogLevelEnabled(LogLevel.DEBUG))
+                        debug(String.format(
+                                "Saving aggregated value (%s) for aggregation key (%s) " +
+                                "to the statistics database. "
+                                , aggregation.getValue(), aggregationKey));
 					database.saveStatisticsValue(
 							key, name, aggregation.getValue(), aggregation.getTime());
 					aggregation.reset(ntime, value);
@@ -113,6 +114,11 @@ public class AggregationRuleNode extends BaseNode implements Rule
 					aggregation.aggregate(value);
 				}
 			}
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug(String.format(
+                        "Aggregating value (%s) for aggregation key (%s). " +
+                        "New aggregated value is (%s)"
+                        , value, aggregationKey, aggregation.getValue()));
 		}finally{
 			aggregationsLock.readLock().unlock();
 		}
@@ -128,14 +134,20 @@ public class AggregationRuleNode extends BaseNode implements Rule
 		this.aggregationFunction = aggregationFunction;
 	}
 
-	private void createAggregation(String aggregationKey, long time, double value)
+	private Aggregation createAggregation(String aggregationKey, long time, double value)
 	{
 		Aggregation aggregation = null;
 		switch (aggregationFunction)
 		{
 			case MAX: aggregation = new MaxAggregation(time, value);
+            case AVERAGE : aggregation = new AverageAggregation(time, value);
+            case LAST : aggregation = new LastAggregation(time, value);
+            case MIN : aggregation = new MinAggregation(time, value);
+            case SUM : aggregation = new SumAggregation(time, value);
 		}
 
 		aggregations.put(aggregationKey, aggregation);
+
+        return aggregation;
 	}
 }

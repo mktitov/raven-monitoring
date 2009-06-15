@@ -15,21 +15,30 @@
  *  under the License.
  */
 
-package org.raven.net;
+package org.raven.net.impl;
 
-import java.util.Map;
+import org.raven.net.Authentication;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface NetworkResponse
+public class AuthenticationImpl implements Authentication
 {
-    public String getResponse(String context, String requesterIp, Map<String, Object> params)
-            throws NetworkResponseServiceExeption;
-    /**
-     * Returns authentication object for context or null if context does not need
-     * authentication.
-     */
-    public Authentication getAuthentication(String context) throws NetworkResponseServiceExeption;
+    private final String user;
+    private final String password;
+
+    public AuthenticationImpl(String user, String password)
+    {
+        this.user = user;
+        this.password = password;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getUser() {
+        return user;
+    }
 }

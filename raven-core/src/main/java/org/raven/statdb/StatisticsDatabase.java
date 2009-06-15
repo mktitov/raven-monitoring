@@ -34,7 +34,7 @@ public interface StatisticsDatabase extends Node, DataConsumer
 	/**
 	 * Returns the database step in seconds
 	 */
-	public long getStep();
+	public Long getStep();
 
 	/**
 	 * Saves the value of the given statistics to the database

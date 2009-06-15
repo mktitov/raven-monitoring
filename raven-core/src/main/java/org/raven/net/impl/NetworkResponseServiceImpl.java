@@ -18,6 +18,7 @@
 package org.raven.net.impl;
 
 import java.util.Map;
+import org.raven.net.Authentication;
 import org.raven.net.NetworkResponseNode;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.NetworkResponseServiceExeption;
@@ -46,10 +47,23 @@ public class NetworkResponseServiceImpl implements NetworkResponseService
     public String getResponse(String context, String requesterIp, Map<String, Object> params)
             throws NetworkResponseServiceExeption
     {
-        NetworkResponseNode serviceNode = getNetworkResponseServiceNode();
-        if (serviceNode==null || !serviceNode.getStatus().equals(Status.STARTED))
-            throw new NetworkResponseServiceUnavailableException();
-        
+        NetworkResponseNode serviceNode = checkNetworkResponseServiceNode();
         return serviceNode.getResponse(context, requesterIp, params);
+    }
+
+    public Authentication getAuthentication(String context) throws NetworkResponseServiceExeption
+    {
+        NetworkResponseNode serviceNode = checkNetworkResponseServiceNode();
+        return serviceNode.getAuthentication(context);
+    }
+
+    private NetworkResponseNode checkNetworkResponseServiceNode()
+            throws NetworkResponseServiceUnavailableException
+    {
+        NetworkResponseNode serviceNode = getNetworkResponseServiceNode();
+        if (serviceNode == null || !serviceNode.getStatus().equals(Status.STARTED)) {
+            throw new NetworkResponseServiceUnavailableException();
+        }
+        return serviceNode;
     }
 }

@@ -15,21 +15,21 @@
  *  under the License.
  */
 
-package org.raven.net;
+package org.raven.net.impl;
 
 import java.util.Map;
+import org.raven.net.NetworkResponseServiceExeption;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface NetworkResponse
+public class TestNetworkResponseContext extends AbstractNetworkResponseContext
 {
-    public String getResponse(String context, String requesterIp, Map<String, Object> params)
-            throws NetworkResponseServiceExeption;
-    /**
-     * Returns authentication object for context or null if context does not need
-     * authentication.
-     */
-    public Authentication getAuthentication(String context) throws NetworkResponseServiceExeption;
+    @Override
+    public String doGetResponse(String requesterIp, Map<String, Object> params)
+            throws NetworkResponseServiceExeption
+    {
+        return null;
+    }
 }

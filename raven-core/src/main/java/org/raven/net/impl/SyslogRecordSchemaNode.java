@@ -28,7 +28,7 @@ import org.raven.ds.impl.RecordSchemasNode;
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=RecordSchemasNode.class)
+@NodeClass(parentNode=RecordSchemasNode.class, childNodes={RecordSchemaFieldNode.class})
 public class SyslogRecordSchemaNode extends RecordSchemaNode
 {
     public static final String DATE_FIELD = "date";

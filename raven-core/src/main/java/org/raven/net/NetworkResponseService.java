@@ -23,6 +23,8 @@ package org.raven.net;
  */
 public interface NetworkResponseService extends NetworkResponse
 {
+    public final static String REQUEST_CONTENT_PARAMETER = "request-content";
+
     public NetworkResponseNode getNetworkResponseServiceNode();
 
     public void setNetworkResponseServiceNode(NetworkResponseNode networkResponseNode);

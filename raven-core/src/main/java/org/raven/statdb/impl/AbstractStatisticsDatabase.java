@@ -48,7 +48,7 @@ public abstract class AbstractStatisticsDatabase
 {
 	@Parameter
 	@NotNull
-	private long step;
+	private Long step;
 
     @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
     @NotNull
@@ -84,12 +84,12 @@ public abstract class AbstractStatisticsDatabase
 		initConfigurationNodes();
 	}
 
-	public void setStep(long step)
+	public void setStep(Long step)
 	{
 		this.step = step;
 	}
 
-	public long getStep()
+	public Long getStep()
 	{
 		return step;
 	}
@@ -160,6 +160,11 @@ public abstract class AbstractStatisticsDatabase
                 {
 					if (!stopList.contains(value.getKey()))
 					{
+                        if (isLogLevelEnabled(LogLevel.DEBUG))
+                            debug(String.format(
+                                    "Processing statistics: currentPath - (%s); " +
+                                    "statisticsName - (%s); value (%s)"
+                                    , subKey, value.getKey(), value.getValue()));
 						RuleProcessingResult res =
 								processStatistics(
 									partialKey, value.getKey(), value.getValue(), record
@@ -172,7 +177,7 @@ public abstract class AbstractStatisticsDatabase
                 catch(Exception e)
                 {
                     if (isLogLevelEnabled(LogLevel.ERROR))
-                    error(String.format(
+                        error(String.format(
                             "Error processing statistics record value (%s) " +
 							"for statistics name (%s) and record key (%s). %s"
                             , value.getValue(), value.getKey(), record.getKey(), e.getMessage())
@@ -190,8 +195,15 @@ public abstract class AbstractStatisticsDatabase
 		bindingSupport.put("name", name);
 		bindingSupport.put("value", value);
 		bindingSupport.put("record", record);
-		Collection<Node> rules = rulesNode.getEffectiveChildrens();
-		bindingSupport.reset();
+        Collection<Node> rules = null;
+        try
+        {
+            rules = rulesNode.getEffectiveChildrens();
+        }
+        finally
+        {
+            bindingSupport.reset();
+        }
 		
 		RuleProcessingResultImpl result =
 				new RuleProcessingResultImpl(ProcessingInstruction.CONTINUE_PROCESSING, value);
@@ -202,6 +214,11 @@ public abstract class AbstractStatisticsDatabase
 				if (ruleNode instanceof Rule)
 				{
 					Rule rule = (Rule) ruleNode;
+                    if (isLogLevelEnabled(LogLevel.DEBUG))
+                        debug(String.format(
+                                "Applying rule (%s) to the statistics value. " +
+                                "Current path - (%s), statistics name (%s), value (%s)"
+                                , ruleNode.getName(), partialKey, name, value));
 					rule.processRule(partialKey, name, value, record, result, this);
 					if (result.getInstruction()!=ProcessingInstruction.CONTINUE_PROCESSING)
 						return result;

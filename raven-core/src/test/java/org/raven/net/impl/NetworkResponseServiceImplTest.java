@@ -26,6 +26,7 @@ import org.raven.RavenCoreTestCase;
 import org.raven.ds.impl.AttributeValueDataSourceNode;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
+import org.raven.net.Authentication;
 import org.raven.net.ContextUnavailableException;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.NetworkResponseServiceExeption;
@@ -151,6 +152,41 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase
         assertEquals(
                 "subcontextName",
                 responseService.getResponse("context/subcontextName", "1.1.1.1", params));
+    }
+
+    @Test
+    public void authTest() throws NetworkResponseServiceExeption, Exception
+    {
+        NetworkResponseServiceNode responseServiceNode = (NetworkResponseServiceNode)
+                tree.getRootNode()
+                .getChildren(SystemNode.NAME)
+                .getChildren(ServicesNode.NAME)
+                .getChildren(NetworkResponseServiceNode.NAME);
+        assertNotNull(responseServiceNode);
+        responseServiceNode.setLogLevel(LogLevel.TRACE);
+
+        PushOnDemandDataSource ds = new PushOnDemandDataSource();
+        ds.setName("ds");
+        tree.getRootNode().addAndSaveChildren(ds);
+        assertTrue(ds.start());
+
+        NetworkResponseContextNode context = new NetworkResponseContextNode();
+        context.setName("context");
+        responseServiceNode.addAndSaveChildren(context);
+        context.setAllowRequestsFromAnyIp(true);
+        context.setDataSource(ds);
+        assertTrue(context.start());
+
+        assertNull(responseService.getAuthentication("context"));
+
+        context.setNeedsAuthentication(true);
+        context.getNodeAttribute(AbstractNetworkResponseContext.USER_ATTR).setValue("user_name");
+        context.getNodeAttribute(AbstractNetworkResponseContext.PASSWORD_ATTR).setValue("pass");
+
+        Authentication auth = context.getAuthentication();
+        assertNotNull(auth);
+        assertEquals("user_name", auth.getUser());
+        assertEquals("pass", auth.getPassword());
     }
 
 }
