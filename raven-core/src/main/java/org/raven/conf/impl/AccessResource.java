@@ -20,14 +20,21 @@ package org.raven.conf.impl;
 public class AccessResource extends AccessControlList 
 {
 		static final long serialVersionUID = 1;
+		public static final String SHOW_PARAM = "show";
+		private String show = null;
 
 		public AccessResource(String list)
 		{
 			super(list);
 		}
 		
-		protected boolean applyExpression(String[] tokens) 
+		protected boolean applyExpression(String[] x) 
 		{
+			if(x[0].equals(SHOW_PARAM))
+			{
+				setShow(x[1]);
+				return true;
+			}
 			return false;		
 		}
 
@@ -37,6 +44,14 @@ public class AccessResource extends AccessControlList
 	    		return true;
 	    	return false;
 	    }
+
+		public void setShow(String show) {
+			this.show = show;
+		}
+
+		public String getShow() {
+			return show;
+		}
 		
 		
 }

@@ -153,11 +153,15 @@ public class UserAcl
 		{
 			String title = ar.getTitle();
 			if(title==null || title.length()==0) continue;
-			List<AccessControl> lst = ar.getAcl();
-			if(lst.size()==0) continue;
-			AccessControl ac = lst.get(0);
-			if(ac==null) continue;
-			String path = ac.getResource();
+			String path = ar.getShow();
+			if(path==null)
+			{
+				List<AccessControl> lst = ar.getAcl();
+				if(lst.size()==0) continue;
+				AccessControl ac = lst.get(0);
+				if(ac==null) continue;
+				path = ac.getResource();
+			}
 			if(path.endsWith("*")) path = path.substring(0, path.length()-1);
 			rl.put(title, path);
 		}
