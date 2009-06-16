@@ -87,41 +87,45 @@ public class AggregationRuleNode extends BaseNode implements Rule
 		throws Exception
 	{
 		String aggregationKey = key+"#"+name;
+        Aggregation aggregation = null;
 		aggregationsLock.readLock().lock();
 		try
 		{
 			if (getStatus()!=Status.STARTED)
 				return;
-			Aggregation aggregation = aggregations.get(aggregationKey);
-			long ntime = Util.normalize(record.getTime(), database.getStep());
-			if (aggregation==null)
-				aggregation = createAggregation(aggregationKey, ntime, value);
-			else
-			{
-				if (ntime>aggregation.getTime())
-				{
+			aggregation = aggregations.get(aggregationKey);
+		}finally{
+			aggregationsLock.readLock().unlock();
+		}
+        long ntime = Util.normalize(record.getTime(), database.getStep());
+        if (aggregation==null)
+            aggregation = createAggregation(aggregationKey, ntime, value);
+        else
+        {
+            synchronized(aggregation)
+            {
+                if (ntime>aggregation.getTime())
+                {
                     if (isLogLevelEnabled(LogLevel.DEBUG))
                         debug(String.format(
                                 "Saving aggregated value (%s) for aggregation key (%s) " +
                                 "to the statistics database. "
                                 , aggregation.getValue(), aggregationKey));
-					database.saveStatisticsValue(
-							key, name, aggregation.getValue(), aggregation.getTime());
-					aggregation.reset(ntime, value);
-				}
-				else
-				{
-					aggregation.aggregate(value);
-				}
-			}
-            if (isLogLevelEnabled(LogLevel.DEBUG))
-                debug(String.format(
-                        "Aggregating value (%s) for aggregation key (%s). " +
-                        "New aggregated value is (%s)"
-                        , value, aggregationKey, aggregation.getValue()));
-		}finally{
-			aggregationsLock.readLock().unlock();
-		}
+                    database.saveStatisticsValue(
+                            key, name, aggregation.getValue(), aggregation.getTime());
+                    aggregation.reset(ntime, value);
+                }
+                else
+                {
+                    aggregation.aggregate(value);
+                }
+            }
+        }
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            debug(String.format(
+                    "Aggregating value (%s) for aggregation key (%s). " +
+                    "New aggregated value is (%s)"
+                    , value, aggregationKey, aggregation.getValue()));
 	}
 
 	public AggregationFunction getAggregationFunction()
@@ -136,18 +140,28 @@ public class AggregationRuleNode extends BaseNode implements Rule
 
 	private Aggregation createAggregation(String aggregationKey, long time, double value)
 	{
-		Aggregation aggregation = null;
-		switch (aggregationFunction)
-		{
-			case MAX: aggregation = new MaxAggregation(time, value);
-            case AVERAGE : aggregation = new AverageAggregation(time, value);
-            case LAST : aggregation = new LastAggregation(time, value);
-            case MIN : aggregation = new MinAggregation(time, value);
-            case SUM : aggregation = new SumAggregation(time, value);
-		}
+        aggregationsLock.writeLock().lock();
+        try
+        {
+            Aggregation aggregation = aggregations.get(aggregationKey);
+            if (aggregation==null)
+            {
+                switch (aggregationFunction)
+                {
+                    case MAX: aggregation = new MaxAggregation(time, value); break;
+                    case AVERAGE : aggregation = new AverageAggregation(time, value); break;
+                    case LAST : aggregation = new LastAggregation(time, value); break;
+                    case MIN : aggregation = new MinAggregation(time, value); break;
+                    case SUM : aggregation = new SumAggregation(time, value); break;
+                }
 
-		aggregations.put(aggregationKey, aggregation);
-
-        return aggregation;
+                aggregations.put(aggregationKey, aggregation);
+            }
+            return aggregation;
+        }
+        finally
+        {
+            aggregationsLock.writeLock().unlock();
+        }
 	}
 }

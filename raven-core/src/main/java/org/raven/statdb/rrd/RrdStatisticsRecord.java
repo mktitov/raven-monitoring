@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchemaField;
+import org.raven.log.LogLevel;
 import org.raven.statdb.impl.AbstractStatisticsRecord;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
@@ -55,6 +56,14 @@ public class RrdStatisticsRecord extends AbstractStatisticsRecord
     {
         RrdDatabaseRecordFieldExtension fieldExt =
                 field.getFieldExtension(RrdDatabaseRecordFieldExtension.class, null);
+        if (fieldExt==null)
+        {
+            if (owner.isLogLevelEnabled(LogLevel.DEBUG))
+                owner.getLogger().debug(String.format(
+                        "Record field (%s) does not have (%s) extension"
+                        , field.getName(), RrdDatabaseRecordFieldExtension.class.getName()));
+            return false;
+        }
         RrdDatabaseRecordExtension dbTemplate = schema.getRecordExtension(
                 RrdDatabaseRecordExtension.class, fieldExt.getDatabaseTemplateName());
         if (dbTemplate==null)

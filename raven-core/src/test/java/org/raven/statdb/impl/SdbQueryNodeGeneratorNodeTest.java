@@ -65,7 +65,7 @@ public class SdbQueryNodeGeneratorNodeTest extends RavenCoreTestCase
         database = new TestStatisticsDatabase();
         database.setName("database");
         tree.getRootNode().addAndSaveChildren(database);
-        database.setStep(5);
+        database.setStep(5l);
         database.setDataSource(datasource);
         database.setRecordSchema(schema);
         assertTrue(database.start());

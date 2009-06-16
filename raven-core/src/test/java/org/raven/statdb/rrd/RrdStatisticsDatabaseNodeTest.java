@@ -114,7 +114,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 		db.save();
 		tree.getRootNode().addChildren(db);
 		db.init();
-		db.setStep(5);
+		db.setStep(5l);
 		db.setDataSource(ds);
 		db.setStartTime("epoch");
 		db.setUpdateQueue(queue);

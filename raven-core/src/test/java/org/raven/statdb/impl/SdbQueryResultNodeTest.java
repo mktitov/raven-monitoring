@@ -52,7 +52,7 @@ public class SdbQueryResultNodeTest extends RavenCoreTestCase
         db = new TestStatisticsDatabase2();
         db.setName("db");
         tree.getRootNode().addAndSaveChildren(db);
-        db.setStep(10);
+        db.setStep(10l);
         db.setDataSource(ds);
         db.setRecordSchema(schema);
         assertTrue(db.start());

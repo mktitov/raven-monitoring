@@ -55,10 +55,7 @@ public class AggregationRuleNodeTest extends RavenCoreTestCase
 
 		AggregationRuleNode rule = new AggregationRuleNode();
 		rule.setName("rule");
-		rule.setParent(tree.getRootNode());
-		rule.save();
-		tree.getRootNode().addChildren(rule);
-		rule.init();
+        tree.getRootNode().addAndSaveChildren(rule);
 		rule.setAggregationFunction(AggregationFunction.MAX);
 		rule.start();
 		assertEquals(rule.getStatus(), Status.STARTED);
