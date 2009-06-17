@@ -23,7 +23,6 @@ import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.ViewableObject;
 import org.tmatesoft.svn.core.SVNDepth;
-import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 
@@ -37,30 +36,36 @@ public class SvnFileDiffViewableObject implements ViewableObject
     private final long revision;
     private final File file;
     private final Node owner;
+    private final boolean wrapToHtml;
 
     public SvnFileDiffViewableObject(
-            SVNClientManager svnClient, long revision, File file, Node owner)
+            SVNClientManager svnClient, long revision, File file, Node owner, boolean wrapToHtml)
     {
         this.svnClient = svnClient;
         this.revision = revision;
         this.file = file;
         this.owner = owner;
+        this.wrapToHtml = wrapToHtml;
     }
 
     public String getMimeType() {
-        return "text/x-diff";
+        return wrapToHtml? "text/html" : "text/x-diff";
     }
 
     public Object getData()
     {
         ByteArrayOutputStream buf = new ByteArrayOutputStream(1024);
         try {
+            if (wrapToHtml)
+                buf.write("<html><body><pre>".getBytes());
             svnClient.getDiffClient().doDiff(
                     file, SVNRevision.UNDEFINED, SVNRevision.create(revision), SVNRevision.WORKING
                     , SVNDepth.IMMEDIATES, false, buf, null);
+            if (wrapToHtml)
+                buf.write("</pre></body></html>".getBytes());
             return buf.toByteArray();
         } 
-        catch (SVNException ex)
+        catch (Exception ex)
         {
             if (owner.isLogLevelEnabled(LogLevel.ERROR))
                 owner.getLogger().error(
@@ -86,7 +91,7 @@ public class SvnFileDiffViewableObject implements ViewableObject
 
     @Override
     public String toString() {
-        return file.getName()+"R"+revision+"-HEAD.diff";
+        return file.getName()+"-R"+revision+"-HEAD.diff"+(wrapToHtml? ".html" : "");
     }
 
 }

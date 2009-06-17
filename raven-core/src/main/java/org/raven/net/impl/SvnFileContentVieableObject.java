@@ -24,7 +24,6 @@ import java.io.File;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.ViewableObject;
-import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 
@@ -39,30 +38,36 @@ public class SvnFileContentVieableObject implements ViewableObject
     private final long revision;
     private final Node owner;
     private final MimeType mimeType;
+    private final boolean wrapToHtml;
 
     public SvnFileContentVieableObject(
-            SVNClientManager svnClient, File file, long revision, Node owner)
+            SVNClientManager svnClient, File file, long revision, Node owner, boolean wrapToHtml)
     {
         this.svnClient = svnClient;
         this.file = file;
         this.revision = revision;
         this.owner = owner;
         this.mimeType = (MimeType) MimeUtil.getMimeTypes(file).iterator().next();
+        this.wrapToHtml = wrapToHtml;
     }
 
     public String getMimeType() {
-        return mimeType.toString();
+        return wrapToHtml? "text/html" : mimeType.toString();
     }
 
     public Object getData()
     {
         ByteArrayOutputStream buf = new ByteArrayOutputStream(1024);
         try {
+            if (wrapToHtml)
+                buf.write("<html><body><pre>".getBytes());
             svnClient.getWCClient().doGetFileContents(
                     file, SVNRevision.UNDEFINED, SVNRevision.create(revision), false, buf);
+            if (wrapToHtml)
+                buf.write("</pre></body></html>".getBytes());
             return buf.toByteArray();
         }
-        catch (SVNException ex)
+        catch (Exception ex)
         {
             if (owner.isLogLevelEnabled(LogLevel.ERROR))
                 owner.getLogger().error(
@@ -89,7 +94,7 @@ public class SvnFileContentVieableObject implements ViewableObject
     @Override
     public String toString()
     {
-        return file.getName();
+        return file.getName()+(wrapToHtml? ".html" : "");
     }
 
 }

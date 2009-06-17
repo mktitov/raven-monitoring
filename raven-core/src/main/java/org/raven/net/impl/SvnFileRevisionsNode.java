@@ -75,7 +75,11 @@ public class SvnFileRevisionsNode extends BaseNode implements Viewable
     @Message
     private static String fileColumnName;
     @Message
+    private static String fileHtmlColumnName;
+    @Message
     private static String diffColumnName;
+    @Message
+    private static String diffHtmlColumnName;
     @Message
     private static String filesColumnName;
 
@@ -150,7 +154,10 @@ public class SvnFileRevisionsNode extends BaseNode implements Viewable
         TableImpl table;
         if (isRevisionsForFile())
             table = new TableImpl(
-                new String[]{revisionsColumnName, dateColumnName, fileColumnName, diffColumnName});
+                new String[]{
+                    revisionsColumnName, dateColumnName,
+                    fileColumnName, fileHtmlColumnName,
+                    diffColumnName, diffHtmlColumnName});
         else
             table = new TableImpl(
                 new String[]{revisionsColumnName, dateColumnName, filesColumnName});
@@ -164,10 +171,14 @@ public class SvnFileRevisionsNode extends BaseNode implements Viewable
             if (isRevisionsForFile())
             {
                 SvnFileContentVieableObject content =
-                        new SvnFileContentVieableObject(svnClient, file, revision, this);
+                        new SvnFileContentVieableObject(svnClient, file, revision, this, false);
+                SvnFileContentVieableObject contentHtml =
+                        new SvnFileContentVieableObject(svnClient, file, revision, this, true);
                 SvnFileDiffViewableObject diff =
-                        new SvnFileDiffViewableObject(svnClient, revision, file, this);
-                table.addRow(new Object[]{revision, date, content, diff});
+                        new SvnFileDiffViewableObject(svnClient, revision, file, this, false);
+                SvnFileDiffViewableObject diffHtml =
+                        new SvnFileDiffViewableObject(svnClient, revision, file, this, true);
+                table.addRow(new Object[]{revision, date, content, contentHtml, diff, diffHtml});
             }
             else
             {

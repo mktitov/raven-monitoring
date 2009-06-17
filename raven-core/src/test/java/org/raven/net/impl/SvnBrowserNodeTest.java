@@ -231,10 +231,15 @@ public class SvnBrowserNodeTest extends RavenCoreTestCase
         assertEquals(2l, rows.get(0)[0]);
         assertEquals(1l, rows.get(1)[0]);
 
-        checkFileContent(rows.get(0)[2], "file content\nmodified");
-        checkFileContent(rows.get(1)[2], "file content");
+        checkFileContent(rows.get(0)[2], "file content\nmodified", "text/plain");
+        checkFileContent(rows.get(1)[2], "file content", "text/plain");
 
-        Object diffObj = rows.get(1)[3];
+        checkFileContent(rows.get(0)[3]
+                , "<html><body><pre>file content\nmodified</pre></body></html>", "text/html");
+        checkFileContent(rows.get(1)[3]
+                , "<html><body><pre>file content</pre></body></html>", "text/html");
+
+        Object diffObj = rows.get(1)[4];
         assertNotNull(diffObj);
         assertTrue(diffObj instanceof SvnFileDiffViewableObject);
         ViewableObject diff = (ViewableObject) diffObj;
@@ -244,6 +249,19 @@ public class SvnBrowserNodeTest extends RavenCoreTestCase
         assertTrue(data instanceof byte[]);
         String diffRes = new String((byte[])data);
         assertFalse(diffRes.isEmpty());
+
+        diffObj = rows.get(1)[5];
+        assertNotNull(diffObj);
+        assertTrue(diffObj instanceof SvnFileDiffViewableObject);
+        diff = (ViewableObject) diffObj;
+        assertEquals("text/html", diff.getMimeType());
+        data = diff.getData();
+        assertNotNull(data);
+        assertTrue(data instanceof byte[]);
+        diffRes = new String((byte[])data);
+        assertFalse(diffRes.isEmpty());
+        assertTrue(diffRes.startsWith("<html><body><pre>"));
+        assertTrue(diffRes.endsWith("</pre></body></html>"));
     }
 
     @Test
@@ -439,12 +457,12 @@ public class SvnBrowserNodeTest extends RavenCoreTestCase
         assertNull(svnBrowser.getChildren("test"));
     }
 
-    private void checkFileContent(Object contentObj, String expectContent)
+    private void checkFileContent(Object contentObj, String expectContent, String contentType)
     {
         assertNotNull(contentObj);
         assertTrue(contentObj instanceof SvnFileContentVieableObject);
         ViewableObject content = (ViewableObject) contentObj;
-        assertEquals("text/plain", content.getMimeType());
+        assertEquals(contentType, content.getMimeType());
         Object data = content.getData();
         assertNotNull(data);
         assertTrue(data instanceof byte[]);
