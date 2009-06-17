@@ -260,8 +260,8 @@ public class SvnBrowserNodeTest extends RavenCoreTestCase
         assertTrue(data instanceof byte[]);
         diffRes = new String((byte[])data);
         assertFalse(diffRes.isEmpty());
-        assertTrue(diffRes.startsWith("<html><body><pre>"));
-        assertTrue(diffRes.endsWith("</pre></body></html>"));
+        assertTrue(diffRes.startsWith("<html><body>"));
+        assertTrue(diffRes.endsWith("</body></html>"));
     }
 
     @Test

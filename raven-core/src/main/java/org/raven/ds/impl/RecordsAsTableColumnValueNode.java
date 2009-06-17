@@ -32,6 +32,8 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass(parentNode=RecordsAsTableNode.class)
 public class RecordsAsTableColumnValueNode extends BaseNode
 {
+    public final static String COLUMN_VALUE_ATTR = "columnValue";
+
     @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
 //    @NotNull
     private String columnValue;

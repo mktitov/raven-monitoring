@@ -17,8 +17,12 @@
 
 package org.raven.net.impl;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.InputStreamReader;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.LineIterator;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.ViewableObject;
@@ -56,14 +60,13 @@ public class SvnFileDiffViewableObject implements ViewableObject
     {
         ByteArrayOutputStream buf = new ByteArrayOutputStream(1024);
         try {
-            if (wrapToHtml)
-                buf.write("<html><body><pre>".getBytes());
             svnClient.getDiffClient().doDiff(
                     file, SVNRevision.UNDEFINED, SVNRevision.create(revision), SVNRevision.WORKING
                     , SVNDepth.IMMEDIATES, false, buf, null);
+            byte[] data = buf.toByteArray();
             if (wrapToHtml)
-                buf.write("</pre></body></html>".getBytes());
-            return buf.toByteArray();
+                data = wrapDiffToHtml(data);
+            return data;
         } 
         catch (Exception ex)
         {
@@ -94,4 +97,40 @@ public class SvnFileDiffViewableObject implements ViewableObject
         return file.getName()+"-R"+revision+"-HEAD.diff"+(wrapToHtml? ".html" : "");
     }
 
+    private byte[] wrapDiffToHtml(byte[] diff)
+    {
+        if (diff==null || diff.length==0)
+            return null;
+        InputStreamReader reader = new InputStreamReader(new ByteArrayInputStream(diff));
+        LineIterator it = IOUtils.lineIterator(reader);
+        try
+        {
+            StringBuilder html = new StringBuilder("<html><body>");
+            boolean isHeader=true;
+            while (it.hasNext())
+            {
+                String line = it.nextLine();
+                if (line.startsWith("@@") && line.endsWith("@@"))
+                {
+                    if (isHeader) isHeader = false;
+                    html.append("<b><font color=\"blue\">"+line+"</font></b>");
+                }
+                else if (line.startsWith("+") && !isHeader)
+                    html.append("<font color=\"green\">"+line+"</font>");
+                else if (line.startsWith("-") && !isHeader)
+                    html.append("<font color=\"red\">"+line+"</font>");
+                else if (isHeader)
+                    html.append("<b>"+line+"</b>");
+                else
+                    html.append(line);
+                html.append("<br/>");
+            }
+            html.append("</body></html>");
+            return html.toString().getBytes();
+        }
+        finally
+        {
+            IOUtils.closeQuietly(reader);
+        }
+    }
 }

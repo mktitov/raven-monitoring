@@ -355,7 +355,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
                             columnValue = columnValues.get(i);
                             columnValue.addBinding(VALUE_BINDING, value);
                             columnValue.addBinding(RECORD_BINDING, record);
-                            value = columnValue.getColumnValue();
+                            value = columnValue.getNodeAttribute(
+                                    RecordsAsTableColumnValueNode.COLUMN_VALUE_ATTR).getRealValue();
                         }
 
                         value = converter.convert(

@@ -19,6 +19,7 @@ package org.raven.graph.impl;
 
 import java.util.Arrays;
 import java.util.Collection;
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
@@ -37,6 +38,9 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
+@NodeClass(
+    parentNode=GraphNode.class,
+    childNodes={LineInterpolatorNode.class, SplineInterpolatorNode.class})
 public class SdbQueryResultDataDef extends AbstractDataDef implements DataConsumer
 {
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
