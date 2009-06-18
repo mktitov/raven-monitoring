@@ -26,12 +26,13 @@ import org.raven.ds.DataConsumer;
 import org.raven.ds.DataPipe;
 import org.raven.ds.DataSource;
 import org.raven.ds.SessionAttributeGenerator;
-import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.expr.impl.BindingSupportImpl;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
+import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -45,10 +46,10 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
     public static final String PREPROCESS_ATTRIBUTE = "preProcess";
     public static final String SESSIONATTRIBUTES_BINDING = "sessAttrs";
 
-    @NotNull @Parameter
+    @NotNull @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     private DataSource dataSource;
 
-    @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
+    @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
     private Object expression;
 
     @NotNull @Parameter(defaultValue="false")
@@ -57,7 +58,7 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
     @NotNull @Parameter(defaultValue="false")
     private Boolean forwardDataSourceAttributes;
 
-    @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
+    @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
     private String preProcess;
 
     @NotNull @Parameter(defaultValue="false")
