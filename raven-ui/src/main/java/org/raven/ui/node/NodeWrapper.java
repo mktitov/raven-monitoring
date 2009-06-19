@@ -159,6 +159,14 @@ implements Comparator<NodeAttribute>
 		return cnode;
 	}
 
+	public static Viewable getViewableByVoSource(Viewable v)
+	{
+		Node n = getNodeByAttr(v,VO_SOURCE);
+		if (n instanceof Viewable) 
+			return (Viewable) n;
+		return v; 
+	}
+	
 	public Node getVoSource()
 	{
 		return getNodeByAttr(getNode(),VO_SOURCE);

@@ -70,7 +70,10 @@ public class RefreshAttributesCache
 	private Map<String,NodeAttribute> getRA(Viewable viewable)
 	{
 		Map<String,NodeAttribute> ra = null;
-		try { ra = viewable.getRefreshAttributes(); }
+		try	{
+			Viewable v = NodeWrapper.getViewableByVoSource(viewable);
+			ra = v.getRefreshAttributes(); 
+		}
 		catch (Exception e){logger.error("on load refresh attributes: ",e);}
 		return ra;
 	}

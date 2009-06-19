@@ -22,6 +22,7 @@ import java.util.Comparator;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.raven.tree.Node;
@@ -46,6 +47,7 @@ public abstract class AccessControlList implements Comparator<AccessControl>
 	private String name = null;
 	private String dsc = null;
 	private String title = null;
+	private AccessControl first = null;
 
 	public AccessControlList() 
 	{ 
@@ -91,7 +93,11 @@ public abstract class AccessControlList implements Comparator<AccessControl>
 			if(x[0].equals(AC_PARAM))
 			{
 				if(x[2]!=null && x[2].length()>0)
-					acl.addAll(AccessControl.getACs(x[1]+PARAM_DELIMITER+x[2]));
+				{
+					List<AccessControl> acAr = AccessControl.getACs(x[1]+PARAM_DELIMITER+x[2]);
+					if(getFirst()==null) setFirst(acAr.get(0));
+					acl.addAll(acAr);
+				}	
 				continue;
 			}	
 			if(!applyExpression(x))
@@ -125,6 +131,12 @@ public abstract class AccessControlList implements Comparator<AccessControl>
 	 */
     protected void addAll(AccessControlList x) 
     {
+    	if(x==null || x.acl==null || x.acl.size()==0) return;
+    	if(getFirst()==null)
+    	{
+    		AccessControl aa = x.acl.get(0);
+    		setFirst(aa);
+    	}	
     	for(AccessControl ac : x.acl)
     		acl.add(ac);
     	if(x.isFiltersDisabled()) setFiltersLocked();
@@ -295,6 +307,14 @@ public abstract class AccessControlList implements Comparator<AccessControl>
 
 	public String getTitle() {
 		return title;
+	}
+
+	public void setFirst(AccessControl first) {
+		this.first = first;
+	}
+
+	public AccessControl getFirst() {
+		return first;
 	}
 
 }

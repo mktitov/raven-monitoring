@@ -89,9 +89,12 @@ public class GroupsAclStorage
 			lastResNum = i;
 			AccessResource ar = new AccessResource(sb.toString());
 			if(ar.isValid())
+			{
 				acln.put(ar.getName(), ar);
-			if(logger.isInfoEnabled())
-				logger.info("resource name: {}  acl: {}",ar.getName(),ar.toString());
+				if(logger.isInfoEnabled())
+					logger.info("added resource, name: {}  acl: {}",ar.getName(),ar.toString());
+			}
+			else logger.warn("invalid resource, name: {}  acl: {}",ar.getName(),ar.toString());
 			
 		}
 		//lastUpdate = config.getLastUpdate();

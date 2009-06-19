@@ -238,7 +238,8 @@ action="#{sBean.reloadRightFrame}"
 <tr:table width="100%"
 		horizontalGridVisible="false" 
 		verticalGridVisible="false"
- 		var="row"
+ 		var="row" 
+ 		varStatus="vnstat"
  		value="#{cNode.viewableObjects}"  
  		id="showTable"
  		immediate="true" >
@@ -276,7 +277,19 @@ partialTriggers=":poolStatus"
 	  	<f:facet name="nodeUrl">
 	  	  	<tr:panelHorizontalLayout halign="left" >
 	  	  	<tr:spacer width="10" />
+			<tr:commandLink
+				inlineStyle="font-weight: bold;"
+				rendered="#{vnstat.index==0}" 
+				partialSubmit="true"
+				text="#{msgs.node}: #{row.node.name}"  
+				actionListener="#{sBean.selectNode}">
+				<f:attribute 
+					name="nodePath" 
+					value="#{row.navigateTo}"/>
+			</tr:commandLink>
+	  	  	
 			<tr:commandLink 
+				rendered="#{vnstat.index!=0}" 
 				partialSubmit="true"
 				text="#{msgs.node}: #{row.node.name}"  
 				actionListener="#{sBean.selectNode}">

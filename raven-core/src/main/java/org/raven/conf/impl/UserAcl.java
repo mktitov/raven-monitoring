@@ -156,9 +156,7 @@ public class UserAcl
 			String path = ar.getShow();
 			if(path==null)
 			{
-				List<AccessControl> lst = ar.getAcl();
-				if(lst.size()==0) continue;
-				AccessControl ac = lst.get(0);
+				AccessControl ac = ar.getFirst();
 				if(ac==null) continue;
 				path = ac.getResource();
 			}

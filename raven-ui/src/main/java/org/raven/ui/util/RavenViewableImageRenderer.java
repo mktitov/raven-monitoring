@@ -1,6 +1,8 @@
 package org.raven.ui.util;
 
 import java.io.IOException;
+import java.io.InputStream;
+
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseStream;
 import org.apache.myfaces.custom.dynamicResources.ResourceContext;
@@ -16,6 +18,7 @@ public class RavenViewableImageRenderer implements ImageRenderer
 	public static final String PARAM_NAME = "ViewableObject";
 	//private InputStream stream = null;
 	private ViewableObjectWrapper vow = null;
+	public static final int BUF_LEN = 100000;
 	
 	public int getContentLength() 
 	{
@@ -43,6 +46,36 @@ public class RavenViewableImageRenderer implements ImageRenderer
 	public void renderResource(ResponseStream out) throws IOException 
 	{
 		if(vow==null) return;
+		Object dt = vow.getData();
+		if(dt==null)
+		{
+			logger.warn("VO data is null");
+			return;
+		}	
+		if (dt instanceof InputStream) 
+		{
+			int cnt;
+			byte[] ba = new byte[BUF_LEN];
+			InputStream is = null;
+			try 
+			{
+				is = (InputStream)dt;
+				while( (cnt = is.read(ba))!=-1 )
+				{
+			        if(cnt==0) continue;
+			        out.write(ba, 0, cnt);
+				}
+			} catch(Exception e) 
+			{
+				logger.error("renderResource:",e);
+			}
+			finally
+			{
+				try {is.close();} catch(Exception e) {};
+			}
+			return;
+		}
+		
 		byte[] data = (byte[]) vow.getData();
 		if(data!=null)
 			out.write(data, 0, data.length);

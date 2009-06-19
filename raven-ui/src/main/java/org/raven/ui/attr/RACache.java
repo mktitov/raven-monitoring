@@ -1,8 +1,6 @@
 package org.raven.ui.attr;
 
-import java.util.Iterator;
 import java.util.Map;
-
 import org.raven.cache.AbstractCache;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;

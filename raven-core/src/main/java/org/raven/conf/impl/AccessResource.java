@@ -1,4 +1,5 @@
 package org.raven.conf.impl;
+
 /*
  *  Copyright 2008 Sergey Pinevskiy.
  * 
@@ -25,7 +26,7 @@ public class AccessResource extends AccessControlList
 
 		public AccessResource(String list)
 		{
-			super(list);
+			super.init(list);
 		}
 		
 		protected boolean applyExpression(String[] x) 
@@ -40,8 +41,9 @@ public class AccessResource extends AccessControlList
 
 	    public boolean isValid()
 	    {
-	    	if(getName()!=null && getAcl().size()>0) 
-	    		return true;
+	    	if(getName()==null) return false;
+    		if( getAcl().size() > 0 ) return true;
+    		if( getShow()!=null && getTitle()!=null) return true;
 	    	return false;
 	    }
 
