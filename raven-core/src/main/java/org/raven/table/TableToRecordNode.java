@@ -20,6 +20,7 @@ package org.raven.table;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
@@ -32,6 +33,8 @@ import org.raven.ds.RecordSchemaField;
 import org.raven.ds.impl.AbstractDataPipe;
 import org.raven.ds.impl.RecordSchemaNode;
 import org.raven.ds.impl.RecordSchemaValueTypeHandlerFactory;
+import org.raven.expr.impl.BindingSupportImpl;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
 import org.weda.annotations.constraints.NotNull;
@@ -43,7 +46,9 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass
 public class TableToRecordNode extends AbstractDataPipe
 {
-    public static final String ROW_BINDING_NAME = "row";
+    public static final String RECORD_BINDING = "record";
+    public static final String ROW_BINDING = "row";
+    public static final String CONFIGURE_RECORD_EXPRESSION_ATTR = "configureRecordExpression";
     @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
     @NotNull
     private RecordSchemaNode recordSchema;
@@ -51,10 +56,36 @@ public class TableToRecordNode extends AbstractDataPipe
     @Parameter
     private String tableColumnExtensionName;
 
+    @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
+    private Record configureRecordExpression;
+
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean useConfigureRecordExpression;
+
+    private BindingSupportImpl bindingSupport;
+
     @Override
     protected void initFields()
     {
         super.initFields();
+
+        bindingSupport = new BindingSupportImpl();
+    }
+
+    public Record getConfigureRecordExpression() {
+        return configureRecordExpression;
+    }
+
+    public void setConfigureRecordExpression(Record configureRecordExpression) {
+        this.configureRecordExpression = configureRecordExpression;
+    }
+
+    public Boolean getUseConfigureRecordExpression() {
+        return useConfigureRecordExpression;
+    }
+
+    public void setUseConfigureRecordExpression(Boolean useConfigureRecordExpression) {
+        this.useConfigureRecordExpression = useConfigureRecordExpression;
     }
 
     public RecordSchemaNode getRecordSchema()
@@ -83,6 +114,13 @@ public class TableToRecordNode extends AbstractDataPipe
     }
 
     @Override
+    public void formExpressionBindings(Bindings bindings)
+    {
+        super.formExpressionBindings(bindings);
+        bindingSupport.addTo(bindings);
+    }
+
+    @Override
     protected void doSetData(DataSource dataSource, Object data) throws Exception
     {
         if (!(data instanceof Table))
@@ -100,7 +138,8 @@ public class TableToRecordNode extends AbstractDataPipe
             debug("Trying to convert table to records");
 
         Table table = (Table) data;
-        Map<Integer, FieldInfo> fieldCols = new HashMap<Integer, FieldInfo>();
+        Map<Integer, Collection<FieldInfo>> fieldCols =
+                new HashMap<Integer, Collection<FieldInfo>>();
         RecordSchema _recordSchema = recordSchema;
         RecordSchemaField[] fields = _recordSchema.getFields();
         String _tableColumnExtensionName = tableColumnExtensionName;
@@ -111,7 +150,7 @@ public class TableToRecordNode extends AbstractDataPipe
                         field.getFieldExtension(
                             TableColumnRecordFieldExtension.class, _tableColumnExtensionName);
                 if (colExt!=null)
-                    fieldCols.put(colExt.getColumnNumber(), new FieldInfo(field, colExt));
+                    addFieldInfo(fieldCols, field, colExt);
             }
         if (isLogLevelEnabled(LogLevel.DEBUG))
             debug(String.format(
@@ -124,15 +163,26 @@ public class TableToRecordNode extends AbstractDataPipe
         {
             Object[] row = it.next();
             Bindings bindings = new SimpleBindings();
-            bindings.put(ROW_BINDING_NAME ,row);
+            bindings.put(ROW_BINDING ,row);
             Record record = _recordSchema.createRecord();
             for (int i=0; i<row.length; ++i)
             {
-                FieldInfo fieldInfo = fieldCols.get(i);
-                if (fieldInfo!=null)
-                {
-                    Object val = fieldInfo.getColumnExtension().prepareValue(row[i], bindings);
-                    record.setValue(fieldInfo.getField().getName(), val);
+                Collection<FieldInfo> fieldInfos = fieldCols.get(i);
+                if (fieldInfos!=null)
+                    for (FieldInfo fieldInfo: fieldInfos)
+                    {
+                        Object val = fieldInfo.getColumnExtension().prepareValue(row[i], bindings);
+                        record.setValue(fieldInfo.getField().getName(), val);
+                    }
+            }
+            if (useConfigureRecordExpression)
+            {
+                bindingSupport.put(RECORD_BINDING, record);
+                bindingSupport.put(ROW_BINDING, row);
+                try{
+                    record = configureRecordExpression;
+                }finally {
+                    bindingSupport.reset();
                 }
             }
             sendDataToConsumers(record);
@@ -141,6 +191,21 @@ public class TableToRecordNode extends AbstractDataPipe
         sendDataToConsumers(null);
         if (isLogLevelEnabled(LogLevel.DEBUG))
             debug(String.format("(%d) records sended to consumers", recCount));
+    }
+
+    private void addFieldInfo(
+            Map<Integer, Collection<FieldInfo>> fieldCols
+            , RecordSchemaField field
+            , TableColumnRecordFieldExtension colExt)
+    {
+        int colNum = colExt.getColumnNumber();
+        Collection<FieldInfo> fieldInfos = fieldCols.get(colNum);
+        if (fieldInfos==null)
+        {
+            fieldInfos = new LinkedList<FieldInfo>();
+            fieldCols.put(colNum, fieldInfos);
+        }
+        fieldInfos.add(new FieldInfo(field, colExt));
     }
 
     private class FieldInfo

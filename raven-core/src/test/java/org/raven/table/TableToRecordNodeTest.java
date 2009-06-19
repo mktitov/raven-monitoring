@@ -18,6 +18,7 @@
 package org.raven.table;
 
 import java.util.List;
+import org.junit.Before;
 import org.junit.Test;
 import org.raven.DataCollector;
 import org.raven.PushDataSource;
@@ -36,10 +37,14 @@ import org.raven.log.LogLevel;
  */
 public class TableToRecordNodeTest extends RavenCoreTestCase
 {
-    @Test
-    public void test() throws RecordException
+    private PushDataSource ds;
+    private TableToRecordNode tab2rec;
+    private DataCollector collector;
+
+    @Before
+    public void prepare()
     {
-        PushDataSource ds = new PushDataSource();
+        ds = new PushDataSource();
         ds.setName("ds");
         tree.getRootNode().addAndSaveChildren(ds);
         assertTrue(ds.start());
@@ -52,7 +57,7 @@ public class TableToRecordNodeTest extends RavenCoreTestCase
         createField(schema, "f1", 0, null);
         createField(schema, "f2", 2, "value+'_'+row[1]");
 
-        TableToRecordNode tab2rec = new TableToRecordNode();
+        tab2rec = new TableToRecordNode();
         tab2rec.setName("pipe");
         tree.getRootNode().addAndSaveChildren(tab2rec);
         tab2rec.setDataSource(ds);
@@ -60,12 +65,16 @@ public class TableToRecordNodeTest extends RavenCoreTestCase
         tab2rec.setLogLevel(LogLevel.DEBUG);
         assertTrue(tab2rec.start());
 
-        DataCollector collector = new DataCollector();
+        collector = new DataCollector();
         collector.setName("collector");
         tree.getRootNode().addAndSaveChildren(collector);
         collector.setDataSource(tab2rec);
         assertTrue(collector.start());
+    }
 
+//    @Test
+    public void test() throws RecordException
+    {
         TableImpl table = new TableImpl(new String[]{"col1", "col2", "col3"});
         table.addRow(new Object[]{"val1", "val2", "val3"});
         ds.pushData(table);
@@ -78,6 +87,29 @@ public class TableToRecordNodeTest extends RavenCoreTestCase
         Record rec = (Record) dataList.get(0);
         assertEquals("val1", rec.getValue("f1"));
         assertEquals("val3_val2", rec.getValue("f2"));
+
+        assertNull(dataList.get(1));
+    }
+
+    @Test
+    public void configureRecordExpressionTest() throws Exception
+    {
+        tab2rec.setUseConfigureRecordExpression(true);
+        tab2rec.getNodeAttribute(TableToRecordNode.CONFIGURE_RECORD_EXPRESSION_ATTR).setValue(
+                "record['f2']+='_conf';record");
+
+        TableImpl table = new TableImpl(new String[]{"col1", "col2", "col3"});
+        table.addRow(new Object[]{"val1", "val2", "val3"});
+        ds.pushData(table);
+
+        List dataList = collector.getDataList();
+        assertNotNull(dataList);
+        assertEquals(2, dataList.size());
+
+        assertTrue(dataList.get(0) instanceof Record);
+        Record rec = (Record) dataList.get(0);
+        assertEquals("val1", rec.getValue("f1"));
+        assertEquals("val3_val2_conf", rec.getValue("f2"));
 
         assertNull(dataList.get(1));
     }
