@@ -76,7 +76,7 @@ public class RavenViewableImageRenderer implements ImageRenderer
 			return;
 		}
 		
-		byte[] data = (byte[]) vow.getData();
+		byte[] data = (byte[]) dt;
 		if(data!=null)
 			out.write(data, 0, data.length);
 	}

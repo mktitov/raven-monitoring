@@ -1,6 +1,9 @@
 package org.raven.ui.vo;
 
+import java.io.InputStream;
 import java.util.List;
+
+import org.apache.commons.io.IOUtils;
 import org.raven.table.Table;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
@@ -160,11 +163,22 @@ public class ViewableObjectWrapper
 	
 	public Object getData()
 	{
-		logger.info("get data");
+		//logger.info("get data");
 		if(!isViewable()) return node.getPath();
 		if(isImage())
 		{
-			if(image==null) image = (byte[]) viewableObject.getData();
+			if(image==null)
+			{
+				Object dt = viewableObject.getData();
+				if (dt instanceof InputStream) 
+				{
+					InputStream is = (InputStream)dt;
+					try { image = IOUtils.toByteArray(is);}
+					catch(Exception e) { logger.error("getData:",e); }
+					finally { try {is.close();} catch(Exception e) {}; }
+				}
+				else image = (byte[]) dt;
+			}	
 			return image;
 		}
 		return viewableObject.getData();
