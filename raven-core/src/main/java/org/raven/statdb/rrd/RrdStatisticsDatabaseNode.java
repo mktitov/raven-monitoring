@@ -257,11 +257,11 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
                         FetchData fData = request.fetchData();
                         double[] data = fData.getValues(0);
                         long[] dataTs = fData.getTimestamps();
-                        long lastTs = Util.normalize(db.getHeader().getLastUpdateTime(), step);
-                        double lastValue = db.getDatasource(0).getLastValue();
-                        int lastTsInd = (int) ((lastTs - timePeriod[0]) / step);
-                        if (lastTsInd>0 && lastTsInd<dataTs.length)
-                            data[lastTsInd]=lastValue;
+//                        long lastTs = Util.normalize(db.getHeader().getLastUpdateTime(), step);
+//                        double lastValue = db.getDatasource(0).getLastValue();
+//                        int lastTsInd = (int) ((lastTs - timePeriod[0]) / step);
+//                        if (lastTsInd>0 && lastTsInd<dataTs.length)
+//                            data[lastTsInd]=lastValue;
                         if (fData.getStep()!=step || fData.getFirstTimestamp()!=timePeriod[0]
                             || data.length!=timestamps.length)
                         {

@@ -280,7 +280,7 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
             Collection<Node> deps = getDependentNodes();
             if (deps!=null && !deps.isEmpty())
                 for (Node dep: deps)
-                    if (dep instanceof DataConsumer)
+                    if (dep instanceof DataConsumer && Status.STARTED.equals(dep.getStatus()))
                         ((DataConsumer)dep).setData(this, data);
         }
     }
