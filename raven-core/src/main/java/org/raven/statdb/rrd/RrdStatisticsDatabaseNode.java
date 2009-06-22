@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.TimeZone;
 import javax.script.SimpleBindings;
@@ -55,6 +56,7 @@ import org.raven.statdb.impl.QueryResultImpl;
 import org.raven.statdb.impl.StatisticsValuesImpl;
 import org.raven.statdb.query.FromClause;
 import org.raven.statdb.query.KeyValues;
+import org.raven.statdb.query.OrderClause;
 import org.raven.statdb.query.Query;
 import org.raven.statdb.query.QueryExecutionException;
 import org.raven.statdb.query.QueryResult;
@@ -188,7 +190,7 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
 	{
 		try
 		{
-			Collection<KeyValues> keys = findKeys(dbRoot, query.getFromClause());
+			List<KeyValues> keys = findKeys(dbRoot, query.getFromClause());
             QueryResultImpl queryResult = new QueryResultImpl(keys);
 			if (   query.getSelectMode() == SelectMode.SELECT_KEYS_AND_DATA
 				&& keys.size()>0)
@@ -201,6 +203,7 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
                     if (selectEntries!=null)
                         calculateSelectEntriesValues(query, queryResult, selectEntries);
                 }
+                sortQueryResult(keys, query.getOrderClause());
 			}
 
 			return queryResult;
@@ -238,6 +241,9 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
         queryResult.setStep(step);
         queryResult.setTimestamps(timestamps);
 
+        String orderStat = query.getOrderClause()==null? null :
+            query.getOrderClause().getStatisticName();
+
         for (KeyValues keyValues: queryResult.getKeyValues())
         {
             for (int i=0; i<statNames.length; ++i)
@@ -271,6 +277,8 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
                         }
                         StatisticsValues values = new StatisticsValuesImpl(statName, data);
                         ((KeyValuesImpl)keyValues).addStatisticsValues(values);
+                        if (statName.equals(orderStat) && data.length>0)
+                            ((KeyValuesImpl)keyValues).setWeight(data[0]);
                     }
                     finally
                     {
@@ -347,7 +355,7 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
             queryResult.compressTime();
     }
 
-	private Collection<KeyValues> findKeys(File path, FromClause fromClause) throws Exception
+	private List<KeyValues> findKeys(File path, FromClause fromClause) throws Exception
 	{
 		String keyExpression = fromClause.getKeyExpression();
 		
@@ -493,5 +501,33 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
     private static boolean between(long v, long lowerBound, long upperBound)
     {
         return v>=lowerBound && v<=upperBound;
+    }
+
+    private void sortQueryResult(
+            List<KeyValues> keys, OrderClause orderClause)
+    {
+        if (orderClause==null)
+            return;
+        Collections.sort(keys, new QueryResultComparator(orderClause));
+    }
+
+    private class QueryResultComparator implements Comparator<KeyValues>
+    {
+        private boolean reverseOrder;
+
+        public QueryResultComparator(OrderClause orderClause)
+        {
+            this.reverseOrder = orderClause.getReverseOrder();
+        }
+
+        public int compare(KeyValues o1, KeyValues o2)
+        {
+            if (reverseOrder)
+                return Double.compare(
+                        ((KeyValuesImpl)o2).getWeight(), ((KeyValuesImpl)o1).getWeight());
+            else
+                return Double.compare(
+                        ((KeyValuesImpl)o1).getWeight(), ((KeyValuesImpl)o2).getWeight());
+        }
     }
 }

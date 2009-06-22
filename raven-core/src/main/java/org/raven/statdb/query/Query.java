@@ -62,4 +62,8 @@ public interface Query
 	 * Returns the select clause of the query.
 	 */
 	public SelectClause getSelectClause();
+    /**
+     * Returns the order clause of the query.
+     */
+    public OrderClause getOrderClause();
 }

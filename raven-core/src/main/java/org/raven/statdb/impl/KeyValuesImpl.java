@@ -31,6 +31,7 @@ public class KeyValuesImpl implements KeyValues
 {
 	private final String key;
     private List<StatisticsValues> values;
+    private double weight = Double.MIN_VALUE;
 
 	public KeyValuesImpl(String key)
 	{
@@ -52,6 +53,14 @@ public class KeyValuesImpl implements KeyValues
         if (values==null)
             values = new ArrayList<StatisticsValues>(5);
         values.add(statisticsValues);
+    }
+
+    public double getWeight() {
+        return weight;
+    }
+
+    public void setWeight(double weight) {
+        this.weight = weight;
     }
 
     public void clear()

@@ -42,6 +42,7 @@ import org.raven.statdb.AggregationFunction;
 import org.raven.statdb.StatisticsRecord;
 import org.raven.statdb.query.FromClause;
 import org.raven.statdb.query.KeyValues;
+import org.raven.statdb.query.OrderClause;
 import org.raven.statdb.query.Query;
 import org.raven.statdb.query.QueryResult;
 import org.raven.statdb.query.QueryStatisticsName;
@@ -393,6 +394,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
         expect(query.getStartTime()).andReturn("5L");
         expect(query.getEndTime()).andReturn("10L");
         expect(query.getStep()).andReturn(5l);
+        expect(query.getOrderClause()).andReturn(null).anyTimes();
 
         expect(query.getSelectMode()).andReturn(SelectMode.SELECT_KEYS_AND_DATA);
         expect(select.getSelectEntries()).andReturn(null);
@@ -446,6 +448,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
         expect(query.getStartTime()).andReturn("5L");
         expect(query.getEndTime()).andReturn("10L");
         expect(query.getStep()).andReturn(5l);
+        expect(query.getOrderClause()).andReturn(null).anyTimes();
 
         expect(query.getSelectMode()).andReturn(SelectMode.SELECT_KEYS_AND_DATA);
         expect(select.getSelectEntries()).andReturn(new SelectEntry[]{selectEntry});
@@ -502,6 +505,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
         expect(query.getStartTime()).andReturn("5L");
         expect(query.getEndTime()).andReturn("10L");
         expect(query.getStep()).andReturn(5l);
+        expect(query.getOrderClause()).andReturn(null).anyTimes();
 
         expect(query.getSelectMode()).andReturn(SelectMode.SELECT_KEYS_AND_DATA);
         expect(select.getSelectEntries()).andReturn(new SelectEntry[]{selectEntry});
@@ -537,6 +541,102 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 
         verify(query, from, select, s1name, s2name, selectEntry);
 
+    }
+
+    @Test
+    public void query_order_test() throws Exception
+    {
+        insertData();
+
+		FromClause from = createMock(FromClause.class);
+		Query query = createMock(Query.class);
+        QueryStatisticsName s1name = createMock("s1", QueryStatisticsName.class);
+        QueryStatisticsName s2name = createMock("s2", QueryStatisticsName.class);
+        SelectClause select = createMock(SelectClause.class);
+        OrderClause order = createMock(OrderClause.class);
+
+		expect(query.getFromClause()).andReturn(from);
+        expect(query.getSelectClause()).andReturn(select).atLeastOnce();
+        expect(query.getStatisticsNames()).andReturn(new QueryStatisticsName[]{s1name, s2name});
+        expect(s1name.getName()).andReturn("s1").atLeastOnce();
+        expect(s1name.getAggregationFunction()).andReturn(AggregationFunction.LAST).atLeastOnce();
+        expect(s2name.getName()).andReturn("s2").atLeastOnce();
+        expect(s2name.getAggregationFunction()).andReturn(AggregationFunction.LAST).atLeastOnce();
+        expect(query.getStartTime()).andReturn("5L");
+        expect(query.getEndTime()).andReturn("10L");
+        expect(query.getStep()).andReturn(5l);
+
+        expect(query.getSelectMode()).andReturn(SelectMode.SELECT_KEYS_AND_DATA);
+        expect(select.getSelectEntries()).andReturn(null);
+
+		expect(from.getKeyExpression()).andReturn("/@r .*/@r .*/");
+
+        expect(query.getOrderClause()).andReturn(order).anyTimes();
+        expect(order.getStatisticName()).andReturn("s1");
+        expect(order.getReverseOrder()).andReturn(false).anyTimes();
+
+        replay(query, from, select, s1name, s2name, order);
+
+        QueryResult result = db.executeQuery(query);
+        assertNotNull(result);
+
+        Collection<KeyValues> keys = result.getKeyValues();
+        assertNotNull(keys);
+        assertEquals(2, keys.size());
+
+        KeyValues[] keyValues = new KeyValues[2];
+        keys.toArray(keyValues);
+        assertEquals("/1/1/", keyValues[0].getKey());
+        assertEquals("/1/2/", keyValues[1].getKey());
+        verify(query, from, select, s1name, s2name, order);
+    }
+
+    @Test
+    public void query_reverseOrder_test() throws Exception
+    {
+        insertData();
+
+		FromClause from = createMock(FromClause.class);
+		Query query = createMock(Query.class);
+        QueryStatisticsName s1name = createMock("s1", QueryStatisticsName.class);
+        QueryStatisticsName s2name = createMock("s2", QueryStatisticsName.class);
+        SelectClause select = createMock(SelectClause.class);
+        OrderClause order = createMock(OrderClause.class);
+
+		expect(query.getFromClause()).andReturn(from);
+        expect(query.getSelectClause()).andReturn(select).atLeastOnce();
+        expect(query.getStatisticsNames()).andReturn(new QueryStatisticsName[]{s1name, s2name});
+        expect(s1name.getName()).andReturn("s1").atLeastOnce();
+        expect(s1name.getAggregationFunction()).andReturn(AggregationFunction.LAST).atLeastOnce();
+        expect(s2name.getName()).andReturn("s2").atLeastOnce();
+        expect(s2name.getAggregationFunction()).andReturn(AggregationFunction.LAST).atLeastOnce();
+        expect(query.getStartTime()).andReturn("5L");
+        expect(query.getEndTime()).andReturn("10L");
+        expect(query.getStep()).andReturn(5l);
+
+        expect(query.getSelectMode()).andReturn(SelectMode.SELECT_KEYS_AND_DATA);
+        expect(select.getSelectEntries()).andReturn(null);
+
+		expect(from.getKeyExpression()).andReturn("/@r .*/@r .*/");
+
+        expect(query.getOrderClause()).andReturn(order).anyTimes();
+        expect(order.getStatisticName()).andReturn("s1");
+        expect(order.getReverseOrder()).andReturn(true).anyTimes();
+
+        replay(query, from, select, s1name, s2name, order);
+
+        QueryResult result = db.executeQuery(query);
+        assertNotNull(result);
+
+        Collection<KeyValues> keys = result.getKeyValues();
+        assertNotNull(keys);
+        assertEquals(2, keys.size());
+
+        KeyValues[] keyValues = new KeyValues[2];
+        keys.toArray(keyValues);
+        assertEquals("/1/2/", keyValues[0].getKey());
+        assertEquals("/1/1/", keyValues[1].getKey());
+        verify(query, from, select, s1name, s2name, order);
     }
 
     private void insertData() throws InterruptedException, RecordException
