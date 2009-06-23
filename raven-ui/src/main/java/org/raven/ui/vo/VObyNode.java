@@ -36,11 +36,11 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 		wrp.setUid(uid++);
 		wrp.setNodeId(nwx.getNodeId());
 		vowl.add(0, wrp );
-		NodeWrapper nw = new NodeWrapper(nwx.getVoSource());
+		NodeWrapper nw = nwx.getVoSourceNW();
 		if ( ! nw.isViewable() ) return vowl;
 		viewable = (Viewable) nw.getNode();
 		List<ViewableObject> vol = null;
-		try { vol = viewable.getViewableObjects(nw.getRefreshAttributesMap());}
+		try { vol = viewable.getViewableObjects(nwx.getRefreshAttributesMap());}
 			catch (Exception e) { logger.error("on load viewable objects: ",e);}
 		if(vol==null)
 		{
@@ -79,17 +79,18 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 		boolean reload = nw.isNeedRefreshVO();
 		nw.setNeedRefreshVO(false);
 		List<ViewableObjectWrapper> lst = new ArrayList<ViewableObjectWrapper>();
+		NodeWrapper nwx = nw.getVoSourceNW();
 		if(!nw.isShowVO())
 		{
-			List<ViewableObjectWrapper> no = getFromCacheOnly(nw);
+			List<ViewableObjectWrapper> no = getFromCacheOnly(nwx);
 			if(no != null) lst.addAll(no);
 			return lst;
 		}	
 		
-		List<ViewableObjectWrapper> no = get(nw,reload);
+		List<ViewableObjectWrapper> no = get(nwx,reload);
 		if(no != null)
 		{
-			logger.info("from {} loaded {} VO ",nw.getNodePath(),no.size());
+			logger.info("from {} loaded {} VO ",nwx.getNodePath(),no.size());
 			lst.addAll(no);
 		}
 		
@@ -103,8 +104,9 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 		if(c==null) return lst;
 		//logger.info("Node {} has {} viewable children",nw.getNodePath(),c.size());
 		boolean arFlag = false;
-		for(NodeWrapper x : c)
+		for(NodeWrapper z : c)
 		{
+			NodeWrapper x = z.getVoSourceNW();
 			if(!nw.isRefreshPressed() && !x.isAutoRefresh()) arFlag = true; //continue;
 			List<ViewableObjectWrapper> zz = get(x,reload);
 			int cnt = 0;
@@ -120,6 +122,11 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 		return lst;
 	}
 
+	public void remove(NodeWrapper nw)
+	{
+		super.remove(nw.getVoSourceNW());
+	}
+	
 	public void setImagesStorage(ImagesStorage imagesStorage) {
 		this.imagesStorage = imagesStorage;
 	}

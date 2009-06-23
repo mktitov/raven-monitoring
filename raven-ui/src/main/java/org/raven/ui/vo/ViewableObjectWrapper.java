@@ -5,9 +5,11 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.raven.table.Table;
+import org.raven.tree.InvalidPathException;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.Node;
+import org.raven.ui.SessionBean;
 import org.raven.ui.node.NodeWrapper;
 import org.raven.util.Utl;
 import org.slf4j.Logger;
@@ -35,7 +37,13 @@ public class ViewableObjectWrapper
 	
 	public ViewableObjectWrapper(ViewableObject vo)
 	{
-		viewableObject = vo;
+		if(Viewable.RAVEN_NODE_MIMETYPE.equals(vo.getMimeType()))
+		{
+			try { node = SessionBean.getTree().getNode((String)vo.getData());} 
+			catch (InvalidPathException e) 
+			{  logger.error("Invalid node path '{}' ",vo.getData(),e); 	}
+		}
+		else viewableObject = vo;	
 		setFd();
 	}
 	
@@ -146,7 +154,7 @@ public class ViewableObjectWrapper
     
 	public String getMimeGroup()
 	{
-		if(!isViewable()) return NODE_URL;
+		if(isNodeUrl()) return NODE_URL;
 		if( isTable() ) return RAVEN_TABLE_GR;
 		String mtype = viewableObject.getMimeType();
 		String[] sa = mtype.split("/");

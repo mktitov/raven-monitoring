@@ -27,6 +27,7 @@ import java.util.Map;
 public interface Viewable extends Node
 {
     public final static String RAVEN_TABLE_MIMETYPE = "raven/table";
+    public final static String RAVEN_NODE_MIMETYPE = "raven/node";
 
     /**
      * Returns the list of the attributes the values of which will be used in the view refresh

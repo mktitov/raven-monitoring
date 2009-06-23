@@ -56,23 +56,14 @@ public class RavenViewableImageRenderer implements ImageRenderer
 		{
 			int cnt;
 			byte[] ba = new byte[BUF_LEN];
-			InputStream is = null;
+			InputStream is = (InputStream)dt;
 			try 
 			{
-				is = (InputStream)dt;
 				while( (cnt = is.read(ba))!=-1 )
-				{
-			        if(cnt==0) continue;
-			        out.write(ba, 0, cnt);
-				}
-			} catch(Exception e) 
-			{
-				logger.error("renderResource:",e);
-			}
-			finally
-			{
-				try {is.close();} catch(Exception e) {};
-			}
+			        if(cnt>0) 
+			        	out.write(ba, 0, cnt);
+			} catch(Exception e) { logger.error("renderResource:",e); }
+			finally	{ try {is.close();} catch(Exception e) {}; }
 			return;
 		}
 		

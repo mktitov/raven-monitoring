@@ -66,7 +66,7 @@ implements Comparator<NodeAttribute>
 {
 	public static final String BEAN_NAME = "cNode";
     public static final String VO_SOURCE = "viewableObjectSource";
-	
+    public static final int MAX_VO_SEARCH = 20;
     protected static final Logger logger = LoggerFactory.getLogger(NodeWrapper.class);
 
     private static final SelectItem[] logsSI = { new SelectItem(LogLevel.TRACE),
@@ -94,6 +94,8 @@ implements Comparator<NodeAttribute>
 	//private int refreshViewInteval = 0;
 	private boolean refreshPressed = false;
 	private List<Integer> unsavedChanges = new ArrayList<Integer>();
+	private Node voSource = null;
+	private boolean voSourceInited = false;
 		
 	public NodeWrapper() 
 	{
@@ -105,7 +107,6 @@ implements Comparator<NodeAttribute>
     { 
 		return logsSI; 
     }
-	
 	
 	public NodeWrapper(Node node) 
 	{
@@ -150,27 +151,28 @@ implements Comparator<NodeAttribute>
 		logger.info("curNode "+cnode.getPath());
 		NodeAttribute na = cnode.getNodeAttribute(attr);
 		logger.info("curNode("+attr+")="+na);
-		if(na==null) return cnode;
+		if(na==null) return null;
 		Object n = na.getRealValue();
 		logger.info("RealValue="+n);
-		if(n==null) return cnode;
-		if (n instanceof Node) cnode = (Node) n;
+		if(n==null) return null;
+		Node ret = null;
+		if (n instanceof Node) ret = (Node) n;
 		else logger.warn("attribute {} of node {} is't instance of Node ",attr,cnode.getPath());
-		return cnode;
+		return ret;
 	}
 
-	public static Viewable getViewableByVoSource(Viewable v)
-	{
-		Node n = getNodeByAttr(v,VO_SOURCE);
-		if (n instanceof Viewable) 
-			return (Viewable) n;
-		return v; 
-	}
+//	public static Viewable getViewableByVoSource(Viewable v)
+//	{
+//		Node n = getNodeByAttr(v,VO_SOURCE);
+//		if (n instanceof Viewable) 
+//			return (Viewable) n;
+//		return v; 
+//	}
 	
-	public Node getVoSource()
-	{
-		return getNodeByAttr(getNode(),VO_SOURCE);
-	}
+//	public Node getVoSrc()
+//	{
+//		return getNodeByAttr(getNode(),VO_SOURCE);
+//	}
 	
 	public String getRefreshAttributesTitle()
 	{
@@ -248,7 +250,7 @@ implements Comparator<NodeAttribute>
 	public boolean isViewable()
 	{
 		if(!isAllowNodeRead()) return false;
-		if( getNode() instanceof Viewable ) 
+		if( getVoSource() instanceof Viewable ) 
 			return true;
 		return false;
 	}
@@ -281,6 +283,7 @@ implements Comparator<NodeAttribute>
 		editingRefreshAttrs = null;
 		refreshPressed = false;
 		clearAllUnsavedChanges();
+		setVoSource(null);
 		//loadRefreshAttributes();
 //		AttributesTableBean atb = (AttributesTableBean) context.getELContext().getELResolver().getValue(context.getELContext(), null, AttributesTableBean.BEAN_NAME);
 //		if(atb != null && atb.getMessage() !=null) atb.getMessage().setMessage("");
@@ -1086,6 +1089,40 @@ implements Comparator<NodeAttribute>
 		return refreshPressed;
 	}
 
+	private void setVoSource(Node voSource) 
+	{
+		this.voSource = voSource;
+		if(voSource==null) voSourceInited = false;
+		else voSourceInited = true;
+	}
+
+	public Node getVoSource() 
+	{
+		if(!voSourceInited) 
+		{
+			Node n = getNode();
+			Node x = null;
+			for(int i=0; i<MAX_VO_SEARCH; i++)
+			{
+				x = getNodeByAttr(n, VO_SOURCE);
+				if(x==null) break;
+				n = x;
+			}
+			if(x!=null)
+				logger.warn("to many VO_SOURCE search steps for node {}",getNodePath());
+			setVoSource(n);
+			
+		}
+		return voSource;
+	}
+
+	public NodeWrapper getVoSourceNW()
+	{
+		Node n = getVoSource();
+		if(n.getId()==getNodeId()) return this;
+		return new NodeWrapper(n);
+	}
+	
 //	public void setRefreshPressed(boolean refreshPressed) {
 //		this.refreshPressed = refreshPressed;
 //	}

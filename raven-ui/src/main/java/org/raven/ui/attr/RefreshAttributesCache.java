@@ -71,7 +71,8 @@ public class RefreshAttributesCache
 	{
 		Map<String,NodeAttribute> ra = null;
 		try	{
-			Viewable v = NodeWrapper.getViewableByVoSource(viewable);
+			NodeWrapper nw = new NodeWrapper(viewable);  
+			Viewable v = (Viewable) nw.getVoSource();
 			ra = v.getRefreshAttributes(); 
 		}
 		catch (Exception e){logger.error("on load refresh attributes: ",e);}
@@ -83,8 +84,9 @@ public class RefreshAttributesCache
 		logger.info("get RA for node="+nw.getNodePath());
 		if ( !nw.isViewable() ) return null;
 		removeOld();
-		Viewable viewable = (Viewable) nw.getNode();
-		Map<String,NodeAttribute> ra = get(nw.getNodeId());
+		NodeWrapper nwx = nw.getVoSourceNW();
+		Viewable viewable = (Viewable) nwx.getNode();
+		Map<String,NodeAttribute> ra = get(nwx.getNodeId());
 		boolean found = false;
 		if(ra!=null)
 		{
@@ -94,7 +96,7 @@ public class RefreshAttributesCache
 			Map<String,NodeAttribute> rb = getRA(viewable);
 			if(rb==null || rb.size()==0)
 			{
-				remove(nw);
+				remove(nwx);
 				ra = null;
 			}	
 			else
@@ -107,7 +109,7 @@ public class RefreshAttributesCache
 						it.remove();
 			}	
 		} else ra = getRA(viewable);
-		if(!found) put(nw.getNodeId(), ra);
+		if(!found) put(nwx.getNodeId(), ra);
 		return ra;
 	}
 	

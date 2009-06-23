@@ -9,7 +9,8 @@ public class TableItemWrapper
 	public static final int VO_TABLE = 1;
 	public static final int VO_IMAGE = 2;
 	public static final int VO_OTHER = 3;
-	public static final int OTHER = 4;
+	public static final int VO_NODE = 4;
+	public static final int OTHER = 5;
 	private Object item;
 //	private ViewableObjectWrapper wrapper = null;
 //	private boolean wrpInited = false;
@@ -35,6 +36,12 @@ public class TableItemWrapper
 		return false; 
 	}
 
+	public boolean isNode()
+	{
+		if(getItemType()==VO_NODE) return true;
+		return false; 
+	}
+	
 	public boolean isOther()
 	{
 		if(getItemType()==OTHER) return true;
@@ -47,8 +54,10 @@ public class TableItemWrapper
 		if (item instanceof ViewableObject) 
 		{
 			ViewableObject x = (ViewableObject) item;
-			if(x.getMimeType().equals(Viewable.RAVEN_TABLE_MIMETYPE)) 
+			if(Viewable.RAVEN_TABLE_MIMETYPE.equals(x.getMimeType())) 
 				return VO_TABLE;
+			if(Viewable.RAVEN_NODE_MIMETYPE.equals(x.getMimeType())) 
+				return VO_NODE;
 			//if(x.getMimeType().startsWith(ViewableObjectWrapper.IMAGE)) 
 			//	return VO_IMAGE;
 			return VO_OTHER;

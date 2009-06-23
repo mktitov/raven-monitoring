@@ -429,6 +429,15 @@ items="#{row.tableColumnNames}"
         				name="#{selectVO.paramName}"
         				value="#{rowa[0].item}" />
 					</tr:commandLink>
+					<tr:commandLink
+						rendered="#{rowa[0].node}" 
+						partialSubmit="true"
+						text="#{msgs.node}: #{rowa[0].string}"  
+						actionListener="#{sBean.selectNode}">
+						<f:attribute 
+							name="nodePath" 
+							value="#{rowa[0].item.data}"/>
+					</tr:commandLink>
 					</tr:panelHorizontalLayout>	
               	</tr:column>
                 <!-- +++++ -->
@@ -460,6 +469,15 @@ items="#{row.tableColumnNames}"
 					<f:attribute
         				name="#{selectVO.paramName}"
         				value="#{rowa[1].item}" />
+					</tr:commandLink>
+					<tr:commandLink
+						rendered="#{rowa[1].node}" 
+						partialSubmit="true"
+						text="#{msgs.node}: #{rowa[1].string}"  
+						actionListener="#{sBean.selectNode}">
+						<f:attribute 
+							name="nodePath" 
+							value="#{rowa[1].item.data}"/>
 					</tr:commandLink>
 					</tr:panelHorizontalLayout>	
 	           	</tr:column>
@@ -494,6 +512,15 @@ items="#{row.tableColumnNames}"
         				name="#{selectVO.paramName}"
         				value="#{rowa[2].item}" />
 					</tr:commandLink>
+					<tr:commandLink
+						rendered="#{rowa[2].node}" 
+						partialSubmit="true"
+						text="#{msgs.node}: #{rowa[2].string}"  
+						actionListener="#{sBean.selectNode}">
+						<f:attribute 
+							name="nodePath" 
+							value="#{rowa[2].item.data}"/>
+					</tr:commandLink>
 					</tr:panelHorizontalLayout>	
 	            </tr:column>
                 <!-- +++++ -->
@@ -527,6 +554,15 @@ items="#{row.tableColumnNames}"
         				name="#{selectVO.paramName}"
         				value="#{rowa[3].item}" />
 					</tr:commandLink>	
+					<tr:commandLink
+						rendered="#{rowa[3].node}" 
+						partialSubmit="true"
+						text="#{msgs.node}: #{rowa[3].string}"  
+						actionListener="#{sBean.selectNode}">
+						<f:attribute 
+							name="nodePath" 
+							value="#{rowa[3].item.data}"/>
+					</tr:commandLink>
                    	</tr:panelHorizontalLayout>
 	            </tr:column>
 	            <!-- +++++ -->
@@ -559,6 +595,15 @@ items="#{row.tableColumnNames}"
 					<f:attribute
         				name="#{selectVO.paramName}"
         				value="#{rowa[4].item}" />
+					</tr:commandLink>
+					<tr:commandLink
+						rendered="#{rowa[4].node}" 
+						partialSubmit="true"
+						text="#{msgs.node}: #{rowa[4].string}"  
+						actionListener="#{sBean.selectNode}">
+						<f:attribute 
+							name="nodePath" 
+							value="#{rowa[4].item.data}"/>
 					</tr:commandLink>
 					</tr:panelHorizontalLayout>	
 	            </tr:column>
@@ -593,6 +638,15 @@ items="#{row.tableColumnNames}"
         				name="#{selectVO.paramName}"
         				value="#{rowa[5].item}" />
 					</tr:commandLink>
+					<tr:commandLink
+						rendered="#{rowa[5].node}" 
+						partialSubmit="true"
+						text="#{msgs.node}: #{rowa[5].string}"  
+						actionListener="#{sBean.selectNode}">
+						<f:attribute 
+							name="nodePath" 
+							value="#{rowa[5].item.data}"/>
+					</tr:commandLink>
 					</tr:panelHorizontalLayout>	
 	            </tr:column>
 				<!-- +++++ -->
@@ -626,6 +680,15 @@ items="#{row.tableColumnNames}"
         				name="#{selectVO.paramName}"
         				value="#{rowa[6].item}" />
 					</tr:commandLink>	
+					<tr:commandLink
+						rendered="#{rowa[6].node}" 
+						partialSubmit="true"
+						text="#{msgs.node}: #{rowa[6].string}"  
+						actionListener="#{sBean.selectNode}">
+						<f:attribute 
+							name="nodePath" 
+							value="#{rowa[6].item.data}"/>
+					</tr:commandLink>
                 	</tr:panelHorizontalLayout> 
 	            </tr:column>
 				<!-- +++++ -->
@@ -659,6 +722,15 @@ items="#{row.tableColumnNames}"
         				name="#{selectVO.paramName}"
         				value="#{rowa[7].item}" />
 					</tr:commandLink>	
+					<tr:commandLink
+						rendered="#{rowa[7].node}" 
+						partialSubmit="true"
+						text="#{msgs.node}: #{rowa[7].string}"  
+						actionListener="#{sBean.selectNode}">
+						<f:attribute 
+							name="nodePath" 
+							value="#{rowa[7].item.data}"/>
+					</tr:commandLink>
                 	</tr:panelHorizontalLayout> 
 	            </tr:column>
 				<!-- +++++ -->
@@ -692,6 +764,15 @@ items="#{row.tableColumnNames}"
         				name="#{selectVO.paramName}"
         				value="#{rowa[8].item}" />
 					</tr:commandLink>	
+					<tr:commandLink
+						rendered="#{rowa[8].node}" 
+						partialSubmit="true"
+						text="#{msgs.node}: #{rowa[8].string}"  
+						actionListener="#{sBean.selectNode}">
+						<f:attribute 
+							name="nodePath" 
+							value="#{rowa[8].item.data}"/>
+					</tr:commandLink>
                 	</tr:panelHorizontalLayout> 
 	            </tr:column>
 	              	
