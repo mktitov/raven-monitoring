@@ -67,7 +67,7 @@
 	                    onclick="top.switchFrameSet()"
     	                actionListener="#{sBean.selectNodeAndMaximize}">
         	            <f:attribute
-        					name="nodePath"
+        					name="#{sBean.nodePathParName}"
         					value="#{res[1]}" 
         				/>
         			</tr:commandLink>

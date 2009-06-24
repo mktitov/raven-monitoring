@@ -53,7 +53,7 @@
 			text="#{msgs.node}: #{row.node.name}" 
 			actionListener="#{sBean.selectNode}">
 			<f:attribute 
-				name="nodePath" 
+				name="#{sBean.nodePathParName}" 
 				value="#{row.nodePath}"/>
 		</tr:commandLink>
 	</f:facet>

@@ -284,7 +284,7 @@ partialTriggers=":poolStatus"
 				text="#{msgs.node}: #{row.node.name}"  
 				actionListener="#{sBean.selectNode}">
 				<f:attribute 
-					name="nodePath" 
+					name="#{sBean.nodePathParName}" 
 					value="#{row.navigateTo}"/>
 			</tr:commandLink>
 	  	  	
@@ -294,7 +294,7 @@ partialTriggers=":poolStatus"
 				text="#{msgs.node}: #{row.node.name}"  
 				actionListener="#{sBean.selectNode}">
 				<f:attribute 
-					name="nodePath" 
+					name="#{sBean.nodePathParName}" 
 					value="#{row.navigateTo}"/>
 			</tr:commandLink>
 			</tr:panelHorizontalLayout>
@@ -435,7 +435,7 @@ items="#{row.tableColumnNames}"
 						text="#{msgs.node}: #{rowa[0].string}"  
 						actionListener="#{sBean.selectNode}">
 						<f:attribute 
-							name="nodePath" 
+							name="#{sBean.nodePathParName}" 
 							value="#{rowa[0].item.data}"/>
 					</tr:commandLink>
 					</tr:panelHorizontalLayout>	
@@ -476,7 +476,7 @@ items="#{row.tableColumnNames}"
 						text="#{msgs.node}: #{rowa[1].string}"  
 						actionListener="#{sBean.selectNode}">
 						<f:attribute 
-							name="nodePath" 
+							name="#{sBean.nodePathParName}" 
 							value="#{rowa[1].item.data}"/>
 					</tr:commandLink>
 					</tr:panelHorizontalLayout>	
@@ -518,7 +518,7 @@ items="#{row.tableColumnNames}"
 						text="#{msgs.node}: #{rowa[2].string}"  
 						actionListener="#{sBean.selectNode}">
 						<f:attribute 
-							name="nodePath" 
+							name="#{sBean.nodePathParName}" 
 							value="#{rowa[2].item.data}"/>
 					</tr:commandLink>
 					</tr:panelHorizontalLayout>	
@@ -560,7 +560,7 @@ items="#{row.tableColumnNames}"
 						text="#{msgs.node}: #{rowa[3].string}"  
 						actionListener="#{sBean.selectNode}">
 						<f:attribute 
-							name="nodePath" 
+							name="#{sBean.nodePathParName}" 
 							value="#{rowa[3].item.data}"/>
 					</tr:commandLink>
                    	</tr:panelHorizontalLayout>
@@ -602,7 +602,7 @@ items="#{row.tableColumnNames}"
 						text="#{msgs.node}: #{rowa[4].string}"  
 						actionListener="#{sBean.selectNode}">
 						<f:attribute 
-							name="nodePath" 
+							name="#{sBean.nodePathParName}" 
 							value="#{rowa[4].item.data}"/>
 					</tr:commandLink>
 					</tr:panelHorizontalLayout>	
@@ -644,7 +644,7 @@ items="#{row.tableColumnNames}"
 						text="#{msgs.node}: #{rowa[5].string}"  
 						actionListener="#{sBean.selectNode}">
 						<f:attribute 
-							name="nodePath" 
+							name="#{sBean.nodePathParName}" 
 							value="#{rowa[5].item.data}"/>
 					</tr:commandLink>
 					</tr:panelHorizontalLayout>	
@@ -686,7 +686,7 @@ items="#{row.tableColumnNames}"
 						text="#{msgs.node}: #{rowa[6].string}"  
 						actionListener="#{sBean.selectNode}">
 						<f:attribute 
-							name="nodePath" 
+							name="#{sBean.nodePathParName}" 
 							value="#{rowa[6].item.data}"/>
 					</tr:commandLink>
                 	</tr:panelHorizontalLayout> 
@@ -728,7 +728,7 @@ items="#{row.tableColumnNames}"
 						text="#{msgs.node}: #{rowa[7].string}"  
 						actionListener="#{sBean.selectNode}">
 						<f:attribute 
-							name="nodePath" 
+							name="#{sBean.nodePathParName}" 
 							value="#{rowa[7].item.data}"/>
 					</tr:commandLink>
                 	</tr:panelHorizontalLayout> 
@@ -770,7 +770,7 @@ items="#{row.tableColumnNames}"
 						text="#{msgs.node}: #{rowa[8].string}"  
 						actionListener="#{sBean.selectNode}">
 						<f:attribute 
-							name="nodePath" 
+							name="#{sBean.nodePathParName}" 
 							value="#{rowa[8].item.data}"/>
 					</tr:commandLink>
                 	</tr:panelHorizontalLayout> 

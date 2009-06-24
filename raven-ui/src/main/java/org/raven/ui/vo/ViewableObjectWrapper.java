@@ -200,7 +200,12 @@ public class ViewableObjectWrapper
 
 	public String getNavigateTo()
 	{
-		if(!isViewable()) return NodeWrapper.getNodeByAttr(node,NAVIGATE_TO).getPath();
+		if(!isViewable())
+		{
+			Node x = NodeWrapper.getNodeByAttr(node,NAVIGATE_TO);
+			if(x==null) x = node;
+			return x.getPath();
+		}	
 		return null;
 	}
 	

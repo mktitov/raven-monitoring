@@ -37,7 +37,7 @@
 				text="#{node.name}"
       			actionListener="#{sBean.selectNode}">
 				<f:attribute 
-					name="nodePath" 
+					name="#{sBean.nodePathParName}" 
 					value="#{node.path}"/>
      		</tr:commandNavigationItem>
         </tr:forEach>
@@ -90,7 +90,7 @@
 			text="#{node.name}"
    			actionListener="#{sBean.selectNode}">
 			<f:attribute 
-				name="nodePath" 
+				name="#{sBean.nodePathParName}" 
 				value="#{node.path}"/>
    		</tr:commandNavigationItem>
 	</tr:forEach>

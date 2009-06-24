@@ -87,7 +87,13 @@ public class SessionBean
 	private LogsCache logsCache; 
 	private boolean collapsed = false;
 	
-	//public String getSelectNodeParam() { return SELECT_NODE_PARAM; }
+	/**
+	 * @return name of parameter, using for node link
+	 */
+	public String getNodePathParName() 
+	{ 
+		return SELECT_NODE_PARAM; 
+	}
 	
 	public String getNodeNamePattern()
 	{
