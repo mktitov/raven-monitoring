@@ -188,6 +188,8 @@ public class Attr implements Comparable<Attr>
 		Node n = null;
 		try {
 			n = tree.getNode(expression);
+			NodeWrapper nw = new NodeWrapper(n);
+			if( ! nw.isAllowNodeRead() ) n = null;
 		} catch (InvalidPathException e) {
 			logger.error("on set current node in dialog : ",e);
 			return;

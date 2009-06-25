@@ -790,7 +790,9 @@ implements Comparator<NodeAttribute>
 	public String onRefresh()
 	{
 		refreshPressed = true;
-		return onRefreshX(); 
+		String ret = onRefreshX();
+		//refreshPressed = false;
+		return ret; 
 	}
 
 	public String onRefreshX()
@@ -1076,7 +1078,7 @@ implements Comparator<NodeAttribute>
 	
 	public boolean isAutoRefresh()
 	{
-		return isAutoRefresh(getNode());
+		return isAutoRefresh(getNode()) && isAutoRefresh(getVoSource());
 	}
 	
 	public boolean isShowVO() 
@@ -1087,6 +1089,10 @@ implements Comparator<NodeAttribute>
 
 	public boolean isRefreshPressed() {
 		return refreshPressed;
+	}
+
+	public void setRefreshPressed(boolean refreshPressed) {
+		this.refreshPressed = refreshPressed;
 	}
 
 	private void setVoSource(Node voSource) 
@@ -1123,8 +1129,5 @@ implements Comparator<NodeAttribute>
 		return new NodeWrapper(n);
 	}
 	
-//	public void setRefreshPressed(boolean refreshPressed) {
-//		this.refreshPressed = refreshPressed;
-//	}
 	
 }

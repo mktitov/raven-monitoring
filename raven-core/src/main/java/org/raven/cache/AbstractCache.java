@@ -157,6 +157,12 @@ public abstract class AbstractCache<K,V,SK>
 		return getValueX(key);
 	}	
 
+	/**
+	 * 
+	 * @param key ключ для поиска
+	 * @param reload если true - заново грузим объект в кэш
+	 * @return объект из кэша
+	 */
 	public V get(K key, boolean reload)
 	{
 		if(reload) return reload(key);

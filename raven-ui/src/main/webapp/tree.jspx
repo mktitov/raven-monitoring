@@ -47,6 +47,9 @@
         onclick="parent.frames.frame1.document.treeform.reftree.focus();"
         title="title"
  		shortDesc="desc"
+ 		
+ 		<tr:panelGroupLayout layout="vertical">
+ 		</tr:panelGroupLayout>
  -->
        	<tr:poll 
        		pollListener="#{sBean.onTreePoll}" 
@@ -57,9 +60,12 @@
  			text="#{msgs.resources}">
        		
         	<tr:panelGroupLayout layout="vertical">
+        	  <ul>
        	        <tr:forEach 
        	        	var="res" 
        	        	items="#{sBean.resourcesList}">
+       	        	<li>
+       	        	<tr:panelHorizontalLayout>
         	    	<tr:commandLink
         	        	text="#{res[0]}"
 		 				partialSubmit="true" 
@@ -71,8 +77,13 @@
         					value="#{res[1]}" 
         				/>
         			</tr:commandLink>
+        			<tr:spacer width="10" />
+        			</tr:panelHorizontalLayout>
+        			</li>
 				</tr:forEach>
+				</ul>
 			</tr:panelGroupLayout>
+						
 		</tr:panelPopup>	
        	<tr:spacer height="3" />	
         <tr:tree 

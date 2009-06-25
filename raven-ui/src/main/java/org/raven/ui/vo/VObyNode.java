@@ -28,18 +28,19 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 	{
 		logger.info("loading objects for "+nwx.getNodePath());
 		Viewable viewable;
-		int uid = 1;
+		int uid = 2;
 		List<ViewableObjectWrapper> vowl = new ArrayList<ViewableObjectWrapper>();
 		//if ( ! nw.isViewable() )
 		//			return vowl;
-		ViewableObjectWrapper wrp = new ViewableObjectWrapper(nwx.getNode());
-		wrp.setUid(uid++);
-		wrp.setNodeId(nwx.getNodeId());
-		vowl.add(0, wrp );
-		NodeWrapper nw = nwx.getVoSourceNW();
-		if ( ! nw.isViewable() ) return vowl;
-		viewable = (Viewable) nw.getNode();
+		//ViewableObjectWrapper wrp = new ViewableObjectWrapper(nwx.getNode());
+		//NodeWrapper nw = nwx.getVoSourceNW();
+		if ( ! nwx.isViewable() ) return vowl;
+		if(!nwx.isAutoRefresh())
+			if(!nwx.isRefreshPressed()) 
+				return vowl;
+		viewable = (Viewable) nwx.getNode();
 		List<ViewableObject> vol = null;
+		
 		try { vol = viewable.getViewableObjects(nwx.getRefreshAttributesMap());}
 			catch (Exception e) { logger.error("on load viewable objects: ",e);}
 		if(vol==null)
@@ -51,7 +52,7 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 		{
 			ViewableObjectWrapper wr = new ViewableObjectWrapper(vo);
 			wr.setUid(uid++);
-			wr.setNodeId(nw.getNodeId());
+			wr.setNodeId(nwx.getNodeId());
 			if(wr.isImage()) 
 				imagesStorage.put(wr);
 			vowl.add(wr);
@@ -79,7 +80,22 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 		boolean reload = nw.isNeedRefreshVO();
 		nw.setNeedRefreshVO(false);
 		List<ViewableObjectWrapper> lst = new ArrayList<ViewableObjectWrapper>();
+		int zzzz = 0;
+		if(nw.getNodeId()==245)
+		{
+			boolean zzz = nw.isAutoRefresh();
+			if(!zzz && nw.isShowVO()) 
+				zzzz = 1;
+			
+		}
+		ViewableObjectWrapper wrp = new ViewableObjectWrapper(nw.getNode());
+		wrp.setUid(1);
+		wrp.setNodeId(nw.getNodeId());
+		lst.add(0, wrp );
+		
 		NodeWrapper nwx = nw.getVoSourceNW();
+		if(nwx.getNodeId()!=nw.getNodeId()) 
+			nwx.setRefreshPressed(nw.isRefreshPressed());
 		if(!nw.isShowVO())
 		{
 			List<ViewableObjectWrapper> no = getFromCacheOnly(nwx);
@@ -103,20 +119,27 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 		List<NodeWrapper> c = nw.getChildrenList();
 		if(c==null) return lst;
 		//logger.info("Node {} has {} viewable children",nw.getNodePath(),c.size());
-		boolean arFlag = false;
+		//boolean arFlag = false;
 		for(NodeWrapper z : c)
 		{
+			ViewableObjectWrapper wr = new ViewableObjectWrapper(z.getNode());
+			wr.setUid(1);
+			wr.setNodeId(z.getNodeId());
+			lst.add( wr );
 			NodeWrapper x = z.getVoSourceNW();
-			if(!nw.isRefreshPressed() && !x.isAutoRefresh()) arFlag = true; //continue;
+			//if(!nw.isRefreshPressed() && !x.isAutoRefresh()) arFlag = true; //continue;
+			x.setRefreshPressed(nw.isRefreshPressed()); 
+			
 			List<ViewableObjectWrapper> zz = get(x,reload);
-			int cnt = 0;
-			for(ViewableObjectWrapper wr: zz)
-			{
-				if(arFlag && !wr.isNodeUrl()) continue;
-				lst.add(wr);
-				cnt++;
-			}
-			logger.info("from {} loaded2 {} VO ",x.getNodePath(),cnt);
+			lst.addAll(zz);
+			//int cnt = 0;
+			//for(ViewableObjectWrapper wr: zz)
+			//{
+			//	if(arFlag && !wr.isNodeUrl()) continue;
+			//	lst.add(wr);
+			//	cnt++;
+			//}
+			logger.info("from {} loaded2 {} VO ",x.getNodePath(),zz.size());
 		}
 		logger.info("getObjects for {} found: {} ",nw.getNodePath(),lst.size());
 		return lst;
