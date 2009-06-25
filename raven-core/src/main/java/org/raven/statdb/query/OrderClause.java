@@ -27,7 +27,7 @@ public interface OrderClause
      * Returns the name of statistics which values will used to order the collection of the
      * {@link QueryResult#getKeyValues KeyValues}
      */
-    public String getStatisticName();
+    public String getStatisticsName();
     /**
      * If the method returns <b>true</b> then the collection of the
      * {@link QueryResult#getKeyValues KeyValues} will be sorted in reverse order.

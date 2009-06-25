@@ -17,10 +17,12 @@
 
 package org.raven.statdb.impl;
 
+import com.sun.jmx.remote.util.OrderClassLoaders;
 import java.util.Collection;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.statdb.query.FromClause;
+import org.raven.statdb.query.OrderClause;
 import org.raven.statdb.query.Query;
 import org.raven.statdb.query.QueryStatisticsName;
 import org.raven.statdb.query.SelectClause;
@@ -55,6 +57,7 @@ public class SdbQueryNode  extends BaseNode implements Query
     private StatisticsNamesNode statisticsNamesNode;
     private FromClauseNode fromClauseNode;
     private SelectClauseNode selectClauseNode;
+    private OrderClauseNode orderClauseNode;
 
     @Override
     protected void doInit() throws Exception
@@ -90,6 +93,11 @@ public class SdbQueryNode  extends BaseNode implements Query
     public void setSelectClauseNode(SelectClauseNode selectClauseNode)
     {
         this.selectClauseNode = selectClauseNode;
+    }
+
+    public OrderClause getOrderClause()
+    {
+        return orderClauseNode;
     }
 
     public Long getStep()
@@ -206,6 +214,13 @@ public class SdbQueryNode  extends BaseNode implements Query
             selectClauseNode = new SelectClauseNode();
             addAndSaveChildren(selectClauseNode);
             selectClauseNode.start();
+        }
+        orderClauseNode = (OrderClauseNode) getChildren(OrderClauseNode.NAME);
+        if (orderClauseNode==null)
+        {
+            orderClauseNode = new OrderClauseNode();
+            addAndSaveChildren(orderClauseNode);
+            orderClauseNode.start();
         }
     }
 }

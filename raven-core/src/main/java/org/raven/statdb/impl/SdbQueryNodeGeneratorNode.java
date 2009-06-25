@@ -64,27 +64,22 @@ public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
     @Service
     private static GroupsOrganazier groupsOrganazier;
     
-    @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
-    @NotNull
+    @NotNull @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     private StatisticsDatabase statisticsDatabase;
 
     @Parameter
     private String keyMasks;
 
-    @Parameter(defaultValue="@r .*")
-    @NotNull
+    @NotNull @Parameter(defaultValue="@r .*")
     private String defaultKeyMask;
 
-    @Parameter(defaultValue="/")
-    @NotNull
+    @NotNull @Parameter(defaultValue="/")
     private String startFromKey;
 
-    @Parameter
-    @NotNull
+    @NotNull @Parameter
     private String gropNames;
 
-    @Parameter(valueHandlerType=SystemSchedulerValueHandlerFactory.TYPE)
-    @NotNull
+    @NotNull @Parameter(valueHandlerType=SystemSchedulerValueHandlerFactory.TYPE)
     private Scheduler scheduler;
 
     @Parameter(readOnly=true)

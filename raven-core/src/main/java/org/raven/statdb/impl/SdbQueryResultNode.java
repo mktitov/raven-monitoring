@@ -25,6 +25,7 @@ import org.raven.ds.DataConsumer;
 import org.raven.ds.impl.AbstractDataSource;
 import org.raven.statdb.StatisticsDatabase;
 import org.raven.statdb.query.FromClause;
+import org.raven.statdb.query.OrderClause;
 import org.raven.statdb.query.Query;
 import org.raven.statdb.query.QueryResult;
 import org.raven.statdb.query.QueryStatisticsName;
@@ -176,6 +177,11 @@ public class SdbQueryResultNode extends AbstractDataSource
         public SelectClause getSelectClause()
         {
             return query.getSelectClause();
+        }
+
+        public OrderClause getOrderClause()
+        {
+            return query.getOrderClause();
         }
     }
 }

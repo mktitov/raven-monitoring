@@ -572,7 +572,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 		expect(from.getKeyExpression()).andReturn("/@r .*/@r .*/");
 
         expect(query.getOrderClause()).andReturn(order).anyTimes();
-        expect(order.getStatisticName()).andReturn("s1");
+        expect(order.getStatisticsName()).andReturn("s1");
         expect(order.getReverseOrder()).andReturn(false).anyTimes();
 
         replay(query, from, select, s1name, s2name, order);
@@ -620,7 +620,7 @@ public class RrdStatisticsDatabaseNodeTest extends RavenCoreTestCase
 		expect(from.getKeyExpression()).andReturn("/@r .*/@r .*/");
 
         expect(query.getOrderClause()).andReturn(order).anyTimes();
-        expect(order.getStatisticName()).andReturn("s1");
+        expect(order.getStatisticsName()).andReturn("s1");
         expect(order.getReverseOrder()).andReturn(true).anyTimes();
 
         replay(query, from, select, s1name, s2name, order);

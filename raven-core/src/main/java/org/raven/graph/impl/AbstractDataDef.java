@@ -20,6 +20,7 @@ package org.raven.graph.impl;
 import java.util.Collection;
 import org.jrobin.data.LinearInterpolator;
 import org.jrobin.data.Plottable;
+import org.raven.annotations.Parameter;
 import org.raven.graph.DataDef;
 import org.raven.graph.DataDefException;
 import org.raven.graph.DataSeries;
@@ -35,6 +36,19 @@ import org.raven.tree.impl.BaseNode;
  */
 public abstract class AbstractDataDef extends BaseNode implements DataDef, GraphDataDefNode
 {
+    @Parameter
+    private Double ignoreValuesGreatThan;
+
+    public Double getIgnoreValuesGreatThan()
+    {
+        return ignoreValuesGreatThan;
+    }
+
+    public void setIgnoreValuesGreatThan(Double ignoreValuesGreatThan)
+    {
+        this.ignoreValuesGreatThan = ignoreValuesGreatThan;
+    }
+
     public GraphData getData(Long startTime, Long endTime) throws DataDefException
     {
         try
@@ -47,6 +61,15 @@ public abstract class AbstractDataDef extends BaseNode implements DataDef, Graph
                 plottable = NanPlottable.NAN_PLOTTABLE;
             else
             {
+                Double _ignoreValuesGreatThan = ignoreValuesGreatThan;
+                if (_ignoreValuesGreatThan!=null)
+                {
+                    double limit = _ignoreValuesGreatThan;
+                    double[] values = dataSeries.getValues();
+                    for (int i=0; i<values.length; ++i)
+                        if (values[i]>limit)
+                            values[i] = Double.NaN;
+                }
                 Interpolator interpolator = null;
                 Collection<Node> childs = getChildrens();
                 if (childs!=null && !childs.isEmpty())

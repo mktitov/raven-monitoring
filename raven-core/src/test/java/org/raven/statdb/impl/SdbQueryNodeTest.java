@@ -103,4 +103,10 @@ public class SdbQueryNodeTest extends RavenCoreTestCase
         assertEquals(1, select.getSelectEntries().length);
         assertSame(entry, select.getSelectEntries()[0]);
     }
+
+    @Test
+    public void orderClause_test() throws Exception
+    {
+        assertNotNull(query.getOrderClause());
+    }
 }

@@ -242,7 +242,7 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
         queryResult.setTimestamps(timestamps);
 
         String orderStat = query.getOrderClause()==null? null :
-            query.getOrderClause().getStatisticName();
+            query.getOrderClause().getStatisticsName();
 
         for (KeyValues keyValues: queryResult.getKeyValues())
         {

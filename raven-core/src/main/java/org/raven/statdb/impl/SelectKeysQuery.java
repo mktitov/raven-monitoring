@@ -17,8 +17,8 @@
 
 package org.raven.statdb.impl;
 
-import org.raven.statdb.StatisticsDatabase;
 import org.raven.statdb.query.FromClause;
+import org.raven.statdb.query.OrderClause;
 import org.raven.statdb.query.Query;
 import org.raven.statdb.query.QueryStatisticsName;
 import org.raven.statdb.query.SelectClause;
@@ -76,5 +76,10 @@ public class SelectKeysQuery implements Query
     public SelectMode getSelectMode()
     {
         return SelectMode.SELECT_KEYS;
+    }
+
+    public OrderClause getOrderClause()
+    {
+        return null;
     }
 }
