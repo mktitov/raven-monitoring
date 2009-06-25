@@ -46,6 +46,9 @@ import org.tmatesoft.svn.core.SVNLogEntryPath;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNRevision;
+import org.tmatesoft.svn.core.wc.SVNStatus;
+import org.tmatesoft.svn.core.wc.SVNStatusClient;
+import org.weda.beans.ObjectUtils;
 import org.weda.internal.Messages;
 import org.weda.internal.annotations.Message;
 import org.weda.internal.annotations.Service;
@@ -136,8 +139,11 @@ public class SvnFileRevisionsNode extends BaseNode implements Viewable
         if (svnClient==null)
             return null;
         File file = fileNode.getSvnFile();
+        long lastRevision = 0;
         if (isRevisionsForFile())
         {
+            SVNStatusClient fileStatus = svnClient.getStatusClient();
+            lastRevision = fileStatus.doStatus(file, false).getCommittedRevision().getNumber();
             LogHandler logHandler = new LogHandler();
             svnClient.getLogClient().doLog(
                 isRevisionsForFile()? new File[]{file} : new File[]{}
@@ -174,10 +180,13 @@ public class SvnFileRevisionsNode extends BaseNode implements Viewable
                         new SvnFileContentVieableObject(svnClient, file, revision, this, false);
                 SvnFileContentVieableObject contentHtml =
                         new SvnFileContentVieableObject(svnClient, file, revision, this, true);
-                SvnFileDiffViewableObject diff =
-                        new SvnFileDiffViewableObject(svnClient, revision, file, this, false);
-                SvnFileDiffViewableObject diffHtml =
-                        new SvnFileDiffViewableObject(svnClient, revision, file, this, true);
+                SvnFileDiffViewableObject diff, diffHtml;
+                diff = diffHtml = null;
+                if (lastRevision != entry.getRevision())
+                {
+                    diff = new SvnFileDiffViewableObject(svnClient, revision, file, this, false);
+                    diffHtml = new SvnFileDiffViewableObject(svnClient, revision, file, this, true);
+                }
                 table.addRow(new Object[]{revision, date, content, contentHtml, diff, diffHtml});
             }
             else

@@ -37,7 +37,6 @@ import org.weda.annotations.constraints.NotNull;
 public class ReferenceNode extends BaseNode implements Viewable
 {
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
-    @NotNull
     private Node reference;
 
     @Parameter(defaultValue="false")

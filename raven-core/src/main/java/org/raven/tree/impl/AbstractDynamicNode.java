@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.raven.tree.Node;
 
 /**
@@ -30,6 +31,7 @@ import org.raven.tree.Node;
 public abstract class AbstractDynamicNode extends BaseNode
 {
     private long lastAccessTime = 0;
+    private AtomicBoolean childrensInitializing;
 
     public AbstractDynamicNode()
     {
@@ -37,32 +39,60 @@ public abstract class AbstractDynamicNode extends BaseNode
     }
 
     @Override
+    protected void initFields()
+    {
+        super.initFields();
+        childrensInitializing = new AtomicBoolean(false);
+    }
+
+    @Override
+    public Node getChildren(String name)
+    {
+        Node child = super.getChildren(name);
+        if (   child==null && !childrensInitializing.get() && lastAccessTime==0
+            && Status.STARTED.equals(getStatus()))
+        {
+            getChildrens();
+            child = super.getChildren(name);
+        }
+        return child;
+    }
+
+    @Override
     public synchronized Collection<Node> getChildrens()
     {
-        lastAccessTime = System.currentTimeMillis();
-        Collection<Node> newNodes = doGetChildrens();
-        Set<String> nodeNames = new HashSet<String>();
-        if (newNodes!=null && !newNodes.isEmpty())
-            for (Node newNode: newNodes)
-            {
-                if (getChildren(newNode.getName())==null)
-                {
-                    addAndSaveChildren(newNode);
-                    if (newNode.isAutoStart())
-                        newNode.start();
-                }
-                nodeNames.add(newNode.getName());
-            }
-        Collection<Node> childs = super.getChildrens();
-        if (childs!=null && !childs.isEmpty())
+        childrensInitializing.set(true);
+        try
         {
-            childs = new ArrayList<Node>(childs);
-            for (Node child: childs)
-                if (!nodeNames.contains(child.getName()))
-                    removeChildren(child);
+            lastAccessTime = System.currentTimeMillis();
+            Collection<Node> newNodes = doGetChildrens();
+            Set<String> nodeNames = new HashSet<String>();
+            if (newNodes!=null && !newNodes.isEmpty())
+                for (Node newNode: newNodes)
+                {
+                    if (getChildren(newNode.getName())==null)
+                    {
+                        addAndSaveChildren(newNode);
+                        if (newNode.isAutoStart())
+                            newNode.start();
+                    }
+                    nodeNames.add(newNode.getName());
+                }
+            Collection<Node> childs = super.getChildrens();
+            if (childs!=null && !childs.isEmpty())
+            {
+                childs = new ArrayList<Node>(childs);
+                for (Node child: childs)
+                    if (!nodeNames.contains(child.getName()))
+                        removeChildren(child);
+            }
+
+            return super.getChildrens();
         }
-        
-        return super.getChildrens();
+        finally
+        {
+            childrensInitializing.set(false);
+        }
     }
 
     /**
@@ -82,7 +112,10 @@ public abstract class AbstractDynamicNode extends BaseNode
     public synchronized void removeChildrensIfExpired(long expirationInterval)
     {
         if (lastAccessTime!=0 && (System.currentTimeMillis()-expirationInterval)>lastAccessTime)
+        {
             removeChildrens();
+            lastAccessTime = 0;
+        }
         else
         {
             Collection<Node> childs = super.getChildrens();

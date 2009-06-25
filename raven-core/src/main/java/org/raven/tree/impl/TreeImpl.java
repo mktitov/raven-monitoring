@@ -80,7 +80,7 @@ import org.weda.internal.services.ResourceProvider;
  */
 public class TreeImpl implements Tree
 {
-    protected Logger logger = LoggerFactory.getLogger(Node.class);
+    protected Logger logger = LoggerFactory.getLogger(Tree.class);
     
     public static Tree INSTANCE;
 
@@ -319,6 +319,8 @@ public class TreeImpl implements Tree
 			if (!node.isStartAfterChildrens() && node.getStatus()==Status.INITIALIZED
                 && (!autoStartOnly || node.isAutoStart()))
             {
+                if (logger.isDebugEnabled())
+                    logger.debug("Starting node "+node.getPath());
 				node.start();
             }
 		}
@@ -337,6 +339,8 @@ public class TreeImpl implements Tree
 			if (node.isStartAfterChildrens() && node.getStatus()==Status.INITIALIZED
                 && (!autoStartOnly || node.isAutoStart()))
             {
+                if (logger.isDebugEnabled())
+                    logger.debug("Starting node "+node.getPath());
 				node.start();
             }
 		}
@@ -565,6 +569,8 @@ public class TreeImpl implements Tree
             logger.debug(String.format("Initializing node (%s)", node.getPath()));
         if (!node.isInitializeAfterChildrens())
         {
+            if (logger.isDebugEnabled())
+                logger.debug("Initializing node "+node.getPath());
             node.init();
             if (nodeTuner!=null)
                 nodeTuner.finishTuning(node);
@@ -578,6 +584,8 @@ public class TreeImpl implements Tree
         }
         if (node.isInitializeAfterChildrens())
         {
+            if (logger.isDebugEnabled())
+                logger.debug("Initializing node "+node.getPath());
             node.init();
             if (nodeTuner!=null)
                 nodeTuner.finishTuning(node);
