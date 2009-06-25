@@ -139,6 +139,19 @@ public class NetworkResponseServlet extends HttpServlet
                     out.close();
                 }
             }
+            else
+            {
+//                response.sendError(response.SC_OK);
+                PrintWriter out = response.getWriter();
+                try
+                {
+                    out.append("OK");
+                }
+                finally
+                {
+                    out.close();
+                }
+            }
         }
         catch(Throwable e)
         {
