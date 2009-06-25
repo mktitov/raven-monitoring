@@ -35,8 +35,7 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 		//ViewableObjectWrapper wrp = new ViewableObjectWrapper(nwx.getNode());
 		//NodeWrapper nw = nwx.getVoSourceNW();
 		if ( ! nwx.isViewable() ) return vowl;
-		if(!nwx.isAutoRefresh())
-			if(!nwx.isRefreshPressed()) 
+		if(!nwx.isAutoRefresh() && !nwx.isRefreshPressed()) 
 				return vowl;
 		viewable = (Viewable) nwx.getNode();
 		List<ViewableObject> vol = null;
@@ -80,14 +79,6 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 		boolean reload = nw.isNeedRefreshVO();
 		nw.setNeedRefreshVO(false);
 		List<ViewableObjectWrapper> lst = new ArrayList<ViewableObjectWrapper>();
-		int zzzz = 0;
-		if(nw.getNodeId()==245)
-		{
-			boolean zzz = nw.isAutoRefresh();
-			if(!zzz && nw.isShowVO()) 
-				zzzz = 1;
-			
-		}
 		ViewableObjectWrapper wrp = new ViewableObjectWrapper(nw.getNode());
 		wrp.setUid(1);
 		wrp.setNodeId(nw.getNodeId());
