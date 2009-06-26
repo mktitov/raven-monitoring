@@ -34,6 +34,11 @@ public interface TreeStore
      */
     public void init(String databaseUrl, String username, String password) throws TreeStoreError;
     /**
+     * Closes the store
+     * @throws org.raven.tree.store.TreeStoreError
+     */
+    public void close() throws TreeStoreError;
+    /**
      * Saves node in the store.
      * @throws TreeStoreError on any error.
      */

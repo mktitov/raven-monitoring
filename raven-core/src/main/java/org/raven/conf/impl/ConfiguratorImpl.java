@@ -22,6 +22,8 @@ import org.raven.conf.Config;
 import org.raven.conf.Configurator;
 import org.raven.conf.ConfiguratorError;
 import org.raven.tree.store.TreeStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -29,6 +31,7 @@ import org.raven.tree.store.TreeStore;
  */
 public class ConfiguratorImpl implements Configurator
 {
+	private final static Logger logger = LoggerFactory.getLogger(Configurator.class);
 //    private PersistenceManagerFactory pmf;
 //    private PersistenceManager pm;
     private TreeStore treeStore;
@@ -187,6 +190,23 @@ public class ConfiguratorImpl implements Configurator
         String passwd = config.getStringProperty(TREE_STORE_PASSWORD, null);
         
         treeStore.init(url, user, passwd);
+        if (logger.isInfoEnabled())
+            logger.info(String.format("Tree store (%s) initialized", engineClass.getName()));
+    }
+
+    public void close() throws Exception
+    {
+        if (logger.isInfoEnabled())
+            logger.info("Shutdowning clonfigurator");
+        if (treeStore!=null)
+            try{
+                treeStore.close();
+            }catch(Exception e)
+            {
+                logger.error("Configurator shutdown error", e);
+            }
+        if (logger.isInfoEnabled())
+            logger.info("Configurator shutdowned");
     }
 
 }

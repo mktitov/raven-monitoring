@@ -25,6 +25,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import org.apache.commons.io.IOUtils;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.raven.ServiceTestCase;
@@ -43,8 +44,8 @@ public class H2TreeStoreTest extends ServiceTestCase
 {
     private static H2TreeStore store;
 
-    @BeforeClass
-    public static void initTests() throws TreeStoreError
+    @Before
+    public void initTests() throws TreeStoreError
     {
         store = new H2TreeStore();
         store.init("jdbc:h2:tcp://localhost/~/test;", "sa", "");

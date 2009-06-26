@@ -233,6 +233,29 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
     }
 
     @Test
+    public void createWithReferenceToInvalidNode() throws Exception
+    {
+        NodeAttribute attr = new NodeAttributeImpl("ref", Node.class, "../parent/child2", null);
+        attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
+        attr.setOwner(node);
+        node.addNodeAttribute(attr);
+        attr.save();
+        attr.init();
+
+        assertFalse(attr.isExpressionValid());
+        assertNull(attr.getRealValue());
+        assertNull(attr.getValue());
+
+        Node child2 = new BaseNode("child2");
+        parentNode.addAndSaveChildren(child2);
+        assertTrue(child2.start());
+        
+        assertNotNull(attr.getValue());
+        assertTrue(attr.isExpressionValid());
+        assertNotNull(attr.getRealValue());
+    }
+
+    @Test
     public void realTest() throws Exception
     {
         NodeAttribute attr = new NodeAttributeImpl("ref", Node.class, childNode.getPath(), null);

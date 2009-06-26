@@ -17,8 +17,6 @@
 
 package org.raven.tree.impl;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
@@ -85,6 +83,8 @@ public class NodeReferenceValueHandler
         
         try 
         {
+            expressionValid = false;
+            node = null;
             Node currentNode = null;
     //        PathElement[] newPathElements = null;
             if (data!=null && data.length()>0)
@@ -98,8 +98,9 @@ public class NodeReferenceValueHandler
         }
         catch (InvalidPathException ex) 
         {
-            expressionValid = false;
-            node = null;
+            attribute.getOwner().getLogger().warn(String.format(
+                    "Attribute (%s). Error resolving path (%s) to node"
+                    , attribute.getName(), data));
         }
 
         this.data = data;
@@ -142,7 +143,6 @@ public class NodeReferenceValueHandler
                         , data, attribute.getName(), attribute.getOwner().getPath()));
             }
         return node;
-        
     }
 
     public void close()

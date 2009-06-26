@@ -449,12 +449,14 @@ public class SvnBrowserNodeTest extends RavenCoreTestCase
         assertTrue(svnBrowser.start());
 
         svnBrowser.getChildrens();
-        assertNotNull(svnBrowser.getChildren("test"));
+        Node testNode = svnBrowser.getChildren("test");
+        assertNotNull(testNode);
 
         svnBrowser.setChildrenExpirationInterval(1l);
         TimeUnit.SECONDS.sleep(2);
         svnBrowser.executeScheduledJob();
-        assertNull(svnBrowser.getChildren("test"));
+        Node testNode2 = svnBrowser.getChildren("test");
+        assertNotSame(testNode2, testNode);
     }
 
     private void checkFileContent(Object contentObj, String expectContent, String contentType)

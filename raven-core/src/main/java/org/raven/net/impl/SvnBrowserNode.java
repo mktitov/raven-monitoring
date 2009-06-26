@@ -26,6 +26,7 @@ import org.raven.sched.Scheduler;
 import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
 import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNURL;
+import org.tmatesoft.svn.core.internal.io.fs.FSRepositoryFactory;
 import org.tmatesoft.svn.core.internal.wc.DefaultSVNOptions;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
@@ -149,6 +150,8 @@ public class SvnBrowserNode extends SvnDirectoryNode implements Schedulable
     private void setupSubversion() throws Exception
     {
         repUrl = SVNURL.parseURIEncoded(repositoryUrl);
+        if ("file".equals(repUrl.getProtocol()))
+            FSRepositoryFactory.setup();
         workDir = new File(workDirectory);
         DefaultSVNOptions options = SVNWCUtil.createDefaultOptions(true);
         svnClient = SVNClientManager.newInstance(options, username, password);

@@ -49,7 +49,7 @@ import org.weda.internal.services.MessagesRegistry;
 //TODO: add autoStart to the Node functionality
 public class H2TreeStore implements TreeStore
 {
-	private final static Logger logger = LoggerFactory.getLogger(H2TreeStore.class);
+	private final static Logger logger = LoggerFactory.getLogger(TreeStore.class);
 
     @Service
     private static MessagesRegistry messagesRegistry;
@@ -410,6 +410,9 @@ public class H2TreeStore implements TreeStore
     {
         try
         {
+            if (logger.isInfoEnabled())
+                logger.info("Loading all nodes from store");
+            int count = 0;
             Map<Integer, Node> cache = new HashMap<Integer, Node>();
             Node rootNode = null;
             Statement st = connection.createStatement();
@@ -426,6 +429,9 @@ public class H2TreeStore implements TreeStore
             while (rs.next())
             {
                 Node node = createNode(rs, cache);
+                if (logger.isDebugEnabled())
+                    logger.debug(String.format(
+                            "Node CREATED: id (%s), name (%s)", node.getId(), node.getName()));
                 cache.put(node.getId(), node);
                 if (rootNode==null)
                     rootNode = node;
@@ -440,6 +446,7 @@ public class H2TreeStore implements TreeStore
                             it.remove();
                     }
                 }
+                ++count;
             }
             
             rs.close();
@@ -447,6 +454,9 @@ public class H2TreeStore implements TreeStore
             
             connection.commit();
         
+            if (logger.isInfoEnabled())
+                logger.info(String.format("Loaded (%s) nodes from the store", count));
+
             return rootNode;
             
         } catch(Exception e)
@@ -786,5 +796,18 @@ public class H2TreeStore implements TreeStore
             composer.append(tokenizer.nextToken());
 
         return composer;
+    }
+
+    public void close() throws TreeStoreError 
+    {
+        try {
+            if (connection != null) {
+                connection.close();
+                connection = null;
+            }
+        } catch (SQLException e)
+        {
+            throw new TreeStoreError("Close store error", e);
+        }
     }
 }

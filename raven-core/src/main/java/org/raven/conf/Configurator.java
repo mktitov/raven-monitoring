@@ -99,6 +99,10 @@ public interface Configurator
      * Returns the storage of the configuration parameters.
      */
     public Config getConfig() throws Exception;
+    /**
+     * Closes the configurator
+     */
+    public void close() throws Exception;
 //    /**
 //     * Starts new transaction.
 //     * @see #commit() 
