@@ -15,7 +15,7 @@
  *  under the License.
  */
 
-package org.raven.req.impl;
+package org.raven.conv.impl;
 
 import java.util.Collection;
 import org.junit.Before;
