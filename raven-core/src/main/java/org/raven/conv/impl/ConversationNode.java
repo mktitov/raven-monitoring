@@ -15,7 +15,7 @@
  *  under the License.
  */
 
-package org.raven.req.impl;
+package org.raven.conv.impl;
 
 import java.util.Collection;
 import java.util.Map;
@@ -23,9 +23,9 @@ import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.IfNode;
-import org.raven.req.RequestEntry;
-import org.raven.req.RequestHandler;
-import org.raven.req.RequestHandlerException;
+import org.raven.conv.ConversationPoint;
+import org.raven.conv.Conversation;
+import org.raven.conv.ConversationException;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.InvisibleNode;
@@ -36,9 +36,9 @@ import org.raven.tree.impl.InvisibleNode;
  */
 @NodeClass(
     parentNode=InvisibleNode.class,
-    childNodes={IfNode.class, RequestEntryNode.class},
+    childNodes={IfNode.class, ConversationPointNode.class},
     importChildTypesFromParent=true)
-public class RequestHandlerNode extends BaseNode implements RequestHandler
+public class ConversationNode extends BaseNode implements Conversation
 {
     private BindingSupportImpl bindingSupport;
 
@@ -49,26 +49,30 @@ public class RequestHandlerNode extends BaseNode implements RequestHandler
         bindingSupport = new BindingSupportImpl();
     }
 
-    public Collection<Node> handleRequest(Map<String, Object> params) throws RequestHandlerException
+    public Collection<Node> makeConversation(Map<String, Object> params) throws ConversationException
     {
-        Node currentPosition = this;
-        RequestEntry nextEntry = (RequestEntry) params.get(NEXT_ENTRY_PARAM);
-        if (nextEntry!=null)
+        Node currentPoint = this;
+        ConversationPoint nextPoint = (ConversationPoint) params.get(NEXT_CONVERSATION_POINT_PARAM);
+        if (nextPoint!=null)
         {
-            currentPosition = nextEntry.getNextEntry();
-            if (currentPosition==null)
-                currentPosition = nextEntry;
+            currentPoint = nextPoint.getNextPoint();
+            if (currentPoint==null)
+                currentPoint = nextPoint;
         }
 
         for (Map.Entry<String, Object> paramEntry: params.entrySet())
             bindingSupport.put(paramEntry.getKey(), paramEntry.getValue());
         try
         {
-            Collection<Node> actions = currentPosition.getEffectiveChildrens();
+            Collection<Node> actions = currentPoint.getEffectiveChildrens();
             if (actions!=null && !actions.isEmpty())
                 for (Node action: actions)
-                    if (action instanceof RequestEntry)
-                        params.put(NEXT_ENTRY_PARAM, action);
+                    if (action instanceof ConversationPoint)
+                        params.put(NEXT_CONVERSATION_POINT_PARAM, action);
+
+            if (!params.containsKey(NEXT_CONVERSATION_POINT_PARAM))
+                params.put(NEXT_CONVERSATION_POINT_PARAM, currentPoint);
+
                 
             return actions;
         }

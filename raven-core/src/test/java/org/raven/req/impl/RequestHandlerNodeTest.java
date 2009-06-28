@@ -17,6 +17,8 @@
 
 package org.raven.req.impl;
 
+import org.raven.conv.impl.ConversationNode;
+import org.raven.conv.impl.ConversationPointNode;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
 import org.raven.expr.impl.IfNode;
@@ -31,7 +33,7 @@ public class RequestHandlerNodeTest extends RavenCoreTestCase
     @Test
     public void test() throws Exception
     {
-        RequestHandlerNode requestHandler = new RequestHandlerNode();
+        ConversationNode requestHandler = new ConversationNode();
         requestHandler.setName("requestHandler");
         tree.getRootNode().addAndSaveChildren(requestHandler);
         assertTrue(requestHandler.start());
@@ -40,7 +42,7 @@ public class RequestHandlerNodeTest extends RavenCoreTestCase
         requestHandler.addAndSaveChildren(hello);
         assertTrue(hello.start());
 
-        RequestEntryNode helloEntry = new RequestEntryNode();
+        ConversationPointNode helloEntry = new ConversationPointNode();
         helloEntry.setName("helloEntry");
         requestHandler.addAndSaveChildren(helloEntry);
         assertTrue(hello.start());

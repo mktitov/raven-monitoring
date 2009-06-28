@@ -15,15 +15,19 @@
  *  under the License.
  */
 
-package org.raven.req;
-
-import org.raven.tree.Node;
+package org.raven.conv;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface RequestEntry extends Node
+public class ConversationCycleDetectedException extends ConversationException
 {
-    public RequestEntry getNextEntry();
+    public ConversationCycleDetectedException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public ConversationCycleDetectedException(String message) {
+        super(message);
+    }
 }

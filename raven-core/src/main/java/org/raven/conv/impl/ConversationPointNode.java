@@ -15,11 +15,11 @@
  *  under the License.
  */
 
-package org.raven.req.impl;
+package org.raven.conv.impl;
 
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
-import org.raven.req.RequestEntry;
+import org.raven.conv.ConversationPoint;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
@@ -28,23 +28,23 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=RequestHandlerNode.class, importChildTypesFromParent=true)
-public class RequestEntryNode extends BaseNode implements RequestEntry
+@NodeClass(parentNode=ConversationNode.class, importChildTypesFromParent=true)
+public class ConversationPointNode extends BaseNode implements ConversationPoint
 {
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
-    private RequestEntry nextEntry;
+    private ConversationPoint nextPoint;
 
     @NotNull @Parameter(defaultValue="false")
     private Boolean immediateTransition;
 
-    public RequestEntry getNextEntry()
+    public ConversationPoint getNextPoint()
     {
-        return nextEntry;
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public void setNextEntry(RequestEntry nextEntry)
+    public void setNextPoint(ConversationPoint nextPoint)
     {
-        this.nextEntry = nextEntry;
+        this.nextPoint = nextPoint;
     }
 
     public Boolean getImmediateTransition() {

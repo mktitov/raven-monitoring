@@ -15,21 +15,24 @@
  *  under the License.
  */
 
-package org.raven.req;
+package org.raven.conv;
+
+import org.raven.tree.Node;
 
 /**
- *
+ * The point from which the next part of the conversation starts
  * @author Mikhail Titov
  */
-public class RequestHandlerException extends Exception
+public interface ConversationPoint extends Node
 {
-    public RequestHandlerException(String message)
-    {
-        super(message);
-    }
-
-    public RequestHandlerException(String message, Throwable cause)
-    {
-        super(message, cause);
-    }
+    /**
+     * Returns the next conversation point. If method returns null then the next conversation point
+     * is this node.
+     */
+    public ConversationPoint getNextPoint();
+    /**
+     * If method return <b>true</b> than the conversation engine must make immediate transition to
+     * the next conversation point.
+     */
+    public Boolean getImmediateTransition();
 }

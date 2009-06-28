@@ -15,20 +15,21 @@
  *  under the License.
  */
 
-package org.raven.req;
-
-import java.util.Collection;
-import java.util.Map;
-import org.raven.tree.Node;
+package org.raven.conv;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface RequestHandler
+public class ConversationException extends Exception
 {
-    public final static String NEXT_ENTRY_PARAM = "NEXT_ENTRY";
+    public ConversationException(String message)
+    {
+        super(message);
+    }
 
-    public Collection<Node> handleRequest(Map<String, Object> params)
-            throws RequestHandlerException;
+    public ConversationException(String message, Throwable cause)
+    {
+        super(message, cause);
+    }
 }
