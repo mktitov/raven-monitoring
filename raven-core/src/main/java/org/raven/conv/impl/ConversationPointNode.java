@@ -39,7 +39,7 @@ public class ConversationPointNode extends BaseNode implements ConversationPoint
 
     public ConversationPoint getNextPoint()
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return nextPoint;
     }
 
     public void setNextPoint(ConversationPoint nextPoint)

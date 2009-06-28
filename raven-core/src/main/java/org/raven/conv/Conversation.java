@@ -18,7 +18,6 @@
 package org.raven.conv;
 
 import java.util.Collection;
-import java.util.Map;
 import org.raven.tree.Node;
 
 /**
@@ -33,12 +32,17 @@ public interface Conversation
 
     /**
      * Starts or continues onversation
-     * @param params converation parameters. Must not be null and must point to the one map in
-     *      conversation process
+     * @param state the state of the conversation. The parameter must not be null and must created
+     *      by {@link #createConversationState()} method. In bound of the one conversation the
+     *      parameter must point to the same object.
      * @return the collection of nodes (actions) that must be executed by using the conversation
      *      engine.
      * @throws org.raven.conv.ConversationException
      */
     public Collection<Node> makeConversation(ConversationState state)
             throws ConversationException;
+    /**
+     * Creates the conversation state.
+     */
+    public ConversationState createConversationState() throws ConversationException;
 }

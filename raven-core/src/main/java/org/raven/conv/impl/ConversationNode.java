@@ -17,17 +17,19 @@
 
 package org.raven.conv.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
+import java.util.Collections;
 import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
+import org.raven.conv.ConversationCycleDetectedException;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.IfNode;
 import org.raven.conv.ConversationPoint;
 import org.raven.conv.Conversation;
 import org.raven.conv.ConversationException;
+import org.raven.conv.ConversationState;
 import org.raven.tree.Node;
-import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.InvisibleNode;
 
 /**
@@ -38,7 +40,7 @@ import org.raven.tree.impl.InvisibleNode;
     parentNode=InvisibleNode.class,
     childNodes={IfNode.class, ConversationPointNode.class},
     importChildTypesFromParent=true)
-public class ConversationNode extends BaseNode implements Conversation
+public class ConversationNode extends ConversationPointNode implements Conversation
 {
     private BindingSupportImpl bindingSupport;
 
@@ -49,31 +51,32 @@ public class ConversationNode extends BaseNode implements Conversation
         bindingSupport = new BindingSupportImpl();
     }
 
-    public Collection<Node> makeConversation(Map<String, Object> params) throws ConversationException
+    public Collection<Node> makeConversation(ConversationState state) throws ConversationException
     {
-        Node currentPoint = this;
-        ConversationPoint nextPoint = (ConversationPoint) params.get(NEXT_CONVERSATION_POINT_PARAM);
-        if (nextPoint!=null)
-        {
-            currentPoint = nextPoint.getNextPoint();
-            if (currentPoint==null)
-                currentPoint = nextPoint;
-        }
+        ConversationPoint nextPoint = state.getNextConversationPoint();
+        if (nextPoint.getNextPoint()!=null)
+            nextPoint = nextPoint.getNextPoint();
 
-        for (Map.Entry<String, Object> paramEntry: params.entrySet())
-            bindingSupport.put(paramEntry.getKey(), paramEntry.getValue());
+        bindingSupport.putAll(state.getBindings());
         try
         {
-            Collection<Node> actions = currentPoint.getEffectiveChildrens();
-            if (actions!=null && !actions.isEmpty())
-                for (Node action: actions)
-                    if (action instanceof ConversationPoint)
-                        params.put(NEXT_CONVERSATION_POINT_PARAM, action);
+            Collection<Node> childs = nextPoint.getEffectiveChildrens();
+            if (childs==null || childs.isEmpty())
+                return Collections.EMPTY_LIST;
+            Collection<Node> actions = new ArrayList<Node>(childs.size());
+            boolean conversationPointSeted = false;
+            for (Node action: childs)
+                if (action.getStatus().equals(Status.STARTED))
+                {
+                    if (!conversationPointSeted && action instanceof ConversationPoint)
+                    {
+                        state.setNextConversationPoint((ConversationPoint) action);
+                        conversationPointSeted = true;
+                    }
+                    else
+                        actions.add(action);
+                }
 
-            if (!params.containsKey(NEXT_CONVERSATION_POINT_PARAM))
-                params.put(NEXT_CONVERSATION_POINT_PARAM, currentPoint);
-
-                
             return actions;
         }
         finally
@@ -89,4 +92,10 @@ public class ConversationNode extends BaseNode implements Conversation
         bindingSupport.addTo(bindings);
     }
 
+    public ConversationState createConversationState() throws ConversationCycleDetectedException
+    {
+        ConversationState state =  new ConversationStateImpl();
+        state.setNextConversationPoint(this);
+        return state;
+    }
 }
