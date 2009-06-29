@@ -754,7 +754,8 @@ implements Comparator<NodeAttribute>
 		  {
 			  NodeWrapper nw = new NodeWrapper(it.next());
 			 // if(!nw.isAllowTreeEdit()) continue;
-			  if(!nw.isAllowNodeRead()) continue;
+			  //if(!nw.isAllowNodeRead()) continue;
+			  if(!nw.isAnyAccess()) continue;
 			  al.add(nw);
 		  }	  
 		  return al;

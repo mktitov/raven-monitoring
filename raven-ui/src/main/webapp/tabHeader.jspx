@@ -15,14 +15,16 @@
  *  limitations under the License.
  *  under the License.
  -->
-<jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
-          xmlns:f="http://java.sun.com/jsf/core"
-          xmlns:tr="http://myfaces.apache.org/trinidad" >
+<jsp:root	xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
+          	xmlns:f="http://java.sun.com/jsf/core"
+			xmlns:trh="http://myfaces.apache.org/trinidad/html"          
+        	xmlns:tr="http://myfaces.apache.org/trinidad" >
 <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
 
 <!-- captionText="#{msgs.nodeStatus}" -->
 <tr:form>
-<tr:panelCaptionGroup rendered="#{! sBean.collapsed}" 
+<tr:panelCaptionGroup 
+	rendered="#{! sBean.collapsed}" 
     id="pcg"  
     captionText="#{msgs.currentNode}" >
     

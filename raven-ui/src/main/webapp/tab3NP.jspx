@@ -29,8 +29,9 @@
             	<jsp:include page="tabHeader.jspx" flush="true"/>
             </f:subview>
         
-            <tr:form>
+            
             <tr:panelGroupLayout layout="horizontal">
+            <tr:form>
             <tr:navigationPane hint="tabs">
               	<tr:commandNavigationItem
               		rendered="#{cNode.allowNodeRead}"
@@ -64,6 +65,7 @@
               		partialSubmit="true" 
               		immediate="true"/>
             </tr:navigationPane>
+            </tr:form>
             <tr:spacer width="5"/>
             <tr:statusIndicator/>
             </tr:panelGroupLayout>
@@ -71,7 +73,7 @@
         	<f:subview id="body">
             	<jsp:include page="tabTreeEdit.jspx" flush="true"/>
             </f:subview>
-            </tr:form>
+            
             </tr:panelGroupLayout>
         </tr:document>
     </f:view>

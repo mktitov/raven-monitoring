@@ -28,10 +28,10 @@
         	<f:subview id="header">
             	<jsp:include page="tabHeader.jspx" flush="true"/>
             </f:subview>
-        
-            <tr:form>
-           		<tr:panelGroupLayout layout="horizontal">
-	            	<tr:navigationPane hint="tabs">
+            
+           	<tr:panelGroupLayout layout="horizontal">
+           		<tr:form>
+	        	<tr:navigationPane hint="tabs">
               			<tr:commandNavigationItem
               				rendered="#{cNode.allowNodeRead}"
               				action="tabShow" 
@@ -64,13 +64,14 @@
               				partialSubmit="true" 
               				immediate="true"/>
             		</tr:navigationPane>
-                    <tr:spacer width="5"/>
+				</tr:form>              				
+                <tr:spacer width="5"/>
             		<tr:statusIndicator/>
             	</tr:panelGroupLayout>
         	<f:subview id="body">
             	<jsp:include page="tabControl.jspx" flush="true"/>
             </f:subview>
-            </tr:form>
+            
             </tr:panelGroupLayout>
         </tr:document>
     </f:view>

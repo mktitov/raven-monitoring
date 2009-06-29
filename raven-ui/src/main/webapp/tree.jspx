@@ -50,6 +50,8 @@
  		
  		<tr:panelGroupLayout layout="vertical">
  		</tr:panelGroupLayout>
+ 		
+ 		<tr:panelHorizontalLayout>
  -->
        	<tr:poll 
        		pollListener="#{sBean.onTreePoll}" 
@@ -59,12 +61,11 @@
        	<tr:panelPopup 
  			text="#{msgs.resources}">
        		
-        	<tr:panelGroupLayout layout="vertical">
-        	  <ul>
+        	<tr:panelList >
+        	  
        	        <tr:forEach 
        	        	var="res" 
        	        	items="#{sBean.resourcesList}">
-       	        	<li>
        	        	<tr:panelHorizontalLayout>
         	    	<tr:commandLink
         	        	text="#{res[0]}"
@@ -77,12 +78,11 @@
         					value="#{res[1]}" 
         				/>
         			</tr:commandLink>
-        			<tr:spacer width="10" />
+        			<tr:spacer width="12"/>
         			</tr:panelHorizontalLayout>
-        			</li>
 				</tr:forEach>
-				</ul>
-			</tr:panelGroupLayout>
+				
+			</tr:panelList>
 						
 		</tr:panelPopup>	
        	<tr:spacer height="3" />	

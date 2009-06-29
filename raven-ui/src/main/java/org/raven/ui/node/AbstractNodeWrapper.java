@@ -107,14 +107,16 @@ public abstract class AbstractNodeWrapper
 
 	public boolean isAllowNodeRead()
 	{
-		int acc;
-		if(node.getId()==16)
-		{
-			acc = 0;	
-		}
-		acc = userAcl.getAccessForNode(node);
+		int acc = userAcl.getAccessForNode(node);
 		if( ( acc & AccessControl.READ) ==0 ) return false;
 		return true;
+	}
+
+	public boolean isAnyAccess()
+	{
+		int acc = userAcl.getAccessForNode(node);
+		if( acc > AccessControl.NONE ) return true;
+		return false;
 	}
 	
 	public boolean isCanNodeStop()

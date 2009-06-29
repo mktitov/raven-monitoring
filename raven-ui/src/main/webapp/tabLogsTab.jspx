@@ -22,7 +22,8 @@
     <jsp:directive.page pageEncoding="utf-8" contentType="text/html; charset=utf-8"/>
 <!--    <f:view>  -->
         <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
-<!--    <tr:panelGroupLayout layout="vertical">  --> 
+<!--    <tr:panelGroupLayout layout="vertical">  -->
+		 <tr:form>
         <tr:panelTabbed 
           	position="above" 
           	id="panelTabbed2" 
@@ -44,5 +45,6 @@
                 </f:subview>
             </tr:showDetailItem>
 		</tr:panelTabbed>
+		</tr:form>		
 <!--  </f:view>  -->
 </jsp:root>

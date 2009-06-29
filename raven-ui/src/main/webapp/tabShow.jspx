@@ -20,12 +20,26 @@
           xmlns:h="http://java.sun.com/jsf/html"
           xmlns:tr="http://myfaces.apache.org/trinidad" 
           xmlns:t="http://myfaces.apache.org/tomahawk" 
+          xmlns:trh="http://myfaces.apache.org/trinidad/html"
           xmlns:s="http://myfaces.apache.org/sandbox" >
 <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
 
+<trh:script ></trh:script>
+<trh:script text="function submitEnter(commandId,e)
+{
+	var keycode;
+    if (window.event) keycode = window.event.keyCode;
+   	else if(e) keycode = e.which;
+        	else return true;
+    if (keycode == 13) {
+    	document.getElementById(commandId).click();
+       	return false;
+   	} 
+    return true;
+}" />
+
 <tr:spacer height="5" />
-    
-    
+<tr:form>
 <tr:panelBorderLayout>    
 	<f:facet name="left">
 		<tr:panelHorizontalLayout
@@ -45,7 +59,7 @@
  
 action="#{sBean.reloadRightFrame}"
  -->
-			<tr:commandButton 
+			<tr:commandButton   
 				shortDesc="#{msgs.dscRefreshAndApply}"
 				partialSubmit="true"
 				action="#{cNode.onRefresh}" 
@@ -113,6 +127,7 @@ action="#{sBean.reloadRightFrame}"
 	<!-- value of attribute-->
             <tr:column headerText="#{msgs.value}">
                 <tr:inputText 
+                	onkeypress="return submitEnter('#{defButtonRA.id}',event)"
                 	readOnly="#{row.expressionSupported}" 
                 	rendered="#{row.expressionSupported or (row.selectItems == null)}" 
                 	value="#{row.value}" 
@@ -146,12 +161,13 @@ action="#{sBean.reloadRightFrame}"
 	                	escape="false" />
 				</tr:panelCaptionGroup>
 
-			    <tr:inputText
+			    <tr:inputText 
+			    	onkeypress="return submitEnter('#{defButtonRA.id}',event)"
 			    	label="#{msgs.expression}"
                		rows="7" 
                		wrap="hard"
             		rendered="#{row.enableEditExpression}" 
-            		value="#{row.expression}" 
+            		value="#{row.expression}"
             		columns="100" />
 
 				<tr:inputListOfValues 
@@ -220,6 +236,8 @@ action="#{sBean.reloadRightFrame}"
 <!-- Button bar for refresh attributes -->
         <tr:panelButtonBar halign="left" >
             <tr:commandButton 
+            	binding="#{defButtonRA.button}"
+            	id = "defButRA" 
             	partialSubmit="true"
             	shortDesc="#{msgs.dscSaveAttr}" 
             	text="#{msgs.saveAndRefresh}" 
@@ -228,13 +246,21 @@ action="#{sBean.reloadRightFrame}"
             	shortDesc="#{msgs.dscCancelAttr}" 
             	text="#{msgs.cancel}" 
             	action="#{cNode.cancelRefreshAttributes}" />
+			<t:commandButton 
+				id="defaultSubmit" 
+				forceId="true" immediate="true"
+				action="#{cNodeRefreshAttrs.saveAttributes}" 
+				style="visibility:hidden;" />
         </tr:panelButtonBar>
+        
   	</tr:showDetailItem>
 </tr:panelAccordion>
+</tr:form>
 <tr:spacer height="5" />
 <!-- ********************************* -->
 <!-- Show viewable nodes               -->
 <!-- ********************************* -->
+<tr:form id="ShowWN">
 <tr:table width="100%"
 		horizontalGridVisible="false" 
 		verticalGridVisible="false"
@@ -244,8 +270,7 @@ action="#{sBean.reloadRightFrame}"
  		id="showTable"
  		immediate="true" >
 <!--
-rendered="#{cNode.showVO}" 
-:::refresh_A ::poolStatus
+ rendered="#{cNode.showVO}" 
 partialTriggers=":poolStatus"
  --> 
  <tr:column 
@@ -805,6 +830,6 @@ items="#{row.tableColumnNames}"
   	
 </tr:switcher>
 </tr:column> 
-
 </tr:table>
+</tr:form>
 </jsp:root>

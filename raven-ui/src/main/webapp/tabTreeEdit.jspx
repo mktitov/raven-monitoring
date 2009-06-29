@@ -21,6 +21,7 @@
           xmlns:tr="http://myfaces.apache.org/trinidad" >
 <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
 
+<tr:form>
 <tr:panelHorizontalLayout rendered="#{cNode.allowTreeEdit}" >
 	<tr:panelAccordion discloseNone="true" >
 		<tr:showDetailItem text="#{msgs.nodeCreate}">
@@ -183,7 +184,7 @@
         </tr:column>
  	</tr:table>
 </tr:panelCaptionGroup>
-
+</tr:form>
 <!-- </tr:panelHorizontalLayout>  -->
 
 </jsp:root>

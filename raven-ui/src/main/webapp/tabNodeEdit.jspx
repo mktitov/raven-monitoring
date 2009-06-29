@@ -38,6 +38,7 @@
     </tr:panelCaptionGroup>        
     
     -->
+    <h:form id="form1" enctype="multipart/form-data" >
 <tr:panelAccordion discloseNone="true" >
 	<tr:showDetailItem text="#{msgs.dsc}">
     <!-- ********************* -->
@@ -313,5 +314,5 @@ readOnly="#{row.expressionSupported}"
             </f:facet>
         </tr:table>
     </tr:panelCaptionGroup>        
-
+</h:form>
 </jsp:root>

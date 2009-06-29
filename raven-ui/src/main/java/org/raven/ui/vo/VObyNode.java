@@ -34,7 +34,7 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 		//			return vowl;
 		//ViewableObjectWrapper wrp = new ViewableObjectWrapper(nwx.getNode());
 		//NodeWrapper nw = nwx.getVoSourceNW();
-		if ( ! nwx.isViewable() ) return vowl;
+		if ( ! nwx.isViewable() || ! nwx.isAllowNodeRead()) return vowl;
 		if(!nwx.isAutoRefresh() && !nwx.isRefreshPressed()) 
 				return vowl;
 		viewable = (Viewable) nwx.getNode();

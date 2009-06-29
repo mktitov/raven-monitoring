@@ -301,11 +301,11 @@ public class SessionBean
 	  
 	  public void selectNodeAndMaximize(ActionEvent event)
 	  {
-		  selectNode(event);
+		  selectNodeT(event);
 		  //switchCollapsed();	
 	  }
 	  
-	  public void selectNode(ActionEvent event)
+	  public void selectNodeT(ActionEvent event)
 	  {
 		  UIComponent component=event.getComponent();
 		  if(component==null)
@@ -322,11 +322,42 @@ public class SessionBean
 			setCurrentNode(n);
 		  } catch (InvalidPathException e) { logger.error("InvalidPath ["+nodePath+"]",e); }
 	  }
-	
+
+	  public void selectNode(ActionEvent event)
+	  {
+		  UIComponent component=event.getComponent();
+		  if(component==null)
+		  {
+			  logger.info("component==null");
+			  return;
+		  }	  
+		  Map<String, Object> params = component.getAttributes();
+		  String nodePath =  (String) params.get(SELECT_NODE_PARAM);
+		  logger.info("select Node: "+nodePath);
+		  if(nodePath==null || nodePath.length()==0) return;
+		  try {
+			Node n = tree.getNode(nodePath);
+			setCurrentNode(n,false);
+		  } catch (InvalidPathException e) { logger.error("InvalidPath ["+nodePath+"]",e); }
+	  }
+	  
+	  
 	public TreeModel getTreeModel() { return treeModel; }
 	public void setTreeModel(RavenTreeModel treeModel) { this.treeModel = treeModel; }
 
 	public Node getCurrentNode() { return wrapper.getNode(); }
+
+	public void setCurrentNode(Node currentNode,boolean rFlag) 
+	{
+		if(getCurrentNode()==null || !getCurrentNode().equals(currentNode))
+		{
+			wrapper.setNode(currentNode);
+			clearNewNode();
+			if(rFlag) reloadBothFrames();
+			else reloadRightFrame();
+		}// else reloadLeftFrame();
+	}
+	
 	public void setCurrentNode(Node currentNode) 
 	{
 		if(getCurrentNode()==null || !getCurrentNode().equals(currentNode))

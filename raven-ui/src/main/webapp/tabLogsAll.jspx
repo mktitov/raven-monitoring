@@ -20,6 +20,7 @@
           xmlns:f="http://java.sun.com/jsf/core"
           xmlns:tr="http://myfaces.apache.org/trinidad" >
 <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
+
 <!-- ********************* -->
 <!-- log view attributes -->
 <!-- ********************* -->
@@ -179,6 +180,5 @@
 			</tr:table>
 	    </f:facet>
 </tr:table>
-
 
 </jsp:root>

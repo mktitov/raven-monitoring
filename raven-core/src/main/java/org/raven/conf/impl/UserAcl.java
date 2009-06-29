@@ -19,8 +19,6 @@ package org.raven.conf.impl;
 
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.List;
-
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -29,13 +27,11 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.InitialDirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
-
 import org.raven.conf.Config;
 import org.raven.conf.Configurator;
 import org.raven.tree.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 public class UserAcl 
 {

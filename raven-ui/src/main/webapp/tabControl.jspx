@@ -27,6 +27,7 @@ partialTriggers="::poolStatus"
 -->
 
 <tr:panelCaptionGroup captionText="" >
+<tr:form>
 	<tr:panelButtonBar 
 		halign="left" 
 		rendered="#{cNode.allowControl}" >
@@ -43,7 +44,7 @@ partialTriggers="::poolStatus"
 			disabled="#{! cNode.canNodeStop}" 
 			text="#{msgs.stop}"/>
 	</tr:panelButtonBar>
+</tr:form>
 </tr:panelCaptionGroup>
-
 
 </jsp:root>
