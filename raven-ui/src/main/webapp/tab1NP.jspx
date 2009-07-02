@@ -34,7 +34,7 @@
             <tr:form>
             <tr:navigationPane hint="tabs">
               	<tr:commandNavigationItem 
-              		rendered="#{cNode.allowNodeRead}"
+              		rendered="#{cNode.anyAccess}"
               		selected="true" 
               		action="tabShow" 
               		text="#{msgs.view}"

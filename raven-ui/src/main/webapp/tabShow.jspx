@@ -43,7 +43,6 @@
 <tr:panelBorderLayout>    
 	<f:facet name="left">
 		<tr:panelHorizontalLayout
-			rendered="#{cNode.allowNodeRead}" 
 			halign="left" 
 			id="phl_1"  >
 			<tr:poll 
@@ -52,11 +51,11 @@
 				interval="#{cNode.refreshViewIntevalMS}" 
 				pollListener="#{cNode.pollRefresh}" />
 <!--
+rendered="#{cNode.anyAccess}"
 	<tr:poll 
 		id="testPoll" 
 		interval="10000" 
 		 />
- 
 action="#{sBean.reloadRightFrame}"
  -->
 			<tr:commandButton   
@@ -115,13 +114,13 @@ action="#{sBean.reloadRightFrame}"
                 	rendered="#{!row.attribute.required}" 
                 	value="#{row.displayName}"/>
                 <tr:outputFormatted 
-                		rendered="#{row.attribute.required}"
-						inlineStyle="font-weight: bold;" 
-                		value="#{row.displayName}"/>
+                	rendered="#{row.attribute.required}"
+					inlineStyle="font-weight: bold;" 
+                	value="#{row.displayName}"/>
                 <tr:outputFormatted 
-                		inlineStyle="color: #cc0000;" 
-                		rendered="#{row.attribute.required and (row.attribute.value == null) }"
-                		value=" *"/>
+                	inlineStyle="color: #cc0000;" 
+                	rendered="#{row.attribute.required and (row.attribute.value == null) }"
+                	value=" *"/>
 				</tr:panelHorizontalLayout>
             </tr:column>
 	<!-- value of attribute-->

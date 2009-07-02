@@ -258,7 +258,8 @@ readOnly="#{row.expressionSupported}"
         <tr:panelButtonBar halign="left" >
             <tr:commandButton 
             	shortDesc="#{msgs.dscDelSelAttr}" 
-            	disabled="#{!cNode.allowNodeEdit}" 
+            	disabled="#{!cNode.allowNodeEdit}"
+            	onclick="if (!confirm('#{msgs.areYouSure}')) return false" 
             	text="#{msgs.delete}" 
             	action="#{cNodeAttrs.deleteAttributes}"  />
             <tr:spacer width="60"></tr:spacer>

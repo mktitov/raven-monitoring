@@ -33,6 +33,8 @@ import org.apache.myfaces.trinidad.event.ReturnEvent;
 //import org.apache.myfaces.trinidad.model.UploadedFile;
 import org.apache.myfaces.custom.fileupload.UploadedFile;
 import org.raven.conf.impl.AccessControl;
+import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.log.NodeLogRecord;
 import org.raven.tree.DataFile;
@@ -41,6 +43,7 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
 import org.raven.tree.Viewable;
 import org.raven.tree.impl.NodeAttributeImpl;
+import org.raven.tree.impl.NodeReferenceValueHandler;
 import org.raven.ui.SessionBean;
 import org.raven.ui.attr.Attr;
 import org.raven.ui.node.AbstractNodeWrapper;
@@ -57,9 +60,9 @@ import org.raven.ui.vo.ViewableObjectWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weda.beans.ObjectUtils;
-import org.weda.constraints.ConstraintException;
 import org.weda.constraints.TooManyReferenceValuesException;
-import org.weda.converter.TypeConverterException;
+//import org.weda.constraints.ConstraintException;
+//import org.weda.converter.TypeConverterException;
 
 public class NodeWrapper extends AbstractNodeWrapper 
 implements Comparator<NodeAttribute>
@@ -76,7 +79,8 @@ implements Comparator<NodeAttribute>
 		new SelectItem(LogLevel.ERROR)	
 		};
     private static final int ALL_NODES = -1;
-    
+//	public static final String ATTR = "attribute";
+	public static final String strAttribute = Messages.getUiMessage(Messages.ATTRIBUTE);    
 	private List<NodeAttribute> savedAttrs = null;
 	private List<Attr> editingAttrs = null;
 	//private List<NodeAttribute> savedRefreshAttrs = null;
@@ -113,6 +117,15 @@ implements Comparator<NodeAttribute>
 		this();
 		this.setNode(node);
 	}
+	
+//	public List<Node> getAccessibleChildrenList(Node n, int Right)
+//	{
+//		List<Node> ret = new ArrayList<Node>();
+//		for(Node cn : n.getChildrenList())
+//			if(getUserAcl().getAccessForNode(cn) >= minRight)
+//				ret.add(cn);
+//		return ret;
+//	}
 
 	public List<Node> getUpperNodes()
 	{
@@ -130,7 +143,7 @@ implements Comparator<NodeAttribute>
 		//Collections.reverse(rt);
 		
 		List<Node> ret = new ArrayList<Node>();
-		for(int i=rt.size()-1;i>=0;i--)
+		for(int i=rt.size()-1; i>=0; i--)
 		{
 			n = rt.get(i);
 			int cnt = 0;
@@ -139,7 +152,16 @@ implements Comparator<NodeAttribute>
 				for(Node cn : n.getChildrenList())
 					if(getUserAcl().getAccessForNode(cn) > AccessControl.NONE)
 						cnt++;
-				if(cnt==1) continue;			
+				if(cnt==1)
+				{
+					int cnt2 = 0;
+					Node par = n.getParent();
+					if(par!=null)
+						for(Node cn : par.getChildrenList())
+							if(getUserAcl().getAccessForNode(cn) > AccessControl.NONE)
+								cnt2++;
+					if(cnt2==1) continue;
+				}	
 			}	
 			ret.add(n);
 		}
@@ -361,7 +383,7 @@ implements Comparator<NodeAttribute>
 		
 	public List<ViewableObjectWrapper> getViewableObjects()
 	{
-		if(!isAllowNodeRead()) return new ArrayList<ViewableObjectWrapper>();
+		if(!isAnyAccess()) return new ArrayList<ViewableObjectWrapper>();
 		List<ViewableObjectWrapper> x = SessionBean.getInstance().getViewableObjectsCache().getObjects(this);
 		logger.info("+++ ");
 		for(ViewableObjectWrapper v : x)
@@ -442,7 +464,16 @@ implements Comparator<NodeAttribute>
 		{	
 			if(na.isReadonly()) readOnlyAttributes.add(na);
 			else
-			{
+			{	
+				if(!SessionBean.getInstance().isSuperUser())
+				{
+					String vht = na.getValueHandlerType();
+					if( ObjectUtils.in(
+            				vht,
+            				ScriptAttributeValueHandlerFactory.TYPE, 
+            				ExpressionAttributeValueHandlerFactory.TYPE )) 
+            		continue;
+				}
 				savedAttrs.add(na);
 				try { editingAttrs.add(new Attr(na)); }
 				catch (TooManyReferenceValuesException e) {
@@ -497,11 +528,39 @@ implements Comparator<NodeAttribute>
 			  if(save==0) continue;
 			  try 
 			  { 
+				  boolean needNodeCheck = false;
+				  boolean prevExprInit = false;
+				  boolean prevVHTInit = false;
+				  String prevExpr = null;
+				  String prevVHT = null;
 				  if( (save&1) !=0 ) na.setValue(at.getValue());
 				  if( (save&2) !=0 ) na.setDescription(at.getDescription());
 				  if( (save&4) !=0 ) na.setName(at.getName());
-				  if( (save&8) !=0 ) na.setValue(at.getExpression());
-                  if( (save&16) !=0) na.setValueHandlerType(at.getValueHandlerType());
+				  if( (save&8) !=0 )
+				  {
+					  prevExprInit = true;
+					  prevExpr = na.getRawValue();
+					  needNodeCheck = true;
+					  try { na.setValue(at.getExpression()); }
+					  catch(Exception e) 
+					  {
+						  na.setValue(prevExpr);
+						  throw e;
+					  }
+					  
+				  }	  
+                  if( (save&16) !=0)
+                  {
+					  prevVHTInit = true;
+					  prevVHT = na.getValueHandlerType();
+                	  needNodeCheck = true;
+                	  try { na.setValueHandlerType(at.getValueHandlerType()); }
+					  catch(Exception e) 
+					  {
+						  na.setValueHandlerType(prevVHT);
+						  throw e;
+					  }
+                  }	  
                   if( (save&32) !=0) na.setTemplateExpression(at.isTemplateExpression());
 				  if( (save&64) !=0)
                   {
@@ -513,6 +572,26 @@ implements Comparator<NodeAttribute>
                       logger.info("Uploaded: '{}'; size:{} ",file.getName(),file.getSize());                      
                       //file.dispose();
                   }
+				  if(needNodeCheck)
+				  {
+					  if(na.getValueHandler() instanceof NodeReferenceValueHandler) 
+					  {
+						NodeReferenceValueHandler navh = (NodeReferenceValueHandler) na.getValueHandler();
+						Node x = navh.getReferencedNode();
+						if(x!=null)
+						{
+							NodeWrapper nw = new NodeWrapper(x);
+							if(!nw.isAllowNodeEdit()) 
+							{
+								if(prevExprInit) na.setValue(prevExpr); 
+								if(prevVHTInit) na.setValueHandlerType(prevVHT);
+								if(ret.length()!=0) ret.append(". ");
+								ret.append(strAttribute+" '"+at.getName()+"' : "+ Messages.getUiMessage(Messages.ACCESS_DENIED));
+								continue;  
+							}
+						}
+					  }
+				  }
 				  if(write)
 				  {
 					  getTree().saveNodeAttribute(na);
@@ -521,25 +600,24 @@ implements Comparator<NodeAttribute>
 				  }	  
 				  	else addUnsavedChanges(na.getId());
 			  }
+/*			  
 			  catch(ConstraintException e) 
 			  {
-				  String t = Messages.getUiMessage("attribute");
 				  if(ret.length()!=0) ret.append(". ");
-				  ret.append(t+" '"+at.getName()+"' : "+e.getMessage());
+				  ret.append(strAttribute+" '"+at.getName()+"' : "+e.getMessage());
 				  logger.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
 			  }
 			  catch(TypeConverterException e) 
 			  {
-				  String t = Messages.getUiMessage("attribute");
 				  if(ret.length()!=0) ret.append(". ");
-				  ret.append(t+" '"+at.getName()+"' : "+e.getMessage());
+				  ret.append(strAttribute+" '"+at.getName()+"' : "+e.getMessage());
 				  logger.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
 			  }
+*/			  
 			  catch(Throwable e) 
 			  {
-				  String t = Messages.getUiMessage("attribute");
 				  if(ret.length()!=0) ret.append(". ");
-				  ret.append(t+" '"+at.getName()+"' : "+e.getMessage());
+				  ret.append(strAttribute+" '"+at.getName()+"' : "+e.getMessage());
 				  logger.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
 			  }
 			  finally 
@@ -549,8 +627,9 @@ implements Comparator<NodeAttribute>
 				  at.setName(na.getName());
 			  }
 		  }
-		  if(ret.length()!=0) ret.toString();
+		  //if(ret.length()!=0) ret.toString();
 		  loadAttributes(); 
+		  if(ret.length()!=0) return ret.toString();
 		  return null;
 	  }
 
@@ -587,25 +666,24 @@ implements Comparator<NodeAttribute>
 		                  if( (save&16) !=0) na.setValueHandlerType(at.getValueHandlerType());
 		                  if( (save&32) !=0) na.setTemplateExpression(at.isTemplateExpression());
 					  }
+/*					  
 					  catch(ConstraintException e) 
 					  {
-						  String t = Messages.getUiMessage("attribute");
 						  if(ret.length()!=0) ret.append(". ");
-						  ret.append(t+" '"+at.getName()+"' : "+e.getMessage());
+						  ret.append(strAttribute+" '"+at.getName()+"' : "+e.getMessage());
 						  logger.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
 					  }
 					  catch(TypeConverterException e) 
 					  {
-						  String t = Messages.getUiMessage("attribute");
 						  if(ret.length()!=0) ret.append(". ");
-						  ret.append(t+" '"+at.getName()+"' : "+e.getMessage());
+						  ret.append(strAttribute+" '"+at.getName()+"' : "+e.getMessage());
 						  logger.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
 					  }
+*/					  
 					  catch(Throwable e) 
 					  {
-						  String t = Messages.getUiMessage("attribute");
 						  if(ret.length()!=0) ret.append(". ");
-						  ret.append(t+" '"+at.getName()+"' : "+e.getMessage());
+						  ret.append(strAttribute+" '"+at.getName()+"' : "+e.getMessage());
 						  logger.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
 					  }
 					  finally 

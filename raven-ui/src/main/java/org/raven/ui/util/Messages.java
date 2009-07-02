@@ -31,18 +31,19 @@ import javax.faces.context.FacesContext;
 	public class Messages 
 	{
 	   //private static final Logger logger = LoggerFactory.getLogger(Messages.class);	
+	   public static final String ACCESS_DENIED = "accessDenied";
+	   public static final String ATTR_CANT_DEL = "attributesCantDeleted";
+	   public static final String ATTR_NOT_FOUND = "attributeNotFound";
+	   public static final String ATTRIBUTE = "attribute";
+	   public static final String BAD_DST_NODE = "inadmissibleDstNode";
+	   public static final String NO_SELECTED_NODES = "noSelectedNodes";
 	   public static final String NODES_CANT_BE_COPIED = "nodesCantBeCopied";
 	   public static final String NODES_CANT_BE_MOVED = "nodesCantBeMoved";
 	   public static final String NODES_COPY_POSTFIX = "copyPostfix";
-	   public static final String NO_SELECTED_NODES = "noSelectedNodes";
-	   public static final String ACCESS_DENIED = "accessDenied";
-	   public static final String BAD_DST_NODE = "inadmissibleDstNode";
 	   public static final String NODES_HAVE_DEPEND = "nodesHaveDepend";
-	   public static final String RA_NODE_AND_CHILD = "refreshAttributesOfNodeAndChildren";
-	   public static final String RA_NODE = "refreshAttributesOfNode";
 	   public static final String RA_CHILD = "refreshAttributesOfChildren";
-	   public static final String ATTR_NOT_FOUND = "attributeNotFound";
-	   public static final String ATTR_CANT_DEL = "attributesCantDeleted";
+	   public static final String RA_NODE = "refreshAttributesOfNode";
+	   public static final String RA_NODE_AND_CHILD = "refreshAttributesOfNodeAndChildren";
 	   
 		public static FacesMessage getMessage(String bundleName, String resourceId, Object[] params) 
 	   {

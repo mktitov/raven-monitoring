@@ -71,7 +71,7 @@
             <tr:spacer width="5"/>
             <tr:statusIndicator/>
             </tr:panelGroupLayout>
-        	<f:subview id="body">
+        	<f:subview id="body" rendered="#{cNode.allowNodeEdit}" >
             	<jsp:include page="tabNodeEdit.jspx" flush="true"/>
             </f:subview>
             </tr:panelGroupLayout>

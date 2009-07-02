@@ -139,6 +139,11 @@ public class SessionBean
 		viewableObjectsCache.setImagesStorage(getImagesStorage());
 	}
 
+	public boolean isSuperUser()
+	{
+		return userAcl.isSuperUser();
+	}
+	
 	public void reloadLeftFrame()
 	{
 		 FacesContext facesContext = FacesContext.getCurrentInstance();

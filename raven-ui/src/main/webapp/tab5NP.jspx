@@ -69,7 +69,7 @@
             	<tr:statusIndicator/>
             </tr:panelGroupLayout>
             	
-        	<f:subview id="body">
+        	<f:subview id="body" rendered="#{cNode.allowNodeEdit}" >
             	<jsp:include page="tabLogsTab.jspx" flush="true"/>
             </f:subview>
             

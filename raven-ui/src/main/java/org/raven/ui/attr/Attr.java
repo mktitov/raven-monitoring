@@ -30,12 +30,15 @@ import org.raven.ui.SessionBean;
 import org.raven.ui.node.NodeWrapper;
 import org.raven.ui.node.SelectNodeBean;
 import org.raven.ui.util.RavenRegistry;
+import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.tree.InvalidPathException;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Tree;
 import org.raven.tree.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.weda.beans.ObjectUtils;
 import org.weda.constraints.ReferenceValue;
 import org.weda.constraints.TooManyReferenceValuesException;
 import org.weda.internal.annotations.Service;
@@ -99,8 +102,16 @@ public class Attr implements Comparable<Attr>
             valueHandlerTypes = new ArrayList<SelectItem>(refValues.size()+1);
             valueHandlerTypes.add(new SelectItem(null, ""));
             for (ReferenceValue refValue: refValues)
+            {
+            	if( !SessionBean.getInstance().isSuperUser() &&
+            			ObjectUtils.in(
+            			refValue.getValue(),
+            				ScriptAttributeValueHandlerFactory.TYPE, 
+            				ExpressionAttributeValueHandlerFactory.TYPE )) 
+            		continue; 
                 valueHandlerTypes.add(
                     new SelectItem(refValue.getValue(), refValue.getValueAsString()));
+            }    
         } 
         else valueHandlerTypes = Collections.EMPTY_LIST;
         templateExpression = na.isTemplateExpression();

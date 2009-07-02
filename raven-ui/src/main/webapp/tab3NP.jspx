@@ -70,7 +70,7 @@
             <tr:statusIndicator/>
             </tr:panelGroupLayout>
             
-        	<f:subview id="body">
+        	<f:subview id="body" rendered="#{cNode.allowTreeEdit}" >
             	<jsp:include page="tabTreeEdit.jspx" flush="true"/>
             </f:subview>
             

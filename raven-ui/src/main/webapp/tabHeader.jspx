@@ -85,7 +85,9 @@
 </tr:panelCaptionGroup>
 
 <tr:breadCrumbs rendered="#{sBean.collapsed}" >
-	<tr:forEach var="node" items="#{cNode.upperNodes}">
+	<tr:forEach 
+		var="node" 
+		items="#{cNode.upperNodes}">
 		<tr:commandNavigationItem
     		partialSubmit="true" 
 			selected="false"

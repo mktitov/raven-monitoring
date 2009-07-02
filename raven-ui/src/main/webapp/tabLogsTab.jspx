@@ -37,6 +37,7 @@
                 </f:subview>
             </tr:showDetailItem>
             <tr:showDetailItem 
+                rendered="#{sBean.superUser}"
       	     	text="#{msgs.allNodes}" 
               	id="item2">
                 <f:subview id="v2_2">
