@@ -75,6 +75,11 @@ public class NodeReferenceValueHandler
             initNodeReference(node, pathElements);
         }
     }
+
+    public Node getReferencedNode()
+    {
+        return node;
+    }
     
     protected void resolveNode(String data)
     {
