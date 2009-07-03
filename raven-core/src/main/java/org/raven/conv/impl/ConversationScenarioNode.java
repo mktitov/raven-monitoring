@@ -22,13 +22,13 @@ import java.util.Collection;
 import java.util.Collections;
 import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
-import org.raven.conv.ConversationCycleDetectedException;
+import org.raven.conv.ConversationScenarioCycleDetectedException;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.IfNode;
-import org.raven.conv.ConversationPoint;
-import org.raven.conv.Conversation;
-import org.raven.conv.ConversationException;
-import org.raven.conv.ConversationState;
+import org.raven.conv.ConversationScenarioPoint;
+import org.raven.conv.ConversationScenario;
+import org.raven.conv.ConversationScenarioException;
+import org.raven.conv.ConversationScenarioState;
 import org.raven.tree.Node;
 import org.raven.tree.impl.InvisibleNode;
 
@@ -38,9 +38,9 @@ import org.raven.tree.impl.InvisibleNode;
  */
 @NodeClass(
     parentNode=InvisibleNode.class,
-    childNodes={IfNode.class, ConversationPointNode.class},
+    childNodes={IfNode.class, ConversationScenarioPointNode.class},
     importChildTypesFromParent=true)
-public class ConversationNode extends ConversationPointNode implements Conversation
+public class ConversationScenarioNode extends ConversationScenarioPointNode implements ConversationScenario
 {
     private BindingSupportImpl bindingSupport;
 
@@ -51,9 +51,9 @@ public class ConversationNode extends ConversationPointNode implements Conversat
         bindingSupport = new BindingSupportImpl();
     }
 
-    public Collection<Node> makeConversation(ConversationState state) throws ConversationException
+    public Collection<Node> makeConversation(ConversationScenarioState state) throws ConversationScenarioException
     {
-        ConversationPoint nextPoint = state.getNextConversationPoint();
+        ConversationScenarioPoint nextPoint = state.getNextConversationPoint();
         if (nextPoint.getNextPoint()!=null)
             nextPoint = nextPoint.getNextPoint();
 
@@ -68,9 +68,9 @@ public class ConversationNode extends ConversationPointNode implements Conversat
             for (Node action: childs)
                 if (action.getStatus().equals(Status.STARTED))
                 {
-                    if (!conversationPointSeted && action instanceof ConversationPoint)
+                    if (!conversationPointSeted && action instanceof ConversationScenarioPoint)
                     {
-                        state.setNextConversationPoint((ConversationPoint) action);
+                        state.setNextConversationPoint((ConversationScenarioPoint) action);
                         conversationPointSeted = true;
                     }
                     else
@@ -92,9 +92,9 @@ public class ConversationNode extends ConversationPointNode implements Conversat
         bindingSupport.addTo(bindings);
     }
 
-    public ConversationState createConversationState() throws ConversationCycleDetectedException
+    public ConversationScenarioState createConversationState() throws ConversationScenarioCycleDetectedException
     {
-        ConversationState state =  new ConversationStateImpl();
+        ConversationScenarioState state =  new ConversationScenarioStateImpl();
         state.setNextConversationPoint(this);
         return state;
     }

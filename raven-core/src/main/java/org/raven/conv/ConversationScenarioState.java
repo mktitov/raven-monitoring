@@ -23,7 +23,7 @@ import javax.script.Bindings;
  *
  * @author Mikhail Titov
  */
-public interface ConversationState
+public interface ConversationScenarioState
 {
     /**
      * Returns the bindings of the conversation. Method never returns null
@@ -38,12 +38,12 @@ public interface ConversationState
     /**
      * Returns the next conversation point. The point from which the conversation continues.
      */
-    public ConversationPoint getNextConversationPoint();
+    public ConversationScenarioPoint getNextConversationPoint();
     /**
      * Sets the next conversation point. From this point conversation will continues.
      * @throws ConversationCycleDetectedException if detected cycle when used a sequence of the
      *      immediate transions
      */
-    public void setNextConversationPoint(ConversationPoint nextConversationPoint)
-            throws ConversationCycleDetectedException;
+    public void setNextConversationPoint(ConversationScenarioPoint nextConversationPoint)
+            throws ConversationScenarioCycleDetectedException;
 }

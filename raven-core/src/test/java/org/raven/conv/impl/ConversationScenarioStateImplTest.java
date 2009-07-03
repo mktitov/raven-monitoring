@@ -20,21 +20,21 @@ package org.raven.conv.impl;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenCoreTestCase;
-import org.raven.conv.ConversationCycleDetectedException;
-import org.raven.conv.ConversationPoint;
+import org.raven.conv.ConversationScenarioCycleDetectedException;
+import org.raven.conv.ConversationScenarioPoint;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class ConversationStateImplTest extends RavenCoreTestCase
+public class ConversationScenarioStateImplTest extends RavenCoreTestCase
 {
-    private ConversationStateImpl state;
+    private ConversationScenarioStateImpl state;
 
     @Before
     public void prepare()
     {
-        state = new ConversationStateImpl();
+        state = new ConversationScenarioStateImpl();
     }
 
     @Test
@@ -46,9 +46,9 @@ public class ConversationStateImplTest extends RavenCoreTestCase
     }
 
     @Test
-    public void setNextConversationPointTest() throws ConversationCycleDetectedException
+    public void setNextConversationPointTest() throws ConversationScenarioCycleDetectedException
     {
-        ConversationPoint point = new ConversationPointNode();
+        ConversationScenarioPoint point = new ConversationScenarioPointNode();
         point.setName("point");
         tree.getRootNode().addAndSaveChildren(point);
         assertTrue(point.start());
@@ -59,9 +59,9 @@ public class ConversationStateImplTest extends RavenCoreTestCase
     }
 
     @Test
-    public void immediateTransitionTest() throws ConversationCycleDetectedException
+    public void immediateTransitionTest() throws ConversationScenarioCycleDetectedException
     {
-        ConversationPointNode point = new ConversationPointNode();
+        ConversationScenarioPointNode point = new ConversationScenarioPointNode();
         point.setName("point");
         tree.getRootNode().addAndSaveChildren(point);
         point.setImmediateTransition(true);
@@ -72,10 +72,10 @@ public class ConversationStateImplTest extends RavenCoreTestCase
         assertTrue(state.hasImmediateTransition());
     }
 
-    @Test(expected=ConversationCycleDetectedException.class)
-    public void loopDetectionTest1() throws ConversationCycleDetectedException
+    @Test(expected=ConversationScenarioCycleDetectedException.class)
+    public void loopDetectionTest1() throws ConversationScenarioCycleDetectedException
     {
-        ConversationPointNode point = new ConversationPointNode();
+        ConversationScenarioPointNode point = new ConversationScenarioPointNode();
         point.setName("point");
         tree.getRootNode().addAndSaveChildren(point);
         point.setImmediateTransition(true);
@@ -86,14 +86,14 @@ public class ConversationStateImplTest extends RavenCoreTestCase
     }
 
     @Test()
-    public void loopDetectionTest2() throws ConversationCycleDetectedException
+    public void loopDetectionTest2() throws ConversationScenarioCycleDetectedException
     {
-        ConversationPointNode point = new ConversationPointNode();
+        ConversationScenarioPointNode point = new ConversationScenarioPointNode();
         point.setName("point");
         tree.getRootNode().addAndSaveChildren(point);
         point.setImmediateTransition(true);
         assertTrue(point.start());
-        ConversationPointNode point2 = new ConversationPointNode();
+        ConversationScenarioPointNode point2 = new ConversationScenarioPointNode();
         point2.setName("point2");
         tree.getRootNode().addAndSaveChildren(point2);
         point2.setImmediateTransition(false);

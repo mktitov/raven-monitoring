@@ -17,22 +17,19 @@
 
 package org.raven.conv;
 
-import org.raven.tree.Node;
-
 /**
- * The point from which the next part of the conversation starts
+ *
  * @author Mikhail Titov
  */
-public interface ConversationPoint extends Node
+public class ConversationScenarioException extends Exception
 {
-    /**
-     * Returns the next conversation point. If method returns null then the next conversation point
-     * is this node.
-     */
-    public ConversationPoint getNextPoint();
-    /**
-     * If method return <b>true</b> than the conversation engine must make immediate transition to
-     * the next conversation point.
-     */
-    public Boolean getImmediateTransition();
+    public ConversationScenarioException(String message)
+    {
+        super(message);
+    }
+
+    public ConversationScenarioException(String message, Throwable cause)
+    {
+        super(message, cause);
+    }
 }

@@ -24,7 +24,7 @@ import org.raven.tree.Node;
  *
  * @author Mikhail Titov
  */
-public interface Conversation
+public interface ConversationScenario
 {
     public final static String NEXT_CONVERSATION_POINT_PARAM = "NEXT_CONVERSATION_POINT";
     public final static String IMMEDIATE_TRANSITIONS_PARAM = "IMMEDIATE_TRANSITIONS";
@@ -39,10 +39,10 @@ public interface Conversation
      *      engine.
      * @throws org.raven.conv.ConversationException
      */
-    public Collection<Node> makeConversation(ConversationState state)
-            throws ConversationException;
+    public Collection<Node> makeConversation(ConversationScenarioState state)
+            throws ConversationScenarioException;
     /**
      * Creates the conversation state.
      */
-    public ConversationState createConversationState() throws ConversationException;
+    public ConversationScenarioState createConversationState() throws ConversationScenarioException;
 }

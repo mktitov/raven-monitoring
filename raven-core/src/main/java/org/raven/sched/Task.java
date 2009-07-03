@@ -15,19 +15,22 @@
  *  under the License.
  */
 
-package org.raven.conv;
+package org.raven.sched;
+
+import org.raven.tree.Node;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class ConversationCycleDetectedException extends ConversationException
+public interface Task extends Runnable
 {
-    public ConversationCycleDetectedException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public ConversationCycleDetectedException(String message) {
-        super(message);
-    }
+    /**
+     * The node that executes the task
+     */
+    public Node getTaskNode();
+    /**
+     * Returns the status method
+     */
+    public String getStatusMessage();
 }

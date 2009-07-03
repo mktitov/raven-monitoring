@@ -21,15 +21,13 @@ package org.raven.conv;
  *
  * @author Mikhail Titov
  */
-public class ConversationException extends Exception
+public class ConversationScenarioCycleDetectedException extends ConversationScenarioException
 {
-    public ConversationException(String message)
-    {
-        super(message);
+    public ConversationScenarioCycleDetectedException(String message, Throwable cause) {
+        super(message, cause);
     }
 
-    public ConversationException(String message, Throwable cause)
-    {
-        super(message, cause);
+    public ConversationScenarioCycleDetectedException(String message) {
+        super(message);
     }
 }

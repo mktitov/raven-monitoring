@@ -19,7 +19,7 @@ package org.raven.conv.impl;
 
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
-import org.raven.conv.ConversationPoint;
+import org.raven.conv.ConversationScenarioPoint;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
@@ -28,21 +28,21 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=ConversationNode.class, importChildTypesFromParent=true)
-public class ConversationPointNode extends BaseNode implements ConversationPoint
+@NodeClass(parentNode=ConversationScenarioNode.class, importChildTypesFromParent=true)
+public class ConversationScenarioPointNode extends BaseNode implements ConversationScenarioPoint
 {
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
-    private ConversationPoint nextPoint;
+    private ConversationScenarioPoint nextPoint;
 
     @NotNull @Parameter(defaultValue="false")
     private Boolean immediateTransition;
 
-    public ConversationPoint getNextPoint()
+    public ConversationScenarioPoint getNextPoint()
     {
         return nextPoint;
     }
 
-    public void setNextPoint(ConversationPoint nextPoint)
+    public void setNextPoint(ConversationScenarioPoint nextPoint)
     {
         this.nextPoint = nextPoint;
     }

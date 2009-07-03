@@ -21,19 +21,19 @@ import java.util.HashSet;
 import java.util.Set;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
-import org.raven.conv.ConversationCycleDetectedException;
-import org.raven.conv.ConversationPoint;
-import org.raven.conv.ConversationState;
+import org.raven.conv.ConversationScenarioCycleDetectedException;
+import org.raven.conv.ConversationScenarioPoint;
+import org.raven.conv.ConversationScenarioState;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class ConversationStateImpl implements ConversationState
+public class ConversationScenarioStateImpl implements ConversationScenarioState
 {
     private final Bindings bindings = new SimpleBindings();
-    private ConversationPoint nextConversationPoint;
-    private final Set<ConversationPoint> immediateTransitions = new HashSet<ConversationPoint>();
+    private ConversationScenarioPoint nextConversationPoint;
+    private final Set<ConversationScenarioPoint> immediateTransitions = new HashSet<ConversationScenarioPoint>();
 
     public Bindings getBindings()
     {
@@ -45,20 +45,20 @@ public class ConversationStateImpl implements ConversationState
         return nextConversationPoint==null? false : nextConversationPoint.getImmediateTransition();
     }
 
-    public ConversationPoint getNextConversationPoint()
+    public ConversationScenarioPoint getNextConversationPoint()
     {
         return nextConversationPoint;
     }
 
-    public void setNextConversationPoint(ConversationPoint nextConversationPoint)
-            throws ConversationCycleDetectedException
+    public void setNextConversationPoint(ConversationScenarioPoint nextConversationPoint)
+            throws ConversationScenarioCycleDetectedException
     {
         if (!nextConversationPoint.getImmediateTransition())
             immediateTransitions.clear();
         else
         {
             if (immediateTransitions.contains(nextConversationPoint))
-                throw new ConversationCycleDetectedException(String.format(
+                throw new ConversationScenarioCycleDetectedException(String.format(
                         "Loop detected. The sequence of immediate transitions returned back " +
                         "to the  (%s) conversation point"
                         , nextConversationPoint.getPath()));
