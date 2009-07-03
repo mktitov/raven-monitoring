@@ -12,12 +12,41 @@ public class LogViewAttributes
 	private String td;
 	private LogLevel level;
 	private boolean groupByNodes = false;
+	private boolean findRecursive = false;
+	private boolean regExp = false;
+	private boolean filterOn = false;
+	private String mesFilter = "";
 
 	public LogViewAttributes()
 	{
 		fd = "now-1d";
 		td = "now";
 		level = LogLevel.WARN;
+	}
+
+	public boolean isFindRecursive() {
+		return findRecursive;
+	}
+
+	public void setFindRecursive(boolean viewRecursive) {
+		this.findRecursive = viewRecursive;
+	}
+
+	public boolean isRegExp() {
+		return regExp;
+	}
+
+	public void setRegExp(boolean regExp) {
+		this.regExp = regExp;
+	}
+
+	public String getMesFilter() {
+		return mesFilter;
+	}
+
+	public void setMesFilter(String mesFilter) {
+		if(mesFilter==null) mesFilter = "";
+		this.mesFilter = mesFilter;
 	}
 
 	public long getDefaultFdTime()
@@ -103,6 +132,14 @@ public class LogViewAttributes
 
 	public boolean isGroupByNodes() {
 		return groupByNodes;
+	}
+
+	public void setFilterOn(boolean filterOn) {
+		this.filterOn = filterOn;
+	}
+
+	public boolean isFilterOn() {
+		return filterOn;
 	}
 	
 }

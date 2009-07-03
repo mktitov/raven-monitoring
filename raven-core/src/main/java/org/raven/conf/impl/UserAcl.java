@@ -116,7 +116,14 @@ public class UserAcl
 	    return glist;
 	}
 	
-	public int getAccessForNode(Node node)
+	public boolean isSuperUser()
+	{
+		checkRefresh();
+		int r = acl.getAccessForNodeWF(""+Node.NODE_SEPARATOR);
+		return (r&AccessControl.ADMIN)!=0;
+	}
+	
+	private void checkRefresh()
 	{
 		boolean refresh = false;
 		if(System.currentTimeMillis() - groupsTime > UserAcl.expireInterval)
@@ -137,6 +144,11 @@ public class UserAcl
 			}
 			groupsTime = System.currentTimeMillis();
 		}
+	}
+	
+	public int getAccessForNode(Node node)
+	{
+		checkRefresh();
 		return acl.getAccessForNode(node);
 	}
 

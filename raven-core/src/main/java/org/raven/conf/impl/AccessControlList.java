@@ -65,11 +65,15 @@ public abstract class AccessControlList implements Comparator<AccessControl>
 		String[] tokens = list.split(EXPRESSION_DELIMITER); 
 		for(String token : tokens)
 		{
-			if(token==null || token.length()==0) 
+			if(token==null) continue;
+			token = token.trim();
+			if( token.length()==0) 
 				continue;
 			String[] x = token.split(PARAM_DELIMITER);
 			if(x.length<2 || x[1]==null || x[1].length()==0 )
 				continue;
+			x[0] = x[0].trim();
+			x[1] = x[1].trim();
 			if(x[0].equals(NAME_PARAM))
 			{
 				setName(x[1]);
@@ -207,18 +211,52 @@ public abstract class AccessControlList implements Comparator<AccessControl>
     public boolean dropByFilter(Node n)
     {
     	if(!dropByFilterNodeOnly(n)) return false;
-    	Iterator<Node> it = n.getChildrenList().iterator();
-    	while(it.hasNext())
+    	for(Node x : n.getChildrenList())
     	{
-    		Node x = it.next();
     		if(x.getChildrenCount()>0) return false;
     		if(!dropByFilterNodeOnly(x)) return false;
     	}
     	return true;
     }
+
+	public int getAccessForNodeWF(String path)
+    {
+    	int curRight = AccessControl.NONE;
+    	for(AccessControl ac : acl)
+    	{
+    		int right = ac.getRight();
+    		if(ac.getResource().startsWith(path))
+    			if(right > AccessControl.NONE )
+    				curRight = AccessControl.TRANSIT;
+    		if( path.matches(ac.getRegExp()))
+    		{
+    			if(right > curRight) curRight = right;
+    			break;
+    		}	
+    	}
+    	return curRight;
+    }
     
 	public int getAccessForNode(Node node)
     {
+		String path = node.getPath();
+    	int curRight = getAccessForNodeWF(path);
+    	if( curRight>AccessControl.NONE && dropByFilter(node))
+    	{
+    		//logger.info("droped by filter "+node.getPath());
+    		return AccessControl.NONE;
+    	}
+		//logger.info("node rigth = "+curRight+" for "+node.getPath());
+    	return curRight;
+    }
+/*
+	public int getAccessForNode(Node node)
+    {
+		int z =0;
+		if(node.getId()==196)
+		{
+			z = 1;
+		}
 		String path = node.getPath();
     	Iterator<AccessControl> it = acl.iterator();
     	int curRight = AccessControl.NONE;
@@ -234,10 +272,9 @@ public abstract class AccessControlList implements Comparator<AccessControl>
     				curRight = AccessControl.TRANSIT;
     				//continue;
     			}	
-    		if( path.matches(ac.getRegExp()) && 
-    				right>=curRight )
+    		if( path.matches(ac.getRegExp()))
     		{
-    			curRight = right;
+    			if( right>=curRight ) curRight = right;
     			break;
     		}	
     	}
@@ -249,6 +286,8 @@ public abstract class AccessControlList implements Comparator<AccessControl>
 		//logger.info("node rigth = "+curRight+" for "+node.getPath());
     	return curRight;
     }
+ */
+	
 	
     public String toString()
     {

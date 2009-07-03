@@ -41,13 +41,14 @@ public class NodeLoggerImpl extends LogTablesManager implements NodeLogger, Runn
 //	public static final String DATE_FORMAT = "yyyyMMdd";
 //	private static SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
 	private static final int MAX_MESSAGE_LENGTH = 10240;
-	private static final int MAX_NODE_PATH_LENGTH = 256;
+	private static final int MAX_NODE_PATH_LENGTH = 512;
 	private static final String FD = "fd";
 	private static final String NODE_ID = "nodeId";
 	private static final String NODE_PATH = "nodePath";
 	private static final String LEVEL = "level";
 	private static final String MESSAGE = "message";
 	private static final String FIELDS = FD+","+NODE_ID+","+NODE_PATH+","+LEVEL+","+MESSAGE;
+	private static final String NODES_MARKER = "#";
 	
 	private static final String[] sCreateLogTable = { 
 		"create table @ ("+FD+" timestamp not null,"+
@@ -61,11 +62,13 @@ public class NodeLoggerImpl extends LogTablesManager implements NodeLogger, Runn
 
 	private static final String orderBy = "order by "+FD+" desc";
 	private static final String sMainSelect = "select "+FIELDS+" from @ where "+
-												FD+" between ? and ? and "+LEVEL+" >= ? ";
+										FD+" between ? and ? and "+LEVEL+" >= ? ";
 	private static final String sSelLogsFromSingleTable =  
 										sMainSelect+orderBy;
 	private static final String sSelLogsFromSingleTableN = sMainSelect+ " and "+
 										NODE_ID+" = ? "+orderBy;
+	private static final String sSelLogsFromSingleTableNN = sMainSelect+ " and "+
+										NODE_ID+" in("+NODES_MARKER+") "+orderBy;
 	private static final String sInsertToLog = "insert into @("+FIELDS+") values(?,?,?,?,?)";
 	
     private NodeLoggerNode nodeLoggerNode;
@@ -172,22 +175,36 @@ public class NodeLoggerImpl extends LogTablesManager implements NodeLogger, Runn
 		return recs;
 	}
 	
-	public List<NodeLogRecord> getRecords(Date fd, Date td, Integer nodeId,LogLevel level) 
+	@SuppressWarnings("unchecked")
+	public List<NodeLogRecord> getRecords(Date fd, Date td, Object nodesId,LogLevel level) 
 	{
 		String sql;
 		Object[] args;
 		List<String> names;
 		logAllowed();
-		if(nodeId ==null)
+		if(nodesId ==null)
 		{
 			sql = sSelLogsFromSingleTable;
 			args = new Object[]{fd,td,level.ordinal()};
 		}
 		else
-		{
-			sql = sSelLogsFromSingleTableN;
-			args = new Object[]{fd,td,level.ordinal(),nodeId};
-		}
+			if (nodesId instanceof List) 
+			{
+				List<Integer> nodes = (List) nodesId;
+				StringBuffer lst = new StringBuffer("");
+				for(Integer id : nodes)
+				{
+					if(lst.length()>0) lst.append(",");
+					lst.append(id);
+				}	
+				sql = sSelLogsFromSingleTableNN.replaceFirst(NODES_MARKER, lst.toString());
+				args = new Object[]{fd,td,level.ordinal()};
+			}
+			else
+			{
+				sql = sSelLogsFromSingleTableN;
+				args = new Object[]{fd,td,level.ordinal(),(Integer)nodesId};
+			}
 		names = getTablesNames(fd.getTime(), td.getTime());
 		return selectLogRecordsMT(names, sql, args);
 	}

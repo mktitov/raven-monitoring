@@ -233,10 +233,11 @@ public abstract class LogTablesManager
 		return createTable(sCreateMetaTable, metaTableName);
 	}
 	
-	protected List<String> getTablesNames(long fd, long td)
+	protected List<String> getTablesNames(long fdx, long td)
 	{
 		List<String> ret = new ArrayList<String>();
-		if(!isMetaInited() || fd>=td) return ret;
+		long fd = truncTime(fdx);
+		if(!isMetaInited() || fdx>=td) return ret;
 		List<Long> lst = new ArrayList<Long>();
 		//Set<Long> set = metaTableRecords.keySet();
 		Iterator<Long> it = metaTableRecords.keySet().iterator();

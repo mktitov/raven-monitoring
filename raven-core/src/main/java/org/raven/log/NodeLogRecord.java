@@ -1,8 +1,10 @@
 package org.raven.log;
 
+import java.util.Comparator;
+
 import org.raven.util.Utl;
 
-public class NodeLogRecord 
+public class NodeLogRecord implements Comparator<NodeLogRecord	>
 {
 	public static final int MAX_SHORT_MES_LENGTH = 200;
 	public static final String SHORT_MES_TAIL = "...";
@@ -84,6 +86,12 @@ public class NodeLogRecord
 
 	public String getNodePath() {
 		return nodePath;
+	}
+
+	public int compare(NodeLogRecord o1, NodeLogRecord o2) {
+		if(o1.fd > o2.fd) return -1;
+		if(o1.fd < o2.fd) return 1;
+		return 0;
 	}
 
 	

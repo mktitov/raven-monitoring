@@ -27,7 +27,8 @@
 	halign="start" 
 	valign="top">
 	<tr:panelCaptionGroup captionText="#{msgs.logViewAttributes}" >
-		<tr:panelFormLayout>
+		<tr:panelFormLayout labelWidth="15%" 
+				rows="3">
 			<tr:inputText 
 				label="#{msgs.dateFrom}" 
 				value="#{cNode.logViewFd}" >
@@ -36,22 +37,60 @@
 				label="#{msgs.dateTo}" 
 				value="#{cNode.logViewTd}" >
 			</tr:inputText>
-                <tr:selectOneChoice 
-                	id="lvlList"
-                	label="#{msgs.level}" 
-                	value="#{cNode.logLevel}" >
-                    <f:selectItems value="#{cNode.logLevelSelectItems}" />
-                </tr:selectOneChoice>
+			<tr:selectOneChoice 
+            	id="lvlList"
+                label="#{msgs.level}" 
+                value="#{cNode.logLevel}" >
+            	<f:selectItems value="#{cNode.logLevelSelectItems}" />
+            </tr:selectOneChoice>
+			<tr:selectBooleanCheckbox 
+				shortDesc="#{msgs.recursive}" 
+				label="#{msgs.recursive}" 
+				value="#{cNode.logFindRecursive}"/>
+			<tr:selectBooleanCheckbox 
+				shortDesc="#{msgs.groupingByNodes}" 
+				label="#{msgs.grouping}" 
+				value="#{cNode.groupByNodes}"/>
    		</tr:panelFormLayout>
+   		<tr:spacer height="10"/>
+<tr:panelButtonBar halign="center" >   		
+	<tr:commandButton
+		id="refresh" 
+		text="#{msgs.refresh}" 
+		action="#{cNode.clearLogForNode}" />
+</tr:panelButtonBar>   		
 	</tr:panelCaptionGroup>
 	<tr:spacer width="40"/>
+	<tr:panelCaptionGroup captionText="#{msgs.recordsFilter}" >
+		<tr:panelFormLayout labelWidth="15%" 
+				rows="3">
+			<tr:inputText 
+				columns="50" 
+				label="#{msgs.filter}" 
+				value="#{cNode.logMessageFilter}" >
+			</tr:inputText>
+			<tr:selectBooleanCheckbox 
+				shortDesc="#{msgs.regExp}" 
+				label="#{msgs.regExp}" 
+				value="#{cNode.logFilterRegExp}"/>
+   		</tr:panelFormLayout>
+   		<tr:spacer height="10"/>
+		<tr:panelButtonBar halign="center" >
+			<tr:commandButton 
+				disabled="#{cNode.logFilterOn}"
+				action="#{cNode.logFilterOnOff}"
+				id="filterOn" 
+				text="#{msgs.filterOn}"	/>
+			<tr:commandButton
+				disabled="#{!cNode.logFilterOn}"
+				action="#{cNode.logFilterOnOff}"
+				id="filterOff" 
+				text="#{msgs.filterOff}" 
+		 	/>
+		</tr:panelButtonBar>       
+	</tr:panelCaptionGroup>
+	
 </tr:panelHorizontalLayout>
-
-<tr:commandButton 
-	id="refresh" 
-	text="#{msgs.refresh}" 
-	action="#{cNode.clearLogForNode}" />        
-       
 <tr:separator></tr:separator>
 
 <tr:table 
@@ -91,6 +130,13 @@
 	      		rendered="#{row.level=='ERROR'}"
 				inlineStyle="color: red; font-weight: bold; "	       
 	      		value="#{row.level}"/>
+        </tr:column>
+    	<tr:column 
+    		rendered="#{cNode.logFindRecursive}" 
+    		headerText="#{msgs.node}">
+	      	<tr:outputText
+	    		inlineStyle="font-size: 80%;"	       
+		      	value="#{row.nodePath}"/>
         </tr:column>
     	<tr:column headerText="#{msgs.message}">
 	      	<tr:outputText
