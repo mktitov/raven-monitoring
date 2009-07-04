@@ -18,7 +18,7 @@
 package org.raven.rep;
 
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.ds.impl.DatabaseRecordExtension;
 import org.raven.ds.impl.DatabaseRecordFieldExtension;

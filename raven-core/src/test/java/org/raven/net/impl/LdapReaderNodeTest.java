@@ -23,7 +23,7 @@ import java.util.Properties;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.raven.DataCollector;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.RavenUtils;
 import org.raven.conf.Configurator;
 import org.raven.ds.impl.AbstractDataConsumer.ResetDataPolicy;

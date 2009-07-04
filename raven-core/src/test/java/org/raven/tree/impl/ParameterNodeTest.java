@@ -20,7 +20,7 @@ package org.raven.tree.impl;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 
 /**
  *

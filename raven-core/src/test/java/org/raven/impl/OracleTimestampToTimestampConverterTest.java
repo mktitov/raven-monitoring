@@ -20,7 +20,7 @@ package org.raven.impl;
 import java.sql.Timestamp;
 import oracle.sql.TIMESTAMP;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.weda.services.TypeConverter;
 
 /**

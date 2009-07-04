@@ -19,7 +19,7 @@ package org.raven.ds.impl;
 
 import java.util.List;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.weda.constraints.ReferenceValue;
 import org.weda.constraints.TooManyReferenceValuesException;
 

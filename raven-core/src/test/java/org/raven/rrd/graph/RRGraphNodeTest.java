@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.IOUtils;
 import org.jrobin.core.Util;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.DataSource;
 import org.raven.rrd.ConsolidationFunction;
 import org.raven.rrd.RRColor;

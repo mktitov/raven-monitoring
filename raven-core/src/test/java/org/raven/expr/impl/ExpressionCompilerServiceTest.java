@@ -19,7 +19,7 @@ package org.raven.expr.impl;
 
 import javax.script.ScriptException;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.expr.Expression;
 import org.raven.expr.ExpressionCompiler;
 

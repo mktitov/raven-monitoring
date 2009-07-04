@@ -19,7 +19,7 @@ package org.raven.dbcp.impl;
 
 import java.sql.Connection;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.conf.Config;
 import org.raven.conf.Configurator;
 import org.raven.tree.Node.Status;

@@ -22,7 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.raven.DataCollector;
 import org.raven.PushDataSource;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchemaFieldType;

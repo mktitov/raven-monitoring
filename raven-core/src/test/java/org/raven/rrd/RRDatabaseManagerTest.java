@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.DataSource;
 import org.raven.rrd.data.RRArchive;
 import org.raven.rrd.data.RRDNode;

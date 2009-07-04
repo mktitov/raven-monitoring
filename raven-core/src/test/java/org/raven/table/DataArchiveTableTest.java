@@ -19,7 +19,7 @@ package org.raven.table;
 
 import java.util.Date;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 
 /**
  *

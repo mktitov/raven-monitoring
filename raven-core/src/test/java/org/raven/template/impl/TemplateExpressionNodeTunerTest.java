@@ -25,7 +25,7 @@ import java.util.List;
 import javax.script.Bindings;
 import org.easymock.IArgumentMatcher;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeTuner;

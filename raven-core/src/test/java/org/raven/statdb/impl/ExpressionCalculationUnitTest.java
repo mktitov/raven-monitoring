@@ -20,7 +20,7 @@ package org.raven.statdb.impl;
 import java.util.Arrays;
 import javax.script.Bindings;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.expr.Expression;
 import org.raven.statdb.query.StatisticsValues;
 import static org.easymock.EasyMock.*;

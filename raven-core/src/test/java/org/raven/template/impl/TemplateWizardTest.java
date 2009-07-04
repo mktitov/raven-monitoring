@@ -25,7 +25,7 @@ import org.raven.template.impl.TemplateNode;
 import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
-import org.raven.ServiceTestCase;
+import org.raven.test.ServiceTestCase;
 import org.raven.conf.Configurator;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;

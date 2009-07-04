@@ -24,7 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.raven.DataCollector;
 import org.raven.PushOnDemandDataSource;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.NodeAttribute;
 import org.weda.internal.CacheScope;
 

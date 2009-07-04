@@ -20,7 +20,7 @@ package org.raven.impl;
 import java.util.List;
 import java.util.Locale;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.weda.constraints.ReferenceValue;
 import org.weda.constraints.TooManyReferenceValuesException;

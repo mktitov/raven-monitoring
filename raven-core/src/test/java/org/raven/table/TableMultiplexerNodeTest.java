@@ -19,7 +19,7 @@ package org.raven.table;
 
 import java.util.Iterator;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.table.objects.TestDataConsumer;
 import org.raven.table.objects.TestTableDataConsumer;

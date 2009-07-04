@@ -17,6 +17,7 @@
 
 package org.raven;
 
+import org.raven.test.ServiceTestCase;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.List;

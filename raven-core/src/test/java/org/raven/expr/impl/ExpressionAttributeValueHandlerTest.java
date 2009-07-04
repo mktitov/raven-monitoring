@@ -21,7 +21,7 @@ import javax.script.Bindings;
 import javax.script.ScriptException;
 import org.easymock.IArgumentMatcher;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.AttributeValueHandlerListener;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;

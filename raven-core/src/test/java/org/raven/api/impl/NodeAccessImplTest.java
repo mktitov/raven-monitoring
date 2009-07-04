@@ -18,7 +18,7 @@
 package org.raven.api.impl;
 
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.impl.DataPipeImpl;
 import org.raven.rrd.data.RRDataSource;
 import org.raven.rrd.graph.RRDef;

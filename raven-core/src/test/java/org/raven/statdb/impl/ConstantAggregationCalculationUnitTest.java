@@ -20,7 +20,7 @@ package org.raven.statdb.impl;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.expr.Expression;
 import static org.easymock.EasyMock.*;
 import org.raven.statdb.query.CalculationUnitException;

@@ -30,7 +30,7 @@ import org.jrobin.core.RrdDbPool;
 import org.jrobin.core.RrdException;
 import org.junit.Before;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.RecordException;
 import org.raven.rrd.ConsolidationFunction;
 import org.raven.PushDataSource;

@@ -19,7 +19,7 @@ package org.raven.tree.impl;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.table.Table;
 import org.raven.template.GroupNode;

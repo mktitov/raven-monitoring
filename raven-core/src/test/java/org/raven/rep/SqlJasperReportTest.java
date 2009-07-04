@@ -26,7 +26,7 @@ import net.sf.jasperreports.engine.JasperExportManager;
 import org.junit.Test;
 import org.raven.DataCollector;
 import org.raven.DummyScheduler;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.conf.Config;
 import org.raven.conf.Configurator;
 import org.raven.dbcp.ConnectionPool;

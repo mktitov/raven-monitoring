@@ -22,7 +22,7 @@ import java.util.Map;
 import org.jrobin.data.Plottable;
 import org.junit.Test;
 import org.raven.PushOnDemandDataSource;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.graph.DataDefException;
 import org.raven.graph.GraphData;
 import org.raven.statdb.impl.KeyValuesImpl;

@@ -19,7 +19,7 @@ package org.raven.tree.impl;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.RavenUtils;
 import org.raven.table.Table;
 import org.raven.tree.Node.Status;

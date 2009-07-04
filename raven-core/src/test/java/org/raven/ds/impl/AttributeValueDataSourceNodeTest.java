@@ -19,7 +19,7 @@ package org.raven.ds.impl;
 
 import java.util.Arrays;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;

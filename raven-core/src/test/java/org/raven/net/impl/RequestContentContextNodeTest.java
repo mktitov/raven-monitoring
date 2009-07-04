@@ -24,7 +24,7 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.DataCollector;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.NetworkResponseServiceExeption;
 

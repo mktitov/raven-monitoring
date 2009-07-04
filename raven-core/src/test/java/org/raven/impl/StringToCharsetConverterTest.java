@@ -19,7 +19,7 @@ package org.raven.impl;
 
 import java.nio.charset.Charset;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.weda.services.TypeConverter;
 
 /**

@@ -19,7 +19,7 @@ package org.raven.sched.impl;
 
 import java.util.concurrent.TimeUnit;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.sched.impl.objects.SchedulableNode;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;

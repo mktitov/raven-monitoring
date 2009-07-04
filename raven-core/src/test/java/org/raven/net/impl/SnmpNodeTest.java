@@ -24,7 +24,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
-import org.raven.ServiceTestCase;
+import org.raven.test.ServiceTestCase;
 import org.raven.conf.Configurator;
 import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.ds.impl.AbstractThreadedDataSource;

@@ -25,7 +25,7 @@ import java.util.Date;
 import java.util.Locale;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.impl.objects.TestDataConsumer2;
 import org.raven.rrd.data.DataAndTime;
 import org.raven.PushDataSource;

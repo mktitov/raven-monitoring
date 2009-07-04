@@ -25,7 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.raven.DummyScheduler;
 import org.raven.PushDataSource;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.impl.RecordSchemaNode;
 import org.raven.log.LogLevel;
 import org.raven.statdb.StatisticsDatabase;

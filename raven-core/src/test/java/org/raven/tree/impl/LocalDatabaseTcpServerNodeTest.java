@@ -19,7 +19,7 @@ package org.raven.tree.impl;
 
 import java.text.ParseException;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 
 /**
  *

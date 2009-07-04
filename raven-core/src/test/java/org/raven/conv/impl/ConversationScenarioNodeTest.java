@@ -21,7 +21,7 @@ import java.util.Collection;
 import org.junit.Before;
 import org.raven.conv.ConversationScenarioCycleDetectedException;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.conv.ConversationScenarioState;
 import org.raven.expr.impl.IfNode;
 import org.raven.tree.Node;

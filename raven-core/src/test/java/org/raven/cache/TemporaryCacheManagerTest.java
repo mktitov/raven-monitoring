@@ -18,7 +18,7 @@
 package org.raven.cache;
 
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.weda.internal.Cache;
 import org.weda.internal.CacheEntity;
 import org.weda.internal.CacheScope;

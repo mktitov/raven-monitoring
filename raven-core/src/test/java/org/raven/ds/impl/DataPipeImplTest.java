@@ -18,7 +18,7 @@
 package org.raven.ds.impl;
 
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.impl.objects.TestDataConsumer2;
 import org.raven.ds.impl.objects.TestDataSource2;
 import org.raven.tree.Node.Status;

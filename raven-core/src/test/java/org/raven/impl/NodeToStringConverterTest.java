@@ -20,7 +20,7 @@ package org.raven.impl;
 import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
-import org.raven.ServiceTestCase;
+import org.raven.test.ServiceTestCase;
 import org.raven.tree.Node;
 import org.raven.tree.NodePathResolver;
 import org.raven.tree.impl.ContainerNode;

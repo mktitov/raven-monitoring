@@ -18,7 +18,7 @@
 package org.raven.net.impl;
 
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.net.Authentication;
 import org.raven.tree.NodeAttribute;
 

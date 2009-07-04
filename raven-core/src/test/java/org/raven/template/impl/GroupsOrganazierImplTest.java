@@ -18,7 +18,7 @@
 package org.raven.template.impl;
 
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.template.GroupNode;
 import org.raven.template.GroupsOrganazier;

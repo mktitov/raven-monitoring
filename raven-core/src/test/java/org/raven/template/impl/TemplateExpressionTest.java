@@ -20,7 +20,7 @@ package org.raven.template.impl;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 
 /**
  *

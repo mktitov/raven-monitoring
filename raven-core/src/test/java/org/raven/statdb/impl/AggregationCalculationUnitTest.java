@@ -19,7 +19,7 @@ package org.raven.statdb.impl;
 
 import javax.script.SimpleBindings;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.statdb.query.SelectEntry;
 import org.raven.statdb.query.StatisticsValues;
 import static org.easymock.EasyMock.*;

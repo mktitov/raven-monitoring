@@ -19,7 +19,7 @@ package org.raven.ds.impl;
 
 import java.util.List;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.objects.TestDataSourceInterface;
 import org.raven.tree.Node;

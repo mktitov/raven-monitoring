@@ -24,7 +24,7 @@ import org.junit.Test;
 import org.raven.DataCollector;
 import org.raven.PushDataSource;
 import org.raven.PushOnDemandDataSource;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeAttributeImpl;

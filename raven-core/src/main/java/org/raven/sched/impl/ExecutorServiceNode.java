@@ -65,6 +65,10 @@ public class ExecutorServiceNode extends BaseNode
     @Parameter(readOnly=true)
     private AtomicLong rejectedTasks;
 
+//    @Parameter(readOnly=true)
+//    private
+
+
 	private ThreadPoolExecutor executor;
     private BlockingQueue queue;
     private Collection executingTasks;
@@ -126,6 +130,12 @@ public class ExecutorServiceNode extends BaseNode
     public Integer getExecutingTaskCount() {
         return executingTasks==null? null : executingTasks.size();
     }
+
+//    @Parameter(readOnly=true)
+//    public Integer getLargestQueueSize()
+//    {
+////        return executor==null? null : executor.g
+//    }
 
     public OperationStatistic getExecutedTasks() {
         return executedTasks;

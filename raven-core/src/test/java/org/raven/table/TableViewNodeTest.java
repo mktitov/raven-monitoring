@@ -22,7 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.table.objects.TestTableDataSource;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;

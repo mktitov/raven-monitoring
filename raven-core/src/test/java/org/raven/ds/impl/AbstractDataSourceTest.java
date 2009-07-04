@@ -19,7 +19,7 @@ package org.raven.ds.impl;
 
 import java.util.concurrent.TimeUnit;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.impl.objects.TestDataConsumer;
 import org.raven.ds.impl.objects.TestDataSource;
 import org.raven.tree.NodeAttribute;

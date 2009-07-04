@@ -19,7 +19,7 @@ package org.raven.rrd;
 
 import org.raven.template.GroupNode;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;

@@ -18,7 +18,7 @@
 package org.raven.tree.impl;
 
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.objects.NodeWithReadonlyParameter;
 

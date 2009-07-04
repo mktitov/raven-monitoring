@@ -19,7 +19,7 @@ package org.raven.statdb.impl;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.statdb.AggregationFunction;
 import org.raven.statdb.query.QueryStatisticsName;
 import org.raven.statdb.query.SelectMode;

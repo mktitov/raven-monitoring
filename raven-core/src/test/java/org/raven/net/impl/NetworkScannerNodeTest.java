@@ -26,7 +26,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.raven.DummyScheduler;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.net.objects.TestScannerConsumer;
 import org.raven.net.objects.TestScannerDataSource;
 import org.raven.net.impl.SnmpNode;

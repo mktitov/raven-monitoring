@@ -19,7 +19,7 @@ package org.raven.tree.impl;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.AttributeNotFoundException;
 import org.raven.tree.InvalidPathException;
 import org.raven.tree.NodeAttribute;

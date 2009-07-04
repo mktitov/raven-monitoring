@@ -22,7 +22,7 @@ import java.io.InputStream;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.DataFile;
 import org.raven.tree.DataFileException;
 import org.raven.tree.NodeAttribute;

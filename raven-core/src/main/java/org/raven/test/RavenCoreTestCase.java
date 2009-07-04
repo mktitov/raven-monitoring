@@ -15,8 +15,9 @@
  *  under the License.
  */
 
-package org.raven;
+package org.raven.test;
 
+import org.raven.*;
 import java.io.File;
 import org.apache.commons.io.FileUtils;
 import org.apache.tapestry5.ioc.RegistryBuilder;

@@ -18,7 +18,7 @@
 package org.raven.rrd.data;
 
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.rrd.objects.TestDataSource2;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;

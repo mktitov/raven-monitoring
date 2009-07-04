@@ -34,7 +34,7 @@ import org.jrobin.core.Util;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.RavenUtils;
 import org.raven.conf.Configurator;
 import org.raven.rrd.DataSourceType;

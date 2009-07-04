@@ -20,7 +20,7 @@ package org.raven.statdb.impl;
 import org.easymock.IArgumentMatcher;
 import org.junit.Before;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.RecordException;
 import org.raven.expr.impl.IfNode;
 import org.raven.log.LogLevel;

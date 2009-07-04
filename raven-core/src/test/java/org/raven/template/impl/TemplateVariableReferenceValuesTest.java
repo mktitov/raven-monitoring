@@ -23,7 +23,7 @@ import org.raven.template.impl.TemplateVariablesNode;
 import org.raven.template.impl.TemplateNode;
 import java.util.List;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodePathResolver;
 import org.raven.tree.impl.ContainerNode;

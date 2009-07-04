@@ -22,7 +22,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
-import org.raven.ServiceTestCase;
+import org.raven.test.ServiceTestCase;
 import org.raven.conf.Configurator;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;

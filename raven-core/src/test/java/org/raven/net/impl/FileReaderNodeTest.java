@@ -24,7 +24,7 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.impl.AbstractDataConsumer.ResetDataPolicy;
 import org.raven.tree.Node.Status;
 import org.raven.tree.impl.objects.TestDataConsumer;

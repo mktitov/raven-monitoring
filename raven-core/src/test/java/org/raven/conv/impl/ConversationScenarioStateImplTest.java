@@ -19,7 +19,7 @@ package org.raven.conv.impl;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.conv.ConversationScenarioCycleDetectedException;
 import org.raven.conv.ConversationScenarioPoint;
 

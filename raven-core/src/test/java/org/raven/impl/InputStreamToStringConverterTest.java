@@ -20,7 +20,7 @@ package org.raven.impl;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.weda.services.TypeConverter;
 
 /**

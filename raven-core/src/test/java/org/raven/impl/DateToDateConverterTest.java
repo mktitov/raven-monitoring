@@ -21,7 +21,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Date;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.weda.services.TypeConverter;
 
 /**

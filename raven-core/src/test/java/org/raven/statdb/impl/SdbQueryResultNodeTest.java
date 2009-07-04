@@ -22,7 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.raven.DataCollector;
 import org.raven.PushDataSource;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.impl.RecordSchemaNode;
 import org.raven.statdb.query.QueryResult;
 import static org.easymock.EasyMock.*;

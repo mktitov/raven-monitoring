@@ -21,7 +21,7 @@ import org.apache.commons.lang.text.StrTokenizer;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.AttributeValueHandlerListener;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;

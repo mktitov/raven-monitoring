@@ -20,7 +20,7 @@ package org.raven.impl;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.RavenUtils;
 import org.raven.table.Table;
 import org.weda.services.TypeConverter;

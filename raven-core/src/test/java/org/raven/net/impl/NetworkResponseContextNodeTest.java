@@ -22,7 +22,7 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.PushOnDemandDataSource;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.log.LogLevel;
 import org.raven.net.AccessDeniedException;
 import org.raven.net.NetworkResponseServiceExeption;

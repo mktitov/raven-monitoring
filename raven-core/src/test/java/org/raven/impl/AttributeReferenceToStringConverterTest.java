@@ -21,7 +21,7 @@ import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
-import org.raven.ServiceTestCase;
+import org.raven.test.ServiceTestCase;
 import org.raven.tree.AttributeReference;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;

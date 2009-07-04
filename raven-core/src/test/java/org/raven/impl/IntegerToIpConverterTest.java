@@ -18,7 +18,7 @@
 package org.raven.impl;
 
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.net.InvalidIpException;
 import org.raven.net.impl.Ip;
 import org.weda.services.TypeConverter;

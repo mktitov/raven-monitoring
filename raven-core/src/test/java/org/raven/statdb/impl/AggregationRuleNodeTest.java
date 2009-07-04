@@ -18,7 +18,7 @@
 package org.raven.statdb.impl;
 
 import org.junit.Test;
-import org.raven.RavenCoreTestCase;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.statdb.AggregationFunction;
 import org.raven.statdb.RuleProcessingResult;
 import org.raven.statdb.StatisticsDatabase;
