@@ -26,6 +26,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.catalina.CometEvent;
+import org.apache.catalina.CometProcessor;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.tapestry5.ioc.Registry;
 import org.raven.net.AccessDeniedException;
@@ -40,7 +42,7 @@ import org.raven.ui.util.RavenRegistry;
  *
  * @author Mikhail Titov
  */
-public class NetworkResponseServlet extends HttpServlet
+public class NetworkResponseServlet extends HttpServlet implements CometProcessor
 {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
         throws ServletException, IOException
@@ -58,30 +60,30 @@ public class NetworkResponseServlet extends HttpServlet
 
             context = context.substring(1);
 
-            Authentication contextAuth = responseService.getAuthentication(context);
-            if (contextAuth!=null)
-            {
-                String requestAuth = request.getHeader("Authorization");
-                if (requestAuth==null)
-                {
-                    response.setHeader(
-                            "WWW-Authenticate", "BASIC realm=\"RAVEN simple request interface\"");
-                    response.sendError(response.SC_UNAUTHORIZED);
-                    return;
-                }
-                else
-                {
-                    String userAndPath = new String(Base64.decodeBase64(
-                            requestAuth.substring(6).getBytes()));
-                    String elems[] = userAndPath.split(":");
-                    if (elems.length!=2 
-                        || !contextAuth.getUser().equals(elems[0])
-                        || !contextAuth.getPassword().equals(elems[1]))
-                    {
-                        throw new AccessDeniedException();
-                    }
-                }
-            }
+//            Authentication contextAuth = responseService.getAuthentication(context);
+//            if (contextAuth!=null)
+//            {
+//                String requestAuth = request.getHeader("Authorization");
+//                if (requestAuth==null)
+//                {
+//                    response.setHeader(
+//                            "WWW-Authenticate", "BASIC realm=\"RAVEN simple request interface\"");
+//                    response.sendError(response.SC_UNAUTHORIZED);
+//                    return;
+//                }
+//                else
+//                {
+//                    String userAndPath = new String(Base64.decodeBase64(
+//                            requestAuth.substring(6).getBytes()));
+//                    String elems[] = userAndPath.split(":");
+//                    if (elems.length!=2
+//                        || !contextAuth.getUser().equals(elems[0])
+//                        || !contextAuth.getPassword().equals(elems[1]))
+//                    {
+//                        throw new AccessDeniedException();
+//                    }
+//                }
+//            }
 
             Map<String, Object> params = new HashMap<String, Object>();
 
@@ -142,16 +144,18 @@ public class NetworkResponseServlet extends HttpServlet
             else
             {
 //                response.sendError(response.SC_OK);
-                PrintWriter out = response.getWriter();
-                try
-                {
-                    out.append("OK");
-                }
-                finally
-                {
-                    out.close();
-                }
+//                PrintWriter out = response.getWriter();
+//                try
+//                {
+//                    out.append("OK");
+//                }
+//                finally
+//                {
+//                    out.close();
+//                }
             }
+            response.setStatus(
+                    isPut? HttpServletResponse.SC_NO_CONTENT : HttpServletResponse.SC_OK);
         }
         catch(Throwable e)
         {
@@ -195,4 +199,161 @@ public class NetworkResponseServlet extends HttpServlet
         return "Simple requests interface";
     }
 
+    public void event(CometEvent event) throws IOException, ServletException
+    {
+        switch (event.getEventType())
+        {
+            case BEGIN: checkAuth(event); processRequest(event); break;
+            case READ: processRequest(event); break;
+            case END: event.close(); break;
+            case ERROR: event.close(); break;
+        }
+            
+    }
+
+    private void checkAuth(CometEvent event) throws IOException
+    {
+        Registry registry = RavenRegistry.getRegistry();
+        NetworkResponseService responseService = registry.getService(NetworkResponseService.class);
+        HttpServletRequest request = event.getHttpServletRequest();
+        HttpServletResponse response = event.getHttpServletResponse();
+        try
+        {
+            String context = request.getPathInfo();
+            if (context.length()<2)
+            {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                event.close();
+                return;
+            }
+
+            context = context.substring(1);
+
+            Authentication contextAuth = responseService.getAuthentication(context);
+            if (contextAuth!=null)
+            {
+                String requestAuth = request.getHeader("Authorization");
+                if (requestAuth==null)
+                {
+                    response.setHeader(
+                            "WWW-Authenticate", "BASIC realm=\"RAVEN simple request interface\"");
+                    response.sendError(response.SC_UNAUTHORIZED);
+                    event.close();
+                    return;
+                }
+                else
+                {
+                    String userAndPath = new String(Base64.decodeBase64(
+                            requestAuth.substring(6).getBytes()));
+                    String elems[] = userAndPath.split(":");
+                    if (elems.length!=2
+                        || !contextAuth.getUser().equals(elems[0])
+                        || !contextAuth.getPassword().equals(elems[1]))
+                    {
+                        throw new AccessDeniedException();
+                    }
+                }
+            }
+        }
+        catch(Throwable e)
+        {
+            if (e instanceof NetworkResponseServiceUnavailableException)
+                response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, e.getMessage());
+            else if (e instanceof ContextUnavailableException)
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
+            else if (e instanceof AccessDeniedException)
+                response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            else if (e instanceof RequiredParameterMissedException)
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            else
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            event.close();
+        }
+    }
+
+    private void processRequest(CometEvent event) throws IOException
+    {
+        Registry registry = RavenRegistry.getRegistry();
+        NetworkResponseService responseService = registry.getService(NetworkResponseService.class);
+        HttpServletRequest request = event.getHttpServletRequest();
+        HttpServletResponse response = event.getHttpServletResponse();
+        boolean isPut = request.getMethod().equalsIgnoreCase("PUT");
+        if (event.getEventType()==CometEvent.EventType.BEGIN && isPut)
+            return;
+        try
+        {
+            String context = request.getPathInfo().substring(1);
+
+            Map<String, Object> params = new HashMap<String, Object>();
+
+            Enumeration<String> headerNames = request.getHeaderNames();
+            if (headerNames!=null)
+                while (headerNames.hasMoreElements())
+                {
+                    String headerName = headerNames.nextElement();
+                    params.put(headerName, request.getHeader(headerName));
+                }
+
+            Enumeration<String> reqParams = request.getParameterNames();
+            if (reqParams!=null)
+                while (reqParams.hasMoreElements())
+                {
+                    String paramName = reqParams.nextElement();
+                    params.put(paramName, request.getParameter(paramName));
+                }
+
+            if (isPut)
+                params.put(
+                        NetworkResponseService.REQUEST_CONTENT_PARAMETER, request.getInputStream());
+
+            String result = responseService.getResponse(
+                    context, request.getRemoteAddr(), params);
+            if (!isPut)
+            {
+                String charset = null;
+                String charsetsStr = request.getHeader("Accept-Charset");
+                if (charsetsStr!=null)
+                {
+                    String[] charsets = charsetsStr.split("\\s*,\\s*");
+                    if (charsets!=null && charsets.length>0)
+                    {
+                        charset = charsets[0].split(";")[0];
+                        getServletContext().log(
+                                String.format("Charset (%s) selected from response", charset));
+                    }
+                }
+                if (charset==null)
+                {
+                    getServletContext().log(
+                            "Can't detect charset from request. Using default charset (UTF-8)");
+                    charset = "UTF-8";
+                }
+                response.setCharacterEncoding(charset);
+                PrintWriter out = response.getWriter();
+                try
+                {
+                    out.append(result);
+                }
+                finally
+                {
+                    out.close();
+                }
+            }
+            response.setStatus(
+                    isPut? HttpServletResponse.SC_NO_CONTENT : HttpServletResponse.SC_OK);
+        }
+        catch(Throwable e)
+        {
+            if (e instanceof NetworkResponseServiceUnavailableException)
+                response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, e.getMessage());
+            else if (e instanceof ContextUnavailableException)
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
+            else if (e instanceof AccessDeniedException)
+                response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            else if (e instanceof RequiredParameterMissedException)
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            else
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
 }
