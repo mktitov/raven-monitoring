@@ -62,6 +62,10 @@
             <id>codehaus</id>
             <url>http://repository.codehaus.org</url>
         </repository>
+        <repository>
+            <id>tomcat</id>
+            <url>http://tomcat.apache.org/dev/dist/m2-repository/org/apache/tomcat</url>
+        </repository>
     </repositories>
     <reporting>
         <plugins>
@@ -293,6 +297,12 @@
                 <artifactId>myfaces-api</artifactId>
                 <version>1.2.6</version>
                 <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat</groupId>
+                <artifactId>catalina</artifactId>
+                <version>6.0.18</version>
+                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.myfaces.core</groupId>
