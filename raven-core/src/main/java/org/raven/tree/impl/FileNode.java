@@ -17,6 +17,7 @@
 
 package org.raven.tree.impl;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,12 @@ public class FileNode extends BaseNode implements Viewable, ViewableObject
     @NotNull @Parameter(valueHandlerType=DataFileValueHandlerFactory.TYPE)
     private DataFile file;
 
+    @Parameter 
+    private String head;
+
+    @Parameter
+    private String tail;
+
     public DataFile getFile()
     {
         return file;
@@ -47,6 +54,26 @@ public class FileNode extends BaseNode implements Viewable, ViewableObject
     public void setFile(DataFile file)
     {
         this.file = file;
+    }
+
+    public String getHead()
+    {
+        return head;
+    }
+
+    public void setHead(String head)
+    {
+        this.head = head;
+    }
+
+    public String getTail()
+    {
+        return tail;
+    }
+
+    public void setTail(String tail)
+    {
+        this.tail = tail;
     }
 
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
@@ -60,7 +87,16 @@ public class FileNode extends BaseNode implements Viewable, ViewableObject
         if (!getStatus().equals(Status.STARTED))
             return null;
 
-        return Arrays.asList((ViewableObject)this);
+        ArrayList<ViewableObject> objects = new ArrayList<ViewableObject>(3);
+        String text = head;
+        if (text!=null && !text.isEmpty())
+            objects.add(new ViewableObjectImpl(RAVEN_TEXT_MIMETYPE, text));
+        objects.add(this);
+        text = tail;
+        if (text!=null && !text.isEmpty())
+            objects.add(new ViewableObjectImpl(RAVEN_TEXT_MIMETYPE, text));
+
+        return objects;
     }
 
     public Boolean getAutoRefresh()
