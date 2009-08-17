@@ -23,6 +23,8 @@ import org.apache.tapestry5.ioc.MappedConfiguration;
 import org.apache.tapestry5.ioc.OrderedConfiguration;
 import org.apache.tapestry5.ioc.ServiceBinder;
 import org.apache.tapestry5.ioc.services.ChainBuilder;
+import org.raven.audit.Auditor;
+import org.raven.audit.impl.AuditorImpl;
 import org.raven.cache.TemporaryCacheManager;
 import org.raven.cache.TemporaryCacheManagerImpl;
 import org.raven.conf.Configurator;
@@ -113,6 +115,7 @@ public class RavenCoreModule
     public static void bind(ServiceBinder binder)
     {
         binder.bind(NodeLogger.class, NodeLoggerImpl.class);
+        binder.bind(Auditor.class, AuditorImpl.class);
         binder.bind(GroupsOrganazier.class, GroupsOrganazierImpl.class);
         binder.bind(ExpressionCache.class, ExpressionCacheImpl.class);
         binder.bind(NetworkResponseService.class, NetworkResponseServiceImpl.class);

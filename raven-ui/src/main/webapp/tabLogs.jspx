@@ -27,8 +27,9 @@
 	halign="start" 
 	valign="top">
 	<tr:panelCaptionGroup captionText="#{msgs.logViewAttributes}" >
-		<tr:panelFormLayout labelWidth="15%" 
-				rows="3">
+		<tr:panelFormLayout 
+			labelWidth="15%" 
+			rows="3">
 			<tr:inputText 
 				label="#{msgs.dateFrom}" 
 				value="#{cNode.logViewFd}" >
@@ -53,17 +54,18 @@
 				value="#{cNode.groupByNodes}"/>
    		</tr:panelFormLayout>
    		<tr:spacer height="10"/>
-<tr:panelButtonBar halign="center" >   		
-	<tr:commandButton
-		id="refresh" 
-		text="#{msgs.refresh}" 
-		action="#{cNode.clearLogForNode}" />
-</tr:panelButtonBar>   		
+		<tr:panelButtonBar halign="center" >   		
+			<tr:commandButton
+				id="refresh" 
+				text="#{msgs.refresh}" 
+				action="#{cNode.clearLogForNode}" />
+		</tr:panelButtonBar>   		
 	</tr:panelCaptionGroup>
 	<tr:spacer width="40"/>
 	<tr:panelCaptionGroup captionText="#{msgs.recordsFilter}" >
-		<tr:panelFormLayout labelWidth="15%" 
-				rows="3">
+		<tr:panelFormLayout 
+			labelWidth="15%" 
+			rows="3">
 			<tr:inputText 
 				columns="50" 
 				label="#{msgs.filter}" 
@@ -77,13 +79,12 @@
    		<tr:spacer height="10"/>
 		<tr:panelButtonBar halign="center" >
 			<tr:commandButton 
-				disabled="#{cNode.logFilterOn}"
-				action="#{cNode.logFilterOnOff}"
+				action="#{cNode.logFilterEnable}"
 				id="filterOn" 
 				text="#{msgs.filterOn}"	/>
 			<tr:commandButton
 				disabled="#{!cNode.logFilterOn}"
-				action="#{cNode.logFilterOnOff}"
+				action="#{cNode.logFilterDisable}"
 				id="filterOff" 
 				text="#{msgs.filterOff}" 
 		 	/>
@@ -94,27 +95,28 @@
 <tr:separator></tr:separator>
 
 <tr:table 
-  		width="100%" 
-  		summary="NodesLogs"  
-  		rowBandingInterval="1"
-  		value="#{cNode.logsForNode}" 
-  		var="row" 
-  		rowSelection="none" 
-  		id="NodesLogs" >
-    	<tr:column 
-    		inlineStyle="width:15%;" 
-    		headerText="#{msgs.date}">
-	    	<tr:outputText
-				inlineStyle="font-size: 80%;"	       
-	      		value="#{row.fdString}" />
-        </tr:column>
-    	<tr:column 
-    		inlineStyle="width:7%;" 
-    		headerText="#{msgs.level}">
-	      	<tr:outputText
-	      		rendered="#{row.level=='TRACE'}"
-				inlineStyle="color: grey;"	       
-	      		value="#{row.level}"/>
+	rendered="#{!cNode.groupByNodes}" 
+	width="100%" 
+  	summary="NodesLogs"  
+  	rowBandingInterval="1"
+  	value="#{cNode.logsForNode}" 
+  	var="row" 
+  	rowSelection="none" 
+  	id="NodesLogs" >
+    <tr:column 
+    	inlineStyle="width:15%;" 
+    	headerText="#{msgs.date}">
+	   	<tr:outputText
+			inlineStyle="font-size: 80%;"	       
+	   		value="#{row.fdString}" />
+    </tr:column>
+    <tr:column 
+    	inlineStyle="width:7%;" 
+    	headerText="#{msgs.level}">
+	    <tr:outputText
+	    	rendered="#{row.level=='TRACE'}"
+			inlineStyle="color: grey;"	       
+	     	value="#{row.level}"/>
 	      	<tr:outputText
 	      		rendered="#{row.level=='DEBUG'}"
 	      		value="#{row.level}"/>
@@ -149,5 +151,70 @@
 		      	value="&lt;pre&gt;&lt;small&gt;&lt;small&gt;#{row.message}&lt;/small&gt;&lt;/small&gt;&lt;/pre&gt;"/>
 	    </f:facet>
 </tr:table>
+
+<tr:table
+	rendered="#{cNode.groupByNodes}" 
+  	width="100%" 
+  	summary="LogsGroupByNodes"  
+  	value="#{cNode.logsGroupedByNodes}" 
+  	var="row" 
+  	rowSelection="none" 
+  	id="NodesLogs2" >
+    <tr:column headerText="#{msgs.node}">
+		<tr:outputText
+	   		inlineStyle="font-weight: bold;"	       
+	      	value="#{row.nodePath}"/>
+    </tr:column>
+    <f:facet name="detailStamp">
+		<tr:table 
+			rowBandingInterval="1"
+  			width="100%" 
+			value="#{row.records}" 
+  			var="rowx" 
+  			rowSelection="none" >
+		   	<tr:column 
+    			inlineStyle="width:15%;" 
+    			headerText="#{msgs.date}">
+	    		<tr:outputText
+					inlineStyle="font-size: 80%;"	       
+		      		value="#{rowx.fdString}" />
+        	</tr:column>
+    		<tr:column 
+    			inlineStyle="width:7%;" 
+    			headerText="#{msgs.level}">
+	    		<tr:outputText
+	    			rendered="#{rowx.level=='TRACE'}"
+					inlineStyle="color: grey;"	       
+	    			value="#{rowx.level}"/>
+	    		<tr:outputText
+	    			rendered="#{rowx.level=='DEBUG'}"
+	    			value="#{rowx.level}"/>
+	    		<tr:outputText
+	    			rendered="#{rowx.level=='INFO'}"
+					inlineStyle="font-weight: bold; "	       
+	      			value="#{rowx.level}"/>
+	      			<tr:outputText
+	      				rendered="#{rowx.level=='WARN'}"
+						inlineStyle="color: green; font-weight: bold; "	       
+	      				value="#{rowx.level}"/>
+	      			<tr:outputText
+	      				rendered="#{rowx.level=='ERROR'}"
+						inlineStyle="color: red; font-weight: bold; "	       
+	      				value="#{rowx.level}"/>
+        		</tr:column>
+		    	<tr:column headerText="#{msgs.message}">
+	    		  	<tr:outputText
+	    				inlineStyle="font-size: 80%;"	       
+		      			value="#{rowx.shortMessage}"/>
+        			</tr:column>
+        		<f:facet name="detailStamp">
+	    		  	<tr:outputText escape="false"
+		    			inlineStyle="font-size: 80%;"	       
+				      	value="&lt;pre&gt;#{rowx.message}&lt;/pre&gt;"/>
+				</f:facet>
+			</tr:table>
+	    </f:facet>
+</tr:table>
+
 
 </jsp:root>

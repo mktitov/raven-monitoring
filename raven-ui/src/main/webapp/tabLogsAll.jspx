@@ -121,7 +121,7 @@
 		rendered="#{cNode.groupByNodes}" 
   		width="100%" 
   		summary="LogsGroupByNodes"  
-  		value="#{cNode.logsGroupedByNodes}" 
+  		value="#{cNode.allLogsGroupedByNodes}" 
   		var="row" 
   		rowSelection="none" 
   		id="NodesLogs2" >

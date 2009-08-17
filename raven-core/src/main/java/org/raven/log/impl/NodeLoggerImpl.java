@@ -21,12 +21,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import javax.sql.rowset.CachedRowSet;
 import org.raven.log.LogLevel;
 import org.raven.log.NodeLogRecord;
 import org.raven.log.NodeLogger;
+import org.raven.store.AbstractDbWorker;
 import org.raven.tree.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,54 +34,44 @@ import org.slf4j.LoggerFactory;
  *
  * @author Sergey Pinevskiy
  */
-public class NodeLoggerImpl extends LogTablesManager implements NodeLogger, Runnable
+public class NodeLoggerImpl extends AbstractDbWorker implements NodeLogger, Runnable
 {
 	private static Logger logger = LoggerFactory.getLogger(NodeLoggerImpl.class);
-//	public static final String DATE_FORMAT = "yyyyMMdd";
-//	private static SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
-	private static final int MAX_MESSAGE_LENGTH = 10240;
-	private static final int MAX_NODE_PATH_LENGTH = 512;
-	private static final String FD = "fd";
-	private static final String NODE_ID = "nodeId";
-	private static final String NODE_PATH = "nodePath";
-	private static final String LEVEL = "level";
-	private static final String MESSAGE = "message";
-	private static final String FIELDS = FD+","+NODE_ID+","+NODE_PATH+","+LEVEL+","+MESSAGE;
 	private static final String NODES_MARKER = "#";
 	
 	private static final String[] sCreateLogTable = { 
-		"create table @ ("+FD+" timestamp not null,"+
-			NODE_ID+" int not null,"+
-			NODE_PATH+" varchar("+MAX_NODE_PATH_LENGTH+") ,"+
-			LEVEL+" int not null,"+
-			MESSAGE+" varchar("+MAX_MESSAGE_LENGTH+") not null )",
-		"create index @_"+FD+" on @("+FD+")",
-		"create index @_"+NODE_ID+" on @("+NODE_ID+")",
-		"create index @_"+LEVEL+" on @("+LEVEL+")"};
+		"create table @ ("+NodeLogRecord.FD+" timestamp not null,"+
+		NodeLogRecord.NODE_ID+" int not null,"+
+		NodeLogRecord.NODE_PATH+" varchar("+MAX_NODE_PATH_LENGTH+") ,"+
+		NodeLogRecord.LEVEL+" int not null,"+
+		NodeLogRecord.MESSAGE+" varchar("+NodeLogRecord.MAX_MESSAGE_LENGTH+") not null )",
+		"create index @_"+NodeLogRecord.FD+" on @("+NodeLogRecord.FD+")",
+		"create index @_"+NodeLogRecord.NODE_ID+" on @("+NodeLogRecord.NODE_ID+")",
+		"create index @_"+NodeLogRecord.LEVEL+" on @("+NodeLogRecord.LEVEL+")"};
 
-	private static final String orderBy = "order by "+FD+" desc";
-	private static final String sMainSelect = "select "+FIELDS+" from @ where "+
-										FD+" between ? and ? and "+LEVEL+" >= ? ";
+	private static final String orderBy = "order by "+NodeLogRecord.FD+" desc";
+	private static final String sMainSelect = "select "+getFieldsList(NodeLogRecord.FIELDS)+" from @ where "+
+	NodeLogRecord.FD+" between ? and ? and "+NodeLogRecord.LEVEL+" >= ? ";
 	private static final String sSelLogsFromSingleTable =  
 										sMainSelect+orderBy;
 	private static final String sSelLogsFromSingleTableN = sMainSelect+ " and "+
-										NODE_ID+" = ? "+orderBy;
+	NodeLogRecord.NODE_ID+" = ? "+orderBy;
 	private static final String sSelLogsFromSingleTableNN = sMainSelect+ " and "+
-										NODE_ID+" in("+NODES_MARKER+") "+orderBy;
-	private static final String sInsertToLog = "insert into @("+FIELDS+") values(?,?,?,?,?)";
+	NodeLogRecord.NODE_ID+" in("+NODES_MARKER+") "+orderBy;
+//	private static final String sInsertToLog = "insert into @("+FIELDS+") values(?,?,?,?,?)";
 	
     private NodeLoggerNode nodeLoggerNode;
-    private Queue<NodeLogRecord> queue;
+//    private Queue<NodeLogRecord> queue;
     
     public NodeLoggerImpl()
     {
-    	queue = new ConcurrentLinkedQueue<NodeLogRecord>();
-    	Thread x = new Thread(this);
-    	x.start();
-    	logger.warn("nodeLogger started !");
+    	setMetaTableNamePrefix("nodeLogger");
+    	setName("log");
+    	setStoreDays(30);
+    	init();
     }
     
-    private synchronized boolean logAllowed()
+    protected synchronized boolean dbWorkAllowed()
     {
     	if(nodeLoggerNode==null || nodeLoggerNode.getStatus()!=Node.Status.STARTED)
     	{
@@ -98,11 +87,11 @@ public class NodeLoggerImpl extends LogTablesManager implements NodeLogger, Runn
 
 	public void write(Node node, LogLevel level, String message) 
 	{
-		if(logAllowed())
-			queue.offer(new NodeLogRecord(node.getId(),node.getPath(),level,message));
+		writeToQueue(new NodeLogRecord(node.getId(),node.getPath(),level,message));
 	}
-
-	protected boolean createLogTable(String tableName) 
+	
+/*
+	protected boolean createTable(String tableName) 
 	{
 		return createTable(sCreateLogTable, tableName);
 	}
@@ -143,7 +132,7 @@ public class NodeLoggerImpl extends LogTablesManager implements NodeLogger, Runn
 			try { Thread.sleep(100); } catch (InterruptedException e) { }
 		}
 	}
-
+*/
 	private List<NodeLogRecord> selectLogRecordsST(String sql,Object[] args)
 	{
 		CachedRowSet crs = select(sql, args);
@@ -153,11 +142,11 @@ public class NodeLoggerImpl extends LogTablesManager implements NodeLogger, Runn
         	while(crs.next())
         	{ 
         		NodeLogRecord nlr = new NodeLogRecord();
-        		nlr.setFd(crs.getDate(FD).getTime());
-        		nlr.setNodeId(crs.getInt(NODE_ID));
-        		nlr.setNodePath(crs.getString(NODE_PATH));
-        		nlr.setLevel(LogLevel.values()[crs.getInt(LEVEL)]);
-        		nlr.setMessage(crs.getString(MESSAGE));
+        		nlr.setFd(crs.getDate(NodeLogRecord.FD).getTime());
+        		nlr.setNodeId(crs.getInt(NodeLogRecord.NODE_ID));
+        		nlr.setNodePath(crs.getString(NodeLogRecord.NODE_PATH));
+        		nlr.setLevel(LogLevel.values()[crs.getInt(NodeLogRecord.LEVEL)]);
+        		nlr.setMessage(crs.getString(NodeLogRecord.MESSAGE));
         		recs.add(nlr);
         	}
         } catch(SQLException e) {logger.error("on selectLogRecordsST:",e);}
@@ -181,7 +170,7 @@ public class NodeLoggerImpl extends LogTablesManager implements NodeLogger, Runn
 		String sql;
 		Object[] args;
 		List<String> names;
-		logAllowed();
+		dbWorkAllowed();
 		if(nodesId ==null)
 		{
 			sql = sSelLogsFromSingleTable;
@@ -218,5 +207,13 @@ public class NodeLoggerImpl extends LogTablesManager implements NodeLogger, Runn
     {
         return nodeLoggerNode;
     }
+
+	protected String[] getFields() {
+		return NodeLogRecord.FIELDS;
+	}
+
+	protected String[] getStCreateTable() {
+		return sCreateLogTable;
+	}
 	
 }

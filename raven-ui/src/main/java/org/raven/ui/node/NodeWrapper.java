@@ -1160,6 +1160,11 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		return new ArrayList<NodeLogRecord>();
 	}
 
+	public List<LogByNode> getAllLogsGroupedByNodes()
+	{
+		return (new LogsByNodes(getLogsForAllNodes())).getAll();
+	}
+
 	public List<NodeLogRecord> getLogsForNodes(List<Integer> idList)
 	{
 		List<NodeLogRecord> ret = new ArrayList<NodeLogRecord>();
@@ -1173,15 +1178,13 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 				if(x!=null) ret.addAll(x);
 			}
 		}
-		NodeLogRecord lr = ret.get(0);
-		if(lr!=null) Collections.sort(ret, lr);
+		if(ret.size()>0 && ret.get(0)!=null) Collections.sort(ret, ret.get(0));
 		return ret;
 	}
 	
-	
 	public List<LogByNode> getLogsGroupedByNodes()
 	{
-		return (new LogsByNodes(getLogsForAllNodes())).getAll();
+		return (new LogsByNodes(getLogsForNode())).getAll();
 	}
 	
 	public String clearLogForNode()
@@ -1316,11 +1319,16 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		getLVAC().get(getNodeId()).setFilterOn(f);
 	}
 
-	public String logFilterOnOff()
+	public String logFilterEnable()
 	{
-		boolean f = true;
-		if(isLogFilterOn()) f = false;
-		setLogFilterOn(f);
+		setLogFilterOn(true);
+		return null;
+	}
+	
+	
+	public String logFilterDisable()
+	{
+		setLogFilterOn(false);
 		return null;
 	}
 	
