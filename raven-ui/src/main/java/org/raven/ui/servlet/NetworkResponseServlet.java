@@ -60,30 +60,30 @@ public class NetworkResponseServlet extends HttpServlet implements CometProcesso
 
             context = context.substring(1);
 
-//            Authentication contextAuth = responseService.getAuthentication(context);
-//            if (contextAuth!=null)
-//            {
-//                String requestAuth = request.getHeader("Authorization");
-//                if (requestAuth==null)
-//                {
-//                    response.setHeader(
-//                            "WWW-Authenticate", "BASIC realm=\"RAVEN simple request interface\"");
-//                    response.sendError(response.SC_UNAUTHORIZED);
-//                    return;
-//                }
-//                else
-//                {
-//                    String userAndPath = new String(Base64.decodeBase64(
-//                            requestAuth.substring(6).getBytes()));
-//                    String elems[] = userAndPath.split(":");
-//                    if (elems.length!=2
-//                        || !contextAuth.getUser().equals(elems[0])
-//                        || !contextAuth.getPassword().equals(elems[1]))
-//                    {
-//                        throw new AccessDeniedException();
-//                    }
-//                }
-//            }
+            Authentication contextAuth = responseService.getAuthentication(context);
+            if (contextAuth!=null)
+            {
+                String requestAuth = request.getHeader("Authorization");
+                if (requestAuth==null)
+                {
+                    response.setHeader(
+                            "WWW-Authenticate", "BASIC realm=\"RAVEN simple request interface\"");
+                    response.sendError(response.SC_UNAUTHORIZED);
+                    return;
+                }
+                else
+                {
+                    String userAndPath = new String(Base64.decodeBase64(
+                            requestAuth.substring(6).getBytes()));
+                    String elems[] = userAndPath.split(":");
+                    if (elems.length!=2
+                        || !contextAuth.getUser().equals(elems[0])
+                        || !contextAuth.getPassword().equals(elems[1]))
+                    {
+                        throw new AccessDeniedException();
+                    }
+                }
+            }
 
             Map<String, Object> params = new HashMap<String, Object>();
 
@@ -208,7 +208,7 @@ public class NetworkResponseServlet extends HttpServlet implements CometProcesso
             case END: event.close(); break;
             case ERROR: event.close(); break;
         }
-            
+
     }
 
     private void checkAuth(CometEvent event) throws IOException
@@ -303,9 +303,23 @@ public class NetworkResponseServlet extends HttpServlet implements CometProcesso
                 }
 
             if (isPut)
+            {
                 params.put(
                         NetworkResponseService.REQUEST_CONTENT_PARAMETER, request.getInputStream());
-
+//                BufferedReader reader = new BufferedReader(
+//                        new InputStreamReader(request.getInputStream()));
+//                try
+//                {
+//                    String line;
+//                    while ((line=reader.readLine())!=null)
+//                        System.out.println("PUT>>> "+line);
+//                }
+//                finally
+//                {
+//                    reader.close();
+//                }
+            }
+//            String result = null;
             String result = responseService.getResponse(
                     context, request.getRemoteAddr(), params);
             if (!isPut)
@@ -355,5 +369,6 @@ public class NetworkResponseServlet extends HttpServlet implements CometProcesso
             else
                 response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
+        response.flushBuffer();
     }
 }
