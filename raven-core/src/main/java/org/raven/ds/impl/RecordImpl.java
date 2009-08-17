@@ -47,7 +47,8 @@ public class RecordImpl implements Record
         this.schema = schema;
         RecordSchemaField[] schemaFields = schema.getFields();
         if (schemaFields==null || schemaFields.length==0)
-            throw new RecordException("The record schema (%s) does contains fields");
+            throw new RecordException(String.format(
+                    "The record schema (%s) does contains fields", schema.getName()));
 
         values = new HashMap<String, Object>();
         fields = new HashMap<String, RecordSchemaField>();
