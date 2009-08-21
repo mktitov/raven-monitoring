@@ -8,6 +8,7 @@ import org.raven.util.Utl;
 public class NodeLogRecord implements Comparator<NodeLogRecord>, IRecord
 {
 	public static final int MAX_MESSAGE_LENGTH   = 10240;
+	public static final int MAX_NODE_PATH_LENGTH =   512;
 	public static final int MAX_SHORT_MES_LENGTH = 200;
 	public static final String SHORT_MES_TAIL = "...";
 	public static final String FD = "fd";
@@ -16,6 +17,16 @@ public class NodeLogRecord implements Comparator<NodeLogRecord>, IRecord
 	public static final String LEVEL = "level";
 	public static final String MESSAGE = "message";
 	public static final String[] FIELDS = {FD,NODE_ID,NODE_PATH,LEVEL,MESSAGE};	
+
+	public static final String[] sCreateLogTable = { 
+		"create table @ ("+NodeLogRecord.FD+" timestamp not null,"+
+		NodeLogRecord.NODE_ID+" int not null,"+
+		NodeLogRecord.NODE_PATH+" varchar("+MAX_NODE_PATH_LENGTH+") ,"+
+		NodeLogRecord.LEVEL+" int not null,"+
+		NodeLogRecord.MESSAGE+" varchar("+NodeLogRecord.MAX_MESSAGE_LENGTH+") not null )",
+		"create index @_"+NodeLogRecord.FD+" on @("+NodeLogRecord.FD+")",
+		"create index @_"+NodeLogRecord.NODE_ID+" on @("+NodeLogRecord.NODE_ID+")",
+		"create index @_"+NodeLogRecord.LEVEL+" on @("+NodeLogRecord.LEVEL+")"};
 	
 	private long fd;
 	private int nodeId;

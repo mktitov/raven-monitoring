@@ -3,11 +3,13 @@ package org.raven.audit;
 import java.util.Comparator;
 
 import org.raven.store.IRecord;
+import org.raven.tree.Node;
 import org.raven.util.Utl;
 
 public class AuditRecord implements Comparator<AuditRecord>, IRecord
 {
 	public static final int MAX_MESSAGE_LENGTH   = 10240;
+	public static final int MAX_NODE_PATH_LENGTH =   512;
 	public static final int MAX_SHORT_MES_LENGTH = 200;
 	public static final String SHORT_MES_TAIL = "...";
 	public static final String FD = "fd";
@@ -21,19 +23,41 @@ public class AuditRecord implements Comparator<AuditRecord>, IRecord
 	public static final String[] FIELDS = {FD, NODE_ID, NODE_PATH, LOGIN,
 		ACTION_TYPE, ACTION, MESSAGE};
 	
+	public static final String[] sCreateLogTable = { 
+		"create table @ ("+FD+" timestamp not null,"+
+		NODE_ID+" int ,"+
+		NODE_PATH+" varchar("+MAX_NODE_PATH_LENGTH+") ,"+
+		LOGIN+" varchar(64) not null,"+
+		ACTION_TYPE+" int not null,"+
+		ACTION+" int not null,"+
+		MESSAGE+" varchar("+MAX_MESSAGE_LENGTH+") )",
+		"create index @_"+FD+" on @("+FD+")",
+		"create index @_"+NODE_ID+" on @("+NODE_ID+")",
+		"create index @_"+LOGIN+" on @("+LOGIN+")",
+		"create index @_"+ACTION_TYPE+" on @("+ACTION_TYPE+")"
+		};
+	
 	private long fd;
-	private int nodeId;
+	private Integer nodeId;
 	private String message;
 	private String nodePath;
 	private String login;
 	private Action action;
 	
-	public AuditRecord(int nodeId,String nodePath,String login,Action action,String message)
+	//int nodeId,String nodePath
+	public AuditRecord(Node node,String login,Action action,String message)
 	{
 		fd = System.currentTimeMillis();
-		this.nodeId = nodeId;
 		this.message = message;
-		this.nodePath = nodePath;
+		if(node!=null)
+		{
+			this.nodeId = node.getId();
+			this.nodePath = node.getPath();
+		}	
+		{
+			this.nodeId = null;
+			this.nodePath = null;
+		}	
 		this.login = login;
 		this.action = action;
 	}
@@ -45,10 +69,11 @@ public class AuditRecord implements Comparator<AuditRecord>, IRecord
 	public Object[] getDataForInsert() 
 	{
 		String mes = getMessage();
-		mes = mes.substring(0, Math.min(MAX_MESSAGE_LENGTH,mes.length()));
+		if(mes!=null)
+			mes = mes.substring(0, Math.min(MAX_MESSAGE_LENGTH,mes.length()));
 		Object[] x = new Object[]{
 				new java.sql.Timestamp(getFd()),
-				new Integer(getNodeId()),
+				getNodeId(),
 				getNodePath(),
 				getLogin(),
 				new Integer(getActionType().ordinal()),
@@ -82,7 +107,7 @@ public class AuditRecord implements Comparator<AuditRecord>, IRecord
 	public void setFd(long time) {
 		this.fd = time;
 	}
-	public int getNodeId() {
+	public Integer getNodeId() {
 		return nodeId;
 	}
 	public void setNodeId(int nodeId) {

@@ -13,7 +13,9 @@ public enum Action
 	NODE_RENAME(ActionType.TREE_EDIT), NODE_CH_INDEX(ActionType.TREE_EDIT),
 	
 	NODE_START(ActionType.CONTROL), NODE_STOP(ActionType.CONTROL),
-	NODE_START_RECURSIVE(ActionType.CONTROL);
+	NODE_START_RECURSIVE(ActionType.CONTROL),
+	
+	SESSION_START(ActionType.SESSION),SESSION_STOP(ActionType.SESSION);
 	
 	private final ActionType actionType;
 	

@@ -30,6 +30,7 @@ import javax.naming.directory.SearchResult;
 import org.raven.conf.Config;
 import org.raven.conf.Configurator;
 import org.raven.tree.Node;
+import org.raven.tree.Tree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -153,22 +154,21 @@ public class UserAcl
 	}
 
 	public String getAccountName() { return accountName; }
+
 	
-	public HashMap<String,String>  getResourcesList()
+	public HashMap<String,String>  getResourcesList(Tree tree)
 	{
 		HashMap<String,String> rl = new HashMap<String,String>();
-		for(AccessResource ar : gaStorage.getResources().values())
+		for(AccessResource ar : gaStorage.getResourcesX(tree).values())
 		{
 			String title = ar.getTitle();
 			if(title==null || title.length()==0) continue;
-			String path = ar.getShow();
-			if(path==null)
+			String path = null;
+			if(ar.isPresent())
 			{
-				AccessControl ac = ar.getFirst();
-				if(ac==null) continue;
-				path = ac.getResource();
-			}
-			if(path.endsWith("*")) path = path.substring(0, path.length()-1);
+				path = ar.getShow();
+				if(acl.getAccessForNodeWF(path)<AccessControl.READ) continue;				
+			}	
 			rl.put(title, path);
 		}
 		return rl;

@@ -22,7 +22,12 @@ public class AccessResource extends AccessControlList
 {
 		static final long serialVersionUID = 1;
 		public static final String SHOW_PARAM = "show";
+		/**
+		 * Путь до целевого узла
+		 */
 		private String show = null;
+		private boolean present = true;
+//		private long lastCheck = 0;
 
 		public AccessResource(String list)
 		{
@@ -47,13 +52,28 @@ public class AccessResource extends AccessControlList
 	    	return false;
 	    }
 
+	    /**
+		 * Устанавливает путь до целевого узла
+	     * @param show
+	     */
 		public void setShow(String show) {
 			this.show = show;
 		}
-
+		
+		/**
+		 * 
+		 * @return путь до целевого узла
+		 */
 		public String getShow() {
 			return show;
 		}
-		
+
+		public void setPresent(boolean present) {
+			this.present = present;
+		}
+
+		public boolean isPresent() {
+			return present;
+		}
 		
 }

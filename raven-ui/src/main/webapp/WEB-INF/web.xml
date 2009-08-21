@@ -84,6 +84,10 @@
     <listener>
         <listener-class>org.apache.myfaces.webapp.StartupServletContextListener</listener-class>
     </listener>
+
+    <listener>
+		<listener-class>org.raven.ui.SessionListener</listener-class>
+    </listener>
   
     <servlet>
         <servlet-name>Faces Servlet</servlet-name>
@@ -115,7 +119,7 @@
     </servlet-mapping>
 
     <session-config>
-        <session-timeout>5</session-timeout>
+        <session-timeout>1</session-timeout>
     </session-config>
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>

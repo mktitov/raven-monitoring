@@ -177,6 +177,10 @@
       <from-outcome>frame2</from-outcome>
       <to-view-id>/page2.jspx</to-view-id>
     </navigation-case>
+    <navigation-case>
+      <from-outcome>logout</from-outcome>
+      <to-view-id>/logout.html</to-view-id>
+    </navigation-case>
   </navigation-rule>
 
   <!-- navigation rules for tab{x}NP.jspx -->

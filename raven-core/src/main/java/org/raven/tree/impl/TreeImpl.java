@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.raven.annotations.NodeClass;
+import org.raven.audit.impl.AuditorNode;
 import org.raven.conf.Configurator;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.expr.BindingSupport;
@@ -102,6 +103,7 @@ public class TreeImpl implements Tree
     private ConnectionPoolsNode connectionPoolsNode;
     private SchedulersNode schedulersNode;
     private NodeLoggerNode nodeLoggerNode;
+    private AuditorNode auditorNode;
 	private QueuesNode queuesNode;
     private SchemasNode schemasNode;
     private LocalDatabaseNode localDatabaseNode;
@@ -550,6 +552,16 @@ public class TreeImpl implements Tree
             saveNode(nodeLoggerNode);
             servicesNode.addChildren(nodeLoggerNode);
         }
+
+        auditorNode = (AuditorNode) servicesNode.getChildren(AuditorNode.NAME);
+        if (auditorNode==null)
+        {
+        	auditorNode = new AuditorNode();
+        	auditorNode.setParent(servicesNode);
+            saveNode(auditorNode);
+            servicesNode.addChildren(auditorNode);
+        }
+    
     }
 
     private void createTempatesSubtree()

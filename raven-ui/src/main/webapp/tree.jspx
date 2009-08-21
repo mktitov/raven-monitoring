@@ -20,7 +20,8 @@
           xmlns:f="http://java.sun.com/jsf/core"
           xmlns:h="http://java.sun.com/jsf/html"
           xmlns:tr="http://myfaces.apache.org/trinidad"
-          xmlns:trh="http://myfaces.apache.org/trinidad/html" 
+          xmlns:trh="http://myfaces.apache.org/trinidad/html"
+          xmlns:t="http://myfaces.apache.org/tomahawk" 
           >
  <jsp:output omit-xml-declaration="true" doctype-root-element="HTML"
               doctype-system="http://www.w3.org/TR/html4/loose.dtd"
@@ -28,9 +29,28 @@
   <jsp:directive.page pageEncoding="utf-8" contentType="text/html;charset=utf-8"/>
   <f:view>
   <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
+  <trh:script text="window.onbeforeunload = function()
+		{
+         parent.frames.frame1.document.getElementById('logout').click();
+  		} " />
     <tr:document title="tree">
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-       <tr:form id="treeform">
+       	<tr:form 
+       		id="treeform0" 
+       		targetFrame="_top">
+    		<tr:statusIndicator/> 
+    		<tr:spacer width="10"/>
+    		<tr:outputText 
+    			inlineStyle="font-size: 70%" 
+    			value="#{sBean.accountName} (#{sBean.remoteIp})" />
+    		<tr:spacer width="10"/>
+    		<tr:commandButton  
+    			id="logout"
+	    		immediate="true" 
+    			action="#{sBean.logout}"
+    			text="Exit" />
+  		</tr:form>
+       	<tr:form id="treeform">
        <!-- 
        <tr:panelGroupLayout layout="horizontal">
            	<tr:statusIndicator/>
@@ -39,7 +59,6 @@
     		<tr:outputText partialTriggers="::pooltree" value="QQQQQQ :#{sBean.focusRowKey}" />
     	</tr:panelGroupLayout>
     	 -->
-    	<tr:statusIndicator/>
         <tr:panelPage>
 <!--
         partialTriggers="::pooltree"
@@ -67,7 +86,8 @@
        	        	var="res" 
        	        	items="#{sBean.resourcesList}">
        	        	<tr:panelHorizontalLayout>
-        	    	<tr:commandLink
+        	    	<tr:commandLink 
+        	    		rendered="#{res[1] != null}"
         	        	text="#{res[0]}"
 		 				partialSubmit="true" 
 	                    immediate="true"
@@ -78,6 +98,10 @@
         					value="#{res[1]}" 
         				/>
         			</tr:commandLink>
+        			<tr:outputText
+        				inlineStyle="font-size: 80%"
+        				rendered="#{res[1] == null}" 
+        				value="#{res[0]}" />
         			<tr:spacer width="12"/>
         			</tr:panelHorizontalLayout>
 				</tr:forEach>

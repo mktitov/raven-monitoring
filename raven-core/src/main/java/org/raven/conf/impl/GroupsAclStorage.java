@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import org.raven.conf.Config;
+import org.raven.tree.InvalidPathException;
+import org.raven.tree.Tree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +38,8 @@ public class GroupsAclStorage
 	private HashMap<String, List<LdapGroupAcl>> aclMap = null;
 	private HashMap<String, AccessResource> arMap = null;
 	private long lastUpdate = 0;
+	private long lastResourcesCheck = 0;
+	private long resourcesCheckInterval = 20*60*1000;
 
 	protected GroupsAclStorage(Config config)
 	{
@@ -188,6 +192,37 @@ public class GroupsAclStorage
 
     public synchronized HashMap<String,AccessResource> getResources()
     {
+    	return arMap;
+    }
+
+    public synchronized HashMap<String,AccessResource> getResourcesX(Tree tree)
+    {
+    	long t = System.currentTimeMillis();
+    	if(t-lastResourcesCheck > resourcesCheckInterval)
+    	{	
+    		for(AccessResource ar : arMap.values())
+    		{
+   				String path = ar.getShow();
+   				if(path==null)
+   				{
+   					AccessControl ac = ar.getFirst();
+   					if(ac==null) continue;
+   					path = ac.getNodePath();
+   					ar.setShow(path);
+   				}
+       			try 
+       			{	
+       				tree.getNode(path);
+   					ar.setPresent(true);
+       			}
+       			catch (InvalidPathException e) 
+       			{
+       				ar.setPresent(false);
+       				logger.warn("not found path '"+path+"' for resource "+ar.getName(),e);
+       			}
+    		}
+    		lastResourcesCheck = t;
+    	}	
     	return arMap;
     }
     

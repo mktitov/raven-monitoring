@@ -26,17 +26,20 @@ import javax.faces.event.ActionEvent;
 import org.apache.myfaces.trinidad.component.UIXTable;
 import org.apache.myfaces.trinidad.model.RowKeySet;
 import org.apache.myfaces.trinidad.component.core.output.CoreMessage;
+import org.raven.audit.Action;
+import org.raven.audit.AuditRecord;
+import org.raven.audit.Auditor;
 import org.raven.tree.Node;
 import org.raven.tree.Tree;
 import org.raven.ui.SessionBean;
 import org.raven.ui.util.Messages;
 import org.apache.myfaces.trinidad.event.ReturnEvent;
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SubNodesTableBean 
 {
-//	private static final Logger logger = LoggerFactory.getLogger(NodeWrapper.class);
+	private static final Logger logger = LoggerFactory.getLogger(NodeWrapper.class);
 	private UIComponent table = null;
 	private CoreMessage message = null;
 
@@ -292,10 +295,20 @@ public class SubNodesTableBean
 		  	for(NodeWrapper nw: nws)
 		  	{
   				String newName = newNames.get(nw.getNodeId());
+	  			if(newName==null) newName =  nw.getNode().getName();
 		  		
 		  		try {
-		  			if(copy) tree.copy(nw.getNode(), n, newName, null, true, true, false);
-		  				else tree.move(nw.getNode(), n, newName); 
+					String mes = "dst: node='{}' name='{}'";
+		  			Action a = Action.NODE_MOVE;
+		  			if(copy) a = Action.NODE_COPY;
+		  			Auditor au = SessionBean.getInstance().getAuditor();
+		  			
+		  			AuditRecord aRec = au.prepare(nw.getNode(), SessionBean.getAccountNameS(), a, mes, n.getPath(), newName);
+		  			if(copy)
+		  				tree.copy(nw.getNode(), n, newName, null, true, true, false);
+	  				else
+	  					tree.move(nw.getNode(), n, newName);
+		  			au.write(aRec);
 		  		}
 		  		catch(Exception e) 
 		  		{
@@ -307,6 +320,7 @@ public class SubNodesTableBean
 		  			 retb.append(Messages.getUiMessage(ms));
 		  		 }			
 		  		 retb.append(" "+nw.getNodeName());
+		  		 logger.error("copyAndMove:",e);
 		  		}
 		  	}	
 			sb.reloadBothFrames();

@@ -20,6 +20,7 @@ package org.raven.log.impl;
 import org.raven.annotations.Parameter;
 import org.raven.dbcp.ConnectionPool;
 import org.raven.log.NodeLogger;
+import org.raven.store.INodeHasPool;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
@@ -29,7 +30,7 @@ import org.weda.internal.annotations.Service;
  *
  * @author Mikhail Titov
  */
-public class NodeLoggerNode extends BaseNode
+public class NodeLoggerNode extends BaseNode implements INodeHasPool
 {
     public static String NAME = "Node logger";
 

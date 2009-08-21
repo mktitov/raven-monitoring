@@ -100,6 +100,14 @@ public class AccessControl {
 	}
 	
 	public synchronized String getResource() { return resource; }
+
+	public synchronized String getNodePath() 
+	{ 
+		if(resource!=null && resource.endsWith("*") )
+			return resource.substring(0, resource.length()-1);
+		return resource; 
+	}
+	
 	public synchronized int getRight() { return right; }
 
 	public synchronized String getRegExp() { return regExp; }

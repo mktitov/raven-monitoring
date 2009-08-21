@@ -3,12 +3,13 @@ package org.raven.audit.impl;
 import org.raven.annotations.Parameter;
 import org.raven.audit.Auditor;
 import org.raven.dbcp.ConnectionPool;
+import org.raven.store.INodeHasPool;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.internal.annotations.Service;
 import org.raven.tree.impl.BaseNode;
 
-public class AuditorNode extends BaseNode
+public class AuditorNode extends BaseNode implements INodeHasPool
 {
 	    public static String NAME = "Auditor";
 

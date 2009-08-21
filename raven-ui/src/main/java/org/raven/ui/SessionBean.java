@@ -38,8 +38,9 @@ import org.raven.ui.util.RavenRegistry;
 import org.raven.ui.util.RavenViewableImageRenderer;
 import org.raven.ui.vo.VObyNode;
 import org.raven.ui.vo.ImagesStorage;
+import org.raven.audit.Action;
+import org.raven.audit.Auditor;
 import org.raven.conf.Configurator;
-import org.raven.conf.impl.AccessControl;
 import org.raven.conf.impl.UserAcl;
 import org.raven.ui.util.Messages;
 import org.raven.template.impl.TemplateNode;
@@ -48,6 +49,7 @@ import org.raven.tree.NodeError;
 import org.raven.tree.Tree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+//import org.weda.internal.annotations.Service;
 import org.weda.services.ClassDescriptorRegistry;
 import org.apache.myfaces.trinidad.component.core.data.CoreTree;
 import org.apache.myfaces.trinidad.model.TreeModel;
@@ -56,18 +58,25 @@ import org.apache.myfaces.trinidad.util.Service;
 import org.apache.tapestry5.ioc.Registry;
 import org.raven.tree.InvalidPathException;
 import javax.faces.component.UIComponent;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
 import org.apache.myfaces.trinidad.event.PollEvent;
 
 public class SessionBean 
 {
 	public static final String BEAN_NAME = "sBean";
 	public static final String SELECT_NODE_PARAM = "nodePath";
-    private Logger logger = LoggerFactory.getLogger(SessionBean.class);	
+    private Logger logger = LoggerFactory.getLogger(SessionBean.class);
+
+    @org.weda.internal.annotations.Service
+    private Auditor auditor;
+    
 	private UserAcl userAcl = null;
 	private Tree tree = null;
 	private RavenTreeModel treeModel = null;   
 	//private Node currentNode = null;
-	private Configurator configurator;
+//	private Configurator configurator;
 	private NodeWrapper wrapper = null;
 	private String title = "RAVEN";
 //	private ClassDescriptorRegistry classDsc = null;
@@ -86,6 +95,7 @@ public class SessionBean
 	private LogViewAttributesCache logViewAttributesCache;
 	private LogsCache logsCache; 
 	private boolean collapsed = false;
+	private String remoteIp = null;
 	
 	/**
 	 * @return name of parameter, using for node link
@@ -105,18 +115,20 @@ public class SessionBean
 	{
 		return title;
 	}
-
+	
 	public SessionBean() 
 	{
-		//FacesContext fc = FacesContext.getCurrentInstance();
-		//fc.getExternalContext().getRequestLocale()
+		
+		FacesContext context = FacesContext.getCurrentInstance();
+		HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
+		remoteIp = request.getRemoteAddr();
 	    wrapper = (NodeWrapper) getElValue(NodeWrapper.BEAN_NAME);
 	    initNodeWrapper(wrapper);
 		
 		userAcl = getUserAcl();
 		tree = getTree();
 //		classDsc = getClassDscRegistry();
-		configurator = getConfigurator();
+//		configurator = getConfigurator();
 		
 		List<Node> nodes = new ArrayList<Node>();
 		nodes.add(tree.getRootNode());
@@ -137,8 +149,28 @@ public class SessionBean
 		setLogViewAttributesCache(new LogViewAttributesCache());
 		setLogsCache(new LogsCache(getLogViewAttributesCache()));
 		viewableObjectsCache.setImagesStorage(getImagesStorage());
+		onSessionStart();
 	}
 
+	public void onSessionStart()
+	{
+		writeAuditRecord(null, Action.SESSION_START, remoteIp);
+		logger.info("session started, login:{} ip:{}",userAcl.getAccountName(),remoteIp);
+	}
+
+	public void onSessionStop()
+	{
+		writeAuditRecord(null, Action.SESSION_STOP, remoteIp);
+		logger.info("session stopped, login:{} ip:{}",userAcl.getAccountName(),remoteIp);
+	}
+	
+	public String logout()
+	{
+	        HttpSession s = (HttpSession) FacesContext.getCurrentInstance().getExternalContext().getSession(false);
+	        s.invalidate();
+	        return "logout";
+	}
+	
 	public boolean isSuperUser()
 	{
 		return userAcl.isSuperUser();
@@ -148,6 +180,7 @@ public class SessionBean
 	{
 		 FacesContext facesContext = FacesContext.getCurrentInstance();
 		 ExtendedRenderKitService service = (ExtendedRenderKitService)
+		 //org.apache.myfaces.trinidad.util.
 		 Service.getRenderKitService(facesContext, ExtendedRenderKitService.class);
 		 service.addScript(facesContext, "parent.frames.frame1.location.href=parent.frames.frame1.location.href");
 		 logger.info("reloadLeftFrame");
@@ -157,7 +190,7 @@ public class SessionBean
 	  {
 		 FacesContext facesContext = FacesContext.getCurrentInstance();
 		 ExtendedRenderKitService service = (ExtendedRenderKitService)
-		 Service.getRenderKitService(facesContext, ExtendedRenderKitService.class);
+		 org.apache.myfaces.trinidad.util.Service.getRenderKitService(facesContext, ExtendedRenderKitService.class);
 		// service.addScript(facesContext, "parent.frames.frame1.document.treeform.reftree.focus();");
 		 service.addScript(facesContext, "parent.frames.frame2.location.href=parent.frames.frame2.location.href");
 		 service.addScript(facesContext, "parent.frames.frame1.location.href=parent.frames.frame1.location.href");
@@ -169,7 +202,7 @@ public class SessionBean
 	  {
 		 FacesContext fc = FacesContext.getCurrentInstance();
 		 ExtendedRenderKitService service = (ExtendedRenderKitService)
-		 Service.getRenderKitService(fc, ExtendedRenderKitService.class);
+		 org.apache.myfaces.trinidad.util.Service.getRenderKitService(fc, ExtendedRenderKitService.class);
 		 logger.info("reloadRightFrame");
 		 service.addScript(fc, "parent.frames.frame2.location.href=parent.frames.frame2.location.href");
 		 return ("success");
@@ -275,7 +308,7 @@ public class SessionBean
 	  
 	  public List<String[]> getResourcesList()
 	  {
-		  HashMap<String,String> rl = userAcl.getResourcesList();
+		  HashMap<String,String> rl = userAcl.getResourcesList(tree);
 		  List<String[]> ret = new ArrayList<String[]>();
 		  if(rl==null)
 		  {
@@ -283,23 +316,12 @@ public class SessionBean
 			  return ret;
 		  }
 		  List<String> keys = new ArrayList<String>();
-		  for(String key: rl.keySet())
-			  keys.add(key);
+		  keys.addAll(rl.keySet());
 		  Collections.sort(keys);
 		  for(String key: keys)
 		  { 
-			  Node n = null;
 			  String nodePath = rl.get(key);
-			  try 
-			  {	
-				  n = tree.getNode(rl.get(key));
-				  if(userAcl.getAccessForNode(n)<AccessControl.READ) continue;
-				  ret.add( new String[] {key,nodePath} );
-			  }
-			  catch (InvalidPathException e) 
-			  { 
-				  logger.error("on load node "+nodePath,e);
-			  }
+			  ret.add( new String[] {key,nodePath} );
 		  }  
 		  return ret;
 	  }
@@ -435,6 +457,7 @@ public class SessionBean
 		n.init();
 		if(n.isAutoStart()) n.start();
 		logger.warn("Added new node name={}",getNewNodeName());
+        auditor.write(n, getUserAcl().getAccountName(), Action.NODE_CREATE, "class: "+newNodeType);            	  
 		clearNewNode();
 		return wrapper.goToEditNewAttribute(n);
 		//return "ok";
@@ -458,6 +481,7 @@ public class SessionBean
 	public int deleteNode(Node n)
 	{
 		if(n.getDependentNodes()!=null && !n.getDependentNodes().isEmpty()) return -1;
+        auditor.write(n, getUserAcl().getAccountName(), Action.NODE_DEL, null);            	  
 		tree.remove(n);
 		logger.warn("removed node: {}",n.getName());
 		return 0;
@@ -481,6 +505,7 @@ public class SessionBean
 			}
 			tree.remove(n);
 			logger.warn("removed node: {}",n.getName());
+	        auditor.write(n, getUserAcl().getAccountName(), Action.NODE_DEL, null);            	  
 			FacesContext.getCurrentInstance().getExternalContext().log("removed node: "+n.getName());
 		}
 		wrapper.onSetNode();
@@ -654,7 +679,30 @@ public class SessionBean
 	public boolean isCollapsed() {
 		return collapsed;
 	}
+
+	public Auditor getAuditor() 
+	{
+		return auditor;
+	}
+
+	public String getAccountName()
+	{
+		return userAcl.getAccountName();
+	}		
 	
+	public static String getAccountNameS()
+	{
+		return SessionBean.getUserAcl().getAccountName();
+	}		
+	
+	public void writeAuditRecord(Node n,Action a,String mes) 
+	{
+		auditor.write(n, userAcl.getAccountName(), a, mes);
+	}
+
+	public String getRemoteIp() {
+		return remoteIp;
+	}
 	
 	
 }

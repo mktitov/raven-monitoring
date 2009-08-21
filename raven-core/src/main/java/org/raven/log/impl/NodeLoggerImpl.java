@@ -38,16 +38,6 @@ public class NodeLoggerImpl extends AbstractDbWorker implements NodeLogger, Runn
 {
 	private static Logger logger = LoggerFactory.getLogger(NodeLoggerImpl.class);
 	private static final String NODES_MARKER = "#";
-	
-	private static final String[] sCreateLogTable = { 
-		"create table @ ("+NodeLogRecord.FD+" timestamp not null,"+
-		NodeLogRecord.NODE_ID+" int not null,"+
-		NodeLogRecord.NODE_PATH+" varchar("+MAX_NODE_PATH_LENGTH+") ,"+
-		NodeLogRecord.LEVEL+" int not null,"+
-		NodeLogRecord.MESSAGE+" varchar("+NodeLogRecord.MAX_MESSAGE_LENGTH+") not null )",
-		"create index @_"+NodeLogRecord.FD+" on @("+NodeLogRecord.FD+")",
-		"create index @_"+NodeLogRecord.NODE_ID+" on @("+NodeLogRecord.NODE_ID+")",
-		"create index @_"+NodeLogRecord.LEVEL+" on @("+NodeLogRecord.LEVEL+")"};
 
 	private static final String orderBy = "order by "+NodeLogRecord.FD+" desc";
 	private static final String sMainSelect = "select "+getFieldsList(NodeLogRecord.FIELDS)+" from @ where "+
@@ -58,81 +48,20 @@ public class NodeLoggerImpl extends AbstractDbWorker implements NodeLogger, Runn
 	NodeLogRecord.NODE_ID+" = ? "+orderBy;
 	private static final String sSelLogsFromSingleTableNN = sMainSelect+ " and "+
 	NodeLogRecord.NODE_ID+" in("+NODES_MARKER+") "+orderBy;
-//	private static final String sInsertToLog = "insert into @("+FIELDS+") values(?,?,?,?,?)";
 	
-    private NodeLoggerNode nodeLoggerNode;
-//    private Queue<NodeLogRecord> queue;
-    
     public NodeLoggerImpl()
     {
-    	setMetaTableNamePrefix("nodeLogger");
-    	setName("log");
+    	setMetaTableNamePrefix("log");
+    	setName("nodeLogger");
     	setStoreDays(30);
     	init();
-    }
-    
-    protected synchronized boolean dbWorkAllowed()
-    {
-    	if(nodeLoggerNode==null || nodeLoggerNode.getStatus()!=Node.Status.STARTED)
-    	{
-    		setPool(null);
-    		return false;
-    	}
-   		if(getPool()==null)
-   			setPool(nodeLoggerNode.getConnectionPool());
-   		if(getPool()==null || getPool().getStatus()!=Node.Status.STARTED)
-   			return false;
-    	return true;
     }
 
 	public void write(Node node, LogLevel level, String message) 
 	{
 		writeToQueue(new NodeLogRecord(node.getId(),node.getPath(),level,message));
 	}
-	
-/*
-	protected boolean createTable(String tableName) 
-	{
-		return createTable(sCreateLogTable, tableName);
-	}
-	
-	private boolean insert(NodeLogRecord rec)
-	{
-		String mes = rec.getMessage();
-		mes = mes.substring(0, Math.min(MAX_MESSAGE_LENGTH,mes.length()));
-		String tname = getTableName(rec);
-		String sql = sInsertToLog.replaceAll(TABLE_MARKER, tname);
-		
-		Object[] x = new Object[]{
-				new java.sql.Timestamp(rec.getFd()),
-				new Integer(rec.getNodeId()),
-				rec.getNodePath(),
-				new Integer(rec.getLevel().ordinal()),
-				mes
-		}; 
-		if( executeUpdate(sql, x)<0 ) return false;
-		return true;
-	}
-	
-	private boolean writeMessagesFromQueue()
-	{
-		NodeLogRecord rec;
-		while( (rec=queue.poll())!=null )
-		{
-			insert(rec);
-		}
-		return true;
-	}
-	
-	public void run()
-	{
-		while(true)
-		{
-			writeMessagesFromQueue();
-			try { Thread.sleep(100); } catch (InterruptedException e) { }
-		}
-	}
-*/
+
 	private List<NodeLogRecord> selectLogRecordsST(String sql,Object[] args)
 	{
 		CachedRowSet crs = select(sql, args);
@@ -200,12 +129,14 @@ public class NodeLoggerImpl extends AbstractDbWorker implements NodeLogger, Runn
 	
     public synchronized void setNodeLoggerNode(NodeLoggerNode nodeLoggerNode)
     {
-        this.nodeLoggerNode = nodeLoggerNode;
+        setNode(nodeLoggerNode);
     }
 
     public synchronized NodeLoggerNode getNodeLoggerNode()
     {
-        return nodeLoggerNode;
+    	try { return (NodeLoggerNode) getNode(); }
+    	catch(Exception e) { logger.error("Xmm...",e); }
+    	return null;
     }
 
 	protected String[] getFields() {
@@ -213,7 +144,7 @@ public class NodeLoggerImpl extends AbstractDbWorker implements NodeLogger, Runn
 	}
 
 	protected String[] getStCreateTable() {
-		return sCreateLogTable;
+		return NodeLogRecord.sCreateLogTable;
 	}
 	
 }
