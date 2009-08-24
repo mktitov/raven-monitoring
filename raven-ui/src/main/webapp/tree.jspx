@@ -38,17 +38,25 @@
        	<tr:form 
        		id="treeform0" 
        		targetFrame="_top">
-    		<tr:statusIndicator/> 
-    		<tr:spacer width="10"/>
-    		<tr:outputText 
+       		
+	<tr:panelBorderLayout>    
+	<f:facet name="left">
+    		<tr:statusIndicator/>
+    </f:facet>
+	<f:facet name="innerLeft">
+	    		<tr:outputText 
     			inlineStyle="font-size: 70%" 
     			value="#{sBean.accountName} (#{sBean.remoteIp})" />
-    		<tr:spacer width="10"/>
-    		<tr:commandButton  
+    </f:facet>
+    
+	<f:facet name="right">
+    		<tr:commandLink   
     			id="logout"
-	    		immediate="true" 
+	    		immediate="true"
     			action="#{sBean.logout}"
-    			text="Exit" />
+    			text="#{msgs.exit}" />
+    </f:facet>
+</tr:panelBorderLayout>    			
   		</tr:form>
        	<tr:form id="treeform">
        <!-- 

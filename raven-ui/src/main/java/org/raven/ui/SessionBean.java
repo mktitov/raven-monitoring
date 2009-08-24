@@ -20,9 +20,12 @@ package org.raven.ui;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
+
+import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import org.raven.ui.attr.RefreshAttributesCache;
@@ -166,9 +169,24 @@ public class SessionBean
 	
 	public String logout()
 	{
-	        HttpSession s = (HttpSession) FacesContext.getCurrentInstance().getExternalContext().getSession(false);
-	        s.invalidate();
-	        return "logout";
+		String ret = "logout"; 
+		FacesContext fc = FacesContext.getCurrentInstance();
+		ExternalContext ec = fc.getExternalContext();
+		String defLang = fc.getApplication().getDefaultLocale().getLanguage();
+		String lang = ec.getRequestLocale().getLanguage();
+		Iterator<Locale> iloc = fc.getApplication().getSupportedLocales();
+		while(iloc.hasNext())
+		{
+			Locale loc = iloc.next();
+			if(!defLang.equals(lang) && loc.getLanguage().equals(lang))
+			{
+				ret = ret+"_"+lang;
+				break;
+			}
+		}	
+	    HttpSession s = (HttpSession) ec.getSession(false);
+		s.invalidate();
+		return ret;
 	}
 	
 	public boolean isSuperUser()
