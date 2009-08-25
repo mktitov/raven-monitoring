@@ -53,7 +53,8 @@ public class AuditRecord implements Comparator<AuditRecord>, IRecord
 		{
 			this.nodeId = node.getId();
 			this.nodePath = node.getPath();
-		}	
+		}
+		else
 		{
 			this.nodeId = null;
 			this.nodePath = null;
