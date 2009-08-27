@@ -31,6 +31,6 @@ public interface Auditor
 
     public AuditRecord prepare(Node node, String login, Action action, String message, String arg0, String arg1, String arg2);
     
-    public List<AuditRecord> getRecords(Date from,Date to, Object nodesId, Action action);
+    public List<AuditRecord> getRecords(Date from,Date to, Object nodeId, Object nodePath, String login, ActionType aType, Action action);
 	
 }

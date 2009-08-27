@@ -297,6 +297,14 @@ partialTriggers=":poolStatus"
 			</tr:panelHorizontalLayout>
   		</f:facet>
 
+<!-- show ravenText --> 
+	  	<f:facet name="ravenText">
+	  	  	<tr:panelHorizontalLayout halign="left" >
+	  	  		<tr:spacer width="10" />
+				<tr:outputFormatted value="#{row.viewableObject.data}"/>
+			</tr:panelHorizontalLayout>
+		</f:facet>
+
 <!-- show nodeUrl --> 
 	  	<f:facet name="nodeUrl">
 	  	  	<tr:panelHorizontalLayout halign="left" >
@@ -305,7 +313,7 @@ partialTriggers=":poolStatus"
 				inlineStyle="font-weight: bold;"
 				rendered="#{vnstat.index==0}" 
 				partialSubmit="true"
-				text="#{msgs.node}: #{row.node.name}"  
+				text="#{row.node.name}"  
 				actionListener="#{sBean.selectNode}">
 				<f:attribute 
 					name="#{sBean.nodePathParName}" 
@@ -315,7 +323,7 @@ partialTriggers=":poolStatus"
 			<tr:commandLink 
 				rendered="#{vnstat.index!=0}" 
 				partialSubmit="true"
-				text="#{msgs.node}: #{row.node.name}"  
+				text="#{row.node.name}"  
 				actionListener="#{sBean.selectNode}">
 				<f:attribute 
 					name="#{sBean.nodePathParName}" 
@@ -429,6 +437,9 @@ items="#{row.tableColumnNames}"
 					rendered="#{row.valid[0]}"                      
                    	headerText="#{row.tableColumnNames[0]}">
                    	<tr:panelHorizontalLayout halign="left" >
+                   	<tr:outputFormatted 
+                   		rendered="#{rowa[0].text}"
+                   		value="#{rowa[0].item}"/>
 					<tr:outputFormatted 
 						rendered="#{rowa[0].other}"
 						value="#{rowa[0].item}"/>
@@ -456,7 +467,7 @@ items="#{row.tableColumnNames}"
 					<tr:commandLink
 						rendered="#{rowa[0].node}" 
 						partialSubmit="true"
-						text="#{msgs.node}: #{rowa[0].string}"  
+						text="#{rowa[0].string}"  
 						actionListener="#{sBean.selectNode}">
 						<f:attribute 
 							name="#{sBean.nodePathParName}" 
@@ -471,6 +482,9 @@ items="#{row.tableColumnNames}"
                    	rendered="#{row.valid[1]}"
                    	headerText="#{row.tableColumnNames[1]}">
                    	<tr:panelHorizontalLayout halign="left" >
+                   	<tr:outputFormatted 
+                   		rendered="#{rowa[1].text}"
+                   		value="#{rowa[1].item}"/>
 					<tr:outputFormatted 
 						rendered="#{rowa[1].other}"
 						value="#{rowa[1].item}"/>
@@ -497,7 +511,7 @@ items="#{row.tableColumnNames}"
 					<tr:commandLink
 						rendered="#{rowa[1].node}" 
 						partialSubmit="true"
-						text="#{msgs.node}: #{rowa[1].string}"  
+						text="#{rowa[1].string}"  
 						actionListener="#{sBean.selectNode}">
 						<f:attribute 
 							name="#{sBean.nodePathParName}" 
@@ -512,6 +526,9 @@ items="#{row.tableColumnNames}"
                    	rendered="#{row.valid[2]}"
                    	headerText="#{row.tableColumnNames[2]}">
                    	<tr:panelHorizontalLayout halign="left" >
+                   	<tr:outputFormatted 
+                   		rendered="#{rowa[2].text}"
+                   		value="#{rowa[2].item}"/>
 					<tr:outputFormatted 
 						rendered="#{rowa[2].other}"
 						value="#{rowa[2].item}"/>
@@ -539,7 +556,7 @@ items="#{row.tableColumnNames}"
 					<tr:commandLink
 						rendered="#{rowa[2].node}" 
 						partialSubmit="true"
-						text="#{msgs.node}: #{rowa[2].string}"  
+						text="#{rowa[2].string}"  
 						actionListener="#{sBean.selectNode}">
 						<f:attribute 
 							name="#{sBean.nodePathParName}" 
@@ -554,6 +571,9 @@ items="#{row.tableColumnNames}"
                    	rendered="#{row.valid[3]}"
                    	headerText="#{row.tableColumnNames[3]}">
                    	<tr:panelHorizontalLayout halign="left" >
+                   	<tr:outputFormatted 
+                   		rendered="#{rowa[3].text}"
+                   		value="#{rowa[3].item}"/>
 					<tr:outputFormatted 
 						rendered="#{rowa[3].other}"
 						value="#{rowa[3].item}"/>
@@ -581,7 +601,7 @@ items="#{row.tableColumnNames}"
 					<tr:commandLink
 						rendered="#{rowa[3].node}" 
 						partialSubmit="true"
-						text="#{msgs.node}: #{rowa[3].string}"  
+						text="#{rowa[3].string}"  
 						actionListener="#{sBean.selectNode}">
 						<f:attribute 
 							name="#{sBean.nodePathParName}" 
@@ -596,6 +616,9 @@ items="#{row.tableColumnNames}"
                    	rendered="#{row.valid[4]}"
                    	headerText="#{row.tableColumnNames[4]}">
                    	<tr:panelHorizontalLayout halign="left" >
+                   	<tr:outputFormatted 
+                   		rendered="#{rowa[4].text}"
+                   		value="#{rowa[4].item}"/>
 					<tr:outputFormatted 
 						rendered="#{rowa[4].other}"
 						value="#{rowa[4].item}"/>
@@ -623,7 +646,7 @@ items="#{row.tableColumnNames}"
 					<tr:commandLink
 						rendered="#{rowa[4].node}" 
 						partialSubmit="true"
-						text="#{msgs.node}: #{rowa[4].string}"  
+						text="#{rowa[4].string}"  
 						actionListener="#{sBean.selectNode}">
 						<f:attribute 
 							name="#{sBean.nodePathParName}" 
@@ -638,6 +661,9 @@ items="#{row.tableColumnNames}"
                    	rendered="#{row.valid[5]}"
                    	headerText="#{row.tableColumnNames[5]}">
                    	<tr:panelHorizontalLayout halign="left" >
+                   	<tr:outputFormatted 
+                   		rendered="#{rowa[5].text}"
+                   		value="#{rowa[5].item}"/>
 					<tr:outputFormatted 
 						rendered="#{rowa[5].other}"
 						value="#{rowa[5].item}"/>
@@ -665,7 +691,7 @@ items="#{row.tableColumnNames}"
 					<tr:commandLink
 						rendered="#{rowa[5].node}" 
 						partialSubmit="true"
-						text="#{msgs.node}: #{rowa[5].string}"  
+						text="#{rowa[5].string}"  
 						actionListener="#{sBean.selectNode}">
 						<f:attribute 
 							name="#{sBean.nodePathParName}" 
@@ -680,6 +706,9 @@ items="#{row.tableColumnNames}"
                    	rendered="#{row.valid[6]}"
                    	headerText="#{row.tableColumnNames[6]}">
                    	<tr:panelHorizontalLayout halign="left" >
+                   	<tr:outputFormatted 
+                   		rendered="#{rowa[6].text}"
+                   		value="#{rowa[6].item}"/>
 					<tr:outputFormatted 
 						rendered="#{rowa[6].other}"
 						value="#{rowa[6].item}"/>
@@ -707,7 +736,7 @@ items="#{row.tableColumnNames}"
 					<tr:commandLink
 						rendered="#{rowa[6].node}" 
 						partialSubmit="true"
-						text="#{msgs.node}: #{rowa[6].string}"  
+						text="#{rowa[6].string}"  
 						actionListener="#{sBean.selectNode}">
 						<f:attribute 
 							name="#{sBean.nodePathParName}" 
@@ -722,6 +751,9 @@ items="#{row.tableColumnNames}"
                    	rendered="#{row.valid[7]}"
                    	headerText="#{row.tableColumnNames[7]}">
                    	<tr:panelHorizontalLayout halign="left" >
+                   	<tr:outputFormatted 
+                   		rendered="#{rowa[7].text}"
+                   		value="#{rowa[7].item}"/>
 					<tr:outputFormatted 
 						rendered="#{rowa[7].other}"
 						value="#{rowa[7].item}"/>
@@ -749,7 +781,7 @@ items="#{row.tableColumnNames}"
 					<tr:commandLink
 						rendered="#{rowa[7].node}" 
 						partialSubmit="true"
-						text="#{msgs.node}: #{rowa[7].string}"  
+						text="#{rowa[7].string}"  
 						actionListener="#{sBean.selectNode}">
 						<f:attribute 
 							name="#{sBean.nodePathParName}" 
@@ -764,6 +796,9 @@ items="#{row.tableColumnNames}"
                    	rendered="#{row.valid[8]}"
                    	headerText="#{row.tableColumnNames[8]}">
                    	<tr:panelHorizontalLayout halign="left" >
+                   	<tr:outputFormatted 
+                   		rendered="#{rowa[8].text}"
+                   		value="#{rowa[8].item}"/>
 					<tr:outputFormatted 
 						rendered="#{rowa[8].other}"
 						value="#{rowa[8].item}"/>
@@ -791,7 +826,7 @@ items="#{row.tableColumnNames}"
 					<tr:commandLink
 						rendered="#{rowa[8].node}" 
 						partialSubmit="true"
-						text="#{msgs.node}: #{rowa[8].string}"  
+						text="#{rowa[8].string}"  
 						actionListener="#{sBean.selectNode}">
 						<f:attribute 
 							name="#{sBean.nodePathParName}" 

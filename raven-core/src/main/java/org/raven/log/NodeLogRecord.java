@@ -1,5 +1,7 @@
 package org.raven.log;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Comparator;
 
 import org.raven.store.IRecord;
@@ -33,6 +35,17 @@ public class NodeLogRecord implements Comparator<NodeLogRecord>, IRecord
 	private LogLevel level;
 	private String message;
 	private String nodePath;
+	
+	public static NodeLogRecord getObjectFromRecord(ResultSet rs) throws SQLException
+	{
+		NodeLogRecord nlr = new NodeLogRecord();
+		nlr.setFd(rs.getDate(NodeLogRecord.FD).getTime());
+		nlr.setNodeId(rs.getInt(NodeLogRecord.NODE_ID));
+		nlr.setNodePath(rs.getString(NodeLogRecord.NODE_PATH));
+		nlr.setLevel(LogLevel.values()[rs.getInt(NodeLogRecord.LEVEL)]);
+		nlr.setMessage(rs.getString(NodeLogRecord.MESSAGE));
+		return nlr;
+	}
 	
 	public NodeLogRecord(int nodeId,String nodePath,LogLevel level,String message)
 	{

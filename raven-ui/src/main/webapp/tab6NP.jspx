@@ -57,13 +57,13 @@
               				immediate="true" 
               				partialSubmit="true"/>
               			<tr:commandNavigationItem 
-              				selected="true" 
               				rendered="#{cNode.allowNodeEdit}"
               				action="tabLogsTab"
               				text="#{msgs.log}" 
               				partialSubmit="true" 
               				immediate="true"/>
               			<tr:commandNavigationItem 
+              				selected="true" 
               				rendered="#{cNode.allowViewAudit}"
               				action="tabAudit"
               				text="#{msgs.audit}" 
@@ -75,8 +75,8 @@
             	<tr:statusIndicator/>
             </tr:panelGroupLayout>
             	
-        	<f:subview id="body" rendered="#{cNode.allowNodeEdit}" >
-            	<jsp:include page="tabLogsTab.jspx" flush="true"/>
+        	<f:subview id="body" rendered="#{cNode.allowViewAudit}" >
+            	<jsp:include page="tabAudit.jspx" flush="true"/>
             </f:subview>
             
         </tr:panelGroupLayout>

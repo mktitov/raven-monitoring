@@ -80,7 +80,13 @@ public abstract class AbstractNodeWrapper
 		if(getNode().getStatus()==Node.Status.STARTED) return "Started";
 		return "unknown";
 	}
-*/	
+*/
+	
+	public boolean isAllowViewAudit()
+	{
+		return userAcl.isSuperUser();
+	}
+	
 	public boolean isAllowControl()
 	{
 		if( (userAcl.getAccessForNode(node) & AccessControl.CONTROL) ==0) return false;

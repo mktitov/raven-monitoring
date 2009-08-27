@@ -64,6 +64,12 @@
               		text="#{msgs.log}" 
               		partialSubmit="true" 
               		immediate="true"/>
+       			<tr:commandNavigationItem 
+       				rendered="#{cNode.allowViewAudit}"
+      				action="tabAudit"
+      				text="#{msgs.audit}" 
+       				partialSubmit="true" 
+       				immediate="true"/>
             </tr:navigationPane>
             </tr:form>
             <tr:spacer width="5"/>

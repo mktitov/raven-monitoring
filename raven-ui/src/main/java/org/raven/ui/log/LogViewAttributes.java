@@ -1,10 +1,7 @@
 package org.raven.ui.log;
 
-import org.jrobin.core.RrdException;
-import org.jrobin.core.Util;
 import org.raven.log.LogLevel;
 import org.raven.util.Utl;
-import java.util.Date;
 
 public class LogViewAttributes 
 {
@@ -49,6 +46,7 @@ public class LogViewAttributes
 		this.mesFilter = mesFilter;
 	}
 
+	/*
 	public long getDefaultFdTime()
 	{
 		return System.currentTimeMillis()-1000*60*60*24;
@@ -69,15 +67,15 @@ public class LogViewAttributes
 			return d.getTime();
 		}
 	}
-	
+*/	
 	public long getFdTime()
 	{
-		return convert(fd);
+		return Utl.convert(fd);
 	}
 
 	public long getTdTime()
 	{
-		return convert(td);
+		return Utl.convert(td);
 	}
 	
 	public String getFd() {

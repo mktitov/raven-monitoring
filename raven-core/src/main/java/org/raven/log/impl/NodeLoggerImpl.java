@@ -17,11 +17,11 @@
 
 package org.raven.log.impl;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.sql.rowset.CachedRowSet;
 import org.raven.log.LogLevel;
 import org.raven.log.NodeLogRecord;
 import org.raven.log.NodeLogger;
@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Sergey Pinevskiy
  */
-public class NodeLoggerImpl extends AbstractDbWorker implements NodeLogger, Runnable
+public class NodeLoggerImpl extends AbstractDbWorker<NodeLogRecord> implements NodeLogger, Runnable
 {
 	private static Logger logger = LoggerFactory.getLogger(NodeLoggerImpl.class);
 	private static final String NODES_MARKER = "#";
@@ -56,41 +56,15 @@ public class NodeLoggerImpl extends AbstractDbWorker implements NodeLogger, Runn
     	setStoreDays(30);
     	init();
     }
+    
+	protected NodeLogRecord getObjectFromRecord(ResultSet rs) throws SQLException 
+	{
+		return NodeLogRecord.getObjectFromRecord(rs);
+	}
 
 	public void write(Node node, LogLevel level, String message) 
 	{
-		writeToQueue(new NodeLogRecord(node.getId(),node.getPath(),level,message));
-	}
-
-	private List<NodeLogRecord> selectLogRecordsST(String sql,Object[] args)
-	{
-		CachedRowSet crs = select(sql, args);
-		ArrayList<NodeLogRecord> recs = new ArrayList<NodeLogRecord>(); 
-        if(crs==null) return recs;
-        try {
-        	while(crs.next())
-        	{ 
-        		NodeLogRecord nlr = new NodeLogRecord();
-        		nlr.setFd(crs.getDate(NodeLogRecord.FD).getTime());
-        		nlr.setNodeId(crs.getInt(NodeLogRecord.NODE_ID));
-        		nlr.setNodePath(crs.getString(NodeLogRecord.NODE_PATH));
-        		nlr.setLevel(LogLevel.values()[crs.getInt(NodeLogRecord.LEVEL)]);
-        		nlr.setMessage(crs.getString(NodeLogRecord.MESSAGE));
-        		recs.add(nlr);
-        	}
-        } catch(SQLException e) {logger.error("on selectLogRecordsST:",e);}
-        return recs;
-	}
-	
-	private List<NodeLogRecord> selectLogRecordsMT(List<String> tables, String sql, Object[] args)
-	{
-		ArrayList<NodeLogRecord> recs = new ArrayList<NodeLogRecord>();
-		for(String tableName : tables)
-		{
-			String sqlx = sql.replaceAll(TABLE_MARKER, tableName);
-			recs.addAll(selectLogRecordsST(sqlx, args));
-		}
-		return recs;
+		write(new NodeLogRecord(node.getId(),node.getPath(),level,message));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -124,7 +98,7 @@ public class NodeLoggerImpl extends AbstractDbWorker implements NodeLogger, Runn
 				args = new Object[]{fd,td,level.ordinal(),(Integer)nodesId};
 			}
 		names = getTablesNames(fd.getTime(), td.getTime());
-		return selectLogRecordsMT(names, sql, args);
+		return selectObjectsMT(names, sql, args);
 	}
 	
     public synchronized void setNodeLoggerNode(NodeLoggerNode nodeLoggerNode)

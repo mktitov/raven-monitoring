@@ -47,10 +47,19 @@
           		value="#{row.uid}"/>
 	   	</tr:commandLink>
 	</f:facet>
+	
+<!-- show ravenText --> 
+	  	<f:facet name="ravenText">
+	  	  	<tr:panelHorizontalLayout halign="left" >
+	  	  		<tr:spacer width="10" />
+				<tr:outputFormatted value="#{row.viewableObject.data}"/>
+			</tr:panelHorizontalLayout>
+		</f:facet>
+	
 <!-- show nodeUrl --> 
   	<f:facet name="nodeUrl">
 		<tr:commandLink 
-			text="#{msgs.node}: #{row.node.name}" 
+			text="#{row.node.name}" 
 			actionListener="#{sBean.selectNode}">
 			<f:attribute 
 				name="#{sBean.nodePathParName}" 

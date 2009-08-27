@@ -21,6 +21,7 @@ public class ViewableObjectWrapper
     public static final String NAVIGATE_TO = "navigateToNode";
 	public static final String NODE_URL = "nodeUrl";
 	public static final String RAVEN_TABLE_GR = "ravenTable";
+	public static final String RAVEN_TEXT = "ravenText";
 	public static final String IMAGE = "image";
 	public static final String UID_DELIM = "@"; 
 	private ViewableObject viewableObject = null;
@@ -94,6 +95,13 @@ public class ViewableObjectWrapper
 		return false;
 	}
 
+	public boolean isText()
+	{
+		if(isViewable() && viewableObject.getMimeType().equals(Viewable.RAVEN_TEXT_MIMETYPE))
+			return true;
+		return false;
+	}
+	
 	public boolean isFile()
 	{
 		if(!isViewable()) return false;
@@ -156,6 +164,7 @@ public class ViewableObjectWrapper
 	{
 		if(isNodeUrl()) return NODE_URL;
 		if( isTable() ) return RAVEN_TABLE_GR;
+		if(isText()) return RAVEN_TEXT;
 		String mtype = viewableObject.getMimeType();
 		String[] sa = mtype.split("/");
 		//if(IMAGE.equals(sa[0])) return IMAGE;

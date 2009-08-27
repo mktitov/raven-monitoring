@@ -180,10 +180,12 @@
     <navigation-case>
       <from-outcome>logout</from-outcome>
       <to-view-id>/logout.html</to-view-id>
+      <redirect/>
     </navigation-case>
     <navigation-case>
       <from-outcome>logout_ru</from-outcome>
       <to-view-id>/logout_ru.html</to-view-id>
+      <redirect/>
     </navigation-case>
   </navigation-rule>
 
@@ -208,6 +210,10 @@
     <navigation-case>
       <from-outcome>tabLogsTab</from-outcome>
       <to-view-id>/tab5NP.jspx</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>tabAudit</from-outcome>
+      <to-view-id>/tab6NP.jspx</to-view-id>
     </navigation-case>
   </navigation-rule>
 

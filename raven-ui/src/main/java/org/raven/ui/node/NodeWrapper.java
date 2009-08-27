@@ -82,6 +82,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	public static final String FROM_TO = "'{}' >> '{}'";
 	public static final String FROMX_TO = "{} : '{}' >> '{}'";
 	public static final String TO = ">> '{}'";
+	public static final String ATTEMPT = "attempt:: ";
     
     protected static final Logger logger = LoggerFactory.getLogger(NodeWrapper.class);
 
@@ -94,6 +95,12 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		new SelectItem(LogLevel.WARN),	
 		new SelectItem(LogLevel.ERROR)	
 		};
+    private static final Integer attrRename = 1;
+    private static final Integer attrChValue = 2;
+    private static final Integer attrChDsc = 3;
+    private static final Integer attrChSubType = 4;
+    private static final Integer attrChTemplExprFlag = 5;
+    
     private static final int ALL_NODES = -1;
 //	public static final String ATTR = "attribute";
 	public static final String strAttribute = Messages.getUiMessage(Messages.ATTRIBUTE);    
@@ -113,7 +120,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	private boolean needRefreshVO = false;
 	//private int refreshViewInteval = 0;
 	private boolean refreshPressed = false;
-	private HashMap<Integer,AuditRecord> unsavedChanges = new HashMap<Integer,AuditRecord>();
+	private HashMap<Integer,HashMap<Integer,AuditRecord>> unsavedChanges = new HashMap<Integer,HashMap<Integer,AuditRecord>>();
 //	private List<AuditRecord> unsavedAuditRecords = new ArrayList<AuditRecord>();
 	private Node voSource = null;
 	private boolean voSourceInited = false;
@@ -380,7 +387,10 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	{
 		if( ! isAllowControl() ) return "err";
 		if(!isCanNodeStop()) return "err";
-		try { getNode().stop(); }
+		try { 
+			getNode().stop();
+			auditor.write(getNode(), getAccountName(), Action.NODE_STOP, null);
+		}
 		catch (NodeError e) 
 		{
 			logger.error("on stop {} : {}",getNodeName(),e.getMessage()); 
@@ -535,7 +545,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		  Iterator<NodeAttribute> itn = savedAttrs.iterator();
 		  Iterator<Attr> ita = editingAttrs.iterator();
 		  NodeAttribute na = null;
-		  AuditRecord aRec = null;
+		  HashMap<Integer,AuditRecord> aRec = new HashMap<Integer,AuditRecord>();
 		  while(itn.hasNext())
 		  {
 			  if(!ita.hasNext()) break;
@@ -571,19 +581,25 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 				  boolean prevVHTInit = false;
 				  String prevExpr = null;
 				  String prevVHT = null;
+				  AuditRecord a;
 				  if( (save&1) !=0 )
 				  {
-					  aRec = auditor.prepare(getNode(), getAccountName(), Action.ATTR_CH_VALUE, FROMX_TO, na.getName(), na.getValue(),at.getValue());
+					  aRec.put(attrChValue,auditor.prepare(getNode(), getAccountName(), 
+						  Action.ATTR_CH_VALUE, FROMX_TO, na.getName(), 
+						  getNotNull(na.getValue()),getNotNull(at.getValue())));
 					  na.setValue(at.getValue());
 				  }	  
 				  if( (save&2) !=0 )
 				  {
-					  aRec = auditor.prepare(getNode(), getAccountName(), Action.ATTR_CH_DSC, FROMX_TO, na.getName() ,na.getDescription() ,at.getDescription());
+					  aRec.put(attrChDsc,auditor.prepare(getNode(), getAccountName(), 
+						  Action.ATTR_CH_DSC, FROMX_TO, na.getName() ,
+						  getNotNull(na.getDescription()) ,getNotNull(at.getDescription())));
 					  na.setDescription(at.getDescription());
 				  }	  
 				  if( (save&4) !=0 )
 				  {
-					  aRec = auditor.prepare(getNode(), getAccountName(), Action.ATTR_RENAME, FROM_TO, na.getName(), at.getName());
+					  aRec.put(attrRename,auditor.prepare(getNode(), getAccountName(), 
+							  Action.ATTR_RENAME, FROM_TO, na.getName(), at.getName()));
 					  na.setName(at.getName());
 				  }	  
 				  if( (save&8) !=0 )
@@ -591,14 +607,16 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 					  prevExprInit = true;
 					  prevExpr = na.getRawValue();
 					  needNodeCheck = true;
-					  try {
-						  aRec = auditor.prepare(getNode(), getAccountName(), Action.ATTR_CH_VALUE, FROMX_TO, na.getName(), prevExpr, at.getExpression());
-						  na.setValue(at.getExpression());
-					  }
+					  a = auditor.prepare(getNode(), getAccountName(), 
+						  Action.ATTR_CH_VALUE, FROMX_TO, na.getName(), 
+						  getNotNull(prevExpr), getNotNull(at.getExpression()));
+					  aRec.put(attrChValue,a);
+					  try { na.setValue(at.getExpression()); }
 					  catch(Exception e) 
 					  {
 						  na.setValue(prevExpr);
-						  aRec = null;
+						  aRec.remove(attrChValue);
+						  a.setMessage(ATTEMPT+a.getMessage());
 						  throw e;
 					  }
 					  
@@ -608,22 +626,24 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 					  prevVHTInit = true;
 					  prevVHT = na.getValueHandlerType();
                 	  needNodeCheck = true;
-                	  try 
-                	  {
-                		  aRec = auditor.prepare(getNode(), getAccountName(), Action.ATTR_CH_SUBTYPE, FROMX_TO, na.getName(), prevVHT, at.getValueHandlerType());
-                		  na.setValueHandlerType(at.getValueHandlerType()); 
-                	  }
+            		  a = auditor.prepare(getNode(), getAccountName(),Action.ATTR_CH_SUBTYPE, 
+            				FROMX_TO, na.getName(), getNotNull(prevVHT),
+                  			getNotNull(at.getValueHandlerType()));  
+            		  aRec.put(attrChSubType, a);
+                	  try { na.setValueHandlerType(at.getValueHandlerType()); }
 					  catch(Exception e) 
 					  {
 						  na.setValueHandlerType(prevVHT);
-						  aRec = null;
+						  a.setMessage(ATTEMPT+a.getMessage());
 						  throw e;
 					  }
                   }	  
                   if( (save&32) !=0)
                   {
                 	  na.setTemplateExpression(at.isTemplateExpression());
-                	  aRec = auditor.prepare(getNode(), getAccountName(), Action.ATTR_CH_VALUE, FROMX_TO, na.getName()+"<TemplateExpression>" ,""+na.isTemplateExpression(), ""+at.isTemplateExpression());            	  
+                	  aRec.put(attrChTemplExprFlag,auditor.prepare(getNode(), getAccountName(), 
+                			  Action.ATTR_CH_VALUE, FROMX_TO, na.getName()+"<TemplateExpression>" ,
+                			  ""+na.isTemplateExpression(), ""+at.isTemplateExpression()));            	  
                   }
 				  if( (save&64) !=0)
                   {
@@ -632,8 +652,10 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
                       dataFile.setFilename(file.getName());
                       dataFile.setMimeType(file.getContentType());
                       dataFile.setDataStream(file.getInputStream());
-                      logger.info("Uploaded: '{}'; size:{} ",file.getName(),file.getSize());                      
-                      aRec = auditor.prepare(getNode(), getAccountName(), Action.ATTR_CH_VALUE, FROMX_TO, na.getName()+"<File>", ".", file.getName());            	  
+                      logger.info("Uploaded: '{}'; size:{} ",file.getName(),file.getSize());
+                      a = auditor.prepare(getNode(), getAccountName(), Action.ATTR_CH_VALUE, 
+                    		  FROMX_TO, na.getName()+"<File>", ".", file.getName());
+                      aRec.put(attrChValue, a);            	  
                       //file.dispose();
                   }
 				  if(needNodeCheck)
@@ -651,7 +673,16 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 								if(prevVHTInit) na.setValueHandlerType(prevVHT);
 								if(ret.length()!=0) ret.append(". ");
 								ret.append(strAttribute+" '"+at.getName()+"' : "+ Messages.getUiMessage(Messages.ACCESS_DENIED));
-								aRec = null;
+								if(prevExprInit)
+								{
+									a = aRec.get(attrChValue);
+									a.setMessage(ATTEMPT+a.getMessage());
+								}	
+								if(prevVHTInit)
+								{
+									a = aRec.get(attrChSubType);
+									a.setMessage(ATTEMPT+a.getMessage());
+								}	
 								continue;  
 							}
 						}
@@ -661,7 +692,9 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 				  {
 					  getTree().saveNodeAttribute(na);
 					  clearUnsavedChanges(na.getId());
-					  if(aRec!=null) auditor.write(aRec); 
+					  if(aRec!=null)
+						  for(AuditRecord ar : aRec.values()) 
+							  auditor.write(ar); 
 					  this.afterWriteAttrubutes();
 				  }	  
 				  	else addUnsavedChanges(na.getId(),aRec);
@@ -1005,7 +1038,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	 unsavedChanges.clear();
 	}
 	
-	public void addUnsavedChanges(int attrId, AuditRecord aRec) 
+	public void addUnsavedChanges(int attrId, HashMap<Integer,AuditRecord> aRec) 
 	{
 	 unsavedChanges.put(attrId, aRec);
 	}

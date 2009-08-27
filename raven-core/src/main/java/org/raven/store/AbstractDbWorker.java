@@ -1,17 +1,22 @@
 package org.raven.store;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.regex.Pattern;
-
+import javax.sql.rowset.CachedRowSet;
 import org.raven.tree.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AbstractDbWorker extends AbstractTablesManager implements Runnable 
+public abstract class AbstractDbWorker<T extends IRecord> extends AbstractTablesManager implements Runnable 
 {
 	private static Logger logger = LoggerFactory.getLogger(AbstractDbWorker.class);
 //	public static final int MAX_NODE_PATH_LENGTH =   512;
+	
 	public static final String FIELDS_MARKER = "$FIELDS$";
 	public static final String VALUES_MARKER = "$VALUES$";
 	public static final String STARTED = "{} started !";
@@ -19,7 +24,7 @@ public abstract class AbstractDbWorker extends AbstractTablesManager implements 
 	public static final String _sInsertToTable = "insert into @("+FIELDS_MARKER+") values("+VALUES_MARKER+")";
 
 	private String sInsertToTable;
-    private Queue<IRecord> queue;
+    private Queue<T> queue;
     private String name;
     private INodeHasPool node;
     private boolean stopFlag = false;
@@ -28,6 +33,8 @@ public abstract class AbstractDbWorker extends AbstractTablesManager implements 
     protected abstract String[] getFields();
 	
 	protected abstract String[] getStCreateTable();
+	
+	protected abstract T getObjectFromRecord(ResultSet rs) throws SQLException; 
 
 	public static String getFieldsList(String[] fields, boolean queryMark)
 	{
@@ -46,6 +53,28 @@ public abstract class AbstractDbWorker extends AbstractTablesManager implements 
 		return getFieldsList(fields, false);
 	}
 	
+	protected List<T> selectObjects(String sql,Object[] args)
+	{
+		ArrayList<T> recs = new ArrayList<T>();
+		CachedRowSet crs = select(sql, args);
+        if(crs==null) return recs;
+        try {
+        	while(crs.next())
+        		recs.add(getObjectFromRecord(crs));
+        } catch(SQLException e) {logger.error("on selectObjects:",e);}
+        return recs;
+	}
+	
+	protected List<T> selectObjectsMT(List<String> tables, String sql, Object[] args)
+	{
+		ArrayList<T> recs = new ArrayList<T>();
+		for(String tableName : tables)
+		{
+			String sqlx = sql.replaceAll(TABLE_MARKER, tableName);
+			recs.addAll(selectObjects(sqlx, args));
+		}
+		return recs;
+	}
 	
 	private void go()
 	{
@@ -72,7 +101,7 @@ public abstract class AbstractDbWorker extends AbstractTablesManager implements 
     	sInsertToTable = sInsertToTable.replaceFirst(Pattern.quote(VALUES_MARKER), qmList);
     	
     	super.init();
-    	queue = new ConcurrentLinkedQueue<IRecord>();
+    	queue = new ConcurrentLinkedQueue<T>();
     	go();
     }
     
@@ -90,7 +119,7 @@ public abstract class AbstractDbWorker extends AbstractTablesManager implements 
     	return true;
     }
 
-    public void writeToQueue(IRecord rec) 
+    public void write(T rec) 
 	{
 		if(dbWorkAllowed())
 		{
@@ -105,7 +134,7 @@ public abstract class AbstractDbWorker extends AbstractTablesManager implements 
 	}
 	
 	//abstract
-	protected boolean insert(IRecord rec)
+	protected boolean insert(T rec)
 	{
 		String tname = getTableName(rec);
 		String sql = sInsertToTable.replaceAll(TABLE_MARKER, tname);
@@ -116,7 +145,7 @@ public abstract class AbstractDbWorker extends AbstractTablesManager implements 
 	
 	private boolean writeMessagesFromQueue()
 	{
-		IRecord rec;
+		T rec;
 		while( (rec=queue.poll())!=null )
 		{
 			insert(rec);

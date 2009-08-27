@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<!-- 
+ *  Copyright 2008 Sergey Pinevskiy.
+ * 
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ * 
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *  under the License.
+ -->
+
+<jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
+          xmlns:f="http://java.sun.com/jsf/core"
+          xmlns:tr="http://myfaces.apache.org/trinidad" >
+<f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
+<!-- ********************* -->
+<!-- view audit attributes -->
+<!-- ********************* -->
+<tr:form>			
+<tr:panelHorizontalLayout 
+	halign="start" 
+	valign="top">
+	<tr:panelCaptionGroup captionText="#{msgs.auditViewAttributes}" >
+		<tr:panelFormLayout 
+			labelWidth="15%" 
+			rows="3">
+			<tr:inputText 
+				columns="20"
+				label="#{msgs.dateFrom}" 
+				value="#{sBean.auditViewFd}" />
+			<tr:inputText 
+				columns="20"
+				label="#{msgs.dateTo}" 
+				value="#{sBean.auditViewTd}" />
+			<tr:inputText 
+				columns="20"
+				label="#{msgs.login}" 
+				value="#{sBean.auditLogin}" />
+			<tr:selectOneChoice 
+            	id="atList"
+                label="#{msgs.actionType}" 
+                value="#{sBean.auditActionType}" >
+            	<f:selectItems value="#{sBean.auditActionTypeSelectItems}" />
+            </tr:selectOneChoice>
+			<tr:selectOneChoice 
+            	id="aList"
+                label="#{msgs.action}" 
+                value="#{sBean.auditAction}" >
+            	<f:selectItems value="#{sBean.auditActionSelectItems}" />
+            </tr:selectOneChoice>
+			<tr:inputText 
+				columns="10"
+				label="#{msgs.nodeId}" 
+				value="#{sBean.auditNodeId}" />
+			<tr:inputText 
+				label="#{msgs.nodePath}" 
+				value="#{sBean.auditNodePath}" />
+   		</tr:panelFormLayout>
+   		<tr:spacer height="10"/>
+		<tr:panelButtonBar halign="center" >   		
+			<tr:commandButton
+				id="refresh" 
+				text="#{msgs.refresh}" 
+				action="#{sBean.clearAuditData}" />
+		</tr:panelButtonBar>   		
+	</tr:panelCaptionGroup>
+	<tr:spacer width="40"/>
+</tr:panelHorizontalLayout>
+<tr:separator></tr:separator>
+
+<tr:table 
+	width="100%" 
+  	summary="NodesAudit"  
+  	rowBandingInterval="1"
+  	value="#{sBean.auditData}" 
+  	var="row" 
+  	rowSelection="none" 
+  	id="NodesAudit" >
+    <tr:column 
+    	inlineStyle="width:15%;" 
+    	headerText="#{msgs.date}">
+	   	<tr:outputText
+			inlineStyle="font-size: 80%;"	       
+	   		value="#{row.fdString}" />
+    </tr:column>
+    
+    <tr:column 
+    	headerText="#{msgs.nodeId}">
+	    <tr:outputText
+			inlineStyle="font-size: 80%;"	       
+	     	value="#{row.nodeId}"/>
+	</tr:column>
+    <tr:column 
+    	headerText="#{msgs.nodePath}">
+	    <tr:outputText
+			inlineStyle="font-size: 80%;"	       
+	     	value="#{row.nodePath}"/>
+	</tr:column>
+    <tr:column 
+    	headerText="#{msgs.login}">
+	    <tr:outputText
+			inlineStyle="font-size: 80%;"	       
+	     	value="#{row.login}"/>
+	</tr:column>
+    <tr:column 
+    	headerText="#{msgs.actionType}">
+	    <tr:outputText
+			inlineStyle="font-size: 80%;"	       
+	     	value="#{row.actionType}"/>
+	</tr:column>
+    <tr:column 
+    	headerText="#{msgs.action}">
+	    <tr:outputText
+			inlineStyle="font-size: 80%;"	       
+	     	value="#{row.action}"/>
+	</tr:column>
+    <tr:column 
+    	headerText="#{msgs.message}">
+	    <tr:outputText
+			inlineStyle="font-size: 80%;"	       
+	     	value="#{row.shortMessage}"/>
+	</tr:column>
+ 	
+	<f:facet name="detailStamp">
+	  	<tr:outputText
+	   		inlineStyle="font-size: 80%;"	       
+		    value="#{row.message}"/>
+	    </f:facet>
+	    
+</tr:table>
+</tr:form>			
+
+</jsp:root>

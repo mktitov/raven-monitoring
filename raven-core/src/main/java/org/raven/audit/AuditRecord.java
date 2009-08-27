@@ -1,5 +1,7 @@
 package org.raven.audit;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Comparator;
 
 import org.raven.store.IRecord;
@@ -10,7 +12,7 @@ public class AuditRecord implements Comparator<AuditRecord>, IRecord
 {
 	public static final int MAX_MESSAGE_LENGTH   = 10240;
 	public static final int MAX_NODE_PATH_LENGTH =   512;
-	public static final int MAX_SHORT_MES_LENGTH = 200;
+	public static final int MAX_SHORT_MES_LENGTH = 30;
 	public static final String SHORT_MES_TAIL = "...";
 	public static final String FD = "fd";
 	public static final String NODE_ID = "nodeId";
@@ -67,6 +69,18 @@ public class AuditRecord implements Comparator<AuditRecord>, IRecord
 	{
 	}
 
+	public static AuditRecord getObjectFromRecord(ResultSet rs) throws SQLException 
+	{
+			AuditRecord rec = new AuditRecord();
+        	rec.setFd(rs.getDate(AuditRecord.FD).getTime());
+        	rec.setNodeId(rs.getInt(AuditRecord.NODE_ID));
+        	rec.setNodePath(rs.getString(AuditRecord.NODE_PATH));
+        	rec.setLogin(rs.getString(AuditRecord.LOGIN));
+        	rec.setAction(Action.values()[rs.getInt(AuditRecord.ACTION)]);
+        	rec.setMessage(rs.getString(AuditRecord.MESSAGE));
+        	return rec;
+	}
+	
 	public Object[] getDataForInsert() 
 	{
 		String mes = getMessage();
@@ -150,7 +164,7 @@ public class AuditRecord implements Comparator<AuditRecord>, IRecord
 		return login;
 	}
 
-	protected void setLogin(String user) {
+	public void setLogin(String user) {
 		this.login = user;
 	}
 
@@ -162,5 +176,8 @@ public class AuditRecord implements Comparator<AuditRecord>, IRecord
 		return action;
 	}
 
+	public void setAction(Action a) {
+		action = a;
+	}
 	
 }
