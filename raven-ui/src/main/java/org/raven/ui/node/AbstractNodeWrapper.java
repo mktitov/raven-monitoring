@@ -183,6 +183,7 @@ public abstract class AbstractNodeWrapper
 	  {
 		 Node n = getNode();
 		 if(n==null) return "isNull";
+		 if(n.getParent()==null) return "@";
 		 return n.getName();
 	  }
 

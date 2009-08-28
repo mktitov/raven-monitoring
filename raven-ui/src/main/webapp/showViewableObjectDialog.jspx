@@ -50,10 +50,7 @@
 	
 <!-- show ravenText --> 
 	  	<f:facet name="ravenText">
-	  	  	<tr:panelHorizontalLayout halign="left" >
-	  	  		<tr:spacer width="10" />
 				<tr:outputFormatted value="#{row.viewableObject.data}"/>
-			</tr:panelHorizontalLayout>
 		</f:facet>
 	
 <!-- show nodeUrl --> 

@@ -262,7 +262,7 @@ action="#{sBean.reloadRightFrame}"
 <tr:form id="ShowWN">
 <tr:table width="100%"
 		horizontalGridVisible="false" 
-		verticalGridVisible="false"
+		verticalGridVisible="false" 
  		var="row" 
  		varStatus="vnstat"
  		value="#{cNode.viewableObjects}"  
@@ -274,7 +274,7 @@ partialTriggers=":poolStatus"
  --> 
  <tr:column 
  	id="sw_column" 
- 	align="center">
+ 	align="left">
  
   	<tr:switcher 
   		id="switcher" 
@@ -282,35 +282,38 @@ partialTriggers=":poolStatus"
   		defaultFacet="default">
 
   		<f:facet name="default">
-	  	  	<tr:panelHorizontalLayout halign="left" >
-	  	  	<tr:spacer width="30" />
-			<tr:commandLink 
-				text="#{msgs.file}: #{row.idVO}" 
-				actionListener="#{otherVO.export}">
-				<f:attribute 
-					name="nodeId" 
-					value="#{row.nodeId}"/>
-				<f:attribute 
-					name="uid" 
-					value="#{row.uid}"/>
-			</tr:commandLink>
-			</tr:panelHorizontalLayout>
+	  	  	<tr:panelHorizontalLayout halign="left" > 
+	  	  		<tr:spacer width="40" height="0" />
+				<tr:commandLink 
+					inlineStyle="font-style: italic; "
+					text="#{msgs.file}: #{row.idVO}" 
+					actionListener="#{otherVO.export}">
+					<f:attribute 
+						name="nodeId" 
+						value="#{row.nodeId}"/>
+					<f:attribute 
+						name="uid" 
+						value="#{row.uid}"/>
+				</tr:commandLink>
+				</tr:panelHorizontalLayout>
   		</f:facet>
 
 <!-- show ravenText --> 
 	  	<f:facet name="ravenText">
-	  	  	<tr:panelHorizontalLayout halign="left" >
-	  	  		<tr:spacer width="10" />
+	  		<tr:panelHorizontalLayout halign="left" >
+	  	  		<tr:spacer width="30" height="0" />
 				<tr:outputFormatted value="#{row.viewableObject.data}"/>
 			</tr:panelHorizontalLayout>
 		</f:facet>
 
 <!-- show nodeUrl --> 
 	  	<f:facet name="nodeUrl">
-	  	  	<tr:panelHorizontalLayout halign="left" >
-	  	  	<tr:spacer width="10" />
+	  	<tr:panelGroupLayout layout="vertical">
+	  	<tr:spacer width="0" height="4" />
+	  	  	<tr:panelHorizontalLayout  halign="left" >
+	  	  	<tr:spacer width="10" height="0" />
 			<tr:commandLink
-				inlineStyle="font-weight: bold;"
+				inlineStyle="font-weight: bold; font-size: 110%;"
 				rendered="#{vnstat.index==0}" 
 				partialSubmit="true"
 				text="#{row.node.name}"  
@@ -322,6 +325,7 @@ partialTriggers=":poolStatus"
 	  	  	
 			<tr:commandLink 
 				rendered="#{vnstat.index!=0}" 
+				inlineStyle="font-size: 110%;"
 				partialSubmit="true"
 				text="#{row.node.name}"  
 				actionListener="#{sBean.selectNode}">
@@ -330,11 +334,13 @@ partialTriggers=":poolStatus"
 					value="#{row.navigateTo}"/>
 			</tr:commandLink>
 			</tr:panelHorizontalLayout>
+	  	</tr:panelGroupLayout>
+			
 		</f:facet>
 <!-- show image -->
 		<f:facet name="image">
 	  	  	<tr:panelHorizontalLayout halign="left" >
-	  	  	<tr:spacer width="30" />
+	  	  	<tr:spacer width="30" height="0" />
 			<tr:panelGroupLayout layout="vertical"  > 
 			<tr:outputFormatted 
 				inlineStyle="COLOR: green; FONT-STYLE: italic;" 
@@ -357,7 +363,7 @@ partialTriggers=":poolStatus"
 <!-- show table varStatus="vStat2" -->  
 	<f:facet name="ravenTable">
 	  	  	<tr:panelHorizontalLayout halign="left" inlineStyle="width:100%" >
-	  	  	<tr:spacer width="30" />
+	  	  	<tr:spacer width="30" height="0" />
 	
 		<tr:panelGroupLayout layout="vertical"  >
 		

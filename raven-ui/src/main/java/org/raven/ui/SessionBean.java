@@ -691,8 +691,8 @@ public class SessionBean
  	
  	public int getRefreshTreeInterval()
  	{
- 		if(isRefreshTree()) return 10000;
- 		return 100000000;
+ 		if(isRefreshTree()) return 20000;
+ 		return 2000000000;
  	}
 
 	public CoreTree getCoreTree() { return coreTree; }

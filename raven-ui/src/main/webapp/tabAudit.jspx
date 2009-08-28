@@ -18,8 +18,27 @@
 
 <jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
           xmlns:f="http://java.sun.com/jsf/core"
-          xmlns:tr="http://myfaces.apache.org/trinidad" >
+          xmlns:trh="http://myfaces.apache.org/trinidad/html"
+          xmlns:tr="http://myfaces.apache.org/trinidad"
+          xmlns:c="http://java.sun.com/jsp/jstl/core" 
+          xmlns:h="http://java.sun.com/jsf/html"
+          xmlns:s="http://myfaces.apache.org/sandbox" 
+          xmlns:t="http://myfaces.apache.org/tomahawk"  
+          >
 <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
+<trh:script text="function submitEnter(commandId,e)
+{
+	var keycode;
+    if (window.event) keycode = window.event.keyCode;
+   	else if(e) keycode = e.which;
+        	else return true;
+    if (keycode == 13) {
+    	document.getElementById(commandId).click();
+       	return false;
+   	} 
+    return true;
+}" />
+
 <!-- ********************* -->
 <!-- view audit attributes -->
 <!-- ********************* -->
@@ -33,17 +52,21 @@
 			rows="3">
 			<tr:inputText 
 				columns="20"
+		    	onkeypress="return submitEnter('#{defButtonRA.id}',event)"
 				label="#{msgs.dateFrom}" 
 				value="#{sBean.auditViewFd}" />
 			<tr:inputText 
+		    	onkeypress="return submitEnter('#{defButtonRA.id}',event)"
 				columns="20"
 				label="#{msgs.dateTo}" 
 				value="#{sBean.auditViewTd}" />
 			<tr:inputText 
+		    	onkeypress="return submitEnter('#{defButtonRA.id}',event)"
 				columns="20"
 				label="#{msgs.login}" 
 				value="#{sBean.auditLogin}" />
 			<tr:selectOneChoice 
+		    	onkeypress="return submitEnter('#{defButtonRA.id}',event)"
             	id="atList"
                 label="#{msgs.actionType}" 
                 value="#{sBean.auditActionType}" >
@@ -51,22 +74,35 @@
             </tr:selectOneChoice>
 			<tr:selectOneChoice 
             	id="aList"
+		    	onkeypress="return submitEnter('#{defButtonRA.id}',event)"
                 label="#{msgs.action}" 
                 value="#{sBean.auditAction}" >
             	<f:selectItems value="#{sBean.auditActionSelectItems}" />
             </tr:selectOneChoice>
 			<tr:inputText 
+		    	onkeypress="return submitEnter('#{defButtonRA.id}',event)"
 				columns="10"
 				label="#{msgs.nodeId}" 
 				value="#{sBean.auditNodeId}" />
 			<tr:inputText 
+		    	onkeypress="return submitEnter('#{defButtonRA.id}',event)"
 				label="#{msgs.nodePath}" 
 				value="#{sBean.auditNodePath}" />
    		</tr:panelFormLayout>
    		<tr:spacer height="10"/>
-		<tr:panelButtonBar halign="center" >   		
-			<tr:commandButton
-				id="refresh" 
+		<tr:panelButtonBar halign="center" >
+			<!-- 
+		
+		<t:commandButton 
+				forceId="true" 
+				id="refBtn" 
+				value="#{msgs.refresh}" 
+				action="#{sBean.clearAuditData}"		
+		/>
+		   					 -->
+			<tr:commandButton 
+            	binding="#{defButtonRA.button}"
+				id="refBtn" 
 				text="#{msgs.refresh}" 
 				action="#{sBean.clearAuditData}" />
 		</tr:panelButtonBar>   		
@@ -97,10 +133,10 @@
 			inlineStyle="font-size: 80%;"	       
 	     	value="#{row.nodeId}"/>
 	</tr:column>
-    <tr:column 
+    <tr:column width="50%" 
     	headerText="#{msgs.nodePath}">
-	    <tr:outputText
-			inlineStyle="font-size: 80%;"	       
+	    <tr:outputText 
+			inlineStyle="word-wrap: break-word; font-size: 80%;"	       
 	     	value="#{row.nodePath}"/>
 	</tr:column>
     <tr:column 

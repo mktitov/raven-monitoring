@@ -125,6 +125,8 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	private Node voSource = null;
 	private boolean voSourceInited = false;
 	private List<Integer> logNodes = new ArrayList<Integer>();
+	private List<NodeWrapper> upperNodes;
+	private int shortNameLen = 0;
 		
 	public NodeWrapper() 
 	{
@@ -151,23 +153,29 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 				ret.add(cn);
 		return ret;
 	}
-
-	public List<Node> getUpperNodes()
+	
+	public String getShortName()
 	{
+		String name = getNodeName();
+		if(name!=null && shortNameLen>0)
+			if(name.length() > shortNameLen)
+				name = name.substring(0, shortNameLen-3)+"...";
+		return name; 
+	}
+
+	public List<NodeWrapper> getUpperNodes()
+	{
+		if(upperNodes!=null) return upperNodes;
+		upperNodes = new ArrayList<NodeWrapper>();
 		List<Node> rt = new ArrayList<Node>();
 		Node n = getNode();
-		if(n!=null && n.getParent()!=null) rt.add(n); 
-		while(n!=null && n.getParent()!=null)
+		while(n!=null )
 		{
-			n = n.getParent();
-			if(n==null || n.getParent()==null) break;
-		//	int ac = SessionBean.getUserAcl().getAccessForNode(n);
-		//	if(ac> AccessControl.TRANSIT) 
 			rt.add(n);
+			n = n.getParent();
 		}
-		//Collections.reverse(rt);
 		
-		List<Node> ret = new ArrayList<Node>();
+		int sumNamesLen = 0;
 		for(int i=rt.size()-1; i>=0; i--)
 		{
 			n = rt.get(i);
@@ -188,9 +196,27 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 					if(cnt2==1) continue;
 				}	
 			}	
-			ret.add(n);
+			NodeWrapper nw = new NodeWrapper(n); 
+			upperNodes.add(nw);
+			sumNamesLen += nw.getNodeName().length()+6;
 		}
-		return ret;
+/*		
+		for(int i=0;i<3 && sumNamesLen>300; i++)
+		{
+			sumNamesLen = 0;
+			for(NodeWrapper nw : upperNodes)
+*/				
+		int maxLen = 200;
+		if(sumNamesLen > maxLen)
+		{
+			double k = ((double)sumNamesLen)/maxLen;
+			double alen = ((double)sumNamesLen)/upperNodes.size();
+			int nlen = (int)(alen/k);
+			if(nlen<7) nlen = 7;
+			for(NodeWrapper nw : upperNodes)
+				nw.setShortNameLen(nlen);
+		}
+		return upperNodes;
 	}
 
 	public static Node getNodeByAttr(Node cnode, String attr)
@@ -342,6 +368,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		refreshPressed = false;
 		clearAllUnsavedChanges();
 		setVoSource(null);
+		upperNodes = null;
 		//loadRefreshAttributes();
 //		AttributesTableBean atb = (AttributesTableBean) context.getELContext().getELResolver().getValue(context.getELContext(), null, AttributesTableBean.BEAN_NAME);
 //		if(atb != null && atb.getMessage() !=null) atb.getMessage().setMessage("");
@@ -1435,6 +1462,14 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 			return ScanOperation.SKIP_NODE;
 		logNodes.add(node.getId());
 		return ScanOperation.CONTINUE;
+	}
+
+	public void setShortNameLen(int shortNameLen) {
+		this.shortNameLen = shortNameLen;
+	}
+
+	public int getShortNameLen() {
+		return shortNameLen;
 	}
 	
 }

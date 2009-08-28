@@ -32,15 +32,18 @@
     	layout="vertical" 
         id="pgl_1" >
 	<tr:breadCrumbs>
-		<tr:forEach var="node" items="#{cNode.upperNodes}">
+		<tr:forEach 
+			var="nw" 
+			items="#{cNode.upperNodes}">
 			<tr:commandNavigationItem
 	    		partialSubmit="true" 
 				selected="false"
-				text="#{node.name}"
+				shortDesc="#{nw.nodeName}"
+				text="#{nw.shortName}"
       			actionListener="#{sBean.selectNode}">
 				<f:attribute 
 					name="#{sBean.nodePathParName}" 
-					value="#{node.path}"/>
+					value="#{nw.nodePath}"/>
      		</tr:commandNavigationItem>
         </tr:forEach>
 	</tr:breadCrumbs>
@@ -85,19 +88,20 @@
 </tr:panelCaptionGroup>
 
 <tr:breadCrumbs rendered="#{sBean.collapsed}" >
-	<tr:forEach 
-		var="node" 
-		items="#{cNode.upperNodes}">
-		<tr:commandNavigationItem
-    		partialSubmit="true" 
-			selected="false"
-			text="#{node.name}"
-   			actionListener="#{sBean.selectNode}">
-			<f:attribute 
-				name="#{sBean.nodePathParName}" 
-				value="#{node.path}"/>
-   		</tr:commandNavigationItem>
-	</tr:forEach>
+		<tr:forEach 
+			var="nw" 
+			items="#{cNode.upperNodes}">
+			<tr:commandNavigationItem
+	    		partialSubmit="true" 
+				selected="false"
+				shortDesc="#{nw.nodeName}"
+				text="#{nw.shortName}"
+      			actionListener="#{sBean.selectNode}">
+				<f:attribute 
+					name="#{sBean.nodePathParName}" 
+					value="#{nw.nodePath}"/>
+     		</tr:commandNavigationItem>
+        </tr:forEach>
 </tr:breadCrumbs>
 </tr:form>
 <tr:spacer height="4" />
