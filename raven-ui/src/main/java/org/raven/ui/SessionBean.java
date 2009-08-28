@@ -47,6 +47,7 @@ import org.raven.audit.ActionType;
 import org.raven.audit.AuditRecord;
 import org.raven.audit.Auditor;
 import org.raven.conf.Configurator;
+import org.raven.conf.impl.AccessControl;
 import org.raven.conf.impl.UserAcl;
 import org.raven.ui.util.Messages;
 import org.raven.util.Utl;
@@ -199,9 +200,35 @@ public class SessionBean
 //		classDsc = getClassDscRegistry();
 //		configurator = getConfigurator();
 		
+		Node x = tree.getRootNode();
+		while(1==1)
+		{
+			int ac = userAcl.getAccessForNode(x);
+			if(ac>AccessControl.TRANSIT) break;
+			if(ac==AccessControl.TRANSIT)
+			{
+				int cnt = 0;
+				Node z = null;
+				for(Node y : x.getChildrens())
+				{
+					if(userAcl.getAccessForNode(y) > AccessControl.NONE)
+					{
+						if(++cnt>1) break;
+						z = y;
+					}	
+				}	
+				if(cnt>1) break;
+				x = z;
+			}
+		}		
+	//	while (en.hasMoreElements()) {
+	//		type type = (type) en.nextElement();
+	//	}
+		
 		List<Node> nodes = new ArrayList<Node>();
-		nodes.add(tree.getRootNode());
-		wrapper.setNode(tree.getRootNode());
+		//nodes.add(tree.getRootNode());
+		nodes.add(x);
+		wrapper.setNode(x);
 		
 		treeModel = new RavenTreeModel(nodes, "childrenList");
 		treeModel.setUserAcl(userAcl);

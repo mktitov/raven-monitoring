@@ -176,12 +176,19 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		}
 		
 		int sumNamesLen = 0;
+//		int i=rt.size()-1;
 		for(int i=rt.size()-1; i>=0; i--)
 		{
 			n = rt.get(i);
-			int cnt = 0;
 			if(getUserAcl().getAccessForNode(n) == AccessControl.TRANSIT) 
 			{
+				int cnt = 0;
+				for(Node cn : n.getChildrenList())
+					if(getUserAcl().getAccessForNode(cn) > AccessControl.NONE)
+						cnt++;
+				if(cnt < 2) continue;
+					
+/*				
 				for(Node cn : n.getChildrenList())
 					if(getUserAcl().getAccessForNode(cn) > AccessControl.NONE)
 						cnt++;
@@ -194,7 +201,8 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 							if(getUserAcl().getAccessForNode(cn) > AccessControl.NONE)
 								cnt2++;
 					if(cnt2==1) continue;
-				}	
+				}
+*/					
 			}	
 			NodeWrapper nw = new NodeWrapper(n); 
 			upperNodes.add(nw);
