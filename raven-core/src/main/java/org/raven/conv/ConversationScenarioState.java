@@ -30,11 +30,29 @@ public interface ConversationScenarioState
      */
     public Bindings getBindings();
     /**
+     * Sets the value and scope of the binding
+     * @param name the binding name
+     * @param value the value of the binding
+     * @param scope the scope of the binding
+     */
+    public void setBinding(String name, Object value, BindingScope scope);
+    /**
+     * Sets the binding default value
+     * @param name the binding name
+     * @param defaultValue default value of the binding
+     */
+    public void setBindingDefaultValue(String name, Object defaultValue);
+    /**
      * If method returns <b>true</b> the top level engine must immediate 
      * {@link Conversation#makeConversation(org.raven.conv.ConversationState)  continue
      * the conversation} after actions will be processed
      */
     public boolean hasImmediateTransition();
+    /**
+     * Sets the <code>immediateTransition</code> flag.
+     * @see #hasImmediateTransition() 
+     */
+    public void setImmediateTransition(boolean immediateTransition);
     /**
      * Returns the next conversation point. The point from which the conversation continues.
      */
@@ -46,4 +64,10 @@ public interface ConversationScenarioState
      */
     public void setNextConversationPoint(ConversationScenarioPoint nextConversationPoint)
             throws ConversationScenarioCycleDetectedException;
+    /**
+     * Resets bindings of the {@link BindingScope#REQUEST} scope. If
+     * {@link #setBindingDefaultValue(java.lang.String, java.lang.Object)  default value} exists for
+     * the binding then then the binding will reset to this value else binding will be removed.
+     */
+    public void resetRequestBindings();
 }

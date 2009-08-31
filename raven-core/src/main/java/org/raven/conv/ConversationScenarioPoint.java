@@ -25,14 +25,4 @@ import org.raven.tree.Node;
  */
 public interface ConversationScenarioPoint extends Node
 {
-    /**
-     * Returns the next conversation point. If method returns null then the next conversation point
-     * is this node.
-     */
-    public ConversationScenarioPoint getNextPoint();
-    /**
-     * If method return <b>true</b> than the conversation engine must make immediate transition to
-     * the next conversation point.
-     */
-    public Boolean getImmediateTransition();
 }

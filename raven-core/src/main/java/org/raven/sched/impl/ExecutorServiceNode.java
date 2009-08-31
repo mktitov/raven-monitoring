@@ -243,7 +243,9 @@ public class ExecutorServiceNode extends BaseNode
             finally
             {
                 executedTasks.markOperationProcessingEnd(executionStart);
-                executingTasks.remove(this);
+                Collection executingTasksList = executingTasks;
+                if (executingTasksList!=null)
+                    executingTasksList.remove(this);
             }
         }
 

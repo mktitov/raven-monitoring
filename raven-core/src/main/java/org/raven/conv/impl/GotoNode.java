@@ -28,7 +28,19 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=ConversationScenarioNode.class, importChildTypesFromParent=true)
-public class ConversationScenarioPointNode extends BaseNode implements ConversationScenarioPoint
+@NodeClass
+public class GotoNode extends BaseNode
 {
+    @NotNull @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
+    private ConversationScenarioPoint conversationPoint;
+
+    public ConversationScenarioPoint getConversationPoint()
+    {
+        return conversationPoint;
+    }
+
+    public void setConversationPoint(ConversationScenarioPoint conversationPoint)
+    {
+        this.conversationPoint = conversationPoint;
+    }
 }

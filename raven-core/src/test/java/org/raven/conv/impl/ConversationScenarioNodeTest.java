@@ -21,6 +21,9 @@ import java.util.Collection;
 import org.junit.Before;
 import org.raven.conv.ConversationScenarioCycleDetectedException;
 import org.junit.Test;
+import org.raven.conv.BindingScope;
+import org.raven.conv.ConversationScenario;
+import org.raven.conv.ConversationScenarioPoint;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.conv.ConversationScenarioState;
 import org.raven.expr.impl.IfNode;
@@ -67,20 +70,65 @@ public class ConversationScenarioNodeTest extends RavenCoreTestCase
         ConversationScenarioPointNode point = addPoint(conversation, "point");
         conversation.makeConversation(state);
         assertSame(point, state.getNextConversationPoint());
+        assertTrue(state.hasImmediateTransition());
+        conversation.makeConversation(state);
+        assertFalse(state.hasImmediateTransition());
     }
 
     @Test
-    public void conversationPointNextPointTest() throws Exception
+    public void conversationGotoTest() throws Exception
     {
-        ConversationScenarioPointNode point = addPoint(conversation, "point");
+        Node container = addAction(conversation, "container");
+        ConversationScenarioPointNode point = addPoint(container, "point");
         Node action = addAction(point, "action");
-        conversation.setNextPoint(point);
+        addGoto(conversation, "goto", point);
 
         Collection<Node> actions = conversation.makeConversation(state);
-        assertSame(conversation, state.getNextConversationPoint());
+        assertSame(point, state.getNextConversationPoint());
+        assertTrue(state.hasImmediateTransition());
         assertNotNull(actions);
         assertEquals(1, actions.size());
+        assertSame(container, actions.iterator().next());
+
+        
+        actions = conversation.makeConversation(state);
+        assertSame(point, state.getNextConversationPoint());
+        assertFalse(state.hasImmediateTransition());
+        assertEquals(1, actions.size());
         assertSame(action, actions.iterator().next());
+    }
+
+    @Test
+    public void repetitionCountTest() throws Exception
+    {
+        Node container = addAction(conversation, "container");
+        ConversationScenarioPointNode point = addPoint(container, "point");
+        GotoNode gotoNode = addGoto(conversation, "goto", point);
+
+        assertEquals(0l, state.getBindings().get(ConversationScenario.REPEITION_COUNT_PARAM));
+        conversation.makeConversation(state);
+        assertEquals(0l, state.getBindings().get(ConversationScenario.REPEITION_COUNT_PARAM));
+        conversation.makeConversation(state);
+        assertEquals(1l, state.getBindings().get(ConversationScenario.REPEITION_COUNT_PARAM));
+
+        addGoto(point, "goto", conversation);
+        gotoNode.setConversationPoint(conversation);
+        conversation.makeConversation(state);
+        assertEquals(0l, state.getBindings().get(ConversationScenario.REPEITION_COUNT_PARAM));
+        conversation.makeConversation(state);
+        assertEquals(1l, state.getBindings().get(ConversationScenario.REPEITION_COUNT_PARAM));
+        assertSame(conversation, state.getNextConversationPoint());
+    }
+
+    @Test
+    public void requestBindingTest() throws Exception
+    {
+        Node container = addAction(conversation, "container");
+        state.setBinding("dtmf", "1", BindingScope.REQUEST);
+        state.setBindingDefaultValue("dtmf", "-");
+        assertEquals("1", state.getBindings().get("dtmf"));
+        conversation.makeConversation(state);
+        assertEquals("-", state.getBindings().get("dtmf"));
     }
 
     @Test
@@ -127,6 +175,16 @@ public class ConversationScenarioNodeTest extends RavenCoreTestCase
         point.addAndSaveChildren(action);
         assertTrue(action.start());
         return action;
+    }
+
+    private GotoNode addGoto(Node owner, String name, ConversationScenarioPoint point)
+    {
+        GotoNode gotoNode = new GotoNode();
+        gotoNode.setName(name);
+        owner.addAndSaveChildren(gotoNode);
+        gotoNode.setConversationPoint(point);
+        assertTrue(gotoNode.start());
+        return gotoNode;
     }
 
     private IfNode addIf(Node parent, String name, String expression) throws Exception

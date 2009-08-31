@@ -17,10 +17,12 @@
 
 package org.raven.conv.impl;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
+import org.raven.conv.BindingScope;
 import org.raven.conv.ConversationScenarioCycleDetectedException;
 import org.raven.conv.ConversationScenarioPoint;
 import org.raven.conv.ConversationScenarioState;
@@ -32,17 +34,53 @@ import org.raven.conv.ConversationScenarioState;
 public class ConversationScenarioStateImpl implements ConversationScenarioState
 {
     private final Bindings bindings = new SimpleBindings();
+    private final Map<String, BindingScope> scopes = new HashMap<String, BindingScope>();
+    private final Map<String, Object> defaultValues = new HashMap<String, Object>();
     private ConversationScenarioPoint nextConversationPoint;
-    private final Set<ConversationScenarioPoint> immediateTransitions = new HashSet<ConversationScenarioPoint>();
+    private boolean immediateTransition = false;
 
     public Bindings getBindings()
     {
         return bindings;
     }
 
+    public void setBinding(String name, Object value, BindingScope scope)
+    {
+        bindings.put(name, value);
+        scopes.put(name, scope);
+    }
+
+    public void setBindingDefaultValue(String name, Object defaultValue)
+    {
+        defaultValues.put(name, defaultValue);
+    }
+
+    public void setImmediateTransition(boolean immediateTransition)
+    {
+        this.immediateTransition = immediateTransition;
+    }
+
+    private void resetBindings(BindingScope scope)
+    {
+        for (Iterator<Map.Entry<String, Object>> it = bindings.entrySet().iterator(); it.hasNext();)
+        {
+            Map.Entry<String, Object> binding = it.next();
+            BindingScope bindingScope = scopes.get(binding.getKey());
+            if (   scope.equals(bindingScope)
+                || (scope==BindingScope.CONVERSATION && bindingScope==null))
+            {
+                Object defaultValue = defaultValues.get(binding.getKey());
+                if (defaultValue==null)
+                    it.remove();
+                else
+                    binding.setValue(defaultValue);
+            }
+        }
+    }
+
     public boolean hasImmediateTransition()
     {
-        return nextConversationPoint==null? false : nextConversationPoint.getImmediateTransition();
+        return immediateTransition;
     }
 
     public ConversationScenarioPoint getNextConversationPoint()
@@ -53,17 +91,15 @@ public class ConversationScenarioStateImpl implements ConversationScenarioState
     public void setNextConversationPoint(ConversationScenarioPoint nextConversationPoint)
             throws ConversationScenarioCycleDetectedException
     {
-        if (!nextConversationPoint.getImmediateTransition())
-            immediateTransitions.clear();
-        else
+        if (this.nextConversationPoint!=nextConversationPoint)
         {
-            if (immediateTransitions.contains(nextConversationPoint))
-                throw new ConversationScenarioCycleDetectedException(String.format(
-                        "Loop detected. The sequence of immediate transitions returned back " +
-                        "to the  (%s) conversation point"
-                        , nextConversationPoint.getPath()));
-            immediateTransitions.add(nextConversationPoint);
+            this.nextConversationPoint = nextConversationPoint;
+            resetBindings(BindingScope.POINT);
         }
-        this.nextConversationPoint = nextConversationPoint;
+    }
+
+    public void resetRequestBindings()
+    {
+        resetBindings(BindingScope.REQUEST);
     }
 }

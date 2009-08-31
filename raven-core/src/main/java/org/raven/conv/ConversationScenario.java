@@ -30,13 +30,15 @@ public interface ConversationScenario
     public final static String IMMEDIATE_TRANSITIONS_PARAM = "IMMEDIATE_TRANSITIONS";
     public final static String IMMEDIATE_TRANSITION_PARAM = "IMMEDIATE_TRANSITION";
 
+    public final static String REPEITION_COUNT_PARAM = "repetitionCount";
+
     /**
-     * Starts or continues onversation
+     * Starts or continues conversation
      * @param state the state of the conversation. The parameter must not be null and must created
      *      by {@link #createConversationState()} method. In bound of the one conversation the
      *      parameter must point to the same object.
      * @return the collection of nodes (actions) that must be executed by using the conversation
-     *      engine.
+     *      engine. Method can return an empty collection but never return null.
      * @throws org.raven.conv.ConversationException
      */
     public Collection<Node> makeConversation(ConversationScenarioState state)

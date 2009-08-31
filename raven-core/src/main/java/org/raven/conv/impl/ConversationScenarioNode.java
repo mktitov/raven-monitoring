@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
+import org.raven.conv.BindingScope;
 import org.raven.conv.ConversationScenarioCycleDetectedException;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.IfNode;
@@ -38,9 +39,11 @@ import org.raven.tree.impl.InvisibleNode;
  */
 @NodeClass(
     parentNode=InvisibleNode.class,
-    childNodes={IfNode.class, ConversationScenarioPointNode.class},
+    childNodes={IfNode.class, ConversationScenarioPointNode.class, GotoNode.class},
     importChildTypesFromParent=true)
-public class ConversationScenarioNode extends ConversationScenarioPointNode implements ConversationScenario
+public class ConversationScenarioNode 
+        extends ConversationScenarioPointNode
+        implements ConversationScenario
 {
     private BindingSupportImpl bindingSupport;
 
@@ -51,16 +54,17 @@ public class ConversationScenarioNode extends ConversationScenarioPointNode impl
         bindingSupport = new BindingSupportImpl();
     }
 
-    public Collection<Node> makeConversation(ConversationScenarioState state) throws ConversationScenarioException
+    public Collection<Node> makeConversation(ConversationScenarioState state)
+            throws ConversationScenarioException
     {
         ConversationScenarioPoint nextPoint = state.getNextConversationPoint();
-        if (nextPoint.getNextPoint()!=null)
-            nextPoint = nextPoint.getNextPoint();
-
+        state.setImmediateTransition(false);
         bindingSupport.putAll(state.getBindings());
         try
         {
             Collection<Node> childs = nextPoint.getEffectiveChildrens();
+            Long repetitionCount =  (Long) state.getBindings().get(REPEITION_COUNT_PARAM);
+            state.getBindings().put(REPEITION_COUNT_PARAM, repetitionCount+1);
             if (childs==null || childs.isEmpty())
                 return Collections.EMPTY_LIST;
             Collection<Node> actions = new ArrayList<Node>(childs.size());
@@ -71,6 +75,13 @@ public class ConversationScenarioNode extends ConversationScenarioPointNode impl
                     if (!conversationPointSeted && action instanceof ConversationScenarioPoint)
                     {
                         state.setNextConversationPoint((ConversationScenarioPoint) action);
+                        state.setImmediateTransition(true);
+                        conversationPointSeted = true;
+                    }
+                    else if (!conversationPointSeted && action instanceof GotoNode)
+                    {
+                        state.setNextConversationPoint(((GotoNode)action).getConversationPoint());
+                        state.setImmediateTransition(true);
                         conversationPointSeted = true;
                     }
                     else
@@ -81,6 +92,7 @@ public class ConversationScenarioNode extends ConversationScenarioPointNode impl
         }
         finally
         {
+            state.resetRequestBindings();
             bindingSupport.reset();
         }
     }
@@ -92,9 +104,12 @@ public class ConversationScenarioNode extends ConversationScenarioPointNode impl
         bindingSupport.addTo(bindings);
     }
 
-    public ConversationScenarioState createConversationState() throws ConversationScenarioCycleDetectedException
+    public ConversationScenarioState createConversationState()
+            throws ConversationScenarioCycleDetectedException
     {
         ConversationScenarioState state =  new ConversationScenarioStateImpl();
+        state.setBindingDefaultValue(REPEITION_COUNT_PARAM, 0l);
+        state.setBinding(REPEITION_COUNT_PARAM, 0l, BindingScope.POINT);
         state.setNextConversationPoint(this);
         return state;
     }
