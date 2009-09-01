@@ -64,7 +64,10 @@ public class AccessResource extends AccessControlList
 		 * 
 		 * @return путь до целевого узла
 		 */
-		public String getShow() {
+		public String getShow() 
+		{
+			if(show==null)
+				show = getFirst().getNodePath();
 			return show;
 		}
 

@@ -164,17 +164,23 @@ public class GroupsAclStorage
         return instance;
     }
 
+    private void checkUpdate()
+    {
+    	if(lastUpdate!=config.getLastUpdate())
+    	{
+    		logger.info("reloading ACL for groups");
+    		load();
+    	}
+    }	
+
+    
     /**
      * Returns summary AccessControlList for list of groups.
      * @param ls list of groups
      */
     public synchronized AccessControlList getAclForGroups(List<String> ls, String account)
     {
-    	if(lastUpdate!=config.getLastUpdate())
-    	{
-    		logger.info("reloading ACL for groups");
-    		load();
-    	}	
+    	checkUpdate();
     	LdapGroupAcl acl = new LdapGroupAcl();
     	for(String grpName: ls)
     	{
@@ -198,18 +204,11 @@ public class GroupsAclStorage
     public synchronized HashMap<String,AccessResource> getResourcesX(Tree tree)
     {
     	long t = System.currentTimeMillis();
-    	if(t-lastResourcesCheck > resourcesCheckInterval)
+    	if(t-lastResourcesCheck > resourcesCheckInterval || lastResourcesCheck < lastUpdate )
     	{	
     		for(AccessResource ar : arMap.values())
     		{
    				String path = ar.getShow();
-   				if(path==null)
-   				{
-   					AccessControl ac = ar.getFirst();
-   					if(ac==null) continue;
-   					path = ac.getNodePath();
-   					ar.setShow(path);
-   				}
        			try 
        			{	
        				tree.getNode(path);

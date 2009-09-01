@@ -221,11 +221,15 @@ public abstract class AccessControlList implements Comparator<AccessControl>
 
 	public int getAccessForNodeWF(String path)
     {
+		if(path==null)
+			return AccessControl.NONE;
     	int curRight = AccessControl.NONE;
     	for(AccessControl ac : acl)
     	{
     		int right = ac.getRight();
-    		if(ac.getResource().startsWith(path))
+    		String res = ac.getResource();
+    		if(res==null) continue;
+    		if(res.startsWith(path))
     			if(right > AccessControl.NONE )
     				curRight = AccessControl.TRANSIT;
     		if( path.matches(ac.getRegExp()))
