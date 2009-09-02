@@ -260,24 +260,38 @@ public class SessionBean
 		logger.info("session stopped, login:{} ip:{}",userAcl.getAccountName(),remoteIp);
 	}
 	
+	/**
+	 * Detects language code of request.
+	 * @param fc FacesContext
+	 * @return language code, or null, if it's default application language code
+	 */
+	public static String getPageLanguage(FacesContext fc)
+	{
+		ExternalContext ec = fc.getExternalContext();
+		String defLang = fc.getApplication().getDefaultLocale().getLanguage();
+		String lang = ec.getRequestLocale().getLanguage();
+		if(defLang.equals(lang)) return null;
+		Iterator<Locale> iloc = fc.getApplication().getSupportedLocales();
+		String ret = null;
+		while(iloc.hasNext() && ret==null)
+			if(iloc.next().getLanguage().equals(lang))
+				ret = lang;
+		return ret;
+	}
+	
+	public static String getOutcomeWithLang(FacesContext fc,String outcome)
+	{
+		String lang = getPageLanguage(fc);
+		if(lang==null) return outcome; 
+		return outcome+"_"+lang;
+	}
+	
 	public String logout()
 	{
 		String ret = "logout"; 
 		FacesContext fc = FacesContext.getCurrentInstance();
-		ExternalContext ec = fc.getExternalContext();
-		String defLang = fc.getApplication().getDefaultLocale().getLanguage();
-		String lang = ec.getRequestLocale().getLanguage();
-		Iterator<Locale> iloc = fc.getApplication().getSupportedLocales();
-		while(iloc.hasNext())
-		{
-			Locale loc = iloc.next();
-			if(!defLang.equals(lang) && loc.getLanguage().equals(lang))
-			{
-				ret = ret+"_"+lang;
-				break;
-			}
-		}	
-	    HttpSession s = (HttpSession) ec.getSession(false);
+		ret = getOutcomeWithLang(fc,ret);
+	    HttpSession s = (HttpSession) fc.getExternalContext().getSession(false);
 		s.invalidate();
 		return ret;
 	}

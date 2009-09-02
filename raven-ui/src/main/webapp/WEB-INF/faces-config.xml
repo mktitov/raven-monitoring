@@ -15,6 +15,12 @@
     </locale-config>
     <message-bundle>org.raven.ui.messages</message-bundle>
   </application>
+  
+<!--   
+	<lifecycle>
+		<phase-listener>org.raven.ui.RavenPhaseListener</phase-listener>
+	</lifecycle>  
+ -->  
   <!--
   <managed-bean>
     <managed-bean-name>ctree</managed-bean-name>
@@ -151,6 +157,21 @@
     <managed-bean-class>org.raven.ui.RowMap</managed-bean-class>
     <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
+ -->
+   <!-- navigation rules for expired session 
+  <navigation-rule>
+    <navigation-case>
+      <from-outcome>sessionExpired</from-outcome>
+      <to-view-id>/logout.html</to-view-id>
+      <redirect/>
+    </navigation-case>
+    
+    <navigation-case>
+      <from-outcome>sessionExpired_ru</from-outcome>
+      <to-view-id>/logout_ru.html</to-view-id>
+      <redirect/>
+    </navigation-case>
+  </navigation-rule>
  -->
   <!-- navigation rules for index.jspx -->
   <navigation-rule>
