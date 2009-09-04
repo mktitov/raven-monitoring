@@ -29,10 +29,6 @@
   <jsp:directive.page pageEncoding="utf-8" contentType="text/html;charset=utf-8"/>
   <f:view>
   <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
-  <trh:script text="window.onbeforeunload = function()
-		{
-         parent.frames.frame1.document.getElementById('logout').click();
-  		} " />
     <tr:document title="tree">
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
        	<tr:form 
@@ -49,12 +45,22 @@
     					value="#{sBean.accountName} (#{sBean.remoteIp})" />
     			</f:facet>
 				<f:facet name="right">
+				<t:commandLink 
+					value="#{msgs.exit}"
+					title="#{msgs.dscExit}"
+					forceId="true"
+					id="logout"
+					immediate="true"
+					action="#{sBean.logout}" 
+					 />
+<!-- 				
     				<tr:commandLink
     					id="logout"
 	    				immediate="true"
     					action="#{sBean.logout}"
     					shortDesc="#{msgs.dscExit}"
     					text="#{msgs.exit}" />
+ -->    					
     			</f:facet>
 		</tr:panelBorderLayout>    			
   	</tr:form>

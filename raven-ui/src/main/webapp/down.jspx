@@ -18,8 +18,27 @@
 
 <jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
           xmlns:f="http://java.sun.com/jsf/core"
+          xmlns:trh="http://myfaces.apache.org/trinidad/html"
+          xmlns:t="http://myfaces.apache.org/tomahawk"
+          xmlns:h="http://java.sun.com/jsf/html"
           xmlns:tr="http://myfaces.apache.org/trinidad" >
 <jsp:directive.page contentType="text/html;charset=utf-8"/>
 <f:view>
+<!-- 
+//top.frames.frame1.document.getElementById('logout').click();
+ 
+  <trh:script text="window.onbeforeunload = function()
+		{
+		top.frames.frame1.document.getElementById('logout').click();
+  		} " />
+<h:form id="loz" >  		
+   	<t:commandLink forceId="true"  
+   		id="logoutZ"
+		immediate="true"
+    	action="#{sBean.logout}"
+    	value="" />
+  		
+</h:form>
+-->  		
 </f:view>
 </jsp:root>
