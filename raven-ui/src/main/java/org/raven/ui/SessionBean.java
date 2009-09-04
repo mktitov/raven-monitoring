@@ -76,6 +76,8 @@ public class SessionBean
 	public static final String BEAN_NAME = "sBean";
 	public static final String SELECT_NODE_PARAM = "nodePath";
     private Logger logger = LoggerFactory.getLogger(SessionBean.class);
+    public static final String LEFT_FRAME = "parent.frames.frame1";
+    public static final String RIGHT_FRAME = "parent.frames.frame2";
 
     @org.weda.internal.annotations.Service
     private Auditor auditor;
@@ -289,6 +291,7 @@ public class SessionBean
 	public String logout()
 	{
 		String ret = "logout"; 
+		logger.info("logout, user:'{}'",userAcl.getAccountName());
 		FacesContext fc = FacesContext.getCurrentInstance();
 		ret = getOutcomeWithLang(fc,ret);
 	    HttpSession s = (HttpSession) fc.getExternalContext().getSession(false);
@@ -307,7 +310,8 @@ public class SessionBean
 		 ExtendedRenderKitService service = (ExtendedRenderKitService)
 		 //org.apache.myfaces.trinidad.util.
 		 Service.getRenderKitService(facesContext, ExtendedRenderKitService.class);
-		 service.addScript(facesContext, "parent.frames.frame1.location.href=parent.frames.frame1.location.href");
+		 //service.addScript(facesContext, "parent.frames.frame1.location.href=parent.frames.frame1.location.href");
+		 service.addScript(facesContext, LEFT_FRAME+".location.reload()");
 		 logger.info("reloadLeftFrame");
 	}
 	
@@ -317,8 +321,10 @@ public class SessionBean
 		 ExtendedRenderKitService service = (ExtendedRenderKitService)
 		 org.apache.myfaces.trinidad.util.Service.getRenderKitService(facesContext, ExtendedRenderKitService.class);
 		// service.addScript(facesContext, "parent.frames.frame1.document.treeform.reftree.focus();");
-		 service.addScript(facesContext, "parent.frames.frame2.location.href=parent.frames.frame2.location.href");
-		 service.addScript(facesContext, "parent.frames.frame1.location.href=parent.frames.frame1.location.href");
+//		 service.addScript(facesContext, "parent.frames.frame2.location.href=parent.frames.frame2.location.href");
+//		 service.addScript(facesContext, "parent.frames.frame1.location.href=parent.frames.frame1.location.href");
+		 service.addScript(facesContext, RIGHT_FRAME+".location.reload()");
+		 service.addScript(facesContext, LEFT_FRAME+".location.reload()");
 		 logger.info("reloadBothFrame");
 		 return ("success");
 	  }
@@ -329,7 +335,8 @@ public class SessionBean
 		 ExtendedRenderKitService service = (ExtendedRenderKitService)
 		 org.apache.myfaces.trinidad.util.Service.getRenderKitService(fc, ExtendedRenderKitService.class);
 		 logger.info("reloadRightFrame");
-		 service.addScript(fc, "parent.frames.frame2.location.href=parent.frames.frame2.location.href");
+//		 service.addScript(fc, "parent.frames.frame2.location.href=parent.frames.frame2.location.href");
+		 service.addScript(fc, RIGHT_FRAME+".location.reload()");
 		 return ("success");
 	  }
 	 
