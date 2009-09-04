@@ -16,11 +16,11 @@
     <message-bundle>org.raven.ui.messages</message-bundle>
   </application>
   
-<!--   
+   
 	<lifecycle>
 		<phase-listener>org.raven.ui.RavenPhaseListener</phase-listener>
 	</lifecycle>  
- -->  
+  
   <!--
   <managed-bean>
     <managed-bean-name>ctree</managed-bean-name>
@@ -158,7 +158,7 @@
     <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>
  -->
-   <!-- navigation rules for expired session 
+   <!-- navigation rules for expired session --> 
   <navigation-rule>
     <navigation-case>
       <from-outcome>sessionExpired</from-outcome>
@@ -172,7 +172,7 @@
       <redirect/>
     </navigation-case>
   </navigation-rule>
- -->
+ 
   <!-- navigation rules for index.jspx -->
   <navigation-rule>
     <from-view-id>/page1.jspx</from-view-id>

@@ -80,7 +80,7 @@
  		
  		<tr:panelHorizontalLayout>
  -->
-       	<tr:poll rendered="false"
+       	<tr:poll rendered="true"
        		pollListener="#{sBean.onTreePoll}" 
        		id="pooltree" 
        		interval="#{sBean.refreshTreeInterval}" />
