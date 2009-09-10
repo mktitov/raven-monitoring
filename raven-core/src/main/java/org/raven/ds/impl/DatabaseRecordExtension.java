@@ -19,6 +19,7 @@ package org.raven.ds.impl;
 
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.constraints.NotNull;
 
@@ -40,5 +41,26 @@ public class DatabaseRecordExtension extends BaseNode
     public void setTableName(String tableName)
     {
         this.tableName = tableName;
+    }
+
+    /**
+     * Creates new database record extension node. If extension with given name already exists
+     * method returns null.
+     * @param owner the owner of the database record extension
+     * @param extensionName the node name of the database record extension
+     * @param tableName the table name 
+     */
+    public final static DatabaseRecordExtension create(
+            Node owner,  String extensionName, String tableName)
+    {
+        if (owner.getChildren(extensionName)!=null)
+            return null;
+        DatabaseRecordExtension dbExt = new DatabaseRecordExtension();
+        dbExt.setName(extensionName);
+        owner.addAndSaveChildren(dbExt);
+        dbExt.setTableName(tableName);
+        dbExt.start();
+
+        return dbExt;
     }
 }

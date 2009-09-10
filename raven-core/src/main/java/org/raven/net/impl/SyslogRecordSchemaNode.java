@@ -17,7 +17,6 @@
 
 package org.raven.net.impl;
 
-import org.apache.commons.lang.StringUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.ds.impl.RecordSchemaFieldNode;
@@ -60,16 +59,16 @@ public class SyslogRecordSchemaNode extends RecordSchemaNode
         createField(MESSAGE_FIELD, RecordSchemaFieldType.STRING, null);
     }
 
-    private void createField(String name, RecordSchemaFieldType fieldType, String format)
-    {
-        if (getChildren(name)!=null)
-            return;
-        RecordSchemaFieldNode field = new RecordSchemaFieldNode();
-        field.setName(name);
-        addAndSaveChildren(field);
-        field.setDisplayName(StringUtils.capitalize(name));
-        field.setFieldType(fieldType);
-        field.setPattern(format);
-        field.start();
-    }
+//    private void createField(String name, RecordSchemaFieldType fieldType, String format)
+//    {
+//        if (getChildren(name)!=null)
+//            return;
+//        RecordSchemaFieldNode field = new RecordSchemaFieldNode();
+//        field.setName(name);
+//        addAndSaveChildren(field);
+//        field.setDisplayName(StringUtils.capitalize(name));
+//        field.setFieldType(fieldType);
+//        field.setPattern(format);
+//        field.start();
+//    }
 }

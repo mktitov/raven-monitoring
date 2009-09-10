@@ -19,6 +19,7 @@ package org.raven.ds.impl;
 
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.tree.Node;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -40,5 +41,26 @@ public class DatabaseRecordFieldExtension extends AbstractRecordFieldExtension
     public void setColumnName(String columnName)
     {
         this.columnName = columnName;
+    }
+
+    /**
+     * Creates the database table column extension for the record schema field. If extention
+     * with given name already exists then method will returns null.
+     * @param owner the record schema field.
+     * @param extensionName the name of the database table column extension.
+     * @param columnName the name of the column with which record schema field related
+     */
+    public final static DatabaseRecordFieldExtension create(
+            Node owner, String extensionName, String columnName)
+    {
+        if (owner.getChildren(extensionName)!=null)
+            return null;
+        DatabaseRecordFieldExtension colExt = new DatabaseRecordFieldExtension();
+        colExt.setName(extensionName);
+        owner.addAndSaveChildren(colExt);
+        colExt.setColumnName(columnName);
+        colExt.start();
+        
+        return colExt;
     }
 }

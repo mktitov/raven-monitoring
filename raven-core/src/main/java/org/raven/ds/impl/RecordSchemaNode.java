@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrMatcher;
 import org.apache.commons.lang.text.StrTokenizer;
 import org.raven.annotations.NodeClass;
@@ -32,6 +33,7 @@ import org.raven.ds.Record;
 import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
+import org.raven.ds.RecordSchemaFieldType;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 
@@ -182,6 +184,29 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema
     public void setIncludeFields(String includeFields)
     {
         this.includeFields = includeFields;
+    }
+
+    /**
+     * Creates and returns {@link RecordSchemaFieldNode the record schema field node}. If record
+     * schema already contains the field node then this field will be returned.
+     * @param name the name of the field node
+     * @param fieldType {@link RecordSchemaField#getFieldType()  the field type}
+     * @param format {@link RecordSchemaField#getPattern() the pattern} of record field
+     */
+    protected RecordSchemaFieldNode createField(
+            String name, RecordSchemaFieldType fieldType, String format)
+    {
+        RecordSchemaFieldNode fieldNode = (RecordSchemaFieldNode) getChildren(name);
+        if (fieldNode!=null)
+            return fieldNode;
+        RecordSchemaFieldNode field = new RecordSchemaFieldNode();
+        field.setName(name);
+        addAndSaveChildren(field);
+        field.setDisplayName(StringUtils.capitalize(name));
+        field.setFieldType(fieldType);
+        field.setPattern(format);
+        field.start();
+        return field;
     }
 
     private String[] splitAndSort(String str)

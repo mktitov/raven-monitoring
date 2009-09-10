@@ -24,8 +24,6 @@ import org.productivity.java.syslog4j.server.SyslogServerEventIF;
 import org.productivity.java.syslog4j.server.SyslogServerIF;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
-import org.raven.ds.impl.RecordSchemaNode;
-import org.raven.ds.impl.RecordSchemaValueTypeHandlerFactory;
 import org.raven.net.SyslogMessageHandler;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
