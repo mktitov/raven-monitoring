@@ -480,6 +480,10 @@ public class BaseNode implements Node, NodeListener, Logger
     
     public void setName(String name)
     {
+        if (parent!=null && parent.getChildren(name)!=null)
+            throw new NodeError(String.format(
+                    "Node (%s) already has children with name (%s)", parent.getPath(), name));
+
         String oldName = this.name;
         this.name = name;
         if (   ObjectUtils.in(getStatus(), Status.INITIALIZED, Status.STARTED) 

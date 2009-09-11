@@ -28,6 +28,7 @@ import org.raven.net.impl.Ip;
  */
 public enum RecordSchemaFieldType
 {
+    BOOLEAN(Boolean.class),
     LONG(Long.class), INTEGER(Integer.class), SHORT(Short.class), BYTE(Byte.class),
     DOUBLE(Double.class), FLOAT(Float.class),
     STRING(String.class),

@@ -20,18 +20,52 @@ package org.raven.tree.impl;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import org.junit.Assert;
 import org.junit.Test;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodeError;
 import static org.easymock.EasyMock.*;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class BaseNodeTest extends Assert
+public class BaseNodeTest extends RavenCoreTestCase
 {
+    @Test
+    public void setNameTest()
+    {
+        BaseNode parent = new BaseNode();
+        parent.setName("parent");
+        tree.getRootNode().addAndSaveChildren(parent);
+        
+        BaseNode node = new BaseNode();
+        node.setName("node");
+        parent.addAndSaveChildren(node);
+        node.setName("new name");
+
+        assertSame(node, parent.getChildren("new name"));
+    }
+
+    @Test(expected=NodeError.class)
+    public void setNameTest2()
+    {
+        BaseNode parent = new BaseNode();
+        parent.setName("parent");
+        tree.getRootNode().addAndSaveChildren(parent);
+
+        BaseNode node = new BaseNode();
+        node.setName("node");
+        parent.addAndSaveChildren(node);
+
+        BaseNode node2 = new BaseNode();
+        node2.setName("new name");
+        parent.addAndSaveChildren(node2);
+
+        node.setName("new name");
+    }
+
     @Test
     public void cloneTest() throws CloneNotSupportedException
     {
