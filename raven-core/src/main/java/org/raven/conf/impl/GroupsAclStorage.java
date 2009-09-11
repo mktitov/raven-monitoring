@@ -87,7 +87,13 @@ public class GroupsAclStorage
 			}
 			if(sb.length()==0)
 			{
-				if(i-lastResNum>10)	break;
+				if(i-lastResNum>10)
+					if(i >= ResourcesListNode.START_NUM) break;
+						else
+						{
+							i = ResourcesListNode.START_NUM - 1;
+							lastResNum = i - 11;
+						}	
 				continue;
 			}
 			lastResNum = i;
@@ -136,7 +142,13 @@ public class GroupsAclStorage
 			}
 			if(sb.length()==0)
 			{
-				if(i-lastGrpNum>10)	break;
+				if(i-lastGrpNum>10)
+					if(i >= GroupsListNode.START_NUM)	break;
+						else 
+						{
+							i = GroupsListNode.START_NUM - 1;
+							lastGrpNum = i - 11;
+						}
 				continue;
 			}
 			lastGrpNum = i;

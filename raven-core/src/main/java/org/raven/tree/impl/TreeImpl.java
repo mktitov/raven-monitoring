@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.raven.annotations.NodeClass;
 import org.raven.audit.impl.AuditorNode;
 import org.raven.conf.Configurator;
+import org.raven.conf.impl.AuthorizationNode;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.expr.BindingSupport;
 import org.raven.impl.ClassNameComparator;
@@ -86,18 +87,23 @@ public class TreeImpl implements Tree
     public static Tree INSTANCE;
 
     private final AttributeReferenceValues attributeReferenceValues;
-    private final Configurator configurator;
+    @SuppressWarnings("unused")
+	private final Configurator configurator;
     private final TreeStore treeStore;
     private final NodePathResolver pathResolver;
     private final AttributeValueHandlerRegistry valueHandlerRegistry;
 
-    private final Map<Class, List<Class>> nodeTypes = new HashMap<Class, List<Class>>();
-    private final Set<Class> anyChildTypeNodes = new HashSet<Class>();
-    private final Set<Class> importParentChildTypeNodes = new HashSet<Class>();
+    @SuppressWarnings("unchecked")
+	private final Map<Class, List<Class>> nodeTypes = new HashMap<Class, List<Class>>();
+    @SuppressWarnings("unchecked")
+	private final Set<Class> anyChildTypeNodes = new HashSet<Class>();
+    @SuppressWarnings("unchecked")
+	private final Set<Class> importParentChildTypeNodes = new HashSet<Class>();
     private final AtomicInteger dynamicNodeId = new AtomicInteger();
     private final AtomicInteger dynamicAttributeId = new AtomicInteger();
     private RootNode rootNode;
     private SystemNode systemNode;
+    private AuthorizationNode authorizationNode;    
     private DataSourcesNode dataSourcesNode;
     private TemplatesNode templatesNode;
     private ConnectionPoolsNode connectionPoolsNode;
@@ -137,7 +143,8 @@ public class TreeImpl implements Tree
 //        reloadTree();
     }
 
-    public List<Class> getChildNodesTypes(Node node)
+    @SuppressWarnings("unchecked")
+	public List<Class> getChildNodesTypes(Node node)
     {
         Set<Class> childTypes = new HashSet<Class>();
         collectChildTypes(node, childTypes);
@@ -148,7 +155,8 @@ public class TreeImpl implements Tree
         return types;
     }
 
-    public Class[] getNodeAttributesTypes(Node node)
+    @SuppressWarnings("unchecked")
+	public Class[] getNodeAttributesTypes(Node node)
     {
         if (node.isTemplate())
             return new Class[]{
@@ -165,7 +173,8 @@ public class TreeImpl implements Tree
         return rootNode;
     }
 
-    public Node getNode(String path) throws InvalidPathException
+    @SuppressWarnings("unchecked")
+	public Node getNode(String path) throws InvalidPathException
     {
         NullParameterError.check("path", path);
         
@@ -240,7 +249,8 @@ public class TreeImpl implements Tree
         treeStore.removeNode(node.getId());
     }
 
-    public Node copy(
+    @SuppressWarnings("unchecked")
+	public Node copy(
             Node source, Node destination, String newNodeName, NodeTuner nodeTuner
             , boolean store, boolean validateNodeType, boolean useEffectiveChildrens)
     {
@@ -406,13 +416,15 @@ public class TreeImpl implements Tree
         }
     }
 
-    public List<Node> getTempltateNodes()
+    @SuppressWarnings("unchecked")
+	public List<Node> getTempltateNodes()
     {
         Collection<Node> result = templatesNode.getSortedChildrens();
         return result==null? Collections.EMPTY_LIST : new ArrayList<Node>(result);
     }
 
-    public List<ReferenceValue> getAttributeValueHandlerTypes(NodeAttribute attr)
+    @SuppressWarnings("unchecked")
+	public List<ReferenceValue> getAttributeValueHandlerTypes(NodeAttribute attr)
     {
         List<ReferenceValue> types = valueHandlerRegistry.getValueHandlerTypes();
         List<ReferenceValue> sortedTypes = new ArrayList<ReferenceValue>(types);
@@ -421,7 +433,8 @@ public class TreeImpl implements Tree
         return sortedTypes;
     }
 
-    private void addChildsToParent(Class parent, Class... childs)
+    @SuppressWarnings("unchecked")
+	private void addChildsToParent(Class parent, Class... childs)
     {
 
         List<Class> childTypes = nodeTypes.get(parent);
@@ -435,7 +448,8 @@ public class TreeImpl implements Tree
                 childTypes.add(child);
     }
 
-    private void collectChildTypes(Node node, Set<Class> types) 
+    @SuppressWarnings("unchecked")
+	private void collectChildTypes(Node node, Set<Class> types) 
     {
         Class[] typesArr = null;
         if (anyChildTypeNodes.contains(node.getClass()))
@@ -475,6 +489,15 @@ public class TreeImpl implements Tree
             saveNode(systemNode);
         }
 
+        authorizationNode = (AuthorizationNode) systemNode.getChildren(AuthorizationNode.NODE_NAME);
+        if (authorizationNode==null)
+        {
+        	authorizationNode = new AuthorizationNode();
+        	authorizationNode.setParent(systemNode);
+            saveNode(authorizationNode);
+            systemNode.addChildren(authorizationNode);
+        }
+        
         schedulersNode = (SchedulersNode) systemNode.getChildren(SchedulersNode.NAME);
         if (schedulersNode==null)
         {
@@ -561,7 +584,7 @@ public class TreeImpl implements Tree
             saveNode(auditorNode);
             servicesNode.addChildren(auditorNode);
         }
-    
+        
     }
 
     private void createTempatesSubtree()
@@ -652,7 +675,8 @@ public class TreeImpl implements Tree
        }
     }
     
-    private void addNodeType(Class nodeType)
+    @SuppressWarnings("unchecked")
+	private void addNodeType(Class nodeType)
     {
         NodeClass ann = (NodeClass) nodeType.getAnnotation(NodeClass.class);
         if (ann==null)

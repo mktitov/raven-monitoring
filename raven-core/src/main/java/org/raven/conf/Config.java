@@ -48,4 +48,10 @@ public interface Config {
 	 */
 	public long getLastUpdate();
 	
+//	public void setTreeEnabled(boolean x);
+	
+//	public boolean isTreeEnabled();
+	
+	public void setAuthorizationTreeUpdated();
+	
 }

@@ -33,8 +33,6 @@ public abstract class AccessControlList implements Comparator<AccessControl>
 {
     protected Logger logger = LoggerFactory.getLogger(AccessControlList.class);
 	static final long serialVersionUID = 1;
-	public static final String EXPRESSION_DELIMITER = ";";
-	public static final String PARAM_DELIMITER = ":";
 	public static final String NAME_PARAM = "name";
 	public static final String FILTER_PARAM = "filter";
 	public static final String AC_PARAM = "ac";
@@ -62,14 +60,14 @@ public abstract class AccessControlList implements Comparator<AccessControl>
 	{
 		//this();
 		logger.info("Loading ACL from : {}",list);
-		String[] tokens = list.split(EXPRESSION_DELIMITER); 
+		String[] tokens = list.split(AccessControl.EXPRESSION_DELIMITER); 
 		for(String token : tokens)
 		{
 			if(token==null) continue;
 			token = token.trim();
 			if( token.length()==0) 
 				continue;
-			String[] x = token.split(PARAM_DELIMITER);
+			String[] x = token.split(AccessControl.DELIMITER);
 			if(x.length<2 || x[1]==null || x[1].length()==0 )
 				continue;
 			x[0] = x[0].trim();
@@ -98,7 +96,8 @@ public abstract class AccessControlList implements Comparator<AccessControl>
 			{
 				if(x[2]!=null && x[2].length()>0)
 				{
-					List<AccessControl> acAr = AccessControl.getACs(x[1]+PARAM_DELIMITER+x[2]);
+					List<AccessControl> acAr = 
+						AccessControl.getACs(x[1]+AccessControl.DELIMITER+x[2]);
 					if(getFirst()==null) setFirst(acAr.get(0));
 					acl.addAll(acAr);
 				}	

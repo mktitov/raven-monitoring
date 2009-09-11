@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.raven.tree.Node;
+
 public class AccessControl {
 	public static final int ADMIN = 64;
 	public static final char ADMIN_SYMBOL = 'a';
@@ -37,6 +39,14 @@ public class AccessControl {
 	public static final int TRANSIT = 1; 
 	public static final int NONE = 0; 
 	public static final char NONE_SYMBOL = 'n'; 
+	public static final String NODE = "";
+	public static final String CHILDREN = "*";
+	public static final String NODE_AND_CHILDREN = "+";
+//	public static final String DELIM = ":";
+//	public static final String AC_DELIM = ";";
+	public static final String EXPRESSION_DELIMITER = ";";
+	public static final String DELIMITER = ":";
+    public static final String disabledInParValues = "[^:;\"\\~\\"+Node.NODE_SEPARATOR+"\\"+Node.ATTRIBUTE_SEPARATOR+"]+";
 	
 	private String resource = "";
 	private String regExp = "";
@@ -44,7 +54,7 @@ public class AccessControl {
 	
 	private AccessControl(String rule)
 	{
-		String[] x = rule.split(":");
+		String[] x = rule.split(DELIMITER);
 		if(x.length==2) loadData(x[0],x[1]);
 	}
 
@@ -53,7 +63,7 @@ public class AccessControl {
 	private void loadData(String resource, String rightString)
 	{
 		this.resource = resource;
-		if(resource.endsWith("*"))
+		if(resource.endsWith(CHILDREN))
 		{
 			regExp = resource.substring(0, resource.length()-1);
 			regExp = Pattern.quote(regExp)+".+";
@@ -86,14 +96,14 @@ public class AccessControl {
 	{
 		ArrayList<AccessControl> al = new ArrayList<AccessControl>();
 		if(rule==null || rule.length()==0) return al;
-		String[] x = rule.split(":");
+		String[] x = rule.split(DELIMITER);
 		if(x.length!=2) return al;
 		
-		if(x[0].endsWith("+"))
+		if(x[0].endsWith(NODE_AND_CHILDREN))
 		{
 			String t = x[0].substring(0, x[0].length()-1);
 			al.add(new AccessControl(t,x[1]));
-			al.add(new AccessControl(t+"*",x[1]));
+			al.add(new AccessControl(t+CHILDREN,x[1]));
 		} else al.add(new AccessControl(rule));
 		
 		return al;
@@ -103,7 +113,7 @@ public class AccessControl {
 
 	public synchronized String getNodePath() 
 	{ 
-		if(resource!=null && resource.endsWith("*") )
+		if(resource!=null && resource.endsWith(CHILDREN) )
 			return resource.substring(0, resource.length()-1);
 		return resource; 
 	}
