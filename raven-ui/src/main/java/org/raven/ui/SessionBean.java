@@ -76,6 +76,7 @@ public class SessionBean
 	public static final String BEAN_NAME = "sBean";
 	public static final String SELECT_NODE_PARAM = "nodePath";
     private Logger logger = LoggerFactory.getLogger(SessionBean.class);
+    public static final String disabledInNames = "[^:;\"\\~\\"+Node.NODE_SEPARATOR+"\\"+Node.ATTRIBUTE_SEPARATOR+"]+";
     public static final String LEFT_FRAME = "parent.frames.frame1";
     public static final String RIGHT_FRAME = "parent.frames.frame2";
 
@@ -180,7 +181,7 @@ public class SessionBean
 	public String getNodeNamePattern()
 	{
 		//return "[^\\Q~"+Node.NODE_SEPARATOR+Node.ATTRIBUTE_SEPARATOR+"\\E]+";
-		return "[^:;\"\\~\\"+Node.NODE_SEPARATOR+"\\"+Node.ATTRIBUTE_SEPARATOR+"]+";
+		return disabledInNames;
 	}
 	
 	public String getTitle()
@@ -311,7 +312,8 @@ public class SessionBean
 		 //org.apache.myfaces.trinidad.util.
 		 Service.getRenderKitService(facesContext, ExtendedRenderKitService.class);
 		 //service.addScript(facesContext, "parent.frames.frame1.location.href=parent.frames.frame1.location.href");
-		 service.addScript(facesContext, LEFT_FRAME+".location.reload()");
+//		 service.addScript(facesContext, LEFT_FRAME+".location.reload()");
+		 service.addScript(facesContext, LEFT_FRAME+".location.href="+LEFT_FRAME+".location.href");
 		 logger.info("reloadLeftFrame");
 	}
 	
@@ -323,8 +325,10 @@ public class SessionBean
 		// service.addScript(facesContext, "parent.frames.frame1.document.treeform.reftree.focus();");
 //		 service.addScript(facesContext, "parent.frames.frame2.location.href=parent.frames.frame2.location.href");
 //		 service.addScript(facesContext, "parent.frames.frame1.location.href=parent.frames.frame1.location.href");
-		 service.addScript(facesContext, RIGHT_FRAME+".location.reload()");
-		 service.addScript(facesContext, LEFT_FRAME+".location.reload()");
+//		 service.addScript(facesContext, RIGHT_FRAME+".location.reload()");
+//		 service.addScript(facesContext, LEFT_FRAME+".location.reload()");
+		 service.addScript(facesContext, RIGHT_FRAME+".location.href="+RIGHT_FRAME+".location.href");
+		 service.addScript(facesContext, LEFT_FRAME+".location.href="+LEFT_FRAME+".location.href");
 		 logger.info("reloadBothFrame");
 		 return ("success");
 	  }
@@ -336,7 +340,8 @@ public class SessionBean
 		 org.apache.myfaces.trinidad.util.Service.getRenderKitService(fc, ExtendedRenderKitService.class);
 		 logger.info("reloadRightFrame");
 //		 service.addScript(fc, "parent.frames.frame2.location.href=parent.frames.frame2.location.href");
-		 service.addScript(fc, RIGHT_FRAME+".location.reload()");
+//		 service.addScript(fc, RIGHT_FRAME+".location.reload()");
+		 service.addScript(fc, RIGHT_FRAME+".location.href="+RIGHT_FRAME+".location.href");
 		 return ("success");
 	  }
 	 
@@ -523,8 +528,9 @@ public class SessionBean
 		{
 			wrapper.setNode(currentNode);
 			clearNewNode();
-			reloadBothFrames();
-		} else reloadLeftFrame();
+			//reloadBothFrames();
+			reloadRightFrame();
+		} //else reloadLeftFrame();
 	}
 	
 	public String createTemplate()

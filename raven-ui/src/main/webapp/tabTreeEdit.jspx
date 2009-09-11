@@ -45,13 +45,13 @@
 						label="#{msgs.type}" 
 						value="#{sBean.newNodeType}"
 		        		action="dialog:chooseType" 
-        				windowWidth="500" windowHeight="400"/>
+        				windowWidth="500" windowHeight="600"/>
 					<tr:commandButton 
 						returnListener="#{sBean.template.handleReturn}" 
 						id="createNode" 
 						text="#{msgs.create}" 
 						action="#{sBean.createNode}" 
-						useWindow="true" windowWidth="500" windowHeight="400" />        
+						useWindow="true" windowWidth="500" windowHeight="600" />        
    				</tr:panelFormLayout>
 			</tr:panelCaptionGroup>
 			<tr:spacer width="40"/>
@@ -60,6 +60,8 @@
 	</tr:panelAccordion>
 	<tr:spacer width="20"/>
 	<tr:commandButton 
+		immediate="true"
+		partialSubmit="true"
 		rendered="#{cNode.allowNodeRename}"
 		id="renameNode"
 		text="#{msgs.renameNode}"

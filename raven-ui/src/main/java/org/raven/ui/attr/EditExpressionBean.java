@@ -49,7 +49,8 @@ public class EditExpressionBean
 	public void handleReturn(ReturnEvent event)
 	{
 		SessionBean sb = SessionBean.getInstance();
-		sb.reloadBothFrames();
+		//sb.reloadBothFrames();
+		sb.reloadRightFrame();
 	}
 	  
 	public String write()

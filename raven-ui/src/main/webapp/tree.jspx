@@ -132,7 +132,9 @@
         	value="#{sBean.treeModel}"  >
  		<f:facet name="nodeStamp">
  		<tr:group >
-			<tr:image source="/images/#{node.status}.gif" shortDesc="#{node.status}" />
+			<tr:image 
+				source="/images/#{node.status}.gif" 
+				shortDesc="#{node.status}" />
 			<tr:spacer width="3" />
  			<tr:commandLink
 	 			id="pSub_link" 
