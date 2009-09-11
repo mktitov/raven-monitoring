@@ -19,6 +19,7 @@ package org.raven.ds.impl;
 
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.tree.Node;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -41,5 +42,18 @@ public class CsvRecordFieldExtension extends AbstractRecordFieldExtension
     public void setColumnNumber(Integer columnNumber)
     {
         this.columnNumber = columnNumber;
+    }
+
+    public final static CsvRecordFieldExtension create(
+            Node owner, String extensionName, int columnNumber)
+    {
+        if (owner.getChildren(extensionName)!=null)
+            return null;
+        CsvRecordFieldExtension csvExt = new CsvRecordFieldExtension();
+        csvExt.setName(extensionName);
+        owner.addAndSaveChildren(csvExt);
+        csvExt.setColumnNumber(columnNumber);
+        csvExt.start();
+        return csvExt;
     }
 }

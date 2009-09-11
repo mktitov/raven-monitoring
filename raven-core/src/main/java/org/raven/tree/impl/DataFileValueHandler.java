@@ -145,6 +145,7 @@ public class DataFileValueHandler extends AbstractAttributeValueHandler
     public void setDataStream(InputStream data)
     {
         configurator.getTreeStore().saveNodeAttributeBinaryData(attribute, data);
+        fireValueChangedEvent(null, null);
     }
 
     private NodeAttribute getFileAttribute(String suffix) throws DataFileException
