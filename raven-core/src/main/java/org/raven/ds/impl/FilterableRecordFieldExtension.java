@@ -19,6 +19,7 @@ package org.raven.ds.impl;
 
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.constraints.NotNull;
 
@@ -69,5 +70,22 @@ public class FilterableRecordFieldExtension extends BaseNode
     public void setFilterValueRequired(Boolean filterValueRequired)
     {
         this.filterValueRequired = filterValueRequired;
+    }
+
+    public final static FilterableRecordFieldExtension create(
+            Node owner, String extensionName, boolean caseSensitive, boolean filterValueRequired,
+            String defaultValue)
+    {
+        if (owner.getChildren(extensionName)!=null)
+            return null;
+        FilterableRecordFieldExtension filterExt = new FilterableRecordFieldExtension();
+        filterExt.setName(extensionName);
+        owner.addAndSaveChildren(filterExt);
+        filterExt.setCaseSensitive(caseSensitive);
+        filterExt.setFilterValueRequired(filterValueRequired);
+        filterExt.setDefaultValue(defaultValue);
+        filterExt.start();
+
+        return filterExt;
     }
 }
