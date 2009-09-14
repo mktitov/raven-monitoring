@@ -15,7 +15,7 @@
  *  under the License.
  */
 
-package org.raven;
+package org.raven.test;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
-import org.raven.PushOnDemandDataSource;
+import org.raven.test.PushOnDemandDataSource;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.RavenUtils;
 import org.raven.ds.Record;

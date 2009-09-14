@@ -22,7 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import org.junit.Test;
-import org.raven.DataCollector;
+import org.raven.test.DataCollector;
 import org.raven.PushDataSource;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.Record;

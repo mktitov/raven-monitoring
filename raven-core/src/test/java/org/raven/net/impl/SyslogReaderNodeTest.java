@@ -26,7 +26,7 @@ import org.productivity.java.syslog4j.Syslog;
 import org.productivity.java.syslog4j.SyslogConstants;
 import org.productivity.java.syslog4j.SyslogIF;
 import org.productivity.java.syslog4j.util.SyslogUtility;
-import org.raven.DataCollector;
+import org.raven.test.DataCollector;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.Record;
 

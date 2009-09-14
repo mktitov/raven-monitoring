@@ -21,10 +21,9 @@ import java.io.InputStream;
 import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
-import org.raven.DataCollector;
+import org.raven.test.DataCollector;
 import org.raven.sched.impl.ExecutorServiceNode;
 import org.raven.test.RavenCoreTestCase;
-import org.raven.tree.DataFileException;
 
 /**
  *

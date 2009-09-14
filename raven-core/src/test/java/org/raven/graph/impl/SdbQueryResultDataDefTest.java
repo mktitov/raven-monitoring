@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.Map;
 import org.jrobin.data.Plottable;
 import org.junit.Test;
-import org.raven.PushOnDemandDataSource;
+import org.raven.test.PushOnDemandDataSource;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.graph.DataDefException;
 import org.raven.graph.GraphData;

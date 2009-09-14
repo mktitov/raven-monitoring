@@ -18,7 +18,7 @@
 package org.raven.ds.impl;
 
 import org.junit.Test;
-import org.raven.PushOnDemandDataSource;
+import org.raven.test.PushOnDemandDataSource;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;

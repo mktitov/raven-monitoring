@@ -20,7 +20,7 @@ package org.raven.ds.impl;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
-import org.raven.PushOnDemandDataSource;
+import org.raven.test.PushOnDemandDataSource;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeAttributeImpl;

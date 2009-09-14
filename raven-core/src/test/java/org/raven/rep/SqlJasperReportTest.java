@@ -24,7 +24,7 @@ import java.sql.Timestamp;
 import java.util.List;
 import net.sf.jasperreports.engine.JasperExportManager;
 import org.junit.Test;
-import org.raven.DataCollector;
+import org.raven.test.DataCollector;
 import org.raven.DummyScheduler;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.conf.Config;
