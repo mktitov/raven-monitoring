@@ -454,7 +454,7 @@ public class SvnBrowserNodeTest extends RavenCoreTestCase
 
         svnBrowser.setChildrenExpirationInterval(1l);
         TimeUnit.SECONDS.sleep(2);
-        svnBrowser.executeScheduledJob();
+        svnBrowser.executeScheduledJob(null);
         Node testNode2 = svnBrowser.getChildren("test");
         assertNotSame(testNode2, testNode);
     }

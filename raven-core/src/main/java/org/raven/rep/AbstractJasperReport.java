@@ -150,7 +150,7 @@ public abstract class AbstractJasperReport extends AbstractDataSource implements
     {
     }
 
-    public void executeScheduledJob()
+    public void executeScheduledJob(Scheduler scheduler)
     {
         try
         {

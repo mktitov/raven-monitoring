@@ -36,6 +36,7 @@ public class RecordImplTest extends RavenCoreTestCase
     {
         RecordSchema schema = createMock(RecordSchema.class);
         expect(schema.getFields()).andReturn(null);
+        expect(schema.getName()).andReturn("schema");
         replay(schema);
 
         try

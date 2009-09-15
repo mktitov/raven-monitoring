@@ -55,6 +55,7 @@ public class QuartzScheduler extends BaseNode implements Scheduler
 {
     public final static String NODE_ATTRIBUTE_NAME = "NODE";
     public final static String SCHEDULE_ATTRIBUTE = "schedule";
+    public final static String SCHEDULER_ATTRIBUTE_NAME = "SCHEDULER";
 
     @Parameter(defaultValue="20")
     @NotNull
@@ -249,6 +250,7 @@ public class QuartzScheduler extends BaseNode implements Scheduler
             JobDetail jobDetail = new JobDetail(
                     ""+node.getId(), scheduler.DEFAULT_GROUP, QuartzJobExecutor.class);
             jobDetail.getJobDataMap().put(NODE_ATTRIBUTE_NAME, node);
+            jobDetail.getJobDataMap().put(SCHEDULER_ATTRIBUTE_NAME, this);
             scheduler.scheduleJob(jobDetail, trigger);
         } catch (ParseException ex)
         {

@@ -118,6 +118,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
         AttributeValueHandlerListener listener = createMock(AttributeValueHandlerListener.class);
         expect(attr.getOwner()).andReturn(node).anyTimes();
         expect(attr.getRawValue()).andReturn(null);
+        expect(attr.getName()).andReturn("attr");
         attr.save();
         attr.save();
         listener.valueChanged(isNull(), eq(childNode));

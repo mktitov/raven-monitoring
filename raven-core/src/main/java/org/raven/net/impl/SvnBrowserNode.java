@@ -188,7 +188,7 @@ public class SvnBrowserNode extends SvnDirectoryNode implements Schedulable
             baseDir = new File(workDir, _initialPath);
     }
 
-    public void executeScheduledJob()
+    public void executeScheduledJob(Scheduler scheduler)
     {
         if (getStatus().equals(Status.STARTED))
         {

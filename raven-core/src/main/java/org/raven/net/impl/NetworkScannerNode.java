@@ -109,7 +109,7 @@ public class NetworkScannerNode extends DataPipeImpl implements Viewable, Schedu
 
     private Lock lock = new ReentrantLock();
 
-    public void executeScheduledJob()
+    public void executeScheduledJob(Scheduler scheduler)
     {
         try {
             scan();

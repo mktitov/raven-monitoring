@@ -38,7 +38,7 @@ public class SchedulableDataPipe extends DataPipeImpl implements Schedulable, Sc
     @NotNull
     private Scheduler scheduler;
 
-    public void executeScheduledJob()
+    public void executeScheduledJob(Scheduler scheduler)
     {
         if (isLogLevelEnabled(LogLevel.DEBUG))
             debug("Initiating data gathering request");
@@ -48,7 +48,7 @@ public class SchedulableDataPipe extends DataPipeImpl implements Schedulable, Sc
 		if (deps!=null)
 			for (Node node: deps)
 				if (node instanceof Schedulable)
-					((Schedulable)node).executeScheduledJob();
+					((Schedulable)node).executeScheduledJob(this);
     }
 
     public Scheduler getScheduler() {

@@ -18,6 +18,7 @@
 package org.raven.ds;
 
 import java.io.InputStream;
+import java.sql.Date;
 import java.sql.Timestamp;
 import org.raven.ds.impl.RecordRelationFieldExtension;
 import org.raven.net.impl.Ip;
@@ -33,6 +34,7 @@ public enum RecordSchemaFieldType
     DOUBLE(Double.class), FLOAT(Float.class),
     STRING(String.class),
     TIMESTAMP(Timestamp.class),
+    DATE(Date.class),
     IP(Ip.class),
     BINARY(BinaryFieldType.class),
     RECORD(Record.class),

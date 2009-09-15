@@ -34,10 +34,17 @@ public class SchedulableNode extends BaseNode implements Schedulable
     @Parameter
     @NotNull
     private Scheduler scheduler;
+    private Scheduler executedBy;
 
-    public void executeScheduledJob()
+    public void executeScheduledJob(Scheduler scheduler)
     {
         ++counter;
+        executedBy = scheduler;
+    }
+
+    public Scheduler getExecutedBy()
+    {
+        return executedBy;
     }
 
     public int getCounter() {

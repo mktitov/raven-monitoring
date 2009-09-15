@@ -21,6 +21,7 @@ import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.raven.sched.Schedulable;
+import org.raven.sched.Scheduler;
 
 /**
  *
@@ -32,6 +33,8 @@ public class QuartzJobExecutor implements Job
     {
         Schedulable node = (Schedulable) context.getJobDetail().getJobDataMap().get(
                 QuartzScheduler.NODE_ATTRIBUTE_NAME);
-        node.executeScheduledJob();
+        Scheduler scheduler = (Scheduler) context.getJobDetail().getJobDataMap().get(
+                QuartzScheduler.SCHEDULER_ATTRIBUTE_NAME);
+        node.executeScheduledJob(scheduler);
     }
 }

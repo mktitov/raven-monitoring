@@ -25,5 +25,9 @@ import org.raven.tree.Node;
  */
 public interface Schedulable extends Node
 {
-    public void executeScheduledJob();
+    /**
+     * Executes sheduled job.
+     * @param scheduler the sheduler which executes the job
+     */
+    public void executeScheduledJob(Scheduler scheduler);
 }

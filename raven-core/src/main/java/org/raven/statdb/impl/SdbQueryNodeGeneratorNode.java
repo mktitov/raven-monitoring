@@ -138,7 +138,7 @@ public class SdbQueryNodeGeneratorNode extends BaseNode implements Schedulable
         deletePreviousGroups();
     }
     
-    public void executeScheduledJob()
+    public void executeScheduledJob(Scheduler scheduler)
     {
         if (getStatus().equals(Status.STARTED))
         {

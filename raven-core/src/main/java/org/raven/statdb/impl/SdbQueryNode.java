@@ -17,7 +17,6 @@
 
 package org.raven.statdb.impl;
 
-import com.sun.jmx.remote.util.OrderClassLoaders;
 import java.util.Collection;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;

@@ -17,7 +17,6 @@
 
 package org.raven.net.impl;
 
-import org.raven.net.impl.NetworkScannerNode;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -25,11 +24,10 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.raven.DummyScheduler;
+import org.raven.test.DummyScheduler;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.net.objects.TestScannerConsumer;
 import org.raven.net.objects.TestScannerDataSource;
-import org.raven.net.impl.SnmpNode;
 import org.raven.table.Table;
 import org.raven.tree.Node.Status;
 
@@ -88,7 +86,7 @@ public class NetworkScannerNodeTest extends RavenCoreTestCase
 
         scanner.start();
         assertEquals(Status.STARTED, Status.STARTED);
-        scanner.executeScheduledJob();
+        scanner.executeScheduledJob(null);
         TimeUnit.SECONDS.sleep(1);
 
         List<String> ips = ds.getIps();
@@ -143,7 +141,7 @@ public class NetworkScannerNodeTest extends RavenCoreTestCase
 
         scanner.start();
         assertEquals(Status.STARTED, Status.STARTED);
-        scanner.executeScheduledJob();
+        scanner.executeScheduledJob(null);
         TimeUnit.SECONDS.sleep(1);
 
         Table table = consumer.getTable();
@@ -194,7 +192,7 @@ public class NetworkScannerNodeTest extends RavenCoreTestCase
         
         scanner.start();
         assertEquals(Status.STARTED, scanner.getStatus());
-        scanner.executeScheduledJob();
+        scanner.executeScheduledJob(null);
         
         while (scanner.isScanning())
             TimeUnit.MILLISECONDS.sleep(100);

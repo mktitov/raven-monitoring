@@ -23,7 +23,7 @@ import org.raven.test.RavenCoreTestCase;
 import org.raven.RavenUtils;
 import org.raven.table.Table;
 import org.raven.tree.Node.Status;
-import org.raven.DummyScheduler;
+import org.raven.test.DummyScheduler;
 import org.raven.tree.impl.objects.NodeScannerNodeConsumer;
 
 /**

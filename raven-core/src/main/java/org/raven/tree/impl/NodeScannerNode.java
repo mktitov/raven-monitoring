@@ -92,7 +92,7 @@ public class NodeScannerNode extends BaseNode implements DataSource, Schedulable
 
     private TableImpl table;
 
-    public void executeScheduledJob()
+    public void executeScheduledJob(Scheduler scheduler)
     {
         scannNodes();
     }

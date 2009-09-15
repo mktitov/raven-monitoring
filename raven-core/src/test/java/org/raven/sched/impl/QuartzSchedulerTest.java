@@ -58,6 +58,7 @@ public class QuartzSchedulerTest extends RavenCoreTestCase
 
         TimeUnit.SECONDS.sleep(5);
         node.stop();
+        assertSame(node.getExecutedBy(), scheduler);
         int counter = node.getCounter();
         assertTrue(counter>=2 && counter<=3);
 

@@ -25,7 +25,7 @@ import java.util.List;
 import net.sf.jasperreports.engine.JasperExportManager;
 import org.junit.Test;
 import org.raven.test.DataCollector;
-import org.raven.DummyScheduler;
+import org.raven.test.DummyScheduler;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.conf.Config;
 import org.raven.conf.Configurator;
@@ -78,7 +78,7 @@ public class SqlJasperReportTest extends RavenCoreTestCase
         DataCollector dataCollector = createDataCollector(report);
 
         long startTime = System.currentTimeMillis();
-        report.executeScheduledJob();
+        report.executeScheduledJob(null);
         long endTime = System.currentTimeMillis();
         List<Object> dataList = dataCollector.getDataList();
         assertNotNull(dataList);

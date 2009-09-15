@@ -23,7 +23,7 @@ import java.util.List;
 import org.easymock.IArgumentMatcher;
 import org.junit.Before;
 import org.junit.Test;
-import org.raven.DummyScheduler;
+import org.raven.test.DummyScheduler;
 import org.raven.PushDataSource;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.impl.RecordSchemaNode;
@@ -162,7 +162,7 @@ public class SdbQueryNodeGeneratorNodeTest extends RavenCoreTestCase
         Node node1 = tree.getNode("/generator/group1/key1/group2");
         assertNotNull(node1);
 
-        generator.executeScheduledJob();
+        generator.executeScheduledJob(null);
 
         Node node2 = tree.getNode("/generator/group1/key1/group2");
         assertNotNull(node2);
