@@ -34,6 +34,10 @@ public class XMLReader
         digester.push(owner);
         digester.setValidating(false);
         digester.addFactoryCreate("*/node", new NodeCreationFactory());
+        digester.addFactoryCreate("*/node/attribute", new AttributeCreationFactory());
+        digester.addRule("*/node/attribute/description", new SetDescriptionRule());
+        digester.addRule("*/node/attribute/value", new SetValueRule());
+        digester.addRule("*/node/attribute", new SaveAttributeRule());
         digester.parse(xmlStream);
     }
 }

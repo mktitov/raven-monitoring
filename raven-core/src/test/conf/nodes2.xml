@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nodes>
+  <node class="org.raven.tree.impl.ContainerNode" name="node">
+    <attribute name="logLevel">
+      <value>DEBUG</value>	
+    </attribute>
+    <attribute name="attr1" type="java.lang.String"/>
+    <attribute name="attr2" type="java.lang.Long" required="true">
+      <description>Привет ,message:org.raven.tree.store.impl.TestMessages:worldMessage</description>
+      <value>10</value>
+    </attribute>
+    <attribute name="attr3" type="java.lang.String" templateExpression="true"/>
+    <attribute name="attr4" type="java.lang.Long" valueHandler="Expression">
+      <value>1+1</value>
+    </attribute>
+  </node>
+</nodes>

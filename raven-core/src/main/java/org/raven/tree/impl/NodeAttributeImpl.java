@@ -256,7 +256,8 @@ public class NodeAttributeImpl
     {
         if (description==null)
             this.descriptionContainer = null;
-        this.descriptionContainer = new MessageComposer(messagesRegistry).append(description);
+        else
+            this.descriptionContainer = new MessageComposer(messagesRegistry).append(description);
     }
 
     public void setName(String name)
