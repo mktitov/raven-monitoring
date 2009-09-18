@@ -10,6 +10,15 @@
 <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
 	<tr:document title="#{msgs.selectDstNode}">
    	<tr:form id="treeform2">
+	<tr:panelButtonBar>
+		<tr:commandButton 
+			text="#{msgs.select}" 
+			action="#{selectNode.select}" />
+		<tr:commandButton 
+			immediate="true" 
+			action="#{selectNode.cancel}" 
+			text="#{msgs.cancel}"  />
+	</tr:panelButtonBar>
     <tr:panelPage>
 		<tr:outputFormatted 
 			value="#{msgs.dstNode}: &lt;b&gt;#{selectNode.dstNode.path}&lt;/b&gt;" />
@@ -26,15 +35,6 @@
         </tr:tree>
 
     </tr:panelPage>
-	<tr:panelButtonBar>
-		<tr:commandButton 
-			text="#{msgs.select}" 
-			action="#{selectNode.select}" />
-		<tr:commandButton 
-			immediate="true" 
-			action="#{selectNode.cancel}" 
-			text="#{msgs.cancel}"  />
-	</tr:panelButtonBar>
     </tr:form>
     </tr:document>
 </f:view>

@@ -131,10 +131,26 @@
         	binding="#{sBean.coreTree}" 
         	value="#{sBean.treeModel}"  >
  		<f:facet name="nodeStamp">
- 		<tr:group >
+ 		<tr:panelHorizontalLayout valign="middle">
 			<tr:image 
+				rendered="#{not node.started}"
 				source="/images/#{node.status}.gif" 
 				shortDesc="#{node.status}" />
+			<tr:spacer 
+				rendered="#{not node.started}"
+			 	width="3" /> 
+			 	<h:graphicImage 
+			 		alt=""
+			 		rendered="#{node.hasIconPath}"
+			 		height="12" 
+			 		width="12" 
+			 		url="#{node.iconPath}" />
+	<!-- 				
+			<tr:image  
+				rendered="#{node.hasIconPath}" 
+				source="#{node.iconPath}" 
+				 />
+ 	-->				 
 			<tr:spacer width="3" />
  			<tr:commandLink
 	 			id="pSub_link" 
@@ -144,14 +160,13 @@
 				<tr:outputText 
 					rendered="#{node.template}"
 					inlineStyle="color: grey; font-weight: bold; font-size: 70%;" 
-					value="#{node.name}"/>
+					value="#{node.prefix}#{node.name}"/>
 				<tr:outputText
 					rendered="#{!node.template}"
 					inlineStyle="font-size: 80%;" 
-					value="#{node.name}"/>
+					value="#{node.prefix}#{node.name}"/>
  			</tr:commandLink>
- 		<!-- <tr:chooseDate  ></tr:chooseDate> -->
- 		</tr:group>
+ 		</tr:panelHorizontalLayout>
   		</f:facet>
         
         </tr:tree>

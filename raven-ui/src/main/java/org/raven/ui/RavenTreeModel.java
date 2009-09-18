@@ -23,6 +23,7 @@ import org.apache.myfaces.trinidad.model.ChildPropertyTreeModel;
 import org.raven.conf.impl.AccessControl;
 import org.raven.conf.impl.UserAcl;
 import org.raven.tree.Node;
+import org.raven.ui.node.NodeWrapper;
 
 public class RavenTreeModel extends ChildPropertyTreeModel 
 {
@@ -33,6 +34,7 @@ public class RavenTreeModel extends ChildPropertyTreeModel
 	public RavenTreeModel(Object instance, String childProperty)
 	{
 		super(instance,childProperty);
+		//super.
 	}
 	
 	  @SuppressWarnings("unchecked")
@@ -45,12 +47,14 @@ public class RavenTreeModel extends ChildPropertyTreeModel
 		  if (o instanceof Object[]) olist = (Object[]) o;
 	    	else if (o instanceof List) olist = ((List) o).toArray();
 		  if(olist==null) return null;
-		  ArrayList<Node> ret = new ArrayList<Node>();
+		  //ArrayList<Node> ret = new ArrayList<Node>();
+		  ArrayList<NodeWrapper> ret = new ArrayList<NodeWrapper>();
 		  int access = AccessControl.NONE; 
 		  for(Object ob : olist)
 		  	{
-			  Node n = (Node) ob;
-			  int acc = userAcl.getAccessForNode(n);
+			  //Node n = (Node) ob;
+			  NodeWrapper n = (NodeWrapper) ob; //new NodeWrapper((Node)ob);
+			  int acc = userAcl.getAccessForNode(n.getNode());
 			  if(acc > AccessControl.NONE)
 			  {
 				  access = acc;

@@ -1673,4 +1673,8 @@ public class BaseNode implements Node, NodeListener, Logger
 	public boolean isWarnEnabled(Marker arg0) {
 		return sl4jLogger.isWarnEnabled(arg0);
 	}
+
+	public String getPrefix() {
+		return "";
+	}
 }

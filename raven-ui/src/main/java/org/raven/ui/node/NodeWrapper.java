@@ -17,6 +17,7 @@
 
 package org.raven.ui.node;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -48,9 +49,13 @@ import org.raven.tree.NodeError;
 import org.raven.tree.ScanOperation;
 import org.raven.tree.ScannedNodeHandler;
 import org.raven.tree.Viewable;
+import org.raven.tree.Node.Status;
+import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.impl.NodeReferenceValueHandler;
 import org.raven.tree.impl.ScanOptionsImpl;
+import org.raven.ui.IconResource;
+import org.raven.ui.ResourcesCache;
 import org.raven.ui.SessionBean;
 import org.raven.ui.attr.Attr;
 import org.raven.ui.node.AbstractNodeWrapper;
@@ -127,6 +132,8 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	private List<Integer> logNodes = new ArrayList<Integer>();
 	private List<NodeWrapper> upperNodes;
 	private int shortNameLen = 0;
+	public static final String[] iconExt = {"gif","png"};
+	private String iconPath = null;
 		
 	public NodeWrapper() 
 	{
@@ -364,7 +371,8 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 			auditor.write(n, getAccountName(), Action.NODE_RENAME, TO, ret);
 			n.setName(ret);
 			n.save();
-			SessionBean.getInstance().reloadBothFrames();
+			//SessionBean.getInstance().reloadBothFrames();
+			SessionBean.getInstance().reloadRightFrame();
 		}
 	}
 	
@@ -377,6 +385,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		clearAllUnsavedChanges();
 		setVoSource(null);
 		upperNodes = null;
+		iconPath = null;
 		//loadRefreshAttributes();
 //		AttributesTableBean atb = (AttributesTableBean) context.getELContext().getELResolver().getValue(context.getELContext(), null, AttributesTableBean.BEAN_NAME);
 //		if(atb != null && atb.getMessage() !=null) atb.getMessage().setMessage("");
@@ -1480,4 +1489,101 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		return shortNameLen;
 	}
 	
+	private byte[] readBytes(InputStream is)
+	{
+	    byte res[] = new byte[0];
+	    byte buf[] = new byte[65535];
+	    try {
+			for(int i = 0; (i = is.read(buf)) > 0;)  
+			 {
+			        int tmp = res.length + i;
+			        byte[] tempBuf = new byte[tmp];
+			        System.arraycopy(res, 0, tempBuf, 0, res.length);
+			        System.arraycopy(buf, 0, tempBuf, res.length, i);
+			        res = tempBuf;
+			      }
+		} catch (Exception e) {
+			logger.error("on readBytes:",e);
+			res = null;
+		}
+		finally 
+		{
+			if(is!=null)
+				try {is.close();} catch(Exception e) {}
+		}
+		return res;
+	}
+	
+	public boolean isHasIconPath()
+	{
+		IconResource ir = ResourcesCache.getInstance().get(getIconPath());
+		return ir.isValid();
+	}
+	
+	@SuppressWarnings("unchecked")
+	public String getIconPath()
+	{
+		if(iconPath!=null) return iconPath;
+		
+		
+		Class nc = getNode().getClass();
+		if(nc.getSimpleName().equals("AccessGroupNode"))
+		{
+			int i=0;
+			i+=100;
+		}
+		String clName = nc.getName();
+		String x = clName.replaceAll("\\.", "/");
+		InputStream is = null;
+		String b = null;
+		for(String a :  iconExt)
+		{
+			is = nc.getResourceAsStream("/"+x+"."+a);
+			if(is!=null)
+			{
+				b = a;
+				break;
+			}	
+		}
+		ResourcesCache rc = ResourcesCache.getInstance();
+		if(is==null)
+		{
+			rc.put(x, new IconResource(null,null));
+			iconPath = x;
+			return x;
+		}
+		iconPath = x+"."+b;
+		rc.put(iconPath, new IconResource("image/"+b,readBytes(is)));
+		return iconPath;
+	}
+	
+	public Status getStatus()
+	{
+		return getNode().getStatus();
+	}
+	
+	public boolean isTemplate()
+	{
+		return getNode().isTemplate();
+	}
+
+	public String getName()
+	{
+		return getNode().getName();
+	}
+
+	public String getPrefix()
+	{
+		return ((BaseNode)getNode()).getPrefix();
+	}
+	
+	public boolean isStarted()
+	{
+		return getStatus()==Status.STARTED;
+	}
+	
+	public String getPath()
+	{
+		return getNode().getPath();
+	}
 }

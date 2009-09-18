@@ -18,6 +18,8 @@ import org.raven.tree.impl.ViewableObjectImpl;
 		parentNode=org.raven.conf.impl.ResourcesListNode.class)
 public class ResourceNode extends BaseNode implements Viewable 
 {
+	public static final String PREFIX = LdapGroupAcl.RESOURCE_PARAM+AccessControl.DELIMITER+" ";
+	
 	@Parameter
 	private String title;
 
@@ -26,6 +28,11 @@ public class ResourceNode extends BaseNode implements Viewable
 	
 	@Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
 	private Node show;
+
+	public ResourceNode()
+	{
+		super();
+	}
 	
 	public Boolean getAutoRefresh() 
 	{
@@ -41,7 +48,7 @@ public class ResourceNode extends BaseNode implements Viewable
 	{
 		buf.append(parName);
 		buf.append(AccessControl.DELIMITER);
-		buf.append(parValue);
+		buf.append(AccessControl.removeDeniedSymbols(parValue));
 		buf.append(AccessControl.EXPRESSION_DELIMITER);
 		return buf;
 	}
@@ -81,8 +88,7 @@ public class ResourceNode extends BaseNode implements Viewable
 	}
 
 	public void setTitle(String title) {
-		String t = title.replaceAll(AccessControl.disabledInParValues, "");
-		this.title = t ;//title.replaceAll(AccessControl.disabledInParValues, "");
+		this.title = title.replaceAll(AccessControl.disabledInParValues, "");
 	}
 
 	public String getTitle() {
@@ -103,6 +109,11 @@ public class ResourceNode extends BaseNode implements Viewable
 
 	public String getDsc() {
 		return dsc;
+	}
+	
+	public String getPrefix()
+	{
+		return PREFIX;
 	}
 
 }

@@ -33,7 +33,8 @@ public class SelectVOBean
 	
 	public void handleReturn(ReturnEvent event)
 	{
-		SessionBean.getInstance().reloadBothFrames();
+		//SessionBean.getInstance().reloadBothFrames();
+		SessionBean.getInstance().reloadRightFrame();
 	}
 
 	public String cancel()

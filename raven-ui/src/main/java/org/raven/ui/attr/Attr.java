@@ -196,16 +196,17 @@ public class Attr implements Comparable<Attr>
 		if(expression==null || expression.length()==0) return;
 		SelectNodeBean nb = (SelectNodeBean) SessionBean.getElValue(SelectNodeBean.BEAN_NAME);
 		Tree tree = SessionBean.getTree();
-		Node n = null;
+		//Node n = null;
+		NodeWrapper nw = null;
 		try {
-			n = tree.getNode(expression);
-			NodeWrapper nw = new NodeWrapper(n);
-			if( ! nw.isAllowNodeRead() ) n = null;
+			Node n = tree.getNode(expression);
+			nw = new NodeWrapper(n);
+			if( ! nw.isAllowNodeRead() ) nw = null;
 		} catch (InvalidPathException e) {
 			logger.error("on set current node in dialog : ",e);
 			return;
 		}
-		nb.setDstNode(n);
+		nb.setDstNode(nw);
 	}
 	
 	public void selectNodeHandleReturn(ReturnEvent event)

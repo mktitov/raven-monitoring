@@ -60,6 +60,11 @@ public class AccessControl {
 
 	private AccessControl(String resource, String right) { loadData(resource, right); }
 	
+	public static String removeDeniedSymbols(String s)
+	{
+		return s.replaceAll(AccessControl.disabledInParValues, "");
+	}
+	
 	private void loadData(String resource, String rightString)
 	{
 		this.resource = resource;

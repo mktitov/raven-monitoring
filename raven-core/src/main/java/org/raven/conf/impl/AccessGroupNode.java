@@ -43,7 +43,6 @@ public class AccessGroupNode extends BaseNode implements Viewable
 				ResourceNode.appendParam(sb, LdapGroupAcl.USER_PARAM, r.getName());
 			}
 		}
-		
 		return sb.toString();
 	}
 
@@ -69,7 +68,7 @@ public class AccessGroupNode extends BaseNode implements Viewable
 	}
 
 	public void setLdapGroup(String ldapGroup) {
-		this.ldapGroup = ldapGroup.replaceAll(AccessControl.disabledInParValues, "");
+		this.ldapGroup = AccessControl.removeDeniedSymbols(ldapGroup);
 	}
 
 	public String getLdapGroup() {

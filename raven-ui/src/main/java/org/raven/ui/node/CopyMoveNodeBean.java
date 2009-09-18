@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.faces.event.ActionEvent;
 import org.apache.myfaces.trinidad.component.core.data.CoreTree;
-import org.raven.tree.Node;
 import org.raven.tree.Tree;
 import org.raven.ui.RavenTreeModel;
 import org.raven.ui.SessionBean;
@@ -16,7 +15,7 @@ import org.apache.myfaces.trinidad.context.RequestContext;
 public class CopyMoveNodeBean  
 {
 	public static final String BEAN_NAME = "copyMoveNode";
-	private Node dstNode = null;
+	private NodeWrapper dstNode = null;
 	private Tree tree = null;
 	private RavenTreeModel treeModel = null;
 	private CoreTree coreTree = null;
@@ -24,8 +23,8 @@ public class CopyMoveNodeBean
 	public CopyMoveNodeBean()
 	{
 		tree = SessionBean.getTree();
-		List<Node> nodes = new ArrayList<Node>();
-		nodes.add(tree.getRootNode());
+		List<NodeWrapper> nodes = new ArrayList<NodeWrapper>();
+		nodes.add(new NodeWrapper(tree.getRootNode()));
 		
 		treeModel = new RavenTreeModel(nodes, "childrenList");
 		treeModel.setUserAcl(SessionBean.getUserAcl());
@@ -33,7 +32,7 @@ public class CopyMoveNodeBean
 	
 	  public void setNode(ActionEvent event)
 	  {
-		  Node n = (Node) SessionBean.getElValue("nodex");
+		  NodeWrapper n = (NodeWrapper) SessionBean.getElValue("nodex");
 		  setDstNode(n);
 	  }
 	  
@@ -87,11 +86,11 @@ public class CopyMoveNodeBean
 		return coreTree;
 	}
 
-	public void setDstNode(Node dstNode) {
+	public void setDstNode(NodeWrapper dstNode) {
 		this.dstNode = dstNode;
 	}
 
-	public Node getDstNode() {
+	public NodeWrapper getDstNode() {
 		return dstNode;
 	}	
 	

@@ -19,10 +19,16 @@ import org.weda.annotations.constraints.NotNull;
 public class ResourceLinkNode extends BaseNode implements Viewable 
 {
 	public static final String prefix = "res: ";
+	public static final String PREFIX = LdapGroupAcl.RESOURCE_PARAM+AccessControl.DELIMITER+" ";
 	
 	@Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
 	@NotNull
 	private Node node;
+	
+	public ResourceLinkNode()
+	{
+		super();
+	}
 	
 	public List<ViewableObject> getViewableObjects(
 			Map<String, NodeAttribute> refreshAttributes) throws Exception 
@@ -57,6 +63,11 @@ public class ResourceLinkNode extends BaseNode implements Viewable
 		if (getStatus()!=Status.STARTED)
 		    return null;
 		return node.getName();
+	}
+	
+	public String getPrefix()
+	{
+		return PREFIX;
 	}
 
 }

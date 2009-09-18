@@ -17,6 +17,8 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass(parentNode=org.raven.conf.impl.ResourceNode.class)
 public class AccessControlNode extends BaseNode implements Viewable 
 {
+	public static final String PREFIX = LdapGroupAcl.AC_PARAM+AccessControl.DELIMITER+" ";
+	
 	@Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
 	@NotNull
 	private Node node;
@@ -28,6 +30,12 @@ public class AccessControlNode extends BaseNode implements Viewable
 	@Parameter
 	@NotNull
 	private AccessRight	right;
+	
+	public AccessControlNode()
+	{
+		super();
+	}
+
 	
 	public Boolean getAutoRefresh() 
 	{
@@ -83,5 +91,9 @@ public class AccessControlNode extends BaseNode implements Viewable
 		return right;
 	}
 
+	public String getPrefix()
+	{
+		return PREFIX;
+	}
 
 }

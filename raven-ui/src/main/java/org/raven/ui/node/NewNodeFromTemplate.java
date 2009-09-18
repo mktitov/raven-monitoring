@@ -33,7 +33,8 @@ public class NewNodeFromTemplate
 	  {
 	    //Object returnedValue = event.getReturnValue();
 	    SessionBean sb = (SessionBean) SessionBean.getElValue(SessionBean.BEAN_NAME);
-	    sb.reloadBothFrames();
+	    //sb.reloadBothFrames();
+	    sb.reloadRightFrame();
 	  }
 
 	public String write()

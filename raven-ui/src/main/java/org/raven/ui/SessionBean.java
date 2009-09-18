@@ -228,9 +228,10 @@ public class SessionBean
 	//		type type = (type) en.nextElement();
 	//	}
 		
-		List<Node> nodes = new ArrayList<Node>();
-		//nodes.add(tree.getRootNode());
-		nodes.add(x);
+		//List<Node> nodes = new ArrayList<Node>();
+		List<NodeWrapper> nodes = new ArrayList<NodeWrapper>();
+		////nodes.add(tree.getRootNode());
+		nodes.add(new NodeWrapper(x));
 		wrapper.setNode(x);
 		
 		treeModel = new RavenTreeModel(nodes, "childrenList");
@@ -388,8 +389,8 @@ public class SessionBean
 	 
 	  public void show(ActionEvent event)
 	  {
-		  Node n = (Node) SessionBean.getElValue("node");
-		  setCurrentNode(n);
+		  NodeWrapper n = (NodeWrapper) SessionBean.getElValue("node");
+		  setCurrentNode(n.getNode());
 	  }
 
 	  public void pollReloadRightFrame(PollEvent event)
@@ -517,8 +518,9 @@ public class SessionBean
 		{
 			wrapper.setNode(currentNode);
 			clearNewNode();
-			if(rFlag) reloadBothFrames();
-			else reloadRightFrame();
+			//if(rFlag) reloadBothFrames();
+			//else 
+			reloadRightFrame();
 		}// else reloadLeftFrame();
 	}
 	

@@ -16,6 +16,7 @@ import org.raven.tree.impl.ViewableObjectImpl;
 public class AccessUserNode extends BaseNode implements Viewable 
 {
 	public static final String prefix = LdapGroupAcl.USER_PARAM+" ";
+	public static final String PREFIX = LdapGroupAcl.USER_PARAM+AccessControl.DELIMITER+" ";
 
 	/*
 	@Parameter
@@ -27,6 +28,13 @@ public class AccessUserNode extends BaseNode implements Viewable
 		return user;
 	}
 */	
+	
+	public AccessUserNode()
+	{
+		super();
+	}
+	
+	
 	public List<ViewableObject> getViewableObjects(
 			Map<String, NodeAttribute> refreshAttributes) throws Exception 
 	{
@@ -45,6 +53,11 @@ public class AccessUserNode extends BaseNode implements Viewable
 	public Map<String, NodeAttribute> getRefreshAttributes() throws Exception 
 	{
 		return null;
+	}
+
+	public String getPrefix()
+	{
+		return PREFIX;
 	}
 	
 }

@@ -8,14 +8,13 @@ import javax.faces.event.ActionEvent;
 import org.apache.myfaces.trinidad.component.core.data.CoreTree;
 import org.apache.myfaces.trinidad.context.RequestContext;
 import org.apache.myfaces.trinidad.model.TreeModel;
-import org.raven.tree.Node;
 import org.raven.tree.Tree;
 import org.raven.ui.RavenTreeModel;
 import org.raven.ui.SessionBean;
 
 public class SelectNodeBean {
 	public static final String BEAN_NAME = "selectNode";
-	private Node dstNode = null;
+	private NodeWrapper dstNode = null;
 	private Tree tree = null;
 	private RavenTreeModel treeModel = null;
 	private CoreTree coreTree = null;
@@ -23,8 +22,8 @@ public class SelectNodeBean {
 	public SelectNodeBean()
 	{
 		tree = SessionBean.getTree();
-		List<Node> nodes = new ArrayList<Node>();
-		nodes.add(tree.getRootNode());
+		List<NodeWrapper> nodes = new ArrayList<NodeWrapper>();
+		nodes.add(new NodeWrapper(tree.getRootNode()));
 		
 		treeModel = new RavenTreeModel(nodes, "childrenList");
 		treeModel.setUserAcl(SessionBean.getUserAcl());
@@ -32,14 +31,14 @@ public class SelectNodeBean {
 	
 	  public void setNode(ActionEvent event)
 	  {
-		  Node n = (Node) SessionBean.getElValue("nodex");
+		  NodeWrapper n = (NodeWrapper) SessionBean.getElValue("nodex");
 		  setDstNode(n);
 	  }
 	  
 		public String select()
 		{
 			if(dstNode==null) return cancel();
-			RequestContext.getCurrentInstance().returnFromDialog(dstNode.getPath(), null);
+			RequestContext.getCurrentInstance().returnFromDialog(dstNode.getNodePath(), null);
 			return null;
 		}
 
@@ -86,11 +85,11 @@ public class SelectNodeBean {
 		return coreTree;
 	}
 
-	public void setDstNode(Node dstNode) {
+	public void setDstNode(NodeWrapper dstNode) {
 		this.dstNode = dstNode;
 	}
 
-	public Node getDstNode() {
+	public NodeWrapper getDstNode() {
 		return dstNode;
 	}	
 	

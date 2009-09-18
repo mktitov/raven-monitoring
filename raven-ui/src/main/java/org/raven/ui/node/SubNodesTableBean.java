@@ -209,7 +209,8 @@ public class SubNodesTableBean
 	    	int idx = nodes.indexOf(it);
 	    	if(idx>=0) state.add(new Integer(idx)); 
 	    }
-	    SessionBean.getInstance().reloadBothFrames();
+	    //SessionBean.getInstance().reloadBothFrames();
+	    SessionBean.getInstance().reloadRightFrame();
 	  }
 	  
 	  public void downNodes(ActionEvent action)
@@ -224,14 +225,16 @@ public class SubNodesTableBean
 		  state.addAll();
 //		  int all = ((UIXTable) table).getRowCount();
 //		  for(int i=0;i<all;i++)
-		  SessionBean.getInstance().reloadBothFrames();
+		  //SessionBean.getInstance().reloadBothFrames();
+		  SessionBean.getInstance().reloadRightFrame();
 	  }
 
 	  public void cancelSelectNodes(ActionEvent action)
 	  {
 		  RowKeySet state = ((UIXTable) table).getSelectedRowKeys();
 		  state.clear();
-		  SessionBean.getInstance().reloadBothFrames();
+		  //SessionBean.getInstance().reloadBothFrames();
+		  SessionBean.getInstance().reloadRightFrame();
 	  }
 	  
 	  public String tryDelete(List<NodeWrapper> nodes)
@@ -253,18 +256,20 @@ public class SubNodesTableBean
 		{
 		  	SessionBean sb = (SessionBean) SessionBean.getElValue(SessionBean.BEAN_NAME);
 		  	StringBuffer retb = new StringBuffer();
-		  	Node n = (Node) event.getReturnValue(); // dst node
-		  	if(n==null)
+		  	NodeWrapper nx = (NodeWrapper) event.getReturnValue(); // dst node
+		  	if(nx==null)
 		  	{
 		  		message.setMessage(Messages.getUiMessage(Messages.NO_SELECTED_NODES));
-				sb.reloadBothFrames();
+				//sb.reloadBothFrames();
+		  		sb.reloadRightFrame();
 		  		return;
 		  	}	
-		  	NodeWrapper nx = new NodeWrapper(n);
+		  	//NodeWrapper nx = new NodeWrapper(n);
 		  	if(!nx.isAllowTreeEdit())
 		  	{
 		  		message.setMessage(Messages.getUiMessage(Messages.ACCESS_DENIED));
-				sb.reloadBothFrames();
+				//sb.reloadBothFrames();
+				sb.reloadRightFrame();
 		  		return;
 		  	}	
 		  		
@@ -274,7 +279,7 @@ public class SubNodesTableBean
 		  	HashMap<Integer,String> newNames = new HashMap<Integer, String>();
 		  	for(NodeWrapper nw: nws)
 		  	{
-		  		String to = n.getPath();
+		  		String to = nx.getPath();
 		  		String parent = nw.getNode().getParent().getPath();
 		  		String from = nw.getNode().getPath();
 		  		//logger.info("to="+to+" , from="+from+" , parent="+parent);
@@ -286,7 +291,8 @@ public class SubNodesTableBean
 		  		if(to.startsWith(from))
 		  		{
 		  			message.setMessage(Messages.getUiMessage(Messages.BAD_DST_NODE));
-		  			sb.reloadBothFrames();
+		  			//sb.reloadBothFrames();
+		  			sb.reloadRightFrame();
 		  			return;
 		  		}
 		  	}	
@@ -303,11 +309,11 @@ public class SubNodesTableBean
 		  			if(copy) a = Action.NODE_COPY;
 		  			Auditor au = SessionBean.getInstance().getAuditor();
 		  			
-		  			AuditRecord aRec = au.prepare(nw.getNode(), SessionBean.getAccountNameS(), a, mes, n.getPath(), newName);
+		  			AuditRecord aRec = au.prepare(nw.getNode(), SessionBean.getAccountNameS(), a, mes, nx.getPath(), newName);
 		  			if(copy)
-		  				tree.copy(nw.getNode(), n, newName, null, true, true, false);
+		  				tree.copy(nw.getNode(), nx.getNode(), newName, null, true, true, false);
 	  				else
-	  					tree.move(nw.getNode(), n, newName);
+	  					tree.move(nw.getNode(), nx.getNode(), newName);
 		  			au.write(aRec);
 		  		}
 		  		catch(Exception e) 
@@ -323,7 +329,8 @@ public class SubNodesTableBean
 		  		 logger.error("copyAndMove:",e);
 		  		}
 		  	}	
-			sb.reloadBothFrames();
+			//sb.reloadBothFrames();
+		  	sb.reloadRightFrame();
 			if(message!=null) message.setMessage(retb.toString());
 		}
 	  
