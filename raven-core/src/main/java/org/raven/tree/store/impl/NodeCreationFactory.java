@@ -26,11 +26,8 @@ import org.xml.sax.Attributes;
  * Factory thats create {@link Node} from xml
  * @author Mikhail Titov
  */
-public class NodeCreationFactory implements ObjectCreationFactory
+public class NodeCreationFactory implements ObjectCreationFactory, XMLConsts
 {
-    public static final String CLASS_ATTRIBUTE = "class";
-    public static final String NAME_ATTRIBUTE = "name";
-    
     private Digester digester;
 
     public Object createObject(Attributes attributes) throws Exception

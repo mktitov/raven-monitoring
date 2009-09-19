@@ -31,18 +31,11 @@ import org.xml.sax.Attributes;
  *
  * @author Mikhail Titov
  */
-public class AttributeCreationFactory implements ObjectCreationFactory
+public class AttributeCreationFactory implements ObjectCreationFactory, XMLConsts
 {
-    public static final String PARENT_ATTRIBUTE = "parent";
-    public static final String REQUIRED_ATTRIBUTE = "required";
-    public static final String TEMPLATE_EXPRESSION_ATTRIBUTE = "templateExpression";
     @Service
     private static TypeConverter converter;
-
-    public final static String NAME_ATTRIBUTE = "name";
-    public static final String TYPE_ATTRIBUTE = "type";
-    public static final String VALUE_HANDLER_ATTRIBUTE = "valueHandler";
-
+    
     private Digester digester;
 
     public Object createObject(Attributes attributes) throws Exception

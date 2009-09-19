@@ -49,6 +49,6 @@ public class SetValueRule extends Rule
             }
         }
         else
-            attr.setValue(text);
+            attr.setValue(text.isEmpty()? null : text);
     }
 }
