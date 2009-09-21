@@ -57,10 +57,10 @@ public class FileDataSourceTest extends RavenCoreTestCase
         fds.getFile().setDataStream(is);
         Thread.sleep(1000);
         List dataList = collector.getDataList();
-        assertEquals(2, dataList.size());
-        assertNull(dataList.get(0));
-        assertTrue(dataList.get(1) instanceof InputStream);
-        assertEquals("test", IOUtils.toString((InputStream)dataList.get(1)));
+        assertEquals(1, dataList.size());
+//        assertNull(dataList.get(0));
+        assertTrue(dataList.get(0) instanceof InputStream);
+        assertEquals("test", IOUtils.toString((InputStream)dataList.get(0)));
 
         dataList.clear();
         Object data = collector.refereshData(null);

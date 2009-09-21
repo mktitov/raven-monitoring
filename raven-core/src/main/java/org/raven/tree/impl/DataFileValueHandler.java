@@ -69,7 +69,7 @@ public class DataFileValueHandler extends AbstractAttributeValueHandler
         if (firstHandleData)
         {
             firstHandleData = false;
-            fireValueChangedEvent(null, this);
+//            fireValueChangedEvent(null, this);
         }
         return this;
     }
