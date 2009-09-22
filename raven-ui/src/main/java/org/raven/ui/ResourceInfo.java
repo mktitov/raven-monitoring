@@ -6,7 +6,7 @@ import org.raven.util.Utl;
 
 public class ResourceInfo 
 {
-	public static final int LIMIT = 1;
+	public static final int LIMIT = 12;
 	//private AccessResource res;
 	private String title;
 	private String path;
