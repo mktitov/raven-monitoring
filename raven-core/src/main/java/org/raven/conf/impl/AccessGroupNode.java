@@ -68,7 +68,8 @@ public class AccessGroupNode extends BaseNode implements Viewable
 	}
 
 	public void setLdapGroup(String ldapGroup) {
-		this.ldapGroup = AccessControl.removeDeniedSymbols(ldapGroup);
+		//this.ldapGroup = AccessControl.removeDeniedSymbols(ldapGroup);
+		this.ldapGroup = ldapGroup;
 	}
 
 	public String getLdapGroup() {

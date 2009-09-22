@@ -48,7 +48,10 @@ public class ResourceNode extends BaseNode implements Viewable
 	{
 		buf.append(parName);
 		buf.append(AccessControl.DELIMITER);
-		buf.append(AccessControl.removeDeniedSymbols(parValue));
+		if(AccessControlList.AC_PARAM.equals(parName))
+				buf.append(parValue);
+		else
+			buf.append(AccessControl.removeDeniedSymbols(parValue));
 		buf.append(AccessControl.EXPRESSION_DELIMITER);
 		return buf;
 	}
@@ -64,7 +67,7 @@ public class ResourceNode extends BaseNode implements Viewable
 			appendParam(sb, AccessControlList.TITLE_PARAM, title);
 		
 		if(show!=null)
-			appendParam(sb, AccessResource.SHOW_PARAM, show.getName());
+			appendParam(sb, AccessResource.SHOW_PARAM, show.getPath());
 
 		for(Node n: getChildrenList())
 		{

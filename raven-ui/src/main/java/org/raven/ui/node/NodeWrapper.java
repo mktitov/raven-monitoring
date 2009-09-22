@@ -912,7 +912,8 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		
 		public void afterWriteAttrubutes()
 		{
-			restartNode();
+			if(this.isStarted())
+				restartNode();
 		}
 		
 		public void restartNode()

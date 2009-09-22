@@ -90,12 +90,12 @@
        		pollListener="#{sBean.onTreePoll}" 
        		id="pooltree" 
        		interval="#{sBean.refreshTreeInterval}" />
-       	<tr:spacer height="3" />	
+       	<tr:spacer height="3" />
+<!--       		
        	<tr:panelPopup 
  			text="#{msgs.resources}">
-       		
-        	<tr:panelList >
-        	  
+         	  
+        	<tr:panelList>
        	        <tr:forEach 
        	        	var="res" 
        	        	items="#{sBean.resourcesList}">
@@ -119,11 +119,52 @@
         			<tr:spacer width="12"/>
         			</tr:panelHorizontalLayout>
 				</tr:forEach>
-				
 			</tr:panelList>
-						
-		</tr:panelPopup>	
-       	<tr:spacer height="3" />	
+	 </tr:panelPopup>  			
+initiallyExpanded="true"			
+ -->
+       	<tr:panelAccordion>
+ 
+ <!-- *************** -->
+ <!-- RESOURCES TREE  -->
+ <!-- *************** -->				
+   		<tr:showDetailItem text="#{msgs.resources}">
+   			<tr:separator/>
+			<tr:tree 
+    	    	partialTriggers="::pooltree" 
+        		id="treeRes" 
+        		var="res" 
+        		value="#{sBean.resourcesTreeModel}"  >
+ 				<f:facet name="nodeStamp">
+ 				<tr:panelHorizontalLayout valign="middle">
+	        	  	<tr:commandLink 
+    	    	    	rendered="#{res.valid}"
+       		 	        text="#{res.title}"
+			 			partialSubmit="true" 
+	   			        immediate="true"
+	   	        	    onclick="top.switchFrameSet()"
+    	            	actionListener="#{sBean.selectNodeAndMaximize}">
+        	        	<f:attribute
+	        				name="#{sBean.nodePathParName}"
+    	    				value="#{res.path}" 
+        				/>
+        			</tr:commandLink>
+        			<tr:outputText
+	        			inlineStyle="font-size: 80%"
+   		     			rendered="#{not res.valid}" 
+   	   		  			value="#{res.title}" />
+ 				</tr:panelHorizontalLayout>
+  				</f:facet>
+        	</tr:tree>
+	        <tr:separator/>
+			<tr:spacer height="8" />        
+		</tr:showDetailItem>
+
+<!-- *************** -->
+ <!-- NODES TREE  -->
+ <!-- *************** -->				
+  		<tr:showDetailItem text="#{msgs.nodes}" >
+		<tr:separator/>
         <tr:tree 
         	partialTriggers="::pooltree" 
         	id="tree1" 
@@ -170,7 +211,8 @@
   		</f:facet>
         
         </tr:tree>
-         
+        </tr:showDetailItem>
+     </tr:panelAccordion>
         </tr:panelPage>
        
        </tr:form>

@@ -19,6 +19,7 @@
 			action="#{copyMoveNode.cancel}" 
 			text="#{msgs.cancel}"  />
 	</tr:panelButtonBar>
+	<tr:spacer height="4" width="0"/>
     <tr:panelPage>
 		<tr:outputFormatted 
 			value="#{msgs.dstNode}: &lt;b&gt;#{copyMoveNode.dstNode.path}&lt;/b&gt;" />

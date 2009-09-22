@@ -60,6 +60,7 @@ import org.slf4j.LoggerFactory;
 //import org.weda.internal.annotations.Service;
 import org.weda.services.ClassDescriptorRegistry;
 import org.apache.myfaces.trinidad.component.core.data.CoreTree;
+import org.apache.myfaces.trinidad.model.ChildPropertyTreeModel;
 import org.apache.myfaces.trinidad.model.TreeModel;
 import org.apache.myfaces.trinidad.render.ExtendedRenderKitService;
 import org.apache.myfaces.trinidad.util.Service;
@@ -142,6 +143,7 @@ public class SessionBean
 	private String auditNodeId = "";
 	private String auditNodePath = "";
 	private List<AuditRecord> auditData = new ArrayList<AuditRecord>();
+	private TreeModel resourcesTreeModel;	
 
 	@SuppressWarnings("unchecked")
 	public static SelectItem[] makeSI(Enum[] values, boolean needNull)
@@ -227,6 +229,8 @@ public class SessionBean
 	//	while (en.hasMoreElements()) {
 	//		type type = (type) en.nextElement();
 	//	}
+		
+		resourcesTreeModel = new ChildPropertyTreeModel(getResources(), "childrenList");
 		
 		//List<Node> nodes = new ArrayList<Node>();
 		List<NodeWrapper> nodes = new ArrayList<NodeWrapper>();
@@ -463,6 +467,28 @@ public class SessionBean
 		  }  
 		  return ret;
 	  }
+	  
+	  public List<ResourceInfo> getResources()
+	  {
+		  HashMap<String,String> rl = userAcl.getResourcesList(tree);
+		  List<ResourceInfo> ret = new ArrayList<ResourceInfo>();
+		  if(rl==null)
+		  {
+			  logger.error("ResourcesList is null !");
+			  return ret;
+		  }
+		  List<String> keys = new ArrayList<String>();
+		  keys.addAll(rl.keySet());
+		  Collections.sort(keys);
+		  for(String key: keys)
+		  { 
+			  String nodePath = rl.get(key);
+			  ret.add( new ResourceInfo(key,nodePath) );
+		  }  
+		  ResourceInfo.makeListX(ret);
+		  return ret;
+	  }
+	  
 	  
 	  public void selectNodeAndMaximize(ActionEvent event)
 	  {
@@ -922,6 +948,10 @@ public class SessionBean
 
 	public List<AuditRecord> getAuditData() {
 		return auditData;
+	}
+
+	public TreeModel getResourcesTreeModel() {
+		return resourcesTreeModel;
 	}
 	
 	

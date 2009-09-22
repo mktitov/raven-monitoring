@@ -94,7 +94,7 @@ public abstract class AccessControlList implements Comparator<AccessControl>
 			}
 			if(x[0].equals(AC_PARAM))
 			{
-				if(x[2]!=null && x[2].length()>0)
+				if(x.length>2 && x[2]!=null && x[2].length()>0)
 				{
 					List<AccessControl> acAr = 
 						AccessControl.getACs(x[1]+AccessControl.DELIMITER+x[2]);

@@ -21,8 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import org.raven.tree.Node;
-
 public class AccessControl {
 	public static final int ADMIN = 64;
 	public static final char ADMIN_SYMBOL = 'a';
@@ -46,7 +44,8 @@ public class AccessControl {
 //	public static final String AC_DELIM = ";";
 	public static final String EXPRESSION_DELIMITER = ";";
 	public static final String DELIMITER = ":";
-    public static final String disabledInParValues = "[^:;\"\\~\\"+Node.NODE_SEPARATOR+"\\"+Node.ATTRIBUTE_SEPARATOR+"]+";
+//    public static final String disabledInParValues = "[\\^:;\"\\~\\"+Node.NODE_SEPARATOR+"\\"+Node.ATTRIBUTE_SEPARATOR+"]+";
+    public static final String disabledInParValues = "[:;]+";
 	
 	private String resource = "";
 	private String regExp = "";
