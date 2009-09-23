@@ -20,28 +20,34 @@ package org.raven.tree.impl;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collection;
+import org.apache.commons.io.input.CountingInputStream;
 import org.raven.conf.Configurator;
-import org.raven.tree.AttributesGenerator;
 import org.raven.tree.DataFile;
 import org.raven.tree.DataFileException;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.weda.internal.annotations.Service;
+import org.weda.internal.impl.MessageComposer;
+import org.weda.internal.services.MessagesRegistry;
 
 /**
  *
  * @author Mikhail Titov
  */
 public class DataFileValueHandler extends AbstractAttributeValueHandler
-        implements DataFile, AttributesGenerator
+        implements DataFile//, AttributesGenerator
 {
     public static final String FILENAME_SUFFIX = "filename";
     public static final String MIMETYPE_SUFFIX = "mimeType";
+    public static final String SIZE_SUFFIX = "filesize";
 
-    private boolean firstHandleData = true;
+    @Service
+    private static MessagesRegistry messagesRegistry;
 
     @Service
     private static Configurator configurator;
+
+    private boolean firstHandleData = true;
 
     public DataFileValueHandler(NodeAttribute attribute) throws DataFileValueHandlerException
     {
@@ -99,12 +105,13 @@ public class DataFileValueHandler extends AbstractAttributeValueHandler
 
     public String getFilename() throws DataFileException
     {
-        return getFileAttribute(FILENAME_SUFFIX).getValue();
+        return getOrCreateAttribute(FILENAME_SUFFIX, String.class).getValue();
     }
 
     public void setFilename(String filename) throws DataFileException
     {
-        NodeAttribute filenameAttr = getFileAttribute(FILENAME_SUFFIX);
+//        NodeAttribute filenameAttr = getFileAttribute(FILENAME_SUFFIX);
+        NodeAttribute filenameAttr = getOrCreateAttribute(FILENAME_SUFFIX, String.class);
         try
         {
             filenameAttr.setValue(filename);
@@ -112,19 +119,22 @@ public class DataFileValueHandler extends AbstractAttributeValueHandler
         }
         catch (Exception ex)
         {
-            throw new DataFileException(String.format(
-                    "Error seting value for filename attribute (%s)", filenameAttr.getPath()));
+            throw new DataFileException(
+                    String.format(
+                        "Error seting value for filename attribute (%s)", filenameAttr.getPath())
+                    , ex);
         }
     }
 
     public String getMimeType() throws DataFileException
     {
-        return getFileAttribute(MIMETYPE_SUFFIX).getValue();
+        return getOrCreateAttribute(MIMETYPE_SUFFIX, String.class).getValue();
     }
 
     public void setMimeType(String mimeType) throws DataFileException
     {
-        NodeAttribute mimeTypeAttr = getFileAttribute(MIMETYPE_SUFFIX);
+//        NodeAttribute mimeTypeAttr = getFileAttribute(MIMETYPE_SUFFIX);
+        NodeAttribute mimeTypeAttr = getOrCreateAttribute(MIMETYPE_SUFFIX, String.class);
         try
         {
             mimeTypeAttr.setValue(mimeType);
@@ -137,15 +147,37 @@ public class DataFileValueHandler extends AbstractAttributeValueHandler
         }
     }
 
+    public Long getFileSize() throws DataFileException
+    {
+        return getOrCreateAttribute(SIZE_SUFFIX, Long.class).getRealValue();
+    }
+
     public InputStream getDataStream()
     {
         return configurator.getTreeStore().getNodeAttributeBinaryData(attribute);
     }
 
-    public void setDataStream(InputStream data)
+    public void setDataStream(InputStream data) throws DataFileException
     {
-        configurator.getTreeStore().saveNodeAttributeBinaryData(attribute, data);
-        fireValueChangedEvent(null, null);
+        InputStream stream = data==null? null : new CountingInputStream(data);
+        try
+        {
+            configurator.getTreeStore().saveNodeAttributeBinaryData(attribute, stream);
+            if (data!=null)
+            {
+                NodeAttribute sizeAttr = getOrCreateAttribute(SIZE_SUFFIX, Long.class);
+                sizeAttr.setValue("" + ((CountingInputStream) stream).getByteCount());
+                sizeAttr.save();
+            }
+            fireValueChangedEvent(null, null);
+        }
+        catch (Exception ex)
+        {
+            throw new DataFileException(
+                    String.format(
+                    "Error saving binary data for attribute (%s)", attribute.getName())
+                    , ex);
+        }
     }
 
     private NodeAttribute getFileAttribute(String suffix) throws DataFileException
@@ -168,7 +200,38 @@ public class DataFileValueHandler extends AbstractAttributeValueHandler
         NodeAttribute mimeTypeAttr = new NodeAttributeImpl(
                 attribute.getName()+"."+MIMETYPE_SUFFIX, String.class, null, null);
 
-        return Arrays.asList(filenameAttr, mimeTypeAttr);
+        NodeAttribute sizeAttr = new NodeAttributeImpl(
+                attribute.getName()+"."+SIZE_SUFFIX, Long.class, null, null);
+
+        return Arrays.asList(filenameAttr, mimeTypeAttr, sizeAttr);
+    }
+
+    private NodeAttribute getOrCreateAttribute(String suffix, Class type) throws DataFileException
+    {
+        String name = attribute.getName()+"."+suffix;
+        Node owner = attribute.getOwner();
+        NodeAttribute attr = owner.getNodeAttribute(name);
+        if (attr==null)
+        {
+            try
+            {
+                attr = new NodeAttributeImpl(name, type, null, null);
+                attr.setParentAttribute(attribute.getName());
+                attr.setOwner(owner);
+                attr.init();
+                owner.addNodeAttribute(attr);
+                String descKey = messagesRegistry.createMessageKeyForStringValue(
+                        this.getClass().getName(), suffix);
+                attr.setDescriptionContainer(new MessageComposer(messagesRegistry).append(descKey));
+                attr.save();
+            } catch (Exception ex)
+            {
+                throw new DataFileException(
+                        String.format("Error creating attribute (%s)", name)
+                        , ex);
+            }
+        }
+        return attr;
     }
 
     private boolean hasFileAttributes()

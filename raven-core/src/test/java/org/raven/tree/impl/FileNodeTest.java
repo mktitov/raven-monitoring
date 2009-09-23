@@ -43,7 +43,17 @@ public class FileNodeTest extends RavenCoreTestCase
         byte[] inData = new byte[]{1,2,3};
         ByteArrayInputStream is = new ByteArrayInputStream(inData);
         fileNode.getFile().setDataStream(is);
+        assertEquals(new Long(3), fileNode.getFile().getFileSize());
         assertTrue(fileNode.start());
+        String desc = fileNode.getNodeAttribute("file.filename").getDescription();
+        assertNotNull(desc);
+        assertFalse(desc.startsWith(DataFileValueHandler.class.getName()));
+        desc = fileNode.getNodeAttribute("file.mimeType").getDescription();
+        assertNotNull(desc);
+        assertFalse(desc.startsWith(DataFileValueHandler.class.getName()));
+        desc = fileNode.getNodeAttribute("file.filesize").getDescription();
+        assertNotNull(desc);
+        assertFalse(desc.startsWith(DataFileValueHandler.class.getName()));
 
         List<ViewableObject> viewableObjects = fileNode.getViewableObjects(null);
         assertNotNull(viewableObjects);

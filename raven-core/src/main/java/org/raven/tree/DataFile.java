@@ -49,4 +49,8 @@ public interface DataFile extends AttributesGenerator
      * Sets the file data
      */
     public void setDataStream(InputStream data) throws DataFileException;
+    /**
+     * Returns the file size in bytes
+     */
+    public Long getFileSize() throws DataFileException;
 }
