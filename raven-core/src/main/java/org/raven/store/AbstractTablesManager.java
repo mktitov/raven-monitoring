@@ -51,9 +51,51 @@ public abstract class AbstractTablesManager {
 //  private NodeLoggerNode nodeLoggerNode;
 
 	private ConnectionPool pool = null;
+	private Connection connection = null;
     
 	protected abstract boolean createTable(String tableName); 
-    
+
+	public static void closeConnectionS(Connection con)
+	{
+		try { con.close();} catch(Exception e) {};
+	}	
+
+	protected boolean setConnection()
+	{
+		connection = pool.getConnection();
+		if(connection==null)
+		{
+			logger.error("connection is null");
+			return false;
+		}	
+		return true;
+	}
+
+	protected Connection getConnection()
+	{
+		return connection;
+	}
+	
+	
+	protected void closeConnection()
+	{
+		if(connection!=null)
+		{
+			closeConnectionS(connection);
+			connection = null;
+		}
+	}	
+	
+	protected void commit()
+	{
+		if(connection!=null)
+		{
+			try { connection.commit();} 
+			catch (SQLException e) { logger.error("on commit:",e);}
+			finally {closeConnection();}
+		}
+	}
+	
     protected void init()
     {
     	metaTableName = metaTableNamePrefix+metaTableNamePostfix;
@@ -63,19 +105,23 @@ public abstract class AbstractTablesManager {
     	dateFormat = new SimpleDateFormat("'"+metaTableNamePrefix+"_'"+DT_FORMAT);
     }
     
-	protected int executeUpdate(String sql, Object[] args, boolean hideError)  
+	protected int executeUpdate(String sql, Object[] args, boolean hideError) 
 	{
 		if(sql==null || sql.length()==0)
 		{
 			logger.error("invalid ddl :\""+sql+"\""); 
 			return -1;
-		}	
-		Connection con = pool.getConnection();
-		if(con==null)
+		}
+		
+		Connection con;
+		boolean solidCon = false;
+		if(connection!=null)
 		{
-			logger.error("connection is null"); 
-			return -2;
-		}	
+			solidCon = true;
+			con = connection;
+		} 
+			else con = pool.getConnection();
+		if(con==null) return -2;
 		Statement st = null;
 		int ret = -3;
 		try {
@@ -92,7 +138,7 @@ public abstract class AbstractTablesManager {
 				st = ps;
 				ret = ps.executeUpdate();
 			}	
-			con.commit();
+			if(!solidCon) con.commit();
 		}
 		catch(SQLException e) 
 			{ 
@@ -102,12 +148,12 @@ public abstract class AbstractTablesManager {
 		finally 
 			{ 
 				try { st.close();} catch(Exception e) {};
-				try { con.close();} catch(Exception e) {};
+				if(!solidCon) closeConnectionS(con);
 			}
 		return ret;
 	}	
 
-	protected int executeUpdate(String sql, Object[] args)
+	protected int executeUpdate(String sql, Object[] args) 
 	{
 		return executeUpdate(sql, args ,false);
 	}

@@ -20,11 +20,14 @@ public class ResourceNode extends BaseNode implements Viewable
 {
 	public static final String PREFIX = LdapGroupAcl.RESOURCE_PARAM+AccessControl.DELIMITER+" ";
 	
-	@Parameter
-	private String title;
+//	@Parameter
+//	private String title;
 
 	@Parameter
 	private String dsc;
+
+	@Parameter(defaultValue="true")
+	private Boolean showInResources;
 	
 	@Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
 	private Node show;
@@ -63,8 +66,8 @@ public class ResourceNode extends BaseNode implements Viewable
 		StringBuffer sb = new StringBuffer();
 		appendParam(sb, AccessControlList.NAME_PARAM, getName());
 
-		if(title!=null)
-			appendParam(sb, AccessControlList.TITLE_PARAM, title);
+		if(showInResources)
+			appendParam(sb, AccessControlList.TITLE_PARAM, getName());
 		
 		if(show!=null)
 			appendParam(sb, AccessResource.SHOW_PARAM, show.getPath());
@@ -90,12 +93,10 @@ public class ResourceNode extends BaseNode implements Viewable
 		return Arrays.asList(textObj);		
 	}
 
-	public void setTitle(String title) {
-		this.title = title.replaceAll(AccessControl.disabledInParValues, "");
-	}
-
 	public String getTitle() {
-		return title;
+		if(showInResources!=null && showInResources==true ) 
+			return  getName();
+		return null;
 	}
 
 	public void setShow(Node show) {
@@ -117,6 +118,14 @@ public class ResourceNode extends BaseNode implements Viewable
 	public String getPrefix()
 	{
 		return PREFIX;
+	}
+
+	public Boolean getShowInResources() {
+		return showInResources;
+	}
+
+	public void setShowInResources(Boolean showInResources) {
+		this.showInResources = showInResources;
 	}
 
 }

@@ -146,10 +146,17 @@ public abstract class AbstractDbWorker<T extends IRecord> extends AbstractTables
 	private boolean writeMessagesFromQueue()
 	{
 		T rec;
+		int cnt = 0;
+		if(queue.isEmpty()) return false;
+		if(!setConnection()) return false;
 		while( (rec=queue.poll())!=null )
-		{
-			insert(rec);
-		}
+		{	
+			if(insert(rec)) 
+				cnt++;
+		}	
+		if(cnt>0) commit();
+		closeConnection();
+		if(cnt==0) return false;
 		return true;
 	}
 	
@@ -158,7 +165,7 @@ public abstract class AbstractDbWorker<T extends IRecord> extends AbstractTables
 		while(!isStopFlag())
 		{
 			writeMessagesFromQueue();
-			try { Thread.sleep(100); } catch (InterruptedException e) { }
+			try { Thread.sleep(200); } catch (InterruptedException e) { }
 		}
 		setRunning(false);
 		logger.warn(STOPPED,name);
