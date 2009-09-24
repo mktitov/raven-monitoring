@@ -25,7 +25,7 @@ public class ViewableObjectWrapper
 	public static final String IMAGE = "image";
 	public static final String UID_DELIM = "@"; 
 	private ViewableObject viewableObject = null;
-	private Node node = null;
+	private NodeWrapper nodeWrapper = null;
 	private long fd = 0;
 //	private String htmlTable = null;
 	private byte[] image = null;
@@ -40,7 +40,10 @@ public class ViewableObjectWrapper
 	{
 		if(Viewable.RAVEN_NODE_MIMETYPE.equals(vo.getMimeType()))
 		{
-			try { node = SessionBean.getTree().getNode((String)vo.getData());} 
+			try { 
+				Node n  = SessionBean.getTree().getNode((String)vo.getData());
+				nodeWrapper = new NodeWrapper(n);
+			} 
 			catch (InvalidPathException e) 
 			{  logger.error("Invalid node path '{}' ",vo.getData(),e); 	}
 		}
@@ -51,7 +54,7 @@ public class ViewableObjectWrapper
 	public ViewableObjectWrapper(Node node)
 	{
 		setFd();
-		this.node = node;
+		this.nodeWrapper = new NodeWrapper(node);
 	}
 
 	public String getId()
@@ -85,7 +88,7 @@ public class ViewableObjectWrapper
 
 	public boolean isNodeUrl()
 	{
-		if(node==null) return false;
+		if(nodeWrapper==null) return false;
 		return true;
 	}
 	
@@ -181,7 +184,7 @@ public class ViewableObjectWrapper
 	public Object getData()
 	{
 		//logger.info("get data");
-		if(!isViewable()) return node.getPath();
+		if(!isViewable()) return nodeWrapper.getPath();
 		if(isImage())
 		{
 			if(image==null)
@@ -203,7 +206,7 @@ public class ViewableObjectWrapper
 	
 	public String getNodePath()
 	{
-		if(!isViewable()) return node.getPath();
+		if(!isViewable()) return nodeWrapper.getPath();
 		return null;
 	}
 
@@ -211,8 +214,8 @@ public class ViewableObjectWrapper
 	{
 		if(!isViewable())
 		{
-			Node x = NodeWrapper.getNodeByAttr(node,NAVIGATE_TO);
-			if(x==null) x = node;
+			Node x = NodeWrapper.getNodeByAttr(nodeWrapper.getNode(),NAVIGATE_TO);
+			if(x==null) x = nodeWrapper.getNode();
 			return x.getPath();
 		}	
 		return null;
@@ -224,9 +227,14 @@ public class ViewableObjectWrapper
 
 	public Node getNode() 
 	{
-		return node;
+		return nodeWrapper.getNode();
 	}
 
+	public NodeWrapper getNodeWrapper() 
+	{
+		return nodeWrapper;
+	}
+	
 	private void setFd() 
 	{
 		fd = System.currentTimeMillis();

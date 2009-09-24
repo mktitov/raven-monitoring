@@ -75,7 +75,8 @@ public class ResourceInfo
 		for(int i=beg; i< r.size()-1; i++)
 		{
 			ResourceInfo ri = r.get(i);
-			if(ri.title.startsWith(title) && ri.path.startsWith(path))
+			if(ri.title.startsWith(title)) 
+					//&& ri.path.startsWith(path))
 			{
 				list.add(ri);
 				r.remove(i--);

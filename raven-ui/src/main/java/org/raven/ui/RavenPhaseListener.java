@@ -28,15 +28,17 @@ public class RavenPhaseListener implements PhaseListener
 		UIViewRoot vr = fc.getViewRoot();
 		if(vr==null) return;
 		String rootId = vr.getViewId();
-		if(!rootId.contains("org/raven/")) return; 
-		String key=rootId.substring(1);
+		if(rootId==null) return;
+		String key = rootId; 
+		if(!key.startsWith(IconResource.RES_SIGN2)) return;
+		key=rootId.substring(1);
 		
 		IconResource ir = ResourcesCache.getInstance().get(key);
 	    if(ir==null || !ir.isValid())
 	    {
 	    	fc.responseComplete();
 	    	return;
-	    }
+	    }	
 		HttpServletResponse resp = (HttpServletResponse) fc.getExternalContext().getResponse();
 		try {
 		      resp.setContentType(ir.getMimeType());

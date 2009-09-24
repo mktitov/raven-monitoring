@@ -280,7 +280,9 @@ public class SubNodesTableBean
 		  	for(NodeWrapper nw: nws)
 		  	{
 		  		String to = nx.getPath();
-		  		String parent = nw.getNode().getParent().getPath();
+		  		Node parentNode = nw.getNode().getParent();
+		  		if(parentNode==null) continue;
+		  		String parent = parentNode.getPath();
 		  		String from = nw.getNode().getPath();
 		  		//logger.info("to="+to+" , from="+from+" , parent="+parent);
 		  		if(to.equalsIgnoreCase(parent))

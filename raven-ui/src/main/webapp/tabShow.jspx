@@ -312,6 +312,13 @@ partialTriggers=":poolStatus"
 	  	<tr:spacer width="0" height="4" />
 	  	  	<tr:panelHorizontalLayout  halign="left" >
 	  	  	<tr:spacer width="10" height="0" />
+		 	<h:graphicImage 
+		 		alt=""
+		 		rendered="#{row.nodeWrapper.hasIconPath}"
+		 		height="16" 
+		 		width="16" 
+		 		url="#{row.nodeWrapper.iconPath}" />
+	  	  	<tr:spacer width="4" height="0" />
 			<tr:commandLink
 				inlineStyle="font-weight: bold; font-size: 110%;"
 				rendered="#{vnstat.index==0}" 

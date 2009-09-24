@@ -17,7 +17,6 @@
 
 package org.raven.ui.node;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -132,7 +131,6 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	private List<Integer> logNodes = new ArrayList<Integer>();
 	private List<NodeWrapper> upperNodes;
 	private int shortNameLen = 0;
-	public static final String[] iconExt = {"gif","png"};
 	private String iconPath = null;
 		
 	public NodeWrapper() 
@@ -1490,71 +1488,46 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		return shortNameLen;
 	}
 	
-	private byte[] readBytes(InputStream is)
-	{
-	    byte res[] = new byte[0];
-	    byte buf[] = new byte[65535];
-	    try {
-			for(int i = 0; (i = is.read(buf)) > 0;)  
-			 {
-			        int tmp = res.length + i;
-			        byte[] tempBuf = new byte[tmp];
-			        System.arraycopy(res, 0, tempBuf, 0, res.length);
-			        System.arraycopy(buf, 0, tempBuf, res.length, i);
-			        res = tempBuf;
-			      }
-		} catch (Exception e) {
-			logger.error("on readBytes:",e);
-			res = null;
-		}
-		finally 
-		{
-			if(is!=null)
-				try {is.close();} catch(Exception e) {}
-		}
-		return res;
-	}
-	
 	public boolean isHasIconPath()
 	{
 		IconResource ir = ResourcesCache.getInstance().get(getIconPath());
 		return ir.isValid();
 	}
+
+	@SuppressWarnings("unchecked")
+	public static String classNameToResourceName(Class nc)
+	{
+		String clName = nc.getName();
+		return clName.replaceAll("\\.", "/");
+	}	
 	
 	@SuppressWarnings("unchecked")
 	public String getIconPath()
 	{
 		if(iconPath!=null) return iconPath;
-		
-		
-		Class nc = getNode().getClass();
-		if(nc.getSimpleName().equals("AccessGroupNode"))
-		{
-			int i=0;
-			i+=100;
-		}
-		String clName = nc.getName();
-		String x = clName.replaceAll("\\.", "/");
-		InputStream is = null;
-		String b = null;
-		for(String a :  iconExt)
-		{
-			is = nc.getResourceAsStream("/"+x+"."+a);
-			if(is!=null)
-			{
-				b = a;
-				break;
-			}	
-		}
 		ResourcesCache rc = ResourcesCache.getInstance();
-		if(is==null)
+		Class cls = getNode().getClass();
+		IconResource ra = ResourcesCache.getIconResourceForClass(cls);
+		if(ra.isValid()) 
 		{
-			rc.put(x, new IconResource(null,null));
-			iconPath = x;
-			return x;
+			iconPath = ra.getIconPath(); 
+			rc.put(iconPath, ra);
+			return iconPath;
+		}	
+		while(1==1)
+		{
+			cls = cls.getSuperclass();
+			if( ! Node.class.isAssignableFrom(cls)) break; 
+			IconResource rb = ResourcesCache.getIconResourceForClass(cls);
+			if(rb.isValid() )
+			{
+				iconPath = rb.getIconPath();
+				rc.put(iconPath, rb);
+				return iconPath;
+			}
 		}
-		iconPath = x+"."+b;
-		rc.put(iconPath, new IconResource("image/"+b,readBytes(is)));
+		iconPath = ra.getIconPath();
+		rc.put(iconPath, ra);
 		return iconPath;
 	}
 	
