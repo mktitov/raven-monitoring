@@ -17,7 +17,11 @@
 
 package org.raven.sched.impl;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -31,8 +35,13 @@ import org.raven.log.LogLevel;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.ExecutorServiceException;
 import org.raven.sched.Task;
+import org.raven.table.TableImpl;
 import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
+import org.raven.tree.Viewable;
+import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.ViewableObjectImpl;
 import org.raven.util.OperationStatistic;
 import org.weda.annotations.constraints.NotNull;
 
@@ -42,7 +51,7 @@ import org.weda.annotations.constraints.NotNull;
  */
 @NodeClass(parentNode=SchedulersNode.class)
 public class ExecutorServiceNode extends BaseNode
-        implements ExecutorService, RejectedExecutionHandler
+        implements ExecutorService, RejectedExecutionHandler, Viewable
 {
 	@NotNull @Parameter(defaultValue="2")
 	private Integer corePoolSize;
@@ -71,7 +80,7 @@ public class ExecutorServiceNode extends BaseNode
 
 	private ThreadPoolExecutor executor;
     private BlockingQueue queue;
-    private Collection executingTasks;
+    private Collection<TaskWrapper> executingTasks;
     private AtomicLong taskIdCounter;
 
     @Override
@@ -192,10 +201,47 @@ public class ExecutorServiceNode extends BaseNode
         taskIdCounter.set(0l);
     }
 
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
+    {
+        return null;
+    }
+
+    public List<ViewableObject> getViewableObjects(
+            Map<String, NodeAttribute> refreshAttributes) throws Exception
+    {
+        if (!Status.STARTED.equals(getStatus()))
+            return null;
+        TableImpl table = new TableImpl(new String[]{
+            "Node started the task", "Status", "Execution start time", "Execution duration"});
+        Collection<TaskWrapper> taskList = executingTasks;
+        if (taskList!=null)
+            for (TaskWrapper task: taskList)
+            {
+                String date = null;
+                if (task.getExecutionStart()!=0)
+                    date = converter.convert(
+                        String.class, new Date(task.getExecutionStart()), "dd.MM.yyyy HH:mm:ss");
+                table.addRow(new Object[]{
+                    task.getTaskNode().getPath(), task.getStatusMessage()
+                    , date, task.getExecutionDuation()});
+            }
+
+        ViewableObject viewableObject =
+                new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table);
+
+        return Arrays.asList(viewableObject);
+    }
+
+    public Boolean getAutoRefresh()
+    {
+        return true;
+    }
+
     private class TaskWrapper implements Task, Comparable
     {
         private final Task task;
         private final Long id;
+        private long executionStart;
 
         public TaskWrapper(Task task)
         {
@@ -217,9 +263,19 @@ public class ExecutorServiceNode extends BaseNode
             return task.getStatusMessage();
         }
 
+        public long getExecutionStart()
+        {
+            return executionStart;
+        }
+
+        public long getExecutionDuation()
+        {
+            return executionStart==0? 0 : System.currentTimeMillis() - executionStart;
+        }
+
         public void run()
         {
-            long executionStart = executedTasks.markOperationProcessingStart();
+            executionStart = executedTasks.markOperationProcessingStart();
             try
             {
                 try

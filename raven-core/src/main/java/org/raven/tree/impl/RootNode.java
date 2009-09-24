@@ -20,12 +20,14 @@ package org.raven.tree.impl;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.script.Bindings;
+import org.raven.annotations.NodeClass;
 import org.raven.expr.BindingSupport;
 
 /**
  *
  * @author Mikhail Titov
  */
+@NodeClass(parentNode=InvisibleNode.class, anyChildTypes=true)
 public class RootNode extends BaseNode
 {
     private Map<String, BindingSupport> bindingSupports;
