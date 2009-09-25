@@ -20,6 +20,8 @@ package org.raven.sched.impl;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicLong;
 import org.quartz.CronTrigger;
@@ -37,12 +39,16 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.sched.Schedulable;
 import org.raven.sched.Scheduler;
+import org.raven.table.TableImpl;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
+import org.raven.tree.Viewable;
+import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeAttributeImpl;
+import org.raven.tree.impl.ViewableObjectImpl;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.internal.annotations.Message;
 
@@ -51,7 +57,7 @@ import org.weda.internal.annotations.Message;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=SchedulersNode.class)
-public class QuartzScheduler extends BaseNode implements Scheduler
+public class QuartzScheduler extends BaseNode implements Scheduler, Viewable
 {
     public final static String NODE_ATTRIBUTE_NAME = "NODE";
     public final static String SCHEDULE_ATTRIBUTE = "schedule";
@@ -281,6 +287,39 @@ public class QuartzScheduler extends BaseNode implements Scheduler
                     "Error removing (%s) job from quartz scheduler (%s). %s"
                     , node.getPath(), getPath(), ex.getMessage()));
         }
+    }
+
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
+    {
+        return null;
+    }
+
+    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes)
+            throws Exception
+    {
+        if (!Status.STARTED.equals(getStatus()))
+            return null;
+        TableImpl table = new TableImpl(new String[]{
+            "Node started the task", "Execution start time", "Execution duration (sec)"});
+        List<JobExecutionContext> jobs = scheduler.getCurrentlyExecutingJobs();
+        if (jobs!=null && !jobs.isEmpty())
+            for (JobExecutionContext job: jobs)
+            {
+                Node taskNode = (Node) job.getJobDetail().getJobDataMap().get(NODE_ATTRIBUTE_NAME);
+                String date = converter.convert(
+                        String.class, job.getFireTime(), "dd.MM.yyyy HH:mm:ss");
+                long duration = job.getJobRunTime()/1000;
+                table.addRow(new Object[]{taskNode.getPath(), date, duration});
+            }
+
+        ViewableObject obj = new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table);
+        
+        return Arrays.asList(obj);
+    }
+
+    public Boolean getAutoRefresh()
+    {
+        return true;
     }
 
     private class SchedulerJobListener implements JobListener, TriggerListener

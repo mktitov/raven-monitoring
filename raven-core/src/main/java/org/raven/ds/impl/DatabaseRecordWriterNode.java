@@ -290,10 +290,10 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                             "Flushed (%d) records to the database", recordBuffer.size()));
                 recordsSaved+=recordBuffer.size();
 
-                recordBuffer = null;
             }
             finally
             {
+                recordBuffer = null;
                 for (SchemaMeta meta: metas.values())
                     meta.close();
             }

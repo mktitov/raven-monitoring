@@ -382,6 +382,10 @@ public class BaseNode implements Node, NodeListener, Logger
 
     public void addAndSaveChildren(Node node)
     {
+        if (childrens.containsKey(node.getName()))
+            throw new NodeError(String.format(
+                    "Node (%s) already contains children node with name (%s)"
+                    , getPath(), node.getName()));
         node.setParent(this);
         node.save();
         addChildren(node);

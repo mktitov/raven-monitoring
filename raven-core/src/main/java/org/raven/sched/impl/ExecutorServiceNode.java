@@ -212,7 +212,7 @@ public class ExecutorServiceNode extends BaseNode
         if (!Status.STARTED.equals(getStatus()))
             return null;
         TableImpl table = new TableImpl(new String[]{
-            "Node started the task", "Status", "Execution start time", "Execution duration"});
+            "Node started the task", "Status", "Execution start time", "Execution duration (sec)"});
         Collection<TaskWrapper> taskList = executingTasks;
         if (taskList!=null)
             for (TaskWrapper task: taskList)
@@ -270,7 +270,7 @@ public class ExecutorServiceNode extends BaseNode
 
         public long getExecutionDuation()
         {
-            return executionStart==0? 0 : System.currentTimeMillis() - executionStart;
+            return executionStart==0? 0 : (System.currentTimeMillis() - executionStart)/1000;
         }
 
         public void run()

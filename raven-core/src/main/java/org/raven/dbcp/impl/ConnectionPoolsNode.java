@@ -17,7 +17,6 @@
 
 package org.raven.dbcp.impl;
 
-import org.raven.annotations.NodeClass;
 import org.raven.tree.impl.BaseNode;
 
 /**
