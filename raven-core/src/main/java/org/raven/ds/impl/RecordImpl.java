@@ -71,7 +71,7 @@ public class RecordImpl implements Record
             throw new InvalidRecordFieldException(fieldName, schema.getName());
         try
         {
-            value = converter.convert(field.getFieldType().getType(), value, null);
+            value = converter.convert(field.getFieldType().getType(), value, field.getPattern());
             values.put(fieldName, value);
         }
         catch(TypeConverterException e)

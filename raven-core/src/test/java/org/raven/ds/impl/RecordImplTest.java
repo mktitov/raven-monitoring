@@ -17,6 +17,7 @@
 
 package org.raven.ds.impl;
 
+import java.text.SimpleDateFormat;
 import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.InvalidRecordFieldException;
@@ -78,6 +79,7 @@ public class RecordImplTest extends RavenCoreTestCase
         expect(schema.getFields()).andReturn(new RecordSchemaField[]{field});
         expect(field.getName()).andReturn("field1");
         expect(field.getFieldType()).andReturn(RecordSchemaFieldType.INTEGER);
+        expect(field.getPattern()).andReturn(null);
         replay(schema, field);
 
         RecordImpl record = new RecordImpl(schema);
@@ -96,12 +98,34 @@ public class RecordImplTest extends RavenCoreTestCase
         expect(schema.getFields()).andReturn(new RecordSchemaField[]{field});
         expect(field.getName()).andReturn("field1");
         expect(field.getFieldType()).andReturn(RecordSchemaFieldType.INTEGER);
+        expect(field.getPattern()).andReturn(null);
         replay(schema, field);
 
         RecordImpl record = new RecordImpl(schema);
         record.setValue("field1", "1");
 
         assertEquals(1, record.getValue("field1"));
+
+        verify(schema, field);
+    }
+
+    @Test
+    public void setFieldValueWithValueConvertingWithPatternTest() throws Exception
+    {
+        RecordSchema schema = createMock(RecordSchema.class);
+        RecordSchemaField field = createMock(RecordSchemaField.class);
+        expect(schema.getFields()).andReturn(new RecordSchemaField[]{field});
+        expect(field.getName()).andReturn("field1");
+        expect(field.getFieldType()).andReturn(RecordSchemaFieldType.DATE);
+        expect(field.getPattern()).andReturn("dd.MM.yyyy");
+        replay(schema, field);
+
+        RecordImpl record = new RecordImpl(schema);
+        record.setValue("field1", "01.01.2009");
+
+        assertEquals(
+                new SimpleDateFormat("dd.MM.yyyy").parse("01.01.2009")
+                , record.getValue("field1"));
 
         verify(schema, field);
     }
@@ -114,6 +138,7 @@ public class RecordImplTest extends RavenCoreTestCase
         expect(schema.getFields()).andReturn(new RecordSchemaField[]{field});
         expect(field.getName()).andReturn("field1");
         expect(field.getFieldType()).andReturn(RecordSchemaFieldType.INTEGER);
+        expect(field.getPattern()).andReturn(null);
         replay(schema, field);
 
         try
