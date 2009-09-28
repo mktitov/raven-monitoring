@@ -22,11 +22,11 @@ import javax.script.Bindings;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
-import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.expr.impl.BindingSupportImpl;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -41,7 +41,7 @@ public class SafeDataConsumer extends BaseNode implements DataConsumer
     @NotNull @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     private DataSource dataSource;
 
-    @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
+    @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
     private String expression;
 
     @NotNull @Parameter(defaultValue="false")

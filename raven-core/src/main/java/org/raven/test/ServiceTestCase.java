@@ -16,7 +16,6 @@
  */
 package org.raven.test;
 
-import org.raven.*;
 import org.raven.EnLocaleModule;
 import org.apache.tapestry5.ioc.IOCUtilities;
 import org.apache.tapestry5.ioc.Registry;

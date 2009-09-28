@@ -72,7 +72,7 @@ public class NodeListenerExecutorHelper
             throw new UnsupportedOperationException(
                     String.format(
                         "To set values of attributes using field access node (%s) must be " +
-                        "in INITIALIZED or STARTED stated", node.getPath()));
+                        "in INITIALIZED or STARTED status", node.getPath()));
         NodeAttribute attr = node.getNodeAttribute(parameterName);
         if (!ObjectUtils.equals(value, attr.getRealValue()))
         {
