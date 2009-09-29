@@ -74,7 +74,7 @@ public class TemplateWizard
                 if (var.isRequired() && var.getValue()==null)
                     throw new ConstraintException(String.format(
                             "The value for required variable (%s) was not seted.", var.getName()));
-        
+
         Collection<Node> nodesToCopy = template.getEntryNode().getSortedChildrens();
         if (nodesToCopy!=null)
         {
@@ -144,7 +144,5 @@ public class TemplateWizard
                     vars.put(attr.getName(), attr.getRealValue());
             bindings.put(TemplateNode.TEMPLATE_VARIABLES_EXPRESSION_BINDING, vars);
         }
-        
-        
     }
 }

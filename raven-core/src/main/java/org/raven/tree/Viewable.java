@@ -29,6 +29,7 @@ public interface Viewable extends Node
     public final static String RAVEN_TABLE_MIMETYPE = "raven/table";
     public final static String RAVEN_NODE_MIMETYPE = "raven/node";
     public final static String RAVEN_TEXT_MIMETYPE = "raven/text";
+    public final static String RAVEN_ACTION_MIMETYPE = "raven/action";
 
     /**
      * Returns the list of the attributes the values of which will be used in the view refresh
