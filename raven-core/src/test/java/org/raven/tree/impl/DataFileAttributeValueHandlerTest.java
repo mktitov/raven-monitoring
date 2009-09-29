@@ -53,9 +53,15 @@ public class DataFileAttributeValueHandlerTest extends RavenCoreTestCase
 
         assertNull(dataFile.getDataStream());
         NodeAttribute attr = node.getNodeAttribute("dataFile.filename");
-        assertNotNull(attr);
+        assertNull(attr);
+
+        dataFile.getFilename();
+        attr = node.getNodeAttribute("dataFile.filename");
         assertEquals(String.class, attr.getType());
 
+        attr = node.getNodeAttribute("dataFile.mimeType");
+        assertNull(attr);
+        dataFile.getMimeType();
         attr = node.getNodeAttribute("dataFile.mimeType");
         assertNotNull(attr);
         assertEquals(String.class, attr.getType());

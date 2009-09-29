@@ -350,7 +350,8 @@ public class BaseNode implements Node, NodeListener, Logger
         if (nodeIndex!=newIndex)
         {
             node.setIndex(newIndex);
-            node.save();
+            if (node.getId()>0)
+                node.save();
         }
         
         childrens.put(node.getName(), node);

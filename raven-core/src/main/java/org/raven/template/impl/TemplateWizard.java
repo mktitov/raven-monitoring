@@ -34,6 +34,8 @@ import org.weda.constraints.ConstraintException;
  */
 public class TemplateWizard 
 {
+    public static final String TEMPLATE_VARIABLES_NODE = "~TemplateVariables";
+    
     @Service
     private static Tree tree;
     
@@ -57,7 +59,7 @@ public class TemplateWizard
         this.newNodeName = newNodeName;
         
         variablesNode = (TemplateVariablesNode) tree.copy(
-                template.getVariablesNode(), destination, "~TemplateVariables"
+                template.getVariablesNode(), destination,TEMPLATE_VARIABLES_NODE
                 , null, false, false, false);
     }
 
@@ -68,27 +70,33 @@ public class TemplateWizard
     
     public void createNodes() throws ConstraintException
     {
-        Collection<NodeAttribute> vars = variablesNode.getNodeAttributes();
-        if (vars!=null)
-            for (NodeAttribute var: vars)
-                if (var.isRequired() && var.getValue()==null)
-                    throw new ConstraintException(String.format(
-                            "The value for required variable (%s) was not seted.", var.getName()));
-
-        Collection<Node> nodesToCopy = template.getEntryNode().getSortedChildrens();
-        if (nodesToCopy!=null)
+        try
         {
-            NodeTuner nodeTuner = new Tuner();
-            boolean useNewNodeName = nodesToCopy.size()==1;
-            for (Node node: nodesToCopy)
+            Collection<NodeAttribute> vars = variablesNode.getNodeAttributes();
+            if (vars!=null)
+                for (NodeAttribute var: vars)
+                    if (var.isRequired() && var.getValue()==null)
+                        throw new ConstraintException(String.format(
+                                "The value for required variable (%s) was not seted.", var.getName()));
+
+            Collection<Node> nodesToCopy = template.getEntryNode().getSortedChildrens();
+            if (nodesToCopy!=null)
             {
-                Node newNode = tree.copy(
-                        node, destination, useNewNodeName? newNodeName : null
-                        , nodeTuner, true, false, false);
-                tree.start(newNode, false);
+                NodeTuner nodeTuner = new Tuner();
+                boolean useNewNodeName = nodesToCopy.size()==1;
+                for (Node node: nodesToCopy)
+                {
+                    Node newNode = tree.copy(
+                            node, destination, useNewNodeName? newNodeName : null
+                            , nodeTuner, true, false, false);
+                    tree.start(newNode, false);
+                }
             }
         }
-        destination.removeChildren(variablesNode);
+        finally
+        {
+            destination.removeChildren(variablesNode);
+        }
     }
     
     public void cancelWizard()
