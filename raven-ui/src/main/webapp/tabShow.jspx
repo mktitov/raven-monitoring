@@ -342,8 +342,27 @@ partialTriggers=":poolStatus"
 			</tr:commandLink>
 			</tr:panelHorizontalLayout>
 	  	</tr:panelGroupLayout>
+		</f:facet>
+		
+<!-- *********** -->		
+<!-- show action -->
+<!-- *********** --> 
+	  	<f:facet name="action">
+	  	<tr:panelGroupLayout layout="vertical">
+	  		<tr:spacer width="0" height="4" />
+	  	  	<tr:panelHorizontalLayout  halign="left" >
+	  	  		<tr:spacer width="30" height="0" />
+				<tr:commandLink 
+					action="#{row.runAction}"
+					inlineStyle="font-size: 110%;"
+					partialSubmit="true"
+					text="#{row.idVO}" />
+			</tr:panelHorizontalLayout>
+	  	</tr:panelGroupLayout>
 			
 		</f:facet>
+		
+		
 <!-- show image -->
 		<f:facet name="image">
 	  	  	<tr:panelHorizontalLayout halign="left" >
@@ -844,6 +863,96 @@ items="#{row.tableColumnNames}"
 						<f:attribute 
 							name="#{sBean.nodePathParName}" 
 							value="#{rowa[8].item.data}"/>
+					</tr:commandLink>
+                	</tr:panelHorizontalLayout> 
+	            </tr:column>
+				<!-- +++++ -->
+                <!-- ROW 9 -->
+                <!-- +++++ -->
+                <tr:column  
+                   	rendered="#{row.valid[9]}"
+                   	headerText="#{row.tableColumnNames[9]}">
+                   	<tr:panelHorizontalLayout halign="left" >
+                   	<tr:outputFormatted 
+                   		rendered="#{rowa[9].text}"
+                   		value="#{rowa[9].item}"/>
+					<tr:outputFormatted 
+						rendered="#{rowa[9].other}"
+						value="#{rowa[9].item}"/>
+					<tr:commandLink
+						rendered="#{rowa[9].file}" 
+						text="#{msgs.file}: #{rowa[9].string}" 
+						actionListener="#{otherVO.exportX}">
+						<f:attribute 
+							name="#{otherVO.paramVO}" 
+							value="#{rowa[9].item}"/>
+					</tr:commandLink>
+					<tr:commandLink
+						partialSubmit="true"
+						useWindow="true"
+						text="#{rowa[9].string}"
+						rendered="#{rowa[9].table}"
+						action="dialog:showViewableObject"
+						actionListener="#{selectVO.select}"
+						windowWidth="500" windowHeight="400"
+					>
+					<f:attribute
+        				name="#{selectVO.paramName}"
+        				value="#{rowa[9].item}" />
+					</tr:commandLink>	
+					<tr:commandLink
+						rendered="#{rowa[9].node}" 
+						partialSubmit="true"
+						text="#{rowa[9].string}"  
+						actionListener="#{sBean.selectNode}">
+						<f:attribute 
+							name="#{sBean.nodePathParName}" 
+							value="#{rowa[9].item.data}"/>
+					</tr:commandLink>
+                	</tr:panelHorizontalLayout> 
+	            </tr:column>
+				<!-- +++++ -->
+                <!-- ROW 10 -->
+                <!-- +++++ -->
+                <tr:column  
+                   	rendered="#{row.valid[10]}"
+                   	headerText="#{row.tableColumnNames[10]}">
+                   	<tr:panelHorizontalLayout halign="left" >
+                   	<tr:outputFormatted 
+                   		rendered="#{rowa[10].text}"
+                   		value="#{rowa[10].item}"/>
+					<tr:outputFormatted 
+						rendered="#{rowa[10].other}"
+						value="#{rowa[10].item}"/>
+					<tr:commandLink
+						rendered="#{rowa[10].file}" 
+						text="#{msgs.file}: #{rowa[10].string}" 
+						actionListener="#{otherVO.exportX}">
+						<f:attribute 
+							name="#{otherVO.paramVO}" 
+							value="#{rowa[10].item}"/>
+					</tr:commandLink>
+					<tr:commandLink
+						partialSubmit="true"
+						useWindow="true"
+						text="#{rowa[10].string}"
+						rendered="#{rowa[10].table}"
+						action="dialog:showViewableObject"
+						actionListener="#{selectVO.select}"
+						windowWidth="500" windowHeight="400"
+					>
+					<f:attribute
+        				name="#{selectVO.paramName}"
+        				value="#{rowa[10].item}" />
+					</tr:commandLink>	
+					<tr:commandLink
+						rendered="#{rowa[10].node}" 
+						partialSubmit="true"
+						text="#{rowa[10].string}"  
+						actionListener="#{sBean.selectNode}">
+						<f:attribute 
+							name="#{sBean.nodePathParName}" 
+							value="#{rowa[10].item.data}"/>
 					</tr:commandLink>
                 	</tr:panelHorizontalLayout> 
 	            </tr:column>

@@ -51,7 +51,7 @@
 						id="createNode" 
 						text="#{msgs.create}" 
 						action="#{sBean.createNode}" 
-						useWindow="true" windowWidth="500" windowHeight="600" />        
+						useWindow="true" windowWidth="700" windowHeight="600" />        
    				</tr:panelFormLayout>
 			</tr:panelCaptionGroup>
 			<tr:spacer width="40"/>

@@ -7,11 +7,14 @@ import org.raven.template.impl.TemplateWizard;
 import org.raven.template.impl.TemplateNode;
 import org.raven.tree.Node;
 import org.raven.ui.SessionBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.MessageFormatter;
-import org.weda.constraints.ConstraintException;
 
 public class NewNodeFromTemplate 
 {
+    private static final Logger logger = LoggerFactory.getLogger(NewNodeFromTemplate.class);
+	
 	TemplateWizard wizard = null;
 	NodeWrapper wrapper = null;
 	TemplateNode template = null;
@@ -32,7 +35,7 @@ public class NewNodeFromTemplate
 	 public void handleReturn(ReturnEvent event)
 	  {
 	    //Object returnedValue = event.getReturnValue();
-	    SessionBean sb = (SessionBean) SessionBean.getElValue(SessionBean.BEAN_NAME);
+	    SessionBean sb = SessionBean.getInstance();
 	    //sb.reloadBothFrames();
 	    sb.reloadRightFrame();
 	  }
@@ -45,7 +48,10 @@ public class NewNodeFromTemplate
 			String mes = MessageFormatter.format("template: id='{}' path='{}'"+template.getPath(),template.getId(),template.getPath());
 			SessionBean.getInstance().getAuditor().write(wrapper.getNode(), SessionBean.getUserAcl().getAccountName(), Action.NODE_CREATE, mes);            	  
 		} 
-		catch(ConstraintException e) { return cancel();} 
+		catch(Throwable e) {
+			logger.error("on wizard.createNodes:", e);
+			return cancel();
+		} 
 	    RequestContext.getCurrentInstance().returnFromDialog(null, null);
 		return null;
 	}

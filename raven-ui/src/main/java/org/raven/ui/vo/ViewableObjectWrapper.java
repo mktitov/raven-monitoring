@@ -23,6 +23,7 @@ public class ViewableObjectWrapper
 	public static final String RAVEN_TABLE_GR = "ravenTable";
 	public static final String RAVEN_TEXT = "ravenText";
 	public static final String IMAGE = "image";
+	public static final String ACTION = "action";
 	public static final String UID_DELIM = "@"; 
 	private ViewableObject viewableObject = null;
 	private NodeWrapper nodeWrapper = null;
@@ -91,6 +92,12 @@ public class ViewableObjectWrapper
 		if(nodeWrapper==null) return false;
 		return true;
 	}
+
+	public boolean isAction()
+	{
+		if(isViewable() && getMimeGroup().equals(ACTION)) return true;
+		return false;
+	}
 	
 	public boolean isImage()
 	{
@@ -128,6 +135,12 @@ public class ViewableObjectWrapper
 		return false;
 	}
 
+	public String runAction()
+	{
+		if(isAction()) viewableObject.getData();
+		return null;
+	}
+	
 	public String getFromDate()
 	{
 		return Utl.formatDate(fd);
@@ -170,6 +183,8 @@ public class ViewableObjectWrapper
 		if(isText()) return RAVEN_TEXT;
 		String mtype = viewableObject.getMimeType();
 		String[] sa = mtype.split("/");
+		if(sa.length>1 && ACTION.equals(sa[1]))
+			return ACTION;
 		//if(IMAGE.equals(sa[0])) return IMAGE;
 		//return mtype;
 		return sa[0];

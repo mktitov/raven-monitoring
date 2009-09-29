@@ -18,7 +18,9 @@
 
 <jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
           xmlns:f="http://java.sun.com/jsf/core"
-          xmlns:tr="http://myfaces.apache.org/trinidad" >
+          xmlns:tr="http://myfaces.apache.org/trinidad" 
+          xmlns:h="http://java.sun.com/jsf/html"
+          xmlns:t="http://myfaces.apache.org/tomahawk">
 <jsp:directive.page contentType="text/html;charset=utf-8"/>
 <f:view>
 <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
@@ -40,70 +42,136 @@
   		var="row" 
   		rows="20" 
   		id="attrs" >
-    	<tr:column headerText="*">
-    	  <tr:selectBooleanCheckbox 
-    	  	onclick="submit();" 
-    	  	shortDesc="#{msgs.dscEnableRenameAttr}" 
-    	  	value="#{row.edit}" 
-    	  	rendered="#{row.allowDelete}"/>
-        </tr:column>
-  		
-    	<tr:column headerText="#{msgs.name}">
-	      <tr:outputText 
-	      	rendered="#{!row.edit}" 
-	      	value="#{row.name}"/>
-	      <tr:inputText 
-	      	columns="8" 
-	      	rendered="#{row.edit}" 
-	      	required="true" 
-	      	value="#{row.name}"/>
-        </tr:column>
-    	<tr:column headerText="#{msgs.value}">
-	      <tr:inputText 
-	      	readOnly="#{row.expression}" 
-	      	rendered="#{row.expressionSupported or (row.selectItems == null)}" 
-	      	value="#{row.value}" 
-	      	columns="12" />
-	      <tr:selectOneChoice 
-	      	rendered="#{!row.expressionSupported and !(row.selectItems == null)}" 
-	      	value="#{row.value}" >
-	      	<f:selectItems value="#{row.selectItems}" />
-	      </tr:selectOneChoice>
-        </tr:column>
-    	<tr:column headerText="#{msgs.dsc}">
-	      <tr:outputText 
-	      	rendered="#{!row.edit}" 
-	      	value="#{row.description}"/>
-	      <tr:inputText 
-	      	rendered="#{row.edit}" 
-	      	value="#{row.description}"/>
-        </tr:column>
-    	<tr:column headerText="#{msgs.type}">
-	      <tr:outputText value="#{row.classDisplayName}"/>
-        </tr:column>
-        <tr:column headerText="#{msgs.subtype}">
-        	<tr:selectOneChoice value="#{row.valueHandlerType}">
-            	<f:selectItems value="#{row.valueHandlerTypes}" />
-	        </tr:selectOneChoice>
-    	</tr:column>
+<!-- on\off changing dsc and name of attribute             
+            <tr:column 
+            	headerText="*" 
+            	shortDesc="#{msgs.dscEnableRenameAttr}" >
+                <tr:selectBooleanCheckbox 
+                	onclick="submit();" 
+                	shortDesc="#{msgs.dscEnableRenameAttr}" 
+                	value="#{row.edit}" 
+                	rendered="#{row.allowDelete}"/>
+            </tr:column>
+-->            
+<!-- name of attribute-->            
+            <tr:column headerText="#{msgs.name}">
+				<tr:panelHorizontalLayout>
+                <tr:outputText 
+                	rendered="#{!row.edit and !row.attribute.required}" 
+                	value="#{row.name}"/>
+                <tr:outputFormatted 
+                	rendered="#{!row.edit and row.attribute.required}"
+					inlineStyle="font-weight: bold;" 
+                	value="#{row.name}"/>
+                <tr:outputFormatted 
+                	inlineStyle="color: #cc0000;" 
+                	rendered="#{!row.edit and row.attribute.required and (row.attribute.value == null) }"
+                	value=" *"/>
+                <tr:inputText 
+                	columns="8" 
+                	rendered="#{row.edit}" 
+                	required="true" 
+                	value="#{row.name}"/>
+				</tr:panelHorizontalLayout>
+            </tr:column>
+<!-- value of attribute-->
+            <tr:column headerText="#{msgs.value}">
+                <tr:outputText  
+                	rendered="#{row.expressionSupported or (row.selectItems == null)}" 
+                	value="#{row.value}"/>
+                <tr:selectOneChoice 
+                	rendered="#{!row.expressionSupported and !(row.selectItems == null)}" 
+                	value="#{row.value}" >
+                    <f:selectItems value="#{row.selectItems}" />
+                </tr:selectOneChoice>
+            </tr:column>
+<!-- type of attribute-->            
+            <tr:column headerText="#{msgs.type}">
+                <tr:outputText value="#{row.classDisplayName}"/>
+            </tr:column>
+<!-- subtype of attribute-->            
+            <tr:column headerText="#{msgs.subtype}">
+                <tr:selectOneChoice 
+                	valueChangeListener="#{row.applySubType}"
+					onchange="submit();"            
+                	value="#{row.valueHandlerType}">
+                    <f:selectItems value="#{row.valueHandlerTypes}" />
+                </tr:selectOneChoice>
+            </tr:column>
 
-		<f:facet name="detailStamp">
-			<tr:panelGroupLayout layout="vertical">
-				<tr:inputText 
-					label="#{msgs.link}" 
-					rendered="#{row.expressionSupported and (row.selectItems == null) }" 
-					value="#{row.expression}"/>
-	      		<tr:selectOneChoice 
-	      			label="#{msgs.link}" 
-	      			rendered="#{row.expressionSupported and !(row.selectItems == null)}" 
-	      			value="#{row.expression}" >
-	      			<f:selectItems value="#{row.selectItems}" />
-	      		</tr:selectOneChoice>
+            <tr:column rendered="#{cNode.node.template}" headerText="#{msgs.templateExpression}" >
+                <tr:selectBooleanCheckbox 
+					valueChangeListener="#{row.applyTemplateExpression}"  
+					onchange="submit();"                	
+                	value="#{row.templateExpression}" />
+            </tr:column>
+            <f:facet name="detailStamp">
+                <tr:panelGroupLayout layout="vertical"  >
+				<tr:panelCaptionGroup captionText="#{msgs.dsc}">
+	                <tr:outputText
+	                	escape="false" 
+	                	rendered="#{!row.edit}" 
+	                	value="#{row.description}"/>
+    	            <tr:inputText 
+    	            	columns="100"
+    	            	rows="8"
+    	            	rendered="#{row.edit}"  
+    	            	value="#{row.description}"/>
+				</tr:panelCaptionGroup>
+
+			    <tr:inputText
+			    	label="#{msgs.value}"
+               		rows="7" 
+               		wrap="off" 
+            		rendered="#{row.enableEditValue}" 
+            		value="#{row.value}" 
+            		columns="100" />
+
+			    <tr:inputText
+			    	label="#{msgs.expression}"
+               		rows="7" 
+               		wrap="off"
+            		rendered="#{row.enableEditExpression}" 
+            		value="#{row.expression}" 
+            		columns="100" />
+
+				<tr:inputListOfValues 
+					rendered="#{row.enableSelectNodeDialog}"
+					value="#{row.expression}"
+					returnListener="#{row.selectNodeHandleReturn}" 
+					action="dialog:selectNode"
+					actionListener="#{row.setNode}"
+					immediate="true" 
+					windowWidth="500" windowHeight="400"
+					columns="40" label="#{msgs.node}"
+				>
+				</tr:inputListOfValues>
+                <tr:group rendered="#{row.fileAttribute}">
+                
+                <t:inputFileUpload  
+                	id="fileupload"
+					value="#{row.file}"
+					storage="file"
+					maxlength="600000"/>
+					</tr:group>
+	            <tr:selectOneChoice 
+	            	label="#{msgs.expression}" 
+	            	rendered="#{row.enableExpressionChoice}" 
+	            	value="#{row.expression}" >
+    	            <f:selectItems value="#{row.selectItems}" />
+                </tr:selectOneChoice>
 				
-			</tr:panelGroupLayout>					
-  		<!-- <tr:panelGroupLayout layout="vertical">
-  			</tr:panelGroupLayout>  -->
-		</f:facet>
+				<tr:spacer height="5"/>
+				<tr:panelGroupLayout layout="horizontal">
+					<tr:spacer width="40"/>
+						<jsp:include page="childAttributes.jspx" flush="true"/>
+					</tr:panelGroupLayout>
+				<tr:spacer height="10"></tr:spacer>
+
+                </tr:panelGroupLayout>					
+                <!-- <tr:panelGroupLayout layout="vertical">
+                </tr:panelGroupLayout>  -->
+            </f:facet>
         
  	</tr:table>
  	<tr:panelButtonBar halign="left" >

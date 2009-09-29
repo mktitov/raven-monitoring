@@ -233,7 +233,7 @@ readOnly="#{row.expressionSupported}"
                 	id="fileupload"
 					value="#{row.file}"
 					storage="file"
-					maxlength="200000"/>
+					maxlength="600000"/>
 					</tr:group>
 	            <tr:selectOneChoice 
 	            	label="#{msgs.expression}" 
