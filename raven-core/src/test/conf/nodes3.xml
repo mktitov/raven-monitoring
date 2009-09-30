@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nodes>
+  <node class="org.raven.tree.impl.FileNode" name="node">
+    <attribute name="file" valueHandler="DataFile">
+      <value>
+	<![CDATA[
+	0JfQtNGA0LDQstGB0Y
+	LQstGD0Lkg0JzQuNGA
+	]]>
+      </value>	
+    </attribute>
+  </node>
+</nodes>

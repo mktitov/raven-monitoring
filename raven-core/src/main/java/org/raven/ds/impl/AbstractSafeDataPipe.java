@@ -259,7 +259,7 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
         {
             doSetData(dataSource, data);
         }
-        catch(Exception e)
+        catch(Throwable e)
         {
             if (isLogLevelEnabled(LogLevel.ERROR))
                 error(

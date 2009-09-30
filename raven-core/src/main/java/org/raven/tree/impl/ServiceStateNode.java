@@ -17,8 +17,12 @@
 
 package org.raven.tree.impl;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.tree.Node;
+import org.raven.tree.ServiceState;
 import org.raven.tree.ServiceStateAlarm;
 
 /**
@@ -28,6 +32,8 @@ import org.raven.tree.ServiceStateAlarm;
 @NodeClass()
 public class ServiceStateNode extends AbstractServiceStateNode
 {
+    public final static int REFRESH_INTERVAL = 10000;
+
     @Parameter
     private Byte serviceAvailability;
     
@@ -46,9 +52,96 @@ public class ServiceStateNode extends AbstractServiceStateNode
     @Parameter
     private ServiceStateAlarm serviceStabilityAlarm;
 
+    private long lastRefreshTime;
+
+    @Override
+    protected void initFields()
+    {
+        super.initFields();
+        lastRefreshTime = 0l;
+    }
+
+    private synchronized void refreshStates()
+    {
+        if (System.currentTimeMillis()-lastRefreshTime<=REFRESH_INTERVAL)
+            return;
+        List<Node> childs = getSortedChildrens();
+        List<ServiceState> stateNodes = new ArrayList<ServiceState>(childs.size());
+        boolean hasAvailibilityControl = false;
+        boolean hasQualityControl = false;
+        boolean hasStabilityControl = false;
+        for (Node child: childs)
+        {
+            if (child instanceof ServiceAvailabilityControlNode)
+                hasAvailibilityControl = true;
+            else if (child instanceof ServiceQualityControlNode)
+                hasQualityControl = true;
+            else if (child instanceof ServiceStabilityControlNode)
+                hasStabilityControl = true;
+            else if (child instanceof ServiceState)
+                stateNodes.add((ServiceState) child);
+        }
+        if (   (!hasAvailibilityControl || !hasQualityControl || !hasStabilityControl)
+            && !stateNodes.isEmpty())
+        {
+            int count = stateNodes.size();
+            float sa = 0;
+            float sq = 0;
+            float st = 0;
+            byte value; Byte state;
+            ServiceStateAlarm saAlarm = ServiceStateAlarm.NO_ALARM;
+            ServiceStateAlarm sqAlarm = ServiceStateAlarm.NO_ALARM;
+            ServiceStateAlarm stAlarm = ServiceStateAlarm.NO_ALARM;
+            for (ServiceState serviceState: stateNodes)
+            {
+                if (!hasAvailibilityControl)
+                {
+                    state = serviceState.getServiceAvailability();
+                    value = state==null? 0 : state;
+                    sa += ((float)value/count)*serviceState.getServiceAvailabilityWeight();
+                    saAlarm = maxAlarm(saAlarm, serviceState.getServiceAvailabilityAlarm());
+                }
+                if (!hasQualityControl)
+                {
+                    state = serviceState.getServiceQuality();
+                    value = state==null? 0 : state;
+                    sq += ((float)value/count)*serviceState.getServiceQualityWeight();
+                    sqAlarm = maxAlarm(sqAlarm, serviceState.getServiceQualityAlarm());
+                }
+                if (!hasStabilityControl)
+                {
+                    state = serviceState.getServiceStability();
+                    value = state==null? 0 : state;
+                    st += ((float)value/count)*serviceState.getServiceStabilityWeight();
+                    stAlarm = maxAlarm(stAlarm, serviceState.getServiceStabilityAlarm());
+                }
+            }
+            if (!hasAvailibilityControl)
+            {
+                serviceAvailability = (byte)Math.round(sa);
+                serviceAvailabilityAlarm = saAlarm;
+            }
+            if (!hasQualityControl)
+            {
+                serviceQuality = (byte)Math.round(sq);
+                serviceQualityAlarm = sqAlarm;
+            }
+            if (!hasStabilityControl)
+            {
+                serviceStability = (byte)Math.round(st);
+                serviceStabilityAlarm = stAlarm;
+            }
+        }
+    }
+
+    private ServiceStateAlarm maxAlarm(ServiceStateAlarm a1, ServiceStateAlarm a2)
+    {
+        return a2==null || a1.ordinal()>=a2.ordinal()? a1 : a2;
+    }
 
     public Byte getServiceAvailability()
     {
+        refreshStates();
         return serviceAvailability;
     }
 
@@ -59,6 +152,7 @@ public class ServiceStateNode extends AbstractServiceStateNode
 
     public Byte getServiceQuality()
     {
+        refreshStates();
         return serviceQuality;
     }
 
@@ -69,6 +163,7 @@ public class ServiceStateNode extends AbstractServiceStateNode
 
     public Byte getServiceStability()
     {
+        refreshStates();
         return serviceStability;
     }
 
@@ -79,6 +174,7 @@ public class ServiceStateNode extends AbstractServiceStateNode
 
     public ServiceStateAlarm getServiceAvailabilityAlarm()
     {
+        refreshStates();
         return serviceAvailabilityAlarm;
     }
 
@@ -89,6 +185,7 @@ public class ServiceStateNode extends AbstractServiceStateNode
 
     public ServiceStateAlarm getServiceQualityAlarm()
     {
+        refreshStates();
         return serviceQualityAlarm;
     }
 
@@ -99,6 +196,7 @@ public class ServiceStateNode extends AbstractServiceStateNode
 
     public ServiceStateAlarm getServiceStabilityAlarm()
     {
+        refreshStates();
         return serviceStabilityAlarm;
     }
 
