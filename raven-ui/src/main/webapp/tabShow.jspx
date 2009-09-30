@@ -260,7 +260,9 @@ action="#{sBean.reloadRightFrame}"
 <!-- Show viewable nodes               -->
 <!-- ********************************* -->
 <tr:form id="ShowWN">
-<tr:table width="100%"
+<tr:table 
+		binding="#{sBean.coreTable}" 
+		width="100%"
 		horizontalGridVisible="false" 
 		verticalGridVisible="false" 
  		var="row" 
@@ -343,7 +345,6 @@ partialTriggers=":poolStatus"
 			</tr:panelHorizontalLayout>
 	  	</tr:panelGroupLayout>
 		</f:facet>
-		
 <!-- *********** -->		
 <!-- show action -->
 <!-- *********** --> 
@@ -361,9 +362,9 @@ partialTriggers=":poolStatus"
 	  	</tr:panelGroupLayout>
 			
 		</f:facet>
-		
-		
+<!-- *********** -->		
 <!-- show image -->
+<!-- *********** -->
 		<f:facet name="image">
 	  	  	<tr:panelHorizontalLayout halign="left" >
 	  	  	<tr:spacer width="30" height="0" />
@@ -386,7 +387,10 @@ partialTriggers=":poolStatus"
 			</tr:panelHorizontalLayout>
   		</f:facet >
 
-<!-- show table varStatus="vStat2" -->  
+<!-- show table varStatus="vStat2" -->
+<!-- *********** -->		
+<!-- show table -->
+<!-- *********** -->
 	<f:facet name="ravenTable">
 	  	  	<tr:panelHorizontalLayout halign="left" inlineStyle="width:100%" >
 	  	  	<tr:spacer width="30" height="0" />
@@ -406,8 +410,22 @@ items="#{row.tableColumnNames}"
 
 				varStatus="rowStatX"
    	<tr:outputText value="#{row.tableColumnNames}"/>
--->
-			<tr:table rowBandingInterval="1" 
+   	
+   	-----------------
+
+				<tr:iterator first="0"     
+                  	varStatus="vStatZ" 
+                  	value="#{row.tableColumnNames}"
+                  	var="nameAZX" >
+                  	<tr:outputText value="#{vStatZ.index}testTESTtest"/>
+               	</tr:iterator>
+
+			<h:dataTable> 
+				<h:column></h:column>
+			</h:dataTable>
+-->			
+			<tr:table 
+				rowBandingInterval="1" 
 				id = "tableView"
                 value="#{row.tableData}"
                 rowSelection="none"
@@ -424,10 +442,15 @@ items="#{row.tableColumnNames}"
                 		text="#">
   						<tr:panelGroupLayout layout="vertical">
 							<tr:commandLink
-								text="CSV"
+								text="#{msgs.csvWithoutHeader}"
 								immediate="true"
 								useWindow="true" 
-								actionListener="#{export.exportToCSV}"/>
+								actionListener="#{export.exportToCSVwithoutHeader}"/>
+							<tr:commandLink
+								text="#{msgs.csvWithHeader}"
+								immediate="true"
+								useWindow="true" 
+								actionListener="#{export.exportToCSVwithHeader}"/>
 							<tr:commandLink
 	 							text="HTML"
 								immediate="true"
@@ -461,513 +484,10 @@ items="#{row.tableColumnNames}"
     				</f:facet>
                 	<tr:outputText value="#{rowN.index+1}"/>
                 </tr:column>
-                <!-- +++++ -->
-                <!-- ROW 0 -->
-                <!-- +++++ -->
-                <tr:column
-                	align="left"
-					rendered="#{row.valid[0]}"                      
-                   	headerText="#{row.tableColumnNames[0]}">
-                   	<tr:panelHorizontalLayout halign="left" >
-                   	<tr:outputFormatted 
-                   		rendered="#{rowa[0].text}"
-                   		value="#{rowa[0].item}"/>
-					<tr:outputFormatted 
-						rendered="#{rowa[0].other}"
-						value="#{rowa[0].item}"/>
-					<tr:commandLink
-					    rendered="#{rowa[0].file}" 
-						text="#{msgs.file}: #{rowa[0].string}" 
-						actionListener="#{otherVO.exportX}">
-						<f:attribute 
-							name="#{otherVO.paramVO}" 
-							value="#{rowa[0].item}"/>
-					</tr:commandLink>
-					<tr:commandLink
-						partialSubmit="true" 
-						useWindow="true"
-						text="#{rowa[0].string}"
-						rendered="#{rowa[0].table}"
-						action="dialog:showViewableObject"
-						actionListener="#{selectVO.select}"
-						windowWidth="500" windowHeight="400"
-					>
-					<f:attribute
-        				name="#{selectVO.paramName}"
-        				value="#{rowa[0].item}" />
-					</tr:commandLink>
-					<tr:commandLink
-						rendered="#{rowa[0].node}" 
-						partialSubmit="true"
-						text="#{rowa[0].string}"  
-						actionListener="#{sBean.selectNode}">
-						<f:attribute 
-							name="#{sBean.nodePathParName}" 
-							value="#{rowa[0].item.data}"/>
-					</tr:commandLink>
-					</tr:panelHorizontalLayout>	
-              	</tr:column>
-                <!-- +++++ -->
-                <!-- ROW 1 -->
-                <!-- +++++ -->
-	            <tr:column  align="start"
-                   	rendered="#{row.valid[1]}"
-                   	headerText="#{row.tableColumnNames[1]}">
-                   	<tr:panelHorizontalLayout halign="left" >
-                   	<tr:outputFormatted 
-                   		rendered="#{rowa[1].text}"
-                   		value="#{rowa[1].item}"/>
-					<tr:outputFormatted 
-						rendered="#{rowa[1].other}"
-						value="#{rowa[1].item}"/>
-					<tr:commandLink
-						rendered="#{rowa[1].file}" 
-						text="#{msgs.file}: #{rowa[1].string}" 
-						actionListener="#{otherVO.exportX}">
-						<f:attribute 
-							name="#{otherVO.paramVO}" 
-							value="#{rowa[1].item}"/>
-					</tr:commandLink>
-					<tr:commandLink
-						partialSubmit="true"
-						useWindow="true"
-						text="#{rowa[1].string}"
-						rendered="#{rowa[1].table}"
-						action="dialog:showViewableObject"
-						actionListener="#{selectVO.select}"
-						windowWidth="500" windowHeight="400" >
-					<f:attribute
-        				name="#{selectVO.paramName}"
-        				value="#{rowa[1].item}" />
-					</tr:commandLink>
-					<tr:commandLink
-						rendered="#{rowa[1].node}" 
-						partialSubmit="true"
-						text="#{rowa[1].string}"  
-						actionListener="#{sBean.selectNode}">
-						<f:attribute 
-							name="#{sBean.nodePathParName}" 
-							value="#{rowa[1].item.data}"/>
-					</tr:commandLink>
-					</tr:panelHorizontalLayout>	
-	           	</tr:column>
-	           	<!-- +++++ -->
-                <!-- ROW 2 -->
-                <!-- +++++ -->
-                <tr:column  align="start"
-                   	rendered="#{row.valid[2]}"
-                   	headerText="#{row.tableColumnNames[2]}">
-                   	<tr:panelHorizontalLayout halign="left" >
-                   	<tr:outputFormatted 
-                   		rendered="#{rowa[2].text}"
-                   		value="#{rowa[2].item}"/>
-					<tr:outputFormatted 
-						rendered="#{rowa[2].other}"
-						value="#{rowa[2].item}"/>
-					<tr:commandLink
-						rendered="#{rowa[2].file}" 
-						text="#{msgs.file}: #{rowa[2].string}" 
-						actionListener="#{otherVO.exportX}">
-						<f:attribute 
-							name="#{otherVO.paramVO}" 
-							value="#{rowa[2].item}"/>
-					</tr:commandLink>
-					<tr:commandLink
-						partialSubmit="true"
-						useWindow="true"
-						text="#{rowa[2].string}"
-						rendered="#{rowa[2].table}"
-						action="dialog:showViewableObject"
-						actionListener="#{selectVO.select}"
-						windowWidth="500" windowHeight="400"
-					>
-					<f:attribute
-        				name="#{selectVO.paramName}"
-        				value="#{rowa[2].item}" />
-					</tr:commandLink>
-					<tr:commandLink
-						rendered="#{rowa[2].node}" 
-						partialSubmit="true"
-						text="#{rowa[2].string}"  
-						actionListener="#{sBean.selectNode}">
-						<f:attribute 
-							name="#{sBean.nodePathParName}" 
-							value="#{rowa[2].item.data}"/>
-					</tr:commandLink>
-					</tr:panelHorizontalLayout>	
-	            </tr:column>
-                <!-- +++++ -->
-                <!-- ROW 3 -->
-                <!-- +++++ -->
-                <tr:column  align="start"
-                   	rendered="#{row.valid[3]}"
-                   	headerText="#{row.tableColumnNames[3]}">
-                   	<tr:panelHorizontalLayout halign="left" >
-                   	<tr:outputFormatted 
-                   		rendered="#{rowa[3].text}"
-                   		value="#{rowa[3].item}"/>
-					<tr:outputFormatted 
-						rendered="#{rowa[3].other}"
-						value="#{rowa[3].item}"/>
-					<tr:commandLink
-						rendered="#{rowa[3].file}" 
-						text="#{msgs.file}: #{rowa[3].string}" 
-						actionListener="#{otherVO.exportX}">
-						<f:attribute 
-							name="#{otherVO.paramVO}" 
-							value="#{rowa[3].item}"/>
-					</tr:commandLink>
-					<tr:commandLink
-						partialSubmit="true"
-						useWindow="true"
-						text="#{rowa[3].string}"
-						rendered="#{rowa[3].table}"
-						action="dialog:showViewableObject"
-						actionListener="#{selectVO.select}"
-						windowWidth="500" windowHeight="400"
-					>
-					<f:attribute
-        				name="#{selectVO.paramName}"
-        				value="#{rowa[3].item}" />
-					</tr:commandLink>	
-					<tr:commandLink
-						rendered="#{rowa[3].node}" 
-						partialSubmit="true"
-						text="#{rowa[3].string}"  
-						actionListener="#{sBean.selectNode}">
-						<f:attribute 
-							name="#{sBean.nodePathParName}" 
-							value="#{rowa[3].item.data}"/>
-					</tr:commandLink>
-                   	</tr:panelHorizontalLayout>
-	            </tr:column>
-	            <!-- +++++ -->
-                <!-- ROW 4 -->
-                <!-- +++++ -->
-                <tr:column  
-                   	rendered="#{row.valid[4]}"
-                   	headerText="#{row.tableColumnNames[4]}">
-                   	<tr:panelHorizontalLayout halign="left" >
-                   	<tr:outputFormatted 
-                   		rendered="#{rowa[4].text}"
-                   		value="#{rowa[4].item}"/>
-					<tr:outputFormatted 
-						rendered="#{rowa[4].other}"
-						value="#{rowa[4].item}"/>
-					<tr:commandLink
-						rendered="#{rowa[4].file}" 
-						text="#{msgs.file}: #{rowa[4].string}" 
-						actionListener="#{otherVO.exportX}">
-						<f:attribute 
-							name="#{otherVO.paramVO}" 
-							value="#{rowa[4].item}"/>
-					</tr:commandLink>
-					<tr:commandLink
-						partialSubmit="true"
-						useWindow="true"
-						text="#{rowa[4].string}"
-						rendered="#{rowa[4].table}"
-						action="dialog:showViewableObject"
-						actionListener="#{selectVO.select}"
-						windowWidth="500" windowHeight="400"
-					>
-					<f:attribute
-        				name="#{selectVO.paramName}"
-        				value="#{rowa[4].item}" />
-					</tr:commandLink>
-					<tr:commandLink
-						rendered="#{rowa[4].node}" 
-						partialSubmit="true"
-						text="#{rowa[4].string}"  
-						actionListener="#{sBean.selectNode}">
-						<f:attribute 
-							name="#{sBean.nodePathParName}" 
-							value="#{rowa[4].item.data}"/>
-					</tr:commandLink>
-					</tr:panelHorizontalLayout>	
-	            </tr:column>
-          	    <!-- +++++ -->
-                <!-- ROW 5 -->
-                <!-- +++++ -->
-                <tr:column  
-                   	rendered="#{row.valid[5]}"
-                   	headerText="#{row.tableColumnNames[5]}">
-                   	<tr:panelHorizontalLayout halign="left" >
-                   	<tr:outputFormatted 
-                   		rendered="#{rowa[5].text}"
-                   		value="#{rowa[5].item}"/>
-					<tr:outputFormatted 
-						rendered="#{rowa[5].other}"
-						value="#{rowa[5].item}"/>
-					<tr:commandLink
-						rendered="#{rowa[5].file}" 
-						text="#{msgs.file}: #{rowa[5].string}" 
-						actionListener="#{otherVO.exportX}">
-						<f:attribute 
-							name="#{otherVO.paramVO}" 
-							value="#{rowa[5].item}"/>
-					</tr:commandLink>
-					<tr:commandLink
-						partialSubmit="true"
-						useWindow="true"
-						text="#{rowa[5].string}"
-						rendered="#{rowa[5].table}"
-						action="dialog:showViewableObject"
-						actionListener="#{selectVO.select}"
-						windowWidth="500" windowHeight="400"
-					>
-					<f:attribute
-        				name="#{selectVO.paramName}"
-        				value="#{rowa[5].item}" />
-					</tr:commandLink>
-					<tr:commandLink
-						rendered="#{rowa[5].node}" 
-						partialSubmit="true"
-						text="#{rowa[5].string}"  
-						actionListener="#{sBean.selectNode}">
-						<f:attribute 
-							name="#{sBean.nodePathParName}" 
-							value="#{rowa[5].item.data}"/>
-					</tr:commandLink>
-					</tr:panelHorizontalLayout>	
-	            </tr:column>
-				<!-- +++++ -->
-                <!-- ROW 6 -->
-                <!-- +++++ -->
-                <tr:column  
-                   	rendered="#{row.valid[6]}"
-                   	headerText="#{row.tableColumnNames[6]}">
-                   	<tr:panelHorizontalLayout halign="left" >
-                   	<tr:outputFormatted 
-                   		rendered="#{rowa[6].text}"
-                   		value="#{rowa[6].item}"/>
-					<tr:outputFormatted 
-						rendered="#{rowa[6].other}"
-						value="#{rowa[6].item}"/>
-					<tr:commandLink
-						rendered="#{rowa[6].file}" 
-						text="#{msgs.file}: #{rowa[6].string}" 
-						actionListener="#{otherVO.exportX}">
-						<f:attribute 
-							name="#{otherVO.paramVO}" 
-							value="#{rowa[6].item}"/>
-					</tr:commandLink>
-					<tr:commandLink
-						partialSubmit="true"
-						useWindow="true"
-						text="#{rowa[6].string}"
-						rendered="#{rowa[6].table}"
-						action="dialog:showViewableObject"
-						actionListener="#{selectVO.select}"
-						windowWidth="500" windowHeight="400"
-					>
-					<f:attribute
-        				name="#{selectVO.paramName}"
-        				value="#{rowa[6].item}" />
-					</tr:commandLink>	
-					<tr:commandLink
-						rendered="#{rowa[6].node}" 
-						partialSubmit="true"
-						text="#{rowa[6].string}"  
-						actionListener="#{sBean.selectNode}">
-						<f:attribute 
-							name="#{sBean.nodePathParName}" 
-							value="#{rowa[6].item.data}"/>
-					</tr:commandLink>
-                	</tr:panelHorizontalLayout> 
-	            </tr:column>
-				<!-- +++++ -->
-                <!-- ROW 7 -->
-                <!-- +++++ -->
-                <tr:column  
-                   	rendered="#{row.valid[7]}"
-                   	headerText="#{row.tableColumnNames[7]}">
-                   	<tr:panelHorizontalLayout halign="left" >
-                   	<tr:outputFormatted 
-                   		rendered="#{rowa[7].text}"
-                   		value="#{rowa[7].item}"/>
-					<tr:outputFormatted 
-						rendered="#{rowa[7].other}"
-						value="#{rowa[7].item}"/>
-					<tr:commandLink
-						rendered="#{rowa[7].file}" 
-						text="#{msgs.file}: #{rowa[7].string}" 
-						actionListener="#{otherVO.exportX}">
-						<f:attribute 
-							name="#{otherVO.paramVO}" 
-							value="#{rowa[7].item}"/>
-					</tr:commandLink>
-					<tr:commandLink
-						partialSubmit="true"
-						useWindow="true"
-						text="#{rowa[7].string}"
-						rendered="#{rowa[7].table}"
-						action="dialog:showViewableObject"
-						actionListener="#{selectVO.select}"
-						windowWidth="500" windowHeight="400"
-					>
-					<f:attribute
-        				name="#{selectVO.paramName}"
-        				value="#{rowa[7].item}" />
-					</tr:commandLink>	
-					<tr:commandLink
-						rendered="#{rowa[7].node}" 
-						partialSubmit="true"
-						text="#{rowa[7].string}"  
-						actionListener="#{sBean.selectNode}">
-						<f:attribute 
-							name="#{sBean.nodePathParName}" 
-							value="#{rowa[7].item.data}"/>
-					</tr:commandLink>
-                	</tr:panelHorizontalLayout> 
-	            </tr:column>
-				<!-- +++++ -->
-                <!-- ROW 8 -->
-                <!-- +++++ -->
-                <tr:column  
-                   	rendered="#{row.valid[8]}"
-                   	headerText="#{row.tableColumnNames[8]}">
-                   	<tr:panelHorizontalLayout halign="left" >
-                   	<tr:outputFormatted 
-                   		rendered="#{rowa[8].text}"
-                   		value="#{rowa[8].item}"/>
-					<tr:outputFormatted 
-						rendered="#{rowa[8].other}"
-						value="#{rowa[8].item}"/>
-					<tr:commandLink
-						rendered="#{rowa[8].file}" 
-						text="#{msgs.file}: #{rowa[8].string}" 
-						actionListener="#{otherVO.exportX}">
-						<f:attribute 
-							name="#{otherVO.paramVO}" 
-							value="#{rowa[8].item}"/>
-					</tr:commandLink>
-					<tr:commandLink
-						partialSubmit="true"
-						useWindow="true"
-						text="#{rowa[8].string}"
-						rendered="#{rowa[8].table}"
-						action="dialog:showViewableObject"
-						actionListener="#{selectVO.select}"
-						windowWidth="500" windowHeight="400"
-					>
-					<f:attribute
-        				name="#{selectVO.paramName}"
-        				value="#{rowa[8].item}" />
-					</tr:commandLink>	
-					<tr:commandLink
-						rendered="#{rowa[8].node}" 
-						partialSubmit="true"
-						text="#{rowa[8].string}"  
-						actionListener="#{sBean.selectNode}">
-						<f:attribute 
-							name="#{sBean.nodePathParName}" 
-							value="#{rowa[8].item.data}"/>
-					</tr:commandLink>
-                	</tr:panelHorizontalLayout> 
-	            </tr:column>
-				<!-- +++++ -->
-                <!-- ROW 9 -->
-                <!-- +++++ -->
-                <tr:column  
-                   	rendered="#{row.valid[9]}"
-                   	headerText="#{row.tableColumnNames[9]}">
-                   	<tr:panelHorizontalLayout halign="left" >
-                   	<tr:outputFormatted 
-                   		rendered="#{rowa[9].text}"
-                   		value="#{rowa[9].item}"/>
-					<tr:outputFormatted 
-						rendered="#{rowa[9].other}"
-						value="#{rowa[9].item}"/>
-					<tr:commandLink
-						rendered="#{rowa[9].file}" 
-						text="#{msgs.file}: #{rowa[9].string}" 
-						actionListener="#{otherVO.exportX}">
-						<f:attribute 
-							name="#{otherVO.paramVO}" 
-							value="#{rowa[9].item}"/>
-					</tr:commandLink>
-					<tr:commandLink
-						partialSubmit="true"
-						useWindow="true"
-						text="#{rowa[9].string}"
-						rendered="#{rowa[9].table}"
-						action="dialog:showViewableObject"
-						actionListener="#{selectVO.select}"
-						windowWidth="500" windowHeight="400"
-					>
-					<f:attribute
-        				name="#{selectVO.paramName}"
-        				value="#{rowa[9].item}" />
-					</tr:commandLink>	
-					<tr:commandLink
-						rendered="#{rowa[9].node}" 
-						partialSubmit="true"
-						text="#{rowa[9].string}"  
-						actionListener="#{sBean.selectNode}">
-						<f:attribute 
-							name="#{sBean.nodePathParName}" 
-							value="#{rowa[9].item.data}"/>
-					</tr:commandLink>
-                	</tr:panelHorizontalLayout> 
-	            </tr:column>
-				<!-- +++++ -->
-                <!-- ROW 10 -->
-                <!-- +++++ -->
-                <tr:column  
-                   	rendered="#{row.valid[10]}"
-                   	headerText="#{row.tableColumnNames[10]}">
-                   	<tr:panelHorizontalLayout halign="left" >
-                   	<tr:outputFormatted 
-                   		rendered="#{rowa[10].text}"
-                   		value="#{rowa[10].item}"/>
-					<tr:outputFormatted 
-						rendered="#{rowa[10].other}"
-						value="#{rowa[10].item}"/>
-					<tr:commandLink
-						rendered="#{rowa[10].file}" 
-						text="#{msgs.file}: #{rowa[10].string}" 
-						actionListener="#{otherVO.exportX}">
-						<f:attribute 
-							name="#{otherVO.paramVO}" 
-							value="#{rowa[10].item}"/>
-					</tr:commandLink>
-					<tr:commandLink
-						partialSubmit="true"
-						useWindow="true"
-						text="#{rowa[10].string}"
-						rendered="#{rowa[10].table}"
-						action="dialog:showViewableObject"
-						actionListener="#{selectVO.select}"
-						windowWidth="500" windowHeight="400"
-					>
-					<f:attribute
-        				name="#{selectVO.paramName}"
-        				value="#{rowa[10].item}" />
-					</tr:commandLink>	
-					<tr:commandLink
-						rendered="#{rowa[10].node}" 
-						partialSubmit="true"
-						text="#{rowa[10].string}"  
-						actionListener="#{sBean.selectNode}">
-						<f:attribute 
-							name="#{sBean.nodePathParName}" 
-							value="#{rowa[10].item.data}"/>
-					</tr:commandLink>
-                	</tr:panelHorizontalLayout> 
-	            </tr:column>
-	              	
-<!--                       	
-				<tr:iterator    
-                  	varStatus="vStatZ" 
-                  	value="#{row.tableColumnNames}"
-                  	var="nameAZX" >
-                      	<tr:outputText value="!@ #{nameAZX} !@"/>
-               	</tr:iterator>
- -->                      	
+<!--                 
  				<tr:forEach    
                   	varStatus="vStat" 
-                  	items="#{row.tableColumnNames}"
+                  	items="#{sBean.coreTableRowData.tableColumnNames}"
                   	var="nameAZX" >
                     <tr:column  
                     	align="center" 
@@ -976,7 +496,95 @@ items="#{row.tableColumnNames}"
                        	<tr:outputText value="#{rowa[vStat.index-1]}"/>
                     </tr:column>
                	</tr:forEach>
-               	
+				<tr:iterator 
+					first="0"    
+                  	varStatus="vStatZZ" 
+                  	value="#{row.tableColumnNames}"
+                  	var="nameAZXZ" >
+                  	<tr:outputText value="testTESTtest"/>
+                  		<tr:column 
+                  			width="24%"
+                			align="center" 
+                			headerText="QQAAQQZZ">
+ 	              			<tr:outputText value="#{vStatZZ.index} testTESTtest"/>
+    	                  	<tr:outputText value="!@ #{nameAZXZ} !@"/>
+        	           	</tr:column>
+               	</tr:iterator>
+ -->               	
+          <!-- +++++ -->
+          <!-- ALL ROWS -->
+          <!-- +++++ -->
+ 				<tr:forEach    
+                  	varStatus="vxStat"
+                  	begin="0" 
+                  	end="11"  
+                  	var="nameAZX" >
+                	<tr:column
+                		align="left"
+						rendered="#{row.valid[vxStat.index]}"                      
+                   		headerText="#{row.tableColumnNames[vxStat.index]}">
+                   		<tr:panelHorizontalLayout halign="left" >
+                   		<tr:outputFormatted 
+	                   		rendered="#{rowa[vxStat.index].text}"
+    	               		value="#{rowa[vxStat.index].item}"/>
+						<tr:outputFormatted 
+							rendered="#{rowa[vxStat.index].other}"
+							value="#{rowa[vxStat.index].item}"/>
+						<tr:commandLink
+					    	rendered="#{rowa[vxStat.index].file}" 
+							text="#{msgs.file}: #{rowa[vxStat.index].string}" 
+							actionListener="#{otherVO.exportX}">
+							<f:attribute 
+								name="#{otherVO.paramVO}" 
+								value="#{rowa[vxStat.index].item}"/>
+						</tr:commandLink>
+						<tr:commandLink
+							partialSubmit="true" 
+							useWindow="true"
+							text="#{rowa[vxStat.index].string}"
+							rendered="#{rowa[vxStat.index].table}"
+							action="dialog:showViewableObject"
+							actionListener="#{selectVO.select}"
+							windowWidth="500" windowHeight="500">
+							<f:attribute
+        						name="#{selectVO.paramName}"
+        						value="#{rowa[vxStat.index].item}" />
+						</tr:commandLink>
+						<tr:commandLink
+							rendered="#{rowa[vxStat.index].node}" 
+							partialSubmit="true"
+							text="#{rowa[vxStat.index].string}"  
+							actionListener="#{sBean.selectNode}">
+							<f:attribute 
+								name="#{sBean.nodePathParName}" 
+								value="#{rowa[vxStat.index].item.data}"/>
+						</tr:commandLink>
+						</tr:panelHorizontalLayout>	
+              		</tr:column>
+               	</tr:forEach>
+	              	
+<!--                       	
+				<tr:iterator    
+                  	varStatus="vStatZ" 
+                  	value="#{row.tableColumnNames}"
+                  	var="nameAZX" >
+                      	<tr:outputText value="!@ #{nameAZX} !@"/>
+               	</tr:iterator>
+               	items="#{row.tableColumnNames}"
+               	getElValueRow
+                     	
+ 				<tr:forEach    
+                  	varStatus="vStat" 
+                  	items="#{sBean.elValueRow.tableColumnNames}"
+                  	var="nameAZX" >
+                    <tr:column  
+                    	align="center" 
+                    	headerText="!! #{nameAZX} !!">
+                    	<tr:outputText value="!@ #{nameAZX} !@"/>
+                       	<tr:outputText value="#{rowa[vStat.index-1]}"/>
+                    </tr:column>
+               	</tr:forEach>
+ -->                	
            	</tr:table>
 			<tr:spacer height="6" />
 	 	</tr:panelGroupLayout>

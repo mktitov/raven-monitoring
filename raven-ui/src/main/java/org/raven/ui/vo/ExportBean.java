@@ -104,14 +104,24 @@ public class ExportBean
 		writeResponce(vtw.makeHtmlTable(), contentType, "html");
     }
 	
-	public void exportToCSV(ActionEvent actionEvent) 
+	public void exportToCSV(ActionEvent actionEvent, boolean header) 
 	{
 		export(actionEvent);
 		VOTableWrapper vtw = getObject();  
 		if(vtw==null) return;
 		String contentType = "text/csv";
-		writeResponce(vtw.makeCSV(), contentType, "csv");
+		writeResponce(vtw.makeCSV(header), contentType, "csv");
+    }
+
+	public void exportToCSVwithoutHeader(ActionEvent actionEvent) 
+	{
+		exportToCSV(actionEvent,false);
     }
 	
+	public void exportToCSVwithHeader(ActionEvent actionEvent) 
+	{
+		exportToCSV(actionEvent,true);
+    }
+
 	
 }

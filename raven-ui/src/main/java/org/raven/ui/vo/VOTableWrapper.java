@@ -10,6 +10,7 @@ public class VOTableWrapper extends ArrayList<TableItemWrapper[]>
 {
 	private static final long serialVersionUID = -1356513548995799683L;
 	public static final int MAX_ARR_LEN = 30;
+	public static final String CSV_DELIM = ";";
 	private boolean[] valid = null;
 	private Table table;
 	
@@ -52,7 +53,8 @@ public class VOTableWrapper extends ArrayList<TableItemWrapper[]>
 	        {
 	    		sb.append("<td>");
 	        	//sb.append(StringEscapeUtils.escapeHtml(ar[i].toString()));
-	    		sb.append(ar[i]);
+	    		if(ar[i]!=null)
+	    			sb.append(ar[i]);
 	    		sb.append("</td>");
 	        }
 			sb.append("</tr>");
@@ -62,28 +64,31 @@ public class VOTableWrapper extends ArrayList<TableItemWrapper[]>
 		return sb.toString();
 	}
 	
-	public String makeCSV()
+	public String makeCSV(boolean header)
 	{
 		StringBuffer sb = new StringBuffer();
-		//sb.append("<html><table border=\"1\" cellpadding=\"3\" cellspacing=\"0\" ><thead><tr>");
 		int cols = table.getColumnNames().length;
-        for (int i = 0; i < cols; i++) 
-        {
-    		if(i>0) sb.append(",");
-        	sb.append(StringEscapeUtils.escapeCsv(table.getColumnNames()[i]));
-        }
+		if(header)
+		{
+			for (int i = 0; i < cols; i++) 
+			{
+				if(i>0) sb.append(CSV_DELIM);
+				sb.append(StringEscapeUtils.escapeCsv(table.getColumnNames()[i]));
+			}
+			sb.append("\n");
+		}
 		Iterator<Object[]> it = table.getRowIterator();
 		while(it.hasNext())
 		{
 			Object[] ar = it.next();
-			sb.append("\n");
 			for(int i=0;i < cols; i++)
 	        {
-				if(i>0) sb.append(",");
-	        	sb.append(StringEscapeUtils.escapeCsv(ar[i].toString()));
+				if(i>0) sb.append(CSV_DELIM);
+				if(ar[i]!=null) 
+					sb.append(StringEscapeUtils.escapeCsv(ar[i].toString()));
 	        }
+			sb.append("\n");
 		}
-		//sb.append("</tbody></table></html>");
 		return sb.toString();
 	}
 	

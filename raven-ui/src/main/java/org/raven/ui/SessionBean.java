@@ -59,6 +59,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 //import org.weda.internal.annotations.Service;
 import org.weda.services.ClassDescriptorRegistry;
+import org.apache.myfaces.trinidad.component.core.data.CoreTable;
 import org.apache.myfaces.trinidad.component.core.data.CoreTree;
 import org.apache.myfaces.trinidad.model.ChildPropertyTreeModel;
 import org.apache.myfaces.trinidad.model.TreeModel;
@@ -143,7 +144,8 @@ public class SessionBean
 	private String auditNodeId = "";
 	private String auditNodePath = "";
 	private List<AuditRecord> auditData = new ArrayList<AuditRecord>();
-	private TreeModel resourcesTreeModel;	
+	private TreeModel resourcesTreeModel;
+	private CoreTable coreTable; 
 
 	@SuppressWarnings("unchecked")
 	public static SelectItem[] makeSI(Enum[] values, boolean needNull)
@@ -366,6 +368,13 @@ public class SessionBean
 	    return context.getELContext().getELResolver().getValue(context.getELContext(), null, name);
 	 }
 
+	 public Object getElValueRow()
+	 {
+		 Object z = getElValue("row");
+		 return z; //getElValue("row"); 
+	 }
+	 
+	 
 	 public static UserAcl getUserAcl()
 	 {
 		FacesContext fc = FacesContext.getCurrentInstance();
@@ -953,6 +962,21 @@ public class SessionBean
 	public TreeModel getResourcesTreeModel() {
 		return resourcesTreeModel;
 	}
+
+	public void setCoreTable(CoreTable coreTable) {
+		logger.info("setCoreTable:");
+		this.coreTable = coreTable;
+	}
+
+	public CoreTable getCoreTable() {
+		logger.info("getCoreTable:");
+		return coreTable;
+	}
 	
+	public Object getCoreTableRowData() {
+		logger.info("getCoreTableRowData:");
+		Object o = coreTable.getRowData();
+		return o;
+	}
 	
 }

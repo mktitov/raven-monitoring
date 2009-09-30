@@ -1316,23 +1316,38 @@ public class BaseNode implements Node, NodeListener, Logger
             parent.formExpressionBindings(bindings);
     }
 
-	public static String getTrace(Throwable t)
+    private static final String[] ex = {"org.apache.myfaces","javax.faces"};
+	public static void getTraceX(StringBuffer sb,Throwable t)
 	{
-		 StringBuffer m = new StringBuffer("");
-		 m.append(t.getClass().getCanonicalName());
-		 m.append(": ");
-		 m.append(t.getMessage());
-		 m.append("\n");
+		 sb.append(t.getClass().getCanonicalName());
+		 sb.append(": ").append(t.getMessage()).append("\n");
 		 StackTraceElement[] stea = t.getStackTrace();
 		 for(StackTraceElement ste :stea)
 		 {
-			 m.append("at ");
-			 m.append(ste.toString());
-			 m.append("\n");
+			 String x = ste.toString();
+			 sb.append("at ").append(x).append("\n");
+			 for(String s : ex)
+				 if(x.startsWith(s))
+				 {
+					 sb.append("...\n");
+					 break;
+				 }	 
 		 }
-		return m.toString();
 	}
-    
+
+	public static String getTrace(Throwable t)
+	{
+		StringBuffer sb = new StringBuffer("");
+		getTraceX(sb, t);
+		Throwable z;
+		while( (z = t.getCause())!=null )
+		{
+			sb.append("Caused by: ");
+			getTraceX(sb, z);
+		}	
+		return sb.toString();
+	}	
+	
 	public boolean isLogLevelEnabled(LogLevel level)
 	{
 		return getLogLevel().ordinal() <= level.ordinal();
