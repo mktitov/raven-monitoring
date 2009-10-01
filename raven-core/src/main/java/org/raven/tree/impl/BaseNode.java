@@ -1339,8 +1339,8 @@ public class BaseNode implements Node, NodeListener, Logger
 	{
 		StringBuffer sb = new StringBuffer("");
 		getTraceX(sb, t);
-		Throwable z;
-		while( (z = t.getCause())!=null )
+		Throwable z = t;
+		while( (z = z.getCause())!=null )
 		{
 			sb.append("Caused by: ");
 			getTraceX(sb, z);

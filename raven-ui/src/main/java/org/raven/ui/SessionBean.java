@@ -501,8 +501,8 @@ public class SessionBean
 	  
 	  public void selectNodeAndMaximize(ActionEvent event)
 	  {
+		  switchCollapsed();
 		  selectNodeT(event);
-		  //switchCollapsed();	
 	  }
 	  
 	  public void selectNodeT(ActionEvent event)
