@@ -70,8 +70,12 @@ public class ServiceStateNode extends AbstractServiceStateNode
         boolean hasAvailibilityControl = false;
         boolean hasQualityControl = false;
         boolean hasStabilityControl = false;
+        float saWSum=0; int saWCount = 0; byte saMin = 100; double saSum=0.;
+        ServiceStateAlarm saAlarm = ServiceStateAlarm.NO_ALARM;
         for (Node child: childs)
         {
+            if (!Status.STARTED.equals(child.getStatus()))
+                continue;
             if (child instanceof ServiceAvailabilityControlNode)
                 hasAvailibilityControl = true;
             else if (child instanceof ServiceQualityControlNode)
@@ -79,7 +83,23 @@ public class ServiceStateNode extends AbstractServiceStateNode
             else if (child instanceof ServiceStabilityControlNode)
                 hasStabilityControl = true;
             else if (child instanceof ServiceState)
+            {
+                ServiceState state = (ServiceState) child;
+                float aw = state.getServiceAvailabilityWeight();
+                Byte a = state.getServiceAvailability();
+                a = a==null? 100 : a;
+                if (aw<=1)
+                {
+                    ++saWCount;
+                    saWSum += aw;
+                    saSum += a*aw;
+                }
+                else
+                    saMin = (byte) Math.min(saMin, a);
+                saAlarm = maxAlarm(saAlarm, state.getServiceAvailabilityAlarm());
+                
                 stateNodes.add((ServiceState) child);
+            }
         }
         if (   (!hasAvailibilityControl || !hasQualityControl || !hasStabilityControl)
             && !stateNodes.isEmpty())
@@ -89,7 +109,7 @@ public class ServiceStateNode extends AbstractServiceStateNode
             float sq = 0;
             float st = 0;
             byte value; Byte state;
-            ServiceStateAlarm saAlarm = ServiceStateAlarm.NO_ALARM;
+//            ServiceStateAlarm saAlarm = ServiceStateAlarm.NO_ALARM;
             ServiceStateAlarm sqAlarm = ServiceStateAlarm.NO_ALARM;
             ServiceStateAlarm stAlarm = ServiceStateAlarm.NO_ALARM;
             for (ServiceState serviceState: stateNodes)
@@ -132,11 +152,6 @@ public class ServiceStateNode extends AbstractServiceStateNode
                 serviceStabilityAlarm = stAlarm;
             }
         }
-    }
-
-    private ServiceStateAlarm maxAlarm(ServiceStateAlarm a1, ServiceStateAlarm a2)
-    {
-        return a2==null || a1.ordinal()>=a2.ordinal()? a1 : a2;
     }
 
     public Byte getServiceAvailability()
@@ -203,5 +218,40 @@ public class ServiceStateNode extends AbstractServiceStateNode
     public void setServiceStabilityAlarm(ServiceStateAlarm serviceStabilityAlarm)
     {
         this.serviceStabilityAlarm = serviceStabilityAlarm;
+    }
+
+    private static class StateCalc
+    {
+        private float wSum=0;
+        private int wCount = 0;
+        private byte min = 100;
+        private double sum = 0.;
+        private ServiceStateAlarm maxAlarm = ServiceStateAlarm.NO_ALARM;
+
+        public void aggregate(Byte state, Float weight, ServiceStateAlarm alarm)
+        {
+            float w = weight.floatValue();
+            byte a = state==null? 100 : state;
+            if (w<=1)
+            {
+                ++wCount;
+                wSum += w;
+                sum += a*w;
+            }
+            else
+                min = (byte) Math.min(min, a);
+            maxAlarm = maxAlarm(maxAlarm, alarm);
+        }
+
+        public byte getState()
+        {
+            byte w = (byte) Math.round(sum / wSum);
+            return w<min? w : min;
+        }
+
+        private static ServiceStateAlarm maxAlarm(ServiceStateAlarm a1, ServiceStateAlarm a2)
+        {
+            return a2==null || a1.ordinal()>=a2.ordinal()? a1 : a2;
+        }
     }
 }
