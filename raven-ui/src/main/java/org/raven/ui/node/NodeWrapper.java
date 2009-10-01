@@ -397,46 +397,36 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	
 	public String nodeStart()
 	{
-		if( ! isAllowControl() ) return "err";
+		//if( ! isAllowControl() ) return "err";
 		if(!isCanNodeStart()) return "err";
 		try { 
 			getNode().start();
 			auditor.write(getNode(), getAccountName(), Action.NODE_START, null);
 		}
-		catch (NodeError e)
-		{
-			logger.error("on start "+getNodeName()+" : "+e.getMessage());
-		}
+		catch (NodeError e)	{logger.error("on start {} : {}",getNodeName(),e.getMessage());	}
 		return "ok";
 	}
 
 	public String nodeStartRecursive()
 	{
-		if( ! isAllowControl() ) return "err";
-		if(!isCanNodeStart()) return "err";
-		try 
-		{
+		//if( ! isAllowControl() ) return "err";
+		if(!isNodeAccessible()) return "err";
+		try {
 			getTree().start(getNode(), true);
 			auditor.write(getNode(), getAccountName(), Action.NODE_START_RECURSIVE, null);
-		} catch (NodeError e)
-		{
-				logger.error("on start recursive:"+getNodeName()+" : "+e.getMessage());
-		}
+		} catch (NodeError e) {logger.error("on start recursive {} : {}",getNodeName(),e.getMessage());}
 		return "ok";
 	}
 	
 	public String nodeStop()
 	{
-		if( ! isAllowControl() ) return "err";
+		//if( ! isAllowControl() ) return "err";
 		if(!isCanNodeStop()) return "err";
 		try { 
 			getNode().stop();
 			auditor.write(getNode(), getAccountName(), Action.NODE_STOP, null);
 		}
-		catch (NodeError e) 
-		{
-			logger.error("on stop {} : {}",getNodeName(),e.getMessage()); 
-		}
+		catch (NodeError e) { logger.error("on stop {} : {}",getNodeName(),e.getMessage());	}
 		return "ok";
 	}
 	

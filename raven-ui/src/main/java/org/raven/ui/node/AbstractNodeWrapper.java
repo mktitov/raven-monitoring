@@ -127,16 +127,21 @@ public abstract class AbstractNodeWrapper
 	
 	public boolean isCanNodeStop()
 	{
-		if( ! isAllowControl() ) return false;
-		if(isNodeCreated()) return false;
+		if( ! isNodeAccessible() ) return false;
 		return isNodeStarted();
 	}
 
 	public boolean isCanNodeStart()
 	{
+		if( ! isNodeAccessible() ) return false;
+		return isNodeStopped();
+	}
+
+	public boolean isNodeAccessible()
+	{
 		if( ! isAllowControl() ) return false;
 		if(isNodeCreated()) return false;
-		return isNodeStopped();
+		return true;
 	}
 	
 	public String getNodeStatusText()
