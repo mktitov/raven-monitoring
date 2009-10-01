@@ -411,7 +411,7 @@ items="#{row.tableColumnNames}"
 				varStatus="rowStatX"
    	<tr:outputText value="#{row.tableColumnNames}"/>
    	
-   	-----------------
+   	+++++++++++++++++++
 
 				<tr:iterator first="0"     
                   	varStatus="vStatZ" 
