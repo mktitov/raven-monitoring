@@ -32,6 +32,13 @@ public class AccessGroupNode extends BaseNode implements Viewable
 		ResourceNode.appendParam(sb, LdapGroupAcl.LDAP_GROUP_PARAM, ldapGroup);
 		for(Node n: getChildrenList())
 		{
+//			try {
+//				ResourceNode r = (ResourceNode) n;
+//			}
+//			catch(Exception e) 
+//			{
+//				logger.error("AAA: ", e);
+//			}
 			if(n.getStatus()!=Status.STARTED) continue;
 			if (n instanceof ResourceLinkNode) {
 				ResourceLinkNode r = (ResourceLinkNode) n;

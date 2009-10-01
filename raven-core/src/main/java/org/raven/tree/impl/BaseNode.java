@@ -1319,20 +1319,23 @@ public class BaseNode implements Node, NodeListener, Logger
     private static final String[] ex = {"org.apache.myfaces","javax.faces"};
 	public static void getTraceX(StringBuffer sb,Throwable t)
 	{
-		 sb.append(t.getClass().getCanonicalName());
-		 sb.append(": ").append(t.getMessage()).append("\n");
-		 StackTraceElement[] stea = t.getStackTrace();
-		 for(StackTraceElement ste :stea)
-		 {
-			 String x = ste.toString();
-			 sb.append("at ").append(x).append("\n");
-			 for(String s : ex)
-				 if(x.startsWith(s))
-				 {
-					 sb.append("...\n");
-					 break;
-				 }	 
-		 }
+		boolean stop = false;
+		sb.append(t.getClass().getCanonicalName());
+		sb.append(": ").append(t.getMessage()).append("\n");
+		StackTraceElement[] stea = t.getStackTrace();
+		for(StackTraceElement ste :stea)
+		{
+			String x = ste.toString();
+			sb.append("at ").append(x).append("\n");
+			for(String s : ex)
+				if(x.startsWith(s))
+				{
+					stop = true;
+					sb.append("...\n");
+					break;
+				}
+			if(stop) break;
+		}
 	}
 
 	public static String getTrace(Throwable t)
