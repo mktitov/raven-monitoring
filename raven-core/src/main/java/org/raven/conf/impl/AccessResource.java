@@ -60,17 +60,18 @@ public class AccessResource extends AccessControlList
 			this.show = show;
 		}
 		
+		private static final String notPresent = "not present";
 		/**
 		 * 
 		 * @return путь до целевого узла
 		 */
 		public String getShow() 
 		{
-			if(show==null)
-			{
-				show = getFirst().getNodePath();
-				if(show==null) 
-					show = "not present";
+			try { if(show==null)
+					show = getFirst().getNodePath(); }
+			catch(Exception e) {
+				logger.warn("on getShow:", e);
+				show = notPresent;
 			}
 			return show;
 		}
