@@ -1481,6 +1481,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	public boolean isHasIconPath()
 	{
 		IconResource ir = ResourcesCache.getInstance().get(getIconPath());
+		if(ir==null) return false;
 		return ir.isValid();
 	}
 
