@@ -31,7 +31,9 @@ import org.raven.tree.AttributeReferenceValues;
 import org.raven.tree.AttributeValueHandlerRegistry;
 import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
+import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodeListener;
 import org.raven.tree.NodePathResolver;
 import org.raven.tree.TreeError;
 import org.raven.tree.TreeException;
@@ -142,6 +144,85 @@ public class TreeImplTest extends RavenCoreTestCase
         byte[] data = new byte[]{1, 2, 3};
         InputStream is = new ByteArrayInputStream(data);
         tree.saveNodeAttributeBinaryData(attr, is);
+    }
+
+    @Test
+    public void copyTest() throws Exception
+    {
+        Node node = new ContainerNode("node");
+        tree.getRootNode().addChildren(node);
+        tree.saveNode(node);
+        node.init();
+
+        Node sysNode = tree.getRootNode().getChildren(SystemNode.NAME);
+        NodeAttribute attr = new NodeAttributeImpl("attr", Integer.class, "1", null);
+        attr.setOwner(node);
+        node.addNodeAttribute(attr);
+        attr.init();
+        tree.saveNodeAttribute(attr);
+
+        Node child = new ContainerNode("child");
+        node.addChildren(child);
+        tree.saveNode(child);
+        child.init();
+
+        Node copyDest = new ContainerNode("copy");
+        tree.getRootNode().addChildren(copyDest);
+        tree.saveNode(copyDest);
+        copyDest.init();
+
+        NodeListener listener = createMock(NodeListener.class);
+        expect(listener.isSubtreeListener()).andReturn(true).anyTimes();
+        listener.childrenAdded(eq(copyDest), matchNode("newName"));
+        listener.childrenAdded(matchNode("newName"), matchNode("child"));
+        listener.nodeStatusChanged((Node)anyObject(), (Status)anyObject(), (Status)anyObject());
+        expectLastCall().anyTimes();
+        listener.nodeAttributeRemoved((Node) anyObject(),(NodeAttribute) anyObject());
+        expectLastCall().andReturn(false).times(2);
+
+        replay(listener);
+
+        copyDest.addListener(listener);
+
+        tree.copy(node, copyDest, "newName", null, true, false, false);
+
+        copyDest.removeListener(listener);
+        verify(listener);
+
+        checkNodeCopy(copyDest, sysNode, node, child, Status.INITIALIZED);
+
+        tree.reloadTree();
+
+        copyDest = tree.getNode(copyDest.getPath());
+        assertNotNull(copyDest);
+        checkNodeCopy(copyDest, sysNode, node, child, Status.STARTED);
+    }
+
+    @Test
+    public void copyNodeWithDataFileTest() throws Exception
+    {
+        FileNode sourceFile = new FileNode();
+        sourceFile.setName("source file");
+        tree.getRootNode().addAndSaveChildren(sourceFile);
+        byte[] data = new String("test").getBytes();
+        sourceFile.getFile().setDataStream(new ByteArrayInputStream(data));
+        assertTrue(sourceFile.start());
+
+        tree.copy(sourceFile, tree.getRootNode(), "file copy", null, true, false, false);
+        FileNode cloneFile = (FileNode) tree.getRootNode().getChildren("file copy");
+        assertNotNull(cloneFile);
+        InputStream is = cloneFile.getFile().getDataStream();
+        assertNotNull(is);
+        assertEquals("test", IOUtils.toString(is));
+        assertNull(cloneFile.getNodeAttribute(TreeImpl.CopyBinaryAttrsTuner.CLONED_FROM_NODE));
+
+
+        tree.copy(sourceFile, tree.getRootNode(), "file copy2", null, false, false, false);
+        cloneFile = (FileNode) tree.getRootNode().getChildren("file copy2");
+        assertNotNull(cloneFile);
+        is = cloneFile.getFile().getDataStream();
+        assertNull(is);
+        assertNull(cloneFile.getNodeAttribute(TreeImpl.CopyBinaryAttrsTuner.CLONED_FROM_NODE));
     }
 
     @Test
@@ -256,4 +337,41 @@ public class TreeImplTest extends RavenCoreTestCase
         });
         return null;
     }
+
+    private static Node matchNode(final String nodeName)
+    {
+        reportMatcher(new IArgumentMatcher() {
+            private Node node;
+
+            public boolean matches(Object argument)
+            {
+                node = (Node) argument;
+                return nodeName.equals(node.getName());
+            }
+
+            public void appendTo(StringBuffer buffer)
+            {
+                buffer.append(node.getName());
+            }
+        });
+
+        return null;
+    }
+
+    private void checkNodeCopy(Node copyDest, Node sysNode, Node node, Node child, Status status)
+    {
+        Node nodeCopy = copyDest.getChildren("newName");
+        assertNotNull(nodeCopy);
+        assertFalse(nodeCopy.equals(node));
+        assertEquals(status, nodeCopy.getStatus());
+        NodeAttribute attrCopy = nodeCopy.getNodeAttribute("attr");
+        assertNotNull(attrCopy);
+        assertEquals(1, attrCopy.getRealValue());
+
+        Node childCopy = nodeCopy.getChildren("child");
+        assertNotNull(childCopy);
+        assertFalse(childCopy.equals(node));
+        assertEquals(status, childCopy.getStatus());
+    }
+
 }

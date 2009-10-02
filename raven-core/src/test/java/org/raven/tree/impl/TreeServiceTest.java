@@ -597,70 +597,6 @@ public class TreeServiceTest extends ServiceTestCase
     }
     
     @Test
-    public void copy() throws ConstraintException, InvalidPathException, Exception
-    {
-        store.removeNodes();
-        tree.reloadTree();
-        
-        Node node = new ContainerNode("node");
-        tree.getRootNode().addChildren(node);
-        tree.saveNode(node);
-        node.init();
-        
-        Node sysNode = tree.getRootNode().getChildren(SystemNode.NAME);
-        NodeAttribute attr = new NodeAttributeImpl("attr", Integer.class, "1", null);
-        attr.setOwner(node);
-        node.addNodeAttribute(attr);
-        attr.init();
-        tree.saveNodeAttribute(attr);
-        
-        Node child = new ContainerNode("child");
-        node.addChildren(child);
-        tree.saveNode(child);
-        child.init();
-        
-//        NodeAttribute attrRef = new NodeAttributeImpl("ref", AttributeReference.class, null, null);
-//        attrRef.setOwner(child);
-//        child.addNodeAttribute(attrRef);
-//        attrRef.setValue(converter.convert(String.class, new AttributeReferenceImpl(attr), null));
-//        tree.saveNodeAttribute(attrRef);
-//        
-//        NodeAttribute nodeRef = new NodeAttributeImpl("nodeRef", Node.class, node.getPath(), null);
-//        nodeRef.setOwner(child);
-//        child.addNodeAttribute(nodeRef);
-//        tree.saveNodeAttribute(nodeRef);
-        
-        Node copyDest = new ContainerNode("copy");
-        tree.getRootNode().addChildren(copyDest);
-        tree.saveNode(copyDest);
-        copyDest.init();
-        
-        NodeListener listener = createMock(NodeListener.class);
-        expect(listener.isSubtreeListener()).andReturn(true).anyTimes();
-        listener.childrenAdded(eq(copyDest), matchNode("newName"));
-        listener.childrenAdded(matchNode("newName"), matchNode("child"));
-        listener.nodeStatusChanged((Node)anyObject(), (Status)anyObject(), (Status)anyObject());
-        expectLastCall().anyTimes();
-        
-        replay(listener);
-        
-        copyDest.addListener(listener);
-                
-        tree.copy(node, copyDest, "newName", null, true, false, false);
-
-        copyDest.removeListener(listener);
-        verify(listener);
-        
-        checkNodeCopy(copyDest, sysNode, node, child, Status.INITIALIZED);
-        
-        tree.reloadTree();
-        
-        copyDest = tree.getNode(copyDest.getPath());
-        assertNotNull(copyDest);
-        checkNodeCopy(copyDest, sysNode, node, child, Status.STARTED);
-    }
-    
-    @Test
     public void scanSubtree_allNodeTypes()
     {
         store.removeNodes();
@@ -802,55 +738,6 @@ public class TreeServiceTest extends ServiceTestCase
         assertNotNull(searchResult);
         assertEquals(1, searchResult.size());
         searchResult.contains(node1);
-    }
-    
-    private static Node matchNode(final String nodeName)
-    {
-        reportMatcher(new IArgumentMatcher() {
-            private Node node;
-
-            public boolean matches(Object argument)
-            {
-                node = (Node) argument;
-                return nodeName.equals(node.getName());
-            }
-
-            public void appendTo(StringBuffer buffer)
-            {
-                buffer.append(node.getName());
-            }
-        });
-        
-        return null;
-    }
-    
-    private void checkNodeCopy(Node copyDest, Node sysNode, Node node, Node child, Status status)
-    {
-        Node nodeCopy = copyDest.getChildren("newName");
-        assertNotNull(nodeCopy);
-        assertFalse(nodeCopy.equals(node));
-//        if (status==Status.STARTED)
-//            nodeCopy.start();
-        assertEquals(status, nodeCopy.getStatus());
-        NodeAttribute attrCopy = nodeCopy.getNodeAttribute("attr");
-        assertNotNull(attrCopy);
-        assertEquals(1, attrCopy.getRealValue());
-//        assertEquals(sysNode, attrCopy.getRealValue());
-        
-        Node childCopy = nodeCopy.getChildren("child");
-        assertNotNull(childCopy);
-        assertFalse(childCopy.equals(node));
-        assertEquals(status, childCopy.getStatus());
-        
-//        String attrPath = 
-//                converter.convert(String.class, new AttributeReferenceImpl(attrCopy), null);
-//        NodeAttribute refCopy = childCopy.getNodeAttribute("ref");
-//        assertNotNull(refCopy);
-//        assertEquals(attrPath, refCopy.getRawValue());
-//        
-//        NodeAttribute nodeRefCopy = childCopy.getNodeAttribute("nodeRef");
-//        assertNotNull(nodeRefCopy);
-//        assertEquals(nodeCopy.getPath(), nodeRefCopy.getValue());
     }
     
     private NodeListener trainMocks_attributeReference(Node node, NodeAttribute attr)

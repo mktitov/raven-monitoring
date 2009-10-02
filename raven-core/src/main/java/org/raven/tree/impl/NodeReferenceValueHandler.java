@@ -203,6 +203,8 @@ public class NodeReferenceValueHandler
         cleanupNodeReference(node, removedNode);
         expressionValid = false;
         node = null;
+        if (!attribute.getOwner().equals(removedNode) && attribute.isRequired())
+            attribute.getOwner().stop();
         fireExpressionInvalidatedEvent(oldValue);
     }
     

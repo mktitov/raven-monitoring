@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.AttributeValueHandlerListener;
 import org.raven.tree.Node;
+import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import static org.easymock.EasyMock.*;
 import org.raven.tree.NodeError;
@@ -119,6 +120,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
         expect(attr.getOwner()).andReturn(node).anyTimes();
         expect(attr.getRawValue()).andReturn(null);
         expect(attr.getName()).andReturn("attr");
+        expect(attr.isRequired()).andReturn(false);
         attr.save();
         attr.save();
         listener.valueChanged(isNull(), eq(childNode));
@@ -137,6 +139,42 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
         assertEquals(data, valueHandler.getData());
         assertNull(valueHandler.handleData());
         
+        addChildNode();
+        valueHandler.validateExpression();
+        assertTrue(valueHandler.isExpressionValid());
+        assertEquals(data, valueHandler.getData());
+        assertEquals(childNode, valueHandler.handleData());
+    }
+
+    @Test
+    public void ownerStop() throws Exception
+    {
+        NodeAttribute attr = createMock(NodeAttribute.class);
+        AttributeValueHandlerListener listener = createMock(AttributeValueHandlerListener.class);
+        expect(attr.getOwner()).andReturn(node).anyTimes();
+        expect(attr.getRawValue()).andReturn(null);
+        expect(attr.getName()).andReturn("attr");
+        expect(attr.isRequired()).andReturn(true);
+        attr.save();
+        attr.save();
+        listener.valueChanged(isNull(), eq(childNode));
+        listener.expressionInvalidated(childNode);
+        listener.valueChanged(isNull(), isA(Node.class));
+        replay(attr, listener);
+
+        NodeReferenceValueHandler valueHandler = new NodeReferenceValueHandler(attr);
+        valueHandler.addListener(listener);
+        valueHandler.setData(childNode.getPath());
+        String data = valueHandler.getData();
+        assertNotNull(data);
+
+        assertTrue(node.start());
+        tree.remove(childNode);
+        assertFalse(valueHandler.isExpressionValid());
+        assertEquals(data, valueHandler.getData());
+        assertNull(valueHandler.handleData());
+        assertEquals(Status.INITIALIZED, node.getStatus());
+
         addChildNode();
         valueHandler.validateExpression();
         assertTrue(valueHandler.isExpressionValid());

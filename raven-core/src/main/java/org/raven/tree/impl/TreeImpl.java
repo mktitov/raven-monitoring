@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 import org.raven.annotations.NodeClass;
 import org.raven.audit.impl.AuditorNode;
 import org.raven.conf.Configurator;
@@ -45,6 +46,8 @@ import org.raven.template.impl.TemplatesNode;
 import org.raven.tree.AttributeReference;
 import org.raven.tree.AttributeReferenceValues;
 import org.raven.tree.AttributeValueHandlerRegistry;
+import org.raven.tree.DataFile;
+import org.raven.tree.DataFileException;
 import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
@@ -275,9 +278,10 @@ public class TreeImpl implements Tree
         }
         try
         {
-            Node clone = source.cloneTo(destination, newNodeName, nodeTuner, useEffectiveChildrens);
+            NodeTuner wrapper = new CopyBinaryAttrsTuner(nodeTuner);
+            Node clone = source.cloneTo(destination, newNodeName, wrapper, useEffectiveChildrens);
             saveClonedNode(source, clone, destination.getPath(), clone, store);
-            initNode(clone, nodeTuner);
+            initNode(clone, wrapper);
             
             return clone;
         } 
@@ -648,7 +652,9 @@ public class TreeImpl implements Tree
 //                            + attr.getRawValue().substring(sourcePath.length()));
 //                }
                 if (store)
+                {
                     saveNodeAttribute(attr);
+                }
             }
         }
         
@@ -719,7 +725,7 @@ public class TreeImpl implements Tree
             if (attribute.getId()==0)
                 attribute.setId(dynamicAttributeId.decrementAndGet());
         }
-        else
+        else if (attribute.getOwner().getId()>0)
             treeStore.saveNodeAttribute(attribute);
     }
 
@@ -792,5 +798,88 @@ public class TreeImpl implements Tree
             fireNodeMovedEvent(node);
             return ScanOperation.CONTINUE;
         }
+    }
+
+    class CopyBinaryAttrsTuner implements NodeTuner
+    {
+        public final static String CLONED_FROM_NODE = "CLONED_FROM_NODE";
+        
+        private final NodeTuner wrappedTuner;
+
+        public CopyBinaryAttrsTuner(NodeTuner wrappedTuner)
+        {
+            this.wrappedTuner = wrappedTuner;
+        }
+
+        public Node cloneNode(Node sourceNode)
+        {
+            Node res = null;
+            if (wrappedTuner!=null)
+                res = wrappedTuner.cloneNode(sourceNode);
+            return res;
+        }
+
+        public void tuneNode(Node sourceNode, Node sourceClone)
+        {
+            if (wrappedTuner!=null)
+                wrappedTuner.tuneNode(sourceNode, sourceClone);
+            NodeAttributeImpl attr =
+                    new NodeAttributeImpl(CLONED_FROM_NODE, Node.class, sourceNode.getPath(), null);
+            try
+            {
+                attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
+                attr.setOwner(sourceClone);
+                sourceClone.addNodeAttribute(attr);
+            }
+            catch (Exception ex)
+            {
+                throw new NodeError(
+                        String.format("Error creating attribute (%s)", CLONED_FROM_NODE), ex);
+            }
+        }
+
+        public void finishTuning(Node sourceClone)
+        {
+            NodeAttribute cloneFromAttr = sourceClone.getNodeAttribute(CLONED_FROM_NODE);
+            try
+            {
+                if (sourceClone.getId()>0)
+                {
+                    Collection<NodeAttribute> attrs = sourceClone.getNodeAttributes();
+                    if (attrs!=null && !attrs.isEmpty())
+                    {
+                        Node sourceNode = cloneFromAttr.getRealValue();
+                        for (NodeAttribute attr: attrs)
+                        {
+                            if (   DataFile.class.isAssignableFrom(attr.getType())
+                                && DataFileValueHandlerFactory.TYPE.equals(attr.getValueHandlerType()))
+                            {
+                                NodeAttribute sourceAttr = sourceNode.getNodeAttribute(attr.getName());
+                                DataFile sourceFile = sourceAttr.getRealValue();
+                                DataFile clonedFile = (DataFile)attr.getRealValue();
+                                try{
+                                    clonedFile.setDataStream(sourceFile.getDataStream());
+                                }catch(DataFileException e)
+                                {
+                                    sourceClone.getLogger().error(
+                                            String.format(
+                                                "Error copy binary data from (%s) to (%s)"
+                                                , sourceAttr.getPath(), attr.getPath())
+                                            , e);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                sourceClone.removeNodeAttribute(CLONED_FROM_NODE);
+                treeStore.removeNodeAttribute(cloneFromAttr.getId());
+            }
+            if (wrappedTuner!=null)
+                wrappedTuner.finishTuning(sourceClone);
+        }
+        
     }
 }
