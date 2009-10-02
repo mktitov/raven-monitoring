@@ -67,7 +67,11 @@ public class AccessResource extends AccessControlList
 		public String getShow() 
 		{
 			if(show==null)
+			{
 				show = getFirst().getNodePath();
+				if(show==null) 
+					show = "not present";
+			}
 			return show;
 		}
 
