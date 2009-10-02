@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 
 public class SubNodesTableBean 
 {
-	private static final Logger logger = LoggerFactory.getLogger(NodeWrapper.class);
+	private static final Logger logger = LoggerFactory.getLogger(SubNodesTableBean.class);
 	private UIComponent table = null;
 	private CoreMessage message = null;
 
@@ -95,7 +95,7 @@ public class SubNodesTableBean
 	  }
 	  
 	  @SuppressWarnings("unchecked")
-	  public void deleteNodes2(ActionEvent action)
+	  public void deleteNodes22(ActionEvent action)
 	  {
 		ArrayList<Object> sel = getSeletedTableRowsData((UIXTable) table);
 	    StringBuffer retb = new StringBuffer();
@@ -119,8 +119,8 @@ public class SubNodesTableBean
      	sb.afterDeleteNodes();
 	    if(message!=null) message.setMessage(retb.toString());
 	  }
-	  
-	  public void deleteNodes(ActionEvent action)
+
+	  public void deleteNodesX(ActionEvent action, boolean force)
 	  {
 		ArrayList<Object> sel = getSeletedTableRowsData((UIXTable) table);
 	    StringBuffer retb = new StringBuffer();
@@ -129,7 +129,9 @@ public class SubNodesTableBean
 	    for(Iterator<Object> it = sel.iterator(); it.hasNext();)
 	    {
 	    	nw = (NodeWrapper)it.next();
-	    	int x = sb.deleteNode(nw);
+	    	int x;
+	    	if(force) x = sb.forceDeleteNode(nw);
+	    		else x = sb.deleteNode(nw);
 	    	if(x==-1)
 	    	{
 	    		if(retb.length()==0) retb.append(Messages.getUiMessage(Messages.NODES_HAVE_DEPEND)+" ");
@@ -144,10 +146,22 @@ public class SubNodesTableBean
 	    sb.afterDeleteNodes();
 	    if(message!=null) message.setMessage(retb.toString());
 	  }
+	  
+	  
+	  public void deleteNodes(ActionEvent action)
+	  {
+		  deleteNodesX(action,false);
+	  }
 
+	  public void forceDeleteNodes(ActionEvent action)
+	  {
+		  deleteNodesX(action,true);
+	  }
+	  
+	  
 	  public void upNodes(ActionEvent action)
 	  {
-		  upDownNodes((UIXTable) table, true);
+		  upDownNodesX((UIXTable) table, true);
 	  }
 
 	  public void upDownNodes(UIXTable table, boolean up)
@@ -215,8 +229,84 @@ public class SubNodesTableBean
 	  
 	  public void downNodes(ActionEvent action)
 	  {
-		  upDownNodes((UIXTable) table, false);
+		  upDownNodesX((UIXTable) table, false);
 	  }
+	  
+	  public void upNodesX(UIXTable table, boolean up)
+	  {
+		ArrayList<Object> sel = getSeletedTableRowsData(table, true);
+	    if( sel.size() == 0 ) 
+	    {
+	    	message.setMessage(Messages.getUiMessage(Messages.NO_SELECTED_NODES));
+	    	return;
+	    }
+	    List<NodeWrapper> nodes = ((NodeWrapper) sel.get(0)).getParent().getChildrenList();
+	    if(nodes==null || nodes.size() < 2)	return;
+	    int upLimit = 0;
+	    RowKeySet state = table.getSelectedRowKeys();
+	    state.clear();
+	    for(Object ob : sel)
+	    {
+	    	NodeWrapper nw = (NodeWrapper)ob;
+	    	int n = nodes.indexOf(nw);
+	    	if(n==-1) break;
+	    	if(--n < upLimit) continue;
+	    	int cidx = nw.getIndex();
+	    	NodeWrapper nwx = nodes.get(n);
+	    	int nidx = nwx.getIndex();
+			nw.getNode().setIndex(nidx);
+			nwx.getNode().setIndex(cidx);
+			nw.getNode().save();
+			nwx.getNode().save();
+			upLimit = cidx;
+			state.add(new Integer(n));
+	    }
+	    //SessionBean.getInstance().reloadBothFrames();
+	    SessionBean.getInstance().reloadRightFrame();
+	  }
+
+	  public void upDownNodesX(UIXTable table, boolean up)
+	  {
+		ArrayList<Object> sel = getSeletedTableRowsData(table, true);
+	    if( sel.size() == 0 ) 
+	    {
+	    	message.setMessage(Messages.getUiMessage(Messages.NO_SELECTED_NODES));
+	    	return;
+	    }
+	    List<NodeWrapper> nodes = ((NodeWrapper) sel.get(0)).getParent().getChildrenList();
+	    if(nodes==null || nodes.size() < 2)
+	    	return;
+	    int limit = 0;
+	    if(!up)
+	    	limit = nodes.size()-1;
+	    RowKeySet state = table.getSelectedRowKeys();
+	    state.clear();
+	    for(Object ob : sel)
+	    {
+	    	NodeWrapper nw = (NodeWrapper)ob;
+	    	int n = nodes.indexOf(nw);
+	    	int nx = n;
+	    	if(n==-1) break;
+	    	if(up)
+	    	{
+	    		if(--n < limit) continue;
+	    	}
+	    	else
+	    	   	if(++n > limit) continue;
+	    	int cidx = nw.getIndex();
+	    	NodeWrapper nwx = nodes.get(n);
+	    	int nidx = nwx.getIndex();
+			nw.getNode().setIndex(nidx);
+			nwx.getNode().setIndex(cidx);
+			nw.getNode().save();
+			nwx.getNode().save();
+			limit = nx;
+			state.add(new Integer(n));
+	    }
+	    //SessionBean.getInstance().reloadBothFrames();
+	    SessionBean.getInstance().reloadRightFrame();
+	  }
+	  
 	  
 	  public void selectAllNodes(ActionEvent action)
 	  {
@@ -229,10 +319,17 @@ public class SubNodesTableBean
 		  SessionBean.getInstance().reloadRightFrame();
 	  }
 
-	  public void cancelSelectNodes(ActionEvent action)
+	  public void unselectNodes()
 	  {
 		  RowKeySet state = ((UIXTable) table).getSelectedRowKeys();
-		  state.clear();
+		  if(state!=null && !state.isEmpty())
+			  state.clear();
+	  }
+	  
+	  
+	  public void cancelSelectNodes(ActionEvent action)
+	  {
+		  unselectNodes();
 		  //SessionBean.getInstance().reloadBothFrames();
 		  SessionBean.getInstance().reloadRightFrame();
 	  }
@@ -340,5 +437,9 @@ public class SubNodesTableBean
 	  public void setMessage(CoreMessage message) { this.message = message; }
 
 	  public UIComponent getTable() { return table; }
-	  public void setTable(UIComponent table) { this.table = table; }
+	  public void setTable(UIComponent table) 
+	  { 
+		  this.table = table;
+		  unselectNodes();  
+	  }
 }

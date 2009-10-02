@@ -312,7 +312,17 @@ partialTriggers=":poolStatus"
 	  	<f:facet name="nodeUrl">
 	  	<tr:panelGroupLayout layout="vertical">
 	  	<tr:spacer width="0" height="4" />
-	  	  	<tr:panelHorizontalLayout  halign="left" >
+	  	  	<tr:panelHorizontalLayout  
+	  	  		halign="left" 
+	  	  		valign="middle" >
+			<tr:image 
+				rendered="#{not row.nodeWrapper.started}"
+				source="/images/#{row.nodeWrapper.status}.gif" 
+				shortDesc="#{row.nodeWrapper.status}" />
+			<tr:spacer 
+				rendered="#{not row.nodeWrapper.started}"
+			 	width="3" /> 
+	  	  	
 	  	  	<tr:spacer width="10" height="0" />
 		 	<h:graphicImage 
 		 		alt=""

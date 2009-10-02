@@ -98,7 +98,7 @@
   		value="#{cNode.childrenList}" 
   		binding="#{subNodes.table}"
   		var="row" 
-  		rows="16" 
+  		rows="20" 
   		rowSelection="multiple" 
   		id="delSubNode" >
 		<f:facet name="detailStamp">
@@ -161,6 +161,16 @@
  			partialSubmit="true" 
 	 		text="#{msgs.cancelSelect}" 
  			actionListener="#{subNodes.cancelSelectNodes}"/>
+
+		<tr:spacer width="30" height="0" />
+
+ 		<tr:commandButton 
+ 			rendered="#{sBean.superUser}"
+	 		text="#{msgs.forceDelete}"
+	 		shortDesc="#{msgs.dscForceDelete}"
+	 		onclick="if (!confirm('#{msgs.areYouSureForceDelete}')) return false"
+ 			actionListener="#{subNodes.forceDeleteNodes}"/>
+ 			
 	</tr:panelButtonBar>
 	</tr:panelCaptionGroup>
 <tr:spacer height="10" />

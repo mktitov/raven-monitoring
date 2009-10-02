@@ -912,8 +912,20 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 				getNode().start();
 			}
 		}
+
+	  public NodeWrapper getParent()
+	  {
+		  try { return new NodeWrapper(getNode().getParent()); }
+		  catch(NullPointerException e) {return null;}
+	  }
 		
-		public String deleteAttrubutes(List<Attr> attrs)
+	  public int getIndex()
+	  {
+		  try { return getNode().getIndex(); }
+		  catch(NullPointerException e) {return -1;}
+	  }
+	  
+	  public String deleteAttrubutes(List<Attr> attrs)
 	  {
 		  StringBuffer ret = new StringBuffer();
 		  Iterator<Attr> it = attrs.iterator();

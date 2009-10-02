@@ -653,9 +653,19 @@ public class SessionBean
 		return deleteNode(node.getNode());
 	}
 
+	public int forceDeleteNode(NodeWrapper node)
+	{
+		return forceDeleteNode(node.getNode());
+	}
+	
 	public int deleteNode(Node n)
 	{
 		if(n.getDependentNodes()!=null && !n.getDependentNodes().isEmpty()) return -1;
+		return forceDeleteNode(n);
+	}
+
+	public int forceDeleteNode(Node n)
+	{
         auditor.write(n, getUserAcl().getAccountName(), Action.NODE_DEL, null);            	  
 		tree.remove(n);
 		logger.warn("removed node: {}",n.getName());
