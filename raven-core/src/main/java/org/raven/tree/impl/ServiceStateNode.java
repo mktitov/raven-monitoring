@@ -28,10 +28,10 @@ import org.raven.tree.ServiceStateAlarm;
  *
  * @author Mikhail Titov
  */
-@NodeClass()
+@NodeClass(anyChildTypes=true)
 public class ServiceStateNode extends AbstractServiceStateNode
 {
-    public final static int REFRESH_INTERVAL = 10000;
+    public static int REFRESH_INTERVAL = 10000;
 
     @Parameter
     private Byte serviceAvailability;
@@ -65,7 +65,7 @@ public class ServiceStateNode extends AbstractServiceStateNode
         if (System.currentTimeMillis()-lastRefreshTime<=REFRESH_INTERVAL)
             return;
         Collection<Node> childs = getChildrens();
-        if (childs!=null && childs.isEmpty())
+        if (childs!=null && !childs.isEmpty())
         {
             StateCalc aCalc = new StateCalc();
             StateCalc qCalc = new StateCalc();
@@ -113,6 +113,7 @@ public class ServiceStateNode extends AbstractServiceStateNode
                 setServiceStabilityAlarm(sCalc.getAlarm());
             }
         }
+        lastRefreshTime = System.currentTimeMillis();
     }
 
     public Byte getServiceAvailability()

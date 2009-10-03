@@ -19,7 +19,6 @@ package org.raven.tree.impl;
 
 import org.raven.annotations.Parameter;
 import org.raven.tree.ServiceState;
-import org.raven.tree.ServiceStateAlarm;
 import org.weda.annotations.constraints.NotNull;
 
 /**
