@@ -18,6 +18,8 @@
 package org.raven.ui.node;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -274,11 +276,14 @@ public class SubNodesTableBean
 	    	return;
 	    }
 	    List<NodeWrapper> nodes = ((NodeWrapper) sel.get(0)).getParent().getChildrenList();
-	    if(nodes==null || nodes.size() < 2)
-	    	return;
+	    if(nodes==null || nodes.size() < 2)	return;
 	    int limit = 0;
+	    int xx = nodes.size()-1;
 	    if(!up)
-	    	limit = nodes.size()-1;
+	    {
+	    //	limit = nodes.size()-1;
+	    	Collections.reverse(nodes);
+	    }	
 	    RowKeySet state = table.getSelectedRowKeys();
 	    state.clear();
 	    for(Object ob : sel)
@@ -287,21 +292,26 @@ public class SubNodesTableBean
 	    	int n = nodes.indexOf(nw);
 	    	int nx = n;
 	    	if(n==-1) break;
-	    	if(up)
-	    	{
+	//    	if(up)
+	//    	{
 	    		if(--n < limit) continue;
-	    	}
-	    	else
-	    	   	if(++n > limit) continue;
+	//    	}
+	//    	else
+//	    	   	if(++n > limit) continue;
 	    	int cidx = nw.getIndex();
 	    	NodeWrapper nwx = nodes.get(n);
 	    	int nidx = nwx.getIndex();
+	    	nodes.set(n, nw);
+	    	nodes.set(nx, nwx);
 			nw.getNode().setIndex(nidx);
 			nwx.getNode().setIndex(cidx);
 			nw.getNode().save();
 			nwx.getNode().save();
 			limit = nx;
-			state.add(new Integer(n));
+			if(up)
+				state.add(new Integer(n));
+			else 
+				state.add(new Integer(xx-n));
 	    }
 	    //SessionBean.getInstance().reloadBothFrames();
 	    SessionBean.getInstance().reloadRightFrame();

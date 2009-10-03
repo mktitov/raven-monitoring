@@ -624,17 +624,18 @@ public class SessionBean
 		n.setName(getNewNodeName());
 		try {
 			wrapper.getNode().addChildren(n);
-		} catch(NodeError e) 
-		{
+			tree.saveNode(n);
+			n.init();
+			if(n.isAutoStart()) n.start();
+			logger.warn("Added new node name={}",getNewNodeName());
+	        auditor.write(n, getUserAcl().getAccountName(), Action.NODE_CREATE, "class: "+newNodeType);
+	        clearNewNode();
+			return wrapper.goToEditNewAttribute(n);
+		} catch(NodeError e) {
 			logger.error("",e);
 		}
-		tree.saveNode(n);
-		n.init();
-		if(n.isAutoStart()) n.start();
-		logger.warn("Added new node name={}",getNewNodeName());
-        auditor.write(n, getUserAcl().getAccountName(), Action.NODE_CREATE, "class: "+newNodeType);            	  
 		clearNewNode();
-		return wrapper.goToEditNewAttribute(n);
+		return null;
 		//return "ok";
 	}
 
