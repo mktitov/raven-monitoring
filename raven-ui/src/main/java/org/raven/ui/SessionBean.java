@@ -168,14 +168,15 @@ public class SessionBean
 		String x = ec.getRequestHeaderMap().get("Accept-Charset");
 		StringBuffer sb = new StringBuffer();
 		if(x!=null) sb.append(x);
-		x = ec.getRequestCharacterEncoding();
-		if(x!=null) sb.append(",").append(x);
 		
 		if(sb.length()>0) sb.append(",");
 		sb.append(Messages.getUiMessage(Messages.CHARSET1));
 		sb.append(",").append(Messages.getUiMessage(Messages.CHARSET2));
 		sb.append(",").append(Messages.getUiMessage(Messages.CHARSET3));
 		sb.append(",").append(Messages.getUiMessage(Messages.CHARSET4));
+		x = ec.getRequestCharacterEncoding();
+		if(x!=null) sb.append(",").append(x);
+		
 		x = sb.toString();
 		String charset;
         String[] charsets = x.split("\\s*,\\s*");
