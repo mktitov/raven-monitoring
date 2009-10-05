@@ -17,6 +17,7 @@
 
 package org.raven.ui;
 
+import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -75,9 +76,9 @@ import org.apache.myfaces.trinidad.event.PollEvent;
 
 public class SessionBean 
 {
+    private static final Logger logger = LoggerFactory.getLogger(SessionBean.class);
 	public static final String BEAN_NAME = "sBean";
 	public static final String SELECT_NODE_PARAM = "nodePath";
-    private Logger logger = LoggerFactory.getLogger(SessionBean.class);
     public static final String disabledInNames = "[^:;\"\\~\\"+Node.NODE_SEPARATOR+"\\"+Node.ATTRIBUTE_SEPARATOR+"]+";
     public static final String LEFT_FRAME = "parent.frames.frame1";
     public static final String RIGHT_FRAME = "parent.frames.frame2";
@@ -146,6 +147,7 @@ public class SessionBean
 	private List<AuditRecord> auditData = new ArrayList<AuditRecord>();
 	private TreeModel resourcesTreeModel;
 	private CoreTable coreTable; 
+	private SelectItem[] charsets;
 
 	@SuppressWarnings("unchecked")
 	public static SelectItem[] makeSI(Enum[] values, boolean needNull)
@@ -156,6 +158,44 @@ public class SessionBean
 		for(Enum x : values)
 			si.add(new SelectItem(x));
 		return si.toArray(new SelectItem[]{});
+	}
+	
+	public static SelectItem[] findCharsets()
+	{
+		ArrayList<Charset> t = new ArrayList<Charset>();
+		FacesContext fc = FacesContext.getCurrentInstance(); 
+		ExternalContext ec = fc.getExternalContext();
+		String x = ec.getRequestHeaderMap().get("Accept-Charset");
+		StringBuffer sb = new StringBuffer();
+		if(x!=null) sb.append(x);
+		x = ec.getRequestCharacterEncoding();
+		if(x!=null) sb.append(",").append(x);
+		
+		if(sb.length()>0) sb.append(",");
+		sb.append(Messages.getUiMessage(Messages.CHARSET1));
+		sb.append(",").append(Messages.getUiMessage(Messages.CHARSET2));
+		sb.append(",").append(Messages.getUiMessage(Messages.CHARSET3));
+		sb.append(",").append(Messages.getUiMessage(Messages.CHARSET4));
+		x = sb.toString();
+		String charset;
+        String[] charsets = x.split("\\s*,\\s*");
+        if (charsets!=null && charsets.length>0)
+          	for(String z : charsets)
+           	{
+           		charset = z.split(";")[0];
+           		try {
+           			Charset ch = Charset.forName(charset);
+           			if(!t.contains(ch))
+       				t.add(ch);
+           		}	catch(Exception e) {}
+          	}
+        
+		ArrayList<SelectItem> si = new ArrayList<SelectItem>();
+		for(Charset ch : t)
+			si.add(new SelectItem(ch));
+        if(si.size()==0) 
+        	si.add( new SelectItem(Charset.forName("UTF-8")) );
+        return si.toArray(new SelectItem[]{});
 	}
 
 	public String clearAuditData()
@@ -201,7 +241,9 @@ public class SessionBean
 		remoteIp = request.getRemoteAddr();
 	    wrapper = (NodeWrapper) getElValue(NodeWrapper.BEAN_NAME);
 	    initNodeWrapper(wrapper);
-		
+	
+	    charsets = findCharsets();
+	    
 		userAcl = getUserAcl();
 		tree = getTree();
 //		classDsc = getClassDscRegistry();
@@ -704,6 +746,7 @@ public class SessionBean
 		setNewNodeType("");
 		setNewNodeName("");
 	}
+	
 /*
 	public void exportToExcel(ActionEvent actionEvent) 
 	{
@@ -988,6 +1031,14 @@ public class SessionBean
 		logger.info("getCoreTableRowData:");
 		Object o = coreTable.getRowData();
 		return o;
+	}
+
+	public void setCharsets(SelectItem[] charsets) {
+		this.charsets = charsets;
+	}
+
+	public SelectItem[] getCharsets() {
+		return charsets;
 	}
 	
 }

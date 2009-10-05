@@ -450,17 +450,56 @@ items="#{row.tableColumnNames}"
                 		title="#{msgs.export}"
                 		shortDesc="#{msgs.export}" 
                 		text="#">
-  						<tr:panelGroupLayout layout="vertical">
-							<tr:commandLink
-								text="#{msgs.csvWithoutHeader}"
-								immediate="true"
-								useWindow="true" 
-								actionListener="#{export.exportToCSVwithoutHeader}"/>
-							<tr:commandLink
-								text="#{msgs.csvWithHeader}"
-								immediate="true"
-								useWindow="true" 
-								actionListener="#{export.exportToCSVwithHeader}"/>
+  					<!-- 	<tr:panelGroupLayout layout="vertical">
+  							<tr:panelAccordion id="accordCsv" 
+  								discloseNone="true">
+  								<tr:showDetailItem  
+  									text="CSV" 
+  									disclosed="false" 
+  									>
+  							</tr:showDetailItem>
+  							</tr:panelAccordion>
+  					
+  					 -->
+  							<tr:panelList>
+  								<tr:panelCaptionGroup captionText="CSV">
+  									<tr:selectBooleanCheckbox 
+  										inlineStyle="font-size: 70%" 
+  										value="#{export.csvHeader}" 
+  										label="#{msgs.header}" 
+  									/>
+  									<tr:selectBooleanCheckbox 
+  										inlineStyle="font-size: 70%"
+  										value="#{export.csvCRLF}" 
+  										label="#{msgs.windowsStyleNewline}" 
+  										/>
+  									<tr:selectOneChoice 
+  										inlineStyle="font-size: 70%" 
+  										label="#{msgs.encoding}" 
+  										value="#{export.charset}">
+  										<f:selectItems value="#{sBean.charsets}" />
+  									</tr:selectOneChoice>	
+									<tr:spacer height="5" width="0" />  										
+  									<tr:panelBox 
+  										text="#{msgs.delimiter}" 
+  										background="light">
+  									  	<tr:panelList>
+  										<tr:commandLink
+											text="#{msgs.semicolon}"
+											useWindow="true" 
+											actionListener="#{export.exportToCSVwithSemi}"/>
+										<tr:commandLink
+											text="#{msgs.tab}"
+											useWindow="true" 
+											actionListener="#{export.exportToCSVwithTab}"/>
+										<tr:commandLink
+											text="#{msgs.comma}"
+											useWindow="true" 
+											actionListener="#{export.exportToCSVwithComma}"/>
+										</tr:panelList>
+									</tr:panelBox>
+									</tr:panelCaptionGroup>	
+  							
 							<tr:commandLink
 	 							text="HTML"
 								immediate="true"
@@ -471,7 +510,11 @@ items="#{row.tableColumnNames}"
 								immediate="true"
 								useWindow="true" 
 								actionListener="#{export.exportToExcel}"/>
+														
+							</tr:panelList>
+						<!-- 	
   						</tr:panelGroupLayout>
+  						 -->
 					</tr:panelPopup>
       			<!-- 		<tr:commandButton
       						partialSubmit="true"

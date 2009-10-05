@@ -10,7 +10,6 @@ public class VOTableWrapper extends ArrayList<TableItemWrapper[]>
 {
 	private static final long serialVersionUID = -1356513548995799683L;
 	public static final int MAX_ARR_LEN = 30;
-	public static final String CSV_DELIM = ";";
 	private boolean[] valid = null;
 	private Table table;
 	
@@ -64,7 +63,7 @@ public class VOTableWrapper extends ArrayList<TableItemWrapper[]>
 		return sb.toString();
 	}
 	
-	public String makeCSV(boolean header)
+	public String makeCSV(boolean header,boolean lf,String delim)
 	{
 		StringBuffer sb = new StringBuffer();
 		int cols = table.getColumnNames().length;
@@ -72,9 +71,10 @@ public class VOTableWrapper extends ArrayList<TableItemWrapper[]>
 		{
 			for (int i = 0; i < cols; i++) 
 			{
-				if(i>0) sb.append(CSV_DELIM);
+				if(i>0) sb.append(delim);
 				sb.append(StringEscapeUtils.escapeCsv(table.getColumnNames()[i]));
 			}
+			if(lf) sb.append("\r");
 			sb.append("\n");
 		}
 		Iterator<Object[]> it = table.getRowIterator();
@@ -83,10 +83,11 @@ public class VOTableWrapper extends ArrayList<TableItemWrapper[]>
 			Object[] ar = it.next();
 			for(int i=0;i < cols; i++)
 	        {
-				if(i>0) sb.append(CSV_DELIM);
+				if(i>0) sb.append(delim);
 				if(ar[i]!=null) 
 					sb.append(StringEscapeUtils.escapeCsv(ar[i].toString()));
 	        }
+			if(lf) sb.append("\r");
 			sb.append("\n");
 		}
 		return sb.toString();

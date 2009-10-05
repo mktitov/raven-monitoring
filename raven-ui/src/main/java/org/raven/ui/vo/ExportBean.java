@@ -1,7 +1,8 @@
 package org.raven.ui.vo;
 
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import javax.faces.component.UIComponent;
@@ -10,36 +11,57 @@ import javax.faces.event.ActionEvent;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.myfaces.trinidad.component.core.data.CoreTable;
 import org.apache.myfaces.trinidad.context.RequestContext;
+import org.raven.ui.SessionBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ExportBean
 {
-    private Logger logger = LoggerFactory.getLogger(ExportBean.class);	
+    private static final Logger logger = LoggerFactory.getLogger(ExportBean.class);	
+	public static final String TAB = "\t";
+	public static final String COMMA = ",";
+	public static final String SEMICOLON = ";";
 	
 	private VOTableWrapper object = null;
 	private VOTableWrapper table = null;
+	
+	private boolean csvHeader = true;
+	private boolean csvCRLF = true;
+	
+	private Charset charset;
 
+	public ExportBean()
+	{
+		charset = (Charset) SessionBean.getInstance().getCharsets()[0].getValue();
+	}
+	
 	public void setTable(VOTableWrapper t)
 	{
 	  table = t;
 	  object = null;
 	}
-
+	
 	public void export(ActionEvent actionEvent) 
 	{
 		UIComponent uic = actionEvent.getComponent();
 		try {
-			CoreTable ct = (CoreTable)uic.getParent().getParent().getParent().getParent();
-			VOTableWrapper lst = (VOTableWrapper) ct.getValue();
-			setTable(lst);
+			CoreTable ct = null;
+			for(int i=0; i<12 ;i++)
+			{
+				uic = uic.getParent();
+				if (uic instanceof CoreTable) {
+					ct = (CoreTable) uic;
+					break;
+				}
+			}
+			if(ct!=null)
+			{
+				VOTableWrapper lst = (VOTableWrapper) ct.getValue();
+				setTable(lst);
+			} else logger.warn("export: not found table");
 		}
-		catch(ClassCastException e)
-		{
-			logger.error("export: ",e);
-		}
+		catch(ClassCastException e)	{ logger.error("export: ",e); }
     }
-	
 	
 //	public void handleReturn(ReturnEvent event)
 //	{
@@ -74,15 +96,21 @@ public class ExportBean
 		HttpServletResponse response = (HttpServletResponse) fc.getExternalContext().getResponse();
 		response.setHeader("Content-disposition", "attachment; filename=" + getFileName(ext));
 		response.setContentType(ct);
+		response.setCharacterEncoding(charset.toString());
 
-		PrintWriter out = null;
+		//PrintWriter out = null;
+		OutputStream os = null;
 		try 
 		{
-			out = response.getWriter(); 
-		   	out.print(x);
+			//out = response.getWriter();
+		   	//out.print(x);
+			byte[] z = x.getBytes(charset);
+			os = response.getOutputStream();
+			os.write(z);
+		   	//out.print(x);
 		}
 		catch (IOException e) { logger.error("",e); }
-		finally { try {out.close();} catch(Exception e) {}}
+		finally { try {os.close();} catch(Exception e) {}}
 		fc.responseComplete(); 			
 	}
 	
@@ -104,24 +132,60 @@ public class ExportBean
 		writeResponce(vtw.makeHtmlTable(), contentType, "html");
     }
 	
-	public void exportToCSV(ActionEvent actionEvent, boolean header) 
+	public void exportToCSV(ActionEvent actionEvent,String delim) 
 	{
 		export(actionEvent);
 		VOTableWrapper vtw = getObject();  
 		if(vtw==null) return;
 		String contentType = "text/csv";
-		writeResponce(vtw.makeCSV(header), contentType, "csv");
+		writeResponce(vtw.makeCSV(csvHeader,csvCRLF,delim), contentType, "csv");
     }
 
-	public void exportToCSVwithoutHeader(ActionEvent actionEvent) 
+	public void exportToCSVwithComma(ActionEvent actionEvent) 
 	{
-		exportToCSV(actionEvent,false);
+		exportToCSV(actionEvent,COMMA);
+    }
+
+	public void exportToCSVwithTab(ActionEvent actionEvent) 
+	{
+		exportToCSV(actionEvent,TAB);
+    }
+
+	public void exportToCSVwithSemi(ActionEvent actionEvent) 
+	{
+		exportToCSV(actionEvent,SEMICOLON);
     }
 	
-	public void exportToCSVwithHeader(ActionEvent actionEvent) 
-	{
-		exportToCSV(actionEvent,true);
-    }
+	public void setCsvHeader(boolean csvHeader) {
+		this.csvHeader = csvHeader;
+	}
 
+	public Boolean getCsvHeader() {
+		return csvHeader;
+	}
+
+	public boolean isCsvHeader() {
+		return csvHeader;
+	}
+	
+	public void setCsvCRLF(boolean csvCRLF) {
+		this.csvCRLF = csvCRLF;
+	}
+
+	public Boolean getCsvCRLF() {
+		return csvCRLF;
+	}
+
+	public boolean isCsvCRLF() {
+		return csvCRLF;
+	}
+
+	public void setCharset(Charset charset) {
+		this.charset = charset;
+	}
+
+	public Charset getCharset() {
+		return charset;
+	}
 	
 }

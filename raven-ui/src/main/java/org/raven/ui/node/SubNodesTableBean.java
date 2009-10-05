@@ -18,7 +18,6 @@
 package org.raven.ui.node;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -160,73 +159,9 @@ public class SubNodesTableBean
 		  deleteNodesX(action,true);
 	  }
 	  
-	  
 	  public void upNodes(ActionEvent action)
 	  {
 		  upDownNodesX((UIXTable) table, true);
-	  }
-
-	  public void upDownNodes(UIXTable table, boolean up)
-	  {
-		ArrayList<Object> sel = getSeletedTableRowsData(table, true);
-	    NodeWrapper nw = null;
-	    List<NodeWrapper> nodes = null;
-	    int maxIndex=0;
-	    int minIndex=1;
-	    NodeWrapper parent = null;
-	    if( sel.size() == 0 ) 
-	    {
-	    	message.setMessage(Messages.getUiMessage(Messages.NO_SELECTED_NODES));
-	    	return;
-	    }
-	    NodeWrapper t = (NodeWrapper) sel.get(0);
-	    parent = new NodeWrapper(t.getNode().getParent());
-	    nodes = parent.getChildrenList();
-	    int ncnt = 0;
-	    if(nodes!=null && (ncnt=nodes.size())>1)
-	    	maxIndex = nodes.get(ncnt-1).getNode().getIndex();
-	    if(maxIndex==0) return;
-	    for(Object it : sel) nodes.remove(it);
-	    for(Object ob : sel)
-	    {
-	    	nw = (NodeWrapper)ob;
-	    	int cidx = nw.getNode().getIndex();
-	    	int nup = -2;
-	    	int mx = nodes.size();
-	    	for(int i=0; i<mx; i++)
-	    		if(cidx<nodes.get(i).getNode().getIndex())
-	    		{
-	    			if(up) nup = i-1;
-	    				else nup = i;
-	    			break;
-	    		}
-	    	if(nup==-2)
-	    	{
-	    		if(up) nup = mx-1; 
-	    			else nup = mx;
-	    	}	    		
-	    	if(nup>=0 && nup<nodes.size()) 
-	    	{
-	    		Node upnode = nodes.get(nup).getNode();
-	    		int upidx = upnode.getIndex();
-	    		if(upidx>=minIndex)
-	    		{
-	    			nw.getNode().setIndex(upidx);
-	    			upnode.setIndex(cidx);
-	    			nw.getNode().save();
-	    			upnode.save();
-	    		}
-	    	}
-	    }
-	    RowKeySet state = table.getSelectedRowKeys();
-	    nodes = parent.getChildrenList();
-	    for(Object it : sel)
-	    {
-	    	int idx = nodes.indexOf(it);
-	    	if(idx>=0) state.add(new Integer(idx)); 
-	    }
-	    //SessionBean.getInstance().reloadBothFrames();
-	    SessionBean.getInstance().reloadRightFrame();
 	  }
 	  
 	  public void downNodes(ActionEvent action)
@@ -234,39 +169,6 @@ public class SubNodesTableBean
 		  upDownNodesX((UIXTable) table, false);
 	  }
 	  
-	  public void upNodesX(UIXTable table, boolean up)
-	  {
-		ArrayList<Object> sel = getSeletedTableRowsData(table, true);
-	    if( sel.size() == 0 ) 
-	    {
-	    	message.setMessage(Messages.getUiMessage(Messages.NO_SELECTED_NODES));
-	    	return;
-	    }
-	    List<NodeWrapper> nodes = ((NodeWrapper) sel.get(0)).getParent().getChildrenList();
-	    if(nodes==null || nodes.size() < 2)	return;
-	    int upLimit = 0;
-	    RowKeySet state = table.getSelectedRowKeys();
-	    state.clear();
-	    for(Object ob : sel)
-	    {
-	    	NodeWrapper nw = (NodeWrapper)ob;
-	    	int n = nodes.indexOf(nw);
-	    	if(n==-1) break;
-	    	if(--n < upLimit) continue;
-	    	int cidx = nw.getIndex();
-	    	NodeWrapper nwx = nodes.get(n);
-	    	int nidx = nwx.getIndex();
-			nw.getNode().setIndex(nidx);
-			nwx.getNode().setIndex(cidx);
-			nw.getNode().save();
-			nwx.getNode().save();
-			upLimit = cidx;
-			state.add(new Integer(n));
-	    }
-	    //SessionBean.getInstance().reloadBothFrames();
-	    SessionBean.getInstance().reloadRightFrame();
-	  }
-
 	  public void upDownNodesX(UIXTable table, boolean up)
 	  {
 		ArrayList<Object> sel = getSeletedTableRowsData(table, true);
@@ -278,11 +180,10 @@ public class SubNodesTableBean
 	    List<NodeWrapper> nodes = ((NodeWrapper) sel.get(0)).getParent().getChildrenList();
 	    if(nodes==null || nodes.size() < 2)	return;
 	    int limit = 0;
-	    int xx = nodes.size()-1;
-	    if(!up)
-	    {
-	    //	limit = nodes.size()-1;
+	    int maxIndex = nodes.size()-1;
+	    if(!up) {
 	    	Collections.reverse(nodes);
+	    	Collections.reverse(sel);
 	    }	
 	    RowKeySet state = table.getSelectedRowKeys();
 	    state.clear();
@@ -292,12 +193,7 @@ public class SubNodesTableBean
 	    	int n = nodes.indexOf(nw);
 	    	int nx = n;
 	    	if(n==-1) break;
-	//    	if(up)
-	//    	{
-	    		if(--n < limit) continue;
-	//    	}
-	//    	else
-//	    	   	if(++n > limit) continue;
+    		if(--n < limit) continue;
 	    	int cidx = nw.getIndex();
 	    	NodeWrapper nwx = nodes.get(n);
 	    	int nidx = nwx.getIndex();
@@ -311,7 +207,7 @@ public class SubNodesTableBean
 			if(up)
 				state.add(new Integer(n));
 			else 
-				state.add(new Integer(xx-n));
+				state.add(new Integer(maxIndex-n));
 	    }
 	    //SessionBean.getInstance().reloadBothFrames();
 	    SessionBean.getInstance().reloadRightFrame();
