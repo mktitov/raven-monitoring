@@ -39,7 +39,7 @@ import org.raven.rrd.data.RRDataSource;
 import org.raven.rrd.graph.RRDef;
 import org.raven.rrd.graph.RRGraphNode;
 import org.raven.rrd.graph.RRLine;
-import org.raven.net.impl.SnmpNode;
+import org.raven.net.impl.SnmpReaderNode;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Tree;
@@ -55,7 +55,7 @@ public class RealTest extends ServiceTestCase
     private Tree tree;
     private TreeStore store;
     
-    private SnmpNode snmp;
+    private SnmpReaderNode snmp;
     private RRDNode rrd;
     private RRGraphNode cpuLoad;
     private RRGraphNode cpuUsage;
@@ -113,8 +113,8 @@ public class RealTest extends ServiceTestCase
         rrs.init();
         rrs.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE).setValue(snmp.getPath());
         rrs.getNodeAttribute(AbstractThreadedDataSource.INTERVAL_ATTRIBUTE).setValue("1");
-        rrs.getNodeAttribute(SnmpNode.HOST_ATTR).setValue("localhost");
-        rrs.getNodeAttribute(SnmpNode.OID_ATTR).setValue(oid);
+        rrs.getNodeAttribute(SnmpReaderNode.HOST_ATTR).setValue("localhost");
+        rrs.getNodeAttribute(SnmpReaderNode.OID_ATTR).setValue(oid);
         
         rrs.getNodeAttribute(RRDataSource.DATASOURCETYPE_ATTRIBUTE).setValue("GAUGE");
         rrs.start();
@@ -223,7 +223,7 @@ public class RealTest extends ServiceTestCase
 
     private void createSnmpDataSource()
     {
-        snmp = new SnmpNode();
+        snmp = new SnmpReaderNode();
         snmp.setName("snmp");
         tree.getRootNode().addChildren(snmp);
         tree.saveNode(snmp);

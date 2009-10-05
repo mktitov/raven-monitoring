@@ -156,7 +156,7 @@ public class NetworkScannerNodeTest extends RavenCoreTestCase
     @Test
     public void snmpScanTest() throws Exception
     {
-        SnmpNode snmp = new SnmpNode();
+        SnmpReaderNode snmp = new SnmpReaderNode();
         snmp.setName("snmp");
         tree.getRootNode().addChildren(snmp);
         snmp.save();
@@ -176,10 +176,10 @@ public class NetworkScannerNodeTest extends RavenCoreTestCase
         scanner.setInterval(0);
         scanner.setIntervalUnit(TimeUnit.SECONDS);
         scanner.setDataSource(snmp);
-        scanner.getNodeAttribute(SnmpNode.TIMEOUT_ATTR).setValue("100");
+        scanner.getNodeAttribute(SnmpReaderNode.TIMEOUT_ATTR).setValue("100");
 //        scanner.getNodeAttribute(SnmpNode.OID_ATTR).setValue("1.3.6.1.2.1.25.3.2.1.1.1");
-        scanner.getNodeAttribute(SnmpNode.OID_ATTR).setValue("1.3.6.1.2.1.25.3.5.1.1.1");
-        scanner.getNodeAttribute(SnmpNode.HOST_ATTR).setValue("dummyValue");
+        scanner.getNodeAttribute(SnmpReaderNode.OID_ATTR).setValue("1.3.6.1.2.1.25.3.5.1.1.1");
+        scanner.getNodeAttribute(SnmpReaderNode.HOST_ATTR).setValue("dummyValue");
         
         TestScannerConsumer consumer = new TestScannerConsumer();
         consumer.setName("consumer");

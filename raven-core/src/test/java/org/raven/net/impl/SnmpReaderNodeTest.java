@@ -50,7 +50,7 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
-public class SnmpNodeTest extends ServiceTestCase
+public class SnmpReaderNodeTest extends ServiceTestCase
 {
     private Tree tree;
     private TreeStore store;
@@ -72,7 +72,7 @@ public class SnmpNodeTest extends ServiceTestCase
         builder.add(RavenCoreModule.class);
     }
     
-    @Ignore
+//    @Ignore
     @Test 
     public void snmp4j() throws Exception
     {
@@ -84,7 +84,9 @@ public class SnmpNodeTest extends ServiceTestCase
         target.setVersion(SnmpConstants.version1);
         
         PDU pdu = new PDU();
-        pdu.add(new VariableBinding(new OID("1.3.6.1.2.1.25.3.2.1.1.1")));
+//        pdu.add(new VariableBinding(new OID("1.3.6.1.2.1.25.3.2.1.1.1")));
+        pdu.add(new VariableBinding(new OID(".1.3.6.1.2.1.6.13.1.2.0.0.0.0.7.0.0.0.0.10301")));
+        pdu.add(new VariableBinding(new OID(".1.3.6.1.2.1.6.13.1.1.0.0.0.0.7.0.0.0.0.10301")));
         pdu.setType(PDU.GET);
         
         TransportMapping transport = new DefaultUdpTransportMapping();
@@ -109,6 +111,7 @@ public class SnmpNodeTest extends ServiceTestCase
         {
             transport.close();
         }
+        fail();
     }
     
     @Test
@@ -154,7 +157,7 @@ public class SnmpNodeTest extends ServiceTestCase
     @Test
     public void singleValueTest() throws Exception
     {
-        SnmpNode snmpNode = new SnmpNode();
+        SnmpReaderNode snmpNode = new SnmpReaderNode();
         snmpNode.setName("snmp");
         tree.getRootNode().addChildren(snmpNode);
         tree.saveNode(snmpNode);
@@ -173,8 +176,8 @@ public class SnmpNodeTest extends ServiceTestCase
         consumer.getNodeAttribute(AbstractThreadedDataSource.INTERVAL_ATTRIBUTE).setValue("2");
         consumer.getNodeAttribute(AbstractThreadedDataSource.INTERVAL_UNIT_ATTRIBUTE).setValue(
                 TimeUnit.SECONDS.toString());
-        consumer.getNodeAttribute(SnmpNode.HOST_ATTR).setValue("localhost");
-        consumer.getNodeAttribute(SnmpNode.OID_ATTR).setValue("1.3.6.1.2.1.1.3.0");
+        consumer.getNodeAttribute(SnmpReaderNode.HOST_ATTR).setValue("localhost");
+        consumer.getNodeAttribute(SnmpReaderNode.OID_ATTR).setValue("1.3.6.1.2.1.1.3.0");
         consumer.start();
         assertEquals(Status.STARTED, consumer.getStatus());
         
@@ -193,7 +196,7 @@ public class SnmpNodeTest extends ServiceTestCase
         store.removeNodes();
         tree.reloadTree();
         
-        SnmpNode snmpNode = new SnmpNode();
+        SnmpReaderNode snmpNode = new SnmpReaderNode();
         snmpNode.setName("snmp");
         tree.getRootNode().addChildren(snmpNode);
         tree.saveNode(snmpNode);
@@ -212,10 +215,10 @@ public class SnmpNodeTest extends ServiceTestCase
         consumer.getNodeAttribute(AbstractThreadedDataSource.INTERVAL_ATTRIBUTE).setValue("2");
         consumer.getNodeAttribute(AbstractThreadedDataSource.INTERVAL_UNIT_ATTRIBUTE).setValue(
                 TimeUnit.SECONDS.toString());
-        consumer.getNodeAttribute(SnmpNode.HOST_ATTR).setValue("localhost");
-        consumer.getNodeAttribute(SnmpNode.OID_ATTR).setValue(".1.3.6.1.2.1.2.2");
+        consumer.getNodeAttribute(SnmpReaderNode.HOST_ATTR).setValue("localhost");
+        consumer.getNodeAttribute(SnmpReaderNode.OID_ATTR).setValue(".1.3.6.1.2.1.2.2");
         consumer.getNodeAttribute(
-                SnmpNode.OID_TYPE_ATTR).setValue(SnmpNode.OidType.TABLE.toString());
+                SnmpReaderNode.OID_TYPE_ATTR).setValue(SnmpReaderNode.OidType.TABLE.toString());
         
         consumer.start();
         assertEquals(Status.STARTED, consumer.getStatus());
