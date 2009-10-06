@@ -57,7 +57,6 @@ public abstract class AbstractSnmpReaderNode extends AbstractThreadedDataSource
     public static final String VERSION_ATTR = "snmp-version";
     public static final String COMMUNITY_ATTR = "snmp-community";
     public static final String HOST_ATTR = "host";
-    public static final String OID_ATTR = "OID";
     public static final String OID_TYPE_ATTR = "OID-Type";
 
     @Message
@@ -86,7 +85,6 @@ public abstract class AbstractSnmpReaderNode extends AbstractThreadedDataSource
         Integer port = attributes.get(PORT_ATTR).getRealValue();
         SnmpVersion version = attributes.get(VERSION_ATTR).getRealValue();
         String community = attributes.get(COMMUNITY_ATTR).getRealValue();
-        String oid = attributes.get(OID_ATTR).getRealValue();
         boolean isTable = attributes.get(OID_TYPE_ATTR).getRealValue()==OidType.TABLE;
         Long timeout = attributes.get(TIMEOUT_ATTR).getRealValue();
 
@@ -103,7 +101,7 @@ public abstract class AbstractSnmpReaderNode extends AbstractThreadedDataSource
             snmp.listen();
             try
             {
-                proccessSnmpRequest(snmp, attributes, isTable);
+                proccessSnmpRequest(dataConsumer, snmp, target, attributes, isTable);
             }
             catch(Exception e)
             {
@@ -128,7 +126,9 @@ public abstract class AbstractSnmpReaderNode extends AbstractThreadedDataSource
     }
 
     protected abstract void proccessSnmpRequest(
-            Snmp snmp, Map<String, NodeAttribute> attrs, boolean isTable) throws Exception;
+            DataConsumer dataConsumer, Snmp snmp, CommunityTarget target
+            , Map<String, NodeAttribute> attrs, boolean isTable)
+        throws Exception;
 
     @Override
     public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
@@ -152,10 +152,6 @@ public abstract class AbstractSnmpReaderNode extends AbstractThreadedDataSource
         attr.setRequired(true);
         consumerAttributes.add(attr);
 
-        attr = new NodeAttributeImpl(OID_ATTR, String.class, null, oidDescription );
-        attr.setRequired(true);
-        consumerAttributes.add(attr);
-
         attr = new NodeAttributeImpl(
                 VERSION_ATTR, SnmpVersion.class, SnmpVersion.V1, snmpVersionDescription);
         attr.setRequired(true);
@@ -170,8 +166,9 @@ public abstract class AbstractSnmpReaderNode extends AbstractThreadedDataSource
     protected Table getTableValue(Snmp snmp, CommunityTarget target, PDU pdu) throws Exception
     {
         OID tableOID = pdu.get(0).getOid();
+        int colOidSize = tableOID.size()+1;
         ColumnBasedTable table = new ColumnBasedTable();
-        Set<Integer> rowIndexes = new HashSet<Integer>();
+        Set<String> rowIndexes = new HashSet<String>();
         while (true)
         {
             pdu.setType(PDU.GETNEXT);
@@ -187,16 +184,16 @@ public abstract class AbstractSnmpReaderNode extends AbstractThreadedDataSource
 
             if (var.getOid().startsWith(tableOID))
             {
-                OID columnOid = new OID(var.getOid());
-                int index = columnOid.last();
+                OID columnOid = new OID(var.getOid().getValue(), 0, colOidSize);
+                OID indexOid = new OID(
+                        var.getOid().getValue(), colOidSize, var.getOid().size()-colOidSize);
+                String index = indexOid.toString();
                 if (!rowIndexes.contains(index))
                 {
                     table.addValue(ROW_INDEX_COLUMN_NAME, index);
                     rowIndexes.add(index);
                 }
-                columnOid.removeLast();
-                String columnName = columnOid.toString();
-                table.addValue(columnName, var.getVariable());
+                table.addValue(columnOid.toString(), var.getVariable());
             }
             else
                 break;

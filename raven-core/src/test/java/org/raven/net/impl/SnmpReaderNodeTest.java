@@ -43,6 +43,7 @@ import org.snmp4j.smi.OID;
 import org.snmp4j.smi.OctetString;
 import org.snmp4j.smi.UdpAddress;
 import org.snmp4j.smi.VariableBinding;
+import org.snmp4j.smi.VariantVariable;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.weda.services.TypeConverter;
 
@@ -76,7 +77,7 @@ public class SnmpReaderNodeTest extends ServiceTestCase
     @Test 
     public void snmp4j() throws Exception
     {
-        UdpAddress addr = new UdpAddress("ipcc.komi.mts.ru/161");
+        UdpAddress addr = new UdpAddress("kompr00205/161");
         
         CommunityTarget target = new CommunityTarget(addr, new OctetString("public"));
         target.setRetries(1);
@@ -85,7 +86,9 @@ public class SnmpReaderNodeTest extends ServiceTestCase
         
         PDU pdu = new PDU();
 //        pdu.add(new VariableBinding(new OID("1.3.6.1.2.1.25.3.2.1.1.1")));
-        pdu.add(new VariableBinding(new OID(".1.3.6.1.2.1.6.13.1.2.0.0.0.0.7.0.0.0.0.10301")));
+        VariableBinding bind = new  VariableBinding(
+                new OID(".1.3.6.1.2.1.1.1.0"));
+        pdu.add(bind);
         pdu.add(new VariableBinding(new OID(".1.3.6.1.2.1.6.13.1.1.0.0.0.0.7.0.0.0.0.10301")));
         pdu.setType(PDU.GET);
         
@@ -107,6 +110,7 @@ public class SnmpReaderNodeTest extends ServiceTestCase
                 System.out.println("Type: "+var.getVariable().getSyntaxString());
                 System.out.println("Type: "+var.getVariable().getSyntax());
             }
+            System.out.println("BIND ="+bind.getVariable().toString());
         }finally
         {
             transport.close();

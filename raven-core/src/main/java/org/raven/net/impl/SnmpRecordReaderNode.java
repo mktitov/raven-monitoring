@@ -17,14 +17,28 @@
 
 package org.raven.net.impl;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Vector;
+import org.raven.ds.DataConsumer;
+import org.raven.ds.Record;
+import org.raven.ds.RecordSchema;
+import org.raven.ds.RecordSchemaField;
 import org.raven.ds.impl.RecordSchemaNode;
 import org.raven.ds.impl.RecordSchemaValueTypeHandlerFactory;
 import org.raven.log.LogLevel;
+import org.raven.table.Table;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeAttributeImpl;
+import org.snmp4j.CommunityTarget;
+import org.snmp4j.PDU;
 import org.snmp4j.Snmp;
+import org.snmp4j.event.ResponseEvent;
+import org.snmp4j.smi.OID;
+import org.snmp4j.smi.VariableBinding;
 import org.weda.internal.annotations.Message;
 
 /**
@@ -42,28 +56,43 @@ public class SnmpRecordReaderNode extends AbstractSnmpReaderNode
     private static String recordSchemaDescription;
 
     @Override
-    protected void proccessSnmpRequest(Snmp snmp, Map<String, NodeAttribute> attrs, boolean isTable)
-            throws Exception
+    protected void proccessSnmpRequest(
+            DataConsumer dataConsumer, Snmp snmp, CommunityTarget target
+            , Map<String, NodeAttribute> attrs, boolean isTable)
+        throws Exception
     {
         RecordSchemaNode recordSchema = attrs.get(RECORD_SCHEMA_ATTR).getRealValue();
-        String[] ids=null;
-        NodeAttribute idsAttr = attrs.get(ROW_IDS_ATTR);
-        if (idsAttr!=null)
-        {
-            String val = idsAttr.getValue();
-            if (val!=null)
-            {
-                ids = val.split("\\s*,\\s*");
-            }
-        }
-        if (ids==null || ids.length==0)
-        {
-            extractAllRecords(snmp, recordSchema);
-        }
+        List<Record> records = null;
+        if (!isTable)
+            records = extractRecord(snmp, target, recordSchema);
         else
         {
+            String[] ids=null;
+            NodeAttribute idsAttr = attrs.get(ROW_IDS_ATTR);
+            if (idsAttr!=null)
+            {
+                String val = idsAttr.getValue();
+                if (val!=null)
+                {
+                    ids = val.split("\\s*,\\s*");
+                }
+            }
+            if (ids==null || ids.length==0)
+            {
+                extractAllRecords(snmp, target, recordSchema);
+            }
+            else
+            {
 
+            }
         }
+        if (records!=null && !records.isEmpty())
+        {
+            for (Record record: records)
+                dataConsumer.setData(this, record);
+            dataConsumer.setData(this, null);
+        }
+
     }
 
     @Override
@@ -89,8 +118,98 @@ public class SnmpRecordReaderNode extends AbstractSnmpReaderNode
         }
     }
 
-    private void extractAllRecords(Snmp snmp, RecordSchemaNode recordSchema)
+    private void extractAllRecords(Snmp snmp, CommunityTarget target, RecordSchemaNode recordSchema)
+            throws Exception
     {
-        
+        SnmpRecordExtension ext = recordSchema.getRecordExtension(SnmpRecordExtension.class, null);
+        if (ext==null)
+            throw new Exception(String.format(
+                    "Can't read snmp table because of record schema (%s) does not have (%s) " +
+                    "extension", recordSchema.getPath(), SnmpRecordExtension.class.getName()));
+        PDU pdu = new PDU();
+        pdu.add(new VariableBinding(new OID(ext.getOid())));
+        Table table = getTableValue(snmp, target, pdu);
+        String[] colNames = table.getColumnNames();
+        Map<Integer, String> colnums = new HashMap<Integer, String>();
+        Map<String, String> fieldNames = new HashMap<String, String>();
+        RecordSchemaField
+        for (String )
+//        table.get
+    }
+
+    private List<Record> extractRecord(
+            Snmp snmp, CommunityTarget target, RecordSchemaNode recordSchema) throws Exception
+    {
+        RecordSchemaField[] fields = recordSchema.getFields();
+        if (fields!=null && fields.length>0)
+        {
+            Map<String, String> oids = null;
+            PDU pdu = null;
+            for (RecordSchemaField field: fields)
+            {
+                SnmpRecordFieldExtension snmpExt = field.getFieldExtension(
+                        SnmpRecordFieldExtension.class, null);
+                if (snmpExt!=null)
+                {
+                    if (oids==null)
+                        oids = new HashMap<String, String>();
+                    if (pdu==null)
+                        pdu = new PDU();
+                    String oidStr = snmpExt.getOid();
+                    oidStr = oidStr.endsWith(".0")? oidStr : oidStr+".0";
+                    OID oid = new OID(oidStr);
+                    oids.put(oid.toString(), field.getName());
+                    pdu.add(new VariableBinding(oid));
+                }
+            }
+            if (pdu!=null)
+            {
+                pdu.setType(PDU.GET);
+                ResponseEvent response = snmp.send(pdu, target);
+                if (response.getError()!=null)
+                    throw response.getError();
+                pdu = response.getResponse();
+                if (pdu==null)
+                    throw new Exception("Response timeout");
+                if (pdu.getErrorIndex()!=0)
+                    throw new Exception(pdu.getErrorStatusText());
+                Vector<VariableBinding> bindings = pdu.getVariableBindings();
+                if (bindings!=null && !bindings.isEmpty())
+                {
+                    Record rec = recordSchema.createRecord();
+                    for (VariableBinding binding: bindings)
+                        rec.setValue(oids.get(binding.getOid().toString()), binding.getVariable());
+
+                    return Arrays.asList(rec);
+                }
+            }
+        }
+        return null;
+    }
+
+    private Map<String, String> getFieldsOids(RecordSchema schema, boolean appendZerro)
+    {
+        RecordSchemaField[] fields = recordSchema.getFields();
+        if (fields!=null && fields.length>0)
+        {
+            Map<String, String> oids = null;
+            PDU pdu = null;
+            for (RecordSchemaField field: fields)
+            {
+                SnmpRecordFieldExtension snmpExt = field.getFieldExtension(
+                        SnmpRecordFieldExtension.class, null);
+                if (snmpExt!=null)
+                {
+                    if (oids==null)
+                        oids = new HashMap<String, String>();
+                    if (pdu==null)
+                        pdu = new PDU();
+                    String oidStr = snmpExt.getOid();
+                    oidStr = oidStr.endsWith(".0")? oidStr : oidStr+".0";
+                    OID oid = new OID(oidStr);
+                    oids.put(oid.toString(), field.getName());
+                    pdu.add(new VariableBinding(oid));
+                }
+            }
     }
 }

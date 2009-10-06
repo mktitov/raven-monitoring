@@ -36,8 +36,13 @@ public class DataCollector extends AbstractDataConsumer
         dataList.add(data);
     }
 
-    public List<Object> getDataList()
+    public  List<Object> getDataList()
     {
         return dataList;
+    }
+
+    public int getDataListSize()
+    {
+        return dataList.size();
     }
 }
