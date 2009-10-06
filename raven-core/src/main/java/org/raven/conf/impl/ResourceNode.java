@@ -14,8 +14,7 @@ import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.tree.impl.ViewableObjectImpl;
 
-@NodeClass(childNodes=org.raven.conf.impl.AccessControlNode.class, 
-		parentNode=org.raven.conf.impl.ResourcesListNode.class)
+@NodeClass(childNodes=org.raven.conf.impl.AccessControlNode.class)
 public class ResourceNode extends BaseNode implements Viewable 
 {
 	public static final String PREFIX = LdapGroupAcl.RESOURCE_PARAM+AccessControl.DELIMITER+" ";

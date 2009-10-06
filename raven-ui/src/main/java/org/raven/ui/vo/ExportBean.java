@@ -120,7 +120,7 @@ public class ExportBean
 		VOTableWrapper vtw = getObject();  
 		if(vtw==null) return;
 		String contentType = "application/vnd.ms-excel";
-		writeResponce(vtw.makeHtmlTable(), contentType, "xls");
+		writeResponce(vtw.makeHtmlTable(charset.toString()), contentType, "xls");
     }
 
 	public void exportToHtml(ActionEvent actionEvent) 
@@ -129,7 +129,7 @@ public class ExportBean
 		VOTableWrapper vtw = getObject();  
 		if(vtw==null) return;
 		String contentType = "text/html";
-		writeResponce(vtw.makeHtmlTable(), contentType, "html");
+		writeResponce(vtw.makeHtmlTable(charset.toString()), contentType, "html");
     }
 	
 	public void exportToCSV(ActionEvent actionEvent,String delim) 

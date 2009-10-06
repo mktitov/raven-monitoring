@@ -27,12 +27,14 @@ public class VOTableWrapper extends ArrayList<TableItemWrapper[]>
 		}	
 	}
 	
-	public String makeHtmlTable()
+	public String makeHtmlTable(String charset)
 	{
+		if(charset==null || charset.length()==0)
+			charset = "utf-8";
 		StringBuffer sb = new StringBuffer();
 		sb.append("<html>");
 		sb.append("<head>");
-		sb.append("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">");
+		sb.append("<meta http-equiv=\"Content-Type\" content=\"text/html; charset="+charset+"\">");
 		sb.append("</head>");
 		sb.append("<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\" ><thead><tr>");
 		int cols = table.getColumnNames().length;

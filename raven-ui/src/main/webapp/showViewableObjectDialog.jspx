@@ -97,68 +97,21 @@
                 rowSelection="none"
                 width="100%"
                 var="rowa">
-                <!-- 
-                <tr:column
-					rendered="#{row.valid[0]}"                      
-                   	align="center" 
-                   	headerText="#{row.tableColumnNames[0]}">
-					<tr:outputText 
-						rendered="#{!rowa[0].table}"
-						value="#{rowa[0].item}"/>
-					<tr:commandLink
-						text="#{rowa[0].string}"
-						rendered="#{rowa[0].table}"
-						action="dialog:showViewableObject"
-						actionListener="#{selectVO.select}"
-						windowWidth="300" windowHeight="300"
-					>
-					<f:attribute
-        				name="#{selectVO.paramName}"
-        				value="#{rowa[0].item}" />
-					</tr:commandLink>	
-              	</tr:column>
-              	 -->
-                    <tr:column 
-                    	width="4%" 
-                    	rowHeader="true"> 
-                		<f:facet name="header">
-                			<tr:panelPopup  
-                				title="#{msgs.export}"
-                				shortDesc="#{msgs.export}" 
-		                		text="#">
-  								<tr:panelGroupLayout layout="vertical">
-									<tr:commandLink
-									text="CSV"
-									immediate="true"
-									useWindow="true" 
-									actionListener="#{export.exportToCSV}"/>
-								<tr:commandLink
-	 								text="HTML"
-									immediate="true"
-									useWindow="true" 
-									actionListener="#{export.exportToHtml}"/>
-								<tr:commandLink
-	 								text="EXCEL"
-									immediate="true"
-									useWindow="true" 
-									actionListener="#{export.exportToExcel}"/>
-  						</tr:panelGroupLayout>
-</tr:panelPopup>
-                		<!-- 
-      						<tr:commandButton
-	      						partialSubmit="true"
-      							immediate="true"
-      							action="dialog:export"
-      							shortDesc="#{msgs.export}"
-      							actionListener="#{export.export}"
-                  				useWindow="true" 
-                  				windowHeight="300"
-                  				windowWidth="400"
-      							text="#"/>
-      							-->
-	    				</f:facet>
-                    	<tr:outputText value="#{rowId.index+1}"/>
-					</tr:column>		                  	
+               <tr:column 
+                   	width="4%" 
+                   	rowHeader="true"> 
+               		<f:facet name="header">
+               		   	<tr:panelPopup 
+                			title="#{msgs.export}"
+                			shortDesc="#{msgs.export}" 
+                			text="#">
+	                		<f:subview id="tExp">
+								<jsp:include page="tableExport.jspx" flush="true"/>
+							</f:subview> 
+						</tr:panelPopup>
+	    			</f:facet>
+                    <tr:outputText value="#{rowId.index+1}"/>
+				</tr:column>		                  	
               	  
 				<tr:forEach    
                   	varStatus="vStat" 

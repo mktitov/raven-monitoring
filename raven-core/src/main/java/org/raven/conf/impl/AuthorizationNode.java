@@ -72,10 +72,10 @@ public class AuthorizationNode extends BaseNode
 		try {
 			ResourcesListNode res = (ResourcesListNode) getChildren(ResourcesListNode.NODE_NAME);
 			if(res!=null && res.getStatus()==Status.STARTED)
-				sb.append(res.getAllResourcesString(false));
+				sb.append(res.getAllResourcesString());
 			GroupsListNode gr = (GroupsListNode) getChildren(GroupsListNode.NODE_NAME);
 			if(gr!=null && gr.getStatus()==Status.STARTED)
-				sb.append(gr.getAllGroupsString(false));
+				sb.append(gr.getAllGroupsString());
 		} catch(Exception e) {
 			logger.error("on load authorization data from tree:",e);
 		}

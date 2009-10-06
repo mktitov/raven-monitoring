@@ -404,36 +404,10 @@ partialTriggers=":poolStatus"
 	<f:facet name="ravenTable">
 	  	  	<tr:panelHorizontalLayout halign="left" inlineStyle="width:100%" >
 	  	  	<tr:spacer width="30" height="0" />
-	
 		<tr:panelGroupLayout layout="vertical"  >
-		
 		 	<tr:outputFormatted 
 					inlineStyle="COLOR: green; FONT-STYLE: italic;" 
 					value="&lt;small&gt;#{row.fromDate}&lt;/small&gt;"/>
-					
-  <!--      // 	<tr:panelHorizontalLayout halign="center" valign="top" > --> 
-	<!--      			<h:outputText  
-					escape="false" 
-					value="#{row.htmlTable}" /> -->
-<!--	 //  </tr:panelHorizontalLayout>   
-items="#{row.tableColumnNames}"
-
-				varStatus="rowStatX"
-   	<tr:outputText value="#{row.tableColumnNames}"/>
-   	
-   	+++++++++++++++++++
-
-				<tr:iterator first="0"     
-                  	varStatus="vStatZ" 
-                  	value="#{row.tableColumnNames}"
-                  	var="nameAZX" >
-                  	<tr:outputText value="#{vStatZ.index}testTESTtest"/>
-               	</tr:iterator>
-
-			<h:dataTable> 
-				<h:column></h:column>
-			</h:dataTable>
--->			
 			<tr:table 
 				rowBandingInterval="1" 
 				id = "tableView"
@@ -446,124 +420,17 @@ items="#{row.tableColumnNames}"
                 	align="center" 
                 	rowHeader="true">
                 	<f:facet name="header">
-                	<tr:panelPopup 
-                		title="#{msgs.export}"
-                		shortDesc="#{msgs.export}" 
-                		text="#">
-  					<!-- 	<tr:panelGroupLayout layout="vertical">
-  							<tr:panelAccordion id="accordCsv" 
-  								discloseNone="true">
-  								<tr:showDetailItem  
-  									text="CSV" 
-  									disclosed="false" 
-  									>
-  							</tr:showDetailItem>
-  							</tr:panelAccordion>
-  					
-  					 -->
-  							<tr:panelList>
-  								<tr:panelCaptionGroup captionText="CSV">
-  									<tr:selectBooleanCheckbox 
-  										inlineStyle="font-size: 70%" 
-  										value="#{export.csvHeader}" 
-  										label="#{msgs.header}" 
-  									/>
-  									<tr:selectBooleanCheckbox 
-  										inlineStyle="font-size: 70%"
-  										value="#{export.csvCRLF}" 
-  										label="#{msgs.windowsStyleNewline}" 
-  										/>
-  									<tr:selectOneChoice 
-  										inlineStyle="font-size: 70%" 
-  										label="#{msgs.encoding}" 
-  										value="#{export.charset}">
-  										<f:selectItems value="#{sBean.charsets}" />
-  									</tr:selectOneChoice>	
-									<tr:spacer height="5" width="0" />  										
-  									<tr:panelBox 
-  										text="#{msgs.delimiter}" 
-  										background="light">
-  									  	<tr:panelList>
-  										<tr:commandLink
-											text="#{msgs.semicolon}"
-											useWindow="true" 
-											actionListener="#{export.exportToCSVwithSemi}"/>
-										<tr:commandLink
-											text="#{msgs.tab}"
-											useWindow="true" 
-											actionListener="#{export.exportToCSVwithTab}"/>
-										<tr:commandLink
-											text="#{msgs.comma}"
-											useWindow="true" 
-											actionListener="#{export.exportToCSVwithComma}"/>
-										</tr:panelList>
-									</tr:panelBox>
-									</tr:panelCaptionGroup>	
-  							
-							<tr:commandLink
-	 							text="HTML"
-								immediate="true"
-								useWindow="true" 
-								actionListener="#{export.exportToHtml}"/>
-							<tr:commandLink
-	 							text="EXCEL"
-								immediate="true"
-								useWindow="true" 
-								actionListener="#{export.exportToExcel}"/>
-														
-							</tr:panelList>
-						<!-- 	
-  						</tr:panelGroupLayout>
-  						 -->
-					</tr:panelPopup>
-      			<!-- 		<tr:commandButton
-      						partialSubmit="true"
-      						immediate="true"
-      						action="dialog:export"
-      						shortDesc="#{msgs.export}"
-      						actionListener="#{export.export}"
-                  			useWindow="true" 
-                  			windowHeight="300"
-                  			windowWidth="400"
-      						text="#"/>
-                	
-                	
-      					<tr:commandButton
-      						shortDesc="exportToExcel"
-      						actionListener="#{sBean.exportToCSV}"
-                  			useWindow="true" 
-      						text="#"/>
-      						 -->
+  	    		       	<tr:panelPopup 
+                			title="#{msgs.export}"
+                			shortDesc="#{msgs.export}" 
+                			text="#">
+	                		<f:subview id="tExp">
+								<jsp:include page="tableExport.jspx" flush="true"/>
+							</f:subview> 
+						</tr:panelPopup>
     				</f:facet>
                 	<tr:outputText value="#{rowN.index+1}"/>
                 </tr:column>
-<!--                 
- 				<tr:forEach    
-                  	varStatus="vStat" 
-                  	items="#{sBean.coreTableRowData.tableColumnNames}"
-                  	var="nameAZX" >
-                    <tr:column  
-                    	align="center" 
-                    	headerText="!! #{nameAZX} !!">
-                    	<tr:outputText value="!@ #{nameAZX} !@"/>
-                       	<tr:outputText value="#{rowa[vStat.index-1]}"/>
-                    </tr:column>
-               	</tr:forEach>
-				<tr:iterator 
-					first="0"    
-                  	varStatus="vStatZZ" 
-                  	value="#{row.tableColumnNames}"
-                  	var="nameAZXZ" >
-                  	<tr:outputText value="testTESTtest"/>
-                  		<tr:column 
-                  			width="24%"
-                			align="center" 
-                			headerText="QQAAQQZZ">
- 	              			<tr:outputText value="#{vStatZZ.index} testTESTtest"/>
-    	                  	<tr:outputText value="!@ #{nameAZXZ} !@"/>
-        	           	</tr:column>
-               	</tr:iterator>
- -->               	
           <!-- +++++ -->
           <!-- ALL ROWS -->
           <!-- +++++ -->
@@ -615,35 +482,11 @@ items="#{row.tableColumnNames}"
 						</tr:panelHorizontalLayout>	
               		</tr:column>
                	</tr:forEach>
-	              	
-<!--                       	
-				<tr:iterator    
-                  	varStatus="vStatZ" 
-                  	value="#{row.tableColumnNames}"
-                  	var="nameAZX" >
-                      	<tr:outputText value="!@ #{nameAZX} !@"/>
-               	</tr:iterator>
-               	items="#{row.tableColumnNames}"
-               	getElValueRow
-                     	
- 				<tr:forEach    
-                  	varStatus="vStat" 
-                  	items="#{sBean.elValueRow.tableColumnNames}"
-                  	var="nameAZX" >
-                    <tr:column  
-                    	align="center" 
-                    	headerText="!! #{nameAZX} !!">
-                    	<tr:outputText value="!@ #{nameAZX} !@"/>
-                       	<tr:outputText value="#{rowa[vStat.index-1]}"/>
-                    </tr:column>
-               	</tr:forEach>
- -->                	
            	</tr:table>
 			<tr:spacer height="6" />
 	 	</tr:panelGroupLayout>
 		</tr:panelHorizontalLayout>	 	 
   	</f:facet>
-  	
   	
 </tr:switcher>
 </tr:column> 
