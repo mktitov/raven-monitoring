@@ -428,6 +428,8 @@ public class H2TreeStore implements TreeStore
             int level = 0;
             while (rs.next())
             {
+                if (logger.isDebugEnabled())
+                    logger.debug("Creating new node");
                 Node node = createNode(rs, cache);
                 if (logger.isDebugEnabled())
                     logger.debug(String.format(
@@ -438,13 +440,22 @@ public class H2TreeStore implements TreeStore
                 
                 if (node.getLevel()>1 && level!=node.getLevel() )
                 {
+                    if (logger.isDebugEnabled())
+                        logger.debug("Removing unneeded nodes from the cache");
                     level = node.getLevel();
+                    int removedCount = 0;
                     Iterator<Node> it = cache.values().iterator();
                     while (it.hasNext())
                     {
                         if (it.next().getLevel()<level-1)
+                        {
                             it.remove();
+                            ++removedCount;
+                        }
                     }
+                    if (logger.isDebugEnabled())
+                        logger.debug(String.format(
+                                "(%s) nodes removed from the cache.", removedCount));
                 }
                 ++count;
             }
@@ -461,6 +472,8 @@ public class H2TreeStore implements TreeStore
             
         } catch(Exception e)
         {
+            if (logger.isErrorEnabled())
+                logger.error("Error reading nodes from H2TreeStore", e);
             throw new TreeStoreError("Error reading nodes", e);
         }
     }
@@ -488,9 +501,13 @@ public class H2TreeStore implements TreeStore
     private Node createNode(ResultSet rs, Map<Integer, Node> cache) throws Exception
     {
         String nodeType = rs.getString(5);
+        if (logger.isDebugEnabled())
+            logger.debug(String.format("Creating node of class (%s)", nodeType));
         Node node = (Node) Class.forName(nodeType).newInstance();
         
         node.setId(rs.getInt(1));
+        if (logger.isDebugEnabled())
+            logger.debug(String.format("Node id is (%s)", node.getId()));
         node.setIndex(rs.getInt(3));
         node.setName(rs.getString(4));
         
@@ -510,6 +527,8 @@ public class H2TreeStore implements TreeStore
             }
         }
                 
+        if (logger.isDebugEnabled())
+            logger.debug(String.format("Creating node attributes", nodeType));
         createNodeAttributes(node);
         
         return node;
@@ -530,6 +549,8 @@ public class H2TreeStore implements TreeStore
         ResultSet rs = selectNodeAttributesStatement.executeQuery();
         while (rs.next())
         {
+            if (logger.isDebugEnabled())
+                logger.debug("Creting node attribute");
             int pos=1;
             NodeAttributeImpl attr = new NodeAttributeImpl();
             attr.setId(rs.getInt(pos++));
@@ -546,6 +567,9 @@ public class H2TreeStore implements TreeStore
                 attr.setDescriptionContainer(stringToMessageComposer(rs.getString(pos++)));
             
             node.addNodeAttribute(attr);
+            if (logger.isDebugEnabled())
+                logger.debug(String.format(
+                        "Node attribute (%s) added to the node", attr.getName()));
         }
     }
     

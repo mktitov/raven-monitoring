@@ -50,6 +50,8 @@ import org.weda.internal.annotations.Message;
  */
 public abstract class AbstractSnmpReaderNode extends AbstractThreadedDataSource
 {
+    public enum OidType {SINGLE, TABLE};
+
     public final static String ROW_INDEX_COLUMN_NAME = "index";
 
     public static final String PORT_ATTR = "snmp-port";
@@ -166,7 +168,7 @@ public abstract class AbstractSnmpReaderNode extends AbstractThreadedDataSource
     protected Table getTableValue(Snmp snmp, CommunityTarget target, PDU pdu) throws Exception
     {
         OID tableOID = pdu.get(0).getOid();
-        int colOidSize = tableOID.size()+1;
+        int colOidSize = tableOID.size()+2;
         ColumnBasedTable table = new ColumnBasedTable();
         Set<String> rowIndexes = new HashSet<String>();
         while (true)
