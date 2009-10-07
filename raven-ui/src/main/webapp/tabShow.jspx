@@ -261,15 +261,15 @@ action="#{sBean.reloadRightFrame}"
 <!-- ********************************* -->
 <tr:form id="ShowWN">
 <tr:table 
-		binding="#{sBean.coreTable}" 
-		width="100%"
-		horizontalGridVisible="false" 
-		verticalGridVisible="false" 
- 		var="row" 
- 		varStatus="vnstat"
- 		value="#{cNode.viewableObjects}"  
- 		id="showTable"
- 		immediate="true" >
+	binding="#{sBean.coreTable}" 
+	width="100%"
+	horizontalGridVisible="false" 
+	verticalGridVisible="false" 
+ 	var="row" 
+ 	varStatus="vnstat"
+ 	value="#{cNode.viewableObjects}"  
+ 	id="showTable"
+ 	immediate="true" >
 <!--
  rendered="#{cNode.showVO}" 
 partialTriggers=":poolStatus"

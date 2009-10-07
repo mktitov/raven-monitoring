@@ -45,22 +45,13 @@
     					value="#{sBean.accountName} (#{sBean.remoteIp})" />
     			</f:facet>
 				<f:facet name="right">
-				<t:commandLink 
-					value="#{msgs.exit}"
-					title="#{msgs.dscExit}"
-					forceId="true"
-					id="logout"
-					immediate="true"
-					action="#{sBean.logout}" 
-					 />
-<!-- 				
-    				<tr:commandLink
-    					id="logout"
-	    				immediate="true"
-    					action="#{sBean.logout}"
-    					shortDesc="#{msgs.dscExit}"
-    					text="#{msgs.exit}" />
- -->    					
+					<t:commandLink 
+						value="#{msgs.exit}"
+						title="#{msgs.dscExit}"
+						forceId="true"
+						id="logout"
+						immediate="true"
+						action="#{sBean.logout}"/>
     			</f:facet>
 		</tr:panelBorderLayout>    			
   	</tr:form>
@@ -139,7 +130,7 @@ initiallyExpanded="true"
  				<tr:panelHorizontalLayout valign="middle">
 	        	  	<tr:commandLink 
     	    	    	rendered="#{res.valid}"
-       		 	        text="#{res.title}"
+       		 	        text="#{res.visibleTitle}"
 			 			partialSubmit="true" 
 	   			        immediate="true"
 	   	        	    onclick="top.switchFrameSet()"
@@ -164,7 +155,12 @@ initiallyExpanded="true"
  <!-- NODES TREE  -->
  <!-- *************** -->				
   		<tr:showDetailItem text="#{msgs.nodes}" >
-		<tr:separator/>
+		<tr:commandLink 
+ 			id="refLink" 
+			immediate="true"
+			partialSubmit="false">
+			<tr:separator/>
+		</tr:commandLink>		
         <tr:tree 
         	partialTriggers="::pooltree" 
         	id="tree1" 
@@ -193,7 +189,7 @@ initiallyExpanded="true"
 				 />
  	-->				 
 			<tr:spacer width="3" />
- 			<tr:commandLink
+ 			<tr:commandLink 
 	 			id="pSub_link" 
  				immediate="true"
  				partialSubmit="true" 

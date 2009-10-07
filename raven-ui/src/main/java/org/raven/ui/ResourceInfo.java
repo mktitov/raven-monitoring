@@ -6,9 +6,12 @@ import org.raven.util.Utl;
 
 public class ResourceInfo 
 {
-	public static final int LIMIT = 12;
+	public static final int LIMIT = 10;
+	public static final boolean recursive = true;
+	public static final boolean stripTitle = true;
 	//private AccessResource res;
 	private String title;
+	private String visibleTitle;
 	private String path;
 	private boolean valid = false;
 	private List<ResourceInfo> list = new ArrayList<ResourceInfo>();
@@ -27,12 +30,11 @@ public class ResourceInfo
 	{
 		if(lst.size() < LIMIT) return;
 		//int i=0;
-		for(int i=0; i<lst.size()-1 ;i++)
-		{
-			ResourceInfo ri = lst.get(i); 
-			//lst.get(i).findChildren(lst, i+1);
-			ri.findChildren(lst, i+1);
-		}
+	//	for(int i=0; i<lst.size()-1 ;i++)
+	//	{
+		ResourceInfo ri = lst.get(0); 
+		ri.findChildren(lst, 1);
+	//	}
 	}
 	
 	public ResourceInfo(String t, String p)
@@ -41,8 +43,31 @@ public class ResourceInfo
 		path = Utl.trim2Empty(p);
 		if(title.length()!=0 && path.length()!=0)
 			valid = true;
+		visibleTitle = title;
 	}
 	
+	public boolean findChildren(List<ResourceInfo> r, int beg)
+	{
+		boolean ret = false;
+		if(!isValid()) return ret;
+		for(int i=beg; i< r.size()-1; i++)
+		{
+			ResourceInfo ri = r.get(i);
+			if(ri.title.startsWith(title)) 
+					//&& ri.path.startsWith(path))
+			{
+				list.add(ri);
+				r.remove(i);
+				if(stripTitle)
+					ri.visibleTitle = ri.title.replace(title, "").trim();
+				if(recursive) 
+					ri.findChildren(r, i);
+				i--;
+			}
+		}
+		return ret;
+	}
+
 	public String getTitle() {
 		return title;
 	}
@@ -62,27 +87,14 @@ public class ResourceInfo
 	private void setChildrenList(List<ResourceInfo> x) {
 		list = x;
 	}
-	
+	 
 	public boolean hasChildren()
 	{
 		return list!=null && list.size()>0;
 	}
 	
-	public boolean findChildren(List<ResourceInfo> r, int beg)
-	{
-		boolean ret = false;
-		if(!isValid()) return ret;
-		for(int i=beg; i< r.size()-1; i++)
-		{
-			ResourceInfo ri = r.get(i);
-			if(ri.title.startsWith(title)) 
-					//&& ri.path.startsWith(path))
-			{
-				list.add(ri);
-				r.remove(i--);
-			}
-		}
-		return ret;
+	public String getVisibleTitle() {
+		return visibleTitle;
 	}
 	
 }
