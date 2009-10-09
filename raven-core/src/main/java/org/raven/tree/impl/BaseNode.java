@@ -112,6 +112,7 @@ public class BaseNode implements Node, NodeListener, Logger
     
     private Map<String, NodeParameter> parameters;
     private boolean subtreeListener = false;
+    private Map<String, Object> variables;
 
 //    public BaseNode(Class[] childNodeTypes, boolean container, boolean readOnly)
 //    {
@@ -780,6 +781,7 @@ public class BaseNode implements Node, NodeListener, Logger
     {
         try
         {
+            variables = null;
             doStop();
             setStatus(Status.INITIALIZED);
         }
@@ -1700,4 +1702,11 @@ public class BaseNode implements Node, NodeListener, Logger
 	public String getPrefix() {
 		return "";
 	}
+
+    public Map<String, Object> getVariables()
+    {
+        if (variables==null)
+            variables = new HashMap<String, Object>();
+        return variables;
+    }
 }

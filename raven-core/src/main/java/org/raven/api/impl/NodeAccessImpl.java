@@ -162,5 +162,8 @@ public class NodeAccessImpl implements NodeAccess
 		return node.toString();
 	}
 
-
+    public Map<String, Object> getVars()
+    {
+        return node.getVariables();
+    }
 }

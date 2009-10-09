@@ -59,6 +59,9 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     @NotNull
     private Boolean enableUpdates;
 
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean updateIdField;
+
     @Parameter(readOnly=true)
     private long recordSetsRecieved;
     @Parameter(readOnly=true)
@@ -67,6 +70,16 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     private long recordsSaved;
 
     private List<Record> recordBuffer;
+
+    public Boolean getUpdateIdField()
+    {
+        return updateIdField;
+    }
+
+    public void setUpdateIdField(Boolean updateIdField)
+    {
+        this.updateIdField = updateIdField;
+    }
 
     public Boolean getEnableUpdates()
     {
@@ -258,7 +271,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         {
             try
             {
-                boolean batchUpdate = con.getMetaData().supportsBatchUpdates();
+                boolean batchUpdate = !updateIdField && con.getMetaData().supportsBatchUpdates();
 
                 if (isLogLevelEnabled(LogLevel.DEBUG))
                     debug(String.format(
@@ -270,7 +283,8 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                     SchemaMeta meta = metas.get(record.getSchema());
                     if (meta==null)
                     {
-                        meta = new SchemaMeta(record.getSchema(), enableUpdates, batchUpdate);
+                        meta = new SchemaMeta(
+                                record.getSchema(), enableUpdates, batchUpdate, updateIdField);
                         meta.init(con);
                         metas.put(record.getSchema(), meta);
                     }
@@ -315,6 +329,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         private String selectQuery;
         private boolean tryUpdate = false;
         private final boolean batchUpdate;
+        private final boolean updateIdField;
 
         private PreparedStatement select;
         private PreparedStatement insert;
@@ -322,8 +337,10 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         private boolean hasUpdates = false;
         private boolean hasInserts = false;
 
-        public SchemaMeta(RecordSchema recordSchema, boolean enableUpdates, boolean batchUpdate)
-                throws Exception
+        public SchemaMeta(
+                RecordSchema recordSchema, boolean enableUpdates, boolean batchUpdate
+                , boolean updateIdField)
+            throws Exception
         {
             RecordSchemaField[] fields = recordSchema.getFields();
 
@@ -335,6 +352,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
             dbFields =  new ArrayList<RecordSchemaField>(fields.length);
             idColumnName = null;
             this.batchUpdate = batchUpdate;
+            this.updateIdField = updateIdField;
             for (RecordSchemaField field : fields)
             {
                 DatabaseRecordFieldExtension extension = field.getFieldExtension(
@@ -424,12 +442,9 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                 Object val = RecordSchemaFieldType.getSqlObject(
                         field, record.getValue(field.getName()));
                 if (!recordFound || !field.getName().equals(idFieldName))
-                {
                     st.setObject(i++, val);
-                }
                 else
                     idFieldValue = val;
-
             }
             if (recordFound)
                 st.setObject(dbFields.size(), idFieldValue);
@@ -437,7 +452,16 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
             if (batchUpdate)
                 st.addBatch();
             else
+            {
                 st.executeUpdate();
+                if (updateIdField && idColumnName!=null)
+                {
+                    ResultSet rs = st.getGeneratedKeys();
+                    rs.next();
+                    Object idVal = rs.getObject(1);
+                    record.setValue(idFieldName, idVal);
+                }
+            }
             if (!hasInserts)
                 hasInserts = !recordFound;
             if (!hasUpdates)

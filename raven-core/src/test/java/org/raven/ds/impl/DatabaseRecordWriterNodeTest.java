@@ -86,25 +86,8 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
         recordExtension.start();
         assertEquals(Status.STARTED, recordExtension.getStatus());
 
-        RecordSchemaFieldNode field1 = new RecordSchemaFieldNode();
-        field1.setName("field1");
-        schema.addAndSaveChildren(field1);
-        field1.setFieldType(RecordSchemaFieldType.INTEGER);
-        field1.start();
-        assertEquals(Status.STARTED, field1.getStatus());
-
-        DatabaseRecordFieldExtension dbExtension = new DatabaseRecordFieldExtension();
-        dbExtension.setName("db");
-        field1.addAndSaveChildren(dbExtension);
-        dbExtension.setColumnName("col1");
-        dbExtension.start();
-        assertEquals(Status.STARTED, dbExtension.getStatus());
-
-        IdRecordFieldExtension idExtension = new IdRecordFieldExtension();
-        idExtension.setName("id");
-        field1.addAndSaveChildren(idExtension);
-        assertTrue(idExtension.start());
-
+        RecordSchemaFieldNode field1;
+        DatabaseRecordFieldExtension dbExtension;
         field1 = new RecordSchemaFieldNode();
         field1.setName("field2");
         schema.addAndSaveChildren(field1);
@@ -118,6 +101,25 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
         dbExtension.setColumnName("col2");
         dbExtension.start();
         assertEquals(Status.STARTED, dbExtension.getStatus());
+
+        field1 = new RecordSchemaFieldNode();
+        field1.setName("field1");
+        schema.addAndSaveChildren(field1);
+        field1.setFieldType(RecordSchemaFieldType.INTEGER);
+        field1.start();
+        assertEquals(Status.STARTED, field1.getStatus());
+
+        dbExtension = new DatabaseRecordFieldExtension();
+        dbExtension.setName("db");
+        field1.addAndSaveChildren(dbExtension);
+        dbExtension.setColumnName("col1");
+        dbExtension.start();
+        assertEquals(Status.STARTED, dbExtension.getStatus());
+
+        IdRecordFieldExtension idExtension = new IdRecordFieldExtension();
+        idExtension.setName("id");
+        field1.addAndSaveChildren(idExtension);
+        assertTrue(idExtension.start());
 
         ds = new PushDataSource();
         ds.setName("ds");
@@ -198,6 +200,19 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
         assertEquals("10.50.1.1", rows.get(0)[1]);
     }
 
+    @Test
+    public void updateIdField_test() throws Exception
+    {
+        writer.setUpdateIdField(true);
+        Record record = schema.createRecord();
+        record.setValue("field2", "10.50.1.1");
+        ds.pushData(record);
+        ds.pushData(null);
+
+        writer.stop();
+        assertEquals(new Integer(1), record.getValue("field1"));
+    }
+
     private List<Object[]> getRows(Connection con) throws SQLException
     {
         Statement st = con.createStatement();
@@ -217,7 +232,7 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
         Connection con = pool.getConnection();
         Statement st = con.createStatement();
         st.executeUpdate("drop table if exists record_data");
-        st.executeUpdate("create table record_data(col1 int, col2 varchar)");
+        st.executeUpdate("create table record_data(col1 int auto_increment(1), col2 varchar)");
     }
 
     private void insertData(Connection connection) throws SQLException

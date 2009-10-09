@@ -172,9 +172,10 @@ public class CsvRecordReaderNode extends AbstractDataPipe
             }
             catch(Exception e)
             {
-                error(String.format(
-                        "Error reading data from node (%s). Error message: %s"
-                        , dataSource.getPath(), e.getMessage()));
+                if (isLogLevelEnabled(LogLevel.ERROR))
+                    error(
+                        String.format("Error reading data from node (%s).", dataSource.getPath())
+                        , e);
             }
         }finally
         {

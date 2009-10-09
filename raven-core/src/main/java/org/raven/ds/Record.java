@@ -59,4 +59,8 @@ public interface Record
      * Returns the fields values as immutable map
      */
     public Map<String, Object> getValues() throws RecordException;
+    /**
+     * Copies field value from record passed in the parameter
+     */
+    public void copyFrom(Record record) throws RecordException;
 }

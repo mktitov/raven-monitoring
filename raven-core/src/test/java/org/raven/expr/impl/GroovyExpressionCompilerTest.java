@@ -17,6 +17,7 @@
 
 package org.raven.expr.impl;
 
+import java.sql.Connection;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
@@ -31,7 +32,7 @@ public class GroovyExpressionCompilerTest extends Assert
     @Test
     public void simpleTest() throws ScriptException
     {
-		ExpressionCache cache = trainCache("1+1");
+		ExpressionCache cache = trainCache("1+1", true);
         GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
         Expression expression = compiler.compile("1+1", "groovy");
         assertNotNull(expression);
@@ -43,7 +44,7 @@ public class GroovyExpressionCompilerTest extends Assert
     @Test
     public void bindginsTest() throws ScriptException
     {
-		ExpressionCache cache = trainCache("var+=1");
+		ExpressionCache cache = trainCache("var+=1", true);
 
         GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
         Expression expression = compiler.compile("var+=1", "groovy");
@@ -55,6 +56,25 @@ public class GroovyExpressionCompilerTest extends Assert
 		verify(cache);
     }
 
+    @Test
+    public void withConnectionTest() throws Exception
+    {
+        String script = "res=null; withConnection(con){c -> res='ok'}\n res";
+		ExpressionCache cache = trainCache(script, false);
+        Connection connection = createMock(Connection.class);
+        connection.close();
+        replay(connection, cache);
+        
+        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
+        Expression expression = compiler.compile(script, "groovy");
+        assertNotNull(expression);
+        SimpleBindings bindings = new SimpleBindings();
+        bindings.put("con", connection);
+        assertEquals("ok", expression.eval(bindings));
+
+        verify(connection, cache);
+    }
+    
 	@Test
 	public void nonGroovyLanguageTest() throws Exception
 	{
@@ -66,12 +86,13 @@ public class GroovyExpressionCompilerTest extends Assert
 		assertNull(expression);
 	}
 
-	private ExpressionCache trainCache(String expressionSource)
+	private ExpressionCache trainCache(String expressionSource, boolean replay)
 	{
 		ExpressionCache cache = createMock(ExpressionCache.class);
 		cache.putExpression(eq(expressionSource), isA(Expression.class));
 
-		replay(cache);
+        if (replay)
+            replay(cache);
 
 		return cache;
 	}

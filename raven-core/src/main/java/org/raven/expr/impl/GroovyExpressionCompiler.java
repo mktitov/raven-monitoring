@@ -19,6 +19,7 @@ package org.raven.expr.impl;
 
 import groovy.lang.GroovyClassLoader;
 import javax.script.ScriptException;
+import org.raven.api.impl.ApiUtils;
 import org.raven.expr.Expression;
 import org.raven.expr.ExpressionCache;
 import org.raven.expr.ExpressionCompiler;
@@ -46,7 +47,10 @@ public class GroovyExpressionCompiler implements ExpressionCompiler
 
 		try
 		{
-			Class expressionClass = classLoader.parseClass(expression);
+            StringBuilder buf = new StringBuilder()
+                .append("import static "+ApiUtils.class.getName()+".*\n")
+                .append(expression);
+			Class expressionClass = classLoader.parseClass(buf.toString());
 			GroovyExpression groovyExpression = new GroovyExpression(expressionClass);
 			cache.putExpression(expression, groovyExpression);
 			

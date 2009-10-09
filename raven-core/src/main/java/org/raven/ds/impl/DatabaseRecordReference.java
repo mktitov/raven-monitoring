@@ -81,6 +81,14 @@ public class DatabaseRecordReference extends AbstractDatabaseRecordReference imp
         return wrappedRecord==null? Collections.EMPTY_MAP : wrappedRecord.getValues();
     }
 
+    public void copyFrom(Record record) throws RecordException
+    {
+        if (!initialized)
+            init();
+        if (wrappedRecord!=null)
+            wrappedRecord.copyFrom(record);
+    }
+
     private void init() throws RecordException
     {
         try
@@ -95,4 +103,5 @@ public class DatabaseRecordReference extends AbstractDatabaseRecordReference imp
             throw new RecordException(ex);
         }
     }
+
 }

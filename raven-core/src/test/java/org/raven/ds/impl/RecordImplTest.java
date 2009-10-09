@@ -19,12 +19,13 @@ package org.raven.ds.impl;
 
 import java.text.SimpleDateFormat;
 import org.junit.Test;
-import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.InvalidRecordFieldException;
+import org.raven.ds.Record;
 import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
+import org.raven.test.RavenCoreTestCase;
 import static org.easymock.EasyMock.*;
 
 /**
@@ -150,5 +151,39 @@ public class RecordImplTest extends RavenCoreTestCase
         {
             verify(schema, field);
         }
+    }
+
+    @Test
+    public void copyFromTest() throws Exception
+    {
+        RecordSchema schema1 = createMock("schema1", RecordSchema.class);
+        RecordSchema schema2 = createMock("schema2", RecordSchema.class);
+        RecordSchemaField field = createMock("field1_schema1", RecordSchemaField.class);
+        expect(schema1.getFields()).andReturn(new RecordSchemaField[]{field});
+        expect(field.getName()).andReturn("field1");
+        expect(field.getFieldType()).andReturn(RecordSchemaFieldType.INTEGER);
+        expect(field.getPattern()).andReturn(null);
+
+        RecordSchemaField field2 = createMock("field1_schema2", RecordSchemaField.class);
+        expect(field2.getName()).andReturn("field1");
+        expect(field2.getFieldType()).andReturn(RecordSchemaFieldType.INTEGER);
+        expect(field2.getPattern()).andReturn(null);
+
+        RecordSchemaField field3 = createMock("field2_schema2", RecordSchemaField.class);
+        expect(field3.getName()).andReturn("field2");
+
+        expect(schema2.getFields()).andReturn(new RecordSchemaField[]{field2, field3});
+
+        replay(schema1, field, schema2, field2, field3);
+
+        Record rec1 = new RecordImpl(schema1);
+        rec1.setValue("field1", 10);
+        Record rec2 = new RecordImpl(schema2);
+        rec2.copyFrom(rec1);
+
+        assertEquals(new Integer(10), rec2.getValue("field1"));
+        assertNull(rec2.getValue("field2"));
+        
+        verify(schema1, field, schema2, field2, field3);
     }
 }

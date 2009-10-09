@@ -104,4 +104,14 @@ public class RecordImpl implements Record
     {
         return Collections.unmodifiableMap(values);
     }
+
+    public void copyFrom(Record record) throws RecordException
+    {
+        Map<String, Object> vals = record.getValues();
+        if (vals!=null && !vals.isEmpty())
+            for (Map.Entry<String, Object> entry: vals.entrySet())
+                try{
+                    setValue(entry.getKey(), entry.getValue());
+                }catch(InvalidRecordFieldException e){ }
+    }
 }

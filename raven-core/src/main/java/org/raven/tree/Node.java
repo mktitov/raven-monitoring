@@ -19,6 +19,7 @@ package org.raven.tree;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.script.Bindings;
 import org.raven.log.LogLevel;
@@ -367,4 +368,8 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
      * Method adds expression bindings to the bindings object passed in the parameter.
      */
     public void formExpressionBindings(Bindings bindings);
+    /**
+     * Returns the map that may be used to store data while node started.
+     */
+    public Map<String, Object> getVariables();
 }
