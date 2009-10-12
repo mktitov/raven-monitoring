@@ -40,9 +40,11 @@ public class NodeTypesBean
 	    Iterator<Object> iterator = table.getSelectedRowKeys().iterator();
 	    if( !iterator.hasNext() ) return null;
 	    Object rowKey = iterator.next();
+	    if(rowKey==null) return null;
 	    Object oldRowKey = table.getRowKey();
 	    table.setRowKey(rowKey);
 	    NodeType n = (NodeType) SessionBean.getElValue("row");
+	    if(n==null) return null;
 	    RequestContext.getCurrentInstance().returnFromDialog(n.getClassName(), null);
 	    table.setRowKey(oldRowKey);
 	    return null;
