@@ -38,6 +38,7 @@ import org.weda.internal.annotations.Service;
 public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandler
 {
     public final static String ENABLE_SCRIPT_EXECUTION_BINDING = "enableScriptExecution";
+    public static final String NODE_BINDING = "node";
 
     @Service
     private static ExpressionCompiler compiler;
@@ -108,7 +109,7 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
         if (expression!=null && expressionValid)
         {
             Bindings bindings = new SimpleBindings();
-            bindings.put("node", new NodeAccessImpl(attribute.getOwner()));
+            bindings.put(NODE_BINDING, new NodeAccessImpl(attribute.getOwner()));
             attribute.getOwner().formExpressionBindings(bindings);
             if (   !attribute.getValueHandlerType().equals(ScriptAttributeValueHandlerFactory.TYPE)
                 || bindings.containsKey(ENABLE_SCRIPT_EXECUTION_BINDING))
