@@ -65,7 +65,7 @@ public class VOTableWrapper extends ArrayList<TableItemWrapper[]>
 		return sb.toString();
 	}
 	
-	public String makeCSV(boolean header,boolean lf,String delim)
+	public String makeCSV(boolean header,boolean lf,String delim,boolean escape)
 	{
 		StringBuffer sb = new StringBuffer();
 		int cols = table.getColumnNames().length;
@@ -74,7 +74,10 @@ public class VOTableWrapper extends ArrayList<TableItemWrapper[]>
 			for (int i = 0; i < cols; i++) 
 			{
 				if(i>0) sb.append(delim);
-				sb.append(StringEscapeUtils.escapeCsv(table.getColumnNames()[i]));
+				if(escape)
+					sb.append(StringEscapeUtils.escapeCsv(table.getColumnNames()[i]));
+				else
+					sb.append(table.getColumnNames()[i]);
 			}
 			if(lf) sb.append("\r");
 			sb.append("\n");
@@ -86,8 +89,11 @@ public class VOTableWrapper extends ArrayList<TableItemWrapper[]>
 			for(int i=0;i < cols; i++)
 	        {
 				if(i>0) sb.append(delim);
-				if(ar[i]!=null) 
+				if(ar[i]==null) continue;
+				if(escape)
 					sb.append(StringEscapeUtils.escapeCsv(ar[i].toString()));
+				else
+					sb.append(ar[i].toString());
 	        }
 			if(lf) sb.append("\r");
 			sb.append("\n");

@@ -27,6 +27,7 @@ public class ExportBean
 	
 	private boolean csvHeader = true;
 	private boolean csvCRLF = true;
+	private boolean escapeCSV = true;
 	
 	private Charset charset;
 
@@ -138,7 +139,7 @@ public class ExportBean
 		VOTableWrapper vtw = getObject();  
 		if(vtw==null) return;
 		String contentType = "text/csv";
-		writeResponce(vtw.makeCSV(csvHeader,csvCRLF,delim), contentType, "csv");
+		writeResponce(vtw.makeCSV(csvHeader,csvCRLF,delim,escapeCSV), contentType, "csv");
     }
 
 	public void exportToCSVwithComma(ActionEvent actionEvent) 
@@ -186,6 +187,14 @@ public class ExportBean
 
 	public Charset getCharset() {
 		return charset;
+	}
+
+	public void setEscapeCSV(boolean escapeCsv) {
+		this.escapeCSV = escapeCsv;
+	}
+
+	public boolean isEscapeCSV() {
+		return escapeCSV;
 	}
 	
 }

@@ -44,6 +44,12 @@
   										value="#{export.csvCRLF}" 
   										label="#{msgs.windowsStyleNewline}" 
   										/>
+  									<tr:selectBooleanCheckbox 
+  										inlineStyle="font-size: 70%"
+  										value="#{export.escapeCSV}" 
+  										label="#{msgs.escapeCSV}"
+  										shortDesc="#{msgs.dscEscapeCSV}" 
+  										/>
 									<tr:spacer height="5" width="0" />  										
   									<tr:panelBox 
   										text="#{msgs.delimiter}" 
