@@ -30,11 +30,11 @@ public class ResourceInfo
 	{
 		if(lst.size() < LIMIT) return;
 		//int i=0;
-	//	for(int i=0; i<lst.size()-1 ;i++)
-	//	{
-		ResourceInfo ri = lst.get(0); 
-		ri.findChildren(lst, 1);
-	//	}
+		for(int i=0; i<lst.size()-1 ;i++)
+		{
+			ResourceInfo ri = lst.get(i); 
+			ri.findChildren(lst, i+1);
+		}
 	}
 	
 	public ResourceInfo(String t, String p)
