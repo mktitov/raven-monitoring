@@ -242,7 +242,37 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
     }
 
     @Test
-    public void selfMovedTest() throws Exception
+    public void selfMovedTest1() throws Exception
+    {
+        NodeAttribute attr = new NodeAttributeImpl("ref", Node.class, "../parent/child", null);
+        attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
+        attr.setOwner(node);
+        node.addNodeAttribute(attr);
+        attr.save();
+        attr.init();
+
+        assertEquals(childNode, attr.getRealValue());
+
+        Node newHome = new BaseNode("newHome");
+        tree.getRootNode().addAndSaveChildren(newHome);
+        tree.move(node, newHome, null);
+
+        assertEquals(newHome, node.getParent());
+        String newPath = "../../\"parent\"/\"child\"/";
+        assertEquals(newPath, attr.getRawValue());
+
+        tree.reloadTree();
+
+        node = tree.getNode(node.getPath());
+        assertNotNull(node);
+        attr = node.getNodeAttribute("ref");
+        assertNotNull(attr);
+        assertEquals(newPath, attr.getRawValue());
+        assertEquals(childNode, attr.getRealValue());
+    }
+
+    @Test
+    public void selfMovedTest2() throws Exception
     {
         NodeAttribute attr = new NodeAttributeImpl("ref", Node.class, "../parent/child", null);
         attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);

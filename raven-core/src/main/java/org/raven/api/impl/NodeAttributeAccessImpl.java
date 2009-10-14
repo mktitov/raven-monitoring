@@ -19,6 +19,9 @@ package org.raven.api.impl;
 
 import org.raven.api.NodeAttributeAccess;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.Tree;
+import org.weda.internal.annotations.Service;
+import org.weda.services.TypeConverter;
 
 /**
  *
@@ -26,6 +29,12 @@ import org.raven.tree.NodeAttribute;
  */
 public class NodeAttributeAccessImpl implements NodeAttributeAccess
 {
+    @Service
+    private static TypeConverter converter;
+
+    @Service
+    private static Tree tree;
+
     private final NodeAttribute attribute;
 
     public NodeAttributeAccessImpl(NodeAttribute attribute) 
@@ -43,6 +52,13 @@ public class NodeAttributeAccessImpl implements NodeAttributeAccess
 
     public String getValueAsString() {
         return attribute.getValue();
+    }
+
+    public void setValue(Object value) throws Exception
+    {
+        String strValue = converter.convert(String.class, value, null);
+        attribute.setValue(strValue);
+        tree.saveNodeAttribute(attribute);
     }
 
 }

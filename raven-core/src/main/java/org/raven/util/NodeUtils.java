@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
+import org.raven.api.impl.NodeAccessImpl;
 import org.raven.expr.impl.ExpressionAttributeValueHandler;
 import org.raven.template.impl.TemplateExpression;
 import org.raven.tree.Node;
@@ -56,7 +57,8 @@ public class NodeUtils
                     clone.setOwner(node);
                     clone.setId(id--);
                     Bindings bindings = new SimpleBindings();
-                    bindings.put(ExpressionAttributeValueHandler.NODE_BINDING, node);
+                    bindings.put(
+                            ExpressionAttributeValueHandler.NODE_BINDING, new NodeAccessImpl(node));
                     Object val = TemplateExpression.eval(clone.getRawValue(), bindings);
                     clone.setRawValue(converter.convert(String.class, val, null));
                     clone.init();
