@@ -25,11 +25,11 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
+import org.raven.tree.ActionViewableObject;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.util.NodeUtils;
-import org.weda.annotations.constraints.NotNull;
 
 /**
  *
@@ -47,11 +47,14 @@ public class ActionNode extends BaseNode implements Viewable
     @Parameter(defaultValue="true")
     private Boolean actionEnabled;
 
-    @NotNull @Parameter
+    @Parameter
     private String enabledActionText;
 
-    @NotNull @Parameter
+    @Parameter
     private String disabledActionText;
+
+    @Parameter
+    private String confirmationMessage;
 
     private BindingSupportImpl bindingSupport;
 
@@ -67,6 +70,16 @@ public class ActionNode extends BaseNode implements Viewable
     {
         super.formExpressionBindings(bindings);
         bindingSupport.addTo(bindings);
+    }
+
+    public String getConfirmationMessage()
+    {
+        return confirmationMessage;
+    }
+
+    public void setConfirmationMessage(String confirmationMessage)
+    {
+        this.confirmationMessage = confirmationMessage;
     }
 
     public String getActionExpression()
@@ -122,7 +135,7 @@ public class ActionNode extends BaseNode implements Viewable
             if (enabled==null || !enabled)
                 action = new ViewableObjectImpl(Viewable.RAVEN_TEXT_MIMETYPE, disabledActionText);
             else
-                action = new ActionViewableObject(refreshAttributes);
+                action = new Action(refreshAttributes);
             return Arrays.asList(action);
         }
         finally
@@ -141,11 +154,11 @@ public class ActionNode extends BaseNode implements Viewable
         return false;
     }
 
-    private class ActionViewableObject implements ViewableObject
+    private class Action implements ActionViewableObject
     {
         private final Map<String, NodeAttribute> refreshAttributes;
 
-        public ActionViewableObject(Map<String, NodeAttribute> refreshAttributes)
+        public Action(Map<String, NodeAttribute> refreshAttributes)
         {
             this.refreshAttributes = refreshAttributes;
         }
@@ -178,6 +191,11 @@ public class ActionNode extends BaseNode implements Viewable
         public int getHeight()
         {
             return 0;
+        }
+
+        public String getConfirmationMessage()
+        {
+            return confirmationMessage;
         }
 
         @Override

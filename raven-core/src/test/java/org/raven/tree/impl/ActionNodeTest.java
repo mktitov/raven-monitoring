@@ -23,6 +23,7 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;
+import org.raven.tree.ActionViewableObject;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
@@ -43,6 +44,7 @@ public class ActionNodeTest extends RavenCoreTestCase
         tree.getRootNode().addAndSaveChildren(action);
         action.setEnabledActionText("test action");
         action.setDisabledActionText("action disabled");
+        action.setConfirmationMessage("confirmation");
     }
 
     @Test
@@ -53,7 +55,9 @@ public class ActionNodeTest extends RavenCoreTestCase
         List<ViewableObject> voList = action.getViewableObjects(null);
         assertNotNull(voList);
         assertEquals(1, voList.size());
-        ViewableObject vo = voList.get(0);
+        assertTrue(voList.get(0) instanceof ActionViewableObject);
+        ActionViewableObject vo = (ActionViewableObject) voList.get(0);
+        assertEquals("confirmation", vo.getConfirmationMessage());
         assertEquals("test action", vo.toString());
         assertEquals(Viewable.RAVEN_ACTION_MIMETYPE, vo.getMimeType());
         assertEquals("2", vo.getData());
