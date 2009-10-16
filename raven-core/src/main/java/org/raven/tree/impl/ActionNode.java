@@ -30,6 +30,7 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.util.NodeUtils;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
@@ -39,6 +40,9 @@ import org.raven.util.NodeUtils;
 public class ActionNode extends BaseNode implements Viewable
 {
     public static final String ACTION_EXPRESSION_ATTR = "actionExpression";
+    public static final String ACTION_ENABLED_ATTR = "actionEnabled";
+    public static final String CONFIRMATION_MESSAGE_ATTR = "confirmationMessage";
+    public static final String ENABLED_ACTION_TEXT_ATTR = "enabledActionText";
     public static final String REFRESH_ATTRIBUTES_BINDING = "refreshAttributes";
     
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
@@ -56,7 +60,10 @@ public class ActionNode extends BaseNode implements Viewable
     @Parameter
     private String confirmationMessage;
 
-    private BindingSupportImpl bindingSupport;
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean autoRefresh;
+
+    protected BindingSupportImpl bindingSupport;
 
     @Override
     protected void initFields()
@@ -130,18 +137,27 @@ public class ActionNode extends BaseNode implements Viewable
         bindingSupport.put(REFRESH_ATTRIBUTES_BINDING, refreshAttributes);
         try
         {
+            Map<String, Object> additionalBindings = prepareViewableObjects(refreshAttributes);
+            addToBindingSupport(additionalBindings);
             Boolean enabled = actionEnabled;
             ViewableObject action = null;
             if (enabled==null || !enabled)
                 action = new ViewableObjectImpl(Viewable.RAVEN_TEXT_MIMETYPE, disabledActionText);
             else
-                action = new Action(refreshAttributes);
+                action = new Action(refreshAttributes, additionalBindings);
             return Arrays.asList(action);
         }
         finally
         {
             bindingSupport.reset();
         }
+    }
+
+    private void addToBindingSupport(Map<String, Object> bindings)
+    {
+        if (bindings!=null)
+            for (Map.Entry<String, Object> entry: bindings.entrySet())
+                bindingSupport.put(entry.getKey(), entry.getValue());
     }
 
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
@@ -151,16 +167,31 @@ public class ActionNode extends BaseNode implements Viewable
 
     public Boolean getAutoRefresh()
     {
-        return false;
+        return autoRefresh;
     }
 
-    private class Action implements ActionViewableObject
+    public void setAutoRefresh(Boolean autoReferesh)
     {
-        private final Map<String, NodeAttribute> refreshAttributes;
+        this.autoRefresh = autoReferesh;
+    }
 
-        public Action(Map<String, NodeAttribute> refreshAttributes)
+    protected Map<String, Object> prepareViewableObjects(
+            Map<String, NodeAttribute> refreshAttributes)
+    {
+        return null;
+    }
+
+    protected class Action implements ActionViewableObject
+    {
+        protected final Map<String, NodeAttribute> refreshAttributes;
+        private final Map<String, Object> additionalBindings;
+
+        public Action(
+                Map<String, NodeAttribute> refreshAttributes
+                , Map<String, Object> additionalBindings)
         {
             this.refreshAttributes = refreshAttributes;
+            this.additionalBindings = additionalBindings;
         }
 
         public String getMimeType()
@@ -172,6 +203,7 @@ public class ActionNode extends BaseNode implements Viewable
         {
             bindingSupport.put(REFRESH_ATTRIBUTES_BINDING, refreshAttributes);
             try{
+                addToBindingSupport(additionalBindings);
                 return getNodeAttribute(ACTION_EXPRESSION_ATTR).getValue();
             }finally {
                 bindingSupport.reset();
@@ -195,15 +227,24 @@ public class ActionNode extends BaseNode implements Viewable
 
         public String getConfirmationMessage()
         {
-            return confirmationMessage;
+            bindingSupport.put(REFRESH_ATTRIBUTES_BINDING, refreshAttributes);
+            try{
+                addToBindingSupport(additionalBindings);
+                return confirmationMessage;
+            }finally {
+                bindingSupport.reset();
+            }
         }
+
+        protected void configureBindings(BindingSupportImpl bindingSupport){}
 
         @Override
         public String toString()
         {
             bindingSupport.put(REFRESH_ATTRIBUTES_BINDING, refreshAttributes);
             try{
-                return enabledActionText;
+                addToBindingSupport(additionalBindings);
+                return getNodeAttribute(ENABLED_ACTION_TEXT_ATTR).getValue();
             }finally {
                 bindingSupport.reset();
             }
