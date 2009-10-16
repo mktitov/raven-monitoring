@@ -363,11 +363,26 @@ partialTriggers=":poolStatus"
 	  		<tr:spacer width="0" height="4" />
 	  	  	<tr:panelHorizontalLayout  halign="left" >
 	  	  		<tr:spacer width="30" height="0" />
+	  	  		<tr:panelPopup 
+	  	  			text="#{row.idVO}"
+	  	  			onclick="if (!confirm('#{row.confirmationMessage}')) return false">
+	  	  			<tr:outputText value="#{row.runAction}"/>
+	  	  		</tr:panelPopup>
+<!-- 	  	  		
 				<tr:commandLink 
+					rendered="#{row.confirmationMessage == null}" 
 					action="#{row.runAction}"
 					inlineStyle="font-size: 110%;"
 					partialSubmit="true"
 					text="#{row.idVO}" />
+				<tr:commandLink
+					rendered="#{row.confirmationMessage != null}" 
+					action="#{row.runAction}"
+					inlineStyle="font-size: 110%;"
+					onclick="if (!confirm('#{row.confirmationMessage}')) return false"
+					partialSubmit="true"
+					text="#{row.idVO}" />
+ -->					
 			</tr:panelHorizontalLayout>
 	  	</tr:panelGroupLayout>
 			
@@ -416,7 +431,7 @@ partialTriggers=":poolStatus"
                 width="100%"
                 var="rowa"
                 varStatus="rowN" >
-                <tr:column width="4%"
+                <tr:column width="4%" 
                 	align="center" 
                 	rowHeader="true">
                 	<f:facet name="header">
@@ -432,14 +447,14 @@ partialTriggers=":poolStatus"
                 	<tr:outputText value="#{rowN.index+1}"/>
                 </tr:column>
           <!-- +++++ -->
-          <!-- ALL ROWS -->
+          <!-- ALL COLUMNS -->
           <!-- +++++ -->
  				<tr:forEach    
                   	varStatus="vxStat"
                   	begin="0" 
-                  	end="11"  
+                  	end="16"  
                   	var="nameAZX" >
-                	<tr:column
+                	<tr:column sortable="true"  sortProperty="#{vxStat.index+1}"
                 		align="left"
 						rendered="#{row.valid[vxStat.index]}"                      
                    		headerText="#{row.tableColumnNames[vxStat.index]}">

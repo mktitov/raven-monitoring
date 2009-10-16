@@ -36,6 +36,11 @@ import javax.faces.context.FacesContext;
 	   public static final String ATTR_NOT_FOUND = "attributeNotFound";
 	   public static final String ATTRIBUTE = "attribute";
 	   public static final String BAD_DST_NODE = "inadmissibleDstNode";
+	   public static final String CHARSET1 = "charset1";
+	   public static final String CHARSET2 = "charset2";
+	   public static final String CHARSET3 = "charset3";
+	   public static final String CHARSET4 = "charset4";
+	   public static final String DONE = "done";
 	   public static final String NO_SELECTED_NODES = "noSelectedNodes";
 	   public static final String NODES_CANT_BE_COPIED = "nodesCantBeCopied";
 	   public static final String NODES_CANT_BE_MOVED = "nodesCantBeMoved";
@@ -44,10 +49,6 @@ import javax.faces.context.FacesContext;
 	   public static final String RA_CHILD = "refreshAttributesOfChildren";
 	   public static final String RA_NODE = "refreshAttributesOfNode";
 	   public static final String RA_NODE_AND_CHILD = "refreshAttributesOfNodeAndChildren";
-	   public static final String CHARSET1 = "charset1";
-	   public static final String CHARSET2 = "charset2";
-	   public static final String CHARSET3 = "charset3";
-	   public static final String CHARSET4 = "charset4";
 	   
 		public static FacesMessage getMessage(String bundleName, String resourceId, Object[] params) 
 	   {

@@ -6,10 +6,11 @@ import java.util.Iterator;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.raven.table.Table;
 
-public class VOTableWrapper extends ArrayList<TableItemWrapper[]>
+//ArrayList<TIWList> ArrayList<TableItemWrapper[]>
+public class VOTableWrapper extends ArrayList<TIWList> 
 {
 	private static final long serialVersionUID = -1356513548995799683L;
-	public static final int MAX_ARR_LEN = 30;
+	public static final int MAX_COLUMNS = 30;
 	private boolean[] valid = null;
 	private Table table;
 	
@@ -20,9 +21,11 @@ public class VOTableWrapper extends ArrayList<TableItemWrapper[]>
 		for(Iterator<Object[]> it = x.getRowIterator();it.hasNext();)
 		{
 			Object[] a = it.next();
-			TableItemWrapper[] b = new TableItemWrapper[a.length];
+			//TableItemWrapper[] b = new TableItemWrapper[a.length];
+			TIWList b = new TIWList();
 			for(int i=0; i<a.length; i++)
-				b[i] = new TableItemWrapper(a[i]);
+				//b[i] = new TableItemWrapper(a[i]);
+				b.add(new TableItemWrapper(a[i]));
 			add(b);
 		}	
 	}
@@ -32,8 +35,7 @@ public class VOTableWrapper extends ArrayList<TableItemWrapper[]>
 		if(charset==null || charset.length()==0)
 			charset = "utf-8";
 		StringBuffer sb = new StringBuffer();
-		sb.append("<html>");
-		sb.append("<head>");
+		sb.append("<html><head>");
 		sb.append("<meta http-equiv=\"Content-Type\" content=\"text/html; charset="+charset+"\">");
 		sb.append("</head>");
 		sb.append("<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\" ><thead><tr>");
@@ -123,14 +125,13 @@ public class VOTableWrapper extends ArrayList<TableItemWrapper[]>
     {
 		if(valid==null)
 		{
-			valid = new boolean[MAX_ARR_LEN];
+			valid = new boolean[MAX_COLUMNS];
 			String[] x = getColumnNames();
-			for(int i=0;i<valid.length && i<MAX_ARR_LEN-1;i++)
+			for(int i=0;i<valid.length && i<MAX_COLUMNS-1;i++)
 				if(i<x.length) valid[i]=true;
 				else valid[i]=false;
 		}
 		return valid;
     }
-	
 
 }

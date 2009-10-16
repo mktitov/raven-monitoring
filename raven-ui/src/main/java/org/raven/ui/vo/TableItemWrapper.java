@@ -80,6 +80,7 @@ public class TableItemWrapper
 		if(getItemType()==VO_OTHER) return true;
 		return false; 
 	}
+	
 /*	
 	public ViewableObjectWrapper getWrapper()
 	{

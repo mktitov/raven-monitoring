@@ -1,16 +1,16 @@
 package org.raven.ui.vo;
 
 import java.io.InputStream;
-import java.util.List;
-
 import org.apache.commons.io.IOUtils;
 import org.raven.table.Table;
+import org.raven.tree.ActionViewableObject;
 import org.raven.tree.InvalidPathException;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.Node;
 import org.raven.ui.SessionBean;
 import org.raven.ui.node.NodeWrapper;
+import org.raven.ui.util.Messages;
 import org.raven.util.Utl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,6 +99,23 @@ public class ViewableObjectWrapper
 		return false;
 	}
 	
+	public String getConfirmationMessage()
+	{
+		if (viewableObject instanceof ActionViewableObject) {
+			ActionViewableObject a = (ActionViewableObject) viewableObject;
+			return a.getConfirmationMessage();
+		}
+		return null;
+	}
+
+	public boolean isActionVO()
+	{
+		if (viewableObject instanceof ActionViewableObject)  
+			return true; 
+		return false;
+	}
+	
+	
 	public boolean isImage()
 	{
 		if(isViewable() && getMimeGroup().equals(IMAGE)) return true;
@@ -140,20 +157,30 @@ public class ViewableObjectWrapper
 		if(isAction()) viewableObject.getData();
 		return null;
 	}
+
+	public String getRunAction()
+	{
+		Object o = viewableObject.getData();
+		if(o==null)
+			return Messages.getUiMessage(Messages.DONE);
+		return o.toString();
+	}
 	
 	public String getFromDate()
 	{
 		return Utl.formatDate(fd);
 	}
 	
-	public List<TableItemWrapper[]> getTableData()
+//	public List<TableItemWrapper[]> getTableData()
+//	public List<TIWList> getTableData()
+	public VOTWModel getTableData()
 	{
 		if(!isTable())
 		{
 			logger.error("VO isn't table !");
 			return null;
 		}
-		return tableWrapper;
+		return new VOTWModel(tableWrapper);
 	}
 	
 	public String[] getTableColumnNames()
