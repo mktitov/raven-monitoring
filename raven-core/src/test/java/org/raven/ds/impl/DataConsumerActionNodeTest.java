@@ -18,6 +18,7 @@
 package org.raven.ds.impl;
 
 import java.util.List;
+import java.util.Map;
 import org.junit.Test;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.test.PushOnDemandDataSource;
@@ -26,6 +27,7 @@ import org.raven.tree.ActionViewableObject;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.ActionNode;
+import org.raven.tree.impl.NodeAttributeImpl;
 
 /**
  *
@@ -40,6 +42,9 @@ public class DataConsumerActionNodeTest extends RavenCoreTestCase
         ds.setName("ds");
         tree.getRootNode().addAndSaveChildren(ds);
         assertTrue(ds.start());
+        NodeAttributeImpl consAttr = 
+                new NodeAttributeImpl("dsAttr", String.class, "dsAttrValue", null);
+        ds.addConsumerAttribute(consAttr);
 
         DataConsumerActionNode action = new DataConsumerActionNode();
         action.setName("action");
@@ -60,6 +65,11 @@ public class DataConsumerActionNodeTest extends RavenCoreTestCase
         assertEquals("1", actionVO.toString());
         assertEquals("1?", actionVO.getConfirmationMessage());
         assertEquals("test", actionVO.getData());
+
+        Map<String, NodeAttribute> sessAttrs = ds.getLastSessionAttributes();
+        assertNotNull(sessAttrs);
+        assertEquals(1, sessAttrs.size());
+        assertTrue(sessAttrs.containsKey("dsAttr"));
     }
 
     private void setExpression(DataConsumerActionNode action, String attrName, String expression)

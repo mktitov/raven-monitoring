@@ -38,6 +38,7 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass
 public class DataConsumerActionNode extends ActionNode
 {
+    public static final String DATA_SOURCE_ATTR = "dataSource";
     public static final String DATA_BINDING = "data";
     
     @NotNull @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
@@ -70,9 +71,17 @@ public class DataConsumerActionNode extends ActionNode
 
         public Consumer(Map<String, NodeAttribute> refreshAttributes)
         {
+            Map<String, NodeAttribute> attrs = new HashMap<String, NodeAttribute>();
+            if (refreshAttributes!=null)
+                attrs.putAll(refreshAttributes);
+            for (NodeAttribute attr: getNodeAttributes())
+                if (   DATA_SOURCE_ATTR.equals(attr.getParentAttribute())
+                    && !attrs.containsKey(attr.getName()))
+            {
+                attrs.put(attr.getName(), attr);
+            }
             dataList.clear();
-            dataSource.getDataImmediate(
-                    this, refreshAttributes==null? null : refreshAttributes.values());
+            dataSource.getDataImmediate(this, attrs.values());
         }
 
         public void setData(DataSource dataSource, Object data)
