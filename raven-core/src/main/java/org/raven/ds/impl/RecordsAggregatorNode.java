@@ -18,15 +18,16 @@
 package org.raven.ds.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.h2.api.AggregateFunction;
-import org.h2.store.Record;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.AggregateFunction;
 import org.raven.ds.DataSource;
+import org.raven.ds.Record;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.weda.annotations.constraints.NotNull;
@@ -39,20 +40,21 @@ import org.weda.annotations.constraints.NotNull;
 public class RecordsAggregatorNode extends AbstractSafeDataPipe
 {
     public static final String RECORD_BINDING = "record";
+    
     @NotNull @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
     private RecordSchemaNode recordSchema;
 
-    private ThreadLocal<Map<String, Aggregation>> aggregations;
+    private ThreadLocal<Map<GroupKey, Aggregation>> aggregations;
 
     @Override
     protected void initFields()
     {
         super.initFields();
-        aggregations = new ThreadLocal<Map<String, Aggregation>>(){
+        aggregations = new ThreadLocal<Map<GroupKey, Aggregation>>(){
             @Override
-            protected Map<String, Aggregation> initialValue()
+            protected Map<GroupKey, Aggregation> initialValue()
             {
-                return new HashMap<String, Aggregation>();
+                return new HashMap<GroupKey, Aggregation>();
             }
         };
     }
@@ -70,6 +72,19 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
     @Override
     protected void doSetData(DataSource dataSource, Object data) throws Exception
     {
+        if (data==null && !aggregations.get().isEmpty())
+        {
+            for (Aggregation agg: aggregations.get().values())
+            {
+                Record rec = agg.getRecord();
+                for (Map.Entry<String, AggregateFunction> entry: agg.getAggregateFunctions().entrySet())
+                    rec.setValue(entry.getKey(), entry.getValue().getAggregatedValue());
+                sendDataToConsumers(rec);
+            }
+            sendDataToConsumers(null);
+            return;
+        }
+        
         if (!(data instanceof Record))
             return;
         
@@ -80,10 +95,13 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
         Collection<Node> childs = getChildrens();
         if (childs!=null && !childs.isEmpty())
             for (Node child: childs)
-                if (child instanceof RecordsAggregatorGroupFieldNode)
-                    groupFields.add((RecordsAggregatorGroupFieldNode) child);
-                else if (child instanceof RecordsAggregatorValueFieldNode)
-                    valueFields.add((RecordsAggregatorValueFieldNode) child);
+                if (Status.STARTED.equals(child.getStatus()))
+                {
+                    if (child instanceof RecordsAggregatorGroupFieldNode)
+                        groupFields.add((RecordsAggregatorGroupFieldNode) child);
+                    else if (child instanceof RecordsAggregatorValueFieldNode)
+                        valueFields.add((RecordsAggregatorValueFieldNode) child);
+                }
         if (groupFields.isEmpty())
         {
             if (isLogLevelEnabled(LogLevel.WARN))
@@ -100,16 +118,16 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
         try
         {
             Object[] groupValues = new Object[groupFields.size()];
-            StringBuilder hashBuilder = new StringBuilder();
             for (int i=0; i<groupFields.size(); ++i)
-            {
-                Object groupValue = groupFields.get(i).getFieldValue();
-                hashBuilder.append(groupValue);
-            }
-            String hash = hashBuilder.toString();
-            Aggregation agg = aggregations.get().get(hash);
+                groupValues[i] = groupFields.get(i).getFieldValue();
+            GroupKey key = new GroupKey(groupValues);
+            Aggregation agg = aggregations.get().get(key);
             if (agg==null)
+            {
                 agg = createAggregation(groupFields, groupValues, valueFields);
+                aggregations.get().put(key, agg);
+            }
+            aggregateValues(agg, valueFields, (Record)data);
         }
         finally
         {
@@ -117,9 +135,109 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
         }
     }
 
-    private Aggregation createAggregation(List<RecordsAggregatorGroupFieldNode> groupFields, Object[] groupValues, List<RecordsAggregatorValueFieldNode> valueFields)
+    private Aggregation createAggregation(
+            List<RecordsAggregatorGroupFieldNode> groupFields, Object[] groupValues
+            , List<RecordsAggregatorValueFieldNode> valueFields)
+        throws Exception
     {
-        throw new UnsupportedOperationException("Not yet implemented");
+        Record record = recordSchema.createRecord();
+        for (int i=0; i<groupFields.size(); ++i)
+            record.setValue(groupFields.get(i).getName(), groupValues[i]);
+        Map<String, AggregateFunction> aggFunctions = new HashMap<String, AggregateFunction>();
+        for (RecordsAggregatorValueFieldNode valueField: valueFields)
+        {
+            AggregateFunction func = null;
+            switch(valueField.getAggregateFunction())
+            {
+                case AVG : func = new AvgAggregateFunction(); break;
+                case COUNT : func = new CountAggregateFunction(); break;
+                case MAX : func = new MaxAggregateFunction(); break;
+                case MIN : func = new MinAggregateFunction(); break;
+                case SUM : func = new SumAggregateFunction(); break;
+                case CUSTOM : func = new CustomAggregateFunction(valueField); break;
+            }
+            if (func==null)
+                throw new Exception(String.format(
+                        "Undefned aggregate function (%s)", valueField.getAggregateFunction()));
+            aggFunctions.put(valueField.getName(), func);
+        }
+        return new Aggregation(record, aggFunctions);
+    }
+
+    private void aggregateValues(
+            Aggregation agg, List<RecordsAggregatorValueFieldNode> valueFields, Record sourceRecord)
+        throws Exception
+    {
+        for (RecordsAggregatorValueFieldNode valueField: valueFields)
+        {
+            Object nextValue = valueField.getValue(sourceRecord);
+            agg.aggregate(valueField.getName(), nextValue);
+        }
+    }
+
+    private class CustomAggregateFunction implements AggregateFunction
+    {
+        private final RecordsAggregatorValueFieldNode fieldValueNode;
+        private Object value;
+        private int counter = 0;
+
+        public CustomAggregateFunction(RecordsAggregatorValueFieldNode fieldValueNode)
+        {
+            this.fieldValueNode = fieldValueNode;
+        }
+        public void aggregate(Object nextValue)
+        {
+            bindingSupport.put("value", value);
+            bindingSupport.put("nextValue", nextValue);
+            bindingSupport.put("counter", counter);
+            ++counter;
+            value = fieldValueNode.getAggregationExpression();
+        }
+
+        public Object getAggregatedValue()
+        {
+            return value;
+        }
+
+        public void finishAggregation() { }
+        public void startAggregation() { }
+    }
+
+    private class GroupKey
+    {
+        private final Object[] groupValues;
+        private final int hashCode;
+
+        public GroupKey(Object[] groupValues)
+        {
+            this.groupValues = groupValues;
+            hashCode = 53 + Arrays.hashCode(this.groupValues);
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (obj == null)
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            final GroupKey other = (GroupKey) obj;
+            if (!Arrays.equals(this.groupValues, other.groupValues))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return hashCode;
+        }
     }
 
     private class Aggregation
@@ -133,9 +251,19 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
             this.aggFunctions = aggFunctions;
         }
 
-        private AggregateFunction getAggregateFunction(String fieldName)
+        public Record getRecord()
         {
-            return aggFunctions.get(fieldName);
+            return record;
+        }
+
+        public Map<String, AggregateFunction> getAggregateFunctions()
+        {
+            return aggFunctions;
+        }
+
+        public void aggregate(String fieldName, Object value)
+        {
+            aggFunctions.get(fieldName).aggregate(value);
         }
     }
 }

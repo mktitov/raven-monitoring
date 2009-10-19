@@ -20,7 +20,6 @@ package org.raven.ds.impl;
 import org.raven.annotations.Parameter;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;
-import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.constraints.NotNull;
@@ -31,6 +30,8 @@ import org.weda.annotations.constraints.NotNull;
  */
 public class RecordsAggregatorField extends BaseNode
 {
+    public final static String FIELD_VALUE_EXPRESSION_ATTR = "fieldValueExpression";
+
     @Parameter
     private String fieldName;
     

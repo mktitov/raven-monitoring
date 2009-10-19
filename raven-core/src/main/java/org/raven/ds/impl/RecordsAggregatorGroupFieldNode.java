@@ -19,14 +19,13 @@ package org.raven.ds.impl;
 
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
-import org.raven.tree.impl.BaseNode;
 
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=RecordsAggregatorNode.class)
-public class RecordsAggregatorGroupFieldNode extends BaseNode
+public class RecordsAggregatorGroupFieldNode extends RecordsAggregatorField
 {
     @Parameter
     private Object fieldValue;
