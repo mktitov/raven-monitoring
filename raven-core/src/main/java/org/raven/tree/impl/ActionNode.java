@@ -230,7 +230,7 @@ public class ActionNode extends BaseNode implements Viewable
             bindingSupport.put(REFRESH_ATTRIBUTES_BINDING, refreshAttributes);
             try{
                 addToBindingSupport(additionalBindings);
-                return confirmationMessage;
+                return getNodeAttribute(CONFIRMATION_MESSAGE_ATTR).getValue();
             }finally {
                 bindingSupport.reset();
             }
