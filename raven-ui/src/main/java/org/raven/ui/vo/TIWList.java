@@ -21,7 +21,7 @@ public class TIWList extends ArrayList<TableItemWrapper>
 	public TableItemWrapper get(int i)
 	{
 		try {
-			logger.warn("on get: "+i);
+		//	logger.warn("on get: "+i);
 			return super.get(i);
 		} 
 		catch(IndexOutOfBoundsException e){

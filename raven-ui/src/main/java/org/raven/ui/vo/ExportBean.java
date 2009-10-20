@@ -57,8 +57,10 @@ public class ExportBean
 			}
 			if(ct!=null)
 			{
-				VOTableWrapper lst = (VOTableWrapper) ct.getValue();
-				setTable(lst);
+				//VOTableWrapper lst = (VOTableWrapper) ct.getValue();
+				VOTWModel lst = (VOTWModel) ct.getValue();
+				VOTableWrapper x = (VOTableWrapper) lst.getWrappedData();
+				setTable(x);
 			} else logger.warn("export: not found table");
 		}
 		catch(ClassCastException e)	{ logger.error("export: ",e); }

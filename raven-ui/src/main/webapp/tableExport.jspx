@@ -55,15 +55,18 @@
   										text="#{msgs.delimiter}" 
   										background="light">
   									  	<tr:panelList>
-  										<tr:commandLink
+  										<tr:commandLink 
+  											immediate="true"
 											text="#{msgs.semicolon}"
 											useWindow="true" 
 											actionListener="#{export.exportToCSVwithSemi}"/>
 										<tr:commandLink
+											immediate="true"
 											text="#{msgs.tab}"
 											useWindow="true" 
 											actionListener="#{export.exportToCSVwithTab}"/>
 										<tr:commandLink
+											immediate="true"
 											text="#{msgs.comma}"
 											useWindow="true" 
 											actionListener="#{export.exportToCSVwithComma}"/>
