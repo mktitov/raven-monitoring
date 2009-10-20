@@ -17,9 +17,13 @@
 
 package org.raven.ds.impl;
 
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.PushDataSource;
+import org.raven.ds.AggregateFunctionType;
+import org.raven.ds.Record;
+import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.test.DataCollector;
 import org.raven.test.RavenCoreTestCase;
@@ -60,18 +64,116 @@ public class RecordsAggregatorNodeTest extends RavenCoreTestCase
         aggregator.setRecordSchema(schema);
 
         createGroupField("grpField1", null);
-        createGroupField("grpField2", "data['grpField2']");
+        createGroupField("grpField2", "record['grpField2']");
 
+        createValueField("value1", null, AggregateFunctionType.SUM, null);
+        createValueField("value2", "record['value1']+record['value2']"
+                , AggregateFunctionType.CUSTOM, "(value?:0)+nextValue");
 
-
+        collector = new DataCollector();
+        collector.setName("collector");
+        tree.getRootNode().addAndSaveChildren(collector);
+        collector.setDataSource(aggregator);
+        assertTrue(collector.start());
     }
 
     @Test
-    public void test()
+    public void test() throws RecordException
     {
-        
+        ds.pushData(createRecord("g1", 1, 1, 10.));
+        ds.pushData(createRecord("g1", 1, 2, 20.));
+        ds.pushData(createRecord("g2", 2, 2, 20.));
+        ds.pushData(null);
+
+        List data = collector.getDataList();
+        assertNotNull(data);
+        assertEquals(3, data.size());
+        assertNull(data.get(2));
+
+        assertTrue(data.get(0) instanceof Record);
+        assertTrue(data.get(1) instanceof Record);
+
+        boolean foundG1 = false;
+        boolean foundG2 = false;
+        for (int i=0; i<2; ++i)
+        {
+            Record rec = (Record) data.get(i);
+            if (rec.getValue("grpField1").equals("g1"))
+            {
+                foundG1 = true;
+                assertEquals(new Integer(1), rec.getValue("grpField2"));
+                assertEquals(new Integer(3), rec.getValue("value1"));
+                assertEquals(new Double(33.), rec.getValue("value2"));
+            } else if (rec.getValue("grpField1").equals("g2"))
+            {
+                foundG2 = true;
+                assertEquals(new Integer(2), rec.getValue("grpField2"));
+                assertEquals(new Integer(2), rec.getValue("value1"));
+                assertEquals(new Double(22.), rec.getValue("value2"));
+                
+            }
+        }
+        assertTrue(foundG1);
+        assertTrue(foundG2);
     }
 
+    @Test
+    public void avgFuncTest() throws RecordException, Exception
+    {
+        testFunction(AggregateFunctionType.AVG, new Integer[]{10, 2}, 6);
+    }
+
+    @Test
+    public void minFuncTest() throws RecordException, Exception
+    {
+        testFunction(AggregateFunctionType.MIN, new Integer[]{10, 2}, 2);
+    }
+
+    @Test
+    public void maxFuncTest() throws RecordException, Exception
+    {
+        testFunction(AggregateFunctionType.MAX, new Integer[]{10, 2}, 10);
+    }
+
+    @Test
+    public void resetOldValuesTest() throws Exception
+    {
+        testFunction(AggregateFunctionType.MAX, new Integer[]{10, 2}, 10);
+        collector.getDataList().clear();
+        testFunction(AggregateFunctionType.MAX, new Integer[]{1}, 1);
+    }
+
+    private void testFunction(AggregateFunctionType func, Integer[] values, Integer res)
+            throws Exception
+    {
+        RecordsAggregatorValueFieldNode valueField =
+                (RecordsAggregatorValueFieldNode) aggregator.getChildren("value1");
+        valueField.setAggregateFunction(func);
+
+        for (Integer value: values)
+            ds.pushData(createRecord("g1", 1, value, 10.));
+        ds.pushData(null);
+
+        List data = collector.getDataList();
+        assertNotNull(data);
+        assertEquals(2, data.size());
+        assertNull(data.get(1));
+        assertTrue(data.get(0) instanceof Record);
+        Record rec = (Record) data.get(0);
+        assertEquals(res, rec.getValue("value1"));
+    }
+
+    private Record createRecord(String grpField1, Integer grpField2, Integer value1, Double value2)
+            throws RecordException
+    {
+        Record rec = schema.createRecord();
+        rec.setValue("grpField1", grpField1);
+        rec.setValue("grpField2", grpField2);
+        rec.setValue("value1", value1);
+        rec.setValue("value2", value2);
+
+        return rec;
+    }
 
     private void createGroupField(String fieldName, String fieldExpression) throws Exception
     {
@@ -85,5 +187,26 @@ public class RecordsAggregatorNodeTest extends RavenCoreTestCase
                     .setValue(fieldExpression);
         } else
             groupField.setFieldName(fieldName);
+        assertTrue(groupField.start());
+    }
+
+    private void createValueField(
+            String fieldName, String fieldExpression, AggregateFunctionType aggType
+            , String aggregationExpression)
+        throws Exception
+    {
+        RecordsAggregatorValueFieldNode valueField = new RecordsAggregatorValueFieldNode();
+        valueField.setName(fieldName);
+        aggregator.addAndSaveChildren(valueField);
+        if (fieldExpression!=null)
+        {
+            valueField.setUseFieldValueExpression(Boolean.TRUE);
+            valueField.getNodeAttribute(RecordsAggregatorField.FIELD_VALUE_EXPRESSION_ATTR)
+                    .setValue(fieldExpression);
+        } else
+            valueField.setFieldName(fieldName);
+        valueField.setAggregateFunction(aggType);
+        valueField.setAggregationExpression(aggregationExpression);
+        assertTrue(valueField.start());
     }
 }

@@ -27,16 +27,4 @@ import org.raven.annotations.Parameter;
 @NodeClass(parentNode=RecordsAggregatorNode.class)
 public class RecordsAggregatorGroupFieldNode extends RecordsAggregatorField
 {
-    @Parameter
-    private Object fieldValue;
-
-    public Object getFieldValue()
-    {
-        return fieldValue;
-    }
-
-    public void setFieldValue(Object fieldValue)
-    {
-        this.fieldValue = fieldValue;
-    }
 }

@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.AggregateFunction;
@@ -74,15 +75,22 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
     {
         if (data==null && !aggregations.get().isEmpty())
         {
-            for (Aggregation agg: aggregations.get().values())
+            try
             {
-                Record rec = agg.getRecord();
-                for (Map.Entry<String, AggregateFunction> entry: agg.getAggregateFunctions().entrySet())
-                    rec.setValue(entry.getKey(), entry.getValue().getAggregatedValue());
-                sendDataToConsumers(rec);
+                for (Aggregation agg: aggregations.get().values())
+                {
+                    Record rec = agg.getRecord();
+                    for (Map.Entry<String, AggregateFunction> entry: agg.getAggregateFunctions().entrySet())
+                        rec.setValue(entry.getKey(), entry.getValue().getAggregatedValue());
+                    sendDataToConsumers(rec);
+                }
+                sendDataToConsumers(null);
+                return;
             }
-            sendDataToConsumers(null);
-            return;
+            finally
+            {
+                aggregations.remove();
+            }
         }
         
         if (!(data instanceof Record))
@@ -119,7 +127,7 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
         {
             Object[] groupValues = new Object[groupFields.size()];
             for (int i=0; i<groupFields.size(); ++i)
-                groupValues[i] = groupFields.get(i).getFieldValue();
+                groupValues[i] = groupFields.get(i).getValue((Record)data);
             GroupKey key = new GroupKey(groupValues);
             Aggregation agg = aggregations.get().get(key);
             if (agg==null)
@@ -133,6 +141,13 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
         {
             bindingSupport.reset();
         }
+    }
+
+    @Override
+    public void formExpressionBindings(Bindings bindings)
+    {
+        super.formExpressionBindings(bindings);
+        bindingSupport.addTo(bindings);
     }
 
     private Aggregation createAggregation(
