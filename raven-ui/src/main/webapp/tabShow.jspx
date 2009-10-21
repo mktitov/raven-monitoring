@@ -378,7 +378,7 @@ partialTriggers=":poolStatus"
 	  	  				valign="middle">
 	  	  				<tr:spacer width="15" height="10"/>
  -->	  	  				
-	  	  			 	<tr:outputText value="' #{row.runAction} '"/>
+	  	  			 	<tr:outputFormatted value="' #{row.runAction} '"/>
 <!-- 	  	  			 	
 	  	  			 	<tr:spacer width="15" height="10"/>
 	  	  			</tr:panelHorizontalLayout>  -->
