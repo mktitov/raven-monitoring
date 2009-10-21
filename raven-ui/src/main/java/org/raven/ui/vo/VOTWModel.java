@@ -24,7 +24,9 @@ public class VOTWModel extends SortableModel implements Comparator<TIWList>
 		if(x!=null && x.size()>0)
 		{
 			//columns = x.get(0).length;
-			columns = Math.min(x.get(0).size(),VOTableWrapper.MAX_COLUMNS);
+			int a = x.get(0).size();
+			if(VOTableWrapper.addCounter) a++;
+			columns = Math.min(a,VOTableWrapper.MAX_COLUMNS);
 		}	
 	}
 
@@ -34,7 +36,7 @@ public class VOTWModel extends SortableModel implements Comparator<TIWList>
 	{
 		try {
 			int i = Integer.parseInt(property);
-			if(i >= columns) 
+			if(i >= columns || i<0) 
 				return -1; 
 			return i;
 		} catch(Exception e) { 
@@ -44,7 +46,7 @@ public class VOTWModel extends SortableModel implements Comparator<TIWList>
 	
 	public boolean isSortable(String property)
 	{
-		if( getColNum(property) > 0 ) return true;
+		if( getColNum(property) >= 0 ) return true;
 		return false; 
 	}
 	
@@ -88,10 +90,12 @@ public class VOTWModel extends SortableModel implements Comparator<TIWList>
 */
 	public int compare(TIWList o1, TIWList o2) 
 	{
+		if(o1==null) return 0;
+		if(o2==null) return 0;
 		for(SortCriterion sc : scList)
 		{
 			int cn = getColNum(sc.getProperty());
-			if(cn<0) continue;
+			if(cn<0 || cn>=o1.size()) continue;
 			String s1 = o1.get(cn).getString();
 			String s2 = o2.get(cn).getString();
 			int c = compareAsDouble(s1, s2);

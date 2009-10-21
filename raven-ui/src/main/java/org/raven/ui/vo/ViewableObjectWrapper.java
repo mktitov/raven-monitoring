@@ -192,7 +192,7 @@ public class ViewableObjectWrapper
 		}
 		return tableWrapper.getColumnNames();
 	}
-
+/*
     public boolean[] getValid()
     {
 		if(!isTable())
@@ -201,6 +201,16 @@ public class ViewableObjectWrapper
 			return null;
 		}
 		return tableWrapper.getValid();
+    }
+*/
+    public int getColumnsCount()
+    {
+		if(!isTable())
+		{
+			logger.error("getColumnsCount - VO isn't table");
+			return 0;
+		}
+		return tableWrapper.getColumnsCount();
     }
     
 	public String getMimeGroup()

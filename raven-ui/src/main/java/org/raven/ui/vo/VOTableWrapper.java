@@ -10,19 +10,24 @@ import org.raven.table.Table;
 public class VOTableWrapper extends ArrayList<TIWList> 
 {
 	private static final long serialVersionUID = -1356513548995799683L;
+	public static final boolean addCounter = true;
 	public static final int MAX_COLUMNS = 30;
-	private boolean[] valid = null;
 	private Table table;
 	
 	public VOTableWrapper(Table x)
 	{
 		super();
 		table = x;
+		int count = 0;
 		for(Iterator<Object[]> it = x.getRowIterator();it.hasNext();)
 		{
 			Object[] a = it.next();
 			//TableItemWrapper[] b = new TableItemWrapper[a.length];
 			TIWList b = new TIWList();
+		//	int k = 0; 
+			
+			if(addCounter)
+				b.add(new TableItemWrapper(++count));
 			for(int i=0; i<a.length; i++)
 				//b[i] = new TableItemWrapper(a[i]);
 				b.add(new TableItemWrapper(a[i]));
@@ -118,20 +123,35 @@ public class VOTableWrapper extends ArrayList<TIWList>
 */	
 	public String[] getColumnNames()
 	{
+		if(VOTableWrapper.addCounter)
+		{
+			ArrayList<String> a = new ArrayList<String>();
+			a.add("");
+			for(String x : table.getColumnNames())
+				a.add(x);
+			return a.toArray(new String[] {});
+		}
 		return table.getColumnNames();
 	}
 
+	public int getColumnsCount()
+	{
+		return getColumnNames().length;
+	}
+/*	
     public boolean[] getValid()
     {
 		if(valid==null)
 		{
 			valid = new boolean[MAX_COLUMNS];
 			String[] x = getColumnNames();
+			int z = x.length;
+			if(VOTableWrapper.addCounter) z++;
 			for(int i=0;i<valid.length && i<MAX_COLUMNS-1;i++)
-				if(i<x.length) valid[i]=true;
-				else valid[i]=false;
+				if(i < z) valid[i]=true;
+					else valid[i]=false;
 		}
 		return valid;
     }
-
+*/
 }

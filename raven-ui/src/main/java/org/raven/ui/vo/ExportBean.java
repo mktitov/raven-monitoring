@@ -2,6 +2,7 @@ package org.raven.ui.vo;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -97,7 +98,17 @@ public class ExportBean
 	{
 		FacesContext fc = FacesContext.getCurrentInstance();
 		HttpServletResponse response = (HttpServletResponse) fc.getExternalContext().getResponse();
-		response.setHeader("Content-disposition", "attachment; filename=" + getFileName(ext));
+		String fName = getFileName(ext);
+		String fn="noname";
+		try {
+			fn = new String(fName.getBytes(charset),"Cp1252");			
+			//fn = javax.mail.internet.MimeUtility.encodeText(fName, charset.name(), "B");
+		} catch (UnsupportedEncodingException e1) {
+			SessionBean sb = SessionBean.getInstance();
+			String u = "account='"+sb.getAccountName()+"' ip='"+sb.getRemoteIp()+"'";
+			logger.info("on writeResponce, {} : {}",u,e1.getMessage());
+		}
+		response.setHeader("Content-disposition", "attachment; filename=" + fn);
 		response.setContentType(ct);
 		response.setCharacterEncoding(charset.toString());
 
@@ -112,7 +123,7 @@ public class ExportBean
 			os.write(z);
 		   	//out.print(x);
 		}
-		catch (IOException e) { logger.error("",e); }
+		catch (IOException e) { logger.error("on writeResponce: ",e); }
 		finally { try {os.close();} catch(Exception e) {}}
 		fc.responseComplete(); 			
 	}

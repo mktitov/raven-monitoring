@@ -253,6 +253,7 @@ action="#{sBean.reloadRightFrame}"
         </tr:panelButtonBar>
         
   	</tr:showDetailItem>
+  	
 </tr:panelAccordion>
 </tr:form>
 <tr:spacer height="5" />
@@ -284,6 +285,7 @@ partialTriggers=":poolStatus"
   		defaultFacet="default">
 
   		<f:facet name="default">
+  		<tr:subform>
 	  	  	<tr:panelHorizontalLayout halign="left" > 
 	  	  		<tr:spacer width="40" height="0" />
 				<tr:commandLink 
@@ -298,6 +300,7 @@ partialTriggers=":poolStatus"
 						value="#{row.uid}"/>
 				</tr:commandLink>
 				</tr:panelHorizontalLayout>
+		</tr:subform>
   		</f:facet>
 
 <!-- show ravenText --> 
@@ -310,6 +313,7 @@ partialTriggers=":poolStatus"
 
 <!-- show nodeUrl --> 
 	  	<f:facet name="nodeUrl">
+	  	<tr:subform>
 	  	<tr:panelGroupLayout layout="vertical">
 	  	<tr:spacer width="0" height="4" />
 	  	  	<tr:panelHorizontalLayout  
@@ -354,11 +358,13 @@ partialTriggers=":poolStatus"
 			</tr:commandLink>
 			</tr:panelHorizontalLayout>
 	  	</tr:panelGroupLayout>
+	  	</tr:subform>
 		</f:facet>
 <!-- *********** -->		
 <!-- show action -->
 <!-- *********** --> 
 	  	<f:facet name="action">
+	  	<tr:subform>
 	  	<tr:panelGroupLayout layout="vertical">
 	  		<tr:spacer width="0" height="4" />
 	  	  	<tr:panelHorizontalLayout  halign="left" >
@@ -366,7 +372,16 @@ partialTriggers=":poolStatus"
 	  	  		<tr:panelPopup 
 	  	  			text="#{row.idVO}"
 	  	  			onclick="if (!confirm('#{row.confirmationMessage}')) return false">
-	  	  			<tr:outputText value="#{row.runAction}"/>
+<!-- 	  	  			
+	  	  			<tr:panelHorizontalLayout 
+	  	  				halign="center" 
+	  	  				valign="middle">
+	  	  				<tr:spacer width="15" height="10"/>
+ -->	  	  				
+	  	  			 	<tr:outputText value="' #{row.runAction} '"/>
+<!-- 	  	  			 	
+	  	  			 	<tr:spacer width="15" height="10"/>
+	  	  			</tr:panelHorizontalLayout>  -->
 	  	  		</tr:panelPopup>
 <!-- 	  	  		
 				<tr:commandLink 
@@ -385,7 +400,7 @@ partialTriggers=":poolStatus"
  -->					
 			</tr:panelHorizontalLayout>
 	  	</tr:panelGroupLayout>
-			
+		</tr:subform>	
 		</f:facet>
 <!-- *********** -->		
 <!-- show image -->
@@ -417,6 +432,7 @@ partialTriggers=":poolStatus"
 <!-- show table -->
 <!-- *********** -->
 	<f:facet name="ravenTable">
+	<tr:subform>
 	  	  	<tr:panelHorizontalLayout halign="left" inlineStyle="width:100%" >
 	  	  	<tr:spacer width="30" height="0" />
 		<tr:panelGroupLayout layout="vertical"  >
@@ -431,10 +447,12 @@ partialTriggers=":poolStatus"
                 width="100%"
                 var="rowa"
                 varStatus="rowN" >
-                <tr:column width="4%" 
+                <!-- sortable="true"  sortProperty="0"  -->
+                <tr:column width="4%"   
                 	align="center" 
                 	rowHeader="true">
                 	<f:facet name="header">
+                	<tr:subform>
   	    		       	<tr:panelPopup 
                 			title="#{msgs.export}"
                 			shortDesc="#{msgs.export}" 
@@ -503,20 +521,22 @@ partialTriggers=":poolStatus"
 						</tr:panelList>
 							  
 						</tr:panelPopup>
+						</tr:subform>
     				</f:facet>
-                	<tr:outputText value="#{rowN.index+1}"/>
+    				<!-- +++++   #{rowN.index+1} -->
+                	<tr:outputText value="#{rowa[0].item}"/>
                 </tr:column>
           <!-- +++++ -->
-          <!-- ALL COLUMNS -->
+          <!-- ALL COLUMNS rendered="#{row.valid[vxStat.index]}"  -->
           <!-- +++++ -->
  				<tr:forEach    
                   	varStatus="vxStat"
-                  	begin="0" 
+                  	begin="1" 
                   	end="16"  
                   	var="nameAZX" >
-                	<tr:column sortable="true"  sortProperty="#{vxStat.index+1}"
+                	<tr:column sortable="true"  sortProperty="#{vxStat.index}"
                 		align="left"
-						rendered="#{row.valid[vxStat.index]}"                      
+						rendered="#{vxStat.index &lt; row.columnsCount}"                      
                    		headerText="#{row.tableColumnNames[vxStat.index]}">
                    		<tr:panelHorizontalLayout halign="left" >
                    		<tr:outputFormatted 
@@ -560,7 +580,8 @@ partialTriggers=":poolStatus"
            	</tr:table>
 			<tr:spacer height="6" />
 	 	</tr:panelGroupLayout>
-		</tr:panelHorizontalLayout>	 	 
+		</tr:panelHorizontalLayout>
+		</tr:subform>	 	 
   	</f:facet>
   	
 </tr:switcher>
