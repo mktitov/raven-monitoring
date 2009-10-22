@@ -432,7 +432,6 @@ partialTriggers=":poolStatus"
 <!-- show table -->
 <!-- *********** -->
 	<f:facet name="ravenTable">
-	<tr:subform>
 	  	  	<tr:panelHorizontalLayout halign="left" inlineStyle="width:100%" >
 	  	  	<tr:spacer width="30" height="0" />
 		<tr:panelGroupLayout layout="vertical"  >
@@ -452,7 +451,7 @@ partialTriggers=":poolStatus"
                 	align="center" 
                 	rowHeader="true">
                 	<f:facet name="header">
-                	<tr:subform>
+                	
   	    		       	<tr:panelPopup 
                 			title="#{msgs.export}"
                 			shortDesc="#{msgs.export}" 
@@ -491,17 +490,14 @@ partialTriggers=":poolStatus"
   										background="light">
   									  	<tr:panelList>
   										<tr:commandLink 
-  											immediate="true"
 											text="#{msgs.semicolon}"
 											useWindow="true" 
 											actionListener="#{export.exportToCSVwithSemi}"/>
 										<tr:commandLink
-											immediate="true"
 											text="#{msgs.tab}"
 											useWindow="true" 
 											actionListener="#{export.exportToCSVwithTab}"/>
 										<tr:commandLink
-											immediate="true"
 											text="#{msgs.comma}"
 											useWindow="true" 
 											actionListener="#{export.exportToCSVwithComma}"/>
@@ -521,7 +517,6 @@ partialTriggers=":poolStatus"
 						</tr:panelList>
 							  
 						</tr:panelPopup>
-						</tr:subform>
     				</f:facet>
     				<!-- +++++   #{rowN.index+1} -->
                 	<tr:outputText value="#{rowa[0].item}"/>
@@ -581,7 +576,6 @@ partialTriggers=":poolStatus"
 			<tr:spacer height="6" />
 	 	</tr:panelGroupLayout>
 		</tr:panelHorizontalLayout>
-		</tr:subform>	 	 
   	</f:facet>
   	
 </tr:switcher>
