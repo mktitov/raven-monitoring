@@ -17,8 +17,6 @@
 
 package org.raven.template.impl;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.raven.RavenRuntimeException;
 import org.raven.tree.AttributeValueHandler;
 import org.raven.tree.AttributeValueHandlerFactory;
