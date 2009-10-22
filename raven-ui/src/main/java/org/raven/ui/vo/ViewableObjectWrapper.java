@@ -180,6 +180,7 @@ public class ViewableObjectWrapper
 			logger.error("VO isn't table !");
 			return null;
 		}
+		tableWrapper.init();
 		return new VOTWModel(tableWrapper);
 	}
 	

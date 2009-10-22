@@ -285,7 +285,7 @@ partialTriggers=":poolStatus"
   		defaultFacet="default">
 
   		<f:facet name="default">
-  		<tr:subform>
+<!--  		<tr:subform>  -->
 	  	  	<tr:panelHorizontalLayout halign="left" > 
 	  	  		<tr:spacer width="40" height="0" />
 				<tr:commandLink 
@@ -300,7 +300,7 @@ partialTriggers=":poolStatus"
 						value="#{row.uid}"/>
 				</tr:commandLink>
 				</tr:panelHorizontalLayout>
-		</tr:subform>
+ <!--  		</tr:subform>  -->
   		</f:facet>
 
 <!-- show ravenText --> 
@@ -313,7 +313,7 @@ partialTriggers=":poolStatus"
 
 <!-- show nodeUrl --> 
 	  	<f:facet name="nodeUrl">
-	  	<tr:subform>
+<!--  	  	<tr:subform> -->
 	  	<tr:panelGroupLayout layout="vertical">
 	  	<tr:spacer width="0" height="4" />
 	  	  	<tr:panelHorizontalLayout  
@@ -358,13 +358,13 @@ partialTriggers=":poolStatus"
 			</tr:commandLink>
 			</tr:panelHorizontalLayout>
 	  	</tr:panelGroupLayout>
-	  	</tr:subform>
+<!-- 	  	</tr:subform>  -->
 		</f:facet>
 <!-- *********** -->		
 <!-- show action -->
 <!-- *********** --> 
 	  	<f:facet name="action">
-	  	<tr:subform>
+<!-- 	  	<tr:subform>  -->
 	  	<tr:panelGroupLayout layout="vertical">
 	  		<tr:spacer width="0" height="4" />
 	  	  	<tr:panelHorizontalLayout  halign="left" >
@@ -400,7 +400,7 @@ partialTriggers=":poolStatus"
  -->					
 			</tr:panelHorizontalLayout>
 	  	</tr:panelGroupLayout>
-		</tr:subform>	
+<!-- 		</tr:subform>  -->	
 		</f:facet>
 <!-- *********** -->		
 <!-- show image -->

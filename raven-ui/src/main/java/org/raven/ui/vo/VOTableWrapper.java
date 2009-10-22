@@ -12,14 +12,21 @@ public class VOTableWrapper extends ArrayList<TIWList>
 	private static final long serialVersionUID = -1356513548995799683L;
 	public static final boolean addCounter = true;
 	public static final int MAX_COLUMNS = 30;
-	private Table table;
+	private Table table = null;
 	
 	public VOTableWrapper(Table x)
 	{
 		super();
 		table = x;
+		//init();
+	}
+	
+	public void init()
+	{
+		if(table==null) return;
+		clear();
 		int count = 0;
-		for(Iterator<Object[]> it = x.getRowIterator();it.hasNext();)
+		for(Iterator<Object[]> it = table.getRowIterator();it.hasNext();)
 		{
 			Object[] a = it.next();
 			//TableItemWrapper[] b = new TableItemWrapper[a.length];

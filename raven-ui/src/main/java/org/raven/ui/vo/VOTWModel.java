@@ -6,18 +6,23 @@ import java.util.Comparator;
 import java.util.List;
 import org.apache.myfaces.trinidad.model.SortCriterion;
 import org.apache.myfaces.trinidad.model.SortableModel;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 
 // TableItemWrapper[]
 
 public class VOTWModel extends SortableModel implements Comparator<TIWList>
 {
+ //   private static final Logger logger = LoggerFactory.getLogger(VOTWModel.class);	
 	private int columns = 0;
 	//private ArrayList<TableItemWrapper[]> data;
 	private ArrayList<TIWList> data;
 	private ArrayList<SortCriterion> scList = new ArrayList<SortCriterion>();
+//	private String name = "noName";
 	
-	//public VOTWModel(ArrayList<TableItemWrapper[]> x)
-	public VOTWModel(ArrayList<TIWList> x)
+	//public VOTWModel(ArrayList<TableItemWrapper[]> x) VOTableWrapper
+	//public VOTWModel(ArrayList<TIWList> x)
+	public VOTWModel(VOTableWrapper x)
 	{
 		setWrappedData(x);
 		data = x;
@@ -28,6 +33,8 @@ public class VOTWModel extends SortableModel implements Comparator<TIWList>
 			if(VOTableWrapper.addCounter) a++;
 			columns = Math.min(a,VOTableWrapper.MAX_COLUMNS);
 		}	
+//		name = this.toString();
+		//logger.warn("new VOTWModel: "+name+" , columns="+columns+" , tWrapper="+x.toString());
 	}
 
 	//ArrayList<TableItemWrapper[]>
@@ -53,9 +60,11 @@ public class VOTWModel extends SortableModel implements Comparator<TIWList>
 	public void setSortCriteria(List<SortCriterion> criteria)
 	{
 		scList.clear();
+	//	logger.warn("VOTWModel: "+name+" setSortCriteria:"+criteria.get(0).getProperty()+" crCount:"+criteria.size());
 		for(SortCriterion x : criteria)
 			scList.add(x);
 		Collections.sort(data, this);
+	///	logger.warn("VOTWModel: "+name+" setSortCriteria ok, data.size="+data.size());
 	}
 
 	public List<SortCriterion> getSortCriteria()	
@@ -90,6 +99,7 @@ public class VOTWModel extends SortableModel implements Comparator<TIWList>
 */
 	public int compare(TIWList o1, TIWList o2) 
 	{
+//		logger.warn("sort!");
 		if(o1==null) return 0;
 		if(o2==null) return 0;
 		for(SortCriterion sc : scList)
