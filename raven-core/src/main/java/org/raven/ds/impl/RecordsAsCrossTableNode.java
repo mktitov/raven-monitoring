@@ -18,23 +18,30 @@
 package org.raven.ds.impl;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
+import org.raven.table.TableImpl;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.beans.ObjectUtils;
 
 /**
  *
  * @author Mikhail Titov
  */
+@NodeClass
 public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
 {
+    public static final String CELLVALUE_FIELDS_EXPRESSION_ATTR = "cellValueFieldsExpression";
+    public static final String MASTER_FIELDS_EXPRESSION_ATTR = "masterFieldsExpression";
+    public static final String SECONDARY_FIELDS_EXPRESSION_ATTR = "secondaryFieldsExpression";
+    
     @NotNull @Parameter
     private String masterFields;
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
@@ -50,14 +57,27 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
     private Boolean useSecondaryFieldsExpression;
 
     @NotNull @Parameter
-    private String cellValueField;
+    private String cellValueFields;
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
-    private String callValueExpression;
+    private String cellValueFieldsExpression;
     @NotNull @Parameter(defaultValue="false")
-    private Boolean useCellValueFieldExpression;
+    private Boolean useCellValueFieldsExpression;
+
+    @Parameter
+    private String firstColumnName;
 
     private String[] masterFieldNames;
     private String[] secondaryFieldNames;
+    private String[] cellValueFieldNames;
+
+    private ThreadLocal<State> states;
+
+    @Override
+    protected void initFields()
+    {
+        super.initFields();
+        states = new ThreadLocal<State>();
+    }
 
     @Override
     protected void doStart() throws Exception
@@ -65,26 +85,47 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
         super.doStart();
         masterFieldNames = masterFields.split("\\s*,\\s*");
         secondaryFieldNames = secondaryFields.split("\\s*,\\s*");
+        cellValueFieldNames = cellValueFields.split("\\s*,\\s*");
     }
 
-    public String getCallValueExpression()
+    public String getFirstColumnName()
     {
-        return callValueExpression;
+        return firstColumnName;
     }
 
-    public void setCallValueExpression(String callValueExpression)
+    public void setFirstColumnName(String firstColumnName)
     {
-        this.callValueExpression = callValueExpression;
+        this.firstColumnName = firstColumnName;
     }
 
-    public String getCellValueField()
+    public String getCellValueFields()
     {
-        return cellValueField;
+        return cellValueFields;
     }
 
-    public void setCellValueField(String cellValueField)
+    public void setCellValueFields(String cellValueFields)
     {
-        this.cellValueField = cellValueField;
+        this.cellValueFields = cellValueFields;
+    }
+
+    public String getCellValueFieldsExpression()
+    {
+        return cellValueFieldsExpression;
+    }
+
+    public void setCellValueFieldsExpression(String cellValueFieldsExpression)
+    {
+        this.cellValueFieldsExpression = cellValueFieldsExpression;
+    }
+
+    public Boolean getUseCellValueFieldsExpression()
+    {
+        return useCellValueFieldsExpression;
+    }
+
+    public void setUseCellValueFieldsExpression(Boolean useCellValueFieldsExpression)
+    {
+        this.useCellValueFieldsExpression = useCellValueFieldsExpression;
     }
 
     public String getMasterFields()
@@ -127,16 +168,6 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
         this.secondaryFieldsExpression = secondaryFieldsExpression;
     }
 
-    public Boolean getUseCellValueFieldExpression()
-    {
-        return useCellValueFieldExpression;
-    }
-
-    public void setUseCellValueFieldExpression(Boolean useCellValueFieldExpression)
-    {
-        this.useCellValueFieldExpression = useCellValueFieldExpression;
-    }
-
     public Boolean getUseMasterFieldsExpression()
     {
         return useMasterFieldsExpression;
@@ -160,6 +191,42 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
     @Override
     protected void doSetData(DataSource dataSource, Object data) throws Exception
     {
+        if (!Status.STARTED.equals(getStatus()))
+            return;
+
+        if (data==null && states.get()!=null)
+        {
+            try
+            {
+                formAndSendCrossTable();
+                return;
+            }
+            finally
+            {
+                states.remove();
+            }
+        }
+
+        if (!(data instanceof Record))
+            return;
+
+        Record rec = (Record) data;
+        bindingSupport.put("record", rec);
+        try
+        {
+            State state = getOrCreateState();
+            Object masterValue = getValue(masterFieldNames, useMasterFieldsExpression
+                    , MASTER_FIELDS_EXPRESSION_ATTR, rec);
+            Object detailValue = getValue(secondaryFieldNames, useSecondaryFieldsExpression
+                    ,SECONDARY_FIELDS_EXPRESSION_ATTR, rec);
+            Object cellValue = getValue(cellValueFieldNames, useCellValueFieldsExpression
+                    , CELLVALUE_FIELDS_EXPRESSION_ATTR, rec);
+            state.addValueToRow(masterValue, detailValue, cellValue);
+        }
+        finally
+        {
+            bindingSupport.reset();
+        }
     }
 
     private Object getValue(
@@ -183,17 +250,48 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
                     v = converter.convert(String.class, rec.getValue(fieldNames[i]), null);
                     buf.append(", "+v);
                 }
-                value = v.toString();
+                value = buf.toString();
             }
         }
         return value;
     }
 
-    private static class State
+    private State getOrCreateState()
+    {
+        State state = states.get();
+        if (state==null)
+        {
+            state = new State();
+            states.set(state);
+        }
+        return state;
+    }
+
+    private void formAndSendCrossTable()
+    {
+        State state = states.get();
+        List row = state.getRow(0);
+        String[] colNames = new String[row.size()];
+        for (int i=0; i<row.size(); ++i)
+            colNames[i] = converter.convert(String.class, row.get(i), null);
+        TableImpl table = new TableImpl(colNames);
+        for (int i=1; i<state.getRowCount(); ++i)
+            table.addRow(state.getRow(i).toArray());
+        sendDataToConsumers(table);
+    }
+
+    private class State
     {
         private int maxRowSize;
         private final Map<Object, Integer> indexes = new HashMap<Object, Integer>();
         private final List<List> rows = new ArrayList<List>(512);
+        private Object lastMasterValue = null;
+
+        public State()
+        {
+            rows.add(new ArrayList());
+            rows.get(0).add(firstColumnName);
+        }
 
         public int getMaxRowSize()
         {
@@ -205,21 +303,27 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
             this.maxRowSize = maxRowSize;
         }
 
-        public void addValueToRow(Object detailValue, Object cellValue)
+        public void addValueToRow(Object masterValue, Object detailValue, Object cellValue)
         {
+            if (!ObjectUtils.equals(masterValue, lastMasterValue))
+            {
+                rows.get(0).add(masterValue);
+                lastMasterValue = masterValue;
+                maxRowSize = rows.get(0).size();
+            }
             Integer index = indexes.get(detailValue);
-            List row = null;
+            List row = index==null? null : rows.get(index);
             if (index==null)
             {
                 row = new ArrayList();
                 rows.add(row);
                 indexes.put(detailValue, rows.size()-1);
+                row.add(detailValue);
             }
             if (row.size()<maxRowSize-1)
                 for (int i=0; i<maxRowSize-row.size()-1; ++i)
                     row.add(null);
             row.add(cellValue);
-            maxRowSize = Math.max(maxRowSize, row.size());
         }
 
         public int getRowCount()

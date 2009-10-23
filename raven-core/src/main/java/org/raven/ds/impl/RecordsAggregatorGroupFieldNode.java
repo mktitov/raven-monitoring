@@ -18,7 +18,6 @@
 package org.raven.ds.impl;
 
 import org.raven.annotations.NodeClass;
-import org.raven.annotations.Parameter;
 
 /**
  *
