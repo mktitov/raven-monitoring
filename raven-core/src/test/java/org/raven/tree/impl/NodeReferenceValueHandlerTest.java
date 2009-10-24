@@ -35,7 +35,6 @@ import org.raven.tree.NodeError;
 public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
 {
     private Node node;
-    private NodeAttribute refAttr;
     private Node parentNode;
     private Node childNode;
     
@@ -110,6 +109,23 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
         childNode.setName("newChildName");
         assertEquals(childNode.getPath(), valueHandler.getData());
         verify(attr);
+    }
+
+    @Test
+    public void ownedAttributeRemove() throws Exception
+    {
+        assertFalse(parentNode.getDependentNodes().contains(node));
+
+        NodeAttributeImpl attr = new NodeAttributeImpl(
+                "refAttr", Node.class, parentNode.getPath(), null);
+        attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
+        attr.setOwner(node);
+        attr.init();
+        node.addNodeAttribute(attr);
+        assertTrue(parentNode.getDependentNodes().contains(node));
+
+        node.removeNodeAttribute("refAttr");
+        assertFalse(parentNode.getDependentNodes().contains(node));
     }
     
     @Test

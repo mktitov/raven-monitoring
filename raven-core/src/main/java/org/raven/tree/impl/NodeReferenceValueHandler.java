@@ -242,7 +242,13 @@ public class NodeReferenceValueHandler
 
     public boolean nodeAttributeRemoved(Node node, NodeAttribute attribute)
     {
-        return false;
+        if (attribute.getOwner().equals(node) && this.attribute.equals(attribute))
+        {
+            cleanupNodeReference(this.node, null);
+            return true;
+        }
+        else
+            return false;
     }
 
     protected void cleanupNodeReference(Node oldNode, Node removedNode)
