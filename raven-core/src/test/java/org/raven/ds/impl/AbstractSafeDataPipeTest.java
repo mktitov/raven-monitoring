@@ -258,6 +258,25 @@ public class AbstractSafeDataPipeTest extends RavenCoreTestCase
         assertEquals(11, data);
     }
 
+    @Test
+    public void skipDataTest() throws Exception
+    {
+        PushDataSource ds = new PushDataSource();
+        ds.setName("ds");
+        tree.getRootNode().addAndSaveChildren(ds);
+        assertTrue(ds.start());
+
+        pipe.setDataSource(ds);
+        pipe.setUseExpression(true);
+        pipe.setExpression("data==1? SKIP_DATA : data");
+        assertTrue(pipe.start());
+
+        ds.pushData(1);
+        ds.pushData(2);
+        testCollector(c1, 2);
+        
+    }
+
     private void testCollector(DataCollector collector, Object value)
     {
         assertEquals(1, collector.getDataList().size());

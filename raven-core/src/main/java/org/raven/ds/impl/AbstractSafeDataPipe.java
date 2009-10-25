@@ -245,6 +245,7 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
         if (useExpression)
         {
             bindingSupport.put(DATA_BINDING, data);
+            bindingSupport.put(SKIP_DATA_BINDING, SKIP_DATA);
             try
             {
                 NodeAttribute exprAttr = getNodeAttribute(EXPRESSION_ATTRIBUTE);
@@ -257,7 +258,8 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
         }
         try
         {
-            doSetData(dataSource, data);
+            if (data!=SKIP_DATA)
+                doSetData(dataSource, data);
         }
         catch(Throwable e)
         {

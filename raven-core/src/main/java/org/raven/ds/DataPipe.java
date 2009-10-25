@@ -30,5 +30,6 @@ import org.raven.tree.AttributesGenerator;
  */
 public interface DataPipe extends DataConsumer, DataSource
 {
-
+    public final static String SKIP_DATA="SKIP_DATA";
+    public final static String SKIP_DATA_BINDING = "SKIP_DATA";
 }
