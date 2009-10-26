@@ -25,7 +25,10 @@ import java.util.Iterator;
  */
 public interface Table 
 {
-//    public final static String ROWNUM_COLUMN_NAME = "#";
+    /**
+     * Returns the table title
+     */
+    public String getTitle();
     /**
      * Returns the column names
      */
@@ -40,25 +43,4 @@ public interface Table
      * Returns rows iterator
      */
     public Iterator<Object[]> getRowIterator();
-    /**
-     * Returns the value in the specified column and row.
-     * @param columnName the name of the column 
-     * @param row the row number
-     */
-//    public Object getValue(String columnName, int row);
-//    /**
-//     * Returns the row count in the table
-//     */
-//    public int getRowCount();
-//    /**
-//     *
-//     */
-//    public Map<String, List<Object>> getRows();
-//    public Map<String, Object> getRow(int row);
-//    /**
-//     * Adds value for the selected column
-//     * @param columnName the name of the column for which value must be added.
-//     * @param value the value
-//     */
-//    public void addValue(String columnName, Object value);
 }

@@ -23,7 +23,19 @@ package org.raven.table;
  */
 public abstract class AbstractTable implements Table
 {
+    private String title;
+    
     protected String[] columnNames;
+
+    public String getTitle()
+    {
+        return title;
+    }
+
+    public void setTitle(String title)
+    {
+        this.title = title;
+    }
 
     public String[] getColumnNames()
     {

@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.collections.CollectionUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataSource;
@@ -40,9 +39,17 @@ import org.weda.beans.ObjectUtils;
 @NodeClass
 public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
 {
+    public static final String NEW_TABLE_FIELDS_EXPRESSION_ATTR = "newTableFieldsExpression";
     public static final String CELLVALUE_FIELDS_EXPRESSION_ATTR = "cellValueFieldsExpression";
     public static final String MASTER_FIELDS_EXPRESSION_ATTR = "masterFieldsExpression";
     public static final String SECONDARY_FIELDS_EXPRESSION_ATTR = "secondaryFieldsExpression";
+
+    @Parameter
+    private String newTableFields;
+    @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
+    private String newTableFieldsExpression;
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean useNewTableFieldsExpression;
     
     @NotNull @Parameter
     private String masterFields;
@@ -68,6 +75,7 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
     @Parameter
     private String firstColumnName;
 
+    private String[] newTableFieldNames;
     private String[] masterFieldNames;
     private String[] secondaryFieldNames;
     private String[] cellValueFieldNames;
@@ -88,6 +96,37 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
         masterFieldNames = masterFields.split("\\s*,\\s*");
         secondaryFieldNames = secondaryFields.split("\\s*,\\s*");
         cellValueFieldNames = cellValueFields.split("\\s*,\\s*");
+        newTableFieldNames = newTableFields==null? null : newTableFields.split("\\s*,\\s*");
+    }
+
+    public String getNewTableFields()
+    {
+        return newTableFields;
+    }
+
+    public void setNewTableFields(String newTableFields)
+    {
+        this.newTableFields = newTableFields;
+    }
+
+    public String getNewTableFieldsExpression()
+    {
+        return newTableFieldsExpression;
+    }
+
+    public void setNewTableFieldsExpression(String newTableFieldsExpression)
+    {
+        this.newTableFieldsExpression = newTableFieldsExpression;
+    }
+
+    public Boolean getUseNewTableFieldsExpression()
+    {
+        return useNewTableFieldsExpression;
+    }
+
+    public void setUseNewTableFieldsExpression(Boolean useNewTableFieldsExpression)
+    {
+        this.useNewTableFieldsExpression = useNewTableFieldsExpression;
     }
 
     public String getFirstColumnName()
@@ -197,17 +236,7 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
             return;
 
         if (data==null && states.get()!=null)
-        {
-            try
-            {
-                formAndSendCrossTable();
-                return;
-            }
-            finally
-            {
-                states.remove();
-            }
-        }
+            formAndSendCrossTable();
 
         if (!(data instanceof Record))
             return;
@@ -216,7 +245,21 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
         bindingSupport.put("record", rec);
         try
         {
+            boolean newState = states.get()==null;
             State state = getOrCreateState();
+            Object tableValue = getValue(newTableFieldNames, useNewTableFieldsExpression
+                    , NEW_TABLE_FIELDS_EXPRESSION_ATTR, rec);
+            if (newState)
+                state.setTableValue(tableValue);
+            else
+            {
+                if (!ObjectUtils.equals(tableValue, state.getTableValue()))
+                {
+                    formAndSendCrossTable();
+                    state = getOrCreateState();
+                    state.setTableValue(tableValue);
+                }
+            }
             Object masterValue = getValue(masterFieldNames, useMasterFieldsExpression
                     , MASTER_FIELDS_EXPRESSION_ATTR, rec);
             Object detailValue = getValue(secondaryFieldNames, useSecondaryFieldsExpression
@@ -240,19 +283,22 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
             value = getNodeAttribute(exprAttr).getRealValue();
         else
         {
-            if (fieldNames.length==1)
-                value = rec.getValue(fieldNames[0]);
-            else
+            if (fieldNames!=null)
             {
-                String v = converter.convert(
-                        String.class, rec.getValue(fieldNames[0]), null);
-                StringBuilder buf = new StringBuilder(v);
-                for (int i=1; i<fieldNames.length; ++i)
+                if (fieldNames.length==1)
+                    value = rec.getValue(fieldNames[0]);
+                else
                 {
-                    v = converter.convert(String.class, rec.getValue(fieldNames[i]), null);
-                    buf.append(", "+v);
+                    String v = converter.convert(
+                            String.class, rec.getValue(fieldNames[0]), null);
+                    StringBuilder buf = new StringBuilder(v);
+                    for (int i=1; i<fieldNames.length; ++i)
+                    {
+                        v = converter.convert(String.class, rec.getValue(fieldNames[i]), null);
+                        buf.append(", "+v);
+                    }
+                    value = buf.toString();
                 }
-                value = buf.toString();
             }
         }
         return value;
@@ -271,28 +317,35 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
 
     private void formAndSendCrossTable() throws Exception
     {
-        State state = states.get();
-        List row = state.getRow(0);
-        String[] colNames = new String[row.size()];
-        for (int i=0; i<row.size(); ++i)
-            colNames[i] = converter.convert(String.class, row.get(i), null);
-        if (isLogLevelEnabled(LogLevel.DEBUG))
-            debug("Column names: "+printArray(colNames));
-        TableImpl table = new TableImpl(colNames);
-        for (int i=1; i<state.getRowCount(); ++i)
+        try
         {
-            Object[] objRow = state.getRow(i).toArray();
-            try{
-                table.addRow(objRow);
-            }catch(Exception e){
-                if (isLogLevelEnabled(LogLevel.DEBUG))
-                    debug(String.format(
-                            "Error adding row number (%s): %s", i, printArray(objRow)));
-                throw e;
+            State state = states.get();
+            List row = state.getRow(0);
+            String[] colNames = new String[row.size()];
+            for (int i=0; i<row.size(); ++i)
+                colNames[i] = converter.convert(String.class, row.get(i), null);
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug("Column names: "+printArray(colNames));
+            TableImpl table = new TableImpl(colNames);
+            for (int i=1; i<state.getRowCount(); ++i)
+            {
+                Object[] objRow = state.getRow(i).toArray();
+                try{
+                    table.addRow(objRow);
+                }catch(Exception e){
+                    if (isLogLevelEnabled(LogLevel.DEBUG))
+                        debug(String.format(
+                                "Error adding row number (%s): %s", i, printArray(objRow)));
+                    throw e;
+                }
             }
-        }
 
-        sendDataToConsumers(table);
+            sendDataToConsumers(table);
+        }
+        finally
+        {
+            states.remove();
+        }
     }
     
     private String printArray(Object[] arr)
@@ -310,11 +363,22 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
         private final Map<Object, Integer> indexes = new HashMap<Object, Integer>();
         private final List<List> rows = new ArrayList<List>(512);
         private Object lastMasterValue = null;
+        private Object tableValue;
 
         public State()
         {
             rows.add(new ArrayList());
             rows.get(0).add(firstColumnName);
+        }
+
+        public Object getTableValue()
+        {
+            return tableValue;
+        }
+
+        public void setTableValue(Object tableValue)
+        {
+            this.tableValue = tableValue;
         }
 
         public int getMaxRowSize()
