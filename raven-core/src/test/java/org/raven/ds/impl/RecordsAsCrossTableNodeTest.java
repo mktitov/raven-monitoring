@@ -25,6 +25,7 @@ import org.raven.RavenUtils;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchemaFieldType;
+import org.raven.log.LogLevel;
 import org.raven.table.Table;
 import org.raven.test.DataCollector;
 import org.raven.test.RavenCoreTestCase;
@@ -63,7 +64,8 @@ public class RecordsAsCrossTableNodeTest extends RavenCoreTestCase
         crossTable.setName("crossTable");
         tree.getRootNode().addAndSaveChildren(crossTable);
         crossTable.setDataSource(ds);
-
+        crossTable.setLogLevel(LogLevel.DEBUG);
+        
         collector = new DataCollector();
         collector.setName("collector");
         tree.getRootNode().addAndSaveChildren(collector);

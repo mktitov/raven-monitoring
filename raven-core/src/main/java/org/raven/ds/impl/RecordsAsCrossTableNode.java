@@ -21,12 +21,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.collections.CollectionUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
+import org.raven.log.LogLevel;
 import org.raven.table.TableImpl;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.beans.ObjectUtils;
@@ -267,17 +269,39 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
         return state;
     }
 
-    private void formAndSendCrossTable()
+    private void formAndSendCrossTable() throws Exception
     {
         State state = states.get();
         List row = state.getRow(0);
         String[] colNames = new String[row.size()];
         for (int i=0; i<row.size(); ++i)
             colNames[i] = converter.convert(String.class, row.get(i), null);
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            debug("Column names: "+printArray(colNames));
         TableImpl table = new TableImpl(colNames);
         for (int i=1; i<state.getRowCount(); ++i)
-            table.addRow(state.getRow(i).toArray());
+        {
+            Object[] objRow = state.getRow(i).toArray();
+            try{
+                table.addRow(objRow);
+            }catch(Exception e){
+                if (isLogLevelEnabled(LogLevel.DEBUG))
+                    debug(String.format(
+                            "Error adding row number (%s): %s", i, printArray(objRow)));
+                throw e;
+            }
+        }
+
         sendDataToConsumers(table);
+    }
+    
+    private String printArray(Object[] arr)
+    {
+        StringBuilder buf = new StringBuilder();
+        for (Object elem: arr)
+            buf.append((buf.length()>0? ", " : "")+(elem==null? "" : elem.toString()));
+        
+        return buf.toString();
     }
 
     private class State
@@ -334,9 +358,8 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
         public List getRow(int index)
         {
             List row = rows.get(index);
-            if (row.size()<maxRowSize)
-                for (int i=0; i<maxRowSize-row.size(); ++i)
-                    row.add(null);
+            for (int i=0; maxRowSize>row.size(); ++i)
+                row.add(null);
             return row;
         }
     }
