@@ -11,7 +11,7 @@ public class VOTableWrapper extends ArrayList<TIWList>
 {
 	private static final long serialVersionUID = -1356513548995799683L;
 	public static final boolean addCounter = true;
-	public static final int MAX_COLUMNS = 30;
+	public static final int MAX_COLUMNS = 50;
 	private Table table = null;
 	
 	public VOTableWrapper(Table x)

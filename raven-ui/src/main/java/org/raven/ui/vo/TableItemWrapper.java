@@ -23,6 +23,7 @@ public class TableItemWrapper
 	
 	public String getString()
 	{
+		if(item==null) return "";
 		return item.toString();
 	}
 	

@@ -75,33 +75,17 @@ public class VOTWModel extends SortableModel implements Comparator<TIWList>
 	private int compareAsDouble(String s1, String s2)
 	{
 		try {
-		Double d = Double.parseDouble(s1);
-		return d.compareTo(Double.parseDouble(s2));
+			Double d = Double.MIN_VALUE;
+			if(s1!=null && s1.length()>0) d = Double.parseDouble(s1);
+			Double d2 = Double.MIN_VALUE;
+			if(s2!=null && s2.length()>0) d2 = Double.parseDouble(s2);
+		return d.compareTo(d2);
 		} catch(NumberFormatException e) { return -2; }
 	}
-/*	
-	public int compare(TableItemWrapper[] o1, TableItemWrapper[] o2) 
-	{
-		for(SortCriterion sc : scList)
-		{
-			int cn = getColNum(sc.getProperty());
-			if(cn<0) continue;
-			String s1 = o1[cn].getString();
-			String s2 = o2[cn].getString();
-			int c = compareAsDouble(s1, s2);
-			if(c==-2)
-				c = s1.compareTo(s2);
-			int asc = sc.isAscending() ? 1 : -1;
-			if(c!=0) return c*asc;
-		}
-		return 0;
-	}
-*/
+
 	public int compare(TIWList o1, TIWList o2) 
 	{
-//		logger.warn("sort!");
-		if(o1==null) return 0;
-		if(o2==null) return 0;
+		if(o1==null || o2==null) return 0;
 		for(SortCriterion sc : scList)
 		{
 			int cn = getColNum(sc.getProperty());
