@@ -1,7 +1,11 @@
 package org.raven.ui.vo;
 
 import java.io.InputStream;
+
+import javax.faces.context.FacesContext;
+
 import org.apache.commons.io.IOUtils;
+import org.apache.myfaces.trinidad.render.ExtendedRenderKitService;
 import org.raven.table.Table;
 import org.raven.tree.ActionViewableObject;
 import org.raven.tree.InvalidPathException;
@@ -154,10 +158,22 @@ public class ViewableObjectWrapper
 
 	public String runAction()
 	{
-		if(isAction()) viewableObject.getData();
+		if(!isAction()) return null;
+		
+		String ret;
+		Object o = viewableObject.getData();
+		if(o==null) ret = Messages.getUiMessage(Messages.DONE);
+			else ret = o.toString();
+		
+		 FacesContext fc = FacesContext.getCurrentInstance();
+		 ExtendedRenderKitService service = (ExtendedRenderKitService)
+		 org.apache.myfaces.trinidad.util.Service.getRenderKitService(fc, ExtendedRenderKitService.class);
+		 //logger.info("runAction");
+		 ret = ret.replaceAll("'", "\"");
+		 service.addScript(fc, "alert('"+ret+"')");
 		return null;
 	}
-
+/*
 	public String getRunAction()
 	{
 		Object o = viewableObject.getData();
@@ -165,7 +181,7 @@ public class ViewableObjectWrapper
 			return Messages.getUiMessage(Messages.DONE);
 		return o.toString();
 	}
-	
+*/	
 	public String getFromDate()
 	{
 		return Utl.formatDate(fd);
@@ -254,6 +270,8 @@ public class ViewableObjectWrapper
 			}	
 			return image;
 		}
+		//Object o = viewableObject.getData();
+		//logger.warn("VOW:getData(): "+o);
 		return viewableObject.getData();
 	}
 	

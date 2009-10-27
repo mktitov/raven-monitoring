@@ -369,21 +369,13 @@ partialTriggers=":poolStatus"
 	  		<tr:spacer width="0" height="4" />
 	  	  	<tr:panelHorizontalLayout  halign="left" >
 	  	  		<tr:spacer width="30" height="0" />
+<!-- 	  	  		
 	  	  		<tr:panelPopup 
 	  	  			text="#{row.idVO}"
 	  	  			onclick="if (!confirm('#{row.confirmationMessage}')) return false">
-<!-- 	  	  			
-	  	  			<tr:panelHorizontalLayout 
-	  	  				halign="center" 
-	  	  				valign="middle">
-	  	  				<tr:spacer width="15" height="10"/>
- -->	  	  				
-	  	  			 	<tr:outputFormatted value="' #{row.runAction} '"/>
-<!-- 	  	  			 	
-	  	  			 	<tr:spacer width="15" height="10"/>
-	  	  			</tr:panelHorizontalLayout>  -->
+	  	  			 	<tr:outputText value="' #{row.runAction} '"/>
 	  	  		</tr:panelPopup>
-<!-- 	  	  		
+ -->	  	  		
 				<tr:commandLink 
 					rendered="#{row.confirmationMessage == null}" 
 					action="#{row.runAction}"
@@ -397,7 +389,6 @@ partialTriggers=":poolStatus"
 					onclick="if (!confirm('#{row.confirmationMessage}')) return false"
 					partialSubmit="true"
 					text="#{row.idVO}" />
- -->					
 			</tr:panelHorizontalLayout>
 	  	</tr:panelGroupLayout>
 <!-- 		</tr:subform>  -->	
