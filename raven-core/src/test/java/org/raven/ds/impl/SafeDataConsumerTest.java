@@ -17,6 +17,7 @@
 
 package org.raven.ds.impl;
 
+import java.util.List;
 import org.junit.Test;
 import org.raven.test.PushOnDemandDataSource;
 import org.raven.test.RavenCoreTestCase;
@@ -42,7 +43,7 @@ public class SafeDataConsumerTest extends RavenCoreTestCase
         assertTrue(consumer.start());
 
         ds.addDataPortion("test");
-        assertEquals("test", consumer.refereshData(null));
+        assertEquals("test", ((List)consumer.refereshData(null)).get(0));
     }
 
     @Test
@@ -62,6 +63,6 @@ public class SafeDataConsumerTest extends RavenCoreTestCase
         assertTrue(consumer.start());
 
         ds.addDataPortion(1);
-        assertEquals(2, consumer.refereshData(null));
+        assertEquals(2, ((List)consumer.refereshData(null)).get(0));
     }
 }

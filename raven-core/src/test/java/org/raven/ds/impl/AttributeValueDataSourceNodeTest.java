@@ -18,6 +18,7 @@
 package org.raven.ds.impl;
 
 import java.util.Arrays;
+import java.util.List;
 import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
@@ -46,7 +47,7 @@ public class AttributeValueDataSourceNodeTest extends RavenCoreTestCase
         collector.setDataSource(ds);
         assertTrue(collector.start());
 
-        assertEquals("test", collector.refereshData(null));
+        assertEquals("test", ((List)collector.refereshData(null)).get(0));
     }
 
     @Test
@@ -98,6 +99,6 @@ public class AttributeValueDataSourceNodeTest extends RavenCoreTestCase
         attr.setOwner(collector);
         attr.init();
 
-        assertEquals("hello world!", collector.refereshData(Arrays.asList(attr)));
+        assertEquals("hello world!", ((List)collector.refereshData(Arrays.asList(attr))).get(0));
     }
 }

@@ -17,6 +17,7 @@
 
 package org.raven.ds.impl;
 
+import java.util.List;
 import org.junit.Test;
 import org.raven.test.PushOnDemandDataSource;
 import org.raven.test.RavenCoreTestCase;
@@ -68,6 +69,9 @@ public class RecordGeneratorPipeNodeTest extends RavenCoreTestCase
         ds.addDataPortion("test");
         Object val = consumer.refereshData(null);
         assertNotNull(val);
+        List data = (List) val;
+        assertEquals(1, data.size());
+        val = data.get(0);
         assertTrue(val instanceof Record);
         Record record = (Record) val;
         assertEquals("test value", record.getValue("field"));

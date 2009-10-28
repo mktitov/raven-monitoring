@@ -19,6 +19,7 @@ package org.raven.table;
 
 import org.raven.tree.impl.*;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.raven.annotations.NodeClass;
@@ -40,32 +41,33 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
     @NotNull @Parameter(defaultValue="false")
     private Boolean autoRefresh;
 
-    //@Override
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) 
             throws Exception
     {
-        Object data = refereshData(refreshAttributes==null? null : refreshAttributes.values());
-//        if (!(tableObj instanceof Table))
-//        {
-//            if (isLogLevelEnabled(LogLevel.DEBUG))
-//                debug(String.format(
-//                        "Invalid data type recieved from (%s). Expected (%s) but recieved (%s)"
-//                        , getDataSource().getPath()
-//                        , tableObj==null? "NULL" : tableObj.getClass().getName()));
-//            return null;
-//        }
-
-        Table table = converter.convert(Table.class, data, null);
-        if (table==null)
-            return null;
-        else
+        List dataList = (List) refereshData(refreshAttributes==null? null : refreshAttributes.values());
+        if (dataList!=null)
         {
-            ViewableObject tableObject = new ViewableObjectImpl(RAVEN_TABLE_MIMETYPE, table);
-            return Arrays.asList(tableObject);
+            List<ViewableObject> voList = new LinkedList<ViewableObject>();
+            for (Object obj: dataList)
+            {
+                Table table = converter.convert(Table.class, obj, null);
+                if (table!=null)
+                {
+                    if (!voList.isEmpty())
+                        voList.add(new ViewableObjectImpl(RAVEN_TEXT_MIMETYPE, "<br>"));
+                    if (table.getTitle()!=null)
+                        voList.add(new ViewableObjectImpl(
+                                RAVEN_TEXT_MIMETYPE, "<b>"+table.getTitle()+"</b>"));
+                    ViewableObject tableVO = new ViewableObjectImpl(RAVEN_TABLE_MIMETYPE, table);
+                    voList.add(new ViewableObjectImpl(RAVEN_TABLE_MIMETYPE, table));
+                }
+            }
+            return voList.isEmpty()? null : voList;
         }
+        else
+            return null;
     }
 
-    //@Override
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
     {
         return NodeUtils.extractRefereshAttributes(this);

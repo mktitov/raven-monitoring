@@ -18,6 +18,8 @@
 package org.raven.ds.impl;
 
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 import javax.script.Bindings;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
@@ -48,14 +50,15 @@ public class SafeDataConsumer extends BaseNode implements DataConsumer
     private Boolean useExpression;
 
     protected BindingSupportImpl bindingSupport;
-    protected ThreadLocal data;
+//    protected ThreadLocal data;
+    protected ThreadLocal<List> data;
 
     @Override
     protected void initFields()
     {
         super.initFields();
         bindingSupport = new BindingSupportImpl();
-        data = new ThreadLocal();
+        data = new ThreadLocal<List>();
     }
 
     public DataSource getDataSource()
@@ -103,13 +106,21 @@ public class SafeDataConsumer extends BaseNode implements DataConsumer
                 bindingSupport.reset();
             }
         }
-        this.data.set(data);
+        if (this.data.get()==null)
+            this.data.set(new LinkedList());
+        this.data.get().add(data);
     }
 
+    /**
+     * Returns the list of the data recieved from the data source or null if no data was send by
+     * the data source.
+     * @param sessionAttributes the set of the session attributes
+     */
     public Object refereshData(Collection<NodeAttribute> sessionAttributes)
     {
         try
         {
+            data.remove();
             dataSource.getDataImmediate(this, sessionAttributes);
             return data.get();
         }

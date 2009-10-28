@@ -215,6 +215,7 @@ public class RecordsAsCrossTableNodeTest extends RavenCoreTestCase
         assertTrue(data.get(1) instanceof Table);
 
         Table table = (Table) data.get(0);
+        assertEquals("t1", table.getTitle());
         assertArrayEquals(new String[]{"c0", "c1"}, table.getColumnNames());
         List<Object[]> rows = RavenUtils.tableAsList(table);
         assertEquals(2, rows.size());
@@ -222,6 +223,7 @@ public class RecordsAsCrossTableNodeTest extends RavenCoreTestCase
         assertArrayEquals(new Object[]{"r2", "v1 2"}, rows.get(1));
 
         table = (Table) data.get(1);
+        assertEquals("t2", table.getTitle());
         assertArrayEquals(new String[]{"c0", "c1", "c2"}, table.getColumnNames());
         rows = RavenUtils.tableAsList(table);
         assertEquals(2, rows.size());

@@ -30,10 +30,35 @@ import org.raven.tree.impl.BaseNode;
  */
 public class TestTableDataSource extends BaseNode implements DataSource
 {
+    private boolean sendTitle = false;
+    private boolean sendTwoTable = false;
+
+    public boolean isSendTwoTable()
+    {
+        return sendTwoTable;
+    }
+
+    public void setSendTwoTable(boolean sendTwoTable)
+    {
+        this.sendTwoTable = sendTwoTable;
+    }
+
+    public boolean isSendTitle()
+    {
+        return sendTitle;
+    }
+
+    public void setSendTitle(boolean sendTitle)
+    {
+        this.sendTitle = sendTitle;
+    }
+
     public boolean getDataImmediate(
             DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes) 
     {
         ColumnBasedTable table = new ColumnBasedTable();
+        if (sendTitle)
+            table.setTitle("title");
         table.addValue("col1", "val_1_1");
         table.addValue("col2", "val_2_1");
         table.addValue("col1", "val_1_2");
@@ -41,6 +66,8 @@ public class TestTableDataSource extends BaseNode implements DataSource
         table.freeze();
         
         dataConsumer.setData(this, table);
+        if (sendTwoTable)
+            dataConsumer.setData(this, table);
 
         return true;
     }

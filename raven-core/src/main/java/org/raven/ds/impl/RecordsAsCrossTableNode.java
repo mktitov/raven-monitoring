@@ -327,6 +327,7 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug("Column names: "+printArray(colNames));
             TableImpl table = new TableImpl(colNames);
+            table.setTitle(converter.convert(String.class, state.getTableValue(), null));
             for (int i=1; i<state.getRowCount(); ++i)
             {
                 Object[] objRow = state.getRow(i).toArray();
