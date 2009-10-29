@@ -15,38 +15,13 @@
  *  under the License.
  */
 
-package org.raven.ds.impl;
-
-import org.raven.ds.AggregateFunction;
-import org.weda.internal.annotations.Service;
-import org.weda.services.TypeConverter;
+package org.raven.table;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class SumAggregateFunction implements AggregateFunction
+public enum AggregationDirection
 {
-    @Service
-    private static TypeConverter converter;
-
-    private double sum = 0.;
-
-    public void startAggregation() { }
-
-    public void aggregate(Object value)
-    {
-        Double val = converter.convert(Double.class, value, null);
-        if (val!=null)
-            sum+=val;
-    }
-
-    public void finishAggregation() { }
-
-    public Object getAggregatedValue()
-    {
-        return sum;
-    }
-
-    public void close() { }
+    COLUMN, ROW
 }

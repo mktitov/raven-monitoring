@@ -47,4 +47,6 @@ public class MinAggregateFunction implements AggregateFunction
     {
         return minValue;
     }
+
+    public void close() { }
 }

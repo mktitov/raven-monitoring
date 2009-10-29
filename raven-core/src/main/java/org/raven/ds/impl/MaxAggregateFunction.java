@@ -47,4 +47,6 @@ public class MaxAggregateFunction implements AggregateFunction
     {
         return maxValue;
     }
+
+    public void close() { }
 }

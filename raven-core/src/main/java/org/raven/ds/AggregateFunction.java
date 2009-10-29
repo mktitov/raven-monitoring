@@ -27,4 +27,5 @@ public interface AggregateFunction
     public void aggregate(Object value);
     public void finishAggregation();
     public Object getAggregatedValue();
+    public void close();
 }

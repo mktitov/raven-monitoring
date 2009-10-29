@@ -216,6 +216,7 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
 
         public void finishAggregation() { }
         public void startAggregation() { }
+        public void close() { }
     }
 
     private class GroupKey

@@ -41,4 +41,5 @@ public class CountAggregateFunction implements AggregateFunction
         return count;
     }
 
+    public void close() { }
 }

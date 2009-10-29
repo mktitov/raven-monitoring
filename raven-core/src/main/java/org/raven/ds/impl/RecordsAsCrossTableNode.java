@@ -409,9 +409,8 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
                 indexes.put(detailValue, rows.size()-1);
                 row.add(detailValue);
             }
-            if (row.size()<maxRowSize-1)
-                for (int i=0; i<maxRowSize-row.size()-1; ++i)
-                    row.add(null);
+            for (int i=0; maxRowSize>row.size()+1; ++i)
+                row.add(null);
             row.add(cellValue);
         }
 
