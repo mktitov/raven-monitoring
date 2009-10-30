@@ -17,6 +17,9 @@
 
 package org.raven.table;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  *
  * @author Mikhail Titov
@@ -24,6 +27,8 @@ package org.raven.table;
 public abstract class AbstractTable implements Table
 {
     private String title;
+    private Map<Integer, Map<String, TableTag>> columnsTags;
+    private Map<Integer, Map<String, TableTag>> rowsTags;
     
     protected String[] columnNames;
 
@@ -51,4 +56,68 @@ public abstract class AbstractTable implements Table
         return -1;
     }
 
+    public Map<String, TableTag> getColumnTags(int col)
+    {
+        return getTags(columnsTags, col);
+    }
+
+    public Map<String, TableTag> getRowTags(int row)
+    {
+        return getTags(rowsTags, row);
+    }
+
+    public boolean containsColumnTag(int col, String tagId)
+    {
+        return containsTag(columnsTags, col, tagId);
+    }
+
+    public boolean containsRowTag(int row, String tagId)
+    {
+        return containsTag(rowsTags, row, tagId);
+    }
+
+    public void addColumnTag(int col, TableTag tag)
+    {
+        if (columnsTags==null)
+            columnsTags = createTags();
+        addTagToTags(columnsTags, col, tag);
+    }
+
+    public void addRowTag(int row, TableTag tag)
+    {
+        if (rowsTags==null)
+            rowsTags = createTags();
+        addTagToTags(rowsTags, row, tag);
+    }
+
+    private Map<Integer, Map<String, TableTag>> createTags()
+    {
+        return new HashMap<Integer, Map<String, TableTag>>();
+    }
+
+    private void addTagToTags(Map<Integer, Map<String, TableTag>> tagsMap, int pos, TableTag tag)
+    {
+        Map<String, TableTag> tags = tagsMap.get(pos);
+        if (tags==null)
+        {
+            tags = new HashMap<String, TableTag>();
+            tagsMap.put(pos, tags);
+        }
+        tags.put(tag.getId(), tag);
+    }
+
+    private Map<String, TableTag> getTags(Map<Integer, Map<String, TableTag>> tagsMap, int pos)
+    {
+        return tagsMap==null? null : tagsMap.get(pos);
+    }
+
+    private boolean containsTag(Map<Integer, Map<String, TableTag>> tagsMap, int pos, String tagId)
+    {
+        if (tagsMap==null)
+            return false;
+        else {
+            Map<String, TableTag> tags = tagsMap.get(pos);
+            return tags==null? false : tags.containsKey(tagId);
+        }
+    }
 }

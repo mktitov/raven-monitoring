@@ -23,8 +23,10 @@ import org.junit.Test;
 import org.raven.RavenUtils;
 import org.raven.ds.AggregateFunctionType;
 import org.raven.ds.impl.SafeDataConsumer;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.test.PushOnDemandDataSource;
 import org.raven.test.RavenCoreTestCase;
+import org.raven.tree.NodeAttribute;
 
 /**
  *
@@ -77,6 +79,189 @@ public class TableSummaryNodeTest extends RavenCoreTestCase
         assertArrayEquals(new Object[]{1, 2}, rows.get(0));
         assertArrayEquals(new Object[]{2, 3}, rows.get(1));
         assertArrayEquals(new Object[]{3., 5.}, rows.get(2));
+
+        Table resTable = (Table)dataList.get(0);
+        assertTrue(resTable.containsRowTag(2, TableSummaryNode.AGGREGATION_TAG_ID));
+        assertNull(resTable.getRowTags(0));
+        assertNull(resTable.getRowTags(1));
+    }
+
+    @Test
+    public void columnAggregationTitleAndSelectorTest() throws Exception
+    {
+        createAggregation("colAgg", "sum", "columnNumber>1", AggregateFunctionType.SUM, AggregationDirection.COLUMN);
+        TableImpl table = new TableImpl(new String[]{"col1", "col2"});
+        table.addRow(new Object[]{1, 2});
+
+        ds.addDataPortion(table);
+
+        List dataList = (List) consumer.refereshData(null);
+        assertNotNull(dataList);
+        assertEquals(1, dataList.size());
+        assertTrue(dataList.get(0) instanceof Table);
+
+        List<Object[]> rows = RavenUtils.tableAsList((Table) dataList.get(0));
+        assertEquals(2, rows.size());
+        assertArrayEquals(new Object[]{1, 2}, rows.get(0));
+        assertArrayEquals(new Object[]{"sum", 2.}, rows.get(1));
+    }
+
+    @Test
+    public void severalColumnAggregationsTest() throws Exception
+    {
+        createAggregation("colAgg1", null, null, AggregateFunctionType.SUM, AggregationDirection.COLUMN);
+        createAggregation("colAgg2", null, null, AggregateFunctionType.COUNT, AggregationDirection.COLUMN);
+        TableImpl table = new TableImpl(new String[]{"col1", "col2"});
+        table.addRow(new Object[]{1, 2});
+        table.addRow(new Object[]{2, 3});
+
+        ds.addDataPortion(table);
+
+        List dataList = (List) consumer.refereshData(null);
+        assertNotNull(dataList);
+        assertEquals(1, dataList.size());
+        assertTrue(dataList.get(0) instanceof Table);
+
+        List<Object[]> rows = RavenUtils.tableAsList((Table) dataList.get(0));
+        assertEquals(4, rows.size());
+        assertArrayEquals(new Object[]{1, 2}, rows.get(0));
+        assertArrayEquals(new Object[]{2, 3}, rows.get(1));
+        assertArrayEquals(new Object[]{3., 5.}, rows.get(2));
+        assertArrayEquals(new Object[]{2, 2}, rows.get(3));
+
+        Table resTable = (Table)dataList.get(0);
+        assertNull(resTable.getRowTags(0));
+        assertNull(resTable.getRowTags(1));
+        assertTrue(resTable.containsRowTag(2, TableSummaryNode.AGGREGATION_TAG_ID));
+        assertTrue(resTable.containsRowTag(3, TableSummaryNode.AGGREGATION_TAG_ID));
+
+    }
+
+    @Test
+    public void rowAggregationTest() throws Exception
+    {
+        createAggregation("rowAgg", null, null, AggregateFunctionType.SUM, AggregationDirection.ROW);
+        TableImpl table = new TableImpl(new String[]{"col1", "col2"});
+        table.addRow(new Object[]{1, 2});
+        table.addRow(new Object[]{2, 3});
+
+        ds.addDataPortion(table);
+
+        List dataList = (List) consumer.refereshData(null);
+        assertNotNull(dataList);
+        assertEquals(1, dataList.size());
+        assertTrue(dataList.get(0) instanceof Table);
+
+        Table resTable = (Table)dataList.get(0);
+        assertArrayEquals(new String[]{"col1", "col2", null}, resTable.getColumnNames());
+        List<Object[]> rows = RavenUtils.tableAsList(resTable);
+        assertEquals(2, rows.size());
+        assertArrayEquals(new Object[]{1, 2, 3.}, rows.get(0));
+        assertArrayEquals(new Object[]{2, 3, 5.}, rows.get(1));
+
+        assertTrue(resTable.containsColumnTag(2, TableSummaryNode.AGGREGATION_TAG_ID));
+        assertNull(resTable.getColumnTags(0));
+        assertNull(resTable.getColumnTags(1));
+    }
+
+    @Test
+    public void rowAggregationTitleTest() throws Exception
+    {
+        createAggregation("rowAgg", "sum", null, AggregateFunctionType.SUM, AggregationDirection.ROW);
+        TableImpl table = new TableImpl(new String[]{"col1", "col2"});
+        table.addRow(new Object[]{1, 2});
+        table.addRow(new Object[]{2, 3});
+
+        ds.addDataPortion(table);
+
+        List dataList = (List) consumer.refereshData(null);
+        assertNotNull(dataList);
+        assertEquals(1, dataList.size());
+        assertTrue(dataList.get(0) instanceof Table);
+
+        Table resTable = (Table)dataList.get(0);
+        assertArrayEquals(new String[]{"col1", "col2", "sum"}, resTable.getColumnNames());
+        List<Object[]> rows = RavenUtils.tableAsList(resTable);
+        assertEquals(2, rows.size());
+        assertArrayEquals(new Object[]{1, 2, 3.}, rows.get(0));
+        assertArrayEquals(new Object[]{2, 3, 5.}, rows.get(1));
+    }
+
+    @Test
+    public void rowAggregationSelectorTest() throws Exception
+    {
+        createAggregation("rowAgg", "sum", "(rowNumber+row[0])==2", AggregateFunctionType.SUM, AggregationDirection.ROW);
+        TableImpl table = new TableImpl(new String[]{"col1", "col2"});
+        table.addRow(new Object[]{1, 2});
+        table.addRow(new Object[]{2, 3});
+
+        ds.addDataPortion(table);
+
+        List dataList = (List) consumer.refereshData(null);
+        assertNotNull(dataList);
+        assertEquals(1, dataList.size());
+        assertTrue(dataList.get(0) instanceof Table);
+
+        Table resTable = (Table)dataList.get(0);
+        assertArrayEquals(new String[]{"col1", "col2", "sum"}, resTable.getColumnNames());
+        List<Object[]> rows = RavenUtils.tableAsList(resTable);
+        assertEquals(2, rows.size());
+        assertArrayEquals(new Object[]{1, 2, 3.}, rows.get(0));
+        assertArrayEquals(new Object[]{2, 3, null}, rows.get(1));
+    }
+
+    @Test
+    public void severalRowAggregationTest() throws Exception
+    {
+        createAggregation("rowAgg1", "sum", null, AggregateFunctionType.SUM, AggregationDirection.ROW);
+        createAggregation("rowAgg2", "count", null, AggregateFunctionType.COUNT, AggregationDirection.ROW);
+        TableImpl table = new TableImpl(new String[]{"col1", "col2"});
+        table.addRow(new Object[]{1, 2});
+        table.addRow(new Object[]{2, 3});
+
+        ds.addDataPortion(table);
+
+        List dataList = (List) consumer.refereshData(null);
+        assertNotNull(dataList);
+        assertEquals(1, dataList.size());
+        assertTrue(dataList.get(0) instanceof Table);
+
+        Table resTable = (Table)dataList.get(0);
+        assertArrayEquals(new String[]{"col1", "col2", "sum", "count"}, resTable.getColumnNames());
+        List<Object[]> rows = RavenUtils.tableAsList(resTable);
+        assertEquals(2, rows.size());
+        assertArrayEquals(new Object[]{1, 2, 3., 2}, rows.get(0));
+        assertArrayEquals(new Object[]{2, 3, 5., 2}, rows.get(1));
+
+        assertNull(resTable.getColumnTags(0));
+        assertNull(resTable.getColumnTags(1));
+        assertTrue(resTable.containsColumnTag(2, TableSummaryNode.AGGREGATION_TAG_ID));
+        assertTrue(resTable.containsColumnTag(3, TableSummaryNode.AGGREGATION_TAG_ID));
+    }
+
+    @Test
+    public void colAggregationWithrowAggregationTest() throws Exception
+    {
+        createAggregation("rowAgg", null, null, AggregateFunctionType.SUM, AggregationDirection.ROW);
+        createAggregation("colAgg", null, null, AggregateFunctionType.SUM, AggregationDirection.COLUMN);
+        TableImpl table = new TableImpl(new String[]{"col1", "col2"});
+        table.addRow(new Object[]{1, 2});
+        table.addRow(new Object[]{2, 3});
+
+        ds.addDataPortion(table);
+
+        List dataList = (List) consumer.refereshData(null);
+        assertNotNull(dataList);
+        assertEquals(1, dataList.size());
+        assertTrue(dataList.get(0) instanceof Table);
+
+        Table resTable = (Table)dataList.get(0);
+        assertArrayEquals(new String[]{"col1", "col2", null}, resTable.getColumnNames());
+        List<Object[]> rows = RavenUtils.tableAsList(resTable);
+        assertEquals(3, rows.size());
+        assertArrayEquals(new Object[]{1, 2, 3.}, rows.get(0));
+        assertArrayEquals(new Object[]{2, 3, 5.}, rows.get(1));
+        assertArrayEquals(new Object[]{3., 5., 8.}, rows.get(2));
     }
 
     private void createAggregation(
@@ -89,7 +274,11 @@ public class TableSummaryNodeTest extends RavenCoreTestCase
         tablesum.addAndSaveChildren(aggDef);
         aggDef.setTitle(title);
         if (selectorExpression!=null)
+        {
+            NodeAttribute attr = aggDef.getNodeAttribute(TableValuesAggregatorNode.SELECTOR_ATTR);
+            attr.setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
             aggDef.getNodeAttribute(TableValuesAggregatorNode.SELECTOR_ATTR).setValue(selectorExpression);
+        }
         aggDef.setAggregateFunction(aggType);
         aggDef.setAggregationDirection(dir);
         assertTrue(aggDef.start());

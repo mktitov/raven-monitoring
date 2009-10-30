@@ -34,11 +34,18 @@ import org.raven.tree.Node;
 @NodeClass()
 public class TableSummaryNode extends AbstractSafeDataPipe
 {
+    public static final String COLUMN_NUMBER_BINDING = "columnNumber";
+    public static final String AGGREGATION_TAG_ID = "AGGREGATION";
+    public static final TableTag AGGREGATION_TAG = new TableTagImpl("AGGREGATION");
+
     @Override
     protected void doSetData(DataSource dataSource, Object data) throws Exception
     {
         if (!(data instanceof Table))
+        {
+            sendDataToConsumers(data);
             return;
+        }
 
         Table table = (Table) data;
         List<TableValuesAggregatorNode> colAggDefs = null;
@@ -66,28 +73,77 @@ public class TableSummaryNode extends AbstractSafeDataPipe
                 }
             
         if (colAggDefs==null && rowAggsDefs==null)
+        {
+            sendDataToConsumers(data);
             return;
+        }
 
-        TableImpl newTable = new TableImpl(table.getColumnNames());
+        String[] colNames = table.getColumnNames();
+        if (rowAggsDefs!=null)
+        {
+            colNames = new String[colNames.length+rowAggsDefs.size()];
+            System.arraycopy(table.getColumnNames(), 0, colNames, 0, table.getColumnNames().length);
+            for (int i=0; i<rowAggsDefs.size(); ++i){
+                colNames[table.getColumnNames().length+i]=rowAggsDefs.get(i).getTitle();
+            }
+        }
+        
+        TableImpl newTable = new TableImpl(colNames);
+        if (rowAggsDefs!=null)
+            for (int i=table.getColumnNames().length; i<colNames.length; ++i)
+                newTable.addColumnTag(i, AGGREGATION_TAG);
 
-        AggregateFunction[][] colAggs = createColumnAggregations(colAggDefs, table);
+        AggregateFunction[][] colAggs = createColumnAggregations(colAggDefs, colNames.length);
         Iterator<Object[]> it = table.getRowIterator();
+        int rowNumber=0;
         while (it!=null && it.hasNext())
         {
+            ++rowNumber;
             Object[] row = it.next();
-            newTable.addRow(row);
+            Object[] newRow = row;
+            if (rowAggsDefs!=null)
+            {
+                newRow = new Object[row.length+rowAggsDefs.size()];
+                System.arraycopy(row, 0, newRow, 0, row.length);
+                for (int i=0; i<rowAggsDefs.size(); ++i)
+                {
+                    bindingSupport.put("row", row);
+                    bindingSupport.put("rowNumber", rowNumber);
+                    try
+                    {
+                        if (rowAggsDefs.get(i).getSelector())
+                        {
+                            AggregateFunction func = rowAggsDefs.get(i).createAggregateFunction();
+                            try{
+                                func.startAggregation();
+                                for (int j=0; j<row.length; ++j)
+                                    func.aggregate(row[j]);
+                                func.finishAggregation();
+                                newRow[row.length+i] = func.getAggregatedValue();
+                            }finally{
+                                func.close();
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        bindingSupport.reset();
+                    }
+                }
+            }
+            newTable.addRow(newRow);
             if (colAggDefs!=null)
-                for (int i=0; i<row.length; ++i)
+                for (int i=0; i<newRow.length; ++i)
                     for (int j=0; j<colAggDefs.size(); ++j)
                         if (colAggs[i][j]!=null)
-                            colAggs[i][j].aggregate(row[i]);
+                            colAggs[i][j].aggregate(newRow[i]);
         }
         if (colAggDefs!=null)
             for (int j=0; j<colAggDefs.size(); ++j)
             {
                 Object[] row = new Object[newTable.getColumnNames().length];
                 row[0] = colAggDefs.get(j).getTitle();
-                for (int i=0; i<table.getColumnNames().length; ++i)
+                for (int i=0; i<newTable.getColumnNames().length; ++i)
                 {
                     AggregateFunction func = colAggs[i][j];
                     if (func!=null)
@@ -98,24 +154,25 @@ public class TableSummaryNode extends AbstractSafeDataPipe
                     }
                 }
                 newTable.addRow(row);
+                newTable.addRowTag(rowNumber++, AGGREGATION_TAG);
             }
 
         sendDataToConsumers(newTable);
     }
 
     private AggregateFunction[][] createColumnAggregations(
-            List<TableValuesAggregatorNode> colAggDefs, Table table)
+            List<TableValuesAggregatorNode> colAggDefs, int len)
         throws Exception
     {
         if (colAggDefs != null)
         {
             AggregateFunction[][] colAggs =
-                    new AggregateFunction[table.getColumnNames().length][colAggDefs.size()];
+                    new AggregateFunction[len][colAggDefs.size()];
             try
             {
                 for (int i = 0; i < colAggs.length; ++i)
                 {
-                    bindingSupport.put("columnNumber", i + 1);
+                    bindingSupport.put(COLUMN_NUMBER_BINDING, i + 1);
                     for (int j = 0; j < colAggDefs.size(); ++j)
                     {
                         TableValuesAggregatorNode aggDef = colAggDefs.get(j);
