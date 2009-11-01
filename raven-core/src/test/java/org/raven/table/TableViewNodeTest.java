@@ -23,8 +23,10 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
+import org.raven.RavenUtils;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.table.objects.TestTableDataSource;
+import org.raven.test.PushOnDemandDataSource;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
@@ -39,6 +41,7 @@ public class TableViewNodeTest extends RavenCoreTestCase
 {
     private TestTableDataSource tableDs;
     private TableViewNode tableView;
+    private PushOnDemandDataSource ds; 
 
 
     @Before
@@ -58,6 +61,11 @@ public class TableViewNodeTest extends RavenCoreTestCase
         tableView.init();
         tableView.setDataSource(tableDs);
         assertTrue(tableView.start());
+
+        ds = new PushOnDemandDataSource();
+        ds.setName("ds");
+        tree.getRootNode().addAndSaveChildren(ds);
+        assertTrue(ds.start());
     }
 
     @Test
@@ -141,5 +149,36 @@ public class TableViewNodeTest extends RavenCoreTestCase
 
         vo = objects.get(4);
         assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, vo.getMimeType());
+    }
+
+    @Test
+    public void cellValueExpressionTest() throws Exception
+    {
+        tableView.setUseCellValueExpression(Boolean.TRUE);
+        tableView.setCellValueExpression(
+                "value+';'+rowNumber+';'+row[columnNumber-1]+';'" +
+                "+(rowTags.row_tag?'row_tag':'no_tag')+';'+(columnTags.col_tag?'col_tag':'no_tag')");
+        tableView.setDataSource(ds);
+        assertTrue(tableView.start());
+
+        TableImpl tab = new TableImpl(new String[]{"col1", "col2"});
+        tab.addRow(new Object[]{"1_1", "2_1"});
+        tab.addRow(new Object[]{"1_2", "2_2"});
+        tab.addRowTag(1, new TableTagImpl("row_tag"));
+        tab.addColumnTag(0, new TableTagImpl("col_tag"));
+
+        ds.addDataPortion(tab);
+        
+        List<ViewableObject> voList = tableView.getViewableObjects(null);
+        assertNotNull(voList);
+        assertEquals(1, voList.size());
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, voList.get(0).getMimeType());
+
+        Table table = (Table) voList.get(0).getData();
+        assertNotNull(table);
+        List<Object[]> rows = RavenUtils.tableAsList(table);
+        assertEquals(2, rows.size());
+        assertArrayEquals(new String[]{"1_1;1;1_1;no_tag;col_tag", "2_1;1;2_1;no_tag;no_tag"}, rows.get(0));
+        assertArrayEquals(new String[]{"1_2;2;1_2;row_tag;col_tag", "2_2;2;2_2;row_tag;no_tag"}, rows.get(1));
     }
 }

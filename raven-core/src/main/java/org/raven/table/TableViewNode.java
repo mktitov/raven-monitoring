@@ -96,11 +96,38 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
         return autoRefresh;
     }
 
+    public String getCellValueExpression()
+    {
+        return cellValueExpression;
+    }
+
+    public void setCellValueExpression(String cellValueExpression)
+    {
+        this.cellValueExpression = cellValueExpression;
+    }
+
+    public Boolean getUseCellValueExpression()
+    {
+        return useCellValueExpression;
+    }
+
+    public void setUseCellValueExpression(Boolean useCellValueExpression)
+    {
+        this.useCellValueExpression = useCellValueExpression;
+    }
+
     private Table transformTable(Table table)
     {
         TableImpl newTable = new TableImpl(table.getColumnNames());
         Iterator<Object[]> it = table.getRowIterator();
         int rowNumber = 1;
+        NodeAttribute attr = getNodeAttribute("cellValueExpression");
+        Map<String, TableTag>[] columnTags = new Map[newTable.getColumnNames().length];
+        for (int i=0; i<columnTags.length; ++i)
+        {
+            Map<String, TableTag> tags = table.getColumnTags(i);
+            columnTags[i] = tags==null? Collections.EMPTY_MAP : tags;
+        }
         try
         {
             while (it!=null && it.hasNext())
@@ -110,12 +137,15 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
                 bindingSupport.put("row", row);
                 Map<String, TableTag> rowTags = table.getRowTags(rowNumber-1);
                 bindingSupport.put("rowTags", rowTags==null? Collections.EMPTY_MAP : rowTags);
-
+                Object[] newRow = new Object[row.length];
                 for (int col=0; col<row.length; ++col)
                 {
                     bindingSupport.put("columnNumber", (col+1));
+                    bindingSupport.put("value", row[col]);
+                    bindingSupport.put("columnTags", columnTags[col]);
+                    newRow[col] = attr.getRealValue();
                 }
-
+                newTable.addRow(newRow);
                 ++rowNumber;
             }
         }
