@@ -162,6 +162,7 @@ public class TableViewNodeTest extends RavenCoreTestCase
         assertTrue(tableView.start());
 
         TableImpl tab = new TableImpl(new String[]{"col1", "col2"});
+        tab.setTitle("table title");
         tab.addRow(new Object[]{"1_1", "2_1"});
         tab.addRow(new Object[]{"1_2", "2_2"});
         tab.addRowTag(1, new TableTagImpl("row_tag"));
@@ -171,11 +172,14 @@ public class TableViewNodeTest extends RavenCoreTestCase
         
         List<ViewableObject> voList = tableView.getViewableObjects(null);
         assertNotNull(voList);
-        assertEquals(1, voList.size());
-        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, voList.get(0).getMimeType());
+        assertEquals(2, voList.size());
+        assertEquals(Viewable.RAVEN_TEXT_MIMETYPE, voList.get(0).getMimeType());
+        assertEquals("<b>table title</b>", voList.get(0).getData());
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, voList.get(1).getMimeType());
 
-        Table table = (Table) voList.get(0).getData();
+        Table table = (Table) voList.get(1).getData();
         assertNotNull(table);
+        assertEquals("table title", table.getTitle());
         List<Object[]> rows = RavenUtils.tableAsList(table);
         assertEquals(2, rows.size());
         assertArrayEquals(new String[]{"1_1;1;1_1;no_tag;col_tag", "2_1;1;2_1;no_tag;no_tag"}, rows.get(0));

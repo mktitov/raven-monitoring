@@ -119,6 +119,7 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
     private Table transformTable(Table table)
     {
         TableImpl newTable = new TableImpl(table.getColumnNames());
+        newTable.setTitle(table.getTitle());
         Iterator<Object[]> it = table.getRowIterator();
         int rowNumber = 1;
         NodeAttribute attr = getNodeAttribute("cellValueExpression");

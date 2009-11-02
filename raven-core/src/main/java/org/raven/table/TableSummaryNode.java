@@ -25,7 +25,9 @@ import org.raven.annotations.NodeClass;
 import org.raven.ds.AggregateFunction;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractSafeDataPipe;
+import org.raven.log.LogLevel;
 import org.raven.tree.Node;
+import org.weda.converter.TypeConverterException;
 
 /**
  *
@@ -89,6 +91,7 @@ public class TableSummaryNode extends AbstractSafeDataPipe
         }
         
         TableImpl newTable = new TableImpl(colNames);
+        newTable.setTitle(table.getTitle());
         if (rowAggsDefs!=null)
             for (int i=table.getColumnNames().length; i<colNames.length; ++i)
                 newTable.addColumnTag(i, AGGREGATION_TAG);
@@ -117,7 +120,12 @@ public class TableSummaryNode extends AbstractSafeDataPipe
                             try{
                                 func.startAggregation();
                                 for (int j=0; j<row.length; ++j)
+                                try{
                                     func.aggregate(row[j]);
+                                }catch(Exception e){
+                                    if (isLogLevelEnabled(LogLevel.DEBUG))
+                                        debug("Aggregation error", e);
+                                }
                                 func.finishAggregation();
                                 newRow[row.length+i] = func.getAggregatedValue();
                             }finally{
@@ -136,7 +144,12 @@ public class TableSummaryNode extends AbstractSafeDataPipe
                 for (int i=0; i<newRow.length; ++i)
                     for (int j=0; j<colAggDefs.size(); ++j)
                         if (colAggs[i][j]!=null)
+                        try{
                             colAggs[i][j].aggregate(newRow[i]);
+                        }catch(Exception e){
+                            if (isLogLevelEnabled(LogLevel.DEBUG))
+                                debug("Aggregation error", e);
+                        }
         }
         if (colAggDefs!=null)
             for (int j=0; j<colAggDefs.size(); ++j)

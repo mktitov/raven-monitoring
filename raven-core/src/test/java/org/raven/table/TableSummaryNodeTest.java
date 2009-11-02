@@ -64,6 +64,7 @@ public class TableSummaryNodeTest extends RavenCoreTestCase
     {
         createAggregation("colAgg", null, null, AggregateFunctionType.SUM, AggregationDirection.COLUMN);
         TableImpl table = new TableImpl(new String[]{"col1", "col2"});
+        table.setTitle("table title");
         table.addRow(new Object[]{1, 2});
         table.addRow(new Object[]{2, 3});
 
@@ -74,13 +75,14 @@ public class TableSummaryNodeTest extends RavenCoreTestCase
         assertEquals(1, dataList.size());
         assertTrue(dataList.get(0) instanceof Table);
 
-        List<Object[]> rows = RavenUtils.tableAsList((Table) dataList.get(0));
+        Table resTable = (Table)dataList.get(0);
+        assertEquals("table title", resTable.getTitle());
+        List<Object[]> rows = RavenUtils.tableAsList(resTable);
         assertEquals(3, rows.size());
         assertArrayEquals(new Object[]{1, 2}, rows.get(0));
         assertArrayEquals(new Object[]{2, 3}, rows.get(1));
         assertArrayEquals(new Object[]{3., 5.}, rows.get(2));
 
-        Table resTable = (Table)dataList.get(0);
         assertTrue(resTable.containsRowTag(2, TableSummaryNode.AGGREGATION_TAG_ID));
         assertNull(resTable.getRowTags(0));
         assertNull(resTable.getRowTags(1));
@@ -264,7 +266,36 @@ public class TableSummaryNodeTest extends RavenCoreTestCase
         assertArrayEquals(new Object[]{3., 5., 8.}, rows.get(2));
     }
 
-    private void createAggregation(
+     @Test
+    public void aggregationWithNotValidTest() throws Exception
+    {
+        createAggregation("colAgg", null, null, AggregateFunctionType.SUM, AggregationDirection.COLUMN);
+        TableImpl table = new TableImpl(new String[]{"col1", "col2"});
+        table.setTitle("table title");
+        table.addRow(new Object[]{1, "blabla"});
+        table.addRow(new Object[]{2, 3});
+
+        ds.addDataPortion(table);
+
+        List dataList = (List) consumer.refereshData(null);
+        assertNotNull(dataList);
+        assertEquals(1, dataList.size());
+        assertTrue(dataList.get(0) instanceof Table);
+
+        Table resTable = (Table)dataList.get(0);
+        assertEquals("table title", resTable.getTitle());
+        List<Object[]> rows = RavenUtils.tableAsList(resTable);
+        assertEquals(3, rows.size());
+        assertArrayEquals(new Object[]{1, "blabla"}, rows.get(0));
+        assertArrayEquals(new Object[]{2, 3}, rows.get(1));
+        assertArrayEquals(new Object[]{3., 3.}, rows.get(2));
+
+        assertTrue(resTable.containsRowTag(2, TableSummaryNode.AGGREGATION_TAG_ID));
+        assertNull(resTable.getRowTags(0));
+        assertNull(resTable.getRowTags(1));
+    }
+
+   private void createAggregation(
             String name, String title, String selectorExpression, AggregateFunctionType aggType
             , AggregationDirection dir)
         throws Exception
