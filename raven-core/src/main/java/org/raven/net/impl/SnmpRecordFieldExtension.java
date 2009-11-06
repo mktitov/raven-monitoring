@@ -18,13 +18,13 @@
 package org.raven.net.impl;
 
 import org.raven.annotations.NodeClass;
-import org.raven.ds.RecordSchemaField;
+import org.raven.ds.impl.RecordSchemaFieldNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=RecordSchemaField.class)
+@NodeClass(parentNode=RecordSchemaFieldNode.class)
 public class SnmpRecordFieldExtension extends SnmpRecordExtension
 {
 }

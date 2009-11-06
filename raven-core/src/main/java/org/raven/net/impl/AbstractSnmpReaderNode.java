@@ -114,10 +114,11 @@ public abstract class AbstractSnmpReaderNode extends AbstractThreadedDataSource
                         consumer.getLogger().error("Error processing snmp request", e);
                 }
                 if (isLogLevelEnabled(LogLevel.ERROR))
-                    error(String.format(
+                    error(
+                        String.format(
                             "Error processing snmp request for consumer (%s)"
-                            , dataConsumer.getPath()
-                        , e));
+                            , dataConsumer.getPath())
+                        , e);
             }
         }
         finally

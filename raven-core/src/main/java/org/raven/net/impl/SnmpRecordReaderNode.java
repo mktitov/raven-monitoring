@@ -53,7 +53,7 @@ import org.weda.internal.annotations.Message;
 public class SnmpRecordReaderNode extends AbstractSnmpReaderNode
 {
     public final static String ROW_IDS_ATTR = "row-ids";
-    public final static String RECORD_SCHEMA_ATTR = "recordSchema";
+    public final static String RECORD_SCHEMA_ATTR = "snmpRecordSchema";
 
     @Message
     private static String rowIdsDescription;
