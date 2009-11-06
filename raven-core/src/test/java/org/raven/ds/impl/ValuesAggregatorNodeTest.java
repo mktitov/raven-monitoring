@@ -81,6 +81,26 @@ public class ValuesAggregatorNodeTest extends RavenCoreTestCase
         func.close();
     }
 
+    @Test
+    public void customFunctionWithStartAndFinishExpressionsTest() throws Exception
+    {
+        agg.setUseStartAggregationExpression(Boolean.TRUE);
+        agg.setStartAggregationExpression("params.p1=100; 10");
+        agg.setUseFinishAggregationExpression(Boolean.TRUE);
+        agg.setFinishAggregationExpression("value+counter+params.p1");
+        agg.setAggregationExpression("nextValue+value");
+        AggregateFunction func = checkFunctionCreation(
+                AggregateFunctionType.CUSTOM, ValuesAggregatorNode.class);
+        func.startAggregation();
+        func.aggregate(1);
+        func.aggregate(2);
+        func.finishAggregation();
+        Object val = func.getAggregatedValue();
+        func.close();
+        assertEquals(new Integer(115), val);
+        func.close();
+    }
+
     private AggregateFunction checkFunctionCreation(
             AggregateFunctionType aggregateFunctionType, Class functionClass)
         throws Exception

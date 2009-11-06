@@ -17,6 +17,8 @@
 
 package org.raven.ds.impl;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.script.Bindings;
 import org.raven.annotations.Parameter;
 import org.raven.ds.AggregateFunction;
@@ -34,7 +36,10 @@ public class ValuesAggregatorNode extends BaseNode implements AggregateFunction
 {
     public static final String AGGREGATION_EXPRESSION_ATTR = "aggregationExpression";
     public static final String COUNTER_BINDING = "counter";
+    public static final String FINISH_AGGREGATION_EXPRESSION_ATTR = "finishAggregationExpression";
     public static final String NEXTVALUE_BINDING = "nextValue";
+    public static final String PARAMS_BINDING = "params";
+    public static final String START_AGGREGATION_EXPRESSION_ATTR = "startAggregationExpression";
     public static final String VALUE_BINDING = "value";
 
     @NotNull @Parameter
@@ -42,7 +47,19 @@ public class ValuesAggregatorNode extends BaseNode implements AggregateFunction
 
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
     private String aggregationExpression;
+
+    @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
+    private String startAggregationExpression;
+
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean useStartAggregationExpression;
+
+    @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
+    private String finishAggregationExpression;
     
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean useFinishAggregationExpression;
+
     private ThreadLocal<Value> valueContainer;
     private BindingSupportImpl bindingSupport;
 
@@ -56,18 +73,48 @@ public class ValuesAggregatorNode extends BaseNode implements AggregateFunction
 
     public void startAggregation() 
     {
-        valueContainer.set(new Value());
+        Value value = new Value();
+        valueContainer.set(value);
+        if (useStartAggregationExpression)
+        {
+            bindingSupport.put(PARAMS_BINDING, value.params);
+            try{
+                value.setValue(getNodeAttribute(START_AGGREGATION_EXPRESSION_ATTR).getRealValue());
+            }finally{
+                bindingSupport.reset();
+            }
+        }
     }
 
     public void aggregate(Object nextValue)
     {
         Value value = this.valueContainer.get();
+        value.incCounter();
         bindingSupport.put(VALUE_BINDING, value.getValue());
         bindingSupport.put(COUNTER_BINDING, value.getCounter());
-        bindingSupport.put( NEXTVALUE_BINDING, nextValue);
+        bindingSupport.put(NEXTVALUE_BINDING, nextValue);
+        bindingSupport.put(PARAMS_BINDING, value.params);
         try
         {
             value.setValue(getNodeAttribute(AGGREGATION_EXPRESSION_ATTR).getRealValue());
+        }
+        finally
+        {
+            bindingSupport.reset();
+        }
+    }
+
+    public void finishAggregation() 
+    {
+        if (!useFinishAggregationExpression)
+            return;
+        Value value = this.valueContainer.get();
+        bindingSupport.put(VALUE_BINDING, value.getValue());
+        bindingSupport.put(COUNTER_BINDING, value.getCounter());
+        bindingSupport.put(PARAMS_BINDING, value.params);
+        try
+        {
+            value.setValue(getNodeAttribute(FINISH_AGGREGATION_EXPRESSION_ATTR).getRealValue());
         }
         finally
         {
@@ -75,8 +122,6 @@ public class ValuesAggregatorNode extends BaseNode implements AggregateFunction
             bindingSupport.reset();
         }
     }
-
-    public void finishAggregation() { }
 
     public Object getAggregatedValue() 
     {
@@ -103,7 +148,6 @@ public class ValuesAggregatorNode extends BaseNode implements AggregateFunction
                 throw new Exception(String.format(
                         "Undefned aggregate function (%s)", aggregateFunction));
         }
-
         return func;
     }
     
@@ -134,11 +178,51 @@ public class ValuesAggregatorNode extends BaseNode implements AggregateFunction
         this.aggregationExpression = aggregationExpression;
     }
 
+    public String getFinishAggregationExpression()
+    {
+        return finishAggregationExpression;
+    }
+
+    public void setFinishAggregationExpression(String finishAggregationExpression)
+    {
+        this.finishAggregationExpression = finishAggregationExpression;
+    }
+
+    public String getStartAggregationExpression()
+    {
+        return startAggregationExpression;
+    }
+
+    public void setStartAggregationExpression(String startAggregationExpression)
+    {
+        this.startAggregationExpression = startAggregationExpression;
+    }
+
+    public Boolean getUseFinishAggregationExpression()
+    {
+        return useFinishAggregationExpression;
+    }
+
+    public void setUseFinishAggregationExpression(Boolean useFinishAggregationExpression)
+    {
+        this.useFinishAggregationExpression = useFinishAggregationExpression;
+    }
+
+    public Boolean getUseStartAggregationExpression()
+    {
+        return useStartAggregationExpression;
+    }
+
+    public void setUseStartAggregationExpression(Boolean useStartAggregationExpression)
+    {
+        this.useStartAggregationExpression = useStartAggregationExpression;
+    }
 
     private static class Value
     {
-        private int counter=1;
+        private int counter=0;
         private Object value;
+        private Map<String, Object> params = new HashMap<String, Object>();
 
         public void incCounter()
         {

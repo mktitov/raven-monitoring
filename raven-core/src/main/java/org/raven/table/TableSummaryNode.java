@@ -27,7 +27,6 @@ import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractSafeDataPipe;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
-import org.weda.converter.TypeConverterException;
 
 /**
  *
