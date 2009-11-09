@@ -32,11 +32,12 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-public class ValuesAggregatorNode extends BaseNode implements AggregateFunction
+public class ValuesAggregatorNode extends BaseNode 
 {
     public static final String AGGREGATION_EXPRESSION_ATTR = "aggregationExpression";
     public static final String COUNTER_BINDING = "counter";
     public static final String FINISH_AGGREGATION_EXPRESSION_ATTR = "finishAggregationExpression";
+    public static final String USE_FINISH_AGGREGATION_EXPRESSION_ATTR = "useFinishAggregationExpression";
     public static final String NEXTVALUE_BINDING = "nextValue";
     public static final String PARAMS_BINDING = "params";
     public static final String START_AGGREGATION_EXPRESSION_ATTR = "startAggregationExpression";
@@ -60,7 +61,6 @@ public class ValuesAggregatorNode extends BaseNode implements AggregateFunction
     @NotNull @Parameter(defaultValue="false")
     private Boolean useFinishAggregationExpression;
 
-    private ThreadLocal<Value> valueContainer;
     private BindingSupportImpl bindingSupport;
 
     @Override
@@ -68,69 +68,6 @@ public class ValuesAggregatorNode extends BaseNode implements AggregateFunction
     {
         super.initFields();
         bindingSupport = new BindingSupportImpl();
-        valueContainer = new ThreadLocal<Value>();
-    }
-
-    public void startAggregation() 
-    {
-        Value value = new Value();
-        valueContainer.set(value);
-        if (useStartAggregationExpression)
-        {
-            bindingSupport.put(PARAMS_BINDING, value.params);
-            try{
-                value.setValue(getNodeAttribute(START_AGGREGATION_EXPRESSION_ATTR).getRealValue());
-            }finally{
-                bindingSupport.reset();
-            }
-        }
-    }
-
-    public void aggregate(Object nextValue)
-    {
-        Value value = this.valueContainer.get();
-        value.incCounter();
-        bindingSupport.put(VALUE_BINDING, value.getValue());
-        bindingSupport.put(COUNTER_BINDING, value.getCounter());
-        bindingSupport.put(NEXTVALUE_BINDING, nextValue);
-        bindingSupport.put(PARAMS_BINDING, value.params);
-        try
-        {
-            value.setValue(getNodeAttribute(AGGREGATION_EXPRESSION_ATTR).getRealValue());
-        }
-        finally
-        {
-            bindingSupport.reset();
-        }
-    }
-
-    public void finishAggregation() 
-    {
-        if (!useFinishAggregationExpression)
-            return;
-        Value value = this.valueContainer.get();
-        bindingSupport.put(VALUE_BINDING, value.getValue());
-        bindingSupport.put(COUNTER_BINDING, value.getCounter());
-        bindingSupport.put(PARAMS_BINDING, value.params);
-        try
-        {
-            value.setValue(getNodeAttribute(FINISH_AGGREGATION_EXPRESSION_ATTR).getRealValue());
-        }
-        finally
-        {
-            value.incCounter();
-            bindingSupport.reset();
-        }
-    }
-
-    public Object getAggregatedValue() 
-    {
-        return valueContainer.get().getValue();
-    }
-
-    public void close()
-    {
-        valueContainer.remove();
     }
 
     public AggregateFunction createAggregateFunction() throws Exception
@@ -143,7 +80,7 @@ public class ValuesAggregatorNode extends BaseNode implements AggregateFunction
             case MAX : func = new MaxAggregateFunction(); break;
             case MIN : func = new MinAggregateFunction(); break;
             case SUM : func = new SumAggregateFunction(); break;
-            case CUSTOM : func = this; break;
+            case CUSTOM : func = new CustomAggregator(); break;
             default:
                 throw new Exception(String.format(
                         "Undefned aggregate function (%s)", aggregateFunction));
@@ -247,6 +184,69 @@ public class ValuesAggregatorNode extends BaseNode implements AggregateFunction
         public void setValue(Object value)
         {
             this.value = value;
+        }
+    }
+
+    class CustomAggregator implements AggregateFunction
+    {
+        private int counter=0;
+        private Object value;
+        private Map<String, Object> params = new HashMap<String, Object>();
+
+        public void startAggregation()
+        {
+            if (useStartAggregationExpression)
+            {
+                bindingSupport.put(PARAMS_BINDING, params);
+                try{
+                    value = getNodeAttribute(START_AGGREGATION_EXPRESSION_ATTR).getRealValue();
+                }finally{
+                    bindingSupport.reset();
+                }
+            }
+        }
+
+        public void aggregate(Object nextValue)
+        {
+            ++counter;
+            bindingSupport.put(VALUE_BINDING, value);
+            bindingSupport.put(COUNTER_BINDING, counter);
+            bindingSupport.put(NEXTVALUE_BINDING, nextValue);
+            bindingSupport.put(PARAMS_BINDING, params);
+            try
+            {
+                value = getNodeAttribute(AGGREGATION_EXPRESSION_ATTR).getRealValue();
+            }
+            finally
+            {
+                bindingSupport.reset();
+            }
+        }
+
+        public void finishAggregation()
+        {
+            if (!useFinishAggregationExpression)
+                return;
+            bindingSupport.put(VALUE_BINDING, value);
+            bindingSupport.put(COUNTER_BINDING, counter);
+            bindingSupport.put(PARAMS_BINDING, params);
+            try
+            {
+                value = getNodeAttribute(FINISH_AGGREGATION_EXPRESSION_ATTR).getRealValue();
+            }
+            finally
+            {
+                bindingSupport.reset();
+            }
+        }
+
+        public Object getAggregatedValue()
+        {
+            return value;
+        }
+
+        public void close()
+        {
         }
     }
 }

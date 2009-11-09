@@ -70,7 +70,7 @@ public class ValuesAggregatorNodeTest extends RavenCoreTestCase
     {
         agg.setAggregationExpression("nextValue+(value?:0)+counter");
         AggregateFunction func = checkFunctionCreation(
-                AggregateFunctionType.CUSTOM, ValuesAggregatorNode.class);
+                AggregateFunctionType.CUSTOM, ValuesAggregatorNode.CustomAggregator.class);
         func.startAggregation();
         func.aggregate(1);
         func.aggregate(2);
@@ -90,7 +90,7 @@ public class ValuesAggregatorNodeTest extends RavenCoreTestCase
         agg.setFinishAggregationExpression("value+counter+params.p1");
         agg.setAggregationExpression("nextValue+value");
         AggregateFunction func = checkFunctionCreation(
-                AggregateFunctionType.CUSTOM, ValuesAggregatorNode.class);
+                AggregateFunctionType.CUSTOM, ValuesAggregatorNode.CustomAggregator.class);
         func.startAggregation();
         func.aggregate(1);
         func.aggregate(2);

@@ -29,6 +29,8 @@ import org.raven.ds.impl.ValuesAggregatorNode;
 public class TableValuesAggregatorNode extends ValuesAggregatorNode
 {
     public final static String SELECTOR_ATTR = "selector";
+    public final static String GROUP_EXPRESSION_ATTR = "groupExpression";
+    public final static String TITLE_ATTR = "title";
 
     @Parameter(defaultValue="true")
     private Boolean selector;
@@ -38,6 +40,19 @@ public class TableValuesAggregatorNode extends ValuesAggregatorNode
 
     @Parameter(defaultValue="COLUMN")
     private AggregationDirection aggregationDirection;
+
+    @Parameter
+    private Object groupExpression;
+
+    public Object getGroupExpression()
+    {
+        return groupExpression;
+    }
+
+    public void setGroupExpression(Object groupExpression)
+    {
+        this.groupExpression = groupExpression;
+    }
 
     public AggregationDirection getAggregationDirection()
     {
