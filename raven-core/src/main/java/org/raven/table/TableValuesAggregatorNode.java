@@ -30,6 +30,7 @@ public class TableValuesAggregatorNode extends ValuesAggregatorNode
 {
     public final static String SELECTOR_ATTR = "selector";
     public final static String GROUP_EXPRESSION_ATTR = "groupExpression";
+    public final static String GROUP_VALIDATOR_EXPRESSION_ATTR = "groupValidatorExpression";
     public final static String TITLE_ATTR = "title";
 
     @Parameter(defaultValue="true")
@@ -43,6 +44,19 @@ public class TableValuesAggregatorNode extends ValuesAggregatorNode
 
     @Parameter
     private Object groupExpression;
+
+    @Parameter(defaultValue="true")
+    private Boolean groupValidatorExpression;
+
+    public Boolean getGroupValidatorExpression()
+    {
+        return groupValidatorExpression;
+    }
+
+    public void setGroupValidatorExpression(Boolean groupValidatorExpression)
+    {
+        this.groupValidatorExpression = groupValidatorExpression;
+    }
 
     public Object getGroupExpression()
     {

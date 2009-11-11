@@ -39,6 +39,10 @@ import org.weda.beans.ObjectUtils;
 @NodeClass()
 public class TableSummaryNode extends AbstractSafeDataPipe
 {
+    public static final String GROUP_COLUMN_BINDING = "groupColumn";
+    public static final String GROUP_FROM_COLUMN_BINDING = "groupFromColumn";
+    public static final String GROUP_TO_COLUMN_BINDING = "groupToColumn";
+    public static final String GROUP_VALUE_BINDING = "groupValue";
     public static final String COLUMN_NUMBER_BINDING = "columnNumber";
     public static final String ROW_BINDING = "row";
     public static final String COLUMN_NAMES_BINDINGS = "columnNames";
@@ -256,25 +260,25 @@ public class TableSummaryNode extends AbstractSafeDataPipe
                                 }
                                 else if (!ObjectUtils.equals(val, groupValue))
                                 {
-                                    bindingSupport.put("groupValue", groupValue);
-                                    RowAgg colAgg = new RowAgg(aggDef, i+add++, froms.get(aggDef.getName()), i-1);
-                                    aggDefsList.add(colAgg);
-                                    namesList.add(aggDef.getTitle());
+                                    bindingSupport.put(GROUP_VALUE_BINDING, groupValue);
+                                    RowAgg rowAgg = new RowAgg(aggDef, i+add, froms.get(aggDef.getName()), i-1);
+                                    if (addGroup(rowAgg, aggDefsList, namesList))
+                                        ++add;
                                     values.put(aggDef.getName(), val);
                                     froms.put(aggDef.getName(), i);
                                     groupValue = val;
                                 }
                                 if (i==sourceColnames.length-1)
                                 {
-                                    bindingSupport.put("groupValue", groupValue);
+                                    bindingSupport.put( GROUP_VALUE_BINDING, groupValue);
                                     if (!lastColumnNameAdded)
                                     {
                                         lastColumnNameAdded = true;
                                         namesList.add(sourceColnames[i]);
                                     }
-                                    RowAgg colAgg = new RowAgg(aggDef, i+1+add++, froms.get(aggDef.getName()), i);
-                                    aggDefsList.add(colAgg);
-                                    namesList.add(aggDef.getTitle());
+                                    RowAgg rowAgg = new RowAgg(aggDef, i+1+add, froms.get(aggDef.getName()), i);
+                                    if (addGroup(rowAgg, aggDefsList, namesList))
+                                        ++add;
                                 }
                             }finally{
                                 bindingSupport.reset();
@@ -350,6 +354,21 @@ public class TableSummaryNode extends AbstractSafeDataPipe
                 for (RowAgg rowAgg: aggDefs)
                     rowAgg.resetFunc();
             }
+        }
+
+        private boolean addGroup(RowAgg rowAgg, List<RowAgg> aggDefsList, LinkedList<String> namesList)
+        {
+            bindingSupport.put(GROUP_COLUMN_BINDING, rowAgg.index+1);
+            bindingSupport.put(GROUP_FROM_COLUMN_BINDING, rowAgg.from+1);
+            bindingSupport.put(GROUP_TO_COLUMN_BINDING, rowAgg.to+1);
+            Boolean validGroup = rowAgg.factory.getGroupValidatorExpression();
+            if (validGroup!=null && validGroup)
+            {
+                aggDefsList.add(rowAgg);
+                namesList.add(rowAgg.factory.getTitle());
+                return true;
+            }
+            return false;
         }
     }
 
