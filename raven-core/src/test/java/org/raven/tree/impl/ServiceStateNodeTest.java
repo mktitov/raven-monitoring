@@ -19,7 +19,7 @@ package org.raven.tree.impl;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.raven.PushDataSource;
+import org.raven.test.PushDataSource;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.ServiceStateAlarm;
 import static org.raven.tree.ServiceStateAlarm.*;

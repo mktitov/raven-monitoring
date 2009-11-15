@@ -23,7 +23,7 @@ import java.io.InputStream;
 import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
-import org.raven.PushDataSource;
+import org.raven.test.PushDataSource;
 import org.raven.ds.DataConsumer;
 import org.raven.test.DataCollector;
 import org.raven.test.RavenCoreTestCase;

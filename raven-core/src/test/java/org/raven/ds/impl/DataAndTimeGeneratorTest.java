@@ -28,7 +28,7 @@ import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.impl.objects.TestDataConsumer2;
 import org.raven.rrd.data.DataAndTime;
-import org.raven.PushDataSource;
+import org.raven.test.PushDataSource;
 import org.raven.tree.Node;
 
 /**

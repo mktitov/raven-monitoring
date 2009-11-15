@@ -22,7 +22,7 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.test.DataCollector;
-import org.raven.PushDataSource;
+import org.raven.test.PushDataSource;
 import org.raven.test.PushOnDemandDataSource;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.log.LogLevel;

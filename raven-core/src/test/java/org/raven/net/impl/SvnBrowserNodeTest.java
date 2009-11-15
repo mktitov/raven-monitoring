@@ -30,7 +30,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
-import org.raven.PushDataSource;
+import org.raven.test.PushDataSource;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.RavenUtils;
 import org.raven.ds.Record;

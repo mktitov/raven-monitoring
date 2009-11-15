@@ -20,7 +20,7 @@ package org.raven.ds.impl;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
-import org.raven.PushDataSource;
+import org.raven.test.PushDataSource;
 import org.raven.ds.AggregateFunctionType;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;

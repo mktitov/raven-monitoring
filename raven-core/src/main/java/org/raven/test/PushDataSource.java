@@ -15,7 +15,7 @@
  *  under the License.
  */
 
-package org.raven;
+package org.raven.test;
 
 import java.util.Collection;
 import org.raven.ds.DataConsumer;
