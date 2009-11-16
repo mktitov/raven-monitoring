@@ -454,7 +454,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
             else
             {
                 st.executeUpdate();
-                if (updateIdField && idColumnName!=null)
+                if (updateIdField && idColumnName!=null && !recordFound)
                 {
                     ResultSet rs = st.getGeneratedKeys();
                     rs.next();
