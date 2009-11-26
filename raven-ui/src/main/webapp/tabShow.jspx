@@ -518,7 +518,7 @@ partialTriggers=":poolStatus"
  				<tr:forEach    
                   	varStatus="vxStat"
                   	begin="1" 
-                  	end="40"  
+                  	end="100"  
                   	var="nameAZX" >
                 	<tr:column sortable="true"  sortProperty="#{vxStat.index}"
                 		align="left"
