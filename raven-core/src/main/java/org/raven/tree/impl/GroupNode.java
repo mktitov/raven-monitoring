@@ -15,24 +15,20 @@
  *  under the License.
  */
 
-package org.raven.ds.impl;
+package org.raven.tree.impl;
 
 import org.raven.annotations.NodeClass;
-import org.raven.tree.impl.BaseNode;
-import org.raven.tree.impl.GroupNode;
-import org.raven.tree.impl.InvisibleNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=InvisibleNode.class, childNodes=GroupNode.class)
-public class RecordSchemasNode extends BaseNode
+@NodeClass(parentNode=InvisibleNode.class, importChildTypesFromParent=true)
+public class GroupNode extends BaseNode
 {
-    public final static String NAME = "Record schemas";
-
-    public RecordSchemasNode()
+    @Override
+    public boolean isConditionalNode()
     {
-        super(NAME);
+        return true;
     }
 }

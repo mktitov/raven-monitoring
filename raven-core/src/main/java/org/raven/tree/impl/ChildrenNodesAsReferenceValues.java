@@ -59,7 +59,7 @@ public class ChildrenNodesAsReferenceValues implements AttributeReferenceValues
         try
         {
             Node node = (Node) pathResolver.resolvePath(nodePath, null).getReferencedObject();
-            Collection<Node> childs = node.getSortedChildrens();
+            Collection<Node> childs = node.getEffectiveChildrens();
             if (childs!=null && childs.size()>0)
                 for (Node child: childs)
                 {

@@ -305,23 +305,23 @@ public class RavenCoreModule
             , "after:"+RecordSchemasNode.class.getSimpleName());
     }
 
-	public static void contributeExpressionCompiler(
-			OrderedConfiguration<ExpressionCompiler> conf
-			, ExpressionCache expressionCache)
-	{
-		conf.add(
-				CacheExpressionCompiler.class.getName()
-				, new CacheExpressionCompiler(expressionCache)
-				, "before:*");
-		conf.add(
-				GroovyExpressionCompiler.class.getName()
-				, new GroovyExpressionCompiler(expressionCache)
-				, "after:"+CacheExpressionCompiler.class.getName());
-		conf.add(
-				ExpressionCompilerImpl.class.getName()
-				, new ExpressionCompilerImpl(expressionCache)
-				, "after:*");
-	}
+    public static void contributeExpressionCompiler(
+                    OrderedConfiguration<ExpressionCompiler> conf
+                    , ExpressionCache expressionCache)
+    {
+            conf.add(
+                            CacheExpressionCompiler.class.getName()
+                            , new CacheExpressionCompiler(expressionCache)
+                            , "before:*");
+            conf.add(
+                            GroovyExpressionCompiler.class.getName()
+                            , new GroovyExpressionCompiler(expressionCache)
+                            , "after:"+CacheExpressionCompiler.class.getName());
+            conf.add(
+                            ExpressionCompilerImpl.class.getName()
+                            , new ExpressionCompilerImpl(expressionCache)
+                            , "after:*");
+    }
 
     public static void contributeCacheManager(MappedConfiguration<CacheScope, Cache> conf)
     {
