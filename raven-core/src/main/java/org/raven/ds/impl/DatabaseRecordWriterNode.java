@@ -59,6 +59,10 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     @NotNull
     private Boolean enableUpdates;
 
+    @Parameter(defaultValue="false")
+    @NotNull
+    private Boolean enableDeletes;
+
     @NotNull @Parameter(defaultValue="false")
     private Boolean updateIdField;
 
@@ -89,6 +93,16 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     public void setEnableUpdates(Boolean enableUpdates)
     {
         this.enableUpdates = enableUpdates;
+    }
+
+    public Boolean getEnableDeletes()
+    {
+        return enableDeletes;
+    }
+
+    public void setEnableDeletes(Boolean enableDeletes)
+    {
+        this.enableDeletes = enableDeletes;
     }
 
     public long getRecordSetsRecieved()
@@ -251,6 +265,11 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         return query.toString();
     }
 
+    private String createDeleteQuery(String tableName, String idColumnName)
+    {
+        return String.format("DELETE FROM %s where %s=?", tableName, idColumnName);
+    }
+
     private synchronized void flushRecords() throws Exception
     {
         if (isLogLevelEnabled(LogLevel.DEBUG))
@@ -284,7 +303,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                     if (meta==null)
                     {
                         meta = new SchemaMeta(
-                                record.getSchema(), enableUpdates, batchUpdate, updateIdField);
+                                record.getSchema(), enableUpdates, enableDeletes, batchUpdate, updateIdField);
                         meta.init(con);
                         metas.put(record.getSchema(), meta);
                     }
@@ -292,10 +311,8 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                 }
 
                 if (batchUpdate)
-                {
                     for (SchemaMeta meta: metas.values())
                         meta.executeBatch();
-                }
 
                 con.commit();
 
@@ -327,6 +344,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         private final String insertQuery;
         private String updateQuery;
         private String selectQuery;
+        private String deleteQuery;
         private boolean tryUpdate = false;
         private final boolean batchUpdate;
         private final boolean updateIdField;
@@ -334,11 +352,13 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         private PreparedStatement select;
         private PreparedStatement insert;
         private PreparedStatement update;
+        private PreparedStatement delete;
         private boolean hasUpdates = false;
         private boolean hasInserts = false;
+        private boolean hasDeletes = false;
 
         public SchemaMeta(
-                RecordSchema recordSchema, boolean enableUpdates, boolean batchUpdate
+                RecordSchema recordSchema, boolean enableUpdates, boolean enableDeletes, boolean batchUpdate
                 , boolean updateIdField)
             throws Exception
         {
@@ -394,6 +414,9 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                 selectQuery = createSelectQuery(tableName, idColumnName);
                 tryUpdate = true;
             }
+            if (idColumnName!=null && enableDeletes)
+                deleteQuery = createDeleteQuery(tableName, idColumnName);
+                
         }
 
         public void init(Connection connection) throws SQLException
@@ -404,6 +427,8 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                 update = connection.prepareStatement(updateQuery);
                 select = connection.prepareStatement(selectQuery);
             }
+            if (deleteQuery!=null)
+                delete = connection.prepareStatement(deleteQuery);
         }
 
         private boolean findRecord(Record record) throws RecordException, SQLException
@@ -433,28 +458,38 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
 
         public void updateRecord(Record record) throws Exception
         {
-            boolean recordFound = findRecord(record);
-            PreparedStatement st = recordFound? update : insert;
+            PreparedStatement st = null;
+            boolean recordFound = false;
+            boolean deleteRecord = deleteQuery!=null && record.containsTag(Record.DELETE_TAG);
+            if (!deleteRecord)
+            {
+                recordFound = findRecord(record);
+                st = recordFound? update : insert;
+            }
+            else
+                st = delete;
             int i=1;
             Object idFieldValue = null;
             for (RecordSchemaField field: dbFields)
             {
                 Object val = RecordSchemaFieldType.getSqlObject(
                         field, record.getValue(field.getName()));
-                if (!recordFound || !field.getName().equals(idFieldName))
-                    st.setObject(i++, val);
-                else
+                if ((recordFound || deleteRecord) && field.getName().equals(idFieldName))
                     idFieldValue = val;
+                else if (!deleteRecord)
+                    st.setObject(i++, val);
             }
             if (recordFound)
                 st.setObject(dbFields.size(), idFieldValue);
+            else if (deleteRecord)
+                st.setObject(1, idFieldValue);
             
             if (batchUpdate)
                 st.addBatch();
             else
             {
                 st.executeUpdate();
-                if (updateIdField && idColumnName!=null && !recordFound)
+                if (updateIdField && idColumnName!=null && !recordFound && !deleteRecord)
                 {
                     ResultSet rs = st.getGeneratedKeys();
                     rs.next();
@@ -462,10 +497,12 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                     record.setValue(idFieldName, idVal);
                 }
             }
+            if (!hasDeletes)
+                hasDeletes = deleteRecord;
             if (!hasInserts)
-                hasInserts = !recordFound;
+                hasInserts = !recordFound && !deleteRecord;
             if (!hasUpdates)
-                hasUpdates = recordFound;
+                hasUpdates = recordFound && !deleteRecord;
         }
 
         public void executeBatch() throws Exception
@@ -476,6 +513,8 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                     insert.executeBatch();
                 if (hasUpdates)
                     update.executeBatch();
+                if (hasDeletes)
+                    delete.executeBatch();
             }
         }
 

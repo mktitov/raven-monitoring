@@ -25,6 +25,8 @@ import java.util.Map;
  */
 public interface Record
 {
+    public final static String DELETE_TAG = "DELETE";
+
     /**
      * Returns the record schema.
      */
@@ -63,4 +65,30 @@ public interface Record
      * Copies field value from record passed in the parameter
      */
     public void copyFrom(Record record) throws RecordException;
+    /**
+     * Returns the tag attached to the record or null if record does not have the tag with
+     * the passed name.
+     * @param tagName the name of the tag
+     */
+    public Object getTag(String tagName) throws RecordException;
+    /**
+     * Attach tag to the record.
+     * @param the name of the tag
+     * @param tag the tag
+     */
+    public void setTag(String tagName, Object tag) throws RecordException;
+    /**
+     * Removes the selected tag from the record.
+     * @param tagName the tag name.
+     */
+    public void removeTag(String tagName) throws RecordException;
+    /**
+     * Returns <b>true</b> if record contains the tag with name passed in the parameter.
+     * @param tagName the tag name
+     */
+    public boolean containsTag(String tagName) throws RecordException;
+    /**
+     * Returns the map containing the record tags. You can use this map for update operations.
+     */
+    public Map<String, Object> getTags() throws RecordException;
 }

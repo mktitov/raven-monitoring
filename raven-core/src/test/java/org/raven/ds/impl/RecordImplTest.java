@@ -18,6 +18,7 @@
 package org.raven.ds.impl;
 
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import org.junit.Test;
 import org.raven.ds.InvalidRecordFieldException;
 import org.raven.ds.Record;
@@ -185,5 +186,45 @@ public class RecordImplTest extends RavenCoreTestCase
         assertNull(rec2.getValue("field2"));
         
         verify(schema1, field, schema2, field2, field3);
+    }
+
+    @Test
+    public void tag_test() throws RecordException
+    {
+        RecordSchema schema = createMock(RecordSchema.class);
+        RecordSchemaField field = createMock(RecordSchemaField.class);
+        expect(schema.getFields()).andReturn(new RecordSchemaField[]{field});
+        expect(field.getName()).andReturn("field");
+//        expect(schema.getName()).andReturn("schema");
+        replay(schema, field);
+
+        Record rec = new RecordImpl(schema);
+        assertFalse(rec.containsTag("tag1"));
+        assertNull(rec.getTag("tag1"));
+        assertSame(Collections.EMPTY_MAP, rec.getTags());
+        assertFalse(rec.getTags().containsKey("tag1"));
+
+        rec.setTag("tag1", "value1");
+        rec.setTag("tag2", "value2");
+        assertEquals(2, rec.getTags().size());
+        assertEquals("value1", rec.getTags().get("tag1"));
+        assertEquals("value2", rec.getTags().get("tag2"));
+        assertTrue(rec.containsTag("tag1"));
+        assertEquals("value1", rec.getTag("tag1"));
+        assertTrue(rec.containsTag("tag2"));
+        assertEquals("value2", rec.getTag("tag2"));
+
+        rec.removeTag("tag1");
+        assertFalse(rec.containsTag("tag1"));
+        assertNull(rec.getTag("tag1"));
+        assertTrue(rec.containsTag("tag2"));
+        assertEquals("value2", rec.getTag("tag2"));
+
+        rec.removeTag("tag2");
+        assertFalse(rec.containsTag("tag2"));
+        assertNull(rec.getTag("tag2"));
+        assertSame(Collections.EMPTY_MAP, rec.getTags());
+        
+        verify(schema, field);
     }
 }

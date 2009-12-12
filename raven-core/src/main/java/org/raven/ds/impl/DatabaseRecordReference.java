@@ -104,4 +104,41 @@ public class DatabaseRecordReference extends AbstractDatabaseRecordReference imp
         }
     }
 
+    public Object getTag(String tagName) throws RecordException
+    {
+        if (!initialized)
+            init();
+        return wrappedRecord==null? null : wrappedRecord.getTag(tagName);
+    }
+
+    public void setTag(String tagName, Object tag) throws RecordException
+    {
+        if (!initialized)
+            init();
+        if (wrappedRecord!=null)
+            wrappedRecord.setTag(tagName, tag);
+    }
+
+    public void removeTag(String tagName) throws RecordException
+    {
+        if (!initialized)
+            init();
+        if (wrappedRecord!=null)
+            wrappedRecord.removeTag(tagName);
+    }
+
+    public boolean containsTag(String tagName) throws RecordException
+    {
+        if (!initialized)
+            init();
+        return wrappedRecord==null? null : wrappedRecord.containsTag(tagName);
+    }
+
+    public Map<String, Object> getTags() throws RecordException
+    {
+        if (!initialized)
+            init();
+        return wrappedRecord==null? null : wrappedRecord.getTags();
+    }
+
 }

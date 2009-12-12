@@ -213,6 +213,32 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
         assertEquals(new Integer(1), record.getValue("field1"));
     }
 
+    @Test
+    public void delete_test() throws Exception
+    {
+        writer.setUpdateIdField(true);
+        writer.setEnableUpdates(Boolean.TRUE);
+        Record record = schema.createRecord();
+        record.setValue("field2", "10.50.1.1");
+        ds.pushData(record);
+        ds.pushData(null);
+
+        List<Object[]> rows = getRows(pool.getConnection());
+        assertEquals(1, rows.size());
+
+        record.setTag(Record.DELETE_TAG, null);
+        ds.pushData(record);
+        ds.pushData(null);
+        assertEquals(1, getRows(pool.getConnection()).size());
+
+        writer.setEnableDeletes(Boolean.TRUE);
+        ds.pushData(record);
+        ds.pushData(null);
+        assertEquals(0, getRows(pool.getConnection()).size());
+
+        writer.stop();
+    }
+
     private List<Object[]> getRows(Connection con) throws SQLException
     {
         Statement st = con.createStatement();

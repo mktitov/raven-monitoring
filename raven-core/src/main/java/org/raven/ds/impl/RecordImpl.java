@@ -41,6 +41,7 @@ public class RecordImpl implements Record
     private final RecordSchema schema;
     private final Map<String, Object> values;
     private final Map<String, RecordSchemaField> fields;
+    private Map<String, Object> tags;
 
     public RecordImpl(RecordSchema schema) throws RecordException
     {
@@ -113,5 +114,37 @@ public class RecordImpl implements Record
                 try{
                     setValue(entry.getKey(), entry.getValue());
                 }catch(InvalidRecordFieldException e){ }
+    }
+
+    public Object getTag(String tagName)
+    {
+        return tags==null? null : tags.get(tagName);
+    }
+
+    public void setTag(String tagName, Object tag)
+    {
+        if (tags==null)
+            tags = new HashMap<String, Object>();
+        tags.put(tagName, tag);
+    }
+
+    public void removeTag(String tagName)
+    {
+        if (tags!=null)
+        {
+            tags.remove(tagName);
+            if (tags.size()==0)
+                tags = null;
+        }
+    }
+
+    public boolean containsTag(String tagName)
+    {
+        return tags==null? false : tags.containsKey(tagName);
+    }
+
+    public Map<String, Object> getTags()
+    {
+        return tags==null? Collections.EMPTY_MAP : tags;
     }
 }
