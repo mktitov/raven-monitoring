@@ -35,6 +35,7 @@ import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
+import org.raven.tree.impl.AbstractActionViewableNode;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.tree.impl.ViewableObjectImpl;
@@ -47,7 +48,7 @@ import org.weda.internal.annotations.Message;
  * @author Mikhail Titov
  */
 @NodeClass
-public class RecordsAsTableNode extends BaseNode implements Viewable
+public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
 {
     public final static String DATA_SOURCE_ATTR = "dataSource";
     public final static String RECORD_SCHEMA_ATTR = "recordSchema";
@@ -76,6 +77,9 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
     @NotNull
     private Boolean autoRefresh;
 
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean enableDeletes;
+
     @Message
     private String detailColumnName;
     @Message
@@ -84,6 +88,12 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
     private String fieldValueColumnName;
     @Message
     private String detailValueViewLinkName;
+    @Message
+    private static String deleteMessage;
+    @Message
+    private static String deleteConfirmationMessage;
+    @Message
+    private static String deleteCompletionMessage;
 
     private Map<String, RecordSchemaField> fields;
 
@@ -115,6 +125,16 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
     public void setAutoRefresh(Boolean autoRefresh)
     {
         this.autoRefresh = autoRefresh;
+    }
+
+    public Boolean getEnableDeletes()
+    {
+        return enableDeletes;
+    }
+
+    public void setEnableDeletes(Boolean enableDeletes)
+    {
+        this.enableDeletes = enableDeletes;
     }
 
     public DataSource getDataSource()
@@ -204,7 +224,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
 
         RecordAsTableDataConsumer dataConsumer = new RecordAsTableDataConsumer(
                 fieldsOrderArr, detailColumnName, detailValueViewLinkName
-                , fieldNameColumnName, fieldValueColumnName, detailColumnNumber, columnValues);
+                , fieldNameColumnName, fieldValueColumnName, detailColumnNumber, columnValues
+                , deleteConfirmationMessage, deleteMessage, deleteCompletionMessage);
 
         dataSource.getDataImmediate(dataConsumer, attrs==null? null : attrs.values());
 
@@ -236,6 +257,17 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
             }
         }
     }
+
+    public boolean getDataImmediate(DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
+    {
+        throw new UnsupportedOperationException(
+                String.format("Datasource (%s) can work only in push mode", getPath()));
+    }
+
+    public Collection<NodeAttribute> generateAttributes() 
+    {
+        return null;
+    }
     
     public class RecordAsTableDataConsumer implements DataConsumer
     {
@@ -250,6 +282,9 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
         private final String fieldValueColumnName;
         private final String detailValueViewLinkName;
         private final int detailColumnNumber;
+        private final String deleteConfirmationMessage;
+        private final String deleteMessage;
+        private final String deleteCompletionMessage;
         private final Map<Integer, RecordsAsTableColumnValueNode> columnValues;
 
         public RecordAsTableDataConsumer(
@@ -257,7 +292,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
                 , String fieldNameColumnName
                 , String fieldValueColumnName
                 , Integer detailColumnNumber
-                , Map<Integer, RecordsAsTableColumnValueNode> columnValues)
+                , Map<Integer, RecordsAsTableColumnValueNode> columnValues
+                , String deleteConfirmationMessage, String deleteMessage, String deleteCompletionMessage)
         {
             fields = new HashMap<String, RecordSchemaField>();
             this.recordSchema = RecordsAsTableNode.this.recordSchema;
@@ -267,6 +303,9 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
             this.fieldNameColumnName = fieldNameColumnName;
             this.fieldValueColumnName = fieldValueColumnName;
             this.columnValues = columnValues;
+            this.deleteCompletionMessage = deleteCompletionMessage;
+            this.deleteConfirmationMessage = deleteConfirmationMessage;
+            this.deleteMessage = deleteMessage;
             
             schemaFields = recordSchema.getFields();
             if (fieldsOrder!=null)
@@ -341,9 +380,20 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
             }
             
             int len = fieldNames.length + (showFieldsInDetailColumn&&detailColumnNumber<0? 1 : 0);
+            int actionsCount = 0;
+            if (enableDeletes)
+                ++actionsCount;
+            len += actionsCount;
             Object[] row = new Object[len];
             try
             {
+                if (actionsCount>0)
+                {
+                    int pos=0;
+                    if (enableDeletes)
+                        row[pos++] = new DeleteRecordAction(
+                                deleteConfirmationMessage, deleteMessage, deleteCompletionMessage, record);
+                }
                 for (int i=0; i<fieldNames.length; ++i)
                     try
                     {
@@ -363,9 +413,9 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
                                 String.class, value
                                 , fields.get(fieldNames[i]).getPattern());
                         if (showFieldsInDetailColumn && detailColumnNumber==i)
-                            row[i] = createDetailObject((String)value, record);
+                            row[i+actionsCount] = createDetailObject((String)value, record);
                         else
-                            row[i] = value;
+                            row[i+actionsCount] = value;
                     }
                     catch (Exception e)
                     {
@@ -420,6 +470,28 @@ public class RecordsAsTableNode extends BaseNode implements Viewable
         public String getPath()
         {
             return RecordsAsTableNode.this.getPath();
+        }
+    }
+
+    public class DeleteRecordAction extends AbstractActionViewableNode
+    {
+        private final Record record;
+        private final String deleteCompletionMessage;
+
+        public DeleteRecordAction(
+                String confirmationMessage, String displayMessage, String deleteCompletionMessage, Record record)
+        {
+            super(confirmationMessage, displayMessage, RecordsAsTableNode.this);
+            this.deleteCompletionMessage = deleteCompletionMessage;
+            this.record = record;
+        }
+
+        @Override
+        public String executeAction() throws Exception
+        {
+            record.setTag(Record.DELETE_TAG, null);
+            DataSourceHelper.sendDataToConsumers(RecordsAsTableNode.this, record);
+            return deleteCompletionMessage;
         }
     }
 }

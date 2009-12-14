@@ -230,11 +230,13 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
         ds.pushData(record);
         ds.pushData(null);
         assertEquals(1, getRows(pool.getConnection()).size());
+        assertTrue(record.containsTag(Record.DELETE_TAG));
 
         writer.setEnableDeletes(Boolean.TRUE);
         ds.pushData(record);
         ds.pushData(null);
         assertEquals(0, getRows(pool.getConnection()).size());
+        assertFalse(record.containsTag(Record.DELETE_TAG));
 
         writer.stop();
     }

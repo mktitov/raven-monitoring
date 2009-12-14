@@ -461,48 +461,56 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
             PreparedStatement st = null;
             boolean recordFound = false;
             boolean deleteRecord = deleteQuery!=null && record.containsTag(Record.DELETE_TAG);
-            if (!deleteRecord)
+            try
             {
-                recordFound = findRecord(record);
-                st = recordFound? update : insert;
-            }
-            else
-                st = delete;
-            int i=1;
-            Object idFieldValue = null;
-            for (RecordSchemaField field: dbFields)
-            {
-                Object val = RecordSchemaFieldType.getSqlObject(
-                        field, record.getValue(field.getName()));
-                if ((recordFound || deleteRecord) && field.getName().equals(idFieldName))
-                    idFieldValue = val;
-                else if (!deleteRecord)
-                    st.setObject(i++, val);
-            }
-            if (recordFound)
-                st.setObject(dbFields.size(), idFieldValue);
-            else if (deleteRecord)
-                st.setObject(1, idFieldValue);
-            
-            if (batchUpdate)
-                st.addBatch();
-            else
-            {
-                st.executeUpdate();
-                if (updateIdField && idColumnName!=null && !recordFound && !deleteRecord)
+                if (!deleteRecord)
                 {
-                    ResultSet rs = st.getGeneratedKeys();
-                    rs.next();
-                    Object idVal = rs.getObject(1);
-                    record.setValue(idFieldName, idVal);
+                    recordFound = findRecord(record);
+                    st = recordFound? update : insert;
                 }
+                else
+                    st = delete;
+                int i=1;
+                Object idFieldValue = null;
+                for (RecordSchemaField field: dbFields)
+                {
+                    Object val = RecordSchemaFieldType.getSqlObject(
+                            field, record.getValue(field.getName()));
+                    if ((recordFound || deleteRecord) && field.getName().equals(idFieldName))
+                        idFieldValue = val;
+                    else if (!deleteRecord)
+                        st.setObject(i++, val);
+                }
+                if (recordFound)
+                    st.setObject(dbFields.size(), idFieldValue);
+                else if (deleteRecord)
+                    st.setObject(1, idFieldValue);
+
+                if (batchUpdate)
+                    st.addBatch();
+                else
+                {
+                    st.executeUpdate();
+                    if (updateIdField && idColumnName!=null && !recordFound && !deleteRecord)
+                    {
+                        ResultSet rs = st.getGeneratedKeys();
+                        rs.next();
+                        Object idVal = rs.getObject(1);
+                        record.setValue(idFieldName, idVal);
+                    }
+                }
+                if (!hasDeletes)
+                    hasDeletes = deleteRecord;
+                if (!hasInserts)
+                    hasInserts = !recordFound && !deleteRecord;
+                if (!hasUpdates)
+                    hasUpdates = recordFound && !deleteRecord;
             }
-            if (!hasDeletes)
-                hasDeletes = deleteRecord;
-            if (!hasInserts)
-                hasInserts = !recordFound && !deleteRecord;
-            if (!hasUpdates)
-                hasUpdates = recordFound && !deleteRecord;
+            finally
+            {
+                if (deleteRecord)
+                    record.removeTag(Record.DELETE_TAG);
+            }
         }
 
         public void executeBatch() throws Exception
