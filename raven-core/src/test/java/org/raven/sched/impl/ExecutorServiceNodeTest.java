@@ -18,12 +18,18 @@
 package org.raven.sched.impl;
 
 import java.io.IOException;
+import java.util.List;
 import org.junit.Test;
+import org.raven.RavenUtils;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.log.LogLevel;
 import org.raven.sched.ExecutorServiceException;
 import org.raven.sched.Task;
+import org.raven.table.Table;
 import org.raven.tree.Node;
+import org.raven.tree.Viewable;
+import org.raven.tree.ViewableObject;
+import sun.management.snmp.jvminstr.JvmThreadInstanceEntryImpl.ThreadStateMap;
 
 /**
  *
@@ -32,7 +38,7 @@ import org.raven.tree.Node;
 public class ExecutorServiceNodeTest extends RavenCoreTestCase
 {
     @Test
-    public void test() throws ExecutorServiceException, InterruptedException, IOException
+    public void test() throws ExecutorServiceException, InterruptedException, IOException, Exception
     {
         ExecutorServiceNode executor = new ExecutorServiceNode();
         executor.setName("executor");
@@ -51,6 +57,28 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase
 
         Thread.sleep(100);
         assertEquals(new Integer(2), executor.getExecutingTaskCount());
+        List<ViewableObject> vos = executor.getViewableObjects(null);
+        assertNotNull(vos);
+        assertEquals(1, vos.size());
+        Object data = vos.get(0).getData();
+        assertTrue(data instanceof Table);
+        List<Object[]> rows = RavenUtils.tableAsList((Table)data);
+        assertNotNull(rows);
+        assertEquals(2, rows.size());
+        assertEquals(executor.getPath(), rows.get(0)[0]);
+        assertEquals("status message", rows.get(0)[1]);
+        assertEquals(Thread.State.TIMED_WAITING.toString(), rows.get(0)[4]);
+        assertTrue(rows.get(0)[5] instanceof ViewableObject);
+        ViewableObject vo = (ViewableObject) rows.get(0)[5];
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, vo.getMimeType());
+        assertTrue(vo.getData() instanceof Table);
+        Table trace = (Table)vo.getData();
+        rows = RavenUtils.tableAsList(trace);
+        assertTrue(rows.size()>0);
+        System.out.println("\nTRACE: \n");
+        for (Object[] row: rows)
+            System.out.println(row[0]);
+        
 
         Thread.sleep(1000);
 

@@ -212,7 +212,7 @@ public class ExecutorServiceNode extends BaseNode
         if (!Status.STARTED.equals(getStatus()))
             return null;
         TableImpl table = new TableImpl(new String[]{
-            "Node started the task", "Status", "Execution start time", "Execution duration (sec)"});
+            "Node started the task", "Status", "Execution start time", "Execution duration (sec)", "Thread status", "Stack trace"});
         Collection<TaskWrapper> taskList = executingTasks;
         if (taskList!=null)
             for (TaskWrapper task: taskList)
@@ -221,9 +221,24 @@ public class ExecutorServiceNode extends BaseNode
                 if (task.getExecutionStart()!=0)
                     date = converter.convert(
                         String.class, new Date(task.getExecutionStart()), "dd.MM.yyyy HH:mm:ss");
+                Thread thread = task.getThread();
+                String threadStatus = thread==null? null : thread.getState().toString();
+                ViewableObject traceVO = null;
+                if (thread!=null)
+                {
+                    StackTraceElement[] elems = thread.getStackTrace();
+                    if (elems!=null && elems.length>0)
+                    {
+                        TableImpl trace = new TableImpl(new String[]{"Stack trace"});
+                        for (StackTraceElement elem: elems)
+                            trace.addRow(new Object[]{elem.toString()});
+                        traceVO = new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, trace, "trace");
+                    }
+                            
+                }
                 table.addRow(new Object[]{
                     task.getTaskNode().getPath(), task.getStatusMessage()
-                    , date, task.getExecutionDuation()});
+                    , date, task.getExecutionDuation(), threadStatus, traceVO});
             }
 
         ViewableObject viewableObject =
@@ -242,6 +257,7 @@ public class ExecutorServiceNode extends BaseNode
         private final Task task;
         private final Long id;
         private long executionStart;
+        private Thread thread;
 
         public TaskWrapper(Task task)
         {
@@ -251,6 +267,10 @@ public class ExecutorServiceNode extends BaseNode
 
         public Long getId() {
             return id;
+        }
+
+        public Thread getThread() {
+            return thread;
         }
 
         public Node getTaskNode() 
@@ -275,6 +295,7 @@ public class ExecutorServiceNode extends BaseNode
 
         public void run()
         {
+            thread = Thread.currentThread();
             executionStart = executedTasks.markOperationProcessingStart();
             try
             {
