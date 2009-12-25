@@ -27,6 +27,8 @@ public class HttpSessionNode
     public final static String RESPONSE_RESPONSE = "response";
     public final static String HEADERS = "headers";
     public final static String REQUEST = "request";
+    public final static String REQUEST_REQUEST = "request";
+    public final static String URI = "uri";
     public final static String PARAMS = "params";
     public final static String CONTENT = "content";
     public final static String DATA = "data";

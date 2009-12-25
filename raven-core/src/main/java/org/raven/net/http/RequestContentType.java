@@ -21,6 +21,7 @@ package org.raven.net.http;
  *
  * @author Mikhail Titov
  */
-public enum ResponseContentType {
-    TEXT, HTML, XML, JSON, BINARY
+public enum RequestContentType
+{
+    NONE, X_WWW_FORM_URLENCODED
 }

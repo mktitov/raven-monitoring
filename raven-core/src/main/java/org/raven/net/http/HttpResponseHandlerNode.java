@@ -17,12 +17,16 @@
 
 package org.raven.net.http;
 
+import groovy.util.XmlSlurper;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Map;
 import javax.script.Bindings;
+import net.sf.json.groovy.JsonSlurper;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
-import org.json.JSONObject;
+import org.apache.http.HttpResponse;
+import org.ccil.cowan.tagsoup.Parser;
 import org.raven.annotations.Parameter;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
@@ -35,6 +39,8 @@ import static org.raven.net.http.HttpSessionNode.*;
  */
 public class HttpResponseHandlerNode extends BaseNode
 {
+
+    public final static String PROCESS_RESPONSE_ATTR = "processResponse";
     @Parameter
     private Charset responseContentEncoding;
     
@@ -56,18 +62,29 @@ public class HttpResponseHandlerNode extends BaseNode
     public Object processResponse(Map<String, Object> params) throws Exception
     {
         Map<String, Object> responseMap = (Map<String, Object>) params.get(RESPONSE);
-        HttpEntity entity = (HttpEntity) responseMap.get(RESPONSE_RESPONSE);
+        HttpResponse response = (HttpResponse) responseMap.get(RESPONSE_RESPONSE);
+        HttpEntity entity = response.getEntity();
         try
         {
-            Object content = entity==null? null : entity.getContent();
+            InputStream contentStream = entity==null? null : entity.getContent();
+            Object content = contentStream;
             if (content!=null && responseContentType!=ResponseContentType.BINARY)
             {
-                Charset charset = responseContentEncoding;
-                String text = IOUtils.toString(entity.getContent(), charset==null? "utf-8" : charset.name());
-                content = text;
                 switch (responseContentType)
                 {
-                    case JSON : content = new JSONObject(text); break;
+                    case HTML:
+                    case TEXT : 
+                    case JSON :
+                        Charset charset = responseContentEncoding;
+                        String text = IOUtils.toString(contentStream, charset==null? "utf-8" : charset.name());
+                        switch (responseContentType)
+                        {
+                            case TEXT: content = text; break;
+                            case JSON: content = new JsonSlurper().parseText(text); break;
+                            case HTML: content = new XmlSlurper(new Parser()).parseText(text); break;
+                        }
+                        break;
+                    case XML  : content = new XmlSlurper().parse(contentStream);
                 }
             }
             responseMap.put(CONTENT, content);
