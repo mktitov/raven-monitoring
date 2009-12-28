@@ -46,6 +46,12 @@ public class HttpRequestNode extends HttpResponseHandlerNode
     @NotNull @Parameter(defaultValue="NONE")
     private RequestContentType requestContentType;
 
+    @NotNull @Parameter
+    private String host;
+
+    @NotNull @Parameter(defaultValue="80")
+    private Integer port;
+
     /**
      * Returns the HttpPost or HttpGet object
      * @throws Exception
@@ -53,18 +59,16 @@ public class HttpRequestNode extends HttpResponseHandlerNode
     @Override
     public Object processResponse(Map<String, Object> params) throws Exception
     {
-        Map<String, Object> requestMap = new HashMap<String, Object>();
-        params.put(HttpSessionNode.REQUEST, requestMap);
+        Map<String, Object> requestMap = (Map<String, Object>) params.get(HttpSessionNode.REQUEST);
         HttpRequestBase request = requestType==RequestType.GET? new HttpGet() : new HttpPost();
         requestMap.put(HttpSessionNode.REQUEST_REQUEST, request);
 
         requestMap.put(HttpSessionNode.URI, uri);
+        requestMap.put(HttpSessionNode.HOST, host);
+        requestMap.put(HttpSessionNode.PORT, port);
 
-        Map<String, String> requestHeaders = new HashMap<String, String>();
-        requestMap.put(HttpSessionNode.HEADERS, requestHeaders);
-
-        Map<String, String> requestParams = new HashMap<String, String>();
-        requestMap.put(HttpSessionNode.PARAMS, requestParams);
+        Map<String, String> requestHeaders = (Map<String, String>)requestMap.get(HttpSessionNode.HEADERS);
+        Map<String, String> requestParams = (Map<String, String>)requestMap.get(HttpSessionNode.PARAMS);
 
         super.processResponse(params);
 
@@ -128,5 +132,21 @@ public class HttpRequestNode extends HttpResponseHandlerNode
 
     public void setRequestContentType(RequestContentType requestContentType) {
         this.requestContentType = requestContentType;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public Integer getPort() {
+        return port;
+    }
+
+    public void setPort(Integer port) {
+        this.port = port;
     }
 }

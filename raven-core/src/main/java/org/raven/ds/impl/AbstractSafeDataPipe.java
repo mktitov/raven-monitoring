@@ -242,6 +242,13 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
 
     public void setData(DataSource dataSource, Object data)
     {
+        if (!Status.STARTED.equals(getStatus()))
+        {
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug(String.format(
+                        "Can't recieve DATA from data source (%s). Node not STARTED", dataSource.getPath()));
+            return;
+        }
         if (useExpression)
         {
             bindingSupport.put(DATA_BINDING, data);
