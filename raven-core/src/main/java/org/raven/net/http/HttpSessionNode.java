@@ -20,6 +20,8 @@ package org.raven.net.http;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
@@ -67,11 +69,14 @@ public class HttpSessionNode extends AbstractSafeDataPipe
     @Parameter
     private String host;
 
-    @Parameter
+    @Parameter(defaultValue="80")
     private Integer port;
 
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
     private Object initRequest;
+
+    @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
+    private Object errorHandler;
 
     @Override
     protected void doSetData(DataSource dataSource, Object data) throws Exception
@@ -81,19 +86,46 @@ public class HttpSessionNode extends AbstractSafeDataPipe
         if (childs!=null)
         {
             HttpResponse response = null;
+            Object res = null;
             for (Node child: childs)
             {
                 if (child instanceof HttpResponseHandlerNode)
                 {
-                    Map params = new HashMap();
+                    Map<String, Object> params = new HashMap<String, Object>();
+                    params.put(DATA_BINDING, data);
+                    params.put(SKIP_DATA_BINDING, SKIP_DATA);
                     boolean isRequest = child instanceof HttpRequestNode;
                     if (isRequest)
                         params.put(REQUEST, initRequest());
+
                     HttpResponseHandlerNode handler = (HttpResponseHandlerNode) child;
+
                     Map responseMap = new HashMap();
                     responseMap.put(RESPONSE_RESPONSE, response);
+                    params.put(RESPONSE, responseMap);
+
+                    Integer expectedStatus = handler.getExpectedResponseStatusCode();
+                    if (response!=null && expectedStatus!=null
+                        && !expectedStatus.equals(response.getStatusLine().getStatusCode()))
+                    {
+                        handleError(params);
+                        return;
+                    }
+
+                    res = handler.processResponse(params);
+
+                    if (isRequest)
+                    {
+                        Map requestMap = (Map)params.get(REQUEST);
+                        HttpRequest request = (HttpRequest)requestMap.get(REQUEST_REQUEST);
+                        HttpHost target =
+                                new HttpHost((String)requestMap.get(HOST), (Integer)requestMap.get(PORT));
+                        response = client.execute(target, request);
+                    }
                 }
             }
+            if (SKIP_DATA!=res)
+                sendDataToConsumers(res==null? data : res);
         }
     }
 
@@ -153,6 +185,14 @@ public class HttpSessionNode extends AbstractSafeDataPipe
         this.initRequest = initRequest;
     }
 
+    public Object getErrorHandler() {
+        return errorHandler;
+    }
+
+    public void setErrorHandler(Object errorHandler) {
+        this.errorHandler = errorHandler;
+    }
+
     private HttpClient createHttpClient()
     {
         DefaultHttpClient client = new DefaultHttpClient();
@@ -192,5 +232,21 @@ public class HttpSessionNode extends AbstractSafeDataPipe
         }
 
         return requestMap;
+    }
+
+    private void handleError(Map<String, Object> params)
+    {
+        for (Map.Entry<String, Object> param: params.entrySet())
+            bindingSupport.put(param.getKey(), param.getValue());
+        try
+        {
+            Object res = errorHandler;
+            if (SKIP_DATA!=res)
+                sendDataToConsumers(res==null? params.get(DATA_BINDING) : res);
+        }
+        finally
+        {
+            bindingSupport.reset();
+        }
     }
 }

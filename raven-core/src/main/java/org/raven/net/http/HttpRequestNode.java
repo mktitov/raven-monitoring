@@ -19,7 +19,6 @@ package org.raven.net.http;
 
 import java.net.URI;
 import java.net.URLEncoder;
-import java.util.HashMap;
 import java.util.Map;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -49,7 +48,7 @@ public class HttpRequestNode extends HttpResponseHandlerNode
     @NotNull @Parameter
     private String host;
 
-    @NotNull @Parameter(defaultValue="80")
+    @NotNull @Parameter
     private Integer port;
 
     /**

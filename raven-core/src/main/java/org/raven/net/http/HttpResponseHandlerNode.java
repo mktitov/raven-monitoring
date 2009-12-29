@@ -50,6 +50,9 @@ public class HttpResponseHandlerNode extends BaseNode
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
     private Object processResponse;
 
+    @Parameter(defaultValue="200")
+    private Integer expectedResponseStatusCode;
+
     protected BindingSupportImpl bindingSupport;
 
     @Override
@@ -63,7 +66,7 @@ public class HttpResponseHandlerNode extends BaseNode
     {
         Map<String, Object> responseMap = (Map<String, Object>) params.get(RESPONSE);
         HttpResponse response = (HttpResponse) responseMap.get(RESPONSE_RESPONSE);
-        HttpEntity entity = response.getEntity();
+        HttpEntity entity = response==null? null : response.getEntity();
         try
         {
             InputStream contentStream = entity==null? null : entity.getContent();
@@ -131,5 +134,13 @@ public class HttpResponseHandlerNode extends BaseNode
 
     public void setResponseContentType(ResponseContentType responseContentType) {
         this.responseContentType = responseContentType;
+    }
+    
+    public Integer getExpectedResponseStatusCode() {
+        return expectedResponseStatusCode;
+    }
+
+    public void setExpectedResponseStatusCode(Integer expectedResponseStatusCode) {
+        this.expectedResponseStatusCode = expectedResponseStatusCode;
     }
 }
