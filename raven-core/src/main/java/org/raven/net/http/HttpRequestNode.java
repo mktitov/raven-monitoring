@@ -24,6 +24,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.weda.annotations.constraints.NotNull;
 
@@ -31,6 +32,7 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
+@NodeClass(parentNode=HttpSessionNode.class)
 public class HttpRequestNode extends HttpResponseHandlerNode
 {
     @NotNull @Parameter(defaultValue="GET")

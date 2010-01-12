@@ -17,22 +17,32 @@
 
 package org.raven.net.http;
 
+import java.sql.ClientInfoStatus;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
+import org.apache.http.annotation.ThreadSafe;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.NTCredentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractSafeDataPipe;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
+import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.weda.annotations.constraints.NotNull;
 
@@ -40,8 +50,10 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
+@NodeClass
 public class HttpSessionNode extends AbstractSafeDataPipe
 {
+    public static final String IS_NEW_SESSION_BINDING = "isNewSession";
     public final static String RESPONSE = "response";
     public final static String RESPONSE_RESPONSE = "response";
     public final static String HEADERS = "headers";
@@ -78,11 +90,48 @@ public class HttpSessionNode extends AbstractSafeDataPipe
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
     private Object errorHandler;
 
+    @Parameter
+    private Boolean keepAliveSession;
+
+    @Parameter
+    private Integer keepAliveSessionTime;
+
+    private List<SessionInfo> sessions;
+    private ReadWriteLock sessionLock;
+    private ThreadLocal<HttpClient> httpClient;
+    private Lock httpClientLock;
+    private long httpClientCreationTime;
+
+    @Override
+    protected void initFields()
+    {
+        super.initFields();
+
+        sessionLock = new ReentrantReadWriteLock();
+
+        httpClientLock = new ReentrantLock();
+        httpClient = null;
+        httpClientCreationTime = 0;
+        httpClient = new ThreadLocal<HttpClient>();
+    }
+
+
     @Override
     protected void doSetData(DataSource dataSource, Object data) throws Exception
     {
+        boolean isNewSession = false;
+        HttpClient client = null;
+        if (keepAliveSession)
+            client = httpClient.get();
+        if (client==null)
+        {
+            isNewSession = true;
+            client = createHttpClient();
+            if (keepAliveSession)
+                httpClient.set(client);
+        }
+        
         Collection<Node> childs = getEffectiveChildrens();
-        HttpClient client = createHttpClient();
         if (childs!=null)
         {
             HttpResponse response = null;
@@ -94,11 +143,17 @@ public class HttpSessionNode extends AbstractSafeDataPipe
                     Map<String, Object> params = new HashMap<String, Object>();
                     params.put(DATA_BINDING, data);
                     params.put(SKIP_DATA_BINDING, SKIP_DATA);
+                    params.put(IS_NEW_SESSION_BINDING, isNewSession);
+                    HttpResponseHandlerNode handler = (HttpResponseHandlerNode) child;
+
+                    Boolean handlerEnabled = handler.getEnabled();
+                    if (handlerEnabled==null || !handlerEnabled)
+                        continue;
+
                     boolean isRequest = child instanceof HttpRequestNode;
                     if (isRequest)
                         params.put(REQUEST, initRequest());
 
-                    HttpResponseHandlerNode handler = (HttpResponseHandlerNode) child;
 
                     Map responseMap = new HashMap();
                     responseMap.put(RESPONSE_RESPONSE, response);
@@ -193,6 +248,14 @@ public class HttpSessionNode extends AbstractSafeDataPipe
         this.errorHandler = errorHandler;
     }
 
+    public Boolean getKeepAliveSession() {
+        return keepAliveSession;
+    }
+
+    public void setKeepAliveSession(Boolean keepAliveSession) {
+        this.keepAliveSession = keepAliveSession;
+    }
+
     private HttpClient createHttpClient()
     {
         DefaultHttpClient client = new DefaultHttpClient();
@@ -210,7 +273,7 @@ public class HttpSessionNode extends AbstractSafeDataPipe
             case BASIC: return new UsernamePasswordCredentials(username, password);
             case NTLM :
                 client.getAuthSchemes().register("ntlm", new NtlmSchemeFactory());
-                return new NTCredentials(username, password, null, host);
+                return new NTCredentials(username, password, null, domain);
         }
         return null;
     }
@@ -247,6 +310,48 @@ public class HttpSessionNode extends AbstractSafeDataPipe
         finally
         {
             bindingSupport.reset();
+        }
+    }
+
+//    private SessionInfo getSessionInfo()
+//    {
+//
+//    }
+//
+    private class SessionInfo
+    {
+        private DefaultHttpClient client;
+        private long clientCreationTime;
+        private boolean busy = false;
+
+        public boolean isBusy() {
+            return busy;
+        }
+
+        public boolean isHttpClientInitialized()
+        {
+            return client!=null;
+        }
+
+        public HttpClient getHttpClient()
+        {
+            long keepAliveTime = keepAliveSessionTime==null? Integer.MAX_VALUE : keepAliveSessionTime;
+            if (client==null || (System.currentTimeMillis()-keepAliveTime*1000)>clientCreationTime)
+            {
+                clientCreationTime = System.currentTimeMillis();
+                client = new DefaultHttpClient();
+                Credentials cred = createCredentials(client);
+                if (cred!=null)
+                    client.getCredentialsProvider().setCredentials(AuthScope.ANY, cred);
+            }
+            busy = true;
+            
+            return client;
+        }
+
+        public void freeHttpClient()
+        {
+            busy = false;
         }
     }
 }

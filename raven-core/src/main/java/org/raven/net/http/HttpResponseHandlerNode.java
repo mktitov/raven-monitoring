@@ -27,6 +27,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.ccil.cowan.tagsoup.Parser;
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
@@ -37,6 +38,7 @@ import static org.raven.net.http.HttpSessionNode.*;
  *
  * @author Mikhail Titov
  */
+@NodeClass(parentNode=HttpSessionNode.class)
 public class HttpResponseHandlerNode extends BaseNode
 {
 
@@ -52,6 +54,9 @@ public class HttpResponseHandlerNode extends BaseNode
 
     @Parameter(defaultValue="200")
     private Integer expectedResponseStatusCode;
+
+    @Parameter(defaultValue="true")
+    private Boolean enabled;
 
     protected BindingSupportImpl bindingSupport;
 
@@ -143,4 +148,13 @@ public class HttpResponseHandlerNode extends BaseNode
     public void setExpectedResponseStatusCode(Integer expectedResponseStatusCode) {
         this.expectedResponseStatusCode = expectedResponseStatusCode;
     }
+
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
+    
 }

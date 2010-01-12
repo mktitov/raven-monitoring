@@ -22,6 +22,7 @@ import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.codec.binary.Base64;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
@@ -171,6 +172,23 @@ public class HttpSessionNodeTest extends RavenCoreTestCase
     @Test
     public void authTest() throws Exception
     {
+        session.setAuthSchema(AuthSchema.BASIC);
+        session.setUsername("user");
+        session.setPassword("pwd");
+        
+        createRequest("request", "/test", RequestContentType.NONE, null);
+        createResponse("response handler", ResponseContentType.TEXT, "response.content", null);
+
+        Handler1 handler = new Handler1();
+        handler.setUseAuth(true);
+        server.setHandler(handler);
+        server.start();
+
+        datasource.pushData("test");
+        List data = collector.getDataList();
+        assertNotNull(data);
+        assertEquals(1, data.size());
+        assertEquals("response", data.get(0));
         
     }
 
@@ -205,6 +223,7 @@ public class HttpSessionNodeTest extends RavenCoreTestCase
     private class Handler1 extends AbstractHandler
     {
         private int responseStatus = HttpServletResponse.SC_OK;
+        private boolean useAuth = false;
 
         public int getResponseStatus() {
             return responseStatus;
@@ -214,9 +233,41 @@ public class HttpSessionNodeTest extends RavenCoreTestCase
             this.responseStatus = responseStatus;
         }
 
+        public boolean isUseAuth() {
+            return useAuth;
+        }
+
+        public void setUseAuth(boolean useAuth) {
+            this.useAuth = useAuth;
+        }
+
         public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
                 throws IOException, ServletException
         {
+            if (useAuth)
+            {
+                String requestAuth = request.getHeader("Authorization");
+                if (requestAuth==null)
+                {
+                    response.setHeader(
+                            "WWW-Authenticate", "BASIC realm=\"Auth test\"");
+                    response.sendError(response.SC_UNAUTHORIZED);
+                    return;
+                }
+                else
+                {
+                    String userAndPath = new String(Base64.decodeBase64(
+                            requestAuth.substring(6).getBytes()));
+                    String elems[] = userAndPath.split(":");
+                    if (elems.length!=2
+                        || !"user".equals(elems[0])
+                        || !"pwd".equals(elems[1]))
+                    {
+                        response.sendError(response.SC_FORBIDDEN);
+                        return;
+                    }
+                }
+            }
             assertEquals("/test", target);
             baseRequest.setHandled(true);
             response.setContentType("text/plain");
