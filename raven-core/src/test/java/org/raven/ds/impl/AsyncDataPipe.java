@@ -14,29 +14,18 @@
  *  limitations under the License.
  *  under the License.
  */
+package org.raven.ds.impl;
 
-package org.raven.ds;
-
-import org.raven.tree.Node;
+import org.raven.ds.DataHandler;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataHandler
+public class AsyncDataPipe extends AbstractAsyncDataPipe
 {
-    /**
-     * Releases handler resources
-     */
-    public void releaseHandler();
-    /**
-     * Handle the data
-     * @param data the data wich must be handled
-     * @param owner the node that owns the handler
-     */
-    public Object handleData(Object data, Node owner) throws Exception;
-    /**
-     * Returns data processing status message
-     */
-    public String getStatusMessage();
+    @Override
+    public DataHandler createDataHandler() {
+        return new TestDataHandler();
+    }
 }

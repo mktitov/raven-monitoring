@@ -14,29 +14,26 @@
  *  limitations under the License.
  *  under the License.
  */
+package org.raven.ds.impl;
 
-package org.raven.ds;
-
+import org.raven.ds.DataHandler;
 import org.raven.tree.Node;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataHandler
-{
-    /**
-     * Releases handler resources
-     */
-    public void releaseHandler();
-    /**
-     * Handle the data
-     * @param data the data wich must be handled
-     * @param owner the node that owns the handler
-     */
-    public Object handleData(Object data, Node owner) throws Exception;
-    /**
-     * Returns data processing status message
-     */
-    public String getStatusMessage();
+public class TestDataHandler implements DataHandler {
+
+    public void releaseHandler() {
+    }
+
+    public Object handleData(Object data, Node owner) throws Exception {
+        Thread.sleep(1000);
+        return data;
+    }
+
+    public String getStatusMessage() {
+        return "handler status";
+    }
 }

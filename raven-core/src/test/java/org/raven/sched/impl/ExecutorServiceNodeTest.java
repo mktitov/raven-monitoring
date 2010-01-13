@@ -29,7 +29,6 @@ import org.raven.table.Table;
 import org.raven.tree.Node;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
-import sun.management.snmp.jvminstr.JvmThreadInstanceEntryImpl.ThreadStateMap;
 
 /**
  *

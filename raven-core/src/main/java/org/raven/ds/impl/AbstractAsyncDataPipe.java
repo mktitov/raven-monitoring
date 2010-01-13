@@ -24,9 +24,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.jfree.threads.ReaderWriterLock;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataHandler;
 import org.raven.ds.DataSource;
@@ -51,10 +48,10 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe
     private Integer handlerLifeTime;
 
     @NotNull @Parameter(defaultValue="true")
-    private Boolean waitForHandeler;
+    private Boolean waitForHandler;
     
     @NotNull @Parameter(defaultValue="60")
-    private Integer maxWaitForHandlerTime;
+    private Integer waitForHandlerTimeout;
 
     @NotNull @Parameter
     private ExecutorService executor;
@@ -83,9 +80,9 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe
             try
             {
                 boolean res = false;
-                if (!(res=processData(data)) && waitForHandeler)
+                if (!(res=processData(data)) && waitForHandler)
                 {
-                    if (waitForHandlerFree.await(maxWaitForHandlerTime, TimeUnit.MILLISECONDS))
+                    if (waitForHandlerFree.await(waitForHandlerTimeout, TimeUnit.MILLISECONDS))
                         res = processData(data);
                 }
                 if (!res && isLogLevelEnabled(LogLevel.DEBUG))
@@ -106,7 +103,7 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe
         for (HandlerInfo handlerInfo: handlers)
             if (handlerInfo.handleData(data))
                 return true;
-        if (maxHandlersCount<handlers.size())
+        if (handlers.size()<maxHandlersCount)
         {
             HandlerInfo handlerInfo = new HandlerInfo();
             handlers.add(handlerInfo);
@@ -133,20 +130,28 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe
         this.maxHandlersCount = maxHandlersCount;
     }
 
-    public Integer getMaxWaitForHandlerTime() {
-        return maxWaitForHandlerTime;
+    public Integer getWaitForHandlerTimeout() {
+        return waitForHandlerTimeout;
     }
 
-    public void setMaxWaitForHandlerTime(Integer maxWaitForHandlerTime) {
-        this.maxWaitForHandlerTime = maxWaitForHandlerTime;
+    public void setWaitForHandlerTimeout(Integer waitForHandlerTimeout) {
+        this.waitForHandlerTimeout = waitForHandlerTimeout;
     }
 
-    public Boolean getWaitForHandeler() {
-        return waitForHandeler;
+    public Boolean getWaitForHandler() {
+        return waitForHandler;
     }
 
-    public void setWaitForHandeler(Boolean waitForHandeler) {
-        this.waitForHandeler = waitForHandeler;
+    public void setWaitForHandler(Boolean waitForHandler) {
+        this.waitForHandler = waitForHandler;
+    }
+
+    public ExecutorService getExecutor() {
+        return executor;
+    }
+
+    public void setExecutor(ExecutorService executor) {
+        this.executor = executor;
     }
 
     private class HandlerInfo implements Task
@@ -207,9 +212,20 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe
 
         public void run()
         {
-            try {
-                handler.handleData(data, AbstractAsyncDataPipe.this);
-            } catch (Exception ex) {
+            try
+            {
+                try
+                {
+                    Object resData = handler.handleData(data, AbstractAsyncDataPipe.this);
+                    sendDataToConsumers(resData);
+                }
+                finally
+                {
+                    busy.set(false);
+                }
+            } 
+            catch (Exception ex)
+            {
                 if (isLogLevelEnabled(LogLevel.ERROR))
                     error("Error handling data", ex);
             }
