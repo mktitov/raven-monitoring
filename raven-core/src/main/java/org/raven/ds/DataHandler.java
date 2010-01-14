@@ -34,7 +34,7 @@ public interface DataHandler
      * @param data the data wich must be handled
      * @param owner the node that owns the handler
      */
-    public Object handleData(Object data, Node owner) throws Exception;
+    public Object handleData(Object data, DataSource dataSource, Node owner) throws Exception;
     /**
      * Returns data processing status message
      */

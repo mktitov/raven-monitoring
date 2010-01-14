@@ -50,11 +50,14 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe
     @NotNull @Parameter(defaultValue="true")
     private Boolean waitForHandler;
     
-    @NotNull @Parameter(defaultValue="60")
+    @NotNull @Parameter(defaultValue="30000")
     private Integer waitForHandlerTimeout;
 
     @NotNull @Parameter
     private ExecutorService executor;
+
+    @NotNull @Parameter(defaultValue="true")
+    private Boolean handleDataInSeparateThread;
 
     private List<HandlerInfo> handlers;
     private ReadWriteLock handlersLock;
@@ -80,10 +83,10 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe
             try
             {
                 boolean res = false;
-                if (!(res=processData(data)) && waitForHandler)
+                if (!(res=processData(data, dataSource)) && waitForHandler)
                 {
                     if (waitForHandlerFree.await(waitForHandlerTimeout, TimeUnit.MILLISECONDS))
-                        res = processData(data);
+                        res = processData(data, dataSource);
                 }
                 if (!res && isLogLevelEnabled(LogLevel.DEBUG))
                     debug("No free handlers to process data from "+dataSource.getPath());
@@ -98,16 +101,16 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe
                 error("Handlers lock wait timeout");
     }
 
-    private boolean processData(Object data) throws Exception
+    private boolean processData(Object data, DataSource dataSource) throws Exception
     {
         for (HandlerInfo handlerInfo: handlers)
-            if (handlerInfo.handleData(data))
+            if (handlerInfo.handleData(data, dataSource))
                 return true;
         if (handlers.size()<maxHandlersCount)
         {
             HandlerInfo handlerInfo = new HandlerInfo();
             handlers.add(handlerInfo);
-            handlerInfo.handleData(data);
+            handlerInfo.handleData(data, dataSource);
             return true;
         }
 
@@ -154,14 +157,23 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe
         this.executor = executor;
     }
 
+    public Boolean getHandleDataInSeparateThread() {
+        return handleDataInSeparateThread;
+    }
+
+    public void setHandleDataInSeparateThread(Boolean handleDataInSeparateThread) {
+        this.handleDataInSeparateThread = handleDataInSeparateThread;
+    }
+
     private class HandlerInfo implements Task
     {
         private long creationTime;
         private AtomicBoolean busy = new AtomicBoolean(false);
         private DataHandler handler;
         private Object data;
+        private DataSource dataSource;
 
-        public boolean handleData(Object data) throws ExecutorServiceException
+        public boolean handleData(Object data, DataSource dataSource) throws ExecutorServiceException
         {
             if (!busy.compareAndSet(false, true))
                 return false;
@@ -174,10 +186,14 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe
             }
 
             this.data = data;
+            this.dataSource = dataSource;
 
             try
             {
-                executor.execute(this);
+                if (handleDataInSeparateThread)
+                    executor.execute(this);
+                else
+                    run();
             }
             catch(ExecutorServiceException e)
             {
@@ -216,12 +232,21 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe
             {
                 try
                 {
-                    Object resData = handler.handleData(data, AbstractAsyncDataPipe.this);
-                    sendDataToConsumers(resData);
+                    Object resData = handler.handleData(data, dataSource, AbstractAsyncDataPipe.this);
+                    if (SKIP_DATA!=resData)
+                        sendDataToConsumers(resData);
                 }
                 finally
                 {
                     busy.set(false);
+                    if (handlersLock.writeLock().tryLock(MAX_HANDLERS_LOCK_WAIT, TimeUnit.MILLISECONDS))
+                    {
+                        try{
+                            waitForHandlerFree.signal();
+                        }finally{
+                            handlersLock.writeLock().unlock();
+                        }
+                    }
                 }
             } 
             catch (Exception ex)

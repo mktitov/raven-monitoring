@@ -30,6 +30,7 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.raven.sched.impl.ExecutorServiceNode;
 import org.raven.test.DataCollector;
 import org.raven.test.PushDataSource;
 import org.raven.test.RavenCoreTestCase;
@@ -44,6 +45,7 @@ public class HttpSessionNodeTest extends RavenCoreTestCase
     private HttpSessionNode session;
     private PushDataSource datasource;
     private DataCollector collector;
+    private ExecutorServiceNode executor;
 
     @Before
     public void prepare()
@@ -55,12 +57,20 @@ public class HttpSessionNodeTest extends RavenCoreTestCase
         tree.getRootNode().addAndSaveChildren(datasource);
         assertTrue(datasource.start());
 
+        executor = new ExecutorServiceNode();
+        executor.setName("executor");
+        tree.getRootNode().addAndSaveChildren(executor);
+        assertTrue(executor.start());
+
         session = new HttpSessionNode();
         session.setName("http session");
         tree.getRootNode().addAndSaveChildren(session);
         session.setHost("localhost");
         session.setPort(9999);
         session.setDataSource(datasource);
+        session.setMaxHandlersCount(1);
+        session.setHandleDataInSeparateThread(Boolean.FALSE);
+        session.setExecutor(executor);
         assertTrue(session.start());
 
         collector = new DataCollector();
@@ -68,7 +78,6 @@ public class HttpSessionNodeTest extends RavenCoreTestCase
         tree.getRootNode().addAndSaveChildren(collector);
         collector.setDataSource(session);
         assertTrue(collector.start());
-        
     }
 
     @After
@@ -189,6 +198,10 @@ public class HttpSessionNodeTest extends RavenCoreTestCase
         assertNotNull(data);
         assertEquals(1, data.size());
         assertEquals("response", data.get(0));
+    }
+
+    public void newSessionTest() throws Exception
+    {
         
     }
 

@@ -21,12 +21,10 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Before;
 import org.junit.Test;
-import org.raven.ds.DataHandler;
 import org.raven.sched.impl.ExecutorServiceNode;
 import org.raven.test.DataCollector;
 import org.raven.test.PushDataSource;
 import org.raven.test.RavenCoreTestCase;
-import org.raven.tree.Node;
 
 /**
  *
@@ -84,5 +82,47 @@ public class AbstractAsyncDataPipeTest extends RavenCoreTestCase
         List dataList = collector.getDataList();
         assertNotNull(dataList);
         assertArrayEquals(new Object[]{"1", "2"}, dataList.toArray());
+    }
+
+    @Test
+    public void waitForHandlerTest() throws Exception
+    {
+        dataPipe.setMaxHandlersCount(1);
+
+        long time = System.currentTimeMillis();
+        dataSource.pushData("1");
+        dataSource.pushData("2");
+        assertTrue(System.currentTimeMillis()-time>1000);
+
+        Thread.sleep(1100);
+
+        List dataList = collector.getDataList();
+        assertNotNull(dataList);
+        assertArrayEquals(new Object[]{"1", "2"}, dataList.toArray());
+    }
+    
+    @Test
+    public void waitForHandlerTimeoutTest() throws Exception
+    {
+        dataPipe.setMaxHandlersCount(1);
+        dataPipe.setWaitForHandlerTimeout(5);
+
+        long time = System.currentTimeMillis();
+        dataSource.pushData("1");
+        dataSource.pushData("2");
+
+        Thread.sleep(1100);
+
+        List dataList = collector.getDataList();
+        assertNotNull(dataList);
+        assertArrayEquals(new Object[]{"1"}, dataList.toArray());
+    }
+
+    @Test
+    public void handleDataInSameThreadTest() throws Exception
+    {
+        dataPipe.setHandleDataInSeparateThread(Boolean.FALSE);
+        dataSource.pushData("1");
+        assertArrayEquals(new Object[]{"1"}, collector.getDataList().toArray());
     }
 }
