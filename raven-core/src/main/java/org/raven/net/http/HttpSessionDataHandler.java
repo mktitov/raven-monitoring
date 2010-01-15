@@ -51,60 +51,67 @@ public class HttpSessionDataHandler implements DataHandler
 
     public Object handleData(Object data, DataSource dataSource, Node owner) throws Exception
     {
-        statusMessage.set("Starting processing data from "+dataSource.getPath());
-        HttpSessionNode session = (HttpSessionNode) owner;
-
-        Collection<Node> childs = session.getEffectiveChildrens();
-        Object res = null;
-        if (childs!=null)
+        try
         {
-            HttpResponse response = null;
-            for (Node child: childs)
+            statusMessage.set("Starting processing data from "+dataSource.getPath());
+            HttpSessionNode session = (HttpSessionNode) owner;
+
+            Collection<Node> childs = session.getEffectiveChildrens();
+            Object res = null;
+            if (childs!=null)
             {
-                if (child instanceof HttpResponseHandlerNode)
+                HttpResponse response = null;
+                for (Node child: childs)
                 {
-                    Map<String, Object> params = new HashMap<String, Object>();
-                    params.put(HttpSessionNode.DATA_BINDING, data);
-                    params.put(HttpSessionNode.SKIP_DATA_BINDING, HttpSessionNode.SKIP_DATA);
-                    params.put(HttpSessionNode.IS_NEW_SESSION_BINDING, isNewSession);
-                    HttpResponseHandlerNode handler = (HttpResponseHandlerNode) child;
-
-                    Boolean handlerEnabled = handler.getEnabled();
-                    if (handlerEnabled==null || !handlerEnabled)
-                        continue;
-
-                    boolean isRequest = child instanceof HttpRequestNode;
-                    statusMessage.set("Processing "+(isRequest? "request" : "response")+" ("+child.getName()+")");
-                    if (isRequest)
-                        params.put(HttpSessionNode.REQUEST, session.initRequest());
-
-                    Map responseMap = new HashMap();
-                    responseMap.put(HttpSessionNode.RESPONSE_RESPONSE, response);
-                    params.put(HttpSessionNode.RESPONSE, responseMap);
-
-                    Integer expectedStatus = handler.getExpectedResponseStatusCode();
-                    if (response!=null && expectedStatus!=null
-                        && !expectedStatus.equals(response.getStatusLine().getStatusCode()))
+                    if (child instanceof HttpResponseHandlerNode)
                     {
-                        return session.handleError(params);
-                    }
+                        Map<String, Object> params = new HashMap<String, Object>();
+                        params.put(HttpSessionNode.DATA_BINDING, data);
+                        params.put(HttpSessionNode.SKIP_DATA_BINDING, HttpSessionNode.SKIP_DATA);
+                        params.put(HttpSessionNode.IS_NEW_SESSION_BINDING, isNewSession);
+                        HttpResponseHandlerNode handler = (HttpResponseHandlerNode) child;
 
-                    res = handler.processResponse(params);
+                        Boolean handlerEnabled = handler.getEnabled();
+                        if (handlerEnabled==null || !handlerEnabled)
+                            continue;
 
-                    if (isRequest)
-                    {
-                        Map requestMap = (Map)params.get(HttpSessionNode.REQUEST);
-                        HttpRequest request = (HttpRequest)requestMap.get(HttpSessionNode.REQUEST_REQUEST);
-                        HttpHost target = new HttpHost(
-                                (String)requestMap.get(HttpSessionNode.HOST)
-                                , (Integer)requestMap.get(HttpSessionNode.PORT));
-                        response = client.execute(target, request);
+                        boolean isRequest = child instanceof HttpRequestNode;
+                        statusMessage.set("Processing "+(isRequest? "request" : "response")+" ("+child.getName()+")");
+                        if (isRequest)
+                            params.put(HttpSessionNode.REQUEST, session.initRequest());
+
+                        Map responseMap = new HashMap();
+                        responseMap.put(HttpSessionNode.RESPONSE_RESPONSE, response);
+                        params.put(HttpSessionNode.RESPONSE, responseMap);
+
+                        Integer expectedStatus = handler.getExpectedResponseStatusCode();
+                        if (response!=null && expectedStatus!=null
+                            && !expectedStatus.equals(response.getStatusLine().getStatusCode()))
+                        {
+                            return session.handleError(params);
+                        }
+
+                        res = handler.processResponse(params);
+
+                        if (isRequest)
+                        {
+                            Map requestMap = (Map)params.get(HttpSessionNode.REQUEST);
+                            HttpRequest request = (HttpRequest)requestMap.get(HttpSessionNode.REQUEST_REQUEST);
+                            HttpHost target = new HttpHost(
+                                    (String)requestMap.get(HttpSessionNode.HOST)
+                                    , (Integer)requestMap.get(HttpSessionNode.PORT));
+                            response = client.execute(target, request);
+                        }
                     }
                 }
-            }
 
+            }
+            return res;
         }
-        return res;
+        finally
+        {
+            isNewSession = false;
+        }
     }
 
     public String getStatusMessage()

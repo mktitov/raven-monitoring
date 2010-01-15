@@ -17,10 +17,14 @@
 
 package org.raven.ds.impl;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -31,21 +35,32 @@ import org.raven.log.LogLevel;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.ExecutorServiceException;
 import org.raven.sched.Task;
+import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
+import org.raven.table.TableImpl;
 import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
+import org.raven.tree.Viewable;
+import org.raven.tree.ViewableObject;
+import org.raven.tree.impl.ViewableObjectImpl;
+import org.raven.util.OperationStatistic;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.internal.annotations.Message;
 
 /**
  *
  * @author Mikhail Titov
  */
-public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe
+public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe implements Viewable
 {
+    private enum HandlerStatus {WAITING, EXECUTING}
+
     public static final int MAX_HANDLERS_LOCK_WAIT = 1000;
+
     @NotNull @Parameter(defaultValue="2")
     private Integer maxHandlersCount;
 
     @NotNull @Parameter(defaultValue="60")
-    private Integer handlerLifeTime;
+    private Integer handlerIdleTime;
 
     @NotNull @Parameter(defaultValue="true")
     private Boolean waitForHandler;
@@ -53,11 +68,32 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe
     @NotNull @Parameter(defaultValue="30000")
     private Integer waitForHandlerTimeout;
 
-    @NotNull @Parameter
+    @NotNull @Parameter(valueHandlerType=SystemSchedulerValueHandlerFactory.TYPE)
     private ExecutorService executor;
 
     @NotNull @Parameter(defaultValue="true")
     private Boolean handleDataInSeparateThread;
+
+    @Message
+    private static String hanlderStatusColumn;
+    @Message
+    private static String handlerStatusMessageColumn;
+    @Message
+    private static String handlersTableTitle;
+    @Message
+    private static String handlerCreationsCountColumn;
+    @Message
+    private static String handlerCreationTimeColumn;
+    @Message
+    private static String handlerIdleTimeColumn;
+    @Message
+    private static String handledRequestsCountColumn;
+    @Message
+    private static String avgRequestsPerSecondColumn;
+    @Message
+    private static String avgMillisecondsPerRequest;
+    @Message
+    private static String handlerStatusColumn;
 
     private List<HandlerInfo> handlers;
     private ReadWriteLock handlersLock;
@@ -73,6 +109,14 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe
         handlers = new ArrayList<HandlerInfo>(10);
         handlersLock = new ReentrantReadWriteLock();
         waitForHandlerFree = handlersLock.writeLock().newCondition();
+    }
+
+    @Override
+    protected void doStop() throws Exception
+    {
+        for (HandlerInfo handlerInfo: handlers)
+            handlerInfo.release();
+        handlers.clear();
     }
 
     @Override
@@ -101,6 +145,50 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe
                 error("Handlers lock wait timeout");
     }
 
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
+    {
+        return null;
+    }
+
+    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) throws Exception
+    {
+        List<ViewableObject> vos = new ArrayList<ViewableObject>(2);
+        vos.add(new ViewableObjectImpl(Viewable.RAVEN_TEXT_MIMETYPE, "<b>"+handlersTableTitle+"</b>"));
+
+        TableImpl table = new TableImpl(new String[]{
+            hanlderStatusColumn, handlerStatusMessageColumn, handlerCreationsCountColumn,
+            handlerCreationTimeColumn, handlerIdleTimeColumn,
+            handledRequestsCountColumn, avgMillisecondsPerRequest, avgRequestsPerSecondColumn});
+        if (handlersLock.readLock().tryLock(MAX_HANDLERS_LOCK_WAIT, TimeUnit.MILLISECONDS))
+        {
+            try
+            {
+                SimpleDateFormat fmt = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+                for (HandlerInfo handlerInfo: handlers)
+                {
+                    table.addRow(new Object[]{
+                        handlerInfo.status.get().toString(),
+                        handlerInfo.getHandlerStatusMessage(),
+                        handlerInfo.handlerCreationCount, 
+                        handlerInfo.lastUseTime==0? "" : fmt.format(new Date(handlerInfo.lastUseTime)),
+                        handlerInfo.lastUseTime==0? 0 : (System.currentTimeMillis()-handlerInfo.lastUseTime)/1000,
+                        handlerInfo.stat.getOperationsCount(),
+                        handlerInfo.stat.getAvgMillisecondsPerOperation(),
+                        handlerInfo.stat.getAvgOperationsPerSecond()
+                    });
+                }
+            }
+            finally
+            {
+                handlersLock.readLock().unlock();
+            }
+        }
+
+        vos.add(new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table));
+
+        return vos;
+    }
+
     private boolean processData(Object data, DataSource dataSource) throws Exception
     {
         for (HandlerInfo handlerInfo: handlers)
@@ -117,12 +205,16 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe
         return false;
     }
 
-    public Integer getHandlerLifeTime() {
-        return handlerLifeTime;
+    public Boolean getAutoRefresh() {
+        return Boolean.TRUE;
     }
 
-    public void setHandlerLifeTime(Integer handlerLifeTime) {
-        this.handlerLifeTime = handlerLifeTime;
+    public Integer getHandlerIdleTime() {
+        return handlerIdleTime;
+    }
+
+    public void setHandlerIdleTime(Integer handlerIdleTime) {
+        this.handlerIdleTime = handlerIdleTime;
     }
 
     public Integer getMaxHandlersCount() {
@@ -167,40 +259,55 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe
 
     private class HandlerInfo implements Task
     {
-        private long creationTime;
+        private long lastUseTime;
         private AtomicBoolean busy = new AtomicBoolean(false);
         private DataHandler handler;
         private Object data;
         private DataSource dataSource;
+        private OperationStatistic stat = new OperationStatistic();
+        private int handlerCreationCount = 0;
+        private AtomicReference<HandlerStatus> status = new AtomicReference<HandlerStatus>(HandlerStatus.WAITING);
+        private Thread taskThread;
 
         public boolean handleData(Object data, DataSource dataSource) throws ExecutorServiceException
         {
             if (!busy.compareAndSet(false, true))
                 return false;
-            if (handler==null || (System.currentTimeMillis()-handlerLifeTime*1000)>creationTime)
-            {
-                if (handler!=null)
-                    release();
-                creationTime = System.currentTimeMillis();
-                handler = createDataHandler();
-            }
-
-            this.data = data;
-            this.dataSource = dataSource;
-
+            long startTime = stat.markOperationProcessingStart();
             try
             {
-                if (handleDataInSeparateThread)
-                    executor.execute(this);
+                if (handler==null || (System.currentTimeMillis()-handlerIdleTime*1000)>lastUseTime)
+                {
+                    if (handler!=null)
+                        release();
+                    lastUseTime = System.currentTimeMillis();
+                    ++handlerCreationCount;
+                    handler = createDataHandler();
+                }
                 else
-                    run();
+                    lastUseTime = System.currentTimeMillis();
+
+                this.data = data;
+                this.dataSource = dataSource;
+
+                try
+                {
+                    if (handleDataInSeparateThread)
+                        executor.execute(this);
+                    else
+                        run();
+                }
+                catch(ExecutorServiceException e)
+                {
+                    busy.set(false);
+                    throw e;
+                }
+                return true;
             }
-            catch(ExecutorServiceException e)
+            finally
             {
-                busy.set(false);
-                throw e;
+                stat.markOperationProcessingEnd(startTime);
             }
-            return true;
         }
 
         public void release()
@@ -216,6 +323,11 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe
             }
         }
 
+        public String getHandlerStatusMessage()
+        {
+            return handler!=null? handler.getStatusMessage() : "";
+        }
+
         public Node getTaskNode() 
         {
             return AbstractAsyncDataPipe.this;
@@ -228,10 +340,13 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe
 
         public void run()
         {
+            status.set(HandlerStatus.EXECUTING);
             try
             {
                 try
                 {
+                    if (handleDataInSeparateThread)
+                        taskThread = Thread.currentThread();
                     Object resData = handler.handleData(data, dataSource, AbstractAsyncDataPipe.this);
                     if (SKIP_DATA!=resData)
                         sendDataToConsumers(resData);
@@ -247,6 +362,8 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe
                             handlersLock.writeLock().unlock();
                         }
                     }
+                    taskThread = null;
+                    status.set(HandlerStatus.WAITING);
                 }
             } 
             catch (Exception ex)

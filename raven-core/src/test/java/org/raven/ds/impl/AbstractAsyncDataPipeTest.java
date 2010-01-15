@@ -21,10 +21,14 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Before;
 import org.junit.Test;
+import org.raven.RavenUtils;
 import org.raven.sched.impl.ExecutorServiceNode;
+import org.raven.table.Table;
 import org.raven.test.DataCollector;
 import org.raven.test.PushDataSource;
 import org.raven.test.RavenCoreTestCase;
+import org.raven.tree.Viewable;
+import org.raven.tree.ViewableObject;
 
 /**
  *
@@ -116,6 +120,30 @@ public class AbstractAsyncDataPipeTest extends RavenCoreTestCase
         List dataList = collector.getDataList();
         assertNotNull(dataList);
         assertArrayEquals(new Object[]{"1"}, dataList.toArray());
+    }
+
+    @Test
+    public void getViewableObjectsTest() throws Exception
+    {
+        long time = System.currentTimeMillis();
+        dataSource.pushData("1");
+
+        List<ViewableObject> vos = dataPipe.getViewableObjects(null);
+        assertNotNull(vos);
+        assertEquals(2, vos.size());
+        assertEquals(Viewable.RAVEN_TEXT_MIMETYPE, vos.get(0).getMimeType());
+        assertTrue(vos.get(0).getData() instanceof String);
+
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, vos.get(1).getMimeType());
+        assertTrue(vos.get(1).getData() instanceof Table);
+
+        Table table = (Table) vos.get(1).getData();
+        List<Object[]> rows = RavenUtils.tableAsList(table);
+        assertNotNull(rows);
+        assertEquals(1, rows.size());
+
+        Thread.sleep(1100);
+
     }
 
     @Test

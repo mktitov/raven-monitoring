@@ -200,9 +200,22 @@ public class HttpSessionNodeTest extends RavenCoreTestCase
         assertEquals("response", data.get(0));
     }
 
+    @Test
     public void newSessionTest() throws Exception
     {
-        
+        createRequest("request", "/test", RequestContentType.NONE, null);
+        createResponse("response handler", ResponseContentType.TEXT, "isNewSession", null);
+
+        Handler handler = new Handler1();
+        server.setHandler(handler);
+        server.start();
+
+        datasource.pushData("test");
+        assertArrayEquals(new Object[]{Boolean.TRUE}, collector.getDataList().toArray());
+
+        collector.getDataList().clear();
+        datasource.pushData("test");
+        assertArrayEquals(new Object[]{Boolean.FALSE}, collector.getDataList().toArray());
     }
 
     private HttpResponseHandlerNode createResponse(
