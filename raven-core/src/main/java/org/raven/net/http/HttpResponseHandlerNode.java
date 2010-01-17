@@ -67,6 +67,11 @@ public class HttpResponseHandlerNode extends BaseNode
         bindingSupport = new BindingSupportImpl();
     }
 
+    BindingSupportImpl getBindingSupport()
+    {
+        return bindingSupport;
+    }
+
     public Object processResponse(Map<String, Object> params) throws Exception
     {
         Map<String, Object> responseMap = (Map<String, Object>) params.get(RESPONSE);

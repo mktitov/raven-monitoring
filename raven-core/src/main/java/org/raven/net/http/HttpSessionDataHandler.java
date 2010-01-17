@@ -27,6 +27,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.raven.ds.DataHandler;
 import org.raven.ds.DataSource;
+import org.raven.expr.BindingSupport;
+import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.tree.Node;
 
 /**
@@ -71,8 +73,7 @@ public class HttpSessionDataHandler implements DataHandler
                         params.put(HttpSessionNode.IS_NEW_SESSION_BINDING, isNewSession);
                         HttpResponseHandlerNode handler = (HttpResponseHandlerNode) child;
 
-                        Boolean handlerEnabled = handler.getEnabled();
-                        if (handlerEnabled==null || !handlerEnabled)
+                        if (!isHandlerEnabled(handler, isNewSession, data))
                             continue;
 
                         boolean isRequest = child instanceof HttpRequestNode;
@@ -119,4 +120,20 @@ public class HttpSessionDataHandler implements DataHandler
         return statusMessage.get();
     }
 
+    private boolean isHandlerEnabled(HttpResponseHandlerNode handler, boolean isNewSession, Object data)
+    {
+        BindingSupportImpl bindingSupport = handler.getBindingSupport();
+        bindingSupport.put(HttpSessionNode.IS_NEW_SESSION_BINDING, isNewSession);
+        bindingSupport.put(HttpSessionNode.DATA_BINDING, data);
+
+        try
+        {
+            Boolean enabled = handler.getEnabled();
+            return enabled!=null && enabled;
+        }
+        finally
+        {
+            bindingSupport.reset();
+        }
+    }
 }
