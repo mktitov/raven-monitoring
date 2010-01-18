@@ -30,10 +30,13 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.raven.expr.impl.IfNode;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.sched.impl.ExecutorServiceNode;
 import org.raven.test.DataCollector;
 import org.raven.test.PushDataSource;
 import org.raven.test.RavenCoreTestCase;
+import org.raven.tree.Node;
 
 /**
  *
@@ -204,26 +207,38 @@ public class HttpSessionNodeTest extends RavenCoreTestCase
     public void newSessionTest() throws Exception
     {
         createRequest("request", "/test", RequestContentType.NONE, null);
-        createResponse("response handler", ResponseContentType.TEXT, "isNewSession", null);
+        IfNode if1 = createCondition("if1", "isNewSession");
+        HttpResponseHandlerNode responseHandler = createResponse(
+                if1, "response handler", ResponseContentType.TEXT, "'newSession'", null);
+        IfNode if2 = createCondition("if2", "!isNewSession");
+        responseHandler = createResponse(
+                if2, "response handler 2", ResponseContentType.TEXT, "'oldSession'", null);
 
         Handler handler = new Handler1();
         server.setHandler(handler);
         server.start();
 
         datasource.pushData("test");
-        assertArrayEquals(new Object[]{Boolean.TRUE}, collector.getDataList().toArray());
+        assertArrayEquals(new Object[]{"newSession"}, collector.getDataList().toArray());
 
         collector.getDataList().clear();
         datasource.pushData("test");
-        assertArrayEquals(new Object[]{Boolean.FALSE}, collector.getDataList().toArray());
+        assertArrayEquals(new Object[]{"oldSession"}, collector.getDataList().toArray());
     }
 
     private HttpResponseHandlerNode createResponse(
             String nodeName, ResponseContentType responseType, String processResponseScript, Integer responseStatusCode)
     {
+        return createResponse(session, nodeName, responseType, processResponseScript, responseStatusCode);
+    }
+
+    private HttpResponseHandlerNode createResponse(
+            Node owner, String nodeName, ResponseContentType responseType, String processResponseScript
+            , Integer responseStatusCode)
+    {
         HttpResponseHandlerNode response = new HttpResponseHandlerNode();
         response.setName(nodeName);
-        session.addAndSaveChildren(response);
+        owner.addAndSaveChildren(response);
         response.setResponseContentType(responseType);
         response.setProcessResponse(processResponseScript);
         response.setExpectedResponseStatusCode(responseStatusCode);
@@ -244,6 +259,18 @@ public class HttpSessionNodeTest extends RavenCoreTestCase
         assertTrue(request.start());
 
         return request;
+    }
+
+    private IfNode createCondition(String name, String condition) throws Exception
+    {
+        IfNode node = new IfNode();
+        node.setName(name);
+        session.addAndSaveChildren(node);
+        node.setUsedInTemplate(Boolean.FALSE);
+        node.getNodeAttribute(IfNode.EXPRESSION_ATTRIBUTE).setValue(condition);
+        assertTrue(node.start());
+
+        return node;
     }
 
     private class Handler1 extends AbstractHandler

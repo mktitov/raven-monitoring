@@ -31,7 +31,9 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
+import org.raven.log.LogLevel;
 import org.raven.tree.impl.BaseNode;
+import org.raven.util.OperationStatistic;
 import org.weda.annotations.constraints.NotNull;
 import static org.raven.net.http.HttpSessionNode.*;
 /**
@@ -55,8 +57,8 @@ public class HttpResponseHandlerNode extends BaseNode
     @Parameter(defaultValue="200")
     private Integer expectedResponseStatusCode;
 
-    @Parameter(defaultValue="true")
-    private Boolean enabled;
+    @Parameter(readOnly=true)
+    protected OperationStatistic operationStatistic;
 
     protected BindingSupportImpl bindingSupport;
 
@@ -67,9 +69,12 @@ public class HttpResponseHandlerNode extends BaseNode
         bindingSupport = new BindingSupportImpl();
     }
 
-    BindingSupportImpl getBindingSupport()
+    @Override
+    protected void doStart() throws Exception
     {
-        return bindingSupport;
+        super.doStart();
+
+        operationStatistic = new OperationStatistic();
     }
 
     public Object processResponse(Map<String, Object> params) throws Exception
@@ -90,6 +95,8 @@ public class HttpResponseHandlerNode extends BaseNode
                     case JSON :
                         Charset charset = responseContentEncoding;
                         String text = IOUtils.toString(contentStream, charset==null? "utf-8" : charset.name());
+                        if (isLogLevelEnabled(LogLevel.TRACE))
+                            trace("RESPONSE CONTENT: "+text);
                         switch (responseContentType)
                         {
                             case TEXT: content = text; break;
@@ -97,7 +104,8 @@ public class HttpResponseHandlerNode extends BaseNode
                             case HTML: content = new XmlSlurper(new Parser()).parseText(text); break;
                         }
                         break;
-                    case XML  : content = new XmlSlurper().parse(contentStream);
+                    case XML :
+                        content = new XmlSlurper().parse(contentStream);
                 }
             }
             responseMap.put(CONTENT, content);
@@ -120,6 +128,10 @@ public class HttpResponseHandlerNode extends BaseNode
     {
         super.formExpressionBindings(bindings);
         bindingSupport.addTo(bindings);
+    }
+
+    public OperationStatistic getOperationStatistic() {
+        return operationStatistic;
     }
 
     public Object getProcessResponse() {
@@ -153,13 +165,4 @@ public class HttpResponseHandlerNode extends BaseNode
     public void setExpectedResponseStatusCode(Integer expectedResponseStatusCode) {
         this.expectedResponseStatusCode = expectedResponseStatusCode;
     }
-
-    public Boolean getEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(Boolean enabled) {
-        this.enabled = enabled;
-    }
-    
 }

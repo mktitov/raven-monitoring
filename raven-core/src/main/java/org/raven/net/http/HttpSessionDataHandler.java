@@ -27,8 +27,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.raven.ds.DataHandler;
 import org.raven.ds.DataSource;
-import org.raven.expr.BindingSupport;
-import org.raven.expr.impl.BindingSupportImpl;
+import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 
 /**
@@ -58,7 +57,7 @@ public class HttpSessionDataHandler implements DataHandler
             statusMessage.set("Starting processing data from "+dataSource.getPath());
             HttpSessionNode session = (HttpSessionNode) owner;
 
-            Collection<Node> childs = session.getEffectiveChildrens();
+            Collection<Node> childs = session.getHandlers(isNewSession, data);
             Object res = null;
             if (childs!=null)
             {
@@ -73,11 +72,11 @@ public class HttpSessionDataHandler implements DataHandler
                         params.put(HttpSessionNode.IS_NEW_SESSION_BINDING, isNewSession);
                         HttpResponseHandlerNode handler = (HttpResponseHandlerNode) child;
 
-                        if (!isHandlerEnabled(handler, isNewSession, data))
-                            continue;
-
                         boolean isRequest = child instanceof HttpRequestNode;
-                        statusMessage.set("Processing "+(isRequest? "request" : "response")+" ("+child.getName()+")");
+                        String msg = "Processing "+(isRequest? "request" : "response")+" ("+child.getName()+")";
+                        statusMessage.set(msg);
+                        if (session.isLogLevelEnabled(LogLevel.DEBUG))
+                            session.getLogger().debug(msg);
                         if (isRequest)
                             params.put(HttpSessionNode.REQUEST, session.initRequest());
 
@@ -92,16 +91,30 @@ public class HttpSessionDataHandler implements DataHandler
                             return session.handleError(params);
                         }
 
-                        res = handler.processResponse(params);
-
-                        if (isRequest)
+                        long start = handler.operationStatistic.markOperationProcessingStart();
+                        try
                         {
-                            Map requestMap = (Map)params.get(HttpSessionNode.REQUEST);
-                            HttpRequest request = (HttpRequest)requestMap.get(HttpSessionNode.REQUEST_REQUEST);
-                            HttpHost target = new HttpHost(
-                                    (String)requestMap.get(HttpSessionNode.HOST)
-                                    , (Integer)requestMap.get(HttpSessionNode.PORT));
-                            response = client.execute(target, request);
+                            res = handler.processResponse(params);
+
+                            if (isRequest)
+                            {
+                                Map requestMap = (Map)params.get(HttpSessionNode.REQUEST);
+                                HttpRequest request = (HttpRequest)requestMap.get(HttpSessionNode.REQUEST_REQUEST);
+                                HttpHost target = new HttpHost(
+                                        (String)requestMap.get(HttpSessionNode.HOST)
+                                        , (Integer)requestMap.get(HttpSessionNode.PORT));
+                                if (session.isLogLevelEnabled(LogLevel.DEBUG))
+                                    session.getLogger().debug(
+                                            "Executing request: "+request.getRequestLine().getMethod()
+                                            + " "+request.getRequestLine().getUri());
+                                response = client.execute(target, request);
+                                if (session.isLogLevelEnabled(LogLevel.DEBUG))
+                                    session.getLogger().debug("Response status: "+response.getStatusLine().toString());
+                            }
+                        }
+                        finally
+                        {
+                            handler.operationStatistic.markOperationProcessingEnd(start);
                         }
                     }
                 }
@@ -120,20 +133,10 @@ public class HttpSessionDataHandler implements DataHandler
         return statusMessage.get();
     }
 
-    private boolean isHandlerEnabled(HttpResponseHandlerNode handler, boolean isNewSession, Object data)
+    private Collection<Node> getHandlers(Node owner)
     {
-        BindingSupportImpl bindingSupport = handler.getBindingSupport();
-        bindingSupport.put(HttpSessionNode.IS_NEW_SESSION_BINDING, isNewSession);
-        bindingSupport.put(HttpSessionNode.DATA_BINDING, data);
+        Collection<Node> handlers = owner.getEffectiveChildrens();
 
-        try
-        {
-            Boolean enabled = handler.getEnabled();
-            return enabled!=null && enabled;
-        }
-        finally
-        {
-            bindingSupport.reset();
-        }
+        return handlers;
     }
 }

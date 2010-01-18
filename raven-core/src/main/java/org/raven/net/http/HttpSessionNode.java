@@ -17,8 +17,11 @@
 
 package org.raven.net.http;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import javax.script.Bindings;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.NTCredentials;
@@ -29,14 +32,19 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataHandler;
 import org.raven.ds.impl.AbstractAsyncDataPipe;
+import org.raven.expr.impl.BindingSupportImpl;
+import org.raven.expr.impl.IfNode;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
+import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
+import org.raven.tree.ViewableObject;
 import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass
+@NodeClass(childNodes=IfNode.class)
 public class HttpSessionNode extends AbstractAsyncDataPipe
 {
     public static final String IS_NEW_SESSION_BINDING = "isNewSession";
@@ -75,6 +83,13 @@ public class HttpSessionNode extends AbstractAsyncDataPipe
 
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
     private Object errorHandler;
+
+    @Override
+    public void formExpressionBindings(Bindings bindings)
+    {
+        super.formExpressionBindings(bindings);
+        bindingSupport.addTo(bindings);
+    }
 
     @Override
     public DataHandler createDataHandler()
@@ -196,6 +211,20 @@ public class HttpSessionNode extends AbstractAsyncDataPipe
         {
             Object res = errorHandler;
             return res==null? params.get(DATA_BINDING) : res;
+        }
+        finally
+        {
+            bindingSupport.reset();
+        }
+    }
+
+    Collection<Node> getHandlers(boolean isNewSession, Object data)
+    {
+        try
+        {
+            bindingSupport.put(DATA_BINDING, data);
+            bindingSupport.put(IS_NEW_SESSION_BINDING, isNewSession);
+            return getEffectiveChildrens();
         }
         finally
         {
