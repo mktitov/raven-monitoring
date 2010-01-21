@@ -19,7 +19,6 @@ package org.raven.net.http;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import javax.script.Bindings;
 import org.apache.http.auth.AuthScope;
@@ -32,12 +31,9 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataHandler;
 import org.raven.ds.impl.AbstractAsyncDataPipe;
-import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.IfNode;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.tree.Node;
-import org.raven.tree.NodeAttribute;
-import org.raven.tree.ViewableObject;
 import org.weda.annotations.constraints.NotNull;
 
 /**
