@@ -286,6 +286,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         private final String deleteMessage;
         private final String deleteCompletionMessage;
         private final Map<Integer, RecordsAsTableColumnValueNode> columnValues;
+        private int actionsCount;
+        private int columnsCount;
 
         public RecordAsTableDataConsumer(
                 String[] fieldsOrder, String detailColumnName, String detailValueViewLinkName
@@ -327,13 +329,16 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                 }
             }
 
-            int len = fieldNames.length +
+            if (enableDeletes)
+                ++actionsCount;
+            columnsCount = actionsCount + fieldNames.length +
                     (showFieldsInDetailColumn&&detailColumnNumber==null? 1 : 0);
-            String[] columnNames = new String[len];
+            String[] columnNames = new String[columnsCount];
+
             for (int i=0; i<fieldNames.length; ++i)
             {
                 String displayName = fields.get(fieldNames[i]).getDisplayName();
-                columnNames[i] = displayName==null? fieldNames[i] : displayName;
+                columnNames[i+actionsCount] = displayName==null? fieldNames[i] : displayName;
             }
 
             if (showFieldsInDetailColumn&&detailColumnNumber==null)
@@ -379,12 +384,9 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                 return;
             }
             
-            int len = fieldNames.length + (showFieldsInDetailColumn&&detailColumnNumber<0? 1 : 0);
-            int actionsCount = 0;
-            if (enableDeletes)
-                ++actionsCount;
-            len += actionsCount;
-            Object[] row = new Object[len];
+//            int len = fieldNames.length + (showFieldsInDetailColumn&&detailColumnNumber<0? 1 : 0);
+//            len += actionsCount;
+            Object[] row = new Object[columnsCount];
             try
             {
                 if (actionsCount>0)

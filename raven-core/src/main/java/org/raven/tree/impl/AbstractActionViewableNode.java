@@ -17,9 +17,11 @@
 
 package org.raven.tree.impl;
 
+import java.util.Collection;
 import org.raven.log.LogLevel;
 import org.raven.tree.ActionViewableObject;
 import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.weda.internal.annotations.Message;
 
@@ -91,6 +93,11 @@ public abstract class AbstractActionViewableNode implements ActionViewableObject
     public String toString()
     {
         return displayMessage;
+    }
+
+    public Collection<NodeAttribute> getActionAttributes()
+    {
+        return null;
     }
 
     public abstract String executeAction() throws Exception;

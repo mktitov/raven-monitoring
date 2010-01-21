@@ -17,6 +17,8 @@
 
 package org.raven.tree;
 
+import java.util.Collection;
+
 /**
  *
  * @author Mikhail Titov
@@ -27,4 +29,9 @@ public interface ActionViewableObject extends ViewableObject
      * Return the confirmation message for dialog before action execution
      */
     public String getConfirmationMessage();
+
+    /**
+     * Returns the action attributes or null if action viewable object does not contains attributes.
+     */
+    public Collection<NodeAttribute> getActionAttributes();
 }

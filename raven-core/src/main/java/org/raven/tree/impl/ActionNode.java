@@ -18,6 +18,7 @@
 package org.raven.tree.impl;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import javax.script.Bindings;
@@ -248,6 +249,11 @@ public class ActionNode extends BaseNode implements Viewable
             }finally {
                 bindingSupport.reset();
             }
+        }
+
+        public Collection<NodeAttribute> getActionAttributes()
+        {
+            return null;
         }
     }
 }

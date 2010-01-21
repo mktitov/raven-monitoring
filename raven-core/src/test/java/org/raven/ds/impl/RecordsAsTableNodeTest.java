@@ -22,12 +22,14 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
+import org.raven.ds.impl.RecordsAsTableNode.DeleteRecordAction;
 import org.raven.test.PushOnDemandDataSource;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.RavenUtils;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.table.Table;
+import org.raven.test.DataCollector;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
@@ -46,6 +48,7 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
     private RecordSchemaNode schema;
     private PushOnDemandDataSource ds;
     private RecordsAsTableNode tableNode;
+    private DataCollector collector;
 
     @Before
     public void prepare()
@@ -79,6 +82,12 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         tableNode.setDataSource(ds);
         tableNode.setRecordSchema(schema);
         assertTrue(tableNode.start());
+
+        collector = new DataCollector();
+        collector.setName("collector");
+        tree.getRootNode().addAndSaveChildren(collector);
+        collector.setDataSource(tableNode);
+        assertTrue(collector.start());
     }
 
     //fieldsOrder==null
@@ -364,6 +373,53 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         List<Object[]> rows = RavenUtils.tableAsList(table);
         assertEquals(1, rows.size());
         assertArrayEquals(new String[]{"test11", "1"}, rows.get(0));
+
+        verify(record);
+    }
+
+    @Test
+    public void deleteRecordTest() throws Exception
+    {
+        tableNode.setEnableDeletes(Boolean.TRUE);
+        Record record = createMock(Record.class);
+
+        expect(record.getSchema()).andReturn(schema).times(1);
+        expect(record.getValue("field1")).andReturn(1);
+        expect(record.getValue("field2")).andReturn("test1");
+        record.setTag(Record.DELETE_TAG, null);
+
+        replay(record);
+
+        ds.addDataPortion(record);
+        ds.addDataPortion(null);
+
+        Collection<ViewableObject> objects = tableNode.getViewableObjects(null);
+        assertNotNull(objects);
+        assertEquals(1, objects.size());
+        ViewableObject object = objects.iterator().next();
+        assertNotNull(object);
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, object.getMimeType());
+        assertNotNull(object.getData());
+        assertTrue(object.getData() instanceof Table);
+        Table table = (Table) object.getData();
+        assertArrayEquals(new String[]{null, "field1 displayName", "field2"}, table.getColumnNames());
+        List<Object[]> rows = RavenUtils.tableAsList(table);
+        assertEquals(1, rows.size());
+        assertEquals("1", rows.get(0)[1]);
+        assertEquals("test1", rows.get(0)[2]);
+
+        assertNotNull(rows.get(0)[0]);
+        assertTrue(rows.get(0)[0] instanceof RecordsAsTableNode.DeleteRecordAction);
+        RecordsAsTableNode.DeleteRecordAction action = (DeleteRecordAction) rows.get(0)[0];
+        assertNotNull(action.toString());
+        assertNotNull(action.getConfirmationMessage());
+        assertEquals(0, collector.getDataList().size());
+        Object res = action.getData();
+        assertNotNull(res);
+        assertTrue(res instanceof String);
+        
+        assertEquals(1, collector.getDataList().size());
+        assertSame(record, collector.getDataList().get(0));
 
         verify(record);
     }
