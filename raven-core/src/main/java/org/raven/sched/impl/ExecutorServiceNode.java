@@ -40,10 +40,12 @@ import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
+import org.raven.tree.impl.AbstractActionViewableNode;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.ViewableObjectImpl;
 import org.raven.util.OperationStatistic;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.internal.annotations.Message;
 
 /**
  *
@@ -53,17 +55,17 @@ import org.weda.annotations.constraints.NotNull;
 public class ExecutorServiceNode extends BaseNode
         implements ExecutorService, RejectedExecutionHandler, Viewable
 {
-	@NotNull @Parameter(defaultValue="2")
-	private Integer corePoolSize;
+    @NotNull @Parameter(defaultValue="2")
+    private Integer corePoolSize;
 
-	@NotNull @Parameter(defaultValue="6")
-	private Integer maximumPoolSize;
+    @NotNull @Parameter(defaultValue="6")
+    private Integer maximumPoolSize;
 
-	@NotNull @Parameter(defaultValue="60")
-	private Long keepAliveTime;
+    @NotNull @Parameter(defaultValue="60")
+    private Long keepAliveTime;
 
-	@NotNull @Parameter(defaultValue="SECONDS")
-	private TimeUnit timeUnit;
+    @NotNull @Parameter(defaultValue="SECONDS")
+    private TimeUnit timeUnit;
 
     @Parameter
     private Integer maximumQueueSize;
@@ -74,11 +76,15 @@ public class ExecutorServiceNode extends BaseNode
     @Parameter(readOnly=true)
     private AtomicLong rejectedTasks;
 
-//    @Parameter(readOnly=true)
-//    private
+    @Message
+    private String interruptDisplayMessage;
+    @Message
+    private String interruptConfirmationMessage;
+    @Message
+    private String interruptCompletionMessage;
 
 
-	private ThreadPoolExecutor executor;
+    private ThreadPoolExecutor executor;
     private BlockingQueue queue;
     private Collection<TaskWrapper> executingTasks;
     private AtomicLong taskIdCounter;
@@ -212,7 +218,8 @@ public class ExecutorServiceNode extends BaseNode
         if (!Status.STARTED.equals(getStatus()))
             return null;
         TableImpl table = new TableImpl(new String[]{
-            "Node started the task", "Status", "Execution start time", "Execution duration (sec)", "Thread status", "Stack trace"});
+            "", "Node started the task", "Status", "Execution start time", "Execution duration (sec)"
+            , "Thread status", "Stack trace"});
         Collection<TaskWrapper> taskList = executingTasks;
         if (taskList!=null)
             for (TaskWrapper task: taskList)
@@ -236,8 +243,14 @@ public class ExecutorServiceNode extends BaseNode
                     }
                             
                 }
+                InterruptThreadAction interruptAction = null;
+                if (thread!=null)
+                    interruptAction = new InterruptThreadAction(
+                            interruptConfirmationMessage, interruptDisplayMessage
+                            , interruptCompletionMessage, this, thread);
                 table.addRow(new Object[]{
-                    task.getTaskNode().getPath(), task.getStatusMessage()
+                    interruptAction
+                    , task.getTaskNode().getPath(), task.getStatusMessage()
                     , date, task.getExecutionDuation(), threadStatus, traceVO});
             }
 
@@ -330,5 +343,28 @@ public class ExecutorServiceNode extends BaseNode
         {
             return id.compareTo(((TaskWrapper)o).getId());
         }
+    }
+
+    private class InterruptThreadAction extends AbstractActionViewableNode
+    {
+        private final Thread thread;
+        private final String completionMessage;
+
+        public InterruptThreadAction(
+                String confirmationMessage, String displayMessage, String completionMessage
+                , Node owner, Thread thread)
+        {
+            super(confirmationMessage, displayMessage, owner);
+            this.thread = thread;
+            this.completionMessage = completionMessage;
+        }
+
+        @Override
+        public String executeAction() throws Exception 
+        {
+            thread.interrupt();
+            return completionMessage;
+        }
+        
     }
 }
