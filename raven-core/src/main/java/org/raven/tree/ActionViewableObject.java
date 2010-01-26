@@ -34,4 +34,6 @@ public interface ActionViewableObject extends ViewableObject
      * Returns the action attributes or null if action viewable object does not contains attributes.
      */
     public Collection<NodeAttribute> getActionAttributes();
+
+    public boolean isRefreshViewAfterAction();
 }

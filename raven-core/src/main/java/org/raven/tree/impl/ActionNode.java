@@ -255,5 +255,9 @@ public class ActionNode extends BaseNode implements Viewable
         {
             return null;
         }
+
+        public boolean isRefreshViewAfterAction() {
+            return true;
+        }
     }
 }

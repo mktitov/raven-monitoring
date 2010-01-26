@@ -40,7 +40,7 @@ import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
-import org.raven.tree.impl.AbstractActionViewableNode;
+import org.raven.tree.impl.AbstractActionViewableObject;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.ViewableObjectImpl;
 import org.raven.util.OperationStatistic;
@@ -345,7 +345,7 @@ public class ExecutorServiceNode extends BaseNode
         }
     }
 
-    private class InterruptThreadAction extends AbstractActionViewableNode
+    private class InterruptThreadAction extends AbstractActionViewableObject
     {
         private final Thread thread;
         private final String completionMessage;
@@ -354,7 +354,7 @@ public class ExecutorServiceNode extends BaseNode
                 String confirmationMessage, String displayMessage, String completionMessage
                 , Node owner, Thread thread)
         {
-            super(confirmationMessage, displayMessage, owner);
+            super(confirmationMessage, displayMessage, owner, true);
             this.thread = thread;
             this.completionMessage = completionMessage;
         }

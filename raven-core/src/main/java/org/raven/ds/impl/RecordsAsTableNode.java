@@ -35,7 +35,7 @@ import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
-import org.raven.tree.impl.AbstractActionViewableNode;
+import org.raven.tree.impl.AbstractActionViewableObject;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.tree.impl.ViewableObjectImpl;
@@ -475,7 +475,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         }
     }
 
-    public class DeleteRecordAction extends AbstractActionViewableNode
+    public class DeleteRecordAction extends AbstractActionViewableObject
     {
         private final Record record;
         private final String deleteCompletionMessage;
@@ -483,7 +483,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         public DeleteRecordAction(
                 String confirmationMessage, String displayMessage, String deleteCompletionMessage, Record record)
         {
-            super(confirmationMessage, displayMessage, RecordsAsTableNode.this);
+            super(confirmationMessage, displayMessage, RecordsAsTableNode.this, true);
             this.deleteCompletionMessage = deleteCompletionMessage;
             this.record = record;
         }

@@ -29,11 +29,12 @@ import org.weda.internal.annotations.Message;
  *
  * @author Mikhail Titov
  */
-public abstract class AbstractActionViewableNode implements ActionViewableObject
+public abstract class AbstractActionViewableObject implements ActionViewableObject
 {
     private final String confirmationMessage;
     private final String displayMessage;
     private final Node owner;
+    private final boolean refreshViewAfterAction;
 
     @Message
     private static String actionExecutionErrorMessage;
@@ -43,11 +44,13 @@ public abstract class AbstractActionViewableNode implements ActionViewableObject
      * @param displayMessage The string or message key of the display message
      * @param owner the owner of the action
      */
-    public AbstractActionViewableNode(String confirmationMessage, String displayMessage, Node owner)
+    public AbstractActionViewableObject(
+            String confirmationMessage, String displayMessage, Node owner, boolean refreshViewAfterAction)
     {
         this.confirmationMessage = confirmationMessage;
         this.displayMessage = displayMessage;
         this.owner = owner;
+        this.refreshViewAfterAction = refreshViewAfterAction;
     }
 
     public String getConfirmationMessage()
@@ -98,6 +101,11 @@ public abstract class AbstractActionViewableNode implements ActionViewableObject
     public Collection<NodeAttribute> getActionAttributes()
     {
         return null;
+    }
+
+    public boolean isRefreshViewAfterAction()
+    {
+        return refreshViewAfterAction;
     }
 
     public abstract String executeAction() throws Exception;
