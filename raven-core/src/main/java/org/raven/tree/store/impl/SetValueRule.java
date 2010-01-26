@@ -39,7 +39,7 @@ public class SetValueRule extends Rule
             && DataFile.class.isAssignableFrom(attr.getType()))
         {
             DataFile dataFile = attr.getRealValue();
-            if (text==null && text.trim().isEmpty())
+            if (text==null || text.trim().isEmpty())
                 dataFile.setDataStream(null);
             else
             {
