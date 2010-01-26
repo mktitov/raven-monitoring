@@ -11,6 +11,7 @@ import org.raven.ui.node.NodeWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// replaced by VObyNode
 public class ViewableObjectsByNode 
 {
 	private static Logger logger = LoggerFactory.getLogger(ViewableObjectsByNode.class);

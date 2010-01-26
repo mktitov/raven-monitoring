@@ -531,6 +531,7 @@ partialTriggers=":poolStatus"
 						<tr:outputFormatted 
 							rendered="#{rowa[vxStat.index].other}"
 							value="#{rowa[vxStat.index].item}"/>
+					<!-- is file -->	
 						<tr:commandLink
 					    	rendered="#{rowa[vxStat.index].file}" 
 							text="#{msgs.file}: #{rowa[vxStat.index].string}" 
@@ -539,6 +540,21 @@ partialTriggers=":poolStatus"
 								name="#{otherVO.paramVO}" 
 								value="#{rowa[vxStat.index].item}"/>
 						</tr:commandLink>
+					<!-- is action -->
+						<tr:commandLink 
+							rendered="#{rowa[vxStat.index].action and rowa[vxStat.index].item.confirmationMessage == null}" 
+							action="#{rowa[vxStat.index].item.runAction}"
+							inlineStyle="font-size: 110%;"
+							partialSubmit="true"
+							text="#{rowa[vxStat.index].itemWrapper.idVO}" />
+						<tr:commandLink
+							rendered="#{rowa[vxStat.index].action and rowa[vxStat.index].item.confirmationMessage != null}" 
+							action="#{rowa[vxStat.index].item.runAction}"
+							inlineStyle="font-size: 110%;"
+							onclick="if (!confirm('#{rowa[vxStat.index].item.confirmationMessage}')) return false"
+							partialSubmit="true"
+							text="#{rowa[vxStat.index].itemWrapper.idVO}" />
+					<!-- is table -->
 						<tr:commandLink
 							partialSubmit="true" 
 							useWindow="true"
