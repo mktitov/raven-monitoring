@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -112,8 +113,7 @@ public class ExecutorServiceNode extends BaseNode
         else
             queue = new LinkedBlockingQueue(capacity);
         executingTasks = new ConcurrentSkipListSet();
-		executor = new ThreadPoolExecutor(
-                corePoolSize, maximumPoolSize, keepAliveTime, timeUnit, queue, this);
+        executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, timeUnit, queue);
     }
 
     @Override
@@ -127,8 +127,24 @@ public class ExecutorServiceNode extends BaseNode
 
     public void execute(Task task) throws ExecutorServiceException
     {
-        if (Status.STARTED.equals(getStatus()))
-            executor.execute(new TaskWrapper(task));
+        try
+        {
+            if (Status.STARTED.equals(getStatus())) {
+                executor.execute(new TaskWrapper(task));
+
+            }
+        } 
+        catch (RejectedExecutionException e)
+        {
+            rejectedTasks.incrementAndGet();
+            String message = String.format(
+                        "Error executing task for node (%s). Executor service does not have " +
+                        "the free thread for task execution"
+                        , task.getTaskNode().getPath());
+            if (isLogLevelEnabled(LogLevel.ERROR))
+                error(message, e);
+            throw new ExecutorServiceException(message, e);
+        }
     }
 
     public void rejectedExecution(Runnable r, ThreadPoolExecutor executor)

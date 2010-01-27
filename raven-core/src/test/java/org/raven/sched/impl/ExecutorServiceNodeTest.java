@@ -51,8 +51,11 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase
         executor.execute(new TestTask(executor, 500));
         executor.execute(new TestTask(executor, 500));
         executor.execute(new TestTask(executor, 500));
-        executor.execute(new TestTask(executor, 0));
-
+        try {
+            executor.execute(new TestTask(executor, 0));
+            fail();
+        } catch (ExecutorServiceException executorServiceException) {
+        }
 
         Thread.sleep(100);
         assertEquals(new Integer(2), executor.getExecutingTaskCount());
@@ -64,11 +67,11 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase
         List<Object[]> rows = RavenUtils.tableAsList((Table)data);
         assertNotNull(rows);
         assertEquals(2, rows.size());
-        assertEquals(executor.getPath(), rows.get(0)[0]);
-        assertEquals("status message", rows.get(0)[1]);
-        assertEquals(Thread.State.TIMED_WAITING.toString(), rows.get(0)[4]);
-        assertTrue(rows.get(0)[5] instanceof ViewableObject);
-        ViewableObject vo = (ViewableObject) rows.get(0)[5];
+        assertEquals(executor.getPath(), rows.get(0)[1]);
+        assertEquals("status message", rows.get(0)[2]);
+        assertEquals(Thread.State.TIMED_WAITING.toString(), rows.get(0)[5]);
+        assertTrue(rows.get(0)[6] instanceof ViewableObject);
+        ViewableObject vo = (ViewableObject) rows.get(0)[6];
         assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, vo.getMimeType());
         assertTrue(vo.getData() instanceof Table);
         Table trace = (Table)vo.getData();
