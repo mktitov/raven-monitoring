@@ -1,9 +1,22 @@
+/* 
+ *  Copyright 2008 Sergey Pinevskiy.
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ * 
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *  under the License.
+ */
 package org.raven.ui.vo;
 
 import java.io.InputStream;
-
 import javax.faces.context.FacesContext;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.myfaces.trinidad.render.ExtendedRenderKitService;
 import org.raven.table.Table;
@@ -19,6 +32,10 @@ import org.raven.util.Utl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+*
+* @author Sergey Pinevskiy
+*/
 public class ViewableObjectWrapper 
 {
 	private static final Logger logger = LoggerFactory.getLogger(ViewableObjectWrapper.class);
@@ -159,9 +176,9 @@ public class ViewableObjectWrapper
 	public String runAction()
 	{
 		if(!isAction()) return null;
-		
+		ActionViewableObject action = (ActionViewableObject) viewableObject;
 		String ret;
-		Object o = viewableObject.getData();
+		Object o = action.getData();
 		if(o==null) ret = Messages.getUiMessage(Messages.DONE);
 			else ret = o.toString();
 		
@@ -170,7 +187,11 @@ public class ViewableObjectWrapper
 		 org.apache.myfaces.trinidad.util.Service.getRenderKitService(fc, ExtendedRenderKitService.class);
 		 //logger.info("runAction");
 		 ret = ret.replaceAll("'", "\"");
-		 service.addScript(fc, "alert('"+ret+"')");
+
+		 if(action.isRefreshViewAfterAction())
+			 SessionBean.getNodeWrapper().onRefresh();
+		 
+		 service.addScript(fc, "alert('"+ret+"'); ");
 		return null;
 	}
 /*

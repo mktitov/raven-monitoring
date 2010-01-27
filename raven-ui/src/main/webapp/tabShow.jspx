@@ -32,7 +32,7 @@
    	else if(e) keycode = e.which;
         	else return true;
     if (keycode == 13) {
-    	document.getElementById(commandId).click();
+    	document.getElementById(commandId).click(); 
        	return false;
    	} 
     return true;
@@ -543,17 +543,17 @@ partialTriggers=":poolStatus"
 					<!-- is action -->
 						<tr:commandLink 
 							rendered="#{rowa[vxStat.index].action and rowa[vxStat.index].item.confirmationMessage == null}" 
-							action="#{rowa[vxStat.index].item.runAction}"
+							action="#{rowa[vxStat.index].itemWrapper.runAction}"
 							inlineStyle="font-size: 110%;"
 							partialSubmit="true"
-							text="#{rowa[vxStat.index].itemWrapper.idVO}" />
+							text="#{rowa[vxStat.index].idVO}" />
 						<tr:commandLink
 							rendered="#{rowa[vxStat.index].action and rowa[vxStat.index].item.confirmationMessage != null}" 
-							action="#{rowa[vxStat.index].item.runAction}"
+							action="#{rowa[vxStat.index].itemWrapper.runAction}"
 							inlineStyle="font-size: 110%;"
 							onclick="if (!confirm('#{rowa[vxStat.index].item.confirmationMessage}')) return false"
 							partialSubmit="true"
-							text="#{rowa[vxStat.index].itemWrapper.idVO}" />
+							text="#{rowa[vxStat.index].idVO}" />
 					<!-- is table -->
 						<tr:commandLink
 							partialSubmit="true" 
