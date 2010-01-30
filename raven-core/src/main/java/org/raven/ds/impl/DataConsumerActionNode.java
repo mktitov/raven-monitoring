@@ -55,14 +55,13 @@ public class DataConsumerActionNode extends ActionNode
     }
 
     @Override
-    protected Map<String, Object> prepareViewableObjects(
-            Map<String, NodeAttribute> refreshAttributes)
+    public void prepareActionBindings(
+            Map<String, NodeAttribute> refreshAttributes, Map<String, Object> additionalBindings)
     {
+        super.prepareActionBindings(refreshAttributes, additionalBindings);
+        
         Consumer consumer = new Consumer(refreshAttributes);
-        Map<String, Object> bindings = new HashMap<String, Object>();
-        bindings.put(DATA_BINDING, consumer.getDataList());
-
-        return bindings;
+        additionalBindings.put(DATA_BINDING, consumer.getDataList());
     }
 
     private class Consumer implements DataConsumer

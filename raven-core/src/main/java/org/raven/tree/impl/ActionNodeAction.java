@@ -28,14 +28,14 @@ import org.raven.tree.Viewable;
  *
  * @author Mikhail Titov
  */
-public class AbstractActionNodeAction implements ActionViewableObject
+public class ActionNodeAction implements ActionViewableObject
 {
     protected final AbstractActionNode actionNode;
     protected final Map<String, NodeAttribute> refreshAttributes;
     protected final Map<String, Object> additionalBindings;
     protected final BindingSupportImpl bindingSupport;
 
-    public AbstractActionNodeAction(
+    public ActionNodeAction(
             AbstractActionNode actionNode
             , Map<String, NodeAttribute> refreshAttributes
             , Map<String, Object> additionalBindings)
@@ -107,7 +107,15 @@ public class AbstractActionNodeAction implements ActionViewableObject
         return null;
     }
 
-    public boolean isRefreshViewAfterAction() {
-        return true;
+    public boolean isRefreshViewAfterAction()
+    {
+        bindingSupport.put(AbstractActionNode.REFRESH_ATTRIBUTES_BINDING, refreshAttributes);
+        try{
+            actionNode.addToBindingSupport(additionalBindings);
+            Boolean res = actionNode.getNodeAttribute(AbstractActionNode.REFRESH_VIEW_AFTER_ACTION_ATTR).getRealValue();
+            return res;
+        }finally {
+            bindingSupport.reset();
+        }
     }
 }

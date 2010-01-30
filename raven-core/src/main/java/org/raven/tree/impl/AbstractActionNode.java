@@ -17,6 +17,7 @@
 
 package org.raven.tree.impl;
 
+import java.util.HashMap;
 import java.util.Map;
 import javax.script.Bindings;
 import org.raven.annotations.Parameter;
@@ -25,6 +26,7 @@ import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
@@ -37,6 +39,7 @@ public abstract class AbstractActionNode extends BaseNode
     public static final String CONFIRMATION_MESSAGE_ATTR = "confirmationMessage";
     public static final String ENABLED_ACTION_TEXT_ATTR = "enabledActionText";
     public static final String REFRESH_ATTRIBUTES_BINDING = "refreshAttributes";
+    public static final String REFRESH_VIEW_AFTER_ACTION_ATTR = "refreshViewAfterAction";
 
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
     private String actionExpression;
@@ -52,10 +55,15 @@ public abstract class AbstractActionNode extends BaseNode
 
     @Parameter
     private String confirmationMessage;
+
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean refreshViewAfterAction;
+
+
     protected BindingSupportImpl bindingSupport;
 
-    public abstract Map<String, Object> prepareActionBindings(
-            Map<String, NodeAttribute> refreshAttributes);
+    public abstract void prepareActionBindings(
+            Map<String, NodeAttribute> refreshAttributes, Map<String, Object> additionalBindings);
     public abstract ViewableObject createActionViewableObject(
             Map<String, NodeAttribute> refreshAttributes, Map<String, Object> additionalBindings);
 
@@ -66,12 +74,15 @@ public abstract class AbstractActionNode extends BaseNode
         bindingSupport = new BindingSupportImpl();
     }
 
-    public ViewableObject getActionViewableObject(Map<String, NodeAttribute> refreshAttributes)
+    public ViewableObject getActionViewableObject(
+            Map<String, NodeAttribute> refreshAttributes, Map<String, Object> additionalBindings)
     {
         try
         {
             bindingSupport.put(REFRESH_ATTRIBUTES_BINDING, refreshAttributes);
-            Map<String, Object> additionalBindings = prepareActionBindings(refreshAttributes);
+            if (additionalBindings==null)
+                additionalBindings = new HashMap<String, Object>();
+            prepareActionBindings(refreshAttributes, additionalBindings);
             addToBindingSupport(additionalBindings);
             Boolean enabled = actionEnabled;
             ViewableObject action = null;
@@ -93,6 +104,14 @@ public abstract class AbstractActionNode extends BaseNode
     {
         super.formExpressionBindings(bindings);
         bindingSupport.addTo(bindings);
+    }
+
+    public Boolean getRefreshViewAfterAction() {
+        return refreshViewAfterAction;
+    }
+
+    public void setRefreshViewAfterAction(Boolean refreshViewAfterAction) {
+        this.refreshViewAfterAction = refreshViewAfterAction;
     }
 
     public String getConfirmationMessage()

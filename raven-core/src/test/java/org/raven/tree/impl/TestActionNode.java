@@ -15,17 +15,28 @@
  *  under the License.
  */
 
-package org.raven.ds.impl;
+package org.raven.tree.impl;
 
-import org.raven.annotations.NodeClass;
-import org.raven.tree.impl.BaseNode;
+import java.util.Map;
+import org.raven.tree.NodeAttribute;
+import org.raven.tree.ViewableObject;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=RecordsAsTableNode.class)
-public class RecordActionNode extends BaseNode
+public class TestActionNode extends AbstractActionNode 
 {
+    @Override
+    public ViewableObject createActionViewableObject(
+            Map<String, NodeAttribute> refreshAttributes, Map<String, Object> additionalBindings)
+    {
+        return new ActionNodeAction(this, refreshAttributes, additionalBindings);
+    }
 
+    @Override
+    public void prepareActionBindings(
+            Map<String, NodeAttribute> refreshAttributes, Map<String, Object> additionalBindings)
+    {
+    }
 }

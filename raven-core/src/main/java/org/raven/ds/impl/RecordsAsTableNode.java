@@ -17,6 +17,8 @@
 
 package org.raven.ds.impl;
 
+import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -225,7 +227,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         RecordAsTableDataConsumer dataConsumer = new RecordAsTableDataConsumer(
                 fieldsOrderArr, detailColumnName, detailValueViewLinkName
                 , fieldNameColumnName, fieldValueColumnName, detailColumnNumber, columnValues
-                , deleteConfirmationMessage, deleteMessage, deleteCompletionMessage);
+                , deleteConfirmationMessage, deleteMessage, deleteCompletionMessage
+                , getRecordActions());
 
         dataSource.getDataImmediate(dataConsumer, attrs==null? null : attrs.values());
 
@@ -268,6 +271,26 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
     {
         return null;
     }
+
+    private List<RecordsAsTableRecordActionNode> getRecordActions()
+    {
+        Collection<Node> childs = getSortedChildrens();
+        if (childs!=null && !childs.isEmpty())
+        {
+            List<RecordsAsTableRecordActionNode> actions = null;
+            for (Node child: childs)
+                if (   child instanceof RecordsAsTableRecordActionNode
+                    && Status.STARTED.equals(child.getStatus()))
+                {
+                    if (actions==null)
+                        actions = new ArrayList<RecordsAsTableRecordActionNode>();
+                    actions.add((RecordsAsTableRecordActionNode) child);
+                }
+            return actions;
+        }
+        else
+            return null;
+    }
     
     public class RecordAsTableDataConsumer implements DataConsumer
     {
@@ -286,6 +309,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         private final String deleteMessage;
         private final String deleteCompletionMessage;
         private final Map<Integer, RecordsAsTableColumnValueNode> columnValues;
+        private final List<RecordsAsTableRecordActionNode> recordActions;
         private int actionsCount;
         private int columnsCount;
 
@@ -295,7 +319,9 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                 , String fieldValueColumnName
                 , Integer detailColumnNumber
                 , Map<Integer, RecordsAsTableColumnValueNode> columnValues
-                , String deleteConfirmationMessage, String deleteMessage, String deleteCompletionMessage)
+                , String deleteConfirmationMessage, String deleteMessage
+                , String deleteCompletionMessage
+                , List<RecordsAsTableRecordActionNode> recordActions)
         {
             fields = new HashMap<String, RecordSchemaField>();
             this.recordSchema = RecordsAsTableNode.this.recordSchema;
@@ -308,6 +334,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
             this.deleteCompletionMessage = deleteCompletionMessage;
             this.deleteConfirmationMessage = deleteConfirmationMessage;
             this.deleteMessage = deleteMessage;
+            this.recordActions = recordActions;
             
             schemaFields = recordSchema.getFields();
             if (fieldsOrder!=null)
@@ -331,6 +358,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
 
             if (enableDeletes)
                 ++actionsCount;
+            if (recordActions!=null)
+                actionsCount += recordActions.size();
             columnsCount = actionsCount + fieldNames.length +
                     (showFieldsInDetailColumn&&detailColumnNumber==null? 1 : 0);
             String[] columnNames = new String[columnsCount];
@@ -395,6 +424,13 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                     if (enableDeletes)
                         row[pos++] = new DeleteRecordAction(
                                 deleteConfirmationMessage, deleteMessage, deleteCompletionMessage, record);
+                    if (recordActions!=null)
+                        for (RecordsAsTableRecordActionNode actionNode: recordActions)
+                        {
+                            Map<String, Object> bindings = new HashMap<String, Object>();
+                            bindings.put(RECORD_BINDING, record);
+                            row[pos++] = actionNode.getActionViewableObject(null, bindings);
+                        }
                 }
                 for (int i=0; i<fieldNames.length; ++i)
                     try
