@@ -341,6 +341,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         private final List<String> columnNames;
         private String idColumnName;
         private String idFieldName;
+        private String sequenceName;
         private final String insertQuery;
         private String updateQuery;
         private String selectQuery;
@@ -353,6 +354,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         private PreparedStatement insert;
         private PreparedStatement update;
         private PreparedStatement delete;
+        private PreparedStatement sequence;
         private boolean hasUpdates = false;
         private boolean hasInserts = false;
         private boolean hasDeletes = false;
@@ -387,6 +389,10 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                     {
                         idColumnName=extension.getColumnName();
                         idFieldName = field.getName();
+                        DatabaseSequenceRecordFieldExtension seqExt = field.getFieldExtension(
+                                DatabaseSequenceRecordFieldExtension.class, null);
+                        if (seqExt!=null)
+                            sequenceName = seqExt.getSequenceName();
                     }
                 }
             }
@@ -429,6 +435,10 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
             }
             if (deleteQuery!=null)
                 delete = connection.prepareStatement(deleteQuery);
+            if (sequenceName!=null && updateIdField)
+            {
+                sequence = connection.prepareStatement("select "+sequenceName+".nextval from dual");
+            }
         }
 
         private boolean findRecord(Record record) throws RecordException, SQLException
@@ -456,6 +466,22 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
             return false;
         }
 
+        private Object getNextSequenceValue(Record record) throws RecordException, SQLException
+        {
+            ResultSet rs = sequence.executeQuery();
+            try
+            {
+                rs.next();
+                Object nextVal = rs.getObject(1);
+                record.setValue(idFieldName, nextVal);
+                return nextVal;
+            }
+            finally
+            {
+                rs.close();
+            }
+        }
+
         public void updateRecord(Record record) throws Exception
         {
             PreparedStatement st = null;
@@ -476,6 +502,11 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                 {
                     Object val = RecordSchemaFieldType.getSqlObject(
                             field, record.getValue(field.getName()));
+                    if (   val==null && field.getName().equals(idFieldName) && updateIdField
+                        && sequenceName!=null && !recordFound && !deleteRecord)
+                    {
+                        val = getNextSequenceValue(record);
+                    }
                     if ((recordFound || deleteRecord) && field.getName().equals(idFieldName))
                         idFieldValue = val;
                     else if (!deleteRecord)
@@ -491,7 +522,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                 else
                 {
                     st.executeUpdate();
-                    if (updateIdField && idColumnName!=null && !recordFound && !deleteRecord)
+                    if (updateIdField && idColumnName!=null && !recordFound && !deleteRecord && sequenceName==null)
                     {
                         ResultSet rs = st.getGeneratedKeys();
                         rs.next();

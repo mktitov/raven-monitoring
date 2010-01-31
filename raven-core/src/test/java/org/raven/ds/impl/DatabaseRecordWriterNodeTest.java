@@ -47,6 +47,7 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
     private PushDataSource ds;
     private JDBCConnectionPoolNode pool;
     private DatabaseRecordWriterNode writer;
+    private RecordSchemaFieldNode idField;
 
     @Before
     public void prepare() throws Exception
@@ -71,7 +72,7 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
 
         pool.start();
 
-        createTable(pool);
+        createTable(pool, true);
 
         schema = new RecordSchemaNode();
         schema.setName("schema");
@@ -103,6 +104,7 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
         assertEquals(Status.STARTED, dbExtension.getStatus());
 
         field1 = new RecordSchemaFieldNode();
+        idField = field1;
         field1.setName("field1");
         schema.addAndSaveChildren(field1);
         field1.setFieldType(RecordSchemaFieldType.INTEGER);
@@ -214,6 +216,31 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
     }
 
     @Test
+    public void sequencedIdField_test() throws Exception
+    {
+        createTable(pool, false);
+        Connection con = pool.getConnection();
+        try{
+            Statement st = con.createStatement();
+            st.executeUpdate("drop sequence test_seq");
+            st.executeUpdate("create sequence test_seq start with 2");
+            st.close();
+        }finally{
+            con.close();
+        }
+        DatabaseSequenceRecordFieldExtension seqExt = DatabaseSequenceRecordFieldExtension.create(
+                idField, "sequence", "test_seq");
+        writer.setUpdateIdField(true);
+        Record record = schema.createRecord();
+        record.setValue("field2", "10.50.1.1");
+        ds.pushData(record);
+        ds.pushData(null);
+
+        writer.stop();
+        assertEquals(new Integer(2), record.getValue("field1"));
+    }
+
+    @Test
     public void delete_test() throws Exception
     {
         writer.setUpdateIdField(true);
@@ -255,12 +282,15 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
         return rows;
     }
 
-    private void createTable(JDBCConnectionPoolNode pool) throws SQLException
+    private void createTable(JDBCConnectionPoolNode pool, boolean autoIncrement) throws SQLException
     {
         Connection con = pool.getConnection();
         Statement st = con.createStatement();
         st.executeUpdate("drop table if exists record_data");
-        st.executeUpdate("create table record_data(col1 int auto_increment(1), col2 varchar)");
+        if (autoIncrement)
+            st.executeUpdate("create table record_data(col1 int auto_increment(1), col2 varchar)");
+        else
+            st.executeUpdate("create table record_data(col1 int, col2 varchar)");
     }
 
     private void insertData(Connection connection) throws SQLException

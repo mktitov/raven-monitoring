@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009 Mikhail Titov.
+ *  Copyright 2010 Mikhail Titov.
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -27,19 +27,17 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=RecordSchemaFieldNode.class, childNodes=ValuePrepareRecordFieldExtension.class)
-public class DatabaseRecordFieldExtension extends AbstractRecordFieldExtension
+public class DatabaseSequenceRecordFieldExtension  extends AbstractRecordFieldExtension
 {
-    @Parameter() @NotNull
-    private String columnName;
+    @NotNull @Parameter
+    private String sequenceName;
 
-    public String getColumnName()
-    {
-        return columnName;
+    public String getSequenceName() {
+        return sequenceName;
     }
 
-    public void setColumnName(String columnName)
-    {
-        this.columnName = columnName;
+    public void setSequenceName(String sequenceName) {
+        this.sequenceName = sequenceName;
     }
 
     /**
@@ -47,19 +45,19 @@ public class DatabaseRecordFieldExtension extends AbstractRecordFieldExtension
      * with given name already exists then method will returns null.
      * @param owner the record schema field.
      * @param extensionName the name of the database table column extension.
-     * @param columnName the name of the column with which record schema field related
+     * @param sequenceName the name of the database sequence which related with field
      */
-    public final static DatabaseRecordFieldExtension create(
-            Node owner, String extensionName, String columnName)
+    public final static DatabaseSequenceRecordFieldExtension create(
+            Node owner, String extensionName, String sequenceName)
     {
         if (owner.getChildren(extensionName)!=null)
             return null;
-        DatabaseRecordFieldExtension colExt = new DatabaseRecordFieldExtension();
-        colExt.setName(extensionName);
-        owner.addAndSaveChildren(colExt);
-        colExt.setColumnName(columnName);
-        colExt.start();
-        
-        return colExt;
+        DatabaseSequenceRecordFieldExtension seqExt = new DatabaseSequenceRecordFieldExtension();
+        seqExt.setName(extensionName);
+        owner.addAndSaveChildren(seqExt);
+        seqExt.setSequenceName(sequenceName);
+        seqExt.start();
+
+        return seqExt;
     }
 }
