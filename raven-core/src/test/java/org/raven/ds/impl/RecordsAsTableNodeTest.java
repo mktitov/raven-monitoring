@@ -17,6 +17,7 @@
 
 package org.raven.ds.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -471,6 +472,66 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         assertEquals("2", action.getData());
         assertEquals(1, collector.getDataListSize());
         assertSame(record, collector.getDataList().get(0));
+
+        collector.getDataList().clear();
+        recordAction.setActionExpression("dataList<<'test data';'test'");
+        assertEquals("test", action.getData());
+        assertEquals(1, collector.getDataListSize());
+        assertEquals("test data", collector.getDataList().get(0));
+
+        verify(record);
+    }
+
+    @Test
+    public void actionTest() throws Exception
+    {
+        RecordsAsTableActionNode recordAction = new RecordsAsTableActionNode();
+        recordAction.setName("action");
+        tableNode.addAndSaveChildren(recordAction);
+        recordAction.setEnabledActionText("action title");
+        recordAction.setActionExpression("records.size()");
+        assertTrue(recordAction.start());
+
+        collector.setDataSource(recordAction);
+
+        Record record = createMock(Record.class);
+
+        expect(record.getSchema()).andReturn(schema);
+        expect(record.getValue("field1")).andReturn(1).times(1);
+
+        replay(record);
+
+        ds.addDataPortion(record);
+        ds.addDataPortion(null);
+
+        tableNode.setFieldsOrder("field1");
+
+        Collection<ViewableObject> objects = tableNode.getViewableObjects(null);
+        assertNotNull(objects);
+        assertEquals(2, objects.size());
+
+        List<ViewableObject> vos = new ArrayList<ViewableObject>(objects);
+        ViewableObject object = vos.get(0);
+        assertEquals(Viewable.RAVEN_ACTION_MIMETYPE, object.getMimeType());
+        assertTrue(object instanceof ActionViewableObject);
+        ActionViewableObject action = (ActionViewableObject)object;
+        assertEquals("action title", action.toString());
+        assertTrue(collector.getDataList().isEmpty());
+        assertEquals("1", action.getData());
+//        assertEquals(1, collector.getDataListSize());
+//        assertSame(record, collector.getDataList().get(0));
+        
+
+        object = vos.get(1);
+        assertNotNull(object);
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, object.getMimeType());
+        assertNotNull(object.getData());
+        assertTrue(object.getData() instanceof Table);
+        Table table = (Table) object.getData();
+        assertArrayEquals(new String[]{"field1 displayName"}, table.getColumnNames());
+        List<Object[]> rows = RavenUtils.tableAsList(table);
+        assertEquals(1, rows.size());
+        assertEquals("1", rows.get(0)[0]);
 
         verify(record);
     }

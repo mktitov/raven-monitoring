@@ -17,7 +17,6 @@
 
 package org.raven.ds.impl;
 
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -53,6 +52,7 @@ import org.weda.internal.annotations.Message;
 public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
 {
     public final static String DATA_SOURCE_ATTR = "dataSource";
+    public static final String RECORDS_BINDING = "records";
     public final static String RECORD_SCHEMA_ATTR = "recordSchema";
     public final static String RECORD_BINDING = "record";
     public final static String VALUE_BINDING = "value";
@@ -200,6 +200,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         Map<String, NodeAttribute> attrs = new HashMap<String, NodeAttribute>();
         if (refreshAttributes!=null)
             attrs.putAll(refreshAttributes);
+
         for (NodeAttribute attr: getNodeAttributes())
             if (   DATA_SOURCE_ATTR.equals(attr.getParentAttribute())
                 && !attrs.containsKey(attr.getName()))
@@ -224,18 +225,27 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         if (columnValues.isEmpty())
             columnValues = null;
 
+        List<Record> records = getActionsCount()>0? new ArrayList<Record>(512) : null;
+
         RecordAsTableDataConsumer dataConsumer = new RecordAsTableDataConsumer(
                 fieldsOrderArr, detailColumnName, detailValueViewLinkName
                 , fieldNameColumnName, fieldValueColumnName, detailColumnNumber, columnValues
                 , deleteConfirmationMessage, deleteMessage, deleteCompletionMessage
-                , getRecordActions());
+                , getRecordActions(), records);
 
         dataSource.getDataImmediate(dataConsumer, attrs==null? null : attrs.values());
 
-        ViewableObject table = new ViewableObjectImpl(
-                Viewable.RAVEN_TABLE_MIMETYPE, dataConsumer.getTable());
+        List<ViewableObject> vos = new ArrayList<ViewableObject>();
+        if (records!=null)
+        {
+            List<ViewableObject> actions = getActions(refreshAttributes, records);
+            if (actions!=null)
+                vos.addAll(actions);
+        }
         
-        return Arrays.asList(table);
+        vos.add(new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, dataConsumer.getTable()));
+        
+        return vos;
     }
 
     @Override
@@ -279,7 +289,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         {
             List<RecordsAsTableRecordActionNode> actions = null;
             for (Node child: childs)
-                if (   child instanceof RecordsAsTableRecordActionNode
+                if (   child.getClass().equals(RecordsAsTableRecordActionNode.class)
                     && Status.STARTED.equals(child.getStatus()))
                 {
                     if (actions==null)
@@ -291,7 +301,45 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         else
             return null;
     }
+
+    private int getActionsCount()
+    {
+        Collection<Node> childs = getChildrens();
+        if (childs!=null && !childs.isEmpty())
+        {
+            int count = 0;
+            for (Node child: childs)
+                if (child instanceof RecordsAsTableActionNode && Status.STARTED.equals(child.getStatus()))
+                    ++count;
+            return count;
+        }
+
+        return 0;
+    }
     
+    private List<ViewableObject> getActions(
+            Map<String, NodeAttribute> refreshAttributes, Collection<Record> records)
+    {
+        Collection<Node> childs = getSortedChildrens();
+        if (childs!=null && !childs.isEmpty())
+        {
+            List<ViewableObject> actions = null;
+            for (Node child: childs)
+                if (   child instanceof RecordsAsTableActionNode
+                    && Status.STARTED.equals(child.getStatus()))
+                {
+                    if (actions==null)
+                        actions = new ArrayList<ViewableObject>();
+                    Map<String, Object> bindings = new HashMap<String, Object>();
+                    bindings.put(RECORDS_BINDING, records);
+                    actions.add(((RecordsAsTableActionNode)child).getActionViewableObject(null, bindings));
+                }
+            return actions;
+        }
+        else
+            return null;
+    }
+
     public class RecordAsTableDataConsumer implements DataConsumer
     {
         private final TableImpl table;
@@ -310,6 +358,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         private final String deleteCompletionMessage;
         private final Map<Integer, RecordsAsTableColumnValueNode> columnValues;
         private final List<RecordsAsTableRecordActionNode> recordActions;
+        private final List<Record> records;
         private int actionsCount;
         private int columnsCount;
 
@@ -321,7 +370,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                 , Map<Integer, RecordsAsTableColumnValueNode> columnValues
                 , String deleteConfirmationMessage, String deleteMessage
                 , String deleteCompletionMessage
-                , List<RecordsAsTableRecordActionNode> recordActions)
+                , List<RecordsAsTableRecordActionNode> recordActions
+                , List<Record> records)
         {
             fields = new HashMap<String, RecordSchemaField>();
             this.recordSchema = RecordsAsTableNode.this.recordSchema;
@@ -335,6 +385,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
             this.deleteConfirmationMessage = deleteConfirmationMessage;
             this.deleteMessage = deleteMessage;
             this.recordActions = recordActions;
+            this.records = records;
             
             schemaFields = recordSchema.getFields();
             if (fieldsOrder!=null)
@@ -412,6 +463,9 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                             "Invalid record schema recived from (%s)", dataSource.getPath()));
                 return;
             }
+
+            if (records!=null)
+                records.add(record);
             
 //            int len = fieldNames.length + (showFieldsInDetailColumn&&detailColumnNumber<0? 1 : 0);
 //            len += actionsCount;

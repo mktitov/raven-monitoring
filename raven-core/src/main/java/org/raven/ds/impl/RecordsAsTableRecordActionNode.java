@@ -17,7 +17,9 @@
 
 package org.raven.ds.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.ds.DataConsumer;
@@ -59,6 +61,7 @@ public class RecordsAsTableRecordActionNode extends AbstractActionNode implement
 
     private class Action extends ActionNodeAction
     {
+        public static final String DATALIST_BINDING = "dataList";
         public Action(
                 AbstractActionNode actionNode, Map<String, NodeAttribute> refreshAttributes
                 , Map<String, Object> additionalBindings)
@@ -69,10 +72,13 @@ public class RecordsAsTableRecordActionNode extends AbstractActionNode implement
         @Override
         public Object getData()
         {
+            List dataList = new ArrayList();
+            bindingSupport.put(DATALIST_BINDING, dataList);
             Object res = super.getData();
-            DataSourceHelper.sendDataToConsumers(
-                    RecordsAsTableRecordActionNode.this,
-                    additionalBindings.get(RecordsAsTableNode.RECORD_BINDING));
+            if (dataList.isEmpty() && additionalBindings.containsKey(RecordsAsTableNode.RECORD_BINDING))
+                dataList.add(additionalBindings.get(RecordsAsTableNode.RECORD_BINDING));
+            for (Object data: dataList)
+                DataSourceHelper.sendDataToConsumers(RecordsAsTableRecordActionNode.this, data);
             return res;
         }
     }
