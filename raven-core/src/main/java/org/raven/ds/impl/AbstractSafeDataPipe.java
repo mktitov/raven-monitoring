@@ -41,6 +41,7 @@ import org.weda.annotations.constraints.NotNull;
  */
 public abstract class AbstractSafeDataPipe extends AbstractDataSource implements DataPipe
 {
+    public static final String DATASOURCE_BINDING = "dataSource";
     public static final String DATA_BINDING = "data";
     public static final String EXPRESSION_ATTRIBUTE = "expression";
     public static final String PREPROCESS_ATTRIBUTE = "preProcess";
@@ -253,6 +254,7 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
         {
             bindingSupport.put(DATA_BINDING, data);
             bindingSupport.put(SKIP_DATA_BINDING, SKIP_DATA);
+//            bindingSupport.put(DATASOURCE_BINDING, dataSource);
             try
             {
                 NodeAttribute exprAttr = getNodeAttribute(EXPRESSION_ATTRIBUTE);

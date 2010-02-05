@@ -26,7 +26,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.raven.test.ServiceTestCase;
 import org.raven.tree.Node;
@@ -98,6 +97,7 @@ public class H2TreeStoreTest extends ServiceTestCase
         
         NodeAttributeImpl attr = new NodeAttributeImpl();
         attr.setName("name");
+        attr.setDisplayName("display name");
         attr.setDescription("test");
         attr.setOwner(node);
         attr.setParameterName("parameterName");
@@ -122,6 +122,7 @@ public class H2TreeStoreTest extends ServiceTestCase
         assertNotNull(attr1);
         assertEquals(attr.getId(), attr1.getId());
         assertSame(node1, attr1.getOwner());
+        assertEquals("display name", attr1.getDisplayName());
         assertEquals("parameterName", attr1.getParameterName());
         assertEquals("parentAttribute", attr1.getParentAttribute());
         assertEquals(String.class, attr1.getType());
@@ -132,6 +133,7 @@ public class H2TreeStoreTest extends ServiceTestCase
         
         attr1.setDescription("description1");
         attr1.setName("name1");
+        attr1.setDisplayName("display name1");
         attr1.setOwner(node);
         attr1.setParameterName("parameterName1");
         attr1.setParentAttribute("parentAttribute1");
@@ -150,6 +152,7 @@ public class H2TreeStoreTest extends ServiceTestCase
         
         attr1 = (NodeAttributeImpl) node1.getNodeAttribute("name1");
         assertNotNull(attr1);
+        assertEquals("display name1", attr1.getDisplayName());
         
         store.removeNodeAttribute(attr1.getId());
         node1 = (ContainerNode) store.getNode(node.getId());

@@ -92,7 +92,7 @@ public class AbstractSafeDataPipeTest extends RavenCoreTestCase
         assertTrue(ds.start());
 
         pipe.setDataSource(ds);
-        assertTrue(ds.start());
+        assertTrue(pipe.start());
 
         ds.pushData("1");
 
@@ -110,11 +110,11 @@ public class AbstractSafeDataPipeTest extends RavenCoreTestCase
 
         pipe.setDataSource(ds);
         pipe.setUseExpression(true);
-        pipe.setExpression("data+1");
+        pipe.setExpression("${dataSource.id}+(data+1)");
         assertTrue(pipe.start());
 
         ds.pushData(1);
-        testCollector(c1, 2);
+        testCollector(c1, ds.getId()+2);
     }
 
     //forwardDataSourceAttributes==false

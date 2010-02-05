@@ -539,7 +539,7 @@ public class H2TreeStore implements TreeStore
         if (selectNodeAttributesStatement==null)
             selectNodeAttributesStatement = connection.prepareStatement(
                     String.format(
-                        "select id, name, attribute_type, value, required, template_expression, " +
+                        "select id, name, display_name, attribute_type, value, required, template_expression, " +
                         "   value_handler_type, parameter_name, parent_attribute, description " +
                         "from %s " +
                         "where owner=?"
@@ -556,6 +556,7 @@ public class H2TreeStore implements TreeStore
             attr.setId(rs.getInt(pos++));
             attr.setOwner(node);
             attr.setName(rs.getString(pos++));
+            attr.setDisplayName(rs.getString(pos++));
             attr.setType(Class.forName(rs.getString(pos++)));
             attr.setRawValue(rs.getString(pos++));
             attr.setRequired(rs.getBoolean(pos++));
@@ -639,6 +640,7 @@ public class H2TreeStore implements TreeStore
                 "  id int auto_increment (1)," +
                 "  owner int," +
                 "  name varchar(128)," +
+                "  display_name varchar(512)," +
                 "  value varchar(4096), " +
                 "  attribute_type varchar(256), " +
                 "  required boolean, " +
@@ -666,16 +668,19 @@ public class H2TreeStore implements TreeStore
             insertNodeAttributeStatement = connection.prepareStatement(
                     String.format(
                         "insert into %s " +
-                        "(owner, name, value, attribute_type, required, template_expression" +
+                        "(owner, name, display_name, value, attribute_type, required, template_expression" +
                         "  , value_handler_type, parameter_name, parent_attribute, description) " +
-                        "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                        "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                         , NODE_ATTRIBUTES_TABLE_NAME)
                     , Statement.RETURN_GENERATED_KEYS);
         
         int pos=1;
         insertNodeAttributeStatement.setInt(pos++, nodeAttribute.getOwner().getId());
         insertNodeAttributeStatement.setString(pos++, nodeAttribute.getName());
-        
+        if (nodeAttribute.getDisplayName()==null)
+            insertNodeAttributeStatement.setNull(pos++, Types.VARCHAR);
+        else
+            insertNodeAttributeStatement.setString(pos++, nodeAttribute.getDisplayName());
         if (nodeAttribute.getRawValue()==null)
             insertNodeAttributeStatement.setNull(pos++, Types.VARCHAR);
         else
@@ -744,7 +749,7 @@ public class H2TreeStore implements TreeStore
             updateNodeAttributeStatement = connection.prepareStatement(
                     String.format(
                         "update %s " +
-                        "set owner=?, name=?, value=?, attribute_type=?, required=?, " +
+                        "set owner=?, name=?, display_name=?, value=?, attribute_type=?, required=?, " +
                         "   template_expression=?, value_handler_type=?, parameter_name=?, " +
                         "   parent_attribute=?, description=? " +
                         "where id=?"
@@ -753,6 +758,11 @@ public class H2TreeStore implements TreeStore
         int pos=1;
         updateNodeAttributeStatement.setInt(pos++, nodeAttribute.getOwner().getId());
         updateNodeAttributeStatement.setString(pos++, nodeAttribute.getName());
+        
+        if (nodeAttribute.getDisplayName()==null)
+            updateNodeAttributeStatement.setNull(pos++, Types.VARCHAR);
+        else
+            updateNodeAttributeStatement.setString(pos++, nodeAttribute.getDisplayName());
         
         if (nodeAttribute.getRawValue()==null)
             updateNodeAttributeStatement.setNull(pos++, Types.VARCHAR);

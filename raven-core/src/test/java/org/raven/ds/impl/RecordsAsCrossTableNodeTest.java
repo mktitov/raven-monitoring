@@ -79,6 +79,36 @@ public class RecordsAsCrossTableNodeTest extends RavenCoreTestCase
         crossTable.setMasterFields("M1");
         crossTable.setSecondaryFields("S1");
         crossTable.setCellValueFields("V1");
+//        crossTable.setFirstColumnName("c0");
+        assertTrue(crossTable.start());
+
+        ds.pushData(createRecord("c1", null, "r1", null, "v1 1", null));
+        ds.pushData(createRecord("c1", null, "r2", null, "v1 2", null));
+        ds.pushData(createRecord("c2", null, "r1", null, "v2 1", null));
+        ds.pushData(createRecord("c2", null, "r2", null, "v2 2", null));
+        ds.pushData(null);
+
+        List data = collector.getDataList();
+        assertNotNull(data);
+        assertEquals(1, data.size());
+        assertTrue(data.get(0) instanceof Table);
+
+        Table table = (Table) data.get(0);
+        assertArrayEquals(new String[]{"S1", "c1", "c2"}, table.getColumnNames());
+        List<Object[]> rows = RavenUtils.tableAsList(table);
+        assertEquals(2, rows.size());
+        assertArrayEquals(new Object[]{"r1", "v1 1", "v2 1"}, rows.get(0));
+        assertArrayEquals(new Object[]{"r2", "v1 2", "v2 2"}, rows.get(1));
+    }
+
+    @Test
+    public void simpleTest2() throws RecordException
+    {
+        crossTable.setMasterFields("M1");
+//        crossTable.setSecondaryFields("S1");
+        crossTable.setUseSecondaryFieldsExpression(Boolean.TRUE);
+        crossTable.setSecondaryFieldsExpression("record['S1']");
+        crossTable.setCellValueFields("V1");
         crossTable.setFirstColumnName("c0");
         assertTrue(crossTable.start());
 
@@ -102,7 +132,7 @@ public class RecordsAsCrossTableNodeTest extends RavenCoreTestCase
     }
 
     @Test
-    public void simpleTest2() throws RecordException
+    public void simpleTest3() throws RecordException
     {
         crossTable.setMasterFields("M1");
         crossTable.setSecondaryFields("S1");
@@ -122,7 +152,7 @@ public class RecordsAsCrossTableNodeTest extends RavenCoreTestCase
         assertTrue(data.get(0) instanceof Table);
 
         Table table = (Table) data.get(0);
-        assertArrayEquals(new String[]{"c0", "c1", "c2", "c3"}, table.getColumnNames());
+        assertArrayEquals(new String[]{"S1", "c1", "c2", "c3"}, table.getColumnNames());
         List<Object[]> rows = RavenUtils.tableAsList(table);
         assertEquals(2, rows.size());
         assertArrayEquals(new Object[]{"r1", "v1 1", "v2 1", "v3 1"}, rows.get(0));
@@ -151,11 +181,11 @@ public class RecordsAsCrossTableNodeTest extends RavenCoreTestCase
         assertTrue(data.get(0) instanceof Table);
 
         Table table = (Table) data.get(0);
-        assertArrayEquals(new String[]{"c0", "c1, 1", "c1, 2","c2, 2"}, table.getColumnNames());
+        assertArrayEquals(new String[]{"S1", "S2", "c1, 1", "c1, 2","c2, 2"}, table.getColumnNames());
         List<Object[]> rows = RavenUtils.tableAsList(table);
         assertEquals(2, rows.size());
-        assertArrayEquals(new Object[]{"r1, 1", "v1 1, v", null, "v3 1, v"}, rows.get(0));
-        assertArrayEquals(new Object[]{"r2, 2", "v1 2, v", "v2 2, v", "v3 2, v"}, rows.get(1));
+        assertArrayEquals(new Object[]{"r1", "1", "v1 1, v", null, "v3 1, v"}, rows.get(0));
+        assertArrayEquals(new Object[]{"r2", "2", "v1 2, v", "v2 2, v", "v3 2, v"}, rows.get(1));
     }
 
     @Test
@@ -216,7 +246,7 @@ public class RecordsAsCrossTableNodeTest extends RavenCoreTestCase
 
         Table table = (Table) data.get(0);
         assertEquals("t1", table.getTitle());
-        assertArrayEquals(new String[]{"c0", "c1"}, table.getColumnNames());
+        assertArrayEquals(new String[]{"S1", "c1"}, table.getColumnNames());
         List<Object[]> rows = RavenUtils.tableAsList(table);
         assertEquals(2, rows.size());
         assertArrayEquals(new Object[]{"r1", "v1 1"}, rows.get(0));
@@ -224,7 +254,7 @@ public class RecordsAsCrossTableNodeTest extends RavenCoreTestCase
 
         table = (Table) data.get(1);
         assertEquals("t2", table.getTitle());
-        assertArrayEquals(new String[]{"c0", "c1", "c2"}, table.getColumnNames());
+        assertArrayEquals(new String[]{"S1", "c1", "c2"}, table.getColumnNames());
         rows = RavenUtils.tableAsList(table);
         assertEquals(2, rows.size());
         assertArrayEquals(new Object[]{"r1", "v2 1", null}, rows.get(0));
