@@ -94,6 +94,7 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         field.setName("field1");
         schema.addAndSaveChildren(field);
         field.setFieldType(RecordSchemaFieldType.STRING);
+        field.setDisplayName("field1 display name");
         field.start();
         assertEquals(Status.STARTED, field.getStatus());
 
@@ -361,6 +362,7 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         NodeAttribute attr = attrs.iterator().next();
         assertNotNull(attr);
         assertEquals("field1", attr.getName());
+        assertEquals("field1 display name", attr.getDisplayName());
         assertEquals(String.class, attr.getType());
         assertEquals("test", attr.getRawValue());
         assertTrue(attr.isRequired());

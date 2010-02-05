@@ -518,6 +518,7 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
                     filterField.getFilterInfo().getFilterValueRequired()
                     && !provideFilterAttributesToConsumers);
             filterAttr.setDescriptionContainer(description);
+            filterAttr.setDisplayName(filterField.getFieldInfo().getDisplayName());
             filterAttr.save();
             filterAttr.init();
             addNodeAttribute(filterAttr);
