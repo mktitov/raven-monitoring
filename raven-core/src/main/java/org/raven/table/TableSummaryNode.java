@@ -119,41 +119,6 @@ public class TableSummaryNode extends AbstractSafeDataPipe
             ++rowNumber;
             Object[] row = it.next();
             Object[] newRow = rowAggInfo.aggregate(row, rowNumber);
-//            if (rowAggsDefs!=null)
-//            {
-//                newRow = new Object[row.length+rowAggsDefs.size()];
-//                System.arraycopy(row, 0, newRow, 0, row.length);
-//                for (int i=0; i<rowAggsDefs.size(); ++i)
-//                {
-//                    bindingSupport.put("row", row);
-//                    bindingSupport.put("rowNumber", rowNumber);
-//                    try
-//                    {
-//                        if (rowAggsDefs.get(i).getSelector())
-//                        {
-//                            AggregateFunction func = rowAggsDefs.get(i).createAggregateFunction();
-//                            try{
-//                                func.startAggregation();
-//                                for (int j=0; j<row.length; ++j)
-//                                try{
-//                                    func.aggregate(row[j]);
-//                                }catch(Exception e){
-//                                    if (isLogLevelEnabled(LogLevel.DEBUG))
-//                                        debug("Aggregation error", e);
-//                                }
-//                                func.finishAggregation();
-//                                newRow[row.length+i] = func.getAggregatedValue();
-//                            }finally{
-//                                func.close();
-//                            }
-//                        }
-//                    }
-//                    finally
-//                    {
-//                        bindingSupport.reset();
-//                    }
-//                }
-//            }
             newTable.addRow(newRow);
             if (colAggDefs!=null)
                 for (int i=0; i<newRow.length; ++i)
