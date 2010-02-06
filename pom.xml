@@ -10,6 +10,7 @@
     <inceptionYear>2008</inceptionYear>
     <modules>
         <module>raven-core</module>
+        <module>raven-server</module>
         <module>raven-ui</module>
 	<module>raven-doc-plugin</module>
     </modules>
@@ -343,7 +344,7 @@
             <dependency>
                 <groupId>com.h2database</groupId>
                 <artifactId>h2</artifactId>
-                <version>1.2.121</version>
+                <version>1.2.127</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
