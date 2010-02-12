@@ -21,9 +21,13 @@ import java.io.InputStream;
 import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
+import org.raven.RavenUtils;
 import org.raven.test.DataCollector;
 import org.raven.sched.impl.ExecutorServiceNode;
+import org.raven.table.Table;
 import org.raven.test.RavenCoreTestCase;
+import org.raven.tree.Viewable;
+import org.raven.tree.ViewableObject;
 
 /**
  *
@@ -42,6 +46,7 @@ public class FileDataSourceTest extends RavenCoreTestCase
         DataCollector collector = new DataCollector();
         collector.setName("collector");
         tree.getRootNode().addAndSaveChildren(collector);
+        collector.setPauseBeforeRecieve(500);
         collector.setResetDataPolicy(AbstractDataConsumer.ResetDataPolicy.DONT_RESET_DATA);
 
         FileDataSource fds = new FileDataSource();
@@ -53,17 +58,38 @@ public class FileDataSourceTest extends RavenCoreTestCase
         collector.setDataSource(fds);
         assertTrue(collector.start());
 
+        assertNull(fds.getViewableObjects(null));
         InputStream is = IOUtils.toInputStream("test");
         fds.getFile().setDataStream(is);
-        Thread.sleep(1000);
+
+        Thread.sleep(200);
+        List<ViewableObject> vos = fds.getViewableObjects(null);
+        assertNotNull(vos);
+        assertEquals(1, vos.size());
+        ViewableObject vo = vos.get(0);
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, vo.getMimeType());
+        Object voData = vo.getData();
+        assertTrue(voData instanceof Table);
+        List<Object[]> rows = RavenUtils.tableAsList((Table)voData);
+        assertEquals(1, rows.size());
+        assertEquals(4l, rows.get(0)[1]);
+        assertEquals(0l, rows.get(0)[2]);
+        assertEquals(0l, rows.get(0)[3]);
+
+        Thread.sleep(500);
         List dataList = collector.getDataList();
         assertEquals(1, dataList.size());
 //        assertNull(dataList.get(0));
         assertTrue(dataList.get(0) instanceof InputStream);
         assertEquals("test", IOUtils.toString((InputStream)dataList.get(0)));
+        assertNull(fds.getViewableObjects(null));
 
         dataList.clear();
         Object data = collector.refereshData(null);
+        Thread.sleep(200);
+        assertNull(fds.getViewableObjects(null));
+        Thread.sleep(500);
+
         assertNotNull(data);
         assertTrue(data instanceof InputStream);
         assertEquals("test", IOUtils.toString((InputStream)data));

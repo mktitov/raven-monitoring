@@ -14,7 +14,6 @@
  *  limitations under the License.
  *  under the License.
  */
-
 package org.raven.expr.impl;
 
 import java.util.HashMap;
@@ -26,47 +25,41 @@ import org.raven.expr.BindingSupport;
  *
  * @author Mikhail Titov
  */
-public class BindingSupportImpl implements BindingSupport
-{
-	ThreadLocal<Map<String, Object>> bindings = new ThreadLocal<Map<String, Object>>();
+public class BindingSupportImpl implements BindingSupport {
 
-    public void enableScriptExecution()
-    {
+    ThreadLocal<Map<String, Object>> bindings = new ThreadLocal<Map<String, Object>>();
+
+    public void enableScriptExecution() {
         put(ExpressionAttributeValueHandler.ENABLE_SCRIPT_EXECUTION_BINDING, true);
     }
 
-	public void put(String bindingName, Object value)
-	{
-		Map<String, Object> binds = bindings.get();
-		if (binds==null)
-		{
-			binds = new HashMap<String, Object>();
+    public void put(String bindingName, Object value) {
+        Map<String, Object> binds = bindings.get();
+        if (binds == null) {
+            binds = new HashMap<String, Object>();
             binds.put(ExpressionAttributeValueHandler.ENABLE_SCRIPT_EXECUTION_BINDING, true);
-			bindings.set(binds);
-		}
-		binds.put(bindingName, value);
-	}
+            bindings.set(binds);
+        }
+        binds.put(bindingName, value);
+    }
 
-    public void putAll(Bindings bindMap)
-    {
-		Map<String, Object> binds = bindings.get();
-		if (binds==null)
-		{
-			binds = new HashMap<String, Object>();
+    public void putAll(Bindings bindMap) {
+        Map<String, Object> binds = bindings.get();
+        if (binds == null) {
+            binds = new HashMap<String, Object>();
             binds.put(ExpressionAttributeValueHandler.ENABLE_SCRIPT_EXECUTION_BINDING, true);
-			bindings.set(binds);
-		}
+            bindings.set(binds);
+        }
         binds.putAll(bindMap);
     }
 
-	public void reset()
-	{
-		bindings.remove();
-	}
+    public void reset() {
+        bindings.remove();
+    }
 
-	public void addTo(Bindings scriptBindings)
-	{
-		if (bindings.get()!=null)
-			scriptBindings.putAll(bindings.get());
-	}
+    public void addTo(Bindings scriptBindings) {
+        if (bindings.get() != null) {
+            scriptBindings.putAll(bindings.get());
+        }
+    }
 }

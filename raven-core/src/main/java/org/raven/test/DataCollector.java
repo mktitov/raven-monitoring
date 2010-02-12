@@ -19,6 +19,8 @@ package org.raven.test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 
@@ -29,11 +31,30 @@ import org.raven.ds.impl.AbstractDataConsumer;
 public class DataCollector extends AbstractDataConsumer
 {
     private List<Object> dataList = new ArrayList<Object>();
+    private long pauseBeforeRecieve = 0;
+
+    public long getPauseBeforeRecieve()
+    {
+        return pauseBeforeRecieve;
+    }
+
+    public void setPauseBeforeRecieve(long pauseBeforeRecieve)
+    {
+        this.pauseBeforeRecieve = pauseBeforeRecieve;
+    }
 
     @Override
     protected void doSetData(DataSource dataSource, Object data)
     {
-        dataList.add(data);
+        try {
+            if (pauseBeforeRecieve > 0) {
+                Thread.sleep(pauseBeforeRecieve);
+            }
+            dataList.add(data);
+        }
+        catch (InterruptedException ex)
+        {
+        }
     }
 
     public  List<Object> getDataList()

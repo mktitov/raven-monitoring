@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.dbcp.ConnectionPool;
@@ -33,6 +34,8 @@ import org.raven.ds.DataConsumer;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
+import org.raven.expr.BindingSupport;
+import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
@@ -97,18 +100,16 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
 
     @Parameter(readOnly=true)
     private long validRecords;
+
     @Parameter(readOnly=true)
     private long errorRecords;
 
     private long processingTime;
-
     private List<SelectField> selectFields;
-
     private Map<RecordSchemaField, FilterField> filterFields;
-
     private Lock filterFieldLock;
-
     private SchemaListener schemaListener;
+    private BindingSupportImpl bindingSupport;
 
     @Override
     protected void initFields()
@@ -121,6 +122,7 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
         validRecords = 0l;
         errorRecords = 0l;
         processingTime = 0l;
+        bindingSupport = new BindingSupportImpl();
     }
 
     @Override
@@ -150,59 +152,73 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
         DataConsumer dataConsumer, Map<String, NodeAttribute> attributes)
             throws Exception
     {
-        long startTime = System.currentTimeMillis();
-        long realProcessingTime = processingTime;
-        long procStart = startTime;
-        List<DatabaseFilterElement> filterElements = createFilterElements(attributes);
-        
-        DatabaseRecordQuery recordQuery = null;
-        String _query = query;
-        if (_query==null || query.trim().isEmpty())
-            recordQuery = new DatabaseRecordQuery(
-                    recordSchema, databaseExtensionName, filterExtensionName, filterElements
-                    , whereExpression
-                    , orderByExpression, connectionPool, maxRows, fetchSize, converter);
-        else
-            recordQuery = new DatabaseRecordQuery(
-                    recordSchema, databaseExtensionName, filterExtensionName
-                    , filterElements, _query, connectionPool
-                    , maxRows, fetchSize, converter);
+        bindingSupport.enableScriptExecution();
+        try{
+            long startTime = System.currentTimeMillis();
+            long realProcessingTime = processingTime;
+            long procStart = startTime;
+            List<DatabaseFilterElement> filterElements = createFilterElements(attributes);
 
-        if (isLogLevelEnabled(LogLevel.DEBUG))
-            debug("Executing query:\n"+recordQuery.getQuery());
-        DatabaseRecordQuery.RecordIterator it = recordQuery.execute();
-        processingTime+=System.currentTimeMillis()-startTime;
-        try
-        {
+            DatabaseRecordQuery recordQuery = null;
+            String _query = query;
+            if (_query==null || _query.trim().isEmpty())
+                recordQuery = new DatabaseRecordQuery(
+                        recordSchema, databaseExtensionName, filterExtensionName, filterElements
+                        , whereExpression
+                        , orderByExpression, connectionPool, maxRows, fetchSize, converter);
+            else
+                recordQuery = new DatabaseRecordQuery(
+                        recordSchema, databaseExtensionName, filterExtensionName
+                        , filterElements, _query, connectionPool
+                        , maxRows, fetchSize, converter);
+
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug("Executing query:\n"+recordQuery.getQuery());
+            DatabaseRecordQuery.RecordIterator it = recordQuery.execute();
+            processingTime+=System.currentTimeMillis()-startTime;
             try
             {
-                startTime = System.currentTimeMillis();
-                int i=0;
-                while (it.hasNext())
+                try
                 {
-                    dataConsumer.setData(this, it.next());
-                    ++validRecords;
-                    if (i % 1000 == 0)
+                    startTime = System.currentTimeMillis();
+                    int i=0;
+                    while (it.hasNext())
                     {
-                        processingTime+=System.currentTimeMillis()-startTime;
-                        startTime = System.currentTimeMillis();
+                        dataConsumer.setData(this, it.next());
+                        ++validRecords;
+                        if (i % 1000 == 0)
+                        {
+                            processingTime+=System.currentTimeMillis()-startTime;
+                            startTime = System.currentTimeMillis();
+                        }
                     }
-                }
-                dataConsumer.setData(this, null);
+                    dataConsumer.setData(this, null);
 
-                return true;
+                    return true;
+                }
+                catch(Exception e)
+                {
+                    ++errorRecords;
+                    throw e;
+                }
             }
-            catch(Exception e)
+            finally
             {
-                ++errorRecords;
-                throw e;
+                processingTime = realProcessingTime + (System.currentTimeMillis()-procStart);
+                recordQuery.close();
             }
         }
         finally
         {
-            processingTime = realProcessingTime + (System.currentTimeMillis()-procStart);
-            recordQuery.close();
+            bindingSupport.reset();
         }
+    }
+
+    @Override
+    public void formExpressionBindings(Bindings bindings)
+    {
+        super.formExpressionBindings(bindings);
+        bindingSupport.addTo(bindings);
     }
 
     @Override

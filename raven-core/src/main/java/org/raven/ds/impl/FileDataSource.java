@@ -18,10 +18,17 @@
 package org.raven.ds.impl;
 
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.CountingInputStream;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
@@ -30,20 +37,25 @@ import org.raven.log.LogLevel;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.ExecutorServiceException;
 import org.raven.sched.Task;
+import org.raven.table.TableImpl;
 import org.raven.tree.DataFile;
 import org.raven.tree.DataFileException;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.Viewable;
+import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.DataFileValueHandlerFactory;
+import org.raven.tree.impl.ViewableObjectImpl;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.internal.annotations.Message;
 
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass()
-public class FileDataSource extends BaseNode implements DataSource, Task
+public class FileDataSource extends BaseNode implements DataSource, Task, Viewable
 {
     public final static String FILE_ATTR = "file";
 
@@ -52,6 +64,31 @@ public class FileDataSource extends BaseNode implements DataSource, Task
     
     @NotNull @Parameter 
     private ExecutorService executorService;
+
+    private AtomicBoolean sendingData;
+    private AtomicInteger bytesSended;
+    private AtomicLong streamSize;
+    private CountingInputStream countingStream;
+
+    @Message
+    private static String streamSizeMessage;
+    @Message
+    private static String sendPrecentMessage;
+    @Message
+    private static String sendStatusMessage;
+    @Message
+    private static String sentBytesMessages;
+    @Message
+    private static String sendingStatusMessage;
+
+    @Override
+    protected void initFields()
+    {
+        super.initFields();
+        sendingData = new AtomicBoolean(false);
+        bytesSended = new AtomicInteger();
+        streamSize = new AtomicLong();
+    }
 
     public DataFile getFile()
     {
@@ -78,7 +115,7 @@ public class FileDataSource extends BaseNode implements DataSource, Task
     {
         if (!Status.STARTED.equals(getStatus()))
             return false;
-        sendDataToConsumer(dataConsumer);
+        sendDataToConsumer(dataConsumer, false);
         return true;
     }
 
@@ -97,40 +134,74 @@ public class FileDataSource extends BaseNode implements DataSource, Task
         return "Working";
     }
 
+    public synchronized CountingInputStream getCountingStream()
+    {
+        return countingStream;
+    }
+
+    private synchronized void setCountingStream(CountingInputStream countingStream)
+    {
+        this.countingStream = countingStream;
+    }
+
     @Override
     public void nodeAttributeValueChanged(
             Node node, NodeAttribute attribute, Object oldValue, Object newValue)
     {
         super.nodeAttributeValueChanged(node, attribute, oldValue, newValue);
         if (Status.STARTED.equals(getStatus()) && FILE_ATTR.equals(attribute.getName()))
-            try
+        {
+            if (!sendingData.get())
             {
-                executorService.execute(this);
+                try
+                {
+                    sendingData.set(true);
+                    executorService.execute(this);
+                }
+                catch (ExecutorServiceException ex)
+                {
+                    sendingData.set(false);
+                    if (isLogLevelEnabled(LogLevel.ERROR))
+                        error(String.format(
+                                "Error executing task using (%s) executor service"
+                                , executorService.getPath()));
+                }
             }
-            catch (ExecutorServiceException ex)
-            {
-                if (isLogLevelEnabled(LogLevel.ERROR))
-                    error(String.format(
-                            "Error executing task using (%s) executor service"
-                            , executorService.getPath()));
-            }
+            else if (isLogLevelEnabled(LogLevel.WARN))
+                warn("Can't send data because of already sending");
+        }
     }
 
     public void run()
     {
-        Collection<Node> depNodes = getDependentNodes();
-        if (depNodes!=null)
-            for (Node dep: depNodes)
-                if (dep instanceof DataConsumer && Status.STARTED.equals(dep.getStatus()))
-                    sendDataToConsumer((DataConsumer) dep);
+        try
+        {
+            resetStatFields();
+            Collection<Node> depNodes = getDependentNodes();
+            if (depNodes!=null)
+                for (Node dep: depNodes)
+                    if (dep instanceof DataConsumer && Status.STARTED.equals(dep.getStatus()))
+                        sendDataToConsumer((DataConsumer) dep, true);
+        }
+        finally
+        {
+            sendingData.set(false);
+            resetStatFields();
+        }
     }
 
-    private void sendDataToConsumer(DataConsumer consumer)
+    private void sendDataToConsumer(DataConsumer consumer, boolean gatherStat)
     {
         InputStream data = null;
         try
         {
             data = getFile().getDataStream();
+            if (data!=null && gatherStat)
+            {
+                data = new CountingInputStream(data);
+                setCountingStream((CountingInputStream)data);
+                streamSize.set(getFile().getFileSize());
+            }
             consumer.setData(this, data);
         } catch (DataFileException ex)
         {
@@ -140,5 +211,35 @@ public class FileDataSource extends BaseNode implements DataSource, Task
                     String.format("Error pushing data to the consumer (%s)", consumer.getPath())
                     , ex);
         }
+    }
+
+    private void resetStatFields()
+    {
+        setCountingStream(null);
+    }
+
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
+    {
+        return null;
+    }
+
+    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) throws Exception
+    {
+        if (!sendingData.get())
+            return null;
+        
+        CountingInputStream is = getCountingStream();
+        if (is==null)
+            return null;
+        TableImpl table = new TableImpl(new String[]{sendStatusMessage, streamSizeMessage, sentBytesMessages, sendPrecentMessage});
+        long bytesSent = is.getByteCount();
+        table.addRow(new Object[]{sendingStatusMessage, streamSize.get(), bytesSent, (int)100*bytesSent/streamSize.get()});
+
+        return Arrays.asList((ViewableObject)new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table, false));
+    }
+
+    public Boolean getAutoRefresh()
+    {
+        return true;
     }
 }
