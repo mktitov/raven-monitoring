@@ -31,6 +31,7 @@ import org.raven.tree.ViewableObject;
  */
 public class DataFileViewableObject implements ViewableObject
 {
+    public static final String OCTETSTREAM_MIMETYPE = "application/octet-stream";
     private final DataFile dataFile;
     private final Node owner;
 
@@ -44,13 +45,14 @@ public class DataFileViewableObject implements ViewableObject
     {
         try
         {
-            return dataFile.getMimeType();
+            String mimeType = dataFile.getMimeType();
+            return mimeType==null? OCTETSTREAM_MIMETYPE : mimeType;
         }
         catch (DataFileException ex)
         {
             if (owner.isLogLevelEnabled(LogLevel.ERROR))
                 owner.getLogger().error("Error geting mime type from data file", ex);
-            return "application/octet-stream";
+            return OCTETSTREAM_MIMETYPE;
         }
     }
 
@@ -63,7 +65,7 @@ public class DataFileViewableObject implements ViewableObject
         catch (DataFileException ex)
         {
             if (owner.isLogLevelEnabled(LogLevel.ERROR))
-                owner.getLogger().error("Error geting input stream from data file", ex);
+                owner.getLogger().error("Error reading content", ex);
             return null;
         }
     }
@@ -88,7 +90,8 @@ public class DataFileViewableObject implements ViewableObject
     {
         try
         {
-            return dataFile.getFilename();
+            String filename = dataFile.getFilename();
+            return filename!=null? filename : "unnamed_file";
         }
         catch (DataFileException ex)
         {

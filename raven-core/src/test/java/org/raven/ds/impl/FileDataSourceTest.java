@@ -58,15 +58,23 @@ public class FileDataSourceTest extends RavenCoreTestCase
         collector.setDataSource(fds);
         assertTrue(collector.start());
 
-        assertNull(fds.getViewableObjects(null));
+        assertEquals(1, fds.getViewableObjects(null).size());
         InputStream is = IOUtils.toInputStream("test");
         fds.getFile().setDataStream(is);
+        fds.getFile().setMimeType("text/plain");
 
         Thread.sleep(200);
         List<ViewableObject> vos = fds.getViewableObjects(null);
         assertNotNull(vos);
-        assertEquals(1, vos.size());
-        ViewableObject vo = vos.get(0);
+        assertEquals(2, vos.size());
+        ViewableObject vo;
+        vo = vos.get(0);
+        Object data = vo.getData();
+        assertTrue(data instanceof InputStream);
+        assertEquals("test", IOUtils.toString((InputStream)data));
+        assertEquals("text/plain", vo.getMimeType());
+
+        vo = vos.get(1);
         assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, vo.getMimeType());
         Object voData = vo.getData();
         assertTrue(voData instanceof Table);
@@ -82,12 +90,12 @@ public class FileDataSourceTest extends RavenCoreTestCase
 //        assertNull(dataList.get(0));
         assertTrue(dataList.get(0) instanceof InputStream);
         assertEquals("test", IOUtils.toString((InputStream)dataList.get(0)));
-        assertNull(fds.getViewableObjects(null));
+        assertEquals(1, fds.getViewableObjects(null).size());
 
         dataList.clear();
-        Object data = collector.refereshData(null);
+        data = collector.refereshData(null);
         Thread.sleep(200);
-        assertNull(fds.getViewableObjects(null));
+        assertEquals(1, fds.getViewableObjects(null).size());
         Thread.sleep(500);
 
         assertNotNull(data);

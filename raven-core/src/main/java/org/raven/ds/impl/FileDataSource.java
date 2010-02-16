@@ -18,6 +18,7 @@
 package org.raven.ds.impl;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -25,8 +26,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.CountingInputStream;
 import org.raven.annotations.NodeClass;
@@ -46,6 +45,7 @@ import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.DataFileValueHandlerFactory;
+import org.raven.tree.impl.DataFileViewableObject;
 import org.raven.tree.impl.ViewableObjectImpl;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.internal.annotations.Message;
@@ -80,6 +80,8 @@ public class FileDataSource extends BaseNode implements DataSource, Task, Viewab
     private static String sentBytesMessages;
     @Message
     private static String sendingStatusMessage;
+    @Message
+    private static String contentMessage;
 
     @Override
     protected void initFields()
@@ -225,17 +227,22 @@ public class FileDataSource extends BaseNode implements DataSource, Task, Viewab
 
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) throws Exception
     {
-        if (!sendingData.get())
+        if (!Status.STARTED.equals(getStatus()))
             return null;
-        
-        CountingInputStream is = getCountingStream();
-        if (is==null)
-            return null;
-        TableImpl table = new TableImpl(new String[]{sendStatusMessage, streamSizeMessage, sentBytesMessages, sendPrecentMessage});
-        long bytesSent = is.getByteCount();
-        table.addRow(new Object[]{sendingStatusMessage, streamSize.get(), bytesSent, (int)100*bytesSent/streamSize.get()});
 
-        return Arrays.asList((ViewableObject)new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table, false));
+        List<ViewableObject> vos = new ArrayList<ViewableObject>(2);
+        vos.add(new DataFileViewableObject(file, this));
+
+        CountingInputStream is = getCountingStream();
+        if (is!=null)
+        {
+            TableImpl table = new TableImpl(new String[]{sendStatusMessage, streamSizeMessage, sentBytesMessages, sendPrecentMessage});
+            long bytesSent = is.getByteCount();
+            table.addRow(new Object[]{sendingStatusMessage, streamSize.get(), bytesSent, (int)100*bytesSent/streamSize.get()});
+            vos.add(new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table, false));
+        }
+
+        return vos;
     }
 
     public Boolean getAutoRefresh()
