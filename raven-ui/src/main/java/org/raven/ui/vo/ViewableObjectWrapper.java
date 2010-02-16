@@ -31,6 +31,7 @@ import org.raven.ui.util.Messages;
 import org.raven.util.Utl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.weda.beans.ObjectUtils;
 
 /**
 *

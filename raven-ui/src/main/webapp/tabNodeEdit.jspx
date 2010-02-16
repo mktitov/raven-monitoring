@@ -83,7 +83,7 @@
             <tr:inputListOfValues  
                 label="#{msgs.type}" value="#{sBean.newNodeType}"
                 action="dialog:chooseType" 
-                windowWidth="500" windowHeight="400"/>
+                windowWidth="800" windowHeight="400"/>
             -->
             <tr:commandButton 
             	text="#{msgs.create}" 

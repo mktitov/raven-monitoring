@@ -35,6 +35,7 @@ import org.raven.tree.Tree;
 import org.raven.ui.SessionBean;
 import org.raven.ui.util.Messages;
 import org.apache.myfaces.trinidad.event.ReturnEvent;
+import org.raven.template.impl.TemplateEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -315,8 +316,9 @@ public class SubNodesTableBean
 		  			Auditor au = SessionBean.getInstance().getAuditor();
 		  			
 		  			AuditRecord aRec = au.prepare(nw.getNode(), SessionBean.getAccountNameS(), a, mes, nx.getPath(), newName);
+                    boolean validateNodeType = !(nx.getNode() instanceof TemplateEntry);
 		  			if(copy)
-		  				tree.copy(nw.getNode(), nx.getNode(), newName, null, true, true, false);
+		  				tree.copy(nw.getNode(), nx.getNode(), newName, null, true, validateNodeType, false);
 	  				else
 	  					tree.move(nw.getNode(), nx.getNode(), newName);
 		  			au.write(aRec);
