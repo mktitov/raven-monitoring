@@ -28,6 +28,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import org.raven.tree.impl.TreeImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weda.internal.annotations.Service;
@@ -157,6 +158,7 @@ public class PropertiesConfig implements Config
 		AuthorizationNode n = null;
 		try 
 		{ 
+			n = (AuthorizationNode) TreeImpl.INSTANCE.getNode(ANPATH);
 			n = (AuthorizationNode) tree.getNode(ANPATH);
 			return n.getAuthorizationData();
 		}

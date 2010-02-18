@@ -38,6 +38,7 @@ public class RecordsAggregatorNodeTest extends RavenCoreTestCase
     RecordSchemaNode schema;
     RecordsAggregatorNode aggregator;
     DataCollector collector;
+    RecordsAggregatorValueFieldNode value2FieldNode;
 
     @Before
     public void prepare() throws Exception
@@ -62,12 +63,13 @@ public class RecordsAggregatorNodeTest extends RavenCoreTestCase
         tree.getRootNode().addAndSaveChildren(aggregator);
         aggregator.setDataSource(ds);
         aggregator.setRecordSchema(schema);
+        assertTrue(aggregator.start());
 
         createGroupField("grpField1", null);
         createGroupField("grpField2", "record['grpField2']");
 
         createValueField("value1", null, AggregateFunctionType.SUM, null);
-        createValueField("value2", "record['value1']+record['value2']"
+        value2FieldNode = createValueField("value2", "record['value1']+record['value2']"
                 , AggregateFunctionType.CUSTOM, "(value?:0)+nextValue");
 
         collector = new DataCollector();
@@ -111,6 +113,50 @@ public class RecordsAggregatorNodeTest extends RavenCoreTestCase
                 assertEquals(new Integer(2), rec.getValue("value1"));
                 assertEquals(new Double(22.), rec.getValue("value2"));
                 
+            }
+        }
+        assertTrue(foundG1);
+        assertTrue(foundG2);
+    }
+
+    @Test
+    public void testCustom() throws RecordException
+    {
+        value2FieldNode.setUseStartAggregationExpression(Boolean.TRUE);
+        value2FieldNode.setUseFinishAggregationExpression(Boolean.TRUE);
+        value2FieldNode.setStartAggregationExpression("params.v=100;1");
+        value2FieldNode.setFinishAggregationExpression("params.v+value");
+        ds.pushData(createRecord("g1", 1, 1, 10.));
+        ds.pushData(createRecord("g1", 1, 2, 20.));
+        ds.pushData(createRecord("g2", 2, 2, 20.));
+        ds.pushData(null);
+
+        List data = collector.getDataList();
+        assertNotNull(data);
+        assertEquals(3, data.size());
+        assertNull(data.get(2));
+
+        assertTrue(data.get(0) instanceof Record);
+        assertTrue(data.get(1) instanceof Record);
+
+        boolean foundG1 = false;
+        boolean foundG2 = false;
+        for (int i=0; i<2; ++i)
+        {
+            Record rec = (Record) data.get(i);
+            if (rec.getValue("grpField1").equals("g1"))
+            {
+                foundG1 = true;
+                assertEquals(new Integer(1), rec.getValue("grpField2"));
+                assertEquals(new Integer(3), rec.getValue("value1"));
+                assertEquals(new Double(134.), rec.getValue("value2"));
+            } else if (rec.getValue("grpField1").equals("g2"))
+            {
+                foundG2 = true;
+                assertEquals(new Integer(2), rec.getValue("grpField2"));
+                assertEquals(new Integer(2), rec.getValue("value1"));
+                assertEquals(new Double(123.), rec.getValue("value2"));
+
             }
         }
         assertTrue(foundG1);
@@ -190,7 +236,7 @@ public class RecordsAggregatorNodeTest extends RavenCoreTestCase
         assertTrue(groupField.start());
     }
 
-    private void createValueField(
+    private RecordsAggregatorValueFieldNode createValueField(
             String fieldName, String fieldExpression, AggregateFunctionType aggType
             , String aggregationExpression)
         throws Exception
@@ -208,5 +254,7 @@ public class RecordsAggregatorNodeTest extends RavenCoreTestCase
         valueField.setAggregateFunction(aggType);
         valueField.setAggregationExpression(aggregationExpression);
         assertTrue(valueField.start());
+
+        return valueField;
     }
 }

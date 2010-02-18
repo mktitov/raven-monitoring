@@ -34,6 +34,18 @@ public class RecordsAggregatorValueFieldNode extends RecordsAggregatorField
     private AggregateFunctionType aggregateFunction;
 
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
+    private Object finishAggregationExpression;
+
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean useFinishAggregationExpression;
+
+    @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
+    private Object startAggregationExpression;
+
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean useStartAggregationExpression;
+
+    @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
     private Object aggregationExpression;
 
     public AggregateFunctionType getAggregateFunction()
@@ -44,6 +56,38 @@ public class RecordsAggregatorValueFieldNode extends RecordsAggregatorField
     public void setAggregateFunction(AggregateFunctionType aggregateFunction)
     {
         this.aggregateFunction = aggregateFunction;
+    }
+
+    public Object getFinishAggregationExpression() {
+        return finishAggregationExpression;
+    }
+
+    public void setFinishAggregationExpression(Object finishAggregationExpression) {
+        this.finishAggregationExpression = finishAggregationExpression;
+    }
+
+    public Object getStartAggregationExpression() {
+        return startAggregationExpression;
+    }
+
+    public void setStartAggregationExpression(Object startAggregationExpression) {
+        this.startAggregationExpression = startAggregationExpression;
+    }
+
+    public Boolean getUseFinishAggregationExpression() {
+        return useFinishAggregationExpression;
+    }
+
+    public void setUseFinishAggregationExpression(Boolean useFinishAggregationExpression) {
+        this.useFinishAggregationExpression = useFinishAggregationExpression;
+    }
+
+    public Boolean getUseStartAggregationExpression() {
+        return useStartAggregationExpression;
+    }
+
+    public void setUseStartAggregationExpression(Boolean useStartAggregationExpression) {
+        this.useStartAggregationExpression = useStartAggregationExpression;
     }
 
     public Object getAggregationExpression()

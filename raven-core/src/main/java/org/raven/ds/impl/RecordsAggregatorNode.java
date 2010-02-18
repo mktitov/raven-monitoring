@@ -81,7 +81,15 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
                 {
                     Record rec = agg.getRecord();
                     for (Map.Entry<String, AggregateFunction> entry: agg.getAggregateFunctions().entrySet())
-                        rec.setValue(entry.getKey(), entry.getValue().getAggregatedValue());
+                    {
+                        AggregateFunction func = entry.getValue();
+                        try{
+                            func.finishAggregation();
+                        }finally{
+                            bindingSupport.reset();
+                        }
+                        rec.setValue(entry.getKey(), func.getAggregatedValue());
+                    }
                     sendDataToConsumers(rec);
                 }
                 sendDataToConsumers(null);
@@ -175,6 +183,7 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
                 throw new Exception(String.format(
                         "Undefned aggregate function (%s)", valueField.getAggregateFunction()));
             aggFunctions.put(valueField.getName(), func);
+            func.startAggregation();
         }
         return new Aggregation(record, aggFunctions);
     }
@@ -195,6 +204,7 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
         private final RecordsAggregatorValueFieldNode fieldValueNode;
         private Object value;
         private int counter = 0;
+        private final Map params = new HashMap();
 
         public CustomAggregateFunction(RecordsAggregatorValueFieldNode fieldValueNode)
         {
@@ -205,6 +215,7 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
             bindingSupport.put("value", value);
             bindingSupport.put("nextValue", nextValue);
             bindingSupport.put("counter", counter);
+            bindingSupport.put("params", params);
             ++counter;
             value = fieldValueNode.getAggregationExpression();
         }
@@ -214,8 +225,26 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
             return value;
         }
 
-        public void finishAggregation() { }
-        public void startAggregation() { }
+        public void finishAggregation() 
+        {
+            if (fieldValueNode.getUseFinishAggregationExpression())
+            {
+                bindingSupport.put("value", value);
+                bindingSupport.put("counter", counter);
+                bindingSupport.put("params", params);
+                value = fieldValueNode.getFinishAggregationExpression();
+            }
+        }
+
+        public void startAggregation() 
+        {
+            if (fieldValueNode.getUseStartAggregationExpression())
+            {
+                bindingSupport.put("params", params);
+                value = fieldValueNode.getStartAggregationExpression();
+            }
+        }
+
         public void close() { }
     }
 
