@@ -105,9 +105,9 @@ public class CsvRecordReaderNode extends AbstractDataPipe
         Map<String, FieldInfo> fieldsColumns = getFieldsColumns();
         if (fieldsColumns==null)
         {
-            if (isLogLevelEnabled(LogLevel.DEBUG))
+            if (isLogLevelEnabled(LogLevel.WARN))
                 debug(String.format(
-                        "CsvRecordFieldExtension is not defind for fields in the record schema (%s)"
+                        "CsvRecordFieldExtension was not defined for fields in the record schema (%s)"
                         , recordSchema.getName()));
             return;
         }
@@ -153,9 +153,13 @@ public class CsvRecordReaderNode extends AbstractDataPipe
                             Record record = recordSchema.createRecord();
                             for (Map.Entry<String, FieldInfo> entry: fieldsColumns.entrySet())
                             {
-                                Object value = entry.getValue().prepareValue(
-                                        tokens[entry.getValue().getColumnNumber()-1]);
-                                record.setValue(entry.getKey(), value);
+                                int colNum = entry.getValue().getColumnNumber()-1;
+                                if (colNum<tokens.length)
+                                {
+                                    Object value = entry.getValue().prepareValue(
+                                            tokens[entry.getValue().getColumnNumber()-1]);
+                                    record.setValue(entry.getKey(), value);
+                                }
                             }
                             sendDataToConsumers(record);
                             ++validRecords;

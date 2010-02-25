@@ -254,7 +254,7 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
         {
             bindingSupport.put(DATA_BINDING, data);
             bindingSupport.put(SKIP_DATA_BINDING, SKIP_DATA);
-//            bindingSupport.put(DATASOURCE_BINDING, dataSource);
+            bindingSupport.put(DATASOURCE_BINDING, dataSource);
             try
             {
                 NodeAttribute exprAttr = getNodeAttribute(EXPRESSION_ATTRIBUTE);

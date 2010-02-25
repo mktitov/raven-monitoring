@@ -252,6 +252,20 @@ public class TreeImpl implements Tree
         treeStore.removeNode(node.getId());
     }
 
+    public void removeNodeAttribute(NodeAttribute attr)
+    {
+        if (attr==null)
+        {
+            logger.error("Can't remove NULL attribute");
+            return;
+        }
+        if (logger.isDebugEnabled())
+            logger.debug("Removing attribute ({}) from the node ({})"
+                    , attr.getName(), attr.getOwner().getPath());
+        attr.getOwner().removeNodeAttribute(attr.getName());
+        configurator.getTreeStore().removeNodeAttribute(attr.getId());
+    }
+
     @SuppressWarnings("unchecked")
 	public Node copy(
             Node source, Node destination, String newNodeName, NodeTuner nodeTuner

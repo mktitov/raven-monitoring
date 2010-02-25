@@ -42,6 +42,9 @@ public class ValuePrepareRecordFieldExtension extends BaseNode
     @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
     private String expression;
 
+    @Parameter
+    private String pattern;
+
     private BindingSupportImpl bindingSupport;
 
     @Override
@@ -82,11 +85,19 @@ public class ValuePrepareRecordFieldExtension extends BaseNode
         this.useExpression = useExpression;
     }
 
+    public String getPattern() {
+        return pattern;
+    }
+
+    public void setPattern(String pattern) {
+        this.pattern = pattern;
+    }
+
     public Object prepareValue(Object value, Bindings bindings)
     {
         Class _convertToType = convertToType;
         if (_convertToType!=null)
-            value = converter.convert(_convertToType, value, null);
+            value = converter.convert(_convertToType, value, pattern);
 
         if (useExpression)
         {

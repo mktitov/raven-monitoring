@@ -110,7 +110,7 @@ public class AbstractSafeDataPipeTest extends RavenCoreTestCase
 
         pipe.setDataSource(ds);
         pipe.setUseExpression(true);
-        pipe.setExpression("${dataSource.id}+(data+1)");
+        pipe.setExpression("dataSource.id+(data+1)");
         assertTrue(pipe.start());
 
         ds.pushData(1);

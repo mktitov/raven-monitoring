@@ -50,6 +50,10 @@ public interface Tree
      */
     public void remove(Node node);
     /**
+     * Removes node attribute from the node and from the store.
+     */
+    public void removeNodeAttribute(NodeAttribute attr);
+    /**
      * Saves the node state using {@link Configurator#getTreeStore() tree store service}
      * if and only if the node is not {@link Node#isDynamic() dynamic}.
      * If node is dynamic then node will not saved in tree store

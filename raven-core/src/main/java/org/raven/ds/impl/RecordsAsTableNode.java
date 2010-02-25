@@ -372,6 +372,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                 , String deleteCompletionMessage
                 , List<RecordsAsTableRecordActionNode> recordActions
                 , List<Record> records)
+            throws Exception
         {
             fields = new HashMap<String, RecordSchemaField>();
             this.recordSchema = RecordsAsTableNode.this.recordSchema;
@@ -417,6 +418,16 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
 
             for (int i=0; i<fieldNames.length; ++i)
             {
+                RecordSchemaField field = fields.get(fieldNames[i]);
+                if (field==null)
+                {
+                    if (isLogLevelEnabled(LogLevel.ERROR))
+                        error("Can't find field ({}) in the record schema ({})"
+                                , fieldNames[i], recordSchema.getName());
+                    throw new Exception(String.format(
+                            "Can't find field (%s) in the record schema (%s)"
+                            , fieldNames[i], recordSchema.getName()));
+                }
                 String displayName = fields.get(fieldNames[i]).getDisplayName();
                 columnNames[i+actionsCount] = displayName==null? fieldNames[i] : displayName;
             }

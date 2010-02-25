@@ -17,6 +17,8 @@
 
 package org.raven.ds.impl;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;
@@ -48,6 +50,11 @@ public class ValuePrepareRecordFieldExtensionTest extends RavenCoreTestCase
 
         valuePrepare.setConvertToType(Integer.class);
         assertEquals(1, valuePrepare.prepareValue("1", null));
+
+        valuePrepare.setPattern("dd.MM.yyyy");
+        valuePrepare.setConvertToType(Date.class);
+        Date date = new SimpleDateFormat(valuePrepare.getPattern()).parse("01.01.2010");
+        assertEquals(date, valuePrepare.prepareValue("01.01.2010", null));
     }
 
     @Test
