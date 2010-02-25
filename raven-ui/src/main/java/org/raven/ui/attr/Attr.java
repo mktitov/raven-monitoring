@@ -145,7 +145,7 @@ public class Attr implements Comparable<Attr>
 
     public void setFile(UploadedFile file)
     {
-    	logger.info("setFile: '{}'",file.getName());
+    	logger.info("setFile: '{}'", file==null? "null" : file.getName());
         this.file = file;
     }
 
