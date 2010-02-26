@@ -139,6 +139,12 @@
                 <dependency>
                     <groupId>org.apache.myfaces.tomahawk</groupId>
                     <artifactId>tomahawk-sandbox</artifactId>
+                    <exclusions>
+                        <exclusion>
+                            <artifactId>poi</artifactId>
+                            <groupId>poi</groupId>
+                        </exclusion>
+                    </exclusions>
                 </dependency>
                 <dependency>
                     <groupId>javax.servlet</groupId>
@@ -169,3 +175,4 @@
         <netbeans.hint.deploy.server>Tomcat60</netbeans.hint.deploy.server>
     </properties>
 </project>
+
