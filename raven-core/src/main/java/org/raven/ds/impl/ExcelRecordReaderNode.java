@@ -44,10 +44,10 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass
 public class ExcelRecordReaderNode extends AbstractDataPipe
 {
-    @NotNull @Parameter(defaultValue="0")
+    @NotNull @Parameter(defaultValue="1")
     private Integer sheetNumber;
 
-    @NotNull @Parameter(defaultValue="0")
+    @NotNull @Parameter(defaultValue="1")
     private Integer startFromRow;
 
     @NotNull @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
@@ -83,7 +83,7 @@ public class ExcelRecordReaderNode extends AbstractDataPipe
 
         InputStream dataStream = converter.convert(InputStream.class, data, null);
         Workbook wb = WorkbookFactory.create(new PushbackInputStream(dataStream));
-        Sheet sheet = wb.getSheetAt(sheetNumber);
+        Sheet sheet = wb.getSheetAt(sheetNumber-1);
         try{
             for (int r=startFromRow-1; r<=sheet.getLastRowNum(); ++r)
             {

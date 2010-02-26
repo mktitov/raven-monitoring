@@ -19,16 +19,42 @@ package org.raven.tree.impl;
 
 import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;
+import org.raven.tree.Node;
 
 /**
  *
  * @author Mikhail Titov
  */
-//TODO: write tests
 public class ParentAttributeValueHandlerTest extends RavenCoreTestCase
 {
     @Test
-    public void test()
+    public void test() throws Exception
     {
+        Node n1 = new ContainerNode("n1");
+        tree.getRootNode().addAndSaveChildren(n1);
+        assertTrue(n1.start());
+        addAttr(n1, "test");
+
+        Node n2 = new ContainerNode("n2");
+        n1.addAndSaveChildren(n2);
+        assertTrue(n2.start());
+
+        Node n3 = new ContainerNode("n3");
+        n2.addAndSaveChildren(n3);
+        assertTrue(n3.start());
+        addAttr(n3, null);
+
+        assertEquals("test", n3.getNodeAttribute("attr").getValue());
+
+        addAttr(n2, "test2");
+        assertEquals("test2", n3.getNodeAttribute("attr").getValue());
+    }
+
+    private void addAttr(Node owner, Object val) throws Exception
+    {
+        NodeAttributeImpl attr = new NodeAttributeImpl("attr", String.class, val, null);
+        attr.setOwner(owner);
+        attr.init();
+        owner.addNodeAttribute(attr);
     }
 }

@@ -36,7 +36,7 @@ public class AbstractRecordFieldExtension extends BaseNode
             return value;
 
         for (Node child: childs)
-            if (child instanceof ValuePrepareRecordFieldExtension)
+            if (child instanceof ValuePrepareRecordFieldExtension && Status.STARTED.equals(child.getStatus()))
                 return ((ValuePrepareRecordFieldExtension)child).prepareValue(value, bindings);
 
         return value;

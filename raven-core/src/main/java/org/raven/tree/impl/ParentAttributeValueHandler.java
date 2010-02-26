@@ -171,12 +171,10 @@ public class ParentAttributeValueHandler
 
     private NodeAttribute getParentAttribute()
     {
-        if (parentAttribute==null)
-        {
-            parentAttribute = attribute.getOwner().getParentAttribute(attribute.getName());
-            if (parentAttribute!=null)
-                parentAttribute.getOwner().addNodeAttributeDependency(attribute.getName(), this);
-        }
+        cleanupParentAttribute();
+        parentAttribute = attribute.getOwner().getParentAttribute(attribute.getName());
+        if (parentAttribute!=null)
+            parentAttribute.getOwner().addNodeAttributeDependency(attribute.getName(), this);
         return parentAttribute;
     }
 
