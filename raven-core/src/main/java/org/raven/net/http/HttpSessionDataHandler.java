@@ -29,6 +29,7 @@ import org.raven.ds.DataHandler;
 import org.raven.ds.DataSource;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
+import org.raven.tree.Node.Status;
 
 /**
  *
@@ -64,7 +65,7 @@ public class HttpSessionDataHandler implements DataHandler
                 HttpResponse response = null;
                 for (Node child: childs)
                 {
-                    if (child instanceof HttpResponseHandlerNode)
+                    if (child instanceof HttpResponseHandlerNode && Status.STARTED.equals(child.getStatus()))
                     {
                         Map<String, Object> params = new HashMap<String, Object>();
                         params.put(HttpSessionNode.DATA_BINDING, data);

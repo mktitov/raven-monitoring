@@ -120,13 +120,13 @@
         </dependency>
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy</artifactId>
+            <artifactId>groovy-all</artifactId>
         </dependency>
-        <dependency>
+<!--        <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-engine</artifactId>
         </dependency>
-        <dependency>
+-->        <dependency>
             <groupId>commons-dbcp</groupId>
             <artifactId>commons-dbcp</artifactId>
         </dependency>
