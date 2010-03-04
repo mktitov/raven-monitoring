@@ -21,13 +21,23 @@ import java.sql.Connection;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
-import org.junit.Assert;
 import org.junit.Test;
+import org.raven.api.impl.NodeAccessImpl;
+import org.raven.conf.Config;
+import org.raven.conf.Configurator;
+import org.raven.dbcp.impl.ConnectionPoolsNode;
+import org.raven.dbcp.impl.JDBCConnectionPoolNode;
 import org.raven.expr.Expression;
 import org.raven.expr.ExpressionCache;
+import org.raven.test.RavenCoreTestCase;
+import org.raven.tree.Node;
+import org.raven.tree.impl.ContainerNode;
+import org.raven.tree.impl.NodeAttributeImpl;
+import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
+import org.raven.tree.impl.SystemNode;
 import static org.easymock.EasyMock.*;
 
-public class GroovyExpressionCompilerTest extends Assert
+public class GroovyExpressionCompilerTest extends RavenCoreTestCase
 {
     @Test
     public void simpleTest() throws ScriptException
@@ -75,6 +85,99 @@ public class GroovyExpressionCompilerTest extends Assert
         verify(connection, cache);
     }
     
+    @Test
+    public void withSqlTest() throws Exception
+    {
+        String script = "res=null; withSql(con){c -> res='ok'}\n res";
+		ExpressionCache cache = trainCache(script, false);
+        Connection connection = createMock(Connection.class);
+        connection.commit();
+        connection.close();
+        replay(connection, cache);
+
+        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
+        Expression expression = compiler.compile(script, "groovy");
+        assertNotNull(expression);
+        SimpleBindings bindings = new SimpleBindings();
+        bindings.put("con", connection);
+        assertEquals("ok", expression.eval(bindings));
+
+        verify(connection, cache);
+    }
+
+    @Test
+    public void withSqlTest2() throws Exception
+    {
+        String script = "res=null; withSql(con){c -> res='ok'; res.notDefinedProperty}\n res";
+		ExpressionCache cache = trainCache(script, false);
+        Connection connection = createMock(Connection.class);
+        connection.rollback();
+        connection.close();
+        replay(connection, cache);
+
+        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
+        Expression expression = compiler.compile(script, "groovy");
+        assertNotNull(expression);
+        SimpleBindings bindings = new SimpleBindings();
+        bindings.put("con", connection);
+        try{
+            expression.eval(bindings);
+            fail();
+        }catch(ScriptException e){
+        }
+
+        verify(connection, cache);
+    }
+
+    @Test
+    public void withSqlTest3() throws Exception
+    {
+        Config conf = configurator.getConfig();
+        assertNotNull(conf);
+
+        ConnectionPoolsNode poolsNode =
+                (ConnectionPoolsNode)
+                tree.getNode(SystemNode.NAME).getChildren(ConnectionPoolsNode.NAME);
+        assertNotNull(poolsNode);
+        JDBCConnectionPoolNode pool = new JDBCConnectionPoolNode();
+        pool.setName("pool");
+        poolsNode.addChildren(pool);
+        pool.save();
+        pool.init();
+
+        pool.setUserName(conf.getStringProperty(Configurator.TREE_STORE_USER, null));
+        pool.setPassword(conf.getStringProperty(Configurator.TREE_STORE_PASSWORD, null));
+        pool.setUrl(conf.getStringProperty(Configurator.TREE_STORE_URL, null));
+        pool.setDriver("org.h2.Driver");
+        assertTrue(pool.start());
+
+        ContainerNode node = new ContainerNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        assertTrue(node.start());
+        NodeAttributeImpl attr = new NodeAttributeImpl("connectionPool", Node.class, null, null);
+        attr.setOwner(node);
+        attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
+        attr.init();
+        node.addNodeAttribute(attr);
+        attr.setValue(pool.getPath());
+
+        String script = "res=null; withSql{sql-> res=sql.firstRow('select count(*) from nodes')[0]}; res";
+		ExpressionCache cache = trainCache(script, false);
+        replay(cache);
+
+        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
+        Expression expression = compiler.compile(script, "groovy");
+        assertNotNull(expression);
+        SimpleBindings bindings = new SimpleBindings();
+        NodeAccessImpl nodeAccess = new NodeAccessImpl(node);
+        bindings.put("node", nodeAccess);
+        Object res=expression.eval(bindings);
+        assertNotNull(res);
+        assertTrue(res instanceof Number);
+
+        verify(cache);
+    }
+
 	@Test
 	public void nonGroovyLanguageTest() throws Exception
 	{

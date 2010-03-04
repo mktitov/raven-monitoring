@@ -18,6 +18,7 @@
 package org.raven.api.impl;
 
 import groovy.lang.Closure;
+import groovy.sql.Sql;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -32,6 +33,25 @@ public class ApiUtils
         try
         {
             closure.call(connection);
+        }
+        finally
+        {
+            connection.close();
+        }
+    }
+
+    public static void withSql(Connection connection, Closure closure) throws Exception
+    {
+        try
+        {
+            Sql sql = new Sql(connection);
+            try{
+                closure.call(sql);
+                connection.commit();
+            }catch(Exception e){
+                connection.rollback();
+                throw e;
+            }
         }
         finally
         {

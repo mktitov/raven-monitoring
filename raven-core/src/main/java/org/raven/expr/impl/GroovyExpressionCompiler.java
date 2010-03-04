@@ -50,6 +50,13 @@ public class GroovyExpressionCompiler implements ExpressionCompiler
             StringBuilder buf = new StringBuilder()
                 .append("import static "+ApiUtils.class.getName()+".*\n")
                 .append(expression);
+            if (expression.contains("withSql"))
+                buf
+                .append("\ndef withSql(Closure c){\n")
+                .append("  con = node['connectionPool']?.value.connection\n")
+                .append("  if (!con) throw new Exception(\"Attribute (connectionPool) not found in the node (${node.path})\".toString())\n")
+                .append("  withSql(con, c)\n")
+                .append("}\n");
 			Class expressionClass = classLoader.parseClass(buf.toString());
 			GroovyExpression groovyExpression = new GroovyExpression(expressionClass);
 			cache.putExpression(expression, groovyExpression);

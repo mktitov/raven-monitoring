@@ -43,7 +43,6 @@ import org.snmp4j.smi.OID;
 import org.snmp4j.smi.OctetString;
 import org.snmp4j.smi.UdpAddress;
 import org.snmp4j.smi.VariableBinding;
-import org.snmp4j.smi.VariantVariable;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.weda.services.TypeConverter;
 
@@ -51,6 +50,7 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
+@Ignore
 public class SnmpReaderNodeTest extends ServiceTestCase
 {
     private Tree tree;
