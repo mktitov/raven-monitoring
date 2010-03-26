@@ -50,6 +50,9 @@ public class ExcelRecordReaderNode extends AbstractDataPipe
     @NotNull @Parameter(defaultValue="1")
     private Integer startFromRow;
 
+    @NotNull @Parameter(defaultValue="true")
+    private Boolean treatEmptyStringAsNull;
+
     @NotNull @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
     private RecordSchemaNode recordSchema;
 
@@ -103,7 +106,11 @@ public class ExcelRecordReaderNode extends AbstractDataPipe
                                     else
                                         value = num;
                                     break;
-                                case Cell.CELL_TYPE_STRING : value = cell.getStringCellValue(); break;
+                                case Cell.CELL_TYPE_STRING :
+                                    value = cell.getStringCellValue();
+                                    if (value!=null && "".equals(value) && treatEmptyStringAsNull)
+                                        value = null;
+                                    break;
                             }
                             value = fieldCol.getValue().prepareValue(value);
                             record.setValue(fieldCol.getKey(), value);
@@ -131,6 +138,14 @@ public class ExcelRecordReaderNode extends AbstractDataPipe
 
     public void setStartFromRow(Integer startFromRow) {
         this.startFromRow = startFromRow;
+    }
+
+    public Boolean getTreatEmptyStringAsNull() {
+        return treatEmptyStringAsNull;
+    }
+
+    public void setTreatEmptyStringAsNull(Boolean treatEmptyStringAsNull) {
+        this.treatEmptyStringAsNull = treatEmptyStringAsNull;
     }
 
     public String getCvsExtensionName() {
