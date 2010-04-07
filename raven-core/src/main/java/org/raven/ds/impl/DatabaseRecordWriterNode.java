@@ -400,7 +400,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
             if (columnNames.size()==0)
                 throw new Exception(String.format(
                         "Schema (%s) does not contains fields with (%s) extenstion"
-                        , recordSchema.getName()));
+                        , recordSchema.getName(), DatabaseRecordFieldExtension.class.getName()));
 
             DatabaseRecordExtension recordExtension = recordSchema.getRecordExtension(
                     DatabaseRecordExtension.class, databaseExtensionName);
