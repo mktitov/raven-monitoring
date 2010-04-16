@@ -20,6 +20,7 @@ package org.raven.server.remote;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.logging.Level;
+import org.raven.auth.Authenticator;
 import org.raven.conf.Configurator;
 import org.raven.conf.impl.UserAcl;
 import org.raven.remote.RemoteAccess;
@@ -37,6 +38,9 @@ public class RemoteAccessImpl implements RemoteAccess
     @Service
     private static Configurator  configurator;
 
+    @Service
+    private static Authenticator authService;
+
     private static Logger logger = LoggerFactory.getLogger(RemoteAccess.class);
 
     public RemoteSession login(String user, String password, String locale) 
@@ -44,14 +48,22 @@ public class RemoteAccessImpl implements RemoteAccess
     {
         logger.info("Recieved request for login from user ({})", user);
         //add auth check here
-
-        logger.info("User ({}) successfully authenticated", user);
-        logger.debug("Creating session for user {}", user);
         try {
-            //Auth success. Creating session
-            UserAcl userAcl = new UserAcl(user, configurator.getConfig());
-            return (RemoteSession) UnicastRemoteObject.exportObject(
-                    new RemoteSessionImpl(userAcl), 0);
+            boolean validUser = authService.checkAuth(user, password);
+            if (!validUser)
+            {
+                logger.warn("Authentication failed for user {}", user);
+                return null;
+            }
+            else
+            {
+                logger.info("User ({}) successfully authenticated", user);
+                logger.debug("Creating session for user {}", user);
+                //Auth success. Creating session
+                UserAcl userAcl = new UserAcl(user, configurator.getConfig());
+                return (RemoteSession) UnicastRemoteObject.exportObject(
+                        new RemoteSessionImpl(userAcl), 0);
+            }
         } catch (Exception ex) {
             String errorMess = String.format("User (%s) authentication/authorization error", user);
             logger.error(errorMess, ex);
