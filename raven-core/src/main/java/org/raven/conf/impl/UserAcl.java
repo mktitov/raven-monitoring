@@ -56,6 +56,8 @@ public class UserAcl
 		this.accountName = accountName;
 		this.config = cfg;
 		testMode = config.getBooleanProperty(Configurator.TEST_MODE, Boolean.FALSE);
+        if (testMode)
+            logger.warn("Authorization work in TEST MODE!");
 		gList = loadGroupsList();
 		gaStorage = GroupsAclStorage.getInstance(config);
 		storageTime = gaStorage.getLastUpdate();

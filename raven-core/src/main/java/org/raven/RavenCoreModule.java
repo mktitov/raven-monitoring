@@ -25,6 +25,8 @@ import org.apache.tapestry5.ioc.ServiceBinder;
 import org.apache.tapestry5.ioc.services.ChainBuilder;
 import org.raven.audit.Auditor;
 import org.raven.audit.impl.AuditorImpl;
+import org.raven.auth.Authenticator;
+import org.raven.auth.impl.BasicAuthenticator;
 import org.raven.cache.TemporaryCacheManager;
 import org.raven.cache.TemporaryCacheManagerImpl;
 import org.raven.conf.Configurator;
@@ -167,6 +169,12 @@ public class RavenCoreModule
 	{
 		return builder.build(ExpressionCompiler.class, commands);
 	}
+
+    public static Authenticator buildAuthenticator(
+            ChainBuilder builder, List<Authenticator> commands)
+    {
+        return builder.build(Authenticator.class, commands);
+    }
     
     @SuppressWarnings("unchecked")
 	public static void contributeConfigurator(MappedConfiguration<String, Class> conf)
@@ -321,6 +329,12 @@ public class RavenCoreModule
                             ExpressionCompilerImpl.class.getName()
                             , new ExpressionCompilerImpl(expressionCache)
                             , "after:*");
+    }
+
+    public static void contributeAuthenticator(
+            OrderedConfiguration<Authenticator> conf, Configurator configurator) throws Exception
+    {
+        conf.add(BasicAuthenticator.class.getName(), new BasicAuthenticator(configurator.getConfig()));
     }
 
     public static void contributeCacheManager(MappedConfiguration<CacheScope, Cache> conf)
