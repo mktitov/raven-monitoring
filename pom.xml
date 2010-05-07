@@ -13,9 +13,10 @@
         <module>raven-remote</module>
         <module>raven-server</module>
         <module>raven-client</module>
+        <module>desktop-client-project</module>
         <module>raven-ui</module>
         <module>raven-doc-plugin</module>
-    </modules>
+  </modules>
     <licenses>
         <license>
             <name>Apache Software License 2.0</name>
@@ -553,4 +554,3 @@
         </dependencies>
     </dependencyManagement>
 </project>
-
