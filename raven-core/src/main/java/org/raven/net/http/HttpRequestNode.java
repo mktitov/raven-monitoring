@@ -88,7 +88,7 @@ public class HttpRequestNode extends HttpResponseHandlerNode
                     buf.append("&");
                 else
                     first = false;
-                buf.append(param.getKey()+"="+URLEncoder.encode(param.getValue(), encoding));
+                buf.append(param.getKey()+"="+URLEncoder.encode(""+param.getValue(), encoding));
             }
             if (requestContentType == RequestContentType.NONE)
                 _uri+=_uri.contains("?")? "&" : "?" + buf.toString();
