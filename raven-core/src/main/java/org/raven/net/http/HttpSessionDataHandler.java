@@ -106,7 +106,7 @@ public class HttpSessionDataHandler implements DataHandler
                                         , (Integer)requestMap.get(HttpSessionNode.PORT));
                                 if (session.isLogLevelEnabled(LogLevel.DEBUG))
                                     session.getLogger().debug(
-                                            "Executing request: "+request.getRequestLine().getMethod()
+                                            "Sending request: "+request.getRequestLine().getMethod()
                                             + " "+request.getRequestLine().getUri());
                                 response = client.execute(target, request);
                                 if (session.isLogLevelEnabled(LogLevel.DEBUG))

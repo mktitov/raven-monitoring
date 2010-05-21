@@ -19,6 +19,9 @@ package org.raven.ds.impl;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
@@ -27,7 +30,11 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataSource;
 import org.raven.tree.DataFile;
+import org.raven.tree.NodeAttribute;
+import org.raven.tree.Viewable;
+import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.DataFileValueHandlerFactory;
+import org.raven.tree.impl.DataFileViewableObject;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -35,7 +42,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass
-public class XslTransformerNode extends AbstractSafeDataPipe
+public class XslTransformerNode extends AbstractSafeDataPipe implements Viewable
 {
     @NotNull @Parameter(valueHandlerType=DataFileValueHandlerFactory.TYPE)
     private DataFile stylesheet;
@@ -62,5 +69,23 @@ public class XslTransformerNode extends AbstractSafeDataPipe
         ByteArrayOutputStream out = new ByteArrayOutputStream(4096);
         transformer.transform(new StreamSource(in), new StreamResult(out));
         sendDataToConsumers(out.toByteArray());
+    }
+
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception 
+    {
+        return null;
+    }
+
+    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) 
+            throws Exception
+    {
+        if (!Status.STARTED.equals(getStatus()))
+            return null;
+
+        return Arrays.asList((ViewableObject)new DataFileViewableObject(stylesheet, this));
+    }
+
+    public Boolean getAutoRefresh() {
+        return true;
     }
 }

@@ -34,7 +34,6 @@ import org.raven.ds.DataConsumer;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
-import org.raven.expr.BindingSupport;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
@@ -154,6 +153,7 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
     {
         bindingSupport.enableScriptExecution();
         try{
+            bindingSupport.put("sessAttrs", attributes);
             long startTime = System.currentTimeMillis();
             long realProcessingTime = processingTime;
             long procStart = startTime;
