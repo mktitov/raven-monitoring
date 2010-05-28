@@ -197,7 +197,7 @@ public class ConfiguratorImpl implements Configurator
     public void close() throws Exception
     {
         if (logger.isInfoEnabled())
-            logger.info("Shutdowning clonfigurator");
+            logger.info("Shutdowning configurator");
         if (treeStore!=null)
             try{
                 treeStore.close();

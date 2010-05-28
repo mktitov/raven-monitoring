@@ -90,6 +90,35 @@ public class TableSummaryNodeTest extends RavenCoreTestCase
     }
 
     @Test
+    public void columnAggregationCustomFunctionTest() throws Exception
+    {
+        TableValuesAggregatorNode agg = createAggregation(
+                "colAgg", null, "columnNumber==2", AggregateFunctionType.CUSTOM, AggregationDirection.COLUMN, null);
+//        agg.setUseStartAggregationExpression(Boolean.TRUE);
+//        agg.setUseFinishAggregationExpression(Boolean.TRUE);
+        agg.setAggregationExpression("println \"value=$value nextValue=$nextValue row[0]=${row[0]}\"; (value?:0)+nextValue+row[0]");
+        TableImpl table = new TableImpl(new String[]{"col1", "col2"});
+        table.setTitle("table title");
+        table.addRow(new Object[]{1, 2});
+        table.addRow(new Object[]{2, 3});
+
+        ds.addDataPortion(table);
+
+        List dataList = (List) consumer.refereshData(null);
+        assertNotNull(dataList);
+        assertEquals(1, dataList.size());
+        assertTrue(dataList.get(0) instanceof Table);
+
+        Table resTable = (Table)dataList.get(0);
+        assertEquals("table title", resTable.getTitle());
+        List<Object[]> rows = RavenUtils.tableAsList(resTable);
+        assertEquals(3, rows.size());
+        assertArrayEquals(new Object[]{null, 8}, rows.get(2));
+
+        assertTrue(resTable.containsRowTag(2, TableSummaryNode.AGGREGATION_TAG_ID));
+    }
+
+    @Test
     public void columnAggregationTitleAndSelectorTest() throws Exception
     {
         createAggregation("colAgg", "sum", "columnNumber>1", AggregateFunctionType.SUM, AggregationDirection.COLUMN, null);

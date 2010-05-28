@@ -35,11 +35,6 @@ public class TableImpl extends AbstractTable
         this.columnNames = columnNames;
     }
 
-    public void replaceColumnNames(String[] columnNames)
-    {
-        this.columnNames = columnNames;
-    }
-
     public TableImpl addRow(Object[] row)
     {
         if (row==null || row.length!=columnNames.length)

@@ -36,6 +36,11 @@ public abstract class AbstractTable implements Table
     {
         return title;
     }
+    
+    public void replaceColumnNames(String[] columnNames)
+    {
+        this.columnNames = columnNames;
+    }
 
     public void setTitle(String title)
     {

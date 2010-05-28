@@ -197,17 +197,19 @@ public class FileDataSource extends BaseNode implements DataSource, Task, Viewab
         InputStream data = null;
         try
         {
-            data = getFile().getDataStream();
-            if (data!=null && gatherStat)
-            {
-                data = new CountingInputStream(data);
-                setCountingStream((CountingInputStream)data);
-                streamSize.set(getFile().getFileSize());
+            try{
+                data = getFile().getDataStream();
+                if (data!=null && gatherStat)
+                {
+                    data = new CountingInputStream(data);
+                    setCountingStream((CountingInputStream)data);
+                    streamSize.set(getFile().getFileSize());
+                }
+                consumer.setData(this, data);
+            } finally {
+                IOUtils.closeQuietly(data);
             }
-            consumer.setData(this, data);
-        } catch (DataFileException ex)
-        {
-            IOUtils.closeQuietly(data);
+        } catch (DataFileException ex) {
             if (isLogLevelEnabled(LogLevel.ERROR))
                 error(
                     String.format("Error pushing data to the consumer (%s)", consumer.getPath())

@@ -44,7 +44,9 @@ public class TableSummaryNode extends AbstractSafeDataPipe
     public static final String GROUP_TO_COLUMN_BINDING = "groupToColumn";
     public static final String GROUP_VALUE_BINDING = "groupValue";
     public static final String COLUMN_NUMBER_BINDING = "columnNumber";
+    public static final String ORIG_COLUMN_NAMES_BINDING = "origColumnNames";
     public static final String ROW_BINDING = "row";
+    public static final String ORIG_ROW_BINDING = "origRow";
     public static final String COLUMN_NAMES_BINDINGS = "columnNames";
     public static final String COLUMN_NAME_BINDING = "columnName";
     public static final String ROW_NUMBER_BINDING = "rowNumber";
@@ -66,7 +68,6 @@ public class TableSummaryNode extends AbstractSafeDataPipe
         RowAggInfo rowAggInfo = new RowAggInfo(table);
 
         List<TableValuesAggregatorNode> colAggDefs = null;
-//        List<TableValuesAggregatorNode> rowAggsDefs = null;
         Collection<Node> childs = getSortedChildrens();
         if (childs!=null)
             for (Node child: childs)
@@ -81,11 +82,6 @@ public class TableSummaryNode extends AbstractSafeDataPipe
                                 colAggDefs = new ArrayList<TableValuesAggregatorNode>(2);
                             colAggDefs.add(agg);
                             break;
-//                        case ROW:
-//                            if (rowAggsDefs==null)
-//                                rowAggsDefs = new ArrayList<TableValuesAggregatorNode>(2);
-//                            rowAggsDefs.add(agg);
-
                     }
                 }
             
@@ -95,21 +91,7 @@ public class TableSummaryNode extends AbstractSafeDataPipe
             return;
         }
 
-//        String[] colNames = table.getColumnNames();
-//        if (rowAggsDefs!=null)
-//        {
-//            colNames = new String[colNames.length+rowAggsDefs.size()];
-//            System.arraycopy(table.getColumnNames(), 0, colNames, 0, table.getColumnNames().length);
-//            for (int i=0; i<rowAggsDefs.size(); ++i){
-//                colNames[table.getColumnNames().length+i]=rowAggsDefs.get(i).getTitle();
-//            }
-//        }
-        
         TableImpl newTable = rowAggInfo.table;
-//        newTable.setTitle(table.getTitle());
-//        if (rowAggsDefs!=null)
-//            for (int i=table.getColumnNames().length; i<colNames.length; ++i)
-//                newTable.addColumnTag(i, AGGREGATION_TAG);
 
         AggregateFunction[][] colAggs = createColumnAggregations(colAggDefs, newTable.getColumnNames().length);
         Iterator<Object[]> it = table.getRowIterator();
@@ -120,16 +102,29 @@ public class TableSummaryNode extends AbstractSafeDataPipe
             Object[] row = it.next();
             Object[] newRow = rowAggInfo.aggregate(row, rowNumber);
             newTable.addRow(newRow);
-            if (colAggDefs!=null)
-                for (int i=0; i<newRow.length; ++i)
-                    for (int j=0; j<colAggDefs.size(); ++j)
-                        if (colAggs[i][j]!=null)
-                        try{
-                            colAggs[i][j].aggregate(newRow[i]);
-                        }catch(Exception e){
-                            if (isLogLevelEnabled(LogLevel.DEBUG))
-                                debug("Aggregation error", e);
-                        }
+            if (colAggDefs!=null) {
+                bindingSupport.put(ROW_BINDING, newRow);
+                bindingSupport.put(ROW_NUMBER_BINDING, rowNumber);
+                bindingSupport.put(ORIG_ROW_BINDING, row);
+                bindingSupport.put(COLUMN_NAMES_BINDINGS, newTable.getColumnNames());
+                bindingSupport.put(ORIG_COLUMN_NAMES_BINDING, table.getColumnNames());
+                try{
+                    for (int i=0; i<newRow.length; ++i)
+                        for (int j=0; j<colAggDefs.size(); ++j)
+                            if (colAggs[i][j]!=null){
+                                bindingSupport.put(COLUMN_NAME_BINDING, newTable.getColumnNames()[i]);
+                                bindingSupport.put(COLUMN_NUMBER_BINDING, i+1);
+                                try{
+                                    colAggs[i][j].aggregate(newRow[i]);
+                                }catch(Exception e){
+                                    if (isLogLevelEnabled(LogLevel.DEBUG))
+                                        debug("Aggregation error", e);
+                                }
+                            }
+                }finally{
+                    bindingSupport.reset();
+                }
+            }
         }
         if (colAggDefs!=null)
             for (int j=0; j<colAggDefs.size(); ++j)
