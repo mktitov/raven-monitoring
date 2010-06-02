@@ -208,6 +208,29 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         assertEquals("5+5", attr.getRawValue());
         
     }
+
+    @Test
+    public void varsBindingTest() throws Exception
+    {
+        Node node = new BaseNode("node");
+        tree.getRootNode().addChildren(node);
+        node.save();
+        node.init();
+
+        NodeAttribute attr = new NodeAttributeImpl("attr", Integer.class, "vars.val=10; node['attr2'].value+vars.val", null);
+        attr.setOwner(node);
+        node.addNodeAttribute(attr);
+        attr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
+        attr.init();
+
+        NodeAttribute attr2 = new NodeAttributeImpl("attr2", Integer.class, "vars.val+=10", null);
+        attr2.setOwner(node);
+        node.addNodeAttribute(attr2);
+        attr2.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
+        attr2.init();
+
+        assertEquals(40, attr.getRealValue());
+    }
     
     private static Bindings formBindings()
     {

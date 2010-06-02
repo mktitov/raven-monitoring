@@ -28,4 +28,7 @@ public interface BindingSupport
 	public void put(String bindingName, Object value);
     public void putAll(Bindings bindMap);
 	public void addTo(Bindings scriptBindings);
+    public Object get(String bindingName);
+    public boolean contains(String bindingName);
+    public void reset();
 }

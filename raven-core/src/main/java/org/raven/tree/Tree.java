@@ -32,6 +32,8 @@ import org.weda.constraints.ReferenceValue;
  */
 public interface Tree 
 {
+    public static final String EXPRESSION_VARS_BINDINGS = "RAVEN_EXPRESSION_VARS";
+    
     public final static String SYSTEM_NODE_DISCRIMINATOR = "1";
     public final static String DATASOURCES_NODE_DESCRIMINATOR = "2";
     public final static String DATASOURCE_NODE_DESCRIMINATOR = "3";
@@ -173,6 +175,11 @@ public interface Tree
      * @param bindingSupport binding support to add
      */
     public void addGlobalBindings(String bindingSupportId, BindingSupport bindingSupport);
+    /**
+     * Returns global binding support or null if binding support for given id not exists
+     * @param bindingSupportId id of the binding support
+     */
+    public BindingSupport getGlobalBindings(String bindingSupportId);
     /**
      * Removes global binding support from the tree
      * @param bindingSupportId the id of the binding support to remove

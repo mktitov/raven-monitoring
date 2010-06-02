@@ -318,6 +318,50 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
     }
 
     @Test
+    public void selfMovedTest3() throws Exception
+    {
+        Node parent2 = new ContainerNode("parent2");
+        parentNode.addAndSaveChildren(parent2);
+        assertTrue(parent2.start());
+
+        Node parent21 = new ContainerNode("parent2_1");
+        parent2.addAndSaveChildren(parent21);
+        assertTrue(parent21.start());
+
+        Node parent3 = new ContainerNode("parent3");
+        parentNode.addAndSaveChildren(parent3);
+        assertTrue(parent3.start());
+
+        Node node2 = new BaseNode("node2");
+        parent21.addAndSaveChildren(node2);
+        assertTrue(node2.start());
+
+        NodeAttribute attr = new NodeAttributeImpl("ref", Node.class, "../../../child", null);
+        attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
+        attr.setOwner(node2);
+        node2.addNodeAttribute(attr);
+        attr.save();
+        attr.init();
+
+        assertEquals(childNode, attr.getRealValue());
+
+        tree.move(node2, parent3, null);
+
+        assertEquals(parent3, node2.getParent());
+        String newPath = "../../\"child\"/";
+        assertEquals(newPath, attr.getRawValue());
+
+        tree.reloadTree();
+
+        node2 = tree.getNode(node2.getPath());
+        assertNotNull(node2);
+        attr = node2.getNodeAttribute("ref");
+        assertNotNull(attr);
+        assertEquals(newPath, attr.getRawValue());
+        assertEquals(childNode, attr.getRealValue());
+    }
+
+    @Test
     public void createWithReferenceToInvalidNode() throws Exception
     {
         NodeAttribute attr = new NodeAttributeImpl("ref", Node.class, "../parent/child2", null);

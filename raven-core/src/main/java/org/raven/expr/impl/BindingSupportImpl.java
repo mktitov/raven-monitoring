@@ -62,4 +62,20 @@ public class BindingSupportImpl implements BindingSupport {
             scriptBindings.putAll(bindings.get());
         }
     }
+
+    public Object get(String bindingName)
+    {
+        if (bindings.get()!=null)
+            return bindings.get().get(bindingName);
+        else
+            return null;
+    }
+
+    public boolean contains(String bindingName)
+    {
+        if (bindings.get()!=null)
+            return bindings.get().containsKey(bindingName);
+        else
+            return false;
+    }
 }

@@ -43,6 +43,11 @@ public class RootNode extends BaseNode
         bindingSupports.put(bindingSupportId, bindingSupport);
     }
 
+    public BindingSupport getBindingSupport(String bindingSupportId)
+    {
+        return bindingSupports.get(bindingSupportId);
+    }
+
     public void removeBindingSupport(String bindingSupportId)
     {
         bindingSupports.remove(bindingSupportId);

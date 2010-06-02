@@ -17,14 +17,17 @@
 
 package org.raven.expr.impl;
 
+import java.util.HashMap;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 import org.raven.api.impl.NodeAccessImpl;
+import org.raven.expr.BindingSupport;
 import org.raven.expr.Expression;
 import org.raven.expr.ExpressionCompiler;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodePathResolver;
+import org.raven.tree.Tree;
 import org.raven.tree.impl.AbstractAttributeValueHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,11 +42,15 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
 {
     public final static String ENABLE_SCRIPT_EXECUTION_BINDING = "enableScriptExecution";
     public static final String NODE_BINDING = "node";
+    public static final String RAVEN_EXPRESSION_VARS_BINDING = "vars";
+    public static final String RAVEN_EXPRESSION_VARS_INITIATED_BINDING = "isVarsInitiated";
 
     @Service
     private static ExpressionCompiler compiler;
     @Service
     private static NodePathResolver pathResolver;
+    @Service
+    private static Tree tree;
     
     private final static Logger logger = 
             LoggerFactory.getLogger(ExpressionAttributeValueHandler.class);
@@ -110,18 +117,31 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
         {
             Bindings bindings = new SimpleBindings();
             bindings.put(NODE_BINDING, new NodeAccessImpl(attribute.getOwner()));
-            attribute.getOwner().formExpressionBindings(bindings);
-            if (   !attribute.getValueHandlerType().equals(ScriptAttributeValueHandlerFactory.TYPE)
-                || bindings.containsKey(ENABLE_SCRIPT_EXECUTION_BINDING))
-            {
-                try {
-                    bindings.remove(ENABLE_SCRIPT_EXECUTION_BINDING);
-                    value = expression.eval(bindings);
-                } catch (ScriptException ex) {
-                    attribute.getOwner().getLogger().warn(String.format(
-                            "Attribute (%s) getValue error. Error executing expression (%s). %s"
-                            , pathResolver.getAbsolutePath(attribute), data, ex.getMessage()));
+
+            BindingSupport varsSupport = tree.getGlobalBindings(Tree.EXPRESSION_VARS_BINDINGS);
+            boolean varsInitiated = varsSupport.contains(RAVEN_EXPRESSION_VARS_INITIATED_BINDING);
+            if (!varsInitiated) {
+                varsSupport.put(RAVEN_EXPRESSION_VARS_INITIATED_BINDING, true);
+                varsSupport.put(RAVEN_EXPRESSION_VARS_BINDING, new HashMap());
+            }
+            bindings.put(RAVEN_EXPRESSION_VARS_BINDING, varsSupport.get(RAVEN_EXPRESSION_VARS_BINDING));
+            try{
+                attribute.getOwner().formExpressionBindings(bindings);
+                if (   !attribute.getValueHandlerType().equals(ScriptAttributeValueHandlerFactory.TYPE)
+                    || bindings.containsKey(ENABLE_SCRIPT_EXECUTION_BINDING))
+                {
+                    try {
+                        bindings.remove(ENABLE_SCRIPT_EXECUTION_BINDING);
+                        value = expression.eval(bindings);
+                    } catch (ScriptException ex) {
+                        attribute.getOwner().getLogger().warn(String.format(
+                                "Attribute (%s) getValue error. Error executing expression (%s). %s"
+                                , pathResolver.getAbsolutePath(attribute), data, ex.getMessage()));
+                    }
                 }
+            }finally{
+                if (!varsInitiated)
+                    varsSupport.reset();
             }
         }
         if (   !attribute.getValueHandlerType().equals(ScriptAttributeValueHandlerFactory.TYPE)

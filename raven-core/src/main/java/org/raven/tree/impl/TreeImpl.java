@@ -36,6 +36,7 @@ import org.raven.conf.Configurator;
 import org.raven.conf.impl.AuthorizationNode;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.expr.BindingSupport;
+import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.impl.ClassNameComparator;
 import org.raven.impl.NodeClassTransformerWorker;
 import org.raven.log.impl.NodeLoggerNode;
@@ -196,6 +197,8 @@ public class TreeImpl implements Tree
         rootNode = (RootNode) treeStore.getRootNode();
         if (rootNode == null)
             createRootNode();
+
+        rootNode.addBindingSupport(EXPRESSION_VARS_BINDINGS, new BindingSupportImpl());
         
         createSystemNodes();
 
@@ -714,6 +717,11 @@ public class TreeImpl implements Tree
     public void addGlobalBindings(String bindingSupportId, BindingSupport bindingSupport)
     {
         rootNode.addBindingSupport(bindingSupportId, bindingSupport);
+    }
+
+    public BindingSupport getGlobalBindings(String bindingSupportId)
+    {
+        return rootNode.getBindingSupport(bindingSupportId);
     }
 
     public void removeGlobalBindings(String bindingSupportId)
