@@ -156,6 +156,8 @@ public class NodePathResolverImpl implements NodePathResolver
         for (Node node: fPath)
             if (!node.equals(intersectionNode))
                 path.append(PARENT_REFERENCE+Node.NODE_SEPARATOR);
+            else
+                break;
 
         ListIterator<Node> it = tPath.listIterator(tPath.size()-1);
         for (; it.hasPrevious();)

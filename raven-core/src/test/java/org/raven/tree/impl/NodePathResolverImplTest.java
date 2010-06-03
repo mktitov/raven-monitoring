@@ -263,6 +263,36 @@ public class NodePathResolverImplTest extends Assert
     }
 
     @Test
+    public void getRelativePathTest4()
+    {
+        NodePathResolverImpl pathResolver = new NodePathResolverImpl();
+
+        Node root = createMock("root", Node.class);
+        Node parent = createMock("parent", Node.class);
+        Node parent1 = createMock("parent1", Node.class);
+        Node parent2 = createMock("parent2", Node.class);
+        Node node1 = createMock("node1", Node.class);
+        Node node2 = createMock("node2", Node.class);
+
+        expect(root.getParent()).andReturn(null);
+        expect(parent.getParent()).andReturn(root);
+        expect(parent1.getParent()).andReturn(parent);
+        expect(parent1.getName()).andReturn("parent1");
+        expect(parent2.getParent()).andReturn(parent);
+//        expect(root.getName()).andReturn("root");
+        expect(node1.getParent()).andReturn(parent1);
+        expect(node2.getParent()).andReturn(parent2);
+        expect(node1.getName()).andReturn("node1");
+
+        replay(root, node1, node2, parent, parent1, parent2);
+
+        String path = pathResolver.getRelativePath(node2, node1);
+        assertEquals("../../\"parent1\"/\"node1\"/", path);
+
+        verify(root, node1, node2, parent, parent1, parent2);
+    }
+
+    @Test
     public void isPathAbsoluteTest()
     {
         NodePathResolverImpl pathResolver = new NodePathResolverImpl();
