@@ -164,11 +164,11 @@ public class TreeImpl implements Tree
     {
         if (node.isTemplate())
             return new Class[]{
-                String.class, Integer.class, Double.class, Boolean.class, Node.class
+                String.class, Integer.class, Double.class, Boolean.class, Object.class, Node.class
                 , AttributeReference.class, TemplateVariable.class};
         else
             return new Class[]{
-                String.class, Integer.class, Double.class, Boolean.class, Node.class
+                String.class, Integer.class, Double.class, Boolean.class, Object.class, Node.class
                 , AttributeReference.class};
     }
 

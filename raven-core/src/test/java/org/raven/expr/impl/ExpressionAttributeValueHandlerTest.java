@@ -17,14 +17,18 @@
 
 package org.raven.expr.impl;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 import org.easymock.IArgumentMatcher;
 import org.junit.Test;
+import org.raven.expr.BindingSupport;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.AttributeValueHandlerListener;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.Tree;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.slf4j.Logger;
@@ -232,6 +236,34 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         assertEquals(40, attr.getRealValue());
     }
     
+    @Test
+    public void argsBindingTest() throws Exception
+    {
+        Node node = new BaseNode("node");
+        tree.getRootNode().addChildren(node);
+        node.save();
+        node.init();
+
+        NodeAttribute attr = new NodeAttributeImpl("attr", Integer.class, "(node['attr2'].value?:20)+arg1", null);
+        attr.setOwner(node);
+        node.addNodeAttribute(attr);
+        attr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
+        attr.init();
+
+        NodeAttribute attr2 = new NodeAttributeImpl("attr2", Integer.class, "arg1", null);
+        attr2.setOwner(node);
+        node.addNodeAttribute(attr2);
+        attr2.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
+        attr2.init();
+
+        Map args = new HashMap();
+        args.put("arg1", 10);
+        BindingSupport varsSupport = tree.getGlobalBindings(Tree.EXPRESSION_VARS_BINDINGS);
+        varsSupport.put(ExpressionAttributeValueHandler.RAVEN_EXPRESSION_ARGS_BINDING, args);        
+        assertEquals(30, attr.getRealValue());
+        assertFalse(varsSupport.contains(ExpressionAttributeValueHandler.RAVEN_EXPRESSION_ARGS_BINDING));
+    }
+
     private static Bindings formBindings()
     {
         reportMatcher(new IArgumentMatcher() 

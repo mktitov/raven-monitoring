@@ -30,5 +30,6 @@ public interface BindingSupport
 	public void addTo(Bindings scriptBindings);
     public Object get(String bindingName);
     public boolean contains(String bindingName);
+    public Object remove(String bindingName);
     public void reset();
 }

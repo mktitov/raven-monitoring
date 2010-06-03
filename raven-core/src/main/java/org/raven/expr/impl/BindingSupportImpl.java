@@ -71,6 +71,13 @@ public class BindingSupportImpl implements BindingSupport {
             return null;
     }
 
+    public Object remove(String bindingName) {
+        if (bindings.get()!=null)
+            return bindings.get().remove(bindingName);
+        else
+            return null;
+    }
+
     public boolean contains(String bindingName)
     {
         if (bindings.get()!=null)

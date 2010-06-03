@@ -17,7 +17,10 @@
 
 package org.raven.api.impl;
 
+import java.util.Map;
 import org.raven.api.NodeAttributeAccess;
+import org.raven.expr.BindingSupport;
+import org.raven.expr.impl.ExpressionAttributeValueHandler;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Tree;
 import org.weda.internal.annotations.Service;
@@ -50,8 +53,30 @@ public class NodeAttributeAccessImpl implements NodeAttributeAccess
         return attribute.getRealValue();
     }
 
+    public Object getValue(Map args){
+        return getAttributeValue(args, false);
+    }
+
     public String getValueAsString() {
         return attribute.getValue();
+    }
+
+    public String getValueAsString(Map args){
+        return (String)getAttributeValue(args, true);
+    }
+
+    private Object getAttributeValue(Map args, boolean asString)
+    {
+        BindingSupport varsSupport = tree.getGlobalBindings(Tree.EXPRESSION_VARS_BINDINGS);
+        boolean initiated = varsSupport.contains(
+                ExpressionAttributeValueHandler.RAVEN_EXPRESSION_VARS_INITIATED_BINDING);
+        try{
+            varsSupport.put(ExpressionAttributeValueHandler.RAVEN_EXPRESSION_ARGS_BINDING, args);
+            return asString? attribute.getValue() : attribute.getRealValue();
+        }finally{
+            if (!initiated)
+                varsSupport.reset();
+        }
     }
 
     public void setValue(Object value) throws Exception

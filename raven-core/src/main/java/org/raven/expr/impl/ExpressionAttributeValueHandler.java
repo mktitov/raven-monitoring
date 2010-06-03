@@ -18,6 +18,7 @@
 package org.raven.expr.impl;
 
 import java.util.HashMap;
+import java.util.Map;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
@@ -42,6 +43,7 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
 {
     public final static String ENABLE_SCRIPT_EXECUTION_BINDING = "enableScriptExecution";
     public static final String NODE_BINDING = "node";
+    public static final String RAVEN_EXPRESSION_ARGS_BINDING = "args";
     public static final String RAVEN_EXPRESSION_VARS_BINDING = "vars";
     public static final String RAVEN_EXPRESSION_VARS_INITIATED_BINDING = "isVarsInitiated";
 
@@ -125,6 +127,11 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
                 varsSupport.put(RAVEN_EXPRESSION_VARS_BINDING, new HashMap());
             }
             bindings.put(RAVEN_EXPRESSION_VARS_BINDING, varsSupport.get(RAVEN_EXPRESSION_VARS_BINDING));
+            Map args = (Map) varsSupport.get(RAVEN_EXPRESSION_ARGS_BINDING);
+            if (args!=null){
+                bindings.putAll(args);
+                varsSupport.remove(RAVEN_EXPRESSION_ARGS_BINDING);
+            }
             try{
                 attribute.getOwner().formExpressionBindings(bindings);
                 if (   !attribute.getValueHandlerType().equals(ScriptAttributeValueHandlerFactory.TYPE)
