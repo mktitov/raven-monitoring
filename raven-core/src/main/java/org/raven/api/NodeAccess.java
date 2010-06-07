@@ -40,6 +40,8 @@ public interface NodeAccess
     public NodeAttributeAccess getAt(String attributeName);
     public Node asNode();
     public Map<String, Object> getVars();
+    public NodeAttributeAccess getParentAttr(String attributeName);
+
     public RRGraphNode findGraph();
     public DataArchiveTable getArchivedData(String fromDate, String toDate) throws ArchiveException;
 }

@@ -101,6 +101,12 @@ public class NodeAccessImpl implements NodeAccess
         return getAttr(attributeName);
     }
 
+    public NodeAttributeAccess getParentAttr(String attributeName)
+    {
+        NodeAttribute attr = node.getParentAttribute(attributeName);
+        return attr==null? null : new NodeAttributeAccessImpl(attr);
+    }
+
     public Node asNode() 
     {
         return node;
