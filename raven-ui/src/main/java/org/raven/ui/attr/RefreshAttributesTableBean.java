@@ -23,9 +23,10 @@ public class RefreshAttributesTableBean {
 	{
 		NodeWrapper nw = SessionBean.getNodeWrapper();
 		String ret = nw.saveRefreshAttributes();
-		if(ret!=null && message!=null) message.setMessage(ret);
-		else message.setMessage("");
-		nw.onRefresh();
+		if(message!=null)
+			if(ret!=null) message.setMessage(ret);
+				else message.setMessage("");
+		nw.onRefresh2(ret);
 		return "";
 	}
 	

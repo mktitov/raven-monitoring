@@ -68,6 +68,7 @@ import org.raven.ui.log.LogsByNodes;
 import org.raven.ui.log.LogsCache;
 import org.raven.ui.util.Messages;
 import org.raven.ui.vo.ViewableObjectWrapper;
+import org.raven.util.Utl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.MessageFormatter;
@@ -1014,6 +1015,33 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	}
 	
 	public String onRefresh()
+	{
+		auditor.write(getNode(), getAccountName(), Action.VIEW, "refreshInterval={}", ""+getRefreshViewIntevalMS());
+		return refresh();
+	}
+	
+	public String onRefresh2(String message)
+	{
+		List<Object> data = new ArrayList<Object>();
+		List<NodeAttribute> na = getRefreshAttributes();
+		StringBuilder sb = new StringBuilder();
+		if(Utl.trim2Null(message)!=null) {
+			sb.append("message='{}' ;");
+			data.add(message);
+		}	
+		for(NodeAttribute a : na) {
+			sb.append(" attr='{}' value='{}' ;");
+			data.add(a.getName());
+			data.add(a.getValue());
+		}
+		if(data.size()>0)
+			auditor.write(getNode(), getAccountName(), Action.VIEW_WITH_ATTR, sb.toString(), data.toArray());
+		else 
+			auditor.write(getNode(), getAccountName(), Action.VIEW_WITH_ATTR, "");
+		return refresh();
+	}
+	
+	public String refresh()
 	{
 		refreshPressed = true;
 		String ret = onRefreshX();
