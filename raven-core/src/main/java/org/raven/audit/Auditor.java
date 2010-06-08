@@ -22,6 +22,8 @@ public interface Auditor
     public void write(Node node, String login, Action action, String message, String arg0, String arg1);
 
     public void write(Node node, String login, Action action, String message, String arg0, String arg1, String arg2);
+
+    public void write(Node node, String login, Action action, String message, Object[] args);
     
     public AuditRecord prepare(Node node, String login, Action action, String message);
 
@@ -30,6 +32,8 @@ public interface Auditor
     public AuditRecord prepare(Node node, String login, Action action, String message, String arg0, String arg1);
 
     public AuditRecord prepare(Node node, String login, Action action, String message, String arg0, String arg1, String arg2);
+
+    public AuditRecord prepare(Node node, String login, Action action, String message, Object[] args);
     
     public List<AuditRecord> getRecords(Date from,Date to, Object nodeId, Object nodePath, String login, ActionType aType, Action action);
 	

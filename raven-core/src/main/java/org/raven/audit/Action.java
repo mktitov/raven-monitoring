@@ -15,7 +15,11 @@ public enum Action
 	NODE_START(ActionType.CONTROL), NODE_STOP(ActionType.CONTROL),
 	NODE_START_RECURSIVE(ActionType.CONTROL),
 	
-	SESSION_START(ActionType.SESSION),SESSION_STOP(ActionType.SESSION);
+	SESSION_START(ActionType.SESSION),SESSION_STOP(ActionType.SESSION),
+	
+	VIEW(ActionType.VIEW),
+	VIEW_WITH_ATTR(ActionType.VIEW)	;
+	
 	
 	private final ActionType actionType;
 	

@@ -87,10 +87,15 @@ public class AuditorImpl extends AbstractDbWorker<AuditRecord> implements Audito
 
 	public void write(Node node, String login, Action action, String message,
 			String arg0, String arg1, String arg2) {
-		String mes = MessageFormatter.format(message,new Object[] {arg0,arg1,arg2});
+		String mes = MessageFormatter.arrayFormat(message,new Object[] {arg0,arg1,arg2});
 		write(node,login,action,mes);
 	}
 
+	public void write(Node node, String login, Action action, String message, Object[] args) {
+		String mes = MessageFormatter.arrayFormat(message, args);
+		write(node,login,action,mes);
+	}
+	
 	public AuditRecord prepare(Node node, String login, Action action, String message) 
 	{
 		return new AuditRecord(node,login,action,message);
@@ -117,6 +122,12 @@ public class AuditorImpl extends AbstractDbWorker<AuditRecord> implements Audito
 		return prepare(node,login,action,mes);
 	}
 
+	public AuditRecord prepare(Node node, String login, Action action, String message, Object[] args) 
+	{
+		String mes = MessageFormatter.arrayFormat(message, args);
+		return prepare(node,login,action,mes);
+	}
+	
 	protected String[] getFields() 
 	{
 		return AuditRecord.FIELDS;
