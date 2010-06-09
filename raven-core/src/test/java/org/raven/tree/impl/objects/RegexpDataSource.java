@@ -19,8 +19,8 @@ package org.raven.tree.impl.objects;
 
 import java.io.ByteArrayInputStream;
 import java.util.Collection;
-import java.util.Map;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.impl.AbstractDataSource;
 import org.raven.tree.NodeAttribute;
 
@@ -55,12 +55,12 @@ public class RegexpDataSource extends AbstractDataSource
     }
 
     @Override
-    public boolean gatherDataForConsumer(
-            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
+    public boolean gatherDataForConsumer(DataConsumer dataConsumer, DataContext context)
+            throws Exception
     {
         ByteArrayInputStream is = new ByteArrayInputStream(stringData.getBytes());
 
-        dataConsumer.setData(this, is);
+        dataConsumer.setData(this, is, context);
         
         return true;
     }
@@ -69,5 +69,4 @@ public class RegexpDataSource extends AbstractDataSource
     public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
     {
     }
-
 }

@@ -24,6 +24,7 @@ import java.util.Map;
 import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;
@@ -238,7 +239,7 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data) throws Exception
+    protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
         if (!Status.STARTED.equals(getStatus()))
             return;
@@ -254,7 +255,7 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
         try
         {
             boolean newState = states.get()==null;
-            State state = getOrCreateState(rec.getSchema());
+            State state = getOrCreateState(rec.getSchema(), context);
             Object tableValue = getValue(newTableFieldNames, useNewTableFieldsExpression
                     , NEW_TABLE_FIELDS_EXPRESSION_ATTR, rec);
             if (newState)
@@ -264,7 +265,7 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
                 if (!ObjectUtils.equals(tableValue, state.getTableValue()))
                 {
                     formAndSendCrossTable();
-                    state = getOrCreateState(rec.getSchema());
+                    state = getOrCreateState(rec.getSchema(), context);
                     state.setTableValue(tableValue);
                 }
             }
@@ -337,12 +338,12 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
         return value;
     }
 
-    private State getOrCreateState(RecordSchema schema)
+    private State getOrCreateState(RecordSchema schema, DataContext context)
     {
         State state = states.get();
         if (state==null)
         {
-            state = new State(schema);
+            state = new State(schema, context);
             states.set(state);
         }
         return state;
@@ -374,7 +375,7 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
                 }
             }
 
-            sendDataToConsumers(table);
+            sendDataToConsumers(table, state.dataContext);
         }
         finally
         {
@@ -396,11 +397,13 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
         private int maxRowSize;
         private final Map<Object, Integer> indexes = new HashMap<Object, Integer>();
         private final List<List> rows = new ArrayList<List>(512);
+        private final DataContext dataContext;
         private Object lastMasterValue = null;
         private Object tableValue;
 
-        public State(RecordSchema schema)
+        public State(RecordSchema schema, DataContext context)
         {
+            this.dataContext = context;
             List firstRow = new ArrayList();
             rows.add(firstRow);
             if (useSecondaryFieldsExpression)

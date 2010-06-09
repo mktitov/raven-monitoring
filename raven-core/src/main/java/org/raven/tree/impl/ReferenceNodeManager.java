@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.table.Table;
@@ -55,7 +56,7 @@ public class ReferenceNodeManager extends AbstractDataConsumer
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data)
+    protected void doSetData(DataSource dataSource, Object data, DataContext context)
     {
         Collection<Node> childs = getChildrens();
         if (childs!=null)

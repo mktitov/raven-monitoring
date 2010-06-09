@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.impl.AbstractDataSource;
 import org.raven.tree.NodeAttribute;
 
@@ -56,14 +57,13 @@ public class PushOnDemandDataSource extends AbstractDataSource
     }
 
     @Override
-    public boolean gatherDataForConsumer(
-            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes)
+    public boolean gatherDataForConsumer(DataConsumer dataConsumer, DataContext context)
         throws Exception
     {
-        this.lastSessionAttributes = attributes;
+        this.lastSessionAttributes = context.getSessionAttributes();
         
         for (Object data: dataList)
-            dataConsumer.setData(this, data);
+            dataConsumer.setData(this, data, context);
 
         return true;
     }

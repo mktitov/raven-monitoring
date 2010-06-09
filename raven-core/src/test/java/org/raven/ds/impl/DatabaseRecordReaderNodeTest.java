@@ -222,7 +222,7 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         reader.setRecordSchema(schema);
         reader.getNodeAttribute("field1").setValue(null);
         assertTrue(reader.start());
-        reader.getDataImmediate(collector, null);
+        reader.getDataImmediate(collector, new DataContextImpl());
 
         assertEquals(5, collector.getDataList().size());
     }
@@ -237,7 +237,7 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         reader.getNodeAttribute("field1").setValue(null);
         reader.setOrderByExpression("col1");
         assertTrue(reader.start());
-        reader.getDataImmediate(collector, null);
+        reader.getDataImmediate(collector, new DataContextImpl());
 
         checkRecords(collector.getDataList(), "1", "3", "4", "5");
     }
@@ -253,7 +253,7 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         reader.setOrderByExpression("col1");
         reader.setWhereExpression("col1 in ('3', '5')");
         assertTrue(reader.start());
-        reader.getDataImmediate(collector, null);
+        reader.getDataImmediate(collector, new DataContextImpl());
 
         checkRecords(collector.getDataList(), "3", "5");
     }
@@ -280,7 +280,7 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         reader.setOrderByExpression("col1");
         reader.setWhereExpression("col1 ${field2}");
         assertTrue(reader.start());
-        reader.getDataImmediate(collector, null);
+        reader.getDataImmediate(collector, new DataContextImpl());
 
         checkRecords(collector.getDataList(), "5");
     }
@@ -297,7 +297,7 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         reader.setFetchSize(2);
         reader.setMaxRows(2);
         assertTrue(reader.start());
-        reader.getDataImmediate(collector, null);
+        reader.getDataImmediate(collector, new DataContextImpl());
 
         checkRecords(collector.getDataList(), "1", "3");
     }
@@ -312,7 +312,7 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         reader.getNodeAttribute("field1").setValue(null);
         reader.setQuery("select * from record_data where col1 in ('1', '4') order by col1");
         assertTrue(reader.start());
-        reader.getDataImmediate(collector, null);
+        reader.getDataImmediate(collector, new DataContextImpl());
 
         checkRecords(collector.getDataList(), "1", "4");
     }
@@ -327,7 +327,7 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         reader.setOrderByExpression("col1");
         reader.getNodeAttribute("field1").setValue("{3, 5}");
         assertTrue(reader.start());
-        reader.getDataImmediate(collector, null);
+        reader.getDataImmediate(collector, new DataContextImpl());
 
         checkRecords(collector.getDataList(), "3", "5");
     }
@@ -342,7 +342,7 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         reader.setQuery("select * from record_data where 1=1 {#} order by col1");
         reader.getNodeAttribute("field1").setValue("{1, 4}");
         assertTrue(reader.start());
-        reader.getDataImmediate(collector, null);
+        reader.getDataImmediate(collector, new DataContextImpl());
 
         checkRecords(collector.getDataList(), "1", "4");
     }

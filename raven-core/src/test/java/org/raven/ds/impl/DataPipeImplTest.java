@@ -17,7 +17,9 @@
 
 package org.raven.ds.impl;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.raven.ds.DataContext;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.impl.objects.TestDataConsumer2;
 import org.raven.ds.impl.objects.TestDataSource2;
@@ -33,15 +35,22 @@ public class DataPipeImplTest extends RavenCoreTestCase
     private DataPipeImpl pipe;
     private TestDataSource2 ds;
     private TestDataConsumer2 consumer;
+    private DataContext context;
+
+    @Before
+    public void prepare(){
+        context = new DataContextImpl();
+    }
     
     @Test
     public void simpleTest() throws Exception
     {
         createNodes();
         
-        pipe.setData(null, "test");
+        pipe.setData(null, "test", context);
         assertEquals("test", consumer.getData());
-        pipe.setData(null, new Integer(1));
+        assertSame(context, consumer.getContext());
+        pipe.setData(null, new Integer(1), context);
         assertEquals(new Integer(1), consumer.getData());
     }
     
@@ -54,7 +63,7 @@ public class DataPipeImplTest extends RavenCoreTestCase
         attr.setValue(Integer.class.getName());
         attr.save();
         
-        pipe.setData(null, "1");
+        pipe.setData(null, "1", context);
         assertEquals(1, consumer.getData());
     }
     
@@ -67,7 +76,7 @@ public class DataPipeImplTest extends RavenCoreTestCase
         attr.setValue("lastData+1");
         attr.save();
         
-        pipe.setData(null, 1);
+        pipe.setData(null, 1, context);
         assertEquals(2, consumer.getData());
     }
     
@@ -82,7 +91,7 @@ public class DataPipeImplTest extends RavenCoreTestCase
         attr.setValue("lastData+1");
         attr.save();
         
-        pipe.setData(null, "1");
+        pipe.setData(null, "1", context);
         assertEquals(2, consumer.getData());
     }
     

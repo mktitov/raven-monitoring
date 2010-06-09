@@ -24,8 +24,10 @@ import org.productivity.java.syslog4j.util.SyslogUtility;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
+import org.raven.ds.impl.DataContextImpl;
 import org.raven.ds.impl.RecordSchemaNode;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
@@ -123,7 +125,7 @@ public class SyslogMessageHandlerNode extends BaseNode implements DataSource, Sy
                             if (   depNode instanceof DataConsumer
                                 && depNode.getStatus().equals(Status.STARTED))
                             {
-                                ((DataConsumer)depNode).setData(this, rec);
+                                ((DataConsumer)depNode).setData(this, rec, new DataContextImpl());
                             }
                     }
                     finally
@@ -151,8 +153,7 @@ public class SyslogMessageHandlerNode extends BaseNode implements DataSource, Sy
         bindingSupport.addTo(bindings);
     }
 
-    public boolean getDataImmediate(
-            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
+    public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
     {
         return false;
     }

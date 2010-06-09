@@ -18,6 +18,7 @@
 package org.raven.net.objects;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.table.Table;
@@ -32,7 +33,7 @@ public class TestScannerConsumer extends AbstractDataConsumer
     private AtomicInteger counter = new AtomicInteger(0);
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data)
+    protected void doSetData(DataSource dataSource, Object data, DataContext context)
     {
         table = (Table) data;
         counter.incrementAndGet();

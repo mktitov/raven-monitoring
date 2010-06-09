@@ -18,7 +18,7 @@
 package org.raven.tree.impl;
 
 import java.util.Map;
-import org.raven.tree.NodeAttribute;
+import org.raven.ds.DataContext;
 import org.raven.tree.ViewableObject;
 
 /**
@@ -29,14 +29,14 @@ public class TestActionNode extends AbstractActionNode
 {
     @Override
     public ViewableObject createActionViewableObject(
-            Map<String, NodeAttribute> refreshAttributes, Map<String, Object> additionalBindings)
+            DataContext context, Map<String, Object> additionalBindings)
     {
-        return new ActionNodeAction(this, refreshAttributes, additionalBindings);
+        return new ActionNodeAction(this, context, additionalBindings);
     }
 
     @Override
     public void prepareActionBindings(
-            Map<String, NodeAttribute> refreshAttributes, Map<String, Object> additionalBindings)
+            DataContext context, Map<String, Object> additionalBindings)
     {
     }
 }

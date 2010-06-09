@@ -34,6 +34,7 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.ds.impl.DataPipeImpl;
@@ -160,7 +161,7 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data)
+    protected void doSetData(DataSource dataSource, Object data, DataContext context)
     {
         try{
             if (dataLock.tryLock())
@@ -179,7 +180,7 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
                         stop();
                         return;
                     }
-                    processData(data);
+                    processData(data, context);
                 } finally {
                     dataLock.unlock();
                 }
@@ -191,10 +192,9 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
     }
 
     @Override
-    public boolean getDataImmediate(
-            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
+    public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
     {
-        return super.getDataImmediate(dataConsumer, sessionAttributes);
+        return super.getDataImmediate(dataConsumer, context);
     }
 
     public void configure()
@@ -249,7 +249,7 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
 //        }
     }
 
-    private Map<String, List<DataConsumer>> collectConsumers(Set<Node> deps, Object data)
+    private Map<String, List<DataConsumer>> collectConsumers(Set<Node> deps, Object data, DataContext context)
     {
         Map<String, List<DataConsumer>> consumers = new HashMap<String, List<DataConsumer>>();
         if (deps!=null)
@@ -261,7 +261,7 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
                             NodeGeneratorNodeTemplate.TABLE_COLUMN_NAME);
                     if (colName == null || colName.getValue() == null)
                     {
-                        ((DataConsumer) dep).setData(this, data);
+                        ((DataConsumer) dep).setData(this, data, context);
                     } else
                     {
                         String indexColumnValue = getIndexValue(dep);
@@ -326,7 +326,7 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
                     , getDataSource().getPath()));
     }
 
-    private void processData(Object data) throws Exception
+    private void processData(Object data, DataContext context) throws Exception
     {
         if (RemovePolicy.REMOVE_BEFORE_PROCESSING==removePolicy)
             removeGeneratedNodes();
@@ -334,7 +334,7 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
 //        if (deps==null || deps.size()==0)
 //            return;
         
-        Map<String, List<DataConsumer>> consumers = collectConsumers(deps, data);
+        Map<String, List<DataConsumer>> consumers = collectConsumers(deps, data, context);
         Map<String, Node> indexValues = getIndexValues();
         Set<String> indexesInTable = new HashSet<String>();
         Table tab = (Table) data;
@@ -355,7 +355,7 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
 
             indexesInTable.add(indexColumnValue);
 
-            sendDataToConsumers(namedRow, indexColumnValue, consumers);
+            sendDataToConsumers(namedRow, indexColumnValue, consumers, context);
 
             if (!indexValues.containsKey(indexColumnValue))
                 processAddOperation(namedRow, indexColumnValue);
@@ -429,7 +429,7 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
 
     private void sendDataToConsumers(
             Map<String, Object> namedRow, String indexColumnValue
-            , Map<String, List<DataConsumer>> consumers) 
+            , Map<String, List<DataConsumer>> consumers, DataContext context)
         throws TypeConverterException
     {
         List<DataConsumer> list = consumers.get(indexColumnValue);
@@ -438,7 +438,7 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
             {
                 String columnName = getTableCoumnName((Node)consumer);
                 Object value = namedRow.get(columnName);
-                consumer.setData(this, value);
+                consumer.setData(this, value, context);
             }
     }
 

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2008 Mikhail Titov.
+ *  Copyright 2010 Mikhail Titov.
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,35 +15,24 @@
  *  under the License.
  */
 
-package org.raven.rrd.objects;
+package org.raven.test;
 
-import java.util.Collection;
-import org.raven.ds.DataConsumer;
-import org.raven.ds.DataContext;
-import org.raven.ds.DataSource;
-import org.raven.tree.NodeAttribute;
-import org.raven.tree.impl.BaseNode;
+import org.raven.auth.UserContext;
+import org.raven.auth.UserContextService;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class TestDataSource3 extends BaseNode implements DataSource
+public class UserContextServiceModule implements UserContextService
 {
-
-    @Override
-    public boolean isAutoStart() {
-        return false;
-    }
-
-    public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
+    public static UserContextService buildUserContextService()
     {
-        return true;
+        return new UserContextServiceModule();
     }
 
-    public Collection<NodeAttribute> generateAttributes() 
+    public UserContext getUserContext()
     {
         return null;
     }
-
 }

@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.ds.AggregateFunction;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractSafeDataPipe;
 import org.raven.log.LogLevel;
@@ -54,11 +55,11 @@ public class TableSummaryNode extends AbstractSafeDataPipe
     public static final TableTag AGGREGATION_TAG = new TableTagImpl("AGGREGATION");
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data) throws Exception
+    protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
         if (!(data instanceof Table))
         {
-            sendDataToConsumers(data);
+            sendDataToConsumers(data, context);
             return;
         }
 
@@ -87,7 +88,7 @@ public class TableSummaryNode extends AbstractSafeDataPipe
             
         if (!rowAggInfo.hasAggregators() && colAggDefs==null)
         {
-            sendDataToConsumers(data);
+            sendDataToConsumers(data, context);
             return;
         }
 
@@ -145,7 +146,7 @@ public class TableSummaryNode extends AbstractSafeDataPipe
                 newTable.addRowTag(rowNumber++, AGGREGATION_TAG);
             }
 
-        sendDataToConsumers(newTable);
+        sendDataToConsumers(newTable, context);
     }
 
     private AggregateFunction[][] createColumnAggregations(

@@ -19,11 +19,11 @@ package org.raven.ds.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import org.raven.Helper;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
@@ -64,22 +64,16 @@ public abstract class AbstractDataPipe extends AbstractDataConsumer implements D
     }
 
     public boolean getDataImmediate(
-            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes) 
+            DataConsumer dataConsumer, DataContext context)
     {
         requester.set(dataConsumer);
         try
         {
-            Map<String, NodeAttribute> attributes = new HashMap<String, NodeAttribute>();
-            Collection<NodeAttribute> nodeAttributes =
-                    dataConsumer instanceof Node? ((Node)dataConsumer).getNodeAttributes() : null;
-            if (nodeAttributes!=null)
-                for (NodeAttribute attr: nodeAttributes)
-                    attributes.put(attr.getName(), attr);
-            if (sessionAttributes!=null)
-                for (NodeAttribute attr: sessionAttributes)
-                    attributes.put(attr.getName(), attr);
+            context.addSessionAttributes(
+                    dataConsumer instanceof Node? ((Node)dataConsumer).getNodeAttributes() : null
+                    , false);
 
-            if (!checkDataConsumer(dataConsumer, attributes))
+            if (!checkDataConsumer(dataConsumer, context.getSessionAttributes()))
             {
                 if (isLogLevelEnabled(LogLevel.DEBUG))
                     debug(String.format(
@@ -89,7 +83,7 @@ public abstract class AbstractDataPipe extends AbstractDataConsumer implements D
             }
             try
             {
-                return gatherDataForConsumer(dataConsumer, attributes);
+                return gatherDataForConsumer(dataConsumer, context);
             }
             catch (Throwable e)
             {
@@ -125,10 +119,10 @@ public abstract class AbstractDataPipe extends AbstractDataConsumer implements D
         return genAttrs;
     }
     
-    public boolean gatherDataForConsumer(
-            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
+    public boolean gatherDataForConsumer(DataConsumer dataConsumer, DataContext context)
+            throws Exception
     {
-        return getDataSource().getDataImmediate(this, attributes.values());
+        return getDataSource().getDataImmediate(this, context);
     }
 
     @Override
@@ -159,14 +153,14 @@ public abstract class AbstractDataPipe extends AbstractDataConsumer implements D
                 && Helper.checkAttributes(this, consumerAttributes, consumer, attributes);
     }
 
-    protected void sendDataToConsumers(Object data)
+    protected void sendDataToConsumers(Object data, DataContext context)
     {
         DataConsumer consumer = requester.get();
         if (consumer!=null)
         {
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug(String.format("Sending data to requester consumer (%s)", consumer.getPath()));
-            consumer.setData(this, data);
+            consumer.setData(this, data, context);
         }
         else
         {
@@ -176,8 +170,7 @@ public abstract class AbstractDataPipe extends AbstractDataConsumer implements D
             if (deps!=null && deps.size()>0)
                 for (Node dep: deps)
                     if (dep.getStatus()==Status.STARTED && dep instanceof DataConsumer)
-                        ((DataConsumer)dep).setData(this, data);
+                        ((DataConsumer)dep).setData(this, data, context);
         }
     }
-
 }

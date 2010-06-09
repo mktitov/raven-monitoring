@@ -24,6 +24,7 @@ import java.util.Locale;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.rrd.data.DataAndTime;
 import org.weda.annotations.constraints.NotNull;
 
@@ -75,7 +76,7 @@ public class DataAndTimeGenerator extends DataPipeImpl
 	}
 
 	@Override
-	protected void sendDataToConsumer(DataConsumer consumer, Object data)
+	protected void sendDataToConsumer(DataConsumer consumer, Object data, DataContext context)
 	{
 		try
 		{
@@ -93,7 +94,7 @@ public class DataAndTimeGenerator extends DataPipeImpl
 			}
 			DataAndTime dataAndTime = new DataAndTime(data, realDate.getTime()/1000);
 
-			super.sendDataToConsumer(consumer, dataAndTime);
+			super.sendDataToConsumer(consumer, dataAndTime, context);
 		}
 		catch (ParseException ex)
 		{

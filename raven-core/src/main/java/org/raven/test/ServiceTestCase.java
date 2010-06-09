@@ -46,6 +46,7 @@ public class ServiceTestCase extends Assert
         RegistryBuilder builder = new RegistryBuilder();
         IOCUtilities.addDefaultModules(builder);
         builder.add(EnLocaleModule.class);
+        builder.add(UserContextServiceModule.class);
         configureRegistry(builder);
 
         registry = builder.build();

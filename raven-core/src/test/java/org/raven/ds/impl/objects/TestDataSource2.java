@@ -19,6 +19,7 @@ package org.raven.ds.impl.objects;
 
 import java.util.Collection;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.ContainerNode;
@@ -29,8 +30,7 @@ import org.raven.tree.impl.ContainerNode;
  */
 public class TestDataSource2 extends ContainerNode implements DataSource
 {
-    public boolean getDataImmediate(
-            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes) 
+    public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
     {
         return true;
     }

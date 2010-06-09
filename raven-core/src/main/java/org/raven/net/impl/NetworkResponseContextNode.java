@@ -22,7 +22,9 @@ import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
+import org.raven.ds.impl.DataContextImpl;
 import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
@@ -67,7 +69,7 @@ public class NetworkResponseContextNode
         return result;
     }
 
-    public void setData(DataSource dataSource, Object data)
+    public void setData(DataSource dataSource, Object data, DataContext context)
     {
         value.set(data);
     }
@@ -76,7 +78,7 @@ public class NetworkResponseContextNode
     {
         try
         {
-            dataSource.getDataImmediate(this, sessionAttributes);
+            dataSource.getDataImmediate(this, new DataContextImpl(sessionAttributes));
             Object val = value.get();
             
             return val;

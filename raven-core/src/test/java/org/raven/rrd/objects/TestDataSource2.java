@@ -19,6 +19,7 @@ package org.raven.rrd.objects;
 
 import java.util.Collection;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
@@ -30,8 +31,7 @@ import org.raven.tree.impl.BaseNode;
 public class TestDataSource2 extends BaseNode implements DataSource
 {
 
-    public boolean getDataImmediate(
-            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
+    public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
     {
         return true;
     }

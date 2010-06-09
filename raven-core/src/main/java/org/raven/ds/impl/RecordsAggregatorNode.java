@@ -27,6 +27,7 @@ import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.AggregateFunction;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.log.LogLevel;
@@ -71,7 +72,7 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data) throws Exception
+    protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
         if (data==null && !aggregations.get().isEmpty())
         {
@@ -90,9 +91,9 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
                         }
                         rec.setValue(entry.getKey(), func.getAggregatedValue());
                     }
-                    sendDataToConsumers(rec);
+                    sendDataToConsumers(rec, context);
                 }
-                sendDataToConsumers(null);
+                sendDataToConsumers(null, context);
                 return;
             }
             finally

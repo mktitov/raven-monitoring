@@ -19,12 +19,12 @@ package org.raven.ds.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.ActionNode;
@@ -56,11 +56,11 @@ public class DataConsumerActionNode extends ActionNode
 
     @Override
     public void prepareActionBindings(
-            Map<String, NodeAttribute> refreshAttributes, Map<String, Object> additionalBindings)
+            DataContext context, Map<String, Object> additionalBindings)
     {
-        super.prepareActionBindings(refreshAttributes, additionalBindings);
+        super.prepareActionBindings(context, additionalBindings);
         
-        Consumer consumer = new Consumer(refreshAttributes);
+        Consumer consumer = new Consumer(context);
         additionalBindings.put(DATA_BINDING, consumer.getDataList());
     }
 
@@ -68,22 +68,19 @@ public class DataConsumerActionNode extends ActionNode
     {
         private final List dataList = new ArrayList(512);
 
-        public Consumer(Map<String, NodeAttribute> refreshAttributes)
+        public Consumer(DataContext context)
         {
-            Map<String, NodeAttribute> attrs = new HashMap<String, NodeAttribute>();
-            if (refreshAttributes!=null)
-                attrs.putAll(refreshAttributes);
             for (NodeAttribute attr: getNodeAttributes())
                 if (   DATA_SOURCE_ATTR.equals(attr.getParentAttribute())
-                    && !attrs.containsKey(attr.getName()))
-            {
-                attrs.put(attr.getName(), attr);
-            }
+                    && !context.getSessionAttributes().containsKey(attr.getName()))
+                {
+                    context.addSessionAttribute(attr);
+                }
             dataList.clear();
-            dataSource.getDataImmediate(this, attrs.values());
+            dataSource.getDataImmediate(this, context);
         }
 
-        public void setData(DataSource dataSource, Object data)
+        public void setData(DataSource dataSource, Object data, DataContext context)
         {
             dataList.add(data);
         }

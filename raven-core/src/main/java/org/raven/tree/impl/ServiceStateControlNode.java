@@ -21,6 +21,7 @@ import java.util.Collection;
 import javax.script.Bindings;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.expr.impl.ExpressionAttributeValueHandler;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
@@ -100,7 +101,7 @@ public class ServiceStateControlNode extends BaseNode implements DataConsumer
         this.warningLevel = warningLevel;
     }
 
-    public synchronized void setData(DataSource dataSource, Object data)
+    public synchronized void setData(DataSource dataSource, Object data, DataContext context)
     {
         if (!Status.STARTED.equals(getStatus()))
             return;

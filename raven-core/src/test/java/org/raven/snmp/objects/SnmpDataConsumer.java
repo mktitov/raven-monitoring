@@ -17,6 +17,7 @@
 
 package org.raven.snmp.objects;
 
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 
@@ -28,7 +29,7 @@ public class SnmpDataConsumer extends AbstractDataConsumer
 {
     private DataSource source;
     
-    protected void doSetData(DataSource dataSource, Object data)
+    protected void doSetData(DataSource dataSource, Object data, DataContext context)
     {
         this.source = dataSource;
     }

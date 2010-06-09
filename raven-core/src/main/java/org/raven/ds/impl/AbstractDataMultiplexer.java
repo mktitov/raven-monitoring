@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.tree.Node;
 
@@ -40,7 +41,7 @@ public abstract class AbstractDataMultiplexer<T, R> extends DataPipeImpl
     public abstract R multiplex(List<T> listOfData);
 
     @Override
-    public void doSetData(DataSource dataSource, Object data) 
+    public void doSetData(DataSource dataSource, Object data, DataContext context)
     {
         try
         {
@@ -75,7 +76,7 @@ public abstract class AbstractDataMultiplexer<T, R> extends DataPipeImpl
             }
             this.data = multiplex(dataList);
             
-            super.doSetData(dataSource, data);
+            super.doSetData(dataSource, data, context);
         }
         catch(Exception e)
         {

@@ -27,6 +27,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractSafeDataPipe;
 import org.weda.annotations.constraints.NotNull;
@@ -72,7 +73,7 @@ public class ExcelTableReaderNode extends AbstractSafeDataPipe
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data) throws Exception 
+    protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
         if (data==null)
             return;
@@ -94,7 +95,7 @@ public class ExcelTableReaderNode extends AbstractSafeDataPipe
         }
         if (table!=null){
             table.freeze();
-            sendDataToConsumers(table);
+            sendDataToConsumers(table, context);
         }
     }
 

@@ -19,7 +19,6 @@ package org.raven.ds.impl;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +30,7 @@ import org.apache.commons.io.input.CountingInputStream;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.log.LogLevel;
 import org.raven.sched.ExecutorService;
@@ -69,6 +69,7 @@ public class FileDataSource extends BaseNode implements DataSource, Task, Viewab
     private AtomicInteger bytesSended;
     private AtomicLong streamSize;
     private CountingInputStream countingStream;
+    private DataContext context;
 
     @Message
     private static String streamSizeMessage;
@@ -112,12 +113,11 @@ public class FileDataSource extends BaseNode implements DataSource, Task, Viewab
         this.executorService = executorService;
     }
 
-    public boolean getDataImmediate(
-            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
+    public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
     {
         if (!Status.STARTED.equals(getStatus()))
             return false;
-        sendDataToConsumer(dataConsumer, false);
+        sendDataToConsumer(dataConsumer, context, false);
         return true;
     }
 
@@ -158,6 +158,7 @@ public class FileDataSource extends BaseNode implements DataSource, Task, Viewab
                 try
                 {
                     sendingData.set(true);
+                    context = new DataContextImpl();
                     executorService.execute(this);
                 }
                 catch (ExecutorServiceException ex)
@@ -183,7 +184,7 @@ public class FileDataSource extends BaseNode implements DataSource, Task, Viewab
             if (depNodes!=null)
                 for (Node dep: depNodes)
                     if (dep instanceof DataConsumer && Status.STARTED.equals(dep.getStatus()))
-                        sendDataToConsumer((DataConsumer) dep, true);
+                        sendDataToConsumer((DataConsumer) dep, context, true);
         }
         finally
         {
@@ -192,7 +193,7 @@ public class FileDataSource extends BaseNode implements DataSource, Task, Viewab
         }
     }
 
-    private void sendDataToConsumer(DataConsumer consumer, boolean gatherStat)
+    private void sendDataToConsumer(DataConsumer consumer, DataContext context, boolean gatherStat)
     {
         InputStream data = null;
         try
@@ -205,7 +206,7 @@ public class FileDataSource extends BaseNode implements DataSource, Task, Viewab
                     setCountingStream((CountingInputStream)data);
                     streamSize.set(getFile().getFileSize());
                 }
-                consumer.setData(this, data);
+                consumer.setData(this, data, context);
             } finally {
                 IOUtils.closeQuietly(data);
             }

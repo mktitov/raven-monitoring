@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -39,12 +38,12 @@ import org.apache.commons.lang.StringUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.impl.AbstractDataSource;
 import org.raven.expr.Expression;
 import org.raven.expr.ExpressionCompiler;
 import org.raven.expr.impl.ExpressionAttributeValueHandler;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
-import org.raven.expr.impl.GroovyExpressionCompiler;
 import org.raven.log.LogLevel;
 import org.raven.table.ColumnBasedTable;
 import org.raven.tree.NodeAttribute;
@@ -155,8 +154,9 @@ public class LdapReaderNode extends AbstractDataSource
 
     @Override
     public boolean gatherDataForConsumer(
-            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
+            DataConsumer dataConsumer, DataContext dataContext) throws Exception
     {
+        Map<String, NodeAttribute> attributes = dataContext.getSessionAttributes();
         String filter = attributes.get(FILTER_ATTRIBUTE).getValue();
         if (filter==null)
         {
@@ -286,7 +286,7 @@ public class LdapReaderNode extends AbstractDataSource
                 table = null;
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug(String.format("Fetched (%d) rows", rowsCount));
-            dataConsumer.setData(this, table);
+            dataConsumer.setData(this, table, dataContext);
             
         }finally{
             context.close();

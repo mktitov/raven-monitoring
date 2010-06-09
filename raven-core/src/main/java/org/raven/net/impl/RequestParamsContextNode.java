@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.tree.NodeAttribute;
@@ -39,7 +40,7 @@ public class RequestParamsContextNode extends AbstractNetworkResponseContext imp
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public boolean getDataImmediate(DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
+    public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
     {
         throw new UnsupportedOperationException("Not supported yet.");
     }

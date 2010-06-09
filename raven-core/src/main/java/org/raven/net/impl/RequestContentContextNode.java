@@ -22,7 +22,9 @@ import java.util.Collection;
 import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
+import org.raven.ds.impl.DataContextImpl;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.tree.Node;
@@ -57,12 +59,12 @@ public class RequestContentContextNode
         if (deps!=null && !deps.isEmpty())
             for (Node dep: deps)
                 if (dep instanceof DataConsumer && dep.getStatus().equals(Status.STARTED))
-                    ((DataConsumer)dep).setData(this, requestContent);
+                    ((DataConsumer)dep).setData(this, requestContent, new DataContextImpl());
         return null;
     }
 
     public boolean getDataImmediate(
-            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
+            DataConsumer dataConsumer, DataContext context)
     {
         return false;
     }

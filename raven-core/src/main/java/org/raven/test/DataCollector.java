@@ -19,6 +19,7 @@ package org.raven.test;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 
@@ -42,7 +43,7 @@ public class DataCollector extends AbstractDataConsumer
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data)
+    protected void doSetData(DataSource dataSource, Object data, DataContext context)
     {
         try {
             if (pauseBeforeRecieve > 0) {

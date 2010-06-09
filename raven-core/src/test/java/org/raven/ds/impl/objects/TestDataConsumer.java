@@ -18,6 +18,7 @@
 package org.raven.ds.impl.objects;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 
@@ -34,7 +35,7 @@ public class TestDataConsumer extends AbstractDataConsumer
         return executionCount.intValue();
     }
     
-    protected void doSetData(DataSource dataSource, Object data)
+    protected void doSetData(DataSource dataSource, Object data, DataContext context)
     {
         executionCount.incrementAndGet();
     }

@@ -19,6 +19,7 @@ package org.raven.tree.impl;
 
 import java.util.Collection;
 import java.util.Map;
+import org.raven.ds.DataContext;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.tree.ActionViewableObject;
 import org.raven.tree.NodeAttribute;
@@ -31,16 +32,16 @@ import org.raven.tree.Viewable;
 public class ActionNodeAction implements ActionViewableObject
 {
     protected final AbstractActionNode actionNode;
-    protected final Map<String, NodeAttribute> refreshAttributes;
+    protected final DataContext context;
     protected final Map<String, Object> additionalBindings;
     protected final BindingSupportImpl bindingSupport;
 
     public ActionNodeAction(
             AbstractActionNode actionNode
-            , Map<String, NodeAttribute> refreshAttributes
+            , DataContext context
             , Map<String, Object> additionalBindings)
     {
-        this.refreshAttributes = refreshAttributes;
+        this.context = context;
         this.additionalBindings = additionalBindings;
         this.actionNode = actionNode;
         this.bindingSupport = actionNode.bindingSupport;
@@ -53,7 +54,8 @@ public class ActionNodeAction implements ActionViewableObject
 
     public Object getData()
     {
-        bindingSupport.put(AbstractActionNode.REFRESH_ATTRIBUTES_BINDING, refreshAttributes);
+        bindingSupport.put(AbstractActionNode.REFRESH_ATTRIBUTES_BINDING, context.getSessionAttributes());
+        bindingSupport.put(AbstractActionNode.DATA_CONTEXT_BINDING, context);
         try{
             actionNode.addToBindingSupport(additionalBindings);
             return actionNode.getNodeAttribute(AbstractActionNode.ACTION_EXPRESSION_ATTR).getValue();
@@ -79,7 +81,8 @@ public class ActionNodeAction implements ActionViewableObject
 
     public String getConfirmationMessage()
     {
-        bindingSupport.put(AbstractActionNode.REFRESH_ATTRIBUTES_BINDING, refreshAttributes);
+        bindingSupport.put(AbstractActionNode.REFRESH_ATTRIBUTES_BINDING, context.getSessionAttributes());
+        bindingSupport.put(AbstractActionNode.DATA_CONTEXT_BINDING, context);
         try{
             actionNode.addToBindingSupport(additionalBindings);
             return actionNode.getNodeAttribute(AbstractActionNode.CONFIRMATION_MESSAGE_ATTR).getValue();
@@ -93,7 +96,8 @@ public class ActionNodeAction implements ActionViewableObject
     @Override
     public String toString()
     {
-        bindingSupport.put(AbstractActionNode.REFRESH_ATTRIBUTES_BINDING, refreshAttributes);
+        bindingSupport.put(AbstractActionNode.REFRESH_ATTRIBUTES_BINDING, context.getSessionAttributes());
+        bindingSupport.put(AbstractActionNode.DATA_CONTEXT_BINDING, context);
         try{
             actionNode.addToBindingSupport(additionalBindings);
             return actionNode.getNodeAttribute(AbstractActionNode.ENABLED_ACTION_TEXT_ATTR).getValue();
@@ -109,7 +113,8 @@ public class ActionNodeAction implements ActionViewableObject
 
     public boolean isRefreshViewAfterAction()
     {
-        bindingSupport.put(AbstractActionNode.REFRESH_ATTRIBUTES_BINDING, refreshAttributes);
+        bindingSupport.put(AbstractActionNode.REFRESH_ATTRIBUTES_BINDING, context.getSessionAttributes());
+        bindingSupport.put(AbstractActionNode.DATA_CONTEXT_BINDING, context);
         try{
             actionNode.addToBindingSupport(additionalBindings);
             Boolean res = actionNode.getNodeAttribute(AbstractActionNode.REFRESH_VIEW_AFTER_ACTION_ATTR).getRealValue();

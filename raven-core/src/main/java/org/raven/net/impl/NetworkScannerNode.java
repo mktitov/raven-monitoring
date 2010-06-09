@@ -38,6 +38,7 @@ import org.apache.commons.lang.time.DurationFormatUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.sched.Schedulable;
 import org.raven.sched.Scheduler;
@@ -134,13 +135,12 @@ public class NetworkScannerNode extends DataPipeImpl implements Viewable, Schedu
     }
 
     @Override
-    public boolean getDataImmediate(
-            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes) 
+    public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
     {
         if (ipTable!=null && executor.isJobDone())
-            setData(this, ipTable);
+            setData(this, ipTable, context);
         else
-            setData(this, null);
+            setData(this, null, context);
         return true;
     }
     
@@ -287,10 +287,10 @@ public class NetworkScannerNode extends DataPipeImpl implements Viewable, Schedu
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data)
+    protected void doSetData(DataSource dataSource, Object data, DataContext context)
     {
         if (dataSource==this)
-            super.doSetData(dataSource, data);
+            super.doSetData(dataSource, data, context);
     }
     
     private long getScanDurationInMillisec()
@@ -368,11 +368,13 @@ public class NetworkScannerNode extends DataPipeImpl implements Viewable, Schedu
             logger.debug(String.format("Ip (%s) added to the table", ip));
     }
 
+    @Override
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
     {
         return null;
     }
 
+    @Override
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) 
             throws Exception
     {
@@ -416,7 +418,7 @@ public class NetworkScannerNode extends DataPipeImpl implements Viewable, Schedu
             if (count==0)
             {
                 scanEndTime.set(System.currentTimeMillis());
-                setData((DataSource)dataConsumer, ipTable);
+                setData((DataSource)dataConsumer, ipTable, new DataContextImpl());
             }
         }
 
@@ -461,7 +463,7 @@ public class NetworkScannerNode extends DataPipeImpl implements Viewable, Schedu
                 try
                 {
                     Collection<NodeAttribute> sessAttribute = getSessionAttributes(ip);
-                    if (dataSource.getDataImmediate(dataConsumer, sessAttribute))
+                    if (dataSource.getDataImmediate(dataConsumer, new DataContextImpl(sessAttribute)))
                     {
                         if (resolveHostnamesCopy)
                         {

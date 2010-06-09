@@ -23,6 +23,7 @@ import java.util.List;
 import javax.script.Bindings;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
@@ -39,6 +40,7 @@ public class SafeDataConsumer extends BaseNode implements DataConsumer
 {
     public static final String DATA_BINDING = "data";
     public static final String EXPRESSION_ATTRIBUTE = "expression";
+    public static final String DATA_CONTEXT_BINDING = "context";
 
     @NotNull @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     private DataSource dataSource;
@@ -91,11 +93,12 @@ public class SafeDataConsumer extends BaseNode implements DataConsumer
         this.useExpression = useExpression;
     }
 
-    public void setData(DataSource dataSource, Object data)
+    public void setData(DataSource dataSource, Object data, DataContext context)
     {
         if (useExpression)
         {
             bindingSupport.put(DATA_BINDING, data);
+            bindingSupport.put(DATA_CONTEXT_BINDING, context);
             try
             {
                 NodeAttribute exprAttr = getNodeAttribute(EXPRESSION_ATTRIBUTE);
@@ -121,7 +124,7 @@ public class SafeDataConsumer extends BaseNode implements DataConsumer
         try
         {
             data.remove();
-            dataSource.getDataImmediate(this, sessionAttributes);
+            dataSource.getDataImmediate(this, new DataContextImpl(sessionAttributes));
             return data.get();
         }
         finally
@@ -136,5 +139,4 @@ public class SafeDataConsumer extends BaseNode implements DataConsumer
         super.formExpressionBindings(bindings);
         bindingSupport.addTo(bindings);
     }
-
 }

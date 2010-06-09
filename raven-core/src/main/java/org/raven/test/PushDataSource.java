@@ -19,7 +19,9 @@ package org.raven.test;
 
 import java.util.Collection;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
+import org.raven.ds.impl.DataContextImpl;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
@@ -30,8 +32,7 @@ import org.raven.tree.impl.BaseNode;
  */
 public class PushDataSource extends BaseNode implements DataSource
 {
-	public boolean getDataImmediate(
-			DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
+	public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
 	{
 		return true;
 	}
@@ -44,10 +45,11 @@ public class PushDataSource extends BaseNode implements DataSource
 	public void pushData(Object data)
 	{
 		Collection<Node> deps = getDependentNodes();
+        DataContext context = new DataContextImpl();
 		if (deps!=null)
 			for (Node dep: deps)
 				if (dep instanceof DataConsumer)
-					((DataConsumer)dep).setData(this, data);
+					((DataConsumer)dep).setData(this, data, context);
 	}
 
 }

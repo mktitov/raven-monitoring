@@ -19,6 +19,7 @@ package org.raven.tree.impl.objects;
 
 import java.util.Collection;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.table.TableImpl;
 import org.raven.tree.Node;
@@ -38,13 +39,12 @@ public class NodesDataSource extends BaseNode implements DataSource
         this.nodes = nodes;
     }
 
-    public boolean getDataImmediate(
-            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
+    public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
     {
         TableImpl table = new TableImpl(new String[]{"name", "node"});
         for (Node node: nodes)
             table.addRow(new Object[]{node.getName(), node});
-        dataConsumer.setData(this, table);
+        dataConsumer.setData(this, table, context);
         return true;
     }
 

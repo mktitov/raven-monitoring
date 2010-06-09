@@ -26,6 +26,7 @@ import javax.script.Bindings;
 import javax.script.SimpleBindings;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
@@ -121,7 +122,7 @@ public class TableToRecordNode extends AbstractDataPipe
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data) throws Exception
+    protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
         if (!(data instanceof Table))
         {
@@ -185,10 +186,10 @@ public class TableToRecordNode extends AbstractDataPipe
                     bindingSupport.reset();
                 }
             }
-            sendDataToConsumers(record);
+            sendDataToConsumers(record, context);
             ++recCount;
         }
-        sendDataToConsumers(null);
+        sendDataToConsumers(null, context);
         if (isLogLevelEnabled(LogLevel.DEBUG))
             debug(String.format("(%d) records sended to consumers", recCount));
     }

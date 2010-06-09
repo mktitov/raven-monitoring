@@ -28,6 +28,7 @@ import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.dbcp.ConnectionPool;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;
@@ -168,7 +169,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     }
 
     @Override
-    protected synchronized void doSetData(DataSource dataSource, Object data)
+    protected synchronized void doSetData(DataSource dataSource, Object data, DataContext context)
     {
         try
         {

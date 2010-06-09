@@ -18,6 +18,7 @@
 package org.raven.ds.impl;
 
 import org.raven.annotations.NodeClass;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 
 /**
@@ -27,8 +28,8 @@ import org.raven.ds.DataSource;
 @NodeClass
 public class SafeDataPipeNode extends AbstractSafeDataPipe
 {
-    protected void doSetData(DataSource dataSource, Object data)
+    protected void doSetData(DataSource dataSource, Object data, DataContext context)
     {
-        sendDataToConsumers(data);
+        sendDataToConsumers(data, context);
     }
 }

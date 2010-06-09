@@ -22,7 +22,9 @@ import java.util.Collection;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
+import org.raven.ds.impl.DataContextImpl;
 import org.raven.graph.DataSeries;
 import org.raven.log.LogLevel;
 import org.raven.statdb.impl.SdbQueryResultNode;
@@ -111,7 +113,7 @@ public class SdbQueryResultDataDef extends AbstractDataDef implements DataConsum
             sessionAttributes = Arrays.asList(startTimeAttr, endTimeAttr);
         }
 
-        dataSource.getDataImmediate(this, sessionAttributes);
+        dataSource.getDataImmediate(this, new DataContextImpl(sessionAttributes));
 
         QueryResult _queryResult = queryResult.get();
         if (_queryResult==null)
@@ -146,7 +148,7 @@ public class SdbQueryResultDataDef extends AbstractDataDef implements DataConsum
 
     }
 
-    public void setData(DataSource dataSource, Object data)
+    public void setData(DataSource dataSource, Object data, DataContext context)
     {
         if (data instanceof QueryResult)
         {

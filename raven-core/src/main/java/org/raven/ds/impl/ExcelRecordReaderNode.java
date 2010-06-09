@@ -30,6 +30,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchemaField;
@@ -65,7 +66,8 @@ public class ExcelRecordReaderNode extends AbstractDataPipe
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data) throws Exception
+    protected void doSetData(DataSource dataSource, Object data, DataContext context)
+            throws Exception
     {
         if (data==null)
         {
@@ -116,11 +118,11 @@ public class ExcelRecordReaderNode extends AbstractDataPipe
                             record.setValue(fieldCol.getKey(), value);
                         }
                     }
-                    sendDataToConsumers(record);
+                    sendDataToConsumers(record, context);
                 }
             }
         }finally{
-            sendDataToConsumers(null);
+            sendDataToConsumers(null, context);
         }
     }
 

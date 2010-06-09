@@ -19,6 +19,7 @@ package org.raven.table.objects;
 
 import java.util.Collection;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.table.ColumnBasedTable;
 import org.raven.tree.NodeAttribute;
@@ -53,8 +54,7 @@ public class TestTableDataSource extends BaseNode implements DataSource
         this.sendTitle = sendTitle;
     }
 
-    public boolean getDataImmediate(
-            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes) 
+    public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
     {
         ColumnBasedTable table = new ColumnBasedTable();
         if (sendTitle)
@@ -65,9 +65,9 @@ public class TestTableDataSource extends BaseNode implements DataSource
         table.addValue("col2", "val_2_2");
         table.freeze();
         
-        dataConsumer.setData(this, table);
+        dataConsumer.setData(this, table, context);
         if (sendTwoTable)
-            dataConsumer.setData(this, table);
+            dataConsumer.setData(this, table, context);
 
         return true;
     }

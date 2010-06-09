@@ -19,7 +19,9 @@ package org.raven.tree.impl.objects;
 
 import java.util.Collection;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
+import org.raven.ds.impl.DataContextImpl;
 import org.raven.table.Table;
 import org.raven.table.TableImpl;
 import org.raven.tree.Node;
@@ -42,12 +44,11 @@ public class TestDataSource extends BaseNode implements DataSource
         super(name);
     }
     
-    public boolean getDataImmediate(
-            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
+    public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
     {
         Table table = createTable();
         
-        dataConsumer.setData(this, table);
+        dataConsumer.setData(this, table, context);
 
         return true;
     }
@@ -58,10 +59,11 @@ public class TestDataSource extends BaseNode implements DataSource
             throw new Exception("No dependencies to the data source");
         
         Table table = createTable();
+        DataContext context  = new DataContextImpl();
         for (Node node: getDependentNodes())
         {
             if (node instanceof DataConsumer)
-                ((DataConsumer)node).setData(this, table);
+                ((DataConsumer)node).setData(this, table, context);
         }
     }
 
@@ -77,10 +79,11 @@ public class TestDataSource extends BaseNode implements DataSource
         
         TableImpl table = createTable().addRow(new Object[]{"value1_3", "value2_3"});
         
+        DataContext context  = new DataContextImpl();
         for (Node node: getDependentNodes())
         {
             if (node instanceof DataConsumer)
-                ((DataConsumer)node).setData(this, table);
+                ((DataConsumer)node).setData(this, table, context);
         }
     }
 
@@ -92,10 +95,11 @@ public class TestDataSource extends BaseNode implements DataSource
         TableImpl table = new TableImpl(new String[]{"column1", "column2"});
         table.addRow(new Object[]{"value1_3", "value2_3"});
         
+        DataContext context  = new DataContextImpl();
         for (Node node: getDependentNodes())
         {
             if (node instanceof DataConsumer)
-                ((DataConsumer)node).setData(this, table);
+                ((DataConsumer)node).setData(this, table, context);
         }
     }
     

@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemManager;
@@ -31,6 +30,7 @@ import org.apache.commons.vfs.Selectors;
 import org.apache.commons.vfs.VFS;
 import org.raven.annotations.NodeClass;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.impl.AbstractDataSource;
 import org.raven.expr.BindingSupport;
 import org.raven.expr.impl.BindingSupportImpl;
@@ -59,14 +59,13 @@ public class FileReaderNode extends AbstractDataSource
     private static String removeFileAfterProcessingDescription;
 
     @Override
-    public boolean gatherDataForConsumer(
-            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes)
+    public boolean gatherDataForConsumer(DataConsumer dataConsumer, DataContext context)
         throws Exception
     {
-        String url = attributes.get(URL_ATTRIBUTE).getRealValue();
-        String fileMask = attributes.get(FILEMASK_ATTRIBUTE).getRealValue();
+        String url = context.getSessionAttributes().get(URL_ATTRIBUTE).getRealValue();
+        String fileMask = context.getSessionAttributes().get(FILEMASK_ATTRIBUTE).getRealValue();
         Boolean removeAfterProcessing =
-                attributes.get(REMOVEFILEAFTERPROCESSING_ATTRIBUTE).getRealValue();
+                context.getSessionAttributes().get(REMOVEFILEAFTERPROCESSING_ATTRIBUTE).getRealValue();
 
         FileSystemManager fsManager = VFS.getManager();
 
@@ -98,7 +97,7 @@ public class FileReaderNode extends AbstractDataSource
             for (FileObject file: files)
                 try
                 {
-                    processFile(dataConsumer, file, removeAfterProcessing);
+                    processFile(dataConsumer, file, removeAfterProcessing, context);
                 }
                 catch(Throwable e)
                 {
@@ -136,7 +135,8 @@ public class FileReaderNode extends AbstractDataSource
     }
 
     private void processFile(
-            DataConsumer dataConsumer, FileObject file, boolean removeAfterProcessing)
+            DataConsumer dataConsumer, FileObject file, boolean removeAfterProcessing
+            , DataContext context)
         throws Exception
     {
         if (isLogLevelEnabled(LogLevel.DEBUG))
@@ -149,7 +149,7 @@ public class FileReaderNode extends AbstractDataSource
         tree.addGlobalBindings(bindingsId, bindingSupport);
         try
         {
-            dataConsumer.setData(this, is);
+            dataConsumer.setData(this, is, context);
             fileProcessed = true;
         }
         finally

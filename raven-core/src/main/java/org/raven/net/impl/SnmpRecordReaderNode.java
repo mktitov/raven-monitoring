@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Vector;
 import org.raven.annotations.NodeClass;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
@@ -63,9 +64,10 @@ public class SnmpRecordReaderNode extends AbstractSnmpReaderNode
     @Override
     protected void proccessSnmpRequest(
             DataConsumer dataConsumer, Snmp snmp, CommunityTarget target
-            , Map<String, NodeAttribute> attrs, boolean isTable)
+            , DataContext context, boolean isTable)
         throws Exception
     {
+        Map<String, NodeAttribute> attrs = context.getSessionAttributes();
         RecordSchemaNode recordSchema = attrs.get(RECORD_SCHEMA_ATTR).getRealValue();
         List<Record> records = null;
         if (!isTable)
@@ -94,8 +96,8 @@ public class SnmpRecordReaderNode extends AbstractSnmpReaderNode
         if (records!=null && !records.isEmpty())
         {
             for (Record record: records)
-                dataConsumer.setData(this, record);
-            dataConsumer.setData(this, null);
+                dataConsumer.setData(this, record, context);
+            dataConsumer.setData(this, null, context);
         }
     }
 

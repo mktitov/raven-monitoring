@@ -31,6 +31,7 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.dbcp.ConnectionPool;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
@@ -54,6 +55,8 @@ import org.weda.internal.services.MessagesRegistry;
 @NodeClass
 public class DatabaseRecordReaderNode extends AbstractDataSource
 {
+    public static final String CONTEXT_BINDING = "context";
+    public static final String SESS_ATTRS_BINDING = "sessAttrs";
     public final static String TEMPLATE_MESSAGE_KEY = "template";
     public final static String
             FILTER_ATTRIBUTE_DESCRIPTION_MESSAGE_KEY = "filterAttributeDescription";
@@ -147,17 +150,18 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
     }
 
     @Override
-    public boolean gatherDataForConsumer(
-        DataConsumer dataConsumer, Map<String, NodeAttribute> attributes)
+    public boolean gatherDataForConsumer(DataConsumer dataConsumer, DataContext context)
             throws Exception
     {
         bindingSupport.enableScriptExecution();
         try{
-            bindingSupport.put("sessAttrs", attributes);
+            bindingSupport.put(SESS_ATTRS_BINDING, context.getSessionAttributes());
+            bindingSupport.put(CONTEXT_BINDING, context);
             long startTime = System.currentTimeMillis();
             long realProcessingTime = processingTime;
             long procStart = startTime;
-            List<DatabaseFilterElement> filterElements = createFilterElements(attributes);
+            List<DatabaseFilterElement> filterElements =
+                    createFilterElements(context.getSessionAttributes());
 
             DatabaseRecordQuery recordQuery = null;
             String _query = query;
@@ -184,7 +188,7 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
                     int i=0;
                     while (it.hasNext())
                     {
-                        dataConsumer.setData(this, it.next());
+                        dataConsumer.setData(this, it.next(), context);
                         ++validRecords;
                         if (i % 1000 == 0)
                         {
@@ -192,7 +196,7 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
                             startTime = System.currentTimeMillis();
                         }
                     }
-                    dataConsumer.setData(this, null);
+                    dataConsumer.setData(this, null, context);
 
                     return true;
                 }

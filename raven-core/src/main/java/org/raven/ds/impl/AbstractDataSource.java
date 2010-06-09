@@ -19,10 +19,10 @@ package org.raven.ds.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import org.raven.Helper;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
@@ -47,20 +47,15 @@ public abstract class AbstractDataSource extends BaseNode implements DataSource
         fillConsumerAttributes(consumerAttributes);
     }
 
+    @Override
     public boolean getDataImmediate(
-            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes) 
+            DataConsumer dataConsumer, DataContext context)
     {
-        Map<String, NodeAttribute> attributes = new HashMap<String, NodeAttribute>();
-        Collection<NodeAttribute> nodeAttributes = 
-                dataConsumer instanceof Node? ((Node)dataConsumer).getNodeAttributes() : null;
-        if (nodeAttributes!=null)
-            for (NodeAttribute attr: nodeAttributes)
-                attributes.put(attr.getName(), attr);
-        if (sessionAttributes!=null)
-            for (NodeAttribute attr: sessionAttributes)
-                attributes.put(attr.getName(), attr);
+        context.addSessionAttributes(
+                dataConsumer instanceof Node? ((Node)dataConsumer).getNodeAttributes() : null
+                , false);
 
-        if (!checkDataConsumer(dataConsumer, attributes))
+        if (!checkDataConsumer(dataConsumer, context.getSessionAttributes()))
         {
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug(String.format(
@@ -74,7 +69,7 @@ public abstract class AbstractDataSource extends BaseNode implements DataSource
                 debug(String.format(
                         "Processing gathering data request for data consumer (%s)"
                         , dataConsumer.getPath()));
-            return gatherDataForConsumer(dataConsumer, attributes);
+            return gatherDataForConsumer(dataConsumer, context);
         }
         catch (Throwable e)
         {
@@ -91,8 +86,8 @@ public abstract class AbstractDataSource extends BaseNode implements DataSource
         return consumerAttributes;
     }
     
-    public abstract boolean gatherDataForConsumer(
-            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception;
+    public abstract boolean gatherDataForConsumer(DataConsumer dataConsumer, DataContext context)
+            throws Exception;
     
     /**
      * Use this method to add attributes that consumers must have and set. The filled collection
@@ -109,12 +104,12 @@ public abstract class AbstractDataSource extends BaseNode implements DataSource
                 && Helper.checkAttributes(this, consumerAttributes, consumer, attributes);
     }
     
-    protected void sendDataToConsumers(Object data)
+    protected void sendDataToConsumers(Object data, DataContext context)
     {
         Collection<Node> deps = getDependentNodes();
         if (deps!=null && deps.size()>0)
             for (Node dep: deps)
                 if (dep instanceof DataConsumer)
-                    ((DataConsumer)dep).setData(this, data);
+                    ((DataConsumer)dep).setData(this, data, context);
     }
 }

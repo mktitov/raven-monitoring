@@ -44,6 +44,7 @@ public class HttpRequestNodeTest extends RavenCoreTestCase
         requestNode.setName("requestNode");
         tree.getRootNode().addAndSaveChildren(requestNode);
         requestNode.setHost("host");
+        requestNode.setPort(80);
     }
 
     @Test

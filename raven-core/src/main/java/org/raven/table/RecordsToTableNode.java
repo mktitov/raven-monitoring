@@ -21,6 +21,7 @@ import java.util.Map;
 import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
@@ -102,11 +103,11 @@ public class RecordsToTableNode extends AbstractSafeDataPipe
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data) throws Exception 
+    protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
         TableImpl table = tableHolder.get();
         if (data==null){
-            sendDataToConsumers(table);
+            sendDataToConsumers(table, context);
             tableHolder.remove();
             return;
         }

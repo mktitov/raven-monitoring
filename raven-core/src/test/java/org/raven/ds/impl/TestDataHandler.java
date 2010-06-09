@@ -16,6 +16,7 @@
  */
 package org.raven.ds.impl;
 
+import org.raven.ds.DataContext;
 import org.raven.ds.DataHandler;
 import org.raven.ds.DataSource;
 import org.raven.tree.Node;
@@ -29,7 +30,8 @@ public class TestDataHandler implements DataHandler {
     public void releaseHandler() {
     }
 
-    public Object handleData(Object data, DataSource dataSource, Node owner) throws Exception
+    public Object handleData(Object data, DataSource dataSource, DataContext context, Node owner)
+            throws Exception
     {
         Thread.sleep(1000);
         return data;

@@ -25,6 +25,7 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataHandler;
 import org.raven.ds.DataSource;
 import org.raven.log.LogLevel;
@@ -51,7 +52,8 @@ public class HttpSessionDataHandler implements DataHandler
     {
     }
 
-    public Object handleData(Object data, DataSource dataSource, Node owner) throws Exception
+    public Object handleData(Object data, DataSource dataSource, DataContext context, Node owner)
+            throws Exception
     {
         try
         {
@@ -69,6 +71,7 @@ public class HttpSessionDataHandler implements DataHandler
                     {
                         Map<String, Object> params = new HashMap<String, Object>();
                         params.put(HttpSessionNode.DATA_BINDING, data);
+                        params.put(HttpSessionNode.DATA_CONTEXT_BINDING, context);
                         params.put(HttpSessionNode.SKIP_DATA_BINDING, HttpSessionNode.SKIP_DATA);
                         params.put(HttpSessionNode.IS_NEW_SESSION_BINDING, isNewSession);
                         HttpResponseHandlerNode handler = (HttpResponseHandlerNode) child;

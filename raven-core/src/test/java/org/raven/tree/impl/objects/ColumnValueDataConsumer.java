@@ -17,6 +17,7 @@
 
 package org.raven.tree.impl.objects;
 
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 
@@ -31,7 +32,7 @@ public class ColumnValueDataConsumer extends AbstractDataConsumer
     public int executionCount = 0;
     
     @Override
-    public void setData(DataSource dataSource, Object data)
+    public void setData(DataSource dataSource, Object data, DataContext context)
     {
         sourceDataSource = dataSource;
         value = data;
@@ -39,6 +40,6 @@ public class ColumnValueDataConsumer extends AbstractDataConsumer
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data) {
+    protected void doSetData(DataSource dataSource, Object data, DataContext context) {
     }
 }

@@ -22,10 +22,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.impl.AbstractThreadedDataSource;
 import org.raven.log.LogLevel;
 import org.raven.net.SnmpVersion;
-import org.raven.net.impl.SnmpReaderNode.OidType;
 import org.raven.table.ColumnBasedTable;
 import org.raven.table.Table;
 import org.raven.tree.Node;
@@ -78,11 +78,12 @@ public abstract class AbstractSnmpReaderNode extends AbstractThreadedDataSource
 
     @Override
     public boolean gatherDataForConsumer(
-            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
+            DataConsumer dataConsumer, DataContext context) throws Exception
     {
         if (logger.isDebugEnabled())
             logger.debug(String.format(
                     "Gathering data for data consumer (%s)", dataConsumer.getPath()));
+        Map<String, NodeAttribute> attributes = context.getSessionAttributes();
         String host = attributes.get(HOST_ATTR).getRealValue();
         Integer port = attributes.get(PORT_ATTR).getRealValue();
         SnmpVersion version = attributes.get(VERSION_ATTR).getRealValue();
@@ -103,7 +104,7 @@ public abstract class AbstractSnmpReaderNode extends AbstractThreadedDataSource
             snmp.listen();
             try
             {
-                proccessSnmpRequest(dataConsumer, snmp, target, attributes, isTable);
+                proccessSnmpRequest(dataConsumer, snmp, target, context, isTable);
             }
             catch(Exception e)
             {
@@ -130,7 +131,7 @@ public abstract class AbstractSnmpReaderNode extends AbstractThreadedDataSource
 
     protected abstract void proccessSnmpRequest(
             DataConsumer dataConsumer, Snmp snmp, CommunityTarget target
-            , Map<String, NodeAttribute> attrs, boolean isTable)
+            , DataContext context, boolean isTable)
         throws Exception;
 
     @Override

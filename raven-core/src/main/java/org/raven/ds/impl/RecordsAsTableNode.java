@@ -26,6 +26,7 @@ import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
@@ -233,7 +234,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                 , deleteConfirmationMessage, deleteMessage, deleteCompletionMessage
                 , getRecordActions(), records);
 
-        dataSource.getDataImmediate(dataConsumer, attrs==null? null : attrs.values());
+        dataSource.getDataImmediate(dataConsumer, new DataContextImpl(attrs));
 
         List<ViewableObject> vos = new ArrayList<ViewableObject>();
         if (records!=null)
@@ -271,7 +272,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         }
     }
 
-    public boolean getDataImmediate(DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
+    public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
     {
         throw new UnsupportedOperationException(
                 String.format("Datasource (%s) can work only in push mode", getPath()));
@@ -332,7 +333,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                         actions = new ArrayList<ViewableObject>();
                     Map<String, Object> bindings = new HashMap<String, Object>();
                     bindings.put(RECORDS_BINDING, records);
-                    actions.add(((RecordsAsTableActionNode)child).getActionViewableObject(null, bindings));
+                    actions.add(((RecordsAsTableActionNode)child).getActionViewableObject(new DataContextImpl(), bindings));
                 }
             return actions;
         }
@@ -445,7 +446,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
             return table;
         }
 
-        public void setData(DataSource dataSource, Object data)
+        public void setData(DataSource dataSource, Object data, DataContext context)
         {
             if (data==null)
             {
@@ -494,7 +495,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                         {
                             Map<String, Object> bindings = new HashMap<String, Object>();
                             bindings.put(RECORD_BINDING, record);
-                            row[pos++] = actionNode.getActionViewableObject(null, bindings);
+                            row[pos++] = actionNode.getActionViewableObject(new DataContextImpl(), bindings);
                         }
                 }
                 for (int i=0; i<fieldNames.length; ++i)
@@ -593,7 +594,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         public String executeAction() throws Exception
         {
             record.setTag(Record.DELETE_TAG, null);
-            DataSourceHelper.sendDataToConsumers(RecordsAsTableNode.this, record);
+            DataSourceHelper.sendDataToConsumers(RecordsAsTableNode.this, record, new DataContextImpl());
             return deleteCompletionMessage;
         }
     }

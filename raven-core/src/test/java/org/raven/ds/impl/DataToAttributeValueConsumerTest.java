@@ -78,8 +78,8 @@ public class DataToAttributeValueConsumerTest extends RavenCoreTestCase
         replay(listener);
         
         recipient.addNodeAttributeDependency("attr", listener);
-        consumer.setData(ds, 1);
-        consumer.setData(ds, 1);
+        consumer.setData(ds, 1, new DataContextImpl());
+        consumer.setData(ds, 1, new DataContextImpl());
         
         verify(listener);
         

@@ -18,8 +18,8 @@
 package org.raven.rrd.objects;
 
 import java.util.Collection;
-import java.util.Map;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.impl.AbstractThreadedDataSource;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -39,13 +39,13 @@ public class TestDataSource extends AbstractThreadedDataSource
     }
 
     @Override
-    public boolean gatherDataForConsumer(
-            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
+    public boolean gatherDataForConsumer(DataConsumer dataConsumer, DataContext context)
+            throws Exception
     {
         if (((Node)dataConsumer).getName().equals("ds"))
-            dataConsumer.setData(this, value++);
+            dataConsumer.setData(this, value++, context);
         else
-            dataConsumer.setData(this, value2--);
+            dataConsumer.setData(this, value2--, context);
         System.out.println(">>>value"+value);
         return true;
     }

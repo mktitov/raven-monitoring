@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataContext;
+import org.raven.ds.impl.DataContextImpl;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
@@ -40,14 +42,14 @@ public class ActionNode extends AbstractActionNode implements Viewable
 
     @Override
     public ViewableObject createActionViewableObject(
-            Map<String, NodeAttribute> refreshAttributes, Map<String, Object> additionalBindings)
+            DataContext context, Map<String, Object> additionalBindings)
     {
-        return new ActionNodeAction(this, refreshAttributes, additionalBindings);
+        return new ActionNodeAction(this, context, additionalBindings);
     }
 
     @Override
     public void prepareActionBindings(
-            Map<String, NodeAttribute> refreshAttributes, Map<String, Object> additionalBindings)
+            DataContext context, Map<String, Object> additionalBindings)
     {
     }
 
@@ -56,7 +58,7 @@ public class ActionNode extends AbstractActionNode implements Viewable
     {
         if (!Status.STARTED.equals(getStatus()))
             return null;
-        return Arrays.asList(getActionViewableObject(refreshAttributes, null));
+        return Arrays.asList(getActionViewableObject(new DataContextImpl(refreshAttributes), null));
     }
 
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception

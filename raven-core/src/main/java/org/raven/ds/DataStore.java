@@ -43,6 +43,15 @@ public interface DataStore
      */
     public void addDataPortion(Object dataPortion) throws DataStoreException;
     /**
+     * Returns the data context of the data added to the store
+     */
+    public DataContext getDataContext() throws DataStoreException;
+    /**
+     * Sets the context of data added to the store
+     * @param context The data context
+     */
+    public void setDataContext(DataContext context) throws DataStoreException;
+    /**
      * Returns the iterator over data added by method {@link #addDataPortion(java.lang.Object)}
      */
     public Iterator getDataIterator() throws DataStoreException;

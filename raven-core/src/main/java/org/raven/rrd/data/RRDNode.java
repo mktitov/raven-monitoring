@@ -47,6 +47,7 @@ import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
 import org.raven.ds.ArchiveException;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.log.LogLevel;
 import org.raven.rrd.ConsolidationFunction;
@@ -302,7 +303,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
         return null;
     }
 
-    public void setData(DataSource dataSource, Object data)
+    public void setData(DataSource dataSource, Object data, DataContext context)
     {
 		if (getStatus()!=Status.STARTED)
 			return;

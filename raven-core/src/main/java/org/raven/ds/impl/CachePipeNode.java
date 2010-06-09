@@ -26,6 +26,7 @@ import org.raven.annotations.Parameter;
 import org.raven.cache.TemporaryCache;
 import org.raven.cache.TemporaryCacheManager;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.DataStore;
 import org.raven.ds.DataStoreException;
@@ -130,10 +131,10 @@ public class CachePipeNode extends AbstractDataPipe
 
     @Override
     public boolean gatherDataForConsumer(
-            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes)
+            DataConsumer dataConsumer, DataContext context)
         throws Exception
     {
-        NodeAttribute activeConsumerAttr = attributes.get(CONSUMER_TYPE_ATTR);
+        NodeAttribute activeConsumerAttr = context.getSessionAttributes().get(CONSUMER_TYPE_ATTR);
         Boolean activeConsumer = activeConsumerAttr.getRealValue();
         DataState dataState = getDataState(activeConsumer, dataConsumer);
         if (dataState.getDataStore()!=null)
@@ -149,7 +150,8 @@ public class CachePipeNode extends AbstractDataPipe
                 try
                 {
                     localDataStore.set(new MemoryDataStore());
-                    getDataSource().getDataImmediate(this, attributes.values());
+                    localDataStore.get().setDataContext(context);
+                    getDataSource().getDataImmediate(this, context);
                     cacheDataStore();
                     if (isLogLevelEnabled(LogLevel.DEBUG))
                         debug("Data cached");
@@ -252,7 +254,7 @@ public class CachePipeNode extends AbstractDataPipe
             {
                 Iterator it = dataStore.getDataIterator();
                 while (it.hasNext())
-                    dataConsumer.setData(this, it.next());
+                    dataConsumer.setData(this, it.next(), dataStore.getDataContext());
             }
             finally
             {
@@ -268,7 +270,7 @@ public class CachePipeNode extends AbstractDataPipe
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data)
+    protected void doSetData(DataSource dataSource, Object data, DataContext context)
     {
         try
         {

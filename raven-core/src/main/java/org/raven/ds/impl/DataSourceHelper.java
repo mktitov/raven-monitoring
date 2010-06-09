@@ -19,6 +19,7 @@ package org.raven.ds.impl;
 
 import java.util.Collection;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
@@ -31,7 +32,7 @@ public class DataSourceHelper
 {
     private DataSourceHelper() {}
 
-    public static void sendDataToConsumers(DataSource source, Object data)
+    public static void sendDataToConsumers(DataSource source, Object data, DataContext context)
     {
         Collection<Node> childs = source.getDependentNodes();
         if (childs!=null && !childs.isEmpty())
@@ -39,7 +40,7 @@ public class DataSourceHelper
                 if (child instanceof DataConsumer && Node.Status.STARTED.equals(child.getStatus()))
                     try
                     {
-                        ((DataConsumer)child).setData(source, data);
+                        ((DataConsumer)child).setData(source, data, context);
                     }
                     catch (Throwable e)
                     {

@@ -27,6 +27,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.log.LogLevel;
 import org.raven.table.TableImpl;
@@ -136,7 +137,7 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
         this.dataSource = dataSource;
     }
 
-    public void setData(DataSource dataSource, Object data) 
+    public void setData(DataSource dataSource, Object data, DataContext context)
     {
         if (Status.STARTED!=getStatus())
         {
@@ -152,7 +153,7 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
         try{
             try
             {
-                doSetData(dataSource, data);
+                doSetData(dataSource, data, context);
             }catch(Exception e)
             {
                 if (isLogLevelEnabled(LogLevel.ERROR))
@@ -169,13 +170,14 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
         }
     }
     
-    protected abstract void doSetData(DataSource dataSource, Object data) throws Exception;
+    protected abstract void doSetData(DataSource dataSource, Object data, DataContext context)
+            throws Exception;
 
     public Object refereshData(Collection<NodeAttribute> sessionAttributes) 
     {
         if (Status.STARTED==getStatus())
         {
-            dataSource.getDataImmediate(this, sessionAttributes);
+            dataSource.getDataImmediate(this, new DataContextImpl(sessionAttributes));
             return data;
         }
         else

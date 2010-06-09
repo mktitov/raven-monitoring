@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
+import org.raven.ds.impl.DataContextImpl;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.ActionViewableObject;
 import static org.junit.Assert.*;
@@ -52,7 +53,7 @@ public class AbstractActionNodeTest extends RavenCoreTestCase
     {
         action.setActionExpression("1+1");
         assertTrue(action.start());
-        ViewableObject obj = action.getActionViewableObject(null, null);
+        ViewableObject obj = action.getActionViewableObject(new DataContextImpl(), null);
         assertTrue(obj instanceof ActionViewableObject);
         ActionViewableObject vo = (ActionViewableObject) obj;
         assertEquals("confirmation", vo.getConfirmationMessage());
@@ -71,7 +72,7 @@ public class AbstractActionNodeTest extends RavenCoreTestCase
         action.setActionExpression("refreshAttributes['attr'].value+'world'");
         assertTrue(action.start());
 
-        ViewableObject vo = action.getActionViewableObject(refreshAttributes, null);
+        ViewableObject vo = action.getActionViewableObject(new DataContextImpl(refreshAttributes), null);
         assertNotNull(vo);
         assertEquals("hello world", vo.getData());
     }
@@ -84,7 +85,7 @@ public class AbstractActionNodeTest extends RavenCoreTestCase
         action.setActionExpression("greeting+'world'");
         assertTrue(action.start());
 
-        ViewableObject vo = action.getActionViewableObject(null, additionalBindings);
+        ViewableObject vo = action.getActionViewableObject(new DataContextImpl(), additionalBindings);
         assertNotNull(vo);
         assertEquals("hello world", vo.getData());
     }
@@ -94,7 +95,7 @@ public class AbstractActionNodeTest extends RavenCoreTestCase
     {
         action.setActionEnabled(false);
         assertTrue(action.start());
-        ViewableObject vo = action.getActionViewableObject(null, null);
+        ViewableObject vo = action.getActionViewableObject(new DataContextImpl(), null);
         assertNotNull(vo);
         assertEquals("action disabled", vo.getData());
         assertEquals(Viewable.RAVEN_TEXT_MIMETYPE, vo.getMimeType());

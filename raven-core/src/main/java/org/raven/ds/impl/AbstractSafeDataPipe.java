@@ -23,6 +23,7 @@ import java.util.Map;
 import javax.script.Bindings;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataPipe;
 import org.raven.ds.DataSource;
 import org.raven.ds.SessionAttributeGenerator;
@@ -41,6 +42,7 @@ import org.weda.annotations.constraints.NotNull;
  */
 public abstract class AbstractSafeDataPipe extends AbstractDataSource implements DataPipe
 {
+    public static final String DATA_CONTEXT_BINDING = "context";
     public static final String DATASOURCE_BINDING = "dataSource";
     public static final String DATA_BINDING = "data";
     public static final String EXPRESSION_ATTRIBUTE = "expression";
@@ -151,7 +153,7 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
 
     @Override
     public boolean gatherDataForConsumer(
-            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
+            DataConsumer dataConsumer, DataContext context) throws Exception
     {
         consumer.set(dataConsumer);
         try
@@ -166,12 +168,12 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
                             debug(String.format(
                                     "Creating session attribute (%s)", child.getName()));
                         SessionAttributeGenerator gen = (SessionAttributeGenerator)child;
-                        Object value = gen.getFieldValue(attributes);
+                        Object value = gen.getFieldValue(context.getSessionAttributes());
                         NodeAttributeImpl attr = new NodeAttributeImpl(
                                 gen.getName(), gen.getAttributeType(), value, null);
                         attr.setOwner(this);
                         attr.init();
-                        attributes.put(gen.getName(), attr);
+                        context.addSessionAttribute(attr);
                         if (isLogLevelEnabled(LogLevel.DEBUG))
                             debug(String.format(
                                     "Attribute information: type - (%s), value (%s)"
@@ -183,7 +185,8 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
             {
                 if (isLogLevelEnabled(LogLevel.DEBUG))
                     debug("Preprocessing...");
-                bindingSupport.put(SESSIONATTRIBUTES_BINDING, attributes);
+                bindingSupport.put(SESSIONATTRIBUTES_BINDING, context.getSessionAttributes());
+                bindingSupport.put( DATA_CONTEXT_BINDING, context);
                 try
                 {
                     preprocessResult = getNodeAttribute(PREPROCESS_ATTRIBUTE).getRealValue();
@@ -197,9 +200,9 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
             }
             boolean result = true;
             if (preprocessResult==null)
-                result = dataSource.getDataImmediate(this, attributes.values());
+                result = dataSource.getDataImmediate(this, context);
             else
-                setData(this, preprocessResult);
+                setData(this, preprocessResult, context);
             
             return result;
         }
@@ -241,7 +244,8 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
         bindingSupport.addTo(bindings);
     }
 
-    public void setData(DataSource dataSource, Object data)
+    @Override
+    public void setData(DataSource dataSource, Object data, DataContext context)
     {
         if (!Status.STARTED.equals(getStatus()))
         {
@@ -255,6 +259,7 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
             bindingSupport.put(DATA_BINDING, data);
             bindingSupport.put(SKIP_DATA_BINDING, SKIP_DATA);
             bindingSupport.put(DATASOURCE_BINDING, dataSource);
+            bindingSupport.put(DATA_CONTEXT_BINDING, context);
             try
             {
                 NodeAttribute exprAttr = getNodeAttribute(EXPRESSION_ATTRIBUTE);
@@ -268,7 +273,7 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
         try
         {
             if (data!=SKIP_DATA)
-                doSetData(dataSource, data);
+                doSetData(dataSource, data, context);
         }
         catch(Throwable e)
         {
@@ -279,20 +284,21 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
         }
     }
 
-    protected abstract void doSetData(DataSource dataSource, Object data) throws Exception;
+    protected abstract void doSetData(DataSource dataSource, Object data, DataContext context)
+            throws Exception;
 
     @Override
-    public void sendDataToConsumers(Object data)
+    public void sendDataToConsumers(Object data, DataContext context)
     {
         if (consumer.get()!=null)
-            consumer.get().setData(this, data);
+            consumer.get().setData(this, data, context);
         else
         {
             Collection<Node> deps = getDependentNodes();
             if (deps!=null && !deps.isEmpty())
                 for (Node dep: deps)
                     if (dep instanceof DataConsumer && Status.STARTED.equals(dep.getStatus()))
-                        ((DataConsumer)dep).setData(this, data);
+                        ((DataConsumer)dep).setData(this, data, context);
         }
     }
 

@@ -19,9 +19,7 @@ package org.raven.sql;
 
 import java.sql.ResultSet;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.conf.Config;

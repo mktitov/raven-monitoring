@@ -24,12 +24,12 @@ import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchemaField;
 import org.raven.log.LogLevel;
-import org.raven.tree.NodeAttribute;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -105,11 +105,11 @@ public class CsvRecordWriterNode extends AbstractSafeDataPipe
 //
     @Override
     public boolean gatherDataForConsumer(
-            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
+            DataConsumer dataConsumer, DataContext context) throws Exception
     {
         try
         {
-            boolean result = super.gatherDataForConsumer(dataConsumer, attributes);
+            boolean result = super.gatherDataForConsumer(dataConsumer, context);
 
             return result;
         }
@@ -120,7 +120,7 @@ public class CsvRecordWriterNode extends AbstractSafeDataPipe
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data) throws Exception
+    protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
         if (data==null)
         {
@@ -173,7 +173,7 @@ public class CsvRecordWriterNode extends AbstractSafeDataPipe
                     res = buf.length()==0? null : buf.toString();
                 }
             }
-            sendDataToConsumers(res);
+            sendDataToConsumers(res, context);
             records.remove();
         }
         else

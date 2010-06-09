@@ -22,6 +22,7 @@ import java.util.Map;
 import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;
@@ -65,7 +66,7 @@ public class SdbQueryResultToRecordsNode extends AbstractDataPipe
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data) throws Exception
+    protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
         if (!(data instanceof QueryResult))
         {
@@ -90,7 +91,7 @@ public class SdbQueryResultToRecordsNode extends AbstractDataPipe
                 if (values==null || values.isEmpty())
                 {
                     Record record = createRecord(fields, _recordSchema, keyValues.getKey(), -1);
-                    sendDataToConsumers(record);
+                    sendDataToConsumers(record, context);
                 }
                 else
                 {
@@ -102,14 +103,14 @@ public class SdbQueryResultToRecordsNode extends AbstractDataPipe
                             if (fields.containsKey(statValues.getStatisticsName()))
                                 record.setValue(
                                         statValues.getStatisticsName(), statValues.getValues()[i]);
-                        sendDataToConsumers(record);
+                        sendDataToConsumers(record, context);
                     }
                 }
             }
         }
         finally
         {
-            sendDataToConsumers(null);
+            sendDataToConsumers(null, context);
         }
     }
 

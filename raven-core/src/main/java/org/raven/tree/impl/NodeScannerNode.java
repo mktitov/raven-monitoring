@@ -30,7 +30,9 @@ import org.raven.annotations.Parameter;
 import org.raven.api.NodeAccess;
 import org.raven.api.impl.NodeAccessImpl;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
+import org.raven.ds.impl.DataContextImpl;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.sched.Schedulable;
@@ -199,8 +201,7 @@ public class NodeScannerNode extends BaseNode implements DataSource, Schedulable
         this.excludeScannedNode = excludeScannedNode;
     }
 
-    public boolean getDataImmediate(
-            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes) 
+    public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
     {
         throw new UnsupportedOperationException("Not supported yet.");
     }
@@ -261,7 +262,7 @@ public class NodeScannerNode extends BaseNode implements DataSource, Schedulable
         if (depNodes!=null)
             for (Node depNode: depNodes)
                 if (depNode.getStatus()==Status.STARTED && depNode instanceof DataConsumer)
-                    ((DataConsumer)depNode).setData(this, table);
+                    ((DataConsumer)depNode).setData(this, table, new DataContextImpl());
     }
 
     public Boolean getAutoRefresh()

@@ -28,6 +28,7 @@ import org.raven.Helper;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.log.LogLevel;
@@ -42,6 +43,8 @@ import org.raven.tree.impl.BaseNode;
 @NodeClass
 public class AttributeValueDataSourceNode extends BaseNode implements DataSource
 {
+    public static final String CONTEXT_BINDING = "context";
+    public static final String SESS_ATTRS_BINDING = "sessAttrs";
     public static final String VALUE_ATTR = "value";
     @Parameter
     private String requiredAttributes;
@@ -76,8 +79,7 @@ public class AttributeValueDataSourceNode extends BaseNode implements DataSource
         this.value = value;
     }
 
-    public boolean getDataImmediate(
-            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
+    public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
     {
         if (!getStatus().equals(Status.STARTED))
         {
@@ -87,19 +89,13 @@ public class AttributeValueDataSourceNode extends BaseNode implements DataSource
                         , dataConsumer.getPath()));
             return false;
         }
-        Map<String, NodeAttribute> attributes = new HashMap<String, NodeAttribute>();
-        Collection<NodeAttribute> nodeAttributes =
-                dataConsumer instanceof Node? ((Node)dataConsumer).getNodeAttributes() : null;
-        if (nodeAttributes!=null)
-            for (NodeAttribute attr: nodeAttributes)
-                attributes.put(attr.getName(), attr);
-        if (sessionAttributes!=null)
-            for (NodeAttribute attr: sessionAttributes)
-                attributes.put(attr.getName(), attr);
+        context.addSessionAttributes(
+                dataConsumer instanceof Node? ((Node)dataConsumer).getNodeAttributes() : null
+                , false);
 
         Collection<NodeAttribute> consumerAttributes = generateAttributes();
 
-        if (!checkDataConsumer(dataConsumer, attributes, consumerAttributes))
+        if (!checkDataConsumer(dataConsumer, context.getSessionAttributes(), consumerAttributes))
         {
             if (isLogLevelEnabled(LogLevel.WARN))
                 warn(String.format(
@@ -114,7 +110,7 @@ public class AttributeValueDataSourceNode extends BaseNode implements DataSource
                 consumerAttrNames.add(attr.getName());
 
         Map<String, Object> values = new HashMap<String, Object>();
-        for (Map.Entry<String, NodeAttribute> attrEntry: attributes.entrySet())
+        for (Map.Entry<String, NodeAttribute> attrEntry: context.getSessionAttributes().entrySet())
         {
             Object attrValue = attrEntry.getValue().getRealValue();
             if (attrValue==null && attrEntry.getValue().isRequired())
@@ -133,12 +129,13 @@ public class AttributeValueDataSourceNode extends BaseNode implements DataSource
         {
             try
             {
-                bindingSupport.put("sessAttrs", values);
+                bindingSupport.put(SESS_ATTRS_BINDING, values);
+                bindingSupport.put( CONTEXT_BINDING, context);
                 if (!consumerAttrNames.isEmpty())
                     for (String name: consumerAttrNames)
                         bindingSupport.put(name, values.get(name));
                 NodeAttribute valueAttr = getNodeAttribute(VALUE_ATTR);
-                dataConsumer.setData(this, valueAttr.getRealValue());
+                dataConsumer.setData(this, valueAttr.getRealValue(), context);
                 return true;
             }
             finally

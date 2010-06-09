@@ -20,7 +20,9 @@ package org.raven.net.objects;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
@@ -33,12 +35,12 @@ public class TestScannerDataSource extends BaseNode implements DataSource
 {
     private List<String> ips = new ArrayList<String>();
 
-    public synchronized boolean getDataImmediate(
-            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
+    public synchronized boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
     {
+        Map<String, NodeAttribute> sessionAttributes = context.getSessionAttributes();
         assertNotNull(sessionAttributes);
         assertEquals(1, sessionAttributes.size());
-        NodeAttribute attr = sessionAttributes.iterator().next();
+        NodeAttribute attr = sessionAttributes.values().iterator().next();
         assertEquals("host", attr.getName());
         String ip = attr.getRealValue();
         assertNotNull(ip);

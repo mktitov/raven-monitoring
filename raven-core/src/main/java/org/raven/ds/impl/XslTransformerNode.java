@@ -28,6 +28,7 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.tree.DataFile;
 import org.raven.tree.NodeAttribute;
@@ -58,7 +59,7 @@ public class XslTransformerNode extends AbstractSafeDataPipe implements Viewable
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data) throws Exception
+    protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
         if (data==null)
             throw new Exception("Can not transform NULL data");
@@ -68,7 +69,7 @@ public class XslTransformerNode extends AbstractSafeDataPipe implements Viewable
                 new StreamSource(stylesheet.getDataStream()));
         ByteArrayOutputStream out = new ByteArrayOutputStream(4096);
         transformer.transform(new StreamSource(in), new StreamResult(out));
-        sendDataToConsumers(out.toByteArray());
+        sendDataToConsumers(out.toByteArray(), context);
     }
 
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception 

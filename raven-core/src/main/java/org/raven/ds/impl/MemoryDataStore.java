@@ -20,6 +20,7 @@ package org.raven.ds.impl;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataStore;
 import org.raven.ds.DataStoreException;
 
@@ -30,6 +31,7 @@ import org.raven.ds.DataStoreException;
 public class MemoryDataStore implements DataStore
 {
     private final List dataList = new ArrayList(128);
+    private DataContext dataContext;
 
     public void open() throws DataStoreException
     {
@@ -52,5 +54,15 @@ public class MemoryDataStore implements DataStore
     public Iterator getDataIterator() throws DataStoreException
     {
         return dataList.iterator();
+    }
+
+    public DataContext getDataContext() throws DataStoreException 
+    {
+        return dataContext;
+    }
+
+    public void setDataContext(DataContext context) throws DataStoreException 
+    {
+        this.dataContext = context;
     }
 }

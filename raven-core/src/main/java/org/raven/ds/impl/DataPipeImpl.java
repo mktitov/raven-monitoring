@@ -22,6 +22,7 @@ import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataPipe;
 import org.raven.ds.DataSource;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
@@ -41,6 +42,7 @@ import org.raven.expr.impl.BindingSupportImpl;
 public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
 {
     public final static String CONVERT_VALUE_TO_TYPE_ATTRIBUTE = "convertValueToType";
+    public static final String DATA_CONTEXT_BINDING = "context";
     public final static String EXPRESSION_ATTRIBUTE = "expression";
     public final static String DATA_ATTRIBUTE = "data";
     
@@ -79,7 +81,7 @@ public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data)
+    protected void doSetData(DataSource dataSource, Object data, DataContext context)
     {
         try
         {
@@ -92,6 +94,7 @@ public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
             bindingSupport.put("previousDataTimeMillis", getPreviuosDataTimeMillis());
             bindingSupport.put(
                     "timeDiffMillis", getLastDataTimeMillis()-getPreviuosDataTimeMillis());
+            bindingSupport.put(DATA_CONTEXT_BINDING, context);
             if (skipFirstCycle && getPreviuosDataTimeMillis()==0)
                 return;
             Object newData = this.data;
@@ -102,7 +105,7 @@ public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
             if (getDependentNodes()!=null)
                 for (Node node: getDependentNodes())
                     if (node.getStatus()==Status.STARTED && node instanceof DataConsumer)
-                        sendDataToConsumer((DataConsumer)node, newData);
+                        sendDataToConsumer((DataConsumer)node, newData, context);
         }
         finally
         {
@@ -110,15 +113,14 @@ public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
         }
     }
 
-	protected void sendDataToConsumer(DataConsumer consumer, Object data)
+	protected void sendDataToConsumer(DataConsumer consumer, Object data, DataContext context)
 	{
-		consumer.setData(this, data);
+		consumer.setData(this, data, context);
 	}
 
-    public boolean getDataImmediate(
-            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes)
+    public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
     {
-        return getDataSource().getDataImmediate(this, sessionAttributes);
+        return getDataSource().getDataImmediate(this, context);
     }
 
     @Override

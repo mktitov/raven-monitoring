@@ -20,6 +20,7 @@ package org.raven.net.impl;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchemaFieldType;
@@ -33,6 +34,7 @@ import static org.raven.net.impl.SnmpRecordReaderNode.*;
  *
  * @author Mikhail Titov
  */
+@Ignore
 public class SnmpRecordReaderNodeTest extends RavenCoreTestCase
 {
     private SnmpRecordReaderNode snmpReader;

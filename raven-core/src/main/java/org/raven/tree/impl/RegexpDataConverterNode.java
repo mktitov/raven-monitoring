@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataPipe;
 import org.raven.log.LogLevel;
@@ -157,7 +158,7 @@ public class RegexpDataConverterNode extends AbstractDataPipe
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data)
+    protected void doSetData(DataSource dataSource, Object data, DataContext context)
     {
         Charset _dataEncoding = dataEncoding;
         if (isLogLevelEnabled(LogLevel.DEBUG))
@@ -251,7 +252,7 @@ public class RegexpDataConverterNode extends AbstractDataPipe
             bindingSupport.reset();
         }
 
-        sendDataToConsumers(table);
+        sendDataToConsumers(table, context);
     }
 
     @Override

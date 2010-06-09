@@ -17,6 +17,7 @@
 
 package org.raven.ds.impl;
 
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 
 /**
@@ -26,8 +27,8 @@ import org.raven.ds.DataSource;
 public class TestSafeDataPipe extends AbstractSafeDataPipe
 {
     @Override
-    protected void doSetData(DataSource dataSource, Object data) throws Exception
+    protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
-        sendDataToConsumers(data);
+        sendDataToConsumers(data, context);
     }
 }

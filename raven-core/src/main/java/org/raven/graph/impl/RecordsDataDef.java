@@ -28,9 +28,11 @@ import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchemaField;
+import org.raven.ds.impl.DataContextImpl;
 import org.raven.ds.impl.RecordSchemaNode;
 import org.raven.ds.impl.RecordSchemaValueTypeHandlerFactory;
 import org.raven.graph.DataSeries;
@@ -143,7 +145,7 @@ public class RecordsDataDef extends AbstractDataDef implements DataConsumer
 
             try
             {
-                dataSource.getDataImmediate(this, sessionAttributes);
+                dataSource.getDataImmediate(this, new DataContextImpl(sessionAttributes));
 
                 List<Record> recs = records.get();
                 if (!recs.isEmpty())
@@ -212,7 +214,7 @@ public class RecordsDataDef extends AbstractDataDef implements DataConsumer
         }
     }
 
-    public void setData(DataSource dataSource, Object data)
+    public void setData(DataSource dataSource, Object data, DataContext context)
     {
         if (data instanceof Record)
             records.get().add((Record)data);

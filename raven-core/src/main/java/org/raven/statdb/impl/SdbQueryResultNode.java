@@ -22,6 +22,7 @@ import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.impl.AbstractDataSource;
 import org.raven.statdb.StatisticsDatabase;
 import org.raven.statdb.query.FromClause;
@@ -74,16 +75,15 @@ public class SdbQueryResultNode extends AbstractDataSource
     }
 
     @Override
-    public boolean gatherDataForConsumer(
-            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes)
+    public boolean gatherDataForConsumer(DataConsumer dataConsumer, DataContext context)
         throws Exception
     {
         QueryWrapper query = new QueryWrapper(
                 queryNode
-                , getAttributeValue(STARTTIME_SESSION_ATTRIBUTE, attributes)
-                , getAttributeValue(ENDTIME_SESSION_ATTRIBUTE, attributes));
+                , getAttributeValue(STARTTIME_SESSION_ATTRIBUTE, context.getSessionAttributes())
+                , getAttributeValue(ENDTIME_SESSION_ATTRIBUTE, context.getSessionAttributes()));
         QueryResult queryResult = statisticsDatabase.executeQuery(query);
-        dataConsumer.setData(this, queryResult);
+        dataConsumer.setData(this, queryResult, context);
         
         return true;
     }

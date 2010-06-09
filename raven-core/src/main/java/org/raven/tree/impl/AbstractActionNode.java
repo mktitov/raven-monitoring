@@ -21,9 +21,9 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.script.Bindings;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataContext;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
-import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.weda.annotations.constraints.NotNull;
@@ -39,6 +39,7 @@ public abstract class AbstractActionNode extends BaseNode
     public static final String CONFIRMATION_MESSAGE_ATTR = "confirmationMessage";
     public static final String ENABLED_ACTION_TEXT_ATTR = "enabledActionText";
     public static final String REFRESH_ATTRIBUTES_BINDING = "refreshAttributes";
+    public static final String DATA_CONTEXT_BINDING = "context";
     public static final String REFRESH_VIEW_AFTER_ACTION_ATTR = "refreshViewAfterAction";
 
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
@@ -63,9 +64,9 @@ public abstract class AbstractActionNode extends BaseNode
     protected BindingSupportImpl bindingSupport;
 
     public abstract void prepareActionBindings(
-            Map<String, NodeAttribute> refreshAttributes, Map<String, Object> additionalBindings);
+            DataContext context, Map<String, Object> additionalBindings);
     public abstract ViewableObject createActionViewableObject(
-            Map<String, NodeAttribute> refreshAttributes, Map<String, Object> additionalBindings);
+            DataContext context, Map<String, Object> additionalBindings);
 
     @Override
     protected void initFields()
@@ -75,21 +76,22 @@ public abstract class AbstractActionNode extends BaseNode
     }
 
     public ViewableObject getActionViewableObject(
-            Map<String, NodeAttribute> refreshAttributes, Map<String, Object> additionalBindings)
+            DataContext context, Map<String, Object> additionalBindings)
     {
         try
         {
-            bindingSupport.put(REFRESH_ATTRIBUTES_BINDING, refreshAttributes);
+            bindingSupport.put(REFRESH_ATTRIBUTES_BINDING, context.getSessionAttributes());
+            bindingSupport.put(DATA_CONTEXT_BINDING, context);
             if (additionalBindings==null)
                 additionalBindings = new HashMap<String, Object>();
-            prepareActionBindings(refreshAttributes, additionalBindings);
+            prepareActionBindings(context, additionalBindings);
             addToBindingSupport(additionalBindings);
             Boolean enabled = actionEnabled;
             ViewableObject action = null;
             if (enabled==null || !enabled)
                 action = new ViewableObjectImpl(Viewable.RAVEN_TEXT_MIMETYPE, disabledActionText);
             else
-                action = createActionViewableObject(refreshAttributes, additionalBindings);
+                action = createActionViewableObject(context, additionalBindings);
 
             return action;
         }

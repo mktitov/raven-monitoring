@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import org.raven.annotations.NodeClass;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.impl.AbstractThreadedDataSource;
 import org.raven.table.ColumnBasedTable;
 import org.raven.tree.NodeAttribute;
@@ -80,11 +81,12 @@ public class SnmpReaderNode extends AbstractThreadedDataSource
     
     @Override
     public boolean gatherDataForConsumer(
-            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception 
+            DataConsumer dataConsumer, DataContext context) throws Exception
     {
         if (logger.isDebugEnabled())
             logger.debug(String.format(
                     "Gathering data for data consumer (%s)", dataConsumer.getPath()));
+        Map<String, NodeAttribute> attributes = context.getSessionAttributes();
         String host = attributes.get(HOST_ATTR).getRealValue();
         Integer port = attributes.get(PORT_ATTR).getRealValue();
         SnmpVersion version = attributes.get(VERSION_ATTR).getRealValue();
@@ -111,7 +113,7 @@ public class SnmpReaderNode extends AbstractThreadedDataSource
             Object value = isTable?
                 getTableValue(snmp, target, pdu) : getSimpleValue(snmp, target, pdu);
 
-            dataConsumer.setData(this, value);
+            dataConsumer.setData(this, value, context);
         }
         finally
         {

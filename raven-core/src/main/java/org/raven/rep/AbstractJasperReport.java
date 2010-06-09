@@ -18,13 +18,13 @@
 package org.raven.rep;
 
 import java.util.Collection;
-import java.util.Map;
-import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;
 import org.raven.ds.impl.AbstractDataSource;
+import org.raven.ds.impl.DataContextImpl;
 import org.raven.ds.impl.RecordSchemaNode;
 import org.raven.ds.impl.RecordSchemaValueTypeHandlerFactory;
 import org.raven.sched.Schedulable;
@@ -134,13 +134,13 @@ public abstract class AbstractJasperReport extends AbstractDataSource implements
     }
 
     @Override
-    public boolean gatherDataForConsumer(
-            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
+    public boolean gatherDataForConsumer(DataConsumer dataConsumer, DataContext context)
+            throws Exception
     {
         Record record = prepareRecord();
         generateReport(record);
-        dataConsumer.setData(this, record);
-        dataConsumer.setData(this, null);
+        dataConsumer.setData(this, record, context);
+        dataConsumer.setData(this, null, context);
         
         return true;
     }
@@ -156,8 +156,9 @@ public abstract class AbstractJasperReport extends AbstractDataSource implements
         {
             Record record = prepareRecord();
             generateReport(record);
-            sendDataToConsumers(record);
-            sendDataToConsumers(null);
+            DataContext context = new DataContextImpl();
+            sendDataToConsumers(record, context);
+            sendDataToConsumers(null, context);
         }
         catch (Exception ex)
         {

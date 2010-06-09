@@ -19,6 +19,7 @@ package org.raven.table.objects;
 
 import java.util.Collection;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.table.TableImpl;
 import org.raven.tree.NodeAttribute;
@@ -30,7 +31,7 @@ import org.raven.tree.impl.BaseNode;
  */
 public class TestTableDataConsumer extends BaseNode implements DataConsumer
 {
-    public void setData(DataSource dataSource, Object data) {
+    public void setData(DataSource dataSource, Object data, DataContext context) {
     }
 
     public Object refereshData(Collection<NodeAttribute> sessionAttributes) 

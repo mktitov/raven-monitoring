@@ -29,6 +29,7 @@ import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang.text.StrTokenizer;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchemaField;
@@ -92,7 +93,7 @@ public class CsvRecordReaderNode extends AbstractDataPipe
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data)
+    protected void doSetData(DataSource dataSource, Object data, DataContext context)
     {
         long start = System.currentTimeMillis();
         if (data==null)
@@ -161,7 +162,7 @@ public class CsvRecordReaderNode extends AbstractDataPipe
                                     record.setValue(entry.getKey(), value);
                                 }
                             }
-                            sendDataToConsumers(record);
+                            sendDataToConsumers(record, context);
                             ++validRecords;
                         }catch(Throwable e)
                         {
@@ -172,7 +173,7 @@ public class CsvRecordReaderNode extends AbstractDataPipe
                     }
                     linenum++;
                 }
-                sendDataToConsumers(null);
+                sendDataToConsumers(null, context);
             }
             catch(Exception e)
             {

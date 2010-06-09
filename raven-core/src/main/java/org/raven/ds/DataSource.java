@@ -17,10 +17,8 @@
 
 package org.raven.ds;
 
-import java.util.Collection;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
-import org.raven.tree.NodeAttribute;
 
 /**
  *
@@ -31,9 +29,8 @@ public interface DataSource extends Node, AttributesGenerator
     /**
      * Immediate gathers data for data consumer.
      * @param dataConsumer data consumer for which data will gather
-     * @param sessionAttributes the session attributes for the data consumer.
+     * @param context the context of this data processing.
      * @return <b>true</b> if data got successfull, else <b>false</b 
      */
-    public boolean getDataImmediate(
-            DataConsumer dataConsumer, Collection<NodeAttribute> sessionAttributes);
+    public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context);
 }

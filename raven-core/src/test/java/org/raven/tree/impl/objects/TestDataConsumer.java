@@ -21,10 +21,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.commons.io.IOUtils;
 import org.raven.RavenRuntimeException;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 
@@ -38,7 +37,7 @@ public class TestDataConsumer extends AbstractDataConsumer
     private List dataList = new ArrayList();
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data) 
+    protected void doSetData(DataSource dataSource, Object data, DataContext context)
     {
         ds = dataSource;
         if (data==null)

@@ -18,10 +18,10 @@
 package org.raven.ds.impl;
 
 import java.util.Collection;
-import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.Record;
 import org.raven.ds.FieldValueGenerator;
 import org.raven.tree.Node;
@@ -50,8 +50,8 @@ public class RecordGeneratorNode extends AbstractDataSource
     }
 
     @Override
-    public boolean gatherDataForConsumer(
-            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
+    public boolean gatherDataForConsumer(DataConsumer dataConsumer, DataContext context)
+            throws Exception
     {
         Collection<Node> childs = getChildrens();
         if (childs!=null && !childs.isEmpty())
@@ -62,9 +62,10 @@ public class RecordGeneratorNode extends AbstractDataSource
                     && child instanceof FieldValueGenerator)
                 {
                     FieldValueGenerator fieldValue = (FieldValueGenerator) child;
-                    rec.setValue(fieldValue.getName(), fieldValue.getFieldValue(attributes));
+                    rec.setValue(fieldValue.getName(), fieldValue.getFieldValue(
+                            context.getSessionAttributes()));
                 }
-            dataConsumer.setData(this, rec);
+            dataConsumer.setData(this, rec, context);
             return true;
         }
         else

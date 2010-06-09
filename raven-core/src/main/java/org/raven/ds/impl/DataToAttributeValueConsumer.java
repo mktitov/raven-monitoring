@@ -19,6 +19,7 @@ package org.raven.ds.impl;
 
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.AttributeReferenceHandlerFactory;
@@ -47,7 +48,7 @@ public class DataToAttributeValueConsumer extends AbstractDataConsumer
     }
     
     @Override
-    protected void doSetData(DataSource dataSource, Object data) 
+    protected void doSetData(DataSource dataSource, Object data, DataContext context)
     {
         NodeAttribute attr = attribute;
         if (!ObjectUtils.equals(attr.getRealValue(), data))

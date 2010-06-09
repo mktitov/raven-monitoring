@@ -31,8 +31,9 @@ public interface DataConsumer extends PathObject
      * Recieves data from the data source
      * @param dataSource the data source from which data recieved
      * @param data the data
+     * @param context the context of the data processing
      */
-    public void setData(DataSource dataSource, Object data);
+    public void setData(DataSource dataSource, Object data, DataContext context);
     /**
      * Refreshes data.
      */

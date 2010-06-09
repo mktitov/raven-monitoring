@@ -19,6 +19,7 @@ package org.raven.ds.impl;
 
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;
@@ -55,7 +56,7 @@ public class RecordGeneratorPipeNode extends AbstractSafeDataPipe
     }
 
     @Override
-    public void setData(DataSource dataSource, Object data)
+    public void setData(DataSource dataSource, Object data, DataContext context)
     {
         try
         {
@@ -71,15 +72,15 @@ public class RecordGeneratorPipeNode extends AbstractSafeDataPipe
                         "Error creating record of schema (%s)", recordSchema.getName())
                     , ex);
         }
-        super.setData(dataSource, data);
+        super.setData(dataSource, data, context);
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data) throws Exception
+    protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
         try
         {
-            sendDataToConsumers(recordStore.get());
+            sendDataToConsumers(recordStore.get(), context);
         }
         finally
         {

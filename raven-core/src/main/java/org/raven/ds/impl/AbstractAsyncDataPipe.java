@@ -29,6 +29,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataHandler;
 import org.raven.ds.DataSource;
 import org.raven.log.LogLevel;
@@ -120,17 +121,17 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data) throws Exception
+    protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
         if (handlersLock.writeLock().tryLock(MAX_HANDLERS_LOCK_WAIT, TimeUnit.MILLISECONDS))
         {
             try
             {
                 boolean res = false;
-                if (!(res=processData(data, dataSource)) && waitForHandler)
+                if (!(res=processData(data, dataSource, context)) && waitForHandler)
                 {
                     if (waitForHandlerFree.await(waitForHandlerTimeout, TimeUnit.MILLISECONDS))
-                        res = processData(data, dataSource);
+                        res = processData(data, dataSource, context);
                 }
                 if (!res && isLogLevelEnabled(LogLevel.DEBUG))
                     debug("No free handlers to process data from "+dataSource.getPath());
@@ -189,16 +190,16 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
         return vos;
     }
 
-    private boolean processData(Object data, DataSource dataSource) throws Exception
+    private boolean processData(Object data, DataSource dataSource, DataContext context) throws Exception
     {
         for (HandlerInfo handlerInfo: handlers)
-            if (handlerInfo.handleData(data, dataSource))
+            if (handlerInfo.handleData(data, dataSource, context))
                 return true;
         if (handlers.size()<maxHandlersCount)
         {
             HandlerInfo handlerInfo = new HandlerInfo();
             handlers.add(handlerInfo);
-            handlerInfo.handleData(data, dataSource);
+            handlerInfo.handleData(data, dataSource, context);
             return true;
         }
 
@@ -263,13 +264,15 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
         private AtomicBoolean busy = new AtomicBoolean(false);
         private DataHandler handler;
         private Object data;
+        private DataContext dataContext;
         private DataSource dataSource;
         private OperationStatistic stat = new OperationStatistic();
         private int handlerCreationCount = 0;
         private AtomicReference<HandlerStatus> status = new AtomicReference<HandlerStatus>(HandlerStatus.WAITING);
         private Thread taskThread;
 
-        public boolean handleData(Object data, DataSource dataSource) throws ExecutorServiceException
+        public boolean handleData(Object data, DataSource dataSource, DataContext context)
+                throws ExecutorServiceException
         {
             if (!busy.compareAndSet(false, true))
                 return false;
@@ -289,7 +292,8 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
 
                 this.data = data;
                 this.dataSource = dataSource;
-
+                this.dataContext = context;
+                
                 try
                 {
                     if (handleDataInSeparateThread)
@@ -347,9 +351,10 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
                 {
                     if (handleDataInSeparateThread)
                         taskThread = Thread.currentThread();
-                    Object resData = handler.handleData(data, dataSource, AbstractAsyncDataPipe.this);
+                    Object resData = handler.handleData(
+                            data, dataSource, dataContext, AbstractAsyncDataPipe.this);
                     if (SKIP_DATA!=resData)
-                        sendDataToConsumers(resData);
+                        sendDataToConsumers(resData, dataContext);
                 }
                 finally
                 {

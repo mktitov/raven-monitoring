@@ -22,6 +22,7 @@ import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.tree.NodeAttribute;
@@ -38,6 +39,7 @@ public class DataSourceRecordFieldValueGenerator
 {
     public final static String DATASOURCE_ATTRIBUTE = "dataSource";
     public static final String DATA_BINDING = "data";
+    public static final String DATA_CONTEXT_BINDING = "context";
     public static final String EXPRESSION_ATTRIBUTE = "expression";
 
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
@@ -50,7 +52,7 @@ public class DataSourceRecordFieldValueGenerator
     @NotNull @Parameter(defaultValue="false")
     private Boolean useExpression;
 
-    private ThreadLocal value;
+    private ThreadLocal<DataInfo> dataInfo;
 
     public String getExpression()
     {
@@ -86,12 +88,12 @@ public class DataSourceRecordFieldValueGenerator
     protected void initFields()
     {
         super.initFields();
-        value = new ThreadLocal();
+        dataInfo = new ThreadLocal();
     }
 
-    public void setData(DataSource dataSource, Object data)
+    public void setData(DataSource dataSource, Object data, DataContext context)
     {
-        value.set(data);
+        dataInfo.set(new DataInfo(data, context));
     }
 
     public Object refereshData(Collection<NodeAttribute> sessionAttributes)
@@ -102,15 +104,26 @@ public class DataSourceRecordFieldValueGenerator
     @Override
     protected Object doGetFieldValue(Map<String, NodeAttribute> sessionAttributes)
     {
-        dataSource.getDataImmediate(
-                this, sessionAttributes==null? null : sessionAttributes.values());
-        Object val = value.get();
-        value.remove();
+        dataSource.getDataImmediate(this, new DataContextImpl(sessionAttributes));
+        DataInfo info = dataInfo.get();
+        Object val = info.data;
+        dataInfo.remove();
         if (useExpression)
         {
-            bindingSupport.put(DATA_BINDING, val);
+            bindingSupport.put(DATA_BINDING, info.data);
+            bindingSupport.put(DATA_CONTEXT_BINDING, info.context);
             val = getNodeAttribute(EXPRESSION_ATTRIBUTE).getRealValue();
         }
         return val;
+    }
+
+    private class DataInfo {
+        private Object data;
+        private DataContext context;
+
+        public DataInfo(Object data, DataContext context) {
+            this.data = data;
+            this.context = context;
+        }
     }
 }

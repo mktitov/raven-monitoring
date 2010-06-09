@@ -17,6 +17,7 @@
 
 package org.raven.sql.objects;
 
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 
@@ -27,6 +28,6 @@ import org.raven.ds.impl.AbstractDataConsumer;
 public class SqlDataConsumer extends AbstractDataConsumer
 {
     @Override
-    protected void doSetData(DataSource dataSource, Object data) {
+    protected void doSetData(DataSource dataSource, Object data, DataContext context) {
     }
 }

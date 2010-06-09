@@ -18,13 +18,13 @@ package org.raven.sql;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.Collection;
 import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.dbcp.ConnectionPool;
 import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
 import org.raven.ds.impl.AbstractThreadedDataSource;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.DataSourcesNode;
@@ -71,14 +71,15 @@ public class SQLDataSourceNode extends AbstractThreadedDataSource {
     }
 
     @Override
-    public boolean gatherDataForConsumer(
-            DataConsumer dataConsumer, Map<String, NodeAttribute> attributes) throws Exception
+    public boolean gatherDataForConsumer(DataConsumer dataConsumer, DataContext context)
+            throws Exception
     {
         Connection connection = getConnection(dataConsumer);
         if (connection==null)
             return false;
         try
         {
+            Map<String, NodeAttribute> attributes = context.getSessionAttributes();
             String query = attributes.get(QUERY_ATTRIBUTE).getValue();
             ResultType resultType = attributes.get(RESULT_TYPE_ATTRIBUTE).getRealValue();
             NamedParameterStatement st = new NamedParameterStatement(connection, query);
@@ -101,7 +102,7 @@ public class SQLDataSourceNode extends AbstractThreadedDataSource {
                 }
                 else
                     result = rs;
-                dataConsumer.setData(this, result);
+                dataConsumer.setData(this, result, context);
                 return true;
             }finally{
                 if (rs!=null)

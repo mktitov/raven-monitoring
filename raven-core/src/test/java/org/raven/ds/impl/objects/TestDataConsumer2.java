@@ -17,6 +17,7 @@
 
 package org.raven.ds.impl.objects;
 
+import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 
@@ -26,12 +27,20 @@ import org.raven.ds.impl.AbstractDataConsumer;
  */
 public class TestDataConsumer2 extends AbstractDataConsumer
 {
+    private DataContext context;
+
+    public DataContext getContext() {
+        return context;
+    }
+
     public Object getData() 
     {
         return data;
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data) {
+    protected void doSetData(DataSource dataSource, Object data, DataContext context)
+    {
+        this.context = context;
     }
 }
