@@ -20,11 +20,14 @@ package org.raven.tree.impl;
 import java.util.List;
 import java.util.Set;
 import org.apache.tapestry5.ioc.RegistryBuilder;
-import org.easymock.IArgumentMatcher;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
+import org.raven.auth.impl.AuthorizationNode;
+import org.raven.auth.impl.ContextsNode;
+import org.raven.auth.impl.GroupsListNode;
+import org.raven.auth.impl.ResourcesListNode;
 import org.raven.test.ServiceTestCase;
 import org.raven.conf.Configurator;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
@@ -58,7 +61,6 @@ import org.raven.tree.impl.objects.NodeWithParameters;
 import org.raven.tree.impl.objects.NodeWithParentChilds;
 import org.raven.tree.impl.objects.ParentNode;
 import org.raven.tree.store.TreeStore;
-import org.weda.constraints.ConstraintException;
 import org.weda.constraints.ReferenceValue;
 import org.weda.services.TypeConverter;
 import static org.easymock.EasyMock.*;
@@ -821,5 +823,12 @@ public class TreeServiceTest extends ServiceTestCase
 
         NodeLoggerNode loggerNode = (NodeLoggerNode) servicesNode.getChildren(NodeLoggerNode.NAME);
         assertNotNull(loggerNode);
+
+        AuthorizationNode authNode = (AuthorizationNode) systemNode.getChildren(AuthorizationNode.NODE_NAME);
+        assertNotNull(authNode);
+
+        assertNotNull(authNode.getChildren(ContextsNode.NODE_NAME));
+        assertNotNull(authNode.getChildren(GroupsListNode.NODE_NAME));
+        assertNotNull(authNode.getChildren(ResourcesListNode.NODE_NAME));
     }
 }

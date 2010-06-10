@@ -32,6 +32,8 @@ public class AuthorizationNode extends BaseNode
 			addAndSaveChildren(new ResourcesListNode());
 		if(getChildren(GroupsListNode.NODE_NAME)==null)
 			addAndSaveChildren(new GroupsListNode());
+        if(getChildren(ContextsNode.NODE_NAME)==null)
+            addAndSaveChildren(new ContextsNode());
 	}
 	
     @Override
