@@ -36,7 +36,7 @@ import org.apache.myfaces.custom.fileupload.UploadedFile;
 import org.raven.audit.Action;
 import org.raven.audit.AuditRecord;
 import org.raven.audit.Auditor;
-import org.raven.conf.impl.AccessControl;
+import org.raven.auth.impl.AccessControl;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;

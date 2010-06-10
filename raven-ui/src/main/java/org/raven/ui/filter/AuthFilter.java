@@ -22,7 +22,7 @@ import org.raven.ui.util.RavenRegistry;
 import org.raven.conf.Config;
 import org.raven.conf.Configurator;
 
-import org.raven.conf.impl.UserAcl;
+import org.raven.auth.impl.UserAcl;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterConfig;

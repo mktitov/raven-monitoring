@@ -20,8 +20,8 @@ package org.raven.ui;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.myfaces.trinidad.model.ChildPropertyTreeModel;
-import org.raven.conf.impl.AccessControl;
-import org.raven.conf.impl.UserAcl;
+import org.raven.auth.impl.AccessControl;
+import org.raven.auth.impl.UserAcl;
 import org.raven.ui.node.NodeWrapper;
 
 public class RavenTreeModel extends ChildPropertyTreeModel 
