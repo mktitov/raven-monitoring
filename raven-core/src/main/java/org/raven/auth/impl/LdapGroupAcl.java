@@ -1,4 +1,4 @@
-package org.raven.conf.impl;
+package org.raven.auth.impl;
 
 import java.util.ArrayList;
 import java.util.HashMap;

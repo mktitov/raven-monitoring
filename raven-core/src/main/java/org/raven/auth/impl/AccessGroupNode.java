@@ -1,4 +1,4 @@
-package org.raven.conf.impl;
+package org.raven.auth.impl;
 
 import java.util.Arrays;
 import java.util.List;
@@ -15,9 +15,9 @@ import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.ViewableObjectImpl;
 import org.weda.annotations.constraints.NotNull;
 
-@NodeClass(childNodes={org.raven.conf.impl.ResourceLinkNode.class,
-		org.raven.conf.impl.AccessUserNode.class},
-		parentNode=org.raven.conf.impl.GroupsListNode.class)
+@NodeClass(childNodes={org.raven.auth.impl.ResourceLinkNode.class,
+		org.raven.auth.impl.AccessUserNode.class},
+		parentNode=org.raven.auth.impl.GroupsListNode.class)
 public class AccessGroupNode extends BaseNode implements Viewable 
 {
 

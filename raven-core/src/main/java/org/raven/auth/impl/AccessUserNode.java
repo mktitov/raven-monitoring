@@ -1,4 +1,4 @@
-package org.raven.conf.impl;
+package org.raven.auth.impl;
 
 import java.util.Arrays;
 import java.util.List;
@@ -12,7 +12,7 @@ import org.raven.tree.impl.ViewableObjectImpl;
 //import org.weda.annotations.constraints.NotNull;
 //import org.raven.annotations.Parameter;
 
-@NodeClass(parentNode=org.raven.conf.impl.AccessGroupNode.class)
+@NodeClass(parentNode=org.raven.auth.impl.AccessGroupNode.class)
 public class AccessUserNode extends BaseNode implements Viewable 
 {
 	public static final String prefix = LdapGroupAcl.USER_PARAM+" ";

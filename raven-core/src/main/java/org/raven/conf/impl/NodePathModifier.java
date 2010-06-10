@@ -1,5 +1,7 @@
 package org.raven.conf.impl;
 
+import org.raven.auth.impl.AccessControl;
+
 public enum NodePathModifier 
 {
 	NODE_ONLY (AccessControl.NODE),

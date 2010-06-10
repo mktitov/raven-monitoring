@@ -33,7 +33,7 @@ import java.util.logging.Level;
 import org.raven.annotations.NodeClass;
 import org.raven.audit.impl.AuditorNode;
 import org.raven.conf.Configurator;
-import org.raven.conf.impl.AuthorizationNode;
+import org.raven.auth.impl.AuthorizationNode;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.expr.BindingSupport;
 import org.raven.expr.impl.BindingSupportImpl;

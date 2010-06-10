@@ -17,6 +17,7 @@
 
 package org.raven.conf.impl;
 
+import org.raven.auth.impl.AuthorizationNode;
 import org.raven.conf.Config;
 import org.raven.tree.Node;
 import org.raven.tree.Tree;

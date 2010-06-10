@@ -17,10 +17,29 @@
 
 package org.raven.auth;
 
+import java.util.Map;
+import java.util.Set;
+
 /**
  *
  * @author Mikhail Titov
  */
-public interface UserContext {
-
+public interface UserContext
+{
+    /**
+     * Returns the user login.
+     */
+    public String getLogin();
+    /**
+     * Returns the user name.
+     */
+    public String getUserName();
+    /**
+     * Returns the user groups.
+     */
+    public Set<String> getGroups();
+    /**
+     * Returns the user context parameters.
+     */
+    public Map<String, Object> getParams();
 }

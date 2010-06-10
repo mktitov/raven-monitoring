@@ -1,4 +1,4 @@
-package org.raven.conf.impl;
+package org.raven.auth.impl;
 
 /*
  *  Copyright 2008 Sergey Pinevskiy.

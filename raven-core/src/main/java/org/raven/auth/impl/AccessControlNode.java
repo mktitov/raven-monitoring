@@ -1,4 +1,4 @@
-package org.raven.conf.impl;
+package org.raven.auth.impl;
 
 import java.util.Arrays;
 import java.util.List;
@@ -12,9 +12,10 @@ import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.conf.impl.NodePathModifier;
 import org.weda.annotations.constraints.NotNull;
 
-@NodeClass(parentNode=org.raven.conf.impl.ResourceNode.class)
+@NodeClass(parentNode=org.raven.auth.impl.ResourceNode.class)
 public class AccessControlNode extends BaseNode implements Viewable 
 {
 	public static final String PREFIX = LdapGroupAcl.AC_PARAM+AccessControl.DELIMITER+" ";

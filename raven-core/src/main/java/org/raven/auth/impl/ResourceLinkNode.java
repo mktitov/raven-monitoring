@@ -1,4 +1,4 @@
-package org.raven.conf.impl;
+package org.raven.auth.impl;
 
 import java.util.Arrays;
 import java.util.List;
@@ -15,7 +15,7 @@ import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.tree.impl.ViewableObjectImpl;
 import org.weda.annotations.constraints.NotNull;
 
-@NodeClass(parentNode=org.raven.conf.impl.AccessGroupNode.class)
+@NodeClass(parentNode=org.raven.auth.impl.AccessGroupNode.class)
 public class ResourceLinkNode extends BaseNode implements Viewable 
 {
 	public static final String prefix = "res: ";

@@ -15,8 +15,9 @@
  *  under the License.
  */
 
-package org.raven.conf.impl;
+package org.raven.auth.impl;
 
+import org.raven.auth.impl.GroupsListNode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

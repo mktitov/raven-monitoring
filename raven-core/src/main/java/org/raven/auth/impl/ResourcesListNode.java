@@ -1,4 +1,4 @@
-package org.raven.conf.impl;
+package org.raven.auth.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,7 +12,7 @@ import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.ViewableObjectImpl;
 
-@NodeClass(childNodes={org.raven.conf.impl.ResourceNode.class,org.raven.conf.impl.ResourcesContainerNode.class})
+@NodeClass(childNodes={org.raven.auth.impl.ResourceNode.class,org.raven.auth.impl.ResourcesContainerNode.class})
 public class ResourcesListNode extends BaseNode implements Viewable 
 {
 	public static final String NODE_NAME = "Resources";

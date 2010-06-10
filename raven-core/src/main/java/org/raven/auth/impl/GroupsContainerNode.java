@@ -1,4 +1,4 @@
-package org.raven.conf.impl;
+package org.raven.auth.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,8 +12,8 @@ import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.ViewableObjectImpl;
 
-@NodeClass(childNodes={org.raven.conf.impl.AccessGroupNode.class,
-		org.raven.conf.impl.GroupsContainerNode.class})
+@NodeClass(childNodes={org.raven.auth.impl.AccessGroupNode.class,
+		org.raven.auth.impl.GroupsContainerNode.class})
 public class GroupsContainerNode extends BaseNode implements Viewable
 {
 

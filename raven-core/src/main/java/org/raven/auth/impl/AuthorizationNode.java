@@ -1,19 +1,14 @@
-package org.raven.conf.impl;
+package org.raven.auth.impl;
 
 import org.raven.annotations.NodeClass;
 import org.raven.conf.Config;
-import org.raven.conf.Configurator;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
-import org.weda.internal.annotations.Service;
 
 @NodeClass(parentNode=org.raven.tree.impl.InvisibleNode.class)
 public class AuthorizationNode extends BaseNode 
 {
 	public static final String NODE_NAME = "Authorization";
-	
-	@Service
-	Configurator configurator;
 	
 	Config config;  
 	
@@ -39,12 +34,14 @@ public class AuthorizationNode extends BaseNode
 			addAndSaveChildren(new GroupsListNode());
 	}
 	
+    @Override
 	public synchronized void doInit() throws Exception
 	{
 		super.doInit();
 		initChildren();
 	}
 
+    @Override
 	public synchronized void doStart() throws Exception
 	{
 		super.doStart();
@@ -53,6 +50,7 @@ public class AuthorizationNode extends BaseNode
 		config.setAuthorizationTreeUpdated();
 	}
 	
+    @Override
 	public synchronized void doStop() throws Exception
 	{
 		super.doStart();
@@ -60,6 +58,7 @@ public class AuthorizationNode extends BaseNode
 		config.setAuthorizationTreeUpdated();
 	}
 
+    @Override
 	public synchronized void nodeStatusChanged(Node node, Status oldStatus, Status newStatus)
 	{
 		if(isAllowEvents())

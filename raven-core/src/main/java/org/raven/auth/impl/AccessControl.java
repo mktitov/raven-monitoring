@@ -15,7 +15,7 @@
  *  under the License.
  */
 
-package org.raven.conf.impl;
+package org.raven.auth.impl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -126,5 +126,6 @@ public class AccessControl {
 
 	public synchronized String getRegExp() { return regExp; }
 	
+    @Override
 	public synchronized String toString() { return resource+":"+right; }
 }
