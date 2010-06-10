@@ -26,7 +26,9 @@ import org.apache.tapestry5.ioc.services.ChainBuilder;
 import org.raven.audit.Auditor;
 import org.raven.audit.impl.AuditorImpl;
 import org.raven.auth.Authenticator;
+import org.raven.auth.UserContextConfigurator;
 import org.raven.auth.impl.BasicAuthenticator;
+import org.raven.auth.impl.UserContextConfiguratorService;
 import org.raven.cache.TemporaryCacheManager;
 import org.raven.cache.TemporaryCacheManagerImpl;
 import org.raven.conf.Configurator;
@@ -174,6 +176,11 @@ public class RavenCoreModule
             ChainBuilder builder, List<Authenticator> commands)
     {
         return builder.build(Authenticator.class, commands);
+    }
+
+    public static UserContextConfigurator buildContextConfigurator(Tree tree)
+    {
+        return new UserContextConfiguratorService(tree);
     }
     
     @SuppressWarnings("unchecked")
