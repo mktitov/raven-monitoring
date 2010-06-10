@@ -17,8 +17,9 @@
 
 package org.raven.auth;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import org.raven.tree.Node;
 
 /**
  *
@@ -29,17 +30,22 @@ public interface UserContext
     /**
      * Returns the user login.
      */
-    public String getLogin();
+    public String getAccountName();
+
     /**
      * Returns the user name.
      */
-    public String getUserName();
+//    public String getUserName();
     /**
      * Returns the user groups.
      */
-    public Set<String> getGroups();
+    public List<String> getGroups();
     /**
      * Returns the user context parameters.
      */
     public Map<String, Object> getParams();
+    /**
+     * Returns access flags for given node.
+     */
+    public int getAccessForNode(Node node);
 }

@@ -19,6 +19,8 @@ package org.raven.auth.impl;
 
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -27,6 +29,7 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.InitialDirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
+import org.raven.auth.UserContext;
 import org.raven.conf.Config;
 import org.raven.conf.Configurator;
 import org.raven.tree.Node;
@@ -34,7 +37,7 @@ import org.raven.tree.Tree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class UserAcl 
+public class UserAcl implements UserContext
 {
 	protected Logger logger = LoggerFactory.getLogger(UserAcl.class);
 	public static final long expireInterval = 300000;
@@ -50,11 +53,13 @@ public class UserAcl
 	private GroupsAclStorage gaStorage;
 	private boolean refreshed = true;
 	private boolean testMode = false;
+    private Map<String, Object> params;
 	
 	public UserAcl(String accountName, Config cfg) 
 	{
 		this.accountName = accountName;
 		this.config = cfg;
+        this.params = new HashMap<String, Object>();
 		testMode = config.getBooleanProperty(Configurator.TEST_MODE, Boolean.FALSE);
         if (testMode)
             logger.warn("Authorization work in TEST MODE!");
@@ -64,6 +69,14 @@ public class UserAcl
 		groupsTime = System.currentTimeMillis();
 		acl = gaStorage.getAclForGroups(gList,accountName);
 	}
+
+    public Map<String, Object> getParams() {
+        return params;
+    }
+
+    public List<String> getGroups() {
+        return gList;
+    }
 	
 	@SuppressWarnings("unchecked")
 	private GroupsList loadGroupsList()
