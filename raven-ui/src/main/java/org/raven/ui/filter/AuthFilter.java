@@ -35,6 +35,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import java.io.IOException;
+import org.raven.auth.UserContextConfigurator;
 
 public class AuthFilter implements Filter 
 {
@@ -46,11 +47,13 @@ public class AuthFilter implements Filter
 	private String domain = ""; 
 	private boolean first=true;
 	private boolean testMode = false;
+    private UserContextConfigurator userContextConfigurator;
 	
     public void init(FilterConfig filterConfig ) throws ServletException 
     {
     	Registry registry = RavenRegistry.getRegistry();
 		org.raven.conf.Configurator configurator = registry.getService(Configurator.class);
+        userContextConfigurator = registry.getService(UserContextConfigurator.class);
 		try { config = configurator.getConfig(); }
         catch(Exception e) { throw new ServletException("init filter: " + e.getMessage(), e); }
         domain = config.getStringProperty(Configurator.WIN_DOMAIN, domain);
@@ -104,6 +107,7 @@ public class AuthFilter implements Filter
            	
            	UserAcl ua = new UserAcl(account,config);
            	if(ua.isEmpty()) break;
+            userContextConfigurator.configure(ua);
            	ses.getServletContext().log("UA is not empty !");
            	ses.getServletContext().log("UA = "+ua.toString());
            	ok = true;
