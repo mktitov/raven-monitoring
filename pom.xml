@@ -341,19 +341,19 @@
             <dependency>
                 <groupId>org.apache.myfaces.core</groupId>
                 <artifactId>myfaces-impl</artifactId>
-                <version>1.2.7</version>
+                <version>1.2.8</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.myfaces.trinidad</groupId>
                 <artifactId>trinidad-api</artifactId>
-                <version>1.2.12</version>
+                <version>1.2.13</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.myfaces.trinidad</groupId>
                 <artifactId>trinidad-impl</artifactId>
-                <version>1.2.12</version>
+                <version>1.2.13</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
@@ -365,7 +365,7 @@
             <dependency>
                 <groupId>com.h2database</groupId>
                 <artifactId>h2</artifactId>
-                <version>1.2.136</version>
+                <version>1.2.137</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
