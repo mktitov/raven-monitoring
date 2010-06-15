@@ -12,7 +12,6 @@ import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
-import org.raven.conf.impl.NodePathModifier;
 import org.weda.annotations.constraints.NotNull;
 
 @NodeClass(parentNode=org.raven.auth.impl.ResourceNode.class)
