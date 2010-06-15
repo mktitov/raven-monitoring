@@ -241,7 +241,7 @@ public class H2TreeStore implements TreeStore
             }
             catch(Exception e)
             {
-                connection.rollback();
+//                connection.rollback();
                 throw e;
             }
         }
