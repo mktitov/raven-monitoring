@@ -17,6 +17,7 @@
 
 package org.raven.auth.impl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
@@ -43,6 +44,9 @@ public class UserAcl implements UserContext
 	public static final long expireInterval = 300000;
 	public static final String TEST_GROUP = "CN=testGroup,OU=testOU";
 	public static final String PUBLIC_GROUP = "CN=PUBLIC,OU=testOU";
+	public static final String A_DN = "distinguishedName";
+	public static final String A_MEMBER_OF = "memberOf";
+	public static final String A_ANAME = "sAMAccountName";
 	
 	private String accountName;
 	private AccessControlList acl;
@@ -54,6 +58,8 @@ public class UserAcl implements UserContext
 	private boolean refreshed = true;
 	private boolean testMode = false;
     private Map<String, Object> params;
+    private Map<String, List<Object>> attributes;
+    private String userDN = null;
 	
 	public UserAcl(String accountName, Config cfg) 
 	{
@@ -63,6 +69,7 @@ public class UserAcl implements UserContext
 		testMode = config.getBooleanProperty(Configurator.TEST_MODE, Boolean.FALSE);
         if (testMode)
             logger.warn("Authorization work in TEST MODE!");
+        attributes = loadLdapAttributes();
 		gList = loadGroupsList();
 		gaStorage = GroupsAclStorage.getInstance(config);
 		storageTime = gaStorage.getLastUpdate();
@@ -77,18 +84,27 @@ public class UserAcl implements UserContext
     public List<String> getGroups() {
         return gList;
     }
-	
+    
+    public String getDN()
+    {
+    	if(userDN==null)
+    		userDN = findUserDN();
+    	return userDN;
+    }
+
+    private String findUserDN()
+    {
+    	List<Object> l = attributes.get(A_DN);
+    	if(l==null) return null;
+    	Object o = l.get(0);
+    	if(o==null) return null;
+    	return o.toString();
+    }
+
 	@SuppressWarnings("unchecked")
-	private GroupsList loadGroupsList()
+	private Map<String, List<Object>> findLdapAttributes(String flt, String[] returnedAtts)
 	{
-	    GroupsList glist = new GroupsList();
-	    glist.add(PUBLIC_GROUP);
-	    if(testMode)
-	    {
-	    	glist.add(TEST_GROUP);
-	    	glist.sort();
-	    	return glist;
-	    }
+		Map<String, List<Object>> ldapAttrs = new HashMap<String, List<Object>>();
 
 		String providerUrl = config.getStringProperty(Configurator.PROVIDER_URL, null);
 		String bindName = config.getStringProperty(Configurator.BIND_NAME, null);
@@ -104,31 +120,64 @@ public class UserAcl implements UserContext
 	    InitialDirContext context = null;
 	    try {
 	    	context = new InitialDirContext(env); 
-	    	String flt = "(sAMAccountName="+accountName+")";
+	    	//String flt = "(sAMAccountName="+accountName+")";
 	    	SearchControls sc = new SearchControls();
 	    	sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
-	    	String returnedAtts[]={"memberOf"};
+	    	//String returnedAtts[]={"memberOf"};
 	    	sc.setReturningAttributes(returnedAtts);
 	    	NamingEnumeration<SearchResult> answer = context.search(searchContext,flt,sc); 
 	    	while(answer.hasMoreElements()) 
 	    	{
 				SearchResult sr = (SearchResult)answer.next();
-				Attributes attrs = sr.getAttributes();
-				if (attrs == null) continue; 
+				Attributes as = sr.getAttributes();
+				if (as == null) continue; 
 				try {
-					for(NamingEnumeration ae = attrs.getAll();ae.hasMore();) 
-						for(NamingEnumeration ne = ((Attribute)ae.next()).getAll(); ne.hasMore();) 
+					for(NamingEnumeration ae = as.getAll();ae.hasMore();)
+					{
+						Attribute a = (Attribute) ae.next();
+						String aId = a.getID();
+						List<Object> vals = new ArrayList<Object>();
+						for(NamingEnumeration ne = a.getAll(); ne.hasMore();) 
 						{
-							String grpName = ne.next().toString();
-							logger.info("found group:{}  for account:{}", grpName, this.accountName);
-							glist.add(grpName);
-						}	
+							String val = ne.next().toString();
+							logger.info("found attribute for account={}: name={} value={}", new Object[] { this.accountName, aId, val} );
+							vals.add(val);
+						}
+						ldapAttrs.put(aId, vals);
+					}	
 				} catch (NamingException e)	
-					{ logger.error("Problem listing groups for account: "+this.accountName , e); }
+					{ logger.error("Problem listing attributes for account: "+this.accountName , e); }
 	    	}
 		} catch(NamingException e) { logger.error("Problem searching directory: " , e); }
 	    finally { try { context.close(); } catch(Exception e) {} }
-    	glist.sort();
+	    return ldapAttrs;
+	}
+    
+	private Map<String, List<Object>> loadLdapAttributes()
+	{
+		return findLdapAttributes("(sAMAccountName="+accountName+")", null);
+	}
+    
+	private GroupsList loadGroupsList()
+	{
+	    GroupsList glist = new GroupsList();
+	    glist.add(PUBLIC_GROUP);
+	    if(testMode)
+	    {
+	    	glist.add(TEST_GROUP);
+	    	glist.sort();
+	    	return glist;
+	    }
+	    
+	    Map<String, List<Object>> a = findLdapAttributes("("+A_ANAME+"="+accountName+")", new String[] {A_MEMBER_OF} );
+	    List<Object> x = a.get(A_MEMBER_OF);
+	    if(x!=null)
+	    {
+	    	for(Object t : x)
+	    		glist.add(t.toString());
+//				logger.info("found group:{}  for account:{}", grpName, this.accountName);
+	    	glist.sort();
+	    }
 	    return glist;
 	}
 	
@@ -200,5 +249,9 @@ public class UserAcl implements UserContext
 	{
 		if(acl.getACCount()!=0) return false;
 		return true;
+	}
+
+	public Map<String, List<Object>> getAttrs() {
+		return attributes;
 	}
 }

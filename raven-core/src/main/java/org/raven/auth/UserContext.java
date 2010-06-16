@@ -31,11 +31,6 @@ public interface UserContext
      * Returns the user login.
      */
     public String getAccountName();
-
-    /**
-     * Returns the user name.
-     */
-//    public String getUserName();
     /**
      * Returns the user groups.
      */
@@ -48,4 +43,14 @@ public interface UserContext
      * Returns access flags for given node.
      */
     public int getAccessForNode(Node node);
+    /**
+     * Returns the user distinguished name.
+     */
+    public String getDN();
+    /**
+     * Returns the user context attributes.
+     */
+    public Map<String, List<Object>> getAttrs();
+    
+    
 }
