@@ -47,9 +47,9 @@ import org.raven.audit.Action;
 import org.raven.audit.ActionType;
 import org.raven.audit.AuditRecord;
 import org.raven.audit.Auditor;
-import org.raven.conf.Configurator;
 import org.raven.auth.impl.AccessControl;
 import org.raven.auth.impl.UserAcl;
+import org.raven.conf.Configurator;
 import org.raven.ui.util.Messages;
 import org.raven.util.Utl;
 import org.raven.template.impl.TemplateNode;
@@ -144,7 +144,8 @@ public class SessionBean
 	private String auditLogin = "";
 	private String auditNodeId = "";
 	private String auditNodePath = "";
-	private List<AuditRecord> auditData = new ArrayList<AuditRecord>();
+	//private List<AuditRecord> auditData = new ArrayList<AuditRecord>();
+	private AuditRecordTable auditData = new AuditRecordTable();
 	private TreeModel resourcesTreeModel;
 	private CoreTable coreTable; 
 	private SelectItem[] charsets;
@@ -210,8 +211,9 @@ public class SessionBean
 		String nodePath = Utl.trim2Null(auditNodePath);
 		String login = Utl.trim2Null(auditLogin);
 		if( auditAction!=null && auditActionType!=null && !auditAction.getActionType().equals(auditActionType) ) auditAction = null;
-		auditData = auditor.getRecords(from, to, nodeId, nodePath, login, auditActionType, auditAction);
-		if(auditData==null) auditData = new ArrayList<AuditRecord>();
+		List<AuditRecord> lst = auditor.getRecords(from, to, nodeId, nodePath, login, auditActionType, auditAction);
+		auditData = new AuditRecordTable();
+		if(lst!=null) auditData.addAll(lst);
 		return null;
 	}
 	
@@ -247,11 +249,9 @@ public class SessionBean
 	    
 		userAcl = getUserAcl();
 		tree = getTree();
-//		classDsc = getClassDscRegistry();
-//		configurator = getConfigurator();
 		
 		Node x = tree.getRootNode();
-		while(1==1)
+		while(true)
 		{
 			int ac = userAcl.getAccessForNode(x);
 			if(ac>AccessControl.TRANSIT) break;
@@ -271,13 +271,8 @@ public class SessionBean
 				x = z;
 			}
 		}		
-	//	while (en.hasMoreElements()) {
-	//		type type = (type) en.nextElement();
-	//	}
-		
 		resourcesTreeModel = new ChildPropertyTreeModel(getResources(), "childrenList");
 		
-		//List<Node> nodes = new ArrayList<Node>();
 		List<NodeWrapper> nodes = new ArrayList<NodeWrapper>();
 		////nodes.add(tree.getRootNode());
 		nodes.add(new NodeWrapper(x));

@@ -111,6 +111,7 @@
 </tr:panelHorizontalLayout>
 <tr:separator></tr:separator>
 
+<!--  #{msgs.export}  headerText="#{msgs.date}"  -->
 <tr:table 
 	width="100%" 
   	summary="NodesAudit"  
@@ -120,8 +121,19 @@
   	rowSelection="none" 
   	id="NodesAudit" >
     <tr:column 
-    	inlineStyle="width:15%;" 
-    	headerText="#{msgs.date}">
+    	inlineStyle="width:15%;"
+    	>
+      	<f:facet name="header">
+	       	<tr:panelPopup 
+      			title="#{msgs.export}"
+       			shortDesc="#{msgs.export}" 
+       			text="#{msgs.date}">
+                <f:subview id="tExp">
+	                <jsp:include page="tableExport.jspx" flush="true"/>
+	            </f:subview>
+			</tr:panelPopup>
+		</f:facet>
+    	
 	   	<tr:outputText
 			inlineStyle="font-size: 80%;"	       
 	   		value="#{row.fdString}" />

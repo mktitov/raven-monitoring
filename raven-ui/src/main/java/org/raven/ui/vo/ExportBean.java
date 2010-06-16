@@ -12,6 +12,7 @@ import javax.faces.event.ActionEvent;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.myfaces.trinidad.component.core.data.CoreTable;
 import org.apache.myfaces.trinidad.context.RequestContext;
+import org.raven.table.Table;
 import org.raven.ui.SessionBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,8 +60,17 @@ public class ExportBean
 			if(ct!=null)
 			{
 				//VOTableWrapper lst = (VOTableWrapper) ct.getValue();
-				VOTWModel lst = (VOTWModel) ct.getValue();
-				VOTableWrapper x = (VOTableWrapper) lst.getWrappedData();
+				VOTableWrapper x = null;
+				Object o = ct.getValue();
+				if (o instanceof VOTWModel) {
+					VOTWModel lst = (VOTWModel) o;
+					x = (VOTableWrapper) lst.getWrappedData();
+				}
+				else
+					if (o instanceof Table) {
+						Table t = (Table) o;
+						x = new VOTableWrapper(t);
+					}
 				setTable(x);
 			} else logger.warn("export: not found table");
 		}

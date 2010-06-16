@@ -19,11 +19,9 @@ package org.raven.ui.filter;
 
 import org.apache.tapestry5.ioc.Registry;
 import org.raven.ui.util.RavenRegistry;
+import org.raven.auth.impl.UserAcl;
 import org.raven.conf.Config;
 import org.raven.conf.Configurator;
-
-import org.raven.auth.impl.UserAcl;
-
 import javax.servlet.Filter;
 import javax.servlet.FilterConfig;
 import javax.servlet.FilterChain;
