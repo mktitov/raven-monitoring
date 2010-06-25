@@ -31,7 +31,10 @@ public class UserContextServiceImpl implements UserContextService
 {
     public UserContext getUserContext() 
     {
-        HttpSession session = (HttpSession)FacesContext.getCurrentInstance().getExternalContext().getSession(false);
+        FacesContext facesContext = FacesContext.getCurrentInstance();
+        if (facesContext==null)
+            return null;
+        HttpSession session = (HttpSession)facesContext.getExternalContext().getSession(false);
         return (UserContext) (session == null ? null : session.getAttribute(AuthFilter.USER_ACL));
     }
 }
