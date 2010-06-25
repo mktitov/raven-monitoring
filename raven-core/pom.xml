@@ -139,6 +139,10 @@
             <artifactId>jasperreports</artifactId>
         </dependency>
         <dependency>
+            <groupId>net.sf.jxls</groupId>
+            <artifactId>jxls-core</artifactId>
+        </dependency>
+        <dependency>
             <groupId>geronimo-spec</groupId>
             <artifactId>geronimo-spec-jta</artifactId>
         </dependency>

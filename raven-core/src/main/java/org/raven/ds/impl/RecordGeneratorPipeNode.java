@@ -23,6 +23,7 @@ import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;
+import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
 import org.weda.annotations.constraints.NotNull;
 
@@ -73,6 +74,12 @@ public class RecordGeneratorPipeNode extends AbstractSafeDataPipe
                     , ex);
         }
         super.setData(dataSource, data, context);
+    }
+
+    @Override
+    protected void doAddBindingsForExpression(
+            DataSource dataSource, Object data, DataContext context, BindingSupport bindingSupport)
+    {
     }
 
     @Override

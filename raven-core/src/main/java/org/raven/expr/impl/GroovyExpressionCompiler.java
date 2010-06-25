@@ -57,6 +57,11 @@ public class GroovyExpressionCompiler implements ExpressionCompiler
                 .append("  if (!con) throw new Exception(\"Attribute (connectionPool) not found in the node (${node.path})\".toString())\n")
                 .append("  withSql(con, c)\n")
                 .append("}\n");
+            if (expression.contains("sendData"))
+                buf.append("\ndef sendData(target, data) { sendData(node.asNode(), target, data); }\n");
+//            if (expression.contains("sendDataToConsumers"))
+//                buf.append("\ndef sendDataToConsumers(data) { " +
+//                        " node.asNode().sendDataToConsumers(data, new org.raven.ds.impl.DataContextImpl()); }\n");
 			Class expressionClass = classLoader.parseClass(buf.toString());
 			GroovyExpression groovyExpression = new GroovyExpression(expressionClass);
 			cache.putExpression(expression, groovyExpression);

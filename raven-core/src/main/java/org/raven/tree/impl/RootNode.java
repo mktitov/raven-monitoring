@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.expr.BindingSupport;
+import org.raven.expr.impl.ExpressionAttributeValueHandler;
 
 /**
  *
@@ -40,6 +41,7 @@ public class RootNode extends BaseNode
 
     public void addBindingSupport(String bindingSupportId, BindingSupport bindingSupport)
     {
+        bindingSupport.setForceDisableScriptExcecution(true);
         bindingSupports.put(bindingSupportId, bindingSupport);
     }
 
@@ -58,7 +60,9 @@ public class RootNode extends BaseNode
     {
         super.formExpressionBindings(bindings);
 
-        for (BindingSupport bindingSupport: bindingSupports.values())
+        for (BindingSupport bindingSupport: bindingSupports.values()){
             bindingSupport.addTo(bindings);
+            bindingSupport.remove(ExpressionAttributeValueHandler.ENABLE_SCRIPT_EXECUTION_BINDING);
+        }
     }
 }

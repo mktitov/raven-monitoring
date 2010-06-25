@@ -30,6 +30,7 @@ import org.raven.ds.AggregateFunction;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
+import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.weda.annotations.constraints.NotNull;
@@ -69,6 +70,12 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
     public void setRecordSchema(RecordSchemaNode recordSchema)
     {
         this.recordSchema = recordSchema;
+    }
+
+    @Override
+    protected void doAddBindingsForExpression(
+            DataSource dataSource, Object data, DataContext context, BindingSupport bindingSupport)
+    {
     }
 
     @Override

@@ -21,6 +21,9 @@ import groovy.lang.Closure;
 import groovy.sql.Sql;
 import java.sql.Connection;
 import java.sql.SQLException;
+import org.raven.ds.DataConsumer;
+import org.raven.ds.DataSource;
+import org.raven.ds.impl.DataContextImpl;
 
 /**
  *
@@ -57,5 +60,10 @@ public class ApiUtils
         {
             connection.close();
         }
+    }
+
+    public static void sendData(DataSource source, DataConsumer target, Object data) throws Exception
+    {
+        target.setData(source, data, new DataContextImpl());
     }
 }

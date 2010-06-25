@@ -32,6 +32,7 @@ import org.raven.annotations.Parameter;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataHandler;
 import org.raven.ds.DataSource;
+import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.ExecutorServiceException;
@@ -118,6 +119,12 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
         for (HandlerInfo handlerInfo: handlers)
             handlerInfo.release();
         handlers.clear();
+    }
+
+    @Override
+    protected void doAddBindingsForExpression(
+            DataSource dataSource, Object data, DataContext context, BindingSupport bindingSupport)
+    {
     }
 
     @Override

@@ -28,6 +28,7 @@ import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.impl.AbstractSafeDataPipe;
 import org.raven.ds.impl.RecordSchemaValueTypeHandlerFactory;
+import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
 import org.weda.annotations.constraints.NotNull;
 
@@ -100,6 +101,12 @@ public class RecordsToTableNode extends AbstractSafeDataPipe
             }
                 
         }
+    }
+
+    @Override
+    protected void doAddBindingsForExpression(
+            DataSource dataSource, Object data, DataContext context, BindingSupport bindingSupport)
+    {
     }
 
     @Override

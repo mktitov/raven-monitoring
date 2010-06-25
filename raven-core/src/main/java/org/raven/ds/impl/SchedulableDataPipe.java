@@ -42,7 +42,7 @@ public class SchedulableDataPipe extends DataPipeImpl implements Schedulable, Sc
     {
         if (isLogLevelEnabled(LogLevel.DEBUG))
             debug("Initiating data gathering request");
-        getDataSource().getDataImmediate(this, null);
+        getDataSource().getDataImmediate(this, new DataContextImpl());
 
 		Collection<Node> deps = getDependentNodes();
 		if (deps!=null)

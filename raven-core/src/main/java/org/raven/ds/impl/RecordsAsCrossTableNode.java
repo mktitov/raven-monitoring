@@ -30,6 +30,7 @@ import org.raven.ds.Record;
 import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
+import org.raven.expr.BindingSupport;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.table.TableImpl;
@@ -236,6 +237,12 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
     public void setUseSecondaryFieldsExpression(Boolean useSecondaryFieldsExpression)
     {
         this.useSecondaryFieldsExpression = useSecondaryFieldsExpression;
+    }
+
+    @Override
+    protected void doAddBindingsForExpression(
+            DataSource dataSource, Object data, DataContext context, BindingSupport bindingSupport)
+    {
     }
 
     @Override

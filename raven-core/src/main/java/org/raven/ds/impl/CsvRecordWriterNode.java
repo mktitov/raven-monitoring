@@ -29,6 +29,7 @@ import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchemaField;
+import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
 import org.weda.annotations.constraints.NotNull;
 
@@ -117,6 +118,12 @@ public class CsvRecordWriterNode extends AbstractSafeDataPipe
         {
             records.remove();
         }
+    }
+
+    @Override
+    protected void doAddBindingsForExpression(
+            DataSource dataSource, Object data, DataContext context, BindingSupport bindingSupport)
+    {
     }
 
     @Override

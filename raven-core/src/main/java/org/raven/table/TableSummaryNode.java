@@ -29,6 +29,7 @@ import org.raven.ds.AggregateFunction;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractSafeDataPipe;
+import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.weda.beans.ObjectUtils;
@@ -53,6 +54,12 @@ public class TableSummaryNode extends AbstractSafeDataPipe
     public static final String ROW_NUMBER_BINDING = "rowNumber";
     public static final String AGGREGATION_TAG_ID = "AGGREGATION";
     public static final TableTag AGGREGATION_TAG = new TableTagImpl("AGGREGATION");
+
+    @Override
+    protected void doAddBindingsForExpression(
+            DataSource dataSource, Object data, DataContext context, BindingSupport bindingSupport)
+    {
+    }
 
     @Override
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception

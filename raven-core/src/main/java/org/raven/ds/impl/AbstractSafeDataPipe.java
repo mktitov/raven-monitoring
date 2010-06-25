@@ -19,7 +19,6 @@ package org.raven.ds.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
 import javax.script.Bindings;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
@@ -27,6 +26,7 @@ import org.raven.ds.DataContext;
 import org.raven.ds.DataPipe;
 import org.raven.ds.DataSource;
 import org.raven.ds.SessionAttributeGenerator;
+import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -260,6 +260,7 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
             bindingSupport.put(SKIP_DATA_BINDING, SKIP_DATA);
             bindingSupport.put(DATASOURCE_BINDING, dataSource);
             bindingSupport.put(DATA_CONTEXT_BINDING, context);
+            doAddBindingsForExpression(dataSource, data, context, bindingSupport);
             try
             {
                 NodeAttribute exprAttr = getNodeAttribute(EXPRESSION_ATTRIBUTE);
@@ -286,6 +287,9 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
 
     protected abstract void doSetData(DataSource dataSource, Object data, DataContext context)
             throws Exception;
+
+    protected abstract void doAddBindingsForExpression(
+            DataSource dataSource, Object data, DataContext context, BindingSupport bindingSupport);
 
     @Override
     public void sendDataToConsumers(Object data, DataContext context)

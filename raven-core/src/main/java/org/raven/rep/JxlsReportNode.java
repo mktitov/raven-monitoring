@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009 Mikhail Titov.
+ *  Copyright 2010 Mikhail Titov.
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,21 +15,18 @@
  *  under the License.
  */
 
-package org.raven.ds.impl;
+package org.raven.rep;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
-import org.raven.annotations.NodeClass;
+import net.sf.jxls.transformer.XLSTransformer;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
+import org.raven.ds.impl.AbstractSafeDataPipe;
 import org.raven.expr.BindingSupport;
 import org.raven.tree.DataFile;
 import org.raven.tree.NodeAttribute;
@@ -43,54 +40,57 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass
-public class XslTransformerNode extends AbstractSafeDataPipe implements Viewable
+public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
 {
     @NotNull @Parameter(valueHandlerType=DataFileValueHandlerFactory.TYPE)
-    private DataFile stylesheet;
+    private DataFile reportTemplate;
 
-    public DataFile getStylesheet()
-    {
-        return stylesheet;
-    }
+    private ThreadLocal<Map> beans;
 
-    public void setStylesheet(DataFile stylesheet)
+    @Override
+    protected void initFields()
     {
-        this.stylesheet = stylesheet;
+        super.initFields();
+        beans = new ThreadLocal<Map>(){
+            @Override
+            protected Map initialValue() {
+                return new HashMap();
+            }
+        };
     }
 
     @Override
     protected void doAddBindingsForExpression(
             DataSource dataSource, Object data, DataContext context, BindingSupport bindingSupport)
     {
+        bindingSupport.put("beans", beans.get());
     }
-
+    
     @Override
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
-        if (data==null)
-            throw new Exception("Can not transform NULL data");
-        InputStream in = converter.convert(InputStream.class, data, null);
-        TransformerFactory factory = TransformerFactory.newInstance();
-        Transformer transformer = factory.newTransformer(
-                new StreamSource(stylesheet.getDataStream()));
-        ByteArrayOutputStream out = new ByteArrayOutputStream(4096);
-        transformer.transform(new StreamSource(in), new StreamResult(out));
-        sendDataToConsumers(out.toByteArray(), context);
+        try {
+            Map b = beans.get();
+            b.put("data", data);
+            XLSTransformer transformer = new XLSTransformer();
+            HSSFWorkbook wb = transformer.transformXLS(reportTemplate.getDataStream(), b);
+        } finally {
+            beans.remove();
+        }
     }
 
-    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception 
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
     {
         return null;
     }
 
-    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) 
+    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes)
             throws Exception
     {
         if (!Status.STARTED.equals(getStatus()))
             return null;
 
-        return Arrays.asList((ViewableObject)new DataFileViewableObject(stylesheet, this));
+        return Arrays.asList((ViewableObject)new DataFileViewableObject(reportTemplate, this));
     }
 
     public Boolean getAutoRefresh() {

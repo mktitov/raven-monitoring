@@ -133,6 +133,7 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
                 varsSupport.remove(RAVEN_EXPRESSION_ARGS_BINDING);
             }
             try{
+                bindings.remove(ENABLE_SCRIPT_EXECUTION_BINDING);
                 attribute.getOwner().formExpressionBindings(bindings);
                 if (   !attribute.getValueHandlerType().equals(ScriptAttributeValueHandlerFactory.TYPE)
                     || bindings.containsKey(ENABLE_SCRIPT_EXECUTION_BINDING))
