@@ -39,6 +39,7 @@ import org.raven.tree.NodeError;
 import org.raven.tree.NodeParameter;
 import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
+import org.raven.expr.impl.ExpressionAttributeValueHandler;
 import org.raven.template.impl.TemplateEntry;
 import org.raven.log.LogLevel;
 import org.raven.log.NodeLogger;
@@ -758,7 +759,9 @@ public class BaseNode implements Node, NodeListener, Logger
                 return false;
             if (nodeAttributes!=null)
                 for (NodeAttribute attr: nodeAttributes.values())
-                    if (attr.isRequired() && attr.getValue()==null)
+                    if ( (attr.isRequired() && attr.getValue()==null)
+                       && (   !(attr.getValueHandler() instanceof ExpressionAttributeValueHandler)
+                           || !attr.isExpressionValid() ))
                     {
                         error(String.format(
                                 "Error switching node (%s) to the STARTED state. " +

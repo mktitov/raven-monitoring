@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import org.junit.Test;
+import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -169,5 +170,35 @@ public class BaseNodeTest extends RavenCoreTestCase
 
         root.setChildrensDynamic(true);
         assertTrue(child.isDynamic());
+    }
+
+    @Test
+    public void requiredAttributesTest() throws Exception
+    {
+        BaseNode node = new BaseNode("node");
+        node.init();
+        assertTrue(node.start());
+
+        node.stop();
+
+        NodeAttributeImpl attr = new NodeAttributeImpl("attr1", String.class, null, null);
+        attr.setRequired(true);
+        attr.setOwner(node);
+        attr.init();
+        node.addNodeAttribute(attr);
+
+        assertFalse(node.start());
+
+        attr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
+        assertTrue(node.start());
+
+        node.stop();
+        try{
+            attr.setValue("1+.sd");
+        }catch(Exception e){}
+        assertFalse(node.start());
+
+        attr.setValue("1+1");
+        assertTrue(node.start());
     }
 }
