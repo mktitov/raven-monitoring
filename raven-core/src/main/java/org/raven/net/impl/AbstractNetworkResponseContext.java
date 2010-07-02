@@ -175,9 +175,9 @@ public abstract class AbstractNetworkResponseContext
                 {
                     ParameterNode param = (ParameterNode) node;
                     Object value = params==null? null : params.get(param.getName());
+                    value = converter.convert(param.getParameterType(), value, param.getPattern());
                     if (value==null && param.getRequired())
                         throw new RequiredParameterMissedException(param.getName(), getName());
-                    value = converter.convert(param.getParameterType(), value, param.getPattern());
                     if (value!=null)
                         newParams.put(param.getName(), value);
                 }
