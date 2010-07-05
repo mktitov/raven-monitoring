@@ -17,6 +17,9 @@
 
 package org.raven.rep;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -73,7 +76,24 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
             Map b = beans.get();
             b.put("data", data);
             XLSTransformer transformer = new XLSTransformer();
-            HSSFWorkbook wb = transformer.transformXLS(reportTemplate.getDataStream(), b);
+            File tempFile = File.createTempFile("jxls_"+getId()+"_", ".xls");
+            try{
+                HSSFWorkbook wb = transformer.transformXLS(reportTemplate.getDataStream(), b);
+                FileOutputStream fos = new FileOutputStream(tempFile);
+                try{
+                    wb.write(fos);
+                }finally{
+                    fos.close();
+                }
+                FileInputStream is = new FileInputStream(tempFile);
+                try{
+                    sendDataToConsumers(is, context);
+                }finally{
+                    is.close();
+                }
+            }finally{
+                tempFile.delete();
+            }
         } finally {
             beans.remove();
         }
@@ -95,5 +115,13 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
 
     public Boolean getAutoRefresh() {
         return true;
+    }
+
+    public DataFile getReportTemplate() {
+        return reportTemplate;
+    }
+
+    public void setReportTemplate(DataFile reportTemplate) {
+        this.reportTemplate = reportTemplate;
     }
 }

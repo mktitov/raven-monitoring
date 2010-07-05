@@ -31,6 +31,15 @@ public class DataCollector extends AbstractDataConsumer
 {
     private List<Object> dataList = new ArrayList<Object>();
     private long pauseBeforeRecieve = 0;
+    private DataHandler dataHandler;
+
+    public DataHandler getDataHandler() {
+        return dataHandler;
+    }
+
+    public void setDataHandler(DataHandler dataHandler) {
+        this.dataHandler = dataHandler;
+    }
 
     public long getPauseBeforeRecieve()
     {
@@ -49,7 +58,10 @@ public class DataCollector extends AbstractDataConsumer
             if (pauseBeforeRecieve > 0) {
                 Thread.sleep(pauseBeforeRecieve);
             }
-            dataList.add(data);
+            if (dataHandler!=null)
+                dataHandler.handleData(data, context);
+            else
+                dataList.add(data);
         }
         catch (InterruptedException ex)
         {
