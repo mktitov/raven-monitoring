@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -58,6 +59,11 @@ public class HttpSessionDataHandler implements DataHandler
         try
         {
             statusMessage.set("Starting processing data from "+dataSource.getPath());
+            if (data==null){
+                if (owner.isLogLevelEnabled(LogLevel.DEBUG))
+                    owner.getLogger().debug("Skiping processing data because of it's NULL");
+                return null;
+            }
             HttpSessionNode session = (HttpSessionNode) owner;
 
             Collection<Node> childs = session.getHandlers(isNewSession, data);
@@ -92,6 +98,9 @@ public class HttpSessionDataHandler implements DataHandler
                         if (response!=null && expectedStatus!=null
                             && !expectedStatus.equals(response.getStatusLine().getStatusCode()))
                         {
+                            HttpEntity entity = response.getEntity();
+                            if (entity!=null)
+                                entity.consumeContent();
                             return session.handleError(params);
                         }
 

@@ -44,6 +44,7 @@ import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.AbstractActionViewableObject;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.ViewableObjectImpl;
+import org.raven.util.LoadAverageStatistic;
 import org.raven.util.OperationStatistic;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.internal.annotations.Message;
@@ -76,6 +77,9 @@ public class ExecutorServiceNode extends BaseNode
 
     @Parameter(readOnly=true)
     private AtomicLong rejectedTasks;
+
+    @Parameter(readOnly=true)
+    private LoadAverageStatistic loadAverage;
 
     @Message
     private String interruptDisplayMessage;
@@ -114,6 +118,7 @@ public class ExecutorServiceNode extends BaseNode
             queue = new LinkedBlockingQueue(capacity);
         executingTasks = new ConcurrentSkipListSet();
         executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, timeUnit, queue);
+        loadAverage = new LoadAverageStatistic(maximumPoolSize, 300000);
     }
 
     @Override
@@ -174,6 +179,10 @@ public class ExecutorServiceNode extends BaseNode
 
     public AtomicLong getRejectedTasks() {
         return rejectedTasks;
+    }
+
+    public LoadAverageStatistic getLoadAverage() {
+        return loadAverage;
     }
 
     public Integer getCorePoolSize() {
@@ -326,6 +335,7 @@ public class ExecutorServiceNode extends BaseNode
         {
             thread = Thread.currentThread();
             executionStart = executedTasks.markOperationProcessingStart();
+            long startTime = System.currentTimeMillis();
             try
             {
                 try
@@ -349,6 +359,7 @@ public class ExecutorServiceNode extends BaseNode
             finally
             {
                 executedTasks.markOperationProcessingEnd(executionStart);
+                loadAverage.addDuration(System.currentTimeMillis()-startTime);
                 Collection executingTasksList = executingTasks;
                 if (executingTasksList!=null)
                     executingTasksList.remove(this);

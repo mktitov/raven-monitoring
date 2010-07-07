@@ -19,8 +19,6 @@ package org.raven.ds.impl;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.raven.dbcp.ConnectionPool;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;
