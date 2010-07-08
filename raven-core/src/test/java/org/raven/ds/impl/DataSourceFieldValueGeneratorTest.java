@@ -26,7 +26,7 @@ import org.raven.log.LogLevel;
  *
  * @author Mikhail Titov
  */
-public class DataSourceRecordFieldValueGeneratorTest extends RavenCoreTestCase
+public class DataSourceFieldValueGeneratorTest extends RavenCoreTestCase
 {
     @Test
     public void test()
@@ -37,7 +37,7 @@ public class DataSourceRecordFieldValueGeneratorTest extends RavenCoreTestCase
         ds.setLogLevel(LogLevel.DEBUG);
         assertTrue(ds.start());
 
-        DataSourceRecordFieldValueGenerator fieldValue = new DataSourceRecordFieldValueGenerator();
+        DataSourceFieldValueGenerator fieldValue = new DataSourceFieldValueGenerator();
         fieldValue.setName("fieldValue");
         tree.getRootNode().addAndSaveChildren(fieldValue);
         fieldValue.setDataSource(ds);
@@ -56,7 +56,7 @@ public class DataSourceRecordFieldValueGeneratorTest extends RavenCoreTestCase
         ds.setLogLevel(LogLevel.DEBUG);
         assertTrue(ds.start());
 
-        DataSourceRecordFieldValueGenerator fieldValue = new DataSourceRecordFieldValueGenerator();
+        DataSourceFieldValueGenerator fieldValue = new DataSourceFieldValueGenerator();
         fieldValue.setName("fieldValue");
         tree.getRootNode().addAndSaveChildren(fieldValue);
         fieldValue.setDataSource(ds);

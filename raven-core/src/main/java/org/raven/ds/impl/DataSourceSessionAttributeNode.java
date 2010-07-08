@@ -31,7 +31,7 @@ import org.weda.annotations.constraints.NotNull;
  */
 @NodeClass(parentNode=SafeDataPipeNode.class)
 public class DataSourceSessionAttributeNode
-        extends DataSourceRecordFieldValueGenerator implements SessionAttributeGenerator
+        extends DataSourceFieldValueGenerator implements SessionAttributeGenerator
 {
     @NotNull @Parameter
     private Class attributeType;

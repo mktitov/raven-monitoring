@@ -1,5 +1,5 @@
 /*
- *  Copyright 2009 Mikhail Titov.
+ *  Copyright 2010 Mikhail Titov.
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,36 +17,30 @@
 
 package org.raven.ds.impl;
 
-import java.util.Map;
-import org.raven.annotations.NodeClass;
-import org.raven.annotations.Parameter;
-import org.raven.tree.NodeAttribute;
+import java.io.InputStream;
+import org.raven.ds.BinaryFieldType;
+import org.raven.ds.BinaryFieldTypeException;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=RecordGeneratorNode.class)
-public class AttributeRecordFieldValueGenerator
-        extends AbstractFieldValueGenerator
+public class InputStreamBinaryFieldValue implements BinaryFieldType
 {
-    public static final String VALUE_ATTRIBUTE = "value";
-    @Parameter
-    private String value;
+    private final InputStream inputStream;
 
-    public String getValue()
+    public InputStreamBinaryFieldValue(InputStream inputStream)
     {
-        return value;
+        this.inputStream = inputStream;
     }
 
-    public void setValue(String value)
+    public InputStream getData() throws BinaryFieldTypeException 
     {
-        this.value = value;
+        return inputStream;
     }
 
-    @Override
-    protected Object doGetFieldValue(Map<String, NodeAttribute> sessionAttributes)
+    public void closeResources() throws BinaryFieldTypeException 
     {
-        return getNodeAttribute(VALUE_ATTRIBUTE).getRealValue();
     }
+
 }

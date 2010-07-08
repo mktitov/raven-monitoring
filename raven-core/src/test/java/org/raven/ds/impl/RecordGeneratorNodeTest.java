@@ -77,7 +77,7 @@ public class RecordGeneratorNodeTest extends RavenCoreTestCase
     private void createFieldValue(
             RecordGeneratorNode recordGenerator, String name, String value, boolean start)
     {
-        AttributeRecordFieldValueGenerator fieldValue = new AttributeRecordFieldValueGenerator();
+        AttributeFieldValueGenerator fieldValue = new AttributeFieldValueGenerator();
         fieldValue.setName(name);
         recordGenerator.addAndSaveChildren(fieldValue);
         fieldValue.setValue(value);

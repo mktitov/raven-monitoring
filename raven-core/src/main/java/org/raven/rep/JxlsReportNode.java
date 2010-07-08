@@ -21,17 +21,28 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.sf.jxls.transformer.XLSTransformer;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.raven.RavenUtils;
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
+import org.raven.ds.FieldValueGenerator;
+import org.raven.ds.Record;
+import org.raven.ds.RecordSchemaField;
+import org.raven.ds.RecordSchemaFieldType;
 import org.raven.ds.impl.AbstractSafeDataPipe;
+import org.raven.ds.impl.AttributeFieldValueGenerator;
+import org.raven.ds.impl.DataSourceFieldValueGenerator;
+import org.raven.ds.impl.InputStreamBinaryFieldValue;
 import org.raven.expr.BindingSupport;
 import org.raven.tree.DataFile;
+import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
@@ -43,10 +54,14 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
+@NodeClass(childNodes={AttributeFieldValueGenerator.class, DataSourceFieldValueGenerator.class})
 public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
 {
     @NotNull @Parameter(valueHandlerType=DataFileValueHandlerFactory.TYPE)
     private DataFile reportTemplate;
+
+    @Parameter
+    private String reportFieldName;
 
     private ThreadLocal<Map> beans;
 
@@ -72,8 +87,25 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
     @Override
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
+        if (data==null)
+            return;
         try {
             Map b = beans.get();
+            Collection<Node> childs = getChildrens();
+            if (childs!=null)
+            {
+                bindingSupport.put(DATA_BINDING, data);
+                bindingSupport.put(DATA_CONTEXT_BINDING, context);
+                try{
+                    for (Node child: childs)
+                        if (child instanceof FieldValueGenerator)
+                            b.put(child.getName(), 
+                                    ((FieldValueGenerator)child).getFieldValue(context.getSessionAttributes()));
+                }finally{
+                    bindingSupport.reset();
+                }
+            }
+                        
             b.put("data", data);
             XLSTransformer transformer = new XLSTransformer();
             File tempFile = File.createTempFile("jxls_"+getId()+"_", ".xls");
@@ -87,7 +119,17 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
                 }
                 FileInputStream is = new FileInputStream(tempFile);
                 try{
-                    sendDataToConsumers(is, context);
+                    Object res = is;
+                    String _reportFieldName = reportFieldName;
+                    if (_reportFieldName!=null && (data instanceof Record)){
+                        Record rec = (Record) data;
+                        RecordSchemaField field = RavenUtils.getRecordSchemaField(rec.getSchema(), _reportFieldName);
+                        if (field!=null && field.getFieldType().equals(RecordSchemaFieldType.BINARY)) {
+                            rec.setValue(_reportFieldName, new InputStreamBinaryFieldValue(is));
+                            res = rec;
+                        }
+                    }
+                    sendDataToConsumers(res, context);
                 }finally{
                     is.close();
                 }
@@ -123,5 +165,13 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
 
     public void setReportTemplate(DataFile reportTemplate) {
         this.reportTemplate = reportTemplate;
+    }
+
+    public String getReportFieldName() {
+        return reportFieldName;
+    }
+
+    public void setReportFieldName(String reportFieldName) {
+        this.reportFieldName = reportFieldName;
     }
 }

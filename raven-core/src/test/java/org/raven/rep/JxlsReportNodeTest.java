@@ -24,8 +24,11 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import org.easymock.IArgumentMatcher;
+import org.junit.Before;
 import org.junit.Test;
 import org.raven.ds.DataContext;
+import org.raven.ds.impl.AttributeFieldValueGenerator;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.test.DataCollector;
 import org.raven.test.DataHandler;
 import org.raven.test.PushDataSource;
@@ -38,26 +41,35 @@ import static org.easymock.EasyMock.*;
  */
 public class JxlsReportNodeTest extends RavenCoreTestCase
 {
-    @Test
-    public void test() throws Exception
+    private PushDataSource ds;
+    private JxlsReportNode report;
+    private DataCollector collector;
+
+    @Before
+    public void prepare()
     {
-        PushDataSource ds = new PushDataSource();
+        ds = new PushDataSource();
         ds.setName("dataSource");
         tree.getRootNode().addAndSaveChildren(ds);
         assertTrue(ds.start());
-
-        JxlsReportNode report = new JxlsReportNode();
+        
+        report = new JxlsReportNode();
         report.setName("report");
         tree.getRootNode().addAndSaveChildren(report);
-        report.getReportTemplate().setDataStream(new FileInputStream("src/test/conf/jxls_template.xls"));
         report.setDataSource(ds);
-        assertTrue(report.start());
 
-        DataCollector collector = new DataCollector();
+        collector = new DataCollector();
         collector.setName("collector");
         tree.getRootNode().addAndSaveChildren(collector);
         collector.setDataSource(report);
         assertTrue(collector.start());
+    }
+
+    @Test
+    public void test() throws Exception
+    {
+        report.getReportTemplate().setDataStream(new FileInputStream("src/test/conf/jxls_template.xls"));
+        assertTrue(report.start());
 
         DataHandler handler = createMock(DataHandler.class);
         handler.handleData(checkInputStream(), isA(DataContext.class));
@@ -67,6 +79,34 @@ public class JxlsReportNodeTest extends RavenCoreTestCase
         ds.pushData("hello world");
 
         verify(handler);
+    }
+
+    @Test
+    public void beansGenerationTest() throws Exception
+    {
+        report.getReportTemplate().setDataStream(new FileInputStream("src/test/conf/jxls_template2.xls"));
+        assertTrue(report.start());
+
+        AttributeFieldValueGenerator attrValue = new AttributeFieldValueGenerator();
+        attrValue.setName("bean1");
+        report.addAndSaveChildren(attrValue);
+        attrValue.getNodeAttribute("value").setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        attrValue.setValue("data+' world'");
+
+        DataHandler handler = createMock(DataHandler.class);
+        handler.handleData(checkInputStream(), isA(DataContext.class));
+        replay(handler);
+
+        collector.setDataHandler(handler);
+        ds.pushData("hello");
+
+        verify(handler);
+    }
+
+    @Test
+    public void recordTest() throws Exception
+    {
+        
     }
 
     public static InputStream checkInputStream()

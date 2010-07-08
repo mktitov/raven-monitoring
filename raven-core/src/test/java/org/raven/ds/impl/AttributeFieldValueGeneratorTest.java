@@ -24,12 +24,12 @@ import org.raven.test.RavenCoreTestCase;
  *
  * @author Mikhail Titov
  */
-public class AttributeRecordFieldValueGeneratorTest extends RavenCoreTestCase
+public class AttributeFieldValueGeneratorTest extends RavenCoreTestCase
 {
     @Test
     public void test()
     {
-        AttributeRecordFieldValueGenerator fieldValue = new AttributeRecordFieldValueGenerator();
+        AttributeFieldValueGenerator fieldValue = new AttributeFieldValueGenerator();
         fieldValue.setName("fieldName");
         tree.getRootNode().addAndSaveChildren(fieldValue);
         fieldValue.setValue("1");
