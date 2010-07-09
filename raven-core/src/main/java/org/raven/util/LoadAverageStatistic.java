@@ -49,7 +49,7 @@ public class LoadAverageStatistic
      * Adds one element usage duration in milliseconds
      * @param dur duration in milliseconds
      */
-    public void addDuration(long dur)
+    public synchronized void addDuration(long dur)
     {
         long currTimePeriod = System.currentTimeMillis()/loadAverageInterval;
         if (currTimePeriod>timePeriod){
@@ -66,7 +66,7 @@ public class LoadAverageStatistic
     /**
      * Returns the load average for the last interval.
      */
-    public double getValue() {
+    public synchronized double getValue() {
         return loadAverage;
     }
 
