@@ -27,18 +27,16 @@
         <param-name>org.apache.myfaces.trinidad.UPLOAD_MAX_DISK_SPACE</param-name>
         <param-value>20480000</param-value>
     </context-param>
-<!--    
+    <!--
   <context-param>
     <param-name>com.sun.faces.expressionFactory</param-name>
     <param-value>org.apache.el.ExpressionFactoryImpl</param-value>
   </context-param>
  -->
-
     <filter>
         <filter-name>JcifsFilter</filter-name>
         <filter-class>org.raven.ui.filter.JcifsFilter</filter-class>
     </filter>
-   
     <filter>
         <filter-name>AuthFilter</filter-name>
         <filter-class>org.raven.ui.filter.AuthFilter</filter-class>
@@ -51,8 +49,6 @@
         <filter-name>trinidad</filter-name>
         <filter-class>org.apache.myfaces.trinidad.webapp.TrinidadFilter</filter-class>
     </filter>
-
-
     <filter-mapping>
         <filter-name>trinidad</filter-name>
         <servlet-name>Faces Servlet</servlet-name>
@@ -65,13 +61,12 @@
         <filter-name>AuthFilter</filter-name>
         <url-pattern>/faces/*</url-pattern>
     </filter-mapping>
-  
-<!--   
+    <!--
   <filter-mapping>
     <filter-name>extensionsFilter</filter-name>
     <servlet-name>Faces Servlet</servlet-name>
   </filter-mapping>
- --> 
+ -->
     <filter-mapping>
         <filter-name>extensionsFilter</filter-name>
         <url-pattern>*.jspx</url-pattern>
@@ -80,15 +75,12 @@
         <filter-name>extensionsFilter</filter-name>
         <url-pattern>/faces/*</url-pattern>
     </filter-mapping>
-   
     <listener>
         <listener-class>org.apache.myfaces.webapp.StartupServletContextListener</listener-class>
     </listener>
-
     <listener>
-		<listener-class>org.raven.ui.SessionListener</listener-class>
+        <listener-class>org.raven.ui.SessionListener</listener-class>
     </listener>
-  
     <servlet>
         <servlet-name>Faces Servlet</servlet-name>
         <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
@@ -98,12 +90,10 @@
         <servlet-name>resources</servlet-name>
         <servlet-class>org.apache.myfaces.trinidad.webapp.ResourceServlet</servlet-class>
     </servlet>
-  
     <servlet>
         <servlet-name>NetworkResponseServlet</servlet-name>
         <servlet-class>org.raven.ui.servlet.NetworkResponseServlet</servlet-class>
     </servlet>
-
     <servlet-mapping>
         <servlet-name>Faces Servlet</servlet-name>
         <url-pattern>/faces/*</url-pattern>
@@ -112,21 +102,17 @@
         <servlet-name>resources</servlet-name>
         <url-pattern>/adf/*</url-pattern>
     </servlet-mapping>
-  
     <servlet-mapping>
         <servlet-name>NetworkResponseServlet</servlet-name>
         <url-pattern>/sri/*</url-pattern>
     </servlet-mapping>
-
     <session-config>
-        <session-timeout>10</session-timeout>
+        <session-timeout>15</session-timeout>
     </session-config>
-
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
     </welcome-file-list>
-   
-   <!-- 
+    <!--
     <error-page>
         <exception-type>javax.faces.application.ViewExpiredException</exception-type>
         <location>/logout.html</location>
