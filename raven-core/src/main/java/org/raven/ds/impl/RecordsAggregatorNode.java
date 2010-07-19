@@ -30,6 +30,7 @@ import org.raven.ds.AggregateFunction;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
+import org.raven.ds.RecordException;
 import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
@@ -47,6 +48,9 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
     @NotNull @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
     private RecordSchemaNode recordSchema;
 
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean isRecordsSorted;
+
     private ThreadLocal<Map<GroupKey, Aggregation>> aggregations;
 
     @Override
@@ -62,14 +66,20 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
         };
     }
 
-    public RecordSchemaNode getRecordSchema()
-    {
+    public RecordSchemaNode getRecordSchema() {
         return recordSchema;
     }
 
-    public void setRecordSchema(RecordSchemaNode recordSchema)
-    {
+    public void setRecordSchema(RecordSchemaNode recordSchema) {
         this.recordSchema = recordSchema;
+    }
+
+    public Boolean getIsRecordsSorted() {
+        return isRecordsSorted;
+    }
+
+    public void setIsRecordsSorted(Boolean isRecordsSorted) {
+        this.isRecordsSorted = isRecordsSorted;
     }
 
     @Override
@@ -83,28 +93,12 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
     {
         if (data==null && !aggregations.get().isEmpty())
         {
-            try
-            {
+            try{
                 for (Aggregation agg: aggregations.get().values())
-                {
-                    Record rec = agg.getRecord();
-                    for (Map.Entry<String, AggregateFunction> entry: agg.getAggregateFunctions().entrySet())
-                    {
-                        AggregateFunction func = entry.getValue();
-                        try{
-                            func.finishAggregation();
-                        }finally{
-                            bindingSupport.reset();
-                        }
-                        rec.setValue(entry.getKey(), func.getAggregatedValue());
-                    }
-                    sendDataToConsumers(rec, context);
-                }
+                    finishAndSendAggregation(agg, context);
                 sendDataToConsumers(null, context);
                 return;
-            }
-            finally
-            {
+            }finally {
                 aggregations.remove();
             }
         }
@@ -148,6 +142,10 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
             Aggregation agg = aggregations.get().get(key);
             if (agg==null)
             {
+                if (isRecordsSorted && aggregations.get().size()>0){
+                    finishAndSendAggregation(aggregations.get().values().iterator().next(), context);
+                    aggregations.get().clear();
+                }
                 agg = createAggregation(groupFields, groupValues, valueFields);
                 aggregations.get().put(key, agg);
             }
@@ -157,6 +155,22 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
         {
             bindingSupport.reset();
         }
+    }
+
+    private void finishAndSendAggregation(Aggregation agg, DataContext context) throws RecordException
+    {
+        Record rec = agg.getRecord();
+        for (Map.Entry<String, AggregateFunction> entry: agg.getAggregateFunctions().entrySet())
+        {
+            AggregateFunction func = entry.getValue();
+//            try{
+                func.finishAggregation();
+//            }finally{
+//                bindingSupport.reset();
+//            }
+            rec.setValue(entry.getKey(), func.getAggregatedValue());
+        }
+        sendDataToConsumers(rec, context);
     }
 
     @Override
@@ -240,7 +254,13 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
                 bindingSupport.put("value", value);
                 bindingSupport.put("counter", counter);
                 bindingSupport.put("params", params);
-                value = fieldValueNode.getFinishAggregationExpression();
+                try{
+                    value = fieldValueNode.getFinishAggregationExpression();
+                }finally{
+                    bindingSupport.remove("value");
+                    bindingSupport.remove("counter");
+                    bindingSupport.remove("params");
+                }
             }
         }
 

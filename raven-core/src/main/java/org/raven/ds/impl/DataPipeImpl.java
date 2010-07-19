@@ -92,8 +92,7 @@ public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
             bindingSupport.put("previousData", getPreviousData());
             bindingSupport.put("lastDataTimeMillis", getLastDataTimeMillis());
             bindingSupport.put("previousDataTimeMillis", getPreviuosDataTimeMillis());
-            bindingSupport.put(
-                    "timeDiffMillis", getLastDataTimeMillis()-getPreviuosDataTimeMillis());
+            bindingSupport.put("timeDiffMillis", getLastDataTimeMillis()-getPreviuosDataTimeMillis());
             bindingSupport.put(DATA_CONTEXT_BINDING, context);
             if (skipFirstCycle && getPreviuosDataTimeMillis()==0)
                 return;

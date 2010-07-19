@@ -120,6 +120,29 @@ public class RecordsAggregatorNodeTest extends RavenCoreTestCase
     }
 
     @Test
+    public void sortedRecordsTest() throws RecordException
+    {
+        aggregator.setIsRecordsSorted(Boolean.TRUE);
+        ds.pushData(createRecord("g1", 1, 1, 10.));
+        ds.pushData(createRecord("g1", 1, 2, 20.));
+
+        ds.pushData(createRecord("g2", 2, 2, 20.));
+
+        assertEquals(1, collector.getDataListSize());
+        Record rec = (Record) collector.getDataList().get(0);
+        assertEquals(new Integer(3), rec.getValue("value1"));
+        assertEquals(new Double(33.), rec.getValue("value2"));
+
+        collector.getDataList().clear();
+        ds.pushData(null);
+        assertEquals(2, collector.getDataListSize());
+        rec = (Record) collector.getDataList().get(0);
+        assertEquals(new Integer(2), rec.getValue("value1"));
+        assertEquals(new Double(22.), rec.getValue("value2"));
+        assertNull(collector.getDataList().get(1));
+    }
+
+    @Test
     public void testCustom() throws RecordException
     {
         value2FieldNode.setUseStartAggregationExpression(Boolean.TRUE);

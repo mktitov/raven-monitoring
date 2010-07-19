@@ -18,6 +18,7 @@
 package org.raven.ds.impl;
 
 import java.util.Collection;
+import java.util.concurrent.locks.ReentrantLock;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.log.LogLevel;
@@ -32,23 +33,54 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass
-public class SchedulableDataPipe extends DataPipeImpl implements Schedulable, Scheduler
+public class SchedulableDataPipe extends SafeDataPipeNode implements Schedulable, Scheduler
 {
     @Parameter(valueHandlerType=SystemSchedulerValueHandlerFactory.TYPE)
     @NotNull
     private Scheduler scheduler;
 
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean allowAsyncExecution;
+
+    private ReentrantLock lock;
+
+    @Override
+    protected void initFields()
+    {
+        super.initFields();
+        lock = new ReentrantLock();
+    }
+
     public void executeScheduledJob(Scheduler scheduler)
     {
-        if (isLogLevelEnabled(LogLevel.DEBUG))
-            debug("Initiating data gathering request");
-        getDataSource().getDataImmediate(this, new DataContextImpl());
+        if (allowAsyncExecution)
+            doExecuteJob();
+        else {
+            if (lock.tryLock()) {
+                try{
+                    doExecuteJob();
+                } finally {
+                    lock.unlock();
+                }
+            } else if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug("Can't execute schedulable task. Already executing");
+        }
+    }
 
-		Collection<Node> deps = getDependentNodes();
-		if (deps!=null)
-			for (Node node: deps)
-				if (node instanceof Schedulable)
-					((Schedulable)node).executeScheduledJob(this);
+    private void doExecuteJob()
+    {
+        if (isLogLevelEnabled(LogLevel.DEBUG)) {
+            debug("Initiating data gathering request");
+        }
+        getDataSource().getDataImmediate(this, new DataContextImpl());
+        Collection<Node> deps = getDependentNodes();
+        if (deps != null) {
+            for (Node node : deps) {
+                if (node instanceof Schedulable) {
+                    ((Schedulable) node).executeScheduledJob(this);
+                }
+            }
+        }
     }
 
     public Scheduler getScheduler() {
@@ -59,4 +91,11 @@ public class SchedulableDataPipe extends DataPipeImpl implements Schedulable, Sc
         this.scheduler = scheduler;
     }
 
+    public Boolean getAllowAsyncExecution() {
+        return allowAsyncExecution;
+    }
+
+    public void setAllowAsyncExecution(Boolean allowAsyncExecution) {
+        this.allowAsyncExecution = allowAsyncExecution;
+    }
 }
