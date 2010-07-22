@@ -32,7 +32,6 @@ import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
-import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
 import org.raven.tree.NodeListener;
@@ -85,7 +84,6 @@ public abstract class AbstractThreadedDataSource
         fillConsumerAttributes(consumerAttributes);
     }
 
-    @Override
     public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
     {
         context.addSessionAttributes(

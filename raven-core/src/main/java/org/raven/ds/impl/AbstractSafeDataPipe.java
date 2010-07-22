@@ -244,7 +244,6 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
         bindingSupport.addTo(bindings);
     }
 
-    @Override
     public void setData(DataSource dataSource, Object data, DataContext context)
     {
         if (!Status.STARTED.equals(getStatus()))

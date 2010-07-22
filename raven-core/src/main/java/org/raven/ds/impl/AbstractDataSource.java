@@ -47,7 +47,6 @@ public abstract class AbstractDataSource extends BaseNode implements DataSource
         fillConsumerAttributes(consumerAttributes);
     }
 
-    @Override
     public boolean getDataImmediate(
             DataConsumer dataConsumer, DataContext context)
     {
