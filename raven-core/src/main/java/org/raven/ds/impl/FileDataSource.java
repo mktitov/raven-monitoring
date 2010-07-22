@@ -36,6 +36,7 @@ import org.raven.log.LogLevel;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.ExecutorServiceException;
 import org.raven.sched.Task;
+import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
 import org.raven.table.TableImpl;
 import org.raven.tree.DataFile;
 import org.raven.tree.DataFileException;
@@ -62,7 +63,7 @@ public class FileDataSource extends BaseNode implements DataSource, Task, Viewab
     @Parameter(valueHandlerType=DataFileValueHandlerFactory.TYPE)
     private DataFile file;
     
-    @NotNull @Parameter 
+    @NotNull @Parameter(valueHandlerType=SystemSchedulerValueHandlerFactory.TYPE)
     private ExecutorService executorService;
 
     private AtomicBoolean sendingData;

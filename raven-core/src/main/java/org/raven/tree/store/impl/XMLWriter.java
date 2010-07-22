@@ -126,8 +126,8 @@ public class XMLWriter implements XMLConsts
                             writer.append("]]></value>\n");
                         }
                     }
-                    writer.append(childOffset+"</attribute>\n");
                 }
+                writer.append(childOffset+"</attribute>\n");
             }
         }
         Collection<Node> childs = node.getSortedChildrens();
