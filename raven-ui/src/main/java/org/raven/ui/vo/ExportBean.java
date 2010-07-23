@@ -98,17 +98,17 @@ public class ExportBean
 		return object;
 	}
 	
-	private String getFileName(String x)
+	public static String makeFileName(String prefix, String ext)
 	{
 		SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
-	    return "table-"+fmt.format(new Date())+"."+x;
+	    return prefix+fmt.format(new Date())+"."+ext;
 	}
 	
 	private void writeResponce(String x, String ct, String ext)
 	{
 		FacesContext fc = FacesContext.getCurrentInstance();
 		HttpServletResponse response = (HttpServletResponse) fc.getExternalContext().getResponse();
-		String fName = getFileName(ext);
+		String fName = makeFileName("table-",ext);
 		String fn="noname";
 		try {
 			fn = new String(fName.getBytes(charset),"Cp1252");			

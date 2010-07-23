@@ -34,7 +34,7 @@ import javax.faces.context.FacesContext;
 	   public static final String ACCESS_DENIED = "accessDenied";
 	   public static final String ACTION = "action";
 	   public static final String ACTION_TYPE = "actionType";
-	   public static final String ATTR_CANT_DEL = "attributesCantDeleted";
+	   public static final String ATTR_CANT_DEL = "attributesCantBeDeleted";
 	   public static final String ATTR_NOT_FOUND = "attributeNotFound";
 	   public static final String ATTRIBUTE = "attribute";
 	   public static final String BAD_DST_NODE = "inadmissibleDstNode";

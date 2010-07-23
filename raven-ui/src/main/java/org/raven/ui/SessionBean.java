@@ -925,6 +925,11 @@ public class SessionBean
 		auditor.write(n, userAcl.getAccountName(), a, mes);
 	}
 
+	public void writeAuditRecord(Action a,String mes) 
+	{
+		auditor.write(getCurrentNode(), userAcl.getAccountName(), a, mes);
+	}
+	
 	public String getRemoteIp() {
 		return remoteIp;
 	}

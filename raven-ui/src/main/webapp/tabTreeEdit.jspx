@@ -18,10 +18,11 @@
 
 <jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
           xmlns:f="http://java.sun.com/jsf/core"
+          xmlns:t="http://myfaces.apache.org/tomahawk"
           xmlns:tr="http://myfaces.apache.org/trinidad" >
 <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
 
-<tr:form>
+<tr:form usesUpload="true">
 <tr:panelHorizontalLayout rendered="#{cNode.allowTreeEdit}" >
 	<tr:panelAccordion discloseNone="true" >
 		<tr:showDetailItem text="#{msgs.nodeCreate}">
@@ -138,11 +139,6 @@
 			useWindow="true" windowWidth="500" windowHeight="400" />        
 
  		<tr:commandButton 
-	 		text="#{msgs.delete}"
-	 		onclick="if (!confirm('#{msgs.areYouSure}')) return false"
- 			actionListener="#{subNodes.deleteNodes}"/>
-
- 		<tr:commandButton 
  			partialSubmit="true"
 	 		text="#{msgs.up}" 
  			actionListener="#{subNodes.upNodes}"/>
@@ -161,17 +157,65 @@
  			partialSubmit="true" 
 	 		text="#{msgs.cancelSelect}" 
  			actionListener="#{subNodes.cancelSelectNodes}"/>
-
-		<tr:spacer width="30" height="0" />
+ 			
+ 		<tr:spacer width="20" height="0" />	
 
  		<tr:commandButton 
- 			rendered="#{sBean.superUser}"
-	 		text="#{msgs.forceDelete}"
-	 		shortDesc="#{msgs.dscForceDelete}"
-	 		onclick="if (!confirm('#{msgs.areYouSureForceDelete}')) return false"
- 			actionListener="#{subNodes.forceDeleteNodes}"/>
+	 		text="#{msgs.delete}"
+	 		onclick="if (!confirm('#{msgs.areYouSure}')) return false"
+ 			actionListener="#{subNodes.deleteNodes}"/>
+
+<!--             		
+		<tr:inputFile 
+		    id="importXml"
+			rendered="#{sBean.superUser}" 
+			valueChangeListener="#{subNodes.importNodes}"
+			value="#{subNodes.file}" 
+			label="#{msgs.import}"
+			shortDesc="#{msgs.importNodes}" >
+		</tr:inputFile>
+ -->
  			
 	</tr:panelButtonBar>
+	<tr:spacer height="5" width="0" ></tr:spacer>
+	<tr:panelAccordion 
+		discloseNone="true" 
+		rendered="#{sBean.superUser}" >
+		<tr:showDetailItem text="#{msgs.extraOperation}">
+		<tr:spacer height="5" width="0" />
+		<tr:panelHorizontalLayout>
+			<tr:panelCaptionGroup captionText="#{msgs.importNodes}">
+				<tr:panelButtonBar>
+					<tr:commandButton 
+						shortDesc="#{msgs.importNodes}" 
+						text="#{msgs.import}" 
+						action="#{subNodes.doUpload}"/>
+					<t:inputFileUpload 
+						title="#{msgs.importNodes}"
+						rendered="#{sBean.superUser}"
+        				id="importXml"	
+    	   				value="#{subNodes.file}"
+            			maxlength="1000000"/>
+				</tr:panelButtonBar>            		
+			</tr:panelCaptionGroup>
+			<tr:panelCaptionGroup captionText="#{msgs.exportNodes}">
+ 				<tr:commandButton
+ 					id="exportXml"
+ 					rendered="#{sBean.superUser}"
+	 				text="#{msgs.export}"
+	 				shortDesc="#{msgs.exportNodes}"
+ 					actionListener="#{subNodes.exportNodes}"/>
+			</tr:panelCaptionGroup>
+			<tr:panelCaptionGroup captionText="#{msgs.forceDelete}" >
+				<tr:commandButton 
+	 				text="#{msgs.forceDelete}"
+	 				shortDesc="#{msgs.dscForceDelete}"
+	 				onclick="if (!confirm('#{msgs.areYouSureForceDelete}')) return false"
+ 					actionListener="#{subNodes.forceDeleteNodes}"/>
+			</tr:panelCaptionGroup>
+		</tr:panelHorizontalLayout>
+		</tr:showDetailItem> 
+	</tr:panelAccordion>
 	</tr:panelCaptionGroup>
 <tr:spacer height="10" />
 <!-- ********************* -->

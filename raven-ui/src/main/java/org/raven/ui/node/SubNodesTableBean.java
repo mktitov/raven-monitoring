@@ -17,13 +17,19 @@
 
 package org.raven.ui.node;
 
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import javax.faces.component.UIComponent;
+import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
+import javax.faces.event.ValueChangeEvent;
+import javax.servlet.http.HttpServletResponse;
+import org.apache.myfaces.custom.fileupload.UploadedFile;
 import org.apache.myfaces.trinidad.component.UIXTable;
 import org.apache.myfaces.trinidad.model.RowKeySet;
 import org.apache.myfaces.trinidad.component.core.output.CoreMessage;
@@ -32,8 +38,12 @@ import org.raven.audit.AuditRecord;
 import org.raven.audit.Auditor;
 import org.raven.tree.Node;
 import org.raven.tree.Tree;
+import org.raven.tree.impl.NodeListenerAdapter;
+import org.raven.tree.store.impl.XMLReader;
+import org.raven.tree.store.impl.XMLWriter;
 import org.raven.ui.SessionBean;
 import org.raven.ui.util.Messages;
+import org.raven.ui.vo.ExportBean;
 import org.apache.myfaces.trinidad.event.ReturnEvent;
 import org.raven.template.impl.TemplateEntry;
 import org.slf4j.Logger;
@@ -44,15 +54,16 @@ public class SubNodesTableBean
 	private static final Logger logger = LoggerFactory.getLogger(SubNodesTableBean.class);
 	private UIComponent table = null;
 	private CoreMessage message = null;
+	private UploadedFile uFile = null;
 
 	public SubNodesTableBean() 
 	{
 		//  selected = Collections.EMPTY_LIST; 
 	}
 
-	  public static ArrayList<Object> getSeletedTableRowsData(UIXTable tbl, boolean clearState)
-	  {
-	    RowKeySet state = tbl.getSelectedRowKeys();
+	public static ArrayList<Object> getSeletedTableRowsData(UIXTable tbl, boolean clearState)
+	{
+		RowKeySet state = tbl.getSelectedRowKeys();
 	    ArrayList<Object> ret = new ArrayList<Object>();
 	    Object oldKey = tbl.getRowKey();
 	    for(Iterator<Object> it = state.iterator(); it.hasNext();)
@@ -64,20 +75,20 @@ public class SubNodesTableBean
 	    tbl.setRowKey(oldKey);
 	    if(clearState) state.clear();
 	    return ret;
-	  }
+	}
 
-	  public static ArrayList<Object> getSeletedTableRowsData(UIXTable tbl)
-	  {
-		  return getSeletedTableRowsData(tbl,true);
-	  }
+	public static ArrayList<Object> getSeletedTableRowsData(UIXTable tbl)
+	{
+		return getSeletedTableRowsData(tbl,true);
+	}
 	  
-	  /**
+	/**
 	   * Loads selected nodes into the list.
 	   * @param lst
 	   * @return true if nodes has been loaded
 	   */
-	  public boolean loadNodeWrappers(List<NodeWrapper> lst)
-	  {
+	public boolean loadNodeWrappers(List<NodeWrapper> lst)
+	{
 		lst.clear();
 		ArrayList<Object> sel = getSeletedTableRowsData((UIXTable) table);
 	    NodeWrapper nw = null;
@@ -88,17 +99,17 @@ public class SubNodesTableBean
 	    }
 	    if(nw == null) return false;
 	    return true;
-	  }
+	}
 	  
-	  public String copyNodes()
-	  {
+	public String copyNodes()
+	{
 		 // CopyMoveNodeBean nb = (CopyMoveNodeBean) SessionBean.getElValue(CopyMoveNodeBean.BEAN_NAME);
 		  return "";
-	  }
-	  
-	  @SuppressWarnings("unchecked")
-	  public void deleteNodes22(ActionEvent action)
-	  {
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void deleteNodes22(ActionEvent action)
+	{
 		ArrayList<Object> sel = getSeletedTableRowsData((UIXTable) table);
 	    StringBuffer retb = new StringBuffer();
 	    SessionBean sb = SessionBean.getInstance();
@@ -122,8 +133,8 @@ public class SubNodesTableBean
 	    if(message!=null) message.setMessage(retb.toString());
 	  }
 
-	  public void deleteNodesX(ActionEvent action, boolean force)
-	  {
+	public void deleteNodesX(ActionEvent action, boolean force)
+	{
 		ArrayList<Object> sel = getSeletedTableRowsData((UIXTable) table);
 	    StringBuffer retb = new StringBuffer();
 	    SessionBean sb = SessionBean.getInstance();
@@ -150,24 +161,141 @@ public class SubNodesTableBean
 	  }
 	  
 	  
-	  public void deleteNodes(ActionEvent action)
-	  {
-		  deleteNodesX(action,false);
-	  }
+	public void deleteNodes(ActionEvent action)
+	{
+		deleteNodesX(action,false);
+	}
 
-	  public void forceDeleteNodes(ActionEvent action)
+	public void forceDeleteNodes(ActionEvent action)
+	{
+		deleteNodesX(action,true);
+	}
+	  
+	public void upNodes(ActionEvent action)
+	{
+		upDownNodesX((UIXTable) table, true);
+	}
+	  
+	public void downNodes(ActionEvent action)
+	{
+		upDownNodesX((UIXTable) table, false);
+	}
+/*
+	  public void importNodes(ValueChangeEvent event)
 	  {
-		  deleteNodesX(action,true);
+		  logger.info("!! importNodes: ");
+		  UploadedFile uf = (UploadedFile) event.getNewValue();
+		  if(uf==null) return;
+		  logger.info("!! importNodes: {}", uf.getName());
+		  logger.info("!! importNodes: len  {}", uf.getSize());
+		  InputStream is = null;
+		  try {
+			  is = uf.getInputStream();
+			  XMLReader xr = new XMLReader();
+			  xr.read(SessionBean.getNodeWrapper().getNode(), is);
+		  } catch (Exception e) {
+			  logger.error("on importNodes: ",e);
+		  }
+		  finally {
+			  try { is.close(); }  catch (Exception e) {}
+		  }
+	  }
+*/	  
+	  
+	  public UploadedFile getFile() {
+		  return uFile;
 	  }
 	  
-	  public void upNodes(ActionEvent action)
-	  {
-		  upDownNodesX((UIXTable) table, true);
+	  public void setFile(UploadedFile f) {
+		  uFile = f;
 	  }
 	  
-	  public void downNodes(ActionEvent action)
+	  public String doUpload()
 	  {
-		  upDownNodesX((UIXTable) table, false);
+		  message.setMessage("");
+		  UploadedFile file = getFile();
+	      if(file==null)
+	      {
+	    	  //message.setMessage("");
+	    	  return null;
+	      }	  
+		  InputStream is = null;
+		  SessionBean sb = SessionBean.getInstance();
+		  AddNodeListener listener = new AddNodeListener();
+		  Node node = sb.getCurrentNode();
+		  node.addListener(listener);
+		  try {
+			  is = file.getInputStream();
+			  XMLReader xr = new XMLReader();
+			  xr.read(SessionBean.getNodeWrapper().getNode(), is);
+			  SessionBean.getInstance().reloadLeftFrame();
+		  } catch (Throwable e) {
+			  logger.error("on importNodes: ",e);
+			  message.setMessage(e.getMessage());
+		  }
+		  finally {
+			  try { is.close(); }  catch (Exception e) {}
+		  }
+		  node.removeListener(listener);
+		  if(listener.nodes.size()>0)
+		  {
+			  StringBuilder b = new StringBuilder("nodes: ");
+			  for(String name : listener.nodes)
+			  {	
+				  b.append(name).append("; ");
+				  sb.writeAuditRecord(Action.NODES_IMPORT, b.toString());
+			  }	
+		  }
+	    return null;
+	  }
+	  
+	  public void exportNodes(ActionEvent action)
+	  {
+		  if( !SessionBean.getInstance().isSuperUser() ) 
+		  {
+			  message.setMessage(Messages.getUiMessage(Messages.ACCESS_DENIED));
+			  return;
+		  }
+		  
+		  ArrayList<Object> sel = getSeletedTableRowsData((UIXTable) table, true);
+		  if( sel.size() == 0 ) 
+		  {
+			  message.setMessage(Messages.getUiMessage(Messages.NO_SELECTED_NODES));
+			  return;
+		  }
+		  Node[] nodes = new Node[sel.size()];
+		  int i=0;
+		  StringBuilder b = new StringBuilder("nodes: ");
+		  for(Object o : sel)
+		  {
+			  Node n = ((NodeWrapper)o).getNode();
+			  nodes[i++] = n;
+			  b.append(n.getName()).append("; ");
+		  }	  
+		  writeExportNodesResponce(nodes);
+		  SessionBean sb = SessionBean.getInstance(); 
+		  sb.writeAuditRecord(Action.NODES_EXPORT, b.toString());
+	  }
+		
+	  private void writeExportNodesResponce(Node[] nodes)
+	  {
+		  FacesContext fc = FacesContext.getCurrentInstance();
+		  HttpServletResponse response = (HttpServletResponse) fc.getExternalContext().getResponse();
+		  String fName = ExportBean.makeFileName("nodes-", "xml");
+		  String charset = "UTF-8";
+		  response.setHeader("Content-disposition", "attachment; filename=" + fName);
+		  response.setContentType("text/xml");
+		  response.setCharacterEncoding(charset);	
+		  OutputStream os = null;
+		  try 
+		  {
+			  os = response.getOutputStream();
+			  XMLWriter x = new XMLWriter();
+			  x.write(os, charset, nodes);
+		  }
+		  catch (Exception e) { logger.error("on writeResponce: ",e); }
+		  finally { try {os.close();} catch(Exception e) {}}
+		  fc.responseComplete(); 			
 	  }
 	  
 	  public void upDownNodesX(UIXTable table, boolean up)
@@ -350,4 +478,21 @@ public class SubNodesTableBean
 		  this.table = table;
 		  unselectNodes();  
 	  }
+	  
+	  class AddNodeListener extends NodeListenerAdapter
+	  {
+		  List<String> nodes = new ArrayList<String>();
+		  
+		  AddNodeListener() {
+				super(false);
+		  }
+
+		  public void childrenAdded(Node owner, Node children) 
+		  {
+			if(children!=null)
+				nodes.add(children.getName());
+		  }
+		  
+	  }
+
 }
