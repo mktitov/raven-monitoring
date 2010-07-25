@@ -55,6 +55,10 @@
             <artifactId>mime-util</artifactId>
         </dependency>
         <dependency>
+            <groupId>javax.mail</groupId>
+            <artifactId>mail</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.directory</groupId>
             <artifactId>groovy-ldap</artifactId>
         </dependency>
