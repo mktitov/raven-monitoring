@@ -48,6 +48,9 @@ public class HttpRequestNode extends HttpResponseHandlerNode
     private RequestContentType requestContentType;
 
     @NotNull @Parameter
+    private Integer connectionTimeout;
+
+    @NotNull @Parameter
     private String host;
 
     @NotNull @Parameter
@@ -62,6 +65,8 @@ public class HttpRequestNode extends HttpResponseHandlerNode
     {
         Map<String, Object> requestMap = (Map<String, Object>) params.get(HttpSessionNode.REQUEST);
         HttpRequestBase request = requestType==RequestType.GET? new HttpGet() : new HttpPost();
+        request.getParams().setIntParameter("http.connection.timeout", connectionTimeout);
+
         requestMap.put(HttpSessionNode.REQUEST_REQUEST, request);
 
         requestMap.put(HttpSessionNode.URI, uri);
@@ -88,7 +93,7 @@ public class HttpRequestNode extends HttpResponseHandlerNode
                     buf.append("&");
                 else
                     first = false;
-                buf.append(param.getKey()+"="+URLEncoder.encode(""+param.getValue(), encoding));
+                buf.append(param.getKey()).append("=").append(URLEncoder.encode("" + param.getValue(), encoding));
             }
             if (requestContentType == RequestContentType.NONE)
                 _uri+=_uri.contains("?")? "&" : "?" + buf.toString();
@@ -101,6 +106,14 @@ public class HttpRequestNode extends HttpResponseHandlerNode
         request.setURI(new URI(_uri));
         
         return request;
+    }
+
+    public Integer getConnectionTimeout() {
+        return connectionTimeout;
+    }
+
+    public void setConnectionTimeout(Integer connectionTimeout) {
+        this.connectionTimeout = connectionTimeout;
     }
 
     public String getUri() {

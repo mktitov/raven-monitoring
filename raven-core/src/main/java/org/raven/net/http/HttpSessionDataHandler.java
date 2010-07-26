@@ -120,6 +120,7 @@ public class HttpSessionDataHandler implements DataHandler
                                     session.getLogger().debug(
                                             "Sending request: "+request.getRequestLine().getMethod()
                                             + " "+request.getRequestLine().getUri());
+//                                request.g
                                 response = client.execute(target, request);
                                 if (session.isLogLevelEnabled(LogLevel.DEBUG))
                                     session.getLogger().debug("Response status: "+response.getStatusLine().toString());

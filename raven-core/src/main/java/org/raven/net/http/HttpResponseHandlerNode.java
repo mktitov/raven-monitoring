@@ -129,7 +129,7 @@ public class HttpResponseHandlerNode extends BaseNode
         super.formExpressionBindings(bindings);
         bindingSupport.addTo(bindings);
     }
-
+    
     public OperationStatistic getOperationStatistic() {
         return operationStatistic;
     }

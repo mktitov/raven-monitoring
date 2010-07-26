@@ -80,6 +80,9 @@ public class HttpSessionNode extends AbstractAsyncDataPipe
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
     private Object errorHandler;
 
+    @Parameter(defaultValue="5000")
+    private Integer connectionTimeout;
+
     @Override
     public void formExpressionBindings(Bindings bindings)
     {
@@ -92,6 +95,14 @@ public class HttpSessionNode extends AbstractAsyncDataPipe
     {
         HttpClient client = createHttpClient();
         return new HttpSessionDataHandler(client);
+    }
+
+    public Integer getConnectionTimeout() {
+        return connectionTimeout;
+    }
+
+    public void setConnectionTimeout(Integer connectionTimeout) {
+        this.connectionTimeout = connectionTimeout;
     }
 
     public AuthSchema getAuthSchema() {
