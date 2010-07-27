@@ -66,6 +66,7 @@ public class HttpRequestNode extends HttpResponseHandlerNode
         Map<String, Object> requestMap = (Map<String, Object>) params.get(HttpSessionNode.REQUEST);
         HttpRequestBase request = requestType==RequestType.GET? new HttpGet() : new HttpPost();
         request.getParams().setIntParameter("http.connection.timeout", connectionTimeout);
+        request.getParams().setIntParameter("http.socket.timeout", connectionTimeout);
 
         requestMap.put(HttpSessionNode.REQUEST_REQUEST, request);
 

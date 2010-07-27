@@ -17,6 +17,7 @@
 
 package org.raven.net.http;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -98,10 +99,7 @@ public class HttpSessionDataHandler implements DataHandler
                         if (response!=null && expectedStatus!=null
                             && !expectedStatus.equals(response.getStatusLine().getStatusCode()))
                         {
-                            HttpEntity entity = response.getEntity();
-                            if (entity!=null)
-                                entity.consumeContent();
-                            return session.handleError(params);
+                            return handleError(session, response.getEntity(), params);
                         }
 
                         long start = handler.operationStatistic.markOperationProcessingStart();
@@ -120,8 +118,13 @@ public class HttpSessionDataHandler implements DataHandler
                                     session.getLogger().debug(
                                             "Sending request: "+request.getRequestLine().getMethod()
                                             + " "+request.getRequestLine().getUri());
-//                                request.g
-                                response = client.execute(target, request);
+                                try{
+                                    response = client.execute(target, request);
+                                }catch(Throwable e){
+                                    if (session.isLogLevelEnabled(LogLevel.DEBUG))
+                                        session.getLogger().debug("Executing request error. "+e.getMessage());
+                                    return handleError(session, response==null? null : response.getEntity(), params);
+                                }
                                 if (session.isLogLevelEnabled(LogLevel.DEBUG))
                                     session.getLogger().debug("Response status: "+response.getStatusLine().toString());
                             }
@@ -140,6 +143,13 @@ public class HttpSessionDataHandler implements DataHandler
         {
             isNewSession = false;
         }
+    }
+
+    private Object handleError(HttpSessionNode session, HttpEntity entity, Map<String, Object> params) throws IOException
+    {
+        if (entity!=null)
+            entity.consumeContent();
+        return session.handleError(params);
     }
 
     public String getStatusMessage()
