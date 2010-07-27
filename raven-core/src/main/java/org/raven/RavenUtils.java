@@ -32,6 +32,8 @@ import org.raven.table.Table;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
+import org.weda.internal.annotations.Service;
+import org.weda.services.TypeConverter;
 
 /**
  *
@@ -40,6 +42,9 @@ import org.raven.tree.impl.BaseNode;
 public class RavenUtils
 {
     public static final String DEFAULT_SPLIT_DELIMITER = ",";
+
+    @Service
+    public static TypeConverter converter;
     
     private RavenUtils(){ }
 
@@ -49,7 +54,7 @@ public class RavenUtils
      */
     public static String[] split(String str)
     {
-        return split(str,DEFAULT_SPLIT_DELIMITER);
+        return split(str, DEFAULT_SPLIT_DELIMITER);
     }
     
     /**
@@ -140,5 +145,41 @@ public class RavenUtils
 			}
 		}
 	}
+
+    public static String tableToHtml(Table table)
+    {
+        StringBuilder builder = new StringBuilder("<table><tr>");
+
+        for (String columnName: table.getColumnNames())
+            builder.append("<th>").append(columnName==null||columnName.isEmpty()? "&nbsp;" : columnName)
+                .append("</th>");
+        builder.append("</tr>");
+
+        Iterator<Object[]> it = table.getRowIterator();
+        while (it.hasNext()){
+            builder.append("<tr>");
+            for (Object value: it.next()){
+                String pattern = null;
+                if (value instanceof java.sql.Date)
+                    pattern = "dd.MM.yyyy";
+                else if (value instanceof java.sql.Time)
+                    pattern = "HH:mm:ss";
+                else if(value instanceof java.util.Date)
+                    pattern = "dd.MM.yyyy HH:mm:ss";
+                else if(value instanceof Double || value instanceof Float)
+                    pattern = "0.00";
+                String strValue = converter.convert(String.class, value, pattern);
+                if (strValue==null || strValue.isEmpty())
+                    strValue = "&nbsp;";
+                builder.append("<td>").append(strValue).append("</td>");
+            }
+            builder.append("</tr>");
+        }
+
+        builder.append("</table>");
+
+        return builder.toString();
+        
+    }
 
 }
