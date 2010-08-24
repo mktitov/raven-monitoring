@@ -19,6 +19,7 @@ package org.raven;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -31,6 +32,8 @@ import org.raven.ds.RecordSchemaField;
 import org.raven.table.Table;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.Viewable;
+import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.BaseNode;
 import org.weda.internal.annotations.Service;
 import org.weda.services.TypeConverter;
@@ -146,9 +149,12 @@ public class RavenUtils
 		}
 	}
 
-    public static String tableToHtml(Table table)
+    public static StringBuilder tableToHtml(Table table, StringBuilder builder)
     {
-        StringBuilder builder = new StringBuilder("<table><tr>");
+        if (builder==null)
+            builder = new StringBuilder("<table><tr>");
+        else
+            builder.append("<table><tr>");
 
         for (String columnName: table.getColumnNames())
             builder.append("<th>").append(columnName==null||columnName.isEmpty()? "&nbsp;" : columnName)
@@ -178,8 +184,59 @@ public class RavenUtils
 
         builder.append("</table>");
 
-        return builder.toString();
-        
+        return builder;
     }
 
+    public static StringBuilder viewableObjectToHtml(ViewableObject obj, StringBuilder builder)
+    {
+        if (builder==null)
+            builder = new StringBuilder();
+        if (Viewable.RAVEN_TABLE_MIMETYPE.equals(obj.getMimeType()))
+            tableToHtml((Table)obj.getData(), builder);
+        else if (Viewable.RAVEN_TEXT_MIMETYPE.equals(obj.getMimeType()))
+            builder.append(obj.getData());
+        return builder;
+    }
+
+    /**
+     * Returns the map of the refresh attributes of the node and it's child nodes or empty map if
+     * node and it's child nodes does not contain refresh attributes
+     * @param node the source node
+     * @throws Exception
+     */
+    public static Map<String, NodeAttribute> getSelfAndChildsRefreshAttributes(Node node) throws Exception
+    {
+        Map<String, NodeAttribute> attrs = new HashMap<String, NodeAttribute>();
+        ArrayList<Node> nodes = new ArrayList<Node>();
+        nodes.add(node);
+        List<Node> childs = node.getSortedChildrens();
+        if (childs!=null)
+            nodes.addAll(childs);
+        for (Node n: nodes)
+            if (n instanceof Viewable){
+                Map<String, NodeAttribute> refAttrs = ((Viewable)n).getRefreshAttributes();
+                if (refAttrs!=null)
+                    attrs.putAll(refAttrs);
+            }
+        return attrs.isEmpty()? Collections.EMPTY_MAP : attrs;
+    }
+
+    public static Collection<ViewableObject> getSelfAndChildsViewableObjects(
+            Node node, Map<String, NodeAttribute> refreshAttributes)
+        throws Exception
+    {
+        ArrayList<ViewableObject> vos = new ArrayList<ViewableObject>();
+        ArrayList<Node> nodes = new ArrayList<Node>();
+        nodes.add(node);
+        List<Node> childs = node.getSortedChildrens();
+        if (childs!=null)
+            nodes.addAll(childs);
+        for (Node n: nodes)
+            if (n instanceof Viewable){
+                Collection<ViewableObject> objects = ((Viewable)n).getViewableObjects(refreshAttributes);
+                if (objects!=null)
+                    vos.addAll(objects);
+            }
+        return vos.isEmpty()? Collections.EMPTY_LIST : vos;
+    }
 }

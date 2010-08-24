@@ -17,27 +17,13 @@
 
 package org.raven.net;
 
+import java.util.Collection;
+
 /**
  *
  * @author Mikhail Titov
  */
-public interface MailMessagePart
+public interface MailMessagePartContainer
 {
-    /**
-     * Returns the name of the part.
-     */
-    public String getName();
-    /**
-     * Returns the file name of the content. Used only if {@link #getIsFile()} returns <b>true</b>.
-     */
-    public String getFileName();
-    /**
-     * Returns the mime type of the content.
-     */
-    public String getContentType();
-    /**
-     * Returns the message part content. If content returns the String then value of the attribute
-     * <code>{@link #getContentEncoding()}
-     */
-    public Object getContent() throws Exception;
+    public Collection<MailMessagePart> getMessageParts();
 }

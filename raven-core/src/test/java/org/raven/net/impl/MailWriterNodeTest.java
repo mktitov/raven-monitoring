@@ -18,11 +18,18 @@ package org.raven.net.impl;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import org.junit.Before;
 import org.junit.Test;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
+import org.raven.table.TableImpl;
 import org.raven.test.PushDataSource;
 import org.raven.test.RavenCoreTestCase;
+import org.raven.tree.Viewable;
+import org.raven.tree.ViewableObject;
+import org.raven.tree.impl.ViewableObjectImpl;
 
 /**
  *
@@ -30,49 +37,85 @@ import org.raven.test.RavenCoreTestCase;
  */
 public class MailWriterNodeTest extends RavenCoreTestCase
 {
-    @Test
-    public void sendToGoogleTest() throws Exception
+    private MailWriterNode mailer;
+    private PushDataSource ds;
+
+    @Before
+    public void prepare()
     {
-        PushDataSource ds = new PushDataSource();
+        ds = new PushDataSource();
         ds.setName("ds");
         tree.getRootNode().addAndSaveChildren(ds);
         assertTrue(ds.start());
+        
+        mailer = new MailWriterNode();
+        mailer.setName("email");
+        tree.getRootNode().addAndSaveChildren(mailer);
+        mailer.setDataSource(ds);
+        mailer.setLogLevel(LogLevel.DEBUG);
 
-        MailWriterNode email = new MailWriterNode();
-        email.setName("email");
-        tree.getRootNode().addAndSaveChildren(email);
-        email.setDataSource(ds);
-        email.setLogLevel(LogLevel.DEBUG);
-        email.setSmptHost("smpt.gmail.com");
-        email.setSmptPort(465);
-        email.setUseAuth(Boolean.TRUE);
-        email.setUseSsl(Boolean.TRUE);
-        email.setUser("mikhail1207");
-        email.setPassword("");
-        email.setFrom("mikhail1207@gmail.com");
-        email.setTo("mikhail1207@gmail.com");
-        email.setSubject("Тестовое сообщение с файлом");
-        email.setContentEncoding("utf-8");
-        assertTrue(email.start());
+        mailer.setSmptHost("mail.komi.mts.ru");
+        mailer.setFrom("mikhail1207@gmail.com");
+        mailer.setTo("tim@komi.mts.ru");
+//        email.setSmptHost("smpt.gmail.com");
+//        email.setSmptPort(465);
+//        email.setUseAuth(Boolean.TRUE);
+//        email.setUseSsl(Boolean.TRUE);
+//        email.setUser("mikhail1207");
+//        email.setPassword("");
+//        email.setFrom("mikhail1207@gmail.com");
+//        email.setTo("mikhail1207@gmail.com");
 
+        mailer.setSubject("Тестовое сообщение");
+        assertTrue(mailer.start());
+    }
+
+//    @Test
+    public void sendToGoogleTest() throws Exception
+    {
         AttributeValueMessagePartNode part = new AttributeValueMessagePartNode();
         part.setName("part1");
-        email.addAndSaveChildren(part);
+        mailer.addAndSaveChildren(part);
         part.setContentType("text/plain");
         part.setValue("Привет мир");
         assertTrue(part.start());
 
         AttributeValueMessagePartNode part2 = new AttributeValueMessagePartNode();
         part2.setName("part2");
-        email.addAndSaveChildren(part2);
+        mailer.addAndSaveChildren(part2);
         part2.setContentType("image/jpeg");
         part2.getNodeAttribute("value").setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
         part2.setValue("data");
         part2.setFileName("Фотография");
         assertTrue(part2.start());
 
-
         InputStream is = new FileInputStream("/home/tim/photo/80-400.jpeg");
         ds.pushData(is);
+    }
+
+    @Test
+    public void viewableObjectsTest() throws Exception
+    {
+        TestViewable source = new TestViewable();
+        source.setName("source");
+        tree.getRootNode().addAndSaveChildren(source);
+        assertTrue(source.start());
+        List<ViewableObject> vos = new ArrayList<ViewableObject>();
+        vos.add(new ViewableObjectImpl(Viewable.RAVEN_TEXT_MIMETYPE, "<h1>Название отчета</h1>"));
+        vos.add(new ViewableObjectImpl(Viewable.RAVEN_TEXT_MIMETYPE, "<b>01.01.2010</b>"));
+        TableImpl table = new TableImpl(new String[]{"Колонка 1", "Колонка 2"});
+        table.addRow(new Object[]{1, "знач 1"});
+        vos.add(new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table));
+        source.setViewableObjects(vos);
+
+        ViewableObjectsMessagePartNode part = new ViewableObjectsMessagePartNode();
+        part.setName("part");
+        mailer.addAndSaveChildren(part);
+        part.setContentType("application/vnd.ms-excel");
+        part.setFileName("report.xls");
+        part.setSource(source);
+        assertTrue(part.start());
+
+        ds.pushData("marker");
     }
 }

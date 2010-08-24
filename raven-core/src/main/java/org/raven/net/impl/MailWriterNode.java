@@ -49,7 +49,7 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass(childNodes={AttributeValueMessagePartNode.class})
+@NodeClass(childNodes={AttributeValueMessagePartNode.class, ViewableObjectsMessagePartNode.class})
 public class MailWriterNode extends AbstractSafeDataPipe
 {
     @NotNull @Parameter
@@ -93,7 +93,7 @@ public class MailWriterNode extends AbstractSafeDataPipe
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
         Properties props = new Properties();
-        props.put("mail.smtp.host", "smtp.gmail.com");
+        props.put("mail.smtp.host", smptHost);
         props.put("mail.smtp.port", smptPort);
         if (useAuth)
             props.put("mail.smtp.auth", "true");
@@ -173,7 +173,7 @@ public class MailWriterNode extends AbstractSafeDataPipe
         message.setContent(multipart);
     }
 
-    private void setContent(MimeBodyPart bodyPart, MailMessagePart part) throws MessagingException
+    private void setContent(MimeBodyPart bodyPart, MailMessagePart part) throws Exception
     {
         byte[] is = converter.convert(byte[].class, part.getContent(), getContentEncoding());
         ByteArrayMailDataSource ds = new ByteArrayMailDataSource(is, part.getContentType(), part.getName());
