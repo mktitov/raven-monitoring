@@ -45,7 +45,7 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 	 */
 	protected List<ViewableObjectWrapper> getValue(NodeWrapper nwx)
 	{
-		log.info("loading objects for "+nwx.getNodePath());
+		log.info("loading objects for {}",nwx.getNodePath());
 		Viewable viewable;
 		int uid = 2;
 		List<ViewableObjectWrapper> vowl = new ArrayList<ViewableObjectWrapper>();
@@ -59,10 +59,12 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 		viewable = (Viewable) nwx.getNode();
 		List<ViewableObject> vol = null;
 		
-		try { vol = viewable.getViewableObjects(nwx.getRefreshAttributesMap());}
-			catch (Exception e) { log.error("on load viewable objects: ",e);}
+		try { 
+			vol = viewable.getViewableObjects(nwx.getRefreshAttributesMap());
+		} catch (Exception e) { log.error("on load viewable objects: ",e);}
 		if(vol==null)
 		{
+			log.info("on load viewable objects for {} : NULL",nwx.getNodePath());
 			//vowl.clear();
 			return vowl;
 		}	
@@ -127,7 +129,17 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 				lst.add( wr );
 			}	
 			NodeWrapper x = z.getVoSourceNW();
-			List<ViewableObjectWrapper> zz = nw.isShowVO()? get(x,reload) : getFromCacheOnly(x);
+			List<ViewableObjectWrapper> zz;
+			//List<ViewableObjectWrapper> zz = nw.isShowVO()? get(x,reload) : getFromCacheOnly(x);
+			if(nw.isShowVO()) {
+				log.info("get(node='{}', reload={})",x.getNodeName(),reload);
+				zz = get(x,reload);
+			}	
+			else {
+				log.info("getFromCacheOnly, node='{}'",x.getNodeName());
+				zz = getFromCacheOnly(x);
+			}	
+			
 			if(zz!=null) {
 				lst.addAll(zz);
 				log.info("from {} loaded2 {} VO ",x.getNodePath(),zz.size());
