@@ -27,7 +27,6 @@ import java.util.List;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
-import javax.faces.event.ValueChangeEvent;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.myfaces.custom.fileupload.UploadedFile;
 import org.apache.myfaces.trinidad.component.UIXTable;

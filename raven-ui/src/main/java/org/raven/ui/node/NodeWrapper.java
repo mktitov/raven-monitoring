@@ -83,6 +83,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 {
 	public static final String BEAN_NAME = "cNode";
     public static final String VO_SOURCE = "viewableObjectSource";
+    public static final String VO_HIDE_NODE_NAME = "hideNodeName";
     public static final int MAX_VO_SEARCH = 20;
 	public static final String FROM_TO = "'{}' >> '{}'";
 	public static final String FROMX_TO = "{} : '{}' >> '{}'";
@@ -133,6 +134,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	private List<NodeWrapper> upperNodes;
 	private int shortNameLen = 0;
 	private String iconPath = null;
+	private Boolean hideNodeName;
 		
 	public NodeWrapper() 
 	{
@@ -233,6 +235,18 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		return upperNodes;
 	}
 
+	public static boolean getBoolAttrValue(Node cnode, String attr, boolean defValue)
+	{
+		NodeAttribute na = cnode.getNodeAttribute(attr);
+		if(na==null) return defValue;
+		Object n = na.getRealValue();
+		if(n==null) return defValue;
+		if (n instanceof Boolean) 
+			return (Boolean)n;
+		else logger.warn("attribute {} of node {} is't instance of Boolean ",attr,cnode.getPath());
+		return defValue;
+	}
+	
 	public static Node getNodeByAttr(Node cnode, String attr)
 	{
 		logger.info("curNode "+cnode.getPath());
@@ -247,7 +261,20 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		else logger.warn("attribute {} of node {} is't instance of Node ",attr,cnode.getPath());
 		return ret;
 	}
-
+	
+	public boolean isHideNodeName()
+	{
+		if(hideNodeName==null)
+			return getBoolAttrValue(this.getNode(), VO_HIDE_NODE_NAME, false);
+		return hideNodeName;
+	}
+	
+	public void setHideNodeName(boolean hide)
+	{
+		hideNodeName = hide;
+	}
+	
+	
 //	public static Viewable getViewableByVoSource(Viewable v)
 //	{
 //		Node n = getNodeByAttr(v,VO_SOURCE);
@@ -1443,8 +1470,12 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	public NodeWrapper getVoSourceNW()
 	{
 		Node n = getVoSource();
-		if(n.getId()==getNodeId()) return this;
-		return new NodeWrapper(n);
+		if(n.getId()==getNodeId()) 
+			return this;
+		NodeWrapper nw = new NodeWrapper(n);
+		nw.setRefreshPressed(isRefreshPressed());
+		nw.setHideNodeName(isHideNodeName());
+		return nw;
 	}
 
 	public String getLogMessageFilter()

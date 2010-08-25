@@ -3,14 +3,14 @@ package org.raven.ui.attr;
 import java.util.Map;
 import org.raven.cache.AbstractCache;
 import org.raven.tree.NodeAttribute;
-import org.raven.tree.Viewable;
+//import org.raven.tree.Viewable;
 import org.raven.ui.node.NodeWrapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 
 public class RACache extends AbstractCache<NodeWrapper,Map<String,NodeAttribute>,Integer> 
 {
-	private static Logger logger = LoggerFactory.getLogger(RACache.class);
+//	private static Logger logger = LoggerFactory.getLogger(RACache.class);
 	
 	public RACache()
 	{
@@ -61,7 +61,7 @@ public class RACache extends AbstractCache<NodeWrapper,Map<String,NodeAttribute>
 		if(!found) put(nw.getNodeId(), ra);
 		return ra;
 	}
-*/
+
 	private Map<String,NodeAttribute> getRA(Viewable viewable)
 	{
 		Map<String,NodeAttribute> ra = null;
@@ -69,5 +69,5 @@ public class RACache extends AbstractCache<NodeWrapper,Map<String,NodeAttribute>
 		catch (Exception e){logger.error("on load refresh attributes: ",e);}
 		return ra;
 	}	
-	
+*/	
 }

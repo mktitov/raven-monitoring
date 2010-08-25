@@ -28,7 +28,8 @@ import org.weda.internal.CacheEntity;
  */
 public class SessionCache implements Cache
 {
-    public <T> CacheEntity<T> get(String id)
+    @SuppressWarnings("unchecked")
+	public <T> CacheEntity<T> get(String id)
     {
         HttpSession session = getSession(false);
         if (session==null)
@@ -37,7 +38,8 @@ public class SessionCache implements Cache
             return (CacheEntity<T>) session.getAttribute(id);
     }
 
-    public void put(String id, CacheEntity entity)
+    @SuppressWarnings("unchecked")
+	public void put(String id, CacheEntity entity)
     {
         getSession(true).setAttribute(id, entity);
     }

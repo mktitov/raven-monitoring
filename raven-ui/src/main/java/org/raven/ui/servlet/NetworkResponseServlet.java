@@ -44,7 +44,10 @@ import org.raven.ui.util.RavenRegistry;
  */
 public class NetworkResponseServlet extends HttpServlet implements CometProcessor
 {
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+	private static final long serialVersionUID = 3540687833508728534L;
+
+	@SuppressWarnings("unchecked")
+	protected void processRequest(HttpServletRequest request, HttpServletResponse response)
         throws ServletException, IOException
     {
         Registry registry = RavenRegistry.getRegistry();
@@ -68,7 +71,7 @@ public class NetworkResponseServlet extends HttpServlet implements CometProcesso
                 {
                     response.setHeader(
                             "WWW-Authenticate", "BASIC realm=\"RAVEN simple request interface\"");
-                    response.sendError(response.SC_UNAUTHORIZED);
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
                     return;
                 }
                 else
@@ -237,7 +240,7 @@ public class NetworkResponseServlet extends HttpServlet implements CometProcesso
                 {
                     response.setHeader(
                             "WWW-Authenticate", "BASIC realm=\"RAVEN simple request interface\"");
-                    response.sendError(response.SC_UNAUTHORIZED);
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
                     event.close();
                     return;
                 }
@@ -271,7 +274,8 @@ public class NetworkResponseServlet extends HttpServlet implements CometProcesso
         }
     }
 
-    private void processRequest(CometEvent event) throws IOException
+    @SuppressWarnings("unchecked")
+	private void processRequest(CometEvent event) throws IOException
     {
         Registry registry = RavenRegistry.getRegistry();
         NetworkResponseService responseService = registry.getService(NetworkResponseService.class);

@@ -35,7 +35,8 @@ import org.weda.constraints.impl.ReferenceValueImpl;
  */
 public class SessionAttributeReferenceValues implements AttributeReferenceValues
 {
-    public boolean getReferenceValues(NodeAttribute attr, ReferenceValueCollection referenceValues)
+    @SuppressWarnings("unchecked")
+	public boolean getReferenceValues(NodeAttribute attr, ReferenceValueCollection referenceValues)
             throws TooManyReferenceValuesException 
     {
         if (!SessionAttributeValueHandlerFactory.TYPE.equals(attr.getValueHandlerType()))

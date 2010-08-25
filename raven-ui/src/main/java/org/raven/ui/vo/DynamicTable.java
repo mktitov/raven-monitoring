@@ -124,7 +124,6 @@ alue(ec, null, parName);
 	    }
 	
 	    // Get table model
-	    @SuppressWarnings("unchecked")
 		public CollectionModel getCollectionModel()
 	    {
 	        if(model == null)

@@ -427,8 +427,8 @@ partialTriggers=":poolStatus"
 	  	  	<tr:spacer width="30" height="0" />
 		<tr:panelGroupLayout layout="vertical"  >
 		 	<tr:outputFormatted 
-					inlineStyle="COLOR: green; FONT-STYLE: italic;" 
-					value="&lt;small&gt;#{row.fromDate}&lt;/small&gt;"/>
+				inlineStyle="COLOR: green; FONT-STYLE: italic;" 
+				value="&lt;small&gt;#{row.fromDate}&lt;/small&gt;"/>
 			<tr:table 
 				rowBandingInterval="1" 
 				id = "tableView"

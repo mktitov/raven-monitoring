@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 */
 public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrapper>, Integer> 
 {
-	private static final Logger logger = LoggerFactory.getLogger(VObyNode.class);
+	private static final Logger log = LoggerFactory.getLogger(VObyNode.class);
 	private ImagesStorage imagesStorage;
 	
 	public VObyNode()
@@ -45,7 +45,7 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 	 */
 	protected List<ViewableObjectWrapper> getValue(NodeWrapper nwx)
 	{
-		logger.info("loading objects for "+nwx.getNodePath());
+		log.info("loading objects for "+nwx.getNodePath());
 		Viewable viewable;
 		int uid = 2;
 		List<ViewableObjectWrapper> vowl = new ArrayList<ViewableObjectWrapper>();
@@ -60,7 +60,7 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 		List<ViewableObject> vol = null;
 		
 		try { vol = viewable.getViewableObjects(nwx.getRefreshAttributesMap());}
-			catch (Exception e) { logger.error("on load viewable objects: ",e);}
+			catch (Exception e) { log.error("on load viewable objects: ",e);}
 		if(vol==null)
 		{
 			//vowl.clear();
@@ -75,7 +75,7 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 				imagesStorage.put(wr);
 			vowl.add(wr);
 		}
-		logger.info("loading objects: "+vowl.size());
+		log.info("loading objects: "+vowl.size());
 		return vowl;
 	}
 	
@@ -94,64 +94,46 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 	
 	public List<ViewableObjectWrapper> getObjects(NodeWrapper nw)
 	{
-		logger.info("getObjects for "+nw.getNodePath());
+		log.info("getObjects for "+nw.getNodePath());
 		boolean reload = nw.isNeedRefreshVO();
+		boolean hideNN = nw.isHideNodeName();
 		nw.setNeedRefreshVO(false);
 		List<ViewableObjectWrapper> lst = new ArrayList<ViewableObjectWrapper>();
-		ViewableObjectWrapper wrp = new ViewableObjectWrapper(nw.getNode());
-		wrp.setUid(1);
-		wrp.setNodeId(nw.getNodeId());
-		lst.add(0, wrp );
+		
+		if(!hideNN) {
+			ViewableObjectWrapper wrp = new ViewableObjectWrapper(nw.getNode());
+			wrp.setUid(1);
+			wrp.setNodeId(nw.getNodeId());
+			lst.add(0, wrp );
+		}
 		
 		NodeWrapper nwx = nw.getVoSourceNW();
-		if(nwx.getNodeId()!=nw.getNodeId()) 
-			nwx.setRefreshPressed(nw.isRefreshPressed());
-		if(!nw.isShowVO())
-		{
-			List<ViewableObjectWrapper> no = getFromCacheOnly(nwx);
-			if(no != null) lst.addAll(no);
-			return lst;
-		}	
 		
-		List<ViewableObjectWrapper> no = get(nwx,reload);
-		if(no != null)
-		{
-			logger.info("from {} loaded {} VO ",nwx.getNodePath(),no.size());
+		List<ViewableObjectWrapper> no = nw.isShowVO()? get(nwx,reload) : getFromCacheOnly(nwx);
+		if(no != null)	{
+			log.info("from {} loaded {} VO ",nwx.getNodePath(),no.size());
 			lst.addAll(no);
 		}
 		
-	//	if(!nw.isChildViewable()) 
-	//	{
-	//		logger.info("Node {} has not viewable children",nw.getNodePath());
-	//		return lst;
-	//	}	
-	//	List<NodeWrapper> c = nw.getViewableChilddren();
-		List<NodeWrapper> c = nw.getChildrenList();
+		List<NodeWrapper> c = nwx.getChildrenList();
 		if(c==null) return lst;
-		//logger.info("Node {} has {} viewable children",nw.getNodePath(),c.size());
-		//boolean arFlag = false;
+		
 		for(NodeWrapper z : c)
 		{
-			ViewableObjectWrapper wr = new ViewableObjectWrapper(z.getNode());
-			wr.setUid(1);
-			wr.setNodeId(z.getNodeId());
-			lst.add( wr );
+			if(!hideNN) {
+				ViewableObjectWrapper wr = new ViewableObjectWrapper(z.getNode());
+				wr.setUid(1);
+				wr.setNodeId(z.getNodeId());
+				lst.add( wr );
+			}	
 			NodeWrapper x = z.getVoSourceNW();
-			//if(!nw.isRefreshPressed() && !x.isAutoRefresh()) arFlag = true; //continue;
-			x.setRefreshPressed(nw.isRefreshPressed()); 
-			
-			List<ViewableObjectWrapper> zz = get(x,reload);
-			lst.addAll(zz);
-			//int cnt = 0;
-			//for(ViewableObjectWrapper wr: zz)
-			//{
-			//	if(arFlag && !wr.isNodeUrl()) continue;
-			//	lst.add(wr);
-			//	cnt++;
-			//}
-			logger.info("from {} loaded2 {} VO ",x.getNodePath(),zz.size());
+			List<ViewableObjectWrapper> zz = nw.isShowVO()? get(x,reload) : getFromCacheOnly(x);
+			if(zz!=null) {
+				lst.addAll(zz);
+				log.info("from {} loaded2 {} VO ",x.getNodePath(),zz.size());
+			}
 		}
-		logger.info("getObjects for {} found: {} ",nw.getNodePath(),lst.size());
+		log.info("getObjects for {} found: {} ",nw.getNodePath(),lst.size());
 		return lst;
 	}
 
