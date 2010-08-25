@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Properties;
 import javax.activation.DataHandler;
 import javax.mail.Message;
-import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
@@ -131,7 +130,6 @@ public class MailWriterNode extends AbstractSafeDataPipe
 
             msg.setRecipients(Message.RecipientType.TO, toAddresses);
             msg.setSubject(subject, subjectEncoding);
-    //        msg.setText(body.toString(), bodyEncoding, "plain");
             msg.setHeader("X-Mailer", "Raven-Monitoring");
 
             createContent(msg);
@@ -142,6 +140,7 @@ public class MailWriterNode extends AbstractSafeDataPipe
         }finally{
             bindingSupport.reset();
         }
+        sendDataToConsumers(data, context);
     }
 
     @Override

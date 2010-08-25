@@ -29,6 +29,7 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeAttributeImpl;
+import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -40,13 +41,13 @@ public class ViewableObjectsMessagePartNode extends BaseNode implements MailMess
 {
     public final static String SOURCE_ATTR = "source";
 
-    @Parameter @NotNull
+    @NotNull @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     private Node source;
 
     @Parameter
     private String fileName;
 
-    @Parameter @NotNull
+    @NotNull @Parameter
     private String contentType;
 
     public Node getSource()
