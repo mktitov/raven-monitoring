@@ -129,6 +129,7 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 				lst.add( wr );
 			}	
 			NodeWrapper x = z.getVoSourceNW();
+			x.setRefreshPressed(nw.isRefreshPressed()); 
 			List<ViewableObjectWrapper> zz;
 			//List<ViewableObjectWrapper> zz = nw.isShowVO()? get(x,reload) : getFromCacheOnly(x);
 			if(nw.isShowVO()) {
