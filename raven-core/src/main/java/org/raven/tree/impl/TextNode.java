@@ -18,10 +18,14 @@
 package org.raven.tree.impl;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.expr.BindingSupport;
+import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
@@ -34,8 +38,20 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass
 public class TextNode extends BaseNode implements Viewable
 {
+    public final static String REFRESH_ATTRIBUTES_BINDING = "refreshAttributes";
+    public final static String TEXT_ATTR = "text";
+
     @Parameter @NotNull
     private String text;
+
+    private BindingSupport bindingSupport;
+
+    @Override
+    protected void initFields()
+    {
+        super.initFields();
+        bindingSupport = new BindingSupportImpl();
+    }
 
     public String getText() {
         return text;
@@ -55,9 +71,20 @@ public class TextNode extends BaseNode implements Viewable
     {
         if (getStatus()!=Status.STARTED)
             return null;
-        ViewableObject textObj = new ViewableObjectImpl(RAVEN_TEXT_MIMETYPE, text);
-        
-        return Arrays.asList(textObj);
+        try{
+            bindingSupport.put(REFRESH_ATTRIBUTES_BINDING, refreshAttributes==null? Collections.EMPTY_MAP : refreshAttributes);
+            ViewableObject textObj = new ViewableObjectImpl(RAVEN_TEXT_MIMETYPE, text);
+            return Arrays.asList(textObj);
+        }finally{
+            bindingSupport.reset();
+        }
+    }
+
+    @Override
+    public void formExpressionBindings(Bindings bindings)
+    {
+        super.formExpressionBindings(bindings);
+        bindingSupport.addTo(bindings);
     }
 
     public Boolean getAutoRefresh()
