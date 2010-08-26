@@ -52,10 +52,10 @@ import org.weda.annotations.constraints.NotNull;
 public class MailWriterNode extends AbstractSafeDataPipe
 {
     @NotNull @Parameter
-    private String smptHost;
+    private String smtpHost;
 
     @NotNull @Parameter(defaultValue="25")
-    private Integer smptPort;
+    private Integer smtpPort;
 
     @NotNull @Parameter(defaultValue="false")
     private Boolean useSsl;
@@ -92,8 +92,8 @@ public class MailWriterNode extends AbstractSafeDataPipe
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
         Properties props = new Properties();
-        props.put("mail.smtp.host", smptHost);
-        props.put("mail.smtp.port", smptPort);
+        props.put("mail.smtp.host", smtpHost);
+        props.put("mail.smtp.port", smtpPort);
         if (useAuth)
             props.put("mail.smtp.auth", "true");
         if (useSsl){
@@ -195,20 +195,20 @@ public class MailWriterNode extends AbstractSafeDataPipe
         this.password = password;
     }
 
-    public String getSmptHost() {
-        return smptHost;
+    public String getSmtpHost() {
+        return smtpHost;
     }
 
-    public void setSmptHost(String smptHost) {
-        this.smptHost = smptHost;
+    public void setSmtpHost(String smptHost) {
+        this.smtpHost = smptHost;
     }
 
-    public Integer getSmptPort() {
-        return smptPort;
+    public Integer getSmtpPort() {
+        return smtpPort;
     }
 
-    public void setSmptPort(Integer smptPort) {
-        this.smptPort = smptPort;
+    public void setSmtpPort(Integer smptPort) {
+        this.smtpPort = smptPort;
     }
 
     public String getSubject() {

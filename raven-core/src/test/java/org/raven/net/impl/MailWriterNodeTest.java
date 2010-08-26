@@ -54,11 +54,11 @@ public class MailWriterNodeTest extends RavenCoreTestCase
         mailer.setDataSource(ds);
         mailer.setLogLevel(LogLevel.DEBUG);
 
-        mailer.setSmptHost("mail.komi.mts.ru");
+        mailer.setSmtpHost("mail.komi.mts.ru");
         mailer.setFrom("mikhail1207@gmail.com");
         mailer.setTo("tim@komi.mts.ru");
-//        email.setSmptHost("smpt.gmail.com");
-//        email.setSmptPort(465);
+//        email.setSmtpHost("smpt.gmail.com");
+//        email.setSmtpPort(465);
 //        email.setUseAuth(Boolean.TRUE);
 //        email.setUseSsl(Boolean.TRUE);
 //        email.setUser("mikhail1207");
