@@ -135,6 +135,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	private int shortNameLen = 0;
 	private String iconPath = null;
 	private Boolean hideNodeName;
+	private Map<String,NodeAttribute> whoulRefreshAttributes; 
 		
 	public NodeWrapper() 
 	{
@@ -516,10 +517,8 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	  {
 		  ArrayList<Node> nodes = new ArrayList<Node>();
 		  nodes.addAll(c);
-		  Iterator<Node> it = nodes.iterator();
-		  while(it.hasNext())
-		  {
-			  NodeWrapper nw = new NodeWrapper(it.next());
+		  for(Node n : nodes) {
+			  NodeWrapper nw = new NodeWrapper(n);
 			  if(!nw.isAllowNodeRead()) continue;
 			  wrappers.add( nw );
 		  }	  
@@ -527,28 +526,31 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	  if ( isViewable() ) 
 		  wrappers.add(0, this );
 	  return wrappers;
-}
+	}
 	
 	public void loadRefreshAttributes() 
 	{
 		List<NodeWrapper> wrappers = getViewableNodes();
-		if(wrappers.size()>1)
-		{
+		if(wrappers.size()>1) {
 			NodeWrapper tmp = wrappers.remove(0);
 			wrappers.add(tmp);
 		}
 		if(editingRefreshAttrs!=null) editingRefreshAttrs.clear();
+		if(whoulRefreshAttributes!=null) whoulRefreshAttributes.clear();
 		editingRefreshAttrs = new HashMap<String,Attr>();
+		Map<String, NodeAttribute> whoulRA = new HashMap<String, NodeAttribute>();
 		for(NodeWrapper nw : wrappers)
 		{
 			List<NodeAttribute> nal = nw.getRefreshAttributes();
 			for(NodeAttribute na : nal)
 				try {
 					editingRefreshAttrs.put(na.getName(),new Attr(na,true));
+					whoulRA.put(na.getName(), na);
 				} catch (TooManyReferenceValuesException e) {
 					logger.error("on load refresh attributes : ",e);
 				}
 		}
+		whoulRefreshAttributes = whoulRA;
 	}
 	
 	public void  loadAttributes() 
@@ -733,13 +735,11 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 								if(prevVHTInit) na.setValueHandlerType(prevVHT);
 								if(ret.length()!=0) ret.append(". ");
 								ret.append(strAttribute+" '"+at.getName()+"' : "+ Messages.getUiMessage(Messages.ACCESS_DENIED));
-								if(prevExprInit)
-								{
+								if(prevExprInit) {
 									a = aRec.get(attrChValue);
 									a.setMessage(ATTEMPT+a.getMessage());
 								}	
-								if(prevVHTInit)
-								{
+								if(prevVHTInit) {
 									a = aRec.get(attrChSubType);
 									a.setMessage(ATTEMPT+a.getMessage());
 								}	
@@ -1621,5 +1621,13 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	public String getPath()
 	{
 		return getNode().getPath();
+	}
+
+	public Map<String,NodeAttribute> getWhoulRefreshAttributes() {
+		return whoulRefreshAttributes;
+	}
+
+	public void setWhoulRefreshAttributes(Map<String,NodeAttribute> whoulRefreshAttributes) {
+		this.whoulRefreshAttributes = whoulRefreshAttributes;
 	}
 }

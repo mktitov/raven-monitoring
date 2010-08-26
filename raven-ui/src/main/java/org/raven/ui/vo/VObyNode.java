@@ -60,7 +60,7 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 		List<ViewableObject> vol = null;
 		
 		try { 
-			vol = viewable.getViewableObjects(nwx.getRefreshAttributesMap());
+			vol = viewable.getViewableObjects(nwx.getWhoulRefreshAttributes());
 		} catch (Exception e) { log.error("on load viewable objects: ",e);}
 		if(vol==null)
 		{
@@ -130,6 +130,7 @@ public class VObyNode extends AbstractCache<NodeWrapper, List<ViewableObjectWrap
 			}	
 			NodeWrapper x = z.getVoSourceNW();
 			x.setRefreshPressed(nw.isRefreshPressed()); 
+			x.setWhoulRefreshAttributes(nw.getWhoulRefreshAttributes());
 			List<ViewableObjectWrapper> zz;
 			//List<ViewableObjectWrapper> zz = nw.isShowVO()? get(x,reload) : getFromCacheOnly(x);
 			if(nw.isShowVO()) {
