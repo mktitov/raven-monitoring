@@ -81,6 +81,12 @@ public class MailWriterNode extends AbstractSafeDataPipe
     @NotNull @Parameter
     private String from;
 
+    @Parameter
+    private String fromPersonalName;
+
+    @NotNull @Parameter(defaultValue="utf-8")
+    private String fromEncoding;
+
     @NotNull @Parameter
     private String to;
 
@@ -122,7 +128,7 @@ public class MailWriterNode extends AbstractSafeDataPipe
             bindingSupport.put(DATA_BINDING, data);
             bindingSupport.put(DATA_CONTEXT_BINDING, context);
             MimeMessage msg = new MimeMessage(session);
-            msg.setFrom(new InternetAddress(from));
+            msg.setFrom(new InternetAddress(from, fromPersonalName, fromEncoding));
             String[] addrs = to.split("\\s*,\\s*");
             InternetAddress[] toAddresses = new InternetAddress[addrs.length];
             for (int i=0; i<addrs.length; ++i)
@@ -185,6 +191,22 @@ public class MailWriterNode extends AbstractSafeDataPipe
 
     public void setFrom(String from) {
         this.from = from;
+    }
+
+    public String getFromEncoding() {
+        return fromEncoding;
+    }
+
+    public void setFromEncoding(String fromEncoding) {
+        this.fromEncoding = fromEncoding;
+    }
+
+    public String getFromPersonalName() {
+        return fromPersonalName;
+    }
+
+    public void setFromPersonalName(String fromPersonalName) {
+        this.fromPersonalName = fromPersonalName;
     }
 
     public String getPassword() {
