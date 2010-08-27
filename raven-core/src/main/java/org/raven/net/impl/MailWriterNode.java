@@ -97,6 +97,11 @@ public class MailWriterNode extends AbstractSafeDataPipe
     @Override
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
+        if (data==null){
+            sendDataToConsumers(null, context);
+            return;
+        }
+
         Properties props = new Properties();
         props.put("mail.smtp.host", smtpHost);
         props.put("mail.smtp.port", smtpPort);

@@ -211,9 +211,9 @@ public class TableSummaryNode extends AbstractSafeDataPipe
                 for (int i=0; i<sourceColnames.length; ++i)
                 {
                     for (Node child: childs)
-                        if (   child instanceof TableValuesAggregatorNode
-                            && ((TableValuesAggregatorNode)child).getAggregationDirection()
-                            ==AggregationDirection.ROW)
+                        if (   Status.STARTED.equals(child.getStatus())
+                            && child instanceof TableValuesAggregatorNode
+                            && ((TableValuesAggregatorNode)child).getAggregationDirection()==AggregationDirection.ROW)
                         {
                             TableValuesAggregatorNode aggDef = (TableValuesAggregatorNode)child;
                             bindingSupport.put(COLUMN_NAME_BINDING, sourceColnames[i]);
