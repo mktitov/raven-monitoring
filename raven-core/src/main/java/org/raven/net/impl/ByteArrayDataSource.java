@@ -27,17 +27,21 @@ import javax.activation.DataSource;
  *
  * @author Mikhail Titov
  */
-public class ByteArrayMailDataSource implements DataSource
+public class ByteArrayDataSource implements DataSource
 {
     private final byte[] bytes;
     private final String contentType;
     private final String name;
 
-    public ByteArrayMailDataSource(byte[] bytes, String contentType, String name)
+    public ByteArrayDataSource(byte[] bytes, String contentType, String name)
     {
         this.contentType = contentType;
         this.name = name;
         this.bytes = bytes;
+    }
+
+    public byte[] getBytes(){
+        return bytes;
     }
 
     public InputStream getInputStream() throws IOException {

@@ -20,11 +20,14 @@ package org.raven.rep;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.activation.FileDataSource;
 import net.sf.jxls.transformer.XLSTransformer;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.raven.RavenUtils;
@@ -87,8 +90,10 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
     @Override
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
-        if (data==null)
+        if (data==null){
+            sendDataToConsumers(null, context);
             return;
+        }
         try {
             Map b = beans.get();
             Collection<Node> childs = getChildrens();
@@ -109,17 +114,20 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
             b.put("data", data);
             XLSTransformer transformer = new XLSTransformer();
             File tempFile = File.createTempFile("jxls_"+getId()+"_", ".xls");
+            FileDataSource ds = new FileDataSource(tempFile);
             try{
                 HSSFWorkbook wb = transformer.transformXLS(reportTemplate.getDataStream(), b);
-                FileOutputStream fos = new FileOutputStream(tempFile);
+//                FileOutputStream fos = new FileOutputStream(tempFile);
+                OutputStream os = ds.getOutputStream();
                 try{
-                    wb.write(fos);
+                    wb.write(os);
                 }finally{
-                    fos.close();
+                    os.close();
                 }
-                FileInputStream is = new FileInputStream(tempFile);
+//                FileInputStream is = new FileInputStream(tempFile);
+                InputStream is = ds.getInputStream();
                 try{
-                    Object res = is;
+                    Object res = ds;
                     String _reportFieldName = reportFieldName;
                     if (_reportFieldName!=null && (data instanceof Record)){
                         Record rec = (Record) data;

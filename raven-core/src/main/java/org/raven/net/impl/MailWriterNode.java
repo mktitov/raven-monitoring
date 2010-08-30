@@ -98,10 +98,14 @@ public class MailWriterNode extends AbstractSafeDataPipe
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
         if (data==null){
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                getLogger().debug("Recieved NULL data. Skiping");
             sendDataToConsumers(null, context);
             return;
         }
 
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            getLogger().debug("Creating mail for data: {}", data);
         Properties props = new Properties();
         props.put("mail.smtp.host", smtpHost);
         props.put("mail.smtp.port", smtpPort);
@@ -185,8 +189,14 @@ public class MailWriterNode extends AbstractSafeDataPipe
 
     private void setContent(MimeBodyPart bodyPart, MailMessagePart part) throws Exception
     {
-        byte[] is = converter.convert(byte[].class, part.getContent(), getContentEncoding());
-        ByteArrayMailDataSource ds = new ByteArrayMailDataSource(is, part.getContentType(), part.getName());
+        javax.activation.DataSource ds = null;
+        Object content = part.getContent();
+        if (content instanceof javax.activation.DataSource)
+            ds = new DataSourceWrapper(ds, part.getContentType(), part.getName());
+        else {
+            byte[] is = converter.convert(byte[].class, content, getContentEncoding());
+            ds = new ByteArrayDataSource(is, part.getContentType(), part.getName());
+        }
         bodyPart.setDataHandler(new DataHandler(ds));
     }
 

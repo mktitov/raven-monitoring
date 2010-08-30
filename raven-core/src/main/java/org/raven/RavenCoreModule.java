@@ -52,6 +52,8 @@ import org.raven.expr.impl.GroovyExpressionCompiler;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.impl.AttributeReferenceToStringConverter;
 import org.raven.impl.BooleanReferenceValues;
+import org.raven.impl.ByteArrayDataSourceToByteArrayConverter;
+import org.raven.impl.DataSourceToInputStreamConverter;
 import org.raven.impl.CharsetReferenceValues;
 import org.raven.impl.ClassToStringConverter;
 import org.raven.impl.CollectionToTableConverter;
@@ -217,6 +219,8 @@ public class RavenCoreModule
         conf.add(new DateToLongConverter());
         conf.add(new DateToDateConverter());
         conf.add(new CollectionToTableConverter());
+        conf.add(new ByteArrayDataSourceToByteArrayConverter());
+        conf.add(new DataSourceToInputStreamConverter());
     }
     
     @SuppressWarnings("unchecked")
