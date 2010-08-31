@@ -118,7 +118,8 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
 
     private Table transformTable(Table table)
     {
-        TableImpl newTable = new TableImpl(table.getColumnNames());
+        String[] columnNames = table.getColumnNames();
+        TableImpl newTable = new TableImpl(columnNames);
         newTable.setTitle(table.getTitle());
         Iterator<Object[]> it = table.getRowIterator();
         int rowNumber = 1;
@@ -144,6 +145,7 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
                     bindingSupport.put("columnNumber", (col+1));
                     bindingSupport.put("value", row[col]);
                     bindingSupport.put("columnTags", columnTags[col]);
+                    bindingSupport.put("columnName", columnNames[col]);
                     newRow[col] = attr.getRealValue();
                 }
                 newTable.addRow(newRow);
