@@ -110,8 +110,8 @@ public class AttributeReferenceValueHandlerTest extends RavenCoreTestCase
         expect(refAttr.getRawValue()).andReturn(null);
         expect(refAttr.getType()).andReturn(Integer.class).times(2);
         refAttr.save();
-        listener.valueChanged(null, 10);
-        listener.valueChanged(10, 99);
+//        listener.valueChanged(null, 10);
+//        listener.valueChanged(10, 99);
         replay(refAttr, listener);
         
         AttributeReferenceValueHandler valueHandler = new AttributeReferenceValueHandler(refAttr);
@@ -135,9 +135,9 @@ public class AttributeReferenceValueHandlerTest extends RavenCoreTestCase
         expect(refAttr.getRawValue()).andReturn(null);
         expect(refAttr.getType()).andReturn(Integer.class).times(2);
         refAttr.save();
-        listener.valueChanged(null, 10);
-        listener.expressionInvalidated(10);
-        listener.valueChanged(null, 10);
+//        listener.valueChanged(null, 10);
+        listener.expressionInvalidated(anyObject());
+//        listener.valueChanged(null, 10);
         replay(refAttr, listener);
         
         AttributeReferenceValueHandler valueHandler = new AttributeReferenceValueHandler(refAttr);
@@ -171,7 +171,7 @@ public class AttributeReferenceValueHandlerTest extends RavenCoreTestCase
         
         expect(refAttr.getOwner()).andReturn(node).times(1);
         expect(refAttr.getRawValue()).andReturn(null);
-        expect(refAttr.getType()).andReturn(Integer.class).times(2);
+        expect(refAttr.getType()).andReturn(Integer.class).times(3);
         refAttr.save();
         refAttr.save();
         listener.valueChanged(null, 10);
