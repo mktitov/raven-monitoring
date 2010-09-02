@@ -18,15 +18,12 @@
 package org.raven.rep;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +61,7 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass(childNodes={AttributeFieldValueGenerator.class, DataSourceFieldValueGenerator.class})
 public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
 {
+    public static final String BEANS_BINDING = "beans";
     public final static String SHEET_NAME_ATTR = "sheetName";
 
     @NotNull @Parameter(valueHandlerType=DataFileValueHandlerFactory.TYPE)
@@ -82,19 +80,26 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
     private String templateSheetName;
 
     private ThreadLocal<List<SheetInfo>> sheetsStore;
+    private ThreadLocal<Map> beansStore;
 
     @Override
     protected void initFields()
     {
         super.initFields();
         sheetsStore = new ThreadLocal<List<SheetInfo>>();
+        beansStore = new ThreadLocal<Map>(){
+            @Override
+            protected Map initialValue() {
+                return new HashMap();
+            }
+        };
     }
 
     @Override
     protected void doAddBindingsForExpression(
             DataSource dataSource, Object data, DataContext context, BindingSupport bindingSupport)
     {
-        bindingSupport.put("beans", sheetsStore.get());
+        bindingSupport.put(BEANS_BINDING, beansStore.get());
     }
     
     @Override
@@ -106,9 +111,10 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
             return;
         }
         Map beans = new HashMap();
-        bindingSupport.put(DATA_BINDING, data);
-        bindingSupport.put(DATA_CONTEXT_BINDING, context);
         try{
+            bindingSupport.put(DATA_BINDING, data);
+            bindingSupport.put(DATA_CONTEXT_BINDING, context);
+            bindingSupport.put(BEANS_BINDING, beansStore.get());
             Collection<Node> childs = getChildrens();
             if (childs!=null)
                 for (Node child: childs)
@@ -116,8 +122,9 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
                         beans.put(child.getName(),
                                     ((FieldValueGenerator)child).getFieldValue(context.getSessionAttributes()));
 
-            beans.put("data", data);
-            beans.put("context", context);
+            beans.put(DATA_BINDING, data);
+            beans.put(DATA_CONTEXT_BINDING, context);
+            beans.putAll(beansStore.get());
             List<SheetInfo> sheets = sheetsStore.get();
             if (sheets==null){
                 sheets = new LinkedList<SheetInfo>();
@@ -128,6 +135,7 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
                 generateReport(context);
         }finally{
             bindingSupport.reset();
+            beansStore.remove();
         }
     }
 
