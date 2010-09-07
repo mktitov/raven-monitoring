@@ -27,6 +27,7 @@ import org.raven.expr.impl.ExpressionAttributeValueHandler;
 import org.raven.template.impl.TemplateExpression;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.impl.ActionAttributeValueHandlerFactory;
 import org.raven.tree.impl.RefreshAttributeValueHandlerFactory;
 import org.weda.internal.annotations.Service;
 import org.weda.services.TypeConverter;
@@ -39,6 +40,7 @@ public class NodeUtils
 {
     @Service
     private static TypeConverter converter;
+    
     /**
      * Returns the map of cloned attributes which value handler type is
      * {@link RefreshAttributeValueHandlerFactory#TYPE}.
@@ -46,12 +48,33 @@ public class NodeUtils
      */
     public static Map<String, NodeAttribute> extractRefereshAttributes(Node node) throws Exception
     {
+        return extractAttributes(node, RefreshAttributeValueHandlerFactory.TYPE);
+    }
+
+    /**
+     * Returns the map of cloned attributes which value handler type is
+     * {@link ActionAttributeValueHandlerFactory#TYPE}.
+     * The ids of attributes are numbers less than zero.
+     */
+    public static Map<String, NodeAttribute> extractActionAttributes(Node node) throws Exception
+    {
+        return extractAttributes(node, ActionAttributeValueHandlerFactory.TYPE);
+    }
+
+    /**
+     * Returns the map of cloned attributes which value handler type is the value of the <b>valueHandlerType</b>
+     * parameter. The ids of attributes are numbers less than zero.
+     * @param node the source node
+     * @param valueHandlerType the value handler type
+     */
+    public static Map<String, NodeAttribute> extractAttributes(Node node, String valueHandlerType) throws Exception
+    {
         Map<String, NodeAttribute> refreshAttributes = new HashMap<String, NodeAttribute>();
         Collection<NodeAttribute> attrs = node.getNodeAttributes();
         int id=-1;
         if (attrs!=null)
             for (NodeAttribute attr: attrs)
-                if (RefreshAttributeValueHandlerFactory.TYPE.equals(attr.getValueHandlerType()))
+                if (valueHandlerType.equals(attr.getValueHandlerType()))
                 {
                     NodeAttribute clone = (NodeAttribute) attr.clone();
                     clone.setOwner(node);
@@ -64,6 +87,6 @@ public class NodeUtils
                     clone.init();
                     refreshAttributes.put(clone.getName(), clone);
                 }
-        return refreshAttributes.size()==0? null : refreshAttributes;
+        return refreshAttributes.isEmpty()? null : refreshAttributes;
     }
 }

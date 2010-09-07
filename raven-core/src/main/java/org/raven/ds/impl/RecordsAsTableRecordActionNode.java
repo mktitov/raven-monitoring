@@ -44,10 +44,10 @@ public class RecordsAsTableRecordActionNode extends AbstractActionNode implement
     }
 
     @Override
-    public ViewableObject createActionViewableObject(
-            DataContext context, Map<String, Object> additionalBindings)
+    public ViewableObject createActionViewableObject(DataContext context, Map<String, Object> additionalBindings)
+            throws Exception
     {
-        return new Action(this, context, additionalBindings);
+        return new Action(this, context, additionalBindings, getActionAttributes());
     }
 
     public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
@@ -60,14 +60,14 @@ public class RecordsAsTableRecordActionNode extends AbstractActionNode implement
         return null;
     }
 
-    private class Action extends ActionNodeAction
+    protected class Action extends ActionNodeAction
     {
         public static final String DATALIST_BINDING = "dataList";
-        public Action(
-                AbstractActionNode actionNode, DataContext context
-                , Map<String, Object> additionalBindings)
+
+        public Action(AbstractActionNode actionNode, DataContext context
+                , Map<String, Object> additionalBindings, Map<String, NodeAttribute> actionAttributes)
         {
-            super(actionNode, context, additionalBindings);
+            super(actionNode, context, additionalBindings, actionAttributes);
         }
 
         @Override
@@ -75,11 +75,14 @@ public class RecordsAsTableRecordActionNode extends AbstractActionNode implement
         {
             List dataList = new ArrayList();
             bindingSupport.put(DATALIST_BINDING, dataList);
+
             Object res = super.getData();
+
             if (dataList.isEmpty() && additionalBindings.containsKey(RecordsAsTableNode.RECORD_BINDING))
                 dataList.add(additionalBindings.get(RecordsAsTableNode.RECORD_BINDING));
             for (Object data: dataList)
                 DataSourceHelper.sendDataToConsumers(RecordsAsTableRecordActionNode.this, data, context);
+
             return res;
         }
     }

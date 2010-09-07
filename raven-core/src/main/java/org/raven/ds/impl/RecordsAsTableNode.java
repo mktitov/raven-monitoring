@@ -23,6 +23,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
@@ -319,7 +321,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
     }
     
     private List<ViewableObject> getActions(
-            Map<String, NodeAttribute> refreshAttributes, Collection<Record> records)
+            Map<String, NodeAttribute> refreshAttributes, Collection<Record> records) throws Exception
     {
         Collection<Node> childs = getSortedChildrens();
         if (childs!=null && !childs.isEmpty())
@@ -495,7 +497,10 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                         {
                             Map<String, Object> bindings = new HashMap<String, Object>();
                             bindings.put(RECORD_BINDING, record);
-                            row[pos++] = actionNode.getActionViewableObject(new DataContextImpl(), bindings);
+                            try {
+                                row[pos++] = actionNode.getActionViewableObject(new DataContextImpl(), bindings);
+                            } catch (Exception ex) {
+                            }
                         }
                 }
                 for (int i=0; i<fieldNames.length; ++i)

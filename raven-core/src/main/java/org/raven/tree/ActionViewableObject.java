@@ -29,11 +29,12 @@ public interface ActionViewableObject extends ViewableObject
      * Return the confirmation message for dialog before action execution
      */
     public String getConfirmationMessage();
-
     /**
      * Returns the action attributes or null if action viewable object does not contains attributes.
      */
     public Collection<NodeAttribute> getActionAttributes();
-
+    /**
+     * If returns <b>true</b> then viewable objects of the node owned the action must be refreshed
+     */
     public boolean isRefreshViewAfterAction();
 }

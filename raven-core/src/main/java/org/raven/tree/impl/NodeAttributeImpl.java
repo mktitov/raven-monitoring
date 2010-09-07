@@ -285,10 +285,7 @@ public class NodeAttributeImpl
 
     public String getDisplayName()
     {
-        if (displayName==null)
-            return name;
-        else
-            return messagesRegistry.getMessageOrString(displayName);
+        return displayName==null? name : messagesRegistry.getMessageOrString(displayName);
     }
 
     public void setDisplayName(String displayName)

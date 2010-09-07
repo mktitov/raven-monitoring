@@ -19,13 +19,18 @@ package org.raven.tree.impl;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.script.Bindings;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataContext;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
+import org.raven.log.LogLevel;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
+import org.raven.util.NodeUtils;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -41,6 +46,7 @@ public abstract class AbstractActionNode extends BaseNode
     public static final String REFRESH_ATTRIBUTES_BINDING = "refreshAttributes";
     public static final String DATA_CONTEXT_BINDING = "context";
     public static final String REFRESH_VIEW_AFTER_ACTION_ATTR = "refreshViewAfterAction";
+    public static final String ACTION_ATTRIBUTES_BINDING = "actionAttributes";
 
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
     private String actionExpression;
@@ -60,13 +66,26 @@ public abstract class AbstractActionNode extends BaseNode
     @NotNull @Parameter(defaultValue="false")
     private Boolean refreshViewAfterAction;
 
-
     protected BindingSupportImpl bindingSupport;
 
     public abstract void prepareActionBindings(
             DataContext context, Map<String, Object> additionalBindings);
     public abstract ViewableObject createActionViewableObject(
-            DataContext context, Map<String, Object> additionalBindings);
+            DataContext context, Map<String, Object> additionalBindings) throws Exception;
+
+    protected Map<String, NodeAttribute> getActionAttributes()
+    {
+        try
+        {
+            return NodeUtils.extractActionAttributes(this);
+        }
+        catch (Exception ex)
+        {
+            if (isLogLevelEnabled(LogLevel.ERROR))
+                getLogger().error("Error extraxting action attributes", ex);
+            return null;
+        }
+    }
 
     @Override
     protected void initFields()
@@ -76,24 +95,32 @@ public abstract class AbstractActionNode extends BaseNode
     }
 
     public ViewableObject getActionViewableObject(
-            DataContext context, Map<String, Object> additionalBindings)
+            DataContext context, Map<String, Object> additionalBindings) throws Exception
     {
         try
         {
-            bindingSupport.put(REFRESH_ATTRIBUTES_BINDING, context.getSessionAttributes());
-            bindingSupport.put(DATA_CONTEXT_BINDING, context);
-            if (additionalBindings==null)
-                additionalBindings = new HashMap<String, Object>();
-            prepareActionBindings(context, additionalBindings);
-            addToBindingSupport(additionalBindings);
-            Boolean enabled = actionEnabled;
-            ViewableObject action = null;
-            if (enabled==null || !enabled)
-                action = new ViewableObjectImpl(Viewable.RAVEN_TEXT_MIMETYPE, disabledActionText);
-            else
-                action = createActionViewableObject(context, additionalBindings);
+            try
+            {
+                bindingSupport.put(REFRESH_ATTRIBUTES_BINDING, context.getSessionAttributes());
+                bindingSupport.put(DATA_CONTEXT_BINDING, context);
+                if (additionalBindings==null)
+                    additionalBindings = new HashMap<String, Object>();
+                prepareActionBindings(context, additionalBindings);
+                addToBindingSupport(additionalBindings);
+                Boolean enabled = actionEnabled;
+                ViewableObject action = null;
+                if (enabled==null || !enabled)
+                    action = new ViewableObjectImpl(Viewable.RAVEN_TEXT_MIMETYPE, disabledActionText);
+                else
+                    action = createActionViewableObject(context, additionalBindings);
 
-            return action;
+                return action;
+            }
+            catch(Exception e){
+                if (isLogLevelEnabled(LogLevel.ERROR))
+                    getLogger().error(String.format("Error creating action (%s)", getName()), e);
+                throw e;
+            }
         }
         finally
         {

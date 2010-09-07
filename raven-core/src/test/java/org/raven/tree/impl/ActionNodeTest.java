@@ -17,6 +17,7 @@
 
 package org.raven.tree.impl;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +77,31 @@ public class ActionNodeTest extends RavenCoreTestCase
         List<ViewableObject> voList = action.getViewableObjects(refreshAttributes);
         assertNotNull(voList);
         assertEquals(1, voList.size());
+        assertEquals("hello world", voList.get(0).getData());
+    }
+
+    @Test
+    public void withActionAttributesTest() throws Exception
+    {
+        NodeAttributeImpl attr = new NodeAttributeImpl("attr", String.class, "test", null);
+        attr.setValueHandlerType(ActionAttributeValueHandlerFactory.TYPE);
+        attr.setOwner(action);
+        attr.init();
+        action.addNodeAttribute(attr);
+
+        action.setActionExpression("actionAttributes['attr'].value+'world'");
+        assertTrue(action.start());
+
+        List<ViewableObject> voList = action.getViewableObjects(null);
+        assertNotNull(voList);
+        assertEquals(1, voList.size());
+        ActionViewableObject actionVO = (ActionViewableObject) voList.get(0);
+        Collection<NodeAttribute> actionAttributes = actionVO.getActionAttributes();
+        assertNotNull(actionAttributes);
+        assertEquals(1, actionAttributes.size());
+        NodeAttribute actionAttr = actionAttributes.iterator().next();
+        assertEquals("test", actionAttr.getValue());
+        actionAttr.setValue("hello ");
         assertEquals("hello world", voList.get(0).getData());
     }
 

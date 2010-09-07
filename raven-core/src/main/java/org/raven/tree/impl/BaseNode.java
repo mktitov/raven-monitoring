@@ -761,7 +761,8 @@ public class BaseNode implements Node, NodeListener, Logger
                 for (NodeAttribute attr: nodeAttributes.values())
                     if ( (attr.isRequired() && attr.getValue()==null)
                        && (   !(attr.getValueHandler() instanceof ExpressionAttributeValueHandler)
-                           || !attr.isExpressionValid() ))
+                           || !attr.isExpressionValid() )
+                       && ( !ObjectUtils.in(attr.getValueHandlerType(), ActionAttributeValueHandlerFactory.TYPE, RefreshAttributeValueHandlerFactory.TYPE)))
                     {
                         error(String.format(
                                 "Error switching node (%s) to the STARTED state. " +

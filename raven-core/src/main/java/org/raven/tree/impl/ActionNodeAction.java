@@ -35,16 +35,19 @@ public class ActionNodeAction implements ActionViewableObject
     protected final DataContext context;
     protected final Map<String, Object> additionalBindings;
     protected final BindingSupportImpl bindingSupport;
+    protected final Map<String, NodeAttribute> actionAttributes;
 
     public ActionNodeAction(
             AbstractActionNode actionNode
             , DataContext context
-            , Map<String, Object> additionalBindings)
+            , Map<String, Object> additionalBindings
+            , Map<String, NodeAttribute> actionAttributes)
     {
         this.context = context;
         this.additionalBindings = additionalBindings;
         this.actionNode = actionNode;
         this.bindingSupport = actionNode.bindingSupport;
+        this.actionAttributes = actionAttributes;
     }
 
     public String getMimeType()
@@ -56,6 +59,7 @@ public class ActionNodeAction implements ActionViewableObject
     {
         bindingSupport.put(AbstractActionNode.REFRESH_ATTRIBUTES_BINDING, context.getSessionAttributes());
         bindingSupport.put(AbstractActionNode.DATA_CONTEXT_BINDING, context);
+        bindingSupport.put(AbstractActionNode.ACTION_ATTRIBUTES_BINDING, actionAttributes);
         try{
             actionNode.addToBindingSupport(additionalBindings);
             return actionNode.getNodeAttribute(AbstractActionNode.ACTION_EXPRESSION_ATTR).getValue();
@@ -108,7 +112,7 @@ public class ActionNodeAction implements ActionViewableObject
 
     public Collection<NodeAttribute> getActionAttributes()
     {
-        return null;
+        return actionAttributes==null || actionAttributes.isEmpty()? null : actionAttributes.values();
     }
 
     public boolean isRefreshViewAfterAction()

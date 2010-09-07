@@ -44,7 +44,7 @@ public class ActionNode extends AbstractActionNode implements Viewable
     public ViewableObject createActionViewableObject(
             DataContext context, Map<String, Object> additionalBindings)
     {
-        return new ActionNodeAction(this, context, additionalBindings);
+        return new ActionNodeAction(this, context, additionalBindings, getActionAttributes());
     }
 
     @Override

@@ -17,26 +17,25 @@
 
 package org.raven.tree.impl;
 
-import java.util.Map;
-import org.raven.ds.DataContext;
-import org.raven.tree.ViewableObject;
+import org.raven.tree.AttributeValueHandler;
+import org.raven.tree.AttributeValueHandlerFactory;
+import org.raven.tree.NodeAttribute;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class TestActionNode extends AbstractActionNode 
+public class ActionAttributeValueHandlerFactory implements AttributeValueHandlerFactory
 {
-    @Override
-    public ViewableObject createActionViewableObject(
-            DataContext context, Map<String, Object> additionalBindings)
+    public final static String TYPE = "ActionAttribute";
+
+    public AttributeValueHandler createValueHandler(NodeAttribute attribute)
     {
-        return new ActionNodeAction(this, context, additionalBindings, null);
+        return null;
     }
 
-    @Override
-    public void prepareActionBindings(
-            DataContext context, Map<String, Object> additionalBindings)
+    public String getName()
     {
+        return "Action attribute";
     }
 }

@@ -97,6 +97,7 @@ import org.raven.tree.AttributeValueHandlerFactory;
 import org.raven.tree.AttributeValueHandlerRegistry;
 import org.raven.tree.NodePathResolver;
 import org.raven.tree.Tree;
+import org.raven.tree.impl.ActionAttributeValueHandlerFactory;
 import org.raven.tree.impl.AttributeReferenceHandlerFactory;
 import org.raven.tree.impl.AttributeReferenceValueHandlerFactory;
 import org.raven.tree.impl.AttributeValueHandlerRegistryImpl;
@@ -262,6 +263,9 @@ public class RavenCoreModule
         conf.add(
             RefreshAttributeValueHandlerFactory.TYPE
             , new RefreshAttributeValueHandlerFactory());
+        conf.add(
+            ActionAttributeValueHandlerFactory.TYPE
+            , new ActionAttributeValueHandlerFactory());
         conf.add(
             SystemSchedulerValueHandlerFactory.TYPE
             , new SystemSchedulerValueHandlerFactory(pathResolver));

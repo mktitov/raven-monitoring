@@ -483,6 +483,62 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
     }
 
     @Test
+    public void addRecordActionTest() throws Exception
+    {
+        AddRecordActionNode addAction = new AddRecordActionNode();
+        addAction.setName("action");
+        tableNode.addAndSaveChildren(addAction);
+        addAction.setEnabledActionText("action title");
+        addAction.setActionExpression("record['field1']=2");
+        assertTrue(addAction.start());
+
+        collector.setDataSource(addAction);
+
+        Record record = createMock(Record.class);
+
+        expect(record.getSchema()).andReturn(schema);
+        expect(record.getValue("field1")).andReturn(1).times(1);
+        record.putAt("field1", 2);
+
+        replay(record);
+
+        ds.addDataPortion(record);
+        ds.addDataPortion(null);
+
+        tableNode.setFieldsOrder("field1");
+
+        Collection<ViewableObject> objects = tableNode.getViewableObjects(null);
+        assertNotNull(objects);
+        assertEquals(1, objects.size());
+        ViewableObject object = objects.iterator().next();
+        assertNotNull(object);
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, object.getMimeType());
+        assertNotNull(object.getData());
+        assertTrue(object.getData() instanceof Table);
+        Table table = (Table) object.getData();
+        assertArrayEquals(new String[]{null, "field1 displayName"}, table.getColumnNames());
+        List<Object[]> rows = RavenUtils.tableAsList(table);
+        assertEquals(1, rows.size());
+        assertEquals("1", rows.get(0)[1]);
+        assertTrue(rows.get(0)[0] instanceof ActionViewableObject);
+        ActionViewableObject action = (ActionViewableObject)rows.get(0)[0];
+
+        assertEquals("action title", action.toString());
+        assertTrue(collector.getDataList().isEmpty());
+        assertEquals("2", action.getData());
+        assertEquals(1, collector.getDataListSize());
+        assertSame(record, collector.getDataList().get(0));
+
+        collector.getDataList().clear();
+        addAction.setActionExpression("dataList<<'test data';'test'");
+        assertEquals("test", action.getData());
+        assertEquals(1, collector.getDataListSize());
+        assertEquals("test data", collector.getDataList().get(0));
+
+        verify(record);
+    }
+
+    @Test
     public void actionTest() throws Exception
     {
         RecordsAsTableActionNode recordAction = new RecordsAsTableActionNode();
