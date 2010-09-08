@@ -23,6 +23,7 @@ import org.raven.tree.impl.*;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.impl.SafeDataConsumer;
@@ -49,6 +50,9 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
     @NotNull @Parameter(defaultValue="false")
     private Boolean autoRefresh;
 
+    @Parameter
+    private String hideColumns;
+
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) 
             throws Exception
     {
@@ -71,6 +75,7 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
                     if (table.getTitle()!=null)
                         voList.add(new ViewableObjectImpl(
                                 RAVEN_TEXT_MIMETYPE, "<b>"+table.getTitle()+"</b>"));
+                    table = hideColumnsIfNeed(table);
                     ViewableObject tableVO = new ViewableObjectImpl(RAVEN_TABLE_MIMETYPE, table);
                     voList.add(new ViewableObjectImpl(RAVEN_TABLE_MIMETYPE, table));
                 }
@@ -116,6 +121,14 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
         this.useCellValueExpression = useCellValueExpression;
     }
 
+    public String getHideColumns() {
+        return hideColumns;
+    }
+
+    public void setHideColumns(String hideColumns) {
+        this.hideColumns = hideColumns;
+    }
+
     private Table transformTable(Table table)
     {
         String[] columnNames = table.getColumnNames();
@@ -158,5 +171,17 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
         }
 
         return newTable;
+    }
+
+    private Table hideColumnsIfNeed(Table table)
+    {
+        String[] strCols = RavenUtils.split(hideColumns);
+        if (strCols!=null){
+            int[] cols = new int[strCols.length];
+            for (int i=0; i<cols.length; ++i)
+                cols[i]=new Integer(strCols[i])+1;
+            return new HideColumnsTableWrapper(table, cols);
+        }
+        return table;
     }
 }

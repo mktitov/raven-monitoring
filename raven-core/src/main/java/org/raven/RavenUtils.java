@@ -89,6 +89,13 @@ public class RavenUtils
         }
     }
 
+//    public static Table hideTableColumns(Table table, int[] columns)
+//    {
+//        if (table==null)
+//            return null;
+//        TableImpl
+//    }
+
     /**
      * Returns the record schema field or null if schema does not contains the field with name
      * passed in parameter

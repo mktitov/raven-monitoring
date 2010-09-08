@@ -41,6 +41,12 @@ import static org.easymock.EasyMock.*;
 public class RavenUtilsTest extends ServiceTestCase
 {
     @Test
+    public void splitTest()
+    {
+        assertArrayEquals(new String[]{"1", "2"}, RavenUtils.split("1, 2 "));
+    }
+
+    @Test
     public void tableToHtml_nbspTest() throws Exception
     {
         TableImpl table = new TableImpl(new String[]{"nbsp1", "nbsp2"});

@@ -25,11 +25,13 @@ import org.raven.ds.DataContext;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
+import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.AbstractActionNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.internal.annotations.Message;
 
 /**
  *
@@ -41,6 +43,9 @@ public class AddRecordActionNode extends RecordsAsTableRecordActionNode
     @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
     @NotNull
     private RecordSchema recordSchema;
+
+    @Message
+    private static String createRecordErrorMessage;
 
     @Override
     public ViewableObject createActionViewableObject(DataContext context, Map<String, Object> additionalBindings)
@@ -54,34 +59,47 @@ public class AddRecordActionNode extends RecordsAsTableRecordActionNode
         if (fields!=null)
             for (RecordSchemaField field: fields){
                 NodeAttributeImpl attr = new NodeAttributeImpl(
-                        field.getName(), field.getFieldType().getType(), null, field.getPattern());
+                        field.getName(), String.class, null, field.getPattern());
                 attr.setOwner(this);
                 attr.init();
                 actionAttributes.put(attr.getName(), attr);
             }
-        return new Action(this, context, additionalBindings, actionAttributes);
+        return new AddAction(this, context, additionalBindings, actionAttributes, createRecordErrorMessage);
     }
 
     private class AddAction extends Action
     {
+        private final String errorMessage;
+        
         public AddAction(AbstractActionNode actionNode, DataContext context,
-                Map<String, Object> additionalBindings, Map<String, NodeAttribute> actionAttributes)
+                Map<String, Object> additionalBindings, Map<String, NodeAttribute> actionAttributes,
+                String errorMessage)
         {
             super(actionNode, context, additionalBindings, actionAttributes);
+            this.errorMessage = errorMessage;
         }
 
         @Override
         public Object getData()
         {
-            if (actionAttributes!=null) {
-                Record record = (Record) additionalBindings.get(RecordsAsTableNode.RECORD_BINDING);
-                Map<String, RecordSchemaField> fields = RavenUtils.getRecordSchemaFields(recordSchema);
-//                for (NodeAttribute attr: actionAttributes.values()){
-//                    if (fields.containsKey(attr.getName()))
-//                        record.putAt(DATALIST_BINDING, attr);
-//                }
+            try{
+                if (actionAttributes!=null) {
+                    Record record = (Record) additionalBindings.get(RecordsAsTableNode.RECORD_BINDING);
+                    Map<String, RecordSchemaField> fields = RavenUtils.getRecordSchemaFields(recordSchema);
+                    for (NodeAttribute attr: actionAttributes.values()){
+                        if (fields.containsKey(attr.getName()))
+                            record.setValue(attr.getName(), attr.getValue());
+                    }
+                }
+
+                return super.getData();
+                
+            }catch(Exception e){
+                if (isLogLevelEnabled(LogLevel.ERROR))
+                    getLogger().error("Creating record error", e);
+                
+                return String.format(errorMessage, e.getMessage());
             }
-            return super.getData();
         }
     }
 }

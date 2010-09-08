@@ -106,6 +106,30 @@ public class TableViewNodeTest extends RavenCoreTestCase
     }
 
     @Test
+    public void hideColumnsTest() throws Exception
+    {
+        tableView.setHideColumns("2");
+
+        List<ViewableObject> objects = tableView.getViewableObjects(null);
+        assertNotNull(objects);
+        assertEquals(1, objects.size());
+        ViewableObject object = objects.get(0);
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, object.getMimeType());
+        Object data = object.getData();
+        assertTrue(data instanceof Table);
+        Table table = (Table) data;
+
+        List<Object[]> rows = new ArrayList<Object[]>();
+        for (Iterator<Object[]> it=table.getRowIterator(); it.hasNext();)
+            rows.add(it.next());
+
+        assertEquals(2, rows.size());
+        assertArrayEquals(new String[]{"col1"}, table.getColumnNames());
+        assertArrayEquals(new Object[]{"val_1_1"}, rows.get(0));
+        assertArrayEquals(new Object[]{"val_1_2"}, rows.get(1));
+    }
+
+    @Test
     public void tableTitleTest() throws Exception
     {
         tableDs.setSendTitle(true);
