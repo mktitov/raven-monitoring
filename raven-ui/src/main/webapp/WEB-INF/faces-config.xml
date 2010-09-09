@@ -134,6 +134,12 @@
   </managed-bean>
 
   <managed-bean>
+    <managed-bean-name>defButtonDA</managed-bean-name>
+    <managed-bean-class>org.raven.ui.attr.DefaultButton</managed-bean-class>
+    <managed-bean-scope>request</managed-bean-scope>
+  </managed-bean>
+
+  <managed-bean>
     <managed-bean-name>test</managed-bean-name>
     <managed-bean-class>org.raven.ui.util.TestBean</managed-bean-class>
     <managed-bean-scope>session</managed-bean-scope>
@@ -274,6 +280,10 @@
     <navigation-case>
       <from-outcome>dialog:export</from-outcome>
       <to-view-id>/exportDialog.jspx</to-view-id>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>dialog:runAction</from-outcome>
+      <to-view-id>/runActionDialog.jspx</to-view-id>
     </navigation-case>
   </navigation-rule>
 

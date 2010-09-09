@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<!-- 
+ *  Copyright 2010 Sergey Pinevskiy.
+ * 
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ * 
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *  under the License.
+ -->
+
+<jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
+          xmlns:f="http://java.sun.com/jsf/core"
+          xmlns:t="http://myfaces.apache.org/tomahawk" 
+          xmlns:trh="http://myfaces.apache.org/trinidad/html"
+          xmlns:tr="http://myfaces.apache.org/trinidad" >
+<jsp:directive.page contentType="text/html;charset=utf-8"/>
+<f:view>
+<f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
+<tr:document title="#{msgs.runAction}" >
+<trh:script text="function submitEnter(commandId,e)
+{
+	var keycode;
+    if (window.event) keycode = window.event.keyCode;
+   	else if(e) keycode = e.which;
+        	else return true;
+    if (keycode == 13) {
+    	document.getElementById(commandId).click(); 
+       	return false;
+   	} 
+    return true;
+}" />
+
+<tr:form >
+<tr:messages/>
+
+<tr:panelGroupLayout layout="vertical">
+<f:facet name="separator">
+    <tr:spacer width="1" height="25"/>
+  </f:facet>
+
+	<tr:panelHorizontalLayout halign="center" valign="center" >
+	<tr:outputText 
+		rendered="#{!pageFlowScope.actionVOW.actionRunned}"
+		inlineStyle="font-weight: bold; text-align:center; font-size: 110%"
+      	value="#{pageFlowScope.actionVOW.confirmationMessage}"/>
+	<tr:outputText 
+		rendered="#{pageFlowScope.actionVOW.actionRunned}"
+		inlineStyle="font-weight: bold; text-align:center; font-size: 110%"
+      	value="#{pageFlowScope.actionVOW.actionRet}"/>
+	</tr:panelHorizontalLayout>
+	<tr:panelCaptionGroup
+		captionText="Attributes of action" 
+		rendered="#{!pageFlowScope.actionVOW.actionRunned and pageFlowScope.actionVOW.actionHasAttributes}">
+    <!-- ********************* -->
+    <!-- attributes -->
+    <!-- ********************* -->
+        <tr:table  emptyText=""
+			columnBandingInterval="1"        
+        	allDetailsEnabled="true" 
+            width="90%" 
+            rowSelection="none" 
+            value="#{pageFlowScope.actionVOW.actionAttributes}" 
+            var="row" 
+            rows="12" 
+            id="attrs" >
+		<!-- name of attribute-->            
+            <tr:column headerText="#{msgs.name}">
+				<tr:panelHorizontalLayout>
+                <tr:outputText 
+                	rendered="#{!row.attribute.required}" 
+                	value="#{row.attribute.displayName}"/>
+                <tr:outputFormatted 
+                	rendered="#{row.attribute.required}"
+					inlineStyle="font-weight: bold;" 
+                	value="#{row.attribute.displayName}"/>
+                <tr:outputFormatted 
+                	inlineStyle="color: #cc0000;" 
+                	rendered="#{row.attribute.required and (row.attribute.value == null) }"
+                	value=" *"/>
+				</tr:panelHorizontalLayout>
+            </tr:column>
+		<!-- value of attribute-->
+            <tr:column headerText="#{msgs.value}">
+                <tr:inputText 
+                	onkeypress="return submitEnter('#{defButtonDA.id}',event)"
+                	readOnly="#{row.expressionSupported}" 
+                	rendered="#{row.expressionSupported or (row.selectItems == null)}" 
+                	value="#{row.value}" 
+                	columns="45" />
+                <tr:selectOneChoice 
+                	rendered="#{!row.expressionSupported and !(row.selectItems == null)}" 
+                	value="#{row.value}" >
+                    <f:selectItems value="#{row.selectItems}" />
+                </tr:selectOneChoice>
+            </tr:column>
+	<!-- detailStamp of attribute-->
+            <f:facet name="detailStamp">
+                <tr:panelGroupLayout layout="vertical"  >
+				<tr:panelCaptionGroup captionText="#{msgs.dsc}">
+	                <tr:outputText
+	                	value="#{row.description}"
+	                	escape="false" />
+				</tr:panelCaptionGroup>
+
+			    <tr:inputText 
+			    	onkeypress="return submitEnter('#{defButtonDA.id}',event)"
+			    	label="#{msgs.expression}"
+               		rows="7" 
+               		wrap="hard"
+            		rendered="#{row.enableEditExpression}" 
+            		value="#{row.expression}"
+            		columns="100" />
+
+                <tr:group rendered="#{row.fileAttribute}">
+                
+                <t:inputFileUpload  
+                	id="fileupload"
+					value="#{row.file}"
+					storage="file"
+					maxlength="200000"/>
+					</tr:group>
+	            <tr:selectOneChoice 
+	            	label="#{msgs.expression}" 
+	            	rendered="#{row.enableExpressionChoice}" 
+	            	value="#{row.expression}" >
+    	            <f:selectItems value="#{row.selectItems}" />
+                </tr:selectOneChoice>
+	<!-- type of attribute-->
+				<tr:panelCaptionGroup captionText="#{msgs.type}">
+                	<tr:outputText value="#{row.classDisplayName}"/>
+                </tr:panelCaptionGroup>
+			</tr:panelGroupLayout>
+            </f:facet>
+        </tr:table>
+	</tr:panelCaptionGroup>
+<!-- Button bar for refresh attributes -->
+
+        <tr:panelButtonBar halign="center"  >
+            <tr:commandButton immediate="true"
+                rendered="#{!pageFlowScope.actionVOW.actionRunned}"
+            	binding="#{defButtonDA.button}"
+            	id = "defButVOA" 
+            	shortDesc="#{msgs.runAction}" 
+            	text="#{msgs.runAction}" 
+            	action="#{pageFlowScope.actionVOW.run}"  />
+            <tr:spacer width="40" />
+            <tr:commandButton
+                rendered="#{pageFlowScope.actionVOW.actionRunned}"
+            	shortDesc="" 
+            	text="#{msgs.close}" 
+            	action="#{pageFlowScope.actionVOW.close}" />
+            <tr:spacer width="40" />
+            <tr:commandButton
+                rendered="#{!pageFlowScope.actionVOW.actionRunned}"
+            	shortDesc="#{msgs.cancel}" 
+            	text="#{msgs.cancel}" 
+            	action="#{pageFlowScope.actionVOW.cancel}" />
+        </tr:panelButtonBar>
+
+</tr:panelGroupLayout>
+</tr:form>
+
+</tr:document>
+</f:view>
+</jsp:root>

@@ -16,22 +16,31 @@
 package org.raven.ui.vo;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import javax.faces.context.FacesContext;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.myfaces.trinidad.context.RequestContext;
+import org.apache.myfaces.trinidad.event.LaunchEvent;
 import org.apache.myfaces.trinidad.render.ExtendedRenderKitService;
 import org.raven.table.Table;
 import org.raven.tree.ActionViewableObject;
 import org.raven.tree.InvalidPathException;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.Node;
 import org.raven.ui.SessionBean;
+import org.raven.ui.attr.Attr;
 import org.raven.ui.node.NodeWrapper;
 import org.raven.ui.util.Messages;
 import org.raven.util.Utl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 //import org.weda.beans.ObjectUtils;
+import org.weda.constraints.TooManyReferenceValuesException;
 
 /**
 *
@@ -39,7 +48,7 @@ import org.slf4j.LoggerFactory;
 */
 public class ViewableObjectWrapper 
 {
-	private static final Logger logger = LoggerFactory.getLogger(ViewableObjectWrapper.class);
+	private static final Logger log = LoggerFactory.getLogger(ViewableObjectWrapper.class);
     public static final String NAVIGATE_TO = "navigateToNode";
 	public static final String NODE_URL = "nodeUrl";
 	public static final String RAVEN_TABLE_GR = "ravenTable";
@@ -58,6 +67,9 @@ public class ViewableObjectWrapper
 //	private List<TableItemWrapper[]> tableData  = null;
 //	private String[] tableColumnNames  = null;
 //	private boolean[] valid = null;
+	private List<Attr> actionAttributes = null;
+	private boolean actionRunned = false;
+	private String actionRet = "";
 	
 	public ViewableObjectWrapper(ViewableObject vo)
 	{
@@ -68,7 +80,7 @@ public class ViewableObjectWrapper
 				nodeWrapper = new NodeWrapper(n);
 			} 
 			catch (InvalidPathException e) 
-			{  logger.error("Invalid node path '{}' ",vo.getData(),e); 	}
+			{  log.error("Invalid node path '{}' ",vo.getData(),e); 	}
 		}
 		else viewableObject = vo;	
 		setFd();
@@ -121,6 +133,48 @@ public class ViewableObjectWrapper
 		return false;
 	}
 	
+	public boolean isActionHasAttributes()
+	{
+		if (viewableObject instanceof ActionViewableObject) {
+			ActionViewableObject a = (ActionViewableObject) viewableObject;
+			Collection<NodeAttribute> c = a.getActionAttributes();
+			if(c!=null && c.size()>0)
+				return true;
+		}
+		return false;		
+	}
+
+	public List<Attr> getActionAttributes()
+	{
+		actionAttributes = new ArrayList<Attr>();
+		if (viewableObject instanceof ActionViewableObject) {
+			ActionViewableObject a = (ActionViewableObject) viewableObject;
+			Collection<NodeAttribute> c = a.getActionAttributes();
+			if(c!=null && c.size()>0)
+				for(NodeAttribute na :c)
+					try { actionAttributes.add(new Attr(na));
+					} catch (TooManyReferenceValuesException e) {
+						log.warn("getActionAttributes: {}", e.getMessage());
+					}
+		}
+		return actionAttributes;		
+	}
+	
+	public boolean isShowAttributesDialog()
+	{
+		if(getConfirmationMessage()!=null && isActionHasAttributes())
+			return true;
+		return false;
+	}
+	
+	public void setDialogParameter(LaunchEvent event)
+	{
+		if (viewableObject instanceof ActionViewableObject) {
+			//ActionViewableObject a = (ActionViewableObject) viewableObject;
+			event.getDialogParameters().put("actionVOW", this);
+		}
+	  }
+	
 	public String getConfirmationMessage()
 	{
 		if (viewableObject instanceof ActionViewableObject) {
@@ -130,6 +184,11 @@ public class ViewableObjectWrapper
 		return null;
 	}
 
+	public String getEscapedConfirmationMessage()
+	{
+		return StringEscapeUtils.escapeHtml(getConfirmationMessage());
+	}
+	
 	public boolean isActionVO()
 	{
 		if (viewableObject instanceof ActionViewableObject)  
@@ -174,6 +233,54 @@ public class ViewableObjectWrapper
 		return false;
 	}
 
+	private void returnFromDialog() 
+	{
+		actionRunned = false;		
+		RequestContext.getCurrentInstance().returnFromDialog(null, null);
+	}
+
+	public boolean isActionRunned() {
+		return actionRunned;
+	}
+	
+	public String getActionRet() {
+		return actionRet;
+	}
+	
+	public String cancel() 
+	{
+		returnFromDialog();
+		return null;
+	}
+
+	public String close() 
+	{
+		returnFromDialog();
+		return null;
+	}
+	
+	public String run()  
+	{
+		if(actionAttributes!=null) 
+			try {
+				for(Attr a :  actionAttributes)
+					a.getAttribute().setValue(a.getValue());
+			} catch (Exception e) {
+				log.error("set actionAttributes:", e);
+			}
+		runAction();
+		log.warn("runAction ok");
+	//	returnFromDialog();
+		return null;
+	}
+
+	public String runActionD()
+	{
+		runAction();
+		return "dialog:runAction";
+	}
+	
+	
 	public String runAction()
 	{
 		if(!isAction()) return null;
@@ -182,19 +289,22 @@ public class ViewableObjectWrapper
 		Object o = action.getData();
 		if(o==null) ret = Messages.getUiMessage(Messages.DONE);
 			else ret = o.toString();
-		
+		 actionRunned = true;
+		 actionRet = ret;
+/*		 
 		 FacesContext fc = FacesContext.getCurrentInstance();
 		 ExtendedRenderKitService service = (ExtendedRenderKitService)
 		 org.apache.myfaces.trinidad.util.Service.getRenderKitService(fc, ExtendedRenderKitService.class);
 		 //logger.info("runAction");
 		 ret = ret.replaceAll("'", "\"");
-
+*/
 		 if(action.isRefreshViewAfterAction())
 			 SessionBean.getNodeWrapper().onRefresh();
 		 
-		 service.addScript(fc, "alert('"+ret+"'); ");
+//		 service.addScript(fc, "alert('"+ret+"'); ");
 		return null;
 	}
+	
 /*
 	public String getRunAction()
 	{
@@ -215,7 +325,7 @@ public class ViewableObjectWrapper
 	{
 		if(!isTable())
 		{
-			logger.error("VO isn't table !");
+			log.error("VO isn't table !");
 			return null;
 		}
 		tableWrapper.init();
@@ -226,7 +336,7 @@ public class ViewableObjectWrapper
 	{
 		if(!isTable())
 		{
-			logger.error("VO isn't table !!");
+			log.error("VO isn't table !!");
 			return null;
 		}
 		return tableWrapper.getColumnNames();
@@ -246,7 +356,7 @@ public class ViewableObjectWrapper
     {
 		if(!isTable())
 		{
-			logger.error("getColumnsCount - VO isn't table");
+			log.error("getColumnsCount - VO isn't table");
 			return 0;
 		}
 		return tableWrapper.getColumnsCount();
@@ -285,7 +395,7 @@ public class ViewableObjectWrapper
 				{
 					InputStream is = (InputStream)dt;
 					try { image = IOUtils.toByteArray(is);}
-					catch(Exception e) { logger.error("getData:",e); }
+					catch(Exception e) { log.error("getData:",e); }
 					finally { try {is.close();} catch(Exception e) {}; }
 				}
 				else image = (byte[]) dt;

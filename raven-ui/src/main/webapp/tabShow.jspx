@@ -375,20 +375,33 @@ partialTriggers=":poolStatus"
 	  	  			onclick="if (!confirm('#{row.confirmationMessage}')) return false">
 	  	  			 	<tr:outputText value="' #{row.runAction} '"/>
 	  	  		</tr:panelPopup>
- -->	  	  		
-				<tr:commandLink 
-					rendered="#{row.confirmationMessage == null}" 
-					action="#{row.runAction}"
-					inlineStyle="font-size: 110%;"
-					partialSubmit="true"
-					text="#{row.idVO}" />
+	  	  		+++++
 				<tr:commandLink
-					rendered="#{row.confirmationMessage != null}" 
+					rendered="#{!row.showAttributesDialog}" 
 					action="#{row.runAction}"
 					inlineStyle="font-size: 110%;"
 					onclick="if (!confirm('#{row.confirmationMessage}')) return false"
 					partialSubmit="true"
+					text="#{row.idVO}" /> 
+	  	  		
+ -->
+				<tr:commandLink 
+					rendered="#{row.confirmationMessage == null}" 
+					action="#{row.runActionD}"
+					launchListener="#{row.setDialogParameter}"
+					useWindow="true"
+					inlineStyle="font-size: 110%;"
+					partialSubmit="true"
 					text="#{row.idVO}" />
+				<tr:commandLink 
+					rendered="#{row.confirmationMessage != null}" 
+					useWindow="true"
+					action="dialog:runAction"
+					launchListener="#{row.setDialogParameter}"
+					inlineStyle="font-size: 110%;"
+					partialSubmit="true"
+					text="#{row.idVO}" />
+					
 			</tr:panelHorizontalLayout>
 	  	</tr:panelGroupLayout>
 <!-- 		</tr:subform>  -->	
@@ -543,10 +556,21 @@ partialTriggers=":poolStatus"
 					<!-- is action -->
 						<tr:commandLink 
 							rendered="#{rowa[vxStat.index].action and rowa[vxStat.index].item.confirmationMessage == null}" 
+							action="#{rowa[vxStat.index].itemWrapper.runActionD}"
+							launchListener="#{rowa[vxStat.index].itemWrapper.setDialogParameter}"
+							useWindow="true"
+							inlineStyle="font-size: 110%;"
+							partialSubmit="true"
+							text="#{rowa[vxStat.index].idVO}" />
+					
+<!--
+						<tr:commandLink 
+							rendered="#{rowa[vxStat.index].action and rowa[vxStat.index].item.confirmationMessage == null}" 
 							action="#{rowa[vxStat.index].itemWrapper.runAction}"
 							inlineStyle="font-size: 110%;"
 							partialSubmit="true"
 							text="#{rowa[vxStat.index].idVO}" />
+ 							
 						<tr:commandLink
 							rendered="#{rowa[vxStat.index].action and rowa[vxStat.index].item.confirmationMessage != null}" 
 							action="#{rowa[vxStat.index].itemWrapper.runAction}"
@@ -554,6 +578,16 @@ partialTriggers=":poolStatus"
 							onclick="if (!confirm('#{rowa[vxStat.index].item.confirmationMessage}')) return false"
 							partialSubmit="true"
 							text="#{rowa[vxStat.index].idVO}" />
+ -->							
+						<tr:commandLink 
+							rendered="#{rowa[vxStat.index].action and rowa[vxStat.index].item.confirmationMessage != null}" 
+							useWindow="true"
+							action="dialog:runAction"
+							launchListener="#{rowa[vxStat.index].itemWrapper.setDialogParameter}"
+							inlineStyle="font-size: 110%;"
+							partialSubmit="true"
+							text="#{rowa[vxStat.index].idVO}" />
+							
 					<!-- is table -->
 						<tr:commandLink
 							partialSubmit="true" 
