@@ -26,20 +26,17 @@ import org.raven.ds.DataContext;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
-import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.ViewableObject;
-import org.raven.tree.impl.AbstractActionNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.weda.annotations.constraints.NotNull;
-import org.weda.internal.annotations.Message;
 
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=RecordsAsTableNode.class)
-public class AddRecordActionNode extends RecordsAsTableActionNode
+public class EditRecordActionNode extends RecordsAsTableRecordActionNode
 {
     @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
     @NotNull
@@ -48,16 +45,11 @@ public class AddRecordActionNode extends RecordsAsTableActionNode
     @Parameter
     private String fieldsOrder;
 
-    @Message
-    private static String createRecordErrorMessage;
-
     @Override
     public ViewableObject createActionViewableObject(DataContext context, Map<String, Object> additionalBindings)
             throws Exception
     {
-        //creating record
-        additionalBindings.put(RecordsAsTableNode.RECORD_BINDING, recordSchema.createRecord());
-        //creating action attributes from record fields
+        Record record = (Record) additionalBindings.get(RecordsAsTableNode.RECORD_BINDING);
         Map<String, NodeAttribute> actionAttrs = getActionAttributes();
         Map<String, NodeAttribute> fieldsAttrs = new LinkedHashMap<String, NodeAttribute>();
         String _fieldsOrder = fieldsOrder;
@@ -94,16 +86,8 @@ public class AddRecordActionNode extends RecordsAsTableActionNode
         attr.setDisplayName(field.getDisplayName());
         attr.setOwner(this);
         attr.init();
-        
+
         return attr;
-    }
-
-    public RecordSchema getRecordSchema() {
-        return recordSchema;
-    }
-
-    public void setRecordSchema(RecordSchema recordSchema) {
-        this.recordSchema = recordSchema;
     }
 
     public String getFieldsOrder() {
@@ -114,39 +98,12 @@ public class AddRecordActionNode extends RecordsAsTableActionNode
         this.fieldsOrder = fieldsOrder;
     }
 
-    private class AddAction extends Action
-    {
-        private final String errorMessage;
-        
-        public AddAction(AbstractActionNode actionNode, DataContext context,
-                Map<String, Object> additionalBindings, Map<String, NodeAttribute> actionAttributes,
-                String errorMessage)
-        {
-            super(actionNode, context, additionalBindings, actionAttributes);
-            this.errorMessage = errorMessage;
-        }
-
-        @Override
-        public Object getData()
-        {
-            try{
-                if (actionAttributes!=null) {
-                    Record record = (Record) additionalBindings.get(RecordsAsTableNode.RECORD_BINDING);
-                    Map<String, RecordSchemaField> fields = RavenUtils.getRecordSchemaFields(recordSchema);
-                    for (NodeAttribute attr: actionAttributes.values()){
-                        if (fields.containsKey(attr.getName()))
-                            record.setValue(attr.getName(), attr.getValue());
-                    }
-                }
-
-                return super.getData();
-                
-            }catch(Exception e){
-                if (isLogLevelEnabled(LogLevel.ERROR))
-                    getLogger().error("Creating record error", e);
-                
-                return String.format(errorMessage, e.getMessage());
-            }
-        }
+    public RecordSchema getRecordSchema() {
+        return recordSchema;
     }
+
+    public void setRecordSchema(RecordSchema recordSchema) {
+        this.recordSchema = recordSchema;
+    }
+
 }

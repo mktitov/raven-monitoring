@@ -78,8 +78,10 @@ public class RecordsAsTableRecordActionNode extends AbstractActionNode implement
 
             Object res = super.getData();
 
-            if (dataList.isEmpty() && additionalBindings.containsKey(RecordsAsTableNode.RECORD_BINDING))
+            if (dataList.isEmpty() && additionalBindings.containsKey(RecordsAsTableNode.RECORD_BINDING)){
                 dataList.add(additionalBindings.get(RecordsAsTableNode.RECORD_BINDING));
+                dataList.add(null);
+            }
             for (Object data: dataList)
                 DataSourceHelper.sendDataToConsumers(RecordsAsTableRecordActionNode.this, data, context);
 

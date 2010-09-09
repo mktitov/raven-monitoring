@@ -239,12 +239,12 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         dataSource.getDataImmediate(dataConsumer, new DataContextImpl(attrs));
 
         List<ViewableObject> vos = new ArrayList<ViewableObject>();
-        if (records!=null)
-        {
+//        if (records!=null)
+//        {
             List<ViewableObject> actions = getActions(refreshAttributes, records);
             if (actions!=null)
                 vos.addAll(actions);
-        }
+//        }
         
         vos.add(new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, dataConsumer.getTable()));
         

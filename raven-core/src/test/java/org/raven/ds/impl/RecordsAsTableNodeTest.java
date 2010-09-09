@@ -17,6 +17,7 @@
 
 package org.raven.ds.impl;
 
+import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -35,6 +36,7 @@ import org.raven.tree.ActionViewableObject;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
+import org.raven.tree.impl.ActionAttributeValueHandlerFactory;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.impl.RefreshAttributeValueHandlerFactory;
 import org.weda.internal.Messages;
@@ -470,8 +472,9 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         assertEquals("action title", action.toString());
         assertTrue(collector.getDataList().isEmpty());
         assertEquals("2", action.getData());
-        assertEquals(1, collector.getDataListSize());
+        assertEquals(2, collector.getDataListSize());
         assertSame(record, collector.getDataList().get(0));
+        assertNull(collector.getDataList().get(1));
 
         collector.getDataList().clear();
         recordAction.setActionExpression("dataList<<'test data';'test'");
@@ -489,53 +492,90 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         addAction.setName("action");
         tableNode.addAndSaveChildren(addAction);
         addAction.setEnabledActionText("action title");
-        addAction.setActionExpression("record['field1']=2");
+        addAction.setActionExpression("record['field1']++");
         assertTrue(addAction.start());
+
+        NodeAttributeImpl field2Attr = new NodeAttributeImpl("field2", String.class, 10, null);
+        field2Attr.setOwner(addAction);
+        field2Attr.setValueHandlerType(ActionAttributeValueHandlerFactory.TYPE);
+        field2Attr.init();
+        addAction.addNodeAttribute(field2Attr);
 
         collector.setDataSource(addAction);
 
-        Record record = createMock(Record.class);
+        Collection<ViewableObject> objects = tableNode.getViewableObjects(null);
+        assertNotNull(objects);
+        assertEquals(2, objects.size());
+        ViewableObject object = objects.iterator().next();
+        assertTrue(object instanceof ActionViewableObject);
+        ActionViewableObject action = (ActionViewableObject) object;
+        Collection<NodeAttribute> attrs = action.getActionAttributes();
+        assertNotNull(attrs);
+        assertEquals(2, attrs.size());
+        Iterator<NodeAttribute> it = attrs.iterator();
+        NodeAttribute f1 = it.next();
+        NodeAttribute f2 = it.next();
+        assertEquals("field1", f1.getName());
+        assertEquals("field1 displayName", f1.getDisplayName());
+        assertEquals("field2", f2.getName());
+        assertEquals("10", f2.getValue());
+        f1.setValue("1");
 
-        expect(record.getSchema()).andReturn(schema);
-        expect(record.getValue("field1")).andReturn(1).times(1);
-        record.putAt("field1", 2);
+        action.getData();
+        
+        assertEquals(2, collector.getDataListSize());
+        assertNull(collector.getDataList().get(1));
+        assertTrue(collector.getDataList().get(0) instanceof Record);
+        Record rec = (Record) collector.getDataList().get(0);
+        assertEquals(2, rec.getValue("field1"));
+        assertEquals(10, rec.getValue("field2"));
+    }
 
-        replay(record);
+    @Test
+    public void addRecordActionFieldsOrderTest() throws Exception
+    {
+        AddRecordActionNode addAction = new AddRecordActionNode();
+        addAction.setName("action");
+        tableNode.addAndSaveChildren(addAction);
+        addAction.setEnabledActionText("action title");
+        addAction.setActionExpression("record['field1']++");
+        addAction.setFieldsOrder("field2, field1");
+        assertTrue(addAction.start());
 
-        ds.addDataPortion(record);
-        ds.addDataPortion(null);
+        NodeAttributeImpl field2Attr = new NodeAttributeImpl("field2", String.class, 10, null);
+        field2Attr.setOwner(addAction);
+        field2Attr.setValueHandlerType(ActionAttributeValueHandlerFactory.TYPE);
+        field2Attr.init();
+        addAction.addNodeAttribute(field2Attr);
 
-        tableNode.setFieldsOrder("field1");
+        collector.setDataSource(addAction);
 
         Collection<ViewableObject> objects = tableNode.getViewableObjects(null);
         assertNotNull(objects);
-        assertEquals(1, objects.size());
+        assertEquals(2, objects.size());
         ViewableObject object = objects.iterator().next();
-        assertNotNull(object);
-        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, object.getMimeType());
-        assertNotNull(object.getData());
-        assertTrue(object.getData() instanceof Table);
-        Table table = (Table) object.getData();
-        assertArrayEquals(new String[]{null, "field1 displayName"}, table.getColumnNames());
-        List<Object[]> rows = RavenUtils.tableAsList(table);
-        assertEquals(1, rows.size());
-        assertEquals("1", rows.get(0)[1]);
-        assertTrue(rows.get(0)[0] instanceof ActionViewableObject);
-        ActionViewableObject action = (ActionViewableObject)rows.get(0)[0];
+        assertTrue(object instanceof ActionViewableObject);
+        ActionViewableObject action = (ActionViewableObject) object;
+        Collection<NodeAttribute> attrs = action.getActionAttributes();
+        assertNotNull(attrs);
+        assertEquals(2, attrs.size());
+        Iterator<NodeAttribute> it = attrs.iterator();
+        NodeAttribute f2 = it.next();
+        NodeAttribute f1 = it.next();
+        assertEquals("field1", f1.getName());
+        assertEquals("field1 displayName", f1.getDisplayName());
+        assertEquals("field2", f2.getName());
+        assertEquals("10", f2.getValue());
+        f1.setValue("1");
 
-        assertEquals("action title", action.toString());
-        assertTrue(collector.getDataList().isEmpty());
-        assertEquals("2", action.getData());
-        assertEquals(1, collector.getDataListSize());
-        assertSame(record, collector.getDataList().get(0));
+        action.getData();
 
-        collector.getDataList().clear();
-        addAction.setActionExpression("dataList<<'test data';'test'");
-        assertEquals("test", action.getData());
-        assertEquals(1, collector.getDataListSize());
-        assertEquals("test data", collector.getDataList().get(0));
-
-        verify(record);
+        assertEquals(2, collector.getDataListSize());
+        assertNull(collector.getDataList().get(1));
+        assertTrue(collector.getDataList().get(0) instanceof Record);
+        Record rec = (Record) collector.getDataList().get(0);
+        assertEquals(2, rec.getValue("field1"));
+        assertEquals(10, rec.getValue("field2"));
     }
 
     @Test

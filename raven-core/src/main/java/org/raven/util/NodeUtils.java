@@ -19,6 +19,7 @@ package org.raven.util;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
@@ -69,7 +70,7 @@ public class NodeUtils
      */
     public static Map<String, NodeAttribute> extractAttributes(Node node, String valueHandlerType) throws Exception
     {
-        Map<String, NodeAttribute> refreshAttributes = new HashMap<String, NodeAttribute>();
+        Map<String, NodeAttribute> refreshAttributes = new LinkedHashMap<String, NodeAttribute>();
         Collection<NodeAttribute> attrs = node.getNodeAttributes();
         int id=-1;
         if (attrs!=null)
