@@ -53,26 +53,32 @@ public class SchedulableDataPipe extends SafeDataPipeNode implements Schedulable
 
     public void executeScheduledJob(Scheduler scheduler)
     {
-        if (allowAsyncExecution)
-            doExecuteJob();
-        else {
-            if (lock.tryLock()) {
-                try{
-                    doExecuteJob();
-                } finally {
-                    lock.unlock();
-                }
-            } else if (isLogLevelEnabled(LogLevel.DEBUG))
-                debug("Can't execute schedulable task. Already executing");
+        try{
+            if (allowAsyncExecution)
+                doExecuteJob();
+            else {
+                if (lock.tryLock()) {
+                    try{
+                        doExecuteJob();
+                    } finally {
+                        lock.unlock();
+                    }
+                } else if (isLogLevelEnabled(LogLevel.DEBUG))
+                    debug("Can't execute schedulable task. Already executing");
+            }
+        }catch(Exception e){
+            if (isLogLevelEnabled(LogLevel.ERROR))
+                getLogger().error("Error executing scheduled job", e);
         }
     }
 
-    private void doExecuteJob()
+    private void doExecuteJob() throws Exception
     {
         if (isLogLevelEnabled(LogLevel.DEBUG)) {
             debug("Initiating data gathering request");
         }
-        getDataSource().getDataImmediate(this, new DataContextImpl());
+//        getDataSource().getDataImmediate(this, new DataContextImpl());
+        gatherDataForConsumer(null, new DataContextImpl());
         Collection<Node> deps = getDependentNodes();
         if (deps != null) {
             for (Node node : deps) {

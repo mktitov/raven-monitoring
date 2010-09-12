@@ -186,7 +186,7 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
                 if (isLogLevelEnabled(LogLevel.DEBUG))
                     debug("Preprocessing...");
                 bindingSupport.put(SESSIONATTRIBUTES_BINDING, context.getSessionAttributes());
-                bindingSupport.put( DATA_CONTEXT_BINDING, context);
+                bindingSupport.put(DATA_CONTEXT_BINDING, context);
                 try
                 {
                     preprocessResult = getNodeAttribute(PREPROCESS_ATTRIBUTE).getRealValue();
