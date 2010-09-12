@@ -24,6 +24,6 @@ import org.raven.annotations.NodeClass;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=RecordsAsTableNode.class)
-public class RecordsAsTableActionNode extends RecordsAsTableRecordActionNode
+public class RecordsAsTableActionNode extends RecordsAsTableBaseAction
 {
 }

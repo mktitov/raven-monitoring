@@ -30,6 +30,7 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.internal.annotations.Message;
 
 /**
  *
@@ -38,12 +39,16 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass(parentNode=RecordsAsTableNode.class)
 public class EditRecordActionNode extends RecordsAsTableRecordActionNode
 {
+    public static final String RECORD_BINDING = "record";
     @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
     @NotNull
     private RecordSchema recordSchema;
 
     @Parameter
     private String fieldsOrder;
+
+    @Message
+    private static String editRecordErrorMessage;
 
     @Override
     public ViewableObject createActionViewableObject(DataContext context, Map<String, Object> additionalBindings)
@@ -52,16 +57,19 @@ public class EditRecordActionNode extends RecordsAsTableRecordActionNode
         Record record = (Record) additionalBindings.get(RecordsAsTableNode.RECORD_BINDING);
         Map<String, NodeAttribute> actionAttrs = getActionAttributes();
         Map<String, NodeAttribute> fieldsAttrs = new LinkedHashMap<String, NodeAttribute>();
+
+        bindingSupport.put(RECORD_BINDING, record);
+        
         String _fieldsOrder = fieldsOrder;
         if (_fieldsOrder==null)
         {
             RecordSchemaField[] fields = recordSchema.getFields();
             if (fields!=null)
                 for (RecordSchemaField field: fields){
-                    if (actionAttrs.containsKey(field.getName()))
+                    if (actionAttrs!=null && actionAttrs.containsKey(field.getName()))
                         fieldsAttrs.put(field.getName(), actionAttrs.get(field.getName()));
                     else {
-                        fieldsAttrs.put(field.getName(), createNodeAttribute(field));
+                        fieldsAttrs.put(field.getName(), createNodeAttribute(field, record));
                     }
                 }
         } else {
@@ -69,20 +77,20 @@ public class EditRecordActionNode extends RecordsAsTableRecordActionNode
             Map<String, RecordSchemaField> fields = RavenUtils.getRecordSchemaFields(recordSchema);
             for (String fieldName: fieldNames)
                 if (fields.containsKey(fieldName)){
-                    if (actionAttrs.containsKey(fieldName))
+                    if (actionAttrs!=null && actionAttrs.containsKey(fieldName))
                         fieldsAttrs.put(fieldName, actionAttrs.get(fieldName));
                     else
-                        fieldsAttrs.put(fieldName, createNodeAttribute(fields.get(fieldName)));
-                } else if (actionAttrs.containsKey(fieldName))
+                        fieldsAttrs.put(fieldName, createNodeAttribute(fields.get(fieldName), record));
+                } else if (actionAttrs!=null && actionAttrs.containsKey(fieldName))
                     fieldsAttrs.put(fieldName, actionAttrs.get(fieldName));
         }
-        return new AddAction(this, context, additionalBindings, fieldsAttrs, createRecordErrorMessage);
+        return new AddEditRecordAction(this, context, additionalBindings, fieldsAttrs, editRecordErrorMessage, this, recordSchema);
     }
 
-    private NodeAttribute createNodeAttribute(RecordSchemaField field) throws Exception
+    private NodeAttribute createNodeAttribute(RecordSchemaField field, Record record) throws Exception
     {
-        NodeAttributeImpl attr = new NodeAttributeImpl(
-                field.getName(), String.class, null, field.getPattern());
+        String value = converter.convert(String.class, record.getValue(field.getName()), field.getPattern());
+        NodeAttributeImpl attr = new NodeAttributeImpl(field.getName(), String.class, value, field.getPattern());
         attr.setDisplayName(field.getDisplayName());
         attr.setOwner(this);
         attr.init();

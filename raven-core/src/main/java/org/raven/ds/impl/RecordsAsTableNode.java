@@ -23,8 +23,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
@@ -292,8 +290,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         {
             List<RecordsAsTableRecordActionNode> actions = null;
             for (Node child: childs)
-                if (   child.getClass().equals(RecordsAsTableRecordActionNode.class)
-                    && Status.STARTED.equals(child.getStatus()))
+                if (child instanceof RecordsAsTableRecordActionNode && Status.STARTED.equals(child.getStatus()))
                 {
                     if (actions==null)
                         actions = new ArrayList<RecordsAsTableRecordActionNode>();

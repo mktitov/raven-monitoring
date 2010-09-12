@@ -23,13 +23,10 @@ import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataContext;
-import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
-import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.ViewableObject;
-import org.raven.tree.impl.AbstractActionNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.internal.annotations.Message;
@@ -66,7 +63,7 @@ public class AddRecordActionNode extends RecordsAsTableActionNode
             RecordSchemaField[] fields = recordSchema.getFields();
             if (fields!=null)
                 for (RecordSchemaField field: fields){
-                    if (actionAttrs.containsKey(field.getName()))
+                    if (actionAttrs!=null && actionAttrs.containsKey(field.getName()))
                         fieldsAttrs.put(field.getName(), actionAttrs.get(field.getName()));
                     else {
                         fieldsAttrs.put(field.getName(), createNodeAttribute(field));
@@ -77,14 +74,15 @@ public class AddRecordActionNode extends RecordsAsTableActionNode
             Map<String, RecordSchemaField> fields = RavenUtils.getRecordSchemaFields(recordSchema);
             for (String fieldName: fieldNames)
                 if (fields.containsKey(fieldName)){
-                    if (actionAttrs.containsKey(fieldName))
+                    if (actionAttrs!=null && actionAttrs.containsKey(fieldName))
                         fieldsAttrs.put(fieldName, actionAttrs.get(fieldName));
                     else
                         fieldsAttrs.put(fieldName, createNodeAttribute(fields.get(fieldName)));
-                } else if (actionAttrs.containsKey(fieldName))
+                } else if (actionAttrs!=null && actionAttrs.containsKey(fieldName))
                     fieldsAttrs.put(fieldName, actionAttrs.get(fieldName));
         }
-        return new AddAction(this, context, additionalBindings, fieldsAttrs, createRecordErrorMessage);
+        return new AddEditRecordAction(
+                this, context, additionalBindings, fieldsAttrs, createRecordErrorMessage, this, recordSchema);
     }
 
     private NodeAttribute createNodeAttribute(RecordSchemaField field) throws Exception
@@ -112,41 +110,5 @@ public class AddRecordActionNode extends RecordsAsTableActionNode
 
     public void setFieldsOrder(String fieldsOrder) {
         this.fieldsOrder = fieldsOrder;
-    }
-
-    private class AddAction extends Action
-    {
-        private final String errorMessage;
-        
-        public AddAction(AbstractActionNode actionNode, DataContext context,
-                Map<String, Object> additionalBindings, Map<String, NodeAttribute> actionAttributes,
-                String errorMessage)
-        {
-            super(actionNode, context, additionalBindings, actionAttributes);
-            this.errorMessage = errorMessage;
-        }
-
-        @Override
-        public Object getData()
-        {
-            try{
-                if (actionAttributes!=null) {
-                    Record record = (Record) additionalBindings.get(RecordsAsTableNode.RECORD_BINDING);
-                    Map<String, RecordSchemaField> fields = RavenUtils.getRecordSchemaFields(recordSchema);
-                    for (NodeAttribute attr: actionAttributes.values()){
-                        if (fields.containsKey(attr.getName()))
-                            record.setValue(attr.getName(), attr.getValue());
-                    }
-                }
-
-                return super.getData();
-                
-            }catch(Exception e){
-                if (isLogLevelEnabled(LogLevel.ERROR))
-                    getLogger().error("Creating record error", e);
-                
-                return String.format(errorMessage, e.getMessage());
-            }
-        }
     }
 }
