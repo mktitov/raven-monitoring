@@ -137,7 +137,7 @@ public class SessionBean
 	private LogsCache logsCache; 
 	private boolean collapsed = false;
 	private String remoteIp = null;
-	private String auditViewFd = "now-7d";
+	private String auditViewFd = "now-1d";
 	private String auditViewTd = "now";
 	private ActionType auditActionType = null;
 	private Action auditAction = null;
