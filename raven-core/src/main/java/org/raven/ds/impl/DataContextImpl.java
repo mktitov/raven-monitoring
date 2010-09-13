@@ -98,7 +98,7 @@ public class DataContextImpl implements DataContext
         sessionAttributes.put(attr.getName(), attr);
     }
 
-    public void addSessionAttributes(Collection<NodeAttribute> attrs)
+    public final void addSessionAttributes(Collection<NodeAttribute> attrs)
     {
         addSessionAttributes(attrs, true);
     }
