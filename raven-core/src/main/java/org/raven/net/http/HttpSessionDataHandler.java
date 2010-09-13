@@ -66,6 +66,13 @@ public class HttpSessionDataHandler implements DataHandler
                 return null;
             }
             HttpSessionNode session = (HttpSessionNode) owner;
+            
+            Integer errorsCount = (Integer) context.getParameters().get(getErrorsCountParamName(session));
+            errorsCount = errorsCount==null? 0 : errorsCount;
+            Integer maxErrors = session.getMaxErrorsPerDataSet();
+            maxErrors = maxErrors==null? Integer.MAX_VALUE : maxErrors;
+            if (errorsCount>=maxErrors)
+                return HttpSessionNode.SKIP_DATA;
 
             Collection<Node> childs = session.getHandlers(isNewSession, data);
             Object res = null;
@@ -99,7 +106,7 @@ public class HttpSessionDataHandler implements DataHandler
                         if (response!=null && expectedStatus!=null
                             && !expectedStatus.equals(response.getStatusLine().getStatusCode()))
                         {
-                            return handleError(session, response.getEntity(), params);
+                            return handleError(context, session, response.getEntity(), params, errorsCount, maxErrors);
                         }
 
                         long start = handler.operationStatistic.markOperationProcessingStart();
@@ -123,7 +130,9 @@ public class HttpSessionDataHandler implements DataHandler
                                 }catch(Throwable e){
                                     if (session.isLogLevelEnabled(LogLevel.DEBUG))
                                         session.getLogger().debug("Executing request error. "+e.getMessage());
-                                    return handleError(session, response==null? null : response.getEntity(), params);
+                                    return handleError(
+                                            context, session, response==null? null : response.getEntity()
+                                            , params, errorsCount, maxErrors);
                                 }
                                 if (session.isLogLevelEnabled(LogLevel.DEBUG))
                                     session.getLogger().debug("Response status: "+response.getStatusLine().toString());
@@ -145,10 +154,24 @@ public class HttpSessionDataHandler implements DataHandler
         }
     }
 
-    private Object handleError(HttpSessionNode session, HttpEntity entity, Map<String, Object> params) throws IOException
+    private String getErrorsCountParamName(HttpSessionNode session){
+        return ""+session.getId()+"_errorsCount";
+    }
+
+    private Object handleError(DataContext context, HttpSessionNode session, HttpEntity entity
+            , Map<String, Object> params, Integer errorsCount, Integer maxErrors)
+        throws IOException
     {
         if (entity!=null)
             entity.consumeContent();
+
+        ++errorsCount;
+        context.getParameters().put(getErrorsCountParamName(session), errorsCount);
+        if (errorsCount>=maxErrors){
+            if (session.isLogLevelEnabled(LogLevel.WARN))
+                session.getLogger().warn("Too many errors. Skipping the rest of the data in the data set");
+        }
+
         return session.handleError(params);
     }
 

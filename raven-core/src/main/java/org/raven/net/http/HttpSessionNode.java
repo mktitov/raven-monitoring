@@ -83,6 +83,9 @@ public class HttpSessionNode extends AbstractAsyncDataPipe
     @Parameter(defaultValue="5000")
     private Integer connectionTimeout;
 
+    @Parameter
+    private Integer maxErrorsPerDataSet;
+
     @Override
     public void formExpressionBindings(Bindings bindings)
     {
@@ -167,6 +170,14 @@ public class HttpSessionNode extends AbstractAsyncDataPipe
 
     public void setErrorHandler(Object errorHandler) {
         this.errorHandler = errorHandler;
+    }
+
+    public Integer getMaxErrorsPerDataSet() {
+        return maxErrorsPerDataSet;
+    }
+
+    public void setMaxErrorsPerDataSet(Integer maxErrorsPerDataSet) {
+        this.maxErrorsPerDataSet = maxErrorsPerDataSet;
     }
 
     private HttpClient createHttpClient()

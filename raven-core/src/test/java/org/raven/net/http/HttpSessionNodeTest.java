@@ -30,8 +30,9 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.raven.ds.DataContext;
+import org.raven.ds.impl.DataContextImpl;
 import org.raven.expr.impl.IfNode;
-import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.sched.impl.ExecutorServiceNode;
 import org.raven.test.DataCollector;
 import org.raven.test.PushDataSource;
@@ -85,10 +86,11 @@ public class HttpSessionNodeTest extends RavenCoreTestCase
 
     @After
     @Override
-    public void finalize() throws Exception
+    public void finalize() throws Throwable
     {
         if (server!=null && server.isStarted())
             server.stop();
+        super.finalize();
     }
 
     @Test
@@ -106,6 +108,31 @@ public class HttpSessionNodeTest extends RavenCoreTestCase
         assertNotNull(data);
         assertEquals(1, data.size());
         assertEquals("response", data.get(0));
+    }
+
+    @Test
+    public void maxErrorsTest() throws Exception
+    {
+        session.setErrorHandler("response.response.statusLine.statusCode");
+        session.setMaxErrorsPerDataSet(1);
+
+        createRequest("request", "/test", RequestContentType.NONE, null);
+        createResponse("response handler", ResponseContentType.TEXT, "data", HttpServletResponse.SC_OK);
+
+        Handler1 handler = new Handler1();
+        handler.setResponseStatus(HttpServletResponse.SC_BAD_REQUEST);
+        server.setHandler(handler);
+        server.start();
+
+        DataContext context = new DataContextImpl();
+        datasource.pushData("test", context);
+        datasource.pushData("test", context);
+        datasource.pushData(null, context);
+        List data = collector.getDataList();
+        assertNotNull(data);
+        assertEquals(2, data.size());
+        assertEquals(new Integer(400), data.get(0));
+        assertNull(data.get(1));
     }
 
     @Test

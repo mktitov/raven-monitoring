@@ -44,8 +44,13 @@ public class PushDataSource extends BaseNode implements DataSource
 
 	public void pushData(Object data)
 	{
-		Collection<Node> deps = getDependentNodes();
         DataContext context = new DataContextImpl();
+        pushData(data, context);
+    }
+
+	public void pushData(Object data, DataContext context)
+	{
+		Collection<Node> deps = getDependentNodes();
 		if (deps!=null)
 			for (Node dep: deps)
 				if (dep instanceof DataConsumer)
