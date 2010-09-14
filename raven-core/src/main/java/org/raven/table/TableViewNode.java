@@ -26,8 +26,6 @@ import java.util.Map;
 import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
-import org.raven.ds.DataContext;
-import org.raven.ds.impl.DataContextImpl;
 import org.raven.ds.impl.SafeDataConsumer;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.tree.NodeAttribute;
@@ -183,7 +181,7 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
             if (strCols!=null){
                 int[] cols = new int[strCols.length];
                 for (int i=0; i<cols.length; ++i)
-                    cols[i]=new Integer(strCols[i])+1;
+                    cols[i]=new Integer(strCols[i])-1;
                 return new HideColumnsTableWrapper(table, cols);
             }
             return table;

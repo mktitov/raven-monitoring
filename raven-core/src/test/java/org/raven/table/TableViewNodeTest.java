@@ -108,7 +108,14 @@ public class TableViewNodeTest extends RavenCoreTestCase
     @Test
     public void hideColumnsTest() throws Exception
     {
+        tableView.setDataSource(ds);
         tableView.setHideColumns("2");
+
+        TableImpl tab = new TableImpl(new String[]{"col1", "col2", "col3"});
+        tab.addRow(new Object[]{"val_1_1", "val_2_1", "val_3_1"});
+        tab.addRow(new Object[]{"val_1_2", "val_2_2", "val_3_2"});
+
+        ds.addDataPortion(tab);
 
         List<ViewableObject> objects = tableView.getViewableObjects(null);
         assertNotNull(objects);
@@ -124,9 +131,40 @@ public class TableViewNodeTest extends RavenCoreTestCase
             rows.add(it.next());
 
         assertEquals(2, rows.size());
-        assertArrayEquals(new String[]{"col1"}, table.getColumnNames());
-        assertArrayEquals(new Object[]{"val_1_1"}, rows.get(0));
-        assertArrayEquals(new Object[]{"val_1_2"}, rows.get(1));
+        assertArrayEquals(new String[]{"col1", "col3"}, table.getColumnNames());
+        assertArrayEquals(new Object[]{"val_1_1", "val_3_1"}, rows.get(0));
+        assertArrayEquals(new Object[]{"val_1_2", "val_3_2"}, rows.get(1));
+    }
+
+    @Test
+    public void hideColumnsTest2() throws Exception
+    {
+        tableView.setDataSource(ds);
+        tableView.setHideColumns("1, 3");
+
+        TableImpl tab = new TableImpl(new String[]{"col1", "col2", "col3"});
+        tab.addRow(new Object[]{"val_1_1", "val_2_1", "val_3_1"});
+        tab.addRow(new Object[]{"val_1_2", "val_2_2", "val_3_2"});
+
+        ds.addDataPortion(tab);
+
+        List<ViewableObject> objects = tableView.getViewableObjects(null);
+        assertNotNull(objects);
+        assertEquals(1, objects.size());
+        ViewableObject object = objects.get(0);
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, object.getMimeType());
+        Object data = object.getData();
+        assertTrue(data instanceof Table);
+        Table table = (Table) data;
+
+        List<Object[]> rows = new ArrayList<Object[]>();
+        for (Iterator<Object[]> it=table.getRowIterator(); it.hasNext();)
+            rows.add(it.next());
+
+        assertEquals(2, rows.size());
+        assertArrayEquals(new String[]{"col2"}, table.getColumnNames());
+        assertArrayEquals(new Object[]{"val_2_1"}, rows.get(0));
+        assertArrayEquals(new Object[]{"val_2_2"}, rows.get(1));
     }
 
     @Test
