@@ -105,6 +105,18 @@ public class HttpRequestNode extends HttpResponseHandlerNode
             }
         }
         request.setURI(new URI(_uri));
+
+        if (requestContentType!=RequestContentType.X_WWW_FORM_URLENCODED){
+            String contentType = converter.convert(String.class, requestMap.get("contentType"), null);
+            if (contentType==null)
+                contentType = requestContentType.getMimeType();
+            if (contentType!=null)
+                request.setHeader("Content-Type", contentType+"; charset="+requestContentEncoding);
+
+            String content = converter.convert(String.class, requestMap.get("content"), null);
+            if (content!=null)
+                ((HttpPost)request).setEntity(new StringEntity(content, requestContentEncoding));
+        }
         
         return request;
     }

@@ -23,5 +23,16 @@ package org.raven.net.http;
  */
 public enum RequestContentType
 {
-    NONE, X_WWW_FORM_URLENCODED
+    NONE(null), X_WWW_FORM_URLENCODED("application/x-www-form-urlencoded"), TEXT("text/plain"), HTML("text/html"), XML("text/xml"), JSON("application/json");
+
+    private final String mimeType;
+
+    private RequestContentType(String mimeType)
+    {
+        this.mimeType = mimeType;
+    }
+
+    public String getMimeType() {
+        return mimeType;
+    }
 }

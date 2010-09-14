@@ -45,7 +45,9 @@ public class HttpRequestNodeTest extends RavenCoreTestCase
         tree.getRootNode().addAndSaveChildren(requestNode);
         requestNode.setHost("host");
         requestNode.setPort(80);
+        requestNode.setConnectionTimeout(50000);
     }
+
 
     @Test
     public void test() throws Exception
@@ -123,6 +125,35 @@ public class HttpRequestNodeTest extends RavenCoreTestCase
         assertNotNull(entity);
         String text = IOUtils.toString(entity.getContent(), "utf-8");
         assertEquals("p1=test", text);
+
+        verify(response);
+    }
+
+    @Test
+    public void textContentTest() throws Exception
+    {
+        HttpResponse response = createMock(HttpResponse.class);
+        expect(response.getEntity()).andReturn(null);
+        replay(response);
+
+        requestNode.setRequestContentType(RequestContentType.TEXT);
+        requestNode.setRequestType(RequestType.POST);
+        requestNode.setUri("/test");
+        requestNode.getNodeAttribute(HttpRequestNode.PROCESS_RESPONSE_ATTR).setValue("request.content='test текст'");
+        assertTrue(requestNode.start());
+
+        Object res = requestNode.processResponse(createParams(response));
+        assertNotNull(res);
+        assertTrue(res instanceof HttpPost);
+
+        HttpPost req = (HttpPost) res;
+        String uri = req.getURI().toString();
+        assertEquals("/test", req.getURI().toString());
+        assertEquals("text/plain; charset=UTF-8", req.getFirstHeader("Content-Type").getValue());
+        HttpEntity entity = req.getEntity();
+        assertNotNull(entity);
+        String text = IOUtils.toString(entity.getContent(), "utf-8");
+        assertEquals("test текст", text);
 
         verify(response);
     }
