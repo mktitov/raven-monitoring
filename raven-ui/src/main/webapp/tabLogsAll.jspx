@@ -54,14 +54,14 @@
 	<tr:spacer width="40"/>
 </tr:panelHorizontalLayout>
 
-<tr:commandButton 
+<tr:commandButton partialSubmit="true" 
 	id="refresh" 
 	text="#{msgs.refresh}" 
 	action="#{cNode.clearLogForAllNodes}" />        
        
 <tr:separator></tr:separator>
 
-<tr:table 
+<tr:table partialTriggers="::refresh" 
 		rendered="#{!cNode.groupByNodes}"
   		width="100%" 
   		summary="NodesLogs"  

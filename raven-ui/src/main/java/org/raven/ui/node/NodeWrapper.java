@@ -135,7 +135,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	private int shortNameLen = 0;
 	private String iconPath = null;
 	private Boolean hideNodeName;
-	private Map<String,NodeAttribute> whoulRefreshAttributes; 
+	private Map<String,NodeAttribute> whoulRefreshAttributes = null; 
 		
 	public NodeWrapper() 
 	{
@@ -487,12 +487,12 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		
 	public List<ViewableObjectWrapper> getViewableObjects()
 	{
-		if(!isAnyAccess()) return new ArrayList<ViewableObjectWrapper>();
+		if(!isAnyAccess()) 
+			return new ArrayList<ViewableObjectWrapper>();
 		List<ViewableObjectWrapper> x = SessionBean.getInstance().getViewableObjectsCache().getObjects(this);
 		logger.info("+++ ");
-		for(ViewableObjectWrapper v : x)
-		{
-			logger.info(" id="+v.getId()+"  group="+v.getMimeGroup()+"  nodeId="+v.getNodeId()+"  uid="+v.getUid());
+		for(ViewableObjectWrapper v : x) {
+			logger.info(" id={}  group={}  nodeId={} uid={}",new Object[]{v.getId(),v.getMimeGroup(),v.getNodeId(),v.getUid()});
 		}
 		logger.info("--- ");
 		return x;
@@ -1043,28 +1043,36 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	
 	public String onRefresh()
 	{
-		auditor.write(getNode(), getAccountName(), Action.VIEW, "refreshInterval={}", ""+getRefreshViewIntevalMS());
-		return refresh();
+		return onRefresh2(null, Action.VIEW, "refreshInterval="+getRefreshViewIntevalMS());
+	}
+
+
+	public String onRefresh2(String message) {
+		return onRefresh2("MESSAGE='"+message+"'", Action.VIEW_WITH_ATTR, null);
 	}
 	
-	public String onRefresh2(String message)
+	public String onRefresh2(String before, Action action, String after)
 	{
 		List<Object> data = new ArrayList<Object>();
-		List<NodeAttribute> na = getRefreshAttributes();
+		if(whoulRefreshAttributes==null)
+			loadRefreshAttributes();
 		StringBuilder sb = new StringBuilder();
-		if(Utl.trim2Null(message)!=null) {
-			sb.append("message='{}' ;");
-			data.add(message);
-		}	
-		for(NodeAttribute a : na) {
-			sb.append(" attr='{}' value='{}' ;");
+		
+		if(Utl.trim2Null(before)!=null)
+					sb.append(before).append(" ; ");
+		
+		for(NodeAttribute a : whoulRefreshAttributes.values() ) {
+			sb.append("attr='{}' value='{}' ; ");
 			data.add(a.getName());
 			data.add(a.getValue());
 		}
-		if(data.size()>0)
-			auditor.write(getNode(), getAccountName(), Action.VIEW_WITH_ATTR, sb.toString(), data.toArray());
+		if(Utl.trim2Null(after)!=null)
+			sb.append(after).append(" ;");
+		
+		if( data.size()>0 )
+			auditor.write(getNode(), getAccountName(), action, sb.toString(), data.toArray());
 		else 
-			auditor.write(getNode(), getAccountName(), Action.VIEW_WITH_ATTR, "");
+			auditor.write(getNode(), getAccountName(), action, sb.toString());
 		return refresh();
 	}
 	
@@ -1351,7 +1359,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		if(getNode().getParent()!=null)
 		{
 			LogsCache lc = SessionBean.getInstance().getLogsCache();
-			List<NodeLogRecord> ret = lc.get(ALL_NODES);
+			List<NodeLogRecord> ret = lc.getFromCacheOnly(ALL_NODES); //get
 			if(ret!=null) return ret;
 		}
 		return new ArrayList<NodeLogRecord>();
@@ -1395,6 +1403,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	{
 		LogsCache lvac = SessionBean.getInstance().getLogsCache();
 		lvac.remove(ALL_NODES);
+		lvac.get(ALL_NODES);
 		return null;
 	}
 	
@@ -1593,33 +1602,27 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		return iconPath;
 	}
 	
-	public Status getStatus()
-	{
+	public Status getStatus() {
 		return getNode().getStatus();
 	}
 	
-	public boolean isTemplate()
-	{
+	public boolean isTemplate() {
 		return getNode().isTemplate();
 	}
 
-	public String getName()
-	{
+	public String getName() {
 		return getNode().getName();
 	}
 
-	public String getPrefix()
-	{
+	public String getPrefix() {
 		return ((BaseNode)getNode()).getPrefix();
 	}
 	
-	public boolean isStarted()
-	{
+	public boolean isStarted() {
 		return getStatus()==Status.STARTED;
 	}
 	
-	public String getPath()
-	{
+	public String getPath() {
 		return getNode().getPath();
 	}
 
