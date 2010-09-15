@@ -118,8 +118,8 @@ public class HttpResponseHandlerNode extends BaseNode
         finally
         {
             bindingSupport.reset();
-            if (entity!=null)
-                entity.consumeContent();
+//            if (entity!=null)
+//                entity.consumeContent();
         }
     }
 

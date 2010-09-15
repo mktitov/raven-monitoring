@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.raven.ds.DataContext;
 import org.raven.ds.impl.DataContextImpl;
 import org.raven.expr.impl.IfNode;
+import org.raven.log.LogLevel;
 import org.raven.sched.impl.ExecutorServiceNode;
 import org.raven.test.DataCollector;
 import org.raven.test.PushDataSource;
@@ -75,6 +76,7 @@ public class HttpSessionNodeTest extends RavenCoreTestCase
         session.setMaxHandlersCount(1);
         session.setHandleDataInSeparateThread(Boolean.FALSE);
         session.setExecutor(executor);
+        session.setLogLevel(LogLevel.TRACE);
         assertTrue(session.start());
 
         collector = new DataCollector();
@@ -114,7 +116,8 @@ public class HttpSessionNodeTest extends RavenCoreTestCase
     public void maxErrorsTest() throws Exception
     {
         session.setErrorHandler("response.response.statusLine.statusCode");
-        session.setMaxErrorsPerDataSet(1);
+        session.setMaxPercentOfErrors(1);
+        session.setCheckMaxPercentOfErrorsAfter(5);
 
         createRequest("request", "/test", RequestContentType.NONE, null);
         createResponse("response handler", ResponseContentType.TEXT, "data", HttpServletResponse.SC_OK);
@@ -125,14 +128,45 @@ public class HttpSessionNodeTest extends RavenCoreTestCase
         server.start();
 
         DataContext context = new DataContextImpl();
-        datasource.pushData("test", context);
-        datasource.pushData("test", context);
+        for (int i=0; i<10; i++)
+            datasource.pushData("test", context);
         datasource.pushData(null, context);
         List data = collector.getDataList();
         assertNotNull(data);
-        assertEquals(2, data.size());
-        assertEquals(new Integer(400), data.get(0));
-        assertNull(data.get(1));
+        assertEquals(7, data.size());
+        for (int i=0; i<6; ++i)
+            assertEquals(new Integer(400), data.get(i));
+        assertNull(data.get(6));
+    }
+
+    @Test
+    public void maxErrorsTest2() throws Exception
+    {
+        session.setErrorHandler("response.response.statusLine.statusCode");
+        session.setMaxPercentOfErrors(12);
+        session.setCheckMaxPercentOfErrorsAfter(5);
+
+        createRequest("request", "/test", RequestContentType.NONE, null);
+        createResponse("response handler", ResponseContentType.TEXT, "data", HttpServletResponse.SC_OK);
+
+        Handler1 handler = new Handler1();
+        server.setHandler(handler);
+        server.start();
+
+        handler.setResponseStatus(HttpServletResponse.SC_OK);
+        DataContext context = new DataContextImpl();
+        for (int i=0; i<8; i++)
+            datasource.pushData("test", context);
+        handler.setResponseStatus(HttpServletResponse.SC_BAD_REQUEST);
+        for (int i=0; i<10; i++)
+            datasource.pushData("test", context);
+        datasource.pushData(null, context);
+        List data = collector.getDataList();
+        assertNotNull(data);
+        assertEquals(11, data.size());
+        for (int i=0; i<10; ++i)
+            assertEquals(i<8? "test" : new Integer(400), data.get(i));
+        assertNull(data.get(10));
     }
 
     @Test

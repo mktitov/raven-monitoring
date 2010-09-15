@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.raven.auth.UserContext;
 import org.raven.auth.UserContextService;
 import org.raven.ds.DataContext;
@@ -45,7 +46,7 @@ public class DataContextImpl implements DataContext
     public DataContextImpl()
     {
         this.userContext = userContextService.getUserContext();
-        this.parameters = new HashMap();
+        this.parameters = new ConcurrentHashMap();
         this.errors = new LinkedHashMap<String, List<String>>();
         this.sessionAttributes = new HashMap<String, NodeAttribute>();
     }

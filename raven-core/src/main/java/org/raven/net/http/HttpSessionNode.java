@@ -20,6 +20,7 @@ package org.raven.net.http;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.script.Bindings;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
@@ -83,8 +84,29 @@ public class HttpSessionNode extends AbstractAsyncDataPipe
     @Parameter(defaultValue="5000")
     private Integer connectionTimeout;
 
-    @Parameter
-    private Integer maxErrorsPerDataSet;
+    @NotNull @Parameter(defaultValue="10")
+    private Integer maxPercentOfErrors;
+
+    @NotNull @Parameter(defaultValue="10")
+    private Integer checkMaxPercentOfErrorsAfter;
+
+    private AtomicLong requestSetNumber;
+
+    @Override
+    protected void initFields() {
+        super.initFields();
+        requestSetNumber = new AtomicLong(0);
+    }
+
+    @Override
+    protected void doStart() throws Exception {
+        super.doStart();
+        requestSetNumber.set(0);
+    }
+
+    long getNextRequestSetNumber(){
+        return requestSetNumber.incrementAndGet();
+    }
 
     @Override
     public void formExpressionBindings(Bindings bindings)
@@ -172,12 +194,20 @@ public class HttpSessionNode extends AbstractAsyncDataPipe
         this.errorHandler = errorHandler;
     }
 
-    public Integer getMaxErrorsPerDataSet() {
-        return maxErrorsPerDataSet;
+    public Integer getCheckMaxPercentOfErrorsAfter() {
+        return checkMaxPercentOfErrorsAfter;
     }
 
-    public void setMaxErrorsPerDataSet(Integer maxErrorsPerDataSet) {
-        this.maxErrorsPerDataSet = maxErrorsPerDataSet;
+    public void setCheckMaxPercentOfErrorsAfter(Integer checkMaxPercentOfErrorsAfter) {
+        this.checkMaxPercentOfErrorsAfter = checkMaxPercentOfErrorsAfter;
+    }
+
+    public Integer getMaxPercentOfErrors() {
+        return maxPercentOfErrors;
+    }
+
+    public void setMaxPercentOfErrors(Integer maxPercentOfErrors) {
+        this.maxPercentOfErrors = maxPercentOfErrors;
     }
 
     private HttpClient createHttpClient()
