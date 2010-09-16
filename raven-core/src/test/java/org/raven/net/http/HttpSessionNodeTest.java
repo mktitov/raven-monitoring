@@ -190,7 +190,7 @@ public class HttpSessionNodeTest extends RavenCoreTestCase
     @Test
     public void skipDataTest() throws Exception
     {
-        createRequest("request", "/test", RequestContentType.NONE, null);
+        createRequest("request", "/test", RequestContentType.NONE, "SKIP_DATA");
         createResponse("response handler", ResponseContentType.TEXT, "SKIP_DATA", null);
 
         Handler handler = new Handler1();

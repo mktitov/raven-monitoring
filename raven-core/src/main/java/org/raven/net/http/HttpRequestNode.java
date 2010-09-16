@@ -77,7 +77,7 @@ public class HttpRequestNode extends HttpResponseHandlerNode
         Map<String, String> requestHeaders = (Map<String, String>)requestMap.get(HttpSessionNode.HEADERS);
         Map<String, String> requestParams = (Map<String, String>)requestMap.get(HttpSessionNode.PARAMS);
 
-        super.processResponse(params);
+        Object res = super.processResponse(params);
 
         for (Map.Entry<String, String> header: requestHeaders.entrySet())
             request.setHeader(header.getKey(), header.getValue());
@@ -118,7 +118,7 @@ public class HttpRequestNode extends HttpResponseHandlerNode
                 ((HttpPost)request).setEntity(new StringEntity(content, requestContentEncoding));
         }
         
-        return request;
+        return res;
     }
 
     public Integer getConnectionTimeout() {
