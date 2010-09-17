@@ -87,6 +87,7 @@ public class HttpSessionDataHandler implements DataHandler
             if (childs!=null)
             {
                 requestNumber=0;
+                String requestUri="";
                 for (Node child: childs)
                 {
                     if (child instanceof HttpResponseHandlerNode && Status.STARTED.equals(child.getStatus()))
@@ -116,8 +117,8 @@ public class HttpSessionDataHandler implements DataHandler
                         {
                             if (session.isLogLevelEnabled(LogLevel.WARN))
                                 session.getLogger().warn(logMess(String.format(
-                                        "Invalid response status code. Expected %s but was %s"
-                                        , expectedStatus, response.getStatusLine().getStatusCode())));
+                                        "Invalid response status code (expected %s but was %s) for request: %s"
+                                        , expectedStatus, response.getStatusLine().getStatusCode(), requestUri)));
                             return handleError(context, session, response.getEntity(), params);
                         }
 
@@ -142,10 +143,10 @@ public class HttpSessionDataHandler implements DataHandler
                                 HttpHost target = new HttpHost(
                                         (String)requestMap.get(HttpSessionNode.HOST)
                                         , (Integer)requestMap.get(HttpSessionNode.PORT));
+                                requestUri = request.getRequestLine().getMethod() + " "+request.getRequestLine().getUri();
                                 if (session.isLogLevelEnabled(LogLevel.DEBUG))
                                     session.getLogger().debug(logMess(
-                                            "Sending request for node ("+child.getName()+"): "+request.getRequestLine().getMethod()
-                                            + " "+request.getRequestLine().getUri()));
+                                            "Sending request for node ("+child.getName()+"): "+requestUri));
                                 try{
                                     response = client.execute(target, request);
                                 }catch(Throwable e){
