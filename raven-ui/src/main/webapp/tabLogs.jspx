@@ -49,14 +49,13 @@
 				label="#{msgs.recursive}" 
 				value="#{cNode.logFindRecursive}"/>
 			<tr:selectBooleanCheckbox 
-				shortDesc="#{msgs.groupingByNodes}" 
+				shortDesc="#{msgs.groupingByNodes}"  
 				label="#{msgs.grouping}" 
 				value="#{cNode.groupByNodes}"/>
    		</tr:panelFormLayout>
    		<tr:spacer height="10"/>
 		<tr:panelButtonBar halign="center" >   		
-			<tr:commandButton
-			    partialSubmit="true"
+			<tr:commandButton 
 				id="refresh" 
 				text="#{msgs.refresh}" 
 				action="#{cNode.clearLogForNode}" />
@@ -96,7 +95,6 @@
 <tr:separator></tr:separator>
 
 <tr:table 
-	partialTriggers="::refresh"
 	rendered="#{!cNode.groupByNodes}" 
 	width="100%" 
   	summary="NodesLogs"  

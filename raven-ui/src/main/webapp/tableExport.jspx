@@ -27,63 +27,63 @@
                 		shortDesc="#{msgs.export}" 
                 		text="#">
                 		 -->
-  					 		<tr:selectOneChoice 
-  								label="#{msgs.encoding}" 
-  								value="#{export.charset}">
-  								<f:selectItems value="#{sBean.charsets}" />
-  							</tr:selectOneChoice>	
-  							<tr:panelList>
-  								<tr:panelCaptionGroup captionText="CSV">
-  									<tr:selectBooleanCheckbox 
-  										inlineStyle="font-size: 70%" 
-  										value="#{export.csvHeader}" 
-  										label="#{msgs.header}" 
-  									/>
-  									<tr:selectBooleanCheckbox 
-  										inlineStyle="font-size: 70%"
-  										value="#{export.csvCRLF}" 
-  										label="#{msgs.windowsStyleNewline}" 
-  										/>
-  									<tr:selectBooleanCheckbox 
-  										inlineStyle="font-size: 70%"
-  										value="#{export.escapeCSV}" 
-  										label="#{msgs.escapeCSV}"
-  										shortDesc="#{msgs.dscEscapeCSV}" 
-  										/>
-									<tr:spacer height="5" width="0" />  										
-  									<tr:panelBox 
-  										text="#{msgs.delimiter}" 
-  										background="light">
-  									  	<tr:panelList>
-  										<tr:commandLink 
-  											immediate="true"
-											text="#{msgs.semicolon}"
-											useWindow="true" 
-											actionListener="#{export.exportToCSVwithSemi}"/>
-										<tr:commandLink
-											immediate="true"
-											text="#{msgs.tab}"
-											useWindow="true" 
-											actionListener="#{export.exportToCSVwithTab}"/>
-										<tr:commandLink
-											immediate="true"
-											text="#{msgs.comma}"
-											useWindow="true" 
-											actionListener="#{export.exportToCSVwithComma}"/>
-										</tr:panelList>
-									</tr:panelBox>
-									</tr:panelCaptionGroup>	
-							<tr:commandLink
-	 							text="HTML"
-								immediate="true"
-								useWindow="true" 
-								actionListener="#{export.exportToHtml}"/>
-							<tr:commandLink
-	 							text="EXCEL"
-								immediate="true"
-								useWindow="true" 
-								actionListener="#{export.exportToExcel}"/>
-						</tr:panelList>
+  	<tr:selectOneChoice 
+  		label="#{msgs.encoding}" 
+  		value="#{export.charset}">
+  		<f:selectItems value="#{sBean.charsets}" />
+  	</tr:selectOneChoice>	
+  	<tr:panelList>
+  		<tr:panelCaptionGroup captionText="CSV">
+  			<tr:selectBooleanCheckbox 
+  				inlineStyle="font-size: 70%" 
+  				value="#{export.csvHeader}" 
+  				label="#{msgs.header}" 
+  			/>
+  			<tr:selectBooleanCheckbox 
+  				inlineStyle="font-size: 70%"
+  				value="#{export.csvCRLF}" 
+  				label="#{msgs.windowsStyleNewline}" 
+  			/>
+  			<tr:selectBooleanCheckbox 
+  				inlineStyle="font-size: 70%"
+  				value="#{export.escapeCSV}" 
+  				label="#{msgs.escapeCSV}"
+  				shortDesc="#{msgs.dscEscapeCSV}" 
+  			/>
+			<tr:spacer height="5" width="0" />  										
+  			<tr:panelBox 
+  				text="#{msgs.delimiter}" 
+  				background="light">
+  			  	<tr:panelList>
+  					<tr:commandLink 
+  						immediate="true"
+						text="#{msgs.semicolon}"
+						useWindow="true" 
+						actionListener="#{export.exportToCSVwithSemi}"/>
+					<tr:commandLink
+						immediate="true"
+						text="#{msgs.tab}"
+						useWindow="true" 
+						actionListener="#{export.exportToCSVwithTab}"/>
+					<tr:commandLink
+						immediate="true"
+						text="#{msgs.comma}"
+						useWindow="true" 
+						actionListener="#{export.exportToCSVwithComma}"/>
+				</tr:panelList>
+			</tr:panelBox>
+		</tr:panelCaptionGroup>	
+		<tr:commandLink
+			text="HTML"
+			immediate="true"
+			useWindow="true" 
+			actionListener="#{export.exportToHtml}"/>
+		<tr:commandLink
+ 			text="EXCEL"
+			immediate="true"
+			useWindow="true" 
+			actionListener="#{export.exportToExcel}"/>
+		</tr:panelList>
 <!-- 					</tr:panelPopup>
 					 -->
 

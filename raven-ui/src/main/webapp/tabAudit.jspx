@@ -54,40 +54,40 @@
 				columns="20"
 		    	onkeypress="return submitEnter('#{defButtonRA.id}',event)"
 				label="#{msgs.dateFrom}" 
-				value="#{sBean.auditViewFd}" />
+				value="#{sBean.audit.fd}" />
 			<tr:inputText 
 		    	onkeypress="return submitEnter('#{defButtonRA.id}',event)"
 				columns="20"
 				label="#{msgs.dateTo}" 
-				value="#{sBean.auditViewTd}" />
+				value="#{sBean.audit.td}" />
 			<tr:inputText 
 		    	onkeypress="return submitEnter('#{defButtonRA.id}',event)"
 				columns="20"
 				label="#{msgs.login}" 
-				value="#{sBean.auditLogin}" />
+				value="#{sBean.audit.login}" />
 			<tr:selectOneChoice 
 		    	onkeypress="return submitEnter('#{defButtonRA.id}',event)"
             	id="atList"
                 label="#{msgs.actionType}" 
-                value="#{sBean.auditActionType}" >
-            	<f:selectItems value="#{sBean.auditActionTypeSelectItems}" />
+                value="#{sBean.audit.actionType}" >
+            	<f:selectItems value="#{sBean.audit.actionTypeSelectItems}" />
             </tr:selectOneChoice>
 			<tr:selectOneChoice 
             	id="aList"
 		    	onkeypress="return submitEnter('#{defButtonRA.id}',event)"
                 label="#{msgs.action}" 
-                value="#{sBean.auditAction}" >
-            	<f:selectItems value="#{sBean.auditActionSelectItems}" />
+                value="#{sBean.audit.action}" >
+            	<f:selectItems value="#{sBean.audit.actionSelectItems}" />
             </tr:selectOneChoice>
 			<tr:inputText 
 		    	onkeypress="return submitEnter('#{defButtonRA.id}',event)"
 				columns="10"
 				label="#{msgs.nodeId}" 
-				value="#{sBean.auditNodeId}" />
+				value="#{sBean.audit.nodeId}" />
 			<tr:inputText 
 		    	onkeypress="return submitEnter('#{defButtonRA.id}',event)"
 				label="#{msgs.nodePath}" 
-				value="#{sBean.auditNodePath}" />
+				value="#{sBean.audit.nodePath}" />
    		</tr:panelFormLayout>
    		<tr:spacer height="10"/>
 		<tr:panelButtonBar halign="center" >
@@ -116,13 +116,11 @@
 	width="100%" 
   	summary="NodesAudit"  
   	rowBandingInterval="1"
-  	value="#{sBean.auditData}" 
+  	value="#{sBean.audit.data}" 
   	var="row" 
   	rowSelection="none" 
   	id="NodesAudit" >
-    <tr:column 
-    	inlineStyle="width:15%;"
-    	>
+    <tr:column inlineStyle="width:15%;"	>
       	<f:facet name="header">
 	       	<tr:panelPopup 
       			title="#{msgs.export}"

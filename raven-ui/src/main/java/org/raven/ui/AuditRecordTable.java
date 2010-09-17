@@ -30,6 +30,11 @@ public class AuditRecordTable extends AbstractRecordTable<AuditRecord>
 				Messages.getUiMessage(Messages.ACTION),
 				Messages.getUiMessage(Messages.MESSAGE)
 				};
+	}
+
+	public boolean isDate(int index) {
+		if(index==0) return true;
+		return false;
 	}	
 	
 }

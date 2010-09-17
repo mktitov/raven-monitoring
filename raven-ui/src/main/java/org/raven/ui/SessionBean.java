@@ -19,7 +19,6 @@ package org.raven.ui;
 
 import java.nio.charset.Charset;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
@@ -33,6 +32,7 @@ import javax.faces.model.SelectItem;
 import org.raven.ui.attr.RefreshAttributesCache;
 import org.raven.ui.attr.RefreshIntervalCache;
 import org.raven.ui.filter.AuthFilter;
+import org.raven.ui.log.LogRecordTable;
 import org.raven.ui.log.LogViewAttributesCache;
 import org.raven.ui.log.LogsCache;
 import org.raven.ui.node.CopyMoveNodeBean;
@@ -44,14 +44,11 @@ import org.raven.ui.util.RavenViewableImageRenderer;
 import org.raven.ui.vo.VObyNode;
 import org.raven.ui.vo.ImagesStorage;
 import org.raven.audit.Action;
-import org.raven.audit.ActionType;
-import org.raven.audit.AuditRecord;
 import org.raven.audit.Auditor;
 import org.raven.auth.impl.AccessControl;
 import org.raven.auth.impl.UserAcl;
 import org.raven.conf.Configurator;
 import org.raven.ui.util.Messages;
-import org.raven.util.Utl;
 import org.raven.template.impl.TemplateNode;
 import org.raven.tree.Node;
 import org.raven.tree.NodeError;
@@ -71,7 +68,6 @@ import org.raven.tree.InvalidPathException;
 import javax.faces.component.UIComponent;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-
 import org.apache.myfaces.trinidad.event.PollEvent;
 
 public class SessionBean 
@@ -86,33 +82,6 @@ public class SessionBean
     @org.weda.internal.annotations.Service
     private Auditor auditor;
     
-    public static final SelectItem[] auditATSI = makeSI(ActionType.values(),true);
-
-    public static final SelectItem[] auditASI = makeSI(Action.values(),true);
-/*    
-    { 
-    	new SelectItem(null,"-----"),
-		new SelectItem(Action.ATTR_CREATE),	
-		new SelectItem(Action.ATTR_DEL),	
-		new SelectItem(Action.ATTR_RENAME),	
-		new SelectItem(Action.ATTR_CH_VALUE),	
-		new SelectItem(Action.ATTR_CH_TYPE),	
-		new SelectItem(Action.ATTR_CH_SUBTYPE),	
-		new SelectItem(Action.ATTR_CH_DSC),	
-		new SelectItem(Action.ATTR_CH_VALUE),
-		new SelectItem(Action.NODE_CREATE),
-		new SelectItem(Action.NODE_DEL),
-		new SelectItem(Action.NODE_COPY),
-		new SelectItem(Action.NODE_MOVE),
-		new SelectItem(Action.NODE_RENAME),
-		new SelectItem(Action.NODE_CH_INDEX),
-		new SelectItem(Action.NODE_START),
-		new SelectItem(Action.NODE_STOP),
-		new SelectItem(Action.NODE_START_RECURSIVE),
-		new SelectItem(Action.SESSION_START),
-		new SelectItem(Action.SESSION_STOP)
-	};
-*/    
 	private UserAcl userAcl = null;
 	private Tree tree = null;
 	private RavenTreeModel treeModel = null;   
@@ -137,18 +106,11 @@ public class SessionBean
 	private LogsCache logsCache; 
 	private boolean collapsed = false;
 	private String remoteIp = null;
-	private String auditViewFd = "now-1d";
-	private String auditViewTd = "now";
-	private ActionType auditActionType = null;
-	private Action auditAction = null;
-	private String auditLogin = "";
-	private String auditNodeId = "";
-	private String auditNodePath = "";
-	//private List<AuditRecord> auditData = new ArrayList<AuditRecord>();
-	private AuditRecordTable auditData = new AuditRecordTable();
+	private AuditView audit = new AuditView(); 
 	private TreeModel resourcesTreeModel;
 	private CoreTable coreTable; 
 	private SelectItem[] charsets;
+	private LogRecordTable allLogRecTable = new LogRecordTable();	
 
 	@SuppressWarnings("unchecked")
 	public static SelectItem[] makeSI(Enum[] values, boolean needNull)
@@ -202,18 +164,7 @@ public class SessionBean
 
 	public String clearAuditData()
 	{
-		Date from = new Date(Utl.convert(auditViewFd));
-		Date to = new Date(Utl.convert(auditViewTd));
-		Integer nodeId;
-		auditNodeId = Utl.trim2Empty(auditNodeId);
-		try { nodeId = new Integer(auditNodeId); }
-		catch(Exception e) {nodeId = null;}
-		String nodePath = Utl.trim2Null(auditNodePath);
-		String login = Utl.trim2Null(auditLogin);
-		if( auditAction!=null && auditActionType!=null && !auditAction.getActionType().equals(auditActionType) ) auditAction = null;
-		List<AuditRecord> lst = auditor.getRecords(from, to, nodeId, nodePath, login, auditActionType, auditAction);
-		auditData = new AuditRecordTable();
-		if(lst!=null) auditData.addAll(lst);
+		audit.loadData(auditor);
 		return null;
 	}
 	
@@ -610,47 +561,39 @@ public class SessionBean
 	
 	public String createTemplate()
 	{
-        try
-        {
+        try  {
             Node n = tree.getNode(newNodeType);
-            if (n instanceof TemplateNode)            
-            {
+            if (n instanceof TemplateNode) {
                 template.init((TemplateNode) n, wrapper.getNode(), getNewNodeName());
                 return "dialog:templateAttrEdit";
             }
             return "err";
-        } catch (InvalidPathException invalidPathException)
-        {
+        } catch (InvalidPathException invalidPathException) {
             return null;
         }
 	}
 	
 	public String createNode()
 	{
-		if(!wrapper.isAllowCreateSubNode())
-		{
+		if(!wrapper.isAllowCreateSubNode()) {
 			logger.warn("not AllowCreateSubNode");
 			return "err";
 		}
 		boolean isTemplate = newNodeType.startsWith(""+Node.NODE_SEPARATOR);
-		if(newNodeName==null || newNodeName.length()==0)
-		{
+		if(newNodeName==null || newNodeName.length()==0) {
 			logger.warn("no newNodeName");
 			return "err";
 		}	
-		if(newNodeType==null || newNodeType.length()==0)
+		if(newNodeType==null || newNodeType.length()==0) 
 		{
 			newNodeType=null;
-			if(!isTemplate)
-			{
+			if(!isTemplate) {
 				logger.warn("no newNodeType");
 				return "err";
 			}
 		}	
 		if(isTemplate)
-		{
 			return createTemplate();
-		}
 		
 		Object o = null;
 		try { o = Class.forName(newNodeType).newInstance(); } 
@@ -677,23 +620,19 @@ public class SessionBean
 		//return "ok";
 	}
 
-	public static SessionBean getInstance()
-	{
+	public static SessionBean getInstance() {
 		return (SessionBean) SessionBean.getElValue(BEAN_NAME);
 	}
 	
-	public static NodeWrapper getNodeWrapper()
-	{
+	public static NodeWrapper getNodeWrapper() {
 		return (NodeWrapper) SessionBean.getElValue(NodeWrapper.BEAN_NAME);
 	}
 	
-	public int deleteNode(NodeWrapper node)
-	{
+	public int deleteNode(NodeWrapper node) {
 		return deleteNode(node.getNode());
 	}
 
-	public int forceDeleteNode(NodeWrapper node)
-	{
+	public int forceDeleteNode(NodeWrapper node) {
 		return forceDeleteNode(node.getNode());
 	}
 	
@@ -715,14 +654,14 @@ public class SessionBean
 	
 	public String deleteNodes(List<NodeWrapper> nodes)
 	{
-		StringBuffer ret = new StringBuffer();
+		StringBuilder ret = new StringBuilder();
 		Iterator<NodeWrapper> it = nodes.iterator();
 		while(it.hasNext())
 		{
 			Node n = it.next().getNode();
 			if(n.getDependentNodes()!=null && !n.getDependentNodes().isEmpty())
 			{
-				if(ret.length()==0) ret.append(Messages.getUiMessage(Messages.NODES_HAVE_DEPEND)+" ");
+				if(ret.length()==0) ret.append(Messages.getUiMessage(Messages.NODES_HAVE_DEPEND)).append(" ");
 					else ret.append(", ");
 				ret.append(n.getName());
 				continue;
@@ -890,6 +829,10 @@ public class SessionBean
 		return logsCache;
 	}
 
+	public static LogsCache getLogsCacheS() {
+		return getInstance().getLogsCache();
+	}
+	
 	private void setCollapsed(boolean collapsed) {
 		this.collapsed = collapsed; 
 	}
@@ -934,86 +877,6 @@ public class SessionBean
 		return remoteIp;
 	}
 
-	public String getAuditViewFd() {
-		return auditViewFd;
-	}
-
-	public void setAuditViewFd(String autitViewFrom) {
-		this.auditViewFd = autitViewFrom;
-	}
-
-	public String getAuditViewTd() {
-		return auditViewTd;
-	}
-
-	public void setAuditViewTd(String autitViewTo) {
-		this.auditViewTd = autitViewTo;
-	}
-	
-	public SelectItem[] getAuditActionSelectItems()  
-    { 
-		return auditASI; 
-    }
-
-	public SelectItem[] getAuditActionTypeSelectItems()  
-    { 
-		return auditATSI; 
-    }
-
-
-	public void setAuditAction(Action auditAction) {
-		this.auditAction = auditAction;
-	}
-
-
-	public Action getAuditAction() {
-		return auditAction;
-	}
-
-
-	public void setAuditActionType(ActionType auditActionType) {
-		this.auditActionType = auditActionType;
-	}
-
-
-	public ActionType getAuditActionType() {
-		return auditActionType;
-	}
-
-
-	public void setAuditLogin(String auditLogin) {
-		this.auditLogin = auditLogin;
-	}
-
-
-	public String getAuditLogin() {
-		return auditLogin;
-	}
-
-
-	public void setAuditNodeId(String auditNodeId) {
-		this.auditNodeId = auditNodeId;
-	}
-
-
-	public String getAuditNodeId() {
-		return auditNodeId;
-	}
-
-
-	public void setAuditNodePath(String auditNodePath) {
-		this.auditNodePath = auditNodePath;
-	}
-
-
-	public String getAuditNodePath() {
-		return auditNodePath;
-	}
-
-	public List<AuditRecord> getAuditData() {
-		return auditData;
-	}
-
 	public TreeModel getResourcesTreeModel() {
 		return resourcesTreeModel;
 	}
@@ -1041,5 +904,12 @@ public class SessionBean
 	public SelectItem[] getCharsets() {
 		return charsets;
 	}
+
+	public LogRecordTable getAllLogRecTable() {
+		return allLogRecTable;
+	}
 	
+	public AuditView getAudit() {
+		return audit;
+	}
 }

@@ -5,6 +5,7 @@ import java.util.Iterator;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.raven.table.Table;
+import org.raven.ui.TableWithDate;
 
 //ArrayList<TIWList> ArrayList<TableItemWrapper[]>
 public class VOTableWrapper extends ArrayList<TIWList> 
@@ -42,7 +43,7 @@ public class VOTableWrapper extends ArrayList<TIWList>
 		}	
 	}
 	
-	public String makeHtmlTable(String charset)
+	public String makeHtmlTable(String charset, boolean forXls)
 	{
 		if(charset==null || charset.length()==0)
 			charset = "utf-8";
@@ -52,6 +53,12 @@ public class VOTableWrapper extends ArrayList<TIWList>
 		sb.append("</head>");
 		sb.append("<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\" ><thead><tr>");
 		int cols = table.getColumnNames().length;
+		TableWithDate twd = null;
+		boolean isTWD = false;
+		if (table instanceof TableWithDate) {
+			twd = (TableWithDate) table;
+			isTWD = true;
+		}
         for (int i = 0; i < cols; i++) 
         {
     		sb.append("<th>");
@@ -69,7 +76,11 @@ public class VOTableWrapper extends ArrayList<TIWList>
 	    		sb.append("<td>");
 	        	//sb.append(StringEscapeUtils.escapeHtml(ar[i].toString()));
 	    		if(ar[i]!=null)
+	    		{
+	    			if (forXls && isTWD && twd.isDate(i)) 
+	    				sb.append("'");
 	    			sb.append(ar[i]);
+	    		}	
 	    		sb.append("</td>");
 	        }
 			sb.append("</tr>");

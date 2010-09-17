@@ -62,6 +62,7 @@ import org.raven.ui.attr.NewAttribute;
 import org.raven.ui.attr.RefreshAttributesCache;
 import org.raven.ui.attr.RefreshIntervalCache;
 import org.raven.ui.log.LogByNode;
+import org.raven.ui.log.LogRecordTable;
 import org.raven.ui.log.LogViewAttributes;
 import org.raven.ui.log.LogViewAttributesCache;
 import org.raven.ui.log.LogsByNodes;
@@ -90,7 +91,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	public static final String TO = ">> '{}'";
 	public static final String ATTEMPT = "attempt:: ";
     
-    protected static final Logger logger = LoggerFactory.getLogger(NodeWrapper.class);
+    protected static final Logger log = LoggerFactory.getLogger(NodeWrapper.class);
 
     @Service
     private Auditor auditor;
@@ -244,22 +245,22 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		if(n==null) return defValue;
 		if (n instanceof Boolean) 
 			return (Boolean)n;
-		else logger.warn("attribute {} of node {} is't instance of Boolean ",attr,cnode.getPath());
+		else log.warn("attribute {} of node {} isn't instance of Boolean ",attr,cnode.getPath());
 		return defValue;
 	}
 	
 	public static Node getNodeByAttr(Node cnode, String attr)
 	{
-		logger.info("curNode "+cnode.getPath());
+		log.info("curNode {}",cnode.getPath());
 		NodeAttribute na = cnode.getNodeAttribute(attr);
-		logger.info("curNode("+attr+")="+na);
+		log.info("curNode({})={}",attr,na);
 		if(na==null) return null;
 		Object n = na.getRealValue();
-		logger.info("RealValue="+n);
+		log.info("RealValue="+n);
 		if(n==null) return null;
 		Node ret = null;
 		if (n instanceof Node) ret = (Node) n;
-		else logger.warn("attribute {} of node {} is't instance of Node ",attr,cnode.getPath());
+		else log.warn("attribute {} of node {} is't instance of Node ",attr,cnode.getPath());
 		return ret;
 	}
 	
@@ -432,7 +433,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 			getNode().start();
 			auditor.write(getNode(), getAccountName(), Action.NODE_START, null);
 		}
-		catch (NodeError e)	{logger.error("on start {} : {}",getNodeName(),e.getMessage());	}
+		catch (NodeError e)	{log.error("on start {} : {}",getNodeName(),e.getMessage());	}
 		return "ok";
 	}
 
@@ -443,7 +444,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		try {
 			getTree().start(getNode(), true);
 			auditor.write(getNode(), getAccountName(), Action.NODE_START_RECURSIVE, null);
-		} catch (NodeError e) {logger.error("on start recursive {} : {}",getNodeName(),e.getMessage());}
+		} catch (NodeError e) {log.error("on start recursive {} : {}",getNodeName(),e.getMessage());}
 		return "ok";
 	}
 	
@@ -454,8 +455,9 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		try { 
 			getNode().stop();
 			auditor.write(getNode(), getAccountName(), Action.NODE_STOP, null);
+		} catch (NodeError e) { 
+			log.error("on stop {} : {}",getNodeName(),e.getMessage());	
 		}
-		catch (NodeError e) { logger.error("on stop {} : {}",getNodeName(),e.getMessage());	}
 		return "ok";
 	}
 	
@@ -490,11 +492,11 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		if(!isAnyAccess()) 
 			return new ArrayList<ViewableObjectWrapper>();
 		List<ViewableObjectWrapper> x = SessionBean.getInstance().getViewableObjectsCache().getObjects(this);
-		logger.info("+++ ");
+		log.info("+++ ");
 		for(ViewableObjectWrapper v : x) {
-			logger.info(" id={}  group={}  nodeId={} uid={}",new Object[]{v.getId(),v.getMimeGroup(),v.getNodeId(),v.getUid()});
+			log.info(" id={}  group={}  nodeId={} uid={}",new Object[]{v.getId(),v.getMimeGroup(),v.getNodeId(),v.getUid()});
 		}
-		logger.info("--- ");
+		log.info("--- ");
 		return x;
 	}
 	
@@ -547,7 +549,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 					editingRefreshAttrs.put(na.getName(),new Attr(na,true));
 					whoulRA.put(na.getName(), na);
 				} catch (TooManyReferenceValuesException e) {
-					logger.error("on load refresh attributes : ",e);
+					log.error("on load refresh attributes : ",e);
 				}
 		}
 		whoulRefreshAttributes = whoulRA;
@@ -582,7 +584,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 				savedAttrs.add(na);
 				try { editingAttrs.add(new Attr(na)); }
 				catch (TooManyReferenceValuesException e) {
-					logger.error("on load attributes: ",e);
+					log.error("on load attributes: ",e);
 					return;
 				}
 			}	
@@ -621,7 +623,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 			  if( !at.isExpressionSupported() &&  at.isValueChanged() )				  
 			  {
 				  save |=1;
-				  logger.info("old value: '{}', new value: '{}'",val,at.getValue());
+				  log.info("old value: '{}', new value: '{}'",val,at.getValue());
 			  }	  
 			  if( !dsc.equals(at.getDescription()) ) save |=2;
 			  if( !na.getName().equals(at.getName()) ) save |=4;
@@ -714,7 +716,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
                       dataFile.setFilename(file.getName());
                       dataFile.setMimeType(file.getContentType());
                       dataFile.setDataStream(file.getInputStream());
-                      logger.info("Uploaded: '{}'; size:{} ",file.getName(),file.getSize());
+                      log.info("Uploaded: '{}'; size:{} ",file.getName(),file.getSize());
                       a = auditor.prepare(getNode(), getAccountName(), Action.ATTR_CH_VALUE, 
                     		  FROMX_TO, na.getName()+"<File>", ".", file.getName());
                       aRec.put(attrChValue, a);            	  
@@ -777,7 +779,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 			  {
 				  if(ret.length()!=0) ret.append(". ");
 				  ret.append(strAttribute+" '"+at.getName()+"' : "+e.getMessage());
-				  logger.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
+				  log.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
 			  }
 			  finally 
 			  { 
@@ -843,7 +845,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 					  {
 						  if(ret.length()!=0) ret.append(". ");
 						  ret.append(strAttribute+" '"+at.getName()+"' : "+e.getMessage());
-						  logger.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
+						  log.info("on set value="+at.getValue()+" to attribute="+na.getName(), e);
 					  }
 					  finally 
 					  { 
@@ -888,7 +890,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		*/		
 		  if(newAttribute.getName()==null || newAttribute.getName().length()==0)
 		  {
-			  logger.warn("no newAttributeName");
+			  log.warn("no newAttributeName");
 			  return "err";
 		  }	
 		  NodeAttribute na = null;
@@ -902,7 +904,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
             na.init();
             na.save();
 			getTree().saveNodeAttribute(na);
-			logger.warn("Added new attribute='{}' for node='{}'",na.getName(),getNode().getName());
+			log.warn("Added new attribute='{}' for node='{}'",na.getName(),getNode().getName());
 			auditor.write(getNode(), getAccountName(), Action.ATTR_CREATE, na.getName());
 			onSetNode();
 			return "ok";
@@ -915,7 +917,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 			if(!attr.isAllowDelete()) return -2;
 			getNode().removeNodeAttribute(na.getName());
 			getConfigurator().getTreeStore().removeNodeAttribute(na.getId());
-			logger.warn("removed attrubute: {}",na.getName());
+			log.warn("removed attrubute: {}",na.getName());
 			auditor.write(getNode(), getAccountName(), Action.ATTR_DEL, na.getName());
 			return 0;
 		}
@@ -977,7 +979,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 			  }
 			  getNode().removeNodeAttribute(na.getName());
 			  getConfigurator().getTreeStore().removeNodeAttribute(na.getId());
-			  logger.warn("removed attrubute: {}",na.getName());
+			  log.warn("removed attrubute: {}",na.getName());
 			  auditor.write(getNode(), getAccountName(), Action.ATTR_DEL, na.getName());
 		  }
 		  onSetNode();
@@ -1165,10 +1167,10 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		this.readOnlyAttributes = readOnlyAttributes;
 	}
 
-	public List<Attr> getEditingRefreshAttrs() {
+	public List<Attr> getEditingRefreshAttrs() 
+	{
 		if(editingRefreshAttrs==null )
 				loadRefreshAttributes();
-		
 		List<Attr> la =  new ArrayList<Attr>(editingRefreshAttrs.values());
 		Collections.sort(la);
 		return la;
@@ -1297,7 +1299,6 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 
 	public List<NodeLogRecord> getLogsForSingleNode()
 	{
-		
 		if(getNode().getParent()!=null)
 		{
 			LogsCache lc = SessionBean.getInstance().getLogsCache();
@@ -1311,15 +1312,11 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	{
 		List<NodeLogRecord> ret = new ArrayList<NodeLogRecord>();
 		Pattern p = Pattern.compile(regExp);
-		for(NodeLogRecord r : res)
+		for(NodeLogRecord r : res) 
 		{
 			Matcher m = p.matcher(r.getMessage());
 			if(m.find())
-			 {
-		//	        String tmp = m.group(1);	
-		//	    if(tmp!=null && tmp.length()>0)
 				ret.add(r);
-			 }			
 		}
 		return ret;
 	}
@@ -1333,14 +1330,12 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		return ret;
 	}
 	
-	
 	public List<NodeLogRecord> getLogsForNode()
 	{
 		List<NodeLogRecord> res; 
 		if(!isLogFindRecursive()) 
 			res = getLogsForSingleNode();
-		else
-		{
+		else {
 			logNodes.clear();
 			SessionBean.getTree().scanSubtree(getNode(), this, ScanOptionsImpl.EMPTY_OPTIONS);
 			res = getLogsForNodes(logNodes);
@@ -1354,17 +1349,6 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		return res;
 	}
 
-	public List<NodeLogRecord> getLogsForAllNodes()
-	{
-		if(getNode().getParent()!=null)
-		{
-			LogsCache lc = SessionBean.getInstance().getLogsCache();
-			List<NodeLogRecord> ret = lc.getFromCacheOnly(ALL_NODES); //get
-			if(ret!=null) return ret;
-		}
-		return new ArrayList<NodeLogRecord>();
-	}
-
 	public List<LogByNode> getAllLogsGroupedByNodes()
 	{
 		return (new LogsByNodes(getLogsForAllNodes())).getAll();
@@ -1373,12 +1357,9 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	public List<NodeLogRecord> getLogsForNodes(List<Integer> idList)
 	{
 		List<NodeLogRecord> ret = new ArrayList<NodeLogRecord>();
-		if(getNode().getParent()!=null)
-		{
-			
-			LogsCache lc = SessionBean.getInstance().getLogsCache();
-			for(Integer id : idList)
-			{
+		if(getNode().getParent()!=null) {
+			LogsCache lc = SessionBean.getLogsCacheS();
+			for(Integer id : idList) {
 				List<NodeLogRecord> x = lc.get(id);
 				if(x!=null) ret.addAll(x);
 			}
@@ -1394,17 +1375,27 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	
 	public String clearLogForNode()
 	{
-		LogsCache lvac = SessionBean.getInstance().getLogsCache();
-		lvac.remove(getNodeId());
+		SessionBean.getLogsCacheS().remove(getNodeId());
 		return null;
 	}
 
 	public String clearLogForAllNodes()
 	{
-		LogsCache lvac = SessionBean.getInstance().getLogsCache();
+		LogsCache lvac = SessionBean.getLogsCacheS();
+		LogRecordTable art = SessionBean.getInstance().getAllLogRecTable();
+		art.clear();
 		lvac.remove(ALL_NODES);
-		lvac.get(ALL_NODES);
+		if(getNode().getParent()!=null) {
+			List<NodeLogRecord> lst = lvac.get(ALL_NODES); 
+			if(lst!=null) art.addAll(lst);
+		}
 		return null;
+	}
+	
+//	public List<NodeLogRecord> getLogsForAllNodes()
+	public LogRecordTable getLogsForAllNodes()
+	{
+		return SessionBean.getInstance().getAllLogRecTable();
 	}
 	
 	public void setGroupByNodes(boolean val)
@@ -1469,7 +1460,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 				n = x;
 			}
 			if(x!=null)
-				logger.warn("to many VO_SOURCE search steps for node {}",getNodePath());
+				log.warn("to many VO_SOURCE search steps for node {}",getNodePath());
 			setVoSource(n);
 			
 		}

@@ -3,10 +3,9 @@ package org.raven.ui;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
-import org.raven.table.Table;
 import org.raven.table.TableTag;
 
-public abstract class AbstractRecordTable<T> extends ArrayList<T> implements Table 
+public abstract class AbstractRecordTable<T> extends ArrayList<T> implements TableWithDate 
 {
 	private static final long serialVersionUID = 6536815712846251464L;
 	private String[] colNames;

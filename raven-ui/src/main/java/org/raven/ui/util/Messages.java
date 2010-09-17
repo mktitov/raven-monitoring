@@ -44,6 +44,7 @@ import javax.faces.context.FacesContext;
 	   public static final String CHARSET4 = "charset4";
 	   public static final String DATE = "date";
 	   public static final String DONE = "done";
+	   public static final String LEVEL = "level";
 	   public static final String LOGIN = "login";
 	   public static final String NO_SELECTED_NODES = "noSelectedNodes";
 	   public static final String NODE_ID = "nodeId";

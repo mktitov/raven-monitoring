@@ -23,6 +23,7 @@ public class ExportBean
 	public static final String TAB = "\t";
 	public static final String COMMA = ",";
 	public static final String SEMICOLON = ";";
+	public static final String FILE_NAME_PATTERN = "yyyy-MM-dd_HHmmss";
 	
 	private VOTableWrapper object = null;
 	private VOTableWrapper table = null;
@@ -65,12 +66,12 @@ public class ExportBean
 				if (o instanceof VOTWModel) {
 					VOTWModel lst = (VOTWModel) o;
 					x = (VOTableWrapper) lst.getWrappedData();
-				}
-				else
+				} else {
 					if (o instanceof Table) {
 						Table t = (Table) o;
 						x = new VOTableWrapper(t);
-					}
+					} else logger.warn("export: class is {}", o.getClass().getCanonicalName());
+				}
 				setTable(x);
 			} else logger.warn("export: not found table");
 		}
@@ -90,8 +91,7 @@ public class ExportBean
 	
 	public VOTableWrapper getObject()
 	{
-		if(table!=null)
-		{
+		if(table!=null)	{
 			object = table;
 			table = null;
 		}	
@@ -100,7 +100,7 @@ public class ExportBean
 	
 	public static String makeFileName(String prefix, String ext)
 	{
-		SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
+		SimpleDateFormat fmt = new SimpleDateFormat(FILE_NAME_PATTERN);
 	    return prefix+fmt.format(new Date())+"."+ext;
 	}
 	
@@ -144,7 +144,7 @@ public class ExportBean
 		VOTableWrapper vtw = getObject();  
 		if(vtw==null) return;
 		String contentType = "application/vnd.ms-excel";
-		writeResponce(vtw.makeHtmlTable(charset.toString()), contentType, "xls");
+		writeResponce(vtw.makeHtmlTable(charset.toString(), true), contentType, "xls");
     }
 
 	public void exportToHtml(ActionEvent actionEvent) 
@@ -153,7 +153,7 @@ public class ExportBean
 		VOTableWrapper vtw = getObject();  
 		if(vtw==null) return;
 		String contentType = "text/html";
-		writeResponce(vtw.makeHtmlTable(charset.toString()), contentType, "html");
+		writeResponce(vtw.makeHtmlTable(charset.toString(), false), contentType, "html");
     }
 	
 	public void exportToCSV(ActionEvent actionEvent,String delim) 

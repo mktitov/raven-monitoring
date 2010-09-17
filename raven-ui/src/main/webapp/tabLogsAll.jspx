@@ -45,7 +45,7 @@
                	value="#{cNode.allLogLevel}" >
     			<f:selectItems value="#{cNode.logLevelSelectItems}" />
          	</tr:selectOneChoice>
-			<tr:selectBooleanCheckbox 
+			<tr:selectBooleanCheckbox  
 				shortDesc="#{msgs.groupingByNodes}" 
 				label="#{msgs.grouping}" 
 				value="#{cNode.groupByNodes}"/>
@@ -54,14 +54,16 @@
 	<tr:spacer width="40"/>
 </tr:panelHorizontalLayout>
 
-<tr:commandButton partialSubmit="true" 
+<tr:commandButton  
 	id="refresh" 
 	text="#{msgs.refresh}" 
 	action="#{cNode.clearLogForAllNodes}" />        
        
 <tr:separator></tr:separator>
 
-<tr:table partialTriggers="::refresh" 
+<!-- partialTriggers="::refresh" partialSubmit="true" -->
+
+<tr:table partialTriggers="::refresh"
 		rendered="#{!cNode.groupByNodes}"
   		width="100%" 
   		summary="NodesLogs"  
@@ -70,9 +72,22 @@
   		var="row" 
   		rowSelection="none" 
   		id="NodesLogs" >
-    	<tr:column 
+<!--   		
+  		    	<tr:column 
     		inlineStyle="width:15%;" 
     		headerText="#{msgs.date}">
+  		 -->
+    	<tr:column inlineStyle="width:15%;">
+      		<f:facet name="header">
+	       		<tr:panelPopup 
+      				title="#{msgs.export}"
+       				shortDesc="#{msgs.export}" 
+       				text="#{msgs.date}">
+                	<f:subview id="tExp">
+	                	<jsp:include page="tableExport.jspx" flush="true"/>
+	            	</f:subview>
+				</tr:panelPopup>
+			</f:facet>
 	    	<tr:outputText
 				inlineStyle="font-size: 80%;"	       
 	      		value="#{row.fdString}" />
@@ -137,9 +152,17 @@
 		  		value="#{row.records}" 
   				var="rowx" 
   				rowSelection="none" >
-		    	<tr:column 
-    				inlineStyle="width:15%;" 
-    				headerText="#{msgs.date}">
+		    	<tr:column inlineStyle="width:15%;">
+		      		<f:facet name="header">
+	    		   		<tr:panelPopup 
+      						title="#{msgs.export}"
+       						shortDesc="#{msgs.export}" 
+       						text="#{msgs.date}">
+                			<f:subview id="tExp">
+	                			<jsp:include page="tableExport.jspx" flush="true"/>
+	            			</f:subview>
+						</tr:panelPopup>
+					</f:facet>
 	    			<tr:outputText
 						inlineStyle="font-size: 80%;"	       
 			      		value="#{rowx.fdString}" />
