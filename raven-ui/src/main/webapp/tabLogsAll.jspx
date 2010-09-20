@@ -33,22 +33,22 @@
 				rows="3" >
 			<tr:inputText 
 				label="#{msgs.dateFrom}" 
-				value="#{cNode.allLogViewFd}" >
+				value="#{sBean.logView.fd}" >
 			</tr:inputText>
 			<tr:inputText 
 				label="#{msgs.dateTo}" 
-				value="#{cNode.allLogViewTd}" >
+				value="#{sBean.logView.td}" >
 			</tr:inputText>
             <tr:selectOneChoice 
 	           	id="aLvlList"
               	label="#{msgs.level}" 
-               	value="#{cNode.allLogLevel}" >
-    			<f:selectItems value="#{cNode.logLevelSelectItems}" />
+               	value="#{sBean.logView.level}" >
+    			<f:selectItems value="#{sBean.logView.logLevelSelectItems}" />
          	</tr:selectOneChoice>
 			<tr:selectBooleanCheckbox  
 				shortDesc="#{msgs.groupingByNodes}" 
 				label="#{msgs.grouping}" 
-				value="#{cNode.groupByNodes}"/>
+				value="#{sBean.logView.groupByNodes}"/>
 		</tr:panelFormLayout>
 	</tr:panelCaptionGroup>
 	<tr:spacer width="40"/>
@@ -57,18 +57,16 @@
 <tr:commandButton  
 	id="refresh" 
 	text="#{msgs.refresh}" 
-	action="#{cNode.clearLogForAllNodes}" />        
+	action="#{sBean.logView.loadLogForNodes}" />        
        
 <tr:separator></tr:separator>
 
-<!-- partialTriggers="::refresh" partialSubmit="true" -->
-
 <tr:table partialTriggers="::refresh"
-		rendered="#{!cNode.groupByNodes}"
+		rendered="#{!sBean.logView.groupByNodes}"
   		width="100%" 
   		summary="NodesLogs"  
   		rowBandingInterval="1"
-  		value="#{cNode.logsForAllNodes}" 
+  		value="#{sBean.logView.logRecordTable}" 
   		var="row" 
   		rowSelection="none" 
   		id="NodesLogs" >
@@ -133,10 +131,10 @@
 </tr:table>
 
 <tr:table
-		rendered="#{cNode.groupByNodes}" 
+		rendered="#{sBean.logView.groupByNodes}" 
   		width="100%" 
   		summary="LogsGroupByNodes"  
-  		value="#{cNode.allLogsGroupedByNodes}" 
+  		value="#{sBean.logView.logsGroupedByNodes}" 
   		var="row" 
   		rowSelection="none" 
   		id="NodesLogs2" >

@@ -4,6 +4,7 @@ import org.raven.cache.SimpleAbstractCache;
 
 public class LogViewAttributesCache extends SimpleAbstractCache<Integer,LogViewAttributes> 
 {
+	public static final String BEAN_NAME = "lvaCache";
 	
 	public LogViewAttributesCache()
 	{

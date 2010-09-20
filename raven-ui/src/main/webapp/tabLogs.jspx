@@ -32,33 +32,33 @@
 			rows="3">
 			<tr:inputText 
 				label="#{msgs.dateFrom}" 
-				value="#{cNode.logViewFd}" >
+				value="#{cNode.logView.fd}" >
 			</tr:inputText>
 			<tr:inputText 
 				label="#{msgs.dateTo}" 
-				value="#{cNode.logViewTd}" >
+				value="#{cNode.logView.td}" >
 			</tr:inputText>
 			<tr:selectOneChoice 
             	id="lvlList"
                 label="#{msgs.level}" 
-                value="#{cNode.logLevel}" >
-            	<f:selectItems value="#{cNode.logLevelSelectItems}" />
+                value="#{cNode.logView.level}" >
+            	<f:selectItems value="#{cNode.logView.logLevelSelectItems}" />
             </tr:selectOneChoice>
 			<tr:selectBooleanCheckbox 
 				shortDesc="#{msgs.recursive}" 
 				label="#{msgs.recursive}" 
-				value="#{cNode.logFindRecursive}"/>
+				value="#{cNode.logView.findRecursive}"/>
 			<tr:selectBooleanCheckbox 
 				shortDesc="#{msgs.groupingByNodes}"  
 				label="#{msgs.grouping}" 
-				value="#{cNode.groupByNodes}"/>
+				value="#{cNode.logView.groupByNodes}"/>
    		</tr:panelFormLayout>
    		<tr:spacer height="10"/>
 		<tr:panelButtonBar halign="center" >   		
 			<tr:commandButton 
 				id="refresh" 
 				text="#{msgs.refresh}" 
-				action="#{cNode.clearLogForNode}" />
+				action="#{cNode.logView.loadLogForNodes}" />
 		</tr:panelButtonBar>   		
 	</tr:panelCaptionGroup>
 	<tr:spacer width="40"/>
@@ -69,22 +69,22 @@
 			<tr:inputText 
 				columns="50" 
 				label="#{msgs.filter}" 
-				value="#{cNode.logMessageFilter}" >
+				value="#{cNode.logView.messageFilter}" >
 			</tr:inputText>
 			<tr:selectBooleanCheckbox 
 				shortDesc="#{msgs.regExp}" 
 				label="#{msgs.regExp}" 
-				value="#{cNode.logFilterRegExp}"/>
+				value="#{cNode.logView.filterRegExp}"/>
    		</tr:panelFormLayout>
    		<tr:spacer height="10"/>
 		<tr:panelButtonBar halign="center" >
 			<tr:commandButton 
-				action="#{cNode.logFilterEnable}"
+				action="#{cNode.logView.filterEnable}"
 				id="filterOn" 
 				text="#{msgs.filterOn}"	/>
 			<tr:commandButton
-				disabled="#{!cNode.logFilterOn}"
-				action="#{cNode.logFilterDisable}"
+				disabled="#{!cNode.logView.filterOn}"
+				action="#{cNode.logView.filterDisable}"
 				id="filterOff" 
 				text="#{msgs.filterOff}" 
 		 	/>
@@ -95,17 +95,25 @@
 <tr:separator></tr:separator>
 
 <tr:table 
-	rendered="#{!cNode.groupByNodes}" 
+	rendered="#{!cNode.logView.groupByNodes}" 
 	width="100%" 
   	summary="NodesLogs"  
   	rowBandingInterval="1"
-  	value="#{cNode.logsForNode}" 
+  	value="#{cNode.logView.logRecordTable}" 
   	var="row" 
   	rowSelection="none" 
   	id="NodesLogs" >
-    <tr:column 
-    	inlineStyle="width:15%;" 
-    	headerText="#{msgs.date}">
+    <tr:column inlineStyle="width:15%;" >
+   		<f:facet name="header">
+      		<tr:panelPopup 
+   				title="#{msgs.export}"
+   				shortDesc="#{msgs.export}" 
+   				text="#{msgs.date}">
+              	<f:subview id="tExp">
+	               	<jsp:include page="tableExport.jspx" flush="true"/>
+	           	</f:subview>
+			</tr:panelPopup>
+		</f:facet>
 	   	<tr:outputText
 			inlineStyle="font-size: 80%;"	       
 	   		value="#{row.fdString}" />
@@ -134,7 +142,7 @@
 	      		value="#{row.level}"/>
         </tr:column>
     	<tr:column 
-    		rendered="#{cNode.logFindRecursive}" 
+    		rendered="#{cNode.logView.findRecursive}" 
     		headerText="#{msgs.node}">
 	      	<tr:outputText
 	    		inlineStyle="font-size: 80%;"	       
@@ -153,10 +161,10 @@
 </tr:table>
 
 <tr:table
-	rendered="#{cNode.groupByNodes}" 
+	rendered="#{cNode.logView.groupByNodes}" 
   	width="100%" 
   	summary="LogsGroupByNodes"  
-  	value="#{cNode.logsGroupedByNodes}" 
+  	value="#{cNode.logView.logsGroupedByNodes}" 
   	var="row" 
   	rowSelection="none" 
   	id="NodesLogs2" >
@@ -172,9 +180,17 @@
 			value="#{row.records}" 
   			var="rowx" 
   			rowSelection="none" >
-		   	<tr:column 
-    			inlineStyle="width:15%;" 
-    			headerText="#{msgs.date}">
+		   	<tr:column inlineStyle="width:15%;">
+      			<f:facet name="header">
+	       			<tr:panelPopup 
+      					title="#{msgs.export}"
+       					shortDesc="#{msgs.export}" 
+       					text="#{msgs.date}">
+                		<f:subview id="tExp">
+	                		<jsp:include page="tableExport.jspx" flush="true"/>
+	            		</f:subview>
+					</tr:panelPopup>
+				</f:facet>
 	    		<tr:outputText
 					inlineStyle="font-size: 80%;"	       
 		      		value="#{rowx.fdString}" />

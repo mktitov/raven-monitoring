@@ -25,10 +25,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.faces.event.ActionEvent;
-import javax.faces.model.SelectItem;
 import org.apache.myfaces.trinidad.component.core.layout.CoreShowDetailItem;
 import org.apache.myfaces.trinidad.event.PollEvent;
 import org.apache.myfaces.trinidad.event.ReturnEvent;
@@ -39,8 +36,6 @@ import org.raven.audit.Auditor;
 import org.raven.auth.impl.AccessControl;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
-import org.raven.log.LogLevel;
-import org.raven.log.NodeLogRecord;
 import org.raven.tree.DataFile;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -61,12 +56,8 @@ import org.raven.ui.node.AbstractNodeWrapper;
 import org.raven.ui.attr.NewAttribute;
 import org.raven.ui.attr.RefreshAttributesCache;
 import org.raven.ui.attr.RefreshIntervalCache;
-import org.raven.ui.log.LogByNode;
-import org.raven.ui.log.LogRecordTable;
+import org.raven.ui.log.LogView;
 import org.raven.ui.log.LogViewAttributes;
-import org.raven.ui.log.LogViewAttributesCache;
-import org.raven.ui.log.LogsByNodes;
-import org.raven.ui.log.LogsCache;
 import org.raven.ui.util.Messages;
 import org.raven.ui.vo.ViewableObjectWrapper;
 import org.raven.util.Utl;
@@ -80,8 +71,9 @@ import org.weda.constraints.TooManyReferenceValuesException;
 import org.weda.internal.annotations.Service;
 
 public class NodeWrapper extends AbstractNodeWrapper 
-implements Comparator<NodeAttribute>, ScannedNodeHandler
+implements Comparator<NodeAttribute>, INodeScanner, ScannedNodeHandler
 {
+    protected static final Logger log = LoggerFactory.getLogger(NodeWrapper.class);
 	public static final String BEAN_NAME = "cNode";
     public static final String VO_SOURCE = "viewableObjectSource";
     public static final String VO_HIDE_NODE_NAME = "hideNodeName";
@@ -90,25 +82,16 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	public static final String FROMX_TO = "{} : '{}' >> '{}'";
 	public static final String TO = ">> '{}'";
 	public static final String ATTEMPT = "attempt:: ";
-    
-    protected static final Logger log = LoggerFactory.getLogger(NodeWrapper.class);
 
     @Service
     private Auditor auditor;
     
-    private static final SelectItem[] logsSI = { new SelectItem(LogLevel.TRACE),
-		new SelectItem(LogLevel.DEBUG),	
-		new SelectItem(LogLevel.INFO),	
-		new SelectItem(LogLevel.WARN),	
-		new SelectItem(LogLevel.ERROR)	
-		};
     private static final Integer attrRename = 1;
     private static final Integer attrChValue = 2;
     private static final Integer attrChDsc = 3;
     private static final Integer attrChSubType = 4;
     private static final Integer attrChTemplExprFlag = 5;
     
-    private static final int ALL_NODES = -1;
 //	public static final String ATTR = "attribute";
 	public static final String strAttribute = Messages.getUiMessage(Messages.ATTRIBUTE);    
 	private List<NodeAttribute> savedAttrs = null;
@@ -131,30 +114,32 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 //	private List<AuditRecord> unsavedAuditRecords = new ArrayList<AuditRecord>();
 	private Node voSource = null;
 	private boolean voSourceInited = false;
-	private List<Integer> logNodes = new ArrayList<Integer>();
 	private List<NodeWrapper> upperNodes;
 	private int shortNameLen = 0;
 	private String iconPath = null;
 	private Boolean hideNodeName;
-	private Map<String,NodeAttribute> whoulRefreshAttributes = null; 
+	private Map<String,NodeAttribute> whoulRefreshAttributes = null;
+	private LogView logView = null;
+	//private LogViewAttributesCache lvaCache = null;
 		
 	public NodeWrapper() 
 	{
 		super();
 		SessionBean.initNodeWrapper(this);
 	}
-
-	public SelectItem[] getLogLevelSelectItems()  
-    { 
-		return logsSI; 
-    }
+	
+	public boolean isRootNode()
+	{
+		if(getNode().getParent()==null) return true;
+		return false;
+	}
 	
 	public NodeWrapper(Node node) 
 	{
 		this();
 		this.setNode(node);
 	}
-	
+
 	public List<Node> getAccessibleChildrenList(Node n, int threshold)
 	{
 		List<Node> ret = new ArrayList<Node>();
@@ -186,7 +171,6 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		}
 		
 		int sumNamesLen = 0;
-//		int i=rt.size()-1;
 		for(int i=rt.size()-1; i>=0; i--)
 		{
 			n = rt.get(i);
@@ -198,32 +182,11 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 						cnt++;
 				if(cnt < 2) continue;
 					
-/*				
-				for(Node cn : n.getChildrenList())
-					if(getUserAcl().getAccessForNode(cn) > AccessControl.NONE)
-						cnt++;
-				if(cnt==1)
-				{
-					int cnt2 = 0;
-					Node par = n.getParent();
-					if(par!=null)
-						for(Node cn : par.getChildrenList())
-							if(getUserAcl().getAccessForNode(cn) > AccessControl.NONE)
-								cnt2++;
-					if(cnt2==1) continue;
-				}
-*/					
 			}	
 			NodeWrapper nw = new NodeWrapper(n); 
 			upperNodes.add(nw);
 			sumNamesLen += nw.getNodeName().length()+6;
 		}
-/*		
-		for(int i=0;i<3 && sumNamesLen>300; i++)
-		{
-			sumNamesLen = 0;
-			for(NodeWrapper nw : upperNodes)
-*/				
 		int maxLen = 200;
 		if(sumNamesLen > maxLen)
 		{
@@ -275,20 +238,6 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	{
 		hideNodeName = hide;
 	}
-	
-	
-//	public static Viewable getViewableByVoSource(Viewable v)
-//	{
-//		Node n = getNodeByAttr(v,VO_SOURCE);
-//		if (n instanceof Viewable) 
-//			return (Viewable) n;
-//		return v; 
-//	}
-	
-//	public Node getVoSrc()
-//	{
-//		return getNodeByAttr(getNode(),VO_SOURCE);
-//	}
 	
 	public String getRefreshAttributesTitle()
 	{
@@ -399,7 +348,6 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 			auditor.write(n, getAccountName(), Action.NODE_RENAME, TO, ret);
 			n.setName(ret);
 			n.save();
-			//SessionBean.getInstance().reloadBothFrames();
 			SessionBean.getInstance().reloadRightFrame();
 		}
 	}
@@ -414,9 +362,10 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		setVoSource(null);
 		upperNodes = null;
 		iconPath = null;
-		//loadRefreshAttributes();
-//		AttributesTableBean atb = (AttributesTableBean) context.getELContext().getELResolver().getValue(context.getELContext(), null, AttributesTableBean.BEAN_NAME);
-//		if(atb != null && atb.getMessage() !=null) atb.getMessage().setMessage("");
+		if( !SessionBean.isSuperUserS() ) return;
+		LogViewAttributes lva = SessionBean.getLVACache().get(getNodeId());
+		logView = new LogView(lva, getNodeId(), this);
+		
 	}
 
 	public void createNewAttribute()
@@ -572,7 +521,7 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 			if(na.isReadonly()) readOnlyAttributes.add(na);
 			else
 			{	
-				if(!SessionBean.getInstance().isSuperUser())
+				if(!SessionBean.isSuperUserS())
 				{
 					String vht = na.getValueHandlerType();
 					if( ObjectUtils.in(
@@ -1197,10 +1146,6 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		return SessionBean.getInstance().getRefreshIntervalCache();
 	}
 	
-	private LogViewAttributesCache getLVAC()
-	{
-		return SessionBean.getInstance().getLogViewAttributesCache();
-	}
 
 	/**
 	 * 
@@ -1226,188 +1171,6 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	public long getRefreshViewIntevalMS() 
 	{
 		return getRiCache().get(this.getNodeId());
-	}
-	
-	public String getLogViewFd()
-	{
-		return getLVAC().get(getNodeId()).getFd();
-	}
-
-	public void setLogViewFd(String fd)
-	{
-		LogViewAttributes lva = getLVAC().get(getNodeId());
-		lva.setFd(fd);
-	}
-
-	public String getAllLogViewFd()
-	{
-		return getLVAC().get(ALL_NODES).getFd();
-	}
-
-	public void setAllLogViewFd(String fd)
-	{
-		LogViewAttributes lva = getLVAC().get(ALL_NODES);
-		lva.setFd(fd);
-	}
-	
-	
-	public String getLogViewTd()
-	{
-		return getLVAC().get(getNodeId()).getTd();
-	}
-
-	public void setLogViewTd(String td)
-	{
-		LogViewAttributes lva = getLVAC().get(getNodeId());
-		lva.setTd(td);
-	}
-
-	public String getAllLogViewTd()
-	{
-		return getLVAC().get(ALL_NODES).getTd();
-	}
-
-	public void setAllLogViewTd(String td)
-	{
-		LogViewAttributes lva = getLVAC().get(ALL_NODES);
-		lva.setTd(td);
-	}
-	
-	public LogLevel getLogLevel()
-	{
-		LogViewAttributes lva = getLVAC().get(getNodeId());
-		return lva.getLevel();
-	}
-
-	public LogLevel getAllLogLevel()
-	{
-		LogViewAttributes lva = getLVAC().get(ALL_NODES);
-		return lva.getLevel();
-	}
-	
-	public void setLogLevel(LogLevel level)
-	{
-		LogViewAttributes lva = getLVAC().get(getNodeId());
-		lva.setLevel(level);
-	}
-
-	public void setAllLogLevel(LogLevel level)
-	{
-		LogViewAttributes lva = getLVAC().get(ALL_NODES);
-		lva.setLevel(level);
-	}
-
-	public List<NodeLogRecord> getLogsForSingleNode()
-	{
-		if(getNode().getParent()!=null)
-		{
-			LogsCache lc = SessionBean.getInstance().getLogsCache();
-			List<NodeLogRecord> ret = lc.get(getNodeId());
-			if(ret!=null) return ret;
-		}
-		return new ArrayList<NodeLogRecord>();
-	}
-
-	public List<NodeLogRecord> filterByRegExp(List<NodeLogRecord> res, String regExp)
-	{
-		List<NodeLogRecord> ret = new ArrayList<NodeLogRecord>();
-		Pattern p = Pattern.compile(regExp);
-		for(NodeLogRecord r : res) 
-		{
-			Matcher m = p.matcher(r.getMessage());
-			if(m.find())
-				ret.add(r);
-		}
-		return ret;
-	}
-
-	public List<NodeLogRecord> filterByString(List<NodeLogRecord> res, String pattern)
-	{
-		List<NodeLogRecord> ret = new ArrayList<NodeLogRecord>();
-		for(NodeLogRecord r : res)
-			if(r.getMessage().indexOf(pattern)!=-1)
-				ret.add(r);
-		return ret;
-	}
-	
-	public List<NodeLogRecord> getLogsForNode()
-	{
-		List<NodeLogRecord> res; 
-		if(!isLogFindRecursive()) 
-			res = getLogsForSingleNode();
-		else {
-			logNodes.clear();
-			SessionBean.getTree().scanSubtree(getNode(), this, ScanOptionsImpl.EMPTY_OPTIONS);
-			res = getLogsForNodes(logNodes);
-		}
-		String mf = getLogMessageFilter().trim();
-		if(isLogFilterOn() && !mf.isEmpty() )
-		{
-			if(isLogFilterRegExp()) res = filterByRegExp(res, mf);
-			else res = filterByString(res, mf);
-		}
-		return res;
-	}
-
-	public List<LogByNode> getAllLogsGroupedByNodes()
-	{
-		return (new LogsByNodes(getLogsForAllNodes())).getAll();
-	}
-
-	public List<NodeLogRecord> getLogsForNodes(List<Integer> idList)
-	{
-		List<NodeLogRecord> ret = new ArrayList<NodeLogRecord>();
-		if(getNode().getParent()!=null) {
-			LogsCache lc = SessionBean.getLogsCacheS();
-			for(Integer id : idList) {
-				List<NodeLogRecord> x = lc.get(id);
-				if(x!=null) ret.addAll(x);
-			}
-		}
-		if(ret.size()>0 && ret.get(0)!=null) Collections.sort(ret, ret.get(0));
-		return ret;
-	}
-	
-	public List<LogByNode> getLogsGroupedByNodes()
-	{
-		return (new LogsByNodes(getLogsForNode())).getAll();
-	}
-	
-	public String clearLogForNode()
-	{
-		SessionBean.getLogsCacheS().remove(getNodeId());
-		return null;
-	}
-
-	public String clearLogForAllNodes()
-	{
-		LogsCache lvac = SessionBean.getLogsCacheS();
-		LogRecordTable art = SessionBean.getInstance().getAllLogRecTable();
-		art.clear();
-		lvac.remove(ALL_NODES);
-		if(getNode().getParent()!=null) {
-			List<NodeLogRecord> lst = lvac.get(ALL_NODES); 
-			if(lst!=null) art.addAll(lst);
-		}
-		return null;
-	}
-	
-//	public List<NodeLogRecord> getLogsForAllNodes()
-	public LogRecordTable getLogsForAllNodes()
-	{
-		return SessionBean.getInstance().getAllLogRecTable();
-	}
-	
-	public void setGroupByNodes(boolean val)
-	{
-		LogViewAttributes lva = getLVAC().get(ALL_NODES);
-		lva.setGroupByNodes(val);
-	}
-
-	public boolean isGroupByNodes()
-	{
-		LogViewAttributes lva = getLVAC().get(ALL_NODES);
-		return lva.isGroupByNodes();
 	}
 
 	public static boolean isAutoRefresh(Node node)
@@ -1462,11 +1225,10 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 			if(x!=null)
 				log.warn("to many VO_SOURCE search steps for node {}",getNodePath());
 			setVoSource(n);
-			
 		}
 		return voSource;
 	}
-
+	
 	public NodeWrapper getVoSourceNW()
 	{
 		Node n = getVoSource();
@@ -1476,69 +1238,6 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 		nw.setRefreshPressed(isRefreshPressed());
 		nw.setHideNodeName(isHideNodeName());
 		return nw;
-	}
-
-	public String getLogMessageFilter()
-	{
-		return getLVAC().get(getNodeId()).getMesFilter();
-	}
-
-	public void setLogMessageFilter(String f)
-	{
-		LogViewAttributes lva = getLVAC().get(getNodeId());
-		lva.setMesFilter(f);
-	}
-
-	public boolean isLogFilterRegExp()
-	{
-		return getLVAC().get(getNodeId()).isRegExp();
-	}
-
-	public void setLogFilterRegExp(boolean f)
-	{
-		getLVAC().get(getNodeId()).setRegExp(f);
-	}
-	
-
-	public boolean isLogFindRecursive()
-	{
-		return getLVAC().get(getNodeId()).isFindRecursive();
-	}
-
-	public void setLogFindRecursive(boolean f)
-	{
-		getLVAC().get(getNodeId()).setFindRecursive(f);
-	}
-
-	public boolean isLogFilterOn()
-	{
-		return getLVAC().get(getNodeId()).isFilterOn();
-	}
-
-	public void setLogFilterOn(boolean f)
-	{
-		getLVAC().get(getNodeId()).setFilterOn(f);
-	}
-
-	public String logFilterEnable()
-	{
-		setLogFilterOn(true);
-		return null;
-	}
-	
-	
-	public String logFilterDisable()
-	{
-		setLogFilterOn(false);
-		return null;
-	}
-	
-	public ScanOperation nodeScanned(Node node) 
-	{
-		if(SessionBean.getUserAcl().getAccessForNode(node) < AccessControl.WRITE)
-			return ScanOperation.SKIP_NODE;
-		logNodes.add(node.getId());
-		return ScanOperation.CONTINUE;
 	}
 
 	public void setShortNameLen(int shortNameLen) {
@@ -1624,4 +1323,27 @@ implements Comparator<NodeAttribute>, ScannedNodeHandler
 	public void setWhoulRefreshAttributes(Map<String,NodeAttribute> whoulRefreshAttributes) {
 		this.whoulRefreshAttributes = whoulRefreshAttributes;
 	}
+
+	public LogView getLogView() {
+		return logView;
+	}
+	
+	
+
+	private List<Integer> idList = new ArrayList<Integer>();
+	
+	public ScanOperation nodeScanned(Node node) 
+	{
+		if(SessionBean.getUserAcl().getAccessForNode(node) < AccessControl.WRITE)
+			return ScanOperation.SKIP_NODE;
+		idList.add(node.getId());
+		return ScanOperation.CONTINUE;
+	}
+	
+	public List<Integer> scan() {
+		idList.clear();
+		SessionBean.getTree().scanSubtree(getNode(), this, ScanOptionsImpl.EMPTY_OPTIONS);
+		return idList;
+	}
+
 }

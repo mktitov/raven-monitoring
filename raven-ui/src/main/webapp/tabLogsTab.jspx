@@ -29,6 +29,7 @@
           	id="panelTabbed2" 
            	inlineStyle="width: 100%"  >
             <tr:showDetailItem 
+            	rendered="#{cNode.logView != null}"
       	     	text="#{msgs.currentNode}" 
               	id="item1">
                 <f:subview id="v2_1">

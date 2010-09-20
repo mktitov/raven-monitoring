@@ -9,13 +9,14 @@ import org.raven.audit.Action;
 import org.raven.audit.ActionType;
 import org.raven.audit.AuditRecord;
 import org.raven.audit.Auditor;
+import org.raven.ui.util.UIUtil;
 import org.raven.util.Utl;
 
 public class AuditView 
 {
-    public static final SelectItem[] auditATSI = SessionBean.makeSI(ActionType.values(),true);
+    public static final SelectItem[] auditATSI = UIUtil.makeSI(ActionType.values(),true);
 
-    public static final SelectItem[] auditASI = SessionBean.makeSI(Action.values(),true);
+    public static final SelectItem[] auditASI = UIUtil.makeSI(Action.values(),true);
 	
 	private String fd = "now-1d";
 	

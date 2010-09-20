@@ -17,7 +17,6 @@
 
 package org.raven.ui;
 
-import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -32,7 +31,8 @@ import javax.faces.model.SelectItem;
 import org.raven.ui.attr.RefreshAttributesCache;
 import org.raven.ui.attr.RefreshIntervalCache;
 import org.raven.ui.filter.AuthFilter;
-import org.raven.ui.log.LogRecordTable;
+import org.raven.ui.log.LogView;
+import org.raven.ui.log.LogViewAttributes;
 import org.raven.ui.log.LogViewAttributesCache;
 import org.raven.ui.log.LogsCache;
 import org.raven.ui.node.CopyMoveNodeBean;
@@ -41,6 +41,7 @@ import org.raven.ui.node.NodeWrapper;
 import org.raven.ui.util.RavenImageRenderer;
 import org.raven.ui.util.RavenRegistry;
 import org.raven.ui.util.RavenViewableImageRenderer;
+import org.raven.ui.util.UIUtil;
 import org.raven.ui.vo.VObyNode;
 import org.raven.ui.vo.ImagesStorage;
 import org.raven.audit.Action;
@@ -78,6 +79,7 @@ public class SessionBean
     public static final String disabledInNames = "[^:;\"\\~\\"+Node.NODE_SEPARATOR+"\\"+Node.ATTRIBUTE_SEPARATOR+"]+";
     public static final String LEFT_FRAME = "parent.frames.frame1";
     public static final String RIGHT_FRAME = "parent.frames.frame2";
+	private static final String title = "RAVEN";
 
     @org.weda.internal.annotations.Service
     private Auditor auditor;
@@ -85,18 +87,11 @@ public class SessionBean
 	private UserAcl userAcl = null;
 	private Tree tree = null;
 	private RavenTreeModel treeModel = null;   
-	//private Node currentNode = null;
-//	private Configurator configurator;
 	private NodeWrapper wrapper = null;
-	private String title = "RAVEN";
-//	private ClassDescriptorRegistry classDsc = null;
 	private boolean refreshTree = true;
-
 	private String newNodeType = null;
 	private String newNodeName = null;
-	
 	private CoreTree coreTree = null;
-//	private TemplateNode templateNode = null; 
 	private NewNodeFromTemplate template;
 	private RefreshAttributesCache refreshAttributesCache;
 	private ImagesStorage imagesStorage;
@@ -110,57 +105,7 @@ public class SessionBean
 	private TreeModel resourcesTreeModel;
 	private CoreTable coreTable; 
 	private SelectItem[] charsets;
-	private LogRecordTable allLogRecTable = new LogRecordTable();	
-
-	@SuppressWarnings("unchecked")
-	public static SelectItem[] makeSI(Enum[] values, boolean needNull)
-	{
-		ArrayList<SelectItem> si = new ArrayList<SelectItem>();
-		if(needNull) 
-			si.add(new SelectItem(null,"-----"));
-		for(Enum x : values)
-			si.add(new SelectItem(x));
-		return si.toArray(new SelectItem[]{});
-	}
-	
-	public static SelectItem[] findCharsets()
-	{
-		ArrayList<Charset> t = new ArrayList<Charset>();
-		FacesContext fc = FacesContext.getCurrentInstance(); 
-		ExternalContext ec = fc.getExternalContext();
-		String x = ec.getRequestHeaderMap().get("Accept-Charset");
-		StringBuffer sb = new StringBuffer();
-		if(x!=null) sb.append(x);
-		
-		if(sb.length()>0) sb.append(",");
-		sb.append(Messages.getUiMessage(Messages.CHARSET1));
-		sb.append(",").append(Messages.getUiMessage(Messages.CHARSET2));
-		sb.append(",").append(Messages.getUiMessage(Messages.CHARSET3));
-		sb.append(",").append(Messages.getUiMessage(Messages.CHARSET4));
-		x = ec.getRequestCharacterEncoding();
-		if(x!=null) sb.append(",").append(x);
-		
-		x = sb.toString();
-		String charset;
-        String[] charsets = x.split("\\s*,\\s*");
-        if (charsets!=null && charsets.length>0)
-          	for(String z : charsets)
-           	{
-           		charset = z.split(";")[0];
-           		try {
-           			Charset ch = Charset.forName(charset);
-           			if(!t.contains(ch))
-       				t.add(ch);
-           		}	catch(Exception e) {}
-          	}
-        
-		ArrayList<SelectItem> si = new ArrayList<SelectItem>();
-		for(Charset ch : t)
-			si.add(new SelectItem(ch));
-        if(si.size()==0) 
-        	si.add( new SelectItem(Charset.forName("UTF-8")) );
-        return si.toArray(new SelectItem[]{});
-	}
+	private LogView logView;
 
 	public String clearAuditData()
 	{
@@ -171,35 +116,31 @@ public class SessionBean
 	/**
 	 * @return name of parameter, using for node link
 	 */
-	public String getNodePathParName() 
-	{ 
+	public String getNodePathParName() { 
 		return SELECT_NODE_PARAM; 
 	}
 	
-	public String getNodeNamePattern()
-	{
-		//return "[^\\Q~"+Node.NODE_SEPARATOR+Node.ATTRIBUTE_SEPARATOR+"\\E]+";
+	public String getNodeNamePattern() {
 		return disabledInNames;
 	}
 	
-	public String getTitle()
-	{
+	public String getTitle() {
 		return title;
 	}
 	
 	public SessionBean() 
 	{
-		
 		FacesContext context = FacesContext.getCurrentInstance();
 		HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
 		remoteIp = request.getRemoteAddr();
-	    wrapper = (NodeWrapper) getElValue(NodeWrapper.BEAN_NAME);
-	    initNodeWrapper(wrapper);
 	
-	    charsets = findCharsets();
+	    charsets = UIUtil.findCharsets();
 	    
 		userAcl = getUserAcl();
 		tree = getTree();
+
+	    wrapper = (NodeWrapper) getElValue(NodeWrapper.BEAN_NAME);
+	    initNodeWrapper(wrapper);
 		
 		Node x = tree.getRootNode();
 		while(true)
@@ -223,11 +164,17 @@ public class SessionBean
 			}
 		}		
 		resourcesTreeModel = new ChildPropertyTreeModel(getResources(), "childrenList");
+
+		LogViewAttributesCache lvac = SessionBean.getLVACache();
+		setLogViewAttributesCache(lvac);
+		//wrapper.setLvaCache(lvac);
+		wrapper.setNode(x);
+		NodeWrapper nw = new NodeWrapper(x);
+		//nw.setLvaCache(lvac);
 		
 		List<NodeWrapper> nodes = new ArrayList<NodeWrapper>();
 		////nodes.add(tree.getRootNode());
-		nodes.add(new NodeWrapper(x));
-		wrapper.setNode(x);
+		nodes.add(nw);
 		
 		treeModel = new RavenTreeModel(nodes, "childrenList");
 		treeModel.setUserAcl(userAcl);
@@ -241,9 +188,10 @@ public class SessionBean
 		setImagesStorage(new ImagesStorage());
 		setViewableObjectsCache(new VObyNode());
 		setRefreshIntervalCache(new RefreshIntervalCache());
-		setLogViewAttributesCache(new LogViewAttributesCache());
-		setLogsCache(new LogsCache(getLogViewAttributesCache()));
+		setLogsCache(new LogsCache(lvac));
 		viewableObjectsCache.setImagesStorage(getImagesStorage());
+		LogViewAttributes lva = lvac.get(LogView.ALL_NODES);
+		logView = new LogView(lva, LogView.ALL_NODES, null );
 		onSessionStart();
 	}
 
@@ -278,14 +226,13 @@ public class SessionBean
 		return ret;
 	}
 	
-	public static String getOutcomeWithLang(FacesContext fc,String outcome)
-	{
+	public static String getOutcomeWithLang(FacesContext fc,String outcome) {
 		String lang = getPageLanguage(fc);
 		if(lang==null) return outcome; 
 		return outcome+"_"+lang;
 	}
 	
-	public String logout()
+	public String logout() 
 	{
 		String ret = "logout"; 
 		logger.info("logout, user:'{}'",userAcl.getAccountName());
@@ -296,9 +243,12 @@ public class SessionBean
 		return ret;
 	}
 	
-	public boolean isSuperUser()
-	{
-		return userAcl.isSuperUser();
+	public static boolean isSuperUserS() {
+		return getUserAcl().isSuperUser();
+	}
+
+	public boolean isSuperUser() {
+		return isSuperUserS();
 	}
 	
 	public void reloadLeftFrame()
@@ -362,7 +312,6 @@ public class SessionBean
 		 Object z = getElValue("row");
 		 return z; //getElValue("row"); 
 	 }
-	 
 	 
 	 public static UserAcl getUserAcl()
 	 {
@@ -429,20 +378,6 @@ public class SessionBean
 	  
 	  public String getFocusRowKey()
 	  {
-		  /*
-		  if(coreTree==null) return "isNull";
-		  org.apache.myfaces.trinidad.model.RowKeySet rk =  coreTree.getSelectedRowKeys();
-		  String z="";
-		  if(rk!=null)
-		  {
-		  Iterator it = rk.iterator();
-		  while(it.hasNext())
-		  {
-			  z = z + it.next()+";";
-		  }
-		  }
-		  return "focus: "+coreTree.getFocusRowKey()+"  selected:"+z;
-		  */
 		  return "";
 	  }
 	  
@@ -628,6 +563,10 @@ public class SessionBean
 		return (NodeWrapper) SessionBean.getElValue(NodeWrapper.BEAN_NAME);
 	}
 	
+	public static LogViewAttributesCache getLVACache() {
+		return (LogViewAttributesCache) SessionBean.getElValue(LogViewAttributesCache.BEAN_NAME);
+	}
+	
 	public int deleteNode(NodeWrapper node) {
 		return deleteNode(node.getNode());
 	}
@@ -681,73 +620,6 @@ public class SessionBean
 		setNewNodeType("");
 		setNewNodeName("");
 	}
-	
-/*
-	public void exportToExcel(ActionEvent actionEvent) 
-	{
-		UIComponent uic = actionEvent.getComponent();
-		try {
-			CoreTable ct = (CoreTable)uic.getParent().getParent();
-			logger.warn(ct.getId());
-			VOTableWrapper lst = (VOTableWrapper) ct.getValue();
-			 String contentType = "application/vnd.ms-excel";
-			    FacesContext fc = FacesContext.getCurrentInstance();
-//			    String filename = fc.getExternalContext().getUserPrincipal().getName() + "-" + System.currentTimeMillis()+ ".xls";
-			    String filename =  "table-" + System.currentTimeMillis()+ ".xls";
-			    HttpServletResponse response = (HttpServletResponse) fc.getExternalContext().getResponse();
-			    response.setHeader("Content-disposition", "attachment; filename=" + filename);
-			    response.setContentType(contentType);
-
-			    PrintWriter out = null;
-				try 
-				{
-					out = response.getWriter(); 
-			    	out.print(lst.makeHtmlTable().toString());
-				}
-				catch (IOException e) { logger.error("",e); }
-				finally { try {out.close();} catch(Exception e) {}}
-			    fc.responseComplete(); 			
-			
-			//ct.g
-		}
-		catch(ClassCastException e)
-		{
-			logger.error("!!! ",e);
-		}
-    }
-
-	public void exportToCSV(ActionEvent actionEvent) 
-	{
-		UIComponent uic = actionEvent.getComponent();
-		try {
-			CoreTable ct = (CoreTable)uic.getParent().getParent();
-			logger.warn(ct.getId());
-			VOTableWrapper lst = (VOTableWrapper) ct.getValue();
-			 String contentType = "text/csv";
-			    FacesContext fc = FacesContext.getCurrentInstance();
-//			    String filename = fc.getExternalContext().getUserPrincipal().getName() + "-" + System.currentTimeMillis()+ ".xls";
-			    String filename =  "table-" + System.currentTimeMillis()+ ".csv";
-			    HttpServletResponse response = (HttpServletResponse) fc.getExternalContext().getResponse();
-			    response.setHeader("Content-disposition", "attachment; filename=" + filename);
-			    response.setContentType(contentType);
-
-			    PrintWriter out = null;
-				try 
-				{
-					out = response.getWriter(); 
-			    	out.print(lst.makeCSV());
-				}
-				catch (IOException e) { logger.error("",e); }
-				finally { try {out.close();} catch(Exception e) {}}
-			    fc.responseComplete(); 			
-		}
-		catch(ClassCastException e)
-		{
-			logger.error("!!! ",e);
-		}
-    }
- 
- */
 	
 	@SuppressWarnings("unchecked")
 	public Class getRavenImageRenderer() { return RavenImageRenderer.class; }
@@ -904,12 +776,12 @@ public class SessionBean
 	public SelectItem[] getCharsets() {
 		return charsets;
 	}
-
-	public LogRecordTable getAllLogRecTable() {
-		return allLogRecTable;
-	}
 	
 	public AuditView getAudit() {
 		return audit;
+	}
+
+	public LogView getLogView() {
+		return logView;
 	}
 }
