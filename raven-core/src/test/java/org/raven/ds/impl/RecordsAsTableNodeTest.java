@@ -493,6 +493,8 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         addAction.setName("action");
         tableNode.addAndSaveChildren(addAction);
         addAction.setEnabledActionText("action title");
+        addAction.setPrepareRecord("record['field1']=1");
+        addAction.setPrepareActionAttributes("actionAttributes.field1.value+='2'");
         addAction.setActionExpression("record['field1']++");
         assertTrue(addAction.start());
 
@@ -518,6 +520,7 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         NodeAttribute f2 = it.next();
         assertEquals("field1", f1.getName());
         assertEquals("field1 displayName", f1.getDisplayName());
+        assertEquals("12", f1.getValue());
         assertEquals("field2", f2.getName());
         assertEquals("10", f2.getValue());
         f1.setValue("1");
@@ -586,6 +589,8 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         edit.setName("action");
         tableNode.addAndSaveChildren(edit);
         edit.setEnabledActionText("action title");
+        edit.setPrepareRecord("record['field1']+=1");
+        edit.setPrepareActionAttributes("actionAttributes.field1.value+='2'");
         edit.setActionExpression("record['field1']++");
         edit.setFieldsOrder("field2, field1");
         assertTrue(edit.start());
@@ -621,7 +626,7 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         NodeAttribute f1 = it.next();
         assertEquals("field1", f1.getName());
         assertEquals("field1 displayName", f1.getDisplayName());
-        assertEquals("1", f1.getValue());
+        assertEquals("22", f1.getValue());
         assertEquals("field2", f2.getName());
         assertEquals("10", f2.getValue());
         f1.setValue("2");

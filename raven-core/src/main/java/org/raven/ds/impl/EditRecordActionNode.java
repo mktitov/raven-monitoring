@@ -26,8 +26,10 @@ import org.raven.ds.DataContext;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.ViewableObject;
+import org.raven.tree.impl.AbstractActionNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.internal.annotations.Message;
@@ -39,7 +41,9 @@ import org.weda.internal.annotations.Message;
 @NodeClass(parentNode=RecordsAsTableNode.class)
 public class EditRecordActionNode extends RecordsAsTableRecordActionNode
 {
-    public static final String RECORD_BINDING = "record";
+    public static final String PREPARE_ACTION_ATTRIBUTES_BINDING = "prepareActionAttributes";
+    public static final String PREPARE_RECORD_BINDING = "prepareRecord";
+
     @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
     @NotNull
     private RecordSchema recordSchema;
@@ -47,6 +51,12 @@ public class EditRecordActionNode extends RecordsAsTableRecordActionNode
     @Parameter
     private String fieldsOrder;
 
+    @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
+    private String prepareRecord;
+
+    @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
+    private String prepareActionAttributes;
+    
     @Message
     private static String editRecordErrorMessage;
 
@@ -55,11 +65,13 @@ public class EditRecordActionNode extends RecordsAsTableRecordActionNode
             throws Exception
     {
         Record record = (Record) additionalBindings.get(RecordsAsTableNode.RECORD_BINDING);
+        bindingSupport.put(RecordsAsTableNode.RECORD_BINDING, record);
+
+        getNodeAttribute(PREPARE_RECORD_BINDING).getValue();
+        
         Map<String, NodeAttribute> actionAttrs = getActionAttributes();
         Map<String, NodeAttribute> fieldsAttrs = new LinkedHashMap<String, NodeAttribute>();
 
-        bindingSupport.put(RECORD_BINDING, record);
-        
         String _fieldsOrder = fieldsOrder;
         if (_fieldsOrder==null)
         {
@@ -84,6 +96,10 @@ public class EditRecordActionNode extends RecordsAsTableRecordActionNode
                 } else if (actionAttrs!=null && actionAttrs.containsKey(fieldName))
                     fieldsAttrs.put(fieldName, actionAttrs.get(fieldName));
         }
+
+        bindingSupport.put(AbstractActionNode.ACTION_ATTRIBUTES_BINDING, fieldsAttrs);
+        getNodeAttribute(PREPARE_ACTION_ATTRIBUTES_BINDING).getValue();
+
         return new AddEditRecordAction(this, context, additionalBindings, fieldsAttrs, editRecordErrorMessage, this, recordSchema);
     }
 
@@ -114,4 +130,19 @@ public class EditRecordActionNode extends RecordsAsTableRecordActionNode
         this.recordSchema = recordSchema;
     }
 
+    public String getPrepareActionAttributes() {
+        return prepareActionAttributes;
+    }
+
+    public void setPrepareActionAttributes(String prepareActionAttributes) {
+        this.prepareActionAttributes = prepareActionAttributes;
+    }
+
+    public String getPrepareRecord() {
+        return prepareRecord;
+    }
+
+    public void setPrepareRecord(String prepareRecord) {
+        this.prepareRecord = prepareRecord;
+    }
 }
