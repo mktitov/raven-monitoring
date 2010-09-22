@@ -46,8 +46,14 @@
   </managed-bean>
   
   <managed-bean>
-    <managed-bean-name>lvaCache</managed-bean-name>
-    <managed-bean-class>org.raven.ui.log.LogViewAttributesCache</managed-bean-class>
+    <managed-bean-name>lvaAll</managed-bean-name>
+    <managed-bean-class>org.raven.ui.log.LogViewAttributes</managed-bean-class>
+    <managed-bean-scope>session</managed-bean-scope>
+  </managed-bean>  
+
+  <managed-bean>
+    <managed-bean-name>lvaNode</managed-bean-name>
+    <managed-bean-class>org.raven.ui.log.LogViewAttributes</managed-bean-class>
     <managed-bean-scope>session</managed-bean-scope>
   </managed-bean>  
 

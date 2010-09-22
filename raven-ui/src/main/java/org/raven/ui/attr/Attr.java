@@ -56,7 +56,7 @@ public class Attr implements Comparable<Attr>
     @Service
     private static Tree tree;
     
-    private Logger logger = LoggerFactory.getLogger(Attr.class);
+    private Logger log = LoggerFactory.getLogger(Attr.class);
     private NodeAttribute attribute;
 	private int id;
 	private String name;
@@ -145,7 +145,7 @@ public class Attr implements Comparable<Attr>
 
     public void setFile(UploadedFile file)
     {
-    	logger.info("setFile: '{}'", file==null? "null" : file.getName());
+    	log.info("setFile: '{}'", file==null? "null" : file.getName());
         this.file = file;
     }
 
@@ -203,7 +203,7 @@ public class Attr implements Comparable<Attr>
 			nw = new NodeWrapper(n);
 			if( ! nw.isAllowNodeRead() ) nw = null;
 		} catch (InvalidPathException e) {
-			logger.error("on set current node in dialog : ",e);
+			log.error("on set current node in dialog : ",e);
 			return;
 		}
 		nb.setDstNode(nw);
@@ -278,7 +278,8 @@ public class Attr implements Comparable<Attr>
 	public void setValue(String value) 
 	{ 
 		if(value!=null && value.length()==0) this.value = null;
-			else this.value = value; 
+			else this.value = value;
+		log.info("set ATTR value: name={} value={}", getName(), this.value);
 	}
 
 	public String getDescription() { return description; }
@@ -293,7 +294,7 @@ public class Attr implements Comparable<Attr>
 		try {
 			lst = attribute.getReferenceValues();
 		} catch (TooManyReferenceValuesException e) {
-			logger.error("xmm: ",e);
+			log.error("xmm: ",e);
 		}
 		if(lst!=null)
 		{

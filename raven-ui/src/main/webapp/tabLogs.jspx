@@ -45,10 +45,12 @@
             	<f:selectItems value="#{cNode.logView.logLevelSelectItems}" />
             </tr:selectOneChoice>
 			<tr:selectBooleanCheckbox 
+				rendered="#{sBean.superUser}" 
 				shortDesc="#{msgs.recursive}" 
 				label="#{msgs.recursive}" 
 				value="#{cNode.logView.findRecursive}"/>
 			<tr:selectBooleanCheckbox 
+				rendered="#{sBean.superUser}"
 				shortDesc="#{msgs.groupingByNodes}"  
 				label="#{msgs.grouping}" 
 				value="#{cNode.logView.groupByNodes}"/>

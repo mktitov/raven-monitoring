@@ -2,16 +2,19 @@ package org.raven.ui.log;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.faces.model.SelectItem;
 import org.raven.log.LogLevel;
 import org.raven.log.NodeLogRecord;
-import org.raven.ui.SessionBean;
+import org.raven.log.NodeLogger;
 import org.raven.ui.node.INodeScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.weda.internal.annotations.Service;
 
 public class LogView
 {
@@ -27,11 +30,14 @@ public class LogView
 		new SelectItem(LogLevel.ERROR)	
 	};
     
+	@Service
+	private NodeLogger nodeLogger;
+    
 	private LogViewAttributes attrs;
 	private int nodeId;
 	private INodeScanner scanner;
 	private LogRecordTable logRecordTable = new LogRecordTable();
-	private boolean reload = false;
+//	private boolean reload = false;
 
 	public LogView(LogViewAttributes lvAttrs, int nodeId, INodeScanner scan)
 	{
@@ -43,44 +49,65 @@ public class LogView
 	public SelectItem[] getLogLevelSelectItems() { 
 		return logsSI; 
     }
-
-	private List<NodeLogRecord> getLogsForNodes(List<Integer> idList)
+	
+	protected List<NodeLogRecord> getLogRecords(Object nodeId) 
 	{
-		List<NodeLogRecord> ret = new ArrayList<NodeLogRecord>();
-//		if(nodeId != ROOT_NODE) {
-		LogsCache lc = SessionBean.getLogsCacheS();
-		for(Integer id : idList) {
-			List<NodeLogRecord> x = lc.get(id,reload);
-			if(x!=null) ret.addAll(x);
-		}
-//		}
+		Date fd = new Date( attrs.getFdTime() );
+		Date td = new Date( attrs.getTdTime() );
+		return nodeLogger.getRecords(fd, td, nodeId, attrs.getLevel());
+	}
+
+	private List<NodeLogRecord> getLogsForNodes(Object nodeId)
+	{
+		List<NodeLogRecord> ret = getLogRecords(nodeId);		
 		if(ret.size()>0 && ret.get(0)!=null) Collections.sort(ret, ret.get(0));
 		return ret;
 	}
 	
-	public List<NodeLogRecord> getLogsForNode()
+	private List<NodeLogRecord> getLogsForNode()
 	{
+		if(logRecordList != null)
+			return logRecordList;
 		List<NodeLogRecord> res;
-		List<Integer> idList = new ArrayList<Integer>();
-		if(!isFindRecursive()) 
-			idList.add(nodeId);
-		 else
-			 if(scanner!=null)
-				 idList = scanner.scan();
-		res = getLogsForNodes(idList);
-		return filterLogRecords(res);
+		List<Integer> idList = null;
+		Object nid = null;
+		if(nodeId == ALL_NODES);
+		else {
+			if( !isFindRecursive() ) nid = new Integer(nodeId);
+			else
+				if(scanner!=null) {
+					idList = scanner.scan();
+					if( idList.size() < 200 ) {
+						nid = idList;
+						idList = null;
+					} else nid = null;
+				}
+		}
+		res = getLogsForNodes(nid);
+		if(idList!=null) {
+			Iterator<NodeLogRecord> it = res.iterator();
+			while(it.hasNext()) {
+				NodeLogRecord r = it.next();
+				if( !idList.contains(r.getNodeId()) ) 
+						it.remove();
+			}
+		}	
+		logRecordList = filterLogRecords(res);
+		return logRecordList;
 	}
 	
+	private List<NodeLogRecord> logRecordList = null;
 	public String loadLogForNodes()
 	{
 		logRecordTable.clear();
+		logRecordList = null;
 		//LogsCache lc = SessionBean.getLogsCacheS();
 		//lc.remove(nodeId);
 		//List<NodeLogRecord> lst = lc.get(nodeId); 
 		//if(lst!=null) 
-		reload = true;
+//		reload = true;
 		logRecordTable.addAll( getLogsForNode() );
-		reload = false;
+//		reload = false;
 		return null;
 	}
 	
@@ -89,11 +116,11 @@ public class LogView
 		return (new LogsByNodes(getLogsForNode())).getAll();
 	}
 	
-	public String clearLogForNode()
-	{
-		SessionBean.getLogsCacheS().remove(nodeId);
-		return null;
-	}
+//	public String clearLogForNode()
+//	{
+//		SessionBean.getLogsCacheS().remove(nodeId);
+//		return null;
+//	}
 	
 	public String getFd() {
 		return attrs.getFd();

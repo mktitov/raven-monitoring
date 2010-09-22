@@ -5,6 +5,9 @@ import org.raven.util.Utl;
 
 public class LogViewAttributes 
 {
+	public static final String LVA_ALL = "lvaAll";
+	public static final String LVA_NODE = "lvaNode";
+	
 	private String fd;
 	private String td;
 	private LogLevel level;

@@ -33,8 +33,6 @@ import org.raven.ui.attr.RefreshIntervalCache;
 import org.raven.ui.filter.AuthFilter;
 import org.raven.ui.log.LogView;
 import org.raven.ui.log.LogViewAttributes;
-import org.raven.ui.log.LogViewAttributesCache;
-import org.raven.ui.log.LogsCache;
 import org.raven.ui.node.CopyMoveNodeBean;
 import org.raven.ui.node.NewNodeFromTemplate;
 import org.raven.ui.node.NodeWrapper;
@@ -97,8 +95,7 @@ public class SessionBean
 	private ImagesStorage imagesStorage;
 	private VObyNode viewableObjectsCache;
 	private RefreshIntervalCache refreshIntervalCache;
-	private LogViewAttributesCache logViewAttributesCache;
-	private LogsCache logsCache; 
+//	private LogViewAttributesCache logViewAttributesCache;
 	private boolean collapsed = false;
 	private String remoteIp = null;
 	private AuditView audit = new AuditView(); 
@@ -165,8 +162,8 @@ public class SessionBean
 		}		
 		resourcesTreeModel = new ChildPropertyTreeModel(getResources(), "childrenList");
 
-		LogViewAttributesCache lvac = SessionBean.getLVACache();
-		setLogViewAttributesCache(lvac);
+		//LogViewAttributesCache lvac = SessionBean.getLVACache();
+		//setLogViewAttributesCache(lvac);
 		//wrapper.setLvaCache(lvac);
 		wrapper.setNode(x);
 		NodeWrapper nw = new NodeWrapper(x);
@@ -188,10 +185,10 @@ public class SessionBean
 		setImagesStorage(new ImagesStorage());
 		setViewableObjectsCache(new VObyNode());
 		setRefreshIntervalCache(new RefreshIntervalCache());
-		setLogsCache(new LogsCache(lvac));
+		//setLogsCache(new LogsCache(lvac));
 		viewableObjectsCache.setImagesStorage(getImagesStorage());
-		LogViewAttributes lva = lvac.get(LogView.ALL_NODES);
-		logView = new LogView(lva, LogView.ALL_NODES, null );
+		if(isSuperUserS()) 
+			logView = new LogView(getLvaAll(), LogView.ALL_NODES, null );
 		onSessionStart();
 	}
 
@@ -562,9 +559,13 @@ public class SessionBean
 	public static NodeWrapper getNodeWrapper() {
 		return (NodeWrapper) SessionBean.getElValue(NodeWrapper.BEAN_NAME);
 	}
-	
-	public static LogViewAttributesCache getLVACache() {
-		return (LogViewAttributesCache) SessionBean.getElValue(LogViewAttributesCache.BEAN_NAME);
+
+	public static LogViewAttributes getLvaAll() {
+		return (LogViewAttributes) SessionBean.getElValue(LogViewAttributes.LVA_ALL);
+	}
+
+	public static LogViewAttributes getLvaNode() {
+		return (LogViewAttributes) SessionBean.getElValue(LogViewAttributes.LVA_NODE);
 	}
 	
 	public int deleteNode(NodeWrapper node) {
@@ -684,26 +685,6 @@ public class SessionBean
 	public RefreshIntervalCache getRefreshIntervalCache() {
 		return refreshIntervalCache;
 	}
-
-	public void setLogViewAttributesCache(LogViewAttributesCache logViewAttributesStorage) {
-		this.logViewAttributesCache = logViewAttributesStorage;
-	}
-
-	public LogViewAttributesCache getLogViewAttributesCache() {
-		return logViewAttributesCache;
-	}
-
-	public void setLogsCache(LogsCache logsCache) {
-		this.logsCache = logsCache;
-	}
-
-	public LogsCache getLogsCache() {
-		return logsCache;
-	}
-
-	public static LogsCache getLogsCacheS() {
-		return getInstance().getLogsCache();
-	}
 	
 	private void setCollapsed(boolean collapsed) {
 		this.collapsed = collapsed; 
@@ -720,18 +701,15 @@ public class SessionBean
 		return collapsed;
 	}
 
-	public Auditor getAuditor() 
-	{
+	public Auditor getAuditor() {
 		return auditor;
 	}
 
-	public String getAccountName()
-	{
+	public String getAccountName() {
 		return userAcl.getAccountName();
 	}		
 	
-	public static String getAccountNameS()
-	{
+	public static String getAccountNameS() {
 		return SessionBean.getUserAcl().getAccountName();
 	}		
 	

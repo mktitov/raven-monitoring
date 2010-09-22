@@ -88,7 +88,7 @@ public abstract class AbstractCache<K,V,SK>
 	{
 		return map.get(key);
 	}	
-
+	
 	/**
 	 * @param key ключ объекта.
 	 * @return CacheValueContainer, соответствующий ключу.

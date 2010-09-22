@@ -25,6 +25,7 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.myfaces.trinidad.context.RequestContext;
 import org.apache.myfaces.trinidad.event.LaunchEvent;
 import org.apache.myfaces.trinidad.render.ExtendedRenderKitService;
+import org.raven.audit.Action;
 import org.raven.table.Table;
 import org.raven.tree.ActionViewableObject;
 import org.raven.tree.InvalidPathException;
@@ -196,7 +197,6 @@ public class ViewableObjectWrapper
 		return false;
 	}
 	
-	
 	public boolean isImage()
 	{
 		if(isViewable() && getMimeGroup().equals(IMAGE)) return true;
@@ -261,14 +261,21 @@ public class ViewableObjectWrapper
 	
 	public String run()  
 	{
+		StringBuilder sb = new StringBuilder();
 		if(actionAttributes!=null) 
 			try {
 				for(Attr a :  actionAttributes)
-					a.getAttribute().setValue(a.getValue());
+				{
+					String v = a.getValue();
+					String n = a.getName();
+					a.getAttribute().setValue(v);
+					sb.append("name='").append(n).append("' , ");
+					sb.append("value='").append(v).append("' ; ");
+				}	
 			} catch (Exception e) {
 				log.error("set actionAttributes:", e);
 			}
-		runAction();
+		runAction(sb.toString());
 		log.warn("runAction ok");
 	//	returnFromDialog();
 		return null;
@@ -276,16 +283,26 @@ public class ViewableObjectWrapper
 
 	public String runActionD()
 	{
-		runAction();
+		runAction(null);
 		return "dialog:runAction";
 	}
 	
-	
-	public String runAction()
+	private String runAction(String attrInfo)
 	{
 		if(!isAction()) return null;
 		ActionViewableObject action = (ActionViewableObject) viewableObject;
 		String ret;
+		SessionBean sb = SessionBean.getInstance();
+		StringBuilder mes = new StringBuilder();
+		mes.append("<<").append(viewableObject.toString()).append(">>. ");
+		
+		Action act = Action.ACTION;
+		if(attrInfo!=null)
+		{
+			mes.append(". Attrs: ").append(attrInfo);
+			act = Action.ACTION_WITH_ATTR;
+		}
+		sb.getAuditor().write(sb.getCurrentNode(), sb.getAccountName(), act, mes.toString());
 		Object o = action.getData();
 		if(o==null) ret = Messages.getUiMessage(Messages.DONE);
 			else ret = o.toString();

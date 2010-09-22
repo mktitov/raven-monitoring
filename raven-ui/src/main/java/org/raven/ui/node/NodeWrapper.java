@@ -57,7 +57,6 @@ import org.raven.ui.attr.NewAttribute;
 import org.raven.ui.attr.RefreshAttributesCache;
 import org.raven.ui.attr.RefreshIntervalCache;
 import org.raven.ui.log.LogView;
-import org.raven.ui.log.LogViewAttributes;
 import org.raven.ui.util.Messages;
 import org.raven.ui.vo.ViewableObjectWrapper;
 import org.raven.util.Utl;
@@ -362,9 +361,8 @@ implements Comparator<NodeAttribute>, INodeScanner, ScannedNodeHandler
 		setVoSource(null);
 		upperNodes = null;
 		iconPath = null;
-		if( !SessionBean.isSuperUserS() ) return;
-		LogViewAttributes lva = SessionBean.getLVACache().get(getNodeId());
-		logView = new LogView(lva, getNodeId(), this);
+		//if( !SessionBean.isSuperUserS() ) return;
+		logView = new LogView(SessionBean.getLvaNode(), getNodeId(), this);
 		
 	}
 

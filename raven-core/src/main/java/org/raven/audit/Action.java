@@ -19,8 +19,10 @@ public enum Action
 	SESSION_START(ActionType.SESSION),SESSION_STOP(ActionType.SESSION),
 	
 	VIEW(ActionType.VIEW),
-	VIEW_WITH_ATTR(ActionType.VIEW)	;
+	VIEW_WITH_ATTR(ActionType.VIEW),
 	
+	ACTION(ActionType.ACTION),
+	ACTION_WITH_ATTR(ActionType.ACTION)		;
 	
 	private final ActionType actionType;
 	

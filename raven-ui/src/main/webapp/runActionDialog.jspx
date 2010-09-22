@@ -144,7 +144,7 @@
 <!-- Button bar for refresh attributes -->
 
         <tr:panelButtonBar halign="center"  >
-            <tr:commandButton immediate="true"
+            <tr:commandButton 
                 rendered="#{!pageFlowScope.actionVOW.actionRunned}"
             	binding="#{defButtonDA.button}"
             	id = "defButVOA" 

@@ -38,17 +38,17 @@ public class NodeLoggerImpl extends AbstractDbWorker<NodeLogRecord> implements N
 	private static Logger logger = LoggerFactory.getLogger(NodeLoggerImpl.class);
 	private static final String NODES_MARKER = "#";
 
-	private static final String orderBy = "order by "+NodeLogRecord.FD+" desc";
-	private static final String sMainSelect = "select "+getFieldsList(NodeLogRecord.FIELDS)+" from @ where "+
-	NodeLogRecord.FD+" between ? and ? and "+NodeLogRecord.LEVEL+" >= ? ";
+	private static final String orderBy = "order by " + NodeLogRecord.FD + " desc";
+	private static final String sMainSelect = "select " + getFieldsList(NodeLogRecord.FIELDS) + " from @ where " +
+	NodeLogRecord.FD + " between ? and ? and " + NodeLogRecord.LEVEL + " >= ? ";
 	private static final String sSelLogsFromSingleTable =  
-										sMainSelect+orderBy;
-	private static final String sSelLogsFromSingleTableN = sMainSelect+ " and "+
-	NodeLogRecord.NODE_ID+" = ? "+orderBy;
-	private static final String sSelLogsFromSingleTableNN = sMainSelect+ " and "+
-	NodeLogRecord.NODE_ID+" in("+NODES_MARKER+") "+orderBy;
+										sMainSelect + orderBy;
+	private static final String sSelLogsFromSingleTableN = sMainSelect + " and " +
+	NodeLogRecord.NODE_ID + " = ? " + orderBy;
+	private static final String sSelLogsFromSingleTableNN = sMainSelect + " and " +
+	NodeLogRecord.NODE_ID + " in(" + NODES_MARKER + ") " + orderBy;
 	
-    public NodeLoggerImpl()
+    public NodeLoggerImpl() 
     {
     	setMetaTableNamePrefix("log");
     	setName("nodeLogger");
@@ -61,8 +61,7 @@ public class NodeLoggerImpl extends AbstractDbWorker<NodeLogRecord> implements N
 		return NodeLogRecord.getObjectFromRecord(rs);
 	}
 
-	public void write(Node node, LogLevel level, String message) 
-	{
+	public void write(Node node, LogLevel level, String message) {
 		write(new NodeLogRecord(node.getId(),node.getPath(),level,message));
 	}
 	
@@ -71,32 +70,27 @@ public class NodeLoggerImpl extends AbstractDbWorker<NodeLogRecord> implements N
 	{
 		String sql;
 		Object[] args;
-		List<String> names;
 		dbWorkAllowed();
 		if(nodesId ==null)
 		{
 			sql = sSelLogsFromSingleTable;
 			args = new Object[]{fd,td,level.ordinal()};
-		}
-		else
+		} else
 			if (nodesId instanceof List) 
 			{
 				List<Integer> nodes = (List) nodesId;
-				StringBuffer lst = new StringBuffer("");
-				for(Integer id : nodes)
-				{
+				StringBuilder lst = new StringBuilder("");
+				for(Integer id : nodes) {
 					if(lst.length()>0) lst.append(",");
 					lst.append(id);
 				}	
 				sql = sSelLogsFromSingleTableNN.replaceFirst(NODES_MARKER, lst.toString());
 				args = new Object[]{fd,td,level.ordinal()};
-			}
-			else
-			{
+			} else 	{
 				sql = sSelLogsFromSingleTableN;
 				args = new Object[]{fd,td,level.ordinal(),(Integer)nodesId};
 			}
-		names = getTablesNames(fd.getTime(), td.getTime());
+		List<String> names = getTablesNames(fd.getTime(), td.getTime());
 		return selectObjectsMT(names, sql, args);
 	}
 	
