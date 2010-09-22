@@ -596,7 +596,9 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         public String executeAction() throws Exception
         {
             record.setTag(Record.DELETE_TAG, null);
-            DataSourceHelper.sendDataToConsumers(RecordsAsTableNode.this, record, new DataContextImpl());
+            DataContext context = new DataContextImpl();
+            DataSourceHelper.sendDataToConsumers(RecordsAsTableNode.this, record, context);
+            DataSourceHelper.sendDataToConsumers(RecordsAsTableNode.this, null, context);
             return deleteCompletionMessage;
         }
     }

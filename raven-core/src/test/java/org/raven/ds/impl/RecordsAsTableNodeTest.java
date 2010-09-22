@@ -422,8 +422,9 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         assertNotNull(res);
         assertTrue(res instanceof String);
         
-        assertEquals(1, collector.getDataList().size());
+        assertEquals(2, collector.getDataList().size());
         assertSame(record, collector.getDataList().get(0));
+        assertNull(collector.getDataList().get(1));
 
         verify(record);
     }
