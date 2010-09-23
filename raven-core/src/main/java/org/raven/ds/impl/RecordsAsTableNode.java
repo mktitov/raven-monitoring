@@ -239,7 +239,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         List<ViewableObject> vos = new ArrayList<ViewableObject>();
 //        if (records!=null)
 //        {
-            List<ViewableObject> actions = getActions(refreshAttributes, records);
+            List<ViewableObject> actions = getActions(refreshAttributes, records, dataConsumer.context);
             if (actions!=null)
                 vos.addAll(actions);
 //        }
@@ -318,7 +318,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
     }
     
     private List<ViewableObject> getActions(
-            Map<String, NodeAttribute> refreshAttributes, Collection<Record> records) throws Exception
+            Map<String, NodeAttribute> refreshAttributes, Collection<Record> records, DataContext context) throws Exception
     {
         Collection<Node> childs = getSortedChildrens();
         if (childs!=null && !childs.isEmpty())
@@ -332,6 +332,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                         actions = new ArrayList<ViewableObject>();
                     Map<String, Object> bindings = new HashMap<String, Object>();
                     bindings.put(RECORDS_BINDING, records);
+                    bindings.put(AbstractSafeDataPipe.DATA_CONTEXT_BINDING, context);
                     actions.add(((RecordsAsTableActionNode)child).getActionViewableObject(new DataContextImpl(), bindings));
                 }
             return actions;
@@ -361,6 +362,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         private final List<Record> records;
         private int actionsCount;
         private int columnsCount;
+        private DataContext context;
 
         public RecordAsTableDataConsumer(
                 String[] fieldsOrder, String detailColumnName, String detailValueViewLinkName
@@ -447,6 +449,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
 
         public void setData(DataSource dataSource, Object data, DataContext context)
         {
+            this.context = context;
             if (data==null)
             {
                 if (isLogLevelEnabled(LogLevel.DEBUG))
@@ -494,6 +497,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                         {
                             Map<String, Object> bindings = new HashMap<String, Object>();
                             bindings.put(RECORD_BINDING, record);
+                            bindings.put(AbstractSafeDataPipe.DATA_CONTEXT_BINDING, context);
                             try {
                                 row[pos++] = actionNode.getActionViewableObject(new DataContextImpl(), bindings);
                             } catch (Exception ex) {
