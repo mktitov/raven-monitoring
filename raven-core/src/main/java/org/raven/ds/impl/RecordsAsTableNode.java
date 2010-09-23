@@ -515,6 +515,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                             columnValue = columnValues.get(i);
                             columnValue.addBinding(VALUE_BINDING, value);
                             columnValue.addBinding(RECORD_BINDING, record);
+                            columnValue.addBinding(AbstractSafeDataPipe.DATA_CONTEXT_BINDING, context);
                             value = columnValue.getNodeAttribute(
                                     RecordsAsTableColumnValueNode.COLUMN_VALUE_ATTR).getRealValue();
                         }
