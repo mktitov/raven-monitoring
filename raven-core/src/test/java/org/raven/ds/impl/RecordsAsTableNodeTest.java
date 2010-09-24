@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
+import org.raven.ds.RecordException;
 import org.raven.ds.impl.RecordsAsTableNode.DeleteRecordAction;
 import org.raven.test.PushOnDemandDataSource;
 import org.raven.test.RavenCoreTestCase;
@@ -338,6 +339,34 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         assertArrayEquals(new String[]{"field2", "test1"}, detailRows.get(1));
 
         verify(record);
+    }
+
+    @Test
+    public void cellValueExpressionTest() throws Exception
+    {
+        tableNode.setUseCellValueExpression(Boolean.TRUE);
+        tableNode.setCellValueExpression("value+columnNumber+record['field1']");
+
+        Record rec = schema.createRecord();
+        rec.setValue("field1", 1);
+        rec.setValue("field2", 2);
+
+        ds.addDataPortion(rec);
+        ds.addDataPortion(null);
+
+        Collection<ViewableObject> objects = tableNode.getViewableObjects(null);
+        assertNotNull(objects);
+        assertEquals(1, objects.size());
+        ViewableObject object = objects.iterator().next();
+        assertNotNull(object);
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, object.getMimeType());
+        assertNotNull(object.getData());
+        assertTrue(object.getData() instanceof Table);
+        Table table = (Table) object.getData();
+        assertArrayEquals(new String[]{"field1 displayName", "field2"}, table.getColumnNames());
+        List<Object[]> rows = RavenUtils.tableAsList(table);
+        assertEquals(1, rows.size());
+        assertArrayEquals(new String[]{"3", "5"}, rows.get(0));
     }
 
     @Test

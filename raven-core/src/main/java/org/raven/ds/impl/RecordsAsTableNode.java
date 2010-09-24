@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
@@ -31,6 +32,8 @@ import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
+import org.raven.expr.impl.BindingSupportImpl;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.table.TableImpl;
 import org.raven.tree.Node;
@@ -83,6 +86,15 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
     @NotNull @Parameter(defaultValue="false")
     private Boolean enableDeletes;
 
+    @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
+    private String cellValueExpression;
+
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean useCellValueExpression;
+
+    private BindingSupportImpl bindingSupport;
+
+
     @Message
     private String detailColumnName;
     @Message
@@ -99,6 +111,20 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
     private static String deleteCompletionMessage;
 
     private Map<String, RecordSchemaField> fields;
+
+    @Override
+    protected void initFields()
+    {
+        super.initFields();
+        bindingSupport = new BindingSupportImpl();
+    }
+
+    @Override
+    public void formExpressionBindings(Bindings bindings)
+    {
+        super.formExpressionBindings(bindings);
+        bindingSupport.addTo(bindings);
+    }
 
     public Integer getDetailColumnNumber()
     {
@@ -168,6 +194,22 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
     public void setRecordSchema(RecordSchema recordSchema)
     {
         this.recordSchema = recordSchema;
+    }
+
+    public String getCellValueExpression() {
+        return cellValueExpression;
+    }
+
+    public void setCellValueExpression(String cellValueExpression) {
+        this.cellValueExpression = cellValueExpression;
+    }
+
+    public Boolean getUseCellValueExpression() {
+        return useCellValueExpression;
+    }
+
+    public void setUseCellValueExpression(Boolean useCellValueExpression) {
+        this.useCellValueExpression = useCellValueExpression;
     }
 
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
@@ -343,6 +385,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
 
     public class RecordAsTableDataConsumer implements DataConsumer
     {
+        public static final String CELL_VALUE_EXPRESSION_ATTR = "cellValueExpression";
+        public static final String COLUMN_NUMBER_BINDING = "columnNumber";
         private final TableImpl table;
         private final String[] fieldNames;
         private final Map<String, RecordSchemaField> fields;
@@ -504,10 +548,22 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                             }
                         }
                 }
+                boolean _useCellValuesExpression = useCellValueExpression;
                 for (int i=0; i<fieldNames.length; ++i)
                     try
                     {
                         Object value = record.getValue(fieldNames[i]);
+                        if (_useCellValuesExpression){
+                            bindingSupport.put(VALUE_BINDING, value);
+                            bindingSupport.put(RECORD_BINDING, record);
+                            bindingSupport.put(COLUMN_NUMBER_BINDING, i+1);
+                            bindingSupport.put(AbstractSafeDataPipe.DATA_CONTEXT_BINDING, context);
+                            try{
+                                value = getNodeAttribute(CELL_VALUE_EXPRESSION_ATTR).getRealValue();
+                            }finally{
+                                bindingSupport.reset();
+                            }
+                        }
                         RecordsAsTableColumnValueNode columnValue =
                                 columnValues==null? null : columnValues.get(i);
                         if (columnValue!=null)
