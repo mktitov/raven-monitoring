@@ -259,7 +259,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         Collection<Node> childs = getChildrens();
         if (childs!=null)
             for (Node child: childs)
-                if (child instanceof RecordsAsTableColumnValueNode)
+                if (Status.STARTED.equals(child.getStatus()) && child instanceof RecordsAsTableColumnValueNode)
                 {
                     RecordsAsTableColumnValueNode columnValue =
                             (RecordsAsTableColumnValueNode) child;
