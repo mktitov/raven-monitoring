@@ -17,23 +17,33 @@
 
 package org.raven.ds.impl;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.log.LogLevel;
+import org.raven.sched.ExecutorService;
 import org.raven.sched.Schedulable;
 import org.raven.sched.Scheduler;
+import org.raven.sched.Task;
 import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
 import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
+import org.raven.tree.Viewable;
+import org.raven.tree.ViewableObject;
+import org.raven.tree.impl.AbstractActionViewableObject;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.internal.annotations.Message;
 
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass
-public class SchedulableDataPipe extends SafeDataPipeNode implements Schedulable, Scheduler
+public class SchedulableDataPipe extends SafeDataPipeNode implements Schedulable, Scheduler, Task, Viewable
 {
     @Parameter(valueHandlerType=SystemSchedulerValueHandlerFactory.TYPE)
     @NotNull
@@ -41,6 +51,14 @@ public class SchedulableDataPipe extends SafeDataPipeNode implements Schedulable
 
     @NotNull @Parameter(defaultValue="false")
     private Boolean allowAsyncExecution;
+
+    @Parameter(valueHandlerType=SystemSchedulerValueHandlerFactory.TYPE)
+    private ExecutorService executor;
+
+    @Message
+    private String displayMessage;
+    @Message
+    private String executedMessage;
 
     private ReentrantLock lock;
 
@@ -72,6 +90,11 @@ public class SchedulableDataPipe extends SafeDataPipeNode implements Schedulable
         }
     }
 
+    public void run()
+    {
+        executeScheduledJob(null);
+    }
+
     private void doExecuteJob() throws Exception
     {
         if (isLogLevelEnabled(LogLevel.DEBUG)) {
@@ -89,6 +112,45 @@ public class SchedulableDataPipe extends SafeDataPipeNode implements Schedulable
         }
     }
 
+    public String getStatusMessage()
+    {
+        return "Scheduled job immediate executing";
+    }
+
+    public Node getTaskNode()
+    {
+        return this;
+    }
+
+    public Boolean getAutoRefresh()
+    {
+        return true;
+    }
+
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception 
+    {
+        return null;
+    }
+
+    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) throws Exception
+    {
+        ExecutorService _executor = executor;
+        if (!Status.STARTED.equals(getStatus()) || _executor==null)
+            return null;
+
+        return Arrays.asList(
+                (ViewableObject)
+                new ExecuteAction(displayMessage, executedMessage, this, _executor));
+    }
+
+    public ExecutorService getExecutor() {
+        return executor;
+    }
+
+    public void setExecutor(ExecutorService executor) {
+        this.executor = executor;
+    }
+
     public Scheduler getScheduler() {
         return scheduler;
     }
@@ -103,5 +165,26 @@ public class SchedulableDataPipe extends SafeDataPipeNode implements Schedulable
 
     public void setAllowAsyncExecution(Boolean allowAsyncExecution) {
         this.allowAsyncExecution = allowAsyncExecution;
+    }
+
+    private class ExecuteAction extends AbstractActionViewableObject
+    {
+        private final ExecutorService executor;
+        private final String executedMessage;
+
+        public ExecuteAction(String displayMessage
+                , String executedMessage, Node owner, ExecutorService executor)
+        {
+            super(null, displayMessage, owner, false);
+            this.executor = executor;
+            this.executedMessage = executedMessage;
+        }
+
+        @Override
+        public String executeAction() throws Exception
+        {
+            executor.execute(SchedulableDataPipe.this);
+            return executedMessage;
+        }
     }
 }

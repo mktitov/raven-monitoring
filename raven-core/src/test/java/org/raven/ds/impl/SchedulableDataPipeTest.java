@@ -17,12 +17,16 @@
 
 package org.raven.ds.impl;
 
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.TestScheduler;
+import org.raven.sched.impl.ExecutorServiceNode;
 import org.raven.test.DataCollector;
 import org.raven.test.PushOnDemandDataSource;
 import org.raven.test.RavenCoreTestCase;
+import org.raven.tree.ActionViewableObject;
+import org.raven.tree.ViewableObject;
 
 /**
  *
@@ -115,6 +119,30 @@ public class SchedulableDataPipeTest extends RavenCoreTestCase
             }
         }).start();
         Thread.sleep(300);
+
+        assertEquals(1, collector.getDataListSize());
+        assertEquals(1, collector.getDataList().get(0));
+    }
+
+    @Test
+    public void executorTest() throws Exception
+    {
+        ExecutorServiceNode executor = new ExecutorServiceNode();
+        executor.setName("executor");
+        tree.getRootNode().addAndSaveChildren(executor);
+        assertTrue(executor.start());
+
+        schedulablePipe.setExecutor(executor);
+
+        List<ViewableObject> vos = schedulablePipe.getViewableObjects(null);
+        assertNotNull(vos);
+        assertEquals(1, vos.size());
+        assertTrue(vos.get(0) instanceof ActionViewableObject);
+
+        ActionViewableObject action = (ActionViewableObject) vos.get(0);
+        ds.addDataPortion(1);
+        assertNotNull(action.getData());
+        Thread.sleep(100);
 
         assertEquals(1, collector.getDataListSize());
         assertEquals(1, collector.getDataList().get(0));
