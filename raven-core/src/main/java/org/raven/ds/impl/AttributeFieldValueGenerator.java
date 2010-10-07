@@ -17,10 +17,9 @@
 
 package org.raven.ds.impl;
 
-import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
-import org.raven.tree.NodeAttribute;
+import org.raven.ds.DataContext;
 
 /**
  *
@@ -45,7 +44,7 @@ public class AttributeFieldValueGenerator extends AbstractFieldValueGenerator
     }
 
     @Override
-    protected Object doGetFieldValue(Map<String, NodeAttribute> sessionAttributes)
+    protected Object doGetFieldValue(DataContext context)
     {
         return getNodeAttribute(VALUE_ATTRIBUTE).getRealValue();
     }

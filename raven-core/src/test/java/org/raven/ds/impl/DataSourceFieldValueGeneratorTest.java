@@ -44,7 +44,7 @@ public class DataSourceFieldValueGeneratorTest extends RavenCoreTestCase
         assertTrue(fieldValue.start());
 
         ds.addDataPortion(1);
-        assertEquals(1, fieldValue.getFieldValue(null));
+        assertEquals(1, fieldValue.getFieldValue(new DataContextImpl()));
     }
 
     @Test
@@ -65,6 +65,6 @@ public class DataSourceFieldValueGeneratorTest extends RavenCoreTestCase
         assertTrue(fieldValue.start());
 
         ds.addDataPortion(1);
-        assertEquals(2, fieldValue.getFieldValue(null));
+        assertEquals(2, fieldValue.getFieldValue(new DataContextImpl()));
     }
 }

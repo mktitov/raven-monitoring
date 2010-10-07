@@ -232,7 +232,7 @@ public class ServiceStateNodeTest extends RavenCoreTestCase
         ServiceStateNode childState = (ServiceStateNode) stateNode.getChildren("service1");
         childState.setServiceAvailability((byte)50);
         assertEquals(new Byte((byte)100), stateNode.getServiceAvailability());
-        Thread.sleep(500);
+        Thread.sleep(501);
         assertEquals(new Byte((byte)50), stateNode.getServiceAvailability());
     }
 

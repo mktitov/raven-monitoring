@@ -119,8 +119,7 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
             if (childs!=null)
                 for (Node child: childs)
                     if (child instanceof FieldValueGenerator)
-                        beans.put(child.getName(),
-                                    ((FieldValueGenerator)child).getFieldValue(context.getSessionAttributes()));
+                        beans.put(child.getName(), ((FieldValueGenerator)child).getFieldValue(context));
 
             beans.put(DATA_BINDING, data);
             beans.put(DATA_CONTEXT_BINDING, context);

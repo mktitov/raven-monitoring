@@ -102,9 +102,9 @@ public class DataSourceFieldValueGenerator
     }
 
     @Override
-    protected Object doGetFieldValue(Map<String, NodeAttribute> sessionAttributes)
+    protected Object doGetFieldValue(DataContext context)
     {
-        dataSource.getDataImmediate(this, new DataContextImpl(sessionAttributes));
+        dataSource.getDataImmediate(this, context);
         DataInfo info = dataInfo.get();
         Object val = info.data;
         dataInfo.remove();

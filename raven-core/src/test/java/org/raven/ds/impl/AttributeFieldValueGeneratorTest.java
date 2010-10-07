@@ -35,6 +35,6 @@ public class AttributeFieldValueGeneratorTest extends RavenCoreTestCase
         fieldValue.setValue("1");
         assertTrue(fieldValue.start());
 
-        assertEquals("1", fieldValue.getFieldValue(null));
+        assertEquals("1", fieldValue.getFieldValue(new DataContextImpl()));
     }
 }

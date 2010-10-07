@@ -63,14 +63,14 @@ public class HttpRequestNodeTest extends RavenCoreTestCase
 
         Map params = createParams(response);
         Object res = requestNode.processResponse(params);
-        assertNotNull(res);
-        assertTrue(res instanceof HttpGet);
+//        assertNotNull(res);
+//        assertTrue(res instanceof HttpGet);
         Map requestMap = (Map) params.get(HttpSessionNode.REQUEST);
+        HttpGet req = (HttpGet) requestMap.get(HttpSessionNode.REQUEST_REQUEST);
 
         assertEquals("host", requestMap.get(HttpSessionNode.HOST));
         assertEquals(new Integer(80), requestMap.get(HttpSessionNode.PORT));
         
-        HttpGet req = (HttpGet) res;
         String uri = req.getURI().toString();
         assertTrue("/test_test?p1=v1&p2=v2".equals(uri) || "/test_test?p2=v2&p1=v1".equals(uri));
         assertEquals("v2", req.getFirstHeader("h1").getValue());
@@ -89,11 +89,13 @@ public class HttpRequestNodeTest extends RavenCoreTestCase
         requestNode.getNodeAttribute(HttpRequestNode.PROCESS_RESPONSE_ATTR).setValue("request.params.p1=' '");
         assertTrue(requestNode.start());
 
-        Object res = requestNode.processResponse(createParams(response));
-        assertNotNull(res);
-        assertTrue(res instanceof HttpGet);
+        Map params = createParams(response);
+        Object res = requestNode.processResponse(params);
+//        assertNotNull(res);
+//        assertTrue(res instanceof HttpGet);
 
-        HttpGet req = (HttpGet) res;
+        Map requestMap = (Map) params.get(HttpSessionNode.REQUEST);
+        HttpGet req = (HttpGet) requestMap.get(HttpSessionNode.REQUEST_REQUEST);
         String uri = req.getURI().toString();
         assertEquals("/test?p1=+", req.getURI().toString());
 
@@ -113,11 +115,11 @@ public class HttpRequestNodeTest extends RavenCoreTestCase
         requestNode.getNodeAttribute(HttpRequestNode.PROCESS_RESPONSE_ATTR).setValue("request.params.p1='test'");
         assertTrue(requestNode.start());
 
-        Object res = requestNode.processResponse(createParams(response));
-        assertNotNull(res);
-        assertTrue(res instanceof HttpPost);
+        Map params = createParams(response);
+        Object res = requestNode.processResponse(params);
 
-        HttpPost req = (HttpPost) res;
+        Map requestMap = (Map) params.get(HttpSessionNode.REQUEST);
+        HttpPost req = (HttpPost) requestMap.get(HttpSessionNode.REQUEST_REQUEST);
         String uri = req.getURI().toString();
         assertEquals("/test", req.getURI().toString());
         assertEquals("application/x-www-form-urlencoded", req.getFirstHeader("Content-Type").getValue());
@@ -142,11 +144,11 @@ public class HttpRequestNodeTest extends RavenCoreTestCase
         requestNode.getNodeAttribute(HttpRequestNode.PROCESS_RESPONSE_ATTR).setValue("request.content='test текст'");
         assertTrue(requestNode.start());
 
-        Object res = requestNode.processResponse(createParams(response));
-        assertNotNull(res);
-        assertTrue(res instanceof HttpPost);
+        Map params = createParams(response);
+        Object res = requestNode.processResponse(params);
 
-        HttpPost req = (HttpPost) res;
+        Map requestMap = (Map) params.get(HttpSessionNode.REQUEST);
+        HttpPost req = (HttpPost) requestMap.get(HttpSessionNode.REQUEST_REQUEST);
         String uri = req.getURI().toString();
         assertEquals("/test", req.getURI().toString());
         assertEquals("text/plain; charset=UTF-8", req.getFirstHeader("Content-Type").getValue());

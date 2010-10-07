@@ -19,7 +19,7 @@ package org.raven.ds.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
+import org.raven.ds.DataContext;
 import org.raven.ds.SessionAttributeGenerator;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
@@ -47,7 +47,7 @@ public class TestSessionAttributeNode extends BaseNode implements SessionAttribu
         attributes.addAll(consumerAttrs);
     }
 
-    public Object getFieldValue(Map<String, NodeAttribute> sessionAttributes)
+    public Object getFieldValue(DataContext context)
     {
         return 10;
     }

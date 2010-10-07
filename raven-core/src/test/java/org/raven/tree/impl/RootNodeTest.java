@@ -17,6 +17,7 @@
 
 package org.raven.tree.impl;
 
+import org.raven.expr.impl.ExpressionAttributeValueHandler;
 import javax.script.Bindings;
 import org.junit.Assert;
 import org.junit.Test;
@@ -35,6 +36,8 @@ public class RootNodeTest extends Assert
         BindingSupport s1 = createMock("s1", BindingSupport.class);
 //        BindingSupport s1 = createMock("s1", BindingSupport.class);
         s1.addTo(bindings);
+        s1.setForceDisableScriptExcecution(true);
+        expect(s1.remove(ExpressionAttributeValueHandler.ENABLE_SCRIPT_EXECUTION_BINDING)).andReturn(null);
         replay(s1, bindings);
 
         RootNode root = new RootNode();

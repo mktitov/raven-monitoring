@@ -19,6 +19,7 @@ package org.raven.ds.impl;
 
 import java.util.Map;
 import javax.script.Bindings;
+import org.raven.ds.DataContext;
 import org.raven.ds.FieldValueGenerator;
 import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
@@ -48,14 +49,14 @@ public abstract class AbstractFieldValueGenerator extends BaseNode implements Fi
     }
     
 
-    public Object getFieldValue(Map<String, NodeAttribute> sessionAttributes)
+    public Object getFieldValue(DataContext context)
     {
         if (isLogLevelEnabled(LogLevel.DEBUG))
             debug("Forming field value");
-        bindingSupport.put(SESSION_ATTRIBUTES_BINDING, sessionAttributes);
+        bindingSupport.put(SESSION_ATTRIBUTES_BINDING, context.getSessionAttributes());
         try
         {
-            Object val = doGetFieldValue(sessionAttributes);
+            Object val = doGetFieldValue(context);
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug(String.format("Field value formed - (%s)", val));
             return val;
@@ -66,5 +67,5 @@ public abstract class AbstractFieldValueGenerator extends BaseNode implements Fi
         }
     }
 
-    protected abstract Object doGetFieldValue(Map<String, NodeAttribute> sessionAttributes);
+    protected abstract Object doGetFieldValue(DataContext context);
 }

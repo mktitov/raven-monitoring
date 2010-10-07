@@ -168,7 +168,7 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
                             debug(String.format(
                                     "Creating session attribute (%s)", child.getName()));
                         SessionAttributeGenerator gen = (SessionAttributeGenerator)child;
-                        Object value = gen.getFieldValue(context.getSessionAttributes());
+                        Object value = gen.getFieldValue(context);
                         NodeAttributeImpl attr = new NodeAttributeImpl(
                                 gen.getName(), gen.getAttributeType(), value, null);
                         attr.setOwner(this);
