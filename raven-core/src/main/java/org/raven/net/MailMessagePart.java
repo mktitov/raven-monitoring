@@ -17,6 +17,8 @@
 
 package org.raven.net;
 
+import org.raven.ds.DataContext;
+
 /**
  *
  * @author Mikhail Titov
@@ -39,5 +41,5 @@ public interface MailMessagePart
      * Returns the message part content. If content returns the String then value of the attribute
      * <code>{@link #getContentEncoding()}
      */
-    public Object getContent() throws Exception;
+    public Object getContent(DataContext context) throws Exception;
 }

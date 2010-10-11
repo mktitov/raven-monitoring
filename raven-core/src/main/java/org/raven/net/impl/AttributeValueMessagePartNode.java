@@ -19,6 +19,7 @@ package org.raven.net.impl;
 
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataContext;
 import org.raven.ds.impl.AttributeFieldValueGenerator;
 import org.raven.net.MailMessagePart;
 import org.weda.annotations.constraints.NotNull;
@@ -52,7 +53,7 @@ public class AttributeValueMessagePartNode extends AttributeFieldValueGenerator 
         return contentType;
     }
 
-    public Object getContent() {
-        return getFieldValue(null);
+    public Object getContent(DataContext context) {
+        return getFieldValue(context);
     }
 }

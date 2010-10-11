@@ -20,6 +20,7 @@ package org.raven.net.impl;
 import org.raven.tree.NodeAttribute;
 import org.junit.Before;
 import org.junit.Test;
+import org.raven.ds.impl.DataContextImpl;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.impl.NodeAttributeImpl;
 
@@ -78,7 +79,7 @@ public class ViewableObjectsMessagePartNodeTest extends RavenCoreTestCase
     {
         source.addRefreshAttribute(new NodeAttributeImpl("attr1", String.class, "v1", "d1"));
         assertTrue(part.start());
-        Object obj = part.getContent();
+        Object obj = part.getContent(new DataContextImpl());
         assertNotNull(obj);
         assertTrue(obj instanceof String);
         assertEquals(

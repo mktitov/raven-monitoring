@@ -147,7 +147,7 @@ public class MailWriterNode extends AbstractSafeDataPipe
             msg.setSubject(subject, subjectEncoding);
             msg.setHeader("X-Mailer", "Raven-Monitoring");
 
-            createContent(msg);
+            createContent(msg, context);
 
             msg.setSentDate(new Date());
 
@@ -164,7 +164,7 @@ public class MailWriterNode extends AbstractSafeDataPipe
     {
     }
 
-    private void createContent(MimeMessage message) throws Exception
+    private void createContent(MimeMessage message, DataContext context) throws Exception
     {
         List<MailMessagePart> parts = new ArrayList<MailMessagePart>();
         List<Node> childs = getSortedChildrens();
@@ -179,7 +179,7 @@ public class MailWriterNode extends AbstractSafeDataPipe
         Multipart multipart = new MimeMultipart();
         for (MailMessagePart part: parts){
             MimeBodyPart bodyPart = new MimeBodyPart();
-            setContent(bodyPart, part);
+            setContent(bodyPart, part, context);
             if (part.getFileName()!=null)
                 bodyPart.setFileName(MimeUtility.encodeText(part.getFileName(), getSubjectEncoding(), null));
             multipart.addBodyPart(bodyPart);
@@ -187,10 +187,10 @@ public class MailWriterNode extends AbstractSafeDataPipe
         message.setContent(multipart);
     }
 
-    private void setContent(MimeBodyPart bodyPart, MailMessagePart part) throws Exception
+    private void setContent(MimeBodyPart bodyPart, MailMessagePart part, DataContext context) throws Exception
     {
         javax.activation.DataSource ds = null;
-        Object content = part.getContent();
+        Object content = part.getContent(context);
         if (content instanceof javax.activation.DataSource)
             ds = new DataSourceWrapper(ds, part.getContentType(), part.getName());
         else {

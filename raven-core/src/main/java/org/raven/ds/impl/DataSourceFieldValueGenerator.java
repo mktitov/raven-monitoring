@@ -33,7 +33,7 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=RecordGeneratorNode.class)
+@NodeClass(parentNode=RecordGeneratorNode.class, anyChildTypes=true)
 public class DataSourceFieldValueGenerator
         extends AbstractFieldValueGenerator implements DataConsumer
 {

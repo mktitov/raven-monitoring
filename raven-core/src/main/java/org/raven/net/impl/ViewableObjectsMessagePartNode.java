@@ -22,6 +22,7 @@ import java.util.Map;
 import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataContext;
 import org.raven.log.LogLevel;
 import org.raven.net.MailMessagePart;
 import org.raven.tree.Node;
@@ -76,7 +77,7 @@ public class ViewableObjectsMessagePartNode extends BaseNode implements MailMess
         this.contentType = contentType;
     }
 
-    public Object getContent() throws Exception
+    public Object getContent(DataContext context) throws Exception
     {
         Map<String, NodeAttribute> refAttrs = new HashMap<String, NodeAttribute>();
         for (NodeAttribute attr: getNodeAttributes())
