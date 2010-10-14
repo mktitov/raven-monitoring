@@ -18,13 +18,12 @@
 package org.raven.ds.impl;
 
 import java.util.Collection;
-import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
-import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
@@ -46,7 +45,7 @@ public class DataSourceFieldValueGenerator
     @NotNull
     private DataSource dataSource;
 
-    @Parameter(valueHandlerType=ExpressionAttributeValueHandlerFactory.TYPE)
+    @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
     private String expression;
 
     @NotNull @Parameter(defaultValue="false")

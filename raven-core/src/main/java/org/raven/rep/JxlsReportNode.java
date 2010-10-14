@@ -52,13 +52,17 @@ import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.DataFileValueHandlerFactory;
 import org.raven.tree.impl.DataFileViewableObject;
+import org.raven.util.NodeUtils;
 import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(childNodes={AttributeFieldValueGenerator.class, DataSourceFieldValueGenerator.class})
+@NodeClass(
+    childNodes={
+        AttributeFieldValueGenerator.class, DataSourceFieldValueGenerator.class,
+        CellStyleSelectorNode.class})
 public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
 {
     public static final String BEANS_BINDING = "beans";
@@ -158,8 +162,14 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
                 sheetBeans.add(info.beans);
             }
 
+
             XLSTransformer transformer = new XLSTransformer();
-            HSSFWorkbook wb = transformer.transformXLS(
+
+            List<CellStyleSelectorNode> styleSelectors = NodeUtils.getChildsOfType(this, CellStyleSelectorNode.class);
+//            if (!styleSelectors.isEmpty())
+//                transformer.r
+            
+            HSSFWorkbook wb = (HSSFWorkbook) transformer.transformXLS(
                     reportTemplate.getDataStream(), templateSheetNames, sheetNames, sheetBeans);
 
             File tempFile = File.createTempFile("jxls_"+getId()+"_", ".xls");
