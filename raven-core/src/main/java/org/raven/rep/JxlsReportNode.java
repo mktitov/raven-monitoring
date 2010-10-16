@@ -145,6 +145,8 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
     private void generateReport(DataContext context) throws Exception
     {
         try{
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                getLogger().debug("Generating report");
             List<SheetInfo> sheets = sheetsStore.get();
 
             if (sheets==null){
@@ -162,12 +164,14 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
                 sheetBeans.add(info.beans);
             }
 
-
             XLSTransformer transformer = new XLSTransformer();
 
             List<CellStyleSelectorNode> styleSelectors = NodeUtils.getChildsOfType(this, CellStyleSelectorNode.class);
-//            if (!styleSelectors.isEmpty())
-//                transformer.r
+            if (!styleSelectors.isEmpty()){
+                if (isLogLevelEnabled(LogLevel.DEBUG))
+                    getLogger().debug("Found style selectors. Registiring row processor");
+                transformer.registerRowProcessor(new CellStyleProcessor(styleSelectors, bindingSupport, this));
+            }
             
             HSSFWorkbook wb = (HSSFWorkbook) transformer.transformXLS(
                     reportTemplate.getDataStream(), templateSheetNames, sheetNames, sheetBeans);

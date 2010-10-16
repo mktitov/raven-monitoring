@@ -19,6 +19,7 @@ package org.raven.rep;
 
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -26,13 +27,19 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=JxlsReportNode.class)
-public class CellStyleSelectorNode
+public class CellStyleSelectorNode extends BaseNode
 {
+    public final static String SELECTOR_ATTR = "selector";
+    public final static String STYLE_CELL_LABEL_ATTR = "styleCellLabel";
+
     @NotNull @Parameter
     private String styleCellLabel;
 
     @NotNull @Parameter(defaultValue="false")
     private Boolean selector;
+
+    @Parameter(defaultValue="1")
+    private Integer ignoreRowNumber;
 
     public Boolean getSelector() {
         return selector;
@@ -48,5 +55,13 @@ public class CellStyleSelectorNode
 
     public void setStyleCellLabel(String styleCellLabel) {
         this.styleCellLabel = styleCellLabel;
+    }
+
+    public Integer getIgnoreRowNumber() {
+        return ignoreRowNumber;
+    }
+
+    public void setIgnoreRowNumber(Integer ignoreRowNumber) {
+        this.ignoreRowNumber = ignoreRowNumber;
     }
 }

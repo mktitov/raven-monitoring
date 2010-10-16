@@ -52,11 +52,15 @@ public class CellStyleProcessor implements RowProcessor
         List<Cell> cells = row.getCells();
         if (cells!=null && cells.size()>0){
             bindingSupport.put("row", row);
-            bindingSupport.put("rowNumber", row.getPoiRow().getRowNum()+1);
+            int rowNumber = row.getPoiRow().getRowNum()+1;
+            bindingSupport.put("rowNumber", rowNumber);
             if (row.getParentRow()!=null){
                 RowCollection collection = (RowCollection)row.getParentRow().getRowCollections().get(0);
                 bindingSupport.put("collection", collection);
                 bindingSupport.put("rowObject", collection.getIterateObject());
+            }else{
+                bindingSupport.put("collection", null);
+                bindingSupport.put("rowObject", null);
             }
             for (int c=0; c<cells.size(); ++c)
             {
@@ -64,7 +68,11 @@ public class CellStyleProcessor implements RowProcessor
                 bindingSupport.put("columnNumber", c+1);
                 bindingSupport.put("cell", cell);
                 for (CellStyleSelectorNode selector: selectors)
-                    if (selector.getSelector() && cell.getPoiCell()!=null){
+                {
+                    Integer ignoreRow = selector.getIgnoreRowNumber();
+                    Boolean selected=selector.getSelector();
+                    if ((ignoreRow==null || rowNumber!=ignoreRow) && selected!=null && selected && cell.getPoiCell()!=null)
+                    {
                         Cell styleCell = (Cell) namedCells.get(selector.getStyleCellLabel());
                         if (styleCell==null){
                             if (owner.isLogLevelEnabled(LogLevel.ERROR))
@@ -74,6 +82,7 @@ public class CellStyleProcessor implements RowProcessor
                             copyStyle((HSSFWorkbook)row.getSheet().getPoiWorkbook()
                                     , (HSSFCell)styleCell.getPoiCell(), (HSSFCell)cell.getPoiCell());
                     }
+                }
             }
         }
     }
