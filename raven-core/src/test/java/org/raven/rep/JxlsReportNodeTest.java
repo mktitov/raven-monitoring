@@ -34,6 +34,7 @@ import org.junit.Test;
 import org.raven.ds.DataContext;
 import org.raven.ds.impl.AttributeFieldValueGenerator;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
+import org.raven.log.LogLevel;
 import org.raven.test.DataCollector;
 import org.raven.test.DataHandler;
 import org.raven.test.PushDataSource;
@@ -63,6 +64,7 @@ public class JxlsReportNodeTest extends RavenCoreTestCase
         report.setName("report");
         tree.getRootNode().addAndSaveChildren(report);
         report.setDataSource(ds);
+        report.setLogLevel(LogLevel.TRACE);
 
         collector = new DataCollector();
         collector.setName("collector");
@@ -214,7 +216,7 @@ public class JxlsReportNodeTest extends RavenCoreTestCase
         });
         ds.pushData("hello");
 
-//        verify(handler);
+        Thread.sleep(100);
     }
 
     public static InputStream checkDataSource()
