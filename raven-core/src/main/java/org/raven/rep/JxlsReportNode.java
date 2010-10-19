@@ -170,11 +170,14 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
             if (!styleSelectors.isEmpty()){
                 if (isLogLevelEnabled(LogLevel.DEBUG))
                     getLogger().debug("Found style selectors. Registiring row processor");
+//                bindingSupport
                 transformer.registerRowProcessor(new CellStyleProcessor(styleSelectors, bindingSupport, this));
             }
             
             HSSFWorkbook wb = (HSSFWorkbook) transformer.transformXLS(
                     reportTemplate.getDataStream(), templateSheetNames, sheetNames, sheetBeans);
+
+            wb.setPrintArea(0, 1,10,1,20);
 
             File tempFile = File.createTempFile("jxls_"+getId()+"_", ".xls");
             try{

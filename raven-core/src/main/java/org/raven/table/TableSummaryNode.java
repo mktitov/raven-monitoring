@@ -73,7 +73,7 @@ public class TableSummaryNode extends AbstractSafeDataPipe
 
         Table table = (Table) data;
 
-        RowAggInfo rowAggInfo = new RowAggInfo(table);
+        RowAggInfo rowAggInfo = new RowAggInfo(table, context);
 
         List<TableValuesAggregatorNode> colAggDefs = null;
         Collection<Node> childs = getSortedChildrens();
@@ -101,7 +101,8 @@ public class TableSummaryNode extends AbstractSafeDataPipe
 
         TableImpl newTable = rowAggInfo.table;
 
-        AggregateFunction[][] colAggs = createColumnAggregations(colAggDefs, newTable.getColumnNames().length);
+        AggregateFunction[][] colAggs = createColumnAggregations(
+                colAggDefs, newTable.getColumnNames().length, context);
         Iterator<Object[]> it = table.getRowIterator();
         int rowNumber=0;
         while (it!=null && it.hasNext())
@@ -116,6 +117,7 @@ public class TableSummaryNode extends AbstractSafeDataPipe
                 bindingSupport.put(ORIG_ROW_BINDING, row);
                 bindingSupport.put(COLUMN_NAMES_BINDINGS, newTable.getColumnNames());
                 bindingSupport.put(ORIG_COLUMN_NAMES_BINDING, table.getColumnNames());
+                bindingSupport.put(DATA_CONTEXT_BINDING, context);
                 try{
                     for (int i=0; i<newRow.length; ++i)
                         for (int j=0; j<colAggDefs.size(); ++j)
@@ -157,7 +159,7 @@ public class TableSummaryNode extends AbstractSafeDataPipe
     }
 
     private AggregateFunction[][] createColumnAggregations(
-            List<TableValuesAggregatorNode> colAggDefs, int len)
+            List<TableValuesAggregatorNode> colAggDefs, int len, DataContext context)
         throws Exception
     {
         if (colAggDefs != null)
@@ -166,6 +168,7 @@ public class TableSummaryNode extends AbstractSafeDataPipe
                     new AggregateFunction[len][colAggDefs.size()];
             try
             {
+                bindingSupport.put(DATA_CONTEXT_BINDING, context);
                 for (int i = 0; i < colAggs.length; ++i)
                 {
                     bindingSupport.put(COLUMN_NUMBER_BINDING, i + 1);
@@ -196,10 +199,12 @@ public class TableSummaryNode extends AbstractSafeDataPipe
         private final String[] sourceColnames;
         private final RowAgg[] aggDefs;
         private final TableImpl table;
+        private final DataContext context;
 
-        private RowAggInfo(Table sourceTable)
+        private RowAggInfo(Table sourceTable, DataContext context)
         {
             sourceColnames = sourceTable.getColumnNames();
+            this.context = context;
             LinkedList<String> namesList = new LinkedList<String>();
             List<Node> childs = getSortedChildrens();
             Map<String, Object> values = new HashMap<String, Object>();
@@ -218,6 +223,7 @@ public class TableSummaryNode extends AbstractSafeDataPipe
                             TableValuesAggregatorNode aggDef = (TableValuesAggregatorNode)child;
                             bindingSupport.put(COLUMN_NAME_BINDING, sourceColnames[i]);
                             bindingSupport.put(COLUMN_NUMBER_BINDING, (i+1));
+                            bindingSupport.put(DATA_CONTEXT_BINDING, context);
                             try{
                                 Object val = aggDef.getGroupExpression();
                                 Object groupValue=values.get(aggDef.getName());
@@ -278,6 +284,7 @@ public class TableSummaryNode extends AbstractSafeDataPipe
                 bindingSupport.put(ROW_BINDING, row);
                 bindingSupport.put(COLUMN_NAMES_BINDINGS, sourceColnames);
                 bindingSupport.put(ROW_NUMBER_BINDING, rowNumber);
+                bindingSupport.put(DATA_CONTEXT_BINDING, context);
                 try
                 {
                     //start aggregations
