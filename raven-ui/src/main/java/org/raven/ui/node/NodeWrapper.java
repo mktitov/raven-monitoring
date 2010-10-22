@@ -437,7 +437,9 @@ implements Comparator<NodeAttribute>, INodeScanner, ScannedNodeHandler
 	public List<ViewableObjectWrapper> getViewableObjects()
 	{
 		if(!isAnyAccess()) 
-			return new ArrayList<ViewableObjectWrapper>();
+			return Collections.EMPTY_LIST;
+        if (editingRefreshAttrs==null)
+            loadRefreshAttributes();
 		List<ViewableObjectWrapper> x = SessionBean.getInstance().getViewableObjectsCache().getObjects(this);
 		log.info("+++ ");
 		for(ViewableObjectWrapper v : x) {

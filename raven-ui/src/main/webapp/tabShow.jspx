@@ -385,11 +385,12 @@ partialTriggers=":poolStatus"
 					text="#{row.idVO}" /> 
 	  	  		
  -->
+ <!--
+                    immediate="#{row.refreshViewAfterAction}"
+ -->
 				<tr:commandLink 
 					rendered="#{row.confirmationMessage == null}" 
 					action="#{row.runActionD}"
-					launchListener="#{row.setDialogParameter}"
-					useWindow="true"
 					inlineStyle="font-size: 110%;"
 					partialSubmit="true"
 					text="#{row.idVO}" />

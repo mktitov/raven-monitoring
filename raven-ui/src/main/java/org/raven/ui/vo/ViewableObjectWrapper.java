@@ -133,6 +133,13 @@ public class ViewableObjectWrapper
 		if(isViewable() && getMimeGroup().equals(ACTION)) return true;
 		return false;
 	}
+
+    public boolean isRefreshViewAfterAction()
+    {
+        boolean res = isAction() && ((ActionViewableObject)viewableObject).isRefreshViewAfterAction();
+        log.warn("isRefreshViewAfterAction: {}", res);
+        return res;
+    }
 	
 	public boolean isActionHasAttributes()
 	{
@@ -255,7 +262,13 @@ public class ViewableObjectWrapper
 
 	public String close() 
 	{
+		if(((ActionViewableObject)viewableObject).isRefreshViewAfterAction())
+        {
+            log.warn("Refreshing viewable objects");
+			SessionBean.getNodeWrapper().onRefresh();
+        }
 		returnFromDialog();
+
 		return null;
 	}
 	
@@ -284,7 +297,13 @@ public class ViewableObjectWrapper
 	public String runActionD()
 	{
 		runAction(null);
-		return "dialog:runAction";
+		if(((ActionViewableObject)viewableObject).isRefreshViewAfterAction())
+        {
+            log.warn("Refreshing viewable objects");
+			SessionBean.getNodeWrapper().onRefresh();
+        }
+        return null;
+//		return "dialog:runAction";
 	}
 	
 	private String runAction(String attrInfo)
@@ -315,8 +334,8 @@ public class ViewableObjectWrapper
 		 //logger.info("runAction");
 		 ret = ret.replaceAll("'", "\"");
 */
-		 if(action.isRefreshViewAfterAction())
-			 SessionBean.getNodeWrapper().onRefresh();
+
+//        returnFromDialog();
 		 
 //		 service.addScript(fc, "alert('"+ret+"'); ");
 		return null;
