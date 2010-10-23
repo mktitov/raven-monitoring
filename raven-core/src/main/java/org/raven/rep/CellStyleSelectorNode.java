@@ -41,6 +41,24 @@ public class CellStyleSelectorNode extends BaseNode
     @Parameter(defaultValue="1")
     private Integer ignoreRowNumber;
 
+    @NotNull @Parameter(defaultValue="true")
+    private Boolean unchangeDataFormat;
+
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean unchangeBorder;
+
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean unchangeBorderColor;
+
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean unchangeBackgroundColor;
+
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean unchangeForegroundColor;
+
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean unchangeAligment;
+
     public Boolean getSelector() {
         return selector;
     }
@@ -63,5 +81,53 @@ public class CellStyleSelectorNode extends BaseNode
 
     public void setIgnoreRowNumber(Integer ignoreRowNumber) {
         this.ignoreRowNumber = ignoreRowNumber;
+    }
+
+    public Boolean getUnchangeAligment() {
+        return unchangeAligment;
+    }
+
+    public void setUnchangeAligment(Boolean unchangeAligment) {
+        this.unchangeAligment = unchangeAligment;
+    }
+
+    public Boolean getUnchangeBackgroundColor() {
+        return unchangeBackgroundColor;
+    }
+
+    public void setUnchangeBackgroundColor(Boolean unchangeBackgroundColor) {
+        this.unchangeBackgroundColor = unchangeBackgroundColor;
+    }
+
+    public Boolean getUnchangeBorder() {
+        return unchangeBorder;
+    }
+
+    public void setUnchangeBorder(Boolean unchangeBorder) {
+        this.unchangeBorder = unchangeBorder;
+    }
+
+    public Boolean getUnchangeBorderColor() {
+        return unchangeBorderColor;
+    }
+
+    public void setUnchangeBorderColor(Boolean unchangeBorderColor) {
+        this.unchangeBorderColor = unchangeBorderColor;
+    }
+
+    public Boolean getUnchangeDataFormat() {
+        return unchangeDataFormat;
+    }
+
+    public void setUnchangeDataFormat(Boolean unchangeDataFormat) {
+        this.unchangeDataFormat = unchangeDataFormat;
+    }
+
+    public Boolean getUnchangeForegroundColor() {
+        return unchangeForegroundColor;
+    }
+
+    public void setUnchangeForegroundColor(Boolean unchangeForegroundColor) {
+        this.unchangeForegroundColor = unchangeForegroundColor;
     }
 }

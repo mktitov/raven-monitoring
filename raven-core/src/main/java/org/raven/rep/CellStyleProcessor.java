@@ -79,59 +79,79 @@ public class CellStyleProcessor implements RowProcessor
                         String styleName = selector.getStyleCellLabel();
                         Cell styleCell = (Cell) namedCells.get(styleName);
                         if (styleCell==null){
-                            if (owner.isLogLevelEnabled(LogLevel.ERROR))
-                                owner.getLogger().error("Invalid cell style label ({})", selector.getStyleCellLabel());
+                            if (selector.isLogLevelEnabled(LogLevel.ERROR))
+                                selector.getLogger().error("Invalid cell style label ({})", selector.getStyleCellLabel());
                         }
                         else
                             copyStyle((HSSFWorkbook)row.getSheet().getPoiWorkbook()
-                                    , (HSSFCell)styleCell.getPoiCell(), (HSSFCell)cell.getPoiCell(), styleName);
+                                    , (HSSFCell)styleCell.getPoiCell(), (HSSFCell)cell.getPoiCell(), styleName, selector);
                     }
                 }
             }
         }
     }
 
-    private void copyStyle(HSSFWorkbook workbook, HSSFCell fromCell, HSSFCell toCell, String styleName)
+    private void copyStyle(HSSFWorkbook workbook, HSSFCell fromCell, HSSFCell toCell, String styleName, CellStyleSelectorNode selector)
     {
         if (owner.isLogLevelEnabled(LogLevel.TRACE))
             owner.getLogger().trace("Applying style to the cell");
+
         HSSFCellStyle toStyle = toCell.getCellStyle();
+        String toStyleId = getStyleId(styleName, toStyle, toStyle, selector);
+        if (!styles.containsKey(toStyleId))
+            styles.put(toStyleId, toStyle);
+
         HSSFCellStyle fromStyle = fromCell.getCellStyle();
-        if (fromStyle.getDataFormat() == toStyle.getDataFormat()){
-            if (owner.isLogLevelEnabled(LogLevel.TRACE))
-                owner.getLogger().trace("Style cell data format and current cell data format equals.");
-            toCell.setCellStyle(fromStyle);
-        } else
+        String styleId = getStyleId(styleName, fromStyle, toStyle, selector);
+        HSSFCellStyle style = styles.get(styleId);
+        if (style==null)
         {
-            String styleIndex = styleName+"_"+toStyle.getDataFormat();
-            HSSFCellStyle style = styles.get(styleIndex);
-            if (style==null){
-                if (owner.isLogLevelEnabled(LogLevel.TRACE))
-                    owner.getLogger().trace("Creating new style ({})", styleIndex);
-                style = workbook.createCellStyle();
-                style.setAlignment(fromStyle.getAlignment());
-                style.setBorderBottom(fromStyle.getBorderBottom());
-                style.setBorderLeft(fromStyle.getBorderLeft());
-                style.setBorderRight(fromStyle.getBorderRight());
-                style.setBorderTop(fromStyle.getBorderTop());
-                style.setBottomBorderColor(fromStyle.getBottomBorderColor());
-                style.setDataFormat(toStyle.getDataFormat());
-                style.setFillBackgroundColor(fromStyle.getFillBackgroundColor());
-                style.setFillForegroundColor(fromStyle.getFillForegroundColor());
-                style.setFillPattern(fromStyle.getFillPattern());
-                style.setFont(workbook.getFontAt( fromStyle.getFontIndex()));
-                style.setHidden(fromStyle.getHidden());
-                style.setIndention(fromStyle.getIndention());
-                style.setLeftBorderColor(fromStyle.getLeftBorderColor());
-                style.setLocked(toStyle.getLocked());
-                style.setRightBorderColor(fromStyle.getRightBorderColor());
-                style.setTopBorderColor(fromStyle.getTopBorderColor());
-                style.setVerticalAlignment(fromStyle.getVerticalAlignment());
-                style.setWrapText(fromStyle.getWrapText());
-                styles.put(styleIndex, style);
-            }else if (owner.isLogLevelEnabled(LogLevel.TRACE))
-                owner.getLogger().trace("Style ({}) found in cache", styleIndex);
-            toCell.setCellStyle(style);
-        }
+            if (owner.isLogLevelEnabled(LogLevel.TRACE))
+                owner.getLogger().trace("Creating new style ({})", styleId);
+            HSSFCellStyle st;
+            style = workbook.createCellStyle();
+            style.setAlignment((selector.getUnchangeAligment()?toStyle:fromStyle).getAlignment());
+            
+            st = selector.getUnchangeBorder()? toStyle : fromStyle;
+            style.setBorderBottom(st.getBorderBottom());
+            style.setBorderLeft(st.getBorderLeft());
+            style.setBorderRight(st.getBorderRight());
+            style.setBorderTop(st.getBorderTop());
+
+            st = selector.getUnchangeBorderColor()? toStyle : fromStyle;
+            style.setBottomBorderColor(st.getBottomBorderColor());
+            style.setLeftBorderColor(st.getLeftBorderColor());
+            style.setRightBorderColor(st.getBorderRight());
+            style.setTopBorderColor(st.getBorderTop());
+            
+            style.setDataFormat((selector.getUnchangeDataFormat()?toStyle:fromStyle).getDataFormat());
+            style.setFillBackgroundColor((selector.getUnchangeBackgroundColor()?toStyle:fromStyle).getFillBackgroundColor());
+            style.setFillForegroundColor((selector.getUnchangeForegroundColor()?toStyle:fromStyle).getFillForegroundColor());
+            style.setFillPattern(fromStyle.getFillPattern());
+            style.setFont(workbook.getFontAt(fromStyle.getFontIndex()));
+            style.setHidden(fromStyle.getHidden());
+            style.setIndention(fromStyle.getIndention());
+            style.setLocked(toStyle.getLocked());
+            style.setVerticalAlignment(fromStyle.getVerticalAlignment());
+            style.setWrapText(fromStyle.getWrapText());
+            styles.put(styleId, style);
+        }else if (owner.isLogLevelEnabled(LogLevel.TRACE))
+            owner.getLogger().trace("Style ({}) found in cache", styleId);
+        
+        toCell.setCellStyle(style);
+    }
+
+    private String getStyleId(String styleName, HSSFCellStyle from, HSSFCellStyle to, CellStyleSelectorNode selector)
+    {
+        HSSFCellStyle st = selector.getUnchangeBorder()? to : from;
+        String borderId = "_"+st.getBorderBottom()+"_"+st.getBorderLeft()+"_"+st.getBorderRight()+"_"+st.getBorderTop();
+        st = selector.getUnchangeBackgroundColor()? to : from;
+        String borderColorId = "_"+st.getBottomBorderColor()+"_"+st.getLeftBorderColor()+"_"+st.getRightBorderColor()+"_"+st.getTopBorderColor();
+        return  styleName+"_"
+                + (selector.getUnchangeDataFormat()? to : from).getDataFormat()
+                + borderId + borderColorId
+                + "_"+(selector.getUnchangeBackgroundColor()? to : from).getFillBackgroundColor()
+                + "_"+(selector.getUnchangeForegroundColor()? to : from).getFillForegroundColor()
+                + "_"+(selector.getUnchangeAligment()? to : from).getAlignment();
     }
 }

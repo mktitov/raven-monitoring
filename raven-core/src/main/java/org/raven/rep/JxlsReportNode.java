@@ -177,7 +177,7 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
             HSSFWorkbook wb = (HSSFWorkbook) transformer.transformXLS(
                     reportTemplate.getDataStream(), templateSheetNames, sheetNames, sheetBeans);
 
-            wb.setPrintArea(0, 1,10,1,20);
+//            wb.getSheetAt(0).createFreezePane(5, 1);
 
             File tempFile = File.createTempFile("jxls_"+getId()+"_", ".xls");
             try{
