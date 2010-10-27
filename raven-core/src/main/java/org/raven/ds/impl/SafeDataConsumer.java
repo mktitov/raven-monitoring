@@ -115,16 +115,21 @@ public class SafeDataConsumer extends BaseNode implements DataConsumer
     }
 
     /**
-     * Returns the list of the data recieved from the data source or null if no data was send by
+     * Returns the list of the data received from the data source or null if no data was send by
      * the data source.
      * @param sessionAttributes the set of the session attributes
      */
     public Object refereshData(Collection<NodeAttribute> sessionAttributes)
     {
+        return refreshData(new DataContextImpl(sessionAttributes));
+    }
+
+    public Object refreshData(DataContext context)
+    {
         try
         {
             data.remove();
-            dataSource.getDataImmediate(this, new DataContextImpl(sessionAttributes));
+            dataSource.getDataImmediate(this, context);
             return data.get();
         }
         finally

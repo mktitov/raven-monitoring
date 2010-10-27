@@ -36,4 +36,48 @@ public class HideColumnsTableWrapperTest extends Assert
         table.addRow(new Object[]{1,2,3,4});
         assertArrayEquals(new Object[]{1,4}, wrapper.getRowIterator().next());
     }
+
+    @Test
+    public void test2()
+    {
+        TableImpl table = new TableImpl(new String[]{"col1","col2","col3","col4"});
+        HideColumnsTableWrapper wrapper = new HideColumnsTableWrapper(table, new int[]{1});
+        assertArrayEquals(new String[]{"col1", "col3", "col4"}, wrapper.getColumnNames());
+
+        table.addRow(new Object[]{1,2,3,4});
+        assertArrayEquals(new Object[]{1,3,4}, wrapper.getRowIterator().next());
+    }
+
+    @Test
+    public void test3()
+    {
+        TableImpl table = new TableImpl(new String[]{"col1","col2","col3","col4"});
+        HideColumnsTableWrapper wrapper = new HideColumnsTableWrapper(table, new int[]{3});
+        assertArrayEquals(new String[]{"col1", "col2", "col3"}, wrapper.getColumnNames());
+
+        table.addRow(new Object[]{1,2,3,4});
+        assertArrayEquals(new Object[]{1,2,3}, wrapper.getRowIterator().next());
+    }
+
+    @Test
+    public void test4()
+    {
+        TableImpl table = new TableImpl(new String[]{"col1","col2","col3","col4"});
+        HideColumnsTableWrapper wrapper = new HideColumnsTableWrapper(table, new int[]{0});
+        assertArrayEquals(new String[]{"col2", "col3", "col4"}, wrapper.getColumnNames());
+
+        table.addRow(new Object[]{1,2,3,4});
+        assertArrayEquals(new Object[]{2,3,4}, wrapper.getRowIterator().next());
+    }
+
+    @Test
+    public void test5()
+    {
+        TableImpl table = new TableImpl(new String[]{"col1","col2","col3","col4"});
+        HideColumnsTableWrapper wrapper = new HideColumnsTableWrapper(table, new int[]{0,2});
+        assertArrayEquals(new String[]{"col2", "col4"}, wrapper.getColumnNames());
+
+        table.addRow(new Object[]{1,2,3,4});
+        assertArrayEquals(new Object[]{2,4}, wrapper.getRowIterator().next());
+    }
 }

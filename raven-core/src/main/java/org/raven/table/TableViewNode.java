@@ -26,6 +26,8 @@ import java.util.Map;
 import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataContext;
+import org.raven.ds.impl.DataContextImpl;
 import org.raven.ds.impl.SafeDataConsumer;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.tree.NodeAttribute;
@@ -41,6 +43,14 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass(anyChildTypes=true)
 public class TableViewNode extends SafeDataConsumer implements Viewable
 {
+    public static final String COLUMN_NAME_BINDING = "columnName";
+    public static final String COLUMN_NUMBER = "columnNumber";
+    public static final String COLUMN_TAGS = "columnTags";
+    public static final String REFRESH_ATTRIBUTES_BINDING = "refreshAttributes";
+    public static final String ROW_BINDING = "row";
+    public static final String ROW_NUMBER_BINDING = "rowNumber";
+    public static final String ROW_TAGS_BINDING = "rowTags";
+    public static final String VALUE_BINDING = "value";
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
     private String cellValueExpression;
 
@@ -59,7 +69,8 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
         if (!Status.STARTED.equals(getStatus()))
             return null;
 
-        List dataList = (List) refereshData(refreshAttributes==null? null : refreshAttributes.values());
+        DataContext context = new DataContextImpl(refreshAttributes);
+        List dataList = (List) refreshData(context);
         if (dataList!=null)
         {
             List<ViewableObject> voList = new LinkedList<ViewableObject>();
@@ -69,13 +80,13 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
                 if (table!=null)
                 {
                     if (useCellValueExpression)
-                        table = transformTable(table);
+                        table = transformTable(table, context);
                     if (!voList.isEmpty())
                         voList.add(new ViewableObjectImpl(RAVEN_TEXT_MIMETYPE, "<br>"));
                     if (table.getTitle()!=null)
                         voList.add(new ViewableObjectImpl(
                                 RAVEN_TEXT_MIMETYPE, "<b>"+table.getTitle()+"</b>"));
-                    table = hideColumnsIfNeed(table, refreshAttributes);
+                    table = hideColumnsIfNeed(table, refreshAttributes, context);
                     ViewableObject tableVO = new ViewableObjectImpl(RAVEN_TABLE_MIMETYPE, table);
                     voList.add(new ViewableObjectImpl(RAVEN_TABLE_MIMETYPE, table));
                 }
@@ -129,7 +140,7 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
         this.hideColumns = hideColumns;
     }
 
-    private Table transformTable(Table table)
+    private Table transformTable(Table table, DataContext context)
     {
         String[] columnNames = table.getColumnNames();
         TableImpl newTable = new TableImpl(columnNames);
@@ -148,17 +159,18 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
             while (it!=null && it.hasNext())
             {
                 Object[] row = it.next();
-                bindingSupport.put("rowNumber", rowNumber);
-                bindingSupport.put("row", row);
+                bindingSupport.put(ROW_NUMBER_BINDING, rowNumber);
+                bindingSupport.put(ROW_BINDING, row);
+                bindingSupport.put(DATA_CONTEXT_BINDING, context);
                 Map<String, TableTag> rowTags = table.getRowTags(rowNumber-1);
-                bindingSupport.put("rowTags", rowTags==null? Collections.EMPTY_MAP : rowTags);
+                bindingSupport.put(ROW_TAGS_BINDING, rowTags==null? Collections.EMPTY_MAP : rowTags);
                 Object[] newRow = new Object[row.length];
                 for (int col=0; col<row.length; ++col)
                 {
-                    bindingSupport.put("columnNumber", (col+1));
-                    bindingSupport.put("value", row[col]);
-                    bindingSupport.put("columnTags", columnTags[col]);
-                    bindingSupport.put("columnName", columnNames[col]);
+                    bindingSupport.put(COLUMN_NUMBER, (col+1));
+                    bindingSupport.put(VALUE_BINDING, row[col]);
+                    bindingSupport.put(COLUMN_TAGS, columnTags[col]);
+                    bindingSupport.put(COLUMN_NAME_BINDING, columnNames[col]);
                     newRow[col] = attr.getRealValue();
                 }
                 newTable.addRow(newRow);
@@ -173,9 +185,11 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
         return newTable;
     }
 
-    private Table hideColumnsIfNeed(Table table, Map<String, NodeAttribute> refreshAttributes)
+    private Table hideColumnsIfNeed(
+            Table table, Map<String, NodeAttribute> refreshAttributes, DataContext context)
     {
-        bindingSupport.put("refreshAttributes", refreshAttributes);
+        bindingSupport.put(REFRESH_ATTRIBUTES_BINDING, refreshAttributes);
+        bindingSupport.put(DATA_CONTEXT_BINDING, context);
         try{
             String[] strCols = RavenUtils.split(hideColumns);
             if (strCols!=null){

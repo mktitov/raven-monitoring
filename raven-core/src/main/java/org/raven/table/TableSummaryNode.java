@@ -244,7 +244,7 @@ public class TableSummaryNode extends AbstractSafeDataPipe
                                 }
                                 if (i==sourceColnames.length-1)
                                 {
-                                    bindingSupport.put( GROUP_VALUE_BINDING, groupValue);
+                                    bindingSupport.put(GROUP_VALUE_BINDING, groupValue);
                                     if (!lastColumnNameAdded)
                                     {
                                         lastColumnNameAdded = true;

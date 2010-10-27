@@ -49,7 +49,7 @@ public class HideColumnsTableWrapper implements Table
     private int translateColumn(int col)
     {
         for (int c: hideColumns)
-            if (col==c)
+            if (col>=c)
                 ++col;
         return col;
     }
