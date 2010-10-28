@@ -81,6 +81,11 @@ public abstract class AbstractTable implements Table
         return containsTag(rowsTags, row, tagId);
     }
 
+    /**
+     * Adds tag to specified column
+     * @param col the column number (zero based)
+     * @param tag the tag
+     */
     public void addColumnTag(int col, TableTag tag)
     {
         if (columnsTags==null)
@@ -88,6 +93,11 @@ public abstract class AbstractTable implements Table
         addTagToTags(columnsTags, col, tag);
     }
 
+    /**
+     * Adds tag to specified row
+     * @param row the row number (zero based)
+     * @param tag the tag
+     */
     public void addRowTag(int row, TableTag tag)
     {
         if (rowsTags==null)

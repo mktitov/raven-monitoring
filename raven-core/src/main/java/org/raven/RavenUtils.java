@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang.ArrayUtils;
@@ -29,7 +30,11 @@ import org.apache.commons.lang.text.StrMatcher;
 import org.apache.commons.lang.text.StrTokenizer;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
+import org.raven.table.ColumnGroup;
+import org.raven.table.ColumnGroupImpl;
+import org.raven.table.ColumnGroupTag;
 import org.raven.table.Table;
+import org.raven.table.TableTag;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
@@ -156,17 +161,77 @@ public class RavenUtils
 		}
 	}
 
+    public static List<ColumnGroup> getTableColumnGroups(Table table)
+    {
+        List<ColumnGroup> groups = new LinkedList<ColumnGroup>();
+        ColumnGroupImpl group = null;
+        String[] colNames = table.getColumnNames();
+        for (int i=0; i<colNames.length; ++i)
+        {
+            if (group!=null && i<=group.getToColumn())
+                group.addColumnName(colNames[i]);
+            else {
+                group = null;
+                Map<String, TableTag> tags = table.getColumnTags(i);
+                if (tags!=null && !tags.isEmpty()){
+                    for (TableTag tag: tags.values())
+                        if (tag instanceof ColumnGroupTag){
+                            ColumnGroupTag groupTag = (ColumnGroupTag) tag;
+                            group = new ColumnGroupImpl(
+                                    groupTag.getId(), groupTag.getFromColumn(), groupTag.getToColumn());
+                            group.addColumnName(colNames[i]);
+                            break;
+                        }
+                }
+                if (group==null)
+                    group = new ColumnGroupImpl(colNames[i], i, i);
+                groups.add(group);
+            }
+        }
+
+        return groups;
+    }
+
     public static StringBuilder tableToHtml(Table table, StringBuilder builder)
     {
         if (builder==null)
-            builder = new StringBuilder("<table><tr>");
+            builder = new StringBuilder("<table>");
         else
-            builder.append("<table><tr>");
+            builder.append("<table>");
 
-        for (String columnName: table.getColumnNames())
-            builder.append("<th>").append(columnName==null||columnName.isEmpty()? "&nbsp;" : columnName)
-                .append("</th>");
+        boolean hasGroups = false;
+        List<ColumnGroup> groups = RavenUtils.getTableColumnGroups(table);
+        for (ColumnGroup group: groups)
+            if (group.isHasNestedColumns())
+            {
+                hasGroups = true;
+                break;
+            }
+
+        builder.append("<tr>");
+        StringBuilder h = null;
+        if (hasGroups)
+            h = new StringBuilder("<tr>");
+        for (ColumnGroup group: groups){
+            String name = group.getGroupName();
+            if (!group.isHasNestedColumns()){
+                builder.append("<th");
+                if (hasGroups) builder.append(" rowspan=\"2\"");
+                builder.append(">").append(name==null||name.isEmpty()? "&nbsp;" : name).append("</th>");
+            }else{
+                builder.append("<th colspan=\"").append(group.getColumnNames().size()).append("\">")
+                        .append(name==null||name.isEmpty()? "&nbsp;" : name)
+                        .append("</th>");
+                for (String columnName: group.getColumnNames())
+                    h.append("<th>").append(columnName==null||columnName.isEmpty()? "&nbsp;" : columnName)
+                        .append("</th>");
+            }
+        }
         builder.append("</tr>");
+        if (hasGroups){
+            builder.append(h);
+            builder.append("</tr>");
+        }
 
         Iterator<Object[]> it = table.getRowIterator();
         while (it.hasNext()){

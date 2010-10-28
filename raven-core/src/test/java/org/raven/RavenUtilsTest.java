@@ -17,6 +17,9 @@
 
 package org.raven;
 
+import org.raven.table.ColumnGroup;
+import java.util.List;
+import org.raven.table.Table;
 import java.util.Collection;
 import org.raven.tree.NodeAttribute;
 import java.util.Map;
@@ -28,6 +31,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import org.junit.Test;
+import org.raven.table.ColumnGroupTag;
 import org.raven.table.TableImpl;
 import org.raven.test.ServiceTestCase;
 import org.raven.tree.ViewableObject;
@@ -44,6 +48,61 @@ public class RavenUtilsTest extends ServiceTestCase
     public void splitTest()
     {
         assertArrayEquals(new String[]{"1", "2"}, RavenUtils.split("1, 2 "));
+    }
+
+    @Test
+    public void getTableColumnGroups1()
+    {
+        TableImpl table = new TableImpl(new String[]{"col1", "col2"});
+        List<ColumnGroup> groups = RavenUtils.getTableColumnGroups(table);
+        assertNotNull(groups);
+        assertEquals(2, groups.size());
+        ColumnGroup grp = groups.get(0);
+        assertEquals("col1", grp.getGroupName());
+        assertEquals(0, grp.getFromColumn());
+        assertEquals(0, grp.getToColumn());
+        assertEquals(0, grp.getColumnNames().size());
+        grp = groups.get(1);
+        assertEquals("col2", grp.getGroupName());
+        assertEquals(1, grp.getFromColumn());
+        assertEquals(1, grp.getToColumn());
+        assertEquals(0, grp.getColumnNames().size());
+    }
+
+    @Test
+    public void getTableColumnGroups2()
+    {
+        TableImpl table = new TableImpl(new String[]{"col1", "col2", "col3", "col4"});
+        table.addColumnTag(1, new ColumnGroupTag("grp1", 1, 2));
+        List<ColumnGroup> groups = RavenUtils.getTableColumnGroups(table);
+        assertNotNull(groups);
+        assertEquals(3, groups.size());
+        ColumnGroup grp = groups.get(0);
+        assertEquals("col1", grp.getGroupName());
+        assertEquals(0, grp.getFromColumn());
+        assertEquals(0, grp.getToColumn());
+        assertEquals(0, grp.getColumnNames().size());
+        grp = groups.get(1);
+        assertEquals("grp1", grp.getGroupName());
+        assertEquals(1, grp.getFromColumn());
+        assertEquals(2, grp.getToColumn());
+        assertEquals(2, grp.getColumnNames().size());
+        assertArrayEquals(new String[]{"col2", "col3"}, grp.getColumnNames().toArray());
+        grp = groups.get(2);
+        assertEquals("col4", grp.getGroupName());
+        assertEquals(3, grp.getFromColumn());
+        assertEquals(3, grp.getToColumn());
+        assertEquals(0, grp.getColumnNames().size());
+    }
+
+    @Test
+    public void tableToHtml_groupsTest() throws Exception
+    {
+        TableImpl table = new TableImpl(new String[]{"col1","col2","col3"});
+        table.addColumnTag(1, new ColumnGroupTag("grp1", 1, 2));
+
+        String html = RavenUtils.tableToHtml(table, null).toString();
+        assertEquals("<table><tr><th rowspan=\"2\">col1</th><th colspan=\"2\">grp1</th></tr><tr><th>col2</th><th>col3</th></tr></table>", html);
     }
 
     @Test
