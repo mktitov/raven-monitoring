@@ -2,8 +2,12 @@ package org.raven.ui.vo;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.raven.RavenUtils;
+import org.raven.table.ColumnGroup;
+import org.raven.table.ColumnGroupImpl;
 import org.raven.table.Table;
 import org.raven.ui.TableWithDate;
 
@@ -151,6 +155,15 @@ public class VOTableWrapper extends ArrayList<TIWList>
 		}
 		return table.getColumnNames();
 	}
+
+    public ColumnGroup[] getColumnGroups()
+    {
+        List<ColumnGroup> groups = RavenUtils.getTableColumnGroups(table);
+        if (VOTableWrapper.addCounter)
+            groups.add(0, new ColumnGroupImpl("", 0, 0));
+        ColumnGroup[] arr = new ColumnGroup[groups.size()];
+        return groups.toArray(arr);
+    }
 
 	public int getColumnsCount()
 	{

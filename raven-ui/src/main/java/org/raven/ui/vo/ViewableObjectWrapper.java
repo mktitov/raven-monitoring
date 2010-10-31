@@ -26,6 +26,7 @@ import org.apache.myfaces.trinidad.context.RequestContext;
 import org.apache.myfaces.trinidad.event.LaunchEvent;
 import org.apache.myfaces.trinidad.render.ExtendedRenderKitService;
 import org.raven.audit.Action;
+import org.raven.table.ColumnGroup;
 import org.raven.table.Table;
 import org.raven.tree.ActionViewableObject;
 import org.raven.tree.InvalidPathException;
@@ -71,6 +72,7 @@ public class ViewableObjectWrapper
 	private List<Attr> actionAttributes = null;
 	private boolean actionRunned = false;
 	private String actionRet = "";
+    private int counter = 0;
 	
 	public ViewableObjectWrapper(ViewableObject vo)
 	{
@@ -377,6 +379,49 @@ public class ViewableObjectWrapper
 		}
 		return tableWrapper.getColumnNames();
 	}
+
+	public ColumnGroup[] getTableColumnGroups()
+	{
+		if(!isTable())
+		{
+			log.error("VO isn't table !!");
+			return null;
+		}
+		return tableWrapper.getColumnGroups();
+	}
+
+    public int getGroupsCountAndResetCounter()
+    {
+        counter = 1;
+        log.warn("Counter initialized: {}", counter);
+        return getTableColumnGroups().length;
+    }
+
+    public int getGroupsCount()
+    {
+        return getTableColumnGroups().length;
+    }
+
+    public int getCounterAndIncrement()
+    {
+        log.warn("Counter incremeneted: {}", counter);
+        return counter++;
+    }
+
+    public int getCounter()
+    {
+        return counter;
+    }
+
+    public boolean isColumnGroup(int col)
+    {
+		if(!isTable())
+		{
+			log.error("VO isn't table !!");
+			return false;
+		}
+		return !tableWrapper.getColumnGroups()[col].getColumnNames().isEmpty();
+    }
 /*
     public boolean[] getValid()
     {

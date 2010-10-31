@@ -16,5 +16,6 @@ Any value defined here will override the pom.xml file value but is only applicab
         <netbeans.hint.useExternalMaven>false</netbeans.hint.useExternalMaven>
         <org-netbeans-modules-editor-indent.CodeStyle.usedProfile>default</org-netbeans-modules-editor-indent.CodeStyle.usedProfile>
         <netbeans.compile.on.save>none</netbeans.compile.on.save>
+        <org-netbeans-modules-projectapi.jsf_2e_language>Item 1</org-netbeans-modules-projectapi.jsf_2e_language>
     </properties>
 </project-shared-configuration>
