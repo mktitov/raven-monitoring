@@ -62,6 +62,12 @@ public interface Record
      */
     public Map<String, Object> getValues() throws RecordException;
     /**
+     * Sets values of record fields from map.
+     * @param values the map with values
+     * @throws RecordException 
+     */
+    public void setValues(Map<String, Object> values) throws RecordException;
+    /**
      * Copies field value from record passed in the parameter
      */
     public void copyFrom(Record record) throws RecordException;

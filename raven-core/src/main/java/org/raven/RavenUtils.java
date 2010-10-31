@@ -202,8 +202,7 @@ public class RavenUtils
         boolean hasGroups = false;
         List<ColumnGroup> groups = RavenUtils.getTableColumnGroups(table);
         for (ColumnGroup group: groups)
-            if (group.isHasNestedColumns())
-            {
+            if (group.isHasNestedColumns()) {
                 hasGroups = true;
                 break;
             }

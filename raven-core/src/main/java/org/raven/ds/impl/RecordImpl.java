@@ -106,14 +106,20 @@ public class RecordImpl implements Record
         return Collections.unmodifiableMap(values);
     }
 
-    public void copyFrom(Record record) throws RecordException
+    public void setValues(Map<String, Object> values) throws RecordException
     {
-        Map<String, Object> vals = record.getValues();
-        if (vals!=null && !vals.isEmpty())
-            for (Map.Entry<String, Object> entry: vals.entrySet())
+        if (values==null) return;
+
+        if (values!=null && !values.isEmpty())
+            for (Map.Entry<String, Object> entry: values.entrySet())
                 try{
                     setValue(entry.getKey(), entry.getValue());
                 }catch(InvalidRecordFieldException e){ }
+    }
+
+    public void copyFrom(Record record) throws RecordException
+    {
+        setValues(record.getValues());
     }
 
     public Object getTag(String tagName)

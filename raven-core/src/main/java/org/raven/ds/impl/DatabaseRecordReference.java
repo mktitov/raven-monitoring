@@ -89,6 +89,14 @@ public class DatabaseRecordReference extends AbstractDatabaseRecordReference imp
             wrappedRecord.copyFrom(record);
     }
 
+    public void setValues(Map<String, Object> values) throws RecordException
+    {
+        if (!initialized)
+            init();
+        if (wrappedRecord!=null)
+            wrappedRecord.setValues(values);
+    }
+
     private void init() throws RecordException
     {
         try

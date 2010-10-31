@@ -30,4 +30,5 @@ public interface ColumnGroup
     public boolean isHasNestedColumns();
     public int getFromColumn();
     public int getToColumn();
+    public int getColumnCount();
 }

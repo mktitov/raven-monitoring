@@ -17,7 +17,6 @@
 
 package org.raven.table;
 
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -65,4 +64,7 @@ public class ColumnGroupImpl implements ColumnGroup
         return !columnNames.isEmpty();
     }
 
+    public int getColumnCount() {
+        return columnNames.size();
+    }
 }

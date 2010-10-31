@@ -22,7 +22,7 @@ import org.raven.ds.DataHandler;
  *
  * @author Mikhail Titov
  */
-public class AsyncDataPipe extends AbstractAsyncDataPipe
+public class TestAsyncDataPipe extends AbstractAsyncDataPipe
 {
     @Override
     public DataHandler createDataHandler() {

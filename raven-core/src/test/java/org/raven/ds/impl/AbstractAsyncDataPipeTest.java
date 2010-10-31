@@ -38,7 +38,7 @@ public class AbstractAsyncDataPipeTest extends RavenCoreTestCase
 {
     private ExecutorServiceNode executor;
     private AtomicInteger counter;
-    private AsyncDataPipe dataPipe;
+    private TestAsyncDataPipe dataPipe;
     private PushDataSource dataSource;
     private DataCollector collector;
 
@@ -58,7 +58,7 @@ public class AbstractAsyncDataPipeTest extends RavenCoreTestCase
         tree.getRootNode().addAndSaveChildren(dataSource);
         assertTrue(dataSource.start());
 
-        dataPipe = new AsyncDataPipe();
+        dataPipe = new TestAsyncDataPipe();
         dataPipe.setName("async data pipe");
         tree.getRootNode().addAndSaveChildren(dataPipe);
         dataPipe.setDataSource(dataSource);
