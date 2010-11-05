@@ -202,6 +202,7 @@ public abstract class AbstractFileReader extends AbstractDataSource
         tree.addGlobalBindings(generateBindingSupportId(), bindingSupport);
         try
         {
+            context.getParameters().put(FILENAME_BINDING, file.getName());
             dataConsumer.setData(this, is, context);
         }
         finally

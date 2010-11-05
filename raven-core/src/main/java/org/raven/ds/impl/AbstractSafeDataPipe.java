@@ -293,7 +293,7 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
     @Override
     public void sendDataToConsumers(Object data, DataContext context)
     {
-        if (consumer.get()!=null)
+        if (consumer.get()!=null) 
             consumer.get().setData(this, data, context);
         else
         {
