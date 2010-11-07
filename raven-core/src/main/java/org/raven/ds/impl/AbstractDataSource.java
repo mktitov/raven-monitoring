@@ -66,7 +66,7 @@ public abstract class AbstractDataSource extends BaseNode implements DataSource
         {
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug(String.format(
-                        "Processing gathering data request for data consumer (%s)"
+                        "Recieved pull data request from consumer (%s)"
                         , dataConsumer.getPath()));
             return gatherDataForConsumer(dataConsumer, context);
         }

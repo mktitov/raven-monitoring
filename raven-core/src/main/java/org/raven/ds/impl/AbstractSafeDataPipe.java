@@ -253,8 +253,12 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
                         "Can't recieve DATA from data source (%s). Node not STARTED", dataSource.getPath()));
             return;
         }
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            getLogger().debug("Recieved data from the ({}). Processing...", dataSource.getPath());
         if (useExpression)
         {
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                getLogger().debug("Using expression to transform data", dataSource.getPath());
             bindingSupport.put(DATA_BINDING, data);
             bindingSupport.put(SKIP_DATA_BINDING, SKIP_DATA);
             bindingSupport.put(DATASOURCE_BINDING, dataSource);
@@ -274,6 +278,8 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
         {
             if (data!=SKIP_DATA)
                 doSetData(dataSource, data, context);
+            else if (isLogLevelEnabled(LogLevel.DEBUG))
+                getLogger().debug("Expression return SKIP_DATA. Terminating push data process");
         }
         catch(Throwable e)
         {
@@ -293,15 +299,21 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
     @Override
     public void sendDataToConsumers(Object data, DataContext context)
     {
-        if (consumer.get()!=null) 
+        if (consumer.get()!=null) {
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                getLogger().debug("Pushing data ONLY to consumer ({})", consumer.get().getPath());
             consumer.get().setData(this, data, context);
+        }
         else
         {
             Collection<Node> deps = getDependentNodes();
             if (deps!=null && !deps.isEmpty())
                 for (Node dep: deps)
-                    if (dep instanceof DataConsumer && Status.STARTED.equals(dep.getStatus()))
+                    if (dep instanceof DataConsumer && Status.STARTED.equals(dep.getStatus())){
+                        if (isLogLevelEnabled(LogLevel.DEBUG))
+                            getLogger().debug("Pushing data to the consumer ({})", dep.getPath());
                         ((DataConsumer)dep).setData(this, data, context);
+                    }
         }
     }
 
