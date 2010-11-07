@@ -30,12 +30,12 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass
-public class InitiateDataRequestNode extends AbstractSafeDataPipe
+public class InitiatePullDataNode extends AbstractSafeDataPipe
 {
     public enum DataMixPolicy {PASS_BOTH, PATH_DATASOURCE, PASS_NEW_DATASOURCE}
 
     @NotNull @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
-    private DataSource initiateDataRequestFrom;
+    private DataSource pullDataFrom;
 
     @NotNull @Parameter(defaultValue="PASS_BOTH")
     private DataMixPolicy dataMixPolicy;
@@ -48,12 +48,12 @@ public class InitiateDataRequestNode extends AbstractSafeDataPipe
         this.dataMixPolicy = dataMixPolicy;
     }
 
-    public DataSource getInitiateDataRequestFrom() {
-        return initiateDataRequestFrom;
+    public DataSource getPullDataFrom() {
+        return pullDataFrom;
     }
 
-    public void setInitiateDataRequestFrom(DataSource initiateDataRequestFrom) {
-        this.initiateDataRequestFrom = initiateDataRequestFrom;
+    public void setPullDataFrom(DataSource pullDataFrom) {
+        this.pullDataFrom = pullDataFrom;
     }
 
     @Override
@@ -64,12 +64,12 @@ public class InitiateDataRequestNode extends AbstractSafeDataPipe
     @Override
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
-        if (!dataSource.equals(initiateDataRequestFrom))
-            initiateDataRequestFrom.getDataImmediate(this, context);
+        if (!dataSource.equals(pullDataFrom))
+            pullDataFrom.getDataImmediate(this, context);
         DataMixPolicy policy = dataMixPolicy;
         if (   policy==DataMixPolicy.PASS_BOTH
             || (dataSource.equals(getDataSource()) && policy==DataMixPolicy.PATH_DATASOURCE)
-            || (dataSource.equals(initiateDataRequestFrom) && policy==DataMixPolicy.PASS_NEW_DATASOURCE))
+            || (dataSource.equals(pullDataFrom) && policy==DataMixPolicy.PASS_NEW_DATASOURCE))
         {
             sendDataToConsumers(data, context);
         }

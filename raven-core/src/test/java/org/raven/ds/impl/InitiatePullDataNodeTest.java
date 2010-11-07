@@ -28,11 +28,11 @@ import org.raven.test.RavenCoreTestCase;
  *
  * @author Mikhail Titov
  */
-public class InitiateDataRequestNodeTest extends RavenCoreTestCase
+public class InitiatePullDataNodeTest extends RavenCoreTestCase
 {
     private PushDataSource ds1;
     private PushOnDemandDataSource ds2;
-    private InitiateDataRequestNode pipe;
+    private InitiatePullDataNode pipe;
     private DataCollector collector;
 
     @Before
@@ -48,11 +48,11 @@ public class InitiateDataRequestNodeTest extends RavenCoreTestCase
         tree.getRootNode().addAndSaveChildren(ds2);
         assertTrue(ds2.start());
 
-        pipe = new InitiateDataRequestNode();
+        pipe = new InitiatePullDataNode();
         pipe.setName("pipe");
         tree.getRootNode().addAndSaveChildren(pipe);
         pipe.setDataSource(ds1);
-        pipe.setInitiateDataRequestFrom(ds2);
+        pipe.setPullDataFrom(ds2);
         assertTrue(pipe.start());
 
         collector = new DataCollector();
@@ -76,7 +76,7 @@ public class InitiateDataRequestNodeTest extends RavenCoreTestCase
     @Test
     public void passDataSourceTest()
     {
-        pipe.setDataMixPolicy(InitiateDataRequestNode.DataMixPolicy.PATH_DATASOURCE);
+        pipe.setDataMixPolicy(InitiatePullDataNode.DataMixPolicy.PATH_DATASOURCE);
         ds2.addDataPortion("Hello");
         ds1.pushData("World");
 
@@ -87,7 +87,7 @@ public class InitiateDataRequestNodeTest extends RavenCoreTestCase
     @Test
     public void passNewDataSourceTest()
     {
-        pipe.setDataMixPolicy(InitiateDataRequestNode.DataMixPolicy.PASS_NEW_DATASOURCE);
+        pipe.setDataMixPolicy(InitiatePullDataNode.DataMixPolicy.PASS_NEW_DATASOURCE);
         ds2.addDataPortion("Hello");
         ds1.pushData("World");
 
