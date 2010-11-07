@@ -179,8 +179,8 @@ initiallyExpanded="true"
 			 	<h:graphicImage 
 			 		alt=""
 			 		rendered="#{node.hasIconPath}"
-			 		height="12" 
-			 		width="12" 
+			 		height="16"
+			 		width="16"
 			 		url="#{node.iconPath}" />
 	<!-- 				
 			<tr:image  
