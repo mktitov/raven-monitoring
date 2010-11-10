@@ -45,7 +45,8 @@ public class ChangeRouteNode extends SafeDataPipeNode
     @Override
     public void sendDataToConsumers(Object data, DataContext context)
     {
-        if (consumer.get()!=null)
+        DataConsumer consumer = (DataConsumer) context.getNodeParameter(this, CONSUMER_PARAM);
+        if (consumer!=null)
             routeDataTo.setData(this, data, context);
         else
             super.sendDataToConsumers(data, context);

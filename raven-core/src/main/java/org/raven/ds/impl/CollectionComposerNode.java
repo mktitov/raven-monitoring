@@ -31,28 +31,22 @@ import org.raven.expr.BindingSupport;
 @NodeClass
 public class CollectionComposerNode extends AbstractSafeDataPipe
 {
-    private ThreadLocal<Collection> collections;
+    public final static String COLLECTION_PARAM = "collection";
 
     @Override
-    protected void initFields()
+    protected synchronized void doSetData(DataSource dataSource, Object data, DataContext context)
+            throws Exception
     {
-        super.initFields();
-        collections = new ThreadLocal<Collection>();
-    }
-
-    @Override
-    protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
-    {
-        Collection collection = collections.get();
+        Collection collection = (Collection) context.getNodeParameter(this, COLLECTION_PARAM);
         if (data==null){
             if (collection!=null){
                 sendDataToConsumers(collection, context);
-                collections.remove();
+                context.removeNodeParameter(this, COLLECTION_PARAM);
             }
         }else{
             if (collection==null){
                 collection = new LinkedList();
-                collections.set(collection);
+                context.putNodeParameter(this, COLLECTION_PARAM, collection);
             }
             collection.add(data);
         }

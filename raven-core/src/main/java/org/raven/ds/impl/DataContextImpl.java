@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.raven.auth.UserContext;
 import org.raven.auth.UserContextService;
 import org.raven.ds.DataContext;
+import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.weda.internal.annotations.Service;
 
@@ -77,6 +78,26 @@ public class DataContextImpl implements DataContext
     public void putAt(String parameterName, Object value)
     {
         parameters.put(parameterName, value);
+    }
+
+    public void putNodeParameter(Node node, String parameterName, Object value)
+    {
+        parameters.put(getNodeParameterId(node, parameterName), value);
+    }
+
+    public Object getNodeParameter(Node node, String parameterName)
+    {
+        return parameters.get(getNodeParameterId(node, parameterName));
+    }
+
+    public Object removeNodeParameter(Node node, String parameterName)
+    {
+        return parameters.remove(getNodeParameterId(node, parameterName));
+    }
+
+    private String getNodeParameterId(Node node, String parameterName)
+    {
+        return ""+node.getId()+"_"+parameterName;
     }
 
     public void addError(String path, String error)

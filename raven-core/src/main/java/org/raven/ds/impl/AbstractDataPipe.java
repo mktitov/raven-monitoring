@@ -36,13 +36,13 @@ import org.weda.annotations.constraints.NotNull;
  */
 public abstract class AbstractDataPipe extends AbstractDataConsumer implements DataSource
 {
+    public final static String CONSUMER_PARAM = "consumer";
+
     protected Collection<NodeAttribute> consumerAttributes;
 
     @Parameter(defaultValue="false")
     @NotNull
     private Boolean forwardDataSourceAttributes;
-
-    private ThreadLocal<DataConsumer> requester;
 
     public Boolean getForwardDataSourceAttributes()
     {
@@ -60,43 +60,36 @@ public abstract class AbstractDataPipe extends AbstractDataConsumer implements D
         super.initFields();
         consumerAttributes = new ArrayList<NodeAttribute>();
         fillConsumerAttributes(consumerAttributes);
-        requester = new ThreadLocal<DataConsumer>();
     }
 
     public boolean getDataImmediate(
             DataConsumer dataConsumer, DataContext context)
     {
-        requester.set(dataConsumer);
+        context.putNodeParameter(this, CONSUMER_PARAM, dataConsumer);
+
+        context.addSessionAttributes(
+                dataConsumer instanceof Node? ((Node)dataConsumer).getNodeAttributes() : null
+                , false);
+
+        if (!checkDataConsumer(dataConsumer, context.getSessionAttributes()))
+        {
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug(String.format(
+                        "Skiping gathering data for data consumer (%s). Data consumer not ready"
+                        , dataConsumer.getPath()));
+            return false;
+        }
         try
         {
-            context.addSessionAttributes(
-                    dataConsumer instanceof Node? ((Node)dataConsumer).getNodeAttributes() : null
-                    , false);
-
-            if (!checkDataConsumer(dataConsumer, context.getSessionAttributes()))
-            {
-                if (isLogLevelEnabled(LogLevel.DEBUG))
-                    debug(String.format(
-                            "Skiping gathering data for data consumer (%s). Data consumer not ready"
-                            , dataConsumer.getPath()));
-                return false;
-            }
-            try
-            {
-                return gatherDataForConsumer(dataConsumer, context);
-            }
-            catch (Throwable e)
-            {
-                if (isLogLevelEnabled(LogLevel.ERROR))
-                    error(String.format(
-                            "Error gathering data for consumer (%s). %s"
-                            , dataConsumer.getPath(), e.getMessage()), e);
-                return false;
-            }
+            return gatherDataForConsumer(dataConsumer, context);
         }
-        finally
+        catch (Throwable e)
         {
-            requester.remove();
+            if (isLogLevelEnabled(LogLevel.ERROR))
+                error(String.format(
+                        "Error gathering data for consumer (%s). %s"
+                        , dataConsumer.getPath(), e.getMessage()), e);
+            return false;
         }
     }
 
@@ -155,7 +148,7 @@ public abstract class AbstractDataPipe extends AbstractDataConsumer implements D
 
     protected void sendDataToConsumers(Object data, DataContext context)
     {
-        DataConsumer consumer = requester.get();
+        DataConsumer consumer = (DataConsumer) context.getNodeParameter(this, CONSUMER_PARAM);
         if (consumer!=null)
         {
             if (isLogLevelEnabled(LogLevel.DEBUG))

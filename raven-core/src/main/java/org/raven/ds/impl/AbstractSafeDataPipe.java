@@ -42,6 +42,7 @@ import org.weda.annotations.constraints.NotNull;
  */
 public abstract class AbstractSafeDataPipe extends AbstractDataSource implements DataPipe
 {
+    public static final String CONSUMER_PARAM = "consumer";
     public static final String DATA_CONTEXT_BINDING = "context";
     public static final String DATASOURCE_BINDING = "dataSource";
     public static final String DATA_BINDING = "data";
@@ -67,7 +68,6 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
     @NotNull @Parameter(defaultValue="false")
     private Boolean usePreProcess;
 
-    protected ThreadLocal<DataConsumer> consumer;
     protected BindingSupportImpl bindingSupport;
 
     public String getPreProcess()
@@ -134,7 +134,6 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
     protected void initFields()
     {
         super.initFields();
-        consumer = new ThreadLocal<DataConsumer>();
         bindingSupport = new BindingSupportImpl();
     }
 
@@ -155,61 +154,55 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
     public boolean gatherDataForConsumer(
             DataConsumer dataConsumer, DataContext context) throws Exception
     {
-        consumer.set(dataConsumer);
-        try
-        {
-            Collection<Node> childs = getEffectiveChildrens();
-            if (childs!=null && !childs.isEmpty())
-                for (Node child: childs)
-                    if (   child.getStatus().equals(Status.STARTED)
-                        && child instanceof SessionAttributeGenerator)
-                    {
-                        if (isLogLevelEnabled(LogLevel.DEBUG))
-                            debug(String.format(
-                                    "Creating session attribute (%s)", child.getName()));
-                        SessionAttributeGenerator gen = (SessionAttributeGenerator)child;
-                        Object value = gen.getFieldValue(context);
-                        NodeAttributeImpl attr = new NodeAttributeImpl(
-                                gen.getName(), gen.getAttributeType(), value, null);
-                        attr.setOwner(this);
-                        attr.init();
-                        context.addSessionAttribute(attr);
-                        if (isLogLevelEnabled(LogLevel.DEBUG))
-                            debug(String.format(
-                                    "Attribute information: type - (%s), value (%s)"
-                                    , gen.getAttributeType(), value));
-                    }
+        context.putNodeParameter(this, CONSUMER_PARAM, dataConsumer);
 
-            Object preprocessResult = null;
-            if (usePreProcess)
-            {
-                if (isLogLevelEnabled(LogLevel.DEBUG))
-                    debug("Preprocessing...");
-                bindingSupport.put(SESSIONATTRIBUTES_BINDING, context.getSessionAttributes());
-                bindingSupport.put(DATA_CONTEXT_BINDING, context);
-                try
+        Collection<Node> childs = getEffectiveChildrens();
+        if (childs!=null && !childs.isEmpty())
+            for (Node child: childs)
+                if (   child.getStatus().equals(Status.STARTED)
+                    && child instanceof SessionAttributeGenerator)
                 {
-                    preprocessResult = getNodeAttribute(PREPROCESS_ATTRIBUTE).getRealValue();
                     if (isLogLevelEnabled(LogLevel.DEBUG))
-                        debug(String.format("Preprocessed value is (%s)", preprocessResult));
+                        debug(String.format(
+                                "Creating session attribute (%s)", child.getName()));
+                    SessionAttributeGenerator gen = (SessionAttributeGenerator)child;
+                    Object value = gen.getFieldValue(context);
+                    NodeAttributeImpl attr = new NodeAttributeImpl(
+                            gen.getName(), gen.getAttributeType(), value, null);
+                    attr.setOwner(this);
+                    attr.init();
+                    context.addSessionAttribute(attr);
+                    if (isLogLevelEnabled(LogLevel.DEBUG))
+                        debug(String.format(
+                                "Attribute information: type - (%s), value (%s)"
+                                , gen.getAttributeType(), value));
                 }
-                finally
-                {
-                    bindingSupport.reset();
-                }
-            }
-            boolean result = true;
-            if (preprocessResult==null)
-                result = dataSource.getDataImmediate(this, context);
-            else
-                setData(this, preprocessResult, context);
-            
-            return result;
-        }
-        finally
+
+        Object preprocessResult = null;
+        if (usePreProcess)
         {
-            consumer.remove();
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug("Preprocessing...");
+            bindingSupport.put(SESSIONATTRIBUTES_BINDING, context.getSessionAttributes());
+            bindingSupport.put(DATA_CONTEXT_BINDING, context);
+            try
+            {
+                preprocessResult = getNodeAttribute(PREPROCESS_ATTRIBUTE).getRealValue();
+                if (isLogLevelEnabled(LogLevel.DEBUG))
+                    debug(String.format("Preprocessed value is (%s)", preprocessResult));
+            }
+            finally
+            {
+                bindingSupport.reset();
+            }
         }
+        boolean result = true;
+        if (preprocessResult==null)
+            result = dataSource.getDataImmediate(this, context);
+        else
+            setData(this, preprocessResult, context);
+
+        return result;
     }
 
     @Override
@@ -299,10 +292,11 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
     @Override
     public void sendDataToConsumers(Object data, DataContext context)
     {
-        if (consumer.get()!=null) {
+        DataConsumer cons = (DataConsumer) context.getNodeParameter(this, CONSUMER_PARAM);
+        if (cons!=null) {
             if (isLogLevelEnabled(LogLevel.DEBUG))
-                getLogger().debug("Pushing data ONLY to consumer ({})", consumer.get().getPath());
-            consumer.get().setData(this, data, context);
+                getLogger().debug("Pushing data ONLY for consumer ({})", cons.getPath());
+            cons.setData(this, data, context);
         }
         else
         {

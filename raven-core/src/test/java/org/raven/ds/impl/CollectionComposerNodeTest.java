@@ -20,6 +20,7 @@ package org.raven.ds.impl;
 import java.util.Collection;
 import java.util.List;
 import org.junit.Test;
+import org.raven.ds.DataContext;
 import org.raven.test.DataCollector;
 import org.raven.test.PushDataSource;
 import org.raven.test.RavenCoreTestCase;
@@ -50,8 +51,9 @@ public class CollectionComposerNodeTest extends RavenCoreTestCase
         collector.setDataSource(composer);
         assertTrue(collector.start());
 
-        ds.pushData(1);
-        ds.pushData(null);
+        DataContext context = new DataContextImpl();
+        ds.pushData(1, context);
+        ds.pushData(null, context);
 
         List dataList = collector.getDataList();
         assertEquals(1, dataList.size());

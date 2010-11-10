@@ -20,6 +20,7 @@ package org.raven.ds;
 import java.util.Collection;
 import java.util.Map;
 import org.raven.auth.UserContext;
+import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 
 /**
@@ -40,6 +41,25 @@ public interface DataContext
      * Access to the context parameters from groovy scripts
      */
     public void putAt(String parameterName, Object value);
+    /**
+     * Put the parameter linked with node. The same as
+     * <pre>
+     *  getParameter().put(node.getId()+"_"+parameterName, value)
+     * </pre>
+     * @param node the node with which the parameter is linked
+     * @param parameterName the parameter name
+     * @param value the value of the parameter
+     */
+    public void putNodeParameter(Node node, String parameterName, Object value);
+    /**
+     * Gets the value of the parameter linked with the node
+     */
+    public Object getNodeParameter(Node node, String parameterName);
+    /**
+     * Remove the parameter linked with node from context parameters
+     * @return the value of r the removed parameter
+     */
+    public Object removeNodeParameter(Node node, String parameterName);
     /**
      * Adds error to the errors list
      * @param path the path to the node where error occurs
