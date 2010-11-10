@@ -154,7 +154,8 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
     public boolean gatherDataForConsumer(
             DataConsumer dataConsumer, DataContext context) throws Exception
     {
-        context.putNodeParameter(this, CONSUMER_PARAM, dataConsumer);
+        if (dataConsumer!=null)
+            context.putNodeParameter(this, CONSUMER_PARAM, dataConsumer);
 
         Collection<Node> childs = getEffectiveChildrens();
         if (childs!=null && !childs.isEmpty())

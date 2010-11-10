@@ -84,6 +84,25 @@ public class AbstractSafeDataPipeTest extends RavenCoreTestCase
     }
 
     @Test
+    public void getDataImmediateWithNullConsumer() throws Exception
+    {
+        PushOnDemandDataSource ds = new PushOnDemandDataSource();
+        ds.setName("ds");
+        tree.getRootNode().addAndSaveChildren(ds);
+        ds.setLogLevel(LogLevel.DEBUG);
+        assertTrue(ds.start());
+
+        pipe.setDataSource(ds);
+        assertTrue(pipe.start());
+
+        ds.addDataPortion("1");
+
+        pipe.gatherDataForConsumer(null, new DataContextImpl());
+        assertEquals(1, c1.getDataListSize());
+        assertEquals(1, c2.getDataList().size());
+    }
+
+    @Test
     public void sendToAllConsumerTest()
     {
         PushDataSource ds = new PushDataSource();
