@@ -62,7 +62,7 @@ public class RootNode extends BaseNode
 
         for (BindingSupport bindingSupport: bindingSupports.values()){
             bindingSupport.addTo(bindings);
-            bindingSupport.remove(ExpressionAttributeValueHandler.ENABLE_SCRIPT_EXECUTION_BINDING);
+//            bindingSupport.remove(ExpressionAttributeValueHandler.ENABLE_SCRIPT_EXECUTION_BINDING);
         }
     }
 }

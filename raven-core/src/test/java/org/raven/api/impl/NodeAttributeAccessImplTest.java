@@ -38,7 +38,7 @@ public class NodeAttributeAccessImplTest extends RavenCoreTestCase
         assertTrue(node.start());
 
         NodeAttributeImpl attr1 = new NodeAttributeImpl("attr1", Integer.class, null, null);
-        attr1.setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        attr1.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
         attr1.setValue("arg1+1");
         attr1.setOwner(node);
         attr1.init();

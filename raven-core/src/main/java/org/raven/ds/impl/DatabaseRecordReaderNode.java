@@ -153,7 +153,9 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
     public boolean gatherDataForConsumer(DataConsumer dataConsumer, DataContext context)
             throws Exception
     {
+        String key = ""+getId()+"_bindings";
         bindingSupport.enableScriptExecution();
+        tree.addGlobalBindings(key, bindingSupport);
         try{
             bindingSupport.put(SESS_ATTRS_BINDING, context.getSessionAttributes());
             bindingSupport.put(CONTEXT_BINDING, context);
@@ -215,15 +217,16 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
         finally
         {
             bindingSupport.reset();
+            tree.removeGlobalBindings(key);
         }
     }
 
-    @Override
-    public void formExpressionBindings(Bindings bindings)
-    {
-        super.formExpressionBindings(bindings);
-        bindingSupport.addTo(bindings);
-    }
+//    @Override
+//    public void formExpressionBindings(Bindings bindings)
+//    {
+//        super.formExpressionBindings(bindings);
+//        bindingSupport.addTo(bindings);
+//    }
 
     @Override
     public Collection<NodeAttribute> generateAttributes()

@@ -68,6 +68,13 @@ public class InitiatePushDataNode extends AbstractSafeDataPipe
     }
 
     @Override
+    public void setData(DataSource dataSource, Object data, DataContext context)
+    {
+        if (!dataSource.equals(pushDataTo))
+            super.setData(dataSource, data, context);
+    }
+
+    @Override
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception 
     {
         Object dataForPush = data;

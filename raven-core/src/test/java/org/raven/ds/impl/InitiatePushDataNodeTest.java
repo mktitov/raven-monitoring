@@ -106,6 +106,28 @@ public class InitiatePushDataNodeTest extends RavenCoreTestCase
         assertArrayEquals(new Object[]{"c1:test"}, callOrder.toArray());
     }
 
+    @Test
+    public void loopDetection_test() throws Exception
+    {
+        SafeDataPipeNode pipe2 = new SafeDataPipeNode();
+        pipe2.setName("pipe2");
+        tree.getRootNode().addAndSaveChildren(pipe2);
+        pipe2.getNodeAttribute("dataSource").setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        assertTrue(pipe2.start());
+
+        pipe.setPushDataTo(pipe2);
+
+        c2.getNodeAttribute("dataSource").setValueHandlerType(null);
+        c2.setDataSource(pipe2);
+        
+        final List<String> callOrder = new ArrayList<String>();
+        c1.setDataHandler(new Handler("c1", callOrder));
+        c2.setDataHandler(new Handler("c2", callOrder));
+        ds.pushData("test");
+
+        assertArrayEquals(new Object[]{"c2:test", "c1:test"}, callOrder.toArray());
+    }
+
     private class Handler implements DataHandler{
         private final String prefix;
         private final List<String> callOrder;
