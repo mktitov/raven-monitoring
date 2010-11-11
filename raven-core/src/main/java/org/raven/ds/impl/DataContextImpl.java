@@ -77,12 +77,18 @@ public class DataContextImpl implements DataContext
 
     public void putAt(String parameterName, Object value)
     {
-        parameters.put(parameterName, value);
+        if (value==null)
+            parameters.remove(parameterName);
+        else
+            parameters.put(parameterName, value);
     }
 
     public void putNodeParameter(Node node, String parameterName, Object value)
     {
-        parameters.put(getNodeParameterId(node, parameterName), value);
+        if (value==null)
+            removeNodeParameter(node, parameterName);
+        else
+            parameters.put(getNodeParameterId(node, parameterName), value);
     }
 
     public Object getNodeParameter(Node node, String parameterName)

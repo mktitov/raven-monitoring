@@ -17,9 +17,12 @@
 
 package org.raven.ds.impl;
 
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
+import org.raven.ds.DataContext;
 import org.raven.test.DataCollector;
+import org.raven.test.DataHandler;
 import org.raven.test.PushDataSource;
 import org.raven.test.PushOnDemandDataSource;
 import org.raven.test.RavenCoreTestCase;
@@ -71,6 +74,18 @@ public class InitiatePullDataNodeTest extends RavenCoreTestCase
         assertEquals(2, collector.getDataListSize());
         assertEquals("Hello", collector.getDataList().get(0));
         assertEquals("World", collector.getDataList().get(1));
+    }
+
+    @Test
+    public void passBoth_firstDataSource_Test()
+    {
+        pipe.setDataOrderPolicy(InitiatePullDataNode.DataOrderPolicy.FIRST_DATASOURCE);
+        ds2.addDataPortion("Hello");
+        ds1.pushData("World");
+
+        assertEquals(2, collector.getDataListSize());
+        assertEquals("World", collector.getDataList().get(0));
+        assertEquals("Hello", collector.getDataList().get(1));
     }
 
     @Test

@@ -33,12 +33,24 @@ import org.weda.annotations.constraints.NotNull;
 public class InitiatePullDataNode extends AbstractSafeDataPipe
 {
     public enum DataMixPolicy {PASS_BOTH, PATH_DATASOURCE, PASS_NEW_DATASOURCE}
+    public enum DataOrderPolicy {FIRST_DATASOURCE, FIRST_NEW_DATASOURCE}
 
     @NotNull @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     private DataSource pullDataFrom;
 
     @NotNull @Parameter(defaultValue="PASS_BOTH")
     private DataMixPolicy dataMixPolicy;
+
+    @NotNull @Parameter(defaultValue="FIRST_NEW_DATASOURCE")
+    private DataOrderPolicy dataOrderPolicy;
+
+    public DataOrderPolicy getDataOrderPolicy() {
+        return dataOrderPolicy;
+    }
+
+    public void setDataOrderPolicy(DataOrderPolicy dataOrderPolicy) {
+        this.dataOrderPolicy = dataOrderPolicy;
+    }
 
     public DataMixPolicy getDataMixPolicy() {
         return dataMixPolicy;
@@ -64,7 +76,7 @@ public class InitiatePullDataNode extends AbstractSafeDataPipe
     @Override
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
-        if (!dataSource.equals(pullDataFrom))
+        if (dataOrderPolicy==DataOrderPolicy.FIRST_NEW_DATASOURCE && !dataSource.equals(pullDataFrom))
             pullDataFrom.getDataImmediate(this, context);
         DataMixPolicy policy = dataMixPolicy;
         if (   policy==DataMixPolicy.PASS_BOTH
@@ -73,5 +85,7 @@ public class InitiatePullDataNode extends AbstractSafeDataPipe
         {
             sendDataToConsumers(data, context);
         }
+        if (dataOrderPolicy==DataOrderPolicy.FIRST_DATASOURCE && !dataSource.equals(pullDataFrom))
+            pullDataFrom.getDataImmediate(this, context);
     }
 }
