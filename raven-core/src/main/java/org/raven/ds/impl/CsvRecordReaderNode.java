@@ -32,6 +32,7 @@ import org.raven.annotations.Parameter;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
+import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
@@ -103,7 +104,7 @@ public class CsvRecordReaderNode extends AbstractDataPipe
             return;
         }
 
-        Map<String, FieldInfo> fieldsColumns = getFieldsColumns();
+        Map<String, FieldInfo> fieldsColumns = getFieldsColumns(recordSchema, cvsExtensionName);
         if (fieldsColumns==null)
         {
             if (isLogLevelEnabled(LogLevel.WARN))
@@ -274,7 +275,7 @@ public class CsvRecordReaderNode extends AbstractDataPipe
         this.lineFilter = lineFilter;
     }
 
-    private Map<String, FieldInfo> getFieldsColumns()
+    static Map<String, FieldInfo> getFieldsColumns(RecordSchema recordSchema, String csvExtensionName)
     {
         RecordSchemaField[] fields = recordSchema.getFields();
         if (fields==null)
@@ -284,14 +285,14 @@ public class CsvRecordReaderNode extends AbstractDataPipe
         for (RecordSchemaField field: fields)
         {
             CsvRecordFieldExtension extension =
-                    field.getFieldExtension(CsvRecordFieldExtension.class, cvsExtensionName);
+                    field.getFieldExtension(CsvRecordFieldExtension.class, csvExtensionName);
             if (extension!=null)
                 result.put(field.getName(), new FieldInfo(extension));
         }
         return result;
     }
 
-    private class FieldInfo
+    static class FieldInfo
     {
         private final int columnNumber;
         private final CsvRecordFieldExtension extension;
