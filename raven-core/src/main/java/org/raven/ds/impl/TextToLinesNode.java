@@ -35,8 +35,15 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass
 public class TextToLinesNode extends AbstractSafeDataPipe
 {
+    public static final String LINE_BINDING = "line";
+    public static String LINE_NUMBER_PARAM = "linenumber";
+    public static String LINE_FILTER_ATTR = "lineFilter";
+
     @NotNull @Parameter()
     private Charset encoding;
+
+    @NotNull @Parameter(defaultValue="true")
+    private Boolean lineFilter;
 
     public Charset getEncoding() {
         return encoding;
@@ -44,6 +51,14 @@ public class TextToLinesNode extends AbstractSafeDataPipe
 
     public void setEncoding(Charset encoding) {
         this.encoding = encoding;
+    }
+
+    public Boolean getLineFilter() {
+        return lineFilter;
+    }
+
+    public void setLineFilter(Boolean lineFilter) {
+        this.lineFilter = lineFilter;
     }
 
     @Override
@@ -58,8 +73,21 @@ public class TextToLinesNode extends AbstractSafeDataPipe
             return;
 
         LineIterator it = IOUtils.lineIterator(is, encoding.name());
-        while (it.hasNext())
-            sendDataToConsumers(it.nextLine(), context);
+        int lineNumber = 0;
+        try{
+            while (it.hasNext()) {
+                ++lineNumber;
+                String line = it.nextLine();
+                bindingSupport.put(LINE_NUMBER_PARAM, data);
+                bindingSupport.put(LINE_BINDING, line);
+                if (lineFilter){
+                    context.putAt(LINE_NUMBER_PARAM, lineNumber);
+                    sendDataToConsumers(line, context);
+                }
+            }
+        } finally {
+            bindingSupport.reset();
+        }
 
     }
 

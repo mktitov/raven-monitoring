@@ -20,11 +20,17 @@ package org.raven.ds.impl;
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
+import org.raven.ds.DataContext;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.test.DataCollector;
+import org.raven.test.DataHandler;
 import org.raven.test.PushDataSource;
 import org.raven.test.RavenCoreTestCase;
+import org.raven.tree.NodeAttribute;
 
 /**
  *
@@ -59,13 +65,50 @@ public class TextToLinesNodeTest extends RavenCoreTestCase
     }
 
     @Test
-    public void stringSourceTest()
+    public void stringSourceAndLineNumbersTest()
     {
+        final List<Object> dataList = new ArrayList<Object>();
+        final List<Object> lineNumbers = new ArrayList<Object>();
+
+        collector.setDataHandler(new DataHandler() {
+            public void handleData(Object data, DataContext context) {
+                dataList.add(data);
+                lineNumbers.add(context.getAt(TextToLinesNode.LINE_NUMBER_PARAM));
+            }
+        });
+
         ds.pushData("Строка1\nline2");
 
-        assertEquals(2, collector.getDataListSize());
-        assertEquals("Строка1", collector.getDataList().get(0));
-        assertEquals("line2", collector.getDataList().get(1));
+        assertEquals(2, dataList.size());
+        assertEquals("Строка1", dataList.get(0));
+        assertEquals("line2", dataList.get(1));
+
+        assertArrayEquals(new Object[]{1,2}, lineNumbers.toArray());
+    }
+
+    @Test
+    public void lineFilterTest() throws Exception
+    {
+        final List<Object> dataList = new ArrayList<Object>();
+        final List<Object> lineNumbers = new ArrayList<Object>();
+
+        collector.setDataHandler(new DataHandler() {
+            public void handleData(Object data, DataContext context) {
+                dataList.add(data);
+                lineNumbers.add(context.getAt(TextToLinesNode.LINE_NUMBER_PARAM));
+            }
+        });
+
+        NodeAttribute attr = splitter.getNodeAttribute(TextToLinesNode.LINE_FILTER_ATTR);
+        attr.setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        attr.setValue("line!='Строка1'");
+
+        ds.pushData("Строка1\nline2");
+
+        assertEquals(1, dataList.size());
+        assertEquals("line2", dataList.get(0));
+
+        assertArrayEquals(new Object[]{2}, lineNumbers.toArray());
     }
 
     @Test
