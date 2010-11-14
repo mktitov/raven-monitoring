@@ -71,6 +71,7 @@ public class Attr implements Comparable<Attr>
 	private boolean edit = false;
 	private boolean expressionSupported = false;
 	private String expression = "";
+    private String oldExpression = "";
 	private List<Attr> children = new ArrayList<Attr>();
 	private boolean hasChildren = false;
 	private boolean templateExpression = false;
@@ -93,7 +94,10 @@ public class Attr implements Comparable<Attr>
 		if(na.getParentAttribute()==null && na.getParameterName()==null) allowDelete = true;
         
 		expressionSupported = na.isExpression();
-		if(expressionSupported) expression = na.getRawValue();  
+		if(expressionSupported){
+            expression = na.getRawValue();
+            oldExpression = expression;
+        }
         
         valueHandlerType = na.getValueHandlerType();
         List<ReferenceValue> refValues = tree.getAttributeValueHandlerTypes(na);
@@ -131,6 +135,11 @@ public class Attr implements Comparable<Attr>
 				else return false;
 		return !oldValue.equals(value);
 	}
+
+    public boolean isExpressionChanged()
+    {
+        return !ObjectUtils.equals(expression, oldExpression);
+    }
 
     public boolean isFileAttribute()
     {

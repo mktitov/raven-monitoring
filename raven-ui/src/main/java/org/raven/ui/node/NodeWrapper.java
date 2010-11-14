@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import javax.faces.event.ActionEvent;
@@ -52,7 +53,6 @@ import org.raven.ui.IconResource;
 import org.raven.ui.ResourcesCache;
 import org.raven.ui.SessionBean;
 import org.raven.ui.attr.Attr;
-import org.raven.ui.node.AbstractNodeWrapper;
 import org.raven.ui.attr.NewAttribute;
 import org.raven.ui.attr.RefreshAttributesCache;
 import org.raven.ui.attr.RefreshIntervalCache;
@@ -576,7 +576,8 @@ implements Comparator<NodeAttribute>, INodeScanner, ScannedNodeHandler
 			  }	  
 			  if( !dsc.equals(at.getDescription()) ) save |=2;
 			  if( !na.getName().equals(at.getName()) ) save |=4;
-			  if( at.isExpressionSupported() &&  ! ObjectUtils.equals(na.getRawValue(), at.getExpression()) ) save |=8;
+//			  if( at.isExpressionSupported() &&  ! ObjectUtils.equals(na.getRawValue(), at.getExpression()) ) save |=8;
+			  if( at.isExpressionSupported() &&  at.isExpressionChanged() ) save |=8;
               if( !ObjectUtils.equals(na.getValueHandlerType(), at.getValueHandlerType())) save |=16;
               if(at.isTemplateExpression() != na.isTemplateExpression()) save |=32;
               if(at.isFileAttribute() && at.getFile()!=null) save |=64;

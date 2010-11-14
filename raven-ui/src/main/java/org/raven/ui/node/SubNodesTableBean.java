@@ -44,7 +44,10 @@ import org.raven.ui.SessionBean;
 import org.raven.ui.util.Messages;
 import org.raven.ui.vo.ExportBean;
 import org.apache.myfaces.trinidad.event.ReturnEvent;
+import org.raven.RavenUtils;
+import org.raven.ds.DataConsumer;
 import org.raven.template.impl.TemplateEntry;
+import org.raven.util.NodeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -305,7 +308,8 @@ public class SubNodesTableBean
 	    	message.setMessage(Messages.getUiMessage(Messages.NO_SELECTED_NODES));
 	    	return;
 	    }
-	    List<NodeWrapper> nodes = ((NodeWrapper) sel.get(0)).getParent().getChildrenList();
+        NodeWrapper parent =((NodeWrapper) sel.get(0)).getParent();
+	    List<NodeWrapper> nodes = parent.getChildrenList();
 	    if(nodes==null || nodes.size() < 2)	return;
 	    int limit = 0;
 	    int maxIndex = nodes.size()-1;
@@ -337,6 +341,8 @@ public class SubNodesTableBean
 			else 
 				state.add(new Integer(maxIndex-n));
 	    }
+        NodeUtils.reconnectDataSources(parent.getNode());
+            
 	    //SessionBean.getInstance().reloadBothFrames();
 	    SessionBean.getInstance().reloadRightFrame();
 	  }
