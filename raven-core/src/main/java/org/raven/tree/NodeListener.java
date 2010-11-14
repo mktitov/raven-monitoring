@@ -49,14 +49,14 @@ public interface NodeListener extends NodeAttributeListener
     public void nodeShutdowned(Node node);
     /**
      * Informs listener that the new children was added to the node
-     * @param owner the node to wich children was added
+     * @param owner the node to which children was added
      * @param children the node that added to the owner
      */
     public void childrenAdded(Node owner, Node children);
     /**
      * Informs listener that dependent node was added.
      * @param node the node to which dependent node was added.
-     * @param dependentNode the depenent node.
+     * @param dependentNode the dependent node.
      */
     public void dependendNodeAdded(Node node, Node dependentNode);
     /**
@@ -70,4 +70,11 @@ public interface NodeListener extends NodeAttributeListener
      * @param node the moved node
      */
     public void nodeMoved(Node node);
+    /**
+     * Informs listener that {@link Node#getIndex() node index} was changed
+     * @param node the node where index was changed
+     * @param oldIndex the old value
+     * @param newIndex the new value
+     */
+    public void nodeIndexChanged(Node node, int oldIndex, int newIndex);
 }

@@ -34,7 +34,9 @@ import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
+import org.raven.util.NodeUtils;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.beans.ObjectUtils;
 
 /**
  *
@@ -68,7 +70,18 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
     @NotNull @Parameter(defaultValue="false")
     private Boolean usePreProcess;
 
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean autoLinkDataSource;
+
     protected BindingSupportImpl bindingSupport;
+
+    public Boolean getAutoLinkDataSource() {
+        return autoLinkDataSource;
+    }
+
+    public void setAutoLinkDataSource(Boolean autoLinkDataSource) {
+        this.autoLinkDataSource = autoLinkDataSource;
+    }
 
     public String getPreProcess()
     {
@@ -309,6 +322,29 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
                             getLogger().debug("Pushing data to the consumer ({})", dep.getPath());
                         ((DataConsumer)dep).setData(this, data, context);
                     }
+        }
+    }
+
+//    @Override
+//    public void nodeIndexChanged(Node node, int oldIndex, int newIndex)
+//    {
+//        if (   ObjectUtils.in(getStatus(), Status.INITIALIZED, Status.STARTED)
+//            && autoLinkDataSource!=null && autoLinkDataSource)
+//        {
+//            NodeUtils.reconnectDataSources(getParent());
+//        }
+//    }
+
+    @Override
+    public void nodeAttributeValueChanged(Node node, NodeAttribute attr, Object oldValue, Object newValue)
+    {
+        super.nodeAttributeValueChanged(node, attr, oldValue, newValue);
+        
+        if (   ObjectUtils.in(getStatus(), Status.INITIALIZED, Status.STARTED)
+            && attr.getName().equals(AbstractDataConsumer.AUTO_LINK_DATA_SOURCE_ATTR)
+            && newValue!=null && (Boolean)newValue)
+        {
+            NodeUtils.reconnectDataSources(getParent());
         }
     }
 

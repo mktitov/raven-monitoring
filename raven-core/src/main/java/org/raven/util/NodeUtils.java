@@ -20,19 +20,23 @@ package org.raven.util;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
 import org.raven.api.impl.NodeAccessImpl;
+import org.raven.ds.DataConsumer;
+import org.raven.ds.DataSource;
+import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.expr.impl.ExpressionAttributeValueHandler;
+import org.raven.log.LogLevel;
 import org.raven.template.impl.TemplateExpression;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.ActionAttributeValueHandlerFactory;
 import org.raven.tree.impl.RefreshAttributeValueHandlerFactory;
+import org.weda.beans.ObjectUtils;
 import org.weda.internal.annotations.Service;
 import org.weda.services.TypeConverter;
 
@@ -117,5 +121,39 @@ public class NodeUtils
                     refreshAttributes.put(clone.getName(), clone);
                 }
         return refreshAttributes.isEmpty()? null : refreshAttributes;
+    }
+
+    public static void reconnectDataSources(Node node) 
+    {
+        try{
+            List<Node> childs = node.getSortedChildrens();
+            if (childs!=null && !childs.isEmpty())
+            {
+                Node prevDs = null;
+                for (Node child: childs){
+                    if (child instanceof DataConsumer)
+                    {
+                        NodeAttribute autoLinkAttr =
+                                child.getNodeAttribute(AbstractDataConsumer.AUTO_LINK_DATA_SOURCE_ATTR);
+                        NodeAttribute dsAttr =
+                                child.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE);
+                        if (   autoLinkAttr!=null && dsAttr!=null && prevDs!=null
+                            && Boolean.class.equals(autoLinkAttr.getType())
+                            && (Boolean)autoLinkAttr.getRealValue()
+                            && !ObjectUtils.equals(dsAttr.getRealValue(), prevDs)
+                            && ObjectUtils.in(child.getStatus(), Node.Status.INITIALIZED, Node.Status.STARTED))
+                        {
+                            dsAttr.setValue( (prevDs==null? null : "../"+prevDs.getName()) );
+                            dsAttr.save();
+                        }
+                    }
+                    if (child instanceof DataSource)
+                        prevDs = child;
+                }
+            }
+        } catch(Exception e) {
+            if (node.isLogLevelEnabled(LogLevel.ERROR))
+                node.getLogger().error("Automatic data sources linking error", e);
+        }
     }
 }

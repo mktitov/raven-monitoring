@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.dbcp.ConnectionPool;
@@ -736,6 +735,9 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
         public void nodeAttributeNameChanged(
                 NodeAttribute attribute, String oldName, String newName)
         {
+        }
+
+        public void nodeIndexChanged(Node node, int oldIndex, int newIndex) {
         }
 
         public void nodeAttributeValueChanged(

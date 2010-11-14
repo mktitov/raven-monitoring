@@ -38,6 +38,7 @@ import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.tree.impl.ViewableObjectImpl;
+import org.raven.util.NodeUtils;
 import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.beans.ObjectUtils;
@@ -50,6 +51,7 @@ import org.weda.beans.ObjectUtils;
 public abstract class AbstractDataConsumer extends ContainerNode implements DataConsumer, Viewable
 {
     public final static String DATASOURCE_ATTRIBUTE = "dataSource";
+    public static final String AUTO_LINK_DATA_SOURCE_ATTR = "autoLinkDataSource";
 
     public enum ResetDataPolicy {
         DONT_RESET_DATA, RESET_LAST_DATA, RESET_PREVIOUS_DATA, RESET_LAST_AND_PREVIOUS_DATA};
@@ -67,10 +69,21 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
     @NotNull
     private Boolean autoRefresh;
 
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean autoLinkDataSource;
+    
     protected Object data;
     private long lastDataTime;
     private Object previousData;
     private long previousDataTime;
+
+    public Boolean getAutoLinkDataSource() {
+        return autoLinkDataSource;
+    }
+
+    public void setAutoLinkDataSource(Boolean autoLinkDataSource) {
+        this.autoLinkDataSource = autoLinkDataSource;
+    }
 
     public Boolean getAutoRefresh()
     {
@@ -217,5 +230,18 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
         ViewableObject object = new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table);
 
         return Arrays.asList(object);
+    }
+
+    @Override
+    public void nodeAttributeValueChanged(Node node, NodeAttribute attr, Object oldValue, Object newValue)
+    {
+        super.nodeAttributeValueChanged(node, attr, oldValue, newValue);
+
+        if (   ObjectUtils.in(getStatus(), Status.INITIALIZED, Status.STARTED)
+            && attr.getName().equals(AbstractDataConsumer.AUTO_LINK_DATA_SOURCE_ATTR)
+            && newValue!=null && (Boolean)newValue)
+        {
+            NodeUtils.reconnectDataSources(getParent());
+        }
     }
 }

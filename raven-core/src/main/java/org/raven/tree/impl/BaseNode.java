@@ -513,9 +513,13 @@ public class BaseNode implements Node, NodeListener, Logger
         return index;
     }
 
+
     public void setIndex(int index)
     {
+        int oldIndex =this.index;
         this.index = index;
+//        if (oldIndex!=index)
+//            fireNodeIndexChanged(oldIndex, index);
     }
     
 //    public boolean isReadOnly()
@@ -867,6 +871,13 @@ public class BaseNode implements Node, NodeListener, Logger
         if (listeners!=null)
             for (NodeListener listener: listeners)
                 listener.nodeRemoved(this);
+    }
+
+    private void fireNodeIndexChanged(int oldIndex, int newIndex)
+    {
+        if (listeners!=null)
+            for (NodeListener listener: listeners)
+                listener.nodeIndexChanged(this, oldIndex, newIndex);
     }
 
     public NodeAttribute getParentAttribute(String attributeName)
@@ -1248,6 +1259,9 @@ public class BaseNode implements Node, NodeListener, Logger
     
     public void nodeRemoved(Node removedNode)
     {
+    }
+
+    public void nodeIndexChanged(Node node, int oldIndex, int newIndex) {
     }
 
     public int compareTo(Node o)

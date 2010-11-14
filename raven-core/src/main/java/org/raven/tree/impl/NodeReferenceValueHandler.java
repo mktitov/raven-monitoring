@@ -251,6 +251,9 @@ public class NodeReferenceValueHandler
             return false;
     }
 
+    public void nodeIndexChanged(Node node, int oldIndex, int newIndex) {
+    }
+
     protected void cleanupNodeReference(Node oldNode, Node removedNode)
     {
         if (oldNode!=null)

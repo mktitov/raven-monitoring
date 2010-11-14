@@ -27,6 +27,7 @@ import org.raven.test.PushOnDemandDataSource;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import static org.junit.Assert.*;
 
@@ -294,6 +295,29 @@ public class AbstractSafeDataPipeTest extends RavenCoreTestCase
         ds.pushData(2);
         testCollector(c1, 2);
         
+    }
+
+    @Test
+    public void autoLinkDataSourceTest() throws Exception
+    {
+        ContainerNode container = new ContainerNode("container");
+        tree.getRootNode().addAndSaveChildren(container);
+        assertTrue(container.start());
+
+        TestSafeDataPipe[] pipes = new TestSafeDataPipe[3];
+        for (int i=0; i<3; ++i){
+            pipes[i] = new TestSafeDataPipe();
+            pipes[i].setName("p"+i);
+            container.addAndSaveChildren(pipes[i]);
+            assertNull(pipes[i].getDataSource());
+        }
+        pipes[2].setAutoLinkDataSource(true);
+        assertEquals(pipes[1], pipes[2].getDataSource());
+        assertNull(pipes[1].getDataSource());
+        pipes[0].setAutoLinkDataSource(true);
+        assertNull(pipes[0].getDataSource());
+        pipes[1].getNodeAttribute(AbstractDataConsumer.AUTO_LINK_DATA_SOURCE_ATTR).setValue("true");
+        assertEquals(pipes[0], pipes[1].getDataSource());
     }
 
     private void testCollector(DataCollector collector, Object value)

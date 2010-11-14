@@ -71,5 +71,8 @@ public class NodeListenerAdapter implements NodeListener
 
     public void nodeMoved(Node node) {
     }
+
+    public void nodeIndexChanged(Node node, int oldIndex, int newIndex) {
+    }
     
 }

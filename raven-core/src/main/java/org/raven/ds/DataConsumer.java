@@ -22,14 +22,14 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.PathObject;
 
 /**
- * The node that recieves data from the one or more {@link DataSource data sources}
+ * The node that receives data from the one or more {@link DataSource data sources}
  * @author Mikhail Titov
  */
 public interface DataConsumer extends PathObject
 {
     /**
-     * Recieves data from the data source
-     * @param dataSource the data source from which data recieved
+     * Receives data from the data source
+     * @param dataSource the data source from which data received
      * @param data the data
      * @param context the context of the data processing
      */
