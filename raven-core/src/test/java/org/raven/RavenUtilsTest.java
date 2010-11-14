@@ -51,6 +51,13 @@ public class RavenUtilsTest extends ServiceTestCase
     }
 
     @Test
+    public void nameToDbName()
+    {
+        assertEquals("COLUMN_NAME", RavenUtils.nameToDbName("columnName"));
+        assertEquals("COLUMN_NAME", RavenUtils.nameToDbName("COLUMN_NAME"));
+    }
+
+    @Test
     public void getTableColumnGroups1()
     {
         TableImpl table = new TableImpl(new String[]{"col1", "col2"});

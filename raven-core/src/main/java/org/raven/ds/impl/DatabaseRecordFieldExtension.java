@@ -17,9 +17,11 @@
 
 package org.raven.ds.impl;
 
+import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -29,8 +31,20 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass(parentNode=RecordSchemaFieldNode.class, childNodes=ValuePrepareRecordFieldExtension.class)
 public class DatabaseRecordFieldExtension extends AbstractRecordFieldExtension
 {
+    public static final String COLUMN_NAME_ATTR = "columnName";
     @Parameter() @NotNull
     private String columnName;
+
+    @Override
+    protected void doInit() throws Exception
+    {
+        super.doInit();
+
+        NodeAttribute columnNameAttr = getNodeAttribute(COLUMN_NAME_ATTR);
+        String colName = columnNameAttr.getValue();
+        if (colName==null)
+            columnNameAttr.setValue(RavenUtils.nameToDbName(getParent().getName()));
+    }
 
     public String getColumnName()
     {

@@ -64,6 +64,32 @@ public class RavenUtils
     {
         return split(str, DEFAULT_SPLIT_DELIMITER);
     }
+
+    public static String nameToDbName(String name)
+    {
+        if (name==null)
+            return null;
+        
+        boolean isUpperCase = true;
+        for (int i=0; i<name.length(); ++i)
+            if (Character.isLetter(name.charAt(i)) && Character.isLowerCase(name.charAt(i)))
+            {
+                isUpperCase = false;
+                break;
+            }
+        if (isUpperCase)
+            return name;
+        
+        StringBuilder buf = new StringBuilder();
+        for (int i=0; i<name.length(); ++i) {
+            char ch = name.charAt(i);
+            if (Character.isUpperCase(ch))
+                buf.append("_");
+            buf.append((""+ch).toUpperCase());
+        }
+        
+        return buf.toString();
+    }
     
     /**
      * Splits the string.
