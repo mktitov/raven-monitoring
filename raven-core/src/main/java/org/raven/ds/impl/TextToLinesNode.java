@@ -45,6 +45,17 @@ public class TextToLinesNode extends AbstractSafeDataPipe
     @NotNull @Parameter(defaultValue="true")
     private Boolean lineFilter;
 
+    @NotNull @Parameter(defaultValue="1")
+    private Integer startFromLine;
+
+    public Integer getStartFromLine() {
+        return startFromLine;
+    }
+
+    public void setStartFromLine(Integer startFromLine) {
+        this.startFromLine = startFromLine;
+    }
+
     public Charset getEncoding() {
         return encoding;
     }
@@ -74,11 +85,14 @@ public class TextToLinesNode extends AbstractSafeDataPipe
 
         LineIterator it = IOUtils.lineIterator(is, encoding.name());
         int lineNumber = 0;
+        int _startFromLine = startFromLine;
         try{
             while (it.hasNext()) {
                 ++lineNumber;
                 String line = it.nextLine();
-                bindingSupport.put(LINE_NUMBER_PARAM, data);
+                if (lineNumber<_startFromLine)
+                    continue;
+                bindingSupport.put(LINE_NUMBER_PARAM, lineNumber);
                 bindingSupport.put(LINE_BINDING, line);
                 if (lineFilter){
                     context.putAt(LINE_NUMBER_PARAM, lineNumber);

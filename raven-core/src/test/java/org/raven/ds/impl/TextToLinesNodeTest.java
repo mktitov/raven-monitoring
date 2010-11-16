@@ -121,4 +121,14 @@ public class TextToLinesNodeTest extends RavenCoreTestCase
         assertEquals("Строка1", collector.getDataList().get(0));
         assertEquals("line2", collector.getDataList().get(1));
     }
+
+    @Test
+    public void startFromTest() throws UnsupportedEncodingException
+    {
+        splitter.setStartFromLine(2);
+        ds.pushData("Строка1\nline2");
+
+        assertEquals(1, collector.getDataListSize());
+        assertEquals("line2", collector.getDataList().get(0));
+    }
 }
