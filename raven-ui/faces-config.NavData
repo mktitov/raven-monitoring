@@ -3,31 +3,42 @@
     <Scope Scope="Faces Configuration Only"/>
     <Scope Scope="Project">
         <Node id="tabTreeEdit.jspx" x="400" y="150" zoom="true"/>
-        <Node id="index.jsp" x="400" y="750" zoom="true"/>
+        <Node id="logout.html" x="400" y="900" zoom="true"/>
         <Node id="index.jspx" x="400" y="600" zoom="true"/>
-        <Node id="tabNodeEdit.jspx" x="400" y="450" zoom="true"/>
+        <Node id="tab5NP.jspx" x="1650" y="300" zoom="true"/>
         <Node id="exportDialog.jspx" x="650" y="450" zoom="true"/>
+        <Node id="tabNodeEdit.jspx" x="400" y="450" zoom="true"/>
         <Node id="page2.jspx" x="150" y="900" zoom="true"/>
         <Node id="down.jspx" x="900" y="150" zoom="true"/>
-        <Node id="dynaTable.jspx" x="1150" y="450" zoom="true"/>
         <Node id="tabLogsAll.jspx" x="1400" y="150" zoom="true"/>
+        <Node id="dynaTable.jspx" x="1150" y="450" zoom="true"/>
+        <Node id="tabAudit.jspx" x="1900" y="150" zoom="true"/>
         <Node id="selectNodeDialog.jspx" x="650" y="150" zoom="true"/>
+        <Node id="runActionDialog.jspx" x="400" y="750" zoom="true"/>
         <Node id="page1.jspx" x="150" y="450" zoom="true"/>
         <Node id="renameNodeDialog.jspx" x="650" y="600" zoom="true"/>
+        <Node id="tabHeader.jspx" x="650" y="900" zoom="true"/>
+        <Node id="tab1NP.jspx" x="150" y="1200" zoom="true"/>
+        <Node id="tab2NP.jspx" x="1150" y="600" zoom="true"/>
         <Node id="tabControl.jspx" x="1150" y="300" zoom="true"/>
+        <Node id="tab6NP.jspx" x="150" y="1050" zoom="true"/>
+        <Node id="logout_ru.html" x="900" y="750" zoom="true"/>
         <Node id="showViewableObjectDialog.jspx" x="1400" y="300" zoom="true"/>
         <Node id="tree.jspx" x="400" y="300" zoom="true"/>
         <Node id="editExpressionDialog.jspx" x="900" y="600" zoom="true"/>
         <Node id="childAttributes.jspx" x="1650" y="150" zoom="true"/>
         <Node id="index.html" x="150" y="750" zoom="true"/>
+        <Node id="tab3NP.jspx" x="1400" y="450" zoom="true"/>
         <Node id="chooseTypeDialog.jspx" x="150" y="150" zoom="true"/>
         <Node id="templateAttrEdit.jspx" x="650" y="300" zoom="true"/>
         <Node id="tabShow.jspx" x="1150" y="150" zoom="true"/>
+        <Node id="tableExport.jspx" x="2150" y="150" zoom="true"/>
+        <Node id="copyMoveNodeDialog.jspx" x="900" y="300" zoom="true"/>
         <Node id="tabLogsTab.jspx" x="150" y="300" zoom="true"/>
         <Node id="frame.jspx" x="150" y="600" zoom="true"/>
-        <Node id="copyMoveNodeDialog.jspx" x="900" y="300" zoom="true"/>
         <Node id="tabLogs.jspx" x="650" y="750" zoom="true"/>
         <Node id="tabbed.jspx" x="900" y="450" zoom="true"/>
+        <Node id="tab4NP.jspx" x="400" y="1050" zoom="true"/>
     </Scope>
     <Scope Scope="All Faces Configurations"/>
 </Scene>

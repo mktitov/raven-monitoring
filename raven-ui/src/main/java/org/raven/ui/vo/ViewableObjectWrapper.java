@@ -19,12 +19,11 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import javax.faces.context.FacesContext;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.myfaces.trinidad.context.RequestContext;
 import org.apache.myfaces.trinidad.event.LaunchEvent;
-import org.apache.myfaces.trinidad.render.ExtendedRenderKitService;
+import org.apache.myfaces.trinidad.event.ReturnEvent;
 import org.raven.audit.Action;
 import org.raven.table.ColumnGroup;
 import org.raven.table.Table;
@@ -264,15 +263,26 @@ public class ViewableObjectWrapper
 
 	public String close() 
 	{
+		returnFromDialog();
 		if(((ActionViewableObject)viewableObject).isRefreshViewAfterAction())
         {
             log.warn("Refreshing viewable objects");
 			SessionBean.getNodeWrapper().onRefresh();
         }
-		returnFromDialog();
 
 		return null;
 	}
+
+    public void handleActionDialogReturn(ReturnEvent event)
+    {
+        log.error("Handling return from action dialog");
+		if ( ((ActionViewableObject)viewableObject).isRefreshViewAfterAction() )
+        {
+            log.error("Reloading right frame");
+            SessionBean sb = (SessionBean) SessionBean.getElValue(SessionBean.BEAN_NAME);
+            sb.reloadRightFrame();
+        }
+    }
 	
 	public String run()  
 	{
@@ -299,7 +309,7 @@ public class ViewableObjectWrapper
 	public String runActionD()
 	{
 		runAction(null);
-		if(((ActionViewableObject)viewableObject).isRefreshViewAfterAction())
+		if ( ((ActionViewableObject)viewableObject).isRefreshViewAfterAction() )
         {
             log.warn("Refreshing viewable objects");
 			SessionBean.getNodeWrapper().onRefresh();

@@ -401,6 +401,7 @@ partialTriggers=":poolStatus"
 					launchListener="#{row.setDialogParameter}"
 					inlineStyle="font-size: 110%;"
 					partialSubmit="true"
+                    returnListener="#{row.handleActionDialogReturn}"
 					text="#{row.idVO}" />
 					
 			</tr:panelHorizontalLayout>
@@ -555,15 +556,6 @@ partialTriggers=":poolStatus"
 								value="#{rowa[vxStat.index].item}"/>
 						</tr:commandLink>
 					<!-- is action -->
-						<tr:commandLink 
-							rendered="#{rowa[vxStat.index].action and rowa[vxStat.index].item.confirmationMessage == null}" 
-							action="#{rowa[vxStat.index].itemWrapper.runActionD}"
-							launchListener="#{rowa[vxStat.index].itemWrapper.setDialogParameter}"
-							useWindow="true"
-							inlineStyle="font-size: 110%;"
-							partialSubmit="true"
-							text="#{rowa[vxStat.index].idVO}" />
-					
 <!--
 						<tr:commandLink 
 							rendered="#{rowa[vxStat.index].action and rowa[vxStat.index].item.confirmationMessage == null}" 
@@ -580,6 +572,14 @@ partialTriggers=":poolStatus"
 							partialSubmit="true"
 							text="#{rowa[vxStat.index].idVO}" />
  -->							
+						<tr:commandLink
+							rendered="#{rowa[vxStat.index].action and rowa[vxStat.index].item.confirmationMessage == null}"
+							action="#{rowa[vxStat.index].itemWrapper.runActionD}"
+							launchListener="#{rowa[vxStat.index].itemWrapper.setDialogParameter}"
+							inlineStyle="font-size: 110%;"
+							partialSubmit="true"
+							text="#{rowa[vxStat.index].idVO}" />
+
 						<tr:commandLink 
 							rendered="#{rowa[vxStat.index].action and rowa[vxStat.index].item.confirmationMessage != null}" 
 							useWindow="true"
@@ -587,6 +587,7 @@ partialTriggers=":poolStatus"
 							launchListener="#{rowa[vxStat.index].itemWrapper.setDialogParameter}"
 							inlineStyle="font-size: 110%;"
 							partialSubmit="true"
+                            returnListener="#{rowa[vxStat.index].itemWrapper.handleActionDialogReturn}"
 							text="#{rowa[vxStat.index].idVO}" />
 							
 					<!-- is table -->
