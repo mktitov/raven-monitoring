@@ -26,6 +26,10 @@ import org.raven.tree.store.TreeStore;
  */
 public interface Configurator 
 {
+    /**
+     * The name of the parameter that holds the names of enabled authentication providers
+     */
+    public static final String AUTH_ROOT_PASSWORD = "auth.root.password";
 	/**
 	 * The name of parameter that stores URL of LDAP server.  
 	 */

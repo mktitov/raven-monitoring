@@ -28,9 +28,21 @@ import org.raven.tree.Node;
 public interface UserContext
 {
     /**
+     * Return the name of the provider that authenticate the user
+     */
+    public String getAuthProvider();
+    /**
      * Returns the user login.
      */
-    public String getAccountName();
+    public String getUsername();
+    /**
+     * Returns true if this user is administrator
+     */
+    public boolean isAdmin();
+    /**
+     * Sets administrator marker to this user.
+     */
+    public void setAdmin(boolean admin);
     /**
      * Returns the user groups.
      */
@@ -47,6 +59,10 @@ public interface UserContext
      * Returns the user distinguished name.
      */
     public String getDN();
+    /**
+     * Sets the user distinguished name.
+     */
+    public void setDN(String dn);
     /**
      * Returns the user context attributes.
      */

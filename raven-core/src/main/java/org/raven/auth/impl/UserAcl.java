@@ -77,6 +77,10 @@ public class UserAcl implements UserContext
 		acl = gaStorage.getAclForGroups(gList,accountName);
 	}
 
+    public String getAuthProvider() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
     public Map<String, Object> getParams() {
         return params;
     }
@@ -90,6 +94,17 @@ public class UserAcl implements UserContext
     	if(userDN==null)
     		userDN = findUserDN();
     	return userDN;
+    }
+
+    public boolean isAdmin() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void setAdmin(boolean admin) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void setDN(String dn){
     }
 
     private String findUserDN()
@@ -217,7 +232,7 @@ public class UserAcl implements UserContext
 		return acl.getAccessForNode(node);
 	}
 
-	public String getAccountName() { return accountName; }
+	public String getUsername() { return accountName; }
 
 	
 	public HashMap<String,String>  getResourcesList(Tree tree)

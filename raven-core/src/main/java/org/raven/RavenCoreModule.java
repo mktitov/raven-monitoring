@@ -25,8 +25,11 @@ import org.apache.tapestry5.ioc.ServiceBinder;
 import org.apache.tapestry5.ioc.services.ChainBuilder;
 import org.raven.audit.Auditor;
 import org.raven.audit.impl.AuditorImpl;
+import org.raven.auth.AuthProvider;
+import org.raven.auth.AuthService;
 import org.raven.auth.Authenticator;
 import org.raven.auth.UserContextConfigurator;
+import org.raven.auth.impl.AuthServiceImpl;
 import org.raven.auth.impl.BasicAuthenticator;
 import org.raven.auth.impl.UserContextConfiguratorService;
 import org.raven.cache.TemporaryCacheManager;
@@ -110,6 +113,7 @@ import org.raven.tree.impl.SchemasNode;
 import org.raven.tree.impl.SystemNode;
 import org.raven.tree.impl.TreeImpl;
 import org.raven.tree.store.impl.H2TreeStore;
+import org.slf4j.Logger;
 import org.weda.internal.Cache;
 import org.weda.internal.CacheScope;
 import org.weda.internal.services.CacheManager;
@@ -157,6 +161,12 @@ public class RavenCoreModule
         return new TreeImpl(
                 attributeReferenceValues, configurator, resourceProvider, pathResolver
                 , valueHandlerRegistry);
+    }
+
+    public static AuthService buildAuthService(
+            List<AuthProvider> providers, Configurator configurator, Logger logger)
+    {
+        return new AuthServiceImpl(providers, configurator, logger);
     }
     
     public static AttributeReferenceValues buildAttributeReferenceValues(
