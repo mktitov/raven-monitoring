@@ -18,7 +18,7 @@
 package org.raven.server.remote;
 
 import java.rmi.RemoteException;
-import org.raven.conf.impl.UserAcl;
+import org.raven.auth.impl.UserAcl;
 import org.raven.remote.RemoteSession;
 import org.raven.remote.RemoteTree;
 

@@ -1,4 +1,4 @@
-/*
+1/*
  *  Copyright 2010 Mikhail Titov.
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +22,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.logging.Level;
 import org.raven.auth.Authenticator;
 import org.raven.conf.Configurator;
-import org.raven.conf.impl.UserAcl;
+import org.raven.auth.impl.UserAcl;
 import org.raven.remote.RemoteAccess;
 import org.raven.remote.RemoteSession;
 import org.slf4j.Logger;
