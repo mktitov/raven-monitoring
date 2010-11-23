@@ -33,7 +33,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import java.io.IOException;
-import org.raven.auth.UserContextConfigurator;
+import org.raven.auth.UserContextConfiguratorService;
 
 public class AuthFilter implements Filter 
 {
@@ -45,13 +45,13 @@ public class AuthFilter implements Filter
 	private String domain = ""; 
 	private boolean first=true;
 	private boolean testMode = false;
-    private UserContextConfigurator userContextConfigurator;
+    private UserContextConfiguratorService userContextConfigurator;
 	
     public void init(FilterConfig filterConfig ) throws ServletException 
     {
     	Registry registry = RavenRegistry.getRegistry();
 		org.raven.conf.Configurator configurator = registry.getService(Configurator.class);
-        userContextConfigurator = registry.getService(UserContextConfigurator.class);
+        userContextConfigurator = registry.getService(UserContextConfiguratorService.class);
 		try { config = configurator.getConfig(); }
         catch(Exception e) { throw new ServletException("init filter: " + e.getMessage(), e); }
         domain = config.getStringProperty(Configurator.WIN_DOMAIN, domain);

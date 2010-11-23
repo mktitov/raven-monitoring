@@ -16,7 +16,10 @@
 package org.raven.ui.vo;
 
 import java.io.InputStream;
+import java.math.BigDecimal;
+import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.apache.commons.io.IOUtils;
@@ -390,7 +393,7 @@ public class ViewableObjectWrapper
 		return tableWrapper.getColumnNames();
 	}
 
-	public ColumnGroup[] getTableColumnGroups()
+	public ColumnGroup[] getColumnGroups()
 	{
 		if(!isTable())
 		{
@@ -400,16 +403,22 @@ public class ViewableObjectWrapper
 		return tableWrapper.getColumnGroups();
 	}
 
+    public List getTextNames(){
+        log.error("!!! getTextNames");
+        return Arrays.asList("col1", "col2");
+    }
+        
+
     public int getGroupsCountAndResetCounter()
     {
         counter = 1;
         log.warn("Counter initialized: {}", counter);
-        return getTableColumnGroups().length;
+        return getColumnGroups().length;
     }
 
     public int getGroupsCount()
     {
-        return getTableColumnGroups().length;
+        return getColumnGroups().length;
     }
 
     public int getCounterAndIncrement()
@@ -432,6 +441,17 @@ public class ViewableObjectWrapper
 		}
 		return !tableWrapper.getColumnGroups()[col].getColumnNames().isEmpty();
     }
+
+    public List getValidColumns()
+    {
+        return new ValidColumns();
+    }
+
+    public List getColumnNames()
+    {
+        return new ColumnNames();
+    }
+
 /*
     public boolean[] getValid()
     {
@@ -566,5 +586,37 @@ public class ViewableObjectWrapper
 	public String getComplexUid() {
 		return ""+getNodeId()+UID_DELIM+getUid();
 	}
-	
+
+//    private static int decodeIndexToColumnNumber(int index)
+//    {
+//        int grp = index/1000;
+//        int col = (int) ((index/1000. - grp) * 1000);
+//    }
+//
+    private class ValidColumns extends AbstractList<Boolean>
+    {
+        @Override
+        public Boolean get(int i) {
+            log.error("Index: {}", i);
+            return tableWrapper.isValidIndex(i);
+        }
+
+        @Override
+        public int size() {
+            return 10000;
+        }
+    }
+
+    private class ColumnNames extends AbstractList<String>
+    {
+        @Override
+        public String get(int i) {
+            return tableWrapper.getColumnName(i);
+        }
+
+        @Override
+        public int size() {
+            return 1;
+        }
+    }
 }

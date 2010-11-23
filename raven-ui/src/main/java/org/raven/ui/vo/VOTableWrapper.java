@@ -18,6 +18,7 @@ public class VOTableWrapper extends ArrayList<TIWList>
 	public static final boolean addCounter = true;
 	public static final int MAX_COLUMNS = 50;
 	private Table table = null;
+    private ColumnGroup[] columnGroups;
 	
 	public VOTableWrapper(Table x)
 	{
@@ -156,19 +157,49 @@ public class VOTableWrapper extends ArrayList<TIWList>
 		return table.getColumnNames();
 	}
 
-    public ColumnGroup[] getColumnGroups()
+    public synchronized ColumnGroup[] getColumnGroups()
     {
-        List<ColumnGroup> groups = RavenUtils.getTableColumnGroups(table);
-        if (VOTableWrapper.addCounter)
-            groups.add(0, new ColumnGroupImpl("", 0, 0));
-        ColumnGroup[] arr = new ColumnGroup[groups.size()];
-        return groups.toArray(arr);
+        if (columnGroups==null) {
+            List<ColumnGroup> groups = RavenUtils.getTableColumnGroups(table);
+            if (VOTableWrapper.addCounter)
+                groups.add(0, new ColumnGroupImpl("", 0, 0));
+            ColumnGroup[] arr = new ColumnGroup[groups.size()];
+            columnGroups = groups.toArray(arr);
+        }
+        return columnGroups;
+    }
+
+    public String getColumnName(int index)
+    {
+        Index ind = new Index(index);
+        return getColumnGroups()[ind.grp].getColumnNames().get(ind.col);
+    }
+
+    public boolean isValidIndex(int index)
+    {
+        Index ind = new Index(index);
+        if (ind.grp>=getColumnGroups().length)
+            return false;
+        ColumnGroup group = getColumnGroups()[ind.grp];
+        if (ind.col>=group.getColumnCount())
+            return false;
+        return true;
     }
 
 	public int getColumnsCount()
 	{
 		return getColumnNames().length;
 	}
+
+    public static class Index {
+        final int grp;
+        final int col;
+
+        public Index(int index) {
+            this.grp = index/1000;
+            this.col = (int) ((index / 1000. - grp) * 1000);
+        }
+    }
 /*	
     public boolean[] getValid()
     {

@@ -195,13 +195,13 @@ public class SessionBean
 	public void onSessionStart()
 	{
 		writeAuditRecord(null, Action.SESSION_START, remoteIp);
-		logger.info("session started, login:{} ip:{}",userAcl.getAccountName(),remoteIp);
+		logger.info("session started, login:{} ip:{}",userAcl.getUsername(),remoteIp);
 	}
 
 	public void onSessionStop()
 	{
 		writeAuditRecord(null, Action.SESSION_STOP, remoteIp);
-		logger.info("session stopped, login:{} ip:{}",userAcl.getAccountName(),remoteIp);
+		logger.info("session stopped, login:{} ip:{}",userAcl.getUsername(),remoteIp);
 	}
 	
 	/**
@@ -232,7 +232,7 @@ public class SessionBean
 	public String logout() 
 	{
 		String ret = "logout"; 
-		logger.info("logout, user:'{}'",userAcl.getAccountName());
+		logger.info("logout, user:'{}'",userAcl.getUsername());
 		FacesContext fc = FacesContext.getCurrentInstance();
 		ret = getOutcomeWithLang(fc,ret);
 	    HttpSession s = (HttpSession) fc.getExternalContext().getSession(false);
@@ -541,7 +541,7 @@ public class SessionBean
 			n.init();
 			if(n.isAutoStart()) n.start();
 			logger.warn("Added new node name={}",getNewNodeName());
-	        auditor.write(n, getUserAcl().getAccountName(), Action.NODE_CREATE, "class: "+newNodeType);
+	        auditor.write(n, getUserAcl().getUsername(), Action.NODE_CREATE, "class: "+newNodeType);
 	        clearNewNode();
 			return wrapper.goToEditNewAttribute(n);
 		} catch(NodeError e) {
@@ -584,7 +584,7 @@ public class SessionBean
 
 	public int forceDeleteNode(Node n)
 	{
-        auditor.write(n, getUserAcl().getAccountName(), Action.NODE_DEL, null);            	  
+        auditor.write(n, getUserAcl().getUsername(), Action.NODE_DEL, null);
 		tree.remove(n);
 		logger.warn("removed node: {}",n.getName());
 		return 0;
@@ -608,7 +608,7 @@ public class SessionBean
 			}
 			tree.remove(n);
 			logger.warn("removed node: {}",n.getName());
-	        auditor.write(n, getUserAcl().getAccountName(), Action.NODE_DEL, null);            	  
+	        auditor.write(n, getUserAcl().getUsername(), Action.NODE_DEL, null);
 			FacesContext.getCurrentInstance().getExternalContext().log("removed node: "+n.getName());
 		}
 		wrapper.onSetNode();
@@ -706,21 +706,21 @@ public class SessionBean
 	}
 
 	public String getAccountName() {
-		return userAcl.getAccountName();
+		return userAcl.getUsername();
 	}		
 	
 	public static String getAccountNameS() {
-		return SessionBean.getUserAcl().getAccountName();
+		return SessionBean.getUserAcl().getUsername();
 	}		
 	
 	public void writeAuditRecord(Node n,Action a,String mes) 
 	{
-		auditor.write(n, userAcl.getAccountName(), a, mes);
+		auditor.write(n, userAcl.getUsername(), a, mes);
 	}
 
 	public void writeAuditRecord(Action a,String mes) 
 	{
-		auditor.write(getCurrentNode(), userAcl.getAccountName(), a, mes);
+		auditor.write(getCurrentNode(), userAcl.getUsername(), a, mes);
 	}
 	
 	public String getRemoteIp() {

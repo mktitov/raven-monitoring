@@ -327,7 +327,7 @@ implements Comparator<NodeAttribute>, INodeScanner, ScannedNodeHandler
 	
 	public static String getAccountName()
 	{
-		return SessionBean.getUserAcl().getAccountName();		
+		return SessionBean.getUserAcl().getUsername();
 	}
 	
 	public static String mesFormat(String arg0, String arg1)
