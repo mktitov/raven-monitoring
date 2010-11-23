@@ -24,6 +24,16 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import org.apache.commons.codec.binary.Base64;
+import org.raven.auth.AuthService;
+import org.raven.auth.UserContext;
+import org.raven.auth.UserContextConfiguratorService;
+import org.raven.net.AccessDeniedException;
+import org.raven.server.app.App;
+import org.weda.internal.annotations.Service;
 
 /**
  *
@@ -31,16 +41,57 @@ import javax.servlet.ServletResponse;
  */
 public class LoginFilter implements Filter
 {
+    @Service
+    private static AuthService authService;
+    
+    @Service
+    private static UserContextConfiguratorService userContextConfiguratorService;
+
     public void init(FilterConfig filterConfig) throws ServletException {
     }
 
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) 
+    public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) 
             throws IOException, ServletException
     {
+        HttpServletRequest request = (HttpServletRequest) req;
+        HttpServletResponse response = (HttpServletResponse) resp;
+
+        String requestAuth = request.getHeader("Authorization");
+        if (requestAuth==null)
+        {
+            response.setHeader("WWW-Authenticate", "BASIC realm=\"RAVEN authentication service\"");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+        else
+        {
+            try{
+                String userAndPath = new String(Base64.decodeBase64(
+                        requestAuth.substring(6).getBytes()));
+                String elems[] = userAndPath.split(":");
+                if (elems.length!=2)
+                    throw new AccessDeniedException();
+                String username = elems[0];
+                String password = elems[1];
+
+                UserContext context = authService.authenticate(username, password);
+                if (context==null)
+                    throw new AccessDeniedException();
+
+                userContextConfiguratorService.configure(context);
+
+                HttpSession session = request.getSession();
+                session.setAttribute(App.USER_CONTEXT_SESSION_ATTR, context);
+            }catch(Throwable e){
+                if (e instanceof AccessDeniedException)
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+        }
+        chain.doFilter(req, resp);
     }
 
     public void destroy()
     {
     }
-
 }
