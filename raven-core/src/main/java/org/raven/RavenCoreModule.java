@@ -16,6 +16,7 @@
  */
 package org.raven;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.apache.tapestry5.ioc.Configuration;
@@ -29,9 +30,11 @@ import org.raven.auth.AuthProvider;
 import org.raven.auth.AuthService;
 import org.raven.auth.Authenticator;
 import org.raven.auth.UserContextConfigurator;
+import org.raven.auth.UserContextConfiguratorService;
 import org.raven.auth.impl.AuthServiceImpl;
 import org.raven.auth.impl.BasicAuthenticator;
-import org.raven.auth.impl.UserContextConfiguratorService;
+import org.raven.auth.impl.RavenUserContextConfigurator;
+import org.raven.auth.impl.UserContextConfiguratorServiceImpl;
 import org.raven.cache.TemporaryCacheManager;
 import org.raven.cache.TemporaryCacheManagerImpl;
 import org.raven.conf.Configurator;
@@ -193,11 +196,12 @@ public class RavenCoreModule
         return builder.build(Authenticator.class, commands);
     }
 
-    public static UserContextConfigurator buildContextConfigurator(Tree tree)
+    public static UserContextConfiguratorService buildContextConfiguratorService(
+            Collection<UserContextConfigurator> configurators)
     {
-        return new UserContextConfiguratorService(tree);
+        return new UserContextConfiguratorServiceImpl(configurators);
     }
-    
+
     @SuppressWarnings("unchecked")
 	public static void contributeConfigurator(MappedConfiguration<String, Class> conf)
     {
@@ -369,5 +373,11 @@ public class RavenCoreModule
     public static void contributeCacheManager(MappedConfiguration<CacheScope, Cache> conf)
     {
         conf.add(CacheScope.GLOBAL, new SimpleCache());
+    }
+
+    public static void contributeContextConfiguratorService(
+            Configuration<UserContextConfigurator> conf, Tree tree)
+    {
+        conf.add(new RavenUserContextConfigurator(tree));
     }
 }

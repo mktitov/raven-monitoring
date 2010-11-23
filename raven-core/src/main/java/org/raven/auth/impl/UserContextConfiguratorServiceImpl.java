@@ -20,32 +20,24 @@ package org.raven.auth.impl;
 import java.util.Collection;
 import org.raven.auth.UserContext;
 import org.raven.auth.UserContextConfigurator;
-import org.raven.tree.Node;
-import org.raven.tree.Node.Status;
-import org.raven.tree.Tree;
-import org.raven.tree.impl.SystemNode;
+import org.raven.auth.UserContextConfiguratorService;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class UserContextConfiguratorService implements UserContextConfigurator
+public class UserContextConfiguratorServiceImpl implements UserContextConfiguratorService
 {
-    private final Tree tree;
+    private final Collection<UserContextConfigurator> configurators;
 
-    public UserContextConfiguratorService(Tree tree) {
-        this.tree = tree;
+    public UserContextConfiguratorServiceImpl(Collection<UserContextConfigurator> configurators)
+    {
+        this.configurators = configurators;
     }
 
     public void configure(UserContext userContext)
     {
-        Collection<Node> configrators = 
-                tree.getRootNode().getChildren(SystemNode.NAME)
-                .getChildren(AuthorizationNode.NODE_NAME)
-                .getChildren(ContextsNode.NODE_NAME)
-                .getChildrens();
-        for (Node configurator: configrators)
-            if ((configurator instanceof UserContextConfigurator) && Status.STARTED==configurator.getStatus())
-                ((UserContextConfigurator)configurator).configure(userContext);
+        for (UserContextConfigurator configurator: configurators)
+            configurator.configure(userContext);
     }
 }

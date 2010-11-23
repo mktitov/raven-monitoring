@@ -17,21 +17,23 @@
 
 package org.raven.auth.impl;
 
+import org.raven.auth.UserContextConfiguratorService;
+import org.raven.test.RavenCoreTestCase;
 import java.util.Arrays;
 import java.util.Map;
+import org.raven.auth.UserContextConfigurator;
+import org.raven.tree.Node;
+import org.raven.tree.impl.SystemNode;
 import org.junit.Test;
 import org.raven.auth.UserContext;
-import org.raven.auth.UserContextConfigurator;
-import org.raven.test.RavenCoreTestCase;
-import org.raven.tree.Node;
 import org.raven.tree.Tree;
-import org.raven.tree.impl.SystemNode;
 import static org.easymock.EasyMock.*;
+
 /**
  *
  * @author Mikhail Titov
  */
-public class UserContextConfiguratorServiceTest extends RavenCoreTestCase
+public class RavenUserContextConfiguratorTest extends RavenCoreTestCase
 {
     @Test
     public void objectTest()
@@ -44,13 +46,13 @@ public class UserContextConfiguratorServiceTest extends RavenCoreTestCase
         expect(node.getChildren(SystemNode.NAME)).andReturn(node);
         expect(node.getChildren(AuthorizationNode.NODE_NAME)).andReturn(node);
         expect(node.getChildren(ContextsNode.NODE_NAME)).andReturn(node);
-        expect(node.getChildrens()).andReturn(Arrays.asList((Node)node));
+        expect(node.getSortedChildrens()).andReturn(Arrays.asList((Node)node));
         expect(node.getStatus()).andReturn(Node.Status.STARTED);
         node.configure(context);
 
         replay(treeService, node, context);
 
-        UserContextConfiguratorService configuratorService = new UserContextConfiguratorService(treeService);
+        RavenUserContextConfigurator configuratorService = new RavenUserContextConfigurator(treeService);
         configuratorService.configure(context);
 
         verify(treeService, node, context);
@@ -69,7 +71,8 @@ public class UserContextConfiguratorServiceTest extends RavenCoreTestCase
         configuratorNode.setExpression("userContext.params.test='value'");
         assertTrue(configuratorNode.start());
 
-        UserContextConfigurator configuratorService = registry.getService(UserContextConfigurator.class);
+        UserContextConfigurator configuratorService = registry.getService(
+                UserContextConfiguratorService.class);
         assertNotNull(configuratorService);
 
         UserContext context = createMock(UserContext.class);
