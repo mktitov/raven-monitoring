@@ -18,6 +18,7 @@
 package org.raven.net.impl;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.junit.Before;
@@ -67,7 +68,7 @@ public class SnmpReaderNodeTest extends ServiceTestCase
     }
     
     @Override
-    protected void configureRegistry(RegistryBuilder builder)
+    protected void configureRegistry(Set<Class> builder)
     {
         super.configureRegistry(builder);
         builder.add(RavenCoreModule.class);

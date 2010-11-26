@@ -17,6 +17,7 @@
 
 package org.raven.tree.impl;
 
+import java.util.Set;
 import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.junit.After;
 import org.junit.Before;
@@ -39,7 +40,7 @@ public class ParameterFieldTransformerWorkerTest extends ServiceTestCase
     private Configurator configurator;
     
     @Override
-    protected void configureRegistry(RegistryBuilder builder)
+    protected void configureRegistry(Set<Class> builder)
     {
         builder.add(RavenCoreModule.class);
     }

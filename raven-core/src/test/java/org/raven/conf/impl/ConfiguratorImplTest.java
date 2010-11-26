@@ -17,6 +17,7 @@
 
 package org.raven.conf.impl;
 
+import java.util.Set;
 import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
@@ -32,7 +33,7 @@ import org.raven.tree.store.TreeStore;
 public class ConfiguratorImplTest extends ServiceTestCase
 {
     @Override
-    protected void configureRegistry(RegistryBuilder builder)
+    protected void configureRegistry(Set<Class> builder)
     {
         builder.add(RavenCoreModule.class);
     }

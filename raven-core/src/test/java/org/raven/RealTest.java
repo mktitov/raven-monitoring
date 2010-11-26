@@ -22,6 +22,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.IOUtils;
 import org.apache.tapestry5.ioc.RegistryBuilder;
@@ -62,7 +63,7 @@ public class RealTest extends ServiceTestCase
     private RRGraphNode ramUsage;
     
     @Override
-    protected void configureRegistry(RegistryBuilder builder)
+    protected void configureRegistry(Set<Class> builder)
     {
         builder.add(RavenCoreModule.class);
     }

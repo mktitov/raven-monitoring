@@ -17,7 +17,7 @@
 
 package org.raven.ds.impl;
 
-import org.apache.tapestry5.ioc.RegistryBuilder;
+import java.util.Set;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
 import org.raven.test.ServiceTestCase;
@@ -29,7 +29,7 @@ import org.raven.test.ServiceTestCase;
 public class SumAggregateFunctionTest extends ServiceTestCase
 {
     @Override
-    protected void configureRegistry(RegistryBuilder builder)
+    protected void configureRegistry(Set<Class> builder)
     {
         super.configureRegistry(builder);
         builder.add(RavenCoreModule.class);

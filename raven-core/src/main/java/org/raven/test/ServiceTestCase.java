@@ -16,6 +16,8 @@
  */
 package org.raven.test;
 
+import java.util.HashSet;
+import java.util.Set;
 import org.raven.EnLocaleModule;
 import org.apache.tapestry5.ioc.IOCUtilities;
 import org.apache.tapestry5.ioc.Registry;
@@ -33,7 +35,7 @@ public class ServiceTestCase extends Assert
 {
     protected Registry registry;
     
-    protected void configureRegistry(RegistryBuilder builder)
+    protected void configureRegistry(Set<Class> builder)
     {
     }
 
@@ -45,9 +47,13 @@ public class ServiceTestCase extends Assert
         
         RegistryBuilder builder = new RegistryBuilder();
         IOCUtilities.addDefaultModules(builder);
-        builder.add(EnLocaleModule.class);
-        builder.add(UserContextServiceModule.class);
-        configureRegistry(builder);
+
+        Set<Class> modules = new HashSet<Class>();
+        modules.add(EnLocaleModule.class);
+        modules.add(UserContextServiceModule.class);
+        configureRegistry(modules);
+        for (Class moduleClass: modules)
+            builder.add(moduleClass);
 
         registry = builder.build();
         registry.performRegistryStartup();

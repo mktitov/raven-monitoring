@@ -40,6 +40,6 @@ public class NodeAccessServiceImpl implements NodeAccessService
 
     public int getAccessForNode(Node node, UserContext context)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return "root".equals(context.getUsername())? AccessControl.ADMIN : 0;
     }
 }

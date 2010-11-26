@@ -17,7 +17,7 @@
 
 package org.raven.impl;
 
-import org.apache.tapestry5.ioc.RegistryBuilder;
+import java.util.Set;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.raven.RavenCoreModule;
@@ -38,7 +38,7 @@ import org.weda.services.TypeConverter;
 public class AttributeReferenceToStringConverterTest extends ServiceTestCase
 {
     @Override
-    protected void configureRegistry(RegistryBuilder builder)
+    protected void configureRegistry(Set<Class> builder)
     {
         builder.add(RavenCoreModule.class);
     }

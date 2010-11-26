@@ -19,7 +19,6 @@ package org.raven.tree.impl;
 
 import java.util.List;
 import java.util.Set;
-import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -77,7 +76,7 @@ public class TreeServiceTest extends ServiceTestCase
     private TypeConverter converter;
     
     @Override
-    protected void configureRegistry(RegistryBuilder builder)
+    protected void configureRegistry(Set<Class> builder)
     {
         builder.add(RavenCoreModule.class);
     }
