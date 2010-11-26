@@ -17,8 +17,11 @@
 
 package org.raven.server.app;
 
+import org.apache.tapestry5.ioc.ServiceBinder;
 import org.raven.auth.UserContextService;
+import org.raven.server.app.service.IconResolver;
 import org.raven.server.app.service.RavenServletContext;
+import org.raven.server.app.service.impl.IconResolverImpl;
 import org.raven.server.app.service.impl.LocaleServiceImpl;
 import org.raven.server.app.service.impl.RavenServletContextImpl;
 import org.raven.server.app.service.impl.UserContextServiceImpl;
@@ -30,9 +33,10 @@ import org.weda.internal.services.Locale;
  */
 public class RavenServerAppModule
 {
-    public static RavenServletContext buildRavenServletContext()
+    public static void bind(ServiceBinder binder)
     {
-        return new RavenServletContextImpl();
+        binder.bind(RavenServletContext.class, RavenServletContextImpl.class);
+        binder.bind(IconResolver.class, IconResolverImpl.class);
     }
 
     public static Locale buildLocale(RavenServletContext servletContext)
