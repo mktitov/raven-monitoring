@@ -22,6 +22,7 @@ import org.raven.auth.UserContext;
 import org.raven.conf.Configurator;
 import org.raven.tree.Node;
 import org.raven.tree.Tree;
+import org.weda.beans.ObjectUtils;
 
 /**
  *
@@ -40,6 +41,7 @@ public class NodeAccessServiceImpl implements NodeAccessService
 
     public int getAccessForNode(Node node, UserContext context)
     {
-        return "root".equals(context.getUsername())? AccessControl.ADMIN : 0;
+        String username = context==null? null : context.getUsername();
+        return ObjectUtils.equals("root", username)? AccessControl.ADMIN : 0;
     }
 }

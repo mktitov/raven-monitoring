@@ -29,10 +29,12 @@ import org.raven.audit.impl.AuditorImpl;
 import org.raven.auth.AuthProvider;
 import org.raven.auth.AuthService;
 import org.raven.auth.Authenticator;
+import org.raven.auth.NodeAccessService;
 import org.raven.auth.UserContextConfigurator;
 import org.raven.auth.UserContextConfiguratorService;
 import org.raven.auth.impl.AuthServiceImpl;
 import org.raven.auth.impl.BasicAuthenticator;
+import org.raven.auth.impl.NodeAccessServiceImpl;
 import org.raven.auth.impl.RavenUserContextConfigurator;
 import org.raven.auth.impl.UserContextConfiguratorServiceImpl;
 import org.raven.cache.TemporaryCacheManager;
@@ -170,6 +172,11 @@ public class RavenCoreModule
             List<AuthProvider> providers, Configurator configurator, Logger logger)
     {
         return new AuthServiceImpl(providers, configurator, logger);
+    }
+
+    public static NodeAccessService buildNodeAccessService(Tree tree, Configurator configurator)
+    {
+        return new NodeAccessServiceImpl(tree, configurator);
     }
     
     public static AttributeReferenceValues buildAttributeReferenceValues(
