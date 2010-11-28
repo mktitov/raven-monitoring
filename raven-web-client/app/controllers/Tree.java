@@ -6,22 +6,15 @@
 package controllers;
 
 import java.io.InputStream;
-import java.io.IOException;
-import java.util.Map;
 import beans.JsTreeNode;
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import org.apache.commons.collections.map.LinkedMap;
-import org.apache.commons.io.IOUtils;
 import org.raven.rest.beans.NodeBean;
 import play.Logger;
 import play.Play;
 import play.libs.WS;
 import play.mvc.Controller;
 import play.mvc.Http.Header;
-import play.mvc.Router;
 import play.mvc.With;
 import service.App;
 import static service.RestHelper.*;
@@ -41,6 +34,7 @@ public class Tree extends Controller
     public static void childs(String path) throws UnsupportedEncodingException
     {
         Logger.debug("Reading child nodes for path (%s)", path);
+        path = path==null || path.isEmpty()? null : path;
         NodeBean[] beans = requestForJson("node/childs", session, NodeBean[].class, "path", path);
         JsTreeNode[] nodes = null;
         if (beans!=null){
@@ -59,6 +53,11 @@ public class Tree extends Controller
             renderBinary(stream, image.length);
         }else
             badRequest();
+    }
+
+    public static void addNewNode()
+    {
+        
     }
 
     public static void testRead() throws UnsupportedEncodingException

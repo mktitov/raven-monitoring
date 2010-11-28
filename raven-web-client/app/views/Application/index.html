@@ -3,13 +3,12 @@
 
 #{set 'moreStyles'}
     <link rel="stylesheet" type="text/css" media="screen" href="@{'/public/stylesheets/ui-lightness/jquery-ui-1.8.6.custom.css'}">
-<!--    <link rel="stylesheet" type="text/css" media="screen" href="@{'/public/stylesheets/raven.css'}">-->
 #{/set}
 #{set 'moreScripts'}
     #{script 'jquery-ui-1.8.6.custom.min.js'/}
+    #{script 'jquery.hotkeys.js'/}
     #{script 'jquery.jstree.js'/}
     #{script 'jquery.layout.min.js'/}
-    #{script 'raven-main.js'/}
     <script type="text/javascript">
         $(function(){
             layout = $('body').layout({
@@ -18,32 +17,50 @@
                     resizable:false, slidable:false, closable:false, spacing_open:-1, togglerLength_open: 0,
                     togglerLength_open: 0, togglerLength_closed: -1, fxName:"none"
                 }
-                , center:{resizable:false}
             });
 
+            $("#addNodeDialog").dialog({
+                modal:true,
+                autoOpen:false,
+                position:['center','top'],
+                width:500,
+                show:'blind',hide:'blind'
+            });
 
             $("#tree").jstree({
                 themes : {theme:"apple"},
                 json_data: {
                     ajax:{
                         url:"@{Tree.childs}",
-                        data:function(node){ return {path:node==-1? "/" : node[0].id}; }
+                        data:function(node){ return {path:node==-1? "" : node[0].id}; }
                     }
                 },
-                plugins:["themes","json_data"]
+                hotkeys:{
+                    "del": function(node){
+                        alert("Creating new node")
+                    },
+                    "insert": function(node){
+                        $("#addNodeDialog").dialog("open");
+                    }
+                },
+                plugins:["themes","json_data","ui","hotkeys"]
             });
         });
     </script>
 #{/set}
 
-  <div class="ui-layout-north">North</div>
-  <div class="ui-layout-center">Center</div>
-<!--  <div class="ui-layout-south">South</div>-->
-  <div class="ui-layout-west">
-      <div class="content"
-        <div id="tree"/>
-      </div>
-  </div>
-<
-
-
+<div class="ui-layout-north">
+</div>
+<div class="ui-layout-center">Center</div>
+<div class="ui-layout-west">
+    <div id="tree"></div>
+</div>
+      
+  <div id="addNodeDialog" title="Добавление нового узла">
+    <form>
+        <fieldset>
+            <label for="name">Имя</label>
+            <input id="name" type="text" class="text ui-widget-content ui-corner-all"/>
+        </fieldset>
+    </form>
+ </div>

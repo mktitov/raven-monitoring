@@ -1,0 +1,64 @@
+#{extends 'main.html' /}
+#{set title:'Raven UI' /}
+
+#{set 'moreStyles'}
+    <link rel="stylesheet" type="text/css" media="screen" href="@{'/public/stylesheets/ui-lightness/jquery-ui-1.8.6.custom.css'}">
+#{/set}
+#{set 'moreScripts'}
+    #{script 'jquery-ui-1.8.6.custom.min.js'/}
+    #{script 'jquery.layout.min.js'/}
+    #{script 'jquery.jstree.js'/}
+    #{script 'jquery.hotkeys.js'/}
+    <script type="text/javascript">
+        $(function(){
+            $('body').layout({
+                  west:{size:300}
+                , north:{
+                    resizable:false, slidable:false, closable:false, spacing_open:-1, togglerLength_open: 0,
+                    togglerLength_open: 0, togglerLength_closed: -1, fxName:"none"
+                }
+                , center:{resizable:false}
+
+            });
+            $("#dialog").dialog({
+                width:400, position:["center","top"], show:'blind', hide:'blind'
+            });
+            $("#tree").jstree({
+                themes : {theme:"apple"},
+                plugins:["themes", "html_data","ui","hotkeys"]
+            });
+        });
+    </script>
+#{/set}
+
+<div class="ui-layout-north">
+</div>
+<div class="ui-layout-center">Center</div>
+<div class="ui-layout-west">
+    <div id="tree">
+	<ul>
+		<li id="phtml_1">
+            <a href="#">Root node 1</a><img src="@{'/public/images/go-dn-on.gif'}" alt="start"/>
+			<ul>
+				<li id="phtml_2">
+					<a href="#">Child node 1</a>
+				</li>
+				<li id="phtml_3">
+					<a href="#">Child node 2</a>
+				</li>
+			</ul>
+		</li>
+		<li id="phtml_4">
+			<a href="#">Root node 2</a>
+		</li>
+	</ul>
+    </div>
+</div>
+
+<div id="dialog" title="Dialog test">
+    <p>The content of the dialog</p>
+    <form>
+        <label for="name">Имя</label>
+        <input id="name" type="text"/>
+    </form>
+</div>
