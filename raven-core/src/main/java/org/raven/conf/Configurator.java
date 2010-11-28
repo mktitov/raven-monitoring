@@ -26,6 +26,7 @@ import org.raven.tree.store.TreeStore;
  */
 public interface Configurator 
 {
+    public static final String REST_ENCODING = "utf-8";
     /**
      * The name of the parameter that holds the names of enabled authentication providers
      */
