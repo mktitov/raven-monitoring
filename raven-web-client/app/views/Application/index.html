@@ -1,4 +1,49 @@
 #{extends 'main.html' /}
-#{set title:'Home' /}
+#{set title:'Raven UI' /}
 
-#{welcome /}
+#{set 'moreStyles'}
+    <link rel="stylesheet" type="text/css" media="screen" href="@{'/public/stylesheets/ui-lightness/jquery-ui-1.8.6.custom.css'}">
+<!--    <link rel="stylesheet" type="text/css" media="screen" href="@{'/public/stylesheets/raven.css'}">-->
+#{/set}
+#{set 'moreScripts'}
+    #{script 'jquery-ui-1.8.6.custom.min.js'/}
+    #{script 'jquery.jstree.js'/}
+    #{script 'jquery.layout.min.js'/}
+    #{script 'raven-main.js'/}
+    <script type="text/javascript">
+        $(function(){
+            layout = $('body').layout({
+                  west:{size:300}
+                , north:{
+                    resizable:false, slidable:false, closable:false, spacing_open:-1, togglerLength_open: 0,
+                    togglerLength_open: 0, togglerLength_closed: -1, fxName:"none"
+                }
+                , center:{resizable:false}
+            });
+
+
+            $("#tree").jstree({
+                themes : {theme:"apple"},
+                json_data: {
+                    ajax:{
+                        url:"@{Tree.childs}",
+                        data:function(node){ return {path:node==-1? "/" : node[0].id}; }
+                    }
+                },
+                plugins:["themes","json_data"]
+            });
+        });
+    </script>
+#{/set}
+
+  <div class="ui-layout-north">North</div>
+  <div class="ui-layout-center">Center</div>
+<!--  <div class="ui-layout-south">South</div>-->
+  <div class="ui-layout-west">
+      <div class="content"
+        <div id="tree"/>
+      </div>
+  </div>
+<
+
+

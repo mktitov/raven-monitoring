@@ -9,9 +9,9 @@
                 themes : {theme:"apple"},
                 json_data: {
                     ajax:{
-                        url:"@{Tree.node}",
-                        data:function(n){
-                            return {path:"path_to_node"};
+                        url:"@{Tree.childs}",
+                        data:function(node){
+                            return {path:node==-1? "/" : node[0].id};
                         }
                     }
                 },

@@ -3,6 +3,7 @@
 # ~~~~
 
 # Home page
+*       /                                       module:secure
 GET     /                                       Application.index
 
 # Map static resources from the /app/public folder to the /public path
