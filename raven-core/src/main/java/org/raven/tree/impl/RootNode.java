@@ -22,7 +22,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.expr.BindingSupport;
-import org.raven.expr.impl.ExpressionAttributeValueHandler;
 
 /**
  *

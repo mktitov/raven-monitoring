@@ -19,8 +19,6 @@ package org.raven.tree.impl;
 
 import org.raven.tree.InvalidPathException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import org.apache.commons.lang.text.StrTokenizer;
