@@ -17,32 +17,24 @@
 
 package org.raven.server.app.rest;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import org.raven.rest.beans.NodeBean;
+import java.net.URLDecoder;
+import org.raven.conf.Configurator;
+import org.weda.internal.annotations.Service;
 
 /**
  *
  * @author Mikhail Titov
  */
-@Path("/helloworld/")
-public class HellowWorldResource
+public class RestHelper
 {
-    @GET
-    @Produces("text/plain")
-    public String getGreeting(@QueryParam("path") String path)
-    {
-        return "Hello world. Body: "+path;
-    }
+    @Service
+    private static Configurator configurator;
 
-    @Path("/testJson/")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public NodeBean getJson()
+    public static String decodeParam(String value, String defaultValue) throws Exception
     {
-        return new NodeBean("node name", "path to node", "path to icon", true, 0);
+        if (value==null || value.isEmpty())
+            return defaultValue;
+        return URLDecoder.decode(value, configurator.getConfig().getStringProperty(
+                Configurator.REST_ENCODING, "utf-8"));
     }
 }

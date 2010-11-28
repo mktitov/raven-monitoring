@@ -41,6 +41,10 @@
                     <artifactId>raven-core</artifactId>
                 </dependency>
                 <dependency>
+                    <groupId>org.raven</groupId>
+                    <artifactId>raven-rest-beans</artifactId>
+                </dependency>
+                <dependency>
                     <groupId>com.sun.jersey</groupId>
                     <artifactId>jersey-server</artifactId>
                 </dependency>

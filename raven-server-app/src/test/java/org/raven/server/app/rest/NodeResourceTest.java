@@ -17,11 +17,13 @@
 
 package org.raven.server.app.rest;
 
+import java.net.URLEncoder;
 import java.util.Collection;
 import org.junit.Test;
 import org.raven.server.app.RavenServerAppTestCase;
-import org.raven.server.app.bean.NodeBean;
-import org.raven.tree.InvalidPathException;
+import org.raven.rest.beans.NodeBean;
+import org.raven.server.app.service.IconResolver;
+import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.SystemNode;
 
 /**
@@ -31,7 +33,7 @@ import org.raven.tree.impl.SystemNode;
 public class NodeResourceTest extends RavenServerAppTestCase
 {
     @Test
-    public void getChildNodeTest1() throws InvalidPathException
+    public void getChildNodeTest1() throws Exception
     {
         NodeResource res = new NodeResource();
         Collection<NodeBean> nodes = res.getChildNodes(null);
@@ -41,7 +43,7 @@ public class NodeResourceTest extends RavenServerAppTestCase
     }
 
     @Test
-    public void getChildNodeTest2() throws InvalidPathException
+    public void getChildNodeTest2() throws Exception
     {
         NodeResource res = new NodeResource();
         Collection<NodeBean> nodes = res.getChildNodes(
@@ -51,4 +53,14 @@ public class NodeResourceTest extends RavenServerAppTestCase
         assertTrue(nodes.size()>2);
     }
 
+    @Test
+    public void getIconTest() throws Exception
+    {
+        NodeResource res = new NodeResource();
+        IconResolver iconResolver = registry.getService(IconResolver.class);
+        String path = iconResolver.getPath(BaseNode.class);
+        assertNotNull(path);
+        byte[] image = res.getIcon(URLEncoder.encode(path, "utf-8"));
+        assertNotNull(image);
+    }
 }
