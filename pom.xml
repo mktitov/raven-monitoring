@@ -12,6 +12,7 @@
         <module>raven-core</module>
         <module>raven-server</module>
         <module>raven-ui</module>
+        <module>raven-rest-beans</module>
         <module>raven-server-app</module>
         <!--
         <module>raven-client</module>
@@ -240,6 +241,12 @@
             <dependency>
                 <groupId>org.raven</groupId>
                 <artifactId>raven-core</artifactId>
+                <version>1.0-SNAPSHOT</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.raven</groupId>
+                <artifactId>raven-rest-beans</artifactId>
                 <version>1.0-SNAPSHOT</version>
                 <scope>compile</scope>
             </dependency>
