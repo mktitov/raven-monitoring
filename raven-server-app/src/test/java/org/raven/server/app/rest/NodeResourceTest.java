@@ -32,11 +32,22 @@ import org.raven.tree.impl.SystemNode;
  */
 public class NodeResourceTest extends RavenServerAppTestCase
 {
+
     @Test
-    public void getChildNodeTest1() throws Exception
+    public void getChildNode_getRootNode() throws Exception
     {
         NodeResource res = new NodeResource();
         Collection<NodeBean> nodes = res.getChildNodes(null);
+
+        assertNotNull(nodes);
+        assertEquals(nodes.size(), 1);
+    }
+
+    @Test
+    public void getChildNode_getRootChilds() throws Exception
+    {
+        NodeResource res = new NodeResource();
+        Collection<NodeBean> nodes = res.getChildNodes("/");
 
         assertNotNull(nodes);
         assertTrue(nodes.size()>=2);

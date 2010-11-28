@@ -17,7 +17,7 @@
 
 package org.raven.server.app.rest;
 
-import java.net.URLDecoder;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -28,11 +28,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import org.raven.auth.NodeAccessService;
 import org.raven.auth.UserContextService;
-import org.raven.auth.impl.AccessControl;
-import org.raven.conf.Configurator;
 import org.raven.rest.beans.NodeBean;
 import org.raven.server.app.service.IconResolver;
-import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
 import org.raven.tree.Tree;
 import org.slf4j.Logger;
@@ -64,6 +61,7 @@ public class NodeResource
     public Collection<NodeBean> getChildNodes(@QueryParam("path") String path)
             throws Exception
     {
+        boolean pathWasNull = path==null || path.isEmpty();
         path = decodeParam(path, "/");
         if (log.isDebugEnabled())
             log.debug("Looking up for child nodes of the ({})", path);
@@ -72,7 +70,7 @@ public class NodeResource
         if (log.isDebugEnabled())
             log.debug("Node found");
 
-        List<Node> childs = node.getSortedChildrens();
+        List<Node> childs = pathWasNull? Arrays.asList(node) : node.getSortedChildrens();
         if (childs!=null && !childs.isEmpty()){
             Collection<NodeBean> beans = new ArrayList<NodeBean>(childs.size());
             for (Node child: childs) {
