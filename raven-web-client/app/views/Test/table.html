@@ -1,0 +1,35 @@
+#{extends 'main.html' /}
+#{set title:'Raven UI' /}
+
+#{set 'moreStyles'}
+    <link rel="stylesheet" type="text/css" media="screen" href="@{'/public/stylesheets/blitzer/jquery-ui-1.8.6.custom.css'}">
+    <link rel="stylesheet" type="text/css" media="screen" href="@{'/public/stylesheets/data_tables_jui.css'}">
+#{/set}
+#{set 'moreScripts'}
+    #{script 'jquery-ui-1.8.6.custom.min.js'/}
+    #{script 'jquery.dataTables.js'/}
+    <script type="text/javascript">
+        $(function(){
+            $('#nodeTypesTable').dataTable({
+                "bJQueryUI": true,
+                "sPaginationType": "full_numbers",
+                sDom:"<fl>t"
+            });
+        });
+    </script>
+#{/set}
+
+<table id="nodeTypesTable" class="display">
+    <thead>
+        <tr>
+            <th>Тип узла</th>
+            <th>Краткое описание</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>org.raven.tree.impl.ContainerNode</td>
+            <td>Узлел который может содержать другие узлы</td>
+        </tr>
+    </tbody>
+</table>

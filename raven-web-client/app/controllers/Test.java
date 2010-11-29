@@ -17,4 +17,9 @@ public class Test extends Controller
     {
         render();
     }
+
+    public static void table()
+    {
+        render();
+    }
 }
