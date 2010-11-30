@@ -29,12 +29,14 @@ import javax.ws.rs.core.MediaType;
 import org.raven.auth.NodeAccessService;
 import org.raven.auth.UserContextService;
 import org.raven.rest.beans.NodeBean;
+import org.raven.rest.beans.NodeTypeBean;
 import org.raven.server.app.service.IconResolver;
 import org.raven.tree.Node;
 import org.raven.tree.Tree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weda.internal.annotations.Service;
+import org.weda.services.ClassDescriptorRegistry;
 import static org.raven.server.app.rest.RestHelper.*;
 /**
  *
@@ -53,6 +55,8 @@ public class NodeResource
     private static NodeAccessService nodeAccessService;
     @Service
     private static UserContextService userContextService;
+    @Service
+    private static ClassDescriptorRegistry classDescriptor;
 
 
     @GET
@@ -92,5 +96,30 @@ public class NodeResource
     public byte[] getIcon(@QueryParam("path") String path) throws Exception
     {
         return IconResolver.getIcon(decodeParam(path, null));
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/child-node-types/")
+    public Collection<NodeTypeBean> getChildNodeTypes(@QueryParam("path") String path) throws Exception
+    {
+        path = path = decodeParam(path, "/");
+        Node node = tree.getNode(path);
+        if (node==null) {
+            if (log.isWarnEnabled())
+                log.warn("Invalid path (%s)", path);
+            return null;
+        }
+
+        List<Class> nodeTypes = tree.getChildNodesTypes(node);
+        if (nodeTypes==null || nodeTypes.isEmpty())
+            return null;
+        
+        List<NodeTypeBean> types = new ArrayList<NodeTypeBean>(nodeTypes.size());
+        for (Class nodeType: nodeTypes)
+            types.add(new NodeTypeBean(
+                nodeType.getName(), classDescriptor.getClassDescriptor(nodeType).getDisplayName()));
+        
+        return types;
     }
 }

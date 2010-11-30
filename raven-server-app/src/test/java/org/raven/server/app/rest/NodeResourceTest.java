@@ -22,6 +22,7 @@ import java.util.Collection;
 import org.junit.Test;
 import org.raven.server.app.RavenServerAppTestCase;
 import org.raven.rest.beans.NodeBean;
+import org.raven.rest.beans.NodeTypeBean;
 import org.raven.server.app.service.IconResolver;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.SystemNode;
@@ -73,5 +74,19 @@ public class NodeResourceTest extends RavenServerAppTestCase
         assertNotNull(path);
         byte[] image = res.getIcon(URLEncoder.encode(path, "utf-8"));
         assertNotNull(image);
+    }
+
+    @Test
+    public void getChildNodeTypesTest() throws Exception
+    {
+        NodeResource res = new NodeResource();
+
+        Collection<NodeTypeBean> types = res.getChildNodeTypes(null);
+        assertNotNull(types);
+        assertTrue(types.size()>10);
+
+        types = res.getChildNodeTypes("Templates");
+        assertNotNull(types);
+        assertEquals(1, types.size());
     }
 }
