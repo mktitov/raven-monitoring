@@ -5,10 +5,12 @@
 
 package controllers;
 
+import org.raven.rest.beans.NodeTypeBean;
 import java.io.InputStream;
 import beans.JsTreeNode;
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.LinkedHashMap;
 import org.raven.rest.beans.NodeBean;
 import play.Logger;
 import play.Play;
@@ -53,6 +55,21 @@ public class Tree extends Controller
             renderBinary(stream, image.length);
         }else
             badRequest();
+    }
+
+    public static void childNodeTypes(String path) throws UnsupportedEncodingException
+    {
+        NodeTypeBean[] beans = requestForJson("node/child-node-types", session, NodeTypeBean[].class, "path", path);
+        if (beans==null || beans.length==0)
+            renderJSON(null);
+        else {
+            String[][] table = new String[beans.length][];
+            for (int i=0; i<beans.length; ++i)
+                table[i] = new String[]{beans[i].type, beans[i].shortDescription};
+            LinkedHashMap data = new LinkedHashMap();
+            data.put("aaData", table);
+            renderJSON(data);
+        }
     }
 
     public static void addNewNode()

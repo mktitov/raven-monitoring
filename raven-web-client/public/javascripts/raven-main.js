@@ -39,6 +39,7 @@ $(function(){
 
     $("#nodeTypesTable").dataTable({
         bJQueryUI: true,
-        sDom:"<fl>t"
+        sDom:"<fl>t",
+        sAjaxSource:'@{Tree.childNodeTypes}'
 	})
 });
