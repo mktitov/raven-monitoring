@@ -152,19 +152,20 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
     public boolean gatherDataForConsumer(DataConsumer dataConsumer, DataContext context)
             throws Exception
     {
+        long startTime = System.currentTimeMillis();
+        long realProcessingTime = processingTime;
+        long procStart = startTime;
+        
         String key = ""+getId()+"_bindings";
         bindingSupport.enableScriptExecution();
         tree.addGlobalBindings(key, bindingSupport);
+        DatabaseRecordQuery recordQuery = null;
         try{
             bindingSupport.put(SESS_ATTRS_BINDING, context.getSessionAttributes());
             bindingSupport.put(CONTEXT_BINDING, context);
-            long startTime = System.currentTimeMillis();
-            long realProcessingTime = processingTime;
-            long procStart = startTime;
             List<DatabaseFilterElement> filterElements =
                     createFilterElements(context.getSessionAttributes());
 
-            DatabaseRecordQuery recordQuery = null;
             String _query = query;
             if (_query==null || _query.trim().isEmpty())
                 recordQuery = new DatabaseRecordQuery(
@@ -179,44 +180,44 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
 
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug("Executing query:\n"+recordQuery.getQuery());
-            DatabaseRecordQuery.RecordIterator it = recordQuery.execute();
-            processingTime+=System.currentTimeMillis()-startTime;
-            try
-            {
-                try
-                {
-                    startTime = System.currentTimeMillis();
-                    int i=0;
-                    while (it.hasNext())
-                    {
-                        dataConsumer.setData(this, it.next(), context);
-                        ++validRecords;
-                        if (i % 1000 == 0)
-                        {
-                            processingTime+=System.currentTimeMillis()-startTime;
-                            startTime = System.currentTimeMillis();
-                        }
-                    }
-                    dataConsumer.setData(this, null, context);
-
-                    return true;
-                }
-                catch(Exception e)
-                {
-                    ++errorRecords;
-                    throw e;
-                }
-            }
-            finally
-            {
-                processingTime = realProcessingTime + (System.currentTimeMillis()-procStart);
-                recordQuery.close();
-            }
         }
         finally
         {
             bindingSupport.reset();
             tree.removeGlobalBindings(key);
+        }
+        DatabaseRecordQuery.RecordIterator it = recordQuery.execute();
+        processingTime+=System.currentTimeMillis()-startTime;
+        try
+        {
+            try
+            {
+                startTime = System.currentTimeMillis();
+                int i=0;
+                while (it.hasNext())
+                {
+                    dataConsumer.setData(this, it.next(), context);
+                    ++validRecords;
+                    if (i % 1000 == 0)
+                    {
+                        processingTime+=System.currentTimeMillis()-startTime;
+                        startTime = System.currentTimeMillis();
+                    }
+                }
+                dataConsumer.setData(this, null, context);
+
+                return true;
+            }
+            catch(Exception e)
+            {
+                ++errorRecords;
+                throw e;
+            }
+        }
+        finally
+        {
+            processingTime = realProcessingTime + (System.currentTimeMillis()-procStart);
+            recordQuery.close();
         }
     }
 
