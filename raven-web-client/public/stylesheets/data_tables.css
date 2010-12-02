@@ -106,6 +106,8 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * DataTables display
  */
+div.dataTables_scroll { clear: both; }
+
 table.display {
 	margin: 0 auto;
 	clear: both;

@@ -4,6 +4,7 @@
 #{set 'moreStyles'}
     <link rel="stylesheet" type="text/css" media="screen" href="@{'/public/stylesheets/blitzer/jquery-ui-1.8.6.custom.css'}">
     <link rel="stylesheet" type="text/css" media="screen" href="@{'/public/stylesheets/data_tables_jui.css'}">
+<!--    <link rel="stylesheet" type="text/css" media="screen" href="@{'/public/stylesheets/data_tables.css'}">-->
 #{/set}
 #{set 'moreScripts'}
     #{script 'jquery-ui-1.8.6.custom.min.js'/}
@@ -11,6 +12,7 @@
     #{script 'jquery.jstree.js'/}
     #{script 'jquery.layout.min.js'/}
     #{script 'jquery.dataTables.js'/}
+    #{script 'KeyTable.min.js'/}
     <script type="text/javascript">
         #{include '/public/javascripts/raven-main.js' /}
     </script>
@@ -23,22 +25,26 @@
     <div id="tree"></div>
 </div>
       
-<div id="addNodeDialog" title="Добавление нового узла">
+<div id="addNodeDialog" title="&{'addNodeDialog_title'}">
     <form>
         <br/>
-        <label for="name"><b>Имя</b></label><br/>
-        <input id="name" type="text" size="50" class="text ui-widget-content ui-corner-all"/>
+        <label for="type"><b>&{'addNodeDialog_node'}</b></label><br/>
+        <input id="node" type="text" size="80" disabled="true" class="text ui-widget-content ui-corner-all"/>
         <br/>
         <br/>
-        <label for="type"><b>Тип</b></label><br/>
-        <input id="type" type="text" size="50" disabled="true" class="text ui-widget-content ui-corner-all"/>
+        <label for="name"><b>&{'addNodeDialog_name'}</b></label><br/>
+        <input id="name" type="text" size="80" class="text ui-widget-content ui-corner-all"/>
+        <br/>
+        <br/>
+        <label for="type"><b>&{'addNodeDialog_type'}</b></label><br/>
+        <input id="type" type="text" size="80" disabled="true" class="text ui-widget-content ui-corner-all"/>
         <br/>
         <br/>
         <table id="nodeTypesTable" class="display">
             <thead>
                 <tr>
-                    <th>Тип узла</th>
-                    <th>Краткое описание</th>
+                    <th>&{'addNodeDialog_type'}</th>
+                    <th>&{'addNodeDialog_shortDesc'}</th>
                 </tr>
             </thead>
             <tbody>

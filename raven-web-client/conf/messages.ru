@@ -1,0 +1,6 @@
+//addNodeDialog
+addNodeDialog_title=Добавление нового узла
+addNodeDialog_node=Узел
+addNodeDialog_name=Имя
+addNodeDialog_type=Тип
+addNodeDialog_shortDesc=Краткое описание

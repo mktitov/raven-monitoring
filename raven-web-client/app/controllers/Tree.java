@@ -49,6 +49,7 @@ public class Tree extends Controller
 
     public static void icon(String path) throws Exception
     {
+        Logger.debug("Reading icon (%s)", path);
         byte[] image = requestForBinary("node/icon", session, "path", path);
         if (image!=null){
             InputStream stream = new ByteArrayInputStream(image);
@@ -59,6 +60,7 @@ public class Tree extends Controller
 
     public static void childNodeTypes(String path) throws UnsupportedEncodingException
     {
+        Logger.debug("Reading child node types for path (%s)", path);
         NodeTypeBean[] beans = requestForJson("node/child-node-types", session, NodeTypeBean[].class, "path", path);
         if (beans==null || beans.length==0)
             renderJSON(null);
