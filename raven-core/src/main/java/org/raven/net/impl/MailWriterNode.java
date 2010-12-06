@@ -18,7 +18,6 @@
 package org.raven.net.impl;
 
 import java.security.Security;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -41,7 +40,7 @@ import org.raven.ds.impl.AbstractSafeDataPipe;
 import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
 import org.raven.net.MailMessagePart;
-import org.raven.tree.Node;
+import org.raven.util.NodeUtils;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -166,12 +165,15 @@ public class MailWriterNode extends AbstractSafeDataPipe
 
     private void createContent(MimeMessage message, DataContext context) throws Exception
     {
-        List<MailMessagePart> parts = new ArrayList<MailMessagePart>();
-        List<Node> childs = getSortedChildrens();
-        if (childs!=null && !childs.isEmpty())
-            for (Node child: childs)
-                if (Status.STARTED.equals(getStatus()) && child instanceof MailMessagePart)
-                    parts.add((MailMessagePart)child);
+        List<MailMessagePart> parts = NodeUtils.getChildsOfType(this, MailMessagePart.class);
+
+//        for (MailMessagePart messagePart:
+//
+//        List<Node> childs = getSortedChildrens();
+//        if (childs!=null && !childs.isEmpty())
+//            for (Node child: childs)
+//                if (Status.STARTED.equals(getStatus()) && child instanceof MailMessagePart)
+//                    parts.add((MailMessagePart)child);
             
         if (parts.isEmpty())
             throw new Exception("Nothing to send. The message must contains at least one message part");
