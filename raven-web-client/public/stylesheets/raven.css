@@ -1,3 +1,11 @@
+.rv-autocomplete-label {
+    width: 250px;
+    display: inline-block;
+    border-right-style: solid;
+    border-right-width: 2px;
+    border-right-color: #888888;
+}
+
 /*
 *	COMMON LAYOUT PANE FORMATTING
 */
@@ -80,7 +88,7 @@
 .resizer-east-open {
 	background-color: #999;
 	opacity: 0.1;
-	filter: alpha(opacity=10);
+	pafilter: alpha(opacity=10);
 }
 .resizer-west-open:hover ,
 .resizer-east-open:hover {

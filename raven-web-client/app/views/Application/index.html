@@ -12,6 +12,7 @@
     #{script 'jquery.jstree.js'/}
     #{script 'jquery.layout.min.js'/}
     #{script 'jquery.dataTables.js'/}
+    #{script 'jquery.form.js'/}
     #{script 'KeyTable.min.js'/}
     <script type="text/javascript">
         #{include '/public/javascripts/raven-main.js' /}
@@ -26,33 +27,17 @@
 </div>
       
 <div id="addNodeDialog" title="&{'addNodeDialog_title'}">
-    <form>
+    <form id="addNodeDialog_form" action="@{Tree.createNewNode}" method="post">
         <br/>
-        <label for="type"><b>&{'addNodeDialog_node'}</b></label><br/>
-        <input id="node" type="text" size="80" disabled="true" class="text ui-widget-content ui-corner-all"/>
-        <br/>
-        <br/>
-        <label for="name"><b>&{'addNodeDialog_name'}</b></label><br/>
-        <input id="name" type="text" size="80" class="text ui-widget-content ui-corner-all"/>
+        <label for="addNodeDialog_parent"><b>&{'addNodeDialog_parent'}</b></label><br/>
+        <input id="addNodeDialog_parent" name="parent" type="text" size="80" disabled="true" class="text ui-widget-content ui-corner-all"/>
         <br/>
         <br/>
-        <label for="type"><b>&{'addNodeDialog_type'}</b></label><br/>
-        <input id="type" type="text" size="80" disabled="true" class="text ui-widget-content ui-corner-all"/>
+        <label for="addNodeDialog_name"><b>&{'addNodeDialog_name'}</b></label><br/>
+        <input id="addNodeDialog_name" name="name" type="text" size="80" class="text ui-widget-content ui-corner-all"/>
         <br/>
         <br/>
-        <table id="nodeTypesTable" class="display">
-            <thead>
-                <tr>
-                    <th>&{'addNodeDialog_type'}</th>
-                    <th>&{'addNodeDialog_shortDesc'}</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>org.raven.tree.impl.ContainerNode</td>
-                    <td>Узлел который может содержать другие узлы</td>
-                </tr>
-            </tbody>
-        </table>
+        <label for="addNodeDialog_type"><b>&{'addNodeDialog_type'}</b></label><br/>
+        <input id="addNodeDialog_type" name="type" type="text" size="80" class="text ui-widget-content ui-corner-all" style="max-height: "/>
     </form>
 </div>

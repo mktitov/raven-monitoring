@@ -11,22 +11,35 @@
     #{script 'KeyTable.min.js'/}
     <script type="text/javascript">
         $(function(){
-            $('#nodeTypesTable').dataTable({
-//                "bJQueryUI": true,
-                "sPaginationType": "full_numbers",
-                sScrollY: 100,
-                sDom:"<fl>t"
+            table = $('#nodeTypesTable').dataTable({
+                "bJQueryUI": true,
+//                "sPaginationType": "full_numbers",
+                sScrollY: 100
+//                , sDom:"<fl>t"
             });
             keys = new KeyTable({
-                table: document.getElementById("nodeTypesTable"),
-                datatable: $('#nodeTypesTable').dataTable()
+                "table": document.getElementById("nodeTypesTable"),
+                'datatable': table
+            });
+            $("#dialog").dialog({
+                modal:true
+                , width:600
+                , height: 600
             });
         });
 
     </script>
 #{/set}
 
-<table id="nodeTypesTable" class="display">
+
+<div id="dialog" title="Dialog">
+    <form>
+        <br/>
+        <label for="type"><b>&{'addNodeDialog_node'}</b></label><br/>
+        <input id="node" type="text" size="80" disabled="true" class="text ui-widget-content ui-corner-all"/>
+        <br/>
+        <br/>
+<table id="nodeTypesTable" class="display KeyTable">
     <thead>
         <tr>
             <th>Тип узла</th>
@@ -244,3 +257,5 @@
         </tr>
     </tbody>
 </table>
+    </form>
+</div>

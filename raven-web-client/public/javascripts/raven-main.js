@@ -1,3 +1,5 @@
+var nodeTypesTable;
+
 $(function(){
     //Layout definition
     layout = $('body').layout({
@@ -35,48 +37,84 @@ $(function(){
         , autoOpen:false
         , position:['center','top']
         , width:700
-        , height:600
+        , height:500
         , resizeStop: function() {
-            $("#nodeTypesTable").dataTable().fnAdjustColumnSizing()
+//            $("#nodeTypesTable").dataTable().fnAdjustColumnSizing()
         }
         , close: function() {
-//            $("#tree").jstree().enable_hotkeys()
+            $('#addNodeDialog_type').autocomplete("destroy")
         }
-//        , show:'blind',hide:'blind'
+        , buttons: {
+            "&{'addNodeDialog_createButton'}" : function (){
+                $(this).dialog("close")
+                $('#addNodeDialog_form').ajaxSubmit({
+                    data: {parent: $('addNodeDialog_parent').val()}
+                })
+            }
+            , "&{'addNodeDialog_cancelButton'}" : function (){
+                $(this).dialog("close")
+            }
+        }
     });
 
-    datatable = $("#nodeTypesTable").dataTable({
-        bJQueryUI: true
-        , sScrollY: "250px"
-        , "sScrollYInner": "110%"
-        , bPaginate: false
-//        , sDom:"<ft>"
-        , sAjaxSource:'@{Tree.childNodeTypes}'
-        , oLanguage: {sUrl:'/public/messages/dataTables.messages.${lang}'}
-	});
+//    nodeTypesTable = $("#nodeTypesTable").dataTable({
+//        bJQueryUI: true
+//        , sScrollY: "250px"
+////        , "sScrollYInner": "110%"
+//        , bPaginate: false
+////        , sDom:"<ft>"
+//        , sAjaxSource:'@{Tree.childNodeTypes}'
+//        , oLanguage: {sUrl:'/public/messages/dataTables.messages.${lang}'}
+//	});
 
-    tableNav = new KeyTable({
-        table: document.getElementById("nodeTypesTable")
-        , "datatable": datatable
-    });
 });
 
 function openAddNodeDialog(parentNode)
 {
     if (!parentNode)
         return;
-    $("#addNodeDialog #node").val(parentNode.id)
-//    $("#addNodeDialog").dialog("open");
-    table = $("#nodeTypesTable").dataTable()
-    table.fnReloadAjax("@{Tree.childNodeTypes}?path="+encodeURIComponent(parentNode.id),
-        function () {
-            dialog = $("#addNodeDialog")
-            dialog.dialog("open")
-            dialog.height(dialog.height+50)
-            table.fnAdjustColumnSizing();
+    $("#addNodeDialog_parent").val(parentNode.id)
+    var items;
+    $.ajax({
+        async:false
+        , url: '@{Tree.childNodeTypes}'
+        , data: {path: parentNode.id}
+        , success: function(data){
+            items = data
         }
-    )
-//    table.fnDraw();
+    })
+    $('#addNodeDialog_parent').attr('disabled', 'true')
+    $('#addNodeDialog_type').autocomplete({
+        source: items
+        , minLength: 0
+    })
+    .data("autocomplete")._renderItem = function(ul, item){
+        return $('<li></li>')
+            .data("item.autocomplete", item)
+            .append('<a>'
+                    +'<table style="width:650px"><tr>'
+                    +'<td style="width:32px;padding-right:16px;background: url(\'@{Tree.icon}?path='+encodeURIComponent(item.icon)+'\') no-repeat center"></td>'
+                    +'<td style="width:350px">'+item.label+'</td>'
+                    +'<td>'+item.desc+'</td></tr></table></a>')
+            .appendTo(ul)
+    }
+    $('.ui-autocomplete').css({
+        "max-height": '300px'
+        , 'overflow-y': 'auto'
+    })
+    $('#addNodeDialog').dialog('open')
+//    nodeTypesTable.fnReloadAjax("@{Tree.childNodeTypes}?path="+encodeURIComponent(parentNode.id),
+//        function () {
+//            dialog = $("#addNodeDialog")
+//            dialog.dialog("open")
+//            dialog.height(dialog.height+50)
+//            nodeTypesTable.fnAdjustColumnSizing();
+//            new KeyTable({
+//                "table": document.getElementById("nodeTypesTable")
+//                , "datatable": nodeTypesTable
+//            });
+//        }
+//    )
 }
 
 $.fn.dataTableExt.oApi.fnReloadAjax = function ( oSettings, sNewSource, fnCallback, bStandingRedraw )

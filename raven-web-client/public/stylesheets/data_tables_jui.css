@@ -521,19 +521,19 @@ table.KeyTable td.focus {
 }
 
 table.display tr.gradeA {
-	background-color: #eeffee;
+	background-color: #ffff99;
 }
 
 table.display tr.gradeC {
-	background-color: #ddddff;
+	background-color: #ffff99;
 }
 
 table.display tr.gradeX {
-	background-color: #ffdddd;
+	background-color: #ffff99;
 }
 
 table.display tr.gradeU {
-	background-color: #ddd;
+	background-color: #ffff99;
 }
 
 div.box {
