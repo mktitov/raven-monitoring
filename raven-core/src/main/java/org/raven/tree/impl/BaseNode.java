@@ -123,7 +123,6 @@ public class BaseNode implements Node, NodeListener, Logger
 //    }
     public BaseNode()
     {
-    	logger = this;
         initFields();
     }
     
@@ -140,6 +139,7 @@ public class BaseNode implements Node, NodeListener, Logger
     
     protected void initFields()
     {
+    	logger = this;
         parent = null;
         dependentNodes = new ConcurrentHashMap<Node, Node>();
         listeners = new CopyOnWriteArraySet<NodeListener>();
