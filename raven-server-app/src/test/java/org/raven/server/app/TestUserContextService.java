@@ -17,27 +17,23 @@
 
 package org.raven.server.app;
 
-import java.util.Set;
-import org.raven.EnLocaleModule;
-import org.raven.test.RavenCoreTestCase;
-import org.raven.test.UserContextServiceModule;
+import org.raven.auth.UserContext;
+import org.raven.auth.UserContextService;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class RavenServerAppTestCase extends RavenCoreTestCase
+public class TestUserContextService implements UserContextService
 {
-    @Override
-    protected void configureRegistry(Set<Class> builder)
+    public static UserContext userContext;
+
+    public UserContextService buildContextService()
     {
-        super.configureRegistry(builder);
-        
-        builder.remove(EnLocaleModule.class);
-        builder.remove(UserContextServiceModule.class);
-        
-        builder.add(RavenServerAppModule.class);
-        builder.add(TestUserContextService.class);
+        return new TestUserContextService();
     }
 
+    public UserContext getUserContext() {
+        return userContext;
+    }
 }

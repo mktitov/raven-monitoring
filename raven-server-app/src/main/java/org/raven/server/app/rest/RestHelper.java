@@ -18,6 +18,8 @@
 package org.raven.server.app.rest;
 
 import java.net.URLDecoder;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 import org.raven.conf.Configurator;
 import org.weda.internal.annotations.Service;
 
@@ -32,9 +34,26 @@ public class RestHelper
 
     public static String decodeParam(String value, String defaultValue) throws Exception
     {
-        if (value==null || value.isEmpty())
+        value = value==null? null : value.trim();
+        if (value!=null && value.isEmpty())
+            value = null;
+        if (value==null)
             return defaultValue;
         return URLDecoder.decode(value, configurator.getConfig().getStringProperty(
                 Configurator.REST_ENCODING, "utf-8"));
+    }
+
+    public static String decodeAndCheckParam(String value, String defaultValue, String errorMessage)
+            throws Exception
+    {
+        value = decodeParam(value, defaultValue);
+        if (value==null)
+            throw new WebApplicationException(badRequest(errorMessage));
+        return value;
+    }
+
+    public static Response badRequest(String message)
+    {
+        return Response.status(Response.Status.BAD_REQUEST).entity(message).build();
     }
 }

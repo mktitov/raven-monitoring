@@ -42,7 +42,7 @@ public class App
     {
         RegistryBuilder builder = new RegistryBuilder();
         IOCUtilities.addDefaultModules(builder);
-        builder.add(RavenCoreModule.class, RavenServerAppModule.class);
+        builder.add(RavenCoreModule.class, RavenServerAppModule.class, UserContextServiceModule.class);
         REGISTRY = builder.build();
         REGISTRY.performRegistryStartup();
         REGISTRY.getService(Tree.class).reloadTree();

@@ -17,17 +17,23 @@
 
 package org.raven.server.app.rest;
 
+import javax.ws.rs.core.Response;
+import org.weda.internal.annotations.Message;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import org.raven.auth.NodeAccessService;
 import org.raven.auth.UserContextService;
+import org.raven.auth.impl.AccessControl;
 import org.raven.rest.beans.NodeBean;
 import org.raven.rest.beans.NodeTypeBean;
 import org.raven.server.app.service.IconResolver;
@@ -58,6 +64,11 @@ public class NodeResource
     @Service
     private static ClassDescriptorRegistry classDescriptor;
 
+    @Message
+    private static String nullNodeNameMessage;
+    @Message
+    private static String nodeNameAlreadyExists;
+
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -79,7 +90,7 @@ public class NodeResource
             Collection<NodeBean> beans = new ArrayList<NodeBean>(childs.size());
             for (Node child: childs) {
                 int right = nodeAccessService.getAccessForNode(child, userContextService.getUserContext());
-//                if (right>=AccessControl.READ)
+                if (right>=AccessControl.READ)
                     beans.add(new NodeBean(
                             child.getName(), child.getPath(), IconResolver.getPath(child.getClass()),
                             child.getChildrenCount()==0? false : true,
@@ -118,8 +129,44 @@ public class NodeResource
         List<NodeTypeBean> types = new ArrayList<NodeTypeBean>(nodeTypes.size());
         for (Class nodeType: nodeTypes)
             types.add(new NodeTypeBean(
-                nodeType.getName(), classDescriptor.getClassDescriptor(nodeType).getDisplayName()));
+                nodeType.getName(), classDescriptor.getClassDescriptor(nodeType).getDisplayName()
+                , IconResolver.getPath(nodeType)));
         
         return types;
+    }
+
+    @POST
+    @Path("/create-node/")
+    public Response createNode(
+            @QueryParam("path") String parentPath
+            , @QueryParam("name") String name
+            , @QueryParam("type") String type)
+        throws Exception
+    {
+        if (log.isDebugEnabled())
+            log.debug(String.format("Creating new node. Parent: (%s), Name (%s), type (%s)"
+                    , parentPath, name, type));
+
+        parentPath = decodeAndCheckParam(parentPath, null, "Null or empty parent");
+        name = decodeAndCheckParam(name, null, "Null or empty name");
+        type = decodeAndCheckParam(type, null, "Null or empty type");
+
+        Node parent = tree.getNode(parentPath);
+        int rights = nodeAccessService.getAccessForNode(parent, userContextService.getUserContext());
+        if (rights < AccessControl.WRITE)
+            throw new Exception(String.format(
+                    "Not enough rights to create a node in the node (%s)", parentPath));
+        if (parent.getChildren(name)!=null)
+            throw new Exception(String.format(nodeNameAlreadyExists, parentPath, name));
+
+        Class nodeType = Class.forName(type);
+        if (!parent.getChildNodeTypes().contains(nodeType))
+            throw new Exception(String.format("Invalid node type (%s)", type));
+
+        Node node = (Node) nodeType.newInstance();
+        node.setName(name);
+        parent.addAndSaveChildren(node);
+
+        return Response.ok("Node successfully created").build();
     }
 }
