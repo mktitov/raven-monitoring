@@ -25,12 +25,15 @@ public class NodeTypeBean
 {
     public String type;
     public String shortDescription;
+    public String iconPath;
 
     public NodeTypeBean() {
     }
 
-    public NodeTypeBean(String type, String shortDescription) {
+    public NodeTypeBean(String type, String shortDescription, String iconPath)
+    {
         this.type = type;
         this.shortDescription = shortDescription;
+        this.iconPath = iconPath;
     }
 }
