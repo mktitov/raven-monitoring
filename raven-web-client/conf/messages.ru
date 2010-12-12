@@ -6,3 +6,4 @@ addNodeDialog_type=Тип
 addNodeDialog_shortDesc=Краткое описание
 addNodeDialog_createButton=Добавить
 addNodeDialog_cancelButton=Отменить
+addNodeDialog_nameAlreadyUsed=Данное имя уже используется

@@ -1,7 +1,22 @@
 var nodeTypesTable;
+var tree;
+var selectedNode;
+var childsOfSelectedNode;
+var addNodeDialogTip;
 
 $(function(){
     //Layout definition
+    layout_init()
+
+    //Tree definition
+    tree_init()
+
+    //Add new node Dialog
+    addNodeDialog_init()
+});
+
+function layout_init()
+{
     layout = $('body').layout({
           west:{size:300}
         , north:{
@@ -9,9 +24,11 @@ $(function(){
             , togglerLength_open: 0, togglerLength_closed: -1, fxName:"none"
         }
     });
+}
 
-    //Tree definition
-    $("#tree").jstree({
+function tree_init()
+{
+    tree = $("#tree").jstree({
         themes : {theme:"apple"},
         json_data: {
             ajax:{
@@ -25,30 +42,45 @@ $(function(){
             },
             "insert": function(){
 //                this.disable_hotkeys()
-                openAddNodeDialog(this.get_selected()[0])
+                selectedNode = this.get_selected()[0]
+                childsOfSelectedNode = {}
+                this.open_node(selectedNode, function(){
+                    //Lets create a hash of the child node names of the selectedNode
+                    $(selectedNode).find('a').each(function(index, node){
+                        name = $(node).text().trim()
+                        if (name)
+                            childsOfSelectedNode[name]=true
+                    })
+                    addNodeDialog_open(selectedNode)
+                })
             }
         },
         plugins:["themes","json_data","ui","hotkeys"]
     });
+}
 
-    //Add new node Dialog
+function addNodeDialog_init()
+{
     $("#addNodeDialog").dialog({
         modal:true
         , autoOpen:false
         , position:['center','top']
         , width:700
         , height:500
-        , resizeStop: function() {
-//            $("#nodeTypesTable").dataTable().fnAdjustColumnSizing()
-        }
         , close: function() {
             $('#addNodeDialog_type').autocomplete("destroy")
+            $('#addNodeDialog_name, #addNodeDialog_type').unbind('keyup')
+            $('#addNodeDialog_name').btOff()
+//            tree.enable_hotkeys()
+        }
+        , open: function() {
+//            $('#addNodeDialog_name').bt("&{'addNodeDialog_nameAlreadyUsed'}", {trigger:'none'}).btOff()
         }
         , buttons: {
             "&{'addNodeDialog_createButton'}" : function (){
                 $(this).dialog("close")
                 $('#addNodeDialog_form').ajaxSubmit({
-                    data: {parent: $('addNodeDialog_parent').val()}
+                    data: {parent: $('#addNodeDialog_parent').val()}
                 })
             }
             , "&{'addNodeDialog_cancelButton'}" : function (){
@@ -56,25 +88,23 @@ $(function(){
             }
         }
     });
+    $('#addNodeDialog_name').bt("&{'addNodeDialog_nameAlreadyUsed'}", {trigger:'none'})
+}
 
-//    nodeTypesTable = $("#nodeTypesTable").dataTable({
-//        bJQueryUI: true
-//        , sScrollY: "250px"
-////        , "sScrollYInner": "110%"
-//        , bPaginate: false
-////        , sDom:"<ft>"
-//        , sAjaxSource:'@{Tree.childNodeTypes}'
-//        , oLanguage: {sUrl:'/public/messages/dataTables.messages.${lang}'}
-//	});
-
-});
-
-function openAddNodeDialog(parentNode)
+function addNodeDialog_open(parentNode)
 {
     if (!parentNode)
         return;
+    addNodeDialogTip = undefined
+    $("#addNodeDialog").clearForm()
     $("#addNodeDialog_parent").val(parentNode.id)
+//    $('#addNodeDialog_name').btOff()
+    addNodeDialog_validate()
+//    $('#addNodeDialog ~ .ui-dialog-buttonpane button').first().attr('disabled',true).addClass('ui-state-disabled')
     var items;
+    $('#addNodeDialog_name, #addNodeDialog_type').bind('keyup', function(event){
+        addNodeDialog_validate()
+    })
     $.ajax({
         async:false
         , url: '@{Tree.childNodeTypes}'
@@ -87,6 +117,9 @@ function openAddNodeDialog(parentNode)
     $('#addNodeDialog_type').autocomplete({
         source: items
         , minLength: 0
+        , select: function(event, ui){
+            addNodeDialog_validate()
+        }
     })
     .data("autocomplete")._renderItem = function(ul, item){
         return $('<li></li>')
@@ -103,56 +136,22 @@ function openAddNodeDialog(parentNode)
         , 'overflow-y': 'auto'
     })
     $('#addNodeDialog').dialog('open')
-//    nodeTypesTable.fnReloadAjax("@{Tree.childNodeTypes}?path="+encodeURIComponent(parentNode.id),
-//        function () {
-//            dialog = $("#addNodeDialog")
-//            dialog.dialog("open")
-//            dialog.height(dialog.height+50)
-//            nodeTypesTable.fnAdjustColumnSizing();
-//            new KeyTable({
-//                "table": document.getElementById("nodeTypesTable")
-//                , "datatable": nodeTypesTable
-//            });
-//        }
-//    )
 }
 
-$.fn.dataTableExt.oApi.fnReloadAjax = function ( oSettings, sNewSource, fnCallback, bStandingRedraw )
+function addNodeDialog_validate()
 {
-	if ( typeof sNewSource != 'undefined' && sNewSource != null )
-	{
-		oSettings.sAjaxSource = sNewSource;
-	}
-	this.oApi._fnProcessingDisplay( oSettings, true );
-	var that = this;
-	var iStart = oSettings._iDisplayStart;
-
-	oSettings.fnServerData( oSettings.sAjaxSource, null, function(json) {
-		/* Clear the old information from the table */
-		that.oApi._fnClearTable( oSettings );
-
-		/* Got the data - add it to the table */
-		for ( var i=0 ; i<json.aaData.length ; i++ )
-		{
-			that.oApi._fnAddData( oSettings, json.aaData[i] );
-		}
-
-		oSettings.aiDisplay = oSettings.aiDisplayMaster.slice();
-		that.fnDraw( that );
-
-		if ( typeof bStandingRedraw != 'undefined' && bStandingRedraw === true )
-		{
-			oSettings._iDisplayStart = iStart;
-			that.fnDraw( false );
-		}
-
-		that.oApi._fnProcessingDisplay( oSettings, false );
-
-		/* Callback user function - for event handlers etc */
-		if ( typeof fnCallback == 'function' && fnCallback != null )
-		{
-			fnCallback( oSettings );
-		}
-	} );
+    name = $('#addNodeDialog_name').val()
+    type = $('#addNodeDialog_type').val()
+    createButton = $('#addNodeDialog ~ .ui-dialog-buttonpane button').first()
+//    if (!addNodeDialogTip)
+//        addNodeDialogTip = $('#addNodeDialog_name').bt("&{'addNodeDialog_nameAlreadyUsed'}", {trigger:'none'})
+    if (childsOfSelectedNode[name])
+        $('#addNodeDialog_name').btOn()
+    else
+        $('#addNodeDialog_name').btOff()
+    if (name && type && !childsOfSelectedNode[name])
+        createButton.attr('disabled',false).removeClass('ui-state-disabled')
+    else
+        createButton.attr('disabled',true).addClass('ui-state-disabled')
+        
 }
-
