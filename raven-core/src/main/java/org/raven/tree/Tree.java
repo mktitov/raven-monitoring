@@ -87,7 +87,8 @@ public interface Tree
      */
     public void reloadTree();
     /**
-     * Returns all classes marked with {@link org.raven.annotations.NodeClass} annotation. 
+     * Returns all classes marked with {@link org.raven.annotations.NodeClass} annotation. Method
+     * never returns null.
      */
     public List<Class> getChildNodesTypes(Node node);
     /**

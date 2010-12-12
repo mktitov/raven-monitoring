@@ -17,6 +17,7 @@
 
 package org.raven.auth.impl;
 
+import org.raven.auth.AuthService;
 import org.raven.auth.NodeAccessService;
 import org.raven.auth.UserContext;
 import org.raven.conf.Configurator;
@@ -42,6 +43,6 @@ public class NodeAccessServiceImpl implements NodeAccessService
     public int getAccessForNode(Node node, UserContext context)
     {
         String username = context==null? null : context.getUsername();
-        return ObjectUtils.equals("root", username)? AccessControl.ADMIN : 0;
+        return ObjectUtils.equals(AuthService.ROOT_USER_NAME, username)? AccessControl.ADMIN : 0;
     }
 }

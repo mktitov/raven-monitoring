@@ -206,7 +206,8 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
      */
     public Collection<NodeListener> getListeners();
     /**
-     * Returns the array of nodes types that can belong to this node type. 
+     * Returns the array of nodes types that can belong to this node type. Method never returns 
+     * <code>null</code>
      * 
      * @see #addChildren(org.raven.tree.Node) 
      * @see #isContainer() 
