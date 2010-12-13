@@ -1,3 +1,6 @@
+cancelButton=Отменить
+deleteButton=Удалить
+
 //addNodeDialog
 addNodeDialog_title=Добавление нового узла
 addNodeDialog_parent=Узел
@@ -5,9 +8,8 @@ addNodeDialog_name=Имя
 addNodeDialog_type=Тип
 addNodeDialog_shortDesc=Краткое описание
 addNodeDialog_createButton=Добавить
-addNodeDialog_cancelButton=Отменить
 addNodeDialog_nameAlreadyUsed=Данное имя уже используется
 
 //deleteNodesDialog
 deleteNodesDialog_title=Удаление выбранных узлов
-deleteNodesDialog_confirmation=Выдействительно хотитте удалить следующие узлы
+deleteNodesDialog_confirmation=Выдействительно хотите удалить следующие узлы?

@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import play.Logger;
 import play.Play;
@@ -84,4 +85,35 @@ public class RestHelper
         return response;
     }
 
+    public static String post(String path, Scope.Session session, Map params) throws Exception
+    {
+        StringBuilder url = new StringBuilder(Play.configuration.getProperty(
+                App.RAVEN_SERVER_URL_ATTR)).append(path);
+        WS.WSRequest request = WS.url(url.toString())
+                .authenticate(session.get(App.USERNAME_ATTR), session.get(App.PASSWORD_ATTR))
+                .params(params);
+
+        checkAuth(session, request);
+        HttpResponse response = request.post();
+        checkResponse(response);
+
+        return response.getString();
+    }
+
+    private static void checkAuth(Scope.Session session, WS.WSRequest request)
+    {
+        if (session!=null){
+            String ravenSessionId = session.get(App.RAVEN_SESSION_ID);
+            if (ravenSessionId!=null)
+                request.setHeader("Cookie", ravenSessionId);
+        }
+    }
+
+    private static void checkResponse(HttpResponse response) throws Exception
+    {
+        if (response.getStatus()!=200 && response.getStatus()!=201) {
+            Logger.error("Recieved error on request. Status code: %s", response.getStatus());
+            throw new Exception(response.getString());
+        }
+    }
 }

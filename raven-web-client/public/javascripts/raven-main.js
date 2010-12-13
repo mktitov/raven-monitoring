@@ -4,6 +4,7 @@ var selectedNode;
 var childsOfSelectedNode;
 var addNodeDialogTip;
 var newNodePath;
+var nodesToDelete;
 
 $(function(){
     //Layout definition
@@ -42,7 +43,10 @@ function tree_init()
         },
         hotkeys:{
             "del": function(node){
-                deleteNodesDialog_open()
+                nodesToDelete = tree.jstree("get_selected")
+                //TODO: check the rights to the node
+                if (nodesToDelete && nodesToDelete.length>0)
+                    deleteNodesDialog_open()
             },
             "insert": function(){
                 selectedNode = this.get_selected()[0]
@@ -99,7 +103,7 @@ function addNodeDialog_init()
                     }
                 })
             }
-            , "&{'addNodeDialog_cancelButton'}" : function (){
+            , "&{'cancelButton'}" : function (){
                 $(this).dialog("close")
             }
         }
@@ -174,13 +178,31 @@ function deleteNodesDialog_init()
          modal:true
         , autoOpen:false
         , position:['center','top']
-        , width:700
-        , height:500       
+        , width:500
+        , height:400
+        , buttons: {
+            "&{'deleteButton'}": function(){
+//                data={}
+                ids=[]
+                nodesToDelete.each(function(index, node){
+                    ids.push(node.id)
+                })
+                $.post("@{Tree.deleteNodes}", {'nodes':ids})
+                $('#deleteNodesDialog').dialog("close")
+            }
+            , "&{'cancelButton'}": function(){
+                $('#deleteNodesDialog').dialog("close")
+            }
+        }
     })
 }
 
 function deleteNodesDialog_open()
 {
+    $('#deleteNodesDialog li').remove()
+    nodesToDelete.each(function(index, node){
+        $('#deleteNodesDialog ol').append('<li>'+node.id+'</li>')
+    })
     $('#deleteNodesDialog').dialog("open")
 }
 

@@ -5,11 +5,13 @@
 
 package controllers;
 
+import java.util.Map;
 import beans.AutoCompleteItem;
 import org.raven.rest.beans.NodeTypeBean;
 import java.io.InputStream;
 import beans.JsTreeNode;
 import java.io.ByteArrayInputStream;
+import java.util.HashMap;
 import org.raven.rest.beans.NodeBean;
 import play.Logger;
 import play.Play;
@@ -79,6 +81,19 @@ public class Tree extends Controller
             renderText(path);
         } catch (Exception ex) {
             error(ex.getMessage());
+        }
+    }
+
+    public static void deleteNodes(String[] nodes)
+    { 
+        Logger.debug("Received delete request for nodes: %s", nodes.length);
+        Map<String, Object> requestParams = new HashMap<String, Object>();
+        requestParams.put("nodes", nodes);
+        try{
+            post("node/delete-nodes", session, requestParams);
+            ok();
+        } catch (Exception e){
+            error(e.getMessage());
         }
     }
 
