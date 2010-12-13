@@ -18,7 +18,6 @@
 package org.raven.server.app.rest;
 
 import java.net.URLDecoder;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import org.raven.conf.Configurator;
 import org.weda.internal.annotations.Service;
@@ -48,7 +47,7 @@ public class RestHelper
     {
         value = decodeParam(value, defaultValue);
         if (value==null)
-            throw new WebApplicationException(badRequest(errorMessage));
+            throw new Exception(errorMessage);
         return value;
     }
 

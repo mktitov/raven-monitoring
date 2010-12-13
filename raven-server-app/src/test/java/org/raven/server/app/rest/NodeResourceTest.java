@@ -99,47 +99,54 @@ public class NodeResourceTest extends RavenServerAppTestCase
         assertEquals(1, types.size());
     }
 
-    @Test(expected=Exception.class)
+    @Test()
     public void createNode_nullParentTest() throws Exception
     {
-        res.createNode(null, "test", ContainerNode.class.getName());
+        Response resp = res.createNode(null, "test", ContainerNode.class.getName());
+        checkResponse(resp, Response.Status.BAD_REQUEST, "Null or empty parent");
     }
 
-    @Test(expected=Exception.class)
+    @Test()
     public void createNode_nullNameTest() throws Exception
     {
-        res.createNode("/", null, ContainerNode.class.getName());
+        Response resp = res.createNode("/", null, ContainerNode.class.getName());
+        checkResponse(resp, Response.Status.BAD_REQUEST, "Null or empty name");
     }
-    
-    @Test(expected=Exception.class)
+
+    @Test()
     public void createNode_nullTypeTest() throws Exception
     {
-        res.createNode("/", "test", null);
+        Response resp = res.createNode("/", "test", null);
+        checkResponse(resp, Response.Status.BAD_REQUEST, "Null or empty type");
     }
 
-    @Test(expected=Exception.class)
+    @Test()
     public void createNode_invlidParentTest() throws Exception
     {
-        res.createNode("/dsds", "test", ContainerNode.class.getName());
+        Response resp = res.createNode("/dsds", "test", ContainerNode.class.getName());
+        checkResponse(resp, Response.Status.BAD_REQUEST, null);
     }
 
-    @Test(expected=Exception.class)
+    @Test()
     public void createNode_nameAlreadyExistsTest() throws Exception
     {
-        res.createNode("/", "System", ContainerNode.class.getName());
+        Response resp = res.createNode("/", "System", ContainerNode.class.getName());
+        checkResponse(resp, Response.Status.BAD_REQUEST, null);
     }
 
-    @Test(expected=Exception.class)
+    @Test()
     public void createNode_invalidTypeTest() throws Exception
     {
-        res.createNode("/", "test", BaseNode.class.getName());
+        Response resp = res.createNode("/", "test", BaseNode.class.getName());
+        checkResponse(resp, Response.Status.BAD_REQUEST, null);
     }
 
-    @Test(expected=Exception.class)
+    @Test()
     public void createNode_notEnoughRightsTest() throws Exception
     {
         TestUserContextService.userContext = null;
-        res.createNode("/", "test", ContainerNode.class.getName());
+        Response resp = res.createNode("/", "test", ContainerNode.class.getName());
+        checkResponse(resp, Response.Status.BAD_REQUEST, null);
     }
 
     @Test
@@ -147,9 +154,17 @@ public class NodeResourceTest extends RavenServerAppTestCase
     {
         Response resp = res.createNode("/", "test", ContainerNode.class.getName());
 
-        assertEquals(Response.Status.OK.getStatusCode(), resp.getStatus());
         Node node = tree.getRootNode().getChildren("test");
         assertNotNull(node);
         assertTrue(node instanceof ContainerNode);
+        checkResponse(resp, Response.Status.OK, node.getPath());
+    }
+
+    private static void checkResponse(Response response, Response.Status status, String message)
+    {
+        assertNotNull(response);
+        assertEquals(status.getStatusCode(), response.getStatus());
+        if (message!=null)
+            assertEquals(message, response.getEntity());
     }
 }

@@ -135,38 +135,45 @@ public class NodeResource
         return types;
     }
 
-    @POST
+    @GET
     @Path("/create-node/")
+    @Produces(MediaType.TEXT_PLAIN)
     public Response createNode(
-            @QueryParam("path") String parentPath
+            @QueryParam("parent") String parentPath
             , @QueryParam("name") String name
             , @QueryParam("type") String type)
         throws Exception
     {
-        if (log.isDebugEnabled())
-            log.debug(String.format("Creating new node. Parent: (%s), Name (%s), type (%s)"
-                    , parentPath, name, type));
+        try{
+            if (log.isDebugEnabled())
+                log.debug(String.format("Creating new node. Parent: (%s), Name (%s), type (%s)"
+                        , parentPath, name, type));
 
-        parentPath = decodeAndCheckParam(parentPath, null, "Null or empty parent");
-        name = decodeAndCheckParam(name, null, "Null or empty name");
-        type = decodeAndCheckParam(type, null, "Null or empty type");
+            parentPath = decodeAndCheckParam(parentPath, null, "Null or empty parent");
+            name = decodeAndCheckParam(name, null, "Null or empty name");
+            type = decodeAndCheckParam(type, null, "Null or empty type");
 
-        Node parent = tree.getNode(parentPath);
-        int rights = nodeAccessService.getAccessForNode(parent, userContextService.getUserContext());
-        if (rights < AccessControl.WRITE)
-            throw new Exception(String.format(
-                    "Not enough rights to create a node in the node (%s)", parentPath));
-        if (parent.getChildren(name)!=null)
-            throw new Exception(String.format(nodeNameAlreadyExists, parentPath, name));
+            Node parent = tree.getNode(parentPath);
+            int rights = nodeAccessService.getAccessForNode(parent, userContextService.getUserContext());
+            if (rights < AccessControl.WRITE)
+                throw new Exception(String.format(
+                        "Not enough rights to create a node in the node (%s)", parentPath));
+            if (parent.getChildren(name)!=null)
+                throw new Exception(String.format(nodeNameAlreadyExists, parentPath, name));
 
-        Class nodeType = Class.forName(type);
-        if (!parent.getChildNodeTypes().contains(nodeType))
-            throw new Exception(String.format("Invalid node type (%s)", type));
+            Class nodeType = Class.forName(type);
+            if (!parent.getChildNodeTypes().contains(nodeType))
+                throw new Exception(String.format("Invalid node type (%s)", type));
 
-        Node node = (Node) nodeType.newInstance();
-        node.setName(name);
-        parent.addAndSaveChildren(node);
+            Node node = (Node) nodeType.newInstance();
+            node.setName(name);
+            parent.addAndSaveChildren(node);
 
-        return Response.ok("Node successfully created").build();
+            return Response.ok(node.getPath()).build();
+        }
+        catch(Exception e)
+        {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
     }
 }
