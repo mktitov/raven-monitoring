@@ -11,8 +11,10 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import org.apache.commons.io.IOUtils;
+import play.Logger;
 import play.Play;
 import play.libs.WS;
+import play.libs.WS.HttpResponse;
 import play.mvc.Scope;
 
 /**
@@ -21,14 +23,16 @@ import play.mvc.Scope;
  */
 public class RestHelper
 {
-    public static <T> T requestForJson(String path, Scope.Session session, Class<T> beanClass, String... params) throws UnsupportedEncodingException
+    public static <T> T requestForJson(String path, Scope.Session session, Class<T> beanClass
+            , String... params)
+        throws Exception
     {
         String str = request(path, session, params);
         return str==null? null : new Gson().fromJson(str, beanClass);
     }
     
     public static byte[] requestForBinary(String path, Scope.Session session, String... params)
-            throws UnsupportedEncodingException, IOException
+            throws Exception
     {
         InputStream stream =  getResponseForRequest(path, session.get(App.USERNAME_ATTR),
                 session.get(App.PASSWORD_ATTR), session, params).getStream();
@@ -42,7 +46,7 @@ public class RestHelper
     }
 
     public static String request(String path, Scope.Session session, String... params)
-            throws UnsupportedEncodingException
+            throws Exception
     {
         return getResponseForRequest(path, session.get(App.USERNAME_ATTR),
                 session.get(App.PASSWORD_ATTR), session, params).getString();
@@ -50,7 +54,7 @@ public class RestHelper
 
     public static WS.HttpResponse getResponseForRequest(
             String path, String username, String password, Scope.Session session, String... params)
-        throws UnsupportedEncodingException
+        throws Exception
     {
         StringBuilder url = new StringBuilder(Play.configuration.getProperty(
                 App.RAVEN_SERVER_URL_ATTR)).append(path);
@@ -72,7 +76,12 @@ public class RestHelper
             if (ravenSessionId!=null)
                 request.setHeader("Cookie", ravenSessionId);
         }
-        return request.get();
+        HttpResponse response = request.get();
+        if (response.getStatus()!=200 && response.getStatus()!=201) {
+            Logger.error("Recieved error on request. Status code: %s", response.getStatus());
+            throw new Exception(response.getString());
+        }
+        return response;
     }
 
 }

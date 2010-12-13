@@ -21,9 +21,7 @@
 #{/set}
 
 <div class="ui-layout-north">
-    <form>
-        <input type="text" id="simpleText"/>
-    </form>
+    <span class="raven-warning">Warning message test</span>
 </div>
 <div class="ui-layout-center">Center</div>
 <div class="ui-layout-west">
@@ -38,10 +36,17 @@
         <br/>
         <br/>
         <label for="addNodeDialog_name"><b>&{'addNodeDialog_name'}</b></label><br/>
-        <input id="addNodeDialog_name" name="name" type="text" size="80" class="text ui-widget-content ui-corner-all"/>
+        <input id="addNodeDialog_name" name="name" type="text" size="80"
+               class="text ui-widget-content ui-corner-all"/>
         <br/>
         <br/>
         <label for="addNodeDialog_type"><b>&{'addNodeDialog_type'}</b></label><br/>
-        <input id="addNodeDialog_type" name="type" type="text" size="80" class="text ui-widget-content ui-corner-all" style="max-height: "/>
+        <input id="addNodeDialog_type" name="type" type="text" size="80"
+               class="text ui-widget-content ui-corner-all"/>
     </form>
+</div>
+
+<div id="deleteNodesDialog" title="&{'deleteNodesDialog_title'}">
+    <div class="raven-warning">&{'deleteNodesDialog_confirmation'}</div>
+    <br/>
 </div>

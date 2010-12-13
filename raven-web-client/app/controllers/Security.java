@@ -5,7 +5,6 @@
 
 package controllers;
 
-import java.io.UnsupportedEncodingException;
 import play.Logger;
 import play.libs.WS;
 import service.App;
@@ -35,7 +34,7 @@ public class Security extends Secure.Security
 
             return true;
             
-        } catch (UnsupportedEncodingException ex)
+        } catch (Exception ex)
         {
             return false;
         }

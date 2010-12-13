@@ -10,7 +10,6 @@ import org.raven.rest.beans.NodeTypeBean;
 import java.io.InputStream;
 import beans.JsTreeNode;
 import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
 import org.raven.rest.beans.NodeBean;
 import play.Logger;
 import play.Play;
@@ -33,7 +32,7 @@ public class Tree extends Controller
         render();
     }
 
-    public static void childs(String path) throws UnsupportedEncodingException
+    public static void childs(String path) throws Exception
     {
         Logger.debug("Reading child nodes for path (%s)", path);
         path = path==null || path.isEmpty()? null : path;
@@ -58,7 +57,7 @@ public class Tree extends Controller
             badRequest();
     }
 
-    public static void childNodeTypes(String path) throws UnsupportedEncodingException
+    public static void childNodeTypes(String path) throws Exception
     {
         Logger.debug("Reading child node types for path (%s)", path);
         NodeTypeBean[] beans = requestForJson("node/child-node-types", session, NodeTypeBean[].class, "path", path);
@@ -75,15 +74,21 @@ public class Tree extends Controller
     public static void createNewNode(String parent, String name, String type)
     {
         Logger.debug("Creating new node: parent=%s, name=%s, type=%s", parent, name, type);
+        try {
+            String path = request("node/create-node", session, "parent", parent, "name", name, "type", type);
+            renderText(path);
+        } catch (Exception ex) {
+            error(ex.getMessage());
+        }
     }
 
-    public static void testRead() throws UnsupportedEncodingException
+    public static void testRead() throws Exception
     {
         String nodes = request("node/childs", session, "path", "System");
         renderText(nodes);
     }
 
-    public static void testReadJson() throws UnsupportedEncodingException
+    public static void testReadJson() throws Exception
     {
         NodeBean[] beans = requestForJson("node/childs", session, NodeBean[].class);
         JsTreeNode[] nodes = new JsTreeNode[beans.length];
@@ -93,7 +98,7 @@ public class Tree extends Controller
         renderJSON(nodes);
     }
 
-    public static void showCookie() throws UnsupportedEncodingException
+    public static void showCookie() throws Exception
     {
 //        String ravenSession = session.get("raven.server.session");
 //        WS.WSRequest req = WS.url("http://localhost:8080/rest/helloworld");

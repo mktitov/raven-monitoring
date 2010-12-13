@@ -3,6 +3,7 @@ var tree;
 var selectedNode;
 var childsOfSelectedNode;
 var addNodeDialogTip;
+var newNodePath;
 
 $(function(){
     //Layout definition
@@ -13,6 +14,9 @@ $(function(){
 
     //Add new node Dialog
     addNodeDialog_init()
+
+    //Delete node Dialog
+    deleteNodesDialog_init()
 });
 
 function layout_init()
@@ -38,11 +42,12 @@ function tree_init()
         },
         hotkeys:{
             "del": function(node){
-                alert("Creating new node")
+                deleteNodesDialog_open()
             },
             "insert": function(){
-//                this.disable_hotkeys()
                 selectedNode = this.get_selected()[0]
+                if ( getRightsForNode(selectedNode)<8 )
+                    return;
                 childsOfSelectedNode = {}
                 this.open_node(selectedNode, function(){
                     //Lets create a hash of the child node names of the selectedNode
@@ -57,6 +62,17 @@ function tree_init()
         },
         plugins:["themes","json_data","ui","hotkeys"]
     });
+    tree.bind("refresh.jstree", function(){
+        if (newNodePath){
+            setTimeout(function(){
+                tree.jstree("deselect_all")
+                newNode = document.getElementById(newNodePath)
+                tree.jstree("hover_node", newNode)
+                tree.jstree("select_node", newNode);
+                newNodePath = undefined
+            }, 500)
+        }
+    })
 }
 
 function addNodeDialog_init()
@@ -71,16 +87,16 @@ function addNodeDialog_init()
             $('#addNodeDialog_type').autocomplete("destroy")
             $('#addNodeDialog_name, #addNodeDialog_type').unbind('keyup')
             $('#addNodeDialog_name').btOff()
-//            tree.enable_hotkeys()
-        }
-        , open: function() {
-//            $('#addNodeDialog_name').bt("&{'addNodeDialog_nameAlreadyUsed'}", {trigger:'none'}).btOff()
         }
         , buttons: {
             "&{'addNodeDialog_createButton'}" : function (){
                 $(this).dialog("close")
                 $('#addNodeDialog_form').ajaxSubmit({
                     data: {parent: $('#addNodeDialog_parent').val()}
+                    , success: function(data){
+                        newNodePath = data
+                        tree.jstree("refresh", selectedNode)
+                    }
                 })
             }
             , "&{'addNodeDialog_cancelButton'}" : function (){
@@ -98,9 +114,7 @@ function addNodeDialog_open(parentNode)
     addNodeDialogTip = undefined
     $("#addNodeDialog").clearForm()
     $("#addNodeDialog_parent").val(parentNode.id)
-//    $('#addNodeDialog_name').btOff()
     addNodeDialog_validate()
-//    $('#addNodeDialog ~ .ui-dialog-buttonpane button').first().attr('disabled',true).addClass('ui-state-disabled')
     var items;
     $('#addNodeDialog_name, #addNodeDialog_type').bind('keyup', function(event){
         addNodeDialog_validate()
@@ -143,8 +157,6 @@ function addNodeDialog_validate()
     name = $('#addNodeDialog_name').val()
     type = $('#addNodeDialog_type').val()
     createButton = $('#addNodeDialog ~ .ui-dialog-buttonpane button').first()
-//    if (!addNodeDialogTip)
-//        addNodeDialogTip = $('#addNodeDialog_name').bt("&{'addNodeDialog_nameAlreadyUsed'}", {trigger:'none'})
     if (childsOfSelectedNode[name])
         $('#addNodeDialog_name').btOn()
     else
@@ -154,4 +166,26 @@ function addNodeDialog_validate()
     else
         createButton.attr('disabled',true).addClass('ui-state-disabled')
         
+}
+
+function deleteNodesDialog_init()
+{
+    $('#deleteNodesDialog').dialog({
+         modal:true
+        , autoOpen:false
+        , position:['center','top']
+        , width:700
+        , height:500       
+    })
+}
+
+function deleteNodesDialog_open()
+{
+    $('#deleteNodesDialog').dialog("open")
+}
+
+
+//
+function getRightsForNode(node){
+    return parseInt($(node).attr('rights'))
 }

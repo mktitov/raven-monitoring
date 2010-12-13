@@ -1,3 +1,13 @@
+.raven-warning {
+    background: url('../images/exclamation_octagon_fram.png') no-repeat left center;
+    padding-left: 25px;
+    margin-top: 20px;
+    margin-bottom: 15px;
+    min-height: 20px;
+    font-size: 1.3em;
+}
+
+
 body {
 	margin: 0;
 	padding: 0 0 20px;

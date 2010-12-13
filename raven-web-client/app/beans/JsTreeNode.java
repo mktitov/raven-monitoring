@@ -18,7 +18,7 @@ public class JsTreeNode
 {
     public Map<String, String> data = new LinkedHashMap<String, String>();
     public String state;
-    public Map<String, String>  attr = new LinkedHashMap<String, String>();
+    public Map<String, Object>  attr = new LinkedHashMap<String, Object>();
 
     public JsTreeNode(NodeBean nodeBean)
     {
@@ -26,6 +26,7 @@ public class JsTreeNode
         data.put("icon", Router.reverse("Tree.icon").add("path", nodeBean.iconPath).url);
         this.state = nodeBean.hasChilds? "closed" : null;
         attr.put("id", nodeBean.path);
+        attr.put("rights", nodeBean.rights);
     }
 }
 

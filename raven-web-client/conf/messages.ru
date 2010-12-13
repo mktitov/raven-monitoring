@@ -7,3 +7,7 @@ addNodeDialog_shortDesc=Краткое описание
 addNodeDialog_createButton=Добавить
 addNodeDialog_cancelButton=Отменить
 addNodeDialog_nameAlreadyUsed=Данное имя уже используется
+
+//deleteNodesDialog
+deleteNodesDialog_title=Удаление выбранных узлов
+deleteNodesDialog_confirmation=Выдействительно хотитте удалить следующие узлы
