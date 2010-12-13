@@ -24,7 +24,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -170,6 +172,27 @@ public class NodeResource
             parent.addAndSaveChildren(node);
 
             return Response.ok(node.getPath()).build();
+        }
+        catch(Exception e)
+        {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_PLAIN)
+    @Path("delete-nodes")
+    public Response deleteNodes(@FormParam("nodes") List<String> nodes)
+    {
+        if (log.isDebugEnabled())
+            log.debug("Reveived delete request for ({}) nodes", nodes);
+        try
+        {
+            if (nodes!=null && nodes.size()>0){
+                
+            }
+            return Response.ok().build();
         }
         catch(Exception e)
         {
