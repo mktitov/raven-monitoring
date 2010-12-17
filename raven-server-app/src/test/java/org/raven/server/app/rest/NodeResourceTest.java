@@ -18,6 +18,7 @@
 package org.raven.server.app.rest;
 
 import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.Collection;
 import javax.ws.rs.core.Response;
 import org.junit.Before;
@@ -158,6 +159,45 @@ public class NodeResourceTest extends RavenServerAppTestCase
         assertNotNull(node);
         assertTrue(node instanceof ContainerNode);
         checkResponse(resp, Response.Status.OK, node.getPath());
+    }
+
+    @Test
+    public void deleteNodes_deleteRootTest() throws Exception
+    {
+        Response resp = res.deleteNodes(Arrays.asList(tree.getRootNode().getPath()));
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.OK, null);
+
+        assertNotNull(tree.getNode("/"));
+    }
+
+    @Test
+    public void deleteNodesTest() throws Exception
+    {
+        ContainerNode node1 = new ContainerNode("node1");
+        tree.getRootNode().addAndSaveChildren(node1);
+
+        ContainerNode node2 = new ContainerNode("node2");
+        tree.getRootNode().addAndSaveChildren(node2);
+
+        assertNotNull(tree.getRootNode().getChildren("node1"));
+        assertNotNull(tree.getRootNode().getChildren("node2"));
+
+        res.deleteNodes(Arrays.asList(node1.getPath(), node2.getPath()));
+        assertNull(tree.getRootNode().getChildren("node1"));
+        assertNull(tree.getRootNode().getChildren("node2"));
+    }
+
+    @Test
+    public void deleteNodes_notEnoughRights() throws Exception
+    {
+        TestUserContextService.userContext = null;
+
+        ContainerNode node = new ContainerNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+
+        res.deleteNodes(Arrays.asList(node.getPath()));
+        assertNotNull(tree.getRootNode().getChildren("node"));
     }
 
     private static void checkResponse(Response response, Response.Status status, String message)
