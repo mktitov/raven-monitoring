@@ -48,7 +48,7 @@ public interface Tree
      */
     public Node getNode(String path) throws InvalidPathException;
     /**
-     * Remove node passed in parameter and all child nodes
+     * Remove node passed in parameter and all child nodes from the tree and from the tree store
      */
     public void remove(Node node);
     /**
