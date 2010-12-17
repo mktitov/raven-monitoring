@@ -43,10 +43,22 @@ function tree_init()
         },
         hotkeys:{
             "del": function(node){
-                nodesToDelete = tree.jstree("get_selected")
+                var nodes = tree.jstree("get_selected")
                 //TODO: check the rights to the node
-                if (nodesToDelete && nodesToDelete.length>0)
+                if (nodes && nodes.length>0){
+                    nodes.sort( function(a,b){ return a.id.length>b.id.length })
+                    nodesToDelete = []
+                    $(nodes).each(function(index, val){
+                        var found = false;
+                        for (var i=0; i<nodesToDelete.length; ++i)
+                            if (val.id.indexOf(nodesToDelete[i].id)==0){
+                                found=true;
+                                break;
+                            }
+                        if (!found) nodesToDelete.push(val)
+                    })
                     deleteNodesDialog_open()
+                }
             },
             "insert": function(){
                 selectedNode = this.get_selected()[0]
@@ -70,6 +82,7 @@ function tree_init()
         if (newNodePath){
             setTimeout(function(){
                 tree.jstree("deselect_all")
+                tree.jstree("open_node", selectedNode)
                 newNode = document.getElementById(newNodePath)
                 tree.jstree("hover_node", newNode)
                 tree.jstree("select_node", newNode);
@@ -158,9 +171,9 @@ function addNodeDialog_open(parentNode)
 
 function addNodeDialog_validate()
 {
-    name = $('#addNodeDialog_name').val()
-    type = $('#addNodeDialog_type').val()
-    createButton = $('#addNodeDialog ~ .ui-dialog-buttonpane button').first()
+    var name = $('#addNodeDialog_name').val()
+    var type = $('#addNodeDialog_type').val()
+    var createButton = $('#addNodeDialog ~ .ui-dialog-buttonpane button').first()
     if (childsOfSelectedNode[name])
         $('#addNodeDialog_name').btOn()
     else
@@ -182,12 +195,25 @@ function deleteNodesDialog_init()
         , height:400
         , buttons: {
             "&{'deleteButton'}": function(){
-//                data={}
-                ids=[]
-                nodesToDelete.each(function(index, node){
-                    ids.push(node.id)
+                //the path of nodes to delete
+                var ids=[]
+                //the nodes which be refreshed after delete
+                var parents = []
+                $(nodesToDelete).each(function(index, node){
+                    ids.push(node.id);
+                    var found=false;
+                    var parent = $(node).parents('li')[0];
+                    for (var i=0; i<parents.length; ++i)
+                        if (parent.id.indexOf(parents[i]==0)){
+                            found = true;
+                            break;
+                        }
+                    if (!found) parents.push(parent)
                 })
-                $.post("@{Tree.deleteNodes}", {'nodes':ids})
+                $.post("@{Tree.deleteNodes}", {'nodes':ids}, function(){
+                    for (var i=0;i<parents.length; i++)
+                        tree.jstree('refresh', parents[i]);
+                })
                 $('#deleteNodesDialog').dialog("close")
             }
             , "&{'cancelButton'}": function(){
@@ -200,7 +226,7 @@ function deleteNodesDialog_init()
 function deleteNodesDialog_open()
 {
     $('#deleteNodesDialog li').remove()
-    nodesToDelete.each(function(index, node){
+    $(nodesToDelete).each(function(index, node){
         $('#deleteNodesDialog ol').append('<li>'+node.id+'</li>')
     })
     $('#deleteNodesDialog').dialog("open")
