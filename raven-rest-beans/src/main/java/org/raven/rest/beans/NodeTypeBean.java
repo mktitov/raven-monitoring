@@ -17,6 +17,8 @@
 
 package org.raven.rest.beans;
 
+import java.util.List;
+
 /**
  *
  * @author Mikhail Titov
@@ -26,14 +28,22 @@ public class NodeTypeBean
     public String type;
     public String shortDescription;
     public String iconPath;
+    public List<String> childTypes;
 
     public NodeTypeBean() {
     }
 
     public NodeTypeBean(String type, String shortDescription, String iconPath)
     {
+        this(type, shortDescription, iconPath, null);
+    }
+
+    public NodeTypeBean(String type, String shortDescription, String iconPath, List<String> childTypes)
+    {
         this.type = type;
         this.shortDescription = shortDescription;
         this.iconPath = iconPath;
+        this.childTypes = childTypes;
     }
+
 }
