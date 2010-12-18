@@ -19,6 +19,7 @@ package org.raven.tree;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Set;
 import org.raven.conf.Configurator;
 import org.raven.expr.BindingSupport;
 import org.raven.tree.store.TreeStore;
@@ -87,10 +88,30 @@ public interface Tree
      */
     public void reloadTree();
     /**
-     * Returns all classes marked with {@link org.raven.annotations.NodeClass} annotation. Method
-     * never returns null.
+     * Returns types of all nodes defined in the system. Method never return null.
+     */
+    public List<Class> getNodeTypes();
+    /**
+     * Returns all available child node types for the node class passed in the parameter. 
+     * <p/>Because of child node types are choosing from the node type
+     * ({@link #getChildNodesTypes(org.raven.tree.Node) not from instance of the node}), it is not
+     * possible to get child node types that offering by the parent node. But it is possible
+     * {@link #getThroughNodesTypes()  to get all node types that can imports child node types from
+     * the parent node}.
+     * <p/>Method never returns null.
+     * @param nodeType the type of the node
+     */
+    public List<Class> getChildNodesTypes(Class nodeType);
+    /**
+     * Returns all available child node types for the node passed in the parameter.
+     * <p/>Method never returns null.
+     * @param node the node
      */
     public List<Class> getChildNodesTypes(Node node);
+    /**
+     * Returns classes of nodes that imports child node types from the parent node.
+     */
+    public Set<Class> getThroughNodesTypes();
     /**
      * Returns attributes types available for the node .
      */
@@ -104,14 +125,14 @@ public interface Tree
      * Copies subtree of nodes starting from the <code>source</code> node 
      * to the <code>destination</code> node.
      * @param source the source node
-     * @param destination the node to wich the source will be copied
-     * @param newNodeName if not null then this name will be seted to the new node
+     * @param destination the node to which the source will be copied
+     * @param newNodeName if not null then this name will be set to the new node
      * @param nodeTuner allows to tune node parameters in copy process
-     * @param store if seted to <code>true</code> then new node will be stored in the tree database
-     * @param validateNodeType if seted to <code>true</code> and the type of the <code>source</code>
+     * @param store if set to <code>true</code> then new node will be stored in the tree database
+     * @param validateNodeType if set to <code>true</code> and the type of the <code>source</code>
      *      node is not {@link Node#getChildNodeTypes() a valid child type} 
-     *      for the <code>destination</code> node then {@link TreeError} exception will be throwed.
-     * @param useEffectiveChildrens if seted to <code>true</code> then method 
+     *      for the <code>destination</code> node then {@link TreeError} exception will be throw.
+     * @param useEffectiveChildrens if set to <code>true</code> then method 
      *      {@link Node#getEffectiveChildrens()} will be used to clone children nodes of the <code>
      *      source</code>.
      */

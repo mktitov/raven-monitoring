@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
 import org.raven.annotations.NodeClass;
 import org.raven.audit.impl.AuditorNode;
 import org.raven.conf.Configurator;
@@ -97,6 +96,7 @@ public class TreeImpl implements Tree
     private final NodePathResolver pathResolver;
     private final AttributeValueHandlerRegistry valueHandlerRegistry;
 
+    private final List<Class> allNodeTypes;
     @SuppressWarnings("unchecked")
 	private final Map<Class, List<Class>> nodeTypes = new HashMap<Class, List<Class>>();
     @SuppressWarnings("unchecked")
@@ -140,11 +140,38 @@ public class TreeImpl implements Tree
         List<String> nodesTypesList = 
                 resourceProvider.getResourceStrings(
                     NodeClassTransformerWorker.NODES_TYPES_RESOURCE);
+
+        allNodeTypes = new ArrayList(nodesTypesList.size());
         
-        for (String nodeType: nodesTypesList)
-            addNodeType(Class.forName(nodeType));
+        for (String nodeTypeName: nodesTypesList)
+        {
+            Class nodeType = Class.forName(nodeTypeName);
+            allNodeTypes.add(nodeType);
+            addNodeType(nodeType);
+        }
         
 //        reloadTree();
+    }
+
+    public List<Class> getNodeTypes()
+    {
+        return allNodeTypes;
+    }
+
+    public List<Class> getChildNodesTypes(Class nodeType)
+    {
+        Set<Class> childTypes = new HashSet<Class>();
+        collectChildTypes(nodeType, childTypes);
+
+        List<Class> types = new ArrayList<Class>(childTypes);
+        Collections.sort(types, new ClassNameComparator());
+
+        return types;
+    }
+
+    public Set<Class> getThroughNodesTypes()
+    {
+        return Collections.unmodifiableSet(importParentChildTypeNodes);
     }
 
     @SuppressWarnings("unchecked")
@@ -472,22 +499,38 @@ public class TreeImpl implements Tree
     @SuppressWarnings("unchecked")
 	private void collectChildTypes(Node node, Set<Class> types) 
     {
-        Class[] typesArr = null;
-        if (anyChildTypeNodes.contains(node.getClass()))
-            typesArr = new Class[]{Void.class, node.getClass()};
-        else
-            typesArr = new Class[]{node.getClass()};
-        for (Class nodeType: typesArr)
-        {
-            List<Class> childTypes = nodeTypes.get(nodeType);
-            if (childTypes!=null)
-                types.addAll(childTypes);
-        }
+//        Class[] typesArr = null;
+//        if (anyChildTypeNodes.contains(node.getClass()))
+//            typesArr = new Class[]{Void.class, node.getClass()};
+//        else
+//            typesArr = new Class[]{node.getClass()};
+//        for (Class nodeType: typesArr)
+//        {
+//            List<Class> childTypes = nodeTypes.get(nodeType);
+//            if (childTypes!=null)
+//                types.addAll(childTypes);
+//        }
+        collectChildTypes(node.getClass(), types);
         
         if (node.getParent()!=null && importParentChildTypeNodes.contains(node.getClass()))
             collectChildTypes(node.getParent(), types);
     }
     
+	private void collectChildTypes(Class nodeType, Set<Class> types)
+    {
+        Class[] typesArr = null;
+        if (anyChildTypeNodes.contains(nodeType))
+            typesArr = new Class[]{Void.class, nodeType};
+        else
+            typesArr = new Class[]{nodeType};
+        for (Class type: typesArr)
+        {
+            List<Class> childTypes = nodeTypes.get(type);
+            if (childTypes!=null)
+                types.addAll(childTypes);
+        }
+    }
+
     private void createRootNode()
     {
         rootNode = new RootNode();
