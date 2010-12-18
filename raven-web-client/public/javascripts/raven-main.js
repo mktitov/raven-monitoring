@@ -5,6 +5,10 @@ var childsOfSelectedNode;
 var addNodeDialogTip;
 var newNodePath;
 var nodesToDelete;
+var moveEvent;
+var moveData;
+var nodeTypes;
+var throughNodeTypes;
 
 $(function(){
     //Layout definition
@@ -18,7 +22,22 @@ $(function(){
 
     //Delete node Dialog
     deleteNodesDialog_init()
+
+    //load node types and through node types
+    loadNodeTypes()
 });
+
+function loadNodeTypes()
+{
+   $.getJSON('@{Tree.nodeTypes}', null, function(data){
+       nodeTypes = {}
+       for (var i=0; i<data.length; ++i)
+           nodeTypes[data[i].type]=data[i]
+   })
+   $.getJSON('@{Tree.throughNodeTypes}', null, function(data){
+       throughNodeTypes = data
+   })
+}
 
 function layout_init()
 {
@@ -76,7 +95,10 @@ function tree_init()
                 })
             }
         },
-        plugins:["themes","json_data","ui","hotkeys"]
+        dnd:{
+            
+        }
+        , plugins:["themes","json_data","ui","hotkeys", "dnd"]
     });
     tree.bind("refresh.jstree", function(){
         if (newNodePath){
@@ -89,6 +111,12 @@ function tree_init()
                 newNodePath = undefined
             }, 500)
         }
+    })
+    tree.bind("move_node.jstree", function(event, data){
+        moveEvent = event;
+        moveData = data;
+        alert('node moved')
+        $.jstree.rollback(data.rlbk)
     })
 }
 

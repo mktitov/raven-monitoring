@@ -34,6 +34,20 @@ public class Tree extends Controller
         render();
     }
 
+    public static void nodeTypes() throws Exception
+    {
+        Logger.debug("Loading node types");
+        NodeTypeBean[] beans = requestForJson("node/node-types", session, NodeTypeBean[].class);
+        renderJSON(beans);
+    }
+
+    public static void throughNodeTypes() throws Exception
+    {
+        Logger.debug("Loading through node types");
+        String[] types = requestForJson("node/through-node-types", session, String[].class);
+        renderJSON(types);
+    }
+
     public static void childs(String path) throws Exception
     {
         Logger.debug("Reading child nodes for path (%s)", path);
