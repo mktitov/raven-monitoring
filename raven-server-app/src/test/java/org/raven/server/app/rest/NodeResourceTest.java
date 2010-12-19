@@ -20,6 +20,7 @@ package org.raven.server.app.rest;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import javax.ws.rs.core.Response;
 import org.junit.Before;
 import org.junit.Test;
@@ -198,6 +199,39 @@ public class NodeResourceTest extends RavenServerAppTestCase
 
         res.deleteNodes(Arrays.asList(node.getPath()));
         assertNotNull(tree.getRootNode().getChildren("node"));
+    }
+
+    @Test
+    public void moveNodes_nullNodes() throws Exception
+    {
+        Response resp = res.moveNodes(null, null, 0);
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.BAD_REQUEST, "Nothing to move");
+    }
+
+    @Test
+    public void moveNodes_emptyNodes() throws Exception
+    {
+        Response resp = res.moveNodes(null, Collections.EMPTY_LIST, 0);
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.BAD_REQUEST, "Nothing to move");
+    }
+
+    @Test
+    public void moveNodes_notEnoughRightsInDestintaion() throws Exception
+    {
+        TestUserContextService.userContext = null;
+        Response resp = res.moveNodes("/", Arrays.asList("/System/"), 0);
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.BAD_REQUEST, "Not enough rights to move nodes to the (/) node");
+    }
+
+    @Test
+    public void moveNodes_rootNode() throws Exception
+    {
+        Response resp = res.moveNodes("/", Arrays.asList(("/")), 0);
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.BAD_REQUEST, "Can not move root node");
     }
 
     private static void checkResponse(Response response, Response.Status status, String message)

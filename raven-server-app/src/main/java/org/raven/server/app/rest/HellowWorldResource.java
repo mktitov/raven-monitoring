@@ -43,6 +43,6 @@ public class HellowWorldResource
     @Produces(MediaType.APPLICATION_JSON)
     public NodeBean getJson()
     {
-        return new NodeBean("node name", "path to node", "path to icon", true, 0);
+        return new NodeBean("node name", "path to node", "class", "path to icon", true, 0);
     }
 }
