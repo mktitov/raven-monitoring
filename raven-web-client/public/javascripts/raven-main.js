@@ -83,22 +83,32 @@ function tree_init()
                 selectedNode = this.get_selected()[0]
                 if ( getRightsForNode(selectedNode)<8 )
                     return;
-                childsOfSelectedNode = {}
-                this.open_node(selectedNode, function(){
-                    //Lets create a hash of the child node names of the selectedNode
-                    $(selectedNode).find('a').each(function(index, node){
-                        name = $(node).text().trim()
-                        if (name)
-                            childsOfSelectedNode[name]=true
-                    })
+                getChildNodeNames(selectedNode, function(names){
+                    childsOfSelectedNode = names
                     addNodeDialog_open(selectedNode)
                 })
+//                this.open_node(selectedNode, function(){
+//                    //Lets create a hash of the child node names of the selectedNode
+//                    $(selectedNode).find('ul:first > li > a').each(function(index, node){
+//                        name = $(node).text().trim()
+//                        if (name)
+//                            childsOfSelectedNode[name]=true
+//                    })
+//                })
             }
         },
         dnd:{
             
         }
-        , plugins:["themes","json_data","ui","hotkeys", "dnd"]
+        , crrm:{
+            move: {
+                check_move: function(req){
+                    moveData = req;
+                    return checkChildNodeType(req.np, req.o)
+                }
+            }
+        }
+        , plugins:["themes","json_data","ui","hotkeys", "dnd", "crrm"]
     });
     tree.bind("refresh.jstree", function(){
         if (newNodePath){
@@ -114,7 +124,7 @@ function tree_init()
     })
     tree.bind("move_node.jstree", function(event, data){
         moveEvent = event;
-        moveData = data;
+//        moveData = data;
         alert('node moved')
         $.jstree.rollback(data.rlbk)
     })
@@ -230,7 +240,7 @@ function deleteNodesDialog_init()
                 $(nodesToDelete).each(function(index, node){
                     ids.push(node.id);
                     var found=false;
-                    var parent = $(node).parents('li')[0];
+                    var parent = getParentNode(node);
                     for (var i=0; i<parents.length; ++i)
                         if (parent.id.indexOf(parents[i]==0)){
                             found = true;
@@ -264,4 +274,66 @@ function deleteNodesDialog_open()
 //
 function getRightsForNode(node){
     return parseInt($(node).attr('rights'))
+}
+
+function getParentNode(node){
+    return $(node).parents('li')[0]
+}
+
+function checkChildNodeType(parent, nodes)
+{
+    if (!parent || getRightsForNode(parent)<32) return false
+
+    var parentType = $(parent).attr('type');
+    var checkPassed = true
+    for (var i=0; i<nodes.length; ++i){
+        if ( getChildNodeNames(parent)[getNodeName(nodes[i])] )
+            return false
+        var nodeType = $(nodes[i]).attr('type')
+        var desc = nodeTypes[parentType]
+        if (!desc)
+            return false;
+        else if ( desc && desc.childTypes.indexOf(nodeType)==-1 ){
+            if ( throughNodeTypes.indexOf(parentType)>=0 )
+                checkPassed = checkChildNodeType(getParentNode(parent), parent)
+            else
+                checkPassed = false
+            if (!checkPassed)
+                return false
+        }
+    }
+    return true;
+}
+
+//Opens the parent node and returns the hash with node name in the key
+function getChildNodeNames(parent, callback)
+{
+    var getNames = function(){
+        var names={}
+        $(parent).find('ul:first > li > a').each(function(index, node){
+            names[$(node).text().trim()]=true
+        })
+        return names
+    }
+    if (callback) {
+        tree.jstree("open_node", parent, function(){
+            callback(getNames())
+        })
+        return null;
+    } else
+        return getNames()
+}
+
+//Returns the hash with node name in the key
+//function getChildNodeNames(parent)
+//{
+//    names = {}
+//    $(parent).find('ul:first > li > a').each(function(index, node){
+//        names[$(node).text().trim()]=true
+//    })
+//    return names;
+//}
+
+function getNodeName(node){
+    return $(node).children('a').text().trim()
 }

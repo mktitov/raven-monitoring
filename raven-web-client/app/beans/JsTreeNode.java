@@ -27,6 +27,7 @@ public class JsTreeNode
         this.state = nodeBean.hasChilds? "closed" : null;
         attr.put("id", nodeBean.path);
         attr.put("rights", nodeBean.rights);
+        attr.put("type", nodeBean.type);
     }
 }
 
