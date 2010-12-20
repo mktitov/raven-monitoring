@@ -277,14 +277,15 @@ public class NodeResource
                 if (nodeAccessService.getAccessForNode(parent, userContext)<AccessControl.TREE_EDIT)
                     throw new Exception(String.format(
                             "Not enough rights to move node (%s) from (%s) node", path, parentPath));
-                if (parent.getPath().startsWith(node.getPath()))
+                if (newParent.getPath().startsWith(node.getPath()))
                     throw new Exception(String.format(
                             "Can't move node (%s) to it self (%s)", path, parentPath));
-                if ( parent.getChildren(node.getName())!=null )
+                Node existingNode = newParent.getChildren(node.getName());
+                if ( existingNode!=null && !node.equals(existingNode))
                     throw new Exception(String.format(
                             "Can't move node (%s) to the node (%s) because of it "
                             + "already has the node with the same name"
-                            , node.getPath(), parent.getPath()));
+                            , node.getPath(), newParent.getPath()));
                 nodes.add(node);
             }
             
@@ -304,11 +305,17 @@ public class NodeResource
             }
 
             //Reposition nodes
+            for (int i=0; i<childs.size(); ++i)
+                if ( nodes.contains(childs.get(i)) )
+                    childs.set(i, null);
+
             childs.addAll(position, nodes);
-            for (int i=0; i<childs.size(); ++i){
-                Node child = childs.get(i);
-                child.setIndex(i);
-                child.save();
+            int i=1;
+            for (Node child: childs){
+                if (child!=null){
+                    child.setIndex(i++);
+                    child.save();
+                }
             }
             
             return Response.ok().build();

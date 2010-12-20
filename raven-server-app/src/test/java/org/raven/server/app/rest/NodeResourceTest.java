@@ -21,6 +21,7 @@ import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import javax.ws.rs.core.Response;
 import org.junit.Before;
 import org.junit.Test;
@@ -232,6 +233,69 @@ public class NodeResourceTest extends RavenServerAppTestCase
         Response resp = res.moveNodes("/", Arrays.asList(("/")), 0);
         assertNotNull(resp);
         checkResponse(resp, Response.Status.BAD_REQUEST, "Can not move root node");
+    }
+
+    @Test
+    public void moveNodes_toItself() throws Exception
+    {
+        ContainerNode node1 = new ContainerNode("node1");
+        tree.getRootNode().addAndSaveChildren(node1);
+
+        ContainerNode node2 = new ContainerNode("node2");
+        node1.addAndSaveChildren(node2);
+
+        Response resp = res.moveNodes(node2.getPath(), Arrays.asList((node1.getPath())), 0);
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.BAD_REQUEST
+                , String.format("Can't move node (%s) to it self (%s)", node1.getPath(), node2.getPath()));
+    }
+
+    @Test
+    public void moveNodes_existsNodeWithSameName() throws Exception
+    {
+        ContainerNode node1 = new ContainerNode("node1");
+        tree.getRootNode().addAndSaveChildren(node1);
+
+        ContainerNode node2 = new ContainerNode("node2");
+        tree.getRootNode().addAndSaveChildren(node2);
+
+        ContainerNode node2_1 = new ContainerNode("node2");
+        node1.addAndSaveChildren(node2_1);
+
+        Response resp = res.moveNodes(node1.getPath(), Arrays.asList((node2.getPath())), 0);
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.BAD_REQUEST
+                , String.format(
+                            "Can't move node (%s) to the node (%s) because of it "
+                            + "already has the node with the same name"
+                            , node2.getPath(), node1.getPath()));
+    }
+
+    @Test
+    public void moveNodes_reposition() throws Exception
+    {
+        ContainerNode node = new ContainerNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+
+        ContainerNode node1 = new ContainerNode("node1");
+        node.addAndSaveChildren(node1);
+
+        ContainerNode node2 = new ContainerNode("node2");
+        node.addAndSaveChildren(node2);
+
+        ContainerNode node3 = new ContainerNode("node3");
+        node.addAndSaveChildren(node3);
+
+        Response resp = res.moveNodes(node.getPath(), Arrays.asList((node2.getPath())), 0);
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.OK, null);
+
+        List<Node> childs = node.getSortedChildrens();
+        assertEquals(3, childs.size());
+        for (int i=0; i<childs.size(); ++i) {
+            assertEquals(i+1, childs.get(i).getIndex());
+        }
+        assertArrayEquals(new Object[]{node2, node1, node3}, childs.toArray());
     }
 
     private static void checkResponse(Response response, Response.Status status, String message)
