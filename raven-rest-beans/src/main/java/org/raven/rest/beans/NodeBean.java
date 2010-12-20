@@ -25,6 +25,7 @@ public class NodeBean
 {
     public String name;
     public String path;
+    public String type;
     public String iconPath;
     public boolean hasChilds;
     public int rights;
@@ -32,9 +33,10 @@ public class NodeBean
     public NodeBean() {
     }
 
-    public NodeBean(String name, String path, String iconPath, boolean hasChilds, int rights) {
+    public NodeBean(String name, String path, String type, String iconPath, boolean hasChilds, int rights) {
         this.name = name;
         this.path = path;
+        this.type = type;
         this.iconPath = iconPath;
         this.hasChilds = hasChilds;
         this.rights = rights;
