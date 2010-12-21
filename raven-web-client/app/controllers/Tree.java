@@ -12,6 +12,7 @@ import java.io.InputStream;
 import beans.JsTreeNode;
 import java.io.ByteArrayInputStream;
 import java.util.HashMap;
+import org.apache.commons.lang.StringUtils;
 import org.raven.rest.beans.NodeBean;
 import play.Logger;
 import play.Play;
@@ -107,6 +108,22 @@ public class Tree extends Controller
             post("node/delete-nodes", session, requestParams);
             ok();
         } catch (Exception e){
+            error(e.getMessage());
+        }
+    }
+
+    public static void moveNodes(String destination, String[] nodes, int position)
+    {
+        Logger.debug("Moving nodes (%s) to the new location (%s)"
+                , StringUtils.join(nodes, ", "), destination);
+        Map<String, Object> requestParams = new HashMap<String, Object>();
+        requestParams.put("destination", destination);
+        requestParams.put("nodes", nodes);
+        requestParams.put("position", position);
+        try{
+            post("node/move-nodes", session, requestParams);
+            ok();
+        } catch(Exception e) {
             error(e.getMessage());
         }
     }

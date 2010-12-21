@@ -1,5 +1,7 @@
 package service;
 
+import org.apache.commons.lang.StringUtils;
+
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -16,4 +18,9 @@ public class App
     public final static String RAVEN_SERVER_URL_ATTR = "raven.server.url";
     public final static String RAVEN_REST_ENCODING = "raven.rest.encoding";
     public final static String RAVEN_SESSION_ID = "raven.session.id";
+
+    public String toString(String... arr)
+    {
+        return StringUtils.join(arr, ", ");
+    }
 }

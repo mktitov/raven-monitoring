@@ -104,7 +104,7 @@ function tree_init()
             move: {
                 check_move: function(req){
                     moveData = req;
-                    return checkChildNodeType(req.np, req.o)
+                    return checkChildNodeType(req.np[0], req.o)
                 }
             }
         }
@@ -123,10 +123,23 @@ function tree_init()
         }
     })
     tree.bind("move_node.jstree", function(event, data){
-        moveEvent = event;
-//        moveData = data;
-        alert('node moved')
-        $.jstree.rollback(data.rlbk)
+        var r = data.args[0]
+        var ids = []
+        for (var i=0; i<r.o.length; ++i)
+            ids.push(r.o[i].id)
+        $.ajax({
+            url: "@{Tree.moveNodes}"
+            , data: {destination:r.np[0].id, nodes:ids, position:r.cp}
+            , type: 'POST'
+            , async: false
+            , success: function(data){
+                tree.jstree("refresh", r.np[0])
+            }
+            , error: function(request, status){
+                $.jstree.rollback(data.rlbk)
+            }
+        })
+//        alert('node moved: calculated position is '+data.args[0].cp)
     })
 }
 
@@ -282,12 +295,14 @@ function getParentNode(node){
 
 function checkChildNodeType(parent, nodes)
 {
+//    return true;
     if (!parent || getRightsForNode(parent)<32) return false
 
     var parentType = $(parent).attr('type');
     var checkPassed = true
     for (var i=0; i<nodes.length; ++i){
-        if ( getChildNodeNames(parent)[getNodeName(nodes[i])] )
+        var nodeParent = getParentNode(nodes[i])
+        if ( nodeParent!=parent && getChildNodeNames(parent)[getNodeName(nodes[i])] )
             return false
         var nodeType = $(nodes[i]).attr('type')
         var desc = nodeTypes[parentType]
