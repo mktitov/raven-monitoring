@@ -250,24 +250,28 @@ public class NodeResource
         }
     }
 
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_PLAIN)
+    @Path("move-nodes")
     public Response moveNodes(
-            @FormParam("parent") String parentPath
+            @FormParam("destination") String destination
             , @FormParam("nodes") List<String> nodePaths
             , @FormParam("position") int position)
     {
         if (log.isDebugEnabled())
             log.debug("Reveived move request. Moving nodes ({}) to the ({}) node"
-                    , parentPath, nodePaths);
+                    , destination, nodePaths);
         try
         {
             //Preparing for move
             if (nodePaths==null || nodePaths.isEmpty())
                 throw new Exception("Nothing to move");
-            Node newParent = tree.getNode(parentPath);
+            Node newParent = tree.getNode(destination);
             UserContext userContext = userContextService.getUserContext();
             if (nodeAccessService.getAccessForNode(newParent, userContext) < AccessControl.TREE_EDIT)
                 throw new Exception(String.format(
-                        "Not enough rights to move nodes to the (%s) node", parentPath));
+                        "Not enough rights to move nodes to the (%s) node", destination));
             List<Node> nodes = new ArrayList<Node>(nodePaths.size());
             for (String path: nodePaths){
                 Node node = tree.getNode(path);
@@ -276,10 +280,10 @@ public class NodeResource
                     throw new Exception("Can not move root node");
                 if (nodeAccessService.getAccessForNode(parent, userContext)<AccessControl.TREE_EDIT)
                     throw new Exception(String.format(
-                            "Not enough rights to move node (%s) from (%s) node", path, parentPath));
+                            "Not enough rights to move node (%s) from (%s) node", path, destination));
                 if (newParent.getPath().startsWith(node.getPath()))
                     throw new Exception(String.format(
-                            "Can't move node (%s) to it self (%s)", path, parentPath));
+                            "Can't move node (%s) to it self (%s)", path, destination));
                 Node existingNode = newParent.getChildren(node.getName());
                 if ( existingNode!=null && !node.equals(existingNode))
                     throw new Exception(String.format(

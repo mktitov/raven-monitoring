@@ -296,6 +296,72 @@ public class NodeResourceTest extends RavenServerAppTestCase
             assertEquals(i+1, childs.get(i).getIndex());
         }
         assertArrayEquals(new Object[]{node2, node1, node3}, childs.toArray());
+
+        resp = res.moveNodes(node.getPath(), Arrays.asList(node2.getPath(), node1.getPath()), 3);
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.OK, null);
+
+        childs = node.getSortedChildrens();
+        assertEquals(3, childs.size());
+        for (int i=0; i<childs.size(); ++i) {
+            assertEquals(i+1, childs.get(i).getIndex());
+        }
+        assertArrayEquals(new Object[]{node3, node2, node1}, childs.toArray());
+    }
+
+    @Test
+    public void moveNodes_move() throws Exception
+    {
+        ContainerNode node = new ContainerNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+
+        ContainerNode node1 = new ContainerNode("node1");
+        node.addAndSaveChildren(node1);
+
+        ContainerNode node2 = new ContainerNode("node2");
+        node.addAndSaveChildren(node2);
+
+        ContainerNode node3 = new ContainerNode("node3");
+        tree.getRootNode().addAndSaveChildren(node3);
+
+        Response resp = res.moveNodes(node.getPath(), Arrays.asList((node3.getPath())), 0);
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.OK, null);
+
+        List<Node> childs = node.getSortedChildrens();
+        assertEquals(3, childs.size());
+        for (int i=0; i<childs.size(); ++i) {
+            assertEquals(i+1, childs.get(i).getIndex());
+        }
+        assertArrayEquals(new Object[]{node3, node1, node2}, childs.toArray());
+    }
+
+    @Test
+    public void moveNodes_moveAndRepostion() throws Exception
+    {
+        ContainerNode node = new ContainerNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+
+        ContainerNode node1 = new ContainerNode("node1");
+        node.addAndSaveChildren(node1);
+
+        ContainerNode node2 = new ContainerNode("node2");
+        node.addAndSaveChildren(node2);
+
+        ContainerNode node3 = new ContainerNode("node3");
+        tree.getRootNode().addAndSaveChildren(node3);
+
+        Response resp = res.moveNodes(
+                node.getPath(), Arrays.asList(node3.getPath(), node2.getPath()), 2);
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.OK, null);
+
+        List<Node> childs = node.getSortedChildrens();
+        assertEquals(3, childs.size());
+        for (int i=0; i<childs.size(); ++i) {
+            assertEquals(i+1, childs.get(i).getIndex());
+        }
+        assertArrayEquals(new Object[]{node1, node3, node2}, childs.toArray());
     }
 
     private static void checkResponse(Response response, Response.Status status, String message)
