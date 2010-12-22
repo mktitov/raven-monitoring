@@ -25,8 +25,9 @@ public class JsTreeNode
         data.put("title", nodeBean.name);
         data.put("icon", Router.reverse("Tree.icon").add("path", nodeBean.iconPath).url);
         this.state = nodeBean.hasChilds? "closed" : null;
-        attr.put("id", nodeBean.path);
+        attr.put("id", nodeBean.id);
         attr.put("rights", nodeBean.rights);
+        attr.put("path", nodeBean.path);
         attr.put("type", nodeBean.type);
     }
 }

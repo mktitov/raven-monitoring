@@ -92,8 +92,8 @@ public class Tree extends Controller
     {
         Logger.debug("Creating new node: parent=%s, name=%s, type=%s", parent, name, type);
         try {
-            String path = request("node/create-node", session, "parent", parent, "name", name, "type", type);
-            renderText(path);
+            String id = request("node/create-node", session, "parent", parent, "name", name, "type", type);
+            renderText(id);
         } catch (Exception ex) {
             error(ex.getMessage());
         }

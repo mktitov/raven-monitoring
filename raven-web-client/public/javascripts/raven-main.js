@@ -3,10 +3,8 @@ var tree;
 var selectedNode;
 var childsOfSelectedNode;
 var addNodeDialogTip;
-var newNodePath;
+var newNodeId;
 var nodesToDelete;
-var moveEvent;
-var moveData;
 var nodeTypes;
 var throughNodeTypes;
 
@@ -41,7 +39,7 @@ function loadNodeTypes()
 
 function layout_init()
 {
-    layout = $('body').layout({
+    var layout = $('body').layout({
           west:{size:300}
         , north:{
             resizable:false, slidable:false, closable:false, spacing_open:-1
@@ -57,20 +55,24 @@ function tree_init()
         json_data: {
             ajax:{
                 url:"@{Tree.childs}",
-                data:function(node){return {path:node==-1? "" : node[0].id};}
+                data:function(node){
+                    return {path:node==-1? "" : node.attr('path')};
+                }
             }
         },
         hotkeys:{
             "del": function(node){
                 var nodes = tree.jstree("get_selected")
-                //TODO: check the rights to the node
+                //TODO: check the rights for the node
                 if (nodes && nodes.length>0){
-                    nodes.sort( function(a,b){ return a.id.length>b.id.length })
+                    nodes.sort( function(a,b){
+                        return $(a).attr('path').length>$(b).attr('path').length
+                    })
                     nodesToDelete = []
                     $(nodes).each(function(index, val){
                         var found = false;
                         for (var i=0; i<nodesToDelete.length; ++i)
-                            if (val.id.indexOf(nodesToDelete[i].id)==0){
+                            if (getPath(val).indexOf(getPath(nodesToDelete[i]))==0){
                                 found=true;
                                 break;
                             }
@@ -103,7 +105,6 @@ function tree_init()
         , crrm:{
             move: {
                 check_move: function(req){
-                    moveData = req;
                     return checkChildNodeType(req.np[0], req.o)
                 }
             }
@@ -111,25 +112,25 @@ function tree_init()
         , plugins:["themes","json_data","ui","hotkeys", "dnd", "crrm"]
     });
     tree.bind("refresh.jstree", function(){
-        if (newNodePath){
+        if (newNodeId){
             setTimeout(function(){
                 tree.jstree("deselect_all")
                 tree.jstree("open_node", selectedNode)
-                newNode = document.getElementById(newNodePath)
+                var newNode = document.getElementById(newNodeId)
                 tree.jstree("hover_node", newNode)
                 tree.jstree("select_node", newNode);
-                newNodePath = undefined
+                newNodeId = undefined
             }, 500)
         }
     })
     tree.bind("move_node.jstree", function(event, data){
         var r = data.args[0]
-        var ids = []
+        var paths = []
         for (var i=0; i<r.o.length; ++i)
-            ids.push(r.o[i].id)
+            paths.push(getPath(r.o[i]))
         $.ajax({
             url: "@{Tree.moveNodes}"
-            , data: {destination:r.np[0].id, nodes:ids, position:r.cp}
+            , data: {destination:getPath(r.np[0]), nodes:paths, position:r.cp}
             , type: 'POST'
             , async: false
             , success: function(data){
@@ -162,7 +163,7 @@ function addNodeDialog_init()
                 $('#addNodeDialog_form').ajaxSubmit({
                     data: {parent: $('#addNodeDialog_parent').val()}
                     , success: function(data){
-                        newNodePath = data
+                        newNodeId = data
                         tree.jstree("refresh", selectedNode)
                     }
                 })
@@ -181,7 +182,7 @@ function addNodeDialog_open(parentNode)
         return;
     addNodeDialogTip = undefined
     $("#addNodeDialog").clearForm()
-    $("#addNodeDialog_parent").val(parentNode.id)
+    $("#addNodeDialog_parent").val($(parentNode).attr('path'))
     addNodeDialog_validate()
     var items;
     $('#addNodeDialog_name, #addNodeDialog_type').bind('keyup', function(event){
@@ -190,7 +191,7 @@ function addNodeDialog_open(parentNode)
     $.ajax({
         async:false
         , url: '@{Tree.childNodeTypes}'
-        , data: {path: parentNode.id}
+        , data: {path: $(parentNode).attr('path')}
         , success: function(data){
             items = data
         }
@@ -247,21 +248,21 @@ function deleteNodesDialog_init()
         , buttons: {
             "&{'deleteButton'}": function(){
                 //the path of nodes to delete
-                var ids=[]
+                var paths=[]
                 //the nodes which be refreshed after delete
                 var parents = []
                 $(nodesToDelete).each(function(index, node){
-                    ids.push(node.id);
+                    paths.push(getPath(node));
                     var found=false;
                     var parent = getParentNode(node);
                     for (var i=0; i<parents.length; ++i)
-                        if (parent.id.indexOf(parents[i]==0)){
+                        if (getPath(parent).indexOf(getPath(parents[i]))==0){
                             found = true;
                             break;
                         }
                     if (!found) parents.push(parent)
                 })
-                $.post("@{Tree.deleteNodes}", {'nodes':ids}, function(){
+                $.post("@{Tree.deleteNodes}", {'nodes':paths}, function(){
                     for (var i=0;i<parents.length; i++)
                         tree.jstree('refresh', parents[i]);
                 })
@@ -278,7 +279,7 @@ function deleteNodesDialog_open()
 {
     $('#deleteNodesDialog li').remove()
     $(nodesToDelete).each(function(index, node){
-        $('#deleteNodesDialog ol').append('<li>'+node.id+'</li>')
+        $('#deleteNodesDialog ol').append('<li>'+$(node).attr('path')+'</li>')
     })
     $('#deleteNodesDialog').dialog("open")
 }
@@ -351,4 +352,8 @@ function getChildNodeNames(parent, callback)
 
 function getNodeName(node){
     return $(node).children('a').text().trim()
+}
+
+function getPath(node){
+    return $(node).attr('path')
 }

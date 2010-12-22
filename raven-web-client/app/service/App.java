@@ -19,8 +19,4 @@ public class App
     public final static String RAVEN_REST_ENCODING = "raven.rest.encoding";
     public final static String RAVEN_SESSION_ID = "raven.session.id";
 
-    public String toString(String... arr)
-    {
-        return StringUtils.join(arr, ", ");
-    }
 }
