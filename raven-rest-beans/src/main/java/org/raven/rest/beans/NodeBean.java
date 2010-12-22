@@ -23,6 +23,7 @@ package org.raven.rest.beans;
  */
 public class NodeBean
 {
+    public int id;
     public String name;
     public String path;
     public String type;
@@ -33,7 +34,11 @@ public class NodeBean
     public NodeBean() {
     }
 
-    public NodeBean(String name, String path, String type, String iconPath, boolean hasChilds, int rights) {
+    public NodeBean(
+            int id, String name, String path, String type, String iconPath
+            , boolean hasChilds, int rights)
+    {
+        this.id = id;
         this.name = name;
         this.path = path;
         this.type = type;
