@@ -160,7 +160,7 @@ public class NodeResourceTest extends RavenServerAppTestCase
         Node node = tree.getRootNode().getChildren("test");
         assertNotNull(node);
         assertTrue(node instanceof ContainerNode);
-        checkResponse(resp, Response.Status.OK, node.getPath());
+        checkResponse(resp, Response.Status.OK, ""+node.getId());
     }
 
     @Test

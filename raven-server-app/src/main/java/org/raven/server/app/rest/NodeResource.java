@@ -93,10 +93,12 @@ public class NodeResource
         if (childs!=null && !childs.isEmpty()){
             Collection<NodeBean> beans = new ArrayList<NodeBean>(childs.size());
             for (Node child: childs) {
-                int right = nodeAccessService.getAccessForNode(child, userContextService.getUserContext());
+                int right = nodeAccessService.getAccessForNode(
+                        child, userContextService.getUserContext());
                 if (right>=AccessControl.READ)
                     beans.add(new NodeBean(
-                            child.getName(), child.getPath(), child.getClass().getName()
+                            child.getId(), child.getName(), child.getPath()
+                            , child.getClass().getName()
                             , IconResolver.getPath(child.getClass())
                             , child.getChildrenCount()==0? false : true
                             , right));
@@ -212,7 +214,7 @@ public class NodeResource
             node.setName(name);
             parent.addAndSaveChildren(node);
 
-            return Response.ok(node.getPath()).build();
+            return Response.ok(""+node.getId()).build();
         }
         catch(Exception e)
         {
