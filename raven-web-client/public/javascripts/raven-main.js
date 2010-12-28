@@ -142,6 +142,10 @@ function tree_init()
         })
 //        alert('node moved: calculated position is '+data.args[0].cp)
     })
+    tree.bind("keydown", function(event){
+//        console.log('event: which-'+event.which+'; event metaKey'+event.metaKey)
+        console.log('event: control key - '+event.ctrlKey+'; meta key - '+event.metaKey)
+    })
 }
 
 function addNodeDialog_init()
