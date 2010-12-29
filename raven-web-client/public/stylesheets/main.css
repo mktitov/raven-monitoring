@@ -7,6 +7,14 @@
     font-size: 1.3em;
 }
 
+.copy-elements {
+    background: transparent url('../images/add.png') no-repeat left center;
+    height: 16px;
+    width: 16px;
+    opacity: 0.50;
+    position: absolute;
+    z-index: 10000;
+}
 
 body {
 	margin: 0;

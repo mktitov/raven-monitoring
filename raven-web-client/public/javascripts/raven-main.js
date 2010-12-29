@@ -7,6 +7,9 @@ var newNodeId;
 var nodesToDelete;
 var nodeTypes;
 var throughNodeTypes;
+var treeCopyNode
+var treeMouseDown;
+var copyIndicator;
 
 $(function(){
     //Layout definition
@@ -50,6 +53,7 @@ function layout_init()
 
 function tree_init()
 {
+//    copyIndicator = $('#copy-indicator').hide()
     tree = $("#tree").jstree({
         themes : {theme:"apple"},
         json_data: {
@@ -142,9 +146,26 @@ function tree_init()
         })
 //        alert('node moved: calculated position is '+data.args[0].cp)
     })
-    tree.bind("keydown", function(event){
-//        console.log('event: which-'+event.which+'; event metaKey'+event.metaKey)
-        console.log('event: control key - '+event.ctrlKey+'; meta key - '+event.metaKey)
+    tree.bind("mousedown", function(event){
+        treeCopyNode = event.which==1 && event.ctrlKey
+        treeMouseDown = true
+        console.log('event: copy - '+treeCopyNode+'which - '+event.which+'; control key - '+event.ctrlKey+'; meta key - '+event.metaKey)
+    })
+    tree.bind("mouseup", function(event){
+        treeMouseDown = false
+        copyIndicator.hide()
+    })
+    tree.bind("mousemove", function(event){
+        if (treeMouseDown && treeCopyNode){
+            if (!copyIndicator){
+                copyIndicator = $("<div id='copy-indicator' class='copy-elelemnts'>")
+                copyIndicator.appendTo('body')
+            }
+            copyIndicator.css({left:event.pageX+10+'px', top:event.pageY-10+'px'})
+        }
+    })
+    tree.bind("start_drag", function(event, data){
+        console.log('drag started. event: copy - '+treeCopyNode+'which - '+event.which+'; control key - '+event.ctrlKey+'; meta key - '+event.metaKey)
     })
 }
 
@@ -301,6 +322,8 @@ function getParentNode(node){
 function checkChildNodeType(parent, nodes)
 {
 //    return true;
+    if (treeCopyNode)
+        copyIndicator.show()
     if (!parent || getRightsForNode(parent)<32) return false
 
     var parentType = $(parent).attr('type');
