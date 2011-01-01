@@ -7,8 +7,7 @@ var newNodeId;
 var nodesToDelete;
 var nodeTypes;
 var throughNodeTypes;
-var treeCopyNode
-var treeMouseDown;
+var treeCopyNode;
 var copyIndicator;
 
 $(function(){
@@ -53,7 +52,7 @@ function layout_init()
 
 function tree_init()
 {
-//    copyIndicator = $('#copy-indicator').hide()
+    copyIndicator = $('#copy-indicator').hide()
     tree = $("#tree").jstree({
         themes : {theme:"apple"},
         json_data: {
@@ -93,14 +92,6 @@ function tree_init()
                     childsOfSelectedNode = names
                     addNodeDialog_open(selectedNode)
                 })
-//                this.open_node(selectedNode, function(){
-//                    //Lets create a hash of the child node names of the selectedNode
-//                    $(selectedNode).find('ul:first > li > a').each(function(index, node){
-//                        name = $(node).text().trim()
-//                        if (name)
-//                            childsOfSelectedNode[name]=true
-//                    })
-//                })
             }
         },
         dnd:{
@@ -134,7 +125,7 @@ function tree_init()
             paths.push(getPath(r.o[i]))
         $.ajax({
             url: "@{Tree.moveNodes}"
-            , data: {destination:getPath(r.np[0]), nodes:paths, position:r.cp}
+            , data: {destination:getPath(r.np[0]), nodes:paths, position:r.cp, copy:treeCopyNode}
             , type: 'POST'
             , async: false
             , success: function(data){
@@ -146,26 +137,21 @@ function tree_init()
         })
 //        alert('node moved: calculated position is '+data.args[0].cp)
     })
-    tree.bind("mousedown", function(event){
-        treeCopyNode = event.which==1 && event.ctrlKey
-        treeMouseDown = true
-        console.log('event: copy - '+treeCopyNode+'which - '+event.which+'; control key - '+event.ctrlKey+'; meta key - '+event.metaKey)
-    })
-    tree.bind("mouseup", function(event){
-        treeMouseDown = false
-        copyIndicator.hide()
-    })
-    tree.bind("mousemove", function(event){
-        if (treeMouseDown && treeCopyNode){
-            if (!copyIndicator){
-                copyIndicator = $("<div id='copy-indicator' class='copy-elelemnts'>")
-                copyIndicator.appendTo('body')
-            }
+    $(document).bind("mousemove", function(event){
+        if (treeCopyNode)
             copyIndicator.css({left:event.pageX+10+'px', top:event.pageY-10+'px'})
+    })
+    $(document).bind("drag_start.vakata", function(event, data){
+        if (data.event.metaKey) {
+            treeCopyNode=true;
+            copyIndicator.show()
         }
     })
-    tree.bind("start_drag", function(event, data){
-        console.log('drag started. event: copy - '+treeCopyNode+'which - '+event.which+'; control key - '+event.ctrlKey+'; meta key - '+event.metaKey)
+    $(document).bind("drag_stop.vakata", function(event, data){
+        if (treeCopyNode) {
+            treeCopyNode=false;
+            copyIndicator.hide()
+        }
     })
 }
 
@@ -321,16 +307,13 @@ function getParentNode(node){
 
 function checkChildNodeType(parent, nodes)
 {
-//    return true;
-    if (treeCopyNode)
-        copyIndicator.show()
     if (!parent || getRightsForNode(parent)<32) return false
 
     var parentType = $(parent).attr('type');
     var checkPassed = true
     for (var i=0; i<nodes.length; ++i){
         var nodeParent = getParentNode(nodes[i])
-        if ( nodeParent!=parent && getChildNodeNames(parent)[getNodeName(nodes[i])] )
+        if ( !treeCopyNode && (nodeParent==parent || getChildNodeNames(parent)[getNodeName(nodes[i])]) )
             return false
         var nodeType = $(nodes[i]).attr('type')
         var desc = nodeTypes[parentType]

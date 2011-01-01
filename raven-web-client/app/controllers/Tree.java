@@ -112,14 +112,15 @@ public class Tree extends Controller
         }
     }
 
-    public static void moveNodes(String destination, String[] nodes, int position)
+    public static void moveNodes(String destination, String[] nodes, int position, boolean copy)
     {
-        Logger.debug("Moving nodes (%s) to the new location (%s)"
-                , StringUtils.join(nodes, ", "), destination);
+        Logger.debug("%s nodes (%s) to the new location (%s)"
+                , copy? "Coping":"Moving", StringUtils.join(nodes, ", "), destination);
         Map<String, Object> requestParams = new HashMap<String, Object>();
         requestParams.put("destination", destination);
         requestParams.put("nodes", nodes);
         requestParams.put("position", position);
+        requestParams.put("copy", copy);
         try{
             post("node/move-nodes", session, requestParams);
             ok();
