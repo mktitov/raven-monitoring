@@ -259,40 +259,60 @@ public class NodeResource
     public Response moveNodes(
             @FormParam("destination") String destination
             , @FormParam("nodes") List<String> nodePaths
-            , @FormParam("position") int position)
+            , @FormParam("position") int position
+            , @FormParam("copy") boolean copy)
     {
         if (log.isDebugEnabled())
             log.debug("Reveived move request. Moving nodes ({}) to the ({}) node"
                     , destination, nodePaths);
         try
         {
+            String oper = copy? "copy":"move";
             //Preparing for move
             if (nodePaths==null || nodePaths.isEmpty())
-                throw new Exception("Nothing to move");
+                throw new Exception("Nothing to "+oper);
             Node newParent = tree.getNode(destination);
             UserContext userContext = userContextService.getUserContext();
             if (nodeAccessService.getAccessForNode(newParent, userContext) < AccessControl.TREE_EDIT)
                 throw new Exception(String.format(
-                        "Not enough rights to move nodes to the (%s) node", destination));
+                        "Not enough rights to %s nodes to the (%s) node", oper, destination));
             List<Node> nodes = new ArrayList<Node>(nodePaths.size());
+            List<String> nodeNames = new ArrayList<String>(nodePaths.size());
             for (String path: nodePaths){
                 Node node = tree.getNode(path);
                 Node parent = node.getParent();
                 if (parent==null)
-                    throw new Exception("Can not move root node");
+                    throw new Exception(String.format("Can not %s root node", oper));
                 if (nodeAccessService.getAccessForNode(parent, userContext)<AccessControl.TREE_EDIT)
                     throw new Exception(String.format(
-                            "Not enough rights to move node (%s) from (%s) node", path, destination));
+                            "Not enough rights to %s node (%s) from (%s) node", oper, path, destination));
                 if (newParent.getPath().startsWith(node.getPath()))
                     throw new Exception(String.format(
-                            "Can't move node (%s) to it self (%s)", path, destination));
-                Node existingNode = newParent.getChildren(node.getName());
-                if ( existingNode!=null && !node.equals(existingNode))
-                    throw new Exception(String.format(
-                            "Can't move node (%s) to the node (%s) because of it "
-                            + "already has the node with the same name"
-                            , node.getPath(), newParent.getPath()));
+                            "Can't %s node (%s) to it self (%s)", oper, path, destination));
+                boolean searchForNewName=false;
+                String newName = node.getName();
+                int index = 1;
+                do {
+                    Node existingNode = newParent.getChildren(newName);
+                    if (!copy) {
+                        if (   (existingNode!=null || nodeNames.contains(newName))
+                            && !node.equals(existingNode))
+                        {
+                            throw new Exception(String.format(
+                                    "Can't move node (%s) to the node (%s) because of it "
+                                    + "already has the node with the same name"
+                                    , node.getPath(), newParent.getPath()));
+                        }
+                    } else {
+                        if (existingNode!=null || nodeNames.contains(newName)){
+                            searchForNewName = true;
+                            newName = node.getName()+"_"+(index++);
+                        }else
+                            searchForNewName = false;
+                    }
+                } while (searchForNewName);
                 nodes.add(node);
+                nodeNames.add(newName);
             }
             
             //Calculating position

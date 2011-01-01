@@ -205,7 +205,7 @@ public class NodeResourceTest extends RavenServerAppTestCase
     @Test
     public void moveNodes_nullNodes() throws Exception
     {
-        Response resp = res.moveNodes(null, null, 0);
+        Response resp = res.moveNodes(null, null, 0, false);
         assertNotNull(resp);
         checkResponse(resp, Response.Status.BAD_REQUEST, "Nothing to move");
     }
@@ -213,7 +213,7 @@ public class NodeResourceTest extends RavenServerAppTestCase
     @Test
     public void moveNodes_emptyNodes() throws Exception
     {
-        Response resp = res.moveNodes(null, Collections.EMPTY_LIST, 0);
+        Response resp = res.moveNodes(null, Collections.EMPTY_LIST, 0, false);
         assertNotNull(resp);
         checkResponse(resp, Response.Status.BAD_REQUEST, "Nothing to move");
     }
@@ -222,7 +222,7 @@ public class NodeResourceTest extends RavenServerAppTestCase
     public void moveNodes_notEnoughRightsInDestintaion() throws Exception
     {
         TestUserContextService.userContext = null;
-        Response resp = res.moveNodes("/", Arrays.asList("/System/"), 0);
+        Response resp = res.moveNodes("/", Arrays.asList("/System/"), 0, false);
         assertNotNull(resp);
         checkResponse(resp, Response.Status.BAD_REQUEST, "Not enough rights to move nodes to the (/) node");
     }
@@ -230,7 +230,7 @@ public class NodeResourceTest extends RavenServerAppTestCase
     @Test
     public void moveNodes_rootNode() throws Exception
     {
-        Response resp = res.moveNodes("/", Arrays.asList(("/")), 0);
+        Response resp = res.moveNodes("/", Arrays.asList(("/")), 0, false);
         assertNotNull(resp);
         checkResponse(resp, Response.Status.BAD_REQUEST, "Can not move root node");
     }
@@ -244,7 +244,7 @@ public class NodeResourceTest extends RavenServerAppTestCase
         ContainerNode node2 = new ContainerNode("node2");
         node1.addAndSaveChildren(node2);
 
-        Response resp = res.moveNodes(node2.getPath(), Arrays.asList((node1.getPath())), 0);
+        Response resp = res.moveNodes(node2.getPath(), Arrays.asList((node1.getPath())), 0, false);
         assertNotNull(resp);
         checkResponse(resp, Response.Status.BAD_REQUEST
                 , String.format("Can't move node (%s) to it self (%s)", node1.getPath(), node2.getPath()));
@@ -262,13 +262,40 @@ public class NodeResourceTest extends RavenServerAppTestCase
         ContainerNode node2_1 = new ContainerNode("node2");
         node1.addAndSaveChildren(node2_1);
 
-        Response resp = res.moveNodes(node1.getPath(), Arrays.asList((node2.getPath())), 0);
+        Response resp = res.moveNodes(node1.getPath(), Arrays.asList((node2.getPath())), 0, false);
         assertNotNull(resp);
         checkResponse(resp, Response.Status.BAD_REQUEST
                 , String.format(
                             "Can't move node (%s) to the node (%s) because of it "
                             + "already has the node with the same name"
                             , node2.getPath(), node1.getPath()));
+    }
+
+    @Test
+    public void moveNodes_existsNodeWithSameName2() throws Exception
+    {
+        ContainerNode node1 = new ContainerNode("node1");
+        tree.getRootNode().addAndSaveChildren(node1);
+
+        ContainerNode node2 = new ContainerNode("node2");
+        tree.getRootNode().addAndSaveChildren(node2);
+
+        ContainerNode node3 = new ContainerNode("node3");
+        tree.getRootNode().addAndSaveChildren(node3);
+
+        ContainerNode node3_2 = new ContainerNode("node2");
+        node3.addAndSaveChildren(node3_2);
+
+        Response resp = res.moveNodes(
+                node1.getPath()
+                , Arrays.asList(node2.getPath(), node3_2.getPath())
+                , 0, false);
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.BAD_REQUEST
+                , String.format(
+                            "Can't move node (%s) to the node (%s) because of it "
+                            + "already has the node with the same name"
+                            , node3_2.getPath(), node1.getPath()));
     }
 
     @Test
@@ -286,7 +313,7 @@ public class NodeResourceTest extends RavenServerAppTestCase
         ContainerNode node3 = new ContainerNode("node3");
         node.addAndSaveChildren(node3);
 
-        Response resp = res.moveNodes(node.getPath(), Arrays.asList((node2.getPath())), 0);
+        Response resp = res.moveNodes(node.getPath(), Arrays.asList((node2.getPath())), 0, false);
         assertNotNull(resp);
         checkResponse(resp, Response.Status.OK, null);
 
@@ -297,7 +324,7 @@ public class NodeResourceTest extends RavenServerAppTestCase
         }
         assertArrayEquals(new Object[]{node2, node1, node3}, childs.toArray());
 
-        resp = res.moveNodes(node.getPath(), Arrays.asList(node2.getPath(), node1.getPath()), 3);
+        resp = res.moveNodes(node.getPath(), Arrays.asList(node2.getPath(), node1.getPath()), 3, false);
         assertNotNull(resp);
         checkResponse(resp, Response.Status.OK, null);
 
@@ -324,7 +351,7 @@ public class NodeResourceTest extends RavenServerAppTestCase
         ContainerNode node3 = new ContainerNode("node3");
         tree.getRootNode().addAndSaveChildren(node3);
 
-        Response resp = res.moveNodes(node.getPath(), Arrays.asList((node3.getPath())), 0);
+        Response resp = res.moveNodes(node.getPath(), Arrays.asList((node3.getPath())), 0, false);
         assertNotNull(resp);
         checkResponse(resp, Response.Status.OK, null);
 
@@ -352,7 +379,7 @@ public class NodeResourceTest extends RavenServerAppTestCase
         tree.getRootNode().addAndSaveChildren(node3);
 
         Response resp = res.moveNodes(
-                node.getPath(), Arrays.asList(node3.getPath(), node2.getPath()), 2);
+                node.getPath(), Arrays.asList(node3.getPath(), node2.getPath()), 2, false);
         assertNotNull(resp);
         checkResponse(resp, Response.Status.OK, null);
 
