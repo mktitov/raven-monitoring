@@ -8,7 +8,14 @@ var nodesToDelete;
 var nodeTypes;
 var throughNodeTypes;
 var treeCopyNode;
+var treeMovingNodes;
 var copyIndicator;
+var treeNodeStartStopControl;
+var layoutWest;
+
+//variables for the test purposes
+var testEvent;
+var testData;
 
 $(function(){
     //Layout definition
@@ -25,7 +32,23 @@ $(function(){
 
     //load node types and through node types
     loadNodeTypes()
+    //init test functionality
+    test_init()
 });
+
+function test_init() {
+    $('#stop-node-button').click(function(){
+        var selected = tree.jstree('get_selected')
+        if (selected)
+            $(selected).attr('started', '0')
+    })
+    $('#start-node-button').click(function(){
+        var selected = tree.jstree('get_selected')
+        if (selected)
+            $(selected).attr('started', '1')
+//            $(selected).children('a').removeClass('stoped-node')
+    })
+}
 
 function loadNodeTypes()
 {
@@ -41,6 +64,7 @@ function loadNodeTypes()
 
 function layout_init()
 {
+    layoutWest = $('#layout-west')
     var layout = $('body').layout({
           west:{size:300}
         , north:{
@@ -53,6 +77,8 @@ function layout_init()
 function tree_init()
 {
     copyIndicator = $('#copy-indicator').hide()
+    treeNodeStartStopControl = $('#start-stop-control').hide()
+    
     tree = $("#tree").jstree({
         themes : {theme:"apple"},
         json_data: {
@@ -68,9 +94,7 @@ function tree_init()
                 var nodes = tree.jstree("get_selected")
                 //TODO: check the rights for the node
                 if (nodes && nodes.length>0){
-                    nodes.sort( function(a,b){
-                        return $(a).attr('path').length>$(b).attr('path').length
-                    })
+                    sortNodesByPathLength(nodes)
                     nodesToDelete = []
                     $(nodes).each(function(index, val){
                         var found = false;
@@ -95,7 +119,7 @@ function tree_init()
             }
         },
         dnd:{
-            
+            copy_modifier: 'none'
         }
         , crrm:{
             move: {
@@ -121,21 +145,64 @@ function tree_init()
     tree.bind("move_node.jstree", function(event, data){
         var r = data.args[0]
         var paths = []
-        for (var i=0; i<r.o.length; ++i)
+        var parents = []
+        var i
+        for (i=0; i<r.o.length; ++i) {
             paths.push(getPath(r.o[i]))
+            console.log("path: "+paths[i])
+        }
+        parents.push(r.np[0]);
+        for (i=0; i<treeMovingNodes.length; ++i)
+            parents.push(treeMovingNodes[i])
+//        parents.concat(treeMovingNodes)
+        parents = sortNodesByPathLength(parents)
+        parents = getTopNodes(parents)
         $.ajax({
             url: "@{Tree.moveNodes}"
             , data: {destination:getPath(r.np[0]), nodes:paths, position:r.cp, copy:treeCopyNode}
             , type: 'POST'
             , async: false
             , success: function(data){
-                tree.jstree("refresh", r.np[0])
+                for (var i=0; i<parents.length; ++i) {
+                    console.log("parent: "+getPath(parents[i]))
+                    tree.jstree("refresh", parents[i])
+                }
             }
             , error: function(request, status){
                 $.jstree.rollback(data.rlbk)
             }
         })
 //        alert('node moved: calculated position is '+data.args[0].cp)
+    })
+    tree.hover(null, function(){
+        treeNodeStartStopControl.hide()
+        console.log('tree hover out')
+    })
+    treeNodeStartStopControl.hover(function(){
+        treeNodeStartStopControl.show()
+    }, null)
+    tree.bind("hover_node.jstree", function(e, data){
+        testData = data;
+        testEvent = e;
+        var node = $(data.rslt.obj[0])
+        if (node.attr('path')=='/')
+            return;
+        if (node.attr('started')=='1') {
+            treeNodeStartStopControl.removeClass('start-node')
+            treeNodeStartStopControl.addClass('stop-node')
+        } else {
+            treeNodeStartStopControl.removeClass('stop-node')
+            treeNodeStartStopControl.addClass('start-node')
+        }
+        var o = node.offset()
+        var a = node.children('a')
+        var ao = a.offset()
+        var lo = layoutWest.offset()
+        var x = Math.min(ao.left+a.width()+10, lo.left+layoutWest.width()-4)
+//        var x = o.left-18
+        var y = o.top+Math.floor((a.height()-16)/2)
+        treeNodeStartStopControl.css({left:x+'px', top: y+'px'})
+        treeNodeStartStopControl.show()
     })
     $(document).bind("mousemove", function(event){
         if (treeCopyNode)
@@ -295,7 +362,6 @@ function deleteNodesDialog_open()
     $('#deleteNodesDialog').dialog("open")
 }
 
-
 //
 function getRightsForNode(node){
     return parseInt($(node).attr('rights'))
@@ -311,6 +377,7 @@ function checkChildNodeType(parent, nodes)
 
     var parentType = $(parent).attr('type');
     var checkPassed = true
+    treeMovingNodes = []
     for (var i=0; i<nodes.length; ++i){
         var nodeParent = getParentNode(nodes[i])
         if ( !treeCopyNode && (nodeParent==parent || getChildNodeNames(parent)[getNodeName(nodes[i])]) )
@@ -327,6 +394,7 @@ function checkChildNodeType(parent, nodes)
             if (!checkPassed)
                 return false
         }
+        treeMovingNodes.push(getParentNode(nodes[i]))
     }
     return true;
 }
@@ -366,4 +434,95 @@ function getNodeName(node){
 
 function getPath(node){
     return $(node).attr('path')
+}
+
+function sortNodesByPathLength(nodes) {
+    nodes.sort( function(a,b){
+        return $(a).attr('path').length>$(b).attr('path').length
+    })
+    return nodes
+}
+
+function sortPathsByLength(paths) {
+    paths.sort(function(a,b){
+        return a.length>b.length
+    })
+}
+
+function getTopPaths(paths) {
+    var topPaths = []
+    if (paths)
+        for (var i=0; i<paths.length; ++i) {
+            var found = false;
+            for (var j=0; j<topPaths.length; ++j)
+                if ( paths[i].indexOf(topPaths[j])==0 ){
+                    found = true;
+                    break;
+                }
+            if (!found) topPaths.push(paths[i])
+        }
+    return topPaths;
+}
+
+function getTopParents(nodes){
+    var topParents = []
+    if (nodes)
+        for (var i=0; i<nodes.length; ++i) {
+            var found = false;
+            var parent = getParentNode(nodes[i])
+//            console.log("checking node: "+getPath(nodes[i]))
+            for (var j=0; j<topParents.length; ++j) {
+                if (getPath(parent).indexOf(getPath(topParents[j]))==0) {
+                    found=true;
+                    break;
+                }
+            }
+            if (!found) {
+//                console.log("added parent: "+getPath(parent))
+                topParents.push(parent)
+            }
+        }
+    return topParents;
+}
+function getTopParents(nodes){
+    var topParents = []
+    if (nodes)
+        for (var i=0; i<nodes.length; ++i) {
+            var found = false;
+            var parent = getParentNode(nodes[i])
+//            console.log("checking node: "+getPath(nodes[i]))
+            for (var j=0; j<topParents.length; ++j) {
+                if (getPath(parent).indexOf(getPath(topParents[j]))==0) {
+                    found=true;
+                    break;
+                }
+            }
+            if (!found) {
+//                console.log("added parent: "+getPath(parent))
+                topParents.push(parent)
+            }
+        }
+    return topParents;
+}
+
+function getTopNodes(nodes){
+    var topNodes = []
+    if (nodes)
+        for (var i=0; i<nodes.length; ++i) {
+            console.log("checking node: "+getPath(nodes[i]))
+            if (nodes[i]) {
+                var found = false;
+                for (var j=0; j<topNodes.length; ++j) {
+                    if (getPath(nodes[i]).indexOf(getPath(topNodes[j]))==0) {
+                        found=true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    topNodes.push(nodes[i])
+                    console.log("added parent: "+getPath(nodes[i]))
+                }
+            }
+        }
+    return topNodes;
 }

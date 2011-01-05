@@ -16,6 +16,33 @@
     z-index: 10000;
 }
 
+.start-node {
+    background: transparent url('../images/start.png') no-repeat left center;
+    height: 16px;
+    width: 16px;
+    position: absolute;
+    z-index: 10000;
+}
+
+.stop-node {
+    background: transparent url('../images/stop.png') no-repeat left center;
+    height: 16px;
+    width: 16px;
+    position: absolute;
+    z-index: 10000;
+}
+
+/*
+.stoped-node {
+    color: darkgray;
+    opacity: 0.50;
+}
+*/
+li[started="0"] > a {
+    color: darkgray;
+    opacity: 0.50;
+}
+
 body {
 	margin: 0;
 	padding: 0 0 20px;

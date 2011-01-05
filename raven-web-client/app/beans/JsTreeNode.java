@@ -29,6 +29,7 @@ public class JsTreeNode
         attr.put("rights", nodeBean.rights);
         attr.put("path", nodeBean.path);
         attr.put("type", nodeBean.type);
+        attr.put("started", nodeBean.started);
     }
 }
 
