@@ -41,7 +41,7 @@ import org.raven.tree.impl.SystemNode;
  *
  * @author Mikhail Titov
  */
-public class NodeResourceTest extends RavenServerAppTestCase
+  public class NodeResourceTest extends RavenServerAppTestCase
 {
     private NodeResource res;
 
@@ -211,11 +211,27 @@ public class NodeResourceTest extends RavenServerAppTestCase
     }
 
     @Test
+    public void copyNodes_nullNodes() throws Exception
+    {
+        Response resp = res.moveNodes(null, null, 0, true);
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.BAD_REQUEST, "Nothing to copy");
+    }
+
+    @Test
     public void moveNodes_emptyNodes() throws Exception
     {
         Response resp = res.moveNodes(null, Collections.EMPTY_LIST, 0, false);
         assertNotNull(resp);
         checkResponse(resp, Response.Status.BAD_REQUEST, "Nothing to move");
+    }
+
+    @Test
+    public void copyNodes_emptyNodes() throws Exception
+    {
+        Response resp = res.moveNodes(null, Collections.EMPTY_LIST, 0, true);
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.BAD_REQUEST, "Nothing to copy");
     }
 
     @Test
@@ -228,11 +244,28 @@ public class NodeResourceTest extends RavenServerAppTestCase
     }
 
     @Test
+    public void copyNodes_notEnoughRightsInDestintaion() throws Exception
+    {
+        TestUserContextService.userContext = null;
+        Response resp = res.moveNodes("/", Arrays.asList("/System/"), 0, true);
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.BAD_REQUEST, "Not enough rights to copy nodes to the (/) node");
+    }
+
+    @Test
     public void moveNodes_rootNode() throws Exception
     {
         Response resp = res.moveNodes("/", Arrays.asList(("/")), 0, false);
         assertNotNull(resp);
         checkResponse(resp, Response.Status.BAD_REQUEST, "Can not move root node");
+    }
+
+    @Test
+    public void copyNodes_rootNode() throws Exception
+    {
+        Response resp = res.moveNodes("/", Arrays.asList(("/")), 0, true);
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.BAD_REQUEST, "Can not copy root node");
     }
 
     @Test
@@ -248,6 +281,22 @@ public class NodeResourceTest extends RavenServerAppTestCase
         assertNotNull(resp);
         checkResponse(resp, Response.Status.BAD_REQUEST
                 , String.format("Can't move node (%s) to it self (%s)", node1.getPath(), node2.getPath()));
+    }
+
+    @Test
+    public void copyNodes_toItself() throws Exception
+    {
+        ContainerNode node1 = new ContainerNode("node1");
+        tree.getRootNode().addAndSaveChildren(node1);
+
+        ContainerNode node2 = new ContainerNode("node2");
+        node1.addAndSaveChildren(node2);
+
+        Response resp = res.moveNodes(node2.getPath(), Arrays.asList((node1.getPath())), 0, true);
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.BAD_REQUEST
+                , String.format("Can't copy node (%s) to it self (%s)"
+                    , node1.getPath(), node2.getPath()));
     }
 
     @Test
@@ -269,6 +318,27 @@ public class NodeResourceTest extends RavenServerAppTestCase
                             "Can't move node (%s) to the node (%s) because of it "
                             + "already has the node with the same name"
                             , node2.getPath(), node1.getPath()));
+    }
+
+    @Test
+    public void copyNodes_existsNodeWithSameName() throws Exception
+    {
+        ContainerNode node1 = new ContainerNode("node1");
+        tree.getRootNode().addAndSaveChildren(node1);
+
+        ContainerNode node2 = new ContainerNode("node2");
+        tree.getRootNode().addAndSaveChildren(node2);
+
+        ContainerNode node2_1 = new ContainerNode("node2");
+        node1.addAndSaveChildren(node2_1);
+
+        Response resp = res.moveNodes(node1.getPath(), Arrays.asList((node2.getPath())), 0, true);
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.OK, null);
+        List<Node> childs = node1.getSortedChildrens();
+        checkNodeIndexes(childs, 2);
+        assertEquals("node2_1", childs.get(0).getName());
+        assertSame(node2_1, childs.get(1));
     }
 
     @Test
@@ -299,6 +369,35 @@ public class NodeResourceTest extends RavenServerAppTestCase
     }
 
     @Test
+    public void copyNodes_existsNodeWithSameName2() throws Exception
+    {
+        ContainerNode node1 = new ContainerNode("node1");
+        tree.getRootNode().addAndSaveChildren(node1);
+
+        ContainerNode node2 = new ContainerNode("node2");
+        tree.getRootNode().addAndSaveChildren(node2);
+
+        ContainerNode node3 = new ContainerNode("node3");
+        tree.getRootNode().addAndSaveChildren(node3);
+
+        ContainerNode node3_1 = new ContainerNode("node2");
+        node3.addAndSaveChildren(node3_1);
+
+        ContainerNode node2_1 = new ContainerNode("node2");
+        node1.addAndSaveChildren(node2_1);
+
+        Response resp = res.moveNodes(
+                node1.getPath()
+                , Arrays.asList(node2.getPath(), node3_1.getPath())
+                , 0, true);
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.OK, null);
+        List<Node> childs = node1.getSortedChildrens();
+        checkNodeIndexes(childs, 3);
+        checkNodeNames(childs, "node2_1", "node2_2", "node2");
+    }
+
+    @Test
     public void moveNodes_reposition() throws Exception
     {
         ContainerNode node = new ContainerNode("node");
@@ -318,10 +417,7 @@ public class NodeResourceTest extends RavenServerAppTestCase
         checkResponse(resp, Response.Status.OK, null);
 
         List<Node> childs = node.getSortedChildrens();
-        assertEquals(3, childs.size());
-        for (int i=0; i<childs.size(); ++i) {
-            assertEquals(i+1, childs.get(i).getIndex());
-        }
+        checkNodeIndexes(childs, 3);
         assertArrayEquals(new Object[]{node2, node1, node3}, childs.toArray());
 
         resp = res.moveNodes(node.getPath(), Arrays.asList(node2.getPath(), node1.getPath()), 3, false);
@@ -329,11 +425,40 @@ public class NodeResourceTest extends RavenServerAppTestCase
         checkResponse(resp, Response.Status.OK, null);
 
         childs = node.getSortedChildrens();
-        assertEquals(3, childs.size());
-        for (int i=0; i<childs.size(); ++i) {
-            assertEquals(i+1, childs.get(i).getIndex());
-        }
+        checkNodeIndexes(childs, 3);
         assertArrayEquals(new Object[]{node3, node2, node1}, childs.toArray());
+    }
+
+    @Test
+    public void copyNodes_toTheSameParent() throws Exception
+    {
+        ContainerNode node = new ContainerNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+
+        ContainerNode node1 = new ContainerNode("node1");
+        node.addAndSaveChildren(node1);
+
+        ContainerNode node2 = new ContainerNode("node2");
+        node.addAndSaveChildren(node2);
+
+        ContainerNode node3 = new ContainerNode("node3");
+        node.addAndSaveChildren(node3);
+
+        Response resp = res.moveNodes(node.getPath(), Arrays.asList((node2.getPath())), 0, true);
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.OK, null);
+
+        List<Node> childs = node.getSortedChildrens();
+        checkNodeIndexes(childs, 4);
+        checkNodeNames(childs, "node2_1", "node1", "node2", "node3");
+
+        resp = res.moveNodes(node.getPath(), Arrays.asList(node2.getPath(), node1.getPath()), 4, true);
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.OK, null);
+
+        childs = node.getSortedChildrens();
+        checkNodeIndexes(childs, 6);
+        checkNodeNames(childs, "node2_1", "node1", "node2", "node3", "node2_2", "node1_1");
     }
 
     @Test
@@ -356,11 +481,59 @@ public class NodeResourceTest extends RavenServerAppTestCase
         checkResponse(resp, Response.Status.OK, null);
 
         List<Node> childs = node.getSortedChildrens();
-        assertEquals(3, childs.size());
-        for (int i=0; i<childs.size(); ++i) {
-            assertEquals(i+1, childs.get(i).getIndex());
-        }
+        checkNodeIndexes(childs, 3);
         assertArrayEquals(new Object[]{node3, node1, node2}, childs.toArray());
+    }
+
+    @Test
+    public void copyNodes_copy() throws Exception
+    {
+        ContainerNode node = new ContainerNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+
+        ContainerNode node1 = new ContainerNode("node1");
+        node.addAndSaveChildren(node1);
+
+        ContainerNode node2 = new ContainerNode("node2");
+        node.addAndSaveChildren(node2);
+
+        ContainerNode node3 = new ContainerNode("node3");
+        tree.getRootNode().addAndSaveChildren(node3);
+
+        Response resp = res.moveNodes(node.getPath(), Arrays.asList((node3.getPath())), 0, true);
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.OK, null);
+
+        List<Node> childs = node.getSortedChildrens();
+        checkNodeIndexes(childs, 3);
+        checkNodeNames(childs, "node3", "node1", "node2");
+    }
+
+    @Test
+    public void copyNodes_copy2() throws Exception
+    {
+        ContainerNode node = new ContainerNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+
+        ContainerNode node1 = new ContainerNode("node1");
+        node.addAndSaveChildren(node1);
+
+        ContainerNode node2 = new ContainerNode("node2");
+        node.addAndSaveChildren(node2);
+
+        ContainerNode node3 = new ContainerNode("node3");
+        tree.getRootNode().addAndSaveChildren(node3);
+
+        Response resp = res.moveNodes(
+                node.getPath()
+                , Arrays.asList(node3.getPath(), node2.getPath())
+                , 0, true);
+        assertNotNull(resp);
+        checkResponse(resp, Response.Status.OK, null);
+
+        List<Node> childs = node.getSortedChildrens();
+        checkNodeIndexes(childs, 4);
+        checkNodeNames(childs, "node3", "node2_1", "node1", "node2");
     }
 
     @Test
@@ -397,5 +570,23 @@ public class NodeResourceTest extends RavenServerAppTestCase
         assertEquals(status.getStatusCode(), response.getStatus());
         if (message!=null)
             assertEquals(message, response.getEntity());
+    }
+
+    private void checkNodeIndexes(List<Node> childs, int size) 
+    {
+        assertNotNull(childs);
+        assertEquals(size, childs.size());
+        for (int i = 0; i < childs.size(); ++i) {
+            assertEquals(i + 1, childs.get(i).getIndex());
+        }
+    }
+
+    private void checkNodeNames(List<Node> childs, String... names)
+    {
+        String[] childNames = new String[childs.size()];
+        for (int i=0; i<childNames.length; ++i)
+            childNames[i] = childs.get(i).getName();
+
+        assertArrayEquals(names, childNames);
     }
 }

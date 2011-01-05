@@ -101,7 +101,8 @@ public class NodeResource
                             , child.getClass().getName()
                             , IconResolver.getPath(child.getClass())
                             , child.getChildrenCount()==0? false : true
-                            , right));
+                            , right
+                            , child.getStatus().equals(Node.Status.STARTED)? 1:0));
             }
             return beans;
         }
@@ -321,26 +322,33 @@ public class NodeResource
                 position = lastPosition;
 
             //Saving the current child nodes position
-            List<Node> childs = newParent.getSortedChildrens();
-            childs = childs==null? new ArrayList(nodes.size()) : childs;
-
-            //Move nodes
+            List<Node> childNodes = newParent.getSortedChildrens();
+            List<String> childs = new ArrayList<String>();
+            if (childNodes!=null && !childNodes.isEmpty())
+                for (Node childNode: childNodes)
+                    childs.add(childNode.getName());
+                
+            //Move or copy nodes
+            int i=0;
             for (Node node: nodes) {
-                if (!node.getParent().equals(newParent))
+                if (copy)
+                    tree.copy(node, newParent, nodeNames.get(i++), null, true, true, false);
+                else if (!node.getParent().equals(newParent))
                     tree.move(node, newParent, null);
             }
 
             //Reposition nodes
-            for (int i=0; i<childs.size(); ++i)
-                if ( nodes.contains(childs.get(i)) )
+            for (i=0; i<childs.size(); ++i)
+                if ( !copy && nodeNames.contains(childs.get(i)) )
                     childs.set(i, null);
 
-            childs.addAll(position, nodes);
-            int i=1;
-            for (Node child: childs){
+            childs.addAll(position, nodeNames);
+            i=1;
+            for (String child: childs){
                 if (child!=null){
-                    child.setIndex(i++);
-                    child.save();
+                    Node childNode = newParent.getChildren(child);
+                    childNode.setIndex(i++);
+                    childNode.save();
                 }
             }
             
