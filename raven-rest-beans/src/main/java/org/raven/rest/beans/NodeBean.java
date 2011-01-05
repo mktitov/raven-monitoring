@@ -30,13 +30,14 @@ public class NodeBean
     public String iconPath;
     public boolean hasChilds;
     public int rights;
+    public int started;
 
     public NodeBean() {
     }
 
     public NodeBean(
             int id, String name, String path, String type, String iconPath
-            , boolean hasChilds, int rights)
+            , boolean hasChilds, int rights, int started)
     {
         this.id = id;
         this.name = name;
@@ -45,5 +46,6 @@ public class NodeBean
         this.iconPath = iconPath;
         this.hasChilds = hasChilds;
         this.rights = rights;
+        this.started = started;
     }
 }
