@@ -27,6 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.raven.auth.AuthService;
 import org.raven.auth.impl.UserContextImpl;
+import org.raven.rest.beans.NodeAttributeBean;
 import org.raven.server.app.RavenServerAppTestCase;
 import org.raven.rest.beans.NodeBean;
 import org.raven.rest.beans.NodeTypeBean;
@@ -35,6 +36,7 @@ import org.raven.server.app.service.IconResolver;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.ContainerNode;
+import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.impl.SystemNode;
 
 /**
@@ -562,6 +564,105 @@ import org.raven.tree.impl.SystemNode;
             assertEquals(i+1, childs.get(i).getIndex());
         }
         assertArrayEquals(new Object[]{node1, node3, node2}, childs.toArray());
+    }
+
+    @Test
+    public void startNode() throws Exception
+    {
+        ContainerNode node = new ContainerNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        assertEquals(Node.Status.INITIALIZED, node.getStatus());
+        
+        Response resp = res.startNode(node.getPath());
+        checkResponse(resp, Response.Status.OK, null);
+        assertEquals(Node.Status.STARTED, node.getStatus());
+    }
+
+    @Test
+    public void startNode_notEnoughRights() throws Exception
+    {
+        TestUserContextService.userContext = null;
+
+        ContainerNode node = new ContainerNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        assertEquals(Node.Status.INITIALIZED, node.getStatus());
+
+        Response resp = res.startNode(node.getPath());
+        checkResponse(resp, Response.Status.BAD_REQUEST, String.format(
+                "Not enough rights to %s the node (%s)", "start", node.getPath()));
+        assertEquals(Node.Status.INITIALIZED, node.getStatus());
+    }
+
+    @Test
+    public void stopNode() throws Exception
+    {
+        ContainerNode node = new ContainerNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        assertTrue(node.start());
+
+        Response resp = res.stopNode(node.getPath());
+        checkResponse(resp, Response.Status.OK, null);
+        assertEquals(Node.Status.INITIALIZED, node.getStatus());
+    }
+
+    @Test
+    public void stopNode_notEnoughRights() throws Exception
+    {
+        TestUserContextService.userContext = null;
+
+        ContainerNode node = new ContainerNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        assertTrue(node.start());
+
+        Response resp = res.stopNode(node.getPath());
+        checkResponse(resp, Response.Status.BAD_REQUEST, String.format(
+                "Not enough rights to %s the node (%s)", "stop", node.getPath()));
+        assertEquals(Node.Status.STARTED, node.getStatus());
+    }
+
+    @Test
+    public void getNodeAttributes() throws Exception
+    {
+        ContainerNode node = new ContainerNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        NodeAttributeImpl attr = new NodeAttributeImpl("attr", String.class, "test", "desc");
+        attr.setOwner(node);
+        node.addNodeAttribute(attr);
+        attr.init();
+        attr.save();
+        assertNotNull(node.getNodeAttribute("attr"));
+
+        Collection<NodeAttributeBean> attrs = res.getNodeAttributes(node.getPath());
+        assertNotNull(attrs);
+        assertEquals(2, attrs.size());
+        NodeAttributeBean logLevel = null;
+        NodeAttributeBean attrBean = null;
+        for (NodeAttributeBean bean: attrs)
+            if (bean.name.equals("logLevel"))
+                logLevel = bean;
+            else if (bean.name.equals("attr"))
+                attrBean = bean;
+        assertNotNull(logLevel);
+        assertNotNull(attrBean);
+        assertTrue(logLevel.builtIn);
+        assertFalse(attrBean.builtIn);
+    }
+
+    @Test()
+    public void getNodeAttributes_notEnoughRights()
+    {
+        TestUserContextService.userContext = null;
+        ContainerNode node = new ContainerNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        try{
+            res.getNodeAttributes(node.getPath());
+            fail();
+        }catch(Exception e){
+            assertEquals(
+                    String.format("Not enough rights for node (%s) to read attributes"
+                        , node.getPath())
+                    , e.getMessage());
+        }
     }
 
     private static void checkResponse(Response response, Response.Status status, String message)

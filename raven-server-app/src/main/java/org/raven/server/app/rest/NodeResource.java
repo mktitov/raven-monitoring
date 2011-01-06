@@ -17,6 +17,7 @@
 
 package org.raven.server.app.rest;
 
+import org.raven.tree.NodeAttribute;
 import org.raven.auth.UserContext;
 import java.util.Set;
 import javax.ws.rs.core.Response;
@@ -36,6 +37,7 @@ import javax.ws.rs.core.MediaType;
 import org.raven.auth.NodeAccessService;
 import org.raven.auth.UserContextService;
 import org.raven.auth.impl.AccessControl;
+import org.raven.rest.beans.NodeAttributeBean;
 import org.raven.rest.beans.NodeBean;
 import org.raven.rest.beans.NodeTypeBean;
 import org.raven.server.app.service.IconResolver;
@@ -158,7 +160,8 @@ public class NodeResource
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/child-node-types/")
-    public Collection<NodeTypeBean> getChildNodeTypes(@QueryParam("path") String path) throws Exception
+    public Collection<NodeTypeBean> getChildNodeTypes(@QueryParam("path") String path)
+            throws Exception
     {
         path = path = decodeParam(path, "/");
         Node node = tree.getNode(path);
@@ -352,6 +355,83 @@ public class NodeResource
                 }
             }
             
+            return Response.ok().build();
+        }
+        catch (Exception e)
+        {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+    }
+
+    @POST
+    @Produces(MediaType.TEXT_PLAIN)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Path("start-node")
+    public Response startNode(@FormParam("path") String path)
+    {
+        return startStopNode(path, true);
+    }
+
+    @POST
+    @Produces(MediaType.TEXT_PLAIN)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Path("stop-node")
+    public Response stopNode(@FormParam("path") String path)
+    {
+        return startStopNode(path, false);
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("node-attributes")
+    public Collection<NodeAttributeBean> getNodeAttributes(String path) throws Exception
+    {
+        Node node = tree.getNode(path);
+
+        checkRights(node, AccessControl.WRITE, "read attributes");
+
+        Collection<NodeAttribute> attrs = node.getNodeAttributes();
+        Collection<NodeAttributeBean> attrBeans = null;
+        if (attrs!=null && !attrs.isEmpty()) {
+            attrBeans = new ArrayList<NodeAttributeBean>(attrs.size());
+            for (NodeAttribute attr: attrs)
+                attrBeans.add(new NodeAttributeBean(
+                    attr.getName(), attr.getDisplayName()
+                    , attr.getType().getName(), attr.getDescription(), attr.getValue()
+                    , attr.getParentAttribute(), attr.getValueHandlerType()
+                    , attr.getParameterName()==null? false:true
+                    , attr.isRequired(), attr.isExpression(), attr.isTemplateExpression()
+                    , attr.isReadonly()));
+        }
+        return attrBeans;
+    }
+
+    private void checkRights(Node node, int minimumRights, String message) throws Exception
+    {
+        int rights = nodeAccessService.getAccessForNode(node, userContextService.getUserContext());
+        if (rights < minimumRights)
+            throw new Exception(String.format(
+                    "Not enough rights for node (%s) to %s", node.getPath(), message));
+    }
+
+    private Response startStopNode(String path, boolean start)
+    {
+        try
+        {
+            String oper = start? "start" : "stop";
+            Node node = tree.getNode(path);
+            int rights = nodeAccessService.getAccessForNode(
+                    node, userContextService.getUserContext());
+            if (rights<AccessControl.CONTROL)
+                throw new Exception(String.format(
+                        "Not enough rights to %s the node (%s)", oper, node.getPath()));
+            if (start) {
+                if (!Node.Status.STARTED.equals(node.getStatus()))
+                    node.start();
+            } else {
+                if (Node.Status.STARTED.equals(node.getStatus()))
+                    node.stop();
+            }
             return Response.ok().build();
         }
         catch (Exception e)
