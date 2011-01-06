@@ -129,6 +129,19 @@ public class Tree extends Controller
         }
     }
 
+    public static void startStopNode(String path, boolean start)
+    {
+        Logger.debug("%s node (%s)", start?"Starting":"Stoping",path);
+        Map<String, Object> requestParams = new HashMap<String, Object>();
+        requestParams.put("path", path);
+        try{
+            post(String.format("node/%s-node", start?"start":"stop"), session, requestParams);
+            ok();
+        } catch(Exception e) {
+            error(e.getMessage());
+        }
+    }
+
     public static void testRead() throws Exception
     {
         String nodes = request("node/childs", session, "path", "System");

@@ -11,6 +11,7 @@ var treeCopyNode;
 var treeMovingNodes;
 var copyIndicator;
 var treeNodeStartStopControl;
+var treeLastHoveredNode;
 var layoutWest;
 
 //variables for the test purposes
@@ -77,7 +78,19 @@ function layout_init()
 function tree_init()
 {
     copyIndicator = $('#copy-indicator').hide()
-    treeNodeStartStopControl = $('#start-stop-control').hide()
+    treeNodeStartStopControl = $('#start-stop-control').hide().click(function(){
+        var started = treeLastHoveredNode.attr('started')=='1'
+        if (treeLastHoveredNode){
+            $.ajax({
+                async: false
+                , url: "@{Tree.startStopNode()}"
+                , data: {path: getPath(treeLastHoveredNode), start:!started}
+                , success: function(data){
+                    treeLastHoveredNode.attr('started', started?'0':'1')
+                }
+            })
+        }
+    })
     
     tree = $("#tree").jstree({
         themes : {theme:"apple"},
@@ -187,6 +200,7 @@ function tree_init()
         var node = $(data.rslt.obj[0])
         if (node.attr('path')=='/')
             return;
+        treeLastHoveredNode = node
         if (node.attr('started')=='1') {
             treeNodeStartStopControl.removeClass('start-node')
             treeNodeStartStopControl.addClass('stop-node')
