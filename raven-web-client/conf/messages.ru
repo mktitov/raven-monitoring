@@ -13,3 +13,7 @@ addNodeDialog_nameAlreadyUsed=Данное имя уже используетс�
 //deleteNodesDialog
 deleteNodesDialog_title=Удаление выбранных узлов
 deleteNodesDialog_confirmation=Выдействительно хотите удалить следующие узлы?
+
+viewNode_title=Просмотр
+
+editNode_title=Редактировать

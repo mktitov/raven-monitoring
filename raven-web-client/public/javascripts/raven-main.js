@@ -7,12 +7,14 @@ var newNodeId;
 var nodesToDelete;
 var nodeTypes;
 var throughNodeTypes;
+var copyIndicator;
 var treeCopyNode;
 var treeMovingNodes;
-var copyIndicator;
 var treeNodeStartStopControl;
 var treeLastHoveredNode;
+var treeSelectedNode;
 var layoutWest;
+var nodeTabs;
 
 //variables for the test purposes
 var testEvent;
@@ -24,6 +26,9 @@ $(function(){
 
     //Tree definition
     tree_init()
+
+    //Init node tabs
+    nodeTabs_init()
 
     //Add new node Dialog
     addNodeDialog_init()
@@ -73,6 +78,29 @@ function layout_init()
             , togglerLength_open: 0, togglerLength_closed: -1, fxName:"none"
         }
     });
+}
+
+function nodeTabs_init()
+{
+    $('#layout-center').children().hide()
+    $('#node-tabs-control').buttonset()
+    $('#view-node-button').next().children('span').addClass('view-node-icon')
+    $('#edit-node-button').next().children('span').addClass('edit-node-icon')
+    $('#node-tabs-control').children('input').click(function(e){
+        $('#layout-center').children().hide()
+        $('#'+$(e.target).attr('tab')).show()
+    })
+    nodeEditTab_init()
+}
+
+function nodeEditTab_init()
+{
+    $('#edit-tab-sections a').click(function(e){
+        $(e.target)
+            .prev().toggleClass('ui-icon-triangle-1-s').toggleClass('ui-icon-triangle-1-e')
+            .parent().toggleClass('ui-state-active')
+            .next().slideToggle()
+    })
 }
 
 function tree_init()
@@ -189,7 +217,6 @@ function tree_init()
     })
     tree.hover(null, function(){
         treeNodeStartStopControl.hide()
-        console.log('tree hover out')
     })
     treeNodeStartStopControl.hover(function(){
         treeNodeStartStopControl.show()
@@ -201,13 +228,10 @@ function tree_init()
         if (node.attr('path')=='/')
             return;
         treeLastHoveredNode = node
-        if (node.attr('started')=='1') {
-            treeNodeStartStopControl.removeClass('start-node')
-            treeNodeStartStopControl.addClass('stop-node')
-        } else {
-            treeNodeStartStopControl.removeClass('stop-node')
-            treeNodeStartStopControl.addClass('start-node')
-        }
+        if (node.attr('started')=='1') 
+            treeNodeStartStopControl.removeClass('start-node').addClass('stop-node')
+        else
+            treeNodeStartStopControl.removeClass('stop-node').addClass('start-node')
         var o = node.offset()
         var a = node.children('a')
         var ao = a.offset()
@@ -217,6 +241,9 @@ function tree_init()
         var y = o.top+Math.floor((a.height()-16)/2)
         treeNodeStartStopControl.css({left:x+'px', top: y+'px'})
         treeNodeStartStopControl.show()
+    })
+    tree.bind("select_node.jstree", function(e, data){
+        treeSelectedNode = data.rslt.obj[0]
     })
     $(document).bind("mousemove", function(event){
         if (treeCopyNode)

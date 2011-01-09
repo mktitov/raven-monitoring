@@ -32,6 +32,18 @@
     z-index: 10000;
 }
 
+.view-node-icon {
+    background: transparent url('../images/view.png') no-repeat center center;
+    height: 16px;
+    width: 16px;
+}
+
+.edit-node-icon {
+    background: transparent url('../images/edit.png') no-repeat center center;
+    height: 16px;
+    width: 16px;
+}
+
 /*
 .stoped-node {
     color: darkgray;

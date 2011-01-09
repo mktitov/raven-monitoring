@@ -19,11 +19,24 @@
 #{/set}
 
 <div class="ui-layout-north">
-    <span class="raven-warning">Warning message test</span>
-    <button id="stop-node-button">stop node</button>
-    <button id="start-node-button">start node</button>
+    <div style="text-align: right">
+        <span id="node-tabs-control" style="text-align: right">
+            <input type="radio" id="view-node-button" name="node-tabs" tab="view-node-tab"/>
+                <label for="view-node-button">&nbsp;</label>
+            <input type="radio" id="edit-node-button" name="node-tabs" tab="edit-node-tab"/>
+                <label for="edit-node-button">&nbsp;</label>
+        </span>
+    </div>
 </div>
-<div class="ui-layout-center">Center</div>
+<div id="layout-center" class="ui-layout-center">
+    <div id="view-node-tab">
+        The node view tab
+    </div>
+    <div id="edit-node-tab">
+        The node edit tab
+        #{include 'node_edit_tab.html' /}
+    </div>
+</div>
 <div id="layout-west" class="ui-layout-west">
     <div id="tree"></div>
 </div>
@@ -49,53 +62,6 @@
 <div id="deleteNodesDialog" title="&{'deleteNodesDialog_title'}">
     <div class="raven-warning">&{'deleteNodesDialog_confirmation'}</div>
     <ol>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
-        <li>Element 1</li>
         <li>Element 1</li>
     </ol>
 </div>
