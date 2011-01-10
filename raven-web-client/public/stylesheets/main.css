@@ -1,3 +1,16 @@
+.tab-header {
+    font-weight: bold;
+    font-size: 12pt;
+    color:#666666;
+    text-indent: 10px;
+}
+
+.tab-header-node-type {
+    font-weight: normal;
+    font-size: 8pt;
+    color:#666666
+}
+
 .raven-warning {
     background: url('../images/exclamation_octagon_fram.png') no-repeat left center;
     padding-left: 25px;
@@ -22,6 +35,7 @@
     width: 16px;
     position: absolute;
     z-index: 10000;
+    cursor: pointer;
 }
 
 .stop-node {
@@ -30,6 +44,7 @@
     width: 16px;
     position: absolute;
     z-index: 10000;
+    cursor: pointer;
 }
 
 .view-node-icon {
@@ -50,7 +65,7 @@
     opacity: 0.50;
 }
 */
-li[started="0"] > a {
+li[started="0"] > a, div[started="0"] {
     color: darkgray;
     opacity: 0.50;
 }

@@ -114,7 +114,8 @@ function tree_init()
                 , url: "@{Tree.startStopNode()}"
                 , data: {path: getPath(treeLastHoveredNode), start:!started}
                 , success: function(data){
-                    treeLastHoveredNode.attr('started', started?'0':'1')
+                    treeNodeStartStopControl.toggleClass('start-node').toggleClass('stop-node')
+                    changeNodeStatus(treeLastHoveredNode.attr('id'), started?'0':'1')
                 }
             })
         }
@@ -244,6 +245,7 @@ function tree_init()
     })
     tree.bind("select_node.jstree", function(e, data){
         treeSelectedNode = data.rslt.obj[0]
+        refresh_nodeEditTab()
     })
     $(document).bind("mousemove", function(event){
         if (treeCopyNode)
@@ -328,7 +330,7 @@ function addNodeDialog_open(parentNode)
             .data("item.autocomplete", item)
             .append('<a>'
                     +'<table style="width:650px"><tr>'
-                    +'<td style="width:32px;padding-right:16px;background: url(\'@{Tree.icon}?path='+encodeURIComponent(item.icon)+'\') no-repeat center"></td>'
+                    +'<td style="width:32px;padding-right:16px;background: url(\''+getIconPath(item.icon)+'\') no-repeat center"></td>'
                     +'<td style="width:350px">'+item.label+'</td>'
                     +'<td>'+item.desc+'</td></tr></table></a>')
             .appendTo(ul)
@@ -566,4 +568,44 @@ function getTopNodes(nodes){
             }
         }
     return topNodes;
+}
+
+function refresh_nodeEditTab()
+{
+    var name = getNodeName(treeSelectedNode)
+    name = name.length>0? name: '/'
+    var type = $(treeSelectedNode).attr('type')
+    var desc = nodeTypes[type].description
+    if (!desc) {
+        $.ajax({
+            url: '@{Tree.typeDescription}'
+            , data: {path: getPath(treeSelectedNode)}
+            , async: false
+            , dataType: 'json'
+            , success: function(data){
+                desc=data.description
+            }
+        })
+        nodeTypes[type].description=desc
+    }
+    $('#edit-tab-node-name')
+        .attr('style', 'float:left;width:26px;background: url(\''+getIconPath(nodeTypes[type].iconPath)+'\') no-repeat left center')
+        .next().html(name)
+        .next().html(' ('+type+')')
+        .parent().attr({'node-id':$(treeSelectedNode).attr('id'), started:$(treeSelectedNode).attr('started')})
+    $('#edit-tab-desc').html(desc)
+}
+
+function getIconPath(nodeType)
+{
+    return'@{Tree.icon}?path='+encodeURIComponent(nodeType)
+}
+
+function changeNodeStatus(nodeId, started)
+{
+    $('#'+nodeId).attr('started', started)
+    var editNode = $('#edit-tab-node-name').parent();
+    if (editNode.attr('node-id')==nodeId)
+        editNode.attr('started', started)
+    
 }

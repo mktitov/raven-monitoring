@@ -13,6 +13,7 @@ import beans.JsTreeNode;
 import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import org.apache.commons.lang.StringUtils;
+import org.raven.rest.beans.DescriptionBean;
 import org.raven.rest.beans.NodeBean;
 import play.Logger;
 import play.Play;
@@ -38,14 +39,14 @@ public class Tree extends Controller
     public static void nodeTypes() throws Exception
     {
         Logger.debug("Loading node types");
-        NodeTypeBean[] beans = requestForJson("node/node-types", session, NodeTypeBean[].class);
+        NodeTypeBean[] beans = requestForJson("node/types", session, NodeTypeBean[].class);
         renderJSON(beans);
     }
 
     public static void throughNodeTypes() throws Exception
     {
         Logger.debug("Loading through node types");
-        String[] types = requestForJson("node/through-node-types", session, String[].class);
+        String[] types = requestForJson("node/through-types", session, String[].class);
         renderJSON(types);
     }
 
@@ -74,6 +75,13 @@ public class Tree extends Controller
             badRequest();
     }
 
+    public static void typeDescription(String path) throws Exception
+    {
+        Logger.debug("Reading description for the node (%s)", path);
+        renderJSON(requestForJson(
+                "node/type-description", session, DescriptionBean.class, "path", path));
+    }
+
     public static void childNodeTypes(String path) throws Exception
     {
         Logger.debug("Reading child node types for path (%s)", path);
@@ -92,7 +100,7 @@ public class Tree extends Controller
     {
         Logger.debug("Creating new node: parent=%s, name=%s, type=%s", parent, name, type);
         try {
-            String id = request("node/create-node", session, "parent", parent, "name", name, "type", type);
+            String id = request("node/create", session, "parent", parent, "name", name, "type", type);
             renderText(id);
         } catch (Exception ex) {
             error(ex.getMessage());
@@ -105,7 +113,7 @@ public class Tree extends Controller
         Map<String, Object> requestParams = new HashMap<String, Object>();
         requestParams.put("nodes", nodes);
         try{
-            post("node/delete-nodes", session, requestParams);
+            post("node/delete", session, requestParams);
             ok();
         } catch (Exception e){
             error(e.getMessage());
@@ -122,7 +130,7 @@ public class Tree extends Controller
         requestParams.put("position", position);
         requestParams.put("copy", copy);
         try{
-            post("node/move-nodes", session, requestParams);
+            post("node/move", session, requestParams);
             ok();
         } catch(Exception e) {
             error(e.getMessage());
@@ -135,7 +143,7 @@ public class Tree extends Controller
         Map<String, Object> requestParams = new HashMap<String, Object>();
         requestParams.put("path", path);
         try{
-            post(String.format("node/%s-node", start?"start":"stop"), session, requestParams);
+            post(String.format("node/%s", start?"start":"stop"), session, requestParams);
             ok();
         } catch(Exception e) {
             error(e.getMessage());
