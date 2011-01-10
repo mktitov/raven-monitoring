@@ -30,6 +30,7 @@ import org.raven.auth.impl.UserContextImpl;
 import org.raven.rest.beans.NodeAttributeBean;
 import org.raven.server.app.RavenServerAppTestCase;
 import org.raven.rest.beans.NodeBean;
+import org.raven.rest.beans.DescriptionBean;
 import org.raven.rest.beans.NodeTypeBean;
 import org.raven.server.app.TestUserContextService;
 import org.raven.server.app.service.IconResolver;
@@ -38,6 +39,7 @@ import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.impl.SystemNode;
+import org.weda.services.ClassDescriptorRegistry;
 
 /**
  *
@@ -662,6 +664,40 @@ import org.raven.tree.impl.SystemNode;
                     String.format("Not enough rights for node (%s) to read attributes"
                         , node.getPath())
                     , e.getMessage());
+        }
+    }
+
+    @Test
+    public void getTypeDescription() throws Exception
+    {
+        ClassDescriptorRegistry descReg = registry.getService(ClassDescriptorRegistry.class);
+
+        ContainerNode node = new ContainerNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        
+        DescriptionBean desc = res.getTypeDescription(node.getPath());
+        assertNotNull(desc);
+        assertEquals(
+                descReg.getClassDescriptor(ContainerNode.class).getDescription()
+                , desc.description);
+    }
+
+    @Test
+    public void getTypeDescription_notEnoughRights()
+    {
+        TestUserContextService.userContext = null;
+
+        ContainerNode node = new ContainerNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        try{
+            res.getTypeDescription(node.getPath());
+            fail();
+        }catch(Exception e){
+            assertEquals(
+                String.format(
+                    "Not enough rights for node (%s) to read description of the node"
+                    , node.getPath())
+                , e.getMessage());
         }
     }
 

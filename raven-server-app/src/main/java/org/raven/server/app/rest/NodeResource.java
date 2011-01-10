@@ -17,6 +17,7 @@
 
 package org.raven.server.app.rest;
 
+import org.raven.rest.beans.DescriptionBean;
 import org.raven.tree.NodeAttribute;
 import org.raven.auth.UserContext;
 import java.util.Set;
@@ -121,7 +122,7 @@ public class NodeResource
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/node-types/")
+    @Path("/types/")
     public Collection<NodeTypeBean> getNodeTypes() throws Exception
     {
         List<Class> nodeTypes = tree.getNodeTypes();
@@ -145,7 +146,7 @@ public class NodeResource
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/through-node-types/")
+    @Path("/through-types/")
     public Collection<String> getThroughNodeTypes() throws Exception
     {
         Set<Class> types = tree.getThroughNodesTypes();
@@ -185,7 +186,7 @@ public class NodeResource
     }
 
     @GET
-    @Path("/create-node/")
+    @Path("/create/")
     @Produces(MediaType.TEXT_PLAIN)
     public Response createNode(
             @QueryParam("parent") String parentPath
@@ -231,7 +232,7 @@ public class NodeResource
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.TEXT_PLAIN)
-    @Path("delete-nodes")
+    @Path("delete")
     public Response deleteNodes(@FormParam("nodes") List<String> nodes)
     {
         if (log.isDebugEnabled())
@@ -259,7 +260,7 @@ public class NodeResource
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.TEXT_PLAIN)
-    @Path("move-nodes")
+    @Path("move")
     public Response moveNodes(
             @FormParam("destination") String destination
             , @FormParam("nodes") List<String> nodePaths
@@ -366,7 +367,7 @@ public class NodeResource
     @POST
     @Produces(MediaType.TEXT_PLAIN)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Path("start-node")
+    @Path("start")
     public Response startNode(@FormParam("path") String path)
     {
         return startStopNode(path, true);
@@ -375,7 +376,7 @@ public class NodeResource
     @POST
     @Produces(MediaType.TEXT_PLAIN)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Path("stop-node")
+    @Path("stop")
     public Response stopNode(@FormParam("path") String path)
     {
         return startStopNode(path, false);
@@ -383,7 +384,7 @@ public class NodeResource
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("node-attributes")
+    @Path("attributes")
     public Collection<NodeAttributeBean> getNodeAttributes(String path) throws Exception
     {
         Node node = tree.getNode(path);
@@ -406,6 +407,19 @@ public class NodeResource
         return attrBeans;
     }
 
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("type-description")
+    public DescriptionBean getTypeDescription(@QueryParam("path") String nodePath) throws Exception
+    {
+        Node node = tree.getNode(decodeParam(nodePath, null));
+
+        checkRights(node, AccessControl.WRITE, "read description of the node");
+
+        return new DescriptionBean(
+                classDescriptor.getClassDescriptor(node.getClass()).getDescription());
+    }
+        
     private void checkRights(Node node, int minimumRights, String message) throws Exception
     {
         int rights = nodeAccessService.getAccessForNode(node, userContextService.getUserContext());
