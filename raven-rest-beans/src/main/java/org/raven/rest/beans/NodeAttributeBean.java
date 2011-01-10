@@ -36,6 +36,9 @@ public class NodeAttributeBean
     public boolean templateExpression;
     public boolean readOnly;
 
+    public NodeAttributeBean() {
+    }
+
     public NodeAttributeBean(
             String name, String displayName, String type, String description
             , String value, String parentAttribute, String valueHandlerType, boolean builtIn
