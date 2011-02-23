@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
-import org.raven.ds.RecordException;
 import org.raven.ds.impl.RecordsAsTableNode.DeleteRecordAction;
 import org.raven.test.PushOnDemandDataSource;
 import org.raven.test.RavenCoreTestCase;

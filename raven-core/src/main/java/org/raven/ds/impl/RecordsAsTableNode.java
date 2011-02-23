@@ -86,6 +86,9 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
     @NotNull @Parameter(defaultValue="false")
     private Boolean enableDeletes;
 
+    @NotNull @Parameter(defaultValue="true")
+    private Boolean refreshViewAfterDelete;
+
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
     private String cellValueExpression;
 
@@ -164,6 +167,14 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
     public void setEnableDeletes(Boolean enableDeletes)
     {
         this.enableDeletes = enableDeletes;
+    }
+
+    public Boolean getRefreshViewAfterDelete() {
+        return refreshViewAfterDelete;
+    }
+
+    public void setRefreshViewAfterDelete(Boolean refreshViewAfterDelete) {
+        this.refreshViewAfterDelete = refreshViewAfterDelete;
     }
 
     public DataSource getDataSource()
@@ -535,7 +546,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                     int pos=0;
                     if (enableDeletes)
                         row[pos++] = new DeleteRecordAction(
-                                deleteConfirmationMessage, deleteMessage, deleteCompletionMessage, record);
+                                deleteConfirmationMessage, deleteMessage, deleteCompletionMessage
+                                , record, refreshViewAfterDelete);
                     if (recordActions!=null)
                         for (RecordsAsTableRecordActionNode actionNode: recordActions)
                         {
@@ -646,9 +658,11 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         private final String deleteCompletionMessage;
 
         public DeleteRecordAction(
-                String confirmationMessage, String displayMessage, String deleteCompletionMessage, Record record)
+                String confirmationMessage, String displayMessage, String deleteCompletionMessage
+                , Record record, boolean refreshViewAfterDelete)
         {
-            super(confirmationMessage, displayMessage, RecordsAsTableNode.this, true);
+            super(confirmationMessage, displayMessage, RecordsAsTableNode.this
+                    , refreshViewAfterDelete);
             this.deleteCompletionMessage = deleteCompletionMessage;
             this.record = record;
         }

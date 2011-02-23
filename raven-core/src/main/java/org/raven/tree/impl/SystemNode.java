@@ -17,10 +17,13 @@
 
 package org.raven.tree.impl;
 
+import org.raven.annotations.NodeClass;
+
 /**
  *
  * @author Mikhail Titov
  */
+@NodeClass(parentNode=org.raven.tree.impl.InvisibleNode.class)
 public class SystemNode extends BaseNode
 {
     public final static String NAME = "System";
