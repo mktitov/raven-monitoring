@@ -193,13 +193,18 @@ public class MailWriterNode extends AbstractSafeDataPipe
     {
         javax.activation.DataSource ds = null;
         Object content = part.getContent(context);
-        if (content instanceof javax.activation.DataSource)
-            ds = new DataSourceWrapper(ds, part.getContentType(), part.getName());
-        else {
-            byte[] is = converter.convert(byte[].class, content, getContentEncoding());
-            ds = new ByteArrayDataSource(is, part.getContentType(), part.getName());
+        if (content instanceof String && part.getContentType().startsWith("text")) {
+            String subtype = part.getContentType().split("/")[1];
+            bodyPart.setText((String) content, getContentEncoding(), subtype);
+        } else {
+            if (content instanceof javax.activation.DataSource)
+                ds = new DataSourceWrapper(ds, part.getContentType(), part.getName());
+            else {
+                byte[] is = converter.convert(byte[].class, content, getContentEncoding());
+                ds = new ByteArrayDataSource(is, part.getContentType(), part.getName());
+            }
+            bodyPart.setDataHandler(new DataHandler(ds));
         }
-        bodyPart.setDataHandler(new DataHandler(ds));
     }
 
     public String getFrom() {

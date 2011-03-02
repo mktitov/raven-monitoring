@@ -31,6 +31,7 @@ import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
+import org.raven.tree.impl.RefreshAttributeValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -81,8 +82,11 @@ public class ViewableObjectsMessagePartNode extends BaseNode implements MailMess
     {
         Map<String, NodeAttribute> refAttrs = new HashMap<String, NodeAttribute>();
         for (NodeAttribute attr: getNodeAttributes())
-            if (SOURCE_ATTR.equals(attr.getParentAttribute()))
+            if (   SOURCE_ATTR.equals(attr.getParentAttribute())
+                || RefreshAttributeValueHandlerFactory.TYPE.equals(attr.getValueHandlerType()))
+            {
                 refAttrs.put(attr.getName(), attr);
+            }
         StringBuilder builder = new StringBuilder("<html>")
             .append("<head>")
             .append("<meta http-equiv=\"Content-Type\" content=\"text/html;charset=")

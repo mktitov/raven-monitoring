@@ -291,13 +291,9 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
         public boolean equals(Object obj)
         {
             if (obj == null)
-            {
                 return false;
-            }
             if (getClass() != obj.getClass())
-            {
                 return false;
-            }
             final GroupKey other = (GroupKey) obj;
             if (!Arrays.equals(this.groupValues, other.groupValues))
             {

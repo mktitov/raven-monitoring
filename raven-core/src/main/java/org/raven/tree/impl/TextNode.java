@@ -36,7 +36,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass
-public class TextNode extends BaseNode implements Viewable
+public class TextNode extends AbstractViewableNode
 {
     public final static String REFRESH_ATTRIBUTES_BINDING = "refreshAttributes";
     public final static String TEXT_ATTR = "text";
@@ -59,11 +59,6 @@ public class TextNode extends BaseNode implements Viewable
 
     public void setText(String text) {
         this.text = text;
-    }
-
-    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
-    {
-        return null;
     }
 
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes)
