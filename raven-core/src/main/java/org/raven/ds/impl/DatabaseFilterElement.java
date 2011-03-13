@@ -73,6 +73,7 @@ public class DatabaseFilterElement
     protected static final String[] operators = {">=", "<=", "<>", "=", ">", "<"};
 
     private final String columnName;
+    private final String tableAlias;
     private final Class columnType;
     private final String convertPattern;
     private final TypeConverter converter;
@@ -84,10 +85,11 @@ public class DatabaseFilterElement
     private Object value;
 
     public DatabaseFilterElement(
-            String columnName, Class columnType, String convertPattern
+            String columnName, String tableAlias, Class columnType, String convertPattern
             , boolean virtual, TypeConverter converter)
     {
         this.columnName = columnName;
+        this.tableAlias = tableAlias;
         this.columnType = columnType;
         this.convertPattern = convertPattern;
         this.converter = converter;
@@ -127,6 +129,11 @@ public class DatabaseFilterElement
     public String getColumnName()
     {
         return columnName;
+    }
+
+    public String getColumnNameWithTableAlias()
+    {
+        return tableAlias==null? columnName : tableAlias+"."+columnName;
     }
 
     public ExpressionType getExpressionType()

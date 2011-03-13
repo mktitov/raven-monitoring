@@ -86,13 +86,13 @@ public class AbstractDatabaseRecordReference
         throws DatabaseRecordQueryException
     {
         DatabaseFilterElement filter = new DatabaseFilterElement(
-                columnName, fieldType, null, false, converter);
+                columnName, null, fieldType, null, false, converter);
         filter.setValue(
                 value, DatabaseFilterElement.ExpressionType.OPERATOR
                 , DatabaseFilterElement.OperatorType.SIMPLE, "=");
         DatabaseRecordQuery query = new DatabaseRecordQuery(
                 recordSchema, null, null, Arrays.asList(filter), null, null, connectionPool
-                ,MAX_ROWS, FETCH_SIZE,converter);
+                , MAX_ROWS, FETCH_SIZE,converter);
         RecordIterator it = query.execute();
         List<Record> recs = new ArrayList<Record>();
         while (it.hasNext())

@@ -347,6 +347,29 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         checkRecords(collector.getDataList(), "1", "4");
     }
 
+    @Test
+    public void gatherDataWithQueryTemplate_AndFilterAttributes_WithTableAlias_Test()
+            throws Exception
+    {
+        prepareCollector();
+        prepareData();
+
+        reader.setRecordSchema(schema);
+        reader.setQuery("select * from record_data t where 1=1 {#} order by col1");
+        reader.getNodeAttribute("field1").setValue("{1, 4}");
+        assertTrue(reader.start());
+
+        FieldTableAliasNode alias = new FieldTableAliasNode();
+        alias.setName("field1");
+        reader.addAndSaveChildren(alias);
+        alias.getNodeAttribute("tableAlias").setValue("t");
+        assertTrue(alias.start());
+
+        reader.getDataImmediate(collector, new DataContextImpl());
+
+        checkRecords(collector.getDataList(), "1", "4");
+    }
+
     //provideFilterAttributesToConsumer==true
     @Test
     public void generateAttributesTest1() throws Exception

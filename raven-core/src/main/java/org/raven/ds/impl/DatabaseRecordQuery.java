@@ -23,7 +23,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -374,9 +373,11 @@ public class DatabaseRecordQuery
     {
         if (filterElement.isVirtual())
             return "";
-        else
+        else {
+            String columnName = filterElement.getColumnNameWithTableAlias();
             return !caseSensitive && String.class.equals(filterElement.getColumnType())?
-                    "upper("+filterElement.getColumnName()+")" : filterElement.getColumnName();
+                    "upper("+columnName+")" : columnName;
+        }
     }
 
     private Object getValue(Object value, boolean caseSensitive)

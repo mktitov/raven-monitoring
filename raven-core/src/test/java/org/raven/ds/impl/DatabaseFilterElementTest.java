@@ -34,7 +34,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
         
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", Integer.class, null, false, converter);
+                new DatabaseFilterElement("col", null, Integer.class, null, false, converter);
 
         for (String expression: new String[]{null, "", " "})
         {
@@ -46,13 +46,29 @@ public class DatabaseFilterElementTest extends Assert
     }
 
     @Test
+    public void getColumnNameWithTableAliasTest() throws Exception
+    {
+        DatabaseFilterElement element =
+                new DatabaseFilterElement("col", null, Integer.class, null, false, null);
+        assertEquals("col", element.getColumnNameWithTableAlias());
+    }
+
+    @Test
+    public void getColumnNameWithTableAliasTest2() throws Exception
+    {
+        DatabaseFilterElement element =
+                new DatabaseFilterElement("col", "t", Integer.class, null, false, null);
+        assertEquals("t.col", element.getColumnNameWithTableAlias());
+    }
+
+    @Test
     public void completeExpressionTypeTest() throws DatabaseFilterElementException
     {
         TypeConverter converter = createMock(TypeConverter.class);
         replay(converter);
         
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", Integer.class, null, false, converter);
+                new DatabaseFilterElement("col", null, Integer.class, null, false, converter);
         
         element.setExpression("#test expression");
         assertEquals(DatabaseFilterElement.ExpressionType.COMPLETE, element.getExpressionType());
@@ -69,7 +85,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
 
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", Integer.class, null, false, converter);
+                new DatabaseFilterElement("col", null, Integer.class, null, false, converter);
 
         for (String operator: new String[]{">=", "<=", "<>", "=", ">", "<"})
         {
@@ -92,7 +108,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
 
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", Integer.class, "pattern", false, converter);
+                new DatabaseFilterElement("col", null, Integer.class, "pattern", false, converter);
 
         element.setExpression("1");
         assertEquals(DatabaseFilterElement.ExpressionType.OPERATOR, element.getExpressionType());
@@ -110,7 +126,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
 
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", Integer.class, null, false, converter);
+                new DatabaseFilterElement("col", null, Integer.class, null, false, converter);
 
         for (String expression: new String[]{"%1", "1%", "1_", "_1", "1%2_3"})
         {
@@ -133,7 +149,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
 
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", Integer.class, null, false, converter);
+                new DatabaseFilterElement("col", null, Integer.class, null, false, converter);
 
         element.setExpression("[1 , \"2\"]");
         assertEquals(DatabaseFilterElement.ExpressionType.OPERATOR, element.getExpressionType());
@@ -152,7 +168,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
 
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", Integer.class, null, false, converter);
+                new DatabaseFilterElement("col", null, Integer.class, null, false, converter);
 
         element.setExpression("{1 , \"2\"}");
         assertEquals(DatabaseFilterElement.ExpressionType.OPERATOR, element.getExpressionType());
@@ -170,7 +186,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
 
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", Integer.class, "pattern", false, converter);
+                new DatabaseFilterElement("col", null, Integer.class, "pattern", false, converter);
 
         element.setExpression("=1");
 

@@ -42,6 +42,7 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
 import org.raven.tree.NodeListener;
 import org.raven.tree.impl.NodeAttributeImpl;
+import org.raven.util.NodeUtils;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.internal.annotations.Service;
 import org.weda.internal.impl.MessageComposer;
@@ -413,6 +414,8 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
         List<DatabaseFilterElement> filterElements = null;
         if (filterFields != null && filterFields.size() > 0)
         {
+            Map<String, FieldTableAliasNode> fieldAliases =
+                    NodeUtils.getChildsOfTypeMap(this, FieldTableAliasNode.class);
             filterElements = new ArrayList<DatabaseFilterElement>(filterFields.size());
             for (FilterField field : filterFields.values())
             {
@@ -426,8 +429,12 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
 
                 Class fieldType = RecordSchemaFieldType.getSqlType(
                         field.getFieldInfo().getFieldType());
+                String alias = null;
+                FieldTableAliasNode aliasNode = fieldAliases.get(fieldName);
+                if (aliasNode!=null)
+                    alias = aliasNode.getTableAlias();
                 DatabaseFilterElement element = new DatabaseFilterElement(
-                        field.getColumnName(), fieldType
+                        field.getColumnName(), alias, fieldType
                         , field.getFieldInfo().getPattern(), field.isVirtual(), converter);
                 element.setExpression(expression);
                 if (element.getExpressionType() != DatabaseFilterElement.ExpressionType.EMPTY)
