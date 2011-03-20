@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
+import org.raven.expr.impl.IfNode;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.table.TableImpl;
@@ -73,7 +74,7 @@ public class MailWriterNodeTest extends RavenCoreTestCase
         assertTrue(mailer.start());
     }
 
-    @Test
+//    @Test
     public void sendToGoogleTest() throws Exception
     {
         AttributeValueMessagePartNode part = new AttributeValueMessagePartNode();
@@ -94,6 +95,41 @@ public class MailWriterNodeTest extends RavenCoreTestCase
 
         InputStream is = new FileInputStream("/home/tim/photo/80-400.jpeg");
         ds.pushData(is);
+    }
+
+    @Test
+    public void sendToGoogleTestWithIfNode() throws Exception
+    {
+        IfNode if1 = new IfNode();
+        if1.setName("if1");
+        mailer.addAndSaveChildren(if1);
+        if1.setUsedInTemplate(Boolean.FALSE);
+        if1.getNodeAttribute("expression").setValue("data!=null");
+        assertTrue(if1.start());
+
+        AttributeValueMessagePartNode part = new AttributeValueMessagePartNode();
+        part.setName("part1");
+        if1.addAndSaveChildren(part);
+        part.setContentType("text/plain");
+        part.getNodeAttribute("value").setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        part.setValue("data");
+        assertTrue(part.start());
+
+        IfNode if2 = new IfNode();
+        if2.setName("if2");
+        mailer.addAndSaveChildren(if2);
+        if2.setUsedInTemplate(Boolean.FALSE);
+        if2.getNodeAttribute("expression").setValue("data==null");
+        assertTrue(if2.start());
+
+        part = new AttributeValueMessagePartNode();
+        part.setName("part1");
+        if2.addAndSaveChildren(part);
+        part.setContentType("text/plain");
+        part.setValue("Этого сообщения не должно быть в письме");
+        assertTrue(part.start());
+
+        ds.pushData("Привет Мир!!!");
     }
 
 //    @Test

@@ -38,6 +38,7 @@ import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractSafeDataPipe;
 import org.raven.expr.BindingSupport;
+import org.raven.expr.impl.IfNode;
 import org.raven.log.LogLevel;
 import org.raven.net.MailMessagePart;
 import org.raven.util.NodeUtils;
@@ -47,7 +48,8 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass(childNodes={AttributeValueMessagePartNode.class, ViewableObjectsMessagePartNode.class})
+@NodeClass(childNodes={
+    AttributeValueMessagePartNode.class, ViewableObjectsMessagePartNode.class, IfNode.class})
 public class MailWriterNode extends AbstractSafeDataPipe
 {
     @NotNull @Parameter
@@ -165,16 +167,9 @@ public class MailWriterNode extends AbstractSafeDataPipe
 
     private void createContent(MimeMessage message, DataContext context) throws Exception
     {
-        List<MailMessagePart> parts = NodeUtils.getChildsOfType(this, MailMessagePart.class);
+        List<MailMessagePart> parts = NodeUtils.getEffectiveChildsOfType(
+                this, MailMessagePart.class);
 
-//        for (MailMessagePart messagePart:
-//
-//        List<Node> childs = getSortedChildrens();
-//        if (childs!=null && !childs.isEmpty())
-//            for (Node child: childs)
-//                if (Status.STARTED.equals(getStatus()) && child instanceof MailMessagePart)
-//                    parts.add((MailMessagePart)child);
-            
         if (parts.isEmpty())
             throw new Exception("Nothing to send. The message must contains at least one message part");
 

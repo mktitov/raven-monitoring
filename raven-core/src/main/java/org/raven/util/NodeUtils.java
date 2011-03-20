@@ -58,20 +58,7 @@ public class NodeUtils
      */
     public static <T> List<T> getChildsOfType(Node owner, Class<T> childType)
     {
-
-        Collection<Node> childs = owner.getSortedChildrens();
-        if (childs!=null && !childs.isEmpty()){
-            List<T> res = new ArrayList<T>(childs.size());
-            for (Node child: childs)
-                if (   Node.Status.STARTED.equals(child.getStatus())
-                    && childType.isAssignableFrom(child.getClass()))
-                {
-                    res.add((T)child);
-                }
-            return res;
-        }
-
-        return Collections.EMPTY_LIST;
+        return extractNodesOfType(owner.getSortedChildrens(), childType);
     }
 
     /**
@@ -98,6 +85,40 @@ public class NodeUtils
         }
 
         return Collections.EMPTY_MAP;
+    }
+
+    /**
+     * Returns the sorted list of the <i>STARTED</i> effective child nodes of the type
+     * <b>childType</b> of the <b>owner</b> node.
+     * Method returns <b>empty list</b> if owner node does not have started child of the specified type.
+     * @param owner the owner node
+     * @param childType the type of child node
+     */
+    public static <T> List<T> getEffectiveChildsOfType(Node owner, Class<T> childType)
+    {
+        return extractNodesOfType(owner.getEffectiveChildrens(), childType);
+    }
+
+    /**
+     * Extracts <i>STARTED</i> nodes of specified type from the list. Method return the empty list if the
+     * input list is empty or list doesn't contains the nodes of specified type.
+     * @param list
+     * @param elementType
+     */
+    public static <T> List<T> extractNodesOfType(Collection<Node> list, Class<T> elementType)
+    {
+        if (list!=null && !list.isEmpty()){
+            List<T> res = new ArrayList<T>(list.size());
+            for (Node child: list)
+                if (   Node.Status.STARTED.equals(child.getStatus())
+                    && elementType.isAssignableFrom(child.getClass()))
+                {
+                    res.add((T)child);
+                }
+            return res;
+        }
+
+        return Collections.EMPTY_LIST;
     }
     
     /**
