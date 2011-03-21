@@ -90,7 +90,7 @@ public class ViewableObjectsMessagePartNode extends BaseNode implements MailMess
         StringBuilder builder = new StringBuilder("<html>")
             .append("<head>")
             .append("<meta http-equiv=\"Content-Type\" content=\"text/html;charset=")
-            .append(((MailWriterNode)getParent()).getContentEncoding())
+            .append(((MailWriterNode)getEffectiveParent()).getContentEncoding())
             .append("\"/>")
             .append("<style>")
             .append("table { border:2px solid; border-collapse: collapse; }")

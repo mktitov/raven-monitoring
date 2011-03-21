@@ -91,6 +91,12 @@ public class MailWriterNode extends AbstractSafeDataPipe
     @NotNull @Parameter
     private String to;
 
+    @NotNull @Parameter(defaultValue="30000")
+    private Integer connectionTimeout;
+
+    @NotNull @Parameter(defaultValue="30000")
+    private Integer timeout;
+
     static {
         Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
     }
@@ -110,6 +116,8 @@ public class MailWriterNode extends AbstractSafeDataPipe
         Properties props = new Properties();
         props.put("mail.smtp.host", smtpHost);
         props.put("mail.smtp.port", smtpPort);
+        props.put("mail.smtp.timeout", timeout);
+        props.put("mail.smtp.connectiontimeout", connectionTimeout);
         if (useAuth)
             props.put("mail.smtp.auth", "true");
         if (useSsl){
@@ -304,5 +312,21 @@ public class MailWriterNode extends AbstractSafeDataPipe
 
     public void setContentEncoding(String contentEncoding) {
         this.contentEncoding = contentEncoding;
+    }
+
+    public Integer getConnectionTimeout() {
+        return connectionTimeout;
+    }
+
+    public void setConnectionTimeout(Integer connectionTimeout) {
+        this.connectionTimeout = connectionTimeout;
+    }
+
+    public Integer getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(Integer timeout) {
+        this.timeout = timeout;
     }
 }
