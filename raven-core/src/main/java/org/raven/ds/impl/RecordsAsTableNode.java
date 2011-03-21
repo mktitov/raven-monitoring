@@ -46,6 +46,7 @@ import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.tree.impl.ViewableObjectImpl;
 import org.raven.util.NodeUtils;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.beans.ObjectUtils;
 import org.weda.internal.annotations.Message;
 
 /**
@@ -225,7 +226,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
 
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
     {
-        if (getStatus()!=Status.STARTED)
+        if (!ObjectUtils.in(getStatus(), Status.STARTED, Status.INITIALIZED))
             return null;
         
         Map<String, NodeAttribute> attrs = NodeUtils.extractRefereshAttributes(this);
