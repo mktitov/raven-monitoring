@@ -18,6 +18,7 @@
 package org.raven.ds.impl;
 
 import org.raven.annotations.NodeClass;
+import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 
 /**
@@ -27,4 +28,21 @@ import org.raven.tree.impl.BaseNode;
 @NodeClass(parentNode=RecordSchemaFieldNode.class)
 public class IdRecordFieldExtension extends BaseNode
 {
+    /**
+     * Creates id extension for the record schema field. If field already has extension with given
+     * name method returns null.
+     * @param owner the record schema field node
+     * @param extenstionName the name of the extension
+     */
+    public static IdRecordFieldExtension create(Node owner, String extenstionName)
+    {
+        if (owner.getChildren(extenstionName)!=null)
+            return null;
+        IdRecordFieldExtension idExt = new IdRecordFieldExtension();
+        idExt.setName(extenstionName);
+        owner.addAndSaveChildren(idExt);
+        idExt.start();
+
+        return idExt;
+    }
 }

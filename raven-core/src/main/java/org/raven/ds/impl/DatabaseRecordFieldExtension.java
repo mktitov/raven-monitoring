@@ -63,7 +63,7 @@ public class DatabaseRecordFieldExtension extends AbstractRecordFieldExtension
      * @param extensionName the name of the database table column extension.
      * @param columnName the name of the column with which record schema field related
      */
-    public final static DatabaseRecordFieldExtension create(
+    public static DatabaseRecordFieldExtension create(
             Node owner, String extensionName, String columnName)
     {
         if (owner.getChildren(extensionName)!=null)
