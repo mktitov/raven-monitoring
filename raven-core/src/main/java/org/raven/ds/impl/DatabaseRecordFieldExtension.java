@@ -61,7 +61,8 @@ public class DatabaseRecordFieldExtension extends AbstractRecordFieldExtension
      * with given name already exists then method will returns null.
      * @param owner the record schema field.
      * @param extensionName the name of the database table column extension.
-     * @param columnName the name of the column with which record schema field related
+     * @param columnName the name of the column with which record schema field related.
+     *  If columnName is null then columnName will generated from the field name
      */
     public static DatabaseRecordFieldExtension create(
             Node owner, String extensionName, String columnName)
@@ -71,7 +72,8 @@ public class DatabaseRecordFieldExtension extends AbstractRecordFieldExtension
         DatabaseRecordFieldExtension colExt = new DatabaseRecordFieldExtension();
         colExt.setName(extensionName);
         owner.addAndSaveChildren(colExt);
-        colExt.setColumnName(columnName);
+        if (columnName!=null)
+            colExt.setColumnName(columnName);
         colExt.start();
         
         return colExt;
