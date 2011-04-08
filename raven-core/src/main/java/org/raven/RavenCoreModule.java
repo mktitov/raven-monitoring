@@ -111,6 +111,7 @@ import org.raven.tree.impl.AttributeReferenceValueHandlerFactory;
 import org.raven.tree.impl.AttributeValueHandlerRegistryImpl;
 import org.raven.tree.impl.ChildrenNodesAsReferenceValues;
 import org.raven.tree.impl.DataFileValueHandlerFactory;
+import org.raven.tree.impl.DataStreamValueHandlerFactory;
 import org.raven.tree.impl.NodePathResolverImpl;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.tree.impl.RefreshAttributeValueHandlerFactory;
@@ -299,6 +300,9 @@ public class RavenCoreModule
         conf.add(
             DataFileValueHandlerFactory.TYPE
             , new DataFileValueHandlerFactory(pathResolver));
+        conf.add(
+            DataStreamValueHandlerFactory.TYPE
+            , new DataStreamValueHandlerFactory(pathResolver));
         conf.add(
             DataConsumerAttributeValueHandlerFactory.TYPE
             , new DataConsumerAttributeValueHandlerFactory());

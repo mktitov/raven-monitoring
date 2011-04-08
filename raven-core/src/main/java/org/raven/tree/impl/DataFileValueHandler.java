@@ -73,10 +73,7 @@ public class DataFileValueHandler extends AbstractAttributeValueHandler
     public Object handleData()
     {
         if (firstHandleData)
-        {
             firstHandleData = false;
-//            fireValueChangedEvent(null, this);
-        }
         return this;
     }
 
@@ -258,12 +255,12 @@ public class DataFileValueHandler extends AbstractAttributeValueHandler
 
             StringBuilder str = new StringBuilder();
             if (filename!=null)
-                str.append("filename: "+filename);
+                str.append("filename: ").append(filename);
             if (mimetype!=null)
             {
                 if (filename!=null)
                     str.append(", ");
-                str.append("mime-type: "+mimetype);
+                str.append("mime-type: ").append(mimetype);
             }
             return str.toString();
         }

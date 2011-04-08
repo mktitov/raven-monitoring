@@ -45,8 +45,8 @@ public class DataSourceHelper
                     catch (Throwable e)
                     {
                         if (source.isLogLevelEnabled(LogLevel.ERROR))
-                            source.getLogger().error(
-                                    String.format("Error pushing data to the consumer (%s)", child.getPath())
+                            source.getLogger().error(String.format(
+                                    "Error pushing data to the consumer (%s)", child.getPath())
                                     , e);
                     }
     }
