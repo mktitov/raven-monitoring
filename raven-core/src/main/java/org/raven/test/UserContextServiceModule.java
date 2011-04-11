@@ -26,6 +26,8 @@ import org.raven.auth.UserContextService;
  */
 public class UserContextServiceModule implements UserContextService
 {
+    private static UserContext context = null;
+
     public static UserContextService buildUserContextService()
     {
         return new UserContextServiceModule();
@@ -33,6 +35,11 @@ public class UserContextServiceModule implements UserContextService
 
     public UserContext getUserContext()
     {
-        return null;
+        return context;
+    }
+
+    public static void setUserContext(UserContext userContext)
+    {
+        context = userContext;
     }
 }

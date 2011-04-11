@@ -43,7 +43,8 @@ import org.weda.internal.annotations.Message;
  * @author Mikhail Titov
  */
 @NodeClass
-public class SchedulableDataPipe extends SafeDataPipeNode implements Schedulable, Scheduler, Task, Viewable
+public class SchedulableDataPipe extends SafeDataPipeNode
+        implements Schedulable, Scheduler, Task, Viewable
 {
     @Parameter(valueHandlerType=SystemSchedulerValueHandlerFactory.TYPE)
     @NotNull

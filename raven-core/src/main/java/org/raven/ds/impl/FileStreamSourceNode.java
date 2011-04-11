@@ -19,6 +19,7 @@ package org.raven.ds.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -26,16 +27,23 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.auth.UserContext;
+import org.raven.auth.UserContextService;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
+import org.raven.log.LogLevel;
+import org.raven.table.TableImpl;
 import org.raven.tree.DataStream;
+import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.DataStreamValueHandlerFactory;
+import org.raven.tree.impl.ViewableObjectImpl;
 import org.tmatesoft.svn.core.internal.util.CountingInputStream;
+import org.weda.internal.annotations.Message;
+import org.weda.internal.annotations.Service;
 
 /**
  *
@@ -44,8 +52,22 @@ import org.tmatesoft.svn.core.internal.util.CountingInputStream;
 @NodeClass
 public class FileStreamSourceNode extends BaseNode implements DataSource, Viewable
 {
+    public final static String FILE_ATTR = "file";
+
+    @Service
+    private static UserContextService userContextService;
+
     @Parameter(valueHandlerType=DataStreamValueHandlerFactory.TYPE)
     private DataStream file;
+
+    @Message
+    private static String statusColumnMessage;
+    @Message
+    private static String transmittedBytesColumnMessage;
+    @Message
+    private static String transmittingStatusMessage;
+    @Message
+    private static String transmittedStatusMessage;
 
     public DataStream getFile() {
         return file;
@@ -53,6 +75,24 @@ public class FileStreamSourceNode extends BaseNode implements DataSource, Viewab
 
     public void setFile(DataStream file) {
         this.file = file;
+    }
+
+    @Override
+    public void nodeAttributeValueChanged(
+            Node node, NodeAttribute attribute, Object oldValue, Object newValue)
+    {
+        super.nodeAttributeValueChanged(node, attribute, oldValue, newValue);
+        if (   node==this && newValue!=null && FILE_ATTR.equals(attribute.getName())
+            && Status.STARTED.equals(getStatus()) && newValue instanceof InputStream)
+        {
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                getLogger().debug("Received new stream. Processing...");
+            UserContext context = userContextService.getUserContext();
+            ContextCountingStream stream = new ContextCountingStream((InputStream)newValue);
+            if (context!=null) 
+                context.getParams().put(getKey(), stream);
+            DataSourceHelper.sendDataToConsumers(this, stream, new DataContextImpl());
+        }
     }
 
     public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context) {
@@ -63,32 +103,45 @@ public class FileStreamSourceNode extends BaseNode implements DataSource, Viewab
         return null;
     }
 
-    private String getKey()
+    String getKey()
     {
         return FileStreamSourceNode.class.getName()+"_"+getId()+"_"+file;
     }
 
-    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception {
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception 
+    {
         return null;
     }
 
-    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) 
+            throws Exception
+    {
+        UserContext context = userContextService.getUserContext();
+        if (context==null)
+            return null;
+        ContextCountingStream stream = (ContextCountingStream) context.getParams().get(getKey());
+        if (stream==null)
+            return null;
+        TableImpl table = new TableImpl(
+                new String[]{statusColumnMessage, transmittedBytesColumnMessage});
+        table.addRow(new Object[]{
+            stream.isTransmitting()? transmittingStatusMessage:transmittedStatusMessage
+            , stream.getTransmittedBytes()});
+        ViewableObject vo = new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table);
+        return Arrays.asList(vo);
     }
 
     public Boolean getAutoRefresh() {
         return Boolean.TRUE;
     }
 
-    private class ContextCountingStream extends CountingInputStream
+    protected class ContextCountingStream extends CountingInputStream
     {
-        private final UserContext userContext;
         private AtomicBoolean transmitting = new AtomicBoolean(true);
 
-        public ContextCountingStream(InputStream in, UserContext userContext)
+        public ContextCountingStream(InputStream in)
         {
             super(in);
-            this.userContext = userContext;
         }
 
         public boolean isTransmitting() {

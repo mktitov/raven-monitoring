@@ -87,42 +87,46 @@ public class ExcelRecordReaderNode extends AbstractDataPipe
         }
 
         InputStream dataStream = converter.convert(InputStream.class, data, null);
-        Workbook wb = WorkbookFactory.create(new PushbackInputStream(dataStream));
-        Sheet sheet = wb.getSheetAt(sheetNumber-1);
         try{
-            for (int r=startFromRow-1; r<=sheet.getLastRowNum(); ++r)
-            {
-                Row row = sheet.getRow(r);
-                if (row!=null){
-                    Record record = recordSchema.createRecord();
-                    for (Map.Entry<String, FieldInfo> fieldCol: fieldsColumns.entrySet()) {
-                        Cell cell = row.getCell(fieldCol.getValue().getColumnNumber()-1, Row.RETURN_BLANK_AS_NULL);
-                        if (cell!=null){
-                            Object value = null;
-                            switch(cell.getCellType()){
-                                case Cell.CELL_TYPE_BOOLEAN: value = cell.getBooleanCellValue(); break;
-                                case Cell.CELL_TYPE_NUMERIC:
-                                    double num = cell.getNumericCellValue();
-                                    if (HSSFDateUtil.isCellDateFormatted(cell) && HSSFDateUtil.isValidExcelDate(num))
-                                        value = cell.getDateCellValue();
-                                    else
-                                        value = num;
-                                    break;
-                                case Cell.CELL_TYPE_STRING :
-                                    value = cell.getStringCellValue();
-                                    if (value!=null && "".equals(value) && treatEmptyStringAsNull)
-                                        value = null;
-                                    break;
+            Workbook wb = WorkbookFactory.create(new PushbackInputStream(dataStream));
+            Sheet sheet = wb.getSheetAt(sheetNumber-1);
+            try{
+                for (int r=startFromRow-1; r<=sheet.getLastRowNum(); ++r)
+                {
+                    Row row = sheet.getRow(r);
+                    if (row!=null){
+                        Record record = recordSchema.createRecord();
+                        for (Map.Entry<String, FieldInfo> fieldCol: fieldsColumns.entrySet()) {
+                            Cell cell = row.getCell(fieldCol.getValue().getColumnNumber()-1, Row.RETURN_BLANK_AS_NULL);
+                            if (cell!=null){
+                                Object value = null;
+                                switch(cell.getCellType()){
+                                    case Cell.CELL_TYPE_BOOLEAN: value = cell.getBooleanCellValue(); break;
+                                    case Cell.CELL_TYPE_NUMERIC:
+                                        double num = cell.getNumericCellValue();
+                                        if (HSSFDateUtil.isCellDateFormatted(cell) && HSSFDateUtil.isValidExcelDate(num))
+                                            value = cell.getDateCellValue();
+                                        else
+                                            value = num;
+                                        break;
+                                    case Cell.CELL_TYPE_STRING :
+                                        value = cell.getStringCellValue();
+                                        if (value!=null && "".equals(value) && treatEmptyStringAsNull)
+                                            value = null;
+                                        break;
+                                }
+                                value = fieldCol.getValue().prepareValue(value);
+                                record.setValue(fieldCol.getKey(), value);
                             }
-                            value = fieldCol.getValue().prepareValue(value);
-                            record.setValue(fieldCol.getKey(), value);
                         }
+                        sendDataToConsumers(record, context);
                     }
-                    sendDataToConsumers(record, context);
                 }
+            }finally{
+                sendDataToConsumers(null, context);
             }
         }finally{
-            sendDataToConsumers(null, context);
+            dataStream.close();
         }
     }
 

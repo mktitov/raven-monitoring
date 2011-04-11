@@ -20,7 +20,6 @@ package org.raven.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import javax.activation.DataSource;
-import org.raven.net.impl.ByteArrayDataSource;
 import org.weda.converter.TypeConverterException;
 import org.weda.converter.impl.AbstractConverter;
 
