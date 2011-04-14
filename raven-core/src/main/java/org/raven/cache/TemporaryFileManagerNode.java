@@ -18,28 +18,29 @@
 package org.raven.cache;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.activation.DataSource;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.log.LogLevel;
 import org.raven.sched.Schedulable;
@@ -52,6 +53,7 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
+@NodeClass
 public class TemporaryFileManagerNode extends BaseNode implements Schedulable
 {
     private final static int LOCK_WAIT_TIMEOUT = 500;
@@ -62,7 +64,7 @@ public class TemporaryFileManagerNode extends BaseNode implements Schedulable
     @NotNull @Parameter(defaultValue="raven_")
     private String tempFilePrefix;
 
-    @NotNull @Parameter(defaultValue="5")
+    @NotNull @Parameter(defaultValue="300")
     private Integer timelife;
 
     @NotNull @Parameter
@@ -72,9 +74,19 @@ public class TemporaryFileManagerNode extends BaseNode implements Schedulable
     private Boolean forceCreateDirectory;
 
     private Map<String, FileInfo> files;
+    private Collection<InputStream> streamsToClose;
     private ReadWriteLock lock;
     private File dirFile;
     private AtomicBoolean jobRunning;
+    private AtomicBoolean stopping;
+
+    public String getTempFilePrefix() {
+        return tempFilePrefix;
+    }
+
+    public void setTempFilePrefix(String tempFilePrefix) {
+        this.tempFilePrefix = tempFilePrefix;
+    }
 
     public Boolean getForceCreateDirectory() {
         return forceCreateDirectory;
@@ -121,6 +133,16 @@ public class TemporaryFileManagerNode extends BaseNode implements Schedulable
         }
     }
 
+    @Override
+    protected void doStop() throws Exception
+    {
+        super.doStop();
+        while (jobRunning.get())
+            TimeUnit.MILLISECONDS.sleep(100);
+        stopping.set(true);
+        executeScheduledJob(null);
+    }
+
     public void executeScheduledJob(Scheduler scheduler)
     {
         if (!jobRunning.compareAndSet(false, true))
@@ -131,19 +153,25 @@ public class TemporaryFileManagerNode extends BaseNode implements Schedulable
             try {
                 if (lock.writeLock().tryLock(LOCK_WAIT_TIMEOUT, TimeUnit.MILLISECONDS)) {
                     Collection<File> filesToDelete = new LinkedList<File>();
+                    Collection<InputStream> _streamsToClose = new LinkedList<InputStream>();
+                    _streamsToClose.addAll(streamsToClose);
+                    streamsToClose.clear();
                     try{
                         Set<String> fileNames = new HashSet<String>();
 
                         //Looking for old files
                         long curtime = System.currentTimeMillis();
-                        long _timelife = timelife*60*1000;
+                        long _timelife = timelife*1000;
                         Iterator<FileInfo> it = files.values().iterator();
                         while (it.hasNext()) {
                             FileInfo fileInfo = it.next();
                             fileNames.add(fileInfo.file.getName());
-                            if (curtime>fileInfo.time+_timelife) {
+                            if (curtime>fileInfo.time+_timelife || stopping.get()) {
                                 it.remove();
                                 filesToDelete.add(fileInfo.file);
+                                synchronized(fileInfo){
+                                    _streamsToClose.addAll(fileInfo.streams);
+                                }
                             }
                         }
 
@@ -165,6 +193,9 @@ public class TemporaryFileManagerNode extends BaseNode implements Schedulable
                                 getLogger().warn(
                                         "Can't delete old temporary file ({})"
                                         , file.getAbsolutePath());
+                    if (!_streamsToClose.isEmpty())
+                        for (InputStream stream: _streamsToClose)
+                            IOUtils.closeQuietly(stream);
                     
                 }else if (isLogLevelEnabled(LogLevel.TRACE))
                     throw new InterruptedException();
@@ -184,6 +215,8 @@ public class TemporaryFileManagerNode extends BaseNode implements Schedulable
         files = new LinkedHashMap<String, FileInfo>();
         lock = new ReentrantReadWriteLock();
         jobRunning = new AtomicBoolean(Boolean.FALSE);
+        stopping = new AtomicBoolean(false);
+        streamsToClose = new LinkedList<InputStream>();
     }
 
     public DataSource saveFile(String key, InputStream stream, boolean rewrite) throws IOException
@@ -193,47 +226,67 @@ public class TemporaryFileManagerNode extends BaseNode implements Schedulable
         try {
             fileInfo = files.get(key);
             if (fileInfo!=null && !rewrite)
-                return new TempDataSource(fileInfo);
+                return new TempDataSource(key);
 
             File tempFile = File.createTempFile(tempFilePrefix, ".tmp", dirFile);
+            if (fileInfo!=null)
+                streamsToClose.addAll(fileInfo.streams);
             fileInfo = new FileInfo(System.currentTimeMillis(), key, tempFile);
             files.put(key, fileInfo);
         } finally {
             lock.writeLock().unlock();
         }
+        FileOutputStream out = null;
         try {
-            FileOutputStream out = new FileOutputStream(fileInfo.file);
-            IOUtils.copy(stream, out);
-        } catch (IOException e) {
-            lock.writeLock().lock();
             try {
-                files.remove(key);
-            } finally {
-                lock.writeLock().unlock();
+                out = new FileOutputStream(fileInfo.file);
+                IOUtils.copy(stream, out);
+            } catch (IOException e) {
+                lock.writeLock().lock();
+                try {
+                    files.remove(key);
+                } finally {
+                    lock.writeLock().unlock();
+                }
+                throw e;
             }
-            throw e;
+        } finally {
+            IOUtils.closeQuietly(stream);
+            IOUtils.closeQuietly(out);
         }
         fileInfo.initialized.set(true);
         
-        return null;
+        return new TempDataSource(key);
     }
 
-    public DataSource get(String key)
+    public DataSource getDataSource(String key)
     {
-        
+        lock.readLock().lock();
+        try {
+            FileInfo fileInfo = files.get(key);
+            return fileInfo==null||!fileInfo.initialized.get()? null : new TempDataSource(key);
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     public void release(String key)
     {
-        
+        lock.writeLock().lock();
+        try {
+            files.remove(key);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     private class FileInfo
     {
-        private long time;
-        private String key;
-        private File file;
-        private AtomicBoolean initialized = new AtomicBoolean(false);
+        private final long time;
+        private final String key;
+        private final File file;
+        private final AtomicBoolean initialized = new AtomicBoolean(false);
+        private final List<InputStream> streams = new LinkedList<InputStream>();
 
         public FileInfo(long time, String key, File file) {
             this.time = time;
@@ -244,18 +297,28 @@ public class TemporaryFileManagerNode extends BaseNode implements Schedulable
 
     private class TempDataSource implements DataSource
     {
-        private final FileInfo fileInfo;
+        private final String key;
 
-        public TempDataSource(FileInfo fileInfo)
+        public TempDataSource(String key)
         {
-            this.fileInfo = fileInfo;
+            this.key = key;
         }
 
         public InputStream getInputStream() throws IOException
         {
-            if (!fileInfo.file.exists())
-                throw new IOException(String.format(
-                        "File (%s) does not exists", fileInfo.file.getAbsolutePath()));
+            lock.readLock().lock();
+            try {
+                FileInfo fileInfo = files.get(key);
+                if (fileInfo==null)
+                    throw new IOException("Temporary file (%s) unavailable");
+                FileInputStream in = new FileInputStream(fileInfo.file);
+                synchronized(fileInfo) {
+                    fileInfo.streams.add(in);
+                }
+                return in;
+            } finally {
+                lock.readLock().unlock();
+            }
         }
 
         public OutputStream getOutputStream() throws IOException {
@@ -266,8 +329,15 @@ public class TemporaryFileManagerNode extends BaseNode implements Schedulable
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public String getName() {
-            throw new UnsupportedOperationException("Not supported yet.");
+        public String getName() 
+        {
+            lock.readLock().lock();
+            try {
+                FileInfo fileInfo = files.get(key);
+                return fileInfo==null? null : fileInfo.file.getAbsolutePath();
+            } finally {
+                lock.readLock().unlock();
+            }
         }
     }
 }

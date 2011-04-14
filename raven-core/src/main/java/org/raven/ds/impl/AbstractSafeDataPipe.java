@@ -74,6 +74,15 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
     private Boolean autoLinkDataSource;
 
     protected BindingSupportImpl bindingSupport;
+    private boolean supportedPullOperation = true;
+
+    protected boolean isSupportedPullOperation() {
+        return supportedPullOperation;
+    }
+
+    protected void setSupportedPullOperation(boolean supportedPullOperation) {
+        this.supportedPullOperation = supportedPullOperation;
+    }
 
     public Boolean getAutoLinkDataSource() {
         return autoLinkDataSource;
@@ -161,6 +170,19 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
         }
         else
             return super.allowAttributesGeneration(attr);
+    }
+
+    @Override
+    public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
+    {
+        if (supportedPullOperation)
+            return super.getDataImmediate(dataConsumer, context);
+        else {
+            if (isLogLevelEnabled(LogLevel.ERROR))
+                getLogger().error("The pipe does not supports pull operation, "
+                        + "so ignoring request from the ({})", dataConsumer.getPath());
+            return false;
+        }
     }
 
     @Override
