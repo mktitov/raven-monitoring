@@ -46,6 +46,7 @@ import org.raven.log.LogLevel;
 import org.raven.sched.Schedulable;
 import org.raven.sched.Scheduler;
 import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
+import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.constraints.NotNull;
 
@@ -54,7 +55,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass
-public class TemporaryFileManagerNode extends BaseNode implements Schedulable
+public class TemporaryFileManagerNode extends BaseNode implements TemporaryFileManager, Schedulable
 {
     private final static int LOCK_WAIT_TIMEOUT = 500;
 
@@ -219,7 +220,9 @@ public class TemporaryFileManagerNode extends BaseNode implements Schedulable
         streamsToClose = new LinkedList<InputStream>();
     }
 
-    public DataSource saveFile(String key, InputStream stream, boolean rewrite) throws IOException
+    public DataSource saveFile(Node creator, String key, InputStream stream, String contentType
+            , boolean rewrite)
+        throws IOException
     {
         lock.writeLock().lock();
         FileInfo fileInfo = null;
@@ -231,7 +234,8 @@ public class TemporaryFileManagerNode extends BaseNode implements Schedulable
             File tempFile = File.createTempFile(tempFilePrefix, ".tmp", dirFile);
             if (fileInfo!=null)
                 streamsToClose.addAll(fileInfo.streams);
-            fileInfo = new FileInfo(System.currentTimeMillis(), key, tempFile);
+            fileInfo = new FileInfo(
+                    creator, System.currentTimeMillis(), key, tempFile, contentType);
             files.put(key, fileInfo);
         } finally {
             lock.writeLock().unlock();
@@ -270,7 +274,7 @@ public class TemporaryFileManagerNode extends BaseNode implements Schedulable
         }
     }
 
-    public void release(String key)
+    public void releaseDataSource(String key)
     {
         lock.writeLock().lock();
         try {
@@ -282,16 +286,21 @@ public class TemporaryFileManagerNode extends BaseNode implements Schedulable
 
     private class FileInfo
     {
+        private final Node creator;
         private final long time;
         private final String key;
         private final File file;
+        private final String contentType;
         private final AtomicBoolean initialized = new AtomicBoolean(false);
         private final List<InputStream> streams = new LinkedList<InputStream>();
 
-        public FileInfo(long time, String key, File file) {
+        public FileInfo(Node creator, long time, String key, File file, String contentType)
+        {
             this.time = time;
             this.key = key;
             this.file = file;
+            this.creator = creator;
+            this.contentType = contentType;
         }
     }
 
@@ -326,7 +335,13 @@ public class TemporaryFileManagerNode extends BaseNode implements Schedulable
         }
 
         public String getContentType() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            lock.readLock().lock();
+            try {
+                FileInfo fileInfo = files.get(key);
+                return fileInfo==null? null : fileInfo.contentType;
+            } finally {
+                lock.readLock().unlock();
+            }
         }
 
         public String getName() 

@@ -17,10 +17,15 @@
 
 package org.raven.cache;
 
+import java.io.InputStream;
+import java.util.concurrent.atomic.AtomicLong;
+import org.raven.annotations.Parameter;
+import org.raven.auth.UserContext;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractSafeDataPipe;
 import org.raven.expr.BindingSupport;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
@@ -28,18 +33,64 @@ import org.raven.expr.BindingSupport;
  */
 public class StreamCacheDataPipeNode extends AbstractSafeDataPipe
 {
+    @NotNull @Parameter(defaultValue="SEQUNCE")
+    private CacheKeyGenerationPolicy cacheKeyGenerationPolicy;
+
+    @NotNull @Parameter
+    private TemporaryFileManager temporaryFileManager;
+
+    private AtomicLong sequence;
+
+    public CacheKeyGenerationPolicy getCacheKeyGenerationPolicy() {
+        return cacheKeyGenerationPolicy;
+    }
+
+    public void setCacheKeyGenerationPolicy(CacheKeyGenerationPolicy cacheKeyGenerationPolicy) {
+        this.cacheKeyGenerationPolicy = cacheKeyGenerationPolicy;
+    }
+
+    public TemporaryFileManager getTemporaryFileManager() {
+        return temporaryFileManager;
+    }
+
+    public void setTemporaryFileManager(TemporaryFileManager temporaryFileManager) {
+        this.temporaryFileManager = temporaryFileManager;
+    }
+
+    @Override
+    protected void initFields()
+    {
+        super.initFields();
+        sequence = new AtomicLong(1);
+    }
+
     @Override
     protected void doSetData(DataSource dataSource, Object data, DataContext context)
             throws Exception
     {
-        throw new UnsupportedOperationException("Not supported yet.");
+        InputStream in = converter.convert(InputStream.class, data, null);
+        if (in!=null) {
+            String key = null;
+            switch (cacheKeyGenerationPolicy) {
+                case DATASOURCE_NAME: key = getPath();
+                case DATASOURCE_NAME_AND_USER_NAME:
+                    UserContext userContext = context.getUserContext();
+                    if (userContext!=null)
+                        key+="_"+userContext.getUsername();
+                    break;
+                default:
+                    sequence.compareAndSet(Long.MAX_VALUE, 1);
+                    key = ""+sequence.getAndIncrement();
+            }
+            data = temporaryFileManager.saveFile(this, key, in, null, true);
+        }
+        sendDataToConsumers(data, context);
+        return;
     }
 
     @Override
     protected void doAddBindingsForExpression(
             DataSource dataSource, Object data, DataContext context, BindingSupport bindingSupport)
     {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
-
 }

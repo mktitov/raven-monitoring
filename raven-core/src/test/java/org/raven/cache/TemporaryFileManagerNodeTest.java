@@ -17,7 +17,6 @@
 
 package org.raven.cache;
 
-import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +28,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.raven.TestScheduler;
 import org.raven.test.RavenCoreTestCase;
-import static org.easymock.EasyMock.*;
 
 /**
  *
@@ -61,7 +59,7 @@ public class TemporaryFileManagerNodeTest extends RavenCoreTestCase
     {
         byte[] arr = {1,2,3,4,5};
         ByteArrayInputStream in = new ByteArrayInputStream(arr);
-        DataSource ds = manager.saveFile("test", in, true);
+        DataSource ds = manager.saveFile(manager, "test", in, null, true);
         checkDataSource(ds, arr);
 
         ds = manager.getDataSource("test");
@@ -71,7 +69,7 @@ public class TemporaryFileManagerNodeTest extends RavenCoreTestCase
 
         File file = new File(ds.getName());
         assertTrue(file.exists());
-        manager.release("test");
+        manager.releaseDataSource("test");
         assertTrue(file.exists());
         assertNull(manager.getDataSource("test"));
         
@@ -85,10 +83,10 @@ public class TemporaryFileManagerNodeTest extends RavenCoreTestCase
         manager.setTimelife(5);
         byte[] arr = {1,2,3,4,5};
         ByteArrayInputStream in = new ByteArrayInputStream(arr);
-        DataSource ds1 = manager.saveFile("test", in, true);
+        DataSource ds1 = manager.saveFile(manager, "test", in, null, true);
 
         TimeUnit.SECONDS.sleep(3);
-        DataSource ds2 = manager.saveFile("test2", in, true);
+        DataSource ds2 = manager.saveFile(manager, "test2", in, null, true);
 
         TimeUnit.SECONDS.sleep(3);
         manager.executeScheduledJob(null);
@@ -102,7 +100,7 @@ public class TemporaryFileManagerNodeTest extends RavenCoreTestCase
     {
         byte[] arr = {1,2,3,4,5};
         ByteArrayInputStream in = new ByteArrayInputStream(arr);
-        DataSource ds1 = manager.saveFile("test", in, true);
+        DataSource ds1 = manager.saveFile(manager, "test", in, null, true);
 
         File file = new File(ds1.getName());
         assertTrue(file.exists());
@@ -118,11 +116,11 @@ public class TemporaryFileManagerNodeTest extends RavenCoreTestCase
         ByteArrayInputStream in = new ByteArrayInputStream(arr);
         ByteArrayInputStream in2 = new ByteArrayInputStream(arr2);
 
-        DataSource ds1 = manager.saveFile("test", in, true);
+        DataSource ds1 = manager.saveFile(manager, "test", in, null, true);
         File file = new File(ds1.getName());
         assertTrue(file.exists());
-        checkDataSource(manager.saveFile("test", in2, false), arr);
-        checkDataSource(manager.saveFile("test", in2, true), arr2);
+        checkDataSource(manager.saveFile(manager, "test", in2, null, false), arr);
+        checkDataSource(manager.saveFile(manager, "test", in2, null, true), arr2);
 
         manager.executeScheduledJob(null);
         assertFalse(file.exists());
@@ -145,7 +143,7 @@ public class TemporaryFileManagerNodeTest extends RavenCoreTestCase
 
         byte[] arr = {1,2,3,4,5};
         ByteArrayInputStream in = new ByteArrayInputStream(arr);
-        DataSource ds1 = manager.saveFile("test", in, true);
+        DataSource ds1 = manager.saveFile(manager, "test", in, null, true);
 
         assertEquals(1, dir.list().length);
     }
