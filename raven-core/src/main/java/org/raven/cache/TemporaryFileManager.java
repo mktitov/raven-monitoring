@@ -26,7 +26,7 @@ import org.raven.tree.Node;
  *
  * @author Mikhail Titov
  */
-public interface TemporaryFileManager
+public interface TemporaryFileManager extends Node
 {
     /**
      * Stores inputStream to the temporary file and returns the DataSource for created file

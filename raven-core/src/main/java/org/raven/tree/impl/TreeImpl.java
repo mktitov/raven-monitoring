@@ -33,6 +33,7 @@ import org.raven.annotations.NodeClass;
 import org.raven.audit.impl.AuditorNode;
 import org.raven.conf.Configurator;
 import org.raven.auth.impl.AuthorizationNode;
+import org.raven.cache.TemporaryFileManagersNode;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.expr.BindingSupport;
 import org.raven.expr.impl.BindingSupportImpl;
@@ -119,6 +120,7 @@ public class TreeImpl implements Tree
     private LocalDatabaseNode localDatabaseNode;
     private NetworkResponseServiceNode responseServiceNode;
     private ServicesNode servicesNode;
+    private TemporaryFileManagersNode temporaryFileManagersNode;
 
     public TreeImpl(
             AttributeReferenceValues attributeReferenceValues
@@ -612,6 +614,16 @@ public class TreeImpl implements Tree
             systemNode.addChildren(schemasNode);
         }
 
+        temporaryFileManagersNode =
+                (TemporaryFileManagersNode) systemNode.getChildren(TemporaryFileManagersNode.NAME);
+        if (temporaryFileManagersNode==null)
+        {
+            temporaryFileManagersNode = new TemporaryFileManagersNode();
+            temporaryFileManagersNode.setParent(systemNode);
+            saveNode(temporaryFileManagersNode);
+            
+        }
+
         servicesNode = (ServicesNode) systemNode.getChildren(ServicesNode.NAME);
         if (servicesNode==null)
         {
@@ -648,7 +660,6 @@ public class TreeImpl implements Tree
             saveNode(auditorNode);
             servicesNode.addChildren(auditorNode);
         }
-        
     }
 
     private void createTempatesSubtree()

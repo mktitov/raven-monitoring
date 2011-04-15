@@ -19,24 +19,27 @@ package org.raven.cache;
 
 import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicLong;
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.auth.UserContext;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractSafeDataPipe;
 import org.raven.expr.BindingSupport;
+import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
+@NodeClass
 public class StreamCacheDataPipeNode extends AbstractSafeDataPipe
 {
     @NotNull @Parameter(defaultValue="SEQUNCE")
     private CacheKeyGenerationPolicy cacheKeyGenerationPolicy;
 
-    @NotNull @Parameter
+    @NotNull @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     private TemporaryFileManager temporaryFileManager;
 
     private AtomicLong sequence;
@@ -70,19 +73,20 @@ public class StreamCacheDataPipeNode extends AbstractSafeDataPipe
     {
         InputStream in = converter.convert(InputStream.class, data, null);
         if (in!=null) {
-            String key = null;
+            StringBuilder key = new StringBuilder().append(getId()).append("_");
             switch (cacheKeyGenerationPolicy) {
-                case DATASOURCE_NAME: key = getPath();
+                case DATASOURCE_NAME: key.append(dataSource.getPath()); break;
                 case DATASOURCE_NAME_AND_USER_NAME:
+                    key.append(dataSource.getPath());
                     UserContext userContext = context.getUserContext();
                     if (userContext!=null)
-                        key+="_"+userContext.getUsername();
+                        key.append("_").append(userContext.getUsername());
                     break;
                 default:
                     sequence.compareAndSet(Long.MAX_VALUE, 1);
-                    key = ""+sequence.getAndIncrement();
+                    key.append(sequence.getAndIncrement());
             }
-            data = temporaryFileManager.saveFile(this, key, in, null, true);
+            data = temporaryFileManager.saveFile(this, key.toString(), in, null, true);
         }
         sendDataToConsumers(data, context);
         return;
