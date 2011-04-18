@@ -38,6 +38,7 @@ import org.raven.auth.impl.AccessControl;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.tree.DataFile;
+import org.raven.tree.DataStream;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
@@ -662,10 +663,15 @@ implements Comparator<NodeAttribute>, INodeScanner, ScannedNodeHandler
 				  if( (save&64) !=0)
                   {
                       UploadedFile file = at.getFile();
-                      DataFile dataFile = na.getRealValue();
-                      dataFile.setFilename(file.getName());
-                      dataFile.setMimeType(file.getContentType());
-                      dataFile.setDataStream(file.getInputStream());
+                      if (DataStream.class.isAssignableFrom(at.getAttribute().getType())) {
+                          DataStream dataStream = na.getRealValue();
+                          dataStream.setStream(file.getInputStream());
+                      } else {
+                          DataFile dataFile = na.getRealValue();
+                          dataFile.setFilename(file.getName());
+                          dataFile.setMimeType(file.getContentType());
+                          dataFile.setDataStream(file.getInputStream());
+                      }
                       log.info("Uploaded: '{}'; size:{} ",file.getName(),file.getSize());
                       a = auditor.prepare(getNode(), getAccountName(), Action.ATTR_CH_VALUE, 
                     		  FROMX_TO, na.getName()+"<File>", ".", file.getName());

@@ -48,7 +48,9 @@ import javax.faces.event.ActionEvent;
 import org.apache.myfaces.custom.fileupload.UploadedFile;
 
 import org.raven.tree.DataFile;
+import org.raven.tree.DataStream;
 import org.raven.tree.impl.DataFileValueHandlerFactory;
+import org.raven.tree.impl.DataStreamValueHandlerFactory;
 //import org.apache.myfaces.trinidad.component.core.nav.CoreCommandButton;
 
 public class Attr implements Comparable<Attr>  
@@ -143,8 +145,10 @@ public class Attr implements Comparable<Attr>
 
     public boolean isFileAttribute()
     {
-        return DataFile.class.isAssignableFrom(attribute.getType())
-                && DataFileValueHandlerFactory.TYPE.equals(attribute.getValueHandlerType());
+        return    (   DataFile.class.isAssignableFrom(attribute.getType())
+                   && DataFileValueHandlerFactory.TYPE.equals(attribute.getValueHandlerType()))
+                ||(   DataStream.class.isAssignableFrom(attribute.getType()))
+                   && DataStreamValueHandlerFactory.TYPE.equals(attribute.getValueHandlerType());
     }
 
     public UploadedFile getFile()
