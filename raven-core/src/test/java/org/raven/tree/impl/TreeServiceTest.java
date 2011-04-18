@@ -27,6 +27,7 @@ import org.raven.auth.impl.AuthorizationNode;
 import org.raven.auth.impl.ContextsNode;
 import org.raven.auth.impl.GroupsListNode;
 import org.raven.auth.impl.ResourcesListNode;
+import org.raven.cache.TemporaryFileManagersNode;
 import org.raven.test.ServiceTestCase;
 import org.raven.conf.Configurator;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
@@ -808,6 +809,10 @@ public class TreeServiceTest extends ServiceTestCase
         RecordSchemasNode recordSchemasNode =
                 (RecordSchemasNode) schemasNode.getChildren(RecordSchemasNode.NAME);
         assertNotNull(recordSchemasNode);
+
+        TemporaryFileManagersNode temporaryFileManagersNode =
+                (TemporaryFileManagersNode) systemNode.getChildren(TemporaryFileManagersNode.NAME);
+        assertNotNull(temporaryFileManagersNode);
         
         TemplatesNode templatesNode = 
                 (TemplatesNode) tree.getRootNode().getChildren(TemplatesNode.NAME);

@@ -621,7 +621,7 @@ public class TreeImpl implements Tree
             temporaryFileManagersNode = new TemporaryFileManagersNode();
             temporaryFileManagersNode.setParent(systemNode);
             saveNode(temporaryFileManagersNode);
-            
+            systemNode.addChildren(temporaryFileManagersNode);
         }
 
         servicesNode = (ServicesNode) systemNode.getChildren(ServicesNode.NAME);

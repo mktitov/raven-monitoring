@@ -39,6 +39,8 @@ import org.raven.auth.impl.RavenUserContextConfigurator;
 import org.raven.auth.impl.UserContextConfiguratorServiceImpl;
 import org.raven.cache.TemporaryCacheManager;
 import org.raven.cache.TemporaryCacheManagerImpl;
+import org.raven.cache.TemporaryFileManagerValueHandlerFactory;
+import org.raven.cache.TemporaryFileManagersNode;
 import org.raven.conf.Configurator;
 import org.raven.conf.impl.ConfiguratorImpl;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
@@ -298,6 +300,9 @@ public class RavenCoreModule
             ConnectionPoolValueHandlerFactory.TYPE
             , new ConnectionPoolValueHandlerFactory(pathResolver));
         conf.add(
+            TemporaryFileManagerValueHandlerFactory.TYPE
+            , new TemporaryFileManagerValueHandlerFactory(pathResolver));
+        conf.add(
             DataFileValueHandlerFactory.TYPE
             , new DataFileValueHandlerFactory(pathResolver));
         conf.add(
@@ -355,6 +360,13 @@ public class RavenCoreModule
                 , pathResolver.createPath(
                     true, SystemNode.NAME, ConnectionPoolsNode.NAME))
             , "after:"+RecordSchemasNode.class.getSimpleName());
+        conf.add(
+            TemporaryFileManagersNode.class.getSimpleName()
+            , new ChildrenNodesAsReferenceValues(
+                TemporaryFileManagerValueHandlerFactory.TYPE
+                , pathResolver.createPath(
+                    true, SystemNode.NAME, TemporaryFileManagersNode.NAME))
+            , "after:"+ConnectionPoolsNode.class.getSimpleName());
     }
 
     public static void contributeExpressionCompiler(
