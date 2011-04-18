@@ -69,4 +69,9 @@ public class DataStreamValueHandler extends AbstractAttributeValueHandler implem
     public void setStream(InputStream stream) {
         fireValueChangedEvent(null, stream);
     }
+
+    @Override
+    public String toString() {
+        return "";
+    }
 }

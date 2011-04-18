@@ -26,7 +26,6 @@ import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractSafeDataPipe;
 import org.raven.expr.BindingSupport;
-import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -39,7 +38,7 @@ public class StreamCacheDataPipeNode extends AbstractSafeDataPipe
     @NotNull @Parameter(defaultValue="SEQUNCE")
     private CacheKeyGenerationPolicy cacheKeyGenerationPolicy;
 
-    @NotNull @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
+    @NotNull @Parameter(valueHandlerType=TemporaryFileManagerValueHandlerFactory.TYPE)
     private TemporaryFileManager temporaryFileManager;
 
     private AtomicLong sequence;

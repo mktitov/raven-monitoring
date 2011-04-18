@@ -54,7 +54,7 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass
+@NodeClass(parentNode=TemporaryFileManagersNode.class)
 public class TemporaryFileManagerNode extends BaseNode implements TemporaryFileManager, Schedulable
 {
     private final static int LOCK_WAIT_TIMEOUT = 500;
