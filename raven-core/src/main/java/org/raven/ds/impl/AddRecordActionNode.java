@@ -106,13 +106,15 @@ public class AddRecordActionNode extends RecordsAsTableActionNode
                 this, context, additionalBindings, fieldsAttrs, createRecordErrorMessage, this, recordSchema);
     }
 
-    private NodeAttribute createNodeAttribute(RecordSchemaField field, Record record) throws Exception
+    private NodeAttribute createNodeAttribute(RecordSchemaField field, Record record)
+            throws Exception
     {
         NodeAttributeImpl attr = new NodeAttributeImpl(
                 field.getName(), String.class, null, field.getPattern());
         attr.setDisplayName(field.getDisplayName());
         attr.setOwner(this);
-        attr.setValue(converter.convert(String.class, record.getValue(field.getName()), field.getPattern()));
+        attr.setValue(converter.convert(
+                String.class, record.getValue(field.getName()), field.getPattern()));
         attr.init();
         
         return attr;
