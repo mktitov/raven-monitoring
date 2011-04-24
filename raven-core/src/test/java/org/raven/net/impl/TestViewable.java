@@ -35,6 +35,7 @@ import org.raven.tree.impl.ViewableObjectImpl;
 public class TestViewable extends BaseNode implements Viewable
 {
     private Map<String, NodeAttribute> refAttrs;
+    private Map<String, NodeAttribute> voRefAttrs;
     private List<ViewableObject> vos;
 
     @Override
@@ -60,14 +61,20 @@ public class TestViewable extends BaseNode implements Viewable
         return refAttrs;
     }
 
+    public Map<String, NodeAttribute> getLastSendedRefAttrs() {
+        return voRefAttrs;
+    }
+
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) throws Exception
     {
+        voRefAttrs = refreshAttributes;
         if (vos!=null)
             return vos;
-        else{
+        else if (refreshAttributes.containsKey("attr1")){
             ViewableObject vo = new ViewableObjectImpl(RAVEN_TEXT_MIMETYPE, refreshAttributes.get("attr1").getValue());
             return Arrays.asList(vo);
         }
+        return null;
     }
 
     public Boolean getAutoRefresh()

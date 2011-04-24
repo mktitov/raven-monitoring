@@ -17,6 +17,7 @@
 
 package org.raven.net.impl;
 
+import java.util.Map;
 import org.raven.tree.NodeAttribute;
 import org.junit.Before;
 import org.junit.Test;
@@ -87,6 +88,26 @@ public class ViewableObjectsMessagePartNodeTest extends RavenCoreTestCase
                 + "<style>table { border:2px solid; border-collapse: collapse; }th { border:2px solid; }td { border:1px solid; }</style>"
                 + "</head><body><div>v1</div></body></html>"
                 , obj);
+    }
+
+    @Test
+    public void refreshAttributesAttrTest() throws Exception
+    {
+        NodeAttributeImpl attr = new NodeAttributeImpl("test", String.class, "test value", null);
+        attr.setOwner(part);
+        attr.init();
+        part.addNodeAttribute(attr);
+        attr.save();
+
+        part.setRefreshAttributes("test");
+        assertTrue(part.start());
+        assertNotNull(part.getNodeAttribute("test"));
+        part.getContent(new DataContextImpl());
+
+        Map<String, NodeAttribute> refAttrs = source.getLastSendedRefAttrs();
+        assertNotNull(refAttrs);
+        assertNotNull(refAttrs.get("test"));
+        assertEquals("test value", refAttrs.get("test").getValue());
     }
 
     private void checkAttribute(NodeAttribute attr, Object val, String desc, Class type)

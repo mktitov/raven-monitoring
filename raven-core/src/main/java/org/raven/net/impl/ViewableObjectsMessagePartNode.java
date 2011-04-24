@@ -17,8 +17,12 @@
 
 package org.raven.net.impl;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
@@ -52,13 +56,22 @@ public class ViewableObjectsMessagePartNode extends BaseNode implements MailMess
     @NotNull @Parameter
     private String contentType;
 
-    public Node getSource()
-    {
+    @Parameter
+    private String refreshAttributes;
+
+    public String getRefreshAttributes() {
+        return refreshAttributes;
+    }
+
+    public void setRefreshAttributes(String refreshAttributes) {
+        this.refreshAttributes = refreshAttributes;
+    }
+
+    public Node getSource() {
         return source;
     }
 
-    public void setSource(Node source)
-    {
+    public void setSource(Node source) {
         this.source = source;
     }
 
@@ -80,10 +93,18 @@ public class ViewableObjectsMessagePartNode extends BaseNode implements MailMess
 
     public Object getContent(DataContext context) throws Exception
     {
+        String[] addRefAttrs = RavenUtils.split(refreshAttributes);
+        Set addRefAttrsSet = Collections.EMPTY_SET;
+        if (addRefAttrs!=null && addRefAttrs.length>0) {
+            addRefAttrsSet = new HashSet();
+            addRefAttrsSet.addAll(Arrays.asList(addRefAttrs));
+        }
+        
         Map<String, NodeAttribute> refAttrs = new HashMap<String, NodeAttribute>();
         for (NodeAttribute attr: getNodeAttributes())
             if (   SOURCE_ATTR.equals(attr.getParentAttribute())
-                || RefreshAttributeValueHandlerFactory.TYPE.equals(attr.getValueHandlerType()))
+                || RefreshAttributeValueHandlerFactory.TYPE.equals(attr.getValueHandlerType())
+                || addRefAttrsSet.contains(attr.getName()))
             {
                 refAttrs.put(attr.getName(), attr);
             }
