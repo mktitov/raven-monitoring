@@ -86,4 +86,29 @@ public class RecordSchemaFieldNode extends BaseNode implements RecordSchemaField
 
         return null;
     }
+
+    /**
+     * Creates new field for the record.
+     * @param owner the record schema node
+     * @param name the name of the field
+     * @param displayName display name for the field
+     * @param type the type of the field
+     * @param pattern the pattern for field value conversion to/from string
+     * @return The reference to the field or null if the field with this name already exists
+     */
+    public static RecordSchemaFieldNode create(
+            Node owner, String name, String displayName
+            , RecordSchemaFieldType type, String pattern)
+    {
+        if (owner.getChildren(name)!=null)
+            return null;
+        RecordSchemaFieldNode field = new RecordSchemaFieldNode();
+        field.setName(name);
+        owner.addAndSaveChildren(field);
+        field.setDisplayName(displayName);
+        field.setFieldType(type);
+        field.setPattern(pattern);
+        field.start();
+        return field;
+    }
 }

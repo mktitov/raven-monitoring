@@ -21,7 +21,6 @@ import org.raven.*;
 import java.io.File;
 import java.util.Set;
 import org.apache.commons.io.FileUtils;
-import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.raven.conf.Configurator;

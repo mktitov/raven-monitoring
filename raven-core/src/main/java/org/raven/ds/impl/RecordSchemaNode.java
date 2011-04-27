@@ -17,32 +17,44 @@
 
 package org.raven.ds.impl;
 
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrMatcher;
 import org.apache.commons.lang.text.StrTokenizer;
+import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.dbcp.ConnectionPool;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
+import org.raven.log.LogLevel;
 import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
+import org.raven.tree.Viewable;
+import org.raven.tree.ViewableObject;
+import org.raven.tree.impl.AbstractActionViewableObject;
 import org.raven.tree.impl.BaseNode;
+import org.weda.internal.annotations.Message;
 
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=RecordSchemasNode.class)
-public class RecordSchemaNode extends BaseNode implements RecordSchema
+public class RecordSchemaNode extends BaseNode implements RecordSchema, Viewable
 {
     @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
     private RecordSchemaNode extendsSchema;
@@ -51,6 +63,16 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema
     private String includeFields;
     @Parameter
     private String excludeFields;
+    @Parameter(valueHandlerType=ConnectionPoolValueHandlerFactory.TYPE)
+    private ConnectionPool connectionPool;
+
+    @Message
+    private static String createRecordMessage;
+    @Message
+    private static String defaultDateFormatMessage;
+    @Message
+    private static String defaultTimestampFormatMessage;
+
 
     private RecordExtensionsNode recordExtensionsNode;
 
@@ -107,7 +129,7 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema
                 if (child instanceof RecordSchemaField && child.getStatus()==Status.STARTED)
                     fields.add((RecordSchemaField)child);
 
-        if (fields.size()==0)
+        if (fields.isEmpty())
             return null;
 
         Set<String> fieldNames = new HashSet<String>();
@@ -151,9 +173,42 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema
         return null;
     }
 
+    public Boolean getAutoRefresh() {
+        return true;
+    }
+
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception {
+        return null;
+    }
+
+    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) 
+            throws Exception
+    {
+        if (!Status.STARTED.equals(getStatus()))
+            return null;
+        DatabaseRecordExtension dbExt = getRecordExtension(DatabaseRecordExtension.class, null);
+        if (dbExt==null)
+            return null;
+        ConnectionPool _connectionPool = connectionPool;
+        if (_connectionPool==null)
+            return null;
+        CreateRecordFromTableAction field = new CreateRecordFromTableAction(
+                createRecordMessage, this, connectionPool, dbExt.getTableName()
+                , defaultDateFormatMessage, defaultTimestampFormatMessage);
+        return Arrays.asList((ViewableObject)field);
+    }
+
     public RecordExtensionsNode getRecordExtensionsNode()
     {
         return recordExtensionsNode;
+    }
+
+    public ConnectionPool getConnectionPool() {
+        return connectionPool;
+    }
+
+    public void setConnectionPool(ConnectionPool connectionPool) {
+        this.connectionPool = connectionPool;
     }
 
     public String getExcludeFields()
@@ -216,5 +271,70 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema
         String[] result = tokenizer.getTokenArray();
         Arrays.sort(result);
         return result;
+    }
+
+    public class CreateRecordFromTableAction extends AbstractActionViewableObject
+    {
+        private final ConnectionPool connectionPool;
+        private final String tableName;
+        private final String dateFormat;
+        private final String timestampFormat;
+
+        public CreateRecordFromTableAction(
+                String displayMessage, Node owner,
+                ConnectionPool connectionPool, String tableName,
+                String dateFormat, String timestampFormat)
+        {
+            super(null, displayMessage, owner, false);
+            this.connectionPool = connectionPool;
+            this.tableName = tableName;
+            this.dateFormat = dateFormat;
+            this.timestampFormat = timestampFormat;
+        }
+
+        @Override
+        public String executeAction() throws Exception
+        {
+            try{
+                Connection con = connectionPool.getConnection();
+                try {
+                    DatabaseMetaData meta = con.getMetaData();
+                    ResultSet rs = meta.getColumns(null, null, tableName, null);
+                    try {
+                        Map<String, RecordSchemaField> fields =
+                                RavenUtils.getRecordSchemaFields(RecordSchemaNode.this);
+                        while (rs.next()) {
+                            String columnName = rs.getString("COLUMN_NAME");
+                            String fieldName = RavenUtils.dbNameToName(columnName);
+                            if (fields.containsKey(fieldName))
+                                continue;
+                            RecordSchemaFieldType type = RecordSchemaFieldType.getTypeBySqlType(
+                                    rs.getInt("DATA_TYPE"));
+                            String pattern = null;
+                            switch (type) {
+                                case DATE: pattern = dateFormat; break;
+                                case TIMESTAMP: pattern = timestampFormat; break;
+                            }
+                            RecordSchemaFieldNode field = RecordSchemaFieldNode.create(
+                                    RecordSchemaNode.this, fieldName, null, type, pattern);
+                            if (field!=null)
+                                DatabaseRecordFieldExtension.create(field, "dbColumn", columnName);
+                        }
+                        return "Record successfully created";
+                    } finally {
+                        rs.close();
+                    }
+                } finally {
+                    con.close();
+                }
+            }catch (Exception e) {
+                String mess = String.format(
+                        "Error creating record from the database table (%s)", tableName);
+                if (isLogLevelEnabled(LogLevel.ERROR))
+                    getLogger().error(mess, e);
+                return mess+". "+e.getMessage();
+            }
+        }
+
     }
 }

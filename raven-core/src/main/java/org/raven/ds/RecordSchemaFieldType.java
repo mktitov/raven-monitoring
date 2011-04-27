@@ -20,6 +20,7 @@ package org.raven.ds;
 import java.io.InputStream;
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.sql.Types;
 import org.raven.ds.impl.RecordRelationFieldExtension;
 import org.raven.net.impl.Ip;
 
@@ -93,6 +94,25 @@ public enum RecordSchemaFieldType
             case IP: return String.class;
             case BINARY: return InputStream.class;
             default: return type.getType();
+        }
+    }
+
+    public static RecordSchemaFieldType getTypeBySqlType(int sqlType)
+    {
+        switch (sqlType) {
+            case Types.BIGINT: return LONG;
+            case Types.INTEGER: return INTEGER;
+            case Types.SMALLINT: return SHORT;
+            case Types.TINYINT: return BYTE;
+            case Types.DOUBLE: return DOUBLE;
+            case Types.FLOAT: return FLOAT;
+            case Types.DATE: return DATE;
+            case Types.TIMESTAMP: return TIMESTAMP;
+            case Types.VARCHAR: return STRING;
+            case Types.BOOLEAN: return BOOLEAN;
+            case Types.BINARY:
+            case Types.BLOB: return BINARY;
+            default: return null;
         }
     }
 }

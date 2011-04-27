@@ -90,6 +90,22 @@ public class RavenUtils
         
         return buf.toString();
     }
+
+    public static String dbNameToName(String dbName)
+    {
+        if (dbName==null || dbName.isEmpty())
+            return null;
+        StringBuilder buf = new StringBuilder();
+        for (int i=0; i<dbName.length(); ++i) {
+            if ('_'==dbName.charAt(i))
+                continue;
+            if (i>0 && dbName.charAt(i-1)=='_')
+                buf.append(Character.toUpperCase(dbName.charAt(i)));
+            else
+                buf.append(Character.toLowerCase(dbName.charAt(i)));
+        }
+        return buf.toString();
+    }
     
     /**
      * Splits the string.
@@ -156,7 +172,7 @@ public class RavenUtils
             return fieldsMap;
         }
         else
-            return null;
+            return Collections.EMPTY_MAP;
     }
 
 	public static void copyAttributes(

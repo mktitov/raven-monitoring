@@ -19,7 +19,6 @@ package org.raven;
 
 import org.raven.table.ColumnGroup;
 import java.util.List;
-import org.raven.table.Table;
 import java.util.Collection;
 import org.raven.tree.NodeAttribute;
 import java.util.Map;
@@ -55,6 +54,15 @@ public class RavenUtilsTest extends ServiceTestCase
     {
         assertEquals("COLUMN_NAME", RavenUtils.nameToDbName("columnName"));
         assertEquals("COLUMN_NAME", RavenUtils.nameToDbName("COLUMN_NAME"));
+    }
+
+    @Test
+    public void dbNameToName()
+    {
+        assertNull(RavenUtils.dbNameToName(null));
+        assertNull(RavenUtils.dbNameToName(""));
+        assertEquals("test", RavenUtils.dbNameToName("TeSt"));
+        assertEquals("testFieldName", RavenUtils.dbNameToName("TeSt_Field_NAME"));
     }
 
     @Test
