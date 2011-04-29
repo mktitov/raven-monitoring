@@ -18,6 +18,7 @@
 package org.raven.tree;
 
 import java.util.List;
+import org.raven.ds.ReferenceValuesSource;
 import org.raven.tree.store.TreeStore;
 import org.weda.constraints.ReferenceValue;
 import org.weda.constraints.TooManyReferenceValuesException;
@@ -155,8 +156,28 @@ public interface NodeAttribute extends Cloneable
      */
     public void setParentAttribute(String name);
     /**
+     * Sets the source of reference values for this attribute.
+     * @see #getReferenceValuesSource() 
+     * @see #getReferenceValues()
+     */
+    public void setReferenceValuesSource(ReferenceValuesSource source);
+    /**
+     * Returns the source of the reference values for this attribute or null.
+     * @see #getReferenceValues()
+     * @see #setReferenceValuesSource(org.raven.ds.ReferenceValuesSource) 
+     */
+    public ReferenceValuesSource getReferenceValuesSource();
+    /**
      * Returns the list of the values that this attribute can take. If method returns null
      * then the attribute does not have reference values.
+     * <p>The order for looking up reference values is:
+     * <ol>
+     *  <li>{@link #setReferenceValuesSource(org.raven.ds.ReferenceValuesSource)
+     *      reference values source}
+     *  </li>
+     *  <li>{@link AttributeValueHandler#
+     *  </li>
+     * </ol>
      */
     public List<ReferenceValue> getReferenceValues() throws TooManyReferenceValuesException;
     /**

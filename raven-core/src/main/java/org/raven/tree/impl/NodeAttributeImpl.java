@@ -20,6 +20,7 @@ package org.raven.tree.impl;
 import java.util.ArrayList;
 import java.util.List;
 import org.raven.conf.Configurator;
+import org.raven.ds.ReferenceValuesSource;
 import org.raven.log.LogLevel;
 import org.raven.tree.AttributeReference;
 import org.raven.tree.AttributeValueHandler;
@@ -74,9 +75,8 @@ public class NodeAttributeImpl
     private BaseNode owner;
     //TODO: remove fild parameter 
     private NodeParameter parameter;
-    //TODO: remove fild attributeReference 
-    private AttributeReference attributeReference;
     private ParentAttributeValueHandler valueHandler;
+    private ReferenceValuesSource referenceValuesSource;
     
     private boolean initialized = false;
     private boolean fireEvents = true;
@@ -332,6 +332,15 @@ public class NodeAttributeImpl
     public boolean isGeneratorType()
     {
         return type!=null && AttributesGenerator.class.isAssignableFrom(type);
+    }
+
+    public ReferenceValuesSource getReferenceValuesSource()
+    {
+        return referenceValuesSource;
+    }
+
+    public void setReferenceValuesSource(ReferenceValuesSource source) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public List<ReferenceValue> getReferenceValues() throws TooManyReferenceValuesException
