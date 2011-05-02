@@ -184,8 +184,79 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         Map<String, NodeAttribute> refreshAttrs = tableNode.getRefreshAttributes();
         assertNotNull(refreshAttrs);
         assertEquals(1, refreshAttrs.size());
-        assertNotNull(refreshAttrs.get("field1"));
-        assertEquals("field1 displayName", refreshAttrs.get("field1").getDisplayName());
+        NodeAttribute refAttr = refreshAttrs.get("field1");
+        assertNotNull(refAttr);
+        assertEquals("field1 displayName", refAttr.getDisplayName());
+    }
+
+    @Test
+    public void getRefreshAttributesWithSchemaReferenceValuesTest() throws Exception
+    {
+        CustomReferenceValuesSourceNode valuesSource = new CustomReferenceValuesSourceNode();
+        valuesSource.setName("values source");
+        schema.getChildren("field1").addAndSaveChildren(valuesSource);
+        valuesSource.setReferenceValuesExpression("[1:'one']");
+        assertTrue(valuesSource.start());
+
+        assertNull(tableNode.getRefreshAttributes());
+
+        NodeAttributeImpl attr = new NodeAttributeImpl("field1", String.class, null, null);
+        attr.setValueHandlerType(RefreshAttributeValueHandlerFactory.TYPE);
+        attr.setOwner(tableNode);
+        attr.setParentAttribute(RecordsAsTableNode.DATA_SOURCE_ATTR);
+        tableNode.addNodeAttribute(attr);
+        attr.init();
+        attr.save();
+
+        Map<String, NodeAttribute> refreshAttrs = tableNode.getRefreshAttributes();
+        assertNotNull(refreshAttrs);
+        assertEquals(1, refreshAttrs.size());
+        NodeAttribute refAttr = refreshAttrs.get("field1");
+        assertNotNull(refAttr);
+        assertEquals("field1 displayName", refAttr.getDisplayName());
+        List<ReferenceValue> refValues = refAttr.getReferenceValues();
+        assertNotNull(refValues);
+        assertEquals(1, refValues.size());
+        assertEquals(1, refValues.get(0).getValue());
+        assertEquals("one", refValues.get(0).getValueAsString());
+    }
+
+    @Test
+    public void getRefreshAttributesWithFieldReferenceValuesTest() throws Exception
+    {
+        CustomReferenceValuesSourceNode valuesSource = new CustomReferenceValuesSourceNode();
+        valuesSource.setName("values source");
+        tree.getRootNode().addAndSaveChildren(valuesSource);
+        valuesSource.setReferenceValuesExpression("[1:'one']");
+        assertTrue(valuesSource.start());
+
+        RecordFieldReferenceValuesNode fieldValues = new RecordFieldReferenceValuesNode();
+        fieldValues.setName("fieldValues");
+        tableNode.addAndSaveChildren(fieldValues);
+        fieldValues.setFieldName("field3");
+        fieldValues.setReferenceValuesSource(valuesSource);
+        assertTrue(fieldValues.start());
+
+        assertNull(tableNode.getRefreshAttributes());
+
+        NodeAttributeImpl attr = new NodeAttributeImpl("field3", String.class, null, null);
+        attr.setValueHandlerType(RefreshAttributeValueHandlerFactory.TYPE);
+        attr.setOwner(tableNode);
+        attr.setParentAttribute(RecordsAsTableNode.DATA_SOURCE_ATTR);
+        tableNode.addNodeAttribute(attr);
+        attr.init();
+        attr.save();
+
+        Map<String, NodeAttribute> refreshAttrs = tableNode.getRefreshAttributes();
+        assertNotNull(refreshAttrs);
+        assertEquals(1, refreshAttrs.size());
+        NodeAttribute refAttr = refreshAttrs.get("field3");
+        assertNotNull(refAttr);
+        List<ReferenceValue> refValues = refAttr.getReferenceValues();
+        assertNotNull(refValues);
+        assertEquals(1, refValues.size());
+        assertEquals(1, refValues.get(0).getValue());
+        assertEquals("one", refValues.get(0).getValueAsString());
     }
 
     @Test

@@ -244,9 +244,19 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
             for (NodeAttribute attr: attrs.values())
             {
                 RecordSchemaField field = fields.get(attr.getName());
-                if (field!=null)
+                if (field!=null) {
                     attr.setDisplayName(field.getDisplayName());
+                    attr.setReferenceValuesSource(field.getReferenceValuesSource());
+                }
             }
+
+        for (RecordFieldReferenceValuesNode node:
+                NodeUtils.getChildsOfType(this, RecordFieldReferenceValuesNode.class))
+        {
+            NodeAttribute attr = attrs.get(node.getFieldName());
+            if (attr!=null)
+                attr.setReferenceValuesSource(node.getReferenceValuesSource());
+        }
 
         return attrs;
     }
