@@ -147,7 +147,8 @@ public class NodeUtils
      * @param node the source node
      * @param valueHandlerType the value handler type
      */
-    public static Map<String, NodeAttribute> extractAttributes(Node node, String valueHandlerType) throws Exception
+    public static Map<String, NodeAttribute> extractAttributes(Node node, String valueHandlerType)
+            throws Exception
     {
         Map<String, NodeAttribute> refreshAttributes = new LinkedHashMap<String, NodeAttribute>();
         Collection<NodeAttribute> attrs = node.getNodeAttributes();

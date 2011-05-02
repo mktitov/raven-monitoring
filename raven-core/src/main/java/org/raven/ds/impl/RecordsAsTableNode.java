@@ -26,6 +26,8 @@ import java.util.Map;
 import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.auth.UserContext;
+import org.raven.auth.UserContextService;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
@@ -50,6 +52,7 @@ import org.weda.annotations.constraints.NotNull;
 import org.weda.beans.ObjectUtils;
 import org.weda.constraints.ReferenceValue;
 import org.weda.internal.annotations.Message;
+import org.weda.internal.annotations.Service;
 
 /**
  *
@@ -63,6 +66,10 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
     public final static String RECORD_SCHEMA_ATTR = "recordSchema";
     public final static String RECORD_BINDING = "record";
     public final static String VALUE_BINDING = "value";
+    public final static String MASTER_FIELDS_PARAMS = "master_fields";
+
+    @Service
+    private static UserContextService userContextService;
 
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     @NotNull
@@ -98,6 +105,12 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
     @NotNull @Parameter(defaultValue="false")
     private Boolean useCellValueExpression;
 
+    @Parameter
+    private String masterFields;
+
+    @Parameter
+    private Node masterNode;
+
     private BindingSupportImpl bindingSupport;
 
 
@@ -130,6 +143,22 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
     {
         super.formExpressionBindings(bindings);
         bindingSupport.addTo(bindings);
+    }
+
+    public String getMasterFields() {
+        return masterFields;
+    }
+
+    public void setMasterFields(String masterFields) {
+        this.masterFields = masterFields;
+    }
+
+    public Node getMasterNode() {
+        return masterNode;
+    }
+
+    public void setMasterNode(Node masterNode) {
+        this.masterNode = masterNode;
     }
 
     public Integer getDetailColumnNumber()
@@ -268,20 +297,14 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         if (refreshAttributes!=null)
             attrs.putAll(refreshAttributes);
 
-        for (NodeAttribute attr: getNodeAttributes())
-            if (   DATA_SOURCE_ATTR.equals(attr.getParentAttribute())
-                && !attrs.containsKey(attr.getName()))
-            {
-                attrs.put(attr.getName(), attr);
-            }
+        Map<String, String> masterFieldValues = getAndApplyMasterFieldValues(attrs);
+        addDataSourceAttributes(attrs, masterFieldValues);
 
         String _fieldsOrder = fieldsOrder;
         String[] fieldsOrderArr = _fieldsOrder==null? null : _fieldsOrder.split("\\s*,\\s*");
 
         Map<Integer, RecordsAsTableColumnValueNode> columnValues = getColumnValues();
-
         Map<String, Map<Object, String>> fieldRefValues = getRecordFieldReferenceValues();
-
         List<Record> records = getActionsCount()>0? new ArrayList<Record>(512) : null;
 
         RecordAsTableDataConsumer dataConsumer = new RecordAsTableDataConsumer(
@@ -337,6 +360,55 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
     public Collection<NodeAttribute> generateAttributes() 
     {
         return null;
+    }
+
+    private String getMasterFieldsParam(Node node)
+    {
+        return ""+node.getId()+"_"+MASTER_FIELDS_PARAMS;
+    }
+    
+    private void addDataSourceAttributes(
+            Map<String, NodeAttribute> attrs, Map<String, String> masterFieldValues)
+        throws Exception
+    {
+        int id = -99;
+        for (NodeAttribute attr : getNodeAttributes()) {
+            if (   DATA_SOURCE_ATTR.equals(attr.getParentAttribute())
+                && !attrs.containsKey(attr.getName()))
+            {
+                if (masterFieldValues == null || !masterFieldValues.containsKey(attr.getName())) 
+                    attrs.put(attr.getName(), attr);
+                else {
+                    NodeAttribute clone = (NodeAttribute) attr.clone();
+                    clone.setOwner(this);
+                    clone.setId(id--);
+                    clone.setRawValue(masterFieldValues.get(attr.getName()));
+                    clone.init();
+                    attrs.put(attr.getName(), clone);
+                }
+            }
+        }
+    }
+
+    private Map<String, String> getAndApplyMasterFieldValues(Map<String, NodeAttribute> attrs)
+            throws Exception
+    {
+        Node _masterNode = masterNode;
+        Map<String, String> masterFieldValues = null;
+        if (_masterNode!=null) {
+            UserContext userContext = userContextService.getUserContext();
+            if (userContext!=null) {
+                masterFieldValues = (Map<String, String>)
+                        userContext.getParams().get(getMasterFieldsParam(_masterNode));
+            }
+        }
+        if (masterFieldValues!=null && !masterFieldValues.isEmpty())
+            for (Map.Entry<String, String> entry: masterFieldValues.entrySet()) {
+                NodeAttribute attr = attrs.get(entry.getKey());
+                if (attr!=null)
+                    attr.setValue(entry.getValue());
+            }
+        return masterFieldValues;
     }
 
     private Map<String, Map<Object, String>> getRecordFieldReferenceValues()
