@@ -22,6 +22,7 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
+import org.raven.ds.ReferenceValuesSource;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.constraints.NotNull;
@@ -30,7 +31,9 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=RecordSchemaNode.class)
+@NodeClass(
+    parentNode=RecordSchemaNode.class,
+    childNodes={CustomReferenceValuesSourceNode.class, ReferenceToReferenceValuesSourceNode.class})
 public class RecordSchemaFieldNode extends BaseNode implements RecordSchemaField
 {
     @Parameter
@@ -85,6 +88,11 @@ public class RecordSchemaFieldNode extends BaseNode implements RecordSchemaField
                 }
 
         return null;
+    }
+
+    public ReferenceValuesSource getReferenceValuesSource()
+    {
+        return getFieldExtension(ReferenceValuesSource.class, null);
     }
 
     /**

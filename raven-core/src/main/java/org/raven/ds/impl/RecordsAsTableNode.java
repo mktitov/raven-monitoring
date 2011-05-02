@@ -32,6 +32,7 @@ import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
+import org.raven.ds.ReferenceValuesSource;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
@@ -47,13 +48,14 @@ import org.raven.tree.impl.ViewableObjectImpl;
 import org.raven.util.NodeUtils;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.beans.ObjectUtils;
+import org.weda.constraints.ReferenceValue;
 import org.weda.internal.annotations.Message;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass
+@NodeClass(childNodes={RecordFieldReferenceValuesNode.class})
 public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
 {
     public final static String DATA_SOURCE_ATTR = "dataSource";
@@ -266,19 +268,9 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         String _fieldsOrder = fieldsOrder;
         String[] fieldsOrderArr = _fieldsOrder==null? null : _fieldsOrder.split("\\s*,\\s*");
 
-        Map<Integer, RecordsAsTableColumnValueNode> columnValues =
-                new HashMap<Integer, RecordsAsTableColumnValueNode>();
-        Collection<Node> childs = getChildrens();
-        if (childs!=null)
-            for (Node child: childs)
-                if (Status.STARTED.equals(child.getStatus()) && child instanceof RecordsAsTableColumnValueNode)
-                {
-                    RecordsAsTableColumnValueNode columnValue =
-                            (RecordsAsTableColumnValueNode) child;
-                    columnValues.put(columnValue.getColumnNumber()-1, columnValue);
-                }
-        if (columnValues.isEmpty())
-            columnValues = null;
+        Map<Integer, RecordsAsTableColumnValueNode> columnValues = getColumnValues();
+
+        Map<String, Map<Object, String>> fieldRefValues = getRecordFieldReferenceValues();
 
         List<Record> records = getActionsCount()>0? new ArrayList<Record>(512) : null;
 
@@ -286,7 +278,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                 fieldsOrderArr, detailColumnName, detailValueViewLinkName
                 , fieldNameColumnName, fieldValueColumnName, detailColumnNumber, columnValues
                 , deleteConfirmationMessage, deleteMessage, deleteCompletionMessage
-                , getRecordActions(), records);
+                , getRecordActions(), records, fieldRefValues);
 
         dataSource.getDataImmediate(dataConsumer, new DataContextImpl(attrs));
 
@@ -337,23 +329,50 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         return null;
     }
 
+    private Map<String, Map<Object, String>> getRecordFieldReferenceValues()
+    {
+        Map<String, Map<Object, String>> fieldRefValues = null;
+        for (RecordFieldReferenceValuesNode node: NodeUtils.getChildsOfType(
+                this, RecordFieldReferenceValuesNode.class))
+        {
+            if (fieldRefValues==null)
+                fieldRefValues = new HashMap<String, Map<Object, String>>();
+            Map<Object, String> values =
+                    refValuesToMap(node.getReferenceValuesSource().getReferenceValues());
+            if (values!=null)
+                fieldRefValues.put(node.getFieldName(), values);
+        }
+        return fieldRefValues;
+    }
+
+    private static Map<Object, String> refValuesToMap(List<ReferenceValue> refValues)
+    {
+        if (refValues!=null && !refValues.isEmpty()) {
+            Map<Object, String> values = new HashMap<Object, String>();
+            for (ReferenceValue value: refValues)
+                values.put(value.getValue(), value.getValueAsString());
+            return values;
+        }
+        return null;
+    }
+
+    private Map<Integer, RecordsAsTableColumnValueNode> getColumnValues()
+    {
+        Map<Integer, RecordsAsTableColumnValueNode> columnValues = null;
+        for (RecordsAsTableColumnValueNode node:
+            NodeUtils.getChildsOfType(this, RecordsAsTableColumnValueNode.class))
+        {
+            if (columnValues==null)
+                columnValues = new HashMap<Integer, RecordsAsTableColumnValueNode>();
+            columnValues.put(node.getColumnNumber()-1, node);
+        }
+            
+        return columnValues;
+    }
+
     private List<RecordsAsTableRecordActionNode> getRecordActions()
     {
-        Collection<Node> childs = getSortedChildrens();
-        if (childs!=null && !childs.isEmpty())
-        {
-            List<RecordsAsTableRecordActionNode> actions = null;
-            for (Node child: childs)
-                if (child instanceof RecordsAsTableRecordActionNode && Status.STARTED.equals(child.getStatus()))
-                {
-                    if (actions==null)
-                        actions = new ArrayList<RecordsAsTableRecordActionNode>();
-                    actions.add((RecordsAsTableRecordActionNode) child);
-                }
-            return actions;
-        }
-        else
-            return null;
+       return NodeUtils.getChildsOfType(this, RecordsAsTableRecordActionNode.class);
     }
 
     private int getActionsCount()
@@ -416,6 +435,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         private final Map<Integer, RecordsAsTableColumnValueNode> columnValues;
         private final List<RecordsAsTableRecordActionNode> recordActions;
         private final List<Record> records;
+        private final Map<String, Map<Object, String>> fieldRefValues;
+        private Map<String, Map<Object, String>> schemaFieldRefValues;
         private int actionsCount;
         private int columnsCount;
         private DataContext context;
@@ -429,7 +450,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                 , String deleteConfirmationMessage, String deleteMessage
                 , String deleteCompletionMessage
                 , List<RecordsAsTableRecordActionNode> recordActions
-                , List<Record> records)
+                , List<Record> records
+                , Map<String, Map<Object, String>> fieldRefValues)
             throws Exception
         {
             fields = new HashMap<String, RecordSchemaField>();
@@ -445,6 +467,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
             this.deleteMessage = deleteMessage;
             this.recordActions = recordActions;
             this.records = records;
+            this.fieldRefValues = fieldRefValues;
             
             schemaFields = recordSchema.getFields();
             if (fieldsOrder!=null)
@@ -463,6 +486,18 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                 {
                     fieldNames[i] = schemaFields[i].getName();
                     fields.put(schemaFields[i].getName(), schemaFields[i]);
+                }
+            }
+
+            for (RecordSchemaField field: fields.values()) {
+                ReferenceValuesSource valuesSource = field.getReferenceValuesSource();
+                if (valuesSource!=null) {
+                    Map<Object, String> values = refValuesToMap(valuesSource.getReferenceValues());
+                    if (values!=null) {
+                        if (schemaFieldRefValues==null)
+                            schemaFieldRefValues = new HashMap<String, Map<Object, String>>();
+                        schemaFieldRefValues.put(field.getName(), values);
+                    }
                 }
             }
 
@@ -566,6 +601,19 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                     try
                     {
                         Object value = record.getValue(fieldNames[i]);
+
+                        if (schemaFieldRefValues!=null) {
+                            Map<Object, String> refValues = schemaFieldRefValues.get(fieldNames[i]);
+                            if (refValues!=null)
+                                value = refValues.get(value);
+                        }
+
+                        if (fieldRefValues!=null) {
+                            Map<Object, String> refValues = fieldRefValues.get(fieldNames[i]);
+                            if (refValues!=null)
+                                value = refValues.get(value);
+                        }
+
                         if (_useCellValuesExpression){
                             bindingSupport.put(VALUE_BINDING, value);
                             bindingSupport.put(RECORD_BINDING, record);
@@ -577,6 +625,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                                 bindingSupport.reset();
                             }
                         }
+
                         RecordsAsTableColumnValueNode columnValue =
                                 columnValues==null? null : columnValues.get(i);
                         if (columnValue!=null)

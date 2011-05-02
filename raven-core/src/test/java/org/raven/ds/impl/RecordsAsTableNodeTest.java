@@ -39,6 +39,7 @@ import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.ActionAttributeValueHandlerFactory;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.impl.RefreshAttributeValueHandlerFactory;
+import org.weda.constraints.ReferenceValue;
 import org.weda.internal.Messages;
 import org.weda.internal.services.MessagesRegistry;
 import static org.easymock.EasyMock.*;
@@ -410,6 +411,93 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
     }
 
     @Test
+    public void fieldReferenceValuesTest() throws Exception
+    {
+        CustomReferenceValuesSourceNode source = new CustomReferenceValuesSourceNode();
+        source.setName("ref values source");
+        tree.getRootNode().addAndSaveChildren(source);
+        source.setReferenceValuesExpression("[1:100]");
+        assertTrue(source.start());
+
+        RecordFieldReferenceValuesNode valuesNode = new RecordFieldReferenceValuesNode();
+        valuesNode.setName("ref values");
+        tableNode.addAndSaveChildren(valuesNode);
+        valuesNode.setFieldName("field1");
+        valuesNode.setReferenceValuesSource(source);
+        assertTrue(valuesNode.start());
+
+        Record record = createMock(Record.class);
+
+        expect(record.getSchema()).andReturn(schema);
+        expect(record.getValue("field1")).andReturn(1).times(1);
+        expect(record.getValue("field2")).andReturn(2).times(1);
+
+        replay(record);
+        
+        ds.addDataPortion(record);
+        ds.addDataPortion(null);
+
+        tableNode.setFieldsOrder("field1, field2");
+
+        Collection<ViewableObject> objects = tableNode.getViewableObjects(null);
+        assertNotNull(objects);
+        assertEquals(1, objects.size());
+        ViewableObject object = objects.iterator().next();
+        assertNotNull(object);
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, object.getMimeType());
+        assertNotNull(object.getData());
+        assertTrue(object.getData() instanceof Table);
+        Table table = (Table) object.getData();
+        assertArrayEquals(new String[]{"field1 displayName", "field2"}, table.getColumnNames());
+        List<Object[]> rows = RavenUtils.tableAsList(table);
+        assertEquals(1, rows.size());
+        assertArrayEquals(new String[]{"100", "2"}, rows.get(0));
+
+        verify(record);
+    }
+        
+
+    @Test
+    public void schemaFieldReferenceValuesTest() throws Exception
+    {
+        CustomReferenceValuesSourceNode source = new CustomReferenceValuesSourceNode();
+        source.setName("ref values source");
+        schema.getChildren("field1").addAndSaveChildren(source);
+        source.setReferenceValuesExpression("[1:'one']");
+        assertTrue(source.start());
+
+        Record record = createMock(Record.class);
+
+        expect(record.getSchema()).andReturn(schema);
+        expect(record.getValue("field1")).andReturn(1).times(1);
+        expect(record.getValue("field2")).andReturn(2).times(1);
+
+        replay(record);
+
+        ds.addDataPortion(record);
+        ds.addDataPortion(null);
+
+        tableNode.setFieldsOrder("field1, field2");
+
+        Collection<ViewableObject> objects = tableNode.getViewableObjects(null);
+        assertNotNull(objects);
+        assertEquals(1, objects.size());
+        ViewableObject object = objects.iterator().next();
+        assertNotNull(object);
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, object.getMimeType());
+        assertNotNull(object.getData());
+        assertTrue(object.getData() instanceof Table);
+        Table table = (Table) object.getData();
+        assertArrayEquals(new String[]{"field1 displayName", "field2"}, table.getColumnNames());
+        List<Object[]> rows = RavenUtils.tableAsList(table);
+        assertEquals(1, rows.size());
+        assertArrayEquals(new String[]{"one", "2"}, rows.get(0));
+
+        verify(record);
+    }
+
+
+    @Test
     public void deleteRecordTest() throws Exception
     {
         tableNode.setEnableDeletes(Boolean.TRUE);
@@ -611,6 +699,89 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
     }
 
     @Test
+    public void addRecordActionSchemaReferenceValuesTest() throws Exception
+    {
+        CustomReferenceValuesSourceNode valuesSource = new CustomReferenceValuesSourceNode();
+        valuesSource.setName("values source");
+        schema.getChildren("field1").addAndSaveChildren(valuesSource);
+        valuesSource.setReferenceValuesExpression("[1:'one']");
+        assertTrue(valuesSource.start());
+
+        AddRecordActionNode addAction = new AddRecordActionNode();
+        addAction.setName("action");
+        tableNode.addAndSaveChildren(addAction);
+        addAction.setEnabledActionText("action title");
+        addAction.setActionExpression("null");
+        assertTrue(addAction.start());
+
+        collector.setDataSource(addAction);
+
+        Collection<ViewableObject> objects = tableNode.getViewableObjects(null);
+        assertNotNull(objects);
+        assertEquals(2, objects.size());
+        ViewableObject object = objects.iterator().next();
+        assertTrue(object instanceof ActionViewableObject);
+        ActionViewableObject action = (ActionViewableObject) object;
+        Collection<NodeAttribute> attrs = action.getActionAttributes();
+        assertNotNull(attrs);
+        assertEquals(2, attrs.size());
+        Iterator<NodeAttribute> it = attrs.iterator();
+        NodeAttribute f1 = it.next();
+        NodeAttribute f2 = it.next();
+        assertNull(f2.getReferenceValues());
+        List<ReferenceValue> refValues = f1.getReferenceValues();
+        assertNotNull(refValues);
+        assertEquals(1, refValues.size());
+        assertEquals(new Integer(1), refValues.get(0).getValue());
+        assertEquals("one", refValues.get(0).getValueAsString());
+    }
+
+    @Test
+    public void addRecordActionFieldReferenceValuesTest() throws Exception
+    {
+        CustomReferenceValuesSourceNode valuesSource = new CustomReferenceValuesSourceNode();
+        valuesSource.setName("values source");
+        tree.getRootNode().addAndSaveChildren(valuesSource);
+        valuesSource.setReferenceValuesExpression("[1:'one']");
+        assertTrue(valuesSource.start());
+
+        RecordFieldReferenceValuesNode fieldRefValues = new RecordFieldReferenceValuesNode();
+        fieldRefValues.setName("refValues");
+        tableNode.addAndSaveChildren(fieldRefValues);
+        fieldRefValues.setFieldName("field1");
+        fieldRefValues.setReferenceValuesSource(valuesSource);
+        assertTrue(fieldRefValues.start());
+
+        AddRecordActionNode addAction = new AddRecordActionNode();
+        addAction.setName("action");
+        tableNode.addAndSaveChildren(addAction);
+        addAction.setEnabledActionText("action title");
+        addAction.setActionExpression("null");
+        assertTrue(addAction.start());
+
+        collector.setDataSource(addAction);
+
+        Collection<ViewableObject> objects = tableNode.getViewableObjects(null);
+        assertNotNull(objects);
+        assertEquals(2, objects.size());
+        ViewableObject object = objects.iterator().next();
+        assertTrue(object instanceof ActionViewableObject);
+        ActionViewableObject action = (ActionViewableObject) object;
+        Collection<NodeAttribute> attrs = action.getActionAttributes();
+        assertNotNull(attrs);
+        assertEquals(2, attrs.size());
+        Iterator<NodeAttribute> it = attrs.iterator();
+        NodeAttribute f1 = it.next();
+        NodeAttribute f2 = it.next();
+        assertNull(f2.getReferenceValues());
+        List<ReferenceValue> refValues = f1.getReferenceValues();
+        assertNotNull(refValues);
+        assertEquals(1, refValues.size());
+        assertEquals(new Integer(1), refValues.get(0).getValue());
+        assertEquals("one", refValues.get(0).getValueAsString());
+    }
+
+    @Test
     public void editRecordActionFieldsOrderTest() throws Exception
     {
         EditRecordActionNode edit = new EditRecordActionNode();
@@ -667,6 +838,109 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         rec = (Record) collector.getDataList().get(0);
         assertEquals(3, rec.getValue("field1"));
         assertEquals(10, rec.getValue("field2"));
+    }
+
+    @Test
+    public void editRecordActionSchemaReferenceValuesTest() throws Exception
+    {
+        CustomReferenceValuesSourceNode valuesSource = new CustomReferenceValuesSourceNode();
+        valuesSource.setName("values source");
+        schema.getChildren("field1").addAndSaveChildren(valuesSource);
+        valuesSource.setReferenceValuesExpression("[1:'one']");
+        assertTrue(valuesSource.start());
+
+        EditRecordActionNode edit = new EditRecordActionNode();
+        edit.setName("action");
+        tableNode.addAndSaveChildren(edit);
+        edit.setEnabledActionText("action title");
+        edit.setActionExpression("null");
+        assertTrue(edit.start());
+
+        collector.setDataSource(edit);
+
+        Record rec = schema.createRecord();
+        rec.setValue("field1", 1);
+        ds.addDataPortion(rec);
+        ds.addDataPortion(null);
+
+        Collection<ViewableObject> objects = tableNode.getViewableObjects(null);
+        assertNotNull(objects);
+        assertEquals(1, objects.size());
+        ViewableObject object = objects.iterator().next();
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, object.getMimeType());
+        Table tab = (Table) object.getData();
+
+        Object actionObject = tab.getRowIterator().next()[0];
+        assertTrue(actionObject instanceof ActionViewableObject);
+        ActionViewableObject action = (ActionViewableObject) actionObject;
+        Collection<NodeAttribute> attrs = action.getActionAttributes();
+        assertNotNull(attrs);
+        assertEquals(2, attrs.size());
+        Iterator<NodeAttribute> it = attrs.iterator();
+        NodeAttribute f1 = it.next();
+        NodeAttribute f2 = it.next();
+
+        assertNull(f2.getReferenceValues());
+        List<ReferenceValue> refValues = f1.getReferenceValues();
+        assertNotNull(refValues);
+        assertEquals(1, refValues.size());
+        assertEquals(1, refValues.get(0).getValue());
+        assertEquals("one", refValues.get(0).getValueAsString());
+    }
+
+    @Test
+    public void editRecordActionFieldReferenceValuesTest() throws Exception
+    {
+        CustomReferenceValuesSourceNode valuesSource = new CustomReferenceValuesSourceNode();
+        valuesSource.setName("values source");
+        tree.getRootNode().addAndSaveChildren(valuesSource);
+        valuesSource.setReferenceValuesExpression("[1:'one']");
+        assertTrue(valuesSource.start());
+
+        RecordFieldReferenceValuesNode fieldValues = new RecordFieldReferenceValuesNode();
+        fieldValues.setName("fieldValues");
+        tableNode.addAndSaveChildren(fieldValues);
+        fieldValues.setFieldName("field1");
+        fieldValues.setReferenceValuesSource(valuesSource);
+        assertTrue(fieldValues.start());
+
+        EditRecordActionNode edit = new EditRecordActionNode();
+        edit.setName("action");
+        tableNode.addAndSaveChildren(edit);
+        edit.setEnabledActionText("action title");
+        edit.setActionExpression("null");
+        assertTrue(edit.start());
+
+        collector.setDataSource(edit);
+
+        Record rec = schema.createRecord();
+        rec.setValue("field1", 1);
+        ds.addDataPortion(rec);
+        ds.addDataPortion(null);
+
+        Collection<ViewableObject> objects = tableNode.getViewableObjects(null);
+        assertNotNull(objects);
+        assertEquals(1, objects.size());
+        ViewableObject object = objects.iterator().next();
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, object.getMimeType());
+        Table tab = (Table) object.getData();
+
+        Object actionObject = tab.getRowIterator().next()[0];
+        assertTrue(actionObject instanceof ActionViewableObject);
+        ActionViewableObject action = (ActionViewableObject) actionObject;
+        Collection<NodeAttribute> attrs = action.getActionAttributes();
+        assertNotNull(attrs);
+        assertEquals(2, attrs.size());
+        Iterator<NodeAttribute> it = attrs.iterator();
+        NodeAttribute f1 = it.next();
+        NodeAttribute f2 = it.next();
+
+        assertNull(f2.getReferenceValues());
+        List<ReferenceValue> refValues = f1.getReferenceValues();
+        assertNotNull(refValues);
+        assertEquals(1, refValues.size());
+        assertEquals(1, refValues.get(0).getValue());
+        assertEquals("one", refValues.get(0).getValueAsString());
     }
 
     @Test

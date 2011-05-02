@@ -17,10 +17,13 @@
 
 package org.raven.tree.impl;
 
+import java.util.Collections;
 import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.objects.NodeWithReadonlyParameter;
+import org.raven.ds.ReferenceValuesSource;
+import static org.easymock.EasyMock.*;
 
 /**
  *
@@ -41,5 +44,29 @@ public class NodeAttributeImplTest extends RavenCoreTestCase
         NodeAttribute attr = node.getNodeAttribute("readOnlyParameter");
         assertNotNull(attr);
         assertEquals(NodeWithReadonlyParameter.VALUE, attr.getValue());
+    }
+
+    @Test
+    public void referenceValuesSourceTest() throws Exception
+    {
+        BaseNode node = new BaseNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        assertTrue(node.start());
+        
+        NodeAttributeImpl attr = new NodeAttributeImpl("name", String.class, null, null);
+        attr.setOwner(node);
+        attr.init();
+        node.addNodeAttribute(attr);
+
+        assertNull(attr.getReferenceValues());
+
+        ReferenceValuesSource source = createMock(ReferenceValuesSource.class);
+        expect(source.getReferenceValues()).andReturn(Collections.EMPTY_LIST);
+        replay(source);
+        
+        attr.setReferenceValuesSource(source);
+        assertSame(Collections.EMPTY_LIST, attr.getReferenceValues());
+
+        verify(source);
     }
 }

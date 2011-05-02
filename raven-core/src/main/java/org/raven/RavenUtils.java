@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -166,7 +167,7 @@ public class RavenUtils
         RecordSchemaField[] fields = recordSchema.getFields();
         if (fields!=null)
         {
-            Map<String, RecordSchemaField> fieldsMap = new HashMap<String, RecordSchemaField>();
+            Map<String, RecordSchemaField> fieldsMap = new LinkedHashMap<String, RecordSchemaField>();
             for (RecordSchemaField field: fields)
                 fieldsMap.put(field.getName(), field);
             return fieldsMap;

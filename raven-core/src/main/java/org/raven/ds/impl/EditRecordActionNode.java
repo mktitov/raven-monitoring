@@ -41,7 +41,6 @@ import org.weda.internal.annotations.Message;
 @NodeClass(parentNode=RecordsAsTableNode.class)
 public class EditRecordActionNode extends RecordsAsTableRecordActionNode
 {
-    public static final String PREPARE_ACTION_ATTRIBUTES_BINDING = "prepareActionAttributes";
     public static final String PREPARE_RECORD_BINDING = "prepareRecord";
 
     @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
@@ -61,57 +60,19 @@ public class EditRecordActionNode extends RecordsAsTableRecordActionNode
     private static String editRecordErrorMessage;
 
     @Override
-    public ViewableObject createActionViewableObject(DataContext context, Map<String, Object> additionalBindings)
-            throws Exception
+    public ViewableObject createActionViewableObject(
+            DataContext context, Map<String, Object> additionalBindings)
+        throws Exception
     {
         Record record = (Record) additionalBindings.get(RecordsAsTableNode.RECORD_BINDING);
         bindingSupport.put(RecordsAsTableNode.RECORD_BINDING, record);
 
         getNodeAttribute(PREPARE_RECORD_BINDING).getValue();
         
-        Map<String, NodeAttribute> actionAttrs = getActionAttributes();
-        Map<String, NodeAttribute> fieldsAttrs = new LinkedHashMap<String, NodeAttribute>();
-
-        String _fieldsOrder = fieldsOrder;
-        if (_fieldsOrder==null)
-        {
-            RecordSchemaField[] fields = recordSchema.getFields();
-            if (fields!=null)
-                for (RecordSchemaField field: fields){
-                    if (actionAttrs!=null && actionAttrs.containsKey(field.getName()))
-                        fieldsAttrs.put(field.getName(), actionAttrs.get(field.getName()));
-                    else {
-                        fieldsAttrs.put(field.getName(), createNodeAttribute(field, record));
-                    }
-                }
-        } else {
-            String[] fieldNames = RavenUtils.split(_fieldsOrder);
-            Map<String, RecordSchemaField> fields = RavenUtils.getRecordSchemaFields(recordSchema);
-            for (String fieldName: fieldNames)
-                if (fields.containsKey(fieldName)){
-                    if (actionAttrs!=null && actionAttrs.containsKey(fieldName))
-                        fieldsAttrs.put(fieldName, actionAttrs.get(fieldName));
-                    else
-                        fieldsAttrs.put(fieldName, createNodeAttribute(fields.get(fieldName), record));
-                } else if (actionAttrs!=null && actionAttrs.containsKey(fieldName))
-                    fieldsAttrs.put(fieldName, actionAttrs.get(fieldName));
-        }
-
-        bindingSupport.put(AbstractActionNode.ACTION_ATTRIBUTES_BINDING, fieldsAttrs);
-        getNodeAttribute(PREPARE_ACTION_ATTRIBUTES_BINDING).getValue();
+        Map<String, NodeAttribute> fieldsAttrs =
+                prepareFieldsAttributes(recordSchema, record, fieldsOrder, true);
 
         return new AddEditRecordAction(this, context, additionalBindings, fieldsAttrs, editRecordErrorMessage, this, recordSchema);
-    }
-
-    private NodeAttribute createNodeAttribute(RecordSchemaField field, Record record) throws Exception
-    {
-        String value = converter.convert(String.class, record.getValue(field.getName()), field.getPattern());
-        NodeAttributeImpl attr = new NodeAttributeImpl(field.getName(), String.class, value, field.getPattern());
-        attr.setDisplayName(field.getDisplayName());
-        attr.setOwner(this);
-        attr.init();
-
-        return attr;
     }
 
     public String getFieldsOrder() {

@@ -36,7 +36,7 @@ public interface RecordSchemaField
      */
     public RecordSchemaFieldType getFieldType();
     /**
-     * Returns the pattern which will be used when convertin string to the value of this field type.
+     * Returns the pattern which will be used when converting string to the value of this field type.
      */
     public String getPattern();
     /**
@@ -47,4 +47,9 @@ public interface RecordSchemaField
      *      found extension.
      */
     public <E> E getFieldExtension (Class<E> extensionType, String extensionName);
+    /**
+     * Returns the reference values source for this field or null if the field does not have
+     * reference values.
+     */
+    public ReferenceValuesSource getReferenceValuesSource();
 }

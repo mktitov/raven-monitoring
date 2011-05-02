@@ -168,23 +168,6 @@ public class NodeAttributeImpl
     public <T> T getRealValue()
     {
         return isReadonly()? (T)parameter.getValue() : (T)valueHandler.handleData();
-//        if (isAttributeReference())
-//            return attributeReference == null ? 
-//                null : (T)attributeReference.getAttribute().getRealValue();
-//        else {
-//            if (parameter!=null)
-//            {
-//                return (T)parameter.getData();
-//            }
-//            else
-//            {
-//                if (value==null)
-//                    return (T) converter.convert(
-//                            type, owner.getParentAttributeRealValue(name), null);
-//                else
-//                    return (T) converter.convert(type, value, null);
-//            }
-//        }
     }
 
     public String getValue()
@@ -339,12 +322,16 @@ public class NodeAttributeImpl
         return referenceValuesSource;
     }
 
-    public void setReferenceValuesSource(ReferenceValuesSource source) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public void setReferenceValuesSource(ReferenceValuesSource source) 
+    {
+        this.referenceValuesSource = source;
     }
 
     public List<ReferenceValue> getReferenceValues() throws TooManyReferenceValuesException
     {
+        if (referenceValuesSource!=null)
+            return referenceValuesSource.getReferenceValues();
+
         if (!valueHandler.isReferenceValuesSupported())
             return null;
         
