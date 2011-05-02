@@ -311,10 +311,11 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema, Viewable
                             RecordSchemaFieldType type = RecordSchemaFieldType.getTypeBySqlType(
                                     rs.getInt("DATA_TYPE"));
                             String pattern = null;
-                            switch (type) {
-                                case DATE: pattern = dateFormat; break;
-                                case TIMESTAMP: pattern = timestampFormat; break;
-                            }
+                            if (type!=null)
+                                switch (type) {
+                                    case DATE: pattern = dateFormat; break;
+                                    case TIMESTAMP: pattern = timestampFormat; break;
+                                }
                             RecordSchemaFieldNode field = RecordSchemaFieldNode.create(
                                     RecordSchemaNode.this, fieldName, null, type, pattern);
                             if (field!=null)

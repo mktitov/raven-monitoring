@@ -157,6 +157,7 @@ public interface NodeAttribute extends Cloneable
     public void setParentAttribute(String name);
     /**
      * Sets the source of reference values for this attribute.
+     * The type of value must be a <code>java.lang.String</code>
      * @see #getReferenceValuesSource() 
      * @see #getReferenceValues()
      */

@@ -66,7 +66,7 @@ public class RecordSchemaNodeTest extends RavenCoreTestCase
         checkField(record, "nodeType", RecordSchemaFieldType.STRING);
     }
 
-//    @Test
+    @Test
     public void getFieldsTest() throws Exception
     {
         RecordSchemaNode schemaNode = new RecordSchemaNode();
@@ -91,7 +91,7 @@ public class RecordSchemaNodeTest extends RavenCoreTestCase
         assertSame(fieldNode, schemaNode.getFields()[0]);
     }
 
-//    @Test
+    @Test
     public void extendsSchemaTest() throws Exception
     {
         RecordSchemaNode schemaNode = new RecordSchemaNode();
@@ -120,7 +120,7 @@ public class RecordSchemaNodeTest extends RavenCoreTestCase
         assertSame(fieldNode, schemaNode2.getFields()[0]);
     }
 
-//    @Test
+    @Test
     public void includeFieldsTest() throws Exception
     {
         RecordSchemaNode schemaNode = new RecordSchemaNode();
@@ -163,7 +163,7 @@ public class RecordSchemaNodeTest extends RavenCoreTestCase
         assertSame(fieldNode3, schemaNode2.getFields()[1]);
     }
 
-//    @Test
+    @Test
     public void excludeFieldsTest() throws Exception
     {
         RecordSchemaNode schemaNode = new RecordSchemaNode();
@@ -205,7 +205,7 @@ public class RecordSchemaNodeTest extends RavenCoreTestCase
         assertSame(fieldNode3, schemaNode2.getFields()[0]);
     }
 
-//    @Test
+    @Test
     public void parentFieldSubstituteTest() throws Exception
     {
         RecordSchemaNode schemaNode = new RecordSchemaNode();
@@ -240,7 +240,7 @@ public class RecordSchemaNodeTest extends RavenCoreTestCase
         assertSame(fieldNode2, schemaNode2.getFields()[0]);
     }
 
-//    @Test
+    @Test
     public void getRecordExtensionTest() throws Exception
     {
         RecordSchemaNode schemaNode = new RecordSchemaNode();
@@ -283,7 +283,7 @@ public class RecordSchemaNodeTest extends RavenCoreTestCase
         assertSame(ext3, schemaNode.getRecordExtension(ContainerNode.class, "ext3"));
     }
 
-//    @Test
+    @Test
     public void getRecordExtensionWithExtendsSchema() throws Exception
     {
         RecordSchemaNode parentSchema = new RecordSchemaNode();

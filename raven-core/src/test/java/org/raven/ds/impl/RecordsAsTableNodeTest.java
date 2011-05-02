@@ -217,7 +217,7 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         List<ReferenceValue> refValues = refAttr.getReferenceValues();
         assertNotNull(refValues);
         assertEquals(1, refValues.size());
-        assertEquals(1, refValues.get(0).getValue());
+        assertEquals("1", refValues.get(0).getValue());
         assertEquals("one", refValues.get(0).getValueAsString());
     }
 
@@ -255,7 +255,7 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         List<ReferenceValue> refValues = refAttr.getReferenceValues();
         assertNotNull(refValues);
         assertEquals(1, refValues.size());
-        assertEquals(1, refValues.get(0).getValue());
+        assertEquals("1", refValues.get(0).getValue());
         assertEquals("one", refValues.get(0).getValueAsString());
     }
 
@@ -803,7 +803,7 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         List<ReferenceValue> refValues = f1.getReferenceValues();
         assertNotNull(refValues);
         assertEquals(1, refValues.size());
-        assertEquals(new Integer(1), refValues.get(0).getValue());
+        assertEquals("1", refValues.get(0).getValue());
         assertEquals("one", refValues.get(0).getValueAsString());
     }
 
@@ -848,7 +848,7 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         List<ReferenceValue> refValues = f1.getReferenceValues();
         assertNotNull(refValues);
         assertEquals(1, refValues.size());
-        assertEquals(new Integer(1), refValues.get(0).getValue());
+        assertEquals("1", refValues.get(0).getValue());
         assertEquals("one", refValues.get(0).getValueAsString());
     }
 
@@ -955,7 +955,7 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         List<ReferenceValue> refValues = f1.getReferenceValues();
         assertNotNull(refValues);
         assertEquals(1, refValues.size());
-        assertEquals(1, refValues.get(0).getValue());
+        assertEquals("1", refValues.get(0).getValue());
         assertEquals("one", refValues.get(0).getValueAsString());
     }
 
@@ -1010,7 +1010,7 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         List<ReferenceValue> refValues = f1.getReferenceValues();
         assertNotNull(refValues);
         assertEquals(1, refValues.size());
-        assertEquals(1, refValues.get(0).getValue());
+        assertEquals("1", refValues.get(0).getValue());
         assertEquals("one", refValues.get(0).getValueAsString());
     }
 

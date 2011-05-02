@@ -17,12 +17,7 @@
 
 package org.raven.ds.impl;
 
-import java.util.Collection;
-import java.util.Map;
 import org.raven.annotations.NodeClass;
-import org.raven.ds.RecordSchemaField;
-import org.raven.tree.NodeAttribute;
-import org.raven.util.NodeUtils;
 
 /**
  *

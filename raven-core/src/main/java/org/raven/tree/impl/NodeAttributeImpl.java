@@ -329,8 +329,8 @@ public class NodeAttributeImpl
 
     public List<ReferenceValue> getReferenceValues() throws TooManyReferenceValuesException
     {
-        if (referenceValuesSource!=null)
-            return referenceValuesSource.getReferenceValues();
+        if (referenceValuesSource!=null) 
+            return new ReferenceValuesSourceWrapper(referenceValuesSource).getReferenceValues();
 
         if (!valueHandler.isReferenceValuesSupported())
             return null;
@@ -464,5 +464,29 @@ public class NodeAttributeImpl
     public boolean isReadonly()
     {
         return parameter==null? false : parameter.isReadOnly();
+    }
+
+    private class ReferenceValuesSourceWrapper implements ReferenceValuesSource
+    {
+        private final ReferenceValuesSource source;
+
+        public ReferenceValuesSourceWrapper(ReferenceValuesSource source) {
+            this.source = source;
+        }
+
+        public List<ReferenceValue> getReferenceValues() 
+        {
+            if (source==null)
+                return null;
+            List<ReferenceValue> values = source.getReferenceValues();
+            if (values==null || values.isEmpty() || values.get(0).getValue() instanceof String)
+                return values;
+
+            List<ReferenceValue> newValues = new ArrayList<ReferenceValue>(values.size());
+            for (ReferenceValue value: values)
+                newValues.add(
+                    new ReferenceValueImpl(value.getValue().toString(), value.getValueAsString()));
+            return newValues;
+        }
     }
 }
