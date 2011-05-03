@@ -17,8 +17,10 @@
 
 package org.raven.ds.impl;
 
+import org.raven.auth.UserContext;
 import java.util.Iterator;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -28,15 +30,18 @@ import org.raven.ds.impl.RecordsAsTableNode.DeleteRecordAction;
 import org.raven.test.PushOnDemandDataSource;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.RavenUtils;
+import org.raven.TestUserContext;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.table.Table;
 import org.raven.test.DataCollector;
+import org.raven.test.UserContextServiceModule;
 import org.raven.tree.ActionViewableObject;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.ActionAttributeValueHandlerFactory;
+import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.impl.RefreshAttributeValueHandlerFactory;
 import org.weda.constraints.ReferenceValue;
@@ -1066,5 +1071,53 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         assertEquals("1", rows.get(0)[0]);
 
         verify(record);
+    }
+
+    @Test
+    public void detailTest() throws Exception
+    {
+        BaseNode masterNode = new BaseNode("master node");
+        tree.getRootNode().addAndSaveChildren(masterNode);
+        assertTrue(masterNode.start());
+
+        UserContext userContext = new TestUserContext();
+        UserContextServiceModule.setUserContext(userContext);
+
+        tableNode.setMasterNode(masterNode);
+        tableNode.setDetailFields("field1, field2");
+        
+        NodeAttributeImpl attr = new NodeAttributeImpl("field1", String.class, null, null);
+        attr.setValueHandlerType(RefreshAttributeValueHandlerFactory.TYPE);
+        attr.setOwner(tableNode);
+        attr.setParentAttribute(RecordsAsTableNode.DATA_SOURCE_ATTR);
+        tableNode.addNodeAttribute(attr);
+        attr.init();
+        attr.save();
+        attr = new NodeAttributeImpl("field2", String.class, null, null);
+        attr.setOwner(tableNode);
+        attr.setParentAttribute(RecordsAsTableNode.DATA_SOURCE_ATTR);
+        tableNode.addNodeAttribute(attr);
+        attr.init();
+        attr.save();
+
+        Map<String, NodeAttribute> attrs = tableNode.getRefreshAttributes();
+        assertNotNull(attrs);
+        assertEquals(1, attrs.size());
+
+        RavenUtils.setMasterFieldValues(masterNode, Arrays.asList("1", "2"));
+        tableNode.getViewableObjects(attrs);
+
+        attrs = ds.getLastSessionAttributes();
+        assertNotNull(attrs);
+        assertEquals(2, attrs.size());
+        checkSessionAttribute(attrs, "field1", "1");
+        checkSessionAttribute(attrs, "field2", "2");
+    }
+
+    private void checkSessionAttribute(Map<String, NodeAttribute> attrs, String name, String value)
+    {
+        NodeAttribute attr = attrs.get(name);
+        assertNotNull(attr);
+        assertEquals(value, attr.getValue());
     }
 }

@@ -29,6 +29,8 @@ import java.util.Map;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.text.StrMatcher;
 import org.apache.commons.lang.text.StrTokenizer;
+import org.raven.auth.UserContext;
+import org.raven.auth.UserContextService;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.table.ColumnGroup;
@@ -50,12 +52,63 @@ import org.weda.services.TypeConverter;
  */
 public class RavenUtils
 {
+    public final static String MASTER_FIELDS_PARAM = "master_field_values";
     public static final String DEFAULT_SPLIT_DELIMITER = ",";
 
     @Service
     public static TypeConverter converter;
+
+    @Service
+    public static UserContextService userContextService;
     
     private RavenUtils(){ }
+
+    /**
+     * Returns the name of the parameter in the {@link UserContext#getParams() user context parameters}
+     * that holds the master field values
+     * @param masterNode the master node
+     * @return
+     */
+    public static String getMasterFieldsParam(Node masterNode)
+    {
+        return ""+masterNode.getId()+"_"+MASTER_FIELDS_PARAM;
+    }
+
+    /**
+     * Returns the master field values or null if masterNode is null.
+     * @param masterNode
+     * @return
+     * @throws Exception if
+     *      <ul>
+     *          <li>{@link UserContextService#getUserContext() user context service} returns null</li>
+     *          <li>user context does not have parameter for master field values or the list
+     *              of the master fields values is null or empty</li>
+     *      </ul>
+     */
+    public static List<String> getMasterFieldValues(Node masterNode) throws Exception
+    {
+        if (masterNode==null)
+            return null;
+        UserContext context = userContextService.getUserContext();
+        if (context==null)
+            throw new Exception("Can't get master field values because of user context not found");
+        List<String> values =
+                (List<String>)context.getParams().get(getMasterFieldsParam(masterNode));
+        if (values==null || values.isEmpty())
+            throw new Exception("Can't get master field values because of values not specified");
+        return values;
+    }
+
+    /**
+     * Stores the master fields values to the user context
+     * @param masterNode the master node
+     * @param values the collection of the master fields values
+     */
+    public static void setMasterFieldValues(Node masterNode, Collection<String> values)
+    {
+        userContextService.getUserContext().getParams().put(
+                getMasterFieldsParam(masterNode), values);
+    }
 
     /**
      * Splits the string using {@link #DEFAULT_SPLIT_DELIMITER DEFAULT_SPLIT_DELIMITER}.
@@ -259,14 +312,16 @@ public class RavenUtils
             if (!group.isHasNestedColumns()){
                 builder.append("<th");
                 if (hasGroups) builder.append(" rowspan=\"2\"");
-                builder.append(">").append(name==null||name.isEmpty()? "&nbsp;" : name).append("</th>");
+                builder.append(">").append(name==null||name.isEmpty()? "&nbsp;" : name)
+                        .append("</th>");
             }else{
                 builder.append("<th colspan=\"").append(group.getColumnNames().size()).append("\">")
                         .append(name==null||name.isEmpty()? "&nbsp;" : name)
                         .append("</th>");
                 for (String columnName: group.getColumnNames())
-                    h.append("<th>").append(columnName==null||columnName.isEmpty()? "&nbsp;" : columnName)
-                        .append("</th>");
+                    h.append("<th>")
+                    .append(columnName==null||columnName.isEmpty()? "&nbsp;" : columnName)
+                    .append("</th>");
             }
         }
         builder.append("</tr>");
@@ -318,7 +373,8 @@ public class RavenUtils
      * @param node the source node
      * @throws Exception
      */
-    public static Map<String, NodeAttribute> getSelfAndChildsRefreshAttributes(Node node) throws Exception
+    public static Map<String, NodeAttribute> getSelfAndChildsRefreshAttributes(Node node)
+            throws Exception
     {
         Map<String, NodeAttribute> attrs = new HashMap<String, NodeAttribute>();
         ArrayList<Node> nodes = new ArrayList<Node>();
@@ -347,7 +403,8 @@ public class RavenUtils
             nodes.addAll(childs);
         for (Node n: nodes)
             if (n instanceof Viewable){
-                Collection<ViewableObject> objects = ((Viewable)n).getViewableObjects(refreshAttributes);
+                Collection<ViewableObject> objects =
+                        ((Viewable)n).getViewableObjects(refreshAttributes);
                 if (objects!=null)
                     vos.addAll(objects);
             }
