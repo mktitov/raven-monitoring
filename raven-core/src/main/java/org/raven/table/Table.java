@@ -26,6 +26,7 @@ import java.util.Map;
  */
 public interface Table 
 {
+    public final static String SELECTED_TAG="selected";
     /**
      * Returns the table title
      */

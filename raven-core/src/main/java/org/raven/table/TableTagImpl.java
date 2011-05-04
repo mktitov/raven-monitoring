@@ -17,8 +17,6 @@
 
 package org.raven.table;
 
-import org.raven.table.*;
-
 /**
  *
  * @author Mikhail Titov

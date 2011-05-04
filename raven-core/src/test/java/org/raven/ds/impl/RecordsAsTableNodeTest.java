@@ -572,7 +572,6 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         verify(record);
     }
 
-
     @Test
     public void deleteRecordTest() throws Exception
     {
@@ -1112,6 +1111,88 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         assertEquals(2, attrs.size());
         checkSessionAttribute(attrs, "field1", "1");
         checkSessionAttribute(attrs, "field2", "2");
+    }
+
+    @Test
+    public void masterTest() throws Exception
+    {
+        UserContext userContext = new TestUserContext();
+        UserContextServiceModule.setUserContext(userContext);
+
+        tableNode.setEnableSelect(Boolean.TRUE);
+        tableNode.setIndexFields("field1");
+        tableNode.setMasterFields("field1, field2");
+
+        Record rec = schema.createRecord();
+        rec.setValue("field1", 1);
+        rec.setValue("field2", 2);
+        ds.addDataPortion(rec);
+        rec = schema.createRecord();
+        rec.setValue("field1", 2);
+        rec.setValue("field2", 3);
+        ds.addDataPortion(rec);
+
+        ds.addDataPortion(null);
+
+        List<ViewableObject> vos = tableNode.getViewableObjects(null);
+        assertNotNull(vos);
+        assertEquals(1, vos.size());
+
+        Table table = (Table) vos.get(0).getData();
+        List<Object[]> rows = RavenUtils.tableAsList(table);
+        assertTrue(rows.get(0)[0] instanceof RecordsAsTableNode.SelectRowAction);
+        ViewableObject action = (ViewableObject) rows.get(0)[0];
+        assertNull(action.getData());
+        Object key = userContext.getParams().get(tableNode.getIndexFieldsValuesParamName());
+        assertNotNull(key);
+        assertArrayEquals(new Object[]{1}, (Object[])key);
+        List<String> masterValues =  RavenUtils.getMasterFieldValues(tableNode);
+        assertNotNull(masterValues);
+        assertEquals(2, masterValues.size());
+        assertArrayEquals(new Object[]{"1", "2"}, masterValues.toArray());
+    }
+
+    @Test
+    public void selectActionTest() throws Exception
+    {
+        UserContext userContext = new TestUserContext();
+        UserContextServiceModule.setUserContext(userContext);
+
+        tableNode.setEnableSelect(Boolean.TRUE);
+        tableNode.setIndexFields("field1");
+
+        Record rec = schema.createRecord();
+        rec.setValue("field1", 1);
+        rec.setValue("field2", 2);
+        ds.addDataPortion(rec);
+        rec = schema.createRecord();
+        rec.setValue("field1", 2);
+        rec.setValue("field2", 3);
+        ds.addDataPortion(rec);
+
+        ds.addDataPortion(null);
+
+        List<ViewableObject> vos = tableNode.getViewableObjects(null);
+        assertNotNull(vos);
+        assertEquals(1, vos.size());
+
+        Table table = (Table) vos.get(0).getData();
+        List<Object[]> rows = RavenUtils.tableAsList(table);
+        assertTrue(rows.get(0)[0] instanceof RecordsAsTableNode.SelectRowAction);
+        ViewableObject action = (ViewableObject) rows.get(0)[0];
+        assertNull(action.getData());
+        Object key = userContext.getParams().get(tableNode.getIndexFieldsValuesParamName());
+        assertNotNull(key);
+        assertArrayEquals(new Object[]{1}, (Object[])key);
+
+        vos = tableNode.getViewableObjects(null);
+        assertNotNull(vos);
+        assertEquals(1, vos.size());
+        table = (Table) vos.get(0).getData();
+        rows = RavenUtils.tableAsList(table);
+        assertEquals(2, rows.size());
+        assertTrue(table.containsRowTag(0, Table.SELECTED_TAG));
+        assertFalse(table.containsRowTag(1, Table.SELECTED_TAG));
     }
 
     private void checkSessionAttribute(Map<String, NodeAttribute> attrs, String name, String value)

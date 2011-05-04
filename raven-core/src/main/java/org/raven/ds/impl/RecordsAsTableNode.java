@@ -33,13 +33,16 @@ import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
+import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.ReferenceValuesSource;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
+import org.raven.table.Table;
 import org.raven.table.TableImpl;
+import org.raven.table.TableTagImpl;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
@@ -62,6 +65,7 @@ import org.weda.internal.annotations.Service;
 @NodeClass(childNodes={RecordFieldReferenceValuesNode.class})
 public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
 {
+    public final static String INDEX_FIELDS_VALUES_PARAM = "indexFieldsValues";
     public final static String DATA_SOURCE_ATTR = "dataSource";
     public static final String RECORDS_BINDING = "records";
     public final static String RECORD_SCHEMA_ATTR = "recordSchema";
@@ -105,6 +109,12 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
     @NotNull @Parameter(defaultValue="false")
     private Boolean useCellValueExpression;
 
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean enableSelect;
+
+    @Parameter
+    private String indexFields;
+
     @Parameter
     private String masterFields;
 
@@ -131,6 +141,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
     private static String deleteConfirmationMessage;
     @Message
     private static String deleteCompletionMessage;
+    @Message
+    private static String selectMessage;
 
     private Map<String, RecordSchemaField> fields;
 
@@ -146,6 +158,22 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
     {
         super.formExpressionBindings(bindings);
         bindingSupport.addTo(bindings);
+    }
+
+    public String getIndexFields() {
+        return indexFields;
+    }
+
+    public void setIndexFields(String indexFields) {
+        this.indexFields = indexFields;
+    }
+
+    public Boolean getEnableSelect() {
+        return enableSelect;
+    }
+
+    public void setEnableSelect(Boolean enableSelect) {
+        this.enableSelect = enableSelect;
     }
 
     public String getDetailFields() {
@@ -318,11 +346,15 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         Map<String, Map<Object, String>> fieldRefValues = getRecordFieldReferenceValues();
         List<Record> records = getActionsCount()>0? new ArrayList<Record>(512) : null;
 
+        String[] indexFieldNames = getIndexFieldNames();
+        String[] masterFieldNames = getMasterFieldNames();
+
         RecordAsTableDataConsumer dataConsumer = new RecordAsTableDataConsumer(
                 fieldsOrderArr, detailColumnName, detailValueViewLinkName
                 , fieldNameColumnName, fieldValueColumnName, detailColumnNumber, columnValues
                 , deleteConfirmationMessage, deleteMessage, deleteCompletionMessage
-                , getRecordActions(), records, fieldRefValues);
+                , getRecordActions(), records, fieldRefValues, indexFieldNames, selectMessage
+                , userContextService.getUserContext(), masterFieldNames);
 
         dataSource.getDataImmediate(dataConsumer, new DataContextImpl(attrs));
 
@@ -371,6 +403,40 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
     public Collection<NodeAttribute> generateAttributes() 
     {
         return null;
+    }
+
+    private String[] getIndexFieldNames() throws Exception
+    {
+        if (enableSelect) {
+            String[] fieldNames = RavenUtils.split(indexFields);
+            if (fieldNames==null || fieldNames.length==0)
+                throw new Exception("Can't enable SELECT functionality because "
+                        + "of indexFields not seted");
+            Map<String, RecordSchemaField> recordFields =
+                    RavenUtils.getRecordSchemaFields(recordSchema);
+            for (String fieldName: fieldNames)
+                if (!recordFields.containsKey(fieldName))
+                    throw new Exception(String.format(
+                            "Invalid indexField name. Field (%s) does not exists in the schema (%s)"
+                            , fieldName, recordSchema.getName()));
+            return fieldNames;
+        }
+        return null;
+    }
+
+    private String[] getMasterFieldNames() throws Exception
+    {
+        String[] fieldNames = RavenUtils.split(masterFields);
+        if (fieldNames!=null) {
+            Map<String, RecordSchemaField> recordFields =
+                    RavenUtils.getRecordSchemaFields(recordSchema);
+            for (String fieldName: fieldNames)
+                if (!recordFields.containsKey(fieldName))
+                    throw new Exception(String.format(
+                            "Invalid masterField name. Field (%s) does not exists in the schema (%s)"
+                            , fieldName, recordSchema.getName()));
+        }
+        return fieldNames;
     }
 
     private void addDataSourceAttributes(
@@ -479,7 +545,9 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
     }
     
     private List<ViewableObject> getActions(
-            Map<String, NodeAttribute> refreshAttributes, Collection<Record> records, DataContext context) throws Exception
+            Map<String, NodeAttribute> refreshAttributes, Collection<Record> records, 
+            DataContext context)
+        throws Exception
     {
         Collection<Node> childs = getSortedChildrens();
         if (childs!=null && !childs.isEmpty())
@@ -494,12 +562,27 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                     Map<String, Object> bindings = new HashMap<String, Object>();
                     bindings.put(RECORDS_BINDING, records);
                     bindings.put(AbstractSafeDataPipe.DATA_CONTEXT_BINDING, context);
-                    actions.add(((RecordsAsTableActionNode)child).getActionViewableObject(new DataContextImpl(), bindings));
+                    actions.add(((RecordsAsTableActionNode)child).getActionViewableObject(
+                            new DataContextImpl(), bindings));
                 }
             return actions;
         }
         else
             return null;
+    }
+
+    String getIndexFieldsValuesParamName()
+    {
+        return ""+getId()+"_"+INDEX_FIELDS_VALUES_PARAM;
+    }
+
+    private static Object[] getIndexFieldValuesKey(Record rec, String[] indexFieldNames)
+            throws RecordException
+    {
+        Object[] key = new Object[indexFieldNames.length];
+        for (int i=0; i<indexFieldNames.length; ++i)
+            key[i] = rec.getValue(indexFieldNames[i]);
+        return key;
     }
 
     public class RecordAsTableDataConsumer implements DataConsumer
@@ -524,10 +607,17 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         private final List<RecordsAsTableRecordActionNode> recordActions;
         private final List<Record> records;
         private final Map<String, Map<Object, String>> fieldRefValues;
+        private final String[] indexFieldNames;
+        private final String[] masterFieldNames;
+        private final String selectMessage;
+        private final Object[] indexFieldValuesKey;
+
         private Map<String, Map<Object, String>> schemaFieldRefValues;
         private int actionsCount;
         private int columnsCount;
         private DataContext context;
+        private int rowNum = 0;
+        private boolean rowSelected = false;
 
         public RecordAsTableDataConsumer(
                 String[] fieldsOrder, String detailColumnName, String detailValueViewLinkName
@@ -539,7 +629,11 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                 , String deleteCompletionMessage
                 , List<RecordsAsTableRecordActionNode> recordActions
                 , List<Record> records
-                , Map<String, Map<Object, String>> fieldRefValues)
+                , Map<String, Map<Object, String>> fieldRefValues
+                , String[] indexFieldNames
+                , String selectMessage
+                , UserContext userContext
+                , String[] masterFieldNames)
             throws Exception
         {
             fields = new HashMap<String, RecordSchemaField>();
@@ -556,6 +650,11 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
             this.recordActions = recordActions;
             this.records = records;
             this.fieldRefValues = fieldRefValues;
+            this.indexFieldNames = indexFieldNames;
+            this.masterFieldNames = masterFieldNames;
+            this.selectMessage = selectMessage;
+            this.indexFieldValuesKey = userContext==null? 
+                    null : (Object[])userContext.getParams().get(getIndexFieldsValuesParamName());
             
             schemaFields = recordSchema.getFields();
             if (fieldsOrder!=null)
@@ -590,6 +689,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
             }
 
             if (enableDeletes)
+                ++actionsCount;
+            if (indexFieldNames!=null)
                 ++actionsCount;
             if (recordActions!=null)
                 actionsCount += recordActions.size();
@@ -668,6 +769,9 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                 if (actionsCount>0)
                 {
                     int pos=0;
+                    if (indexFieldNames!=null)
+                        row[pos++] = new SelectRowAction(selectMessage, record, indexFieldNames, 
+                                masterFieldNames, context.getUserContext());
                     if (enableDeletes)
                         row[pos++] = new DeleteRecordAction(
                                 deleteConfirmationMessage, deleteMessage, deleteCompletionMessage
@@ -751,6 +855,19 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                 row[row.length-1] = createDetailObject(detailValueViewLinkName, record);
 
             table.addRow(row);
+            try {
+                if (   indexFieldValuesKey!=null
+                    && !rowSelected
+                    && Arrays.equals(indexFieldValuesKey,
+                        getIndexFieldValuesKey(record, indexFieldNames)))
+                {
+                    table.addRowTag(rowNum++, new TableTagImpl(Table.SELECTED_TAG));
+                    rowSelected = true;
+                }
+            } catch (Exception e){
+                if (isLogLevelEnabled(LogLevel.WARN))
+                    getLogger().warn("Error while checking index fields values", e);
+            }
         }
 
         private ViewableObject createDetailObject(String displayValue, Record record)
@@ -813,6 +930,39 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
             DataSourceHelper.sendDataToConsumers(RecordsAsTableNode.this, record, context);
             DataSourceHelper.sendDataToConsumers(RecordsAsTableNode.this, null, context);
             return deleteCompletionMessage;
+        }
+    }
+
+    public class SelectRowAction extends AbstractActionViewableObject
+    {
+        private final Record record;
+        private final String[] indexFields;
+        private final String[] masterFields;
+        private final UserContext userContext;
+
+        public SelectRowAction(String displayMessage, Record record,
+                String[] indexFields, String[] masterFields, UserContext userContext)
+        {
+            super(null, displayMessage, RecordsAsTableNode.this, true);
+            this.record = record;
+            this.indexFields = indexFields;
+            this.userContext = userContext;
+            this.masterFields = masterFields;
+        }
+
+        @Override
+        public String executeAction() throws Exception
+        {
+            userContext.getParams().put(
+                    getIndexFieldsValuesParamName(), getIndexFieldValuesKey(record, indexFields));
+            if (masterFields!=null) {
+                List<String> masterValues = new ArrayList<String>(masterFields.length);
+                for (String fieldName: masterFields)
+                    masterValues.add(
+                        converter.convert(String.class, record.getValue(fieldName), null));
+                RavenUtils.setMasterFieldValues(RecordsAsTableNode.this, masterValues);
+            }
+            return null;
         }
     }
 }
