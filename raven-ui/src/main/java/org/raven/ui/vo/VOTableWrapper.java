@@ -32,18 +32,20 @@ public class VOTableWrapper extends ArrayList<TIWList>
 		if(table==null) return;
 		clear();
 		int count = 0;
+        int row=0;
 		for(Iterator<Object[]> it = table.getRowIterator();it.hasNext();)
 		{
+            boolean selected = table.containsRowTag(row++, Table.SELECTED_TAG);
 			Object[] a = it.next();
 			//TableItemWrapper[] b = new TableItemWrapper[a.length];
 			TIWList b = new TIWList();
 		//	int k = 0; 
 			
 			if(addCounter)
-				b.add(new TableItemWrapper(++count));
+				b.add(new TableItemWrapper(++count, selected));
 			for(int i=0; i<a.length; i++)
 				//b[i] = new TableItemWrapper(a[i]);
-				b.add(new TableItemWrapper(a[i]));
+				b.add(new TableItemWrapper(a[i], selected));
 			add(b);
 		}	
 	}

@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 public class TIWList extends ArrayList<TableItemWrapper>  
 {
 	private static final long serialVersionUID = -1269069921894205502L;
-	private static final Logger logger = LoggerFactory.getLogger(TIWList.class);	
+	private static final Logger logger = LoggerFactory.getLogger(TIWList.class);
 
 	public String getXI(int i)
 	{
@@ -18,6 +18,7 @@ public class TIWList extends ArrayList<TableItemWrapper>
 		return get(i).getString();
 	}
 	
+    @Override
 	public TableItemWrapper get(int i)
 	{
 		try {
@@ -29,6 +30,15 @@ public class TIWList extends ArrayList<TableItemWrapper>
 			return null;
 		}
 	}
+
+    public boolean isSelected() {
+        return true;
+    }
+
+    public String getStyle()
+    {
+        return "background-color: yellow";
+    }
 
 	public boolean isValid(int i)
 	{

@@ -536,11 +536,13 @@ partialTriggers=":poolStatus"
                   	end="100"  
                   	var="nameAZX" >
                 	<tr:column sortable="true"  sortProperty="#{vxStat.index}"
+                        inlineStyle="#{rowa[0].style}"
                 		align="left"
 						rendered="#{vxStat.index &lt; row.columnsCount}"                      
                    		headerText="#{row.tableColumnNames[vxStat.index]}">
                    		<tr:panelHorizontalLayout halign="left" >
-                   		<tr:outputFormatted 
+                            <tr:outputText value="#{rowa[-1].item}"/>
+                   		<tr:outputFormatted
 	                   		rendered="#{rowa[vxStat.index].text}"
     	               		value="#{rowa[vxStat.index].item}"/>
 						<tr:outputFormatted 

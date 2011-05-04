@@ -32,12 +32,14 @@ public class TableItemWrapper
 	public static final int VO_ACTION = 5;
 	public static final int VO_OTHER = 6;
 	public static final int OTHER = 7;
+    private final boolean selectedRow;
 	private Object item;
 	private ViewableObjectWrapper wrapper = null;
 //	private boolean wrpInited = false;
 	
-	public TableItemWrapper(Object x)
+	public TableItemWrapper(Object x, boolean selectedRow)
 	{
+        this.selectedRow = selectedRow;
 		item = x;
 		if (x instanceof ViewableObject) {
 			wrapper = new ViewableObjectWrapper((ViewableObject) x);
@@ -55,6 +57,11 @@ public class TableItemWrapper
 	{
 		return item;
 	}
+
+    public String getStyle()
+    {
+        return selectedRow? "background-color: #FFF297" : null;
+    }
 
 	public ViewableObjectWrapper getItemWrapper()
 	{
