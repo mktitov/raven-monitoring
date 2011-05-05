@@ -121,7 +121,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
     @Parameter
     private String detailFields;
 
-    @Parameter
+    @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     private Node masterNode;
 
     private BindingSupportImpl bindingSupport;
@@ -861,9 +861,10 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                     && Arrays.equals(indexFieldValuesKey,
                         getIndexFieldValuesKey(record, indexFieldNames)))
                 {
-                    table.addRowTag(rowNum++, new TableTagImpl(Table.SELECTED_TAG));
+                    table.addRowTag(rowNum, new TableTagImpl(Table.SELECTED_TAG));
                     rowSelected = true;
                 }
+                ++rowNum;
             } catch (Exception e){
                 if (isLogLevelEnabled(LogLevel.WARN))
                     getLogger().warn("Error while checking index fields values", e);
