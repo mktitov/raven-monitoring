@@ -332,43 +332,49 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes)
             throws Exception
     {
-        Map<String, NodeAttribute> attrs = new HashMap<String, NodeAttribute>();
-        if (refreshAttributes!=null)
-            attrs.putAll(refreshAttributes);
+        try{
+            Map<String, NodeAttribute> attrs = new HashMap<String, NodeAttribute>();
+            if (refreshAttributes!=null)
+                attrs.putAll(refreshAttributes);
 
-        Map<String, String> detailFieldValues = getAndApplyMasterFieldValues(attrs);
-        addDataSourceAttributes(attrs, detailFieldValues);
+            Map<String, String> detailFieldValues = getAndApplyMasterFieldValues(attrs);
+            addDataSourceAttributes(attrs, detailFieldValues);
 
-        String _fieldsOrder = fieldsOrder;
-        String[] fieldsOrderArr = _fieldsOrder==null? null : _fieldsOrder.split("\\s*,\\s*");
+            String _fieldsOrder = fieldsOrder;
+            String[] fieldsOrderArr = _fieldsOrder==null? null : _fieldsOrder.split("\\s*,\\s*");
 
-        Map<Integer, RecordsAsTableColumnValueNode> columnValues = getColumnValues();
-        Map<String, Map<Object, String>> fieldRefValues = getRecordFieldReferenceValues();
-        List<Record> records = getActionsCount()>0? new ArrayList<Record>(512) : null;
+            Map<Integer, RecordsAsTableColumnValueNode> columnValues = getColumnValues();
+            Map<String, Map<Object, String>> fieldRefValues = getRecordFieldReferenceValues();
+            List<Record> records = getActionsCount()>0? new ArrayList<Record>(512) : null;
 
-        String[] indexFieldNames = getIndexFieldNames();
-        String[] masterFieldNames = getMasterFieldNames();
+            String[] indexFieldNames = getIndexFieldNames();
+            String[] masterFieldNames = getMasterFieldNames();
 
-        RecordAsTableDataConsumer dataConsumer = new RecordAsTableDataConsumer(
-                fieldsOrderArr, detailColumnName, detailValueViewLinkName
-                , fieldNameColumnName, fieldValueColumnName, detailColumnNumber, columnValues
-                , deleteConfirmationMessage, deleteMessage, deleteCompletionMessage
-                , getRecordActions(), records, fieldRefValues, indexFieldNames, selectMessage
-                , userContextService.getUserContext(), masterFieldNames);
+            RecordAsTableDataConsumer dataConsumer = new RecordAsTableDataConsumer(
+                    fieldsOrderArr, detailColumnName, detailValueViewLinkName
+                    , fieldNameColumnName, fieldValueColumnName, detailColumnNumber, columnValues
+                    , deleteConfirmationMessage, deleteMessage, deleteCompletionMessage
+                    , getRecordActions(), records, fieldRefValues, indexFieldNames, selectMessage
+                    , userContextService.getUserContext(), masterFieldNames);
 
-        dataSource.getDataImmediate(dataConsumer, new DataContextImpl(attrs));
+            dataSource.getDataImmediate(dataConsumer, new DataContextImpl(attrs));
 
-        List<ViewableObject> vos = new ArrayList<ViewableObject>();
-//        if (records!=null)
-//        {
-            List<ViewableObject> actions = getActions(refreshAttributes, records, dataConsumer.context);
-            if (actions!=null)
-                vos.addAll(actions);
-//        }
-        
-        vos.add(new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, dataConsumer.getTable()));
-        
-        return vos;
+            List<ViewableObject> vos = new ArrayList<ViewableObject>();
+    //        if (records!=null)
+    //        {
+                List<ViewableObject> actions = getActions(refreshAttributes, records, dataConsumer.context);
+                if (actions!=null)
+                    vos.addAll(actions);
+    //        }
+
+            vos.add(new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, dataConsumer.getTable()));
+
+            return vos;
+        }catch (Exception e){
+            if (isLogLevelEnabled(LogLevel.ERROR))
+                getLogger().error("Error getting viewable objects", e);
+            throw e;
+        }
     }
 
     @Override
@@ -468,7 +474,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         Map<String, String> detailFieldValues = null;
         List<String> fieldValues = RavenUtils.getMasterFieldValues(masterNode);
         if (fieldValues!=null) {
-            String[] detailFieldNames = RavenUtils.split(detailFields);
+            String[] detailFieldNames = getDetailFieldNames();
             if (detailFieldNames==null || detailFieldNames.length!=fieldValues.size())
                 throw new Exception("The number of master fields not equals to number "
                         + "of detail fields");
@@ -481,6 +487,11 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
             }
         }
         return detailFieldValues;
+    }
+
+    String[] getDetailFieldNames()
+    {
+        return RavenUtils.split(detailFields);
     }
 
     private Map<String, Map<Object, String>> getRecordFieldReferenceValues()

@@ -1113,6 +1113,84 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         checkSessionAttribute(attrs, "field2", "2");
     }
 
+    @Test(expected=Exception.class)
+    public void addAction_detailTest() throws Exception
+    {
+        BaseNode masterNode = new BaseNode("master node");
+        tree.getRootNode().addAndSaveChildren(masterNode);
+        assertTrue(masterNode.start());
+
+        UserContext userContext = new TestUserContext();
+        UserContextServiceModule.setUserContext(userContext);
+
+        tableNode.setMasterNode(masterNode);
+        tableNode.setDetailFields("field1");
+
+        NodeAttributeImpl attr = new NodeAttributeImpl("field1", String.class, null, null);
+        attr.setValueHandlerType(RefreshAttributeValueHandlerFactory.TYPE);
+        attr.setOwner(tableNode);
+        attr.setParentAttribute(RecordsAsTableNode.DATA_SOURCE_ATTR);
+        tableNode.addNodeAttribute(attr);
+        attr.init();
+        attr.save();
+
+        AddRecordActionNode addActionNode = new AddRecordActionNode();
+        addActionNode.setName("add");
+        tableNode.addAndSaveChildren(addActionNode);
+        addActionNode.setEnabledActionText("add");
+        addActionNode.setConfirmationMessage("Adding");
+        assertTrue(addActionNode.start());
+
+        ds.addDataPortion(null);
+        tableNode.getViewableObjects(null);
+    }
+
+    @Test
+    public void addAction_detailTest2() throws Exception
+    {
+        BaseNode masterNode = new BaseNode("master node");
+        tree.getRootNode().addAndSaveChildren(masterNode);
+        assertTrue(masterNode.start());
+
+        UserContext userContext = new TestUserContext();
+        UserContextServiceModule.setUserContext(userContext);
+
+        tableNode.setMasterNode(masterNode);
+        tableNode.setDetailFields("field1");
+
+        NodeAttributeImpl attr = new NodeAttributeImpl("field1", String.class, null, null);
+        attr.setValueHandlerType(RefreshAttributeValueHandlerFactory.TYPE);
+        attr.setOwner(tableNode);
+        attr.setParentAttribute(RecordsAsTableNode.DATA_SOURCE_ATTR);
+        tableNode.addNodeAttribute(attr);
+        attr.init();
+        attr.save();
+
+        AddRecordActionNode addActionNode = new AddRecordActionNode();
+        addActionNode.setName("add");
+        tableNode.addAndSaveChildren(addActionNode);
+        addActionNode.setEnabledActionText("add");
+        addActionNode.setConfirmationMessage("Adding");
+        assertTrue(addActionNode.start());
+
+        collector.setDataSource(addActionNode);
+
+        ds.addDataPortion(null);
+        RavenUtils.setMasterFieldValues(masterNode, Arrays.asList("1"));
+        List<ViewableObject> vos = tableNode.getViewableObjects(null);
+        assertNotNull(vos);
+        assertEquals(2, vos.size());
+        assertEquals(Viewable.RAVEN_ACTION_MIMETYPE, vos.get(0).getMimeType());
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, vos.get(1).getMimeType());
+
+        vos.get(0).getData();
+        assertEquals(2, collector.getDataListSize());
+        assertNull(collector.getDataList().get(1));
+        Object obj = collector.getDataList().get(0);
+        assertTrue(obj instanceof Record);
+        assertEquals(1, ((Record)obj).getValue("field1"));
+    }
+
     @Test
     public void masterTest() throws Exception
     {

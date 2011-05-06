@@ -17,13 +17,17 @@
 
 package org.raven.ds.impl;
 
+import java.util.List;
 import java.util.Map;
+import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.auth.UserContext;
 import org.raven.ds.DataContext;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
+import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.ViewableObject;
 import org.weda.annotations.constraints.NotNull;
@@ -61,6 +65,7 @@ public class AddRecordActionNode extends RecordsAsTableActionNode
     {
         //creating record
         Record record = recordSchema.createRecord();
+        initDetailFieldsValues(record);
         bindingSupport.put(RecordsAsTableNode.RECORD_BINDING, record);
 
         getNodeAttribute(PREPARE_RECORD_BINDING).getValue();
@@ -72,6 +77,19 @@ public class AddRecordActionNode extends RecordsAsTableActionNode
         
         return new AddEditRecordAction(this, context, additionalBindings, fieldsAttrs,
                 createRecordErrorMessage, this, recordSchema);
+    }
+
+    private void initDetailFieldsValues(Record record) throws Exception
+    {
+        RecordsAsTableNode tableNode = (RecordsAsTableNode) getEffectiveParent();
+        Node masterNode = tableNode.getMasterNode();
+        if (masterNode==null)
+            return;
+
+        List<String> values = RavenUtils.getMasterFieldValues(masterNode);
+        String[] fieldNames = tableNode.getDetailFieldNames();
+        for (int i=0; i<fieldNames.length; ++i)
+            record.setValue(fieldNames[i], values.get(i));
     }
 
     public RecordSchema getRecordSchema() {
