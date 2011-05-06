@@ -24,12 +24,13 @@ import java.util.Map;
 import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.auth.UserContextService;
 import org.raven.expr.BindingSupport;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.tree.NodeAttribute;
-import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.internal.annotations.Service;
 
 /**
  *
@@ -40,6 +41,9 @@ public class TextNode extends AbstractViewableNode
 {
     public final static String REFRESH_ATTRIBUTES_BINDING = "refreshAttributes";
     public final static String TEXT_ATTR = "text";
+
+    @Service
+    private static UserContextService userContextService;
 
     @Parameter @NotNull
     private String text;
@@ -67,7 +71,10 @@ public class TextNode extends AbstractViewableNode
         if (getStatus()!=Status.STARTED)
             return null;
         try{
-            bindingSupport.put(REFRESH_ATTRIBUTES_BINDING, refreshAttributes==null? Collections.EMPTY_MAP : refreshAttributes);
+            bindingSupport.put(
+                    REFRESH_ATTRIBUTES_BINDING,
+                    refreshAttributes==null? Collections.EMPTY_MAP : refreshAttributes);
+            bindingSupport.put("userContext", userContextService.getUserContext());
             ViewableObject textObj = new ViewableObjectImpl(RAVEN_TEXT_MIMETYPE, text);
             return Arrays.asList(textObj);
         }finally{

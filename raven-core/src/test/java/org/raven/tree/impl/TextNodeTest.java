@@ -21,8 +21,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
+import org.raven.TestUserContext;
+import org.raven.auth.UserContext;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.test.RavenCoreTestCase;
+import org.raven.test.UserContextServiceModule;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.ViewableObject;
 
@@ -35,15 +38,20 @@ public class TextNodeTest extends RavenCoreTestCase
     @Test
     public void test() throws Exception
     {
+        UserContext context = new TestUserContext();
+        context.getParams().put("text", " message");
+        UserContextServiceModule.setUserContext(context);
+        
         TextNode text = new TextNode();
         text.setName("text");
         tree.getRootNode().addAndSaveChildren(text);
-        text.getNodeAttribute(TextNode.TEXT_ATTR).setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
-        text.setText("refreshAttributes.text.value");
+        text.getNodeAttribute(TextNode.TEXT_ATTR).setValueHandlerType(
+                ScriptAttributeValueHandlerFactory.TYPE);
+        text.setText("refreshAttributes.text.value+userContext.params.text");
         assertTrue(text.start());
 
         Map<String, NodeAttribute> attrs = new HashMap<String, NodeAttribute>();
-        NodeAttribute attr = new NodeAttributeImpl("text", String.class, "test message", null);
+        NodeAttribute attr = new NodeAttributeImpl("text", String.class, "test", null);
         attr.setOwner(text);
         attr.init();
         attrs.put("text", attr);
