@@ -153,4 +153,11 @@ public class RecordImpl implements Record
     {
         return tags==null? Collections.EMPTY_MAP : tags;
     }
+
+    @Override
+    public String toString()
+    {
+        return "Schema: "+schema.getName()+"; field values: "+values.toString();
+    }
+
 }
