@@ -57,6 +57,7 @@ import org.weda.beans.ObjectUtils;
 import org.weda.constraints.ReferenceValue;
 import org.weda.internal.annotations.Message;
 import org.weda.internal.annotations.Service;
+import org.weda.services.TypeConverter;
 
 /**
  *
@@ -71,6 +72,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
     public final static String RECORD_SCHEMA_ATTR = "recordSchema";
     public final static String RECORD_BINDING = "record";
     public final static String VALUE_BINDING = "value";
+    public final static String STRING_VALUE_BINDING = "stringValue";
+    public final static String FIELD_NAME_BINDING = "columnName";
 
     @Service
     private static UserContextService userContextService;
@@ -355,7 +358,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                     , fieldNameColumnName, fieldValueColumnName, detailColumnNumber, columnValues
                     , deleteConfirmationMessage, deleteMessage, deleteCompletionMessage
                     , getRecordActions(), records, fieldRefValues, indexFieldNames, selectMessage
-                    , userContextService.getUserContext(), masterFieldNames);
+                    , userContextService.getUserContext(), masterFieldNames, converter);
 
             dataSource.getDataImmediate(dataConsumer, new DataContextImpl(attrs));
 
@@ -622,6 +625,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         private final String[] masterFieldNames;
         private final String selectMessage;
         private final Object[] indexFieldValuesKey;
+        private final TypeConverter converter;
 
         private Map<String, Map<Object, String>> schemaFieldRefValues;
         private int actionsCount;
@@ -644,7 +648,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                 , String[] indexFieldNames
                 , String selectMessage
                 , UserContext userContext
-                , String[] masterFieldNames)
+                , String[] masterFieldNames
+                , TypeConverter converter)
             throws Exception
         {
             fields = new HashMap<String, RecordSchemaField>();
@@ -666,6 +671,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
             this.selectMessage = selectMessage;
             this.indexFieldValuesKey = userContext==null? 
                     null : (Object[])userContext.getParams().get(getIndexFieldsValuesParamName());
+            this.converter = converter;
             
             schemaFields = recordSchema.getFields();
             if (fieldsOrder!=null)
@@ -819,8 +825,13 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
 
                         if (_useCellValuesExpression){
                             bindingSupport.put(VALUE_BINDING, value);
+                            bindingSupport.put(
+                                    STRING_VALUE_BINDING
+                                    , converter.convert(String.class, value
+                                        , fields.get(fieldNames[i]).getPattern()));
                             bindingSupport.put(RECORD_BINDING, record);
                             bindingSupport.put(COLUMN_NUMBER_BINDING, i+1);
+                            bindingSupport.put(FIELD_NAME_BINDING, fieldNames[i]);
                             bindingSupport.put(AbstractSafeDataPipe.DATA_CONTEXT_BINDING, context);
                             try{
                                 value = getNodeAttribute(CELL_VALUE_EXPRESSION_ATTR).getRealValue();
