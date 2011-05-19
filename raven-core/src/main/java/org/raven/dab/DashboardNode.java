@@ -17,7 +17,6 @@
 
 package org.raven.dab;
 
-import org.raven.annotations.NodeClass;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.Description;
 

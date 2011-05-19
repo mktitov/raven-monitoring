@@ -98,7 +98,12 @@ public class ViewableObjectImpl implements ViewableObject
     @Override
     public String toString()
     {
-        return toStringValue==null? super.toString() : toStringValue;
+        if (toStringValue!=null)
+            return toStringValue;
+        if (data!=null)
+            return data.toString();
+        else
+            return super.toString();
     }
 
 }
