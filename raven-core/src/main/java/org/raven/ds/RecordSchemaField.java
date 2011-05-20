@@ -17,11 +17,13 @@
 
 package org.raven.ds;
 
+import java.util.Collection;
+
 /**
  *
  * @author Mikhail Titov
  */
-public interface RecordSchemaField
+public interface RecordSchemaField 
 {
     /**
      * Returns the field name
@@ -52,4 +54,9 @@ public interface RecordSchemaField
      * reference values.
      */
     public ReferenceValuesSource getReferenceValuesSource();
+    /**
+     * Returns the collection of error messages if the field value failed the validation or null
+     * if field value passed the validation
+     */
+    public Collection<String> validate(Object value);
 }

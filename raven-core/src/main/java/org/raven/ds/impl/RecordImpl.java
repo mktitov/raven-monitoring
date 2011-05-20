@@ -25,6 +25,7 @@ import org.raven.ds.Record;
 import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
+import org.raven.ds.RecordValidationErrors;
 import org.weda.converter.TypeConverterException;
 import org.weda.internal.annotations.Service;
 import org.weda.services.TypeConverter;
@@ -152,6 +153,14 @@ public class RecordImpl implements Record
     public Map<String, Object> getTags()
     {
         return tags==null? Collections.EMPTY_MAP : tags;
+    }
+
+    public RecordValidationErrors getValidationErrors() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public boolean validate() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override

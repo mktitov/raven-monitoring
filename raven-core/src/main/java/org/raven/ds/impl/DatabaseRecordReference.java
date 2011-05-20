@@ -25,6 +25,7 @@ import org.raven.ds.Record;
 import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
+import org.raven.ds.RecordValidationErrors;
 import org.weda.services.TypeConverter;
 
 /**
@@ -147,6 +148,20 @@ public class DatabaseRecordReference extends AbstractDatabaseRecordReference imp
         if (!initialized)
             init();
         return wrappedRecord==null? null : wrappedRecord.getTags();
+    }
+
+    public RecordValidationErrors getValidationErrors() throws RecordException
+    {
+        if (!initialized)
+            init();
+        return wrappedRecord==null? null : wrappedRecord.getValidationErrors();
+    }
+
+    public boolean validate() throws RecordException
+    {
+        if (!initialized)
+            init();
+        return wrappedRecord==null? true : wrappedRecord.validate();
     }
 
 }

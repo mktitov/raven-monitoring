@@ -97,4 +97,15 @@ public interface Record
      * Returns the map containing the record tags. You can use this map for update operations.
      */
     public Map<String, Object> getTags() throws RecordException;
+    /**
+     * Returns <b>true</b> if the fields values passed the validation or <b>false</b> if didn't
+     * @see #getValidationErrors() 
+     */
+    public boolean validate() throws RecordException;
+    /**
+     * Returns the validation errors if the field values failed the validation or null if field
+     * values passed the validation.
+     * <p>This method must called after the {@link #validate()} method.
+     */
+    public RecordValidationErrors getValidationErrors() throws RecordException;
 }

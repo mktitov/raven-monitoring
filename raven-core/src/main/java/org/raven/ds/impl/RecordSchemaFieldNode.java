@@ -17,14 +17,18 @@
 
 package org.raven.ds.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.ValueValidator;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.ds.ReferenceValuesSource;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
+import org.raven.util.NodeUtils;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -33,7 +37,9 @@ import org.weda.annotations.constraints.NotNull;
  */
 @NodeClass(
     parentNode=RecordSchemaNode.class,
-    childNodes={CustomReferenceValuesSourceNode.class, ReferenceToReferenceValuesSourceNode.class})
+    childNodes={
+        CustomReferenceValuesSourceNode.class, ReferenceToReferenceValuesSourceNode.class,
+        CustomValueValidatorNode.class})
 public class RecordSchemaFieldNode extends BaseNode implements RecordSchemaField
 {
     @Parameter
@@ -93,6 +99,21 @@ public class RecordSchemaFieldNode extends BaseNode implements RecordSchemaField
     public ReferenceValuesSource getReferenceValuesSource()
     {
         return getFieldExtension(ReferenceValuesSource.class, null);
+    }
+
+    public Collection<String> validate(Object value)
+    {
+        List<ValueValidator> validators =
+                NodeUtils.getChildsOfType(this, ValueValidator.class);
+        if (validators.isEmpty())
+            return null;
+        ArrayList<String> errors = new ArrayList<String>(validators.size());
+        for (ValueValidator validator: validators) {
+            String error = validator.validate(value);
+            if (error!=null)
+                errors.add(error);
+        }
+        return errors.isEmpty()? null : errors;
     }
 
     /**
