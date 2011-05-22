@@ -39,7 +39,10 @@ import org.weda.annotations.constraints.NotNull;
     parentNode=RecordSchemaNode.class,
     childNodes={
         CustomReferenceValuesSourceNode.class, ReferenceToReferenceValuesSourceNode.class,
-        CustomValueValidatorNode.class})
+        CustomValueValidatorNode.class, RequiredValueValidatorNode.class,
+        MinLengthValidatorNode.class, MaxLengthValidatorNode.class,
+        RegexpValidatorNode.class
+    })
 public class RecordSchemaFieldNode extends BaseNode implements RecordSchemaField
 {
     @Parameter

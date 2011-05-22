@@ -17,6 +17,7 @@
 
 package org.raven.ds.impl;
 
+import java.util.Collection;
 import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.RecordSchemaFieldType;
@@ -64,6 +65,43 @@ public class RecordSchemaFieldNodeTest extends RavenCoreTestCase
 
         assertSame(node1, field.getFieldExtension(ContainerNode.class, "node1"));
         assertSame(node3, field.getFieldExtension(ContainerNode.class, "node3"));
+    }
 
+    @Test
+    public void validateTest()
+    {
+        RecordSchemaFieldNode field = new RecordSchemaFieldNode();
+        field.setName("field");
+        tree.getRootNode().addAndSaveChildren(field);
+        field.setFieldType(RecordSchemaFieldType.INTEGER);
+        assertTrue(field.start());
+
+        assertNull(field.validate(1));
+        assertNull(field.validate(null));
+
+        CustomValueValidatorNode validator = new CustomValueValidatorNode();
+        validator.setName("validator");
+        field.addAndSaveChildren(validator);
+        validator.setValidateExpression("value==null?'empty':null");
+        assertTrue(validator.start());
+
+        Collection<String> errors = field.validate(null);
+        assertNotNull(errors);
+        assertArrayEquals(new Object[]{"empty"}, errors.toArray());
+        assertNull(field.validate(1));
+
+        validator.stop();
+        assertNull(field.validate(null));
+        validator.start();
+
+        CustomValueValidatorNode validator2 = new CustomValueValidatorNode();
+        validator2.setName("validator2");
+        field.addAndSaveChildren(validator2);
+        validator2.setValidateExpression("value==null?'empty2':null");
+        assertTrue(validator2.start());
+
+        errors = field.validate(null);
+        assertNotNull(errors);
+        assertArrayEquals(new Object[]{"empty", "empty2"}, errors.toArray());
     }
 }

@@ -17,24 +17,37 @@
 
 package org.raven.ds.impl;
 
-import java.util.Arrays;
-import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.raven.test.RavenCoreTestCase;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class RecordValidationErrorsImplTest extends Assert
+public class RequiredValueValidatorNodeTest extends RavenCoreTestCase
 {
-    @Test
-    public void toTextTest()
-    {
-        RecordValidationErrorsImpl errors = new RecordValidationErrorsImpl("test");
-        assertNull(errors.toText());
+    private RequiredValueValidatorNode validator;
 
-        errors.addValidationErrors("field1", Arrays.asList("error1", "error2"));
-        errors.addValidationErrors("field2", Arrays.asList("error1"));
-        assertEquals("Record of schema (test) has validation errors: \nfield1:\n  error1\n  error2\nfield2:\n  error1\n", errors.toText());
+    @Before
+    public void prepare()
+    {
+        validator = new RequiredValueValidatorNode();
+        validator.setName("validator");
+        tree.getRootNode().addAndSaveChildren(validator);
+        assertTrue(validator.start());
+    }
+
+    @Test
+    public void successValidationTest()
+    {
+        assertNull(validator.validate("test"));
+    }
+
+    @Test
+    public void unsuccessValidationTest()
+    {
+        String error = validator.validate(null);
+        assertNotNull(error);
     }
 }

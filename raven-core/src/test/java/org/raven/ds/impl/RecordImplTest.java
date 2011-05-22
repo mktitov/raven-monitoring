@@ -26,6 +26,7 @@ import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
+import org.raven.ds.RecordValidationErrors;
 import org.raven.test.RavenCoreTestCase;
 import static org.easymock.EasyMock.*;
 
@@ -226,5 +227,29 @@ public class RecordImplTest extends RavenCoreTestCase
         assertSame(Collections.EMPTY_MAP, rec.getTags());
         
         verify(schema, field);
+    }
+
+    @Test
+    public void validateTest() throws RecordException
+    {
+        RecordSchemaNode schema = new RecordSchemaNode();
+        schema.setName("schema");
+        tree.getRootNode().addAndSaveChildren(schema);
+        assertTrue(schema.start());
+
+        RecordSchemaFieldNode field = RecordSchemaFieldNode.create(
+                schema, "field", null, RecordSchemaFieldType.INTEGER, null);
+        CustomValueValidatorNode validator = new CustomValueValidatorNode();
+        validator.setName("validator");
+        field.addAndSaveChildren(validator);
+        validator.setValidateExpression("value?null:'empty'");
+        assertTrue(validator.start());
+
+        Record record = schema.createRecord();
+
+        RecordValidationErrors errors = record.validate();
+        assertNotNull(errors);
+        assertEquals("Record of schema (schema) has validation errors: \nfield:\n  empty\n"
+                , errors.toText());
     }
 }

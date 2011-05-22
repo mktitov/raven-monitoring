@@ -98,14 +98,8 @@ public interface Record
      */
     public Map<String, Object> getTags() throws RecordException;
     /**
-     * Returns <b>true</b> if the fields values passed the validation or <b>false</b> if didn't
-     * @see #getValidationErrors() 
+     * Returns null if the fields values passed the validation or object that holds the validation
+     * errors
      */
-    public boolean validate() throws RecordException;
-    /**
-     * Returns the validation errors if the field values failed the validation or null if field
-     * values passed the validation.
-     * <p>This method must called after the {@link #validate()} method.
-     */
-    public RecordValidationErrors getValidationErrors() throws RecordException;
+    public RecordValidationErrors validate() throws RecordException;
 }

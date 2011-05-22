@@ -17,6 +17,7 @@
 
 package org.raven.ds.impl;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -155,12 +156,18 @@ public class RecordImpl implements Record
         return tags==null? Collections.EMPTY_MAP : tags;
     }
 
-    public RecordValidationErrors getValidationErrors() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public boolean validate() {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public RecordValidationErrors validate()
+    {
+        RecordValidationErrorsImpl errors = null;
+        for (RecordSchemaField field: fields.values()) {
+            Collection<String> fieldErrors = field.validate(values.get(field.getName()));
+            if (fieldErrors!=null){
+                if (errors==null)
+                    errors = new RecordValidationErrorsImpl(schema.getName());
+                errors.addValidationErrors(field.getName(), fieldErrors);
+            }
+        }
+        return errors;
     }
 
     @Override

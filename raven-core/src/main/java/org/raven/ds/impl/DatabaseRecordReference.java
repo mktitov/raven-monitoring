@@ -150,18 +150,11 @@ public class DatabaseRecordReference extends AbstractDatabaseRecordReference imp
         return wrappedRecord==null? null : wrappedRecord.getTags();
     }
 
-    public RecordValidationErrors getValidationErrors() throws RecordException
+    public RecordValidationErrors validate() throws RecordException
     {
         if (!initialized)
             init();
-        return wrappedRecord==null? null : wrappedRecord.getValidationErrors();
-    }
-
-    public boolean validate() throws RecordException
-    {
-        if (!initialized)
-            init();
-        return wrappedRecord==null? true : wrappedRecord.validate();
+        return wrappedRecord==null? null : wrappedRecord.validate();
     }
 
 }

@@ -17,24 +17,24 @@
 
 package org.raven.ds.impl;
 
-import java.util.Arrays;
-import org.junit.Assert;
-import org.junit.Test;
+import org.raven.annotations.NodeClass;
+import org.raven.ds.ValueValidator;
+import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.InvisibleNode;
+import org.weda.internal.annotations.Message;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class RecordValidationErrorsImplTest extends Assert
+@NodeClass(parentNode=InvisibleNode.class)
+public class RequiredValueValidatorNode extends BaseNode implements ValueValidator
 {
-    @Test
-    public void toTextTest()
-    {
-        RecordValidationErrorsImpl errors = new RecordValidationErrorsImpl("test");
-        assertNull(errors.toText());
+    @Message
+    private static String requiredMessage;
 
-        errors.addValidationErrors("field1", Arrays.asList("error1", "error2"));
-        errors.addValidationErrors("field2", Arrays.asList("error1"));
-        assertEquals("Record of schema (test) has validation errors: \nfield1:\n  error1\n  error2\nfield2:\n  error1\n", errors.toText());
+    public String validate(Object value)
+    {
+        return value==null? requiredMessage : null;
     }
 }

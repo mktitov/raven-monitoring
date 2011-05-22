@@ -29,9 +29,11 @@ import org.raven.ds.RecordValidationErrors;
 public class RecordValidationErrorsImpl implements RecordValidationErrors
 {
     private final Map<String, Collection<String>> fieldErrors;
+    private final String recordSchemaName;
 
-    public RecordValidationErrorsImpl()
+    public RecordValidationErrorsImpl(String recordSchemaName)
     {
+        this.recordSchemaName = recordSchemaName;
         fieldErrors = new LinkedHashMap<String, Collection<String>>();
     }
 
@@ -44,7 +46,10 @@ public class RecordValidationErrorsImpl implements RecordValidationErrors
     {
         if (fieldErrors.isEmpty())
             return null;
-        StringBuilder buf = new StringBuilder("\n");
+        StringBuilder buf = 
+                new StringBuilder("Record of schema (")
+                .append(recordSchemaName)
+                .append(") has validation errors: \n");
         for (Map.Entry<String, Collection<String>> errors: fieldErrors.entrySet())
         {
             buf.append(errors.getKey()).append(":\n");
@@ -53,5 +58,4 @@ public class RecordValidationErrorsImpl implements RecordValidationErrors
         }
         return buf.toString();
     }
-
 }
