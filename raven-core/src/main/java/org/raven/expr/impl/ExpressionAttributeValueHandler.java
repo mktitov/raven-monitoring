@@ -42,6 +42,7 @@ import org.weda.internal.annotations.Service;
 public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandler
 {
     public final static String ENABLE_SCRIPT_EXECUTION_BINDING = "enableScriptExecution";
+    public static final String LOGGER = "logger";
     public static final String NODE_BINDING = "node";
     public static final String RAVEN_EXPRESSION_ARGS_BINDING = "args";
     public static final String RAVEN_EXPRESSION_VARS_BINDING = "vars";
@@ -119,6 +120,7 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
         {
             Bindings bindings = new SimpleBindings();
             bindings.put(NODE_BINDING, new NodeAccessImpl(attribute.getOwner()));
+            bindings.put(LOGGER, attribute.getOwner().getLogger());
 
             BindingSupport varsSupport = tree.getGlobalBindings(Tree.EXPRESSION_VARS_BINDINGS);
             boolean varsInitiated = varsSupport.contains(RAVEN_EXPRESSION_VARS_INITIATED_BINDING);
@@ -136,7 +138,8 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
                 bindings.remove(ENABLE_SCRIPT_EXECUTION_BINDING);
                 attribute.getOwner().formExpressionBindings(bindings);
                 if (   !attribute.getValueHandlerType().equals(ScriptAttributeValueHandlerFactory.TYPE)
-                    || bindings.containsKey(ENABLE_SCRIPT_EXECUTION_BINDING))
+                    || bindings.containsKey(ENABLE_SCRIPT_EXECUTION_BINDING)
+                    || varsInitiated)
                 {
                     try {
                         bindings.remove(ENABLE_SCRIPT_EXECUTION_BINDING);

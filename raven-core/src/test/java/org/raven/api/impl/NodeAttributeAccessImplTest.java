@@ -21,6 +21,7 @@ import org.junit.Test;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.test.RavenCoreTestCase;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 
@@ -31,7 +32,7 @@ import org.raven.tree.impl.NodeAttributeImpl;
 public class NodeAttributeAccessImplTest extends RavenCoreTestCase
 {
     @Test
-    public void getValueWithParams() throws Exception
+    public void getValueWithParamsFromSameNode() throws Exception
     {
         BaseNode node = new BaseNode("node");
         tree.getRootNode().addAndSaveChildren(node);
@@ -39,6 +40,91 @@ public class NodeAttributeAccessImplTest extends RavenCoreTestCase
 
         NodeAttributeImpl attr1 = new NodeAttributeImpl("attr1", Integer.class, null, null);
         attr1.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
+        attr1.setValue("arg1+1");
+        attr1.setOwner(node);
+        attr1.init();
+        node.addNodeAttribute(attr1);
+
+        NodeAttributeImpl attr2 = new NodeAttributeImpl("attr2", Integer.class, null, null);
+        attr2.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
+        attr2.setValue("node['attr1'].getValue([arg1:1])");
+        attr2.setOwner(node);
+        attr2.init();
+        node.addNodeAttribute(attr2);
+
+        assertEquals(2, attr2.getRealValue());
+    }
+    
+    @Test
+    public void getValueWithParamsFromParentNode() throws Exception
+    {
+        BaseNode parent = new BaseNode("node2");
+        tree.getRootNode().addAndSaveChildren(parent);
+        assertTrue(parent.start());
+
+        BaseNode node = new BaseNode("node");
+        parent.addAndSaveChildren(node);
+        assertTrue(node.start());
+        
+        NodeAttributeImpl attr1 = new NodeAttributeImpl("attr1", Integer.class, null, null);
+        attr1.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
+        attr1.setValue("arg1+1");
+        attr1.setOwner(parent);
+        attr1.init();
+        parent.addNodeAttribute(attr1);
+
+        NodeAttributeImpl attr2 = new NodeAttributeImpl("attr2", Integer.class, null, null);
+        attr2.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
+        attr2.setValue("node.parent['attr1'].getValue([arg1:1])");
+        attr2.setOwner(node);
+        attr2.init();
+        node.addNodeAttribute(attr2);
+
+        assertEquals(2, attr2.getRealValue());
+    }
+    
+    @Test
+    public void getValueWithParamsInheritance() throws Exception
+    {
+        BaseNode parent = new BaseNode("node2");
+        tree.getRootNode().addAndSaveChildren(parent);
+        assertTrue(parent.start());
+
+        BaseNode node = new BaseNode("node");
+        parent.addAndSaveChildren(node);
+        assertTrue(node.start());
+        
+        NodeAttributeImpl attr1 = new NodeAttributeImpl("attr1", Integer.class, null, null);
+        attr1.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
+        attr1.setValue("arg1+1");
+        attr1.setOwner(parent);
+        attr1.init();
+        parent.addNodeAttribute(attr1);
+        
+        NodeAttribute attr1_ref = new NodeAttributeImpl("attr1", Integer.class, null, null);
+        attr1_ref.setOwner(node);
+        attr1_ref.init();
+        node.addNodeAttribute(attr1_ref);
+
+        NodeAttributeImpl attr2 = new NodeAttributeImpl("attr2", Integer.class, null, null);
+        attr2.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
+        attr2.setValue("node['attr1'].getValue([arg1:2])");
+        attr2.setOwner(node);
+        attr2.init();
+        node.addNodeAttribute(attr2);
+
+        assertEquals(3, attr2.getRealValue());
+    }
+    
+    @Test
+    public void getValueFromScriptAttribute() throws Exception
+    {
+        BaseNode node = new BaseNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        assertTrue(node.start());
+
+        NodeAttributeImpl attr1 = new NodeAttributeImpl("attr1", Integer.class, null, null);
+        attr1.setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
         attr1.setValue("arg1+1");
         attr1.setOwner(node);
         attr1.init();

@@ -53,10 +53,10 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         expect(attribute.getValueHandlerType())
                 .andReturn(ExpressionAttributeValueHandlerFactory.TYPE).anyTimes();
         listener.valueChanged(isNull(), eq(2));
-        expect(attribute.getOwner()).andReturn(node).times(5);
+        expect(attribute.getOwner()).andReturn(node).anyTimes();
         node.formExpressionBindings(isA(Bindings.class));
         expectLastCall().times(2);
-        expect(node.getLogger()).andReturn(logger);
+        expect(node.getLogger()).andReturn(logger).anyTimes();
         listener.expressionInvalidated(2);
         listener.valueChanged(2, null);
         listener.valueChanged(null, 10);
@@ -95,9 +95,10 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         AttributeValueHandlerListener listener = createMock(AttributeValueHandlerListener.class);
         
         expect(attribute.getRawValue()).andReturn("1+1");
-        expect(attribute.getOwner()).andReturn(node).times(2);
+        expect(attribute.getOwner()).andReturn(node).times(3);
         expect(attribute.getValueHandlerType())
                 .andReturn(ExpressionAttributeValueHandlerFactory.TYPE).anyTimes();
+        expect(node.getLogger()).andReturn(null).anyTimes();
         node.formExpressionBindings(isA(Bindings.class));
         listener.valueChanged(null, 2);
         
@@ -122,7 +123,8 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         expect(attribute.getValueHandlerType())
                 .andReturn(ExpressionAttributeValueHandlerFactory.TYPE).anyTimes();
         attribute.save();
-        expect(attribute.getOwner()).andReturn(node).times(2);
+        expect(attribute.getOwner()).andReturn(node).times(3);
+        expect(node.getLogger()).andReturn(null).anyTimes();
         node.formExpressionBindings(formBindings());
         
         replay(node, attribute);
@@ -148,7 +150,8 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         expect(attribute.getValueHandlerType())
                 .andReturn(ExpressionAttributeValueHandlerFactory.TYPE).anyTimes();
         attribute.save();
-        expect(attribute.getOwner()).andReturn(node).times(2);
+        expect(attribute.getOwner()).andReturn(node).times(3);
+        expect(node.getLogger()).andReturn(null).anyTimes();
         node.formExpressionBindings(isA(Bindings.class));
         expect(node.getName()).andReturn("nodeName");
         
@@ -173,7 +176,8 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         expect(attribute.getValueHandlerType())
                 .andReturn(ScriptAttributeValueHandlerFactory.TYPE).anyTimes();
         attribute.save();
-        expect(attribute.getOwner()).andReturn(node).times(4);
+        expect(attribute.getOwner()).andReturn(node).anyTimes();
+        expect(node.getLogger()).andReturn(null).anyTimes();
         node.formExpressionBindings(isA(Bindings.class));
         node.formExpressionBindings(formBindings2());
 
