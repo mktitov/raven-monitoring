@@ -132,6 +132,7 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
             Map args = (Map) varsSupport.get(RAVEN_EXPRESSION_ARGS_BINDING);
             if (args!=null){
                 bindings.putAll(args);
+                bindings.put(RAVEN_EXPRESSION_ARGS_BINDING, args);
                 varsSupport.remove(RAVEN_EXPRESSION_ARGS_BINDING);
             }
             try{

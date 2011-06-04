@@ -39,6 +39,25 @@ import static org.easymock.EasyMock.*;
  */
 public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
 {
+    @Test
+    public void speedTest() throws Exception
+    {
+        Node node = new BaseNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        assertTrue(node.start());
+        NodeAttributeImpl attr = new NodeAttributeImpl("attr", String.class, "'test'", null);
+        attr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
+        attr.setOwner(node);
+        attr.init();
+        node.addNodeAttribute(attr);
+        
+        assertEquals("test", attr.getRealValue());
+        long startTime = System.currentTimeMillis();
+        for (int i=0; i<10000; ++i)
+            attr.getRealValue();
+        System.out.println("!!! "+(System.currentTimeMillis()-startTime));
+    }
+    
     @Test 
     public void handlerConstruction() throws Exception
     {
