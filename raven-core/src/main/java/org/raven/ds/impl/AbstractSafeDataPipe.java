@@ -48,6 +48,7 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
     public static final String DATA_CONTEXT_BINDING = "context";
     public static final String DATASOURCE_BINDING = "dataSource";
     public static final String DATA_BINDING = "data";
+    public static final String REQUESTER_BINDING = "requester";
     public static final String EXPRESSION_ATTRIBUTE = "expression";
     public static final String PREPROCESS_ATTRIBUTE = "preProcess";
     public static final String SESSIONATTRIBUTES_BINDING = "sessAttrs";
@@ -221,6 +222,7 @@ public abstract class AbstractSafeDataPipe extends AbstractDataSource implements
                 debug("Preprocessing...");
             bindingSupport.put(SESSIONATTRIBUTES_BINDING, context.getSessionAttributes());
             bindingSupport.put(DATA_CONTEXT_BINDING, context);
+            bindingSupport.put(REQUESTER_BINDING, dataConsumer);
             try
             {
                 preprocessResult = getNodeAttribute(PREPROCESS_ATTRIBUTE).getRealValue();
