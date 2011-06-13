@@ -18,7 +18,9 @@
 package org.raven.net.http;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -201,6 +203,26 @@ public class HttpSessionNodeTest extends RavenCoreTestCase
         List data = collector.getDataList();
         assertNotNull(data);
         assertEquals(0, data.size());
+    }
+
+    @Test
+    public void stopProcessingTest() throws Exception
+    {
+        createRequest("request", "/test", RequestContentType.NONE, "data.stopped=2; STOP_PROCESSING");
+        createResponse("response handler", ResponseContentType.TEXT, "data.stopped=3; SKIP_DATA", null);
+
+        Handler handler = new Handler1();
+        server.setHandler(handler);
+        server.start();
+
+        Map m = new HashMap();
+        m.put("stopped", 1);
+        datasource.pushData(m);
+        List data = collector.getDataList();
+        assertNotNull(data);
+        assertEquals(1, data.size());
+        assertSame(m, data.get(0));
+        assertEquals(2, ((Map)data.get(0)).get("stopped"));
     }
 
     @Test

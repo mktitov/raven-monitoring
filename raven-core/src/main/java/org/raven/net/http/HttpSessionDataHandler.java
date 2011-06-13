@@ -82,7 +82,7 @@ public class HttpSessionDataHandler implements DataHandler
                 return HttpSessionNode.SKIP_DATA;
             handledCounter.incrementAndGet();
 
-            Collection<Node> childs = session.getHandlers(isNewSession, data);
+            Collection<Node> childs = session.getHandlers(isNewSession, data, context);
             Object res = null;
             if (childs!=null)
             {
@@ -96,6 +96,7 @@ public class HttpSessionDataHandler implements DataHandler
                         params.put(HttpSessionNode.DATA_BINDING, data);
                         params.put(HttpSessionNode.DATA_CONTEXT_BINDING, context);
                         params.put(HttpSessionNode.SKIP_DATA_BINDING, HttpSessionNode.SKIP_DATA);
+                        params.put(HttpSessionNode.STOP_PROCESSING_BINDING, HttpSessionNode.STOP_PROCESSING);
                         params.put(HttpSessionNode.IS_NEW_SESSION_BINDING, isNewSession);
                         HttpResponseHandlerNode handler = (HttpResponseHandlerNode) child;
 
@@ -135,6 +136,8 @@ public class HttpSessionDataHandler implements DataHandler
                             ++requestNumber;
                             if (HttpSessionNode.SKIP_DATA.equals(res))
                                 return HttpSessionNode.SKIP_DATA;
+                            if (HttpSessionNode.STOP_PROCESSING.equals(res))
+                                return data;
 
                             if (isRequest)
                             {

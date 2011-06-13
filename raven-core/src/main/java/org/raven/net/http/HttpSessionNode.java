@@ -30,6 +30,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataContext;
 import org.raven.ds.DataHandler;
 import org.raven.ds.impl.AbstractAsyncDataPipe;
 import org.raven.expr.impl.IfNode;
@@ -56,6 +57,8 @@ public class HttpSessionNode extends AbstractAsyncDataPipe
     public final static String PARAMS = "params";
     public final static String CONTENT = "content";
     public final static String DATA = "data";
+    public final static String STOP_PROCESSING = "STOP_PROCESSING";
+    public final static String STOP_PROCESSING_BINDING="STOP_PROCESSING";
 
     @Parameter
     private String username;
@@ -266,12 +269,13 @@ public class HttpSessionNode extends AbstractAsyncDataPipe
         }
     }
 
-    Collection<Node> getHandlers(boolean isNewSession, Object data)
+    Collection<Node> getHandlers(boolean isNewSession, Object data, DataContext context)
     {
         try
         {
             bindingSupport.put(DATA_BINDING, data);
             bindingSupport.put(IS_NEW_SESSION_BINDING, isNewSession);
+            bindingSupport.put(DATA_CONTEXT_BINDING, context);
             return getEffectiveChildrens();
         }
         finally
