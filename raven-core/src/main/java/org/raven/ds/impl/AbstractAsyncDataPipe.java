@@ -128,20 +128,36 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
+    protected void doSetData(DataSource dataSource, Object data, DataContext context)
+            throws Exception
     {
         if (handlersLock.writeLock().tryLock(MAX_HANDLERS_LOCK_WAIT, TimeUnit.MILLISECONDS))
         {
             try
             {
-                boolean res = false;
-                if (!(res=processData(data, dataSource, context)) && waitForHandler)
-                {
-                    if (waitForHandlerFree.await(waitForHandlerTimeout, TimeUnit.MILLISECONDS))
-                        res = processData(data, dataSource, context);
+                if (data!=null){
+                    boolean res = false;
+                    if (!(res=processData(data, dataSource, context)) && waitForHandler)
+                    {
+                        if (waitForHandlerFree.await(waitForHandlerTimeout, TimeUnit.MILLISECONDS))
+                            res = processData(data, dataSource, context);
+                    }
+                    if (!res && isLogLevelEnabled(LogLevel.DEBUG))
+                        debug("No free handlers to process data from "+dataSource.getPath());
+                }else{
+                    boolean hasBusy;
+                    do {
+                        hasBusy=false;
+                        for (HandlerInfo handlerInfo: handlers)
+                            if (handlerInfo.isBusy()){
+                                hasBusy = true;
+                                break;
+                            }
+                        if (hasBusy)
+                            waitForHandlerFree.await();
+                    } while (hasBusy);
+                    sendDataToConsumers(data, context);
                 }
-                if (!res && isLogLevelEnabled(LogLevel.DEBUG))
-                    debug("No free handlers to process data from "+dataSource.getPath());
             }
             finally
             {
@@ -319,6 +335,10 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
             {
                 stat.markOperationProcessingEnd(startTime);
             }
+        }
+
+        public boolean isBusy() {
+            return busy.get();
         }
 
         public void release()

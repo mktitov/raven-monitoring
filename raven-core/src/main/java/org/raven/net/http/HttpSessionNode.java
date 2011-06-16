@@ -39,7 +39,7 @@ import org.raven.tree.Node;
 import org.weda.annotations.constraints.NotNull;
 
 /**
- *
+ * 
  * @author Mikhail Titov
  */
 @NodeClass(childNodes=IfNode.class)

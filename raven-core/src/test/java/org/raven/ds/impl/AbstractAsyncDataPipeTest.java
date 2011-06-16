@@ -89,6 +89,20 @@ public class AbstractAsyncDataPipeTest extends RavenCoreTestCase
     }
 
     @Test
+    public void nullHandlingTest() throws Exception
+    {
+        dataSource.pushData("1");
+        Thread.sleep(50);
+        dataSource.pushData("2");
+        dataSource.pushData(null);
+        Thread.sleep(1100);
+
+        List dataList = collector.getDataList();
+        assertNotNull(dataList);
+        assertArrayEquals(new Object[]{"1", "2", null}, dataList.toArray());
+    }
+
+    @Test
     public void waitForHandlerTest() throws Exception
     {
         dataPipe.setMaxHandlersCount(1);

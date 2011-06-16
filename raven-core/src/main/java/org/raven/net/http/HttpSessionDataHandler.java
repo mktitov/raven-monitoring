@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.http.HttpEntity;
@@ -72,11 +71,6 @@ public class HttpSessionDataHandler implements DataHandler
             requestNumber = 0;
 
             statusMessage.set("Starting processing data from "+dataSource.getPath());
-            if (data==null){
-                if (owner.isLogLevelEnabled(LogLevel.DEBUG))
-                    owner.getLogger().debug(logMess("Skipping processing data because of it's NULL"));
-                return null;
-            }
             
             initCounters(context, session);
 
