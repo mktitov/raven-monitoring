@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.http.HttpEntity;
@@ -44,6 +45,7 @@ public class HttpSessionDataHandler implements DataHandler
     private final HttpClient client;
     private AtomicReference<String> statusMessage;
     private boolean isNewSession = true;
+    private boolean connected = false;
     private long requestSetNumber;
     private int requestNumber;
     private AtomicInteger errorsCounter;
@@ -83,98 +85,134 @@ public class HttpSessionDataHandler implements DataHandler
             handledCounter.incrementAndGet();
 
             Collection<Node> childs = session.getHandlers(isNewSession, data, context);
+            if (childs==null)
+                return null;
             Object res = null;
-            if (childs!=null)
-            {
-                requestNumber=0;
-                String requestUri="";
-                for (Node child: childs)
+            requestNumber=0;
+            String requestUri="";
+            if (!connected && !session.getUseSessionMode())
+                connected = true;
+            for (Node child: childs) {
+                if (   !(child instanceof HttpResponseHandlerNode) 
+                    || !Status.STARTED.equals(child.getStatus()))
                 {
-                    if (child instanceof HttpResponseHandlerNode && Status.STARTED.equals(child.getStatus()))
+                    continue;
+                }
+                HttpResponseHandlerNode handler = (HttpResponseHandlerNode) child;
+                boolean isRequest = child instanceof HttpRequestNode;
+                
+                if (connected && isRequest && ((HttpRequestNode)handler).getSessionInitializer())
+                    continue;
+                
+                Map<String, Object> params = initParamsAndRequest(
+                        data, context, isRequest, session, response);
+                logInitProcessing(isRequest, child, session);
+                
+                Object pres = processResponseStatusCode(
+                        handler, response, session, context, params, requestUri);
+                if (pres!=null)
+                    return pres;
+
+                long start = handler.operationStatistic.markOperationProcessingStart();
+                try
+                {
+                    try{
+                        res = handler.processResponse(params);
+                    }finally{
+                        if (response!=null)
+                            response.getEntity().consumeContent();
+                    }
+                    ++requestNumber;
+                    if (HttpSessionNode.SKIP_DATA.equals(res))
+                        return HttpSessionNode.SKIP_DATA;
+                    if (HttpSessionNode.STOP_PROCESSING.equals(res))
+                        return data;
+
+                    if (isRequest)
                     {
-                        Map<String, Object> params = new HashMap<String, Object>();
-                        params.put(HttpSessionNode.DATA_BINDING, data);
-                        params.put(HttpSessionNode.DATA_CONTEXT_BINDING, context);
-                        params.put(HttpSessionNode.SKIP_DATA_BINDING, HttpSessionNode.SKIP_DATA);
-                        params.put(HttpSessionNode.STOP_PROCESSING_BINDING, HttpSessionNode.STOP_PROCESSING);
-                        params.put(HttpSessionNode.IS_NEW_SESSION_BINDING, isNewSession);
-                        HttpResponseHandlerNode handler = (HttpResponseHandlerNode) child;
-
-                        boolean isRequest = child instanceof HttpRequestNode;
-                        String msg = "Processing "+(isRequest? "request" : "response")+" ("+child.getName()+")";
-                        statusMessage.set(msg);
-                        if (requestNumber>0 && session.isLogLevelEnabled(LogLevel.DEBUG))
-                            session.getLogger().debug(logMess("Processing response"));
-                        if (isRequest)
-                            params.put(HttpSessionNode.REQUEST, session.initRequest());
-
-                        Map responseMap = new HashMap();
-                        responseMap.put(HttpSessionNode.RESPONSE_RESPONSE, response);
-                        params.put(HttpSessionNode.RESPONSE, responseMap);
-
-                        Integer expectedStatus = handler.getExpectedResponseStatusCode();
-                        if (response!=null && expectedStatus!=null
-                            && !expectedStatus.equals(response.getStatusLine().getStatusCode()))
-                        {
+                        Map requestMap = (Map)params.get(HttpSessionNode.REQUEST);
+                        HttpRequest request = (HttpRequest)requestMap.get(
+                                HttpSessionNode.REQUEST_REQUEST);
+                        HttpHost target = new HttpHost(
+                                (String)requestMap.get(HttpSessionNode.HOST)
+                                , (Integer)requestMap.get(HttpSessionNode.PORT));
+                        requestUri = request.getRequestLine().getMethod() + " "
+                                +request.getRequestLine().getUri();
+                        if (session.isLogLevelEnabled(LogLevel.DEBUG))
+                            session.getLogger().debug(logMess(
+                                    "Sending request for node ("+child.getName()+"): "+requestUri));
+                        try{
+                            response = client.execute(target, request);
+                        }catch(Throwable e){
                             if (session.isLogLevelEnabled(LogLevel.WARN))
-                                session.getLogger().warn(logMess(String.format(
-                                        "Invalid response status code (expected %s but was %s) for request: %s"
-                                        , expectedStatus, response.getStatusLine().getStatusCode(), requestUri)));
-                            return handleError(context, session, response.getEntity(), params);
+                                session.getLogger().warn(logMess(
+                                        "Executing request error. "+e.getMessage()));
+                            return handleError(context, session, response==null? 
+                                    null : response.getEntity(), params);
                         }
-
-                        long start = handler.operationStatistic.markOperationProcessingStart();
-                        try
-                        {
-                            try{
-                                res = handler.processResponse(params);
-                            }finally{
-                                if (response!=null)
-                                    response.getEntity().consumeContent();
-                            }
-
-                            ++requestNumber;
-                            if (HttpSessionNode.SKIP_DATA.equals(res))
-                                return HttpSessionNode.SKIP_DATA;
-                            if (HttpSessionNode.STOP_PROCESSING.equals(res))
-                                return data;
-
-                            if (isRequest)
-                            {
-                                Map requestMap = (Map)params.get(HttpSessionNode.REQUEST);
-                                HttpRequest request = (HttpRequest)requestMap.get(HttpSessionNode.REQUEST_REQUEST);
-                                HttpHost target = new HttpHost(
-                                        (String)requestMap.get(HttpSessionNode.HOST)
-                                        , (Integer)requestMap.get(HttpSessionNode.PORT));
-                                requestUri = request.getRequestLine().getMethod() + " "+request.getRequestLine().getUri();
-                                if (session.isLogLevelEnabled(LogLevel.DEBUG))
-                                    session.getLogger().debug(logMess(
-                                            "Sending request for node ("+child.getName()+"): "+requestUri));
-                                try{
-                                    response = client.execute(target, request);
-                                }catch(Throwable e){
-                                    if (session.isLogLevelEnabled(LogLevel.WARN))
-                                        session.getLogger().warn(logMess("Executing request error. "+e.getMessage()));
-                                    return handleError(context, session, response==null? null : response.getEntity(), params);
-                                }
-                                if (session.isLogLevelEnabled(LogLevel.DEBUG))
-                                    session.getLogger().debug(logMess("Response status: "+response.getStatusLine().toString()));
-                            }
-                        }
-                        finally
-                        {
-                            handler.operationStatistic.markOperationProcessingEnd(start);
-                        }
+                        if (session.isLogLevelEnabled(LogLevel.DEBUG))
+                            session.getLogger().debug(logMess(
+                                    "Response status: "+response.getStatusLine().toString()));
                     }
                 }
-
+                finally {
+                    handler.operationStatistic.markOperationProcessingEnd(start);
+                }
             }
             return res;
         }
-        finally
-        {
+        finally {
             isNewSession = false;
         }
+    }
+
+    private void logInitProcessing(boolean isRequest, Node child, HttpSessionNode session) {
+        String msg = "Processing "+(isRequest? "request" : "response")+" ("+child.getName()+")";
+        statusMessage.set(msg);
+        if (requestNumber>0 && session.isLogLevelEnabled(LogLevel.DEBUG))
+            session.getLogger().debug(logMess("Processing response"));
+    }
+    
+    private Map<String, Object> initParamsAndRequest(Object data, DataContext context
+            , boolean isRequest, HttpSessionNode session, HttpResponse response)
+    {
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put(HttpSessionNode.DATA_BINDING, data);
+        params.put(HttpSessionNode.DATA_CONTEXT_BINDING, context);
+        params.put(HttpSessionNode.SKIP_DATA_BINDING, HttpSessionNode.SKIP_DATA);
+        params.put(HttpSessionNode.STOP_PROCESSING_BINDING, HttpSessionNode.STOP_PROCESSING);
+        params.put(HttpSessionNode.IS_NEW_SESSION_BINDING, isNewSession);
+        if (isRequest)
+            params.put(HttpSessionNode.REQUEST, session.initRequest());
+        Map responseMap = new HashMap();
+        responseMap.put(HttpSessionNode.RESPONSE_RESPONSE, response);
+        params.put(HttpSessionNode.RESPONSE, responseMap);
+        
+        return params;
+    }
+    
+    private Object processResponseStatusCode(HttpResponseHandlerNode handler, HttpResponse response
+            , HttpSessionNode session, DataContext context, Map params, String requestUri)
+        throws Exception
+    {
+        Integer expectedStatus = handler.getExpectedResponseStatusCode();
+        if (response!=null && expectedStatus!=null
+            && !expectedStatus.equals(response.getStatusLine().getStatusCode()))
+        {
+            if (session.isLogLevelEnabled(LogLevel.WARN))
+                session.getLogger().warn(logMess(String.format(
+                        "Invalid response status code (expected %s but was %s) for request: %s"
+                        , expectedStatus, response.getStatusLine().getStatusCode(), requestUri)));
+            return handleError(context, session, response.getEntity(), params);
+        }
+        HttpRequestNode request = 
+                (HttpRequestNode)(handler instanceof HttpRequestNode? handler : null);
+        if (!connected && (request==null || !request.getSessionInitializer())) {
+            if (session.isLogLevelEnabled(LogLevel.DEBUG))
+                session.getLogger().debug(logMess("Successfully connected"));
+            connected = true;
+        }
+        return null;
     }
 
     private void initCounters(DataContext context, HttpSessionNode session)

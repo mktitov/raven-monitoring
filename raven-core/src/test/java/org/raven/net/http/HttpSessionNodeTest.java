@@ -309,6 +309,62 @@ public class HttpSessionNodeTest extends RavenCoreTestCase
         assertArrayEquals(new Object[]{"oldSession"}, collector.getDataList().toArray());
     }
 
+    @Test
+    public void sessionModeSuccessConnectionTest() throws Exception
+    {
+        session.setUseSessionMode(Boolean.TRUE);
+        HttpRequestNode req = createRequest(
+                "request", "/test", RequestContentType.NONE, "context['connCount']++");
+        req.setSessionInitializer(Boolean.TRUE);
+        createResponse("response handler", ResponseContentType.TEXT, "'Ok'", null);
+
+        Handler handler = new Handler1();
+        server.setHandler(handler);
+        server.start();
+
+        DataContext context = new DataContextImpl();
+        Map params = context.getParameters();
+        params.put("connCount", 0);
+        datasource.pushData("test", context);
+        assertArrayEquals(new Object[]{"Ok"}, collector.getDataList().toArray());
+        assertEquals(1, params.get("connCount"));
+        
+        collector.getDataList().clear();
+        datasource.pushData("test", context);
+        assertArrayEquals(new Object[]{"Ok"}, collector.getDataList().toArray());
+        assertEquals(1, params.get("connCount"));
+    }
+
+    @Test
+    public void sessionModeUnsuccessConnectionTest() throws Exception
+    {
+        session.setUseSessionMode(Boolean.TRUE);
+        session.setErrorHandler("'error'");
+        HttpRequestNode req = createRequest(
+                "request", "/test", RequestContentType.NONE, "context['connCount']++");
+        req.setSessionInitializer(Boolean.TRUE);
+        createResponse(
+                "response handler", ResponseContentType.TEXT, "'Ok'", HttpServletResponse.SC_OK);
+
+        Handler1 handler = new Handler1();
+        handler.setResponseStatus(HttpServletResponse.SC_BAD_REQUEST);
+        server.setHandler(handler);
+        server.start();
+
+        DataContext context = new DataContextImpl();
+        Map params = context.getParameters();
+        params.put("connCount", 0);
+        datasource.pushData("test", context);
+        assertArrayEquals(new Object[]{"error"}, collector.getDataList().toArray());
+        assertEquals(1, params.get("connCount"));
+        
+        handler.setResponseStatus(HttpServletResponse.SC_OK);
+        collector.getDataList().clear();
+        datasource.pushData("test", context);
+        assertArrayEquals(new Object[]{"Ok"}, collector.getDataList().toArray());
+        assertEquals(2, params.get("connCount"));
+    }
+
     private HttpResponseHandlerNode createResponse(
             String nodeName, ResponseContentType responseType, String processResponseScript, Integer responseStatusCode)
     {

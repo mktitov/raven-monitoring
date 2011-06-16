@@ -55,6 +55,9 @@ public class HttpRequestNode extends HttpResponseHandlerNode
 
     @NotNull @Parameter
     private Integer port;
+    
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean sessionInitializer;
 
     /**
      * Returns the HttpPost or HttpGet object
@@ -119,6 +122,14 @@ public class HttpRequestNode extends HttpResponseHandlerNode
         }
         
         return res;
+    }
+
+    public Boolean getSessionInitializer() {
+        return sessionInitializer;
+    }
+
+    public void setSessionInitializer(Boolean sessionInitializer) {
+        this.sessionInitializer = sessionInitializer;
     }
 
     public Integer getConnectionTimeout() {

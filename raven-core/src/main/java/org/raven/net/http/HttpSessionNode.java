@@ -92,6 +92,9 @@ public class HttpSessionNode extends AbstractAsyncDataPipe
 
     @NotNull @Parameter(defaultValue="10")
     private Integer checkMaxPercentOfErrorsAfter;
+    
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean useSessionMode;
 
     private AtomicLong requestSetNumber;
 
@@ -123,6 +126,14 @@ public class HttpSessionNode extends AbstractAsyncDataPipe
     {
         HttpClient client = createHttpClient();
         return new HttpSessionDataHandler(client);
+    }
+
+    public Boolean getUseSessionMode() {
+        return useSessionMode;
+    }
+
+    public void setUseSessionMode(Boolean useSessionMode) {
+        this.useSessionMode = useSessionMode;
     }
 
     public Integer getConnectionTimeout() {
