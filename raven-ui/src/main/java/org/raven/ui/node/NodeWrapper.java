@@ -274,7 +274,7 @@ implements Comparator<NodeAttribute>, INodeScanner, ScannedNodeHandler
 	public boolean isChildViewable()
 	{
 		if(!isAllowNodeRead()) return false;
-		Collection<Node> c = getNode().getSortedChildrens();
+		Collection<Node> c = getNode().getEffectiveChildrens();
 		if(c!=null) 
 		{
 			Iterator<Node> it = c.iterator();
