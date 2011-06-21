@@ -583,7 +583,7 @@ public class BaseNode implements Node, NodeListener, Logger
                     sortedChildrens.addAll(i, list);
             }
         }
-        return sortedChildrens.size()==0? null : sortedChildrens;
+        return sortedChildrens.isEmpty()? null : sortedChildrens;
     }
 
     public Node getChildren(String name)
@@ -766,7 +766,9 @@ public class BaseNode implements Node, NodeListener, Logger
                     if ( (attr.isRequired() && attr.getValue()==null)
                        && (   !(attr.getValueHandler() instanceof ExpressionAttributeValueHandler)
                            || !attr.isExpressionValid() )
-                       && ( !ObjectUtils.in(attr.getValueHandlerType(), ActionAttributeValueHandlerFactory.TYPE, RefreshAttributeValueHandlerFactory.TYPE)))
+                       && !ObjectUtils.in(attr.getValueHandlerType()
+                            , ActionAttributeValueHandlerFactory.TYPE
+                            , RefreshAttributeValueHandlerFactory.TYPE))
                     {
                         error(String.format(
                                 "Error switching node (%s) to the STARTED state. " +
