@@ -17,6 +17,7 @@
 
 package org.raven.ds.impl;
 
+import java.io.ByteArrayInputStream;
 import org.raven.auth.UserContext;
 import java.util.Iterator;
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.ds.impl.RecordsAsTableNode.DeleteRecordAction;
@@ -31,8 +33,10 @@ import org.raven.test.PushOnDemandDataSource;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.RavenUtils;
 import org.raven.TestUserContext;
+import org.raven.ds.BinaryFieldType;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchemaFieldType;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.table.Table;
 import org.raven.test.DataCollector;
 import org.raven.test.UserContextServiceModule;
@@ -171,6 +175,99 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         assertArrayEquals(new String[]{"test2", "2"}, rows.get(1));
 
         verify(record);
+    }
+    
+    @Test
+    public void binaryFieldTypeTest() throws Exception
+    {
+        RecordSchemaFieldNode.create(schema, "field3", null, RecordSchemaFieldType.BINARY, null);
+        byte[] arr = "content".getBytes();
+        
+        BinaryFieldType binaryValue = createMock(BinaryFieldType.class);
+        Record record = createMock(Record.class);
+        expect(record.getSchema()).andReturn(schema).anyTimes();
+        expect(binaryValue.getData()).andReturn(new ByteArrayInputStream(arr));
+        expect(record.getValue("field3")).andReturn(binaryValue);
+        
+        replay(binaryValue, record);
+        
+        tableNode.setFieldsOrder("field3");
+        
+        ds.addDataPortion(record);
+        ds.addDataPortion(null);
+        
+        Collection<ViewableObject> objects = tableNode.getViewableObjects(null);
+        assertNotNull(objects);
+        assertEquals(1, objects.size());
+        ViewableObject object = objects.iterator().next();
+        assertNotNull(object);
+        assertNotNull(object.getData());
+        assertTrue(object.getData() instanceof Table);
+        Table table = (Table) object.getData();
+        List<Object[]> rows = RavenUtils.tableAsList(table);
+        assertEquals(1, rows.size());
+        assertTrue(rows.get(0)[0] instanceof ViewableObject);
+        ViewableObject vo = (ViewableObject) rows.get(0)[0];
+        assertEquals("file", vo.toString());
+        assertEquals("application/octet-stream", vo.getMimeType());
+        Object data = vo.getData();
+        assertTrue(data instanceof BinaryFieldType);
+        assertArrayEquals(arr, IOUtils.toByteArray(((BinaryFieldType)data).getData()));
+
+        verify(record, binaryValue);
+    }
+
+    @Test
+    public void binaryFieldTypeWithFileExtensionTest() throws Exception
+    {
+        RecordSchemaFieldNode field = RecordSchemaFieldNode.create(
+                schema, "field3", null, RecordSchemaFieldType.BINARY, null);
+        FileRecordFieldExtension fileExt = new FileRecordFieldExtension();
+        fileExt.setName("file");
+        field.addAndSaveChildren(fileExt);
+        fileExt.setMimeType("text/plain");
+        NodeAttribute attr = fileExt.getNodeAttribute(FileRecordFieldExtension.FILENAME_ATTR);
+        attr.setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        attr.setValue("record['filename']");
+        assertTrue(fileExt.start());
+        
+        RecordSchemaFieldNode.create(schema, "filename", null, RecordSchemaFieldType.STRING, null);
+
+        byte[] arr = "content".getBytes();
+
+        BinaryFieldType binaryValue = createMock(BinaryFieldType.class);
+        Record record = createMock(Record.class);
+        expect(record.getSchema()).andReturn(schema).anyTimes();
+        expect(binaryValue.getData()).andReturn(new ByteArrayInputStream(arr));
+        expect(record.getValue("field3")).andReturn(binaryValue);
+        expect(record.getAt("filename")).andReturn("filename.txt");
+
+        replay(binaryValue, record);
+
+        tableNode.setFieldsOrder("field3");
+
+        ds.addDataPortion(record);
+        ds.addDataPortion(null);
+
+        Collection<ViewableObject> objects = tableNode.getViewableObjects(null);
+        assertNotNull(objects);
+        assertEquals(1, objects.size());
+        ViewableObject object = objects.iterator().next();
+        assertNotNull(object);
+        assertNotNull(object.getData());
+        assertTrue(object.getData() instanceof Table);
+        Table table = (Table) object.getData();
+        List<Object[]> rows = RavenUtils.tableAsList(table);
+        assertEquals(1, rows.size());
+        assertTrue(rows.get(0)[0] instanceof ViewableObject);
+        ViewableObject vo = (ViewableObject) rows.get(0)[0];
+        assertEquals("filename.txt", vo.toString());
+        assertEquals("text/plain", vo.getMimeType());
+        Object data = vo.getData();
+        assertTrue(data instanceof BinaryFieldType);
+        assertArrayEquals(arr, IOUtils.toByteArray(((BinaryFieldType)data).getData()));
+
+        verify(record, binaryValue);
     }
 
     @Test

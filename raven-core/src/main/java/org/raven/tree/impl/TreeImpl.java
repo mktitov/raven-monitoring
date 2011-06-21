@@ -106,6 +106,7 @@ public class TreeImpl implements Tree
 	private final Set<Class> importParentChildTypeNodes = new HashSet<Class>();
     private final AtomicInteger dynamicNodeId = new AtomicInteger();
     private final AtomicInteger dynamicAttributeId = new AtomicInteger();
+    private final AtomicInteger globalBindingsId = new AtomicInteger();
     private RootNode rootNode;
     private SystemNode systemNode;
     private AuthorizationNode authorizationNode;    
@@ -771,6 +772,13 @@ public class TreeImpl implements Tree
     public void addGlobalBindings(String bindingSupportId, BindingSupport bindingSupport)
     {
         rootNode.addBindingSupport(bindingSupportId, bindingSupport);
+    }
+    
+    public String addGlobalBindings(BindingSupport bindingSupport)
+    {
+        String id = ""+globalBindingsId.incrementAndGet();
+        addGlobalBindings(id, bindingSupport);
+        return id;
     }
 
     public BindingSupport getGlobalBindings(String bindingSupportId)

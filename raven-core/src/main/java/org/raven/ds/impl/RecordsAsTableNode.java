@@ -29,6 +29,7 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.auth.UserContext;
 import org.raven.auth.UserContextService;
+import org.raven.ds.BinaryFieldType;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
@@ -844,17 +845,40 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                                 columnValues==null? null : columnValues.get(i);
                         if (columnValue!=null)
                         {
-                            columnValue = columnValues.get(i);
                             columnValue.addBinding(VALUE_BINDING, value);
                             columnValue.addBinding(RECORD_BINDING, record);
                             columnValue.addBinding(AbstractSafeDataPipe.DATA_CONTEXT_BINDING, context);
                             value = columnValue.getNodeAttribute(
                                     RecordsAsTableColumnValueNode.COLUMN_VALUE_ATTR).getRealValue();
                         }
-
-                        value = converter.convert(
-                                String.class, value
-                                , fields.get(fieldNames[i]).getPattern());
+                        
+                        if (value instanceof BinaryFieldType){
+                            String mimeType = null;
+                            String fileName = null;
+                            FileRecordFieldExtension fileExt = fields.get(fieldNames[i])
+                                    .getFieldExtension(FileRecordFieldExtension.class, null);
+                            if (fileExt!=null){
+                                String bindingId = tree.addGlobalBindings(bindingSupport);
+                                bindingSupport.enableScriptExecution();
+                                try {
+                                    bindingSupport.put(RECORD_BINDING, record);
+                                    mimeType = fileExt.getMimeType();
+                                    fileName = fileExt.getFileName();
+                                } finally {
+                                    bindingSupport.reset();
+                                    tree.removeGlobalBindings(bindingId);
+                                }
+                            }
+                            if (mimeType==null)
+                                mimeType = "application/octet-stream";
+                            if (fileName==null)
+                                fileName = "file";
+                            ViewableObject vo = new ViewableObjectImpl(mimeType, value, fileName);
+                            value = vo;
+                        } else 
+                            value = converter.convert(
+                                    String.class, value
+                                    , fields.get(fieldNames[i]).getPattern());
                         if (showFieldsInDetailColumn && detailColumnNumber==i)
                             row[i+actionsCount] = createDetailObject((String)value, record);
                         else

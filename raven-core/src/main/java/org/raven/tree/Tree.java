@@ -191,12 +191,19 @@ public interface Tree
      */
     public boolean scanSubtree(
             Node startingPoint, ScannedNodeHandler handler, ScanOptions options);
+        
     /**
-     * Adds global binding support to the tree
+     * Adds global binding support to the tree. If binding already exists then bindingSupport 
+     * will not be added
      * @param bindingSupportId the unique binding support identificator
      * @param bindingSupport binding support to add
      */
     public void addGlobalBindings(String bindingSupportId, BindingSupport bindingSupport);
+    /**
+     * Adds global bindings support to the tree and returns the unique id that you can use in the
+     * {@link #getGlobalBindings(String)} or in the {@link #removeGlobalBindings(String)} methods .
+     */
+    public String addGlobalBindings(BindingSupport bindingSupport);
     /**
      * Returns global binding support or null if binding support for given id not exists
      * @param bindingSupportId id of the binding support

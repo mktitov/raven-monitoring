@@ -17,7 +17,6 @@
 
 package org.raven.tree.impl;
 
-import org.raven.expr.impl.ExpressionAttributeValueHandler;
 import javax.script.Bindings;
 import org.junit.Assert;
 import org.junit.Test;

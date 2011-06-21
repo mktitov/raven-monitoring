@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.expr.BindingSupport;
+import org.raven.tree.Tree;
 
 /**
  *
@@ -38,20 +39,32 @@ public class RootNode extends BaseNode
         bindingSupports = new ConcurrentHashMap<String, BindingSupport>();
     }
 
-    public void addBindingSupport(String bindingSupportId, BindingSupport bindingSupport)
+    /**
+     * @see Tree#addGlobalBindings(String, org.raven.expr.BindingSupport) 
+     */
+    public void addBindingSupport(
+            String bindingSupportId, BindingSupport bindingSupport)
     {
+        if (bindingSupports.containsKey(bindingSupportId))
+            return;
         bindingSupport.setForceDisableScriptExcecution(true);
         bindingSupports.put(bindingSupportId, bindingSupport);
     }
 
+    /**
+     * @see Tree#getGlobalBindings(String)
+     */
     public BindingSupport getBindingSupport(String bindingSupportId)
     {
         return bindingSupports.get(bindingSupportId);
     }
 
+    /**
+     * @see Tree#removeGlobalBindings(String) 
+     */
     public void removeBindingSupport(String bindingSupportId)
     {
-        bindingSupports.remove(bindingSupportId);
+        bindingSupports.remove(bindingSupportId);       
     }
 
     @Override
