@@ -13,7 +13,10 @@ import javax.faces.event.ActionEvent;
 import javax.servlet.http.HttpServletResponse;
 
 //import org.apache.tools.ant.input.InputRequest;
+import org.apache.commons.io.IOUtils;
 import org.raven.cache.CacheValueContainer;
+import org.raven.ds.BinaryFieldType;
+import org.raven.ds.impl.BinaryFieldValue;
 import org.raven.tree.ViewableObject;
 import org.raven.ui.SessionBean;
 import org.slf4j.Logger;
@@ -98,22 +101,31 @@ public class OtherVOExportBean
 				byte[] ba = (byte[]) data;
 				out.write(ba, 0, ba.length); //.print(x);
 			}
+            BinaryFieldType binaryField = null;
+            if (data instanceof BinaryFieldType) {
+                binaryField = (BinaryFieldType) data;
+                data = binaryField.getData();
+            }
 			if (data instanceof InputStream) 
 			{
 				int len;
 				byte[] buf = new byte[BUF_LEN];
 				is = (InputStream) data;
-				while( (len=is.read(buf))!=-1 )
-					out.write(buf, 0, len); 
-			}
+                try {
+                    while( (len=is.read(buf))!=-1 )
+                        out.write(buf, 0, len); 
+                } finally {
+                    IOUtils.closeQuietly(is);
+                    if (binaryField!=null)
+                        binaryField.closeResources();
+                }
+			}            
 		}
-		catch (IOException e) { logger.error("",e); }
+		catch (Exception e) { logger.error("",e); }
 		finally {
 			try {out.close();} catch(Exception e) {}
 			if(is!=null) try {is.close();} catch(Exception e) {}
 		}
 		fc.responseComplete(); 			
 	}
-	
-
 }
