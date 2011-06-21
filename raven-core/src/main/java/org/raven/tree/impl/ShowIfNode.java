@@ -17,7 +17,8 @@
 
 package org.raven.tree.impl;
 
-import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import javax.script.Bindings;
@@ -30,7 +31,6 @@ import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
-import org.raven.util.NodeUtils;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.internal.annotations.Service;
 
@@ -39,7 +39,7 @@ import org.weda.internal.annotations.Service;
  * @author Mikhail Titov
  */
 @NodeClass(anyChildTypes=true)
-public class ShowIfNode extends BaseNode implements Viewable
+public class ShowIfNode extends AbstractViewableNode
 {
     public final static String EXPRESSION_ATTR = "expression";
 
@@ -48,6 +48,9 @@ public class ShowIfNode extends BaseNode implements Viewable
 
     @NotNull @Parameter()
     private Boolean expression;
+
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean autoRefresh;
 
     private BindingSupportImpl bindingSupport;
 
@@ -58,28 +61,24 @@ public class ShowIfNode extends BaseNode implements Viewable
     }
 
     @Override
-    public boolean isConditionalNode() {
-        return isTemplate()? false : true;
-    }
-
-    @Override
-    public Collection<Node> getEffectiveChildrens() 
-    {
-        if (!isConditionalNode())
-            return null;
-        bindingSupport.put(BindingNames.USER_CONTEXT, userContextService.getUserContext());
-        try {
-            Boolean res = expression;
-            return res==null || !res? null : super.getEffectiveChildrens();
-        } finally {
-            bindingSupport.reset();
-        }
-    }
-
-    @Override
     public void formExpressionBindings(Bindings bindings) {
         super.formExpressionBindings(bindings);
         bindingSupport.addTo(bindings);
+    }
+
+    private boolean calculateExpression(Map<String, NodeAttribute> refAttrs)
+    {
+        if (!Status.STARTED.equals(getStatus()))
+            return false;
+        bindingSupport.put(BindingNames.USER_CONTEXT, userContextService.getUserContext());
+        if (refAttrs!=null)
+            bindingSupport.put(BindingNames.REFRESH_ATTRIBUTES, refAttrs);
+        try {
+            Boolean res = expression;
+            return res==null? false : res;
+        } finally {
+            bindingSupport.reset();
+        }
     }
 
     public Boolean getExpression() {
@@ -90,16 +89,54 @@ public class ShowIfNode extends BaseNode implements Viewable
         this.expression = expression;
     }
 
+    @Override
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
     {
-        NodeUtils
+        if (!calculateExpression(null))
+            return null;
+
+        Map<String, NodeAttribute> refAttrs = super.getRefreshAttributes();
+
+        List<Node> childs = getSortedChildrens();
+        if (childs==null)
+            return refAttrs;
+
+        if (refAttrs==null)
+            refAttrs = new HashMap<String, NodeAttribute>();
+        
+        for (Node child: childs)
+            if (child instanceof Viewable){
+                Map<String, NodeAttribute> childRefAttrs = ((Viewable)child).getRefreshAttributes();
+                if (childRefAttrs!=null)
+                    refAttrs.putAll(childRefAttrs);
+            }
+        return refAttrs.isEmpty()? null : refAttrs;
     }
 
-    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) 
+            throws Exception
+    {
+        if (!calculateExpression(refreshAttributes))
+            return null;
+        List<Node> childs = getSortedChildrens();
+        if (childs==null)
+            return null;
+        List<ViewableObject> viewableObjects = new LinkedList<ViewableObject>();
+        for (Node child: childs)
+            if (child instanceof Viewable){
+                List<ViewableObject> childViewableObjects =
+                        ((Viewable)child).getViewableObjects(refreshAttributes);
+                if (childViewableObjects!=null)
+                    viewableObjects.addAll(childViewableObjects);
+            }
+        return viewableObjects.isEmpty()? null : viewableObjects;
+    }
+
+    public void setAutoRefresh(Boolean autoRefresh) {
+        this.autoRefresh = autoRefresh;
     }
 
     public Boolean getAutoRefresh() {
-        return true
+        return autoRefresh;
     }
 }

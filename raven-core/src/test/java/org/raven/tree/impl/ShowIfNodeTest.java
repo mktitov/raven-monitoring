@@ -17,15 +17,16 @@
 
 package org.raven.tree.impl;
 
-import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.TestUserContext;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.test.UserContextServiceModule;
-import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.ViewableObject;
 
 /**
  *
@@ -35,10 +36,10 @@ public class ShowIfNodeTest extends RavenCoreTestCase
 {
     private ContainerNode container;
     private ShowIfNode ifnode;
-    private ContainerNode node;
+    private TextNode node;
 
     @Before
-    public void prepare()
+    public void prepare() throws Exception
     {
         container = new ContainerNode("container");
         tree.getRootNode().addAndSaveChildren(container);
@@ -48,13 +49,20 @@ public class ShowIfNodeTest extends RavenCoreTestCase
         ifnode.setName("ifnode");
         container.addAndSaveChildren(ifnode);
 
-        node = new ContainerNode("node");
+        node = new TextNode();
+        node.setName("text");
         ifnode.addAndSaveChildren(node);
+        node.setText("test");
+        NodeAttributeImpl attr = new NodeAttributeImpl("attr", String.class, null, null);
+        attr.setValueHandlerType(RefreshAttributeValueHandlerFactory.TYPE);
+        attr.setOwner(node);
+        attr.init();
+        node.addNodeAttribute(attr);
         assertTrue(node.start());
     }
 
     @Test
-    public void trueExpressionTest()
+    public void trueExpressionTest() throws Exception
     {
         ifnode.setExpression(true);
         assertTrue(ifnode.start());
@@ -62,11 +70,11 @@ public class ShowIfNodeTest extends RavenCoreTestCase
     }
 
     @Test
-    public void falseExpressionTest()
+    public void falseExpressionTest() throws Exception
     {
         ifnode.setExpression(false);
-        assertTrue(ifnode.start());
-        assertNull(container.getEffectiveChildrens());
+        assertNull(ifnode.getRefreshAttributes());
+        assertNull(ifnode.getViewableObjects(null));
     }
 
     @Test
@@ -83,11 +91,16 @@ public class ShowIfNodeTest extends RavenCoreTestCase
         checkChilds();
     }
 
-    private void checkChilds()
+    private void checkChilds() throws Exception
     {
-        Collection<Node> childs = container.getEffectiveChildrens();
-        assertNotNull(childs);
-        assertEquals(1, childs.size());
-        assertSame(node, childs.iterator().next());
+        Map<String, NodeAttribute> refAttrs = ifnode.getRefreshAttributes();
+        assertNotNull(refAttrs);
+        assertEquals(1, refAttrs.size());
+        assertTrue(refAttrs.containsKey("attr"));
+
+        List<ViewableObject> vos = ifnode.getViewableObjects(refAttrs);
+        assertNotNull(vos);
+        assertEquals(1, vos.size());
+        assertEquals("test", vos.get(0).getData());
     }
 }

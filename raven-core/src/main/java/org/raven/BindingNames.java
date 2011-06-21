@@ -24,4 +24,5 @@ package org.raven;
 public interface BindingNames
 {
     public static String USER_CONTEXT = "userContext";
+    public static String REFRESH_ATTRIBUTES = "refreshAttributes";
 }
