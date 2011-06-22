@@ -476,21 +476,27 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
             throws Exception
     {
         Map<String, String> detailFieldValues = null;
-        List<String> fieldValues = RavenUtils.getMasterFieldValues(masterNode);
-        if (fieldValues!=null) {
-            String[] detailFieldNames = getDetailFieldNames();
-            if (detailFieldNames==null || detailFieldNames.length!=fieldValues.size())
-                throw new Exception("The number of master fields not equals to number "
-                        + "of detail fields");
-            detailFieldValues = new HashMap<String, String>();
-            for (int i=0; i<fieldValues.size(); ++i) {
-                detailFieldValues.put(detailFieldNames[i], fieldValues.get(i));
-                NodeAttribute attr = attrs.get(detailFieldNames[i]);
-                if (attr!=null)
-                    attr.setValue(fieldValues.get(i));
+        try{
+            List<String> fieldValues = RavenUtils.getMasterFieldValues(masterNode);
+            if (fieldValues!=null) {
+                String[] detailFieldNames = getDetailFieldNames();
+                if (detailFieldNames==null || detailFieldNames.length!=fieldValues.size())
+                    throw new Exception("The number of master fields not equals to number "
+                            + "of detail fields");
+                detailFieldValues = new HashMap<String, String>();
+                for (int i=0; i<fieldValues.size(); ++i) {
+                    detailFieldValues.put(detailFieldNames[i], fieldValues.get(i));
+                    NodeAttribute attr = attrs.get(detailFieldNames[i]);
+                    if (attr!=null)
+                        attr.setValue(fieldValues.get(i));
+                }
             }
+            return detailFieldValues;
+        }catch(Exception e){
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                getLogger().debug(e.getMessage());
+            return null;
         }
-        return detailFieldValues;
     }
 
     String[] getDetailFieldNames()
