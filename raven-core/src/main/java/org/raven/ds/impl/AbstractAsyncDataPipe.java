@@ -154,7 +154,7 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
                                 break;
                             }
                         if (hasBusy)
-                            waitForHandlerFree.await();
+                            waitForHandlerFree.await(1, TimeUnit.SECONDS);
                     } while (hasBusy);
                     sendDataToConsumers(data, context);
                 }
@@ -291,7 +291,8 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
         private DataSource dataSource;
         private OperationStatistic stat = new OperationStatistic();
         private int handlerCreationCount = 0;
-        private AtomicReference<HandlerStatus> status = new AtomicReference<HandlerStatus>(HandlerStatus.WAITING);
+        private AtomicReference<HandlerStatus> status =
+                new AtomicReference<HandlerStatus>(HandlerStatus.WAITING);
         private Thread taskThread;
 
         public boolean handleData(Object data, DataSource dataSource, DataContext context)
