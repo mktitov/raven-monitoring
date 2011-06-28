@@ -20,6 +20,7 @@ package org.raven.ds.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import javax.script.Bindings;
+import org.raven.BindingNames;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
@@ -42,16 +43,12 @@ import org.weda.beans.ObjectUtils;
  *
  * @author Mikhail Titov
  */
-public abstract class AbstractSafeDataPipe extends AbstractDataSource implements DataPipe
+public abstract class AbstractSafeDataPipe 
+        extends AbstractDataSource implements DataPipe, BindingNames
 {
     public static final String CONSUMER_PARAM = "consumer";
-    public static final String DATA_CONTEXT_BINDING = "context";
-    public static final String DATASOURCE_BINDING = "dataSource";
-    public static final String DATA_BINDING = "data";
-    public static final String REQUESTER_BINDING = "requester";
     public static final String EXPRESSION_ATTRIBUTE = "expression";
     public static final String PREPROCESS_ATTRIBUTE = "preProcess";
-    public static final String SESSIONATTRIBUTES_BINDING = "sessAttrs";
 
     @NotNull @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     private DataSource dataSource;

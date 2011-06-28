@@ -39,6 +39,7 @@ import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractSafeDataPipe;
 import org.raven.expr.BindingSupport;
 import org.raven.expr.impl.IfNode;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.net.MailMessagePart;
 import org.raven.util.NodeUtils;
@@ -96,13 +97,19 @@ public class MailWriterNode extends AbstractSafeDataPipe
 
     @NotNull @Parameter(defaultValue="30000")
     private Integer timeout;
+    
+    @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
+    private Object errorHandler;
+    
+    @Parameter(defaultValue="false")
+    private Boolean useErrorHandler;
 
     static {
         Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
+    protected void doSetData(DataSource dataSource, Object data, DataContext context) 
     {
         if (data==null){
             if (isLogLevelEnabled(LogLevel.DEBUG))
@@ -127,46 +134,70 @@ public class MailWriterNode extends AbstractSafeDataPipe
         }
         if (isLogLevelEnabled(LogLevel.DEBUG))
             props.put("mail.debug", "true");
+        
+        try {
+            Session session = null;
+            if (useAuth) {
+                session = Session.getDefaultInstance(props, new javax.mail.Authenticator() {
 
-        Session session = null;
-        if (useAuth)
-            session = Session.getDefaultInstance(props, new javax.mail.Authenticator() {
-                @Override
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(user, password);
+                    @Override
+                    protected PasswordAuthentication getPasswordAuthentication() {
+                        return new PasswordAuthentication(user, password);
+                    }
+                });
+            } else {
+                session = Session.getDefaultInstance(props);
+            }
+            
+            if (isLogLevelEnabled(LogLevel.DEBUG)) {
+                session.setDebug(true);
+            }
+            
+            try {
+                bindingSupport.put(DATA_BINDING, data);
+                bindingSupport.put(DATA_CONTEXT_BINDING, context);
+                MimeMessage msg = new MimeMessage(session);
+                msg.setFrom(new InternetAddress(from, fromPersonalName, fromEncoding));
+                String[] addrs = to.split("\\s*,\\s*");
+                InternetAddress[] toAddresses = new InternetAddress[addrs.length];
+                for (int i = 0; i < addrs.length; ++i) {
+                    toAddresses[i] = new InternetAddress(addrs[i]);
                 }
-            });
-        else
-            session = Session.getDefaultInstance(props);
+                
+                msg.setRecipients(Message.RecipientType.TO, toAddresses);
+                msg.setSubject(subject, subjectEncoding);
+                msg.setHeader("X-Mailer", "Raven-Monitoring");
+                
+                createContent(msg, context);
+                
+                msg.setSentDate(new Date());
+                
+                Transport.send(msg);
+            } finally {
+                bindingSupport.reset();
+            }
+            sendDataToConsumers(data, context);
+        } catch(Throwable e) {
+            if (isLogLevelEnabled(LogLevel.ERROR))
+                getLogger().error("Error sending email mesage", e);
+            sendDataToConsumers(processError(data, context, e), context);
+        }
+    } 
 
-        if (isLogLevelEnabled(LogLevel.DEBUG))
-            session.setDebug(true);
-
-        try{
-            bindingSupport.put(DATA_BINDING, data);
+    private Object processError(Object data, DataContext context, Throwable e) 
+    {
+        if (!useErrorHandler)
+            return data;
+        try {
             bindingSupport.put(DATA_CONTEXT_BINDING, context);
-            MimeMessage msg = new MimeMessage(session);
-            msg.setFrom(new InternetAddress(from, fromPersonalName, fromEncoding));
-            String[] addrs = to.split("\\s*,\\s*");
-            InternetAddress[] toAddresses = new InternetAddress[addrs.length];
-            for (int i=0; i<addrs.length; ++i)
-                toAddresses[i] = new InternetAddress(addrs[i]);
-
-            msg.setRecipients(Message.RecipientType.TO, toAddresses);
-            msg.setSubject(subject, subjectEncoding);
-            msg.setHeader("X-Mailer", "Raven-Monitoring");
-
-            createContent(msg, context);
-
-            msg.setSentDate(new Date());
-
-            Transport.send(msg);
-        }finally{
+            bindingSupport.put(DATA_BINDING, data);
+            bindingSupport.put(EXCEPTION_BINDING, e);
+            return errorHandler;
+        } finally {
             bindingSupport.reset();
         }
-        sendDataToConsumers(data, context);
     }
-
+    
     @Override
     protected void doAddBindingsForExpression(
             DataSource dataSource, Object data, DataContext context, BindingSupport bindingSupport)
@@ -179,20 +210,23 @@ public class MailWriterNode extends AbstractSafeDataPipe
                 this, MailMessagePart.class);
 
         if (parts.isEmpty())
-            throw new Exception("Nothing to send. The message must contains at least one message part");
+            throw new Exception(
+                    "Nothing to send. The message must contains at least one message part");
 
         Multipart multipart = new MimeMultipart();
         for (MailMessagePart part: parts){
             MimeBodyPart bodyPart = new MimeBodyPart();
             setContent(bodyPart, part, context);
             if (part.getFileName()!=null)
-                bodyPart.setFileName(MimeUtility.encodeText(part.getFileName(), getSubjectEncoding(), null));
+                bodyPart.setFileName(MimeUtility.encodeText(
+                        part.getFileName(), getSubjectEncoding(), null));
             multipart.addBodyPart(bodyPart);
         }
         message.setContent(multipart);
     }
 
-    private void setContent(MimeBodyPart bodyPart, MailMessagePart part, DataContext context) throws Exception
+    private void setContent(MimeBodyPart bodyPart, MailMessagePart part, DataContext context) 
+            throws Exception
     {
         javax.activation.DataSource ds = null;
         Object content = part.getContent(context);
@@ -328,5 +362,21 @@ public class MailWriterNode extends AbstractSafeDataPipe
 
     public void setTimeout(Integer timeout) {
         this.timeout = timeout;
+    }
+
+    public Object getErrorHandler() {
+        return errorHandler;
+    }
+
+    public void setErrorHandler(Object errorHandler) {
+        this.errorHandler = errorHandler;
+    }
+
+    public Boolean getUseErrorHandler() {
+        return useErrorHandler;
+    }
+
+    public void setUseErrorHandler(Boolean useErrorHandler) {
+        this.useErrorHandler = useErrorHandler;
     }
 }

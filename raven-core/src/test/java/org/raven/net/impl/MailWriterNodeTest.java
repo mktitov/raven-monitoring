@@ -26,6 +26,7 @@ import org.raven.expr.impl.IfNode;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.table.TableImpl;
+import org.raven.test.DataCollector;
 import org.raven.test.PushDataSource;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.Viewable;
@@ -40,6 +41,7 @@ public class MailWriterNodeTest extends RavenCoreTestCase
 {
     private MailWriterNode mailer;
     private PushDataSource ds;
+    private DataCollector collector;
 
     @Before
     public void prepare()
@@ -73,9 +75,15 @@ public class MailWriterNodeTest extends RavenCoreTestCase
 
         mailer.setSubject("Тестовое сообщение");
         assertTrue(mailer.start());
+        
+        collector = new DataCollector();
+        collector.setName("collector");
+        tree.getRootNode().addAndSaveChildren(collector);
+        collector.setDataSource(mailer);
+        assertTrue(collector.start());
     }
 
-    @Test
+//    @Test
     public void sendToGoogleTest() throws Exception
     {
         AttributeValueMessagePartNode part = new AttributeValueMessagePartNode();
@@ -96,6 +104,33 @@ public class MailWriterNodeTest extends RavenCoreTestCase
 
         InputStream is = new FileInputStream("/home/tim/photo/80-400.jpeg");
         ds.pushData(is);
+    }
+    
+    @Test
+    public void errorHandlerTest() throws Exception
+    {
+        mailer.setConnectionTimeout(500);
+        mailer.setTo("invalid\temail\taddress");
+        mailer.setUseErrorHandler(Boolean.TRUE);
+        mailer.setErrorHandler("'error'");
+        
+        AttributeValueMessagePartNode part = new AttributeValueMessagePartNode();        
+        part.setName("part1");
+        mailer.addAndSaveChildren(part);
+        part.setContentType("text/plain");
+        part.setValue("Привет мир");
+        assertTrue(part.start());
+
+        ds.pushData("test");
+        
+        assertEquals(1, collector.getDataListSize());
+        assertEquals("error", collector.getDataList().get(0));
+
+        collector.getDataList().clear();
+        mailer.setUseErrorHandler(Boolean.FALSE);
+        ds.pushData("test");
+        assertEquals(1, collector.getDataListSize());
+        assertEquals("test", collector.getDataList().get(0));
     }
 
 //    @Test

@@ -23,6 +23,12 @@ package org.raven;
  */
 public interface BindingNames
 {
-    public static String USER_CONTEXT = "userContext";
-    public static String REFRESH_ATTRIBUTES = "refreshAttributes";
+    public static final String USER_CONTEXT = "userContext";
+    public static final String REFRESH_ATTRIBUTES = "refreshAttributes";
+    public static final String DATA_CONTEXT_BINDING = "context";
+    public static final String DATASOURCE_BINDING = "dataSource";
+    public static final String DATA_BINDING = "data";
+    public static final String REQUESTER_BINDING = "requester";
+    public static final String SESSIONATTRIBUTES_BINDING = "sessAttrs";
+    public static final String EXCEPTION_BINDING = "exception";
 }
