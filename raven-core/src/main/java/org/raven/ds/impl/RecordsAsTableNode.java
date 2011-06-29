@@ -342,6 +342,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                 attrs.putAll(refreshAttributes);
 
             Map<String, String> detailFieldValues = getAndApplyMasterFieldValues(attrs);
+            if (detailFieldValues==null && masterNode!=null)
+                return null;
             addDataSourceAttributes(attrs, detailFieldValues);
 
             String _fieldsOrder = fieldsOrder;

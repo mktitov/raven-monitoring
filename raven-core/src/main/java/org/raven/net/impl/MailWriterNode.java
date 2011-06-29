@@ -101,7 +101,7 @@ public class MailWriterNode extends AbstractSafeDataPipe
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
     private Object errorHandler;
     
-    @Parameter(defaultValue="false")
+    @NotNull @Parameter(defaultValue="false")
     private Boolean useErrorHandler;
 
     static {

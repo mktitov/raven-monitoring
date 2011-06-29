@@ -1199,6 +1199,9 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         Map<String, NodeAttribute> attrs = tableNode.getRefreshAttributes();
         assertNotNull(attrs);
         assertEquals(1, attrs.size());
+        
+        assertNull(tableNode.getViewableObjects(attrs));
+        assertNull(ds.getLastSessionAttributes());
 
         RavenUtils.setMasterFieldValues(masterNode, Arrays.asList("1", "2"));
         tableNode.getViewableObjects(attrs);
@@ -1210,7 +1213,7 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         checkSessionAttribute(attrs, "field2", "2");
     }
 
-    @Test(expected=Exception.class)
+    @Test()
     public void addAction_detailTest() throws Exception
     {
         BaseNode masterNode = new BaseNode("master node");
@@ -1239,7 +1242,7 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         assertTrue(addActionNode.start());
 
         ds.addDataPortion(null);
-        tableNode.getViewableObjects(null);
+        assertNull(tableNode.getViewableObjects(null));
     }
 
     @Test
