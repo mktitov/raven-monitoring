@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.myfaces.custom.fileupload.UploadedFile;
 import org.apache.myfaces.trinidad.context.RequestContext;
 import org.apache.myfaces.trinidad.event.LaunchEvent;
 import org.apache.myfaces.trinidad.event.ReturnEvent;
@@ -31,6 +32,7 @@ import org.raven.audit.Action;
 import org.raven.table.ColumnGroup;
 import org.raven.table.Table;
 import org.raven.tree.ActionViewableObject;
+import org.raven.tree.AttributeValueValidationException;
 import org.raven.tree.InvalidPathException;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
@@ -73,8 +75,10 @@ public class ViewableObjectWrapper
 //	private boolean[] valid = null;
 	private List<Attr> actionAttributes = null;
 	private boolean actionRunned = false;
+    private boolean hasValidationErrors = false;
 	private String actionRet = "";
     private int counter = 0;
+    private UploadedFile uploadedFile;
 	
 	public ViewableObjectWrapper(ViewableObject vo)
 	{
@@ -107,6 +111,14 @@ public class ViewableObjectWrapper
 		if(viewableObject==null) return "";
 		return viewableObject.toString(); 
 	}
+
+    public UploadedFile getUploadedFile() {
+        return uploadedFile;
+    }
+
+    public void setUploadedFile(UploadedFile uploadedFile) {
+        this.uploadedFile = uploadedFile;
+    }
 	
 	public String getHeight() 
 	{ 
@@ -250,6 +262,10 @@ public class ViewableObjectWrapper
 		RequestContext.getCurrentInstance().returnFromDialog(null, null);
 	}
 
+    public boolean isHasValidationErrors() {
+        return hasValidationErrors;
+    }
+
 	public boolean isActionRunned() {
 		return actionRunned;
 	}
@@ -292,19 +308,29 @@ public class ViewableObjectWrapper
 		StringBuilder sb = new StringBuilder();
 		if(actionAttributes!=null) 
 			try {
+                hasValidationErrors = false;
 				for(Attr a :  actionAttributes)
-				{
+                {
 					String v = a.getValue();
 					String n = a.getName();
-					a.getAttribute().setValue(v);
+                    try {
+                        a.getAttribute().setValue(v);
+                        a.setErrors(null);
+                    } catch(AttributeValueValidationException e){
+                        hasValidationErrors = true;
+                        log.error("Attribute {} has validation errors: {}", n, a.getErrors());
+                    }
 					sb.append("name='").append(n).append("' , ");
 					sb.append("value='").append(v).append("' ; ");
 				}	
 			} catch (Exception e) {
 				log.error("set actionAttributes:", e);
 			}
-		runAction(sb.toString());
-		log.warn("runAction ok");
+        if (!hasValidationErrors) {
+            runAction(sb.toString());
+            log.warn("runAction ok");
+        } else
+            log.warn("Action attributes has validation errors.");
 	//	returnFromDialog();
 		return null;
 	}
@@ -338,21 +364,12 @@ public class ViewableObjectWrapper
 		}
 		sb.getAuditor().write(sb.getCurrentNode(), sb.getAccountName(), act, mes.toString());
 		Object o = action.getData();
-		if(o==null) ret = Messages.getUiMessage(Messages.DONE);
-			else ret = o.toString();
-		 actionRunned = true;
-		 actionRet = ret;
-/*		 
-		 FacesContext fc = FacesContext.getCurrentInstance();
-		 ExtendedRenderKitService service = (ExtendedRenderKitService)
-		 org.apache.myfaces.trinidad.util.Service.getRenderKitService(fc, ExtendedRenderKitService.class);
-		 //logger.info("runAction");
-		 ret = ret.replaceAll("'", "\"");
-*/
+        if (o==null)
+            return close();
+		ret = o.toString();
+		actionRunned = true;
+		actionRet = ret;
 
-//        returnFromDialog();
-		 
-//		 service.addScript(fc, "alert('"+ret+"'); ");
 		return null;
 	}
 	

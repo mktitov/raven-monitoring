@@ -101,6 +101,12 @@
                     <f:selectItems value="#{row.selectItems}" />
                 </tr:selectOneChoice>
             </tr:column>
+            <tr:column headerText="" rendered="#{pageFlowScope.actionVOW.hasValidationErrors}">
+                <tr:outputText
+                	inlineStyle="color: #FF5016;"
+                    escape="false"
+                	value="#{row.errors}"/>
+            </tr:column>
 	<!-- detailStamp of attribute-->
             <f:facet name="detailStamp">
                 <tr:panelGroupLayout layout="vertical"  >

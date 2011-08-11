@@ -397,6 +397,7 @@ partialTriggers=":poolStatus"
 				<tr:commandLink 
 					rendered="#{row.confirmationMessage != null}" 
 					useWindow="true"
+                    windowWidth="800"
 					action="dialog:runAction"
 					launchListener="#{row.setDialogParameter}"
 					inlineStyle="font-size: 110%;"

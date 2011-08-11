@@ -46,7 +46,7 @@
 						label="#{msgs.type}" 
 						value="#{sBean.newNodeType}"
 		        		action="dialog:chooseType" 
-        				windowWidth="500" windowHeight="600"/>
+        				windowWidth="800" windowHeight="600"/>
 					<tr:commandButton 
 						returnListener="#{sBean.template.handleReturn}" 
 						id="createNode" 

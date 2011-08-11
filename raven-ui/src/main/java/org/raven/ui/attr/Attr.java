@@ -19,6 +19,7 @@ package org.raven.ui.attr;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 
 import javax.faces.event.ValueChangeEvent;
@@ -79,6 +80,7 @@ public class Attr implements Comparable<Attr>
 	private boolean templateExpression = false;
 	private boolean refreshAttribute = false;
     private UploadedFile file;
+    private String errors;
 
 	@SuppressWarnings("unchecked")
 	public Attr(NodeAttribute na) throws TooManyReferenceValuesException
@@ -129,6 +131,23 @@ public class Attr implements Comparable<Attr>
 		this(na);
 		setRefreshAttribute(ra);
 	}
+
+    public String getErrors()
+    {
+        Collection<String> errorsList = attribute.getValidationErrors();
+        if (errorsList==null)
+            return null;
+        StringBuilder msg = new StringBuilder("<ul style=\"color: #FF5016;margin-left: -20px\">");
+        for (String error: errorsList)
+            msg.append("<li>").append(error).append("</li>");
+        msg.append("</ul>");
+        
+        return msg.toString();
+    }
+
+    public void setErrors(String errors)
+    {
+    }
 	
 	public boolean isValueChanged()
 	{
