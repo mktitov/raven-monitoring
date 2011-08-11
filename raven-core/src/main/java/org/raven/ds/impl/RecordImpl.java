@@ -141,7 +141,7 @@ public class RecordImpl implements Record
         if (tags!=null)
         {
             tags.remove(tagName);
-            if (tags.size()==0)
+            if (tags.isEmpty())
                 tags = null;
         }
     }

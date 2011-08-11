@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
+import org.raven.ds.Record;
+import org.raven.ds.RecordValidationErrors;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.AbstractActionNode;
 import org.raven.tree.impl.ActionNodeAction;
@@ -52,7 +54,12 @@ public class RecordsAsTableRecordAction extends ActionNodeAction
         Object res = super.getData();
 
         if (dataList.isEmpty() && additionalBindings.containsKey(RecordsAsTableNode.RECORD_BINDING)){
-            dataList.add(additionalBindings.get(RecordsAsTableNode.RECORD_BINDING));
+            Record rec = (Record) additionalBindings.get(RecordsAsTableNode.RECORD_BINDING);
+//            RecordValidationErrors errors = rec.validate();
+//            if (errors!=null){
+//                StringBuilder msg = new StringBuilder();
+//            }
+            dataList.add(rec);
             dataList.add(null);
         }
         for (Object data: dataList)

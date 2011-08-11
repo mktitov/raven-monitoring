@@ -43,14 +43,15 @@ public class ApiUtils
         }
     }
 
-    public static void withSql(Connection connection, Closure closure) throws Exception
+    public static Object withSql(Connection connection, Closure closure) throws Exception
     {
         try
         {
             Sql sql = new Sql(connection);
             try{
-                closure.call(sql);
+                Object res = closure.call(sql);
                 connection.commit();
+                return res;
             }catch(Exception e){
                 connection.rollback();
                 throw e;

@@ -18,20 +18,16 @@
 package org.raven.ds;
 
 import java.util.Collection;
-import java.util.Map;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface RecordValidationErrors
+public interface ValueValidatorController
 {
     /**
-     * Converts the validation errors to text
+     * Make a value validation using all validators available in the controller
+     * @return The list of the error messages or null if value passed a
      */
-    public String toText();
-    /**
-     * Returns the validation errors. The key of the map is record field name the value is a list of errors.
-     */
-    public Map<String, Collection<String>> getErrors();
+    public Collection<String> validate(Object value);
 }

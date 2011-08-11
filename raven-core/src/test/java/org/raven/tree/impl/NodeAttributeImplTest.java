@@ -17,12 +17,15 @@
 
 package org.raven.tree.impl;
 
+import java.util.Arrays;
 import java.util.Collections;
 import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.objects.NodeWithReadonlyParameter;
 import org.raven.ds.ReferenceValuesSource;
+import org.raven.ds.ValueValidatorController;
+import org.raven.tree.AttributeValueValidationException;
 import static org.easymock.EasyMock.*;
 
 /**
@@ -68,5 +71,42 @@ public class NodeAttributeImplTest extends RavenCoreTestCase
         assertSame(Collections.EMPTY_LIST, attr.getReferenceValues());
 
         verify(source);
+    }
+
+    @Test
+    public void valueValidatorTest() throws Exception
+    {
+        BaseNode node = new BaseNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        assertTrue(node.start());
+
+        NodeAttributeImpl attr = new NodeAttributeImpl("name", String.class, null, null);
+        attr.setOwner(node);
+        attr.init();
+        node.addNodeAttribute(attr);
+
+        assertNull(attr.getValueValidatorController());
+
+        ValueValidatorController validator = createStrictMock(ValueValidatorController.class);
+        expect(validator.validate("test")).andReturn(null);
+        expect(validator.validate("test2")).andReturn(Arrays.asList("error"));
+        replay(validator);
+        
+        attr.setValueValidatorController(validator);
+        assertSame(validator, attr.getValueValidatorController());
+
+        attr.setValue("test");
+        assertEquals("test", attr.getValue());
+
+        try{
+            attr.setValue("test2");
+            fail();
+        }catch(AttributeValueValidationException e){
+            assertArrayEquals(new Object[]{"error"}, e.getErrors().toArray());
+            assertArrayEquals(new Object[]{"error"}, attr.getValidationErrors().toArray());
+            assertEquals("test", attr.getValue());
+        }
+
+        verify(validator);
     }
 }

@@ -18,13 +18,15 @@
 package org.raven.tree.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import org.raven.conf.Configurator;
 import org.raven.ds.ReferenceValuesSource;
+import org.raven.ds.ValueValidatorController;
 import org.raven.log.LogLevel;
-import org.raven.tree.AttributeReference;
 import org.raven.tree.AttributeValueHandler;
 import org.raven.tree.AttributeValueHandlerListener;
+import org.raven.tree.AttributeValueValidationException;
 import org.raven.tree.AttributesGenerator;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
@@ -77,6 +79,8 @@ public class NodeAttributeImpl
     private NodeParameter parameter;
     private ParentAttributeValueHandler valueHandler;
     private ReferenceValuesSource referenceValuesSource;
+    private ValueValidatorController valueValidatorController;
+    private Collection<String> validationErrors;
     
     private boolean initialized = false;
     private boolean fireEvents = true;
@@ -308,8 +312,18 @@ public class NodeAttributeImpl
                     "Attribute (%s) of the node (%s) is readonly", getName(), owner.getPath()));
         if (templateExpression || !initialized)
             this.value = value;
-        else 
+        else {
+            String prevValue = getValue();
+            validationErrors = null;
             valueHandler.setData(value);
+            if (valueValidatorController!=null) {
+                validationErrors = valueValidatorController.validate(valueHandler.handleData());
+                if (validationErrors!=null) {
+                    valueHandler.setData(prevValue);
+                    throw new AttributeValueValidationException(validationErrors);
+                }
+            }
+        }
     }
 
     public boolean isGeneratorType()
@@ -320,6 +334,18 @@ public class NodeAttributeImpl
     public ReferenceValuesSource getReferenceValuesSource()
     {
         return referenceValuesSource;
+    }
+
+    public ValueValidatorController getValueValidatorController() {
+        return valueValidatorController;
+    }
+
+    public void setValueValidatorController(ValueValidatorController valueValidatorController) {
+        this.valueValidatorController = valueValidatorController;
+    }
+
+    public Collection<String> getValidationErrors() {
+        return validationErrors;
     }
 
     public void setReferenceValuesSource(ReferenceValuesSource source) 

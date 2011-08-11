@@ -18,11 +18,8 @@
 package org.raven.conv.impl;
 
 import org.raven.annotations.NodeClass;
-import org.raven.annotations.Parameter;
 import org.raven.conv.ConversationScenarioPoint;
 import org.raven.tree.impl.BaseNode;
-import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
-import org.weda.annotations.constraints.NotNull;
 
 /**
  *

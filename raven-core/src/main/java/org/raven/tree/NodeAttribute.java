@@ -17,8 +17,10 @@
 
 package org.raven.tree;
 
+import java.util.Collection;
 import java.util.List;
 import org.raven.ds.ReferenceValuesSource;
+import org.raven.ds.ValueValidatorController;
 import org.raven.tree.store.TreeStore;
 import org.weda.constraints.ReferenceValue;
 import org.weda.constraints.TooManyReferenceValuesException;
@@ -155,6 +157,18 @@ public interface NodeAttribute extends Cloneable
      * Sets the name of the parent attribute.
      */
     public void setParentAttribute(String name);
+    /**
+     * Sets value validator controller
+     */
+    public void setValueValidatorController(ValueValidatorController valueValidatorController);
+    /**
+     * Returns value validator controller
+     */
+    public ValueValidatorController getValueValidatorController();
+    /**
+     * Returns the last validation errors
+     */
+    public Collection<String> getValidationErrors();
     /**
      * Sets the source of reference values for this attribute.
      * The type of value must be a <code>java.lang.String</code>

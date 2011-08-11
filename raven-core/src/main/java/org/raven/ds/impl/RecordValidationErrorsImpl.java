@@ -42,6 +42,10 @@ public class RecordValidationErrorsImpl implements RecordValidationErrors
         fieldErrors.put(fieldName, errors);
     }
 
+    public Map<String, Collection<String>> getErrors() {
+        return fieldErrors;
+    }
+
     public String toText() 
     {
         if (fieldErrors.isEmpty())

@@ -117,7 +117,8 @@ public class ExecutorServiceNode extends BaseNode
         else
             queue = new LinkedBlockingQueue(capacity);
         executingTasks = new ConcurrentSkipListSet();
-        executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, timeUnit, queue);
+        executor = new ThreadPoolExecutor(
+                corePoolSize, maximumPoolSize, keepAliveTime, timeUnit, queue);
         loadAverage = new LoadAverageStatistic(maximumPoolSize, 300000);
     }
 

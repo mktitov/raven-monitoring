@@ -15,23 +15,24 @@
  *  under the License.
  */
 
-package org.raven.ds;
+package org.raven.tree;
 
 import java.util.Collection;
-import java.util.Map;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface RecordValidationErrors
+public class AttributeValueValidationException extends Exception
 {
-    /**
-     * Converts the validation errors to text
-     */
-    public String toText();
-    /**
-     * Returns the validation errors. The key of the map is record field name the value is a list of errors.
-     */
-    public Map<String, Collection<String>> getErrors();
+    private final Collection<String> errors;
+
+    public AttributeValueValidationException(Collection<String> errors) {
+        super();
+        this.errors = errors;
+    }
+
+    public Collection<String> getErrors() {
+        return errors;
+    }
 }

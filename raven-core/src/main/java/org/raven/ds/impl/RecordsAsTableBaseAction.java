@@ -92,7 +92,8 @@ public class RecordsAsTableBaseAction extends AbstractActionNode implements Data
                 } else if (actionAttrs!=null && actionAttrs.containsKey(fieldName))
                     fieldsAttrs.put(fieldName, actionAttrs.get(fieldName));
         }
-        addReferenceValuesToTheAttributes(fields.values(), fieldsAttrs);
+        addReferenceValuesToAttributes(fields.values(), fieldsAttrs);
+        addValueValidatorsToAttributes(fields.values(), fieldsAttrs);
 
         bindingSupport.put(AbstractActionNode.ACTION_ATTRIBUTES_BINDING, fieldsAttrs);
         getNodeAttribute(PREPARE_ACTION_ATTRIBUTES_BINDING).getValue();
@@ -115,7 +116,7 @@ public class RecordsAsTableBaseAction extends AbstractActionNode implements Data
         return attr;
     }
 
-    protected void addReferenceValuesToTheAttributes(
+    protected void addReferenceValuesToAttributes(
             Collection<RecordSchemaField> fields, Map<String, NodeAttribute> fieldsAttrs)
     {
         for (RecordSchemaField field: fields) {
@@ -130,6 +131,16 @@ public class RecordsAsTableBaseAction extends AbstractActionNode implements Data
             NodeAttribute attr = fieldsAttrs.get(valuesSource.getFieldName());
             if (attr!=null)
                 attr.setReferenceValuesSource(valuesSource.getReferenceValuesSource());
+        }
+    }
+
+    protected void addValueValidatorsToAttributes(Collection<RecordSchemaField> fields
+            , Map<String, NodeAttribute> fieldsAttrs)
+    {
+        for (RecordSchemaField field: fields) {
+            NodeAttribute attr = fieldsAttrs.get(field.getName());
+            if (attr!=null)
+                attr.setValueValidatorController(field);
         }
     }
 }

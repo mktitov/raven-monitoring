@@ -22,7 +22,6 @@ import java.util.Map;
 import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
-import org.raven.auth.UserContext;
 import org.raven.ds.DataContext;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
