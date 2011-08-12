@@ -327,7 +327,7 @@ public class ViewableObjectWrapper
 				log.error("set actionAttributes:", e);
 			}
         if (!hasValidationErrors) {
-            runAction(sb.toString());
+            runAction(sb.toString(), true);
             log.warn("runAction ok");
         } else
             log.warn("Action attributes has validation errors.");
@@ -337,7 +337,7 @@ public class ViewableObjectWrapper
 
 	public String runActionD()
 	{
-		runAction(null);
+		runAction(null, false);
 		if ( ((ActionViewableObject)viewableObject).isRefreshViewAfterAction() )
         {
             log.warn("Refreshing viewable objects");
@@ -347,7 +347,7 @@ public class ViewableObjectWrapper
 //		return "dialog:runAction";
 	}
 	
-	private String runAction(String attrInfo)
+	private String runAction(String attrInfo, boolean dialog)
 	{
 		if(!isAction()) return null;
 		ActionViewableObject action = (ActionViewableObject) viewableObject;
@@ -364,9 +364,9 @@ public class ViewableObjectWrapper
 		}
 		sb.getAuditor().write(sb.getCurrentNode(), sb.getAccountName(), act, mes.toString());
 		Object o = action.getData();
-        if (o==null)
+        if (o==null && dialog)
             return close();
-		ret = o.toString();
+		ret = o==null? null : o.toString();
 		actionRunned = true;
 		actionRet = ret;
 
