@@ -18,6 +18,7 @@
 package org.raven.ds.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.raven.annotations.NodeClass;
@@ -30,6 +31,8 @@ import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import org.raven.util.NodeUtils;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.converter.TypeConverterException;
+import org.weda.internal.annotations.Message;
 
 /**
  *
@@ -53,6 +56,9 @@ public class RecordSchemaFieldNode extends BaseNode implements RecordSchemaField
 
     @Parameter
     private String pattern;
+
+    @Message
+    private static String conversationErrorMessage;
 
     public String getDisplayName()
     {
@@ -106,13 +112,20 @@ public class RecordSchemaFieldNode extends BaseNode implements RecordSchemaField
 
     public Collection<String> validate(Object value)
     {
+        Object val = null;
+        Class type = getFieldType().getType();
+        try{
+            val = converter.convert(type, value, getPattern());
+        }catch(TypeConverterException e){
+            return Arrays.asList(String.format(conversationErrorMessage, value, type.getName()));
+        }
         List<ValueValidator> validators =
                 NodeUtils.getChildsOfType(this, ValueValidator.class);
         if (validators.isEmpty())
             return null;
         ArrayList<String> errors = new ArrayList<String>(validators.size());
         for (ValueValidator validator: validators) {
-            String error = validator.validate(value);
+            String error = validator.validate(val);
             if (error!=null)
                 errors.add(error);
         }

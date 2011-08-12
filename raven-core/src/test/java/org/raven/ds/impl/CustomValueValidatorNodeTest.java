@@ -17,8 +17,12 @@
 
 package org.raven.ds.impl;
 
+import java.util.Map;
 import org.junit.Test;
+import org.raven.auth.UserContext;
 import org.raven.test.RavenCoreTestCase;
+import org.raven.test.UserContextServiceModule;
+import static org.easymock.EasyMock.*;
 
 /**
  *
@@ -29,6 +33,13 @@ public class CustomValueValidatorNodeTest extends RavenCoreTestCase
     @Test
     public void test()
     {
+        UserContext userContext = createMock(UserContext.class);
+        Map map = createMock(Map.class);
+        expect(userContext.getParams()).andReturn(map);
+        expect(map.get("param1")).andReturn("context value");
+        replay(userContext, map);
+
+        UserContextServiceModule.setUserContext(userContext);
         CustomValueValidatorNode validator = new CustomValueValidatorNode();
         validator.setName("validator");
         tree.getRootNode().addAndSaveChildren(validator);
@@ -36,7 +47,9 @@ public class CustomValueValidatorNodeTest extends RavenCoreTestCase
 
         assertNull(validator.validate("test"));
         
-        validator.setValidateExpression("'validation '+value");
-        assertEquals("validation test", validator.validate("test"));
+        validator.setValidateExpression("'validation '+value+' with '+userContext.params.param");
+        assertEquals("validation test with context value1", validator.validate("test"));
+        
+        verify(userContext, map);
     }
 }

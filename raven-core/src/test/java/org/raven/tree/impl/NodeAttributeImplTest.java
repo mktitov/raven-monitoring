@@ -109,4 +109,41 @@ public class NodeAttributeImplTest extends RavenCoreTestCase
 
         verify(validator);
     }
+
+    @Test
+    public void valueValidatorTest2() throws Exception
+    {
+        BaseNode node = new BaseNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        assertTrue(node.start());
+
+        NodeAttributeImpl attr = new NodeAttributeImpl("name", Integer.class, null, null);
+        attr.setOwner(node);
+        attr.init();
+        node.addNodeAttribute(attr);
+
+        assertNull(attr.getValueValidatorController());
+
+        ValueValidatorController validator = createStrictMock(ValueValidatorController.class);
+        expect(validator.validate(1)).andReturn(null);
+        expect(validator.validate(2)).andReturn(Arrays.asList("error"));
+        replay(validator);
+
+        attr.setValueValidatorController(validator);
+        assertSame(validator, attr.getValueValidatorController());
+
+        attr.setValue("1");
+        assertEquals("1", attr.getValue());
+
+        try{
+            attr.setValue("2");
+            fail();
+        }catch(AttributeValueValidationException e){
+            assertArrayEquals(new Object[]{"error"}, e.getErrors().toArray());
+            assertArrayEquals(new Object[]{"error"}, attr.getValidationErrors().toArray());
+            assertEquals("1", attr.getValue());
+        }
+
+        verify(validator);
+    }
 }

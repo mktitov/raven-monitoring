@@ -90,6 +90,7 @@ public class RecordSchemaFieldNodeTest extends RavenCoreTestCase
         assertArrayEquals(new Object[]{"empty"}, errors.toArray());
         assertNull(field.validate(1));
 
+
         validator.stop();
         assertNull(field.validate(null));
         validator.start();
@@ -103,5 +104,33 @@ public class RecordSchemaFieldNodeTest extends RavenCoreTestCase
         errors = field.validate(null);
         assertNotNull(errors);
         assertArrayEquals(new Object[]{"empty", "empty2"}, errors.toArray());
+    }
+
+    @Test
+    public void validateValueConvertionTest()
+    {
+        RecordSchemaFieldNode field = new RecordSchemaFieldNode();
+        field.setName("field");
+        tree.getRootNode().addAndSaveChildren(field);
+        field.setFieldType(RecordSchemaFieldType.INTEGER);
+        assertTrue(field.start());
+
+        assertNull(field.validate("1"));
+        assertNull(field.validate(2));
+
+        Collection<String> errors = field.validate("a2");
+        assertNotNull(errors);
+        assertArrayEquals(new Object[]{"Не могу привести (a2) к типу (java.lang.Integer)"}, errors.toArray());
+
+        CustomValueValidatorNode validator = new CustomValueValidatorNode();
+        validator.setName("validator");
+        field.addAndSaveChildren(validator);
+        validator.setValidateExpression("value>1?'error':null");
+        assertTrue(validator.start());
+       
+        errors = field.validate("2");
+        assertNotNull(errors);
+        assertArrayEquals(new Object[]{"error"}, errors.toArray());
+        assertNull(field.validate(1));
     }
 }

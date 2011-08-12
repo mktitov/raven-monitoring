@@ -18,13 +18,16 @@
 package org.raven.ds.impl;
 
 import javax.script.Bindings;
+import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.auth.UserContextService;
 import org.raven.ds.ValueValidator;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.InvisibleNode;
+import org.weda.internal.annotations.Service;
 
 /**
  *
@@ -33,6 +36,9 @@ import org.raven.tree.impl.InvisibleNode;
 @NodeClass(parentNode=InvisibleNode.class)
 public class CustomValueValidatorNode extends BaseNode implements ValueValidator
 {
+    @Service
+    private static UserContextService userContextService;
+
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
     private String validateExpression;
 
@@ -55,6 +61,7 @@ public class CustomValueValidatorNode extends BaseNode implements ValueValidator
     public String validate(Object value)
     {
         bindingSupport.put("value", value);
+        bindingSupport.put(BindingNames.USER_CONTEXT, userContextService.getUserContext());
         try {
             return validateExpression;
         } finally {
