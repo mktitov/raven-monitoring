@@ -11,4 +11,28 @@
                 <skipTests>true</skipTests>
             </properties>
         </action>
+        <action>
+            <actionName>CUSTOM-site</actionName>
+            <displayName>site</displayName>
+            <recursive>false</recursive>
+            <goals>
+                <goal>site</goal>
+            </goals>
+        </action>
+        <action>
+            <actionName>CUSTOM-run-site</actionName>
+            <displayName>run-site</displayName>
+            <recursive>false</recursive>
+            <goals>
+                <goal>site:run</goal>
+            </goals>
+        </action>
+        <action>
+            <actionName>CUSTOM-clean wo recursive</actionName>
+            <displayName>clean wo recursive</displayName>
+            <recursive>false</recursive>
+            <goals>
+                <goal>clean</goal>
+            </goals>
+        </action>
     </actions>

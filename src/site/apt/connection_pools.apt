@@ -1,0 +1,62 @@
+Пулы соединений с БД
+
+* Для чего нужны?
+
+  Пулы соединений нужны для того что бы Raven мог работать с базами данных (получать/сохранять данные).
+
+* Как создать?
+
+  Для того, бы создать пул соединений необходимо:
+
+  * Перейти в узел <<System -> Connection pools>>
+
+  * {{{create_node.html}Создать}} узел с типом <<JDBCConnectionPoolNode>>
+
+  * {{{edit_attributes.html}Задать}} значение атрибутов обязательных атрибутов
+
+  []
+  
+  Для разных баз данных используются разные значения атрибутов <<driver>> и <<url>>:
+  
+  * H2 Database:
+  
+    * <<driver>> - org.h2.Driver
+    
+    * <<url>> - jdbc:h2:file:<absolute_path>\
+      Где <absolute_path> - это абсолютный путь до базы данных, например - 
+      <c:\raven\databases\test_db\test_db>
+      
+    * или <<url>> - jdbc:h2:tcp://<host>:<port>//<absolute_path>\
+      Где 
+      
+        * <host> - IP адрес или имя сервера H2 database
+        
+        * <port> - порт на котором работает H2 database
+        
+        * <absolute_path> - это абсолютный путь до базы данных, например - 
+      <c:\raven\databases\test_db\test_db>
+      
+    []
+    
+  * Oracle:
+  
+    * <<driver>> - oracle.jdbc.driver.OracleDriver
+    
+    * <<url>> - jdbc:oracle:thin:@<host>:<port>:<sid>\
+      Где 
+      
+        * <host> - IP адрес или имя сервера БД Oracle
+        
+        * <port> - обычно это 1521
+        
+        * <sid> - sid базы данных
+        
+        []
+        
+      []
+    
+    []
+
+* Как использовать?
+
+
