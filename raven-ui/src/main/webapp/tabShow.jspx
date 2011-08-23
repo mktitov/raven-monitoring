@@ -180,6 +180,7 @@ action="#{sBean.reloadRightFrame}"
 					columns="40" label="#{msgs.node}"
 				>
 				</tr:inputListOfValues>
+                <!--
                 <tr:group rendered="#{row.fileAttribute}">
                 
                 <t:inputFileUpload  
@@ -188,6 +189,7 @@ action="#{sBean.reloadRightFrame}"
 					storage="file"
 					maxlength="200000"/>
 					</tr:group>
+                -->
 	            <tr:selectOneChoice 
 	            	label="#{msgs.expression}" 
 	            	rendered="#{row.enableExpressionChoice}" 
@@ -260,7 +262,7 @@ action="#{sBean.reloadRightFrame}"
 <!-- ********************************* -->
 <!-- Show viewable nodes               -->
 <!-- ********************************* -->
-<tr:form id="ShowWN">
+<tr:form id="ShowWN" usesUpload="true">
 <tr:table 
 	binding="#{sBean.coreTable}" 
 	width="100%"
@@ -302,6 +304,26 @@ partialTriggers=":poolStatus"
 				</tr:panelHorizontalLayout>
  <!--  		</tr:subform>  -->
   		</f:facet>
+
+<!-- show ravenUploadFile -->
+	  	<f:facet name="ravenUploadFile">
+	  		<tr:panelHorizontalLayout halign="left" >
+	  	  		<tr:spacer width="30" height="0" />
+                <!--
+                -->
+                <t:inputFileUpload
+                    id="fileupload"
+                    value="#{row.file}"
+                    rendered="true"
+                    title="#{msgs.uploadFileTitle}"
+                    storage="file" maxlength="256"/>
+                <tr:spacer width="5" height="0" />
+                <tr:commandButton shortDesc="#{msgs.uploadFileDsc}"
+                    text="#{msgs.uploadFile}"
+                    action="#{row.uploadFile}"  />
+			</tr:panelHorizontalLayout>
+		</f:facet>
+
 
 <!-- show ravenText --> 
 	  	<f:facet name="ravenText">

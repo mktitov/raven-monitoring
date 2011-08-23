@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import javax.faces.event.ActionEvent;
@@ -554,7 +553,7 @@ implements Comparator<NodeAttribute>, INodeScanner, ScannedNodeHandler
 	  public String save(boolean write)
 	  {
 		  int save = 0;
-		  StringBuffer ret = new StringBuffer();
+		  StringBuilder ret = new StringBuilder();
 		  if( ! isAllowNodeEdit() ) return "err";
 		  Iterator<NodeAttribute> itn = savedAttrs.iterator();
 		  Iterator<Attr> ita = editingAttrs.iterator();

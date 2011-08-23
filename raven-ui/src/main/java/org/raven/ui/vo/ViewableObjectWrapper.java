@@ -15,8 +15,8 @@
  */
 package org.raven.ui.vo;
 
+import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigDecimal;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,6 +29,8 @@ import org.apache.myfaces.trinidad.context.RequestContext;
 import org.apache.myfaces.trinidad.event.LaunchEvent;
 import org.apache.myfaces.trinidad.event.ReturnEvent;
 import org.raven.audit.Action;
+import org.raven.audit.AuditRecord;
+import org.raven.audit.Auditor;
 import org.raven.table.ColumnGroup;
 import org.raven.table.Table;
 import org.raven.tree.ActionViewableObject;
@@ -38,15 +40,17 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.Node;
+import org.raven.tree.UploadFileViewableObject;
+import org.raven.tree.impl.UploadedFileImpl;
 import org.raven.ui.SessionBean;
 import org.raven.ui.attr.Attr;
 import org.raven.ui.node.NodeWrapper;
-import org.raven.ui.util.Messages;
 import org.raven.util.Utl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 //import org.weda.beans.ObjectUtils;
 import org.weda.constraints.TooManyReferenceValuesException;
+import org.weda.internal.annotations.Service;
 
 /**
 *
@@ -54,14 +58,20 @@ import org.weda.constraints.TooManyReferenceValuesException;
 */
 public class ViewableObjectWrapper 
 {
-	private static final Logger log = LoggerFactory.getLogger(ViewableObjectWrapper.class);
     public static final String NAVIGATE_TO = "navigateToNode";
 	public static final String NODE_URL = "nodeUrl";
 	public static final String RAVEN_TABLE_GR = "ravenTable";
 	public static final String RAVEN_TEXT = "ravenText";
+    public static final String RAVEN_UPLOAD_FILE = "ravenUploadFile";
 	public static final String IMAGE = "image";
 	public static final String ACTION = "action";
-	public static final String UID_DELIM = "@"; 
+	public static final String UID_DELIM = "@";
+
+	private static final Logger log = LoggerFactory.getLogger(ViewableObjectWrapper.class);
+
+    @Service
+    private static Auditor auditor;
+
 	private ViewableObject viewableObject = null;
 	private NodeWrapper nodeWrapper = null;
 	private long fd = 0;
@@ -79,6 +89,7 @@ public class ViewableObjectWrapper
 	private String actionRet = "";
     private int counter = 0;
     private UploadedFile uploadedFile;
+    private UploadedFile file;
 	
 	public ViewableObjectWrapper(ViewableObject vo)
 	{
@@ -119,6 +130,42 @@ public class ViewableObjectWrapper
     public void setUploadedFile(UploadedFile uploadedFile) {
         this.uploadedFile = uploadedFile;
     }
+
+    public UploadedFile getFile() {
+        return file;
+    }
+
+    public void setFile(UploadedFile file) {
+    	log.info("setFile: '{}'", file==null? "null" : file.getName());
+        this.file = file;
+    }
+
+    public String uploadFile()
+    {
+        if (isUploadFile() && file!=null) {
+            log.info("Uploading file ({})", file.getName());
+            try {
+                try {
+                    ((UploadFileViewableObject) viewableObject).setUploadedFile(
+                        new UploadedFileImpl(file.getContentType(), file.getName(), file.getInputStream()));
+                    AuditRecord rec = auditor.prepare(getNode(), getAccountName(), Action.ATTR_CH_VALUE,
+                          "Uploaded file ({})", file.getName());
+                    auditor.write(rec);
+                } catch (IOException ex) {
+                    log.error("File ({}) upload error", file.getName());
+                }
+            } finally {
+                file = null;
+            }
+        }
+        return null;
+    }
+    
+	public static String getAccountName()
+	{
+		return SessionBean.getUserAcl().getUsername();
+	}
+
 	
 	public String getHeight() 
 	{ 
@@ -149,6 +196,11 @@ public class ViewableObjectWrapper
 		if(isViewable() && getMimeGroup().equals(ACTION)) return true;
 		return false;
 	}
+
+    public boolean isUploadFile()
+    {
+        return isViewable() && viewableObject instanceof UploadFileViewableObject;
+    }
 
     public boolean isRefreshViewAfterAction()
     {
@@ -233,7 +285,7 @@ public class ViewableObjectWrapper
 		return false;
 	}
 	
-	public boolean isFile()
+	public boolean isFileUpload()
 	{
 		if(!isViewable()) return false;
 		if(isImage() || isTable()) return false;
@@ -492,9 +544,10 @@ public class ViewableObjectWrapper
     
 	public String getMimeGroup()
 	{
-		if(isNodeUrl()) return NODE_URL;
-		if( isTable() ) return RAVEN_TABLE_GR;
-		if(isText()) return RAVEN_TEXT;
+		if (isNodeUrl()) return NODE_URL;
+		if (isTable()) return RAVEN_TABLE_GR;
+		if (isText()) return RAVEN_TEXT;
+        if (isUploadFile()) return RAVEN_UPLOAD_FILE;
 		String mtype = viewableObject.getMimeType();
 		String[] sa = mtype.split("/");
 		if(sa.length>1 && ACTION.equals(sa[1]))
