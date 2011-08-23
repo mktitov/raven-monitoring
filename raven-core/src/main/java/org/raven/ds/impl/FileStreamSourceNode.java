@@ -19,6 +19,7 @@ package org.raven.ds.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -36,6 +37,8 @@ import org.raven.table.TableImpl;
 import org.raven.tree.DataStream;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.UploadFileViewableObject;
+import org.raven.tree.UploadedFile;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.BaseNode;
@@ -60,6 +63,9 @@ public class FileStreamSourceNode extends BaseNode implements DataSource, Viewab
     @Parameter(valueHandlerType=DataStreamValueHandlerFactory.TYPE)
     private DataStream file;
 
+    @Parameter(defaultValue="false")
+    private Boolean enableFileUploadFromViewTab;
+
     @Message
     private static String statusColumnMessage;
     @Message
@@ -75,6 +81,14 @@ public class FileStreamSourceNode extends BaseNode implements DataSource, Viewab
 
     public void setFile(DataStream file) {
         this.file = file;
+    }
+
+    public Boolean getEnableFileUploadFromViewTab() {
+        return enableFileUploadFromViewTab;
+    }
+
+    public void setEnableFileUploadFromViewTab(Boolean enableFileUploadFromViewTab) {
+        this.enableFileUploadFromViewTab = enableFileUploadFromViewTab;
     }
 
     @Override
@@ -119,20 +133,56 @@ public class FileStreamSourceNode extends BaseNode implements DataSource, Viewab
         UserContext context = userContextService.getUserContext();
         if (context==null)
             return null;
+        List<ViewableObject> vos = new ArrayList<ViewableObject>(2);
         ContextCountingStream stream = (ContextCountingStream) context.getParams().get(getKey());
-        if (stream==null)
-            return null;
-        TableImpl table = new TableImpl(
-                new String[]{statusColumnMessage, transmittedBytesColumnMessage});
-        table.addRow(new Object[]{
-            stream.isTransmitting()? transmittingStatusMessage:transmittedStatusMessage
-            , stream.getTransmittedBytes()});
-        ViewableObject vo = new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table);
-        return Arrays.asList(vo);
+        if (stream!=null){
+            TableImpl table = new TableImpl(
+                    new String[]{statusColumnMessage, transmittedBytesColumnMessage});
+            table.addRow(new Object[]{
+                stream.isTransmitting()? transmittingStatusMessage:transmittedStatusMessage
+                , stream.getTransmittedBytes()});
+            vos.add(new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table));
+        }
+        if (enableFileUploadFromViewTab)
+            vos.add(new UploadFileViewObjectImpl());
+        return vos.isEmpty()? null : vos;
     }
 
     public Boolean getAutoRefresh() {
         return Boolean.TRUE;
+    }
+
+    private class UploadFileViewObjectImpl implements UploadFileViewableObject
+    {
+        public void setUploadedFile(UploadedFile uploadedFile)
+        {
+            getFile().setStream(uploadedFile.getInputStream());
+        }
+
+        public Node getNode() {
+            return FileStreamSourceNode.this;
+        }
+
+        public String getMimeType() {
+            return Viewable.RAVEN_UPLOAD_FILE_MIMETYPE;
+        }
+
+        public Object getData() {
+            return null;
+        }
+
+        public boolean cacheData() {
+            return false;
+        }
+
+        public int getWidth() {
+            return 0;
+        }
+
+        public int getHeight() {
+            return 0;
+        }
+
     }
 
     protected class ContextCountingStream extends CountingInputStream

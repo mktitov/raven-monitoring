@@ -18,6 +18,7 @@
 package org.raven.ds.impl;
 
 import java.io.ByteArrayInputStream;
+import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,6 +28,10 @@ import org.raven.ds.impl.FileStreamSourceNode.ContextCountingStream;
 import org.raven.test.DataCollector;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.test.UserContextServiceModule;
+import org.raven.tree.UploadFileViewableObject;
+import org.raven.tree.Viewable;
+import org.raven.tree.ViewableObject;
+import org.raven.tree.impl.UploadedFileImpl;
 
 /**
  *
@@ -66,6 +71,44 @@ public class FileStreamSourceNodeTest extends RavenCoreTestCase
         source.getFile().setStream(in);
 
         assertNotNull(source.getViewableObjects(null));
+
+        assertEquals(1, collector.getDataListSize());
+        Object data = collector.getDataList().get(0);
+        assertTrue(data instanceof FileStreamSourceNode.ContextCountingStream);
+        FileStreamSourceNode.ContextCountingStream stream = (ContextCountingStream) data;
+        assertTrue(stream.isTransmitting());
+        assertEquals(0, stream.getBytesRead());
+        Object param = context.getParams().get(source.getKey());
+        assertNotNull(param);
+        assertSame(param, stream);
+
+        byte[] res = IOUtils.toByteArray(stream);
+        assertArrayEquals(arr, res);
+        assertFalse(stream.isTransmitting());
+        //10??? must be a 5
+        assertEquals(10, stream.getBytesRead());
+    }
+
+    @Test
+    public void setDataStreamFromViewableObjectTest() throws Exception
+    {
+        source.setEnableFileUploadFromViewTab(Boolean.TRUE);
+
+        byte[] arr = {1,2,3,4,5};
+        ByteArrayInputStream in = new ByteArrayInputStream(arr);
+
+        List<ViewableObject> vos = source.getViewableObjects(null);
+        assertNotNull(vos);
+        assertEquals(1, vos.size());
+        assertTrue(vos.get(0) instanceof UploadFileViewableObject);
+        assertEquals(Viewable.RAVEN_UPLOAD_FILE_MIMETYPE, vos.get(0).getMimeType());
+        UploadFileViewableObject uploadFile = (UploadFileViewableObject) vos.get(0);
+        assertSame(source, uploadFile.getNode());
+        uploadFile.setUploadedFile(new UploadedFileImpl(null, null, in));
+
+        vos = source.getViewableObjects(null);
+        assertNotNull(vos);
+        assertEquals(2, vos.size());
 
         assertEquals(1, collector.getDataListSize());
         Object data = collector.getDataList().get(0);
