@@ -146,10 +146,11 @@ public class ViewableObjectWrapper
             log.info("Uploading file ({})", file.getName());
             try {
                 try {
-                    ((UploadFileViewableObject) viewableObject).setUploadedFile(
+                    UploadFileViewableObject uploader = (UploadFileViewableObject) viewableObject;
+                    uploader.setUploadedFile(
                         new UploadedFileImpl(file.getContentType(), file.getName(), file.getInputStream()));
-                    AuditRecord rec = auditor.prepare(getNode(), getAccountName(), Action.ATTR_CH_VALUE,
-                          "Uploaded file ({})", file.getName());
+                    AuditRecord rec = auditor.prepare(uploader.getNode(), getAccountName()
+                            , Action.ATTR_CH_VALUE, "Uploaded file ({})", file.getName());
                     auditor.write(rec);
                 } catch (IOException ex) {
                     log.error("File ({}) upload error", file.getName());
