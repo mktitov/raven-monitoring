@@ -180,7 +180,7 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
      */
     public Node getEffectiveParent(); 
     /**
-     * Returns the childrens of a this node excluding {@link #isConditionalNode() conditional nodes}
+     * Returns the children of this node excluding {@link #isConditionalNode() conditional nodes}
      * and the {@link #getEffectiveChildrens() effective childrens} of the conditional nodes. 
      * Returned nodes are sorted by the {@link #getIndex() index property} and effective childrens 
      * from the {@link #isConditionalNode() conditional nodes} are inserted to the returned list at
