@@ -44,6 +44,18 @@ import static org.easymock.EasyMock.*;
 public class RavenUtilsTest extends ServiceTestCase
 {
     @Test
+    public void generateIdTest()
+    {
+        Node node = createMock(Node.class);
+        expect(node.getId()).andReturn(1);
+        replay(node);
+
+        assertEquals("test_1", RavenUtils.generateKey("test", node));
+
+        verify(node);
+    }
+
+    @Test
     public void splitTest()
     {
         assertArrayEquals(new String[]{"1", "2"}, RavenUtils.split("1, 2 "));

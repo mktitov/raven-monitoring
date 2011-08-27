@@ -63,6 +63,11 @@ public class RavenUtils
     
     private RavenUtils(){ }
 
+    public static String generateKey(String name, Node node)
+    {
+        return name + "_" + node.getId();
+    }
+
     /**
      * Returns the name of the parameter in the {@link UserContext#getParams() user context parameters}
      * that holds the master field values
