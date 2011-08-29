@@ -17,7 +17,7 @@
 
 package org.raven.net.impl;
 
-import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.productivity.java.syslog4j.server.SyslogServer;
 import org.productivity.java.syslog4j.server.SyslogServerEventHandlerIF;
 import org.productivity.java.syslog4j.server.SyslogServerEventIF;
@@ -27,6 +27,10 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.log.LogLevel;
 import org.raven.net.SyslogMessageHandler;
+import org.raven.sched.ExecutorService;
+import org.raven.sched.Task;
+import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
+import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.DataSourcesNode;
 import org.raven.util.NodeUtils;
@@ -38,7 +42,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=DataSourcesNode.class)
-public class SyslogReaderNode extends BaseNode implements SyslogServerEventHandlerIF
+public class SyslogReaderNode extends BaseNode implements SyslogServerEventHandlerIF, Task
 {
     public enum SyslogProtocol {UDP, TCP};
 
@@ -51,24 +55,34 @@ public class SyslogReaderNode extends BaseNode implements SyslogServerEventHandl
     @Parameter(readOnly=true)
     private OperationStatistic messagesStat;
 
+    @NotNull @Parameter(valueHandlerType=SystemSchedulerValueHandlerFactory.TYPE)
+    private ExecutorService executor;
+
     private SyslogServerIF syslogServer;
+
+    private AtomicBoolean taskRunning;
 
     @Override
     protected void initFields()
     {
         super.initFields();
         messagesStat = new OperationStatistic();
+        taskRunning = new AtomicBoolean();
     }
 
     @Override
     protected void doStart() throws Exception
     {
         super.doStart();
+        if (taskRunning.get())
+            throw new Exception("Can't start server because of syslog server task is still running");
         String _protocol = protocol.equals(SyslogProtocol.UDP)? "udp" : "tcp";
         syslogServer = SyslogServer.getInstance(_protocol);
         syslogServer.getConfig().setPort(port);
         syslogServer.getConfig().addEventHandler(this);
-        syslogServer = SyslogServer.getThreadedInstance(_protocol);
+        syslogServer.getConfig().setShutdownWait(0);
+        syslogServer = SyslogServer.getInstance(_protocol);
+        executor.execute(this);
     }
 
     @Override
@@ -76,6 +90,25 @@ public class SyslogReaderNode extends BaseNode implements SyslogServerEventHandl
     {
         super.doStop();
         syslogServer.shutdown();
+    }
+
+    public Node getTaskNode() {
+        return this;
+    }
+
+    public String getStatusMessage() {
+        return String.format("Waiting for syslog message (port: %s, protocol: %s, received messages: %s)"
+                , syslogServer.getConfig().getPort(), protocol, messagesStat.getOperationsCount());
+    }
+
+    public void run()
+    {
+        taskRunning.set(true);
+        try {
+            syslogServer.run();
+        } finally {
+            taskRunning.set(false);
+        }
     }
 
     public OperationStatistic getMessagesStat()
@@ -99,18 +132,22 @@ public class SyslogReaderNode extends BaseNode implements SyslogServerEventHandl
         this.protocol = protocol;
     }
 
+    public ExecutorService getExecutor() {
+        return executor;
+    }
+
+    public void setExecutor(ExecutorService executor) {
+        this.executor = executor;
+    }
+
     public void event(SyslogServerIF syslogServer, SyslogServerEventIF event)
     {
         long startTime = messagesStat.markOperationProcessingStart();
         logMessage(event);
-        try
-        {
-            List<SyslogMessageHandler> handlers = NodeUtils.getChildsOfType(this, SyslogMessageHandler.class);
-            for (SyslogMessageHandler handler: handlers)
+        try {
+            for (SyslogMessageHandler handler: NodeUtils.getChildsOfType(this, SyslogMessageHandler.class))
                 handler.handleEvent(event);
-        }
-        finally
-        {
+        } finally {
             messagesStat.markOperationProcessingEnd(startTime);
         }
     }

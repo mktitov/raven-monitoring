@@ -30,6 +30,7 @@ import org.raven.test.DataCollector;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.Record;
 import org.raven.log.LogLevel;
+import org.raven.sched.impl.ExecutorServiceNode;
 
 /**
  *
@@ -40,6 +41,7 @@ public class SyslogReaderNodeTest extends RavenCoreTestCase
     private SyslogReaderNode reader;
     private DataCollector collector;
     private DataCollector collector2;
+    private ExecutorServiceNode executor;
 
     @Before
     public void prepare() throws Exception
@@ -49,11 +51,17 @@ public class SyslogReaderNodeTest extends RavenCoreTestCase
         tree.getRootNode().addAndSaveChildren(schema);
         assertTrue(schema.start());
 
+        executor = new ExecutorServiceNode();
+        executor.setName("executor");
+        tree.getRootNode().addAndSaveChildren(executor);
+        assertTrue(executor.start());
+
         reader = new SyslogReaderNode();
         reader.setName("reader");
         tree.getRootNode().addAndSaveChildren(reader);
         reader.setProtocol(SyslogReaderNode.SyslogProtocol.UDP);
         reader.setPort(1514);
+        reader.setExecutor(executor);
         reader.setLogLevel(LogLevel.TRACE);
         assertTrue(reader.start());
 
