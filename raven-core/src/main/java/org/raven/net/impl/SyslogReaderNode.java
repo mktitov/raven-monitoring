@@ -17,17 +17,19 @@
 
 package org.raven.net.impl;
 
-import java.util.Collection;
+import java.util.List;
 import org.productivity.java.syslog4j.server.SyslogServer;
 import org.productivity.java.syslog4j.server.SyslogServerEventHandlerIF;
 import org.productivity.java.syslog4j.server.SyslogServerEventIF;
 import org.productivity.java.syslog4j.server.SyslogServerIF;
+import org.productivity.java.syslog4j.util.SyslogUtility;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.log.LogLevel;
 import org.raven.net.SyslogMessageHandler;
-import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.DataSourcesNode;
+import org.raven.util.NodeUtils;
 import org.raven.util.OperationStatistic;
 import org.weda.annotations.constraints.NotNull;
 
@@ -61,7 +63,7 @@ public class SyslogReaderNode extends BaseNode implements SyslogServerEventHandl
     @Override
     protected void doStart() throws Exception
     {
-         super.doStart();
+        super.doStart();
         String _protocol = protocol.equals(SyslogProtocol.UDP)? "udp" : "tcp";
         syslogServer = SyslogServer.getInstance(_protocol);
         syslogServer.getConfig().setPort(port);
@@ -100,17 +102,25 @@ public class SyslogReaderNode extends BaseNode implements SyslogServerEventHandl
     public void event(SyslogServerIF syslogServer, SyslogServerEventIF event)
     {
         long startTime = messagesStat.markOperationProcessingStart();
+        logMessage(event);
         try
         {
-            Collection<Node> childs = getChildrens();
-            if (childs!=null && !childs.isEmpty())
-                for (Node child: childs)
-                    if (child instanceof SyslogMessageHandler)
-                        ((SyslogMessageHandler)child).handleEvent(event);
+            List<SyslogMessageHandler> handlers = NodeUtils.getChildsOfType(this, SyslogMessageHandler.class);
+            for (SyslogMessageHandler handler: handlers)
+                handler.handleEvent(event);
         }
         finally
         {
             messagesStat.markOperationProcessingEnd(startTime);
         }
+    }
+
+    private void logMessage(SyslogServerEventIF event)
+    {
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            getLogger().debug(String.format(
+                    "Received a message from (%s): Facility - %s, Level - %s, Message - %s"
+                    , event.getHost(), SyslogUtility.getFacilityString(event.getFacility())
+                    , SyslogUtility.getLevelString(event.getLevel()), event.getMessage()));
     }
 }

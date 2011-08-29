@@ -18,6 +18,7 @@
 package org.raven.net.impl;
 
 import java.util.Collection;
+import java.util.List;
 import javax.script.Bindings;
 import org.productivity.java.syslog4j.server.SyslogServerEventIF;
 import org.productivity.java.syslog4j.util.SyslogUtility;
@@ -28,14 +29,16 @@ import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.impl.DataContextImpl;
+import org.raven.ds.impl.DataSourceHelper;
 import org.raven.ds.impl.RecordSchemaNode;
+import org.raven.ds.impl.RecordSchemaValueTypeHandlerFactory;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.net.SyslogMessageHandler;
-import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
+import org.raven.util.NodeUtils;
 import org.raven.util.OperationStatistic;
 import org.weda.annotations.constraints.NotNull;
 
@@ -48,7 +51,7 @@ public class SyslogMessageHandlerNode extends BaseNode implements DataSource, Sy
 {
     public final static String ACCEPT_MESSAGE_EXPRESSION_ATTR = "acceptMessageExpression";
 
-    @Parameter @NotNull
+    @NotNull @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
     private RecordSchemaNode recordSchema;
 
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
@@ -89,9 +92,6 @@ public class SyslogMessageHandlerNode extends BaseNode implements DataSource, Sy
 
     public void handleEvent(SyslogServerEventIF event)
     {
-        Collection<Node> depNodes = getDependentNodes();
-        if (depNodes==null || depNodes.isEmpty())
-            return;
         try
         {
             try
@@ -108,6 +108,8 @@ public class SyslogMessageHandlerNode extends BaseNode implements DataSource, Sy
                 Boolean filter = acceptMessageExpression;
                 if (filter!=null && filter==true)
                 {
+                    if (isLogLevelEnabled(LogLevel.DEBUG))
+                        getLogger().debug("Message accepted by ({}) handler", getName());
                     long time = messagesStat.markOperationProcessingStart();
                     try
                     {
@@ -121,12 +123,7 @@ public class SyslogMessageHandlerNode extends BaseNode implements DataSource, Sy
                                 SyslogRecordSchemaNode.LEVEL_FIELD
                                 , SyslogUtility.getLevelString(event.getLevel()));
                         rec.setValue(SyslogRecordSchemaNode.MESSAGE_FIELD, event.getMessage());
-                        for (Node depNode: depNodes)
-                            if (   depNode instanceof DataConsumer
-                                && depNode.getStatus().equals(Status.STARTED))
-                            {
-                                ((DataConsumer)depNode).setData(this, rec, new DataContextImpl());
-                            }
+                        DataSourceHelper.sendDataToConsumers(this, rec, new DataContextImpl());
                     }
                     finally
                     {

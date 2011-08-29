@@ -29,6 +29,7 @@ public interface BindingNames
     public static final String DATASOURCE_BINDING = "dataSource";
     public static final String DATA_BINDING = "data";
     public static final String REQUESTER_BINDING = "requester";
+    public static final String REQUEST_BINDING = "request";
     public static final String SESSIONATTRIBUTES_BINDING = "sessAttrs";
     public static final String EXCEPTION_BINDING = "exception";
 }

@@ -29,6 +29,7 @@ import org.productivity.java.syslog4j.util.SyslogUtility;
 import org.raven.test.DataCollector;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.Record;
+import org.raven.log.LogLevel;
 
 /**
  *
@@ -53,6 +54,7 @@ public class SyslogReaderNodeTest extends RavenCoreTestCase
         tree.getRootNode().addAndSaveChildren(reader);
         reader.setProtocol(SyslogReaderNode.SyslogProtocol.UDP);
         reader.setPort(1514);
+        reader.setLogLevel(LogLevel.TRACE);
         assertTrue(reader.start());
 
         SyslogMessageHandlerNode handler = new SyslogMessageHandlerNode();
@@ -63,6 +65,7 @@ public class SyslogReaderNodeTest extends RavenCoreTestCase
                     "facility=='ftp' && host=='localhost' " +
                     "&& message.contains('hello world') && level=='INFO'");
         handler.setRecordSchema(schema);
+        handler.setLogLevel(LogLevel.TRACE);
         assertTrue(handler.start());
 
         SyslogMessageHandlerNode handler2 = new SyslogMessageHandlerNode();
@@ -70,6 +73,7 @@ public class SyslogReaderNodeTest extends RavenCoreTestCase
         reader.addAndSaveChildren(handler2);
         handler2.getNodeAttribute(SyslogMessageHandlerNode.ACCEPT_MESSAGE_EXPRESSION_ATTR)
                 .setValue("facility=='cron'");
+        handler2.setLogLevel(LogLevel.TRACE);
         handler2.setRecordSchema(schema);
         assertTrue(handler2.start());
         
