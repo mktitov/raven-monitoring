@@ -18,11 +18,13 @@
 package org.raven.ds.impl;
 
 import java.util.Collection;
+import org.raven.RavenUtils;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
+import org.raven.util.NodeUtils;
 
 /**
  *
@@ -32,22 +34,24 @@ public class DataSourceHelper
 {
     private DataSourceHelper() {}
 
+    /**
+     * Sends data to all {@link Node#getDependentNodes() dependent nodes} which are in STARTED state and
+     * instance of {@link DataConsumer}
+     * @param source consumers of this data source receive the data
+     * @param data this data will be sent to the consumers
+     * @param context the data context
+     */
     public static void sendDataToConsumers(DataSource source, Object data, DataContext context)
     {
-        Collection<Node> childs = source.getDependentNodes();
-        if (childs!=null && !childs.isEmpty())
-            for (Node child: childs)
-                if (child instanceof DataConsumer && Node.Status.STARTED.equals(child.getStatus()))
-                    try
-                    {
-                        ((DataConsumer)child).setData(source, data, context);
-                    }
-                    catch (Throwable e)
-                    {
-                        if (source.isLogLevelEnabled(LogLevel.ERROR))
-                            source.getLogger().error(String.format(
-                                    "Error pushing data to the consumer (%s)", child.getPath())
-                                    , e);
-                    }
+        for (DataConsumer con: NodeUtils.extractNodesOfType(source.getDependentNodes(), DataConsumer.class)) {
+            try{
+                con.setData(source, data, context);
+            }catch(Throwable e){
+                if (source.isLogLevelEnabled(LogLevel.ERROR))
+                    source.getLogger().error(String.format(
+                            "Error pushing data to the consumer (%s)", con.getPath())
+                            , e);
+            }
+        }
     }
 }
