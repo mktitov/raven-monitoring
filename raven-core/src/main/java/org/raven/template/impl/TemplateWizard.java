@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import javax.script.Bindings;
+import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeTuner;
@@ -61,6 +62,31 @@ public class TemplateWizard
         variablesNode = (TemplateVariablesNode) tree.copy(
                 template.getVariablesNode(), destination,TEMPLATE_VARIABLES_NODE
                 , null, false, false, false);
+    }
+
+    public TemplateWizard(TemplateNode templateNode, Node destination, String newNodeName
+            , Map<String, String> vars)
+        throws Exception
+    {
+        this(templateNode, destination, newNodeName);
+        if (vars!=null && !vars.isEmpty()){
+            for (Map.Entry<String, String> entry: vars.entrySet()){
+                try{
+                    NodeAttribute attr = variablesNode.getNodeAttribute(entry.getKey());
+                    if (attr==null){
+                        if (templateNode.isLogLevelEnabled(LogLevel.WARN))
+                            templateNode.getLogger().warn("Template variable ({}) not found", entry.getKey());
+                    } else
+                        attr.setValue(entry.getValue());
+                }catch (Exception e){
+                    if (templateNode.isLogLevelEnabled(LogLevel.WARN))
+                        templateNode.getLogger().warn(
+                                "Error creating template. Can't set value for template variable ({})", e);
+                    cancelWizard();
+                    throw e;
+                }
+            }
+        }
     }
 
     public TemplateVariablesNode getVariablesNode()

@@ -17,11 +17,11 @@
 
 package org.raven.template.impl;
 
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
+import org.junit.Before;
 import org.junit.Test;
-import org.raven.RavenCoreModule;
-import org.raven.test.ServiceTestCase;
-import org.raven.conf.Configurator;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
@@ -30,66 +30,53 @@ import org.raven.tree.Tree;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.LeafNode;
 import org.raven.tree.impl.NodeAttributeImpl;
-import org.raven.tree.store.TreeStore;
 import org.weda.constraints.ConstraintException;
-import org.weda.services.TypeConverter;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class TemplateWizardTest extends ServiceTestCase
+public class TemplateWizardTest extends RavenCoreTestCase
 {
-    @Override
-    protected void configureRegistry(Set<Class> builder)
+    private TemplateNode template;
+    private NodePathResolver pathResolver;
+
+    @Before
+    public void prepare() throws Exception
     {
-        builder.add(RavenCoreModule.class);
-    }
-    
-    @Test
-    public void test() throws Exception
-    {
-        //initialization block
-        Tree tree = registry.getService(Tree.class);
-        Configurator configurator = registry.getService(Configurator.class);
-        TreeStore store = configurator.getTreeStore();
-        TypeConverter converter = registry.getService(TypeConverter.class);
-        NodePathResolver pathResolver = registry.getService(NodePathResolver.class);
-        
-        store.removeNodes();
-        tree.reloadTree();
-        
+        pathResolver = registry.getService(NodePathResolver.class);
+
         TemplatesNode templates = (TemplatesNode)tree.getRootNode().getChildren(TemplatesNode.NAME);
-        TemplateNode template = new TemplateNode();
+        template = new TemplateNode();
         template.setName("template");
         templates.addChildren(template);
         tree.saveNode(template);
         template.init();
         template.start();
         assertEquals(Node.Status.STARTED, template.getStatus());
-        
+
         //Creating template variables
         TemplateVariablesNode varsNode = template.getVariablesNode();
-        
+
         NodeAttribute stringVar = new NodeAttributeImpl("stringVar", String.class, null, null);
         stringVar.setOwner(varsNode);
         varsNode.addNodeAttribute(stringVar);
         stringVar.init();
         stringVar.save();
-        
+
         NodeAttribute integerVar = new NodeAttributeImpl("integerVar", Integer.class, null, null);
         integerVar.setOwner(varsNode);
         integerVar.setRequired(true);
         varsNode.addNodeAttribute(integerVar);
         integerVar.init();
         integerVar.save();
-        
+
         //Creating template entry
         Node node = new ContainerNode("node");
         template.getEntryNode().addChildren(node);
         tree.saveNode(node);
         node.init();
-        
+
         NodeAttribute stringAttr =
                 new NodeAttributeImpl("stringAttr", String.class, null, null);
         stringAttr.setOwner(node);
@@ -98,12 +85,12 @@ public class TemplateWizardTest extends ServiceTestCase
         stringAttr.setValue(pathResolver.getAbsolutePath(stringVar));
         stringAttr.init();
         stringAttr.save();
-        
+
         Node child = new LeafNode("^t vars['stringVar']");
         node.addChildren(child);
         tree.saveNode(child);
         child.init();
-        NodeAttribute integerAttr = 
+        NodeAttribute integerAttr =
                 new NodeAttributeImpl("integerAttr", Integer.class, null, null);
         integerAttr.setOwner(child);
         child.addNodeAttribute(integerAttr);
@@ -111,7 +98,11 @@ public class TemplateWizardTest extends ServiceTestCase
         integerAttr.setValue(pathResolver.getAbsolutePath(integerVar));
         integerAttr.init();
         integerAttr.save();
-        
+    }
+
+    @Test
+    public void test() throws Exception
+    {        
         //test
         TemplateWizard wizard = new TemplateWizard(template, tree.getRootNode(), "newName");
         try{
@@ -127,6 +118,20 @@ public class TemplateWizardTest extends ServiceTestCase
         
         tree.reloadTree();
         
+        checkCreatedNodes(tree);
+    }
+
+    @Test
+    public void testConstructorWithVarValues() throws Exception
+    {
+        Map<String, String> vals = new HashMap<String, String>();
+        vals.put("integerVar", "10");
+        vals.put("stringVar", "child");
+
+        new TemplateWizard(template, tree.getRootNode(), "newName", vals).createNodes();
+
+        checkCreatedNodes(tree);
+        tree.reloadTree();
         checkCreatedNodes(tree);
     }
     
