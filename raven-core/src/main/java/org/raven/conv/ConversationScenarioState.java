@@ -60,7 +60,7 @@ public interface ConversationScenarioState
     /**
      * Sets the next conversation point. From this point conversation will continues.
      * @throws ConversationCycleDetectedException if detected cycle when used a sequence of the
-     *      immediate transions
+     *      immediate transitions
      */
     public void setNextConversationPoint(ConversationScenarioPoint nextConversationPoint)
             throws ConversationScenarioCycleDetectedException;
@@ -70,4 +70,16 @@ public interface ConversationScenarioState
      * the binding then then the binding will reset to this value else binding will be removed.
      */
     public void resetRequestBindings();
+    /**
+     * If returns <b>true</b> then some action disabled the dtmf processing for now
+     */
+    public boolean isDtmfProcessingDisabled();
+    /**
+     * Enables the dtmf processing
+     */
+    public void enableDtmfProcessing();
+    /**
+     * Enables the dtmf processing
+     */
+    public void disableDtmfProcessing();
 }

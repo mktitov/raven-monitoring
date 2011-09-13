@@ -20,6 +20,7 @@ package org.raven.conv.impl;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
 import org.raven.conv.BindingScope;
@@ -38,6 +39,7 @@ public class ConversationScenarioStateImpl implements ConversationScenarioState
     private final Map<String, Object> defaultValues = new HashMap<String, Object>();
     private ConversationScenarioPoint nextConversationPoint;
     private boolean immediateTransition = false;
+    private AtomicBoolean dtmfProcessingFlag = new AtomicBoolean(true);
 
     public Bindings getBindings()
     {
@@ -101,5 +103,17 @@ public class ConversationScenarioStateImpl implements ConversationScenarioState
     public void resetRequestBindings()
     {
         resetBindings(BindingScope.REQUEST);
+    }
+
+    public void enableDtmfProcessing() {
+        dtmfProcessingFlag.compareAndSet(false, true);
+    }
+
+    public void disableDtmfProcessing() {
+        dtmfProcessingFlag.compareAndSet(true, false);
+    }
+
+    public boolean isDtmfProcessingDisabled() {
+        return !dtmfProcessingFlag.get();
     }
 }
