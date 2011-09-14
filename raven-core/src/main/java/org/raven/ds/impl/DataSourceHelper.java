@@ -17,8 +17,6 @@
 
 package org.raven.ds.impl;
 
-import java.util.Collection;
-import org.raven.RavenUtils;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
