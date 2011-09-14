@@ -197,11 +197,11 @@ initiallyExpanded="true"
 				<tr:outputText 
 					rendered="#{node.template}"
 					inlineStyle="color: grey; font-weight: bold; font-size: 70%;" 
-					value="#{node.prefix}#{node.name}"/>
+					value="#{node.prefix}#{node.name}#{node.nodeTitle}"/>
 				<tr:outputText
 					rendered="#{!node.template}"
 					inlineStyle="font-size: 80%;" 
-					value="#{node.prefix}#{node.name}"/>
+					value="#{node.prefix}#{node.name}#{node.nodeTitle}"/>
  			</tr:commandLink>
  		</tr:panelHorizontalLayout>
   		</f:facet>

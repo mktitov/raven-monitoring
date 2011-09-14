@@ -1313,6 +1313,11 @@ implements Comparator<NodeAttribute>, INodeScanner, ScannedNodeHandler
 	public String getPrefix() {
 		return ((BaseNode)getNode()).getPrefix();
 	}
+
+    public String getNodeTitle(){
+        NodeAttribute titleAttr = getNode().getNodeAttribute("nodeTitle");
+        return titleAttr==null? null : " ("+titleAttr.getValue()+")";
+    }
 	
 	public boolean isStarted() {
 		return getStatus()==Status.STARTED;
