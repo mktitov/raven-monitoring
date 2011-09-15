@@ -28,6 +28,7 @@ import org.raven.tree.NodeTuner;
 import org.raven.tree.Tree;
 import org.weda.internal.annotations.Service;
 import org.weda.constraints.ConstraintException;
+import org.weda.services.TypeConverter;
 
 /**
  * Creates nodes from tamplate
@@ -39,6 +40,9 @@ public class TemplateWizard
     
     @Service
     private static Tree tree;
+
+    @Service
+    private static TypeConverter converter;
     
     private final TemplateNode template;
     private final Node destination;
@@ -76,8 +80,10 @@ public class TemplateWizard
                     if (attr==null){
                         if (templateNode.isLogLevelEnabled(LogLevel.WARN))
                             templateNode.getLogger().warn("Template variable ({}) not found", entry.getKey());
-                    } else
-                        attr.setValue(entry.getValue());
+                    } else {
+                        String val = converter.convert(String.class, entry.getValue(), null);
+                        attr.setValue(val);
+                    }
                 }catch (Exception e){
                     if (templateNode.isLogLevelEnabled(LogLevel.WARN))
                         templateNode.getLogger().warn(

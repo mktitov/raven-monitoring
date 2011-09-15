@@ -28,6 +28,8 @@ import org.raven.ds.impl.DataContextImpl;
 import org.raven.template.impl.TemplateNode;
 import org.raven.template.impl.TemplateWizard;
 import org.raven.tree.Node;
+import org.raven.tree.Tree;
+import org.raven.tree.impl.TreeImpl;
 
 /**
  *
@@ -35,6 +37,10 @@ import org.raven.tree.Node;
  */
 public class ApiUtils
 {
+    public static Tree getTree(){
+        return TreeImpl.INSTANCE;
+    }
+
     public static void withConnection(Connection connection, Closure closure) throws SQLException
     {
         try
