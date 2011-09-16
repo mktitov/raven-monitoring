@@ -61,7 +61,7 @@ public class ConversationScenarioNodeTest extends RavenCoreTestCase
     {
         Collection<Node> actions = conversation.makeConversation(state);
         assertNotNull(actions);
-        assertSame(conversation, state.getNextConversationPoint());
+        assertSame(conversation, state.getConversationPoint());
     }
 
     @Test
@@ -69,8 +69,10 @@ public class ConversationScenarioNodeTest extends RavenCoreTestCase
     {
         ConversationScenarioPointNode point = addPoint(conversation, "point");
         conversation.makeConversation(state);
-        assertSame(point, state.getNextConversationPoint());
+        assertSame(conversation, state.getConversationPoint());
         assertTrue(state.hasImmediateTransition());
+        state.switchToNextConversationPoint();
+        assertSame(point, state.getConversationPoint());
         conversation.makeConversation(state);
         assertFalse(state.hasImmediateTransition());
     }
@@ -84,15 +86,16 @@ public class ConversationScenarioNodeTest extends RavenCoreTestCase
         addGoto(conversation, "goto", point);
 
         Collection<Node> actions = conversation.makeConversation(state);
-        assertSame(point, state.getNextConversationPoint());
+        assertSame(conversation, state.getConversationPoint());
         assertTrue(state.hasImmediateTransition());
         assertNotNull(actions);
         assertEquals(1, actions.size());
         assertSame(container, actions.iterator().next());
-
+        state.switchToNextConversationPoint();
+        assertSame(point, state.getConversationPoint());
         
         actions = conversation.makeConversation(state);
-        assertSame(point, state.getNextConversationPoint());
+        assertSame(point, state.getConversationPoint());
         assertFalse(state.hasImmediateTransition());
         assertEquals(1, actions.size());
         assertSame(action, actions.iterator().next());
@@ -107,17 +110,21 @@ public class ConversationScenarioNodeTest extends RavenCoreTestCase
 
         assertEquals(0l, state.getBindings().get(ConversationScenario.REPEITION_COUNT_PARAM));
         conversation.makeConversation(state);
+        state.switchToNextConversationPoint();
         assertEquals(0l, state.getBindings().get(ConversationScenario.REPEITION_COUNT_PARAM));
         conversation.makeConversation(state);
+        state.switchToNextConversationPoint();
         assertEquals(1l, state.getBindings().get(ConversationScenario.REPEITION_COUNT_PARAM));
 
         addGoto(point, "goto", conversation);
         gotoNode.setConversationPoint(conversation);
         conversation.makeConversation(state);
+        state.switchToNextConversationPoint();
         assertEquals(0l, state.getBindings().get(ConversationScenario.REPEITION_COUNT_PARAM));
         conversation.makeConversation(state);
+        state.switchToNextConversationPoint();
         assertEquals(1l, state.getBindings().get(ConversationScenario.REPEITION_COUNT_PARAM));
-        assertSame(conversation, state.getNextConversationPoint());
+        assertSame(conversation, state.getConversationPoint());
     }
 
     @Test
@@ -137,7 +144,7 @@ public class ConversationScenarioNodeTest extends RavenCoreTestCase
         ConversationScenarioPointNode point = addPoint(conversation, "point");
         point.stop();
         conversation.makeConversation(state);
-        assertSame(conversation, state.getNextConversationPoint());
+        assertSame(conversation, state.getConversationPoint());
     }
 
     @Test

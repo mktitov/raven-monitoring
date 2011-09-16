@@ -57,7 +57,7 @@ public class ConversationScenarioNode
     public Collection<Node> makeConversation(ConversationScenarioState state)
             throws ConversationScenarioException
     {
-        ConversationScenarioPoint nextPoint = state.getNextConversationPoint();
+        ConversationScenarioPoint nextPoint = state.getConversationPoint();
         state.setImmediateTransition(false);
         bindingSupport.putAll(state.getBindings());
         try
@@ -111,6 +111,7 @@ public class ConversationScenarioNode
         state.setBindingDefaultValue(REPEITION_COUNT_PARAM, 0l);
         state.setBinding(REPEITION_COUNT_PARAM, 0l, BindingScope.POINT);
         state.setNextConversationPoint(this);
+        state.switchToNextConversationPoint();
         return state;
     }
 }

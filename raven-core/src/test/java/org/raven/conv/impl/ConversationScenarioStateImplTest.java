@@ -20,8 +20,6 @@ package org.raven.conv.impl;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;
-import org.raven.conv.ConversationScenarioCycleDetectedException;
-import org.raven.conv.ConversationScenarioPoint;
 
 /**
  *
@@ -54,7 +52,7 @@ public class ConversationScenarioStateImplTest extends RavenCoreTestCase
 //        assertTrue(point.start());
 //        assertFalse(point.getImmediateTransition());
 //        state.setNextConversationPoint(point);
-//        assertSame(point, state.getNextConversationPoint());
+//        assertSame(point, state.getConversationPoint());
 //        assertFalse(state.hasImmediateTransition());
 //    }
 //
@@ -68,7 +66,7 @@ public class ConversationScenarioStateImplTest extends RavenCoreTestCase
 //        assertTrue(point.start());
 //        assertTrue(point.getImmediateTransition());
 //        state.setNextConversationPoint(point);
-//        assertSame(point, state.getNextConversationPoint());
+//        assertSame(point, state.getConversationPoint());
 //        assertTrue(state.hasImmediateTransition());
 //    }
 //

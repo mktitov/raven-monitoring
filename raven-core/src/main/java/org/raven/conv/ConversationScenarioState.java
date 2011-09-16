@@ -56,7 +56,11 @@ public interface ConversationScenarioState
     /**
      * Returns the next conversation point. The point from which the conversation continues.
      */
-    public ConversationScenarioPoint getNextConversationPoint();
+    public ConversationScenarioPoint getConversationPoint();
+    /**
+     * Switches to next conversation point
+     */
+    public void switchToNextConversationPoint();
     /**
      * Sets the next conversation point. From this point conversation will continues.
      * @throws ConversationCycleDetectedException if detected cycle when used a sequence of the

@@ -37,6 +37,7 @@ public class ConversationScenarioStateImpl implements ConversationScenarioState
     private final Bindings bindings = new SimpleBindings();
     private final Map<String, BindingScope> scopes = new HashMap<String, BindingScope>();
     private final Map<String, Object> defaultValues = new HashMap<String, Object>();
+    private ConversationScenarioPoint conversationPoint;
     private ConversationScenarioPoint nextConversationPoint;
     private boolean immediateTransition = false;
     private AtomicBoolean dtmfProcessingFlag = new AtomicBoolean(true);
@@ -85,19 +86,25 @@ public class ConversationScenarioStateImpl implements ConversationScenarioState
         return immediateTransition;
     }
 
-    public ConversationScenarioPoint getNextConversationPoint()
+    public ConversationScenarioPoint getConversationPoint()
     {
-        return nextConversationPoint;
+        return conversationPoint;
+    }
+
+    public void switchToNextConversationPoint()
+    {
+        if (nextConversationPoint!=null) {
+            if (conversationPoint!=nextConversationPoint) {
+                conversationPoint = nextConversationPoint;
+                resetBindings(BindingScope.POINT);
+            }
+        }
     }
 
     public void setNextConversationPoint(ConversationScenarioPoint nextConversationPoint)
             throws ConversationScenarioCycleDetectedException
     {
-        if (this.nextConversationPoint!=nextConversationPoint)
-        {
-            this.nextConversationPoint = nextConversationPoint;
-            resetBindings(BindingScope.POINT);
-        }
+        this.nextConversationPoint = nextConversationPoint;
     }
 
     public void resetRequestBindings()
