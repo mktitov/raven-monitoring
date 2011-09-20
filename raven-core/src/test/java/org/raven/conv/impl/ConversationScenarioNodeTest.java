@@ -89,7 +89,7 @@ public class ConversationScenarioNodeTest extends RavenCoreTestCase
         assertSame(conversation, state.getConversationPoint());
         assertTrue(state.hasImmediateTransition());
         assertNotNull(actions);
-        assertEquals(1, actions.size());
+        assertEquals(2, actions.size());
         assertSame(container, actions.iterator().next());
         state.switchToNextConversationPoint();
         assertSame(point, state.getConversationPoint());

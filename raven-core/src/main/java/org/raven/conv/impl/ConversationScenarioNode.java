@@ -77,12 +77,14 @@ public class ConversationScenarioNode
                         state.setNextConversationPoint((ConversationScenarioPoint) action);
                         state.setImmediateTransition(true);
                         conversationPointSeted = true;
+                        actions.add(action);
                     }
                     else if (!conversationPointSeted && action instanceof GotoNode)
                     {
                         state.setNextConversationPoint(((GotoNode)action).getConversationPoint());
                         state.setImmediateTransition(true);
                         conversationPointSeted = true;
+                        actions.add(action);
                     }
                     else
                         actions.add(action);
