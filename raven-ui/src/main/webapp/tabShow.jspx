@@ -361,7 +361,7 @@ partialTriggers=":poolStatus"
 				inlineStyle="font-weight: bold; font-size: 110%;"
 				rendered="#{vnstat.index==0}" 
 				partialSubmit="true"
-				text="#{row.node.prefix}#{row.node.name}"  
+				text="#{row.node.prefix}#{row.node.name}#{row.node.nodeTitle}"
 				actionListener="#{sBean.selectNode}">
 				<f:attribute 
 					name="#{sBean.nodePathParName}" 
