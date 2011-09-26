@@ -18,7 +18,6 @@
 package org.raven.rrd.graph;
 
 import org.raven.tree.ViewableObject;
-import org.raven.tree.impl.ViewableObjectImpl;
 
 /**
  *

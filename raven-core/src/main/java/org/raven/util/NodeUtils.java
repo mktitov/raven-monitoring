@@ -58,7 +58,19 @@ public class NodeUtils
      */
     public static <T> List<T> getChildsOfType(Node owner, Class<T> childType)
     {
-        return extractNodesOfType(owner.getSortedChildrens(), childType);
+        return extractNodesOfType(owner.getSortedChildrens(), childType, true);
+    }
+
+    /**
+     * Returns the sorted list of the <b>started</b> child nodes of the type <b>childType</b> of the <b>owner</b> node.
+     * Method returns <b>empty list</b> if owner node does not have started child of the specified type.
+     * @param owner the owner node
+     * @param childType the type of child node
+     * @param startedOnly if <b>true</b> then only started nodes fall into the result map
+     */
+    public static <T> List<T> getChildsOfType(Node owner, Class<T> childType, boolean startedOnly)
+    {
+        return extractNodesOfType(owner.getSortedChildrens(), childType, startedOnly);
     }
 
     /**
@@ -72,11 +84,26 @@ public class NodeUtils
      */
     public static <T> Map<String, T> getChildsOfTypeMap(Node owner, Class<T> childType)
     {
+        return getChildsOfTypeMap(owner, childType, true);
+    }
+    
+    /**
+     * Returns the map of the <b>started</b> child nodes of the type <b>childType</b> of the
+     * <b>owner</b> node.
+     * The <b>key</b> of the returned map is the <b>name</b> of the node and the
+     * <b>value</b> is the <b>node</b>.
+     * Method returns <b>empty map</b> if owner node does not have started child of the specified type.
+     * @param owner the owner node
+     * @param childType the type of child node
+     * @param startedOnly if <b>true</b> then only started nodes fall into the result map
+     */
+    public static <T> Map<String, T> getChildsOfTypeMap(Node owner, Class<T> childType, boolean startedOnly)
+    {
         Collection<Node> childs = owner.getSortedChildrens();
         if (childs!=null && !childs.isEmpty()){
             Map<String, T> res = new HashMap<String, T>();
             for (Node child: childs)
-                if (   Node.Status.STARTED.equals(child.getStatus())
+                if (   (Node.Status.STARTED.equals(child.getStatus()) || !startedOnly)
                     && childType.isAssignableFrom(child.getClass()))
                 {
                     res.put(child.getName(), (T)child);
@@ -86,6 +113,8 @@ public class NodeUtils
 
         return Collections.EMPTY_MAP;
     }
+
+
 
     /**
      * Returns the sorted list of the <i>STARTED</i> effective child nodes of the type
@@ -107,10 +136,23 @@ public class NodeUtils
      */
     public static <T> List<T> extractNodesOfType(Collection<Node> list, Class<T> elementType)
     {
+        return extractNodesOfType(list, elementType, true);
+    }
+    
+    /**
+     * Extracts <i>STARTED</i> nodes of specified type from the list. Method return the empty list if the
+     * input list is empty or list doesn't contains the nodes of specified type.
+     * @param list
+     * @param elementType
+     * @param startedOnly if <b>true</b> then only started nodes fall into the result list
+     */
+    public static <T> List<T> extractNodesOfType(Collection<Node> list, Class<T> elementType
+            , boolean onlyStarted)
+    {
         if (list!=null && !list.isEmpty()){
             List<T> res = new ArrayList<T>(list.size());
             for (Node child: list)
-                if (   Node.Status.STARTED.equals(child.getStatus())
+                if (   (Node.Status.STARTED.equals(child.getStatus()) || !onlyStarted)
                     && elementType.isAssignableFrom(child.getClass()))
                 {
                     res.add((T)child);
@@ -120,7 +162,7 @@ public class NodeUtils
 
         return Collections.EMPTY_LIST;
     }
-    
+
     /**
      * Returns the map of cloned attributes which value handler type is
      * {@link RefreshAttributeValueHandlerFactory#TYPE}.
