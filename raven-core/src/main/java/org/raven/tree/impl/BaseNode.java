@@ -1177,19 +1177,11 @@ public class BaseNode implements Node, NodeListener, Logger
     @Override
     public boolean equals(Object obj)
     {
-        if (obj == null)
-        {
+        if (obj == null || getClass() != obj.getClass())
             return false;
-        }
-        if (getClass() != obj.getClass())
-        {
-            return false;
-        }
         final BaseNode other = (BaseNode) obj;
         if (this.id != other.id)
-        {
             return false;
-        }
         return true;
     }
 
