@@ -107,6 +107,8 @@ import org.raven.tree.AttributeValueHandlerFactory;
 import org.raven.tree.AttributeValueHandlerRegistry;
 import org.raven.tree.NodePathResolver;
 import org.raven.tree.Tree;
+import org.raven.tree.TreeListener;
+import org.raven.tree.TreeListeners;
 import org.raven.tree.impl.ActionAttributeValueHandlerFactory;
 import org.raven.tree.impl.AttributeReferenceHandlerFactory;
 import org.raven.tree.impl.AttributeReferenceValueHandlerFactory;
@@ -120,6 +122,7 @@ import org.raven.tree.impl.RefreshAttributeValueHandlerFactory;
 import org.raven.tree.impl.SchemasNode;
 import org.raven.tree.impl.SystemNode;
 import org.raven.tree.impl.TreeImpl;
+import org.raven.tree.impl.TreeListenersImpl;
 import org.raven.tree.store.impl.H2TreeStore;
 import org.slf4j.Logger;
 import org.weda.internal.Cache;
@@ -157,18 +160,23 @@ public class RavenCoreModule
     {
         return new NodePathResolverImpl();
     }
+
+    public static TreeListeners buildTreeListeners(final Collection<TreeListener> listeners){
+        return new TreeListenersImpl(listeners);
+    }
     
     public static Tree buildTree(
             AttributeReferenceValues attributeReferenceValues
             , Configurator configurator
             , ResourceProvider resourceProvider
             , NodePathResolver pathResolver
-            , AttributeValueHandlerRegistry valueHandlerRegistry) 
+            , AttributeValueHandlerRegistry valueHandlerRegistry
+            , TreeListeners listeners)
         throws Exception
     {
         return new TreeImpl(
                 attributeReferenceValues, configurator, resourceProvider, pathResolver
-                , valueHandlerRegistry);
+                , valueHandlerRegistry, listeners.getListeners());
     }
 
     public static AuthService buildAuthService(

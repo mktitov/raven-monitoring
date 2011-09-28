@@ -66,6 +66,7 @@ import org.raven.tree.SearchOptions;
 import org.raven.tree.Tree;
 import org.raven.tree.TreeError;
 import org.raven.tree.TreeException;
+import org.raven.tree.TreeListener;
 import org.raven.tree.UnableMoveRootException;
 import org.raven.tree.UnableMoveToSelfException;
 import org.raven.tree.store.TreeStore;
@@ -96,6 +97,7 @@ public class TreeImpl implements Tree
     private final TreeStore treeStore;
     private final NodePathResolver pathResolver;
     private final AttributeValueHandlerRegistry valueHandlerRegistry;
+    private final Collection<TreeListener> listeners;
 
     private final List<Class> allNodeTypes;
     @SuppressWarnings("unchecked")
@@ -128,7 +130,8 @@ public class TreeImpl implements Tree
             , Configurator configurator
             , ResourceProvider resourceProvider
             , NodePathResolver pathResolver
-            , AttributeValueHandlerRegistry valueHandlerRegistry) 
+            , AttributeValueHandlerRegistry valueHandlerRegistry
+            , Collection<TreeListener> listeners)
         throws Exception
     {
         this.configurator = configurator;
@@ -137,6 +140,7 @@ public class TreeImpl implements Tree
         this.pathResolver = pathResolver;
         this.attributeReferenceValues = attributeReferenceValues;
         this.valueHandlerRegistry = valueHandlerRegistry;
+        this.listeners = listeners;
         
         INSTANCE = this;
         
@@ -247,6 +251,10 @@ public class TreeImpl implements Tree
 
 			operationTime = (System.currentTimeMillis()-curTime)/1000;
 			logger.info(String.format("Tree reloaded in %d seconds", operationTime));
+            
+            if (listeners!=null)
+                for (TreeListener listener: listeners)
+                    listener.treeReloaded(this);
 		}
 		catch(Throwable e)
 		{

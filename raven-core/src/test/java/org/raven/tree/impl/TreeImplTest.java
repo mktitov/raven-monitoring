@@ -17,6 +17,9 @@
 
 package org.raven.tree.impl;
 
+import org.raven.tree.Tree;
+import java.util.Set;
+import org.raven.tree.TreeListener;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,6 +28,7 @@ import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.easymock.IArgumentMatcher;
 import org.junit.Test;
+import org.raven.TreeListenersModule;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.impl.NodeClassTransformerWorker;
 import org.raven.tree.AttributeReferenceValues;
@@ -49,6 +53,26 @@ import static org.easymock.EasyMock.*;
  */
 public class TreeImplTest extends RavenCoreTestCase
 {
+
+    @Override
+    protected void configureRegistry(Set<Class> builder) {
+        super.configureRegistry(builder);
+        builder.add(TreeListenersModule.class);
+    }
+
+    @Test
+    public void listenersTest()
+    {
+        TreeListener listener = createMock(TreeListener.class);
+        listener.treeReloaded(isA(Tree.class));
+        replay(listener);
+
+        TreeListenersModule.listener = listener;
+        tree.reloadTree();
+
+        verify(listener);
+    }
+
     @Test
     public void saveNodeTest()
     {
@@ -204,7 +228,7 @@ public class TreeImplTest extends RavenCoreTestCase
         FileNode sourceFile = new FileNode();
         sourceFile.setName("source file");
         tree.getRootNode().addAndSaveChildren(sourceFile);
-        byte[] data = new String("test").getBytes();
+        byte[] data = "test".getBytes();
         sourceFile.getFile().setDataStream(new ByteArrayInputStream(data));
         assertTrue(sourceFile.start());
 
@@ -299,7 +323,7 @@ public class TreeImplTest extends RavenCoreTestCase
         
         TreeImpl tree = new TreeImpl(
                 referenceValues, configurator, resourceProvider, pathResolver
-                , valueHandlerRegistry);
+                , valueHandlerRegistry, null);
         tree.reloadTree();
         
         assertNull(tree.getReferenceValuesForAttribute(integerAttr));
