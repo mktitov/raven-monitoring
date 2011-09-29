@@ -165,8 +165,8 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
      */
     public int getChildrenCount();
     /**
-     * Returns children nodes sorted by {@link #getIndex() index}. Method returns <code>null</code>
-     * if this node has not childrens.
+     * Returns children nodes sorted by {@link #getIndex() index}. Method returns an empty list if node does 
+     * not have child nodes
      */
     public List<Node> getSortedChildrens();
     /**
