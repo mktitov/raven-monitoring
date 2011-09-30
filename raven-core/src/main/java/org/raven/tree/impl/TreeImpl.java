@@ -282,10 +282,8 @@ public class TreeImpl implements Tree
         if (childrens!=null)
             for (Node children: new ArrayList<Node>(childrens))
                 remove(children);
-    
         
         node.shutdown();
-        
         
         if (node.getParent()!=null)
             node.getParent().removeChildren(node);
