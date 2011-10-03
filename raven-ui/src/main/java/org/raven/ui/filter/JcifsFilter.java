@@ -51,6 +51,7 @@ public class JcifsFilter extends NtlmHttpFilter {
    public static final String[] jcifsParams  = {WINS,DOMAIN,USERNAME,PASSWORD,CONTROLLER};
    private boolean testMode = false;
 	
+    @Override
     public void init(FilterConfig filterConfig ) throws ServletException 
     {
     	Registry registry = RavenRegistry.getRegistry();
@@ -68,6 +69,7 @@ public class JcifsFilter extends NtlmHttpFilter {
         if(!testMode) super.init(filterConfig);
     }
     
+    @Override
     public void doFilter( ServletRequest request, ServletResponse response, FilterChain chain ) 
     throws IOException, ServletException
     {
@@ -84,6 +86,7 @@ public class JcifsFilter extends NtlmHttpFilter {
     	}
     }
     
+    @Override
     public void destroy()
     {
     	Registry registry = RavenRegistry.getRegistry();

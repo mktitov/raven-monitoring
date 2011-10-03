@@ -99,7 +99,8 @@ public class AuthFilter implements Filter
             parm(ses.getServletContext());
            	String[] da = domainAccount.split("\\\\");
            	String account = "";
-            if(da.length!=2 || !da[0].equalsIgnoreCase(domain)) break;
+//            if(da.length!=2 || !da[0].equalsIgnoreCase(domain)) break;
+            if(da.length!=2) break;
            	account = da[1];
             ses.getServletContext().log("Account "+account);
            	
