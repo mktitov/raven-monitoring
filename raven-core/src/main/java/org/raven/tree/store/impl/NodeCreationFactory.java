@@ -34,10 +34,16 @@ public class NodeCreationFactory implements ObjectCreationFactory, XMLConsts
     {
         String nodeClass = attributes.getValue(CLASS_ATTRIBUTE);
         String nodeName = attributes.getValue(NAME_ATTRIBUTE);
-        Node node = (Node) Class.forName(nodeClass).newInstance();
-        node.setName(nodeName);
-        ((Node)digester.peek()).addAndSaveChildren(node);
-        
+        Node parent = (Node) digester.peek();
+        Node node = parent.getChildren(nodeName);
+        if (node==null){
+            node = (Node) Class.forName(nodeClass).newInstance();
+            node.setName(nodeName);
+            parent.addAndSaveChildren(node);
+        } else if (!node.getClass().getName().equals(nodeClass))
+            throw new Exception(String.format(
+                    "Node (%s) already exists and has different type. Expected (%s) but was (%s)"
+                    , node.getPath(), nodeClass, node.getClass().getName()));
         return node;
     }
 
