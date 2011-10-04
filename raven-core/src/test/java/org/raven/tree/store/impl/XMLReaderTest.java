@@ -19,7 +19,6 @@ package org.raven.tree.store.impl;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
