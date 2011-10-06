@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import javax.script.Bindings;
+import org.raven.BindingNames;
 import org.raven.Helper;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
@@ -41,11 +42,10 @@ import org.raven.tree.impl.BaseNode;
  * @author Mikhail Titov
  */
 @NodeClass
-public class AttributeValueDataSourceNode extends BaseNode implements DataSource
+public class AttributeValueDataSourceNode extends BaseNode implements DataSource, BindingNames
 {
-    public static final String CONTEXT_BINDING = "context";
-    public static final String SESS_ATTRS_BINDING = "sessAttrs";
     public static final String VALUE_ATTR = "value";
+
     @Parameter
     private String requiredAttributes;
 
@@ -129,8 +129,9 @@ public class AttributeValueDataSourceNode extends BaseNode implements DataSource
         {
             try
             {
-                bindingSupport.put(SESS_ATTRS_BINDING, values);
-                bindingSupport.put( CONTEXT_BINDING, context);
+                bindingSupport.put(SESSIONATTRIBUTES_BINDING, values);
+                bindingSupport.put(DATA_CONTEXT_BINDING, context);
+                bindingSupport.put(DATA_STREAM_BINDING, new DataStreamImpl(this, context));
                 if (!consumerAttrNames.isEmpty())
                     for (String name: consumerAttrNames)
                         bindingSupport.put(name, values.get(name));

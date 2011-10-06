@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
+import org.raven.test.DataCollector;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeAttributeImpl;
 
@@ -48,6 +49,27 @@ public class AttributeValueDataSourceNodeTest extends RavenCoreTestCase
         assertTrue(collector.start());
 
         assertEquals("test", ((List)collector.refereshData(null)).get(0));
+    }
+
+    @Test
+    public void dataStreamTest() throws Exception
+    {
+        AttributeValueDataSourceNode ds = new AttributeValueDataSourceNode();
+        ds.setName("ds");
+        tree.getRootNode().addAndSaveChildren(ds);
+        ds.getNodeAttribute(AttributeValueDataSourceNode.VALUE_ATTR)
+                .setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        ds.setValue("dataStream << 1; 2");
+        assertTrue(ds.start());
+
+        DataCollector collector = new DataCollector();
+        collector.setName("collector");
+        tree.getRootNode().addAndSaveChildren(collector);
+        collector.setDataSource(ds);
+        assertTrue(collector.start());
+
+        collector.refereshData(null);
+        assertArrayEquals(new Object[]{1,2}, collector.getDataList().toArray());
     }
 
     @Test

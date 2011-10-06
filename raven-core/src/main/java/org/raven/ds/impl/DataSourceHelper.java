@@ -17,6 +17,7 @@
 
 package org.raven.ds.impl;
 
+import org.raven.BindingNames;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
@@ -41,14 +42,23 @@ public class DataSourceHelper
      */
     public static void sendDataToConsumers(DataSource source, Object data, DataContext context)
     {
-        for (DataConsumer con: NodeUtils.extractNodesOfType(source.getDependentNodes(), DataConsumer.class)) {
-            try{
-                con.setData(source, data, context);
-            }catch(Throwable e){
-                if (source.isLogLevelEnabled(LogLevel.ERROR))
-                    source.getLogger().error(String.format(
-                            "Error pushing data to the consumer (%s)", con.getPath())
-                            , e);
+        DataConsumer cons = (DataConsumer) context.getNodeParameter(source, BindingNames.CONSUMER_PARAM);
+        if (cons!=null) {
+            if (source.isLogLevelEnabled(LogLevel.DEBUG))
+                source.getLogger().debug("Pushing data ONLY for consumer ({})", cons.getPath());
+            cons.setData(source, data, context);
+        } else {
+            for (DataConsumer con: NodeUtils.extractNodesOfType(source.getDependentNodes(), DataConsumer.class)) {
+                try{
+                    if (source.isLogLevelEnabled(LogLevel.DEBUG))
+                        source.getLogger().debug("Pushing data to the consumer ({})", con.getPath());
+                    con.setData(source, data, context);
+                }catch(Throwable e){
+                    if (source.isLogLevelEnabled(LogLevel.ERROR))
+                        source.getLogger().error(String.format(
+                                "Error pushing data to the consumer (%s)", con.getPath())
+                                , e);
+                }
             }
         }
     }

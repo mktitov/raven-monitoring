@@ -137,6 +137,26 @@ public class AbstractSafeDataPipeTest extends RavenCoreTestCase
         testCollector(c1, ds.getId()+2);
     }
 
+    @Test
+    public void dataStreamTest()
+    {
+        PushDataSource ds = new PushDataSource();
+        ds.setName("ds");
+        tree.getRootNode().addAndSaveChildren(ds);
+        assertTrue(ds.start());
+
+        pipe.setDataSource(ds);
+        pipe.setUseExpression(true);
+        pipe.setExpression("dataStream << 1+data; 3");
+        assertTrue(pipe.start());
+
+        ds.pushData(1);
+
+        assertEquals(2, c1.getDataListSize());
+        assertEquals(2, c1.getDataList().get(0));
+        assertEquals(3, c1.getDataList().get(1));
+    }
+
     //forwardDataSourceAttributes==false
     @Test
     public void forwardDataSourceAttributesTest1()

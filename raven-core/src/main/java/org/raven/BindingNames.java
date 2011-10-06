@@ -23,10 +23,15 @@ package org.raven;
  */
 public interface BindingNames
 {
+    public static final String CONSUMER_PARAM = "consumer";
+    
     public static final String USER_CONTEXT = "userContext";
+
     public static final String REFRESH_ATTRIBUTES = "refreshAttributes";
+    
     public static final String DATA_CONTEXT_BINDING = "context";
     public static final String DATASOURCE_BINDING = "dataSource";
+    public static final String DATA_STREAM_BINDING = "dataStream";
     public static final String DATA_BINDING = "data";
     public static final String REQUESTER_BINDING = "requester";
     public static final String REQUEST_BINDING = "request";

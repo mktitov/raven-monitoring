@@ -22,6 +22,7 @@ import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
+import org.raven.ds.DataStream;
 import org.raven.expr.BindingSupport;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
@@ -82,6 +83,7 @@ public class InitiatePushDataNode extends AbstractSafeDataPipe
             bindingSupport.put(DATA_BINDING, data);
             bindingSupport.put(SKIP_DATA_BINDING, SKIP_DATA);
             bindingSupport.put(DATA_CONTEXT_BINDING, context);
+            bindingSupport.put(DATA_STREAM_BINDING, new DataStreamForPushDataTo(pushDataTo, context, this));
             try{
                 dataForPush = expressionForPushDataTo;
             } finally {
@@ -96,5 +98,26 @@ public class InitiatePushDataNode extends AbstractSafeDataPipe
 
     @Override
     protected void doAddBindingsForExpression(DataSource dataSource, Object data, DataContext context, BindingSupport bindingSupport) {
+    }
+
+    private class DataStreamForPushDataTo implements DataStream {
+        private final DataConsumer consumer;
+        private final DataContext context;
+        private final DataSource source;
+
+        public DataStreamForPushDataTo(DataConsumer consumer, DataContext context, DataSource source) {
+            this.consumer = consumer;
+            this.context = context;
+            this.source = source;
+        }
+
+        public DataStream push(Object data) {
+            consumer.setData(source, data, context);
+            return this;
+        }
+
+        public DataStream leftShift(Object data) {
+            return push(data);
+        }
     }
 }

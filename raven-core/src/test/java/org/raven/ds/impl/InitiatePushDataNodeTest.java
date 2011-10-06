@@ -93,6 +93,20 @@ public class InitiatePushDataNodeTest extends RavenCoreTestCase
     }
 
     @Test
+    public void dataStreamExpressionForPushDataTo_test()
+    {
+        pipe.setUseExpressionForPushDataTo(Boolean.TRUE);
+        pipe.setExpressionForPushDataTo("dataStream << '1'; data+'1'");
+
+        final List<String> callOrder = new ArrayList<String>();
+        c1.setDataHandler(new Handler("c1", callOrder));
+        c2.setDataHandler(new Handler("c2", callOrder));
+        ds.pushData("test");
+
+        assertArrayEquals(new Object[]{"c2:1", "c2:test1", "c1:test"}, callOrder.toArray());
+    }
+
+    @Test
     public void skipDataInExpressionForPushDataTo_test()
     {
         pipe.setUseExpressionForPushDataTo(Boolean.TRUE);

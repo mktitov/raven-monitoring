@@ -46,7 +46,6 @@ import org.weda.beans.ObjectUtils;
 public abstract class AbstractSafeDataPipe 
         extends AbstractDataSource implements DataPipe, BindingNames
 {
-    public static final String CONSUMER_PARAM = "consumer";
     public static final String EXPRESSION_ATTRIBUTE = "expression";
     public static final String PREPROCESS_ATTRIBUTE = "preProcess";
 
@@ -291,6 +290,7 @@ public abstract class AbstractSafeDataPipe
             bindingSupport.put(SKIP_DATA_BINDING, SKIP_DATA);
             bindingSupport.put(DATASOURCE_BINDING, dataSource);
             bindingSupport.put(DATA_CONTEXT_BINDING, context);
+            bindingSupport.put(DATA_STREAM_BINDING, new DataStreamImpl(this, context));
             doAddBindingsForExpression(dataSource, data, context, bindingSupport);
             try
             {
@@ -327,23 +327,7 @@ public abstract class AbstractSafeDataPipe
     @Override
     public void sendDataToConsumers(Object data, DataContext context)
     {
-        DataConsumer cons = (DataConsumer) context.getNodeParameter(this, CONSUMER_PARAM);
-        if (cons!=null) {
-            if (isLogLevelEnabled(LogLevel.DEBUG))
-                getLogger().debug("Pushing data ONLY for consumer ({})", cons.getPath());
-            cons.setData(this, data, context);
-        }
-        else
-        {
-            Collection<Node> deps = getDependentNodes();
-            if (deps!=null && !deps.isEmpty())
-                for (Node dep: deps)
-                    if (dep instanceof DataConsumer && Status.STARTED.equals(dep.getStatus())){
-                        if (isLogLevelEnabled(LogLevel.DEBUG))
-                            getLogger().debug("Pushing data to the consumer ({})", dep.getPath());
-                        ((DataConsumer)dep).setData(this, data, context);
-                    }
-        }
+        DataSourceHelper.sendDataToConsumers(this, data, context);
     }
 
 //    @Override
