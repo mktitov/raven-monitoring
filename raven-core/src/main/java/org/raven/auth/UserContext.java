@@ -67,6 +67,4 @@ public interface UserContext
      * Returns the user context attributes.
      */
     public Map<String, List<Object>> getAttrs();
-    
-    
 }
