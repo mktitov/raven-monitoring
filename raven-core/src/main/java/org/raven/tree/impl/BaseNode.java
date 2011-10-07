@@ -759,6 +759,8 @@ public class BaseNode implements Node, NodeListener, Logger
     {
         try
         {
+            if (Status.STARTED.equals(getStatus()))
+                return true;
             if (isTemplate())
                 return false;
             if (nodeAttributes!=null)

@@ -75,6 +75,15 @@ public class TimeWindowNodeTest extends RavenCoreTestCase
     }
 
     @Test
+    public void invertResultTest()
+    {
+        timeWindow.setInvertResult(Boolean.TRUE);
+        assertFalse(timeWindow.isCurrentTimeInPeriod());
+        timeWindow.setTimePeriods(""+(c.get(Calendar.HOUR_OF_DAY)-1));
+        assertTrue(timeWindow.isCurrentTimeInPeriod());
+    }
+
+    @Test
     public void getViewableObjectsTest() throws Exception
     {
         List<ViewableObject> vos = timeWindow.getViewableObjects(null);

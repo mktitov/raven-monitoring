@@ -48,6 +48,9 @@ public class TimeWindowNode extends BaseNode implements Viewable
     @Parameter
     private String daysOfMonth;
 
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean invertResult;
+
     @Message
     private static String yesMessage;
     @Message
@@ -73,27 +76,31 @@ public class TimeWindowNode extends BaseNode implements Viewable
 
     public boolean isCurrentTimeInPeriod()
     {
-        try
-        {
-            Calendar c = Calendar.getInstance();
-
-            if (!getTimePeriod().isInPeriod(getMinutes(c)))
-                return false;
-
-            PeriodImpl dayOfWeekPeriod = getDayOfWeekPeriod();
-            if (dayOfWeekPeriod != null && !dayOfWeekPeriod.isInPeriod(getDayOfWeek(c))) 
-                return false;
-
-            PeriodImpl dayOfMonthPeriod = getDayOfMonthPeriod();
-            if (dayOfMonthPeriod != null && !dayOfMonthPeriod.isInPeriod(getDayOfMonth(c))) 
-                return false;
-            
-            return true;
+        try {
+            boolean res = checkCurrentTimeInPeriod();
+            return invertResult? !res : res;
         }
-        catch (ValueParserException valueParserException)
-        {
+        catch (ValueParserException e) {
             return false;
         }
+    }
+
+    private boolean checkCurrentTimeInPeriod() throws ValueParserException
+    {
+        Calendar c = Calendar.getInstance();
+
+        if (!getTimePeriod().isInPeriod(getMinutes(c)))
+            return false;
+
+        PeriodImpl dayOfWeekPeriod = getDayOfWeekPeriod();
+        if (dayOfWeekPeriod != null && !dayOfWeekPeriod.isInPeriod(getDayOfWeek(c)))
+            return false;
+
+        PeriodImpl dayOfMonthPeriod = getDayOfMonthPeriod();
+        if (dayOfMonthPeriod != null && !dayOfMonthPeriod.isInPeriod(getDayOfMonth(c)))
+            return false;
+
+        return true;
     }
 
     public String getDaysOfMonth() {
@@ -120,6 +127,14 @@ public class TimeWindowNode extends BaseNode implements Viewable
         this.timePeriods = timePeriods;
     }
 
+    public Boolean getInvertResult() {
+        return invertResult;
+    }
+
+    public void setInvertResult(Boolean invertResult) {
+        this.invertResult = invertResult;
+    }
+
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
     {
         return null;
@@ -128,10 +143,10 @@ public class TimeWindowNode extends BaseNode implements Viewable
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) throws Exception
     {
         List<ViewableObject> vos = new ArrayList<ViewableObject>(2);
-        
+        String inv = invertResult? " (включена инверсия)" : "";
         vos.add(new ViewableObjectImpl(
                 Viewable.RAVEN_TEXT_MIMETYPE, 
-                "<b>"+currentTimeInPeriodMessage+" </b>"+getYesNoString(isCurrentTimeInPeriod(), null)));
+                "<b>"+currentTimeInPeriodMessage+inv+" </b>"+getYesNoString(isCurrentTimeInPeriod(), null)));
 
         TableImpl table = new TableImpl(new String[]{
             periodNameColumnMessage, periodStringColumnMessage, validPeriodColumnMessage,
