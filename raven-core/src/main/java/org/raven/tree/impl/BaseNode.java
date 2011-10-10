@@ -572,13 +572,17 @@ public class BaseNode implements Node, NodeListener, Logger
     public Collection<Node> getEffectiveChildrens() 
     {
         List<Node> sortedChildrens = getSortedChildrens();
-        for (int i=sortedChildrens.size()-1; i>=0; --i)
-        {
+        Map<Node, Collection<Node>> effChilds = new HashMap<Node, Collection<Node>>();
+        //calculating effective childrens in right direction
+        for (Node child: sortedChildrens)
+            if (child.isConditionalNode())
+                effChilds.put(child, child.getEffectiveChildrens());
+        //composing sortedChildrens in reverse direction
+        for (int i=sortedChildrens.size()-1; i>=0; --i) {
             Node node = sortedChildrens.get(i);
-            if (node.isConditionalNode())
-            {
+            if (node.isConditionalNode()) {
                 sortedChildrens.remove(i);
-                Collection<Node> list = node.getEffectiveChildrens();
+                Collection<Node> list = effChilds.get(node);
                 if (list!=null)
                     sortedChildrens.addAll(i, list);
             }
@@ -795,6 +799,7 @@ public class BaseNode implements Node, NodeListener, Logger
         {
             variables = null;
             doStop();
+//            if (!Status.REMOVING.equals(getStatus()))
             setStatus(Status.INITIALIZED);
         }
         catch(Exception e)

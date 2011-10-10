@@ -117,14 +117,14 @@ public class BaseNodeTest extends RavenCoreTestCase
         expect(child1.compareTo(child3)).andReturn(-1).anyTimes();
         expect(child1.compareTo(condChild)).andReturn(-1).anyTimes();
         expect(child1.getIndex()).andReturn(1).anyTimes();
-        expect(child1.isConditionalNode()).andReturn(false);
+        expect(child1.isConditionalNode()).andReturn(false).atLeastOnce();
         
         Node condChildChild = createMock("condChildChild", Node.class);
         
         condChild.setParent(node);
         condChild.addListener(node);
         expect(condChild.getName()).andReturn("condChild").times(2);
-        expect(condChild.isConditionalNode()).andReturn(true);
+        expect(condChild.isConditionalNode()).andReturn(true).atLeastOnce();
         expect(condChild.getIndex()).andReturn(3);
         expect(condChild.compareTo(child1)).andReturn(1).anyTimes();
         expect(condChild.compareTo(child3)).andReturn(-1).anyTimes();
@@ -136,7 +136,7 @@ public class BaseNodeTest extends RavenCoreTestCase
         expect(child3.getIndex()).andReturn(2).anyTimes();
         expect(child3.compareTo(condChild)).andReturn(1).anyTimes();
         expect(child3.compareTo(child1)).andReturn(1).anyTimes();
-        expect(child3.isConditionalNode()).andReturn(false);
+        expect(child3.isConditionalNode()).andReturn(false).atLeastOnce();
         
         replay(child1, condChild, condChildChild, child3);
         

@@ -274,7 +274,8 @@ public class TreeImpl implements Tree
     {
         if (logger.isDebugEnabled())
             logger.debug(String.format("Removing node (%s)", node.getPath()));
-        
+
+        Node.Status prevStat = node.getStatus();
         node.setStatus(Status.REMOVING);
         
         Collection<Node> childrens = node.getChildrens();
@@ -282,7 +283,8 @@ public class TreeImpl implements Tree
         if (childrens!=null)
             for (Node children: new ArrayList<Node>(childrens))
                 remove(children);
-        
+
+        node.setStatus(prevStat);
         node.shutdown();
         
         if (node.getParent()!=null)
