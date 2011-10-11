@@ -42,8 +42,7 @@ import org.weda.beans.ObjectUtils;
  *
  * @author Mikhail Titov
  */
-public abstract class AbstractNetworkResponseContext
-        extends BaseNode implements NetworkResponseContext
+public abstract class AbstractNetworkResponseContext extends BaseNode implements NetworkResponseContext
 {
     public static final String PARAMS_BINDING = "params";
     public static final String NEEDS_AUTHENTICATION_ATTR = "needsAuthentication";

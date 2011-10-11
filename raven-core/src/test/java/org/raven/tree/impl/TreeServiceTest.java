@@ -97,8 +97,7 @@ public class TreeServiceTest extends ServiceTestCase
     }
     
     @Test
-    public void getChildNodesTypes()
-    {
+    public void getChildNodesTypes() {
         store.removeNodes();
         tree.reloadTree();
         
