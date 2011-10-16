@@ -30,6 +30,8 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.log.LogLevel;
@@ -119,7 +121,7 @@ public class ExecutorServiceNode extends BaseNode
         executingTasks = new ConcurrentSkipListSet();
         executor = new ThreadPoolExecutor(
                 corePoolSize, maximumPoolSize, keepAliveTime, timeUnit, queue);
-        loadAverage = new LoadAverageStatistic(maximumPoolSize, 300000);
+        loadAverage = new LoadAverageStatistic(300000, maximumPoolSize);
     }
 
     @Override
@@ -133,15 +135,10 @@ public class ExecutorServiceNode extends BaseNode
 
     public void execute(Task task) throws ExecutorServiceException
     {
-        try
-        {
-            if (Status.STARTED.equals(getStatus())) {
+        try {
+            if (Status.STARTED.equals(getStatus())) 
                 executor.execute(new TaskWrapper(task));
-
-            }
-        } 
-        catch (RejectedExecutionException e)
-        {
+        } catch (RejectedExecutionException e) {
             rejectedTasks.incrementAndGet();
             String message = String.format(
                         "Error executing task for node (%s). Executor service does not have " +
@@ -150,6 +147,18 @@ public class ExecutorServiceNode extends BaseNode
             if (isLogLevelEnabled(LogLevel.ERROR))
                 error(message, e);
             throw new ExecutorServiceException(message, e);
+        }
+    }
+
+    public boolean executeQuietly(Task task) {
+        try {
+            execute(task);
+            return true;
+        } catch (ExecutorServiceException ex) {
+            if (task.getTaskNode().isLogLevelEnabled(LogLevel.ERROR))
+                task.getTaskNode().getLogger().error(String.format(
+                        "Error executing task (%s)", task.getStatusMessage()));
+            return false;
         }
     }
 

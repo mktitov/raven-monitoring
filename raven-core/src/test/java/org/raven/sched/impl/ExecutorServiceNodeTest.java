@@ -49,7 +49,7 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase
         assertTrue(executor.start());
 
         executor.execute(new TestTask(executor, 500));
-        executor.execute(new TestTask(executor, 500));
+        assertTrue(executor.executeQuietly(new TestTask(executor, 500)));
         executor.execute(new TestTask(executor, 500));
         try {
             executor.execute(new TestTask(executor, 0));

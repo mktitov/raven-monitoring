@@ -29,4 +29,9 @@ public interface ExecutorService extends Node
      * Executes the task in separate thread
      */
     public void execute(Task task) throws ExecutorServiceException;
+    /**
+     * The same as {@link #execute(org.raven.sched.Task)} but this method does not throws exception
+     * @return <b>true</b> if tasks successfully
+     */
+    public boolean executeQuietly(Task task);
 }
