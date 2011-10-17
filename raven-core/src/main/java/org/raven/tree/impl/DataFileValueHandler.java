@@ -20,6 +20,8 @@ package org.raven.tree.impl;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.zip.Adler32;
+import java.util.zip.CheckedInputStream;
 import org.apache.commons.io.input.CountingInputStream;
 import org.raven.conf.Configurator;
 import org.raven.tree.DataFile;
@@ -34,12 +36,12 @@ import org.weda.internal.services.MessagesRegistry;
  *
  * @author Mikhail Titov
  */
-public class DataFileValueHandler extends AbstractAttributeValueHandler
-        implements DataFile//, AttributesGenerator
+public class DataFileValueHandler extends AbstractAttributeValueHandler implements DataFile
 {
     public static final String FILENAME_SUFFIX = "filename";
     public static final String MIMETYPE_SUFFIX = "mimeType";
     public static final String SIZE_SUFFIX = "filesize";
+    public static final String CHECKSUM_SUFFIX = "checksum";
 
     @Service
     private static MessagesRegistry messagesRegistry;
@@ -149,6 +151,31 @@ public class DataFileValueHandler extends AbstractAttributeValueHandler
         return getOrCreateAttribute(SIZE_SUFFIX, Long.class).getRealValue();
     }
 
+    public Long getChecksum() throws DataFileException {
+        NodeAttribute attr = getOrCreateAttribute(CHECKSUM_SUFFIX, Long.class);
+        Long val = attr.getRealValue();
+        if (val==null || val==0){
+            InputStream is = getDataStream();
+            if (is!=null){
+                byte[] buf = new byte[1024];
+                CheckedInputStream checksumStream = new CheckedInputStream(is, new Adler32());
+                try {
+                    try {
+                        while (checksumStream.read(buf) != -1) ;
+                        attr.setValue(""+checksumStream.getChecksum().getValue());
+                        attr.save();
+                        val = checksumStream.getChecksum().getValue();
+                    } finally {
+                        is.close();
+                    }
+                } catch (Exception ex) {
+                    throw new DataFileException("Error calculating checksum", ex);
+                }
+            }
+        }
+        return val;
+    }
+
     public InputStream getDataStream()
     {
         return configurator.getTreeStore().getNodeAttributeBinaryData(attribute);
@@ -156,15 +183,23 @@ public class DataFileValueHandler extends AbstractAttributeValueHandler
 
     public void setDataStream(InputStream data) throws DataFileException
     {
-        InputStream stream = data==null? null : new CountingInputStream(data);
+        CountingInputStream countingStream = null;
+        CheckedInputStream checksumStream = null;
+        if (data!=null){
+            countingStream = new CountingInputStream(data);
+            checksumStream = new CheckedInputStream(countingStream, new Adler32());
+        }
         try
         {
-            configurator.getTreeStore().saveNodeAttributeBinaryData(attribute, stream);
+            configurator.getTreeStore().saveNodeAttributeBinaryData(attribute, checksumStream);
             if (data!=null)
             {
-                NodeAttribute sizeAttr = getOrCreateAttribute(SIZE_SUFFIX, Long.class);
-                sizeAttr.setValue("" + ((CountingInputStream) stream).getByteCount());
-                sizeAttr.save();
+                NodeAttribute attr = getOrCreateAttribute(SIZE_SUFFIX, Long.class);
+                attr.setValue("" + countingStream.getByteCount());
+                attr.save();
+                attr = getOrCreateAttribute(CHECKSUM_SUFFIX, Long.class);
+                attr.setValue("" + checksumStream.getChecksum().getValue());
+                attr.save();
             }
             fireValueChangedEvent(null, null);
         }
@@ -200,7 +235,10 @@ public class DataFileValueHandler extends AbstractAttributeValueHandler
         NodeAttribute sizeAttr = new NodeAttributeImpl(
                 attribute.getName()+"."+SIZE_SUFFIX, Long.class, null, null);
 
-        return Arrays.asList(filenameAttr, mimeTypeAttr, sizeAttr);
+        NodeAttribute checksumAttr = new NodeAttributeImpl(
+                attribute.getName()+"."+CHECKSUM_SUFFIX, Long.class, null, null);
+
+        return Arrays.asList(filenameAttr, mimeTypeAttr, sizeAttr, checksumAttr);
     }
 
     private NodeAttribute getOrCreateAttribute(String suffix, Class type) throws DataFileException

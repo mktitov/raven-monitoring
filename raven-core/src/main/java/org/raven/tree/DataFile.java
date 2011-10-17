@@ -53,4 +53,8 @@ public interface DataFile extends AttributesGenerator
      * Returns the file size in bytes
      */
     public Long getFileSize() throws DataFileException;
+    /**
+     * Returns the checksum of the file. Adler32 is used to calculate checksum
+     */
+    public Long getChecksum() throws DataFileException;
 }
