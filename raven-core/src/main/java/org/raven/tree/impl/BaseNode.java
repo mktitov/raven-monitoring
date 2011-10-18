@@ -767,7 +767,10 @@ public class BaseNode implements Node, NodeListener, Logger
                 return true;
             if (isTemplate())
                 return false;
-            if (nodeAttributes!=null)
+            if (nodeAttributes!=null) {
+                for (NodeAttribute attr: nodeAttributes.values())
+                    if (attr.isGeneratorType())
+                        syncParentAttributes(attr);
                 for (NodeAttribute attr: nodeAttributes.values())
                     if ( (attr.isRequired() && attr.getValue()==null)
                        && (   !(attr.getValueHandler() instanceof ExpressionAttributeValueHandler)
@@ -782,6 +785,8 @@ public class BaseNode implements Node, NodeListener, Logger
                                 , getPath(), attr.getName()));
                         return false;
                     }
+                
+            }
             doStart();
             setStatus(Status.STARTED);
         }
@@ -1051,27 +1056,21 @@ public class BaseNode implements Node, NodeListener, Logger
     {
         if (parent.getRealValue() == null || !allowAttributesGeneration(parent))
             removeChildAttributes(parent.getName(), null);
-        else
-        {
+        else  {
             AttributesGenerator attributesGenerator = (AttributesGenerator)parent.getRealValue();
-
             Collection<NodeAttribute> newAttrs = attributesGenerator.generateAttributes();
-
             removeChildAttributes(parent.getName(), newAttrs);
 
-            if (newAttrs != null)
-            {
-                for (NodeAttribute newAttr : newAttrs)
-                {
+            if (newAttrs != null) {
+                for (NodeAttribute newAttr : newAttrs) {
+
                     if (nodeAttributes.containsKey(newAttr.getName()))
                         continue;
 
                     NodeAttribute clone = null;
-                    try
-                    {
+                    try {
                         clone = (NodeAttribute) newAttr.clone();
-                    } catch (CloneNotSupportedException ex)
-                    {
+                    } catch (CloneNotSupportedException ex) {
                         throw new NodeError(String.format(
                                 "Error in the node (%s). Attribute (%s) clone error"
                                 , getPath(), clone.getName()), ex);
@@ -1080,16 +1079,13 @@ public class BaseNode implements Node, NodeListener, Logger
                     clone.setParentAttribute(parent.getName());
 
                     addNodeAttribute(clone);
-                    try
-                    {
+                    try {
                         clone.init();
                         clone.save();
-                    } 
-                    catch (Exception exception)
-                    {
+                    }  catch (Exception e) {
                         logger.error(String.format(
                                 "Error initializing the attribute (%s) of the node (%s)"
-                                , clone.getName(), getPath()))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ;
+                                , clone.getName(), getPath()), e);
                     }
                 }
             }
@@ -1152,14 +1148,11 @@ public class BaseNode implements Node, NodeListener, Logger
     void removeChildAttributes(String parentName, Collection<NodeAttribute> leaveAttributes)
     {
         Iterator<Map.Entry<String, NodeAttribute>> it = nodeAttributes.entrySet().iterator();
-        while (it.hasNext())
-        {
+        while (it.hasNext()) {
             NodeAttribute childAttr = it.next().getValue();
-            if (parentName.equals(childAttr.getParentAttribute()))
-            {
+            if (parentName.equals(childAttr.getParentAttribute())) {
                 boolean removeAttr = true;
-                if (leaveAttributes!=null)
-                {
+                if (leaveAttributes!=null) {
                     for (NodeAttribute attr: leaveAttributes)
                         if (   childAttr.getName().equals(attr.getName()) 
                             && (  attr.getType().isAssignableFrom(childAttr.getType())))
@@ -1171,8 +1164,7 @@ public class BaseNode implements Node, NodeListener, Logger
                             break;
                         }
                 }
-                if (removeAttr)
-                {
+                if (removeAttr) {
                     configurator.getTreeStore().removeNodeAttribute(childAttr.getId());
                     it.remove();
                 }
