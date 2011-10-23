@@ -42,8 +42,8 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase
         ExecutorServiceNode executor = new ExecutorServiceNode();
         executor.setName("executor");
         tree.getRootNode().addAndSaveChildren(executor);
-        executor.setCorePoolSize(1);
-        executor.setMaximumPoolSize(2);
+        executor.setCorePoolSize(2);
+        executor.setMaximumPoolSize(3);
         executor.setMaximumQueueSize(1);
         executor.setLogLevel(LogLevel.DEBUG);
         assertTrue(executor.start());
@@ -58,7 +58,7 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase
         }
 
         Thread.sleep(100);
-        assertEquals(new Integer(2), executor.getExecutingTaskCount());
+        assertEquals(new Integer(2+1), executor.getExecutingTaskCount()); //+1 is the delayed tasks executor
         List<ViewableObject> vos = executor.getViewableObjects(null);
         assertNotNull(vos);
         assertEquals(1, vos.size());
@@ -66,12 +66,12 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase
         assertTrue(data instanceof Table);
         List<Object[]> rows = RavenUtils.tableAsList((Table)data);
         assertNotNull(rows);
-        assertEquals(2, rows.size());
-        assertEquals(executor.getPath(), rows.get(0)[1]);
-        assertEquals("status message", rows.get(0)[2]);
-        assertEquals(Thread.State.TIMED_WAITING.toString(), rows.get(0)[5]);
-        assertTrue(rows.get(0)[6] instanceof ViewableObject);
-        ViewableObject vo = (ViewableObject) rows.get(0)[6];
+        assertEquals(2+1, rows.size()); //+1 is the delayed tasks executor
+        assertEquals(executor.getPath(), rows.get(1)[1]);
+        assertEquals("status message", rows.get(1)[2]);
+        assertEquals(Thread.State.TIMED_WAITING.toString(), rows.get(1)[5]);
+        assertTrue(rows.get(1)[6] instanceof ViewableObject);
+        ViewableObject vo = (ViewableObject) rows.get(1)[6];
         assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, vo.getMimeType());
         assertTrue(vo.getData() instanceof Table);
         Table trace = (Table)vo.getData();
@@ -84,15 +84,37 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase
 
         Thread.sleep(1000);
 
-        assertEquals(new Integer(0), executor.getExecutingTaskCount());
-        assertEquals(3, executor.getExecutedTasks().getOperationsCount());
+        assertEquals(new Integer(0+1), executor.getExecutingTaskCount()); //+1 is the delayed tasks executor
+        assertEquals(4, executor.getExecutedTasks().getOperationsCount());
         assertEquals(1l, executor.getRejectedTasks().get());
     }
 
-    private class TestTask implements Task
-    {
+    @Test
+    public void delayedTasksTest() throws InterruptedException {
+        ExecutorServiceNode executor = new ExecutorServiceNode();
+        executor.setName("executor");
+        tree.getRootNode().addAndSaveChildren(executor);
+        executor.setCorePoolSize(2);
+        executor.setMaximumPoolSize(2);
+        executor.setMaximumQueueSize(1);
+        executor.setLogLevel(LogLevel.DEBUG);
+        assertTrue(executor.start());
+
+        TestTask task1 = new TestTask(executor, 0);
+        TestTask task2 = new TestTask(executor, 0);
+        assertTrue(executor.executeQuietly(100, task2));
+        assertTrue(executor.executeQuietly(50, task1));
+        Thread.sleep(150);
+        assertTrue(task1.executed);
+        assertTrue(task2.executed);
+        assertTrue(task1.time < task2.time);
+    }
+
+    private class TestTask implements Task {
         private final Node initiator;
         private final long sleepInterval;
+        private boolean executed;
+        private long time;
 
         public TestTask(Node initiator, long sleepInterval) {
             this.initiator = initiator;
@@ -103,6 +125,10 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase
             return initiator;
         }
 
+        public boolean isExecuted() {
+            return executed;
+        }
+
         public String getStatusMessage() {
             return "status message";
         }
@@ -110,6 +136,8 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase
         public void run() {
             try {
                 Thread.sleep(sleepInterval);
+                executed = true;
+                time = System.currentTimeMillis();
             } catch (InterruptedException ex) {
             }
         }

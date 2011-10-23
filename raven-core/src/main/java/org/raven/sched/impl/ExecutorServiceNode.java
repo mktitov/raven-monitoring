@@ -23,10 +23,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.DelayQueue;
+import java.util.concurrent.Delayed;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -92,8 +96,10 @@ public class ExecutorServiceNode extends BaseNode
 
 
     private ThreadPoolExecutor executor;
+    private ScheduledThreadPoolExecutor scheduledExecutor;
     private BlockingQueue queue;
     private Collection<TaskWrapper> executingTasks;
+    private DelayQueue<DelayedTaskWrapper> delayedTasks;
     private AtomicLong taskIdCounter;
 
     @Override
@@ -119,8 +125,9 @@ public class ExecutorServiceNode extends BaseNode
         else
             queue = new LinkedBlockingQueue(capacity);
         executingTasks = new ConcurrentSkipListSet();
-        executor = new ThreadPoolExecutor(
-                corePoolSize, maximumPoolSize, keepAliveTime, timeUnit, queue);
+        delayedTasks = new DelayQueue<DelayedTaskWrapper>();
+        executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, timeUnit, queue);
+        executor.execute(new TaskWrapper(new DelayedTaskExecutor()));
         loadAverage = new LoadAverageStatistic(300000, maximumPoolSize);
     }
 
@@ -131,6 +138,8 @@ public class ExecutorServiceNode extends BaseNode
         executor.shutdown();
         resetStatFields();
         executingTasks = null;
+        delayedTasks.clear();
+        delayedTasks = null;
     }
 
     public void execute(Task task) throws ExecutorServiceException
@@ -150,6 +159,10 @@ public class ExecutorServiceNode extends BaseNode
         }
     }
 
+    public void execute(long delay, Task task) throws ExecutorServiceException {
+        delayedTasks.add(new DelayedTaskWrapper(task, delay));
+    }
+
     public boolean executeQuietly(Task task) {
         try {
             execute(task);
@@ -158,6 +171,18 @@ public class ExecutorServiceNode extends BaseNode
             if (task.getTaskNode().isLogLevelEnabled(LogLevel.ERROR))
                 task.getTaskNode().getLogger().error(String.format(
                         "Error executing task (%s)", task.getStatusMessage()));
+            return false;
+        }
+    }
+
+    public boolean executeQuietly(long delay, Task task) {
+        try {
+            execute(delay, task);
+            return true;
+        } catch (ExecutorServiceException ex) {
+            if (task.getTaskNode().isLogLevelEnabled(LogLevel.ERROR))
+                task.getTaskNode().getLogger().error(String.format(
+                        "Error executing delayed task (%s)", task.getStatusMessage()));
             return false;
         }
     }
@@ -177,11 +202,10 @@ public class ExecutorServiceNode extends BaseNode
         return executingTasks==null? null : executingTasks.size();
     }
 
-//    @Parameter(readOnly=true)
-//    public Integer getLargestQueueSize()
-//    {
-////        return executor==null? null : executor.g
-//    }
+    @Parameter(readOnly=true)
+    public Integer getLargestQueueSize() {
+        return executor==null? null : executor.getLargestPoolSize();
+    }
 
     public OperationStatistic getExecutedTasks() {
         return executedTasks;
@@ -307,8 +331,7 @@ public class ExecutorServiceNode extends BaseNode
         private long executionStart;
         private Thread thread;
 
-        public TaskWrapper(Task task)
-        {
+        public TaskWrapper(Task task) {
             this.task = task;
             id = taskIdCounter.incrementAndGet();
         }
@@ -321,28 +344,23 @@ public class ExecutorServiceNode extends BaseNode
             return thread;
         }
 
-        public Node getTaskNode() 
-        {
+        public Node getTaskNode() {
             return task.getTaskNode();
         }
 
-        public String getStatusMessage()
-        {
+        public String getStatusMessage() {
             return task.getStatusMessage();
         }
 
-        public long getExecutionStart()
-        {
+        public long getExecutionStart() {
             return executionStart;
         }
 
-        public long getExecutionDuation()
-        {
+        public long getExecutionDuation() {
             return executionStart==0? 0 : (System.currentTimeMillis() - executionStart)/1000;
         }
 
-        public void run()
-        {
+        public void run() {
             thread = Thread.currentThread();
             executionStart = executedTasks.markOperationProcessingStart();
             long startTime = System.currentTimeMillis();
@@ -376,14 +394,57 @@ public class ExecutorServiceNode extends BaseNode
             }
         }
 
-        public int compareTo(Object o)
-        {
+        public int compareTo(Object o) {
             return id.compareTo(((TaskWrapper)o).getId());
         }
     }
 
-    private class InterruptThreadAction extends AbstractActionViewableObject
-    {
+    private class DelayedTaskWrapper implements Delayed {
+        private final long startAt;
+        private final Task task;
+
+        public DelayedTaskWrapper(Task task, long delay) {
+            this.task = task;
+            this.startAt = System.currentTimeMillis()+delay;
+        }
+
+        public long getDelay(TimeUnit unit) {
+            return unit.convert(startAt-System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+        }
+
+        public int compareTo(Delayed o) {
+            if (o==this)
+                return 0;
+            long d = getDelay(TimeUnit.MILLISECONDS)-o.getDelay(TimeUnit.MILLISECONDS);
+            return d==0? 0 : (d<0? -1 : 1);
+        }
+    }
+
+    private class DelayedTaskExecutor implements Task {
+        public Node getTaskNode() {
+            return ExecutorServiceNode.this;
+        }
+
+        public String getStatusMessage() {
+            return "Servicing delayed tasks";
+        }
+
+        public void run() {
+            try {
+                for (;;){
+                    DelayedTaskWrapper delayedTask = delayedTasks.poll(1, TimeUnit.SECONDS);
+                    if (delayedTask!=null)
+                        executeQuietly(delayedTask.task);
+                }
+            } catch (InterruptedException e) {
+                if (isLogLevelEnabled(LogLevel.DEBUG))
+                    getLogger().debug("Delayed task executor stopped");
+                Thread.interrupted();
+            }
+        }
+    }
+
+    private class InterruptThreadAction extends AbstractActionViewableObject {
         private final Thread thread;
         private final String completionMessage;
 
@@ -397,11 +458,9 @@ public class ExecutorServiceNode extends BaseNode
         }
 
         @Override
-        public String executeAction() throws Exception 
-        {
+        public String executeAction() throws Exception  {
             thread.interrupt();
             return completionMessage;
-        }
-        
+        }       
     }
 }
