@@ -75,7 +75,6 @@ public class NodeAttributeImpl
     
     private boolean required;
     private BaseNode owner;
-    //TODO: remove fild parameter 
     private NodeParameter parameter;
     private ParentAttributeValueHandler valueHandler;
     private ReferenceValuesSource referenceValuesSource;

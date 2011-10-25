@@ -23,7 +23,6 @@ import java.util.Collection;
  * 
  * @author Mikhail Titov
  */
-//TODO: add method checkAttributesValues(Collection<NodeAttribute>)
 public interface AttributesGenerator 
 {
     /**
@@ -35,6 +34,5 @@ public interface AttributesGenerator
      * @see NodeAttribute#getOwner() 
      * @see NodeAttribute#getParentAttribute() 
      */
-//    public void generateAttributes(Node owner, String parentAttribute);
     public Collection<NodeAttribute> generateAttributes();
 }

@@ -31,9 +31,6 @@ import org.weda.internal.impl.MessageComposer;
  * 
  * @author Mikhail Titov
  */
-//TODO: add isVisible method
-//TODO: add isReadOnly functionality
-//TODO: add getPattern functionality
 public interface NodeAttribute extends Cloneable
 {
     public void init() throws Exception;

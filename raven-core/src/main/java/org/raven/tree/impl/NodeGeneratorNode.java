@@ -201,52 +201,23 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
     {
         if (getStatus()!=Status.STARTED)
             return;
-        try
-        {
-            if (dataLock.tryLock(500, TimeUnit.MILLISECONDS))
-            {
+        try {
+            if (dataLock.tryLock(500, TimeUnit.MILLISECONDS)) {
                 needTableForConfiguration = true;
-                try
-                {
+                try {
                     getDataSource().getDataImmediate(this, null);
-                } finally
-                {
+                } finally {
                     needTableForConfiguration = false;
                     dataLock.unlock();
                 }
-            } else
-            {
+            } else {
                 logger.error(
                         String.format("Error locking node (%s) for configuration purposes"
                         , getPath()));
             }
-        } catch (InterruptedException e)
-        {
+        } catch (InterruptedException e) {
             logger.error(String.format("Node (%s) configuration error", getPath()), e);
         }
-//        try
-//        {
-//            if (dataLock.tryLock(500, TimeUnit.MILLISECONDS))
-//            {
-//                try
-//                {
-//                    Node templateNode = getTemplateNode();
-//                    getTable();
-//                    for (int row=0; row<table.getRowCount(); ++row)
-//                    {
-//                        Object val = table.getValue(indexColumnName, row);
-//                        String indexColumnValue = converter.convert(String.class, val, null);
-//                        createNewNode(table, row, templateNode, indexColumnValue, false);    
-//                    }
-//                }finally{
-//                    dataLock.unlock();
-//                }
-//            }
-//        } catch (Exception e)
-//        {
-//            throw new NodeError(
-//                    String.format("Node (%s) configuration error", getPath()) , e);
-//        }
     }
 
     private Map<String, List<DataConsumer>> collectConsumers(Set<Node> deps, Object data, DataContext context)
@@ -440,71 +411,6 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
                 Object value = namedRow.get(columnName);
                 consumer.setData(this, value, context);
             }
-    }
-
-    //TODO: преобразовать в NodeTuner
-    private void tuneNode(NodeGeneratorNode tableNode, StrSubstitutor subst, Node newNode)
-            throws Exception
-    {
-        String newName = subst.replace(newNode.getName());
-        if (!newName.equals(newNode.getName()))
-        {
-            newNode.setName(newName);
-            tree.saveNode(newNode);
-        }
-        
-        NodeAttribute columnNameAttr = 
-                newNode.getNodeAttribute(NodeGeneratorNodeTemplate.TABLE_COLUMN_NAME);
-        if (columnNameAttr!=null)
-        {
-            if (columnNameAttr.getRawValue()==null)
-            {
-                newNode.removeNodeAttribute(columnNameAttr.getName());
-                configurator.getTreeStore().removeNodeAttribute(columnNameAttr.getId());
-            } 
-            else if (newNode instanceof AbstractDataConsumer)
-            {
-                NodeAttribute dataSourceAttr = 
-                        newNode.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE);
-                dataSourceAttr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
-                dataSourceAttr.setValue(tableNode.getPath());
-                dataSourceAttr.save();
-            }
-        }
-        
-        if (getNodeAttributes()!=null)
-        {
-            List<NodeAttribute> attrs = new ArrayList<NodeAttribute>(newNode.getNodeAttributes());
-            for (NodeAttribute attr: attrs)
-            {
-                boolean hasChanges = false;
-                String newVal = subst.replace(attr.getName());
-                if (!ObjectUtils.equals(newVal, attr.getName()))
-                {
-                    attr.setName(newVal);
-                    hasChanges = true;
-                }
-                newVal = subst.replace(attr.getRawValue());
-                if (!ObjectUtils.equals(newVal, attr.getRawValue()))
-                {
-                    hasChanges = true;
-                    attr.setValue(newVal);
-                }
-                newVal = subst.replace(attr.getDescription());
-                if (!ObjectUtils.equals(newVal, attr.getDescription()))
-                {
-                    hasChanges = true;
-                    attr.setDescription(newVal);
-                }
-                if (hasChanges)
-                    tree.saveNodeAttribute(attr);
-            }
-        }
-        
-        Collection<Node> childs = newNode.getChildrens();
-        if (childs!=null)
-            for (Node child: childs)
-                tuneNode(tableNode, subst, child);
     }
 
     @Override

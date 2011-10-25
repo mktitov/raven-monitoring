@@ -45,8 +45,6 @@ import org.weda.internal.services.MessagesRegistry;
  *
  * @author Mikhail Titov
  */
-//TODO: add required property to NodeAttribute functionality
-//TODO: add autoStart to the Node functionality
 public class H2TreeStore implements TreeStore
 {
 	private final static Logger logger = LoggerFactory.getLogger(TreeStore.class);

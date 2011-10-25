@@ -18,7 +18,7 @@
 package org.raven.tree;
 
 /**
- * Allows the podsibility to dynamic change the contents of the node.
+ * Allows the posibility to dynamic change the contents of the node.
  * 
  * @author Mikhail Titov
  */
