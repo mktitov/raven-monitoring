@@ -61,8 +61,8 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase
         assertEquals(new Integer(2+1), executor.getExecutingTaskCount()); //+1 is the delayed tasks executor
         List<ViewableObject> vos = executor.getViewableObjects(null);
         assertNotNull(vos);
-        assertEquals(1, vos.size());
-        Object data = vos.get(0).getData();
+        assertEquals(4, vos.size());
+        Object data = vos.get(3).getData();
         assertTrue(data instanceof Table);
         List<Object[]> rows = RavenUtils.tableAsList((Table)data);
         assertNotNull(rows);

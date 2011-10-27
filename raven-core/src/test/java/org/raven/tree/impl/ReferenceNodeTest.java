@@ -19,8 +19,8 @@ package org.raven.tree.impl;
 
 import java.util.Collection;
 import org.junit.Test;
-import org.raven.test.RavenCoreTestCase;
 import org.raven.template.impl.TemplateEntry;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 
@@ -92,6 +92,6 @@ public class ReferenceNodeTest extends RavenCoreTestCase
         depNodes = nodes.getEffectiveChildrens();
         assertEquals(1, depNodes.size());
         assertSame(referenceNode, depNodes.iterator().next());
-        
+
     }
 }

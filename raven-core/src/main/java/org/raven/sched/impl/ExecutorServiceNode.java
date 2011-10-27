@@ -17,6 +17,7 @@
 
 package org.raven.sched.impl;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -277,8 +278,24 @@ public class ExecutorServiceNode extends BaseNode
     {
         if (!Status.STARTED.equals(getStatus()))
             return null;
-        TableImpl table = new TableImpl(new String[]{
-            "", "Node started the task", "Status", "Execution start time", "Execution duration (sec)"
+        ArrayList<ViewableObject> vos = new ArrayList<ViewableObject>(4);
+        vos.add(new ViewableObjectImpl(Viewable.RAVEN_TEXT_MIMETYPE, "<b>Dealayed tasks</b>"));
+        TableImpl table = new TableImpl(new String[]{"Node submited the task", "Execution delayed until"
+                , "Seconds to execution", "Status"});
+        Collection<DelayedTaskWrapper> _delayedTasks = delayedTasks;
+        if (_delayedTasks!=null && !_delayedTasks.isEmpty()) {
+            long time = System.currentTimeMillis();
+            for (DelayedTaskWrapper task: _delayedTasks) {
+                String date = converter.convert(String.class, new Date(task.startAt), "dd.MM.yyyy HH:mm:ss");
+                table.addRow(new Object[]{
+                    task.task.getTaskNode().getPath(), date, (task.startAt-time)*1000
+                    , task.task.getStatusMessage()});
+            }
+        }
+        vos.add(new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table));
+        vos.add(new ViewableObjectImpl(Viewable.RAVEN_TEXT_MIMETYPE, "<b>Executing tasks</b>"));
+        table = new TableImpl(new String[]{
+            "", "Node submited the task", "Status", "Execution start time", "Execution duration (sec)"
             , "Thread status", "Stack trace"});
         Collection<TaskWrapper> taskList = executingTasks;
         if (taskList!=null)
@@ -313,11 +330,9 @@ public class ExecutorServiceNode extends BaseNode
                     , task.getTaskNode().getPath(), task.getStatusMessage()
                     , date, task.getExecutionDuation(), threadStatus, traceVO});
             }
-
-        ViewableObject viewableObject =
-                new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table);
-
-        return Arrays.asList(viewableObject);
+        vos.add(new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table));
+        
+        return vos;
     }
 
     public Boolean getAutoRefresh()
