@@ -273,7 +273,8 @@ implements Comparator<NodeAttribute>, INodeScanner, ScannedNodeHandler
 	public boolean isChildViewable()
 	{
 		if(!isAllowNodeRead()) return false;
-		Collection<Node> c = getNode().getEffectiveChildrens();
+//		Collection<Node> c = getNode().getEffectiveChildrens();
+		Collection<Node> c = getNode().getSortedChildrens();
 		if(c!=null) 
 		{
 			Iterator<Node> it = c.iterator();
@@ -291,8 +292,8 @@ implements Comparator<NodeAttribute>, INodeScanner, ScannedNodeHandler
 	public List<NodeWrapper> getViewableChilddren()
 	{
 		List<NodeWrapper> ret = new ArrayList<NodeWrapper>();
-		//Collection<Node> c = getNode().getSortedChildrens();
-		Collection<Node> c = getNode().getEffectiveChildrens();
+		Collection<Node> c = getNode().getSortedChildrens();
+//		Collection<Node> c = getNode().getEffectiveChildrens();
 		if(c!=null) 
 		{
 			Iterator<Node> it = c.iterator();
@@ -461,8 +462,8 @@ implements Comparator<NodeAttribute>, INodeScanner, ScannedNodeHandler
 	
 	public List<NodeWrapper> getViewableNodes()
 	{
-	  //Collection<Node> c = getNode().getSortedChildrens();
-	  Collection<Node> c = getNode().getEffectiveChildrens();
+	  Collection<Node> c = getNode().getSortedChildrens();
+//	  Collection<Node> c = getNode().getEffectiveChildrens();
 	  ArrayList<NodeWrapper> wrappers = new ArrayList<NodeWrapper>();
 	  if(c!=null) 
 	  {
