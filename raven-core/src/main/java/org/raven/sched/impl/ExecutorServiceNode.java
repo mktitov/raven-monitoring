@@ -18,13 +18,13 @@
 package org.raven.sched.impl;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Delayed;
@@ -35,13 +35,12 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.log.LogLevel;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.ExecutorServiceException;
+import org.raven.sched.ManagedTask;
 import org.raven.sched.Task;
 import org.raven.table.TableImpl;
 import org.raven.tree.Node;
@@ -52,6 +51,7 @@ import org.raven.tree.impl.AbstractActionViewableObject;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.ViewableObjectImpl;
 import org.raven.util.LoadAverageStatistic;
+import org.raven.util.NodeUtils;
 import org.raven.util.OperationStatistic;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.internal.annotations.Message;
@@ -60,10 +60,19 @@ import org.weda.internal.annotations.Message;
  *
  * @author Mikhail Titov
  */
+//TODO: Добавить возможность, позволяющую executor'у рестартовать задачи.
+//USECASES. 1 При выполнении задачи произошла ошибка. Соотвественно thread освободился, узел прекратил
+//            выполнять свою функцию :( . А executor мог бы эту задачу перезапустить.
+//            Это критично для тех узлов(задач) которые постоянно занимают нить
+//          2 Допустим необходимо перезапустить executor. В текущем алгоритме некому перезапустить
+//            long live tasks,
 @NodeClass(parentNode=SchedulersNode.class)
 public class ExecutorServiceNode extends BaseNode
         implements ExecutorService, RejectedExecutionHandler, Viewable
 {
+    private final String managedTasksLock = "l";
+    private final int CHECK_MANAGED_TASKS_INTERVAL = 10000;
+
     @NotNull @Parameter(defaultValue="2")
     private Integer corePoolSize;
 
@@ -88,6 +97,9 @@ public class ExecutorServiceNode extends BaseNode
     @Parameter(readOnly=true)
     private LoadAverageStatistic loadAverage;
 
+    @NotNull @Parameter(defaultValue=""+CHECK_MANAGED_TASKS_INTERVAL)
+    private Long checkManagedTasksInterval;
+
     @Message
     private String interruptDisplayMessage;
     @Message
@@ -95,17 +107,16 @@ public class ExecutorServiceNode extends BaseNode
     @Message
     private String interruptCompletionMessage;
 
-
     private ThreadPoolExecutor executor;
     private ScheduledThreadPoolExecutor scheduledExecutor;
     private BlockingQueue queue;
     private Collection<TaskWrapper> executingTasks;
+    private Set<Node> managedTasks;
     private DelayQueue<DelayedTaskWrapper> delayedTasks;
     private AtomicLong taskIdCounter;
 
     @Override
-    protected void initFields()
-    {
+    protected void initFields() {
         super.initFields();
         executor = null;
         queue = null;
@@ -113,6 +124,7 @@ public class ExecutorServiceNode extends BaseNode
         rejectedTasks = new AtomicLong();
         executedTasks = new OperationStatistic();
         taskIdCounter = new AtomicLong();
+        managedTasks = new HashSet<Node>();
     }
 
     @Override
@@ -129,6 +141,8 @@ public class ExecutorServiceNode extends BaseNode
         delayedTasks = new DelayQueue<DelayedTaskWrapper>();
         executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, timeUnit, queue);
         executor.execute(new TaskWrapper(new DelayedTaskExecutor()));
+        delayedTasks.add(new DelayedTaskWrapper(new TasksManagerTask(checkManagedTasksInterval)
+                , checkManagedTasksInterval));
         loadAverage = new LoadAverageStatistic(300000, maximumPoolSize);
     }
 
@@ -143,11 +157,10 @@ public class ExecutorServiceNode extends BaseNode
         delayedTasks = null;
     }
 
-    public void execute(Task task) throws ExecutorServiceException
-    {
+    public void execute(Task task) throws ExecutorServiceException {
         try {
             if (Status.STARTED.equals(getStatus())) 
-                executor.execute(new TaskWrapper(task));
+                    executor.execute(new TaskWrapper(task));
         } catch (RejectedExecutionException e) {
             rejectedTasks.incrementAndGet();
             String message = String.format(
@@ -212,6 +225,14 @@ public class ExecutorServiceNode extends BaseNode
         return executedTasks;
     }
 
+    public Long getCheckManagedTasksInterval() {
+        return checkManagedTasksInterval;
+    }
+
+    public void setCheckManagedTasksInterval(Long checkManagedTasksInterval) {
+        this.checkManagedTasksInterval = checkManagedTasksInterval;
+    }
+
     public AtomicLong getRejectedTasks() {
         return rejectedTasks;
     }
@@ -272,7 +293,7 @@ public class ExecutorServiceNode extends BaseNode
         return null;
     }
 
-    //TODO: Добавить таблицу для delayedTasks
+    //TODO: add column "isManagedTask?"
     public List<ViewableObject> getViewableObjects(
             Map<String, NodeAttribute> refreshAttributes) throws Exception
     {
@@ -380,33 +401,43 @@ public class ExecutorServiceNode extends BaseNode
             thread = Thread.currentThread();
             executionStart = executedTasks.markOperationProcessingStart();
             long startTime = System.currentTimeMillis();
-            try
-            {
-                try
-                {
-                    if (isLogLevelEnabled(LogLevel.DEBUG))
+            boolean enableTaskExecution = true;
+            try {
+                try {
+                    if (task instanceof ManagedTask) {
+                        synchronized(managedTasksLock) {
+                            if (managedTasks.contains(task.getTaskNode())) {
+                                enableTaskExecution = false;
+                                if (isLogLevelEnabled(LogLevel.WARN))
+                                    getLogger().warn("Skipping executing the task ({}). "
+                                            + "The task is already executing", getTaskNode().getPath());
+                            }
+                        }
+                    } else if (isLogLevelEnabled(LogLevel.DEBUG))
                         debug(String.format(
                                 "Executing task for node (%s)", task.getTaskNode().getPath()));
-                    executingTasks.add(this);
-                    task.run();
-                }
-                catch(Throwable e)
-                {
+                    if (enableTaskExecution) {
+                        executingTasks.add(this);
+                        task.run();
+                    }
+                } catch(Throwable e) {
                     if (isLogLevelEnabled(LogLevel.ERROR))
-                        error(
-                                String.format(
-                                    "Error executing task for node (%s)"
-                                    , task.getTaskNode().getPath())
+                        error(String.format("Error executing task for node (%s)", task.getTaskNode().getPath())
                                 , e);
                 }
-            }
-            finally
-            {
+            } finally {
                 executedTasks.markOperationProcessingEnd(executionStart);
                 loadAverage.addDuration(System.currentTimeMillis()-startTime);
                 Collection executingTasksList = executingTasks;
                 if (executingTasksList!=null)
                     executingTasksList.remove(this);
+                if (enableTaskExecution && task instanceof ManagedTask) {
+                    Collection<Node> _managedTasks = managedTasks;
+                    if (_managedTasks!=null)
+                        synchronized(managedTasksLock) {
+                            _managedTasks.remove(task.getTaskNode());
+                        }
+                }
             }
         }
 
@@ -447,8 +478,11 @@ public class ExecutorServiceNode extends BaseNode
 
         public void run() {
             try {
-                for (;;){
-                    DelayedTaskWrapper delayedTask = delayedTasks.poll(1, TimeUnit.SECONDS);
+                for (;;) {
+                    DelayQueue<DelayedTaskWrapper> _delayedTasks = delayedTasks;
+                    if (_delayedTasks==null)
+                        return;
+                    DelayedTaskWrapper delayedTask = _delayedTasks.poll(1, TimeUnit.SECONDS);
                     if (delayedTask!=null)
                         executeQuietly(delayedTask.task);
                 }
@@ -478,5 +512,43 @@ public class ExecutorServiceNode extends BaseNode
             thread.interrupt();
             return completionMessage;
         }       
+    }
+
+    private class TasksManagerTask implements Task {
+        private final long restartInterval;
+
+        public TasksManagerTask(long restartInterval) {
+            this.restartInterval = restartInterval;
+        }
+
+        public Node getTaskNode() {
+            return ExecutorServiceNode.this;
+        }
+
+        public String getStatusMessage() {
+            return "Managed tasks reexecutor";
+        }
+
+        public void run() {
+            try {
+                for (ManagedTask task: NodeUtils.extractNodesOfType(getDependentNodes(), ManagedTask.class))
+                    if (managedTasks==null || !managedTasks.contains(task.getTaskNode()))
+                        synchronized(managedTasksLock) {
+                            try {
+                                switch (task.getTaskRestartPolicy()) {
+                                    case REEXECUTE_TASK: execute(task); break;
+                                    case RESTART_NODE: task.stop(); task.start(); break;
+                                }
+                            } catch (ExecutorServiceException e){
+                                if (isLogLevelEnabled(LogLevel.ERROR))
+                                    getLogger().error(
+                                            String.format("Error reexecuting the task (%s)", task.getPath())
+                                            , e);
+                            }
+                        }
+            } finally {
+                executeQuietly(restartInterval, this);
+            }
+        }
     }
 }

@@ -19,12 +19,14 @@ package org.raven.sched.impl;
 
 import java.io.IOException;
 import java.util.List;
+import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenUtils;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.log.LogLevel;
 import org.raven.sched.ExecutorServiceException;
 import org.raven.sched.Task;
+import org.raven.sched.TaskRestartPolicy;
 import org.raven.table.Table;
 import org.raven.tree.Node;
 import org.raven.tree.Viewable;
@@ -34,14 +36,20 @@ import org.raven.tree.ViewableObject;
  *
  * @author Mikhail Titov
  */
-public class ExecutorServiceNodeTest extends RavenCoreTestCase
-{
-    @Test
-    public void test() throws ExecutorServiceException, InterruptedException, IOException, Exception
-    {
-        ExecutorServiceNode executor = new ExecutorServiceNode();
+public class ExecutorServiceNodeTest extends RavenCoreTestCase {
+    
+    private ExecutorServiceNode executor;
+
+    @Before
+    public void prepare() {
+        executor = new ExecutorServiceNode();
         executor.setName("executor");
         tree.getRootNode().addAndSaveChildren(executor);
+    }
+    
+//    @Test
+    public void test() throws ExecutorServiceException, InterruptedException, IOException, Exception
+    {
         executor.setCorePoolSize(2);
         executor.setMaximumPoolSize(3);
         executor.setMaximumQueueSize(1);
@@ -89,11 +97,8 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase
         assertEquals(1l, executor.getRejectedTasks().get());
     }
 
-    @Test
+//    @Test
     public void delayedTasksTest() throws InterruptedException {
-        ExecutorServiceNode executor = new ExecutorServiceNode();
-        executor.setName("executor");
-        tree.getRootNode().addAndSaveChildren(executor);
         executor.setCorePoolSize(2);
         executor.setMaximumPoolSize(2);
         executor.setMaximumQueueSize(1);
@@ -108,6 +113,59 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase
         assertTrue(task1.executed);
         assertTrue(task2.executed);
         assertTrue(task1.time < task2.time);
+    }
+
+    @Test
+    public  void managedTaskReexecutePolicyTest() throws Exception {
+        executor.setCheckManagedTasksInterval(500l);
+        assertTrue(executor.start());
+
+        ManagedTaskNode task = new ManagedTaskNode();
+        task.setName("task");
+        tree.getRootNode().addAndSaveChildren(task);
+        task.setExecutor(executor);
+        task.setTaskRestartPolicy(TaskRestartPolicy.REEXECUTE_TASK);
+        assertTrue(task.start());
+
+        Thread.sleep(600);
+        assertEquals(1, task.getExecutionCount());
+    }
+
+    @Test
+    public  void managedTaskRestartPolicyTest() throws Exception {
+        executor.setCheckManagedTasksInterval(500l);
+        assertTrue(executor.start());
+
+        ManagedTaskNode task = new ManagedTaskNode();
+        task.setName("task");
+        tree.getRootNode().addAndSaveChildren(task);
+        task.setExecutor(executor);
+        task.setTaskRestartPolicy(TaskRestartPolicy.RESTART_NODE);
+        assertTrue(task.start());
+
+        Thread.sleep(600);
+        assertEquals(0, task.getExecutionCount());
+        assertEquals(2, task.getRestartCount());
+    }
+
+    @Test
+    public  void singleManagedTaskExecutionTest() throws Exception {
+        executor.setCheckManagedTasksInterval(500l);
+        assertTrue(executor.start());
+
+        ManagedTaskNode task = new ManagedTaskNode();
+        task.setName("task");
+        tree.getRootNode().addAndSaveChildren(task);
+        task.setExecutor(executor);
+        task.setTaskRestartPolicy(TaskRestartPolicy.REEXECUTE_TASK);
+        task.setSleepInterval(1001);
+        assertTrue(task.start());
+
+        Thread.sleep(1400);
+        assertEquals(1, task.getExecutionCount());
+
+        Thread.sleep(200);
+        assertEquals(2, task.getExecutionCount());
     }
 
     private class TestTask implements Task {
