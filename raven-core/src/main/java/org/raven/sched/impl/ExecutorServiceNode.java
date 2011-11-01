@@ -54,6 +54,7 @@ import org.raven.util.LoadAverageStatistic;
 import org.raven.util.NodeUtils;
 import org.raven.util.OperationStatistic;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.converter.TypeConverterException;
 import org.weda.internal.annotations.Message;
 
 /**
@@ -139,6 +140,7 @@ public class ExecutorServiceNode extends BaseNode
             queue = new LinkedBlockingQueue(capacity);
         executingTasks = new ConcurrentSkipListSet();
         delayedTasks = new DelayQueue<DelayedTaskWrapper>();
+        managedTasks = new HashSet<Node>();
         executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, timeUnit, queue);
         executor.execute(new TaskWrapper(new DelayedTaskExecutor()));
         delayedTasks.add(new DelayedTaskWrapper(new TasksManagerTask(checkManagedTasksInterval)
@@ -174,7 +176,8 @@ public class ExecutorServiceNode extends BaseNode
     }
 
     public void execute(long delay, Task task) throws ExecutorServiceException {
-        delayedTasks.add(new DelayedTaskWrapper(task, delay));
+        if (Status.STARTED.equals(getStatus()))
+            delayedTasks.add(new DelayedTaskWrapper(task, delay));
     }
 
     public boolean executeQuietly(Task task) {
@@ -281,6 +284,60 @@ public class ExecutorServiceNode extends BaseNode
         this.maximumQueueSize = maximumQueueSize;
     }
 
+    private void addDelayedTasksTable(ArrayList<ViewableObject> vos) throws TypeConverterException {
+        vos.add(new ViewableObjectImpl(Viewable.RAVEN_TEXT_MIMETYPE, "<b>Dealayed tasks</b>"));
+        TableImpl table = new TableImpl(new String[]{"Node submited the task", "Execution delayed until"
+                , "Seconds to execution", "Status"});
+        Collection<DelayedTaskWrapper> _delayedTasks = delayedTasks;
+        if (_delayedTasks != null && !_delayedTasks.isEmpty()) {
+            long time = System.currentTimeMillis();
+            for (DelayedTaskWrapper task : _delayedTasks) {
+                String date = converter.convert(String.class, new Date(task.startAt), "dd.MM.yyyy HH:mm:ss");
+                table.addRow(new Object[]{task.task.getTaskNode().getPath(), date
+                        , (task.startAt - time) / 1000, task.task.getStatusMessage()});
+            }
+        }
+        vos.add(new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table));
+    }
+
+    private void addExecutingTasksTable(ArrayList<ViewableObject> vos) throws TypeConverterException {
+        vos.add(new ViewableObjectImpl(Viewable.RAVEN_TEXT_MIMETYPE, "<b>Executing tasks</b>"));
+        TableImpl table = new TableImpl(new String[]{"", "Node submited the task", "Status"
+                , "Is Managed task?", "Execution start time", "Execution duration (sec)", "Thread status"
+                , "Stack trace"});
+        Collection<TaskWrapper> taskList = executingTasks;
+        if (taskList != null) {
+            for (TaskWrapper task : taskList) {
+                String date = null;
+                if (task.getExecutionStart() != 0) 
+                    date = converter.convert(String.class, new Date(task.getExecutionStart())
+                            , "dd.MM.yyyy HH:mm:ss");
+                Thread thread = task.getThread();
+                String threadStatus = thread == null ? null : thread.getState().toString();
+                ViewableObject traceVO = null;
+                if (thread != null) {
+                    StackTraceElement[] elems = thread.getStackTrace();
+                    if (elems != null && elems.length > 0) {
+                        TableImpl trace = new TableImpl(new String[]{"Stack trace"});
+                        for (StackTraceElement elem : elems) {
+                            trace.addRow(new Object[]{elem.toString()});
+                        }
+                        traceVO = new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, trace, "trace");
+                    }
+                }
+                InterruptThreadAction interruptAction = null;
+                if (thread != null) 
+                    interruptAction = new InterruptThreadAction(interruptConfirmationMessage
+                            , interruptDisplayMessage, interruptCompletionMessage, this, thread);
+                table.addRow(new Object[]{interruptAction, task.getTaskNode().getPath()
+                        , task.getStatusMessage()
+                        , task.task instanceof ManagedTask ? "<b style='color:green'>Yes</b>" : "No"
+                        , date, task.getExecutionDuation(), threadStatus, traceVO});
+            }
+        }
+        vos.add(new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table));
+    }
+
     private void resetStatFields()
     {
         executedTasks.reset();
@@ -293,65 +350,14 @@ public class ExecutorServiceNode extends BaseNode
         return null;
     }
 
-    //TODO: add column "isManagedTask?"
     public List<ViewableObject> getViewableObjects(
             Map<String, NodeAttribute> refreshAttributes) throws Exception
     {
         if (!Status.STARTED.equals(getStatus()))
             return null;
         ArrayList<ViewableObject> vos = new ArrayList<ViewableObject>(4);
-        vos.add(new ViewableObjectImpl(Viewable.RAVEN_TEXT_MIMETYPE, "<b>Dealayed tasks</b>"));
-        TableImpl table = new TableImpl(new String[]{"Node submited the task", "Execution delayed until"
-                , "Seconds to execution", "Status"});
-        Collection<DelayedTaskWrapper> _delayedTasks = delayedTasks;
-        if (_delayedTasks!=null && !_delayedTasks.isEmpty()) {
-            long time = System.currentTimeMillis();
-            for (DelayedTaskWrapper task: _delayedTasks) {
-                String date = converter.convert(String.class, new Date(task.startAt), "dd.MM.yyyy HH:mm:ss");
-                table.addRow(new Object[]{
-                    task.task.getTaskNode().getPath(), date, (task.startAt-time)*1000
-                    , task.task.getStatusMessage()});
-            }
-        }
-        vos.add(new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table));
-        vos.add(new ViewableObjectImpl(Viewable.RAVEN_TEXT_MIMETYPE, "<b>Executing tasks</b>"));
-        table = new TableImpl(new String[]{
-            "", "Node submited the task", "Status", "Execution start time", "Execution duration (sec)"
-            , "Thread status", "Stack trace"});
-        Collection<TaskWrapper> taskList = executingTasks;
-        if (taskList!=null)
-            for (TaskWrapper task: taskList)
-            {
-                String date = null;
-                if (task.getExecutionStart()!=0)
-                    date = converter.convert(
-                        String.class, new Date(task.getExecutionStart()), "dd.MM.yyyy HH:mm:ss");
-                Thread thread = task.getThread();
-                String threadStatus = thread==null? null : thread.getState().toString();
-                ViewableObject traceVO = null;
-                if (thread!=null)
-                {
-                    StackTraceElement[] elems = thread.getStackTrace();
-                    if (elems!=null && elems.length>0)
-                    {
-                        TableImpl trace = new TableImpl(new String[]{"Stack trace"});
-                        for (StackTraceElement elem: elems)
-                            trace.addRow(new Object[]{elem.toString()});
-                        traceVO = new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, trace, "trace");
-                    }
-                            
-                }
-                InterruptThreadAction interruptAction = null;
-                if (thread!=null)
-                    interruptAction = new InterruptThreadAction(
-                            interruptConfirmationMessage, interruptDisplayMessage
-                            , interruptCompletionMessage, this, thread);
-                table.addRow(new Object[]{
-                    interruptAction
-                    , task.getTaskNode().getPath(), task.getStatusMessage()
-                    , date, task.getExecutionDuation(), threadStatus, traceVO});
-            }
-        vos.add(new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table));
+        addDelayedTasksTable(vos);
+        addExecutingTasksTable(vos);
         
         return vos;
     }
@@ -406,12 +412,14 @@ public class ExecutorServiceNode extends BaseNode
                 try {
                     if (task instanceof ManagedTask) {
                         synchronized(managedTasksLock) {
-                            if (managedTasks.contains(task.getTaskNode())) {
+                            ManagedTask managedTask = (ManagedTask) task;
+                            if (managedTasks.contains(managedTask)) {
                                 enableTaskExecution = false;
                                 if (isLogLevelEnabled(LogLevel.WARN))
                                     getLogger().warn("Skipping executing the task ({}). "
-                                            + "The task is already executing", getTaskNode().getPath());
-                            }
+                                            + "The task is already executing", managedTask.getPath());
+                            } else 
+                                managedTasks.add(managedTask);
                         }
                     } else if (isLogLevelEnabled(LogLevel.DEBUG))
                         debug(String.format(
@@ -433,9 +441,10 @@ public class ExecutorServiceNode extends BaseNode
                     executingTasksList.remove(this);
                 if (enableTaskExecution && task instanceof ManagedTask) {
                     Collection<Node> _managedTasks = managedTasks;
+                    ManagedTask managedTask = (ManagedTask) task;
                     if (_managedTasks!=null)
                         synchronized(managedTasksLock) {
-                            _managedTasks.remove(task.getTaskNode());
+                            _managedTasks.remove(managedTask);
                         }
                 }
             }
@@ -531,21 +540,30 @@ public class ExecutorServiceNode extends BaseNode
 
         public void run() {
             try {
-                for (ManagedTask task: NodeUtils.extractNodesOfType(getDependentNodes(), ManagedTask.class))
-                    if (managedTasks==null || !managedTasks.contains(task.getTaskNode()))
-                        synchronized(managedTasksLock) {
+                for (ManagedTask task: NodeUtils.extractNodesOfType(getDependentNodes(), ManagedTask.class)) {
+                    boolean hasTask = false;
+                    synchronized(managedTasksLock) {
+                        hasTask = managedTasks==null || !managedTasks.contains(task);
+                    }
+                    if (hasTask)
                             try {
                                 switch (task.getTaskRestartPolicy()) {
                                     case REEXECUTE_TASK: execute(task); break;
-                                    case RESTART_NODE: task.stop(); task.start(); break;
+                                    case RESTART_NODE:
+                                        if (Status.STARTED.equals(task.getStatus())) {
+                                            task.stop();
+                                            TimeUnit.MILLISECONDS.sleep(100);
+                                            task.start();
+                                        }
+                                        break;
                                 }
-                            } catch (ExecutorServiceException e){
+                            } catch (Throwable e){
                                 if (isLogLevelEnabled(LogLevel.ERROR))
                                     getLogger().error(
                                             String.format("Error reexecuting the task (%s)", task.getPath())
                                             , e);
                             }
-                        }
+                }
             } finally {
                 executeQuietly(restartInterval, this);
             }

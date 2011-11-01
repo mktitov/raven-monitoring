@@ -17,8 +17,6 @@
 
 package org.raven.sched.impl;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.raven.annotations.Parameter;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.ManagedTask;
