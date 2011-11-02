@@ -768,6 +768,7 @@ public class BaseNode implements Node, NodeListener, Logger
             if (isTemplate())
                 return false;
             if (nodeAttributes!=null) {
+                //TODO: Не работает :(
                 for (NodeAttribute attr: nodeAttributes.values())
                     if (attr.isGeneratorType())
                         syncParentAttributes(attr);
