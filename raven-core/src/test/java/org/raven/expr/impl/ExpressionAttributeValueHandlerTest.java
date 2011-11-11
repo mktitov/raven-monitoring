@@ -267,13 +267,13 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         node.save();
         node.init();
 
-        NodeAttribute attr = new NodeAttributeImpl("attr", Integer.class, "(node['attr2'].value?:20)+arg1", null);
+        NodeAttribute attr = new NodeAttributeImpl("attr", Integer.class, "node['attr2'].getValue(arg2:20)+arg1", null);
         attr.setOwner(node);
         node.addNodeAttribute(attr);
         attr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
         attr.init();
 
-        NodeAttribute attr2 = new NodeAttributeImpl("attr2", Integer.class, "arg1", null);
+        NodeAttribute attr2 = new NodeAttributeImpl("attr2", Integer.class, "arg1+args.containsKey('arg1')?0:arg2", null);
         attr2.setOwner(node);
         node.addNodeAttribute(attr2);
         attr2.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);

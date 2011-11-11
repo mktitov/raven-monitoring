@@ -22,6 +22,7 @@ import java.util.Map;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
+import org.raven.RavenRuntimeException;
 import org.raven.api.impl.NodeAccessImpl;
 import org.raven.expr.BindingSupport;
 import org.raven.expr.Expression;
@@ -116,8 +117,7 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
     {
         Object oldValue = value;
         value = null;
-        if (expression!=null && expressionValid)
-        {
+        if (expression!=null && expressionValid) {
             Bindings bindings = new SimpleBindings();
             bindings.put(NODE_BINDING, new NodeAccessImpl(attribute.getOwner()));
             bindings.put(LOGGER, attribute.getOwner().getLogger());
@@ -130,7 +130,7 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
             }
             bindings.put(RAVEN_EXPRESSION_VARS_BINDING, varsSupport.get(RAVEN_EXPRESSION_VARS_BINDING));
             Map args = (Map) varsSupport.get(RAVEN_EXPRESSION_ARGS_BINDING);
-            if (args!=null){
+            if (args!=null) {
                 bindings.putAll(args);
                 bindings.put(RAVEN_EXPRESSION_ARGS_BINDING, args);
                 varsSupport.remove(RAVEN_EXPRESSION_ARGS_BINDING);
@@ -145,10 +145,14 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
                     try {
                         bindings.remove(ENABLE_SCRIPT_EXECUTION_BINDING);
                         value = expression.eval(bindings);
-                    } catch (ScriptException ex) {
-                        attribute.getOwner().getLogger().warn(String.format(
+                    } catch (Throwable ex) {
+//                    } catch (ScriptException ex) {
+                        String mess = String.format(
                                 "Attribute (%s) getValue error. Error executing expression (%s). %s"
-                                , pathResolver.getAbsolutePath(attribute), data, ex.getMessage()));
+                                , pathResolver.getAbsolutePath(attribute), data, ex.getMessage());
+                        attribute.getOwner().getLogger().warn(mess, ex);
+                        if (varsInitiated)
+                            throw new RavenRuntimeException(mess, ex);
                     }
                 }
             }finally{

@@ -18,6 +18,7 @@
 package org.raven.expr.impl;
 
 import groovy.lang.GroovyClassLoader;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.script.ScriptException;
 import org.raven.api.impl.ApiUtils;
 import org.raven.expr.Expression;
@@ -33,6 +34,7 @@ public class GroovyExpressionCompiler implements ExpressionCompiler
 	public final static String LANGUAGE = "groovy";
 	private final ExpressionCache cache;
 	private final GroovyClassLoader classLoader;
+    private final AtomicLong counter = new AtomicLong(0);
 
 	public GroovyExpressionCompiler(ExpressionCache cache)
 	{
@@ -62,7 +64,7 @@ public class GroovyExpressionCompiler implements ExpressionCompiler
 //            if (expression.contains("sendDataToConsumers"))
 //                buf.append("\ndef sendDataToConsumers(data) { " +
 //                        " node.asNode().sendDataToConsumers(data, new org.raven.ds.impl.DataContextImpl()); }\n");
-			Class expressionClass = classLoader.parseClass(buf.toString());
+			Class expressionClass = classLoader.parseClass(buf.toString(), "RAVEN_EXPRESSION_"+counter.incrementAndGet());
 			GroovyExpression groovyExpression = new GroovyExpression(expressionClass);
 			cache.putExpression(expression, groovyExpression);
 			

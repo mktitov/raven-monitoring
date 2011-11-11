@@ -66,6 +66,7 @@ import org.raven.impl.ByteArrayDataSourceToByteArrayConverter;
 import org.raven.impl.DataSourceToInputStreamConverter;
 import org.raven.impl.CharsetReferenceValues;
 import org.raven.impl.ClassToStringConverter;
+import org.raven.impl.ClobToStringConverter;
 import org.raven.impl.CollectionToTableConverter;
 import org.raven.impl.DateToDateConverter;
 import org.raven.impl.DateToLongConverter;
@@ -254,6 +255,7 @@ public class RavenCoreModule
         conf.add(new CollectionToTableConverter());
         conf.add(new ByteArrayDataSourceToByteArrayConverter());
         conf.add(new DataSourceToInputStreamConverter());
+        conf.add(new ClobToStringConverter());
     }
     
     @SuppressWarnings("unchecked")
