@@ -67,12 +67,14 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         Logger logger = createMock(Logger.class);
         
         expect(attribute.getRawValue()).andReturn(null);
+        expect(attribute.getName()).andReturn("attr").atLeastOnce();
         attribute.save();
         expectLastCall().times(3);
         expect(attribute.getValueHandlerType())
                 .andReturn(ExpressionAttributeValueHandlerFactory.TYPE).anyTimes();
         listener.valueChanged(isNull(), eq(2));
         expect(attribute.getOwner()).andReturn(node).anyTimes();
+        expect(node.getName()).andReturn("node").atLeastOnce();
         node.formExpressionBindings(isA(Bindings.class));
         expectLastCall().times(2);
         expect(node.getLogger()).andReturn(logger).anyTimes();
@@ -109,46 +111,50 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
     @Test 
     public void handlerReConstruction() throws Exception
     {
-        NodeAttribute attribute = createMock(NodeAttribute.class);
+        NodeAttribute attr = createMock(NodeAttribute.class);
         Node node = createMock(Node.class);
         AttributeValueHandlerListener listener = createMock(AttributeValueHandlerListener.class);
-        
-        expect(attribute.getRawValue()).andReturn("1+1");
-        expect(attribute.getOwner()).andReturn(node).times(3);
-        expect(attribute.getValueHandlerType())
+
+        expect(attr.getName()).andReturn("attr").atLeastOnce();
+        expect(node.getName()).andReturn("node").atLeastOnce();
+        expect(attr.getRawValue()).andReturn("1+1");
+        expect(attr.getOwner()).andReturn(node).atLeastOnce();
+        expect(attr.getValueHandlerType())
                 .andReturn(ExpressionAttributeValueHandlerFactory.TYPE).anyTimes();
         expect(node.getLogger()).andReturn(null).anyTimes();
         node.formExpressionBindings(isA(Bindings.class));
         listener.valueChanged(null, 2);
         
-        replay(node, attribute, listener);
+        replay(node, attr, listener);
         
-        ExpressionAttributeValueHandler handler = new ExpressionAttributeValueHandler(attribute);
+        ExpressionAttributeValueHandler handler = new ExpressionAttributeValueHandler(attr);
         assertTrue(handler.isExpressionValid());
         handler.addListener(listener);
         Object result = handler.handleData();
         assertEquals(2, result);
         
-        verify(node, attribute, listener);
+        verify(node, attr, listener);
     }
     
     @Test
     public void expressionWithBindings() throws Exception
     {
-        NodeAttribute attribute = createMock(NodeAttribute.class);
+        NodeAttribute attr = createMock(NodeAttribute.class);
         Node node = createMock(Node.class);
         
-        expect(attribute.getRawValue()).andReturn(null);
-        expect(attribute.getValueHandlerType())
+        expect(attr.getName()).andReturn("attr").atLeastOnce();
+        expect(node.getName()).andReturn("node").atLeastOnce();
+        expect(attr.getRawValue()).andReturn(null);
+        expect(attr.getValueHandlerType())
                 .andReturn(ExpressionAttributeValueHandlerFactory.TYPE).anyTimes();
-        attribute.save();
-        expect(attribute.getOwner()).andReturn(node).times(3);
+        attr.save();
+        expect(attr.getOwner()).andReturn(node).atLeastOnce();
         expect(node.getLogger()).andReturn(null).anyTimes();
         node.formExpressionBindings(formBindings());
         
-        replay(node, attribute);
+        replay(node, attr);
         
-        ExpressionAttributeValueHandler handler = new ExpressionAttributeValueHandler(attribute);
+        ExpressionAttributeValueHandler handler = new ExpressionAttributeValueHandler(attr);
         handler.setData("var+1");
         
         Object result = handler.handleData();
@@ -156,53 +162,56 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         
         handler.setData("var+1");
         
-        verify(node, attribute);
+        verify(node, attr);
     }
     
     @Test
     public void nodeBindingTest() throws Exception
     {
-        NodeAttribute attribute = createMock(NodeAttribute.class);
+        NodeAttribute attr = createMock(NodeAttribute.class);
         Node node = createMock(Node.class);
         
-        expect(attribute.getRawValue()).andReturn(null);
-        expect(attribute.getValueHandlerType())
+        expect(attr.getName()).andReturn("attr").atLeastOnce();
+        expect(node.getName()).andReturn("node").atLeastOnce();
+        expect(attr.getRawValue()).andReturn(null);
+        expect(attr.getValueHandlerType())
                 .andReturn(ExpressionAttributeValueHandlerFactory.TYPE).anyTimes();
-        attribute.save();
-        expect(attribute.getOwner()).andReturn(node).times(3);
+        attr.save();
+        expect(attr.getOwner()).andReturn(node).atLeastOnce();
         expect(node.getLogger()).andReturn(null).anyTimes();
         node.formExpressionBindings(isA(Bindings.class));
-        expect(node.getName()).andReturn("nodeName");
         
-        replay(node, attribute);
+        replay(node, attr);
         
-        ExpressionAttributeValueHandler handler = new ExpressionAttributeValueHandler(attribute);
+        ExpressionAttributeValueHandler handler = new ExpressionAttributeValueHandler(attr);
         handler.setData("node.name");
         
         Object result = handler.handleData();
-        assertEquals("nodeName", result);
+        assertEquals("node", result);
         
-        verify(node, attribute);
+        verify(node, attr);
     }
 
     @Test
     public void scriptTest() throws Exception
     {
-        NodeAttribute attribute = createMock(NodeAttribute.class);
+        NodeAttribute attr = createMock(NodeAttribute.class);
         Node node = createMock(Node.class);
 
-        expect(attribute.getRawValue()).andReturn(null);
-        expect(attribute.getValueHandlerType())
+        expect(attr.getName()).andReturn("attr").atLeastOnce();
+        expect(node.getName()).andReturn("node").atLeastOnce();
+        expect(attr.getRawValue()).andReturn(null);
+        expect(attr.getValueHandlerType())
                 .andReturn(ScriptAttributeValueHandlerFactory.TYPE).anyTimes();
-        attribute.save();
-        expect(attribute.getOwner()).andReturn(node).anyTimes();
+        attr.save();
+        expect(attr.getOwner()).andReturn(node).anyTimes();
         expect(node.getLogger()).andReturn(null).anyTimes();
         node.formExpressionBindings(isA(Bindings.class));
         node.formExpressionBindings(formBindings2());
 
-        replay(node, attribute);
+        replay(node, attr);
 
-        ExpressionAttributeValueHandler handler = new ExpressionAttributeValueHandler(attribute);
+        ExpressionAttributeValueHandler handler = new ExpressionAttributeValueHandler(attr);
         handler.setData("var+1");
 
         Object result = handler.handleData();
@@ -210,7 +219,7 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         result = handler.handleData();
         assertEquals(2, result);
 
-        verify(node, attribute);
+        verify(node, attr);
     }
     
     @Test

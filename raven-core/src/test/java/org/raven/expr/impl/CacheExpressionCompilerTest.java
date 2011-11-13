@@ -36,7 +36,7 @@ public class CacheExpressionCompilerTest extends Assert
 		replay(cache);
 
 		CacheExpressionCompiler compiler = new CacheExpressionCompiler(cache);
-		Expression expression = compiler.compile("expression", "groovy");
+		Expression expression = compiler.compile("expression", "groovy", "test");
 		assertNull(expression);
 
 		verify(cache);
@@ -51,7 +51,7 @@ public class CacheExpressionCompilerTest extends Assert
 		replay(cache, cachedExpression);
 
 		CacheExpressionCompiler compiler = new CacheExpressionCompiler(cache);
-		Expression expression = compiler.compile("expression", "groovy");
+		Expression expression = compiler.compile("expression", "groovy", "test");
 		assertSame(cachedExpression, expression);
 
 		verify(cache, cachedExpression);

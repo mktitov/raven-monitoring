@@ -27,5 +27,5 @@ import javax.script.ScriptException;
  */
 public interface ExpressionCompiler 
 {
-    public Expression compile(String expression, String language) throws ScriptException;
+    public Expression compile(String expression, String language, String scriptName) throws ScriptException;
 }

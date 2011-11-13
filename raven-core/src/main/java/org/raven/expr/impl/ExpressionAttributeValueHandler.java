@@ -87,19 +87,15 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
         compileExpression();
     }
     
-    private void compileExpression() throws ScriptException
-    {
+    private void compileExpression() throws ScriptException {
         expressionValid = true;
         if (data==null)
             expression = null;
-        else
-        {
-            try
-            {
-                expression = compiler.compile(data, GroovyExpressionCompiler.LANGUAGE);
-            }
-            catch(ScriptException e)
-            {
+        else {
+            try {
+                expression = compiler.compile(data, GroovyExpressionCompiler.LANGUAGE
+                        , attribute.getOwner().getName()+"@"+attribute.getName());
+            } catch(ScriptException e) {
                 expressionValid = false;
                 attribute.getOwner().getLogger().warn(String.format(
                         "Error compile expression (%s)", data), e);

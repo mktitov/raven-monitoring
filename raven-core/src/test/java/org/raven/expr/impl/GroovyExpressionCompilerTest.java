@@ -44,7 +44,7 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
     {
 		ExpressionCache cache = trainCache("1+1", true);
         GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
-        Expression expression = compiler.compile("1+1", "groovy");
+        Expression expression = compiler.compile("1+1", GroovyExpressionCompiler.LANGUAGE, null);
         assertNotNull(expression);
         assertEquals(2, expression.eval(null));
 
@@ -57,7 +57,7 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
 		ExpressionCache cache = trainCache("var+=1", true);
 
         GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
-        Expression expression = compiler.compile("var+=1", "groovy");
+        Expression expression = compiler.compile("var+=1", GroovyExpressionCompiler.LANGUAGE, "test");
         assertNotNull(expression);
         Bindings bindings = new SimpleBindings();
         bindings.put("var", 1);
@@ -76,7 +76,7 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         replay(connection, cache);
         
         GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
-        Expression expression = compiler.compile(script, "groovy");
+        Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
         assertNotNull(expression);
         SimpleBindings bindings = new SimpleBindings();
         bindings.put("con", connection);
@@ -96,7 +96,7 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         replay(connection, cache);
 
         GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
-        Expression expression = compiler.compile(script, "groovy");
+        Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
         assertNotNull(expression);
         SimpleBindings bindings = new SimpleBindings();
         bindings.put("con", connection);
@@ -116,7 +116,7 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         replay(connection, cache);
 
         GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
-        Expression expression = compiler.compile(script, "groovy");
+        Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
         assertNotNull(expression);
         SimpleBindings bindings = new SimpleBindings();
         bindings.put("con", connection);
@@ -166,7 +166,7 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         replay(cache);
 
         GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
-        Expression expression = compiler.compile(script, "groovy");
+        Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
         assertNotNull(expression);
         SimpleBindings bindings = new SimpleBindings();
         NodeAccessImpl nodeAccess = new NodeAccessImpl(node);
@@ -185,7 +185,7 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
 		replay(cache);
 
 		GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
-		Expression expression = compiler.compile("some expression", "notGroovy");
+		Expression expression = compiler.compile("some expression", "notGroovy", null);
 		assertNull(expression);
 	}
 

@@ -40,7 +40,7 @@ public class TemplateExpression
             return expression;
         
         expression = expression.substring(TEMPLATE_EXPRESSION_PREFIX.length());
-        Expression compExpr = compiler.compile(expression, GroovyExpressionCompiler.LANGUAGE);
+        Expression compExpr = compiler.compile(expression, GroovyExpressionCompiler.LANGUAGE, null);
         return compExpr.eval(bindings);
     }
 }

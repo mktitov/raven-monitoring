@@ -80,7 +80,7 @@ public class AggregationCalculationUnit implements SelectEntryCalculationUnit
 			}
 			String aggExpression = m.group(2);
 			Expression expr = expressionCompiler.compile(
-					aggExpression, GroovyExpressionCompiler.LANGUAGE);
+					aggExpression, GroovyExpressionCompiler.LANGUAGE, null);
 
 			if (entryAggrgations==null)
 			{
@@ -96,7 +96,7 @@ public class AggregationCalculationUnit implements SelectEntryCalculationUnit
 			//Создаем calculation unit
             m.appendTail(resExpression);
             Expression entryExpression = expressionCompiler.compile(
-                    resExpression.toString(), GroovyExpressionCompiler.LANGUAGE);
+                    resExpression.toString(), GroovyExpressionCompiler.LANGUAGE, null);
             SelectEntryAggregation[] aggArr = new SelectEntryAggregation[entryAggrgations.size()];
             entryAggrgations.toArray(aggArr);
 

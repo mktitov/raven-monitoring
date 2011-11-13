@@ -35,7 +35,7 @@ public class CacheExpressionCompiler implements ExpressionCompiler
 		this.cache = cache;
 	}
 
-	public Expression compile(String expression, String language) throws ScriptException
+	public Expression compile(String expression, String language, String scriptName) throws ScriptException
 	{
 		return cache.getExpression(expression);
 	}

@@ -39,8 +39,7 @@ public class ExpressionCompilerImpl implements ExpressionCompiler
 		this.cache = cache;
     }
 
-    public Expression compile(String expression, String language) throws ScriptException 
-    {
+    public Expression compile(String expression, String language, String scriptName) throws ScriptException {
         ScriptEngine engine = engineManager.getEngineByName(language);
         if (engine==null)
             throw new ScriptException(

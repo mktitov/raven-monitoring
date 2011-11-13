@@ -37,7 +37,7 @@ public class ExpressionCompilerImplTest extends Assert
     {
 		ExpressionCache cache = trainCache("1+1");
         ExpressionCompiler compiler = new ExpressionCompilerImpl(cache);
-        Expression expression = compiler.compile("1+1", "groovy");
+        Expression expression = compiler.compile("1+1", "groovy", "test");
         assertNotNull(expression);
         assertEquals(2, expression.eval(null));
 
@@ -50,7 +50,7 @@ public class ExpressionCompilerImplTest extends Assert
 		ExpressionCache cache = trainCache("var+=1");
 		
         ExpressionCompiler compiler = new ExpressionCompilerImpl(cache);
-        Expression expression = compiler.compile("var+=1", "groovy");
+        Expression expression = compiler.compile("var+=1", "groovy", "test");
         assertNotNull(expression);
         Bindings bindings = new SimpleBindings();
         bindings.put("var", 1);

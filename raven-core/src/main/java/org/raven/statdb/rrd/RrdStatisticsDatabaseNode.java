@@ -315,7 +315,7 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
                 if (units[i]==null)
                 {
                     Expression expression = expressionCompiler.compile(
-                            selectEntries[i].getExpression(), GroovyExpressionCompiler.LANGUAGE);
+                            selectEntries[i].getExpression(), GroovyExpressionCompiler.LANGUAGE, null);
                     units[i] = new ConstantAggregationCalculationUnit(
                             selectEntries[i].getName(), expression);
                 }
@@ -325,7 +325,7 @@ public class RrdStatisticsDatabaseNode extends AbstractStatisticsDatabase
             for (int i=0; i<units.length; ++i)
             {
                 Expression expression = expressionCompiler.compile(
-                        selectEntries[i].getExpression(), GroovyExpressionCompiler.LANGUAGE);
+                        selectEntries[i].getExpression(), GroovyExpressionCompiler.LANGUAGE, null);
                 units[i] = new ExpressionCalculationUnit(
                         expression, selectEntries[i].getName(), queryResult.getValuesCount());
             }

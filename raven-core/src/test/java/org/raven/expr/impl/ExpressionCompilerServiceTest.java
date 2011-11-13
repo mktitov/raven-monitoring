@@ -34,12 +34,12 @@ public class ExpressionCompilerServiceTest extends RavenCoreTestCase
     {
         ExpressionCompiler compiler = registry.getService(ExpressionCompiler.class);
         assertNotNull(compiler);
-        Expression expression = compiler.compile("1+9", "groovy");
+        Expression expression = compiler.compile("1+9", GroovyExpressionCompiler.LANGUAGE, "test");
         assertNotNull(expression);
 		assertTrue(expression instanceof GroovyExpression);
         assertEquals(10, expression.eval(null));
 
-		Expression expression2 = compiler.compile("1+9", "groovy");
+		Expression expression2 = compiler.compile("1+9", "groovy", "test2");
 		assertSame(expression, expression2);
     }
 }

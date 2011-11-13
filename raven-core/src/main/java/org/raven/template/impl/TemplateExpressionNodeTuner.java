@@ -22,6 +22,7 @@ import javax.script.Bindings;
 import javax.script.SimpleBindings;
 import org.raven.expr.Expression;
 import org.raven.expr.ExpressionCompiler;
+import org.raven.expr.impl.GroovyExpressionCompiler;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
@@ -116,7 +117,8 @@ public class TemplateExpressionNodeTuner implements NodeTuner
             if (expressionStr==null)
                 return null;
             
-            Expression expression = expressionCompiler.compile(expressionStr, "groovy");
+            Expression expression = expressionCompiler.compile(
+                    expressionStr, GroovyExpressionCompiler.LANGUAGE, null);
             Object result = expression.eval(bindings);
             String strResult = converter.convert(String.class, result, null);
             return strResult;

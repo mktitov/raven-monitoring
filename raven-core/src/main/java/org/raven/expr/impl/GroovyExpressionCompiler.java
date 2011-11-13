@@ -18,6 +18,8 @@
 package org.raven.expr.impl;
 
 import groovy.lang.GroovyClassLoader;
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.script.ScriptException;
 import org.raven.api.impl.ApiUtils;
@@ -42,40 +44,62 @@ public class GroovyExpressionCompiler implements ExpressionCompiler
 		classLoader = new GroovyClassLoader();
 	}
 
-	public Expression compile(String expression, String language) throws ScriptException
+	public Expression compile(String expression, String language, String scriptName) throws ScriptException
 	{
 		if (!LANGUAGE.equals(language))
 			return null;
 
-		try
-		{
+		try {
             StringBuilder buf = new StringBuilder()
                 .append("import static ").append(ApiUtils.class.getName()).append(".*\n")
                 .append(expression);
             if (expression.contains("withSql"))
                 buf
                 .append("\ndef withSql(Closure c){\n")
-                .append("  con = node['connectionPool']?.value.connection\n")
+                .append("  con = node['connectionPool']?.value?.connection\n")
                 .append("  if (!con) throw new Exception(\"Attribute (connectionPool) not found in the node (${node.path})\".toString())\n")
                 .append("  withSql(con, c)\n")
                 .append("}\n");
             if (expression.contains("sendData"))
                 buf.append("\ndef sendData(target, data) { sendData(node.asNode(), target, data); }\n");
-//            if (expression.contains("sendDataToConsumers"))
-//                buf.append("\ndef sendDataToConsumers(data) { " +
-//                        " node.asNode().sendDataToConsumers(data, new org.raven.ds.impl.DataContextImpl()); }\n");
-			Class expressionClass = classLoader.parseClass(buf.toString(), "RAVEN_EXPRESSION_"+counter.incrementAndGet());
+            String name = convert(scriptName);
+			Class expressionClass = classLoader.parseClass(buf.toString(), name);
 			GroovyExpression groovyExpression = new GroovyExpression(expressionClass);
 			cache.putExpression(expression, groovyExpression);
 			
 			return groovyExpression;
-		}
-		catch(Exception e)
-		{
+		} catch(Exception e) {
 			if (e instanceof ScriptException)
 				throw (ScriptException)e;
 			else
 				throw new ScriptException(e);
 		}
 	}
+
+    private String convert(String ident) {
+        StringBuilder sb = new StringBuilder("org.raven.EXPR.");
+        if (ident==null || ident.length() == 0)
+            sb.append("_");
+        else {
+            CharacterIterator ci = new StringCharacterIterator(ident);
+            for (char c = ci.first(); c != CharacterIterator.DONE; c = ci.next()) {
+                if (c == ' ')
+                    c = '_';
+                if (sb.length() == 0) {
+                    if (Character.isJavaIdentifierStart(c)) {
+                        sb.append(c);
+                        continue;
+                    } else {
+                        sb.append('_');
+                    }
+                }
+                if (Character.isJavaIdentifierPart(c))
+                    sb.append(c);
+                else
+                    sb.append('_');
+            }
+        }
+        sb.append("._").append(counter.incrementAndGet());
+        return sb.toString();
+    }
 }
