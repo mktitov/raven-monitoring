@@ -41,7 +41,7 @@ public class ParentAttributeValueHandler
     private static TypeConverter converter;
     
     private AttributeValueHandler wrappedHandler;
-    private NodeAttribute parentAttribute;
+//    private NodeAttribute parentAttribute;
     private String data;
     private String wrappedHandlerType;
 
@@ -104,32 +104,19 @@ public class ParentAttributeValueHandler
     public Object handleData()
     {
         if (wrappedHandler==null && data != null)
-        {
-            cleanupParentAttribute();
             return converter.convert(attribute.getType(), data, null);
-        }
-        else
-        {
+        else {
             Object result = wrappedHandler==null? null : wrappedHandler.handleData();
             if (result!=null)
-            {
-                cleanupParentAttribute();
                 return result;
-            } 
-            else
-            {
+            else {
                 NodeAttribute pAttr = getParentAttribute();
-                if (pAttr==null)
-                    return null;
-                else
-                    return converter.convert(attribute.getType(), pAttr.getRealValue(), null);
+                return pAttr==null? null : converter.convert(attribute.getType(), pAttr.getRealValue(), null);
             }
         }
     }
 
-    public void close()
-    {
-        cleanupParentAttribute();
+    public void close() {
         cleanupWrappedHandler();
     }
 
@@ -154,32 +141,17 @@ public class ParentAttributeValueHandler
         fireValueChangedEvent(oldValue, newValue);
     }
 
-    private void cleanupParentAttribute()
-    {
-        if (parentAttribute!=null)
-        {
-            parentAttribute.getOwner().removeNodeAttributeDependency(attribute.getName(), this);
-            parentAttribute = null;
-        }
-    }
-    
     private void cleanupWrappedHandler()
     {
         if (wrappedHandler!=null)
             wrappedHandler.close();
     }
 
-    private NodeAttribute getParentAttribute()
-    {
-        cleanupParentAttribute();
-        parentAttribute = attribute.getOwner().getParentAttribute(attribute.getName());
-        if (parentAttribute!=null)
-            parentAttribute.getOwner().addNodeAttributeDependency(attribute.getName(), this);
-        return parentAttribute;
+    private NodeAttribute getParentAttribute() {
+        return attribute.getOwner().getParentAttribute(attribute.getName());
     }
 
-    public void nodeAttributeNameChanged(NodeAttribute attribute, String oldName, String newName)
-    {
+    public void nodeAttributeNameChanged(NodeAttribute attribute, String oldName, String newName) {
     }
 
     public void nodeAttributeValueChanged(
@@ -191,7 +163,6 @@ public class ParentAttributeValueHandler
     public boolean nodeAttributeRemoved(Node node, NodeAttribute attribute)
     {
         Object oldValue = handleData();
-        cleanupParentAttribute();
         Object newValue = handleData();
         if (!ObjectUtils.equals(newValue, oldValue))
             fireValueChangedEvent(oldValue, newValue);
