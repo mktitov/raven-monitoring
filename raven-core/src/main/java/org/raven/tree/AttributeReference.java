@@ -23,7 +23,7 @@ import org.weda.annotations.Description;
  * Reference to the attribute.
  * @author Mikhail Titov
  */
-@Description("Allows to reference to the value of the other attribute")
+//@Description("Allows to reference to the value of the other attribute")
 public interface AttributeReference 
 {
     public NodeAttribute getAttribute();

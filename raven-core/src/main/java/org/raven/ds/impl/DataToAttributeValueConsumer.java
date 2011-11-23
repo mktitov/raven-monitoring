@@ -23,7 +23,6 @@ import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.AttributeReferenceHandlerFactory;
-import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.beans.ObjectUtils;
 
@@ -32,13 +31,13 @@ import org.weda.beans.ObjectUtils;
  * @author Mikhail Titov
  */
 @NodeClass()
-@Description("Allows to change value of the attribute by data reciving by this consumer")
+//@Description("Allows to change value of the attribute by data reciving by this consumer")
 public class DataToAttributeValueConsumer extends AbstractDataConsumer
 {
     public final static String ATTRIBUTE_ATTRIBUTE = "attribute";
     
     @Parameter(valueHandlerType=AttributeReferenceHandlerFactory.TYPE)
-    @Description("The attribute which value will changed")
+//    @Description("The attribute which value will changed")
     @NotNull
     private NodeAttribute attribute;
 

@@ -24,7 +24,7 @@ import org.weda.annotations.Description;
  *
  * @author Mikhail Titov
  */
-@Description("The node which contains the data sources")
+//@Description("The node which contains the data sources")
 @NodeClass(parentNode=SystemNode.class)
 public class DataSourcesNode extends BaseNode
 {

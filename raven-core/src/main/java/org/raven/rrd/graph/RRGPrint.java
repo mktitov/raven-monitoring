@@ -21,7 +21,6 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.rrd.ConsolidationFunction;
 import org.raven.tree.impl.LeafNode;
-import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -29,20 +28,19 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=RRGraphNode.class)
-@Description("")
 public class RRGPrint extends LeafNode
 {
     public final static String DATADEFINITION_ATTRIBUTE = "dataDefinition";
     public final static String CONSOLIDATIONFUNCTION_ATTRIBUTE = "consolidationFunction";
     public final static String FORMAT_ATTRIBUTE = "format";
     
-    @Parameter @NotNull @Description("The reference to the data defenition node")
+    @Parameter @NotNull //@Description("The reference to the data defenition node")
     private DataDefinition dataDefinition;
     
-    @Parameter @NotNull @Description("The consolidation function")
+    @Parameter @NotNull //@Description("The consolidation function")
     private ConsolidationFunction consolidationFunction;
     
-    @Parameter @NotNull @Description("Format string (like \"average = %10.3f %s\")")
+    @Parameter @NotNull //@Description("Format string (like \"average = %10.3f %s\")")
     private String format;
 
     public ConsolidationFunction getConsolidationFunction()

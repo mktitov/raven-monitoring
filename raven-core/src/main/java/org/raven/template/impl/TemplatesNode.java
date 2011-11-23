@@ -19,13 +19,12 @@ package org.raven.template.impl;
 
 import org.raven.annotations.NodeClass;
 import org.raven.tree.impl.BaseNode;
-import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
-@Description("The root for template")
+//@Description("The root for template")
 @NodeClass(parentNode=org.raven.tree.impl.InvisibleNode.class)
 public class TemplatesNode extends BaseNode
 {

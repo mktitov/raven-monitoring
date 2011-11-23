@@ -19,13 +19,12 @@ package org.raven.template.impl;
 
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.AttributeReferenceImpl;
-import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
-@Description("Allows to reference to the template variable")
+//@Description("Allows to reference to the template variable")
 public class TemplateVariable extends AttributeReferenceImpl
 {
     public TemplateVariable(NodeAttribute attribute)

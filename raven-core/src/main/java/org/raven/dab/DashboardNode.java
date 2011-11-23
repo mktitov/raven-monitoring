@@ -18,14 +18,13 @@
 package org.raven.dab;
 
 import org.raven.tree.impl.BaseNode;
-import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
 //@NodeClass
-@Description("The dashboard")
+//@Description("The dashboard")
 public class DashboardNode extends BaseNode 
 {
 }

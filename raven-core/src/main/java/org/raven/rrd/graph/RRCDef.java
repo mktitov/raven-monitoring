@@ -20,7 +20,6 @@ package org.raven.rrd.graph;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.tree.impl.LeafNode;
-import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -28,14 +27,14 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=RRGraphNode.class)
-@Description(
-    "The virtual datasource. The values of this datasource are evaluating using" +
-    "mathematical expression, specified in Reverse Polish Notation (RPN).")
+//@Description(
+//    "The virtual datasource. The values of this datasource are evaluating using" +
+//    "mathematical expression, specified in Reverse Polish Notation (RPN).")
 public class RRCDef extends LeafNode implements DataDefinition
 {
     public final static String EXPRESSION_ATTRIBUTE = "expression";
     
-    @Parameter @NotNull @Description("Reverse Polish Notation (RPN) expression")
+    @Parameter @NotNull //@Description("Reverse Polish Notation (RPN) expression")
     private String expression;
 
     public String getExpression()

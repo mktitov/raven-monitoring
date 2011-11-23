@@ -18,14 +18,13 @@
 package org.raven.tree.impl;
 
 import org.raven.annotations.NodeClass;
-import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass() 
-@Description("The node that can not contain any child nodes")
+//@Description("The node that can not contain any child nodes")
 public class LeafNode extends BaseNode
 {
     public LeafNode()

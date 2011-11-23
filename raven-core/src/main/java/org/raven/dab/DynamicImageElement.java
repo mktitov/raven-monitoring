@@ -21,18 +21,17 @@ import org.raven.DynamicImageNode;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.tree.impl.BaseNode;
-import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=DashboardNode.class)
-@Description("The image that generated dynamiclly")
+//@Description("The image that generated dynamiclly")
 public class DynamicImageElement extends BaseNode
 {
     @Parameter 
-    @Description("The reference to the dynamic image node")
+//    @Description("The reference to the dynamic image node")
     private DynamicImageNode imageNode;
 
     public DynamicImageNode getImageNode()

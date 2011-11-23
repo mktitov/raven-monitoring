@@ -22,7 +22,6 @@ import org.raven.annotations.Parameter;
 import org.raven.rrd.ConsolidationFunction;
 import org.raven.rrd.data.RRDataSource;
 import org.raven.tree.impl.LeafNode;
-import org.weda.annotations.Description;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -31,21 +30,21 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=RRGraphNode.class)
-@Description("Defines virtual datasource.")
+//@Description("Defines virtual datasource.")
 public class RRDef extends LeafNode implements DataDefinition
 {
     public final static String CONSOLIDATIONFUNCTION_ATTRIBUTE = "consolidationFunction";
     public final static String DATASOURCE_ATTRIBUTE = "dataSource";
     
     @Parameter()
-    @Description("The reference to the rrd data source from which data will be taken")
+//    @Description("The reference to the rrd data source from which data will be taken")
     @NotNull
     private RRDataSource dataSource;
     
     @Parameter(defaultValue="AVERAGE")
-    @Description(
-        "Consolidation function. If not seted consolidation function will be taken from the" +
-        "rrd archive corresponding the dataSource.")
+//    @Description(
+//        "Consolidation function. If not seted consolidation function will be taken from the" +
+//        "rrd archive corresponding the dataSource.")
     @NotNull
     private ConsolidationFunction consolidationFunction;
 

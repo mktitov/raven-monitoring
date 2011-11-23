@@ -18,14 +18,13 @@
 package org.raven.tree.impl;
 
 import org.raven.annotations.NodeClass;
-import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass(anyChildTypes=true)
-@Description("The node that can contains any type of children nodes")
+//@Description("The node that can contains any type of children nodes")
 public class ContainerNode extends BaseNode
 {
     public ContainerNode()

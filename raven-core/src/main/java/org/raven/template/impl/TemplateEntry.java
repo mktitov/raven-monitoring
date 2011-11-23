@@ -19,14 +19,13 @@ package org.raven.template.impl;
 
 import org.raven.annotations.NodeClass;
 import org.raven.tree.impl.BaseNode;
-import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=TemplateNode.class, anyChildTypes=true)
-@Description("Holds the subtree of template nodes")
+//@Description("Holds the subtree of template nodes")
 public class TemplateEntry extends BaseNode
 {
     @Override

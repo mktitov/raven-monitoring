@@ -25,14 +25,13 @@ import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
-import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=TemplatesNode.class)
-@Description("The template node")
+//@Description("The template node")
 public class TemplateNode extends BaseNode 
 {
     public static final String TEMPLATE_VARIABLES_EXPRESSION_BINDING = "vars";

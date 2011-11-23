@@ -19,14 +19,13 @@ package org.raven.template.impl;
 
 import org.raven.annotations.NodeClass;
 import org.raven.tree.impl.BaseNode;
-import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=TemplateNode.class)
-@Description("Holds the template variables")
+//@Description("Holds the template variables")
 public class TemplateVariablesNode extends BaseNode
 {
     @Override

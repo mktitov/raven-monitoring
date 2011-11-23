@@ -58,7 +58,7 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
     
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     @NotNull 
-    @Description("The data source")
+//    @Description("The data source")
     private DataSource dataSource;
 
     @Parameter(defaultValue="RESET_LAST_AND_PREVIOUS_DATA")

@@ -22,14 +22,13 @@ import org.raven.template.impl.TemplateEntry;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
-import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=NodeGeneratorNode.class, anyChildTypes=true)
-@Description("The template for creation child nodes in the TableNode")
+//@Description("The template for creation child nodes in the TableNode")
 public class NodeGeneratorNodeTemplate extends TemplateEntry
 {
     public final static String NAME="Template";

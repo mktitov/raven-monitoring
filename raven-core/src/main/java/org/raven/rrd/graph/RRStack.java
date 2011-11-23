@@ -18,16 +18,15 @@
 package org.raven.rrd.graph;
 
 import org.raven.annotations.NodeClass;
-import org.weda.annotations.Description;
 
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=RRGraphNode.class)
-@Description(
-    "Does the same as RRLine, but the graph gets stacked on top of the previous RRLine, RRArea " +
-    "or RRStack graph")
+//@Description(
+//    "Does the same as RRLine, but the graph gets stacked on top of the previous RRLine, RRArea " +
+//    "or RRStack graph")
 public class RRStack extends RRArea
 {
 

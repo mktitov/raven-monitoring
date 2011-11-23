@@ -25,7 +25,6 @@ import javax.script.Bindings;
 import org.raven.log.LogLevel;
 import org.raven.tree.store.TreeStore;
 import org.slf4j.Logger;
-import org.weda.annotations.Description;
 
 /**
  * The base interface of the observable object tree.
@@ -65,7 +64,7 @@ import org.weda.annotations.Description;
  * 
  * @author Mikhail Titov
  */
-@Description("The node type")
+//@Description("The node type")
 public interface Node extends Cloneable, Comparable<Node>, PathObject
 {
     public enum Status {CREATED, INITIALIZED, STARTED, REMOVING, REMOVED}
