@@ -61,7 +61,8 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
-<!--        <repository>
+        <!--
+        <repository>
             <id>java.net</id>
             <url>http://download.java.net/maven/1</url>
             <layout>legacy</layout>
@@ -98,6 +99,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
+                <version>3.0</version>
                 <configuration>
                     <inputEncoding>utf-8</inputEncoding>
                     <outputEncoding>utf-8</outputEncoding>
@@ -106,6 +108,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.8</version>
                 <configuration>
                     <encoding>Cp1251</encoding>
                     <charset>utf-8</charset>
@@ -119,6 +122,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-site-plugin</artifactId>
+            <version>3.0</version>
             <configuration>
               <outputEncoding>utf-8</outputEncoding>
               <inputEncoding>utf-8</inputEncoding>
@@ -131,10 +135,11 @@
                 <plugin>
                     <groupId>org.weda</groupId>
                     <artifactId>weda-maven-plugin</artifactId>
+                    <version>1.0-SNAPSHOT</version>
                     <executions>
                         <execution>
                             <id>transform-classes</id>
-                            <phase>process-classes</phase>
+                            <phase>compile</phase>
                             <goals>
                                 <goal>transform-classes</goal>
                             </goals>
@@ -150,6 +155,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-compiler-plugin</artifactId>
+                    <version>2.3.2</version>
                     <configuration>
                         <source>1.5</source>
                         <target>1.5</target>
@@ -189,6 +195,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>
+                    <version>2.1.2</version>
                     <executions>
                         <execution>
                             <goals>
@@ -211,13 +218,13 @@
             <dependency>
                 <groupId>org.apache.maven</groupId>
                 <artifactId>maven-plugin-api</artifactId>
-                <version>2.0</version>
+                <version>3.0.3</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.maven</groupId>
                 <artifactId>maven-artifact</artifactId>
-                <version>2.0</version>
+                <version>3.0.3</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
@@ -286,12 +293,6 @@
                 <groupId>com.sun.jersey</groupId>
                 <artifactId>jersey-json</artifactId>
                 <version>1.4</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.maven</groupId>
-                <artifactId>maven-artifact</artifactId>
-                <version>2.0</version>
-                <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
