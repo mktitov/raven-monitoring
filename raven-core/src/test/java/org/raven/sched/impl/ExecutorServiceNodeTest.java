@@ -97,7 +97,7 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         assertEquals(1l, executor.getRejectedTasks().get());
     }
 
-//    @Test
+    @Test
     public void delayedTasksTest() throws InterruptedException {
         executor.setCorePoolSize(2);
         executor.setMaximumPoolSize(2);
@@ -107,15 +107,19 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
 
         TestTask task1 = new TestTask(executor, 0);
         TestTask task2 = new TestTask(executor, 0);
+        TestTask task3 = new TestTask(executor, 0);
         assertTrue(executor.executeQuietly(100, task2));
         assertTrue(executor.executeQuietly(50, task1));
+        assertTrue(executor.executeQuietly(90, task3));
         Thread.sleep(150);
         assertTrue(task1.executed);
         assertTrue(task2.executed);
-        assertTrue(task1.time < task2.time);
+        assertTrue(task3.executed);
+        assertTrue(task1.time < task3.time);
+        assertTrue(task3.time < task2.time);
     }
 
-    @Test
+//    @Test
     public  void managedTaskReexecutePolicyTest() throws Exception {
         executor.setCheckManagedTasksInterval(500l);
         assertTrue(executor.start());
@@ -131,7 +135,7 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         assertEquals(1, task.getExecutionCount());
     }
 
-    @Test
+//    @Test
     public  void managedTaskRestartPolicyTest() throws Exception {
         executor.setCheckManagedTasksInterval(500l);
         assertTrue(executor.start());
@@ -148,7 +152,7 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         assertEquals(2, task.getRestartCount());
     }
 
-    @Test
+//    @Test
     public  void singleManagedTaskExecutionTest() throws Exception {
         executor.setCheckManagedTasksInterval(500l);
         assertTrue(executor.start());
