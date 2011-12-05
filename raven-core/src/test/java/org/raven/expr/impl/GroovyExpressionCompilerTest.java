@@ -42,19 +42,19 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
     @Test
     public void simpleTest() throws ScriptException
     {
-		ExpressionCache cache = trainCache("1+1", true);
+	ExpressionCache cache = trainCache("1+1", true);
         GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
         Expression expression = compiler.compile("1+1", GroovyExpressionCompiler.LANGUAGE, null);
         assertNotNull(expression);
         assertEquals(2, expression.eval(null));
 
-		verify(cache);
+        verify(cache);
     }
 
     @Test
     public void bindginsTest() throws ScriptException
     {
-		ExpressionCache cache = trainCache("var+=1", true);
+	ExpressionCache cache = trainCache("var+=1", true);
 
         GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
         Expression expression = compiler.compile("var+=1", GroovyExpressionCompiler.LANGUAGE, "test");
@@ -63,14 +63,14 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         bindings.put("var", 1);
         assertEquals(2, expression.eval(bindings));
 
-		verify(cache);
+	verify(cache);
     }
 
     @Test
     public void withConnectionTest() throws Exception
     {
         String script = "res=null; withConnection(con){c -> res='ok'}\n res";
-		ExpressionCache cache = trainCache(script, false);
+	ExpressionCache cache = trainCache(script, false);
         Connection connection = createMock(Connection.class);
         connection.close();
         replay(connection, cache);
@@ -89,7 +89,7 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
     public void withSqlTest() throws Exception
     {
         String script = "res=null; withSql(con){c -> res='ok'}\n res";
-		ExpressionCache cache = trainCache(script, false);
+	ExpressionCache cache = trainCache(script, false);
         Connection connection = createMock(Connection.class);
         connection.commit();
         connection.close();
@@ -109,7 +109,7 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
     public void withSqlTest2() throws Exception
     {
         String script = "res=null; withSql(con){c -> res='ok'; res.notDefinedProperty}\n res";
-		ExpressionCache cache = trainCache(script, false);
+	ExpressionCache cache = trainCache(script, false);
         Connection connection = createMock(Connection.class);
         connection.rollback();
         connection.close();
@@ -178,25 +178,24 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         verify(cache);
     }
 
-	@Test
-	public void nonGroovyLanguageTest() throws Exception
-	{
-		ExpressionCache cache = createMock(ExpressionCache.class);
-		replay(cache);
+    @Test
+    public void nonGroovyLanguageTest() throws Exception {
+        ExpressionCache cache = createMock(ExpressionCache.class);
+        replay(cache);
 
-		GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
-		Expression expression = compiler.compile("some expression", "notGroovy", null);
-		assertNull(expression);
-	}
+        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
+        Expression expression = compiler.compile("some expression", "notGroovy", null);
+        assertNull(expression);
+    }
 
-	private ExpressionCache trainCache(String expressionSource, boolean replay)
-	{
-		ExpressionCache cache = createMock(ExpressionCache.class);
-		cache.putExpression(eq(expressionSource), isA(Expression.class));
+    private ExpressionCache trainCache(String expressionSource, boolean replay) {
+        ExpressionCache cache = createMock(ExpressionCache.class);
+        cache.putExpression(eq(expressionSource), isA(Expression.class));
 
-        if (replay)
+        if (replay) {
             replay(cache);
+        }
 
-		return cache;
-	}
+        return cache;
+    }
 }

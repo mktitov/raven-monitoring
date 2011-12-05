@@ -51,7 +51,7 @@ public class GroovyExpressionCompiler implements ExpressionCompiler
 
 		try {
             StringBuilder buf = new StringBuilder()
-                .append("import static ").append(ApiUtils.class.getName()).append(".*\n")
+                .append("import static ").append(ApiUtils.class.getName()).append(".*; ")
                 .append(expression);
             if (expression.contains("withSql"))
                 buf
