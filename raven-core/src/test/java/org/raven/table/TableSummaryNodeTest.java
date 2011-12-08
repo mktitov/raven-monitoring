@@ -397,6 +397,37 @@ public class TableSummaryNodeTest extends RavenCoreTestCase
     }
 
     @Test
+    public void rowAggregationWithGroupExpressionAndGroupValidatorExpressionTest3() throws Exception {
+        TableValuesAggregatorNode aggDef = createAggregation(
+                "rowAgg", "groupValue+' sum'", null, AggregateFunctionType.SUM, AggregationDirection.ROW, "columnName[0..3]");
+        NodeAttribute attr = aggDef.getNodeAttribute(TableValuesAggregatorNode.GROUP_VALIDATOR_EXPRESSION_ATTR);
+        attr.setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        attr.setValue("groupColumn==4");
+        TableImpl table = new TableImpl(new String[]{"col2", "col1", "col11"});
+        table.addRow(new Object[]{2, 1, 10});
+        table.addRow(new Object[]{3, 2, 11});
+
+        ds.addDataPortion(table);
+
+        List dataList = (List) consumer.refereshData(null);
+        assertNotNull(dataList);
+        assertEquals(1, dataList.size());
+        assertTrue(dataList.get(0) instanceof Table);
+
+        Table resTable = (Table)dataList.get(0);
+        assertArrayEquals(new String[]{"col2", "col1", "col11", "col1 sum"}, resTable.getColumnNames());
+        List<Object[]> rows = RavenUtils.tableAsList(resTable);
+        assertEquals(2, rows.size());
+        assertArrayEquals(new Object[]{2, 1, 10, 11.}, rows.get(0));
+        assertArrayEquals(new Object[]{3, 2, 11, 13.}, rows.get(1));
+
+        assertTrue(resTable.containsColumnTag(3, TableSummaryNode.AGGREGATION_TAG_ID));
+        assertNull(resTable.getColumnTags(0));
+        assertNull(resTable.getColumnTags(1));
+        assertNull(resTable.getColumnTags(2));
+    }
+
+    @Test
     public void colAggregationWithrowAggregationTest() throws Exception
     {
         createAggregation("rowAgg", null, null, AggregateFunctionType.SUM, AggregationDirection.ROW, null);

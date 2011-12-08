@@ -32,6 +32,7 @@ import org.raven.ds.impl.AbstractSafeDataPipe;
 import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
+import org.raven.util.NodeUtils;
 import org.weda.beans.ObjectUtils;
 
 /**
@@ -93,8 +94,7 @@ public class TableSummaryNode extends AbstractSafeDataPipe
                     }
                 }
             
-        if (!rowAggInfo.hasAggregators() && colAggDefs==null)
-        {
+        if (!rowAggInfo.hasAggregators() && colAggDefs==null) {
             sendDataToConsumers(data, context);
             return;
         }
@@ -201,8 +201,7 @@ public class TableSummaryNode extends AbstractSafeDataPipe
         private final TableImpl table;
         private final DataContext context;
 
-        private RowAggInfo(Table sourceTable, DataContext context)
-        {
+        private RowAggInfo(Table sourceTable, DataContext context) {
             sourceColnames = sourceTable.getColumnNames();
             this.context = context;
             LinkedList<String> namesList = new LinkedList<String>();
@@ -213,27 +212,19 @@ public class TableSummaryNode extends AbstractSafeDataPipe
             boolean lastColumnNameAdded = false;
             int add=0;
             if (childs!=null && !childs.isEmpty())
-                for (int i=0; i<sourceColnames.length; ++i)
-                {
-                    for (Node child: childs)
-                        if (   Status.STARTED.equals(child.getStatus())
-                            && child instanceof TableValuesAggregatorNode
-                            && ((TableValuesAggregatorNode)child).getAggregationDirection()==AggregationDirection.ROW)
-                        {
-                            TableValuesAggregatorNode aggDef = (TableValuesAggregatorNode)child;
+                for (int i=0; i<sourceColnames.length; ++i) {
+                    for (TableValuesAggregatorNode aggDef: NodeUtils.extractNodesOfType(childs, TableValuesAggregatorNode.class))
+                        if (aggDef.getAggregationDirection()==AggregationDirection.ROW) {
                             bindingSupport.put(COLUMN_NAME_BINDING, sourceColnames[i]);
                             bindingSupport.put(COLUMN_NUMBER_BINDING, (i+1));
                             bindingSupport.put(DATA_CONTEXT_BINDING, context);
-                            try{
+                            try {
                                 Object val = aggDef.getGroupExpression();
                                 Object groupValue=values.get(aggDef.getName());
-                                if (!values.containsKey(aggDef.getName()))
-                                {
+                                if (!values.containsKey(aggDef.getName())) {
                                     values.put(aggDef.getName(), val);
                                     froms.put(aggDef.getName(), i);
-                                }
-                                else if (!ObjectUtils.equals(val, groupValue))
-                                {
+                                } else if (!ObjectUtils.equals(val, groupValue)) {
                                     bindingSupport.put(GROUP_VALUE_BINDING, groupValue);
                                     RowAgg rowAgg = new RowAgg(aggDef, i+add, froms.get(aggDef.getName()), i-1);
                                     if (addGroup(rowAgg, aggDefsList, namesList))
@@ -242,11 +233,9 @@ public class TableSummaryNode extends AbstractSafeDataPipe
                                     froms.put(aggDef.getName(), i);
                                     groupValue = val;
                                 }
-                                if (i==sourceColnames.length-1)
-                                {
+                                if (i==sourceColnames.length-1) {
                                     bindingSupport.put(GROUP_VALUE_BINDING, groupValue);
-                                    if (!lastColumnNameAdded)
-                                    {
+                                    if (!lastColumnNameAdded) {
                                         lastColumnNameAdded = true;
                                         namesList.add(sourceColnames[i]);
                                     }
@@ -254,7 +243,7 @@ public class TableSummaryNode extends AbstractSafeDataPipe
                                     if (addGroup(rowAgg, aggDefsList, namesList))
                                         ++add;
                                 }
-                            }finally{
+                            } finally {
                                 bindingSupport.reset();
                             }
                         }
@@ -331,14 +320,12 @@ public class TableSummaryNode extends AbstractSafeDataPipe
             }
         }
 
-        private boolean addGroup(RowAgg rowAgg, List<RowAgg> aggDefsList, LinkedList<String> namesList)
-        {
+        private boolean addGroup(RowAgg rowAgg, List<RowAgg> aggDefsList, LinkedList<String> namesList) {
             bindingSupport.put(GROUP_COLUMN_BINDING, rowAgg.index+1);
             bindingSupport.put(GROUP_FROM_COLUMN_BINDING, rowAgg.from+1);
             bindingSupport.put(GROUP_TO_COLUMN_BINDING, rowAgg.to+1);
             Boolean validGroup = rowAgg.factory.getGroupValidatorExpression();
-            if (validGroup!=null && validGroup)
-            {
+            if (validGroup!=null && validGroup) {
                 aggDefsList.add(rowAgg);
                 namesList.add(rowAgg.factory.getTitle());
                 return true;
