@@ -193,7 +193,7 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema, Viewable
         if (_connectionPool==null)
             return null;
         CreateRecordFromTableAction field = new CreateRecordFromTableAction(
-                createRecordMessage, this, connectionPool, dbExt.getTableName()
+                createRecordMessage, this, connectionPool, dbExt.getSchemaName(), dbExt.getTableName()
                 , defaultDateFormatMessage, defaultTimestampFormatMessage);
         return Arrays.asList((ViewableObject)field);
     }
@@ -276,30 +276,31 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema, Viewable
     public class CreateRecordFromTableAction extends AbstractActionViewableObject
     {
         private final ConnectionPool connectionPool;
+        private final String schemaName;
         private final String tableName;
         private final String dateFormat;
         private final String timestampFormat;
 
         public CreateRecordFromTableAction(
                 String displayMessage, Node owner,
-                ConnectionPool connectionPool, String tableName,
+                ConnectionPool connectionPool, String schemaName, String tableName,
                 String dateFormat, String timestampFormat)
         {
             super(null, displayMessage, owner, false);
             this.connectionPool = connectionPool;
+            this.schemaName = schemaName;
             this.tableName = tableName;
             this.dateFormat = dateFormat;
             this.timestampFormat = timestampFormat;
         }
 
         @Override
-        public String executeAction() throws Exception
-        {
+        public String executeAction() throws Exception {
             try{
                 Connection con = connectionPool.getConnection();
                 try {
                     DatabaseMetaData meta = con.getMetaData();
-                    ResultSet rs = meta.getColumns(null, null, tableName, null);
+                    ResultSet rs = meta.getColumns(null, schemaName, tableName, null);
                     try {
                         Map<String, RecordSchemaField> fields =
                                 RavenUtils.getRecordSchemaFields(RecordSchemaNode.this);

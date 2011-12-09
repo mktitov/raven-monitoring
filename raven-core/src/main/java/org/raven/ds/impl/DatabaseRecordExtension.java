@@ -32,15 +32,24 @@ public class DatabaseRecordExtension extends BaseNode
 {
     @Parameter @NotNull
     private String tableName;
+    
+    @Parameter
+    private String schemaName;
 
-    public String getTableName()
-    {
+    public String getTableName() {
         return tableName;
     }
 
-    public void setTableName(String tableName)
-    {
+    public void setTableName(String tableName) {
         this.tableName = tableName;
+    }
+
+    public String getSchemaName() {
+        return schemaName;
+    }
+
+    public void setSchemaName(String schemaName) {
+        this.schemaName = schemaName;
     }
 
     /**

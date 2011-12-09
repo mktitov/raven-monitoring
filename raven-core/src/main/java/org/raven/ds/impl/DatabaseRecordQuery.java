@@ -197,6 +197,9 @@ public class DatabaseRecordQuery
                         , DatabaseRecordExtension.class.getSimpleName()));
 
             tableName = dbExtension.getTableName();
+            String schemaName = dbExtension.getSchemaName();
+            if (schemaName!=null)
+                tableName = schemaName+"."+tableName;
 
             StrBuilder queryBuf = new StrBuilder();
 
