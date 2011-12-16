@@ -17,16 +17,14 @@
 
 package org.raven.tree.impl;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
+import org.raven.util.NodeUtils;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -86,10 +84,19 @@ public class ReferenceNode extends BaseNode implements Viewable
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
     {
         Node _reference = reference;
+        Map<String, NodeAttribute> refAttrs = null; 
+        Map<String, NodeAttribute> selfRefAttrs = NodeUtils.extractRefereshAttributes(this);
+        Map<String, NodeAttribute> refRefAttrs = null;
         if (isConditionalNode() && _reference instanceof Viewable)
-            return ((Viewable)_reference).getRefreshAttributes();
-        else
-            return null;
+            refRefAttrs =  ((Viewable)_reference).getRefreshAttributes();
+        if ( (selfRefAttrs!=null && !selfRefAttrs.isEmpty()) || (refRefAttrs!=null && !refRefAttrs.isEmpty()) )
+            refAttrs = new HashMap<String, NodeAttribute>();
+        if (refRefAttrs!=null && !refRefAttrs.isEmpty())
+            refAttrs.putAll(refRefAttrs);
+        if (selfRefAttrs!=null && !selfRefAttrs.isEmpty())
+            refAttrs.putAll(selfRefAttrs);
+        
+        return refAttrs;
     }
 
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes)

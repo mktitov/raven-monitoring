@@ -18,18 +18,30 @@
 package org.raven.tree.impl;
 
 import java.util.Collection;
+import java.util.Map;
+import org.junit.Before;
 import org.junit.Test;
+import org.raven.net.impl.TestViewable;
 import org.raven.template.impl.TemplateEntry;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
+import org.raven.tree.NodeAttribute;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class ReferenceNodeTest extends RavenCoreTestCase
-{
+public class ReferenceNodeTest extends RavenCoreTestCase {
+    private ReferenceNode ref;
+    
+    @Before
+    public void prepare() {
+        ref = new ReferenceNode();
+        ref.setName("reference");
+        tree.getRootNode().addAndSaveChildren(ref); 
+    }
+    
     @Test
     public void testNotInTemplate() throws Exception
     {
@@ -92,6 +104,50 @@ public class ReferenceNodeTest extends RavenCoreTestCase
         depNodes = nodes.getEffectiveChildrens();
         assertEquals(1, depNodes.size());
         assertSame(referenceNode, depNodes.iterator().next());
+    }
+    
+    @Test
+    public void getSelfRefernceAttributesTest() throws Exception {
+        assertTrue(ref.start());
+        
+        assertNull(ref.getRefreshAttributes());
+        addAttrToRef();
+        
+        Map<String, NodeAttribute> attrs = ref.getRefreshAttributes();
+        assertNotNull(attrs);
+        assertTrue(attrs.containsKey("test"));
+        assertEquals(1, attrs.size());
+    }
 
+    @Test
+    public void getReferenceRefAtttributesTest() throws Exception {
+        TestViewable node = new TestViewable();
+        node.setName("viewable object");
+        tree.getRootNode().addAndSaveChildren(node);
+        assertTrue(node.start());
+        ref.setReference(node);
+        assertTrue(ref.start());
+        
+        assertNull(ref.getRefreshAttributes());
+        
+        node.addRefreshAttribute(new NodeAttributeImpl("ref_test", String.class, null, null));
+        Map<String, NodeAttribute> attrs = ref.getRefreshAttributes();
+        assertNotNull(attrs);
+        assertEquals(1, attrs.size());
+        assertTrue(attrs.containsKey("ref_test"));
+        
+        addAttrToRef();
+        attrs = ref.getRefreshAttributes();
+        assertNotNull(attrs);
+        assertEquals(2, attrs.size());
+        assertTrue(attrs.containsKey("ref_test"));
+        assertTrue(attrs.containsKey("test"));
+    }
+    
+    private void addAttrToRef() throws Exception {
+        NodeAttributeImpl attr = new NodeAttributeImpl("test", String.class, null, null);
+        attr.setValueHandlerType(RefreshAttributeValueHandlerFactory.TYPE);
+        attr.init();
+        ref.addNodeAttribute(attr);
     }
 }
