@@ -18,13 +18,8 @@
 package org.raven.ds.impl;
 
 import java.io.ByteArrayInputStream;
+import java.util.*;
 import org.raven.auth.UserContext;
-import java.util.Iterator;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -139,6 +134,7 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
 
         verify(record);
     }
+    
     //fieldsOrder!=null
     @Test
     public void tableGeneration2() throws Exception
@@ -160,6 +156,50 @@ public class RecordsAsTableNodeTest extends RavenCoreTestCase
         tableNode.setFieldsOrder("field2, field1");
 
         Collection<ViewableObject> objects = tableNode.getViewableObjects(null);
+        assertNotNull(objects);
+        assertEquals(1, objects.size());
+        ViewableObject object = objects.iterator().next();
+        assertNotNull(object);
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, object.getMimeType());
+        assertNotNull(object.getData());
+        assertTrue(object.getData() instanceof Table);
+        Table table = (Table) object.getData();
+        assertArrayEquals(new String[]{"field2", "field1 displayName"}, table.getColumnNames());
+        List<Object[]> rows = RavenUtils.tableAsList(table);
+        assertEquals(2, rows.size());
+        assertArrayEquals(new String[]{"test1", "1"}, rows.get(0));
+        assertArrayEquals(new String[]{"test2", "2"}, rows.get(1));
+
+        verify(record);
+    }
+    
+    //fieldsOrder!=null (fieldsOrder generates by script)
+    @Test
+    public void tableGeneration2_1() throws Exception
+    {
+        Record record = createMock(Record.class);
+
+        expect(record.getSchema()).andReturn(schema).times(2);
+        expect(record.getValue("field1")).andReturn(1);
+        expect(record.getValue("field1")).andReturn(2);
+        expect(record.getValue("field2")).andReturn("test1");
+        expect(record.getValue("field2")).andReturn("test2");
+
+        replay(record);
+
+        ds.addDataPortion(record);
+        ds.addDataPortion(record);
+        ds.addDataPortion(null);
+
+        NodeAttribute attr = tableNode.getNodeAttribute("fieldsOrder");
+        assertNotNull(attr);
+        attr.setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        attr.save();
+        tableNode.setFieldsOrder("refreshAttributes.containsKey('test')? 'field2, field1':null");
+
+        Map<String, NodeAttribute> refAttrs = new HashMap<String, NodeAttribute>();
+        refAttrs.put("test", new NodeAttributeImpl("test", String.class, null, null));
+        Collection<ViewableObject> objects = tableNode.getViewableObjects(refAttrs);
         assertNotNull(objects);
         assertEquals(1, objects.size());
         ViewableObject object = objects.iterator().next();

@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.script.Bindings;
+import org.raven.BindingNames;
 import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
@@ -336,43 +337,44 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes)
             throws Exception
     {
-        try{
+        try {
             Map<String, NodeAttribute> attrs = new HashMap<String, NodeAttribute>();
             if (refreshAttributes!=null)
                 attrs.putAll(refreshAttributes);
-
-            Map<String, String> detailFieldValues = getAndApplyMasterFieldValues(attrs);
-            if (detailFieldValues==null && masterNode!=null)
-                return null;
-            addDataSourceAttributes(attrs, detailFieldValues);
-
-            String _fieldsOrder = fieldsOrder;
-            String[] fieldsOrderArr = _fieldsOrder==null? null : _fieldsOrder.split("\\s*,\\s*");
-
-            Map<Integer, RecordsAsTableColumnValueNode> columnValues = getColumnValues();
-            Map<String, Map<Object, String>> fieldRefValues = getRecordFieldReferenceValues();
+            RecordAsTableDataConsumer dataConsumer = null;
             List<Record> records = getActionsCount()>0? new ArrayList<Record>(512) : null;
+            try {
+                bindingSupport.put(BindingNames.REFRESH_ATTRIBUTES, attrs);
+                Map<String, String> detailFieldValues = getAndApplyMasterFieldValues(attrs);
 
-            String[] indexFieldNames = getIndexFieldNames();
-            String[] masterFieldNames = getMasterFieldNames();
+                if (detailFieldValues==null && masterNode!=null)
+                    return null;
+                addDataSourceAttributes(attrs, detailFieldValues);
 
-            RecordAsTableDataConsumer dataConsumer = new RecordAsTableDataConsumer(
-                    fieldsOrderArr, detailColumnName, detailValueViewLinkName
-                    , fieldNameColumnName, fieldValueColumnName, detailColumnNumber, columnValues
-                    , deleteConfirmationMessage, deleteMessage, deleteCompletionMessage
-                    , getRecordActions(), records, fieldRefValues, indexFieldNames, selectMessage
-                    , userContextService.getUserContext(), masterFieldNames, converter);
+                String _fieldsOrder = fieldsOrder;
+                String[] fieldsOrderArr = _fieldsOrder==null? null : _fieldsOrder.split("\\s*,\\s*");
 
+                Map<Integer, RecordsAsTableColumnValueNode> columnValues = getColumnValues();
+                Map<String, Map<Object, String>> fieldRefValues = getRecordFieldReferenceValues();
+
+                String[] indexFieldNames = getIndexFieldNames();
+                String[] masterFieldNames = getMasterFieldNames();
+
+                dataConsumer = new RecordAsTableDataConsumer(
+                        fieldsOrderArr, detailColumnName, detailValueViewLinkName
+                        , fieldNameColumnName, fieldValueColumnName, detailColumnNumber, columnValues
+                        , deleteConfirmationMessage, deleteMessage, deleteCompletionMessage
+                        , getRecordActions(), records, fieldRefValues, indexFieldNames, selectMessage
+                        , userContextService.getUserContext(), masterFieldNames, converter);
+            } finally {
+                bindingSupport.reset();
+            }
             dataSource.getDataImmediate(dataConsumer, new DataContextImpl(attrs));
 
             List<ViewableObject> vos = new ArrayList<ViewableObject>();
-    //        if (records!=null)
-    //        {
-                List<ViewableObject> actions = getActions(refreshAttributes, records, dataConsumer.context);
-                if (actions!=null)
-                    vos.addAll(actions);
-    //        }
-
+            List<ViewableObject> actions = getActions(refreshAttributes, records, dataConsumer.context);
+            if (actions!=null)
+                vos.addAll(actions);
             vos.add(new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, dataConsumer.getTable()));
 
             return vos;
