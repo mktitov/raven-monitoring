@@ -42,10 +42,7 @@ public class RecordsAsTableBaseAction extends AbstractActionNode implements Data
     public static final String PREPARE_ACTION_ATTRIBUTES_BINDING = "prepareActionAttributes";
 
     @Override
-    public void prepareActionBindings(
-            DataContext context, Map<String, Object> additionalBindings)
-    {
-    }
+    public void prepareActionBindings(DataContext context, Map<String, Object> additionalBindings) { }
 
     @Override
     public ViewableObject createActionViewableObject(DataContext context, Map<String, Object> additionalBindings)
@@ -54,13 +51,11 @@ public class RecordsAsTableBaseAction extends AbstractActionNode implements Data
         return new RecordsAsTableRecordAction(this, context, additionalBindings, getActionAttributes(), this);
     }
 
-    public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
-    {
+    public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context) {
         throw new UnsupportedOperationException("The pull operation not supported by this datasource");
     }
 
-    public Collection<NodeAttribute> generateAttributes()
-    {
+    public Collection<NodeAttribute> generateAttributes() {
         return null;
     }
 
