@@ -61,12 +61,6 @@ import org.weda.internal.annotations.Message;
  *
  * @author Mikhail Titov
  */
-//TODO: Добавить возможность, позволяющую executor'у рестартовать задачи.
-//USECASES. 1 При выполнении задачи произошла ошибка. Соотвественно thread освободился, узел прекратил
-//            выполнять свою функцию :( . А executor мог бы эту задачу перезапустить.
-//            Это критично для тех узлов(задач) которые постоянно занимают нить
-//          2 Допустим необходимо перезапустить executor. В текущем алгоритме некому перезапустить
-//            long live tasks,
 @NodeClass(parentNode=SchedulersNode.class)
 public class ExecutorServiceNode extends BaseNode
         implements ExecutorService, RejectedExecutionHandler, Viewable
