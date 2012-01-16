@@ -22,11 +22,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.activation.FileDataSource;
 import net.sf.jxls.transformer.XLSTransformer;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -35,18 +37,14 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
-import org.raven.ds.FieldValueGenerator;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.ds.impl.AbstractSafeDataPipe;
-import org.raven.ds.impl.AttributeFieldValueGenerator;
-import org.raven.ds.impl.DataSourceFieldValueGenerator;
 import org.raven.ds.impl.InputStreamBinaryFieldValue;
 import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
 import org.raven.tree.DataFile;
-import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
@@ -61,7 +59,7 @@ import org.weda.annotations.constraints.NotNull;
  */
 @NodeClass(
     childNodes={
-        AttributeFieldValueGenerator.class, DataSourceFieldValueGenerator.class,
+        JxlsAttributeValueBeanNode.class, JxlsDataSourceBeanNode.class,
         CellStyleSelectorNode.class})
 public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
 {
@@ -119,12 +117,12 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
             bindingSupport.put(DATA_BINDING, data);
             bindingSupport.put(DATA_CONTEXT_BINDING, context);
             bindingSupport.put(BEANS_BINDING, beansStore.get());
-            Collection<Node> childs = getChildrens();
-            if (childs!=null)
-                for (Node child: childs)
-                    if (child instanceof FieldValueGenerator)
-                        beans.put(child.getName(), ((FieldValueGenerator)child).getFieldValue(context));
-
+            Set<String> fixedSizeCollectionBeanNames = new HashSet<String>();
+            for (JxlsBean bean: NodeUtils.getChildsOfType(this, JxlsBean.class)) {
+                beans.put(bean.getName(), bean.getFieldValue(context));
+                if (bean.getFixedSizeCollection())
+                    fixedSizeCollectionBeanNames.add(bean.getName());
+            }
             beans.put(DATA_BINDING, data);
             beans.put(DATA_CONTEXT_BINDING, context);
             beans.putAll(beansStore.get());
@@ -133,7 +131,7 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
                 sheets = new LinkedList<SheetInfo>();
                 sheetsStore.set(sheets);
             }
-            sheets.add(new SheetInfo(beans, templateSheetName, sheetName));
+            sheets.add(new SheetInfo(beans, fixedSizeCollectionBeanNames, templateSheetName, sheetName));
             if (!multiSheetReport)
                 generateReport(context);
         }finally{
@@ -151,29 +149,29 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
 
             if (sheets==null){
                 if (isLogLevelEnabled(LogLevel.DEBUG))
-                    getLogger().debug("No data to generate excel report. Skiping");
+                    getLogger().debug("No data to generate excel report. Skipping");
                 return ;
             }
 
             List<String> templateSheetNames = new ArrayList<String>(sheets.size());
             List<String> sheetNames = new ArrayList<String>(sheets.size());
             List<Map> sheetBeans = new ArrayList<Map>(sheets.size());
+            XLSTransformer transformer = new XLSTransformer();
             for (SheetInfo info: sheets){
                 templateSheetNames.add(info.templateSheetName);
                 sheetNames.add(info.sheetName);
                 sheetBeans.add(info.beans);
+                for (String name: info.fixedSizeCollectionBeanNames)
+                    transformer.markAsFixedSizeCollection(name);
             }
 
-            XLSTransformer transformer = new XLSTransformer();
-
-            List<CellStyleSelectorNode> styleSelectors = NodeUtils.getChildsOfType(this, CellStyleSelectorNode.class);
+            List<CellStyleSelectorNode> styleSelectors = NodeUtils.getChildsOfType(
+                    this, CellStyleSelectorNode.class);
             if (!styleSelectors.isEmpty()){
                 if (isLogLevelEnabled(LogLevel.DEBUG))
                     getLogger().debug("Found style selectors. Registiring row processor");
-//                bindingSupport
                 transformer.registerRowProcessor(new CellStyleProcessor(styleSelectors, bindingSupport, this));
             }
-            
             HSSFWorkbook wb = (HSSFWorkbook) transformer.transformXLS(
                     reportTemplate.getDataStream(), templateSheetNames, sheetNames, sheetBeans);
 
@@ -193,10 +191,12 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
                     Object res = ds;
                     String _reportFieldName = reportFieldName;
                     if (   _reportFieldName!=null
-                        && sheetBeans.size()==1 && (sheetBeans.get(0).get(DATA_BINDING) instanceof Record))
+                        && sheetBeans.size()==1 
+                        && (sheetBeans.get(0).get(DATA_BINDING) instanceof Record))
                     {
                         Record rec = (Record) sheetBeans.get(0).get(DATA_BINDING);
-                        RecordSchemaField field = RavenUtils.getRecordSchemaField(rec.getSchema(), _reportFieldName);
+                        RecordSchemaField field = RavenUtils.getRecordSchemaField(
+                                rec.getSchema(), _reportFieldName);
                         if (field!=null && field.getFieldType().equals(RecordSchemaFieldType.BINARY)) {
                             rec.setValue(_reportFieldName, new InputStreamBinaryFieldValue(is));
                             res = rec;
@@ -273,14 +273,20 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
     }
 
     private class SheetInfo {
-        Map beans;
-        String templateSheetName;
-        String sheetName;
+        private final Map beans;
+        private final Set<String> fixedSizeCollectionBeanNames;
+        private final String templateSheetName;
+        private final String sheetName;
 
-        public SheetInfo(Map beans, String templateSheetName, String sheetName) {
+        public SheetInfo(Map beans, Set<String> fixedSizeCollectionBeanNames
+                , String templateSheetName, String sheetName) 
+        {
             this.beans = beans;
+            this.fixedSizeCollectionBeanNames = fixedSizeCollectionBeanNames.isEmpty()?
+                    Collections.EMPTY_SET : fixedSizeCollectionBeanNames;
             this.templateSheetName = templateSheetName;
             this.sheetName = sheetName;
         }
+
     }
 }

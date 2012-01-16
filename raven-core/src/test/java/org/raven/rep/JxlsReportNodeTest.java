@@ -26,7 +26,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import javax.activation.DataSource;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.easymock.IArgumentMatcher;
 import org.junit.Before;
@@ -100,11 +99,12 @@ public class JxlsReportNodeTest extends RavenCoreTestCase
         report.getReportTemplate().setDataStream(new FileInputStream("src/test/conf/jxls_template2.xls"));
         assertTrue(report.start());
 
-        AttributeFieldValueGenerator attrValue = new AttributeFieldValueGenerator();
+        JxlsAttributeValueBeanNode attrValue = new JxlsAttributeValueBeanNode();
         attrValue.setName("bean1");
         report.addAndSaveChildren(attrValue);
         attrValue.getNodeAttribute("value").setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
         attrValue.setValue("data+' world'");
+        assertTrue(attrValue.start());
 
         DataHandler handler = createMock(DataHandler.class);
         handler.handleData(checkDataSource(), isA(DataContext.class));
@@ -114,6 +114,31 @@ public class JxlsReportNodeTest extends RavenCoreTestCase
         ds.pushData("hello");
 
         verify(handler);
+    }
+
+    @Test
+    public void fixedSizeCollectionTest() throws Exception
+    {
+        report.getReportTemplate().setDataStream(new FileInputStream("src/test/conf/jxls_template4.xls"));
+        assertTrue(report.start());
+
+        JxlsAttributeValueBeanNode attrValue = new JxlsAttributeValueBeanNode();
+        attrValue.setName("list");
+        report.addAndSaveChildren(attrValue);
+        attrValue.getNodeAttribute("value").setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        attrValue.setValue("[[col1:1, col2:1],[col1:5, col2:10]]");
+        attrValue.setFixedSizeCollection(Boolean.TRUE);
+        assertTrue(attrValue.start());
+
+//        DataHandler handler = createMock(DataHandler.class);
+//        handler.handleData(checkDataSource(), isA(DataContext.class));
+//        replay(handler);
+
+        collector.setDataHandler(new WriteToFileHandler("target/report_fixedSizeCollection.xls"));
+        ds.pushData("test");
+        ds.pushData(null);
+
+//        verify(handler);
     }
 
 //    @Test
@@ -126,14 +151,16 @@ public class JxlsReportNodeTest extends RavenCoreTestCase
         attr.setValue("data");
         assertTrue(report.start());
 
-        AttributeFieldValueGenerator attrValue = new AttributeFieldValueGenerator();
+        JxlsAttributeValueBeanNode attrValue = new JxlsAttributeValueBeanNode();
         attrValue.setName("bean1");
         report.addAndSaveChildren(attrValue);
         attrValue.getNodeAttribute("value").setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
         attrValue.setValue("data");
+        assertTrue(attrValue.start());
 
         DataHandler handler = createMock(DataHandler.class);
         handler.handleData(checkDataSource2(), isA(DataContext.class));
+        handler.handleData(isNull(), isA(DataContext.class));
         replay(handler);
 
         collector.setDataHandler(handler);
@@ -144,7 +171,7 @@ public class JxlsReportNodeTest extends RavenCoreTestCase
         verify(handler);
     }
 
-    @Test
+//    @Test
     public void styleSelectorsTest() throws Exception
     {
         report.getReportTemplate().setDataStream(new FileInputStream("src/test/conf/jxls_template3.xls"));
@@ -169,16 +196,18 @@ public class JxlsReportNodeTest extends RavenCoreTestCase
         attr.setValue("columnNumber%2==0 && !rowObject");
         assertTrue(selector.start());
 
-        AttributeFieldValueGenerator attrValue = new AttributeFieldValueGenerator();
+        JxlsAttributeValueBeanNode attrValue = new JxlsAttributeValueBeanNode();
         attrValue.setName("bean1");
         report.addAndSaveChildren(attrValue);
         attrValue.setValue("hello world");
+        assertTrue(attrValue.start());
 
-        attrValue = new AttributeFieldValueGenerator();
+        attrValue = new JxlsAttributeValueBeanNode();
         attrValue.setName("list");
         report.addAndSaveChildren(attrValue);
         attrValue.getNodeAttribute("value").setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
         attrValue.setValue("[[name:'elem1', style:'listStyle1'], [name:'elem2', style:'listStyle2']]");
+        assertTrue(attrValue.start());
 
         selector = new CellStyleSelectorNode();
         selector.setName("selector3");
@@ -197,28 +226,12 @@ public class JxlsReportNodeTest extends RavenCoreTestCase
 //        handler.handleData(checkDataSource(), isA(DataContext.class));
 //        replay(handler);
 
-        collector.setDataHandler(new DataHandler() {
-            public void handleData(Object data, DataContext context) {
-                try {
-                    DataSource ds = (DataSource) data;
-                    File reportFile = new File("target/report.xls");
-                    reportFile.delete();
-                    FileOutputStream fos = new FileOutputStream(reportFile);
-                    try {
-                        IOUtils.copy(ds.getInputStream(), fos);
-                    } finally {
-                        fos.close();
-                    }
-                } catch(Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+        collector.setDataHandler(new WriteToFileHandler("target/report.xls"));
         ds.pushData("hello");
 
         Thread.sleep(100);
     }
-
+    
     public static InputStream checkDataSource()
     {
         reportMatcher(new IArgumentMatcher() {
@@ -253,7 +266,8 @@ public class JxlsReportNodeTest extends RavenCoreTestCase
                 try{
                     if (!(obj instanceof DataSource))
                         return false;
-                    Workbook wb = WorkbookFactory.create(new PushbackInputStream(((DataSource)obj).getInputStream()));
+                    Workbook wb = WorkbookFactory.create(
+                            new PushbackInputStream(((DataSource)obj).getInputStream()));
                     Sheet sheet = wb.getSheetAt(0);
                     assertEquals("data1", sheet.getSheetName());
                     assertEquals("data1", sheet.getRow(0).getCell(0).getStringCellValue());
@@ -272,5 +286,31 @@ public class JxlsReportNodeTest extends RavenCoreTestCase
         });
 
         return null;
+    }
+    
+    private class WriteToFileHandler implements DataHandler {
+        private final String filename;
+
+        public WriteToFileHandler(String filename) {
+            this.filename = filename;
+        }
+
+        public void handleData(Object data, DataContext context) {
+            if (data==null)
+                return;
+            try {
+                DataSource ds = (DataSource) data;
+                File reportFile = new File(filename);
+                reportFile.delete();
+                FileOutputStream fos = new FileOutputStream(reportFile);
+                try {
+                    IOUtils.copy(ds.getInputStream(), fos);
+                } finally {
+                    fos.close();
+                }
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

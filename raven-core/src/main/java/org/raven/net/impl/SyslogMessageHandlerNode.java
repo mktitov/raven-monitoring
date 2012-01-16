@@ -18,7 +18,6 @@
 package org.raven.net.impl;
 
 import java.util.Collection;
-import java.util.List;
 import javax.script.Bindings;
 import org.productivity.java.syslog4j.server.SyslogServerEventIF;
 import org.productivity.java.syslog4j.util.SyslogUtility;
@@ -38,7 +37,6 @@ import org.raven.log.LogLevel;
 import org.raven.net.SyslogMessageHandler;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
-import org.raven.util.NodeUtils;
 import org.raven.util.OperationStatistic;
 import org.weda.annotations.constraints.NotNull;
 

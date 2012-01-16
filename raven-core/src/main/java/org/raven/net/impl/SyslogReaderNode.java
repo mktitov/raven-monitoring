@@ -17,11 +17,13 @@
 
 package org.raven.net.impl;
 
+import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.productivity.java.syslog4j.server.SyslogServer;
 import org.productivity.java.syslog4j.server.SyslogServerEventHandlerIF;
 import org.productivity.java.syslog4j.server.SyslogServerEventIF;
 import org.productivity.java.syslog4j.server.SyslogServerIF;
+import org.productivity.java.syslog4j.server.SyslogServerSessionEventHandlerIF;
 import org.productivity.java.syslog4j.util.SyslogUtility;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
@@ -42,7 +44,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=DataSourcesNode.class)
-public class SyslogReaderNode extends BaseNode implements SyslogServerEventHandlerIF, Task
+public class SyslogReaderNode extends BaseNode implements SyslogServerSessionEventHandlerIF, Task
 {
     public enum SyslogProtocol {UDP, TCP};
 
@@ -81,7 +83,8 @@ public class SyslogReaderNode extends BaseNode implements SyslogServerEventHandl
         syslogServer.getConfig().setPort(port);
         syslogServer.getConfig().addEventHandler(this);
         syslogServer.getConfig().setShutdownWait(0);
-        syslogServer = SyslogServer.getInstance(_protocol);
+//        syslogServer.getConfig().setHost("localhost");
+//        syslogServer = SyslogServer.getInstance(_protocol);
         executor.execute(this);
     }
 
@@ -101,8 +104,7 @@ public class SyslogReaderNode extends BaseNode implements SyslogServerEventHandl
                 , syslogServer.getConfig().getPort(), protocol, messagesStat.getOperationsCount());
     }
 
-    public void run()
-    {
+    public void run() {
         taskRunning.set(true);
         try {
             syslogServer.run();
@@ -111,8 +113,7 @@ public class SyslogReaderNode extends BaseNode implements SyslogServerEventHandl
         }
     }
 
-    public OperationStatistic getMessagesStat()
-    {
+    public OperationStatistic getMessagesStat() {
         return messagesStat;
     }
 
@@ -140,7 +141,15 @@ public class SyslogReaderNode extends BaseNode implements SyslogServerEventHandl
         this.executor = executor;
     }
 
-    public void event(SyslogServerIF syslogServer, SyslogServerEventIF event)
+    public Object sessionOpened(SyslogServerIF syslogServer, SocketAddress socketAddress) {
+        if (isLogLevelEnabled(LogLevel.TRACE)) {
+            getLogger().trace("Syslog session opened");
+        }
+        return this;
+    }
+
+    public void event(Object session, SyslogServerIF syslogServer, SocketAddress socketAddress
+            , SyslogServerEventIF event) 
     {
         long startTime = messagesStat.markOperationProcessingStart();
         logMessage(event);
@@ -150,6 +159,43 @@ public class SyslogReaderNode extends BaseNode implements SyslogServerEventHandl
         } finally {
             messagesStat.markOperationProcessingEnd(startTime);
         }
+    }
+
+    public void exception(Object session, SyslogServerIF syslogServer, SocketAddress socketAddress
+            , Exception exception) 
+    {
+        if (isLogLevelEnabled(LogLevel.ERROR))
+            getLogger().error("Exeption throwed by Syslog server", exception);
+    }
+
+    public void sessionClosed(Object session, SyslogServerIF syslogServer
+            , SocketAddress socketAddress, boolean timeout) 
+    {
+        if (isLogLevelEnabled(LogLevel.TRACE))
+            getLogger().trace("Syslog session were closed");
+    }
+
+//    public void event(SyslogServerIF syslogServer, SyslogServerEventIF event)
+//    {
+//        long startTime = messagesStat.markOperationProcessingStart();
+//        logMessage(event);
+//        try {
+//            for (SyslogMessageHandler handler: NodeUtils.getChildsOfType(this, SyslogMessageHandler.class))
+//                handler.handleEvent(event);
+//        } finally {
+//            messagesStat.markOperationProcessingEnd(startTime);
+//        }
+//    }
+
+    public void initialize(SyslogServerIF syslogServer) {
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            getLogger().debug("Syslog server initialized on port {} using protocol {}"
+                    , syslogServer.getConfig().getPort(), syslogServer.getProtocol());
+    }
+
+    public void destroy(SyslogServerIF syslogServer) {
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            getLogger().debug("Syslog server destroyed");
     }
 
     private void logMessage(SyslogServerEventIF event)
