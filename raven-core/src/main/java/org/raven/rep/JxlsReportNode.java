@@ -43,6 +43,7 @@ import org.raven.ds.RecordSchemaFieldType;
 import org.raven.ds.impl.AbstractSafeDataPipe;
 import org.raven.ds.impl.InputStreamBinaryFieldValue;
 import org.raven.expr.BindingSupport;
+import org.raven.expr.impl.IfNode;
 import org.raven.log.LogLevel;
 import org.raven.tree.DataFile;
 import org.raven.tree.NodeAttribute;
@@ -60,7 +61,7 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass(
     childNodes={
         JxlsAttributeValueBeanNode.class, JxlsDataSourceBeanNode.class,
-        CellStyleSelectorNode.class})
+        CellStyleSelectorNode.class, IfNode.class})
 public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
 {
     public static final String BEANS_BINDING = "beans";
@@ -118,7 +119,7 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
             bindingSupport.put(DATA_CONTEXT_BINDING, context);
             bindingSupport.put(BEANS_BINDING, beansStore.get());
             Set<String> fixedSizeCollectionBeanNames = new HashSet<String>();
-            for (JxlsBean bean: NodeUtils.getChildsOfType(this, JxlsBean.class)) {
+            for (JxlsBean bean: NodeUtils.getEffectiveChildsOfType(this, JxlsBean.class)) {
                 beans.put(bean.getName(), bean.getFieldValue(context));
                 if (bean.getFixedSizeCollection())
                     fixedSizeCollectionBeanNames.add(bean.getName());
@@ -165,7 +166,7 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
                     transformer.markAsFixedSizeCollection(name);
             }
 
-            List<CellStyleSelectorNode> styleSelectors = NodeUtils.getChildsOfType(
+            List<CellStyleSelectorNode> styleSelectors = NodeUtils.getEffectiveChildsOfType(
                     this, CellStyleSelectorNode.class);
             if (!styleSelectors.isEmpty()){
                 if (isLogLevelEnabled(LogLevel.DEBUG))

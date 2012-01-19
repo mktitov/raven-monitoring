@@ -31,7 +31,6 @@ import org.easymock.IArgumentMatcher;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.ds.DataContext;
-import org.raven.ds.impl.AttributeFieldValueGenerator;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.test.DataCollector;
@@ -77,7 +76,7 @@ public class JxlsReportNodeTest extends RavenCoreTestCase
         
     }
 
-//    @Test
+    @Test
     public void test() throws Exception
     {
         report.getReportTemplate().setDataStream(new FileInputStream("src/test/conf/jxls_template.xls"));
@@ -93,7 +92,7 @@ public class JxlsReportNodeTest extends RavenCoreTestCase
         verify(handler);
     }
 
-//    @Test
+    @Test
     public void beansGenerationTest() throws Exception
     {
         report.getReportTemplate().setDataStream(new FileInputStream("src/test/conf/jxls_template2.xls"));
@@ -141,7 +140,7 @@ public class JxlsReportNodeTest extends RavenCoreTestCase
 //        verify(handler);
     }
 
-//    @Test
+    @Test
     public void multiSheetReportTest() throws Exception
     {
         report.getReportTemplate().setDataStream(new FileInputStream("src/test/conf/jxls_template2.xls"));
@@ -171,7 +170,7 @@ public class JxlsReportNodeTest extends RavenCoreTestCase
         verify(handler);
     }
 
-//    @Test
+    @Test
     public void styleSelectorsTest() throws Exception
     {
         report.getReportTemplate().setDataStream(new FileInputStream("src/test/conf/jxls_template3.xls"));
