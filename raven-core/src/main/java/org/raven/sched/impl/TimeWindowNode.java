@@ -21,8 +21,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.log.LogLevel;
 import org.raven.sched.ValueParserException;
 import org.raven.table.TableImpl;
 import org.raven.tree.NodeAttribute;
@@ -50,6 +52,12 @@ public class TimeWindowNode extends BaseNode implements Viewable
 
     @NotNull @Parameter(defaultValue="false")
     private Boolean invertResult;
+    
+    @Parameter
+    private TimeZone timezone;
+    
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean useTimezone;
 
     @Message
     private static String yesMessage;
@@ -81,13 +89,24 @@ public class TimeWindowNode extends BaseNode implements Viewable
             return invertResult? !res : res;
         }
         catch (ValueParserException e) {
+            if (isLogLevelEnabled(LogLevel.ERROR))
+                getLogger().error(e.getMessage(), e);
             return false;
         }
     }
 
     private boolean checkCurrentTimeInPeriod() throws ValueParserException
     {
-        Calendar c = Calendar.getInstance();
+        TimeZone tz = null;
+        if (useTimezone) {
+            tz = timezone;
+            if (tz==null)
+                throw new ValueParserException("Timezone attribute can not be null if useTimeZone==true");
+        }
+        if (tz==null)
+            tz = TimeZone.getDefault();
+        
+        Calendar c = Calendar.getInstance(tz);
 
         if (!getTimePeriod().isInPeriod(getMinutes(c)))
             return false;
@@ -133,6 +152,33 @@ public class TimeWindowNode extends BaseNode implements Viewable
 
     public void setInvertResult(Boolean invertResult) {
         this.invertResult = invertResult;
+    }
+
+    public TimeZone getTimezone() {
+        return timezone;
+    }
+
+    public void setTimezone(TimeZone timezone) {
+        this.timezone = timezone;
+    }
+
+    public Boolean getUseTimezone() {
+        return useTimezone;
+    }
+
+    public void setUseTimezone(Boolean useTimezone) {
+        this.useTimezone = useTimezone;
+    }
+    
+    @Parameter(readOnly=true)
+    public String getTimeForDefaultTimeZone() {
+        return Calendar.getInstance().getTime().toString();
+    } 
+    
+    @Parameter(readOnly=true)
+    public String getTimeForTimeZone() {
+        TimeZone tz = timezone;
+        return tz==null? "" : Calendar.getInstance(tz).getTime().toString();
     }
 
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception

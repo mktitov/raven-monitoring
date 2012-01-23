@@ -91,6 +91,9 @@ import org.raven.impl.StringToIpConverter;
 import org.raven.impl.StringToLocaleConverter;
 import org.raven.impl.StringToNodeConverter;
 import org.raven.impl.StringToTemplateVariableConverter;
+import org.raven.impl.StringToTimeZoneConverter;
+import org.raven.impl.TimeZoneReferenceValues;
+import org.raven.impl.TimeZoneToStringConverter;
 import org.raven.log.NodeLogger;
 import org.raven.log.impl.NodeLoggerImpl;
 import org.raven.net.NetworkResponseService;
@@ -228,7 +231,7 @@ public class RavenCoreModule
     }
     
     @SuppressWarnings("unchecked")
-	public static void contributeTypeConverter(Configuration conf)
+    public static void contributeTypeConverter(Configuration conf)
     {
         conf.add(new NodeToStringConverter());
         conf.add(new NodeAttributeToStringConverter());
@@ -256,6 +259,8 @@ public class RavenCoreModule
         conf.add(new ByteArrayDataSourceToByteArrayConverter());
         conf.add(new DataSourceToInputStreamConverter());
         conf.add(new ClobToStringConverter());
+        conf.add(new StringToTimeZoneConverter());
+        conf.add(new TimeZoneToStringConverter());
     }
     
     @SuppressWarnings("unchecked")
@@ -352,10 +357,14 @@ public class RavenCoreModule
             CharsetReferenceValues.class.getSimpleName()
             , new CharsetReferenceValues()
             , "after:"+DataPipeConvertToTypesReferenceValues.class.getSimpleName());
-		conf.add(
-			LocaleReferenceValues.class.getSimpleName()
-			, new LocaleReferenceValues()
-			, "after:"+CharsetReferenceValues.class.getSimpleName());
+        conf.add(
+            TimeZoneReferenceValues.class.getSimpleName()
+            , new TimeZoneReferenceValues()
+            , "after:"+CharsetReferenceValues.class.getSimpleName());
+        conf.add(
+            LocaleReferenceValues.class.getSimpleName()
+            , new LocaleReferenceValues()
+            , "after:"+TimeZoneReferenceValues.class.getSimpleName());
         conf.add(
             RecordSchemasNode.class.getSimpleName()
             , new ChildrenNodesAsReferenceValues(

@@ -39,9 +39,7 @@ public class CharsetReferenceValues implements AttributeReferenceValues
             return false;
 
         for (Map.Entry<String, Charset> entry: Charset.availableCharsets().entrySet())
-        {
             referenceValues.add(new ReferenceValueImpl(entry.getKey(), entry.getKey()), null);
-        }
 
         return true;
     }

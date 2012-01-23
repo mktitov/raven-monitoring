@@ -19,6 +19,7 @@ package org.raven.sched.impl;
 
 import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;
@@ -91,5 +92,17 @@ public class TimeWindowNodeTest extends RavenCoreTestCase
         assertEquals(2, vos.size());
         assertEquals(Viewable.RAVEN_TEXT_MIMETYPE, vos.get(0).getMimeType());
         assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, vos.get(1).getMimeType());
+    }
+    
+    @Test
+    public void timezoneTest() {
+        TimeZone timezone = TimeZone.getDefault();
+        long offset = timezone.getRawOffset()/(1000*60*60);
+        timeWindow.setUseTimezone(Boolean.TRUE);
+        timeWindow.setTimezone(TimeZone.getTimeZone("GMT+"+(offset-2)));
+        assertFalse(timeWindow.isCurrentTimeInPeriod());      
+        
+        timeWindow.setTimezone(TimeZone.getDefault());
+        assertTrue(timeWindow.isCurrentTimeInPeriod());      
     }
 }
