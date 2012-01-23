@@ -53,6 +53,7 @@
         </developer>
     </developers>
     <repositories>
+        <!--
         <repository>
             <id>opennms-repo</id>
             <name>OpenNMS Repository</name>
@@ -61,7 +62,6 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
-        <!--
         <repository>
             <id>java.net</id>
             <url>http://download.java.net/maven/1</url>
