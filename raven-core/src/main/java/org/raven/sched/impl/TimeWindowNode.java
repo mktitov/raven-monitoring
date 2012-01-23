@@ -17,9 +17,13 @@
 
 package org.raven.sched.impl;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import org.raven.annotations.NodeClass;
@@ -97,16 +101,7 @@ public class TimeWindowNode extends BaseNode implements Viewable
 
     private boolean checkCurrentTimeInPeriod() throws ValueParserException
     {
-        TimeZone tz = null;
-        if (useTimezone) {
-            tz = timezone;
-            if (tz==null)
-                throw new ValueParserException("Timezone attribute can not be null if useTimeZone==true");
-        }
-        if (tz==null)
-            tz = TimeZone.getDefault();
-        
-        Calendar c = Calendar.getInstance(tz);
+        Calendar c = getCalendar();
 
         if (!getTimePeriod().isInPeriod(getMinutes(c)))
             return false;
@@ -172,18 +167,38 @@ public class TimeWindowNode extends BaseNode implements Viewable
     
     @Parameter(readOnly=true)
     public String getTimeForDefaultTimeZone() {
-        return Calendar.getInstance().getTime().toString();
+        DateFormat fmt = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG, Locale.ENGLISH);
+        return fmt.format(new Date());
     } 
     
     @Parameter(readOnly=true)
     public String getTimeForTimeZone() {
         TimeZone tz = timezone;
-        return tz==null? "" : Calendar.getInstance(tz).getTime().toString();
+        if (tz==null)
+            return null;
+        DateFormat fmt = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG, Locale.ENGLISH);
+        fmt.setTimeZone(tz);
+        return fmt.format(new Date());
     }
 
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
     {
         return null;
+    }
+    
+    private Calendar getCalendar() throws ValueParserException {
+        TimeZone tz = null;
+        if (useTimezone) {
+            tz = timezone;
+            if (tz==null)
+                throw new ValueParserException("Timezone attribute can not be null if useTimeZone==true");
+        }
+        if (tz==null)
+            tz = TimeZone.getDefault();
+
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            getLogger().debug("Selected timezone: {}", tz.getID());
+        return Calendar.getInstance(tz);
     }
 
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) throws Exception
@@ -198,7 +213,7 @@ public class TimeWindowNode extends BaseNode implements Viewable
             periodNameColumnMessage, periodStringColumnMessage, validPeriodColumnMessage,
             compiledPeriodColumnMessage, currentTimeInPeriodColumnMessage});
 
-        Calendar c = Calendar.getInstance();
+        Calendar c = getCalendar();
 
         PeriodImpl period = null;
         boolean valid = true;
