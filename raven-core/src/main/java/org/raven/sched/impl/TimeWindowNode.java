@@ -70,6 +70,10 @@ public class TimeWindowNode extends BaseNode implements Viewable
     @Message
     private static String currentTimeInPeriodMessage;
     @Message
+    private static String currentTimeZoneMessage;
+    @Message
+    private static String currentTimeInTimeZoneMessage;
+    @Message
     private static String periodNameColumnMessage;
     @Message
     private static String periodStringColumnMessage;
@@ -205,15 +209,24 @@ public class TimeWindowNode extends BaseNode implements Viewable
     {
         List<ViewableObject> vos = new ArrayList<ViewableObject>(2);
         String inv = invertResult? " (включена инверсия)" : "";
+        
+        Calendar c = getCalendar();
+        
         vos.add(new ViewableObjectImpl(
-                Viewable.RAVEN_TEXT_MIMETYPE, 
-                "<b>"+currentTimeInPeriodMessage+inv+" </b>"+getYesNoString(isCurrentTimeInPeriod(), null)));
+                Viewable.RAVEN_TEXT_MIMETYPE
+                , "<b>"+currentTimeInPeriodMessage+inv+" </b>"+getYesNoString(isCurrentTimeInPeriod()
+                , null)));
+        vos.add(new ViewableObjectImpl(
+                Viewable.RAVEN_TEXT_MIMETYPE
+                , "<b>"+currentTimeZoneMessage+"</b>"+c.getTimeZone().getID()));
+        vos.add(new ViewableObjectImpl(
+                Viewable.RAVEN_TEXT_MIMETYPE
+                , "<b>"+currentTimeInTimeZoneMessage+"</b>"+getTimeForTimeZone()));
 
         TableImpl table = new TableImpl(new String[]{
             periodNameColumnMessage, periodStringColumnMessage, validPeriodColumnMessage,
             compiledPeriodColumnMessage, currentTimeInPeriodColumnMessage});
 
-        Calendar c = getCalendar();
 
         PeriodImpl period = null;
         boolean valid = true;
