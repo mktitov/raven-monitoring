@@ -218,10 +218,10 @@ public class TimeWindowNode extends BaseNode implements Viewable
                 , null)));
         vos.add(new ViewableObjectImpl(
                 Viewable.RAVEN_TEXT_MIMETYPE
-                , "<b>"+currentTimeZoneMessage+"</b>"+c.getTimeZone().getID()));
+                , "<b>"+currentTimeZoneMessage+"</b>: "+c.getTimeZone().getID()));
         vos.add(new ViewableObjectImpl(
                 Viewable.RAVEN_TEXT_MIMETYPE
-                , "<b>"+currentTimeInTimeZoneMessage+"</b>"+getTimeForTimeZone()));
+                , "<b>"+currentTimeInTimeZoneMessage+"</b>: "+getTimeForTimeZone()));
 
         TableImpl table = new TableImpl(new String[]{
             periodNameColumnMessage, periodStringColumnMessage, validPeriodColumnMessage,
