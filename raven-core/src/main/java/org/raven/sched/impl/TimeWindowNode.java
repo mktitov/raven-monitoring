@@ -171,8 +171,7 @@ public class TimeWindowNode extends BaseNode implements Viewable
     
     @Parameter(readOnly=true)
     public String getTimeForDefaultTimeZone() {
-        DateFormat fmt = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG, Locale.ENGLISH);
-        return fmt.format(new Date());
+        return formatDateTime(TimeZone.getDefault());
     } 
     
     @Parameter(readOnly=true)
@@ -180,13 +179,16 @@ public class TimeWindowNode extends BaseNode implements Viewable
         TimeZone tz = timezone;
         if (tz==null)
             return null;
+        return formatDateTime(timezone);
+    }
+    
+    private String formatDateTime(TimeZone timezone) {
         DateFormat fmt = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG, Locale.ENGLISH);
-        fmt.setTimeZone(tz);
+        fmt.setTimeZone(timezone);
         return fmt.format(new Date());
     }
 
-    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
-    {
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception {
         return null;
     }
     
@@ -207,7 +209,7 @@ public class TimeWindowNode extends BaseNode implements Viewable
 
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) throws Exception
     {
-        List<ViewableObject> vos = new ArrayList<ViewableObject>(2);
+        List<ViewableObject> vos = new ArrayList<ViewableObject>(4);
         String inv = invertResult? " (включена инверсия)" : "";
         
         Calendar c = getCalendar();
@@ -221,7 +223,7 @@ public class TimeWindowNode extends BaseNode implements Viewable
                 , "<b>"+currentTimeZoneMessage+"</b>: "+c.getTimeZone().getID()));
         vos.add(new ViewableObjectImpl(
                 Viewable.RAVEN_TEXT_MIMETYPE
-                , "<b>"+currentTimeInTimeZoneMessage+"</b>: "+getTimeForTimeZone()));
+                , "<b>"+currentTimeInTimeZoneMessage+"</b>: "+formatDateTime(c.getTimeZone())));
 
         TableImpl table = new TableImpl(new String[]{
             periodNameColumnMessage, periodStringColumnMessage, validPeriodColumnMessage,
