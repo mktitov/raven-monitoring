@@ -14,7 +14,6 @@
  *  limitations under the License.
  *  under the License.
  */
-
 package org.raven.impl;
 
 import java.util.Arrays;
@@ -30,36 +29,40 @@ import org.weda.constraints.impl.ReferenceValueImpl;
  *
  * @author Mikhail Titov
  */
-public class LocaleReferenceValues implements AttributeReferenceValues
-{
-	public boolean getReferenceValues(NodeAttribute attr, ReferenceValueCollection referenceValues)
-			throws TooManyReferenceValuesException
-	{
-		if (!Locale.class.equals(attr.getType()))
-			return false;
+public class LocaleReferenceValues implements AttributeReferenceValues {
 
-		Locale[] locales = Locale.getAvailableLocales();
-		Arrays.sort(locales, new Comparator<Locale>() {
-			public int compare(Locale o1, Locale o2) {
-				return o1.toString().compareTo(o2.toString());
-			}
-		});
+    public boolean getReferenceValues(NodeAttribute attr, ReferenceValueCollection referenceValues)
+            throws TooManyReferenceValuesException 
+    {
+        if (!Locale.class.equals(attr.getType())) {
+            return false;
+        }
 
-		for (Locale locale: locales)
-			referenceValues.add(
-				new ReferenceValueImpl(locale.toString(), getLocaleDisplayName(locale)), null);
+        Locale[] locales = Locale.getAvailableLocales();
+        Arrays.sort(locales, new Comparator<Locale>() {
 
-		return true;
-	}
+            public int compare(Locale o1, Locale o2) {
+                return o1.toString().compareTo(o2.toString());
+            }
+        });
 
-	private String getLocaleDisplayName(Locale locale)
-	{
-		StringBuffer buf = new StringBuffer(locale.toString()+" ("+locale.getDisplayLanguage());
-		if (locale.getDisplayCountry().length()>0)
-			buf.append(", "+locale.getDisplayCountry());
-		if (locale.getDisplayVariant().length()>0)
-			buf.append(", "+locale.getDisplayVariant());
-		buf.append(")");
-		return buf.toString();
-	}
+        for (Locale locale : locales) {
+            referenceValues.add(
+                    new ReferenceValueImpl(locale.toString(), getLocaleDisplayName(locale)), null);
+        }
+
+        return true;
+    }
+
+    private String getLocaleDisplayName(Locale locale) {
+        StringBuilder buf = new StringBuilder(locale.toString() + " (" + locale.getDisplayLanguage());
+        if (locale.getDisplayCountry().length() > 0) {
+            buf.append(", ").append(locale.getDisplayCountry());
+        }
+        if (locale.getDisplayVariant().length() > 0) {
+            buf.append(", ").append(locale.getDisplayVariant());
+        }
+        buf.append(")");
+        return buf.toString();
+    }
 }

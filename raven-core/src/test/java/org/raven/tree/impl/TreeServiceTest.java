@@ -816,6 +816,9 @@ public class TreeServiceTest extends ServiceTestCase
         TemplatesNode templatesNode = 
                 (TemplatesNode) tree.getRootNode().getChildren(TemplatesNode.NAME);
         assertNotNull(templatesNode);
+        
+        ResourcesNode resourcesNode = (ResourcesNode) tree.getRootNode().getChildren(ResourcesNode.NAME);
+        assertNotNull(resourcesNode);
 
         ServicesNode servicesNode = (ServicesNode) systemNode.getChildren(ServicesNode.NAME);
         assertNotNull(servicesNode);

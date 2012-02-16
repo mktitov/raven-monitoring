@@ -114,6 +114,7 @@ public class TreeImpl implements Tree
     private AuthorizationNode authorizationNode;    
     private DataSourcesNode dataSourcesNode;
     private TemplatesNode templatesNode;
+    private ResourcesNode resourcesNode;
     private ConnectionPoolsNode connectionPoolsNode;
     private SchedulersNode schedulersNode;
     private NodeLoggerNode nodeLoggerNode;
@@ -552,6 +553,7 @@ public class TreeImpl implements Tree
     {
         createSystemSubtree();
         createTempatesSubtree();
+        createResourcesSubtree();
     }
 
     private void createSystemSubtree()
@@ -679,6 +681,15 @@ public class TreeImpl implements Tree
             templatesNode = new TemplatesNode();
             rootNode.addChildren(templatesNode);
             saveNode(templatesNode);
+        }
+    }
+    
+    private void createResourcesSubtree() {
+        resourcesNode = (ResourcesNode) rootNode.getChildren(ResourcesNode.NAME);
+        if (resourcesNode==null) {
+            resourcesNode = new ResourcesNode();
+            rootNode.addChildren(resourcesNode);
+            saveNode(resourcesNode);
         }
     }
 

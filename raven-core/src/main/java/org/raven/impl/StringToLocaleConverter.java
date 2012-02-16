@@ -14,7 +14,6 @@
  *  limitations under the License.
  *  under the License.
  */
-
 package org.raven.impl;
 
 import java.util.Locale;
@@ -25,29 +24,23 @@ import org.weda.converter.impl.AbstractConverter;
  *
  * @author Mikhail Titov
  */
-public class StringToLocaleConverter extends AbstractConverter<String, Locale>
-{
-	public Locale convert(String value, Class realTargetType, String format)
-	{
-		String[] keys = value.split("_");
-		switch (keys.length)
-		{
-			case 1: return new Locale(keys[0]);
-			case 2: return new Locale(keys[0], keys[1]);
-			case 3: return new Locale(keys[0], keys[1], keys[2]);
-		}
+public class StringToLocaleConverter extends AbstractConverter<String, Locale> {
 
-		throw new TypeConverterException(String.format("Invalid locale (%s)", value));
-	}
+    public Locale convert(String value, Class realTargetType, String format) {
+        String[] keys = value.split("_");
+        switch (keys.length) {
+            case 1: return new Locale(keys[0]);
+            case 2: return new Locale(keys[0], keys[1]);
+            case 3: return new Locale(keys[0], keys[1], keys[2]);
+        }
+        throw new TypeConverterException(String.format("Invalid locale (%s)", value));
+    }
 
-	public Class getSourceType()
-	{
-		return String.class;
-	}
+    public Class getSourceType() {
+        return String.class;
+    }
 
-	public Class getTargetType()
-	{
-		return Locale.class;
-	}
-
+    public Class getTargetType() {
+        return Locale.class;
+    }
 }

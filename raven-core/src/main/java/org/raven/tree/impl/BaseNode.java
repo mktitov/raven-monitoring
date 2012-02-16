@@ -577,6 +577,15 @@ public class BaseNode implements Node, NodeListener, Logger
         return childrens==null? null : childrens.get(name);
     }
 
+    public Node getChildrenByPath(String path) {
+        try {
+            PathInfo<Node> pathInfo = pathResolver.resolvePath(path, this);
+            return pathInfo.getReferencedObject();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public Collection<NodeAttribute> getNodeAttributes()
     {
         return nodeAttributes==null? null : nodeAttributes.values();

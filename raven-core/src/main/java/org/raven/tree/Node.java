@@ -193,6 +193,10 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
      */
     public Node getChildren(String name);
     /**
+     * Returns children by path relative to this node
+     */
+    public Node getChildrenByPath(String path);
+    /**
      * Adds listener to the node.
      */
     public void addListener(NodeListener listener);

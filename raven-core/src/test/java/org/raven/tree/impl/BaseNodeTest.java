@@ -201,4 +201,19 @@ public class BaseNodeTest extends RavenCoreTestCase
         attr.setValue("1+1");
         assertTrue(node.start());
     }
+    
+    @Test
+    public void getChildByPathTest() throws Exception {
+        BaseNode node1 = new BaseNode("test");
+        tree.getRootNode().addAndSaveChildren(node1);
+        
+        BaseNode node2 = new BaseNode("test2");
+        node1.addAndSaveChildren(node2);
+        
+        BaseNode node3 = new BaseNode("test3");
+        node2.addAndSaveChildren(node3);
+        
+        assertSame(node2, node1.getChildrenByPath("test"));
+        assertSame(node3, node1.getChildrenByPath("test2/test3"));
+    }
 }
