@@ -40,5 +40,4 @@ public class SynchronizedDataPipe extends AbstractSafeDataPipe {
     @Override
     protected void doAddBindingsForExpression(DataSource dataSource, Object data, DataContext context, BindingSupport bindingSupport) {
     }
-    
 }

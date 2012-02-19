@@ -21,7 +21,7 @@ import java.util.Locale;
  *
  * @author Mikhail Titov
  */
-public interface ResourceManager {
+public interface ResourceManager extends TreeListener {
     /**
      * Returns <b>true</b> if resource with specified key for passed locale exists
      * @param key resource key (the subpath from the resources node)
@@ -37,7 +37,7 @@ public interface ResourceManager {
      * @return <b>true</b> if node was successfully registered or <b>false</b> if resource is already
      *      exists
      */
-    public boolean registerResource(String key, Locale locale, Node resource);
+    public boolean registerResource(String key, Locale locale, Node resource) throws ResourceManagerException;
     /**
      * Returns resource for specified key and locale or null if resource not exists
      * @param key resource key (the subpath from the resources node)
@@ -45,5 +45,12 @@ public interface ResourceManager {
      *      default locale must be specified in the <i>Resources</i> node
      */
     public Node getResource(String key, Locale locale);
+    /**
+     * Returns the key for resource node or null if node is not a resource node
+     * @param resource This node or it's parent must be an instance of ResouceNode
+     */
+    public String getKeyForResource(Node resource);
+    
+//    public ResourcesNode
     
 }

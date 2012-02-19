@@ -13,33 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.tree.impl;
-
-import java.util.Locale;
-import org.raven.annotations.NodeClass;
-import org.raven.annotations.Parameter;
+package org.raven.tree;
 
 /**
  *
  * @author Mikhail Titov
-*/
-@NodeClass(parentNode=InvisibleNode.class, childNodes=ResourceBundleNode.class)
-public class ResourcesNode extends BaseNode {
-    
-    public final static String NAME = "Resources";
-    
-    @Parameter
-    private Locale defaultLocale;
+ */
+public class ResourceManagerException extends Exception {
 
-    public ResourcesNode() {
-        super(NAME);
+    public ResourceManagerException(String string, Throwable thrwbl) {
+        super(string, thrwbl);
     }
 
-    public Locale getDefaultLocale() {
-        return defaultLocale;
-    }
-
-    public void setDefaultLocale(Locale defaultLocale) {
-        this.defaultLocale = defaultLocale;
+    public ResourceManagerException(String string) {
+        super(string);
     }
 }

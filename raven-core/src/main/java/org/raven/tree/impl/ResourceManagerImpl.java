@@ -37,19 +37,31 @@ public class ResourceManagerImpl implements ResourceManager, TreeListener {
         return resourcesNode.getChildrenByPath(getPath(key, locale))!=null;
     }
 
-    public boolean registerResource(String key, Locale locale, Node resource) {
+    public boolean registerResource(String key, Locale locale, Node resource) throws ResourceManagerException {
         StrTokenizer tokenizer = new StrTokenizer(key, Node.NODE_SEPARATOR, NodePathResolver.QUOTE);
         Node node = resourcesNode;
         while (tokenizer.hasNext()) {
             String nodeName = tokenizer.nextToken();
             Node child = node.getChildren(nodeName);
             if (child==null) {
-                child = new ContainerNode(nodeName);
+                if ( (!(node instanceof ResourcesNode) && !(node instanceof ResourceBundleNode))
+                    || (!tokenizer.hasNext() && node instanceof ResourcesNode))
+                {
+                    throw new ResourceManagerException(String.format(
+                            "Error registering resource (%s). Can't create resource bundle "
+                            + "or resource node (%s) in the resource node."
+                            , key, nodeName));
+                }
+                child = tokenizer.hasNext()? new ResourceBundleNode(nodeName) : new ResourceNode(nodeName);
                 node.addAndSaveChildren(child);
                 node.start();
             } 
             node = child;
         }
+        if (!(node instanceof ResourceNode))
+            throw new ResourceManagerException(String.format(
+                    "Error registering resource (%s) because of (%s) is not"
+                    , key, node.getPath()));
         Locale loc = getLocale(locale);
         if (node.getChildren(loc.toString())==null) {
             resource.setName(loc.toString());
@@ -61,6 +73,16 @@ public class ResourceManagerImpl implements ResourceManager, TreeListener {
 
     public Node getResource(String key, Locale locale) {
         return resourcesNode.getChildrenByPath(getPath(key, locale));
+    }
+
+    public String getKeyForResource(Node resource) {
+        if (   (resource instanceof ResourceNode || resource.getParent() instanceof ResourceNode)
+            && (resource.getPath().startsWith(resourcesNode.getPath())) )
+        {
+            ResourceNode node = (ResourceNode) (resource instanceof ResourceNode? resource : resource.getParent());
+            return node.getPath().substring(resourcesNode.getPath().length());
+        } else
+            return null;
     }
 
     public void treeReloaded(Tree tree) {

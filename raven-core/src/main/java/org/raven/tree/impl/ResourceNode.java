@@ -15,31 +15,17 @@
  */
 package org.raven.tree.impl;
 
-import java.util.Locale;
 import org.raven.annotations.NodeClass;
-import org.raven.annotations.Parameter;
 
 /**
  *
  * @author Mikhail Titov
-*/
-@NodeClass(parentNode=InvisibleNode.class, childNodes=ResourceBundleNode.class)
-public class ResourcesNode extends BaseNode {
+ */
+@NodeClass(parentNode=ResourceBundleNode.class)
+public class ResourceNode extends BaseNode {
+
+    public ResourceNode(String name) {
+        super(name);
+    }
     
-    public final static String NAME = "Resources";
-    
-    @Parameter
-    private Locale defaultLocale;
-
-    public ResourcesNode() {
-        super(NAME);
-    }
-
-    public Locale getDefaultLocale() {
-        return defaultLocale;
-    }
-
-    public void setDefaultLocale(Locale defaultLocale) {
-        this.defaultLocale = defaultLocale;
-    }
 }

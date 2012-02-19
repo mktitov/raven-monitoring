@@ -15,31 +15,23 @@
  */
 package org.raven.tree.impl;
 
-import java.util.Locale;
-import org.raven.annotations.NodeClass;
-import org.raven.annotations.Parameter;
+import org.raven.tree.AttributeValueHandler;
+import org.raven.tree.AttributeValueHandlerFactory;
+import org.raven.tree.NodeAttribute;
 
 /**
  *
  * @author Mikhail Titov
-*/
-@NodeClass(parentNode=InvisibleNode.class, childNodes=ResourceBundleNode.class)
-public class ResourcesNode extends BaseNode {
+ */
+public class ResourceReferenceValueHandlerFactory implements AttributeValueHandlerFactory {
     
-    public final static String NAME = "Resources";
-    
-    @Parameter
-    private Locale defaultLocale;
+    public final static String TYPE = "ResourceReference";
 
-    public ResourcesNode() {
-        super(NAME);
+    public AttributeValueHandler createValueHandler(NodeAttribute attribute) {
+        return new ResourceReferenceValueHandler(attribute);
     }
 
-    public Locale getDefaultLocale() {
-        return defaultLocale;
-    }
-
-    public void setDefaultLocale(Locale defaultLocale) {
-        this.defaultLocale = defaultLocale;
+    public String getName() {
+        return "Resource reference";
     }
 }

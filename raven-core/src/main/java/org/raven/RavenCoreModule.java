@@ -106,27 +106,8 @@ import org.raven.template.impl.GroupsOrganazierImpl;
 import org.raven.template.impl.TemplateVariable;
 import org.raven.template.impl.TemplateVariableReferenceValues;
 import org.raven.template.impl.TemplateVariableValueHandlerFactory;
-import org.raven.tree.AttributeReferenceValues;
-import org.raven.tree.AttributeValueHandlerFactory;
-import org.raven.tree.AttributeValueHandlerRegistry;
-import org.raven.tree.NodePathResolver;
-import org.raven.tree.Tree;
-import org.raven.tree.TreeListener;
-import org.raven.tree.TreeListeners;
-import org.raven.tree.impl.ActionAttributeValueHandlerFactory;
-import org.raven.tree.impl.AttributeReferenceHandlerFactory;
-import org.raven.tree.impl.AttributeReferenceValueHandlerFactory;
-import org.raven.tree.impl.AttributeValueHandlerRegistryImpl;
-import org.raven.tree.impl.ChildrenNodesAsReferenceValues;
-import org.raven.tree.impl.DataFileValueHandlerFactory;
-import org.raven.tree.impl.DataStreamValueHandlerFactory;
-import org.raven.tree.impl.NodePathResolverImpl;
-import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
-import org.raven.tree.impl.RefreshAttributeValueHandlerFactory;
-import org.raven.tree.impl.SchemasNode;
-import org.raven.tree.impl.SystemNode;
-import org.raven.tree.impl.TreeImpl;
-import org.raven.tree.impl.TreeListenersImpl;
+import org.raven.tree.*;
+import org.raven.tree.impl.*;
 import org.raven.tree.store.impl.H2TreeStore;
 import org.slf4j.Logger;
 import org.weda.internal.Cache;
@@ -181,6 +162,10 @@ public class RavenCoreModule
         return new TreeImpl(
                 attributeReferenceValues, configurator, resourceProvider, pathResolver
                 , valueHandlerRegistry, listeners.getListeners());
+    }
+    
+    public static ResourceManager buildResourceManager(final Collection<ResourceRegistrator> registrators) {
+        return new ResourceManagerImpl(registrators);
     }
 
     public static AuthService buildAuthService(
@@ -326,6 +311,9 @@ public class RavenCoreModule
         conf.add(
             DataConsumerAttributeValueHandlerFactory.TYPE
             , new DataConsumerAttributeValueHandlerFactory());
+        conf.add(
+            ResourceReferenceValueHandlerFactory.TYPE
+            , new ResourceReferenceValueHandlerFactory());
     }
     
     public static void contributeAttributeReferenceValues(
@@ -421,5 +409,11 @@ public class RavenCoreModule
             Configuration<UserContextConfigurator> conf, Tree tree)
     {
         conf.add(new RavenUserContextConfigurator(tree));
+    }
+    
+    public static void contributeTreeListeners(Configuration<TreeListener> listeners
+            , ResourceManager resourceManager) 
+    {
+        listeners.add(resourceManager);
     }
 }
