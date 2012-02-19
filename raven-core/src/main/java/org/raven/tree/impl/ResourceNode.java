@@ -24,8 +24,10 @@ import org.raven.annotations.NodeClass;
 @NodeClass(parentNode=ResourceBundleNode.class)
 public class ResourceNode extends BaseNode {
 
+    public ResourceNode() {
+    }
+
     public ResourceNode(String name) {
         super(name);
     }
-    
 }

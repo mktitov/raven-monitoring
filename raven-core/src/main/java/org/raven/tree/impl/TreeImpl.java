@@ -228,39 +228,44 @@ public class TreeImpl implements Tree
         logger.info("Reloading tree");
         shutdown();
         rootNode = null;
-    
+
         rootNode = (RootNode) treeStore.getRootNode();
-        if (rootNode == null)
+        if (rootNode == null) {
             createRootNode();
+        }
 
         rootNode.addBindingSupport(EXPRESSION_VARS_BINDINGS, new BindingSupportImpl());
-        
+
         createSystemNodes();
 
-		try
-		{
-			logger.info("Initializing tree nodes.");
-			initNode(rootNode, null);
-			long operationTime = (System.currentTimeMillis()-curTime)/1000;
-			logger.info(String.format("Tree nodes initialized in %d seconds", operationTime));
+        try {
+            logger.info("Initializing tree nodes.");
+            initNode(rootNode, null);
+            long operationTime = (System.currentTimeMillis() - curTime) / 1000;
+            logger.info(String.format("Tree nodes initialized in %d seconds", operationTime));
+            if (listeners != null) {
+                for (TreeListener listener : listeners) {
+                    listener.treeInitialized(this);
+                }
+            }
 
-			logger.info("Starting tree nodes");
-			long curTime2 = System.currentTimeMillis();
-			start(rootNode, true);
-			operationTime = (System.currentTimeMillis()-curTime2)/1000;
-			logger.info(String.format("Tree nodes started in %d seconds", operationTime));
+            logger.info("Starting tree nodes");
+            long curTime2 = System.currentTimeMillis();
+            start(rootNode, true);
+            operationTime = (System.currentTimeMillis() - curTime2) / 1000;
+            logger.info(String.format("Tree nodes started in %d seconds", operationTime));
 
-			operationTime = (System.currentTimeMillis()-curTime)/1000;
-			logger.info(String.format("Tree reloaded in %d seconds", operationTime));
-            
-            if (listeners!=null)
-                for (TreeListener listener: listeners)
+            operationTime = (System.currentTimeMillis() - curTime) / 1000;
+            logger.info(String.format("Tree reloaded in %d seconds", operationTime));
+
+            if (listeners != null) {
+                for (TreeListener listener : listeners) {
                     listener.treeReloaded(this);
-		}
-		catch(Throwable e)
-		{
-			logger.error("Error initializing or starting node", e);
-		}
+                }
+            }
+        } catch (Throwable e) {
+            logger.error("Error initializing or starting node", e);
+        }
     }
     
     public void shutdown()

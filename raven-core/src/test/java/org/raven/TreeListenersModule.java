@@ -37,4 +37,7 @@ public class TreeListenersModule implements TreeListener
         if (listener!=null)
             listener.treeReloaded(tree);
     }
+
+    public void treeInitialized(Tree tree) {
+    }
 }

@@ -37,6 +37,7 @@ public class ResourceReferenceValueHandler extends AbstractAttributeValueHandler
 
     public ResourceReferenceValueHandler(NodeAttribute attribute) {
         super(attribute);
+        this.data = attribute.getRawValue();
     }
     
     public void setData(String value) throws Exception {
@@ -44,10 +45,10 @@ public class ResourceReferenceValueHandler extends AbstractAttributeValueHandler
         if (!ObjectUtils.equals(data, value)) {
             Node oldResource = resolveResource(data);
             Node newResource = resolveResource(value);
+            attribute.save();
             if (!ObjectUtils.equals(oldResource, newResource)) {
                 fireValueChangedEvent(oldResource, newResource);
                 this.data = value;
-                attribute.save();
             }
         }
     }
@@ -79,7 +80,7 @@ public class ResourceReferenceValueHandler extends AbstractAttributeValueHandler
     }
 
     public boolean isExpressionSupported() {
-        return false;
+        return true;
     }
 
     public boolean isExpressionValid() {

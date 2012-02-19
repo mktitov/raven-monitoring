@@ -26,5 +26,9 @@ public interface TreeListener
     /**
      * Informs listener that tree has been reloaded
      */
+    public void treeInitialized(Tree tree);
+    /**
+     * Informs listener that tree has been reloaded
+     */
     public void treeReloaded(Tree tree);
 }

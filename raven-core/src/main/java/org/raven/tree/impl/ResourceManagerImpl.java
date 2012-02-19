@@ -85,11 +85,13 @@ public class ResourceManagerImpl implements ResourceManager, TreeListener {
             return null;
     }
 
-    public void treeReloaded(Tree tree) {
+    public void treeInitialized(Tree tree) {
         resourcesNode = (ResourcesNode) tree.getRootNode().getChildren(ResourcesNode.NAME);
         for (ResourceRegistrator registrator: resourceRegistrators)
             registrator.registerResources(this);
     }
+
+    public void treeReloaded(Tree tree) { }
     
     private String getPath(String key, Locale locale) {
         return key+Node.NODE_SEPARATOR+getLocale(locale).toString();

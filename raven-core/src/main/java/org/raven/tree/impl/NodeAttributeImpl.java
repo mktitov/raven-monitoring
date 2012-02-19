@@ -175,21 +175,16 @@ public class NodeAttributeImpl
 
     public String getValue()
     {
-        try
-        {
+        try {
             if (isReadonly())
-                return converter.convert(
-                        String.class, parameter.getValue(), parameter.getPattern());
-            else
-            {
+                return converter.convert(String.class, parameter.getValue(), parameter.getPattern());
+            else {
                 if (templateExpression)
                     return null;
                 else
                     return converter.convert(String.class, valueHandler.handleData(), null);
             }
-        }
-        catch(Throwable e)
-        {
+        } catch(Throwable e) {
             if (owner.isLogLevelEnabled(LogLevel.WARN))
                 owner.warn(
                         String.format("Error getting value for attribute (%s)", getName())
