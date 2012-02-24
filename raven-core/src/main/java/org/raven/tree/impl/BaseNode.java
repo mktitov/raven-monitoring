@@ -76,7 +76,6 @@ public class BaseNode implements Node, NodeListener, Logger
     private String name;
     private byte level = 0;
     private int index = 0;
-	private int maxChildIndex = 0;
     
     private Node parent;
     
