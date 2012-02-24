@@ -17,23 +17,8 @@
 
 package org.raven.sched.impl;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.DelayQueue;
-import java.util.concurrent.Delayed;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
@@ -519,6 +504,7 @@ public class ExecutorServiceNode extends BaseNode
 
     private class TasksManagerTask implements Task {
         private final long restartInterval;
+        private final static long RESTART_TIMEOUT = 10000;
 
         public TasksManagerTask(long restartInterval) {
             this.restartInterval = restartInterval;
@@ -534,29 +520,49 @@ public class ExecutorServiceNode extends BaseNode
 
         public void run() {
             try {
+                List<ManagedTask> tasksToStart = new LinkedList<ManagedTask>();
                 for (ManagedTask task: NodeUtils.extractNodesOfType(getDependentNodes(), ManagedTask.class)) {
                     boolean hasTask = false;
+                    if (isLogLevelEnabled(LogLevel.DEBUG))
+                        getLogger().debug("Managed tasks reexecutor. Found managed task ({})", task.getPath());
                     synchronized(managedTasksLock) {
                         hasTask = managedTasks==null || !managedTasks.contains(task);
                     }
-                    if (hasTask)
-                            try {
-                                switch (task.getTaskRestartPolicy()) {
-                                    case REEXECUTE_TASK: execute(task); break;
-                                    case RESTART_NODE:
-                                        if (Status.STARTED.equals(task.getStatus())) {
-                                            task.stop();
-                                            TimeUnit.MILLISECONDS.sleep(100);
-                                            task.start();
-                                        }
-                                        break;
-                                }
-                            } catch (Throwable e){
-                                if (isLogLevelEnabled(LogLevel.ERROR))
-                                    getLogger().error(
-                                            String.format("Error reexecuting the task (%s)", task.getPath())
-                                            , e);
+                    if (hasTask) {
+                        try {
+                            if (isLogLevelEnabled(LogLevel.DEBUG))
+                                getLogger().debug("Managed tasks reexecutor. Reexecuting task ({})", task.getPath());
+                            switch (task.getTaskRestartPolicy()) {
+                                case REEXECUTE_TASK: execute(task); break;
+                                case RESTART_NODE:
+                                    if (Status.STARTED.equals(task.getStatus())) {
+                                        task.stop();
+                                        tasksToStart.add(task);
+                                    }
+                                    break;
                             }
+                        } catch (Throwable e){
+                            if (isLogLevelEnabled(LogLevel.ERROR))
+                                getLogger().error(
+                                        String.format("Error reexecuting the task (%s)", task.getPath())
+                                        , e);
+                        }
+                    } else if (isLogLevelEnabled(LogLevel.DEBUG))
+                        getLogger().debug("Managed task reexecutor. Task ({}) already executing", task.getPath());
+                }
+                long ts = System.currentTimeMillis();
+                while (!tasksToStart.isEmpty() && System.currentTimeMillis()<ts+RESTART_TIMEOUT) {
+                    for (Iterator<ManagedTask> it = tasksToStart.iterator(); it.hasNext();) {
+                        ManagedTask task = it.next();
+                        if (Status.INITIALIZED.equals(task.getStatus())) {
+                            task.start();
+                            it.remove();
+                        }
+                    }
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(10);
+                    } catch (InterruptedException ex) {
+                    }
                 }
             } finally {
                 executeQuietly(restartInterval, this);

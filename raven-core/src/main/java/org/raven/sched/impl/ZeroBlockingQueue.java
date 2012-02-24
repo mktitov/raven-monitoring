@@ -38,6 +38,7 @@ public class ZeroBlockingQueue<T> implements BlockingQueue<T> {
     }
 
     public boolean offer(T e, long l, TimeUnit tu) throws InterruptedException {
+        System.out.println(String.format("!!! timeout: %d, timeunit: %s", l, tu));
         return false;
     }
 
@@ -90,7 +91,7 @@ public class ZeroBlockingQueue<T> implements BlockingQueue<T> {
     }
 
     public boolean isEmpty() {
-        return true;
+        return false;
     }
 
     public Iterator<T> iterator() {
