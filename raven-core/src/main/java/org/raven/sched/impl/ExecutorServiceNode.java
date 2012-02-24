@@ -129,7 +129,7 @@ public class ExecutorServiceNode extends BaseNode
         resetStatFields();
         Integer capacity = maximumQueueSize;
         if (capacity==null)
-            queue = new LinkedBlockingQueue();
+            queue = new ZeroBlockingQueue();
         else
             queue = new LinkedBlockingQueue(capacity);
         executingTasks = new ConcurrentSkipListSet();

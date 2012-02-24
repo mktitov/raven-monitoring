@@ -47,7 +47,7 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         tree.getRootNode().addAndSaveChildren(executor);
     }
     
-//    @Test
+    @Test
     public void test() throws ExecutorServiceException, InterruptedException, IOException, Exception
     {
         executor.setCorePoolSize(2);
@@ -74,20 +74,20 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         assertTrue(data instanceof Table);
         List<Object[]> rows = RavenUtils.tableAsList((Table)data);
         assertNotNull(rows);
+        System.out.println("\nTRACE: \n");
+//        for (Object[] row: rows)
+//            System.out.println(row[5]);
         assertEquals(2+1, rows.size()); //+1 is the delayed tasks executor
         assertEquals(executor.getPath(), rows.get(1)[1]);
         assertEquals("status message", rows.get(1)[2]);
-        assertEquals(Thread.State.TIMED_WAITING.toString(), rows.get(1)[5]);
-        assertTrue(rows.get(1)[6] instanceof ViewableObject);
-        ViewableObject vo = (ViewableObject) rows.get(1)[6];
+        assertEquals(Thread.State.TIMED_WAITING.toString(), rows.get(1)[6]);
+        assertTrue(rows.get(1)[7] instanceof ViewableObject);
+        ViewableObject vo = (ViewableObject) rows.get(1)[7];
         assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, vo.getMimeType());
         assertTrue(vo.getData() instanceof Table);
         Table trace = (Table)vo.getData();
         rows = RavenUtils.tableAsList(trace);
         assertTrue(rows.size()>0);
-        System.out.println("\nTRACE: \n");
-        for (Object[] row: rows)
-            System.out.println(row[0]);
         
 
         Thread.sleep(1000);
@@ -97,7 +97,34 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         assertEquals(1l, executor.getRejectedTasks().get());
     }
 
-    @Test
+//    @Test
+    public void test_nullMaximumQueueSize() throws Exception {
+        executor.setCorePoolSize(2);
+        executor.setMaximumPoolSize(3);
+        executor.setMaximumQueueSize(null);
+        executor.setLogLevel(LogLevel.DEBUG);
+        assertTrue(executor.start());
+
+        executor.execute(new TestTask(executor, 500));
+        assertTrue(executor.executeQuietly(new TestTask(executor, 500)));
+        try {
+            executor.execute(new TestTask(executor, 0));
+            fail();
+        } catch (ExecutorServiceException ex) {
+        }
+
+        Thread.sleep(100);
+        assertEquals(new Integer(2+1), executor.getExecutingTaskCount()); //+1 is the delayed tasks executor
+        List<ViewableObject> vos = executor.getViewableObjects(null);
+
+        Thread.sleep(1000);
+
+        assertEquals(new Integer(0+1), executor.getExecutingTaskCount()); //+1 is the delayed tasks executor
+        assertEquals(3, executor.getExecutedTasks().getOperationsCount());
+        assertEquals(1l, executor.getRejectedTasks().get());
+    }
+
+//    @Test
     public void delayedTasksTest() throws InterruptedException {
         executor.setCorePoolSize(2);
         executor.setMaximumPoolSize(2);
