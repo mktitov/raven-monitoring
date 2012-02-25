@@ -25,15 +25,15 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
-import org.raven.test.RavenCoreTestCase;
 import org.raven.conf.Config;
 import org.raven.conf.Configurator;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.dbcp.impl.JDBCConnectionPoolNode;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchemaFieldType;
-import org.raven.test.PushDataSource;
 import org.raven.log.LogLevel;
+import org.raven.test.PushDataSource;
+import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.Node.Status;
 import org.raven.tree.impl.SystemNode;
 
@@ -222,7 +222,9 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
         Connection con = pool.getConnection();
         try{
             Statement st = con.createStatement();
-            st.executeUpdate("drop sequence test_seq");
+            try{
+                st.executeUpdate("drop sequence test_seq");
+            }catch (Exception e){}
             st.executeUpdate("create sequence test_seq start with 2");
             st.close();
         }finally{

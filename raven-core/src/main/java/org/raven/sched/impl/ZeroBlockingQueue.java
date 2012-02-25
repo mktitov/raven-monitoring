@@ -43,10 +43,12 @@ public class ZeroBlockingQueue<T> implements BlockingQueue<T> {
     }
 
     public T take() throws InterruptedException {
-        return null;
+        for (;;)
+            Thread.sleep(1000);
     }
 
     public T poll(long l, TimeUnit tu) throws InterruptedException {
+        tu.sleep(l);
         return null;
     }
 

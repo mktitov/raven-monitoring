@@ -276,8 +276,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         if (isLogLevelEnabled(LogLevel.DEBUG))
             debug("Flushing records to the database");
         
-        if (recordBuffer==null || recordBuffer.size()==0)
-        {
+        if (recordBuffer==null || recordBuffer.isEmpty()) {
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug("Nothing to flush. Records buffer is empty.");
             return;
@@ -287,10 +286,8 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
 
         Connection con = connectionPool.getConnection();
         con.setAutoCommit(false);
-        try
-        {
-            try
-            {
+        try {
+            try {
                 boolean batchUpdate = !updateIdField && con.getMetaData().supportsBatchUpdates();
 
                 if (isLogLevelEnabled(LogLevel.DEBUG))
@@ -298,22 +295,36 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                             "Database driver %ssupports batch updates"
                             , batchUpdate? "" : "does not "));
 
-                for (Record record: recordBuffer)
-                {
+                for (Record record: recordBuffer) {
                     SchemaMeta meta = metas.get(record.getSchema());
-                    if (meta==null)
-                    {
+                    if (meta==null) {
                         meta = new SchemaMeta(
                                 record.getSchema(), enableUpdates, enableDeletes, batchUpdate, updateIdField);
                         meta.init(con);
                         metas.put(record.getSchema(), meta);
                     }
-                    meta.updateRecord(record);
+                    try {
+                        meta.updateRecord(record);
+                    } catch (Exception e) {
+                        if (isLogLevelEnabled(LogLevel.WARN))
+                            getLogger().warn("Record updating error: {}", record);
+                        throw e;
+                    }
                 }
 
                 if (batchUpdate)
                     for (SchemaMeta meta: metas.values())
-                        meta.executeBatch();
+                        try {
+                            meta.executeBatch();
+                        } catch (Exception e) {
+                            if (isLogLevelEnabled(LogLevel.WARN)) {
+                                getLogger().warn("Error updating set of records");
+                                int i=0;
+                                for (Record rec: recordBuffer)
+                                    getLogger().warn("[{}] Record: {}", ++i, rec);
+                            }
+                            throw e;
+                        }
 
                 con.commit();
 
@@ -322,16 +333,12 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                             "Flushed (%d) records to the database", recordBuffer.size()));
                 recordsSaved+=recordBuffer.size();
 
-            }
-            finally
-            {
+            } finally {
                 recordBuffer = null;
                 for (SchemaMeta meta: metas.values())
                     meta.close();
             }
-        }
-        finally
-        {
+        } finally {
             con.close();
         }
     }
