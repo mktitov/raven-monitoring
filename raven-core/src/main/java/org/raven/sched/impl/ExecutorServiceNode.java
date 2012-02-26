@@ -199,8 +199,13 @@ public class ExecutorServiceNode extends BaseNode
     }
 
     @Parameter(readOnly=true)
-    public Integer getLargestQueueSize() {
+    public Integer getLargestPoolSize() {
         return executor==null? null : executor.getLargestPoolSize();
+    }
+    
+    @Parameter(readOnly=true)
+    public Integer getCurrentPoolSize() {
+        return executor==null? null : executor.getPoolSize();
     }
 
     public OperationStatistic getExecutedTasks() {

@@ -18,11 +18,8 @@
 package org.raven.ds.impl;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -101,7 +98,7 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
     @Message
     private static String handlerStatusColumn;
 
-    protected List<HandlerWrapper> handlers;
+    protected Queue<HandlerWrapper> handlers;
     private ReadWriteLock handlersLock;
     private Condition waitForHandlerFree;
     private AtomicBoolean releaseHandlersTaskScheduled;
@@ -113,7 +110,8 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
     {
         super.initFields();
 
-        handlers = new ArrayList<HandlerWrapper>(10);
+//        handlers = new ArrayList<HandlerWrapper>(10);
+        handlers = new ConcurrentLinkedQueue<HandlerWrapper>();
         handlersLock = new ReentrantReadWriteLock();
         waitForHandlerFree = handlersLock.writeLock().newCondition();
         releaseHandlersTaskScheduled = new AtomicBoolean(false);
@@ -165,7 +163,7 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
             if (isLogLevelEnabled(LogLevel.ERROR))
                 error("Handlers lock wait timeout");
     }
-
+    
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception {
         return null;
     }
@@ -179,29 +177,18 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
             hanlderStatusColumn, handlerStatusMessageColumn, handlerCreationsCountColumn,
             handlerCreationTimeColumn, handlerIdleTimeColumn,
             handledRequestsCountColumn, avgMillisecondsPerRequest, avgRequestsPerSecondColumn});
-        if (handlersLock.readLock().tryLock(MAX_HANDLERS_LOCK_WAIT, TimeUnit.MILLISECONDS))
-        {
-            try
-            {
-                SimpleDateFormat fmt = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-                for (HandlerWrapper handlerInfo: handlers)
-                {
-                    table.addRow(new Object[]{
-                        handlerInfo.status.get().toString(),
-                        handlerInfo.getHandlerStatusMessage(),
-                        1, 
-                        handlerInfo.lastUseTime==0? "" : fmt.format(new Date(handlerInfo.lastUseTime)),
-                        handlerInfo.lastUseTime==0? 0 : (System.currentTimeMillis()-handlerInfo.lastUseTime)/1000,
-                        handlerInfo.stat.getOperationsCount(),
-                        handlerInfo.stat.getAvgMillisecondsPerOperation(),
-                        handlerInfo.stat.getAvgOperationsPerSecond()
-                    });
-                }
-            }
-            finally
-            {
-                handlersLock.readLock().unlock();
-            }
+            SimpleDateFormat fmt = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+        for (HandlerWrapper handlerInfo: handlers)  {
+            table.addRow(new Object[]{
+                handlerInfo.status.get().toString(),
+                handlerInfo.getHandlerStatusMessage(),
+                1, 
+                handlerInfo.lastUseTime==0? "" : fmt.format(new Date(handlerInfo.lastUseTime)),
+                handlerInfo.lastUseTime==0? 0 : (System.currentTimeMillis()-handlerInfo.lastUseTime)/1000,
+                handlerInfo.stat.getOperationsCount(),
+                handlerInfo.stat.getAvgMillisecondsPerOperation(),
+                handlerInfo.stat.getAvgOperationsPerSecond()
+            });
         }
 
         vos.add(new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table));
@@ -299,7 +286,7 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
                 try {
                     for (Iterator<HandlerWrapper> it=handlers.iterator(); it.hasNext();) {
                         HandlerWrapper handler = it.next();
-                        if (!handler.isBusy() && handler.lastUseTime+maxIdleTime<System.currentTimeMillis()) {
+                        if (!handler.isBusy() && handler.lastUseTime+maxIdleTime*1000<System.currentTimeMillis()) {
                             handler.release();
                             it.remove();
                         }

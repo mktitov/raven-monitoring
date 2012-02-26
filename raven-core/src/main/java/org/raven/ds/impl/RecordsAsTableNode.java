@@ -337,6 +337,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
     public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes)
             throws Exception
     {
+        if (!Status.STARTED.equals(getStatus()))
+            return null;
         try {
             Map<String, NodeAttribute> attrs = new HashMap<String, NodeAttribute>();
             if (refreshAttributes!=null)
