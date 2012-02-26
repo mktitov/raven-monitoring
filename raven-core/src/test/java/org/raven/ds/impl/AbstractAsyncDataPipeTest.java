@@ -18,6 +18,7 @@
 package org.raven.ds.impl;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Before;
 import org.junit.Test;
@@ -161,10 +162,24 @@ public class AbstractAsyncDataPipeTest extends RavenCoreTestCase
     }
 
     @Test
-    public void handleDataInSameThreadTest() throws Exception
-    {
+    public void handleDataInSameThreadTest() throws Exception {
         dataPipe.setHandleDataInSeparateThread(Boolean.FALSE);
         dataSource.pushData("1");
         assertArrayEquals(new Object[]{"1"}, collector.getDataList().toArray());
+    }
+    
+    @Test
+    public void releaseHandlersTest() throws Exception {
+        
+        assertTrue(dataPipe.getHandlers().isEmpty());
+        
+        dataPipe.setHandleDataInSeparateThread(Boolean.FALSE);
+        dataPipe.setHandlerIdleTime(1);
+        dataSource.pushData("1");
+        assertArrayEquals(new Object[]{"1"}, collector.getDataList().toArray());
+        
+        assertEquals(1, dataPipe.getHandlers().size());
+        TimeUnit.MILLISECONDS.sleep(AbstractAsyncDataPipe.RELEASE_HANDLERS_INTERVAL+200);
+        assertTrue(dataPipe.getHandlers().isEmpty());
     }
 }

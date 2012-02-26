@@ -50,22 +50,18 @@ public class HttpSessionDataHandler implements DataHandler
     private AtomicInteger errorsCounter;
     private AtomicInteger handledCounter;
 
-    public HttpSessionDataHandler(HttpClient client)
-    {
+    public HttpSessionDataHandler(HttpClient client) {
         this.client = client;
         statusMessage = new AtomicReference<String>("http session handler created");
     }
 
-    public void releaseHandler()
-    {
-    }
+    public void releaseHandler() { }
 
     public Object handleData(Object data, DataSource dataSource, DataContext context, Node owner)
             throws Exception
     {
         HttpResponse response = null;
-        try
-        {
+        try {
             HttpSessionNode session = (HttpSessionNode) owner;
             requestSetNumber = session.getNextRequestSetNumber();
             requestNumber = 0;

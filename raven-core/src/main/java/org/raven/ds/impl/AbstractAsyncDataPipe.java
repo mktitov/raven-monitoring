@@ -20,13 +20,16 @@ package org.raven.ds.impl;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataContext;
@@ -35,7 +38,6 @@ import org.raven.ds.DataSource;
 import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
 import org.raven.sched.ExecutorService;
-import org.raven.sched.ExecutorServiceException;
 import org.raven.sched.Task;
 import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
 import org.raven.table.TableImpl;
@@ -54,6 +56,8 @@ import org.weda.internal.annotations.Message;
  */
 public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe implements Viewable
 {
+    public static final int RELEASE_HANDLERS_INTERVAL = 1000;
+    
     private enum HandlerStatus {WAITING, EXECUTING}
 
     public static final int MAX_HANDLERS_LOCK_WAIT = 1000;
@@ -97,26 +101,27 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
     @Message
     private static String handlerStatusColumn;
 
-    private List<HandlerInfo> handlers;
+    protected List<HandlerWrapper> handlers;
     private ReadWriteLock handlersLock;
     private Condition waitForHandlerFree;
+    private AtomicBoolean releaseHandlersTaskScheduled;
 
     public abstract DataHandler createDataHandler();
-
+    
     @Override
     protected void initFields()
     {
         super.initFields();
 
-        handlers = new ArrayList<HandlerInfo>(10);
+        handlers = new ArrayList<HandlerWrapper>(10);
         handlersLock = new ReentrantReadWriteLock();
         waitForHandlerFree = handlersLock.writeLock().newCondition();
+        releaseHandlersTaskScheduled = new AtomicBoolean(false);
     }
 
     @Override
-    protected void doStop() throws Exception
-    {
-        for (HandlerInfo handlerInfo: handlers)
+    protected void doStop() throws Exception {
+        for (HandlerWrapper handlerInfo: handlers)
             handlerInfo.release();
         handlers.clear();
     }
@@ -128,27 +133,22 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data, DataContext context)
-            throws Exception
-    {
-        if (handlersLock.writeLock().tryLock(MAX_HANDLERS_LOCK_WAIT, TimeUnit.MILLISECONDS))
-        {
-            try
-            {
-                if (data!=null){
+    protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception {
+        if (handlersLock.writeLock().tryLock(MAX_HANDLERS_LOCK_WAIT, TimeUnit.MILLISECONDS)) {
+            try {
+                if (data!=null) {
                     boolean res = false;
-                    if (!(res=processData(data, dataSource, context)) && waitForHandler)
-                    {
+                    if (!(res=processData(data, dataSource, context)) && waitForHandler) {
                         if (waitForHandlerFree.await(waitForHandlerTimeout, TimeUnit.MILLISECONDS))
                             res = processData(data, dataSource, context);
                     }
                     if (!res && isLogLevelEnabled(LogLevel.DEBUG))
                         debug("No free handlers to process data from "+dataSource.getPath());
-                }else{
+                } else {
                     boolean hasBusy;
                     do {
                         hasBusy=false;
-                        for (HandlerInfo handlerInfo: handlers)
+                        for (HandlerWrapper handlerInfo: handlers)
                             if (handlerInfo.isBusy()){
                                 hasBusy = true;
                                 break;
@@ -158,19 +158,15 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
                     } while (hasBusy);
                     sendDataToConsumers(data, context);
                 }
-            }
-            finally
-            {
+            } finally {
                 handlersLock.writeLock().unlock();
             }
-        }
-        else
+        } else
             if (isLogLevelEnabled(LogLevel.ERROR))
                 error("Handlers lock wait timeout");
     }
 
-    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
-    {
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception {
         return null;
     }
 
@@ -188,12 +184,12 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
             try
             {
                 SimpleDateFormat fmt = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-                for (HandlerInfo handlerInfo: handlers)
+                for (HandlerWrapper handlerInfo: handlers)
                 {
                     table.addRow(new Object[]{
                         handlerInfo.status.get().toString(),
                         handlerInfo.getHandlerStatusMessage(),
-                        handlerInfo.handlerCreationCount, 
+                        1, 
                         handlerInfo.lastUseTime==0? "" : fmt.format(new Date(handlerInfo.lastUseTime)),
                         handlerInfo.lastUseTime==0? 0 : (System.currentTimeMillis()-handlerInfo.lastUseTime)/1000,
                         handlerInfo.stat.getOperationsCount(),
@@ -213,19 +209,19 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
         return vos;
     }
 
-    private boolean processData(Object data, DataSource dataSource, DataContext context) throws Exception
-    {
-        for (HandlerInfo handlerInfo: handlers)
+    private boolean processData(Object data, DataSource dataSource, DataContext context) throws Exception {
+        for (HandlerWrapper handlerInfo: handlers)
             if (handlerInfo.handleData(data, dataSource, context))
                 return true;
-        if (handlers.size()<maxHandlersCount)
-        {
-            HandlerInfo handlerInfo = new HandlerInfo();
+        if (handlers.size()<maxHandlersCount) {
+            HandlerWrapper handlerInfo = new HandlerWrapper();
             handlers.add(handlerInfo);
-            handlerInfo.handleData(data, dataSource, context);
+            if (!handlerInfo.handleData(data, dataSource, context))
+                return false;
+            if (releaseHandlersTaskScheduled.compareAndSet(false, true))
+                scheduleHandlerReleaseTask(new ReleaseHandlersTask());
             return true;
         }
-
         return false;
     }
 
@@ -280,130 +276,171 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
     public void setHandleDataInSeparateThread(Boolean handleDataInSeparateThread) {
         this.handleDataInSeparateThread = handleDataInSeparateThread;
     }
+    
+    private void scheduleHandlerReleaseTask(ReleaseHandlersTask task) {
+        if (!executor.executeQuietly(RELEASE_HANDLERS_INTERVAL, task) && isLogLevelEnabled(LogLevel.ERROR))
+            getLogger().error("Error scheduling release handlers task");
+    }
+    
+    private class ReleaseHandlersTask implements Task {
+        public Node getTaskNode() {
+            return AbstractAsyncDataPipe.this;
+        }
 
-    private class HandlerInfo implements Task
-    {
-        private long lastUseTime;
+        public String getStatusMessage() {
+            return "Release handlers task";
+        }
+
+        public void run() {
+            if (!Status.STARTED.equals(getStatus()))
+                return;
+            if (handlersLock.writeLock().tryLock()) {
+                int maxIdleTime = handlerIdleTime;
+                try {
+                    for (Iterator<HandlerWrapper> it=handlers.iterator(); it.hasNext();) {
+                        HandlerWrapper handler = it.next();
+                        if (!handler.isBusy() && handler.lastUseTime+maxIdleTime<System.currentTimeMillis()) {
+                            handler.release();
+                            it.remove();
+                        }
+                    }
+                    if (!handlers.isEmpty())
+                        scheduleHandlerReleaseTask(this);
+                    else
+                        releaseHandlersTaskScheduled.set(false);
+                } finally {
+                    handlersLock.writeLock().unlock();
+                }
+            } else
+                scheduleHandlerReleaseTask(this);
+        }
+    }
+
+    protected class HandlerWrapper implements Task {
+        private final boolean useExecutor = handleDataInSeparateThread;
+        private final OperationStatistic stat = new OperationStatistic();
+        private volatile DataHandler handler;
+        private volatile boolean hasNewTask = false;
+        private volatile boolean stop = false;
         private AtomicBoolean busy = new AtomicBoolean(false);
-        private DataHandler handler;
+        private AtomicReference<HandlerStatus> status =
+                new AtomicReference<HandlerStatus>(HandlerStatus.WAITING);
+        private Lock taskLock = new ReentrantLock();
+        private Condition taskCondition = taskLock.newCondition();
+        private long lastUseTime;
+        private long operationStartTime;
+        private boolean running;
         private Object data;
         private DataContext dataContext;
         private DataSource dataSource;
-        private OperationStatistic stat = new OperationStatistic();
-        private int handlerCreationCount = 0;
-        private AtomicReference<HandlerStatus> status =
-                new AtomicReference<HandlerStatus>(HandlerStatus.WAITING);
-        private Thread taskThread;
 
-        public boolean handleData(Object data, DataSource dataSource, DataContext context)
-                throws ExecutorServiceException
-        {
-            if (!busy.compareAndSet(false, true))
+        public boolean handleData(Object data, DataSource dataSource, DataContext context) {
+            if (!busy.compareAndSet(false, true) || stop)
                 return false;
-            long startTime = stat.markOperationProcessingStart();
-            try
-            {
-                if (handler==null || (System.currentTimeMillis()-handlerIdleTime*1000)>lastUseTime)
-                {
-                    if (handler!=null)
-                        release();
-                    lastUseTime = System.currentTimeMillis();
-                    ++handlerCreationCount;
-                    handler = createDataHandler();
-                }
-                else
-                    lastUseTime = System.currentTimeMillis();
+            operationStartTime = stat.markOperationProcessingStart();
+            if (handler==null)
+                handler = createDataHandler();
+            this.data = data;
+            this.dataSource = dataSource;
+            this.dataContext = context;
+            hasNewTask = true;
+            if (useExecutor) {
+                if (!handleDataUsingExecutor()) return false;
+            } else 
+                run();
+            return true;
+        }
 
-                this.data = data;
-                this.dataSource = dataSource;
-                this.dataContext = context;
-                
-                try
-                {
-                    if (handleDataInSeparateThread)
-                        executor.execute(this);
-                    else
-                        run();
-                }
-                catch(ExecutorServiceException e)
-                {
+        private boolean handleDataUsingExecutor() {
+            if (!running) {
+                if (!executor.executeQuietly(this)) {
                     busy.set(false);
-                    throw e;
+                    return false;
+                } else {
+                    running = true;
                 }
-                return true;
+            } else {
+                taskLock.lock();
+                try {
+                    taskCondition.signal();
+                } finally {
+                    taskLock.unlock();
+                }
             }
-            finally
-            {
-                stat.markOperationProcessingEnd(startTime);
-            }
+            return true;
         }
 
         public boolean isBusy() {
             return busy.get();
         }
 
-        public void release()
-        {
-            try
-            {
+        public void release() {
+            try {
+                stop = true;
                 if (handler!=null)
                     handler.releaseHandler();
-            }
-            finally
-            {
+            } finally {
                 handler = null;
             }
         }
 
-        public String getHandlerStatusMessage()
-        {
+        public String getHandlerStatusMessage() {
             return handler!=null? handler.getStatusMessage() : "";
         }
 
-        public Node getTaskNode() 
-        {
+        public Node getTaskNode() {
             return AbstractAsyncDataPipe.this;
         }
 
-        public String getStatusMessage()
-        {
+        public String getStatusMessage() {
             return handler==null? "" : handler.getStatusMessage();
         }
-
-        public void run()
-        {
+        
+        public void run() {
             status.set(HandlerStatus.EXECUTING);
-            try
-            {
-                try
-                {
-                    if (handleDataInSeparateThread)
-                        taskThread = Thread.currentThread();
-                    Object resData = handler.handleData(
-                            data, dataSource, dataContext, AbstractAsyncDataPipe.this);
-                    if (SKIP_DATA!=resData)
-                        sendDataToConsumers(resData, dataContext);
-                }
-                finally
-                {
-                    busy.set(false);
-                    if (handlersLock.writeLock().tryLock(MAX_HANDLERS_LOCK_WAIT, TimeUnit.MILLISECONDS))
-                    {
-                        try{
-                            waitForHandlerFree.signal();
-                        }finally{
-                            handlersLock.writeLock().unlock();
-                        }
-                    }
-                    taskThread = null;
+            while (!stop) {
+                if (!hasNewTask) 
+                    waitForTask();
+                else {
+                    hasNewTask = false;
+                    executeTask();
+                    stat.markOperationProcessingEnd(operationStartTime);
+                    lastUseTime = System.currentTimeMillis();
                     status.set(HandlerStatus.WAITING);
+                    busy.set(false);
+                    if (handlersLock.writeLock().tryLock()) try {
+                        waitForHandlerFree.signal();
+                    } finally {
+                        handlersLock.writeLock().unlock();
+                    }
+                    if (!useExecutor)
+                        return;
                 }
-            } 
-            catch (Exception ex)
-            {
-                if (isLogLevelEnabled(LogLevel.ERROR))
-                    error("Error handling data", ex);
             }
+        }
+        
+        private void executeTask() {
+            try {
+                Object resData = handler.handleData(data, dataSource, dataContext, AbstractAsyncDataPipe.this);
+                if (SKIP_DATA!=resData)
+                    sendDataToConsumers(resData, dataContext);
+            } catch (Throwable e) {
+                if (isLogLevelEnabled(LogLevel.ERROR))
+                    getLogger().error("Error handling data", e);
+            }
+        }
+        
+        private void waitForTask() {
+            try {
+                if (taskLock.tryLock()) 
+                    try {
+                        taskCondition.await(100, TimeUnit.MILLISECONDS);
+                    } finally {
+                        taskLock.unlock();
+                    }
+                else
+                    TimeUnit.MILLISECONDS.sleep(1);
+            } catch (InterruptedException ex) { }
         }
     }
 }

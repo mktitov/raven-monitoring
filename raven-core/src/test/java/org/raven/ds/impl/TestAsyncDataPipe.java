@@ -16,6 +16,7 @@
  */
 package org.raven.ds.impl;
 
+import java.util.List;
 import org.raven.ds.DataHandler;
 
 /**
@@ -24,6 +25,11 @@ import org.raven.ds.DataHandler;
  */
 public class TestAsyncDataPipe extends AbstractAsyncDataPipe
 {
+
+    public List<HandlerWrapper> getHandlers() {
+        return handlers;
+    }
+    
     @Override
     public DataHandler createDataHandler() {
         return new TestDataHandler();
