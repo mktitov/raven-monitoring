@@ -319,14 +319,14 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
     protected class HandlerWrapper implements Task {
         private final boolean useExecutor = handleDataInSeparateThread;
         private final OperationStatistic stat = new OperationStatistic();
+        private final AtomicBoolean busy = new AtomicBoolean(false);
+        private final AtomicReference<HandlerStatus> status = new AtomicReference<HandlerStatus>(
+                HandlerStatus.WAITING);
+        private final Lock taskLock = new ReentrantLock();
+        private final Condition taskCondition = taskLock.newCondition();
         private volatile DataHandler handler;
         private volatile boolean hasNewTask = false;
         private volatile boolean stop = false;
-        private AtomicBoolean busy = new AtomicBoolean(false);
-        private AtomicReference<HandlerStatus> status =
-                new AtomicReference<HandlerStatus>(HandlerStatus.WAITING);
-        private Lock taskLock = new ReentrantLock();
-        private Condition taskCondition = taskLock.newCondition();
         private long lastUseTime;
         private long operationStartTime;
         private boolean running;
