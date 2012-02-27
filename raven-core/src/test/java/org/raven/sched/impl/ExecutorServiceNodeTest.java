@@ -97,7 +97,7 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         assertEquals(1l, executor.getRejectedTasks().get());
     }
 
-    @Test
+//    @Test
     public void test_nullMaximumQueueSize() throws Exception {
         executor.setCorePoolSize(2);
         executor.setMaximumPoolSize(3);

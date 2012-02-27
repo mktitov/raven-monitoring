@@ -20,6 +20,8 @@ package org.raven.sched.impl;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.log.LogLevel;
@@ -80,12 +82,9 @@ public class ExecutorServiceNode extends BaseNode
     @NotNull @Parameter(defaultValue=""+CHECK_MANAGED_TASKS_INTERVAL)
     private Long checkManagedTasksInterval;
 
-    @Message
-    private String interruptDisplayMessage;
-    @Message
-    private String interruptConfirmationMessage;
-    @Message
-    private String interruptCompletionMessage;
+    @Message private String interruptDisplayMessage;
+    @Message private String interruptConfirmationMessage;
+    @Message private String interruptCompletionMessage;
 
     private ThreadPoolExecutor executor;
     private ScheduledThreadPoolExecutor scheduledExecutor;
@@ -94,6 +93,9 @@ public class ExecutorServiceNode extends BaseNode
     private Set<Node> managedTasks;
     private DelayQueue<DelayedTaskWrapper> delayedTasks;
     private AtomicLong taskIdCounter;
+    private volatile long maxExecutionWaitTime;
+    private volatile long avgExecutionWaitTime;
+    private Lock waitTimeLock;
 
     @Override
     protected void initFields() {
@@ -105,11 +107,11 @@ public class ExecutorServiceNode extends BaseNode
         executedTasks = new OperationStatistic();
         taskIdCounter = new AtomicLong();
         managedTasks = new HashSet<Node>();
+        waitTimeLock = new ReentrantLock();
     }
 
     @Override
-    protected void doStart() throws Exception
-    {
+    protected void doStart() throws Exception {
         super.doStart();
         resetStatFields();
         Integer capacity = maximumQueueSize;
@@ -206,6 +208,26 @@ public class ExecutorServiceNode extends BaseNode
     @Parameter(readOnly=true)
     public Integer getCurrentPoolSize() {
         return executor==null? null : executor.getPoolSize();
+    }
+    
+    @Parameter(readOnly=true)
+    public Long getMaxExecutionWaitTime() {
+        return maxExecutionWaitTime;
+    }
+    
+    @Parameter(readOnly=true)
+    public String getMaxExecutionWaitTimeMS() {
+        return String.format("%.5f", maxExecutionWaitTime*1e-6);
+    }
+    
+    @Parameter(readOnly=true)
+    public Long getAvgExecutionWaitTime() {
+        return avgExecutionWaitTime;
+    }
+
+    @Parameter(readOnly=true)
+    public String getAvgExecutionWaitTimeMS() {
+        return String.format("%.5f", avgExecutionWaitTime*1e-6);
     }
 
     public OperationStatistic getExecutedTasks() {
@@ -328,6 +350,20 @@ public class ExecutorServiceNode extends BaseNode
         rejectedTasks.set(0l);
         taskIdCounter.set(0l);
     }
+    
+    private void aggExecutionWaitTime(long waitTime) {
+        waitTimeLock.lock();
+        try {
+            if (waitTime>maxExecutionWaitTime)
+                maxExecutionWaitTime = waitTime;
+            if (avgExecutionWaitTime==0)
+                avgExecutionWaitTime = waitTime;
+            else 
+                avgExecutionWaitTime = (avgExecutionWaitTime+waitTime)/2;
+        } finally {
+            waitTimeLock.unlock();
+        }
+    }
 
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
     {
@@ -355,6 +391,7 @@ public class ExecutorServiceNode extends BaseNode
     {
         private final Task task;
         private final Long id;
+        private final long created = System.nanoTime();
         private long executionStart;
         private Thread thread;
 
@@ -388,6 +425,7 @@ public class ExecutorServiceNode extends BaseNode
         }
 
         public void run() {
+            aggExecutionWaitTime(System.nanoTime()-created);
             thread = Thread.currentThread();
             executionStart = executedTasks.markOperationProcessingStart();
             long startTime = System.currentTimeMillis();
