@@ -344,11 +344,12 @@ public class ExecutorServiceNode extends BaseNode
         vos.add(new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table));
     }
 
-    private void resetStatFields()
-    {
+    private void resetStatFields() {
         executedTasks.reset();
         rejectedTasks.set(0l);
         taskIdCounter.set(0l);
+        maxExecutionWaitTime = 0;
+        avgExecutionWaitTime = 0;
     }
     
     private void aggExecutionWaitTime(long waitTime) {
