@@ -59,6 +59,8 @@ public class JDBCConnectionPoolNode extends BaseNode implements ConnectionPool
     private Integer maxIdle;
     @Parameter(defaultValue="10000") @NotNull
     private Integer maxWait;
+    @NotNull @Parameter(defaultValue="60000")
+    private Long minIdleTime;
     @Parameter
     private String validationQuery;
 
@@ -67,12 +69,15 @@ public class JDBCConnectionPoolNode extends BaseNode implements ConnectionPool
 
 
     @Override
-    protected void doStart() throws Exception
-    {
+    protected void doStart() throws Exception {
         connectionPool = new GenericObjectPool(null);
         connectionPool.setMaxActive(maxActive);
         connectionPool.setMaxIdle(maxIdle);
         connectionPool.setMaxWait(maxWait);
+        connectionPool.setTimeBetweenEvictionRunsMillis(30000);
+        connectionPool.setMinEvictableIdleTimeMillis(minIdleTime);
+        connectionPool.setTestWhileIdle(true);
+        
         
         ConnectionFactory connectionFactory =
                 new DriverManagerConnectionFactory(url, userName, password);
@@ -85,38 +90,56 @@ public class JDBCConnectionPoolNode extends BaseNode implements ConnectionPool
         poolingDriver.registerPool(getName(), connectionPool);
     }
 
-	@Override
-	public synchronized void stop() throws NodeError
-	{
-		try
-		{
-			poolingDriver.closePool(getName());
-		}
-		catch (SQLException ex)
-		{
-			error("Error stoping node", ex);
-			throw new NodeError(String.format("Error stoping node (%s)", getPath()), ex);
-		}
-		super.stop();
-	}
+    @Override
+    public synchronized void stop() throws NodeError {
+        try {
+            poolingDriver.closePool(getName());
+        } catch (SQLException ex) {
+            error("Error stoping node", ex);
+            throw new NodeError(String.format("Error stoping node (%s)", getPath()), ex);
+        }
+        super.stop();
+    }
     
-    public Connection getConnection() 
-    {
+    public Connection getConnection() {
         if (getStatus()!=Status.STARTED)
             return null;
-        else
-        {
+        else {
             try {
                 return DriverManager.getConnection("jdbc:apache:commons:dbcp:"+getName());
-            }
-            catch (SQLException ex)
-            {
+            } catch (SQLException ex) {
                 String message = String.format(
                         "Error creating connection in connection pool (%s)", getPath());
                 logger.error(message, ex);
                 throw new NodeError(message, ex);
             }
         }
+    }
+    
+    @Parameter(readOnly=true)
+    public Integer getNumberOfActiveConnections() {
+        GenericObjectPool _connectionPool = connectionPool;
+        return _connectionPool!=null? _connectionPool.getNumActive() : null;
+    }
+    
+    @Parameter(readOnly=true)
+    public Integer getNumberOfIdleConnections() {
+        GenericObjectPool _connectionPool = connectionPool;
+        return _connectionPool!=null? _connectionPool.getNumIdle() : null;
+    }
+    
+    @Parameter(readOnly=true)
+    public Integer getNumberOfTestsPerEvictionRun() {
+        GenericObjectPool _connectionPool = connectionPool;
+        return _connectionPool!=null? _connectionPool.getNumTestsPerEvictionRun() : null;
+    }
+
+    public Long getMinIdleTime() {
+        return minIdleTime;
+    }
+
+    public void setMinIdleTime(Long minIdleTime) {
+        this.minIdleTime = minIdleTime;
     }
 
     public Boolean getAutoCommit() {

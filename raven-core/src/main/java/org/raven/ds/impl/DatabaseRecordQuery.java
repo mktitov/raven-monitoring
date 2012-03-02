@@ -155,24 +155,22 @@ public class DatabaseRecordQuery
 
     public void close() throws DatabaseRecordQueryException
     {
-        try
-        {
-            if (statement != null)
-                statement.close();
-            if (connection != null)
-            {
-                try{
-                    connection.commit();
-                }
-                finally{
-                    connection.close();
+        try {
+            try {
+                if (statement!=null)
+                    statement.close();
+            } finally {
+                if (connection!=null) {
+                    try {
+                        connection.commit();
+                    } finally {
+                        connection.close();
+                    }
                 }
             }
-            statement = null;
             connection = null;
-        }
-        catch (SQLException e)
-        {
+            statement = null;
+        } catch (SQLException e) {
             throw new DatabaseRecordQueryException(e);
         }
     }

@@ -50,6 +50,7 @@ public class JDBCConnectionPoolNodeTest extends RavenCoreTestCase
         pool.setUserName(conf.getStringProperty(Configurator.TREE_STORE_USER, null));
         pool.setPassword(conf.getStringProperty(Configurator.TREE_STORE_PASSWORD, null));
         pool.setUrl(conf.getStringProperty(Configurator.TREE_STORE_URL, null));
+        pool.setMinIdleTime(30000l);
         pool.setDriver("org.h2.Driver");
         pool.start();
         assertEquals(Status.STARTED, pool.getStatus());

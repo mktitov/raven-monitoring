@@ -161,7 +161,7 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
         bindingSupport.enableScriptExecution();
         tree.addGlobalBindings(key, bindingSupport);
         DatabaseRecordQuery recordQuery = null;
-        try{
+        try {
             bindingSupport.put(SESS_ATTRS_BINDING, context.getSessionAttributes());
             bindingSupport.put(CONTEXT_BINDING, context);
             List<DatabaseFilterElement> filterElements =
@@ -181,45 +181,34 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
 
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug("Executing query:\n"+recordQuery.getQuery());
-        }
-        finally
-        {
+        } finally {
             bindingSupport.reset();
             tree.removeGlobalBindings(key);
         }
         DatabaseRecordQuery.RecordIterator it = recordQuery.execute();
         processingTime+=System.currentTimeMillis()-startTime;
-        try
-        {
-            try
-            {
+        try {
+            try {
                 startTime = System.currentTimeMillis();
                 int i=0;
-                while (it.hasNext())
-                {
+                while (it.hasNext()) {
                     dataConsumer.setData(this, it.next(), context);
                     ++validRecords;
-                    if (i % 1000 == 0)
-                    {
+                    if (i % 1000 == 0) {
                         processingTime+=System.currentTimeMillis()-startTime;
                         startTime = System.currentTimeMillis();
                     }
                 }
-                dataConsumer.setData(this, null, context);
-
-                return true;
-            }
-            catch(Exception e)
-            {
+            } catch(Exception e) {
                 ++errorRecords;
                 throw e;
             }
-        }
-        finally
-        {
+        } finally {
             processingTime = realProcessingTime + (System.currentTimeMillis()-procStart);
             recordQuery.close();
         }
+        dataConsumer.setData(this, null, context);
+        return true;
     }
 
 //    @Override
