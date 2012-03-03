@@ -328,7 +328,7 @@ public class BaseNode implements Node, NodeListener, Logger
                     "Node (%s) already contains children node with name (%s)"
                     , getPath(), node.getName()));
         node.setParent(this);
-		int nodeIndex = node.getIndex();
+        int nodeIndex = node.getIndex();
         int newIndex = checkNodeIndex(nodeIndex);
         if (nodeIndex!=newIndex)
         {

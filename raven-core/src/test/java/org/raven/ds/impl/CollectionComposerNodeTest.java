@@ -56,10 +56,11 @@ public class CollectionComposerNodeTest extends RavenCoreTestCase
         ds.pushData(null, context);
 
         List dataList = collector.getDataList();
-        assertEquals(1, dataList.size());
+        assertEquals(2, dataList.size());
         assertTrue(dataList.get(0) instanceof Collection);
         Collection collection = (Collection) dataList.get(0);
         assertEquals(1, collection.size());
         assertEquals(1, collection.iterator().next());
+        assertNull(dataList.get(1));
     }
 }

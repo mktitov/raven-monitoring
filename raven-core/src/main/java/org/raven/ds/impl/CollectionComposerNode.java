@@ -43,6 +43,7 @@ public class CollectionComposerNode extends AbstractSafeDataPipe
                 sendDataToConsumers(collection, context);
                 context.removeNodeParameter(this, COLLECTION_PARAM);
             }
+            sendDataToConsumers(null, context);
         }else{
             if (collection==null){
                 collection = new LinkedList();

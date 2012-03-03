@@ -43,7 +43,7 @@ public class CollectionDecomposerNode extends AbstractSafeDataPipe
             processIterator(((Table)data).getRowIterator(), context);
         else if (data instanceof Iterator)
             processIterator((Iterator) data,context);
-        else
+        else 
             sendDataToConsumers(data, context);
     }
 
