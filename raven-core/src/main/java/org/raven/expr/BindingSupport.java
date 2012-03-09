@@ -26,9 +26,9 @@ import javax.script.Bindings;
 public interface BindingSupport
 {
     public void setForceDisableScriptExcecution(boolean value);
-	public void put(String bindingName, Object value);
+    public void put(String bindingName, Object value);
     public void putAll(Bindings bindMap);
-	public void addTo(Bindings scriptBindings);
+    public void addTo(Bindings scriptBindings);
     public Object get(String bindingName);
     public boolean contains(String bindingName);
     public Object remove(String bindingName);

@@ -84,15 +84,15 @@ public class DataSourceFieldValueGenerator
     }
 
     @Override
-    protected void initFields()
-    {
+    protected void initFields() {
         super.initFields();
         dataInfo = new ThreadLocal();
     }
-
+    
     public void setData(DataSource dataSource, Object data, DataContext context)
     {
-        dataInfo.set(new DataInfo(data, context));
+        if (data!=null || dataInfo.get()==null)
+            dataInfo.set(new DataInfo(data, context));
     }
 
     public Object refereshData(Collection<NodeAttribute> sessionAttributes)
@@ -101,14 +101,13 @@ public class DataSourceFieldValueGenerator
     }
 
     @Override
-    protected Object doGetFieldValue(DataContext context)
-    {
+    protected Object doGetFieldValue(DataContext context) {
+        dataInfo.remove();
         dataSource.getDataImmediate(this, context);
         DataInfo info = dataInfo.get();
-        Object val = info.data;
+        Object val = info==null? null : info.data;
         dataInfo.remove();
-        if (useExpression)
-        {
+        if (useExpression) {
             bindingSupport.put(DATA_BINDING, info.data);
             bindingSupport.put(DATA_CONTEXT_BINDING, info.context);
             val = getNodeAttribute(EXPRESSION_ATTRIBUTE).getRealValue();

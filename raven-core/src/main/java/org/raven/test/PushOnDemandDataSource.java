@@ -34,7 +34,17 @@ public class PushOnDemandDataSource extends AbstractDataSource
 {
     private List dataList = new ArrayList();
     private Map<String, NodeAttribute> lastSessionAttributes;
+    private DataContext lastContext;
     private Collection<NodeAttribute> consumerAttrs = new ArrayList<NodeAttribute>();
+    private PushOnDemandDataSourceListener listener;
+
+    public PushOnDemandDataSourceListener getListener() {
+        return listener;
+    }
+
+    public void setListener(PushOnDemandDataSourceListener listener) {
+        this.listener = listener;
+    }
 
     public void addDataPortion(Object data)
     {
@@ -56,11 +66,19 @@ public class PushOnDemandDataSource extends AbstractDataSource
         return lastSessionAttributes;
     }
 
+    public DataContext getLastContext() {
+        return lastContext;
+    }
+
     @Override
     public boolean gatherDataForConsumer(DataConsumer dataConsumer, DataContext context)
         throws Exception
     {
         this.lastSessionAttributes = context.getSessionAttributes();
+        this.lastContext = context;
+        
+        if (listener!=null)
+            listener.onGatherDataForConsumer(dataConsumer, context);
         
         for (Object data: dataList)
             dataConsumer.setData(this, data, context);

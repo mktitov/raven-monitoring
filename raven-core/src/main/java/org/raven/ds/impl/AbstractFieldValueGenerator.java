@@ -17,14 +17,12 @@
 
 package org.raven.ds.impl;
 
-import java.util.Map;
 import javax.script.Bindings;
 import org.raven.ds.DataContext;
 import org.raven.ds.FieldValueGenerator;
-import org.raven.log.LogLevel;
-import org.raven.tree.NodeAttribute;
-import org.raven.tree.impl.BaseNode;
 import org.raven.expr.impl.BindingSupportImpl;
+import org.raven.log.LogLevel;
+import org.raven.tree.impl.BaseNode;
 
 /**
  *
@@ -35,9 +33,8 @@ public abstract class AbstractFieldValueGenerator extends BaseNode implements Fi
     protected BindingSupportImpl bindingSupport;
 
     @Override
-    protected void doInit() throws Exception
-    {
-        super.doInit();
+    protected void initFields() {
+        super.initFields();
         bindingSupport = new BindingSupportImpl();
     }
 

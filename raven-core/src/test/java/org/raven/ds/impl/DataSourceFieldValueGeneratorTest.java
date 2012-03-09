@@ -18,9 +18,9 @@
 package org.raven.ds.impl;
 
 import org.junit.Test;
+import org.raven.log.LogLevel;
 import org.raven.test.PushOnDemandDataSource;
 import org.raven.test.RavenCoreTestCase;
-import org.raven.log.LogLevel;
 
 /**
  *
@@ -29,8 +29,7 @@ import org.raven.log.LogLevel;
 public class DataSourceFieldValueGeneratorTest extends RavenCoreTestCase
 {
     @Test
-    public void test()
-    {
+    public void test() {
         PushOnDemandDataSource ds = new PushOnDemandDataSource();
         ds.setName("ds");
         tree.getRootNode().addAndSaveChildren(ds);
