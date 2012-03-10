@@ -51,10 +51,8 @@ public class DataFileValueHandler extends AbstractAttributeValueHandler implemen
 
     private boolean firstHandleData = true;
 
-    public DataFileValueHandler(NodeAttribute attribute) throws DataFileValueHandlerException
-    {
+    public DataFileValueHandler(NodeAttribute attribute) throws DataFileValueHandlerException {
         super(attribute);
-
         if (!DataFile.class.isAssignableFrom(attribute.getType()))
             throw new DataFileValueHandlerException(String.format(
                     "Invalid attribute (%s) type (%s). Type must be assignable from (%s)"
