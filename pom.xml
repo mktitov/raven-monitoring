@@ -427,7 +427,13 @@
             <dependency>
                 <groupId>oracle</groupId>
                 <artifactId>oracle</artifactId>
-                <version>10.2.0.1</version>
+                <version>11.2.0.3</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>oracle</groupId>
+                <artifactId>oracle-i18n</artifactId>
+                <version>11.2.0.3</version>
                 <scope>compile</scope>
             </dependency>
 
