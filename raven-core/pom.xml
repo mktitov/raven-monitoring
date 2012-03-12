@@ -87,6 +87,10 @@
             <artifactId>oracle</artifactId>
         </dependency>
         <dependency>
+            <groupId>oracle</groupId>
+            <artifactId>oracle-i18n</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.jrobin</groupId>
             <artifactId>jrobin</artifactId>
         </dependency>
