@@ -14,7 +14,6 @@
  *  limitations under the License.
  *  under the License.
  */
-
 package org.raven.expr.impl;
 
 import groovy.lang.GroovyObject;
@@ -27,29 +26,25 @@ import org.raven.expr.Expression;
  *
  * @author Mikhail Titov
  */
-public class GroovyExpression implements Expression
-{
-	private final Class expressionClass;
+public class GroovyExpression implements Expression {
 
-	public GroovyExpression(Class expressionClass)
-	{
-		this.expressionClass = expressionClass;
-	}
+    private final Class expressionClass;
 
-	public Object eval(Bindings bindings) throws ScriptException
-	{
-		try
-		{
-			GroovyObject obj = (GroovyObject) expressionClass.newInstance();
-			if (bindings!=null && bindings.size()>0)
-			for (Map.Entry<String, Object> prop: bindings.entrySet())
-				obj.setProperty(prop.getKey(), prop.getValue());
-			
-			return obj.invokeMethod("run", null);
-		}
-		catch (Exception e)
-		{
-			throw new ScriptException(e);
-		}
-	}
+    public GroovyExpression(Class expressionClass) {
+        this.expressionClass = expressionClass;
+    }
+
+    public Object eval(Bindings bindings) throws ScriptException {
+        try {
+            GroovyObject obj = (GroovyObject) expressionClass.newInstance();
+            if (bindings != null && bindings.size() > 0) {
+                for (Map.Entry<String, Object> prop : bindings.entrySet()) {
+                    obj.setProperty(prop.getKey(), prop.getValue());
+                }
+            }
+            return obj.invokeMethod("run", null);
+        } catch (Exception e) {
+            throw new ScriptException(e);
+        }
+    }
 }
