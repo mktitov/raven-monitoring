@@ -199,7 +199,8 @@ public abstract class AbstractFileReader extends AbstractDataSource
             is = new SequenceInputStream(filenameIs, is);
         }
         bindingSupport.put(FILENAME_BINDING, file.getName());
-        tree.addGlobalBindings(generateBindingSupportId(), bindingSupport);
+        String key = tree.addGlobalBindings(bindingSupport);
+//        tree.addGlobalBindings(generateBindingSupportId(), bindingSupport);
         try
         {
             context.getParameters().put(FILENAME_BINDING, file.getName());
@@ -207,7 +208,7 @@ public abstract class AbstractFileReader extends AbstractDataSource
         }
         finally
         {
-            tree.removeGlobalBindings(generateBindingSupportId());
+            tree.removeGlobalBindings(key);
             is.close();
             file.close();
 

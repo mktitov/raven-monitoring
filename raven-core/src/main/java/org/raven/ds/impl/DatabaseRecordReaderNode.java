@@ -157,9 +157,10 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
         long realProcessingTime = processingTime;
         long procStart = startTime;
         
-        String key = ""+getId()+"_bindings";
+//        String key = ""+getId()+"_bindings";
         bindingSupport.enableScriptExecution();
-        tree.addGlobalBindings(key, bindingSupport);
+        String key = tree.addGlobalBindings(bindingSupport);
+//        tree.addGlobalBindings(key, bindingSupport);
         DatabaseRecordQuery recordQuery = null;
         try {
             bindingSupport.put(SESS_ATTRS_BINDING, context.getSessionAttributes());
