@@ -16,8 +16,13 @@
  */
 package org.raven.test;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.Set;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.raven.EnLocaleModule;
 import org.apache.tapestry5.ioc.IOCUtilities;
 import org.apache.tapestry5.ioc.Registry;
@@ -34,17 +39,27 @@ import org.raven.conf.impl.PropertiesConfig;
 public class ServiceTestCase extends Assert
 {
     protected Registry registry;
+    protected Properties privateProperties;
     
     protected void configureRegistry(Set<Class> builder)
     {
     }
 
     @Before
-    public void setUp() 
+    public void setUp() throws Exception 
     {
-        System.setProperty(
-                PropertiesConfig.CONFIG_PROPERTY_NAME, "src/test/conf/raven.properties");
-        
+        System.setProperty(PropertiesConfig.CONFIG_PROPERTY_NAME, "src/test/conf/raven.properties");
+        String home = System.getProperty("user.home");
+        File propFile = new File(home+"/.raven/dev.properties");
+        privateProperties = new Properties();
+        if (propFile.exists()) {
+            FileInputStream is = new FileInputStream(propFile);
+            try {
+                privateProperties.load(is);
+            } finally {
+                IOUtils.closeQuietly(is);
+            }
+        }
         RegistryBuilder builder = new RegistryBuilder();
         IOCUtilities.addDefaultModules(builder);
 
@@ -60,9 +75,7 @@ public class ServiceTestCase extends Assert
     }
 
     @After
-    public void tearDown() 
-    {
+    public void tearDown() {
         registry.shutdown();
     }
-
 }
