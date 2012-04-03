@@ -14,7 +14,6 @@ That way multiple projects can share the same settings (useful for formatting ru
 Any value defined here will override the pom.xml file value but is only applicable to the current project.
 -->
         <netbeans.hint.useExternalMaven>false</netbeans.hint.useExternalMaven>
-        <org-netbeans-modules-editor-indent.CodeStyle.usedProfile>default</org-netbeans-modules-editor-indent.CodeStyle.usedProfile>
         <netbeans.compile.on.save>none</netbeans.compile.on.save>
         <org-netbeans-modules-projectapi.jsf_2e_language>Item 1</org-netbeans-modules-projectapi.jsf_2e_language>
     </properties>
