@@ -864,33 +864,35 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                                     RecordsAsTableColumnValueNode.COLUMN_VALUE_ATTR).getRealValue();
                         }
                         
-                        if (value instanceof BinaryFieldType){
-                            String mimeType = null;
-                            String fileName = null;
-                            FileRecordFieldExtension fileExt = fields.get(fieldNames[i])
-                                    .getFieldExtension(FileRecordFieldExtension.class, null);
-                            if (fileExt!=null){
-                                String bindingId = tree.addGlobalBindings(bindingSupport);
-                                bindingSupport.enableScriptExecution();
-                                try {
-                                    bindingSupport.put(RECORD_BINDING, record);
-                                    mimeType = fileExt.getMimeType();
-                                    fileName = fileExt.getFileName();
-                                } finally {
-                                    bindingSupport.reset();
-                                    tree.removeGlobalBindings(bindingId);
+                        if (!(value instanceof ViewableObject)) {
+                            if (value instanceof BinaryFieldType){
+                                String mimeType = null;
+                                String fileName = null;
+                                FileRecordFieldExtension fileExt = fields.get(fieldNames[i])
+                                        .getFieldExtension(FileRecordFieldExtension.class, null);
+                                if (fileExt!=null){
+                                    String bindingId = tree.addGlobalBindings(bindingSupport);
+                                    bindingSupport.enableScriptExecution();
+                                    try {
+                                        bindingSupport.put(RECORD_BINDING, record);
+                                        mimeType = fileExt.getMimeType();
+                                        fileName = fileExt.getFileName();
+                                    } finally {
+                                        bindingSupport.reset();
+                                        tree.removeGlobalBindings(bindingId);
+                                    }
                                 }
-                            }
-                            if (mimeType==null)
-                                mimeType = "application/octet-stream";
-                            if (fileName==null)
-                                fileName = "file";
-                            ViewableObject vo = new ViewableObjectImpl(mimeType, value, fileName);
-                            value = vo;
-                        } else 
-                            value = converter.convert(
-                                    String.class, value
-                                    , fields.get(fieldNames[i]).getPattern());
+                                if (mimeType==null)
+                                    mimeType = "application/octet-stream";
+                                if (fileName==null)
+                                    fileName = "file";
+                                ViewableObject vo = new ViewableObjectImpl(mimeType, value, fileName);
+                                value = vo;
+                            } else 
+                                value = converter.convert(
+                                        String.class, value
+                                        , fields.get(fieldNames[i]).getPattern());
+                        }
                         if (showFieldsInDetailColumn && detailColumnNumber==i)
                             row[i+actionsCount] = createDetailObject((String)value, record);
                         else

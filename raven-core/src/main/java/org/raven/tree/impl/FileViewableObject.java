@@ -43,6 +43,12 @@ public class FileViewableObject implements ViewableObject
         this.owner = owner;
     }
 
+    public FileViewableObject(File file, String mimeType, Node owner) {
+        this.file = file;
+        this.owner = owner;
+        this.mimeType = new MimeType(mimeType);
+    }
+
     public String getMimeType()
     {
         return mimeType.toString();
