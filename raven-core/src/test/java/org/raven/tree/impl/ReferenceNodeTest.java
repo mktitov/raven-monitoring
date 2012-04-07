@@ -144,6 +144,23 @@ public class ReferenceNodeTest extends RavenCoreTestCase {
         assertTrue(attrs.containsKey("test"));
     }
     
+    @Test
+    public void hideRefreshAttributesTest() throws Exception {
+        TestViewable node = new TestViewable();
+        node.setName("viewable object");
+        tree.getRootNode().addAndSaveChildren(node);
+        assertTrue(node.start());
+        ref.setReference(node);
+        ref.setHideRefreshAttributes("ref_test");
+        assertTrue(ref.start());
+        
+        assertNull(ref.getRefreshAttributes());
+        
+        node.addRefreshAttribute(new NodeAttributeImpl("ref_test", String.class, null, null));
+        Map<String, NodeAttribute> attrs = ref.getRefreshAttributes();
+        assertNull(attrs);
+    }
+    
     private void addAttrToRef() throws Exception {
         NodeAttributeImpl attr = new NodeAttributeImpl("test", String.class, null, null);
         attr.setValueHandlerType(RefreshAttributeValueHandlerFactory.TYPE);

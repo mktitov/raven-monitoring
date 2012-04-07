@@ -18,6 +18,7 @@
 package org.raven.tree.impl;
 
 import java.util.*;
+import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.tree.Node;
@@ -36,9 +37,11 @@ public class ReferenceNode extends BaseNode implements Viewable
 {
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     private Node reference;
+    
+    @Parameter
+    private String hideRefreshAttributes;
 
-    @Parameter(defaultValue="false")
-    @NotNull
+    @NotNull @Parameter(defaultValue="false")
     private Boolean useInTemplate;
 
     @Override
@@ -57,6 +60,14 @@ public class ReferenceNode extends BaseNode implements Viewable
             return refNode.getEffectiveChildrens();
         else
             return Arrays.asList(refNode);
+    }
+
+    public String getHideRefreshAttributes() {
+        return hideRefreshAttributes;
+    }
+
+    public void setHideRefreshAttributes(String hideRefreshAttributes) {
+        this.hideRefreshAttributes = hideRefreshAttributes;
     }
 
     public Node getReference() {
@@ -80,8 +91,15 @@ public class ReferenceNode extends BaseNode implements Viewable
         Map<String, NodeAttribute> refAttrs = null; 
         Map<String, NodeAttribute> selfRefAttrs = NodeUtils.extractRefereshAttributes(this);
         Map<String, NodeAttribute> refRefAttrs = null;
-        if (isConditionalNode() && _reference instanceof Viewable)
+        if (isConditionalNode() && _reference instanceof Viewable) {
             refRefAttrs =  ((Viewable)_reference).getRefreshAttributes();
+            if (refRefAttrs!=null && !refRefAttrs.isEmpty()) {
+                String[] hideAttrs = RavenUtils.split(hideRefreshAttributes);
+                if (hideAttrs!=null)
+                    for (String hideAttr: hideAttrs) 
+                        refRefAttrs.remove(hideAttr);
+            }
+        }
         if ( (selfRefAttrs!=null && !selfRefAttrs.isEmpty()) || (refRefAttrs!=null && !refRefAttrs.isEmpty()) )
             refAttrs = new HashMap<String, NodeAttribute>();
         if (refRefAttrs!=null && !refRefAttrs.isEmpty())
