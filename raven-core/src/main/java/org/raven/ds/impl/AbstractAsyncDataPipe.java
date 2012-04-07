@@ -23,11 +23,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.*;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataHandler;
@@ -168,7 +164,8 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
         return null;
     }
 
-    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) throws Exception
+    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) 
+            throws Exception
     {
         List<ViewableObject> vos = new ArrayList<ViewableObject>(2);
         vos.add(new ViewableObjectImpl(Viewable.RAVEN_TEXT_MIMETYPE, "<b>"+handlersTableTitle+"</b>"));

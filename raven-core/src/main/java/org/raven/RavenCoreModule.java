@@ -288,6 +288,9 @@ public class RavenCoreModule
             RefreshAttributeValueHandlerFactory.TYPE
             , new RefreshAttributeValueHandlerFactory());
         conf.add(
+            HiddenRefreshAttributeValueHandlerFactory.TYPE
+            , new HiddenRefreshAttributeValueHandlerFactory());
+        conf.add(
             ActionAttributeValueHandlerFactory.TYPE
             , new ActionAttributeValueHandlerFactory());
         conf.add(

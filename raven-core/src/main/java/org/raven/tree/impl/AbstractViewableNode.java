@@ -26,12 +26,8 @@ import org.raven.util.NodeUtils;
  *
  * @author Mikhail Titov
  */
-public abstract class AbstractViewableNode extends BaseNode implements Viewable
-{
-
-    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
-    {
+public abstract class AbstractViewableNode extends BaseNode implements Viewable {
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception {
         return NodeUtils.extractRefereshAttributes(this);
     }
-
 }

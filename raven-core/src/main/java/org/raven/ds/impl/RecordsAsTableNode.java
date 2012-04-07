@@ -340,6 +340,8 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         if (!Status.STARTED.equals(getStatus()))
             return null;
         try {
+            refreshAttributes = NodeUtils.concatAttributesMap(refreshAttributes
+                    , NodeUtils.extractHiddenRefereshAttributes(this));
             Map<String, NodeAttribute> attrs = new HashMap<String, NodeAttribute>();
             if (refreshAttributes!=null)
                 attrs.putAll(refreshAttributes);

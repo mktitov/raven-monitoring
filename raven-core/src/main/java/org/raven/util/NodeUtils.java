@@ -36,6 +36,7 @@ import org.raven.template.impl.TemplateExpression;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.ActionAttributeValueHandlerFactory;
+import org.raven.tree.impl.HiddenRefreshAttributeValueHandlerFactory;
 import org.raven.tree.impl.RefreshAttributeValueHandlerFactory;
 import org.weda.beans.ObjectUtils;
 import org.weda.internal.annotations.Service;
@@ -162,15 +163,34 @@ public class NodeUtils
 
         return Collections.EMPTY_LIST;
     }
-
+    
     /**
      * Returns the map of cloned attributes which value handler type is
      * {@link RefreshAttributeValueHandlerFactory#TYPE}.
      * The ids of attributes are numbers less than zero.
      */
-    public static Map<String, NodeAttribute> extractRefereshAttributes(Node node) throws Exception
-    {
+    public static Map<String, NodeAttribute> extractRefereshAttributes(Node node) throws Exception {
         return extractAttributes(node, RefreshAttributeValueHandlerFactory.TYPE);
+    }
+    
+    /**
+     * Returns the map of cloned attributes which value handler type is
+     * {@link HiddenRefreshAttributeValueHandlerFactory#TYPE}.
+     * The ids of attributes are numbers less than zero.
+     */
+    public static Map<String, NodeAttribute> extractHiddenRefereshAttributes(Node node) 
+            throws Exception
+    {
+        return extractAttributes(node, HiddenRefreshAttributeValueHandlerFactory.TYPE);
+    }
+    
+    public static Map<String, NodeAttribute> concatAttributesMap(Map<String, NodeAttribute> map1
+            , Map<String, NodeAttribute> map2)
+    {
+        if (map1==null) return map2;
+        if (map2==null) return map1;
+        map1.putAll(map2);
+        return map1;
     }
 
     /**

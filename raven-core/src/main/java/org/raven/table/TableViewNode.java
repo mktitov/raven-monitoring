@@ -17,12 +17,7 @@
 
 package org.raven.table;
 
-import java.util.Collections;
-import java.util.Iterator;
-import org.raven.tree.impl.*;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
@@ -33,6 +28,7 @@ import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
+import org.raven.tree.impl.ViewableObjectImpl;
 import org.raven.util.NodeUtils;
 import org.weda.annotations.constraints.NotNull;
 
@@ -68,14 +64,15 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
     {
         if (!Status.STARTED.equals(getStatus()))
             return null;
+        
+        refreshAttributes = NodeUtils.concatAttributesMap(refreshAttributes
+                , NodeUtils.extractHiddenRefereshAttributes(this));
 
         DataContext context = new DataContextImpl(refreshAttributes);
         List dataList = (List) refreshData(context);
-        if (dataList!=null)
-        {
+        if (dataList!=null) {
             List<ViewableObject> voList = new LinkedList<ViewableObject>();
-            for (Object obj: dataList)
-            {
+            for (Object obj: dataList) {
                 Table table = converter.convert(Table.class, obj, null);
                 if (table!=null)
                 {
@@ -97,18 +94,15 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
             return null;
     }
 
-    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
-    {
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception {
         return NodeUtils.extractRefereshAttributes(this);
     }
 
-    public void setAutoRefresh(Boolean autoRefresh)
-    {
+    public void setAutoRefresh(Boolean autoRefresh) {
         this.autoRefresh = autoRefresh;
     }
 
-    public Boolean getAutoRefresh()
-    {
+    public Boolean getAutoRefresh() {
         return autoRefresh;
     }
 

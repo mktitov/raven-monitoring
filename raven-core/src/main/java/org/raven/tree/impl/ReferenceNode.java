@@ -42,14 +42,12 @@ public class ReferenceNode extends BaseNode implements Viewable
     private Boolean useInTemplate;
 
     @Override
-    public boolean isConditionalNode()
-    {
+    public boolean isConditionalNode() {
         return (isTemplate() && useInTemplate) || (!isTemplate() && !useInTemplate);
     }
 
     @Override
-    public Collection<Node> getEffectiveChildrens()
-    {
+    public Collection<Node> getEffectiveChildrens() {
         if (!isConditionalNode())
             return null;
         Node refNode = reference;
@@ -61,28 +59,23 @@ public class ReferenceNode extends BaseNode implements Viewable
             return Arrays.asList(refNode);
     }
 
-    public Node getReference()
-    {
+    public Node getReference() {
         return reference;
     }
 
-    public void setReference(Node reference)
-    {
+    public void setReference(Node reference) {
         this.reference = reference;
     }
 
-    public Boolean getUseInTemplate()
-    {
+    public Boolean getUseInTemplate() {
         return useInTemplate;
     }
 
-    public void setUseInTemplate(Boolean useInTemplate)
-    {
+    public void setUseInTemplate(Boolean useInTemplate) {
         this.useInTemplate = useInTemplate;
     }
 
-    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception
-    {
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception {
         Node _reference = reference;
         Map<String, NodeAttribute> refAttrs = null; 
         Map<String, NodeAttribute> selfRefAttrs = NodeUtils.extractRefereshAttributes(this);
@@ -103,6 +96,8 @@ public class ReferenceNode extends BaseNode implements Viewable
             throws Exception
     {
         Node _reference = reference;
+        refreshAttributes = NodeUtils.concatAttributesMap(refreshAttributes
+                , NodeUtils.extractHiddenRefereshAttributes(this));
         if (isConditionalNode() && _reference instanceof Viewable)
             return ((Viewable)_reference).getViewableObjects(refreshAttributes);
         else

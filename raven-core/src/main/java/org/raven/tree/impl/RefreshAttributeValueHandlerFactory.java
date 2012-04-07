@@ -25,18 +25,14 @@ import org.raven.tree.NodeAttribute;
  *
  * @author Mikhail Titov
  */
-public class RefreshAttributeValueHandlerFactory implements AttributeValueHandlerFactory
-{
+public class RefreshAttributeValueHandlerFactory implements AttributeValueHandlerFactory {
     public final static String TYPE = "RefreshAttribute";
 
-    public AttributeValueHandler createValueHandler(NodeAttribute attribute)
-    {
+    public AttributeValueHandler createValueHandler(NodeAttribute attribute) {
         return null;
     }
 
-    public String getName()
-    {
+    public String getName() {
         return "Refresh attribute";
     }
-
 }
