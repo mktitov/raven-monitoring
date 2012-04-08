@@ -179,8 +179,7 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
         return expressionValid;
     }
 
-    public void validateExpression() throws Exception 
-    {
+    public void validateExpression() throws Exception {
         compileExpression();
     }
 }

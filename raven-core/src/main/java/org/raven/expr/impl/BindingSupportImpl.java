@@ -27,8 +27,8 @@ import org.raven.expr.BindingSupport;
  */
 public class BindingSupportImpl implements BindingSupport {
 
-    ThreadLocal<Map<String, Object>> bindings = new ThreadLocal<Map<String, Object>>();
-    private boolean forceDisableScriptExcecution = false;
+    private final ThreadLocal<Map<String, Object>> bindings = new ThreadLocal<Map<String, Object>>();
+    private volatile boolean forceDisableScriptExcecution = false;
 
     public void setForceDisableScriptExcecution(boolean value)
     {
