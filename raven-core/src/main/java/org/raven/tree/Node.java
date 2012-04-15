@@ -76,6 +76,10 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
     public static char ATTRIBUTE_SEPARATOR = '@';
     
     /**
+     * Returns current log level for the node
+     */
+    public LogLevel getLogLevel();
+    /**
      * Returns the node logger.
      */
     public Logger getLogger();
@@ -338,7 +342,7 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
     
     public List<Node> getChildrenList();
     
-	public boolean isLogLevelEnabled(LogLevel level);
+    public boolean isLogLevelEnabled(LogLevel level);
     /**
      * Returns <code>true</code> if this node is in the template.
      */

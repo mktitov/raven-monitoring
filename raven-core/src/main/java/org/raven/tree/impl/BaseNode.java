@@ -1355,8 +1355,7 @@ public class BaseNode implements Node, NodeListener, Logger
 		return sb.toString();
 	}	
 	
-	public boolean isLogLevelEnabled(LogLevel level)
-	{
+        public boolean isLogLevelEnabled(LogLevel level) {
 		return getLogLevel().ordinal() <= level.ordinal();
 	}
 

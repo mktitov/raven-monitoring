@@ -21,7 +21,10 @@ package org.raven.log;
  *
  * @author Mikhail Titov
  */
-public enum LogLevel
-{
-    TRACE, DEBUG, INFO, WARN, ERROR, NONE
+public enum LogLevel {
+    TRACE, DEBUG, INFO, WARN, ERROR, NONE;
+    
+    public boolean isLogLevelEnabled(LogLevel level) {
+        return ordinal()<=level.ordinal();
+    }
 }
