@@ -30,8 +30,7 @@ public class BindingSupportImpl implements BindingSupport {
     private final ThreadLocal<Map<String, Object>> bindings = new ThreadLocal<Map<String, Object>>();
     private volatile boolean forceDisableScriptExcecution = false;
 
-    public void setForceDisableScriptExcecution(boolean value)
-    {
+    public void setForceDisableScriptExcecution(boolean value) {
         forceDisableScriptExcecution = value;
     }
 
@@ -71,8 +70,7 @@ public class BindingSupportImpl implements BindingSupport {
         }
     }
 
-    public Object get(String bindingName)
-    {
+    public Object get(String bindingName) {
         if (bindings.get()!=null)
             return bindings.get().get(bindingName);
         else
@@ -86,8 +84,7 @@ public class BindingSupportImpl implements BindingSupport {
             return null;
     }
 
-    public boolean contains(String bindingName)
-    {
+    public boolean contains(String bindingName) {
         if (bindings.get()!=null)
             return bindings.get().containsKey(bindingName);
         else

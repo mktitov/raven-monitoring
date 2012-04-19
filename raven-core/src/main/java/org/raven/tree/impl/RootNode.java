@@ -33,8 +33,7 @@ public class RootNode extends BaseNode
 {
     private Map<String, BindingSupport> bindingSupports;
 
-    public RootNode()
-    {
+    public RootNode() {
         super("");
         bindingSupports = new ConcurrentHashMap<String, BindingSupport>();
     }
@@ -42,9 +41,7 @@ public class RootNode extends BaseNode
     /**
      * @see Tree#addGlobalBindings(String, org.raven.expr.BindingSupport) 
      */
-    public void addBindingSupport(
-            String bindingSupportId, BindingSupport bindingSupport)
-    {
+    public void addBindingSupport(String bindingSupportId, BindingSupport bindingSupport) {
         if (bindingSupports.containsKey(bindingSupportId))
             return;
         bindingSupport.setForceDisableScriptExcecution(true);
@@ -54,27 +51,21 @@ public class RootNode extends BaseNode
     /**
      * @see Tree#getGlobalBindings(String)
      */
-    public BindingSupport getBindingSupport(String bindingSupportId)
-    {
+    public BindingSupport getBindingSupport(String bindingSupportId) {
         return bindingSupports.get(bindingSupportId);
     }
 
     /**
      * @see Tree#removeGlobalBindings(String) 
      */
-    public void removeBindingSupport(String bindingSupportId)
-    {
+    public void removeBindingSupport(String bindingSupportId) {
         bindingSupports.remove(bindingSupportId);       
     }
 
     @Override
-    public void formExpressionBindings(Bindings bindings)
-    {
+    public void formExpressionBindings(Bindings bindings) {
         super.formExpressionBindings(bindings);
-
-        for (BindingSupport bindingSupport: bindingSupports.values()){
+        for (BindingSupport bindingSupport: bindingSupports.values())
             bindingSupport.addTo(bindings);
-//            bindingSupport.remove(ExpressionAttributeValueHandler.ENABLE_SCRIPT_EXECUTION_BINDING);
-        }
     }
 }
