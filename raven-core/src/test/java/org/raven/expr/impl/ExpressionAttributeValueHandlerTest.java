@@ -72,15 +72,15 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         expectLastCall().times(3);
         expect(attribute.getValueHandlerType())
                 .andReturn(ExpressionAttributeValueHandlerFactory.TYPE).anyTimes();
-        listener.valueChanged(isNull(), eq(2));
+//        listener.valueChanged(isNull(), eq(2));
         expect(attribute.getOwner()).andReturn(node).anyTimes();
         expect(node.getName()).andReturn("node").atLeastOnce();
         node.formExpressionBindings(isA(Bindings.class));
         expectLastCall().times(2);
         expect(node.getLogger()).andReturn(logger).anyTimes();
-        listener.expressionInvalidated(2);
-        listener.valueChanged(2, null);
-        listener.valueChanged(null, 10);
+        listener.expressionInvalidated(null);
+//        listener.valueChanged(2, null);
+//        listener.valueChanged(null, 10);
         logger.warn(isA(String.class), isA(ScriptException.class));
         
         replay(node, attribute, listener, logger);
@@ -123,7 +123,7 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
                 .andReturn(ExpressionAttributeValueHandlerFactory.TYPE).anyTimes();
         expect(node.getLogger()).andReturn(null).anyTimes();
         node.formExpressionBindings(isA(Bindings.class));
-        listener.valueChanged(null, 2);
+//        listener.valueChanged(null, 2);
         
         replay(node, attr, listener);
         
@@ -282,7 +282,7 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         attr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
         attr.init();
 
-        NodeAttribute attr2 = new NodeAttributeImpl("attr2", Integer.class, "arg1+args.containsKey('arg1')?0:arg2", null);
+        NodeAttribute attr2 = new NodeAttributeImpl("attr2", Integer.class, "args.containsKey('arg1')?0:arg2", null);
         attr2.setOwner(node);
         node.addNodeAttribute(attr2);
         attr2.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);

@@ -56,16 +56,12 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
     @Service
     private static Tree tree;
     
-    private final static Logger logger = 
-            LoggerFactory.getLogger(ExpressionAttributeValueHandler.class);
-    
     private boolean expressionValid = false;
-    private String data;
-    private Expression expression;
+    private volatile String data;
+    private volatile Expression expression;
     private Object value;
     
-    public ExpressionAttributeValueHandler(NodeAttribute attribute) 
-    {
+    public ExpressionAttributeValueHandler(NodeAttribute attribute) {
         super(attribute);
         try {
             data = attribute.getRawValue();
@@ -73,13 +69,11 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
         } catch (ScriptException ex) {}
     }
 
-	public Expression getExpression()
-	{
-		return expression;
-	}
+    public Expression getExpression() {
+        return expression;
+    }
 
-    public void setData(String data) throws Exception 
-    {
+    public void setData(String data) throws Exception {
         if (ObjectUtils.equals(this.data, data))
             return;
         this.data = data;
@@ -99,7 +93,7 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
                 expressionValid = false;
                 attribute.getOwner().getLogger().warn(String.format(
                         "Error compile expression (%s)", data), e);
-                fireExpressionInvalidatedEvent(value);
+                fireExpressionInvalidatedEvent(null);
                 throw e;
             }
         }
@@ -111,8 +105,8 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
 
     public Object handleData() 
     {
-        Object oldValue = value;
-        value = null;
+//        Object oldValue = value;
+        Object res = null;
         if (expression!=null && expressionValid) {
             Bindings bindings = new SimpleBindings();
             bindings.put(NODE_BINDING, new NodeAccessImpl(attribute.getOwner()));
@@ -140,7 +134,7 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
                 {
                     try {
                         bindings.remove(ENABLE_SCRIPT_EXECUTION_BINDING);
-                        value = expression.eval(bindings);
+                        res = expression.eval(bindings);
                     } catch (Throwable ex) {
 //                    } catch (ScriptException ex) {
                         String mess = String.format(
@@ -156,12 +150,12 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
                     varsSupport.reset();
             }
         }
-        if (   !attribute.getValueHandlerType().equals(ScriptAttributeValueHandlerFactory.TYPE)
-            && !ObjectUtils.equals(value, oldValue))
-        {
-            fireValueChangedEvent(oldValue, value);
-        }
-        return value;
+//        if (   !attribute.getValueHandlerType().equals(ScriptAttributeValueHandlerFactory.TYPE)
+//            && !ObjectUtils.equals(value, oldValue))
+//        {
+//            fireValueChangedEvent(oldValue, value);
+//        }
+        return res;
     }
 
     public void close() {
