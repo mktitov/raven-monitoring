@@ -24,22 +24,34 @@ import org.slf4j.Marker;
  *
  * @author Mikhail Titov
  */
-public class NodeLoggerHelper implements Logger {
+public class LoggerHelper implements Logger {
     
     private final LogLevel logLevel;
     private final String name;
     private final String prefix;
     private final Logger logger;
 
-    public NodeLoggerHelper(Node node, String prefix) {
+    public LoggerHelper(Node node, String prefix) {
         this(node.getLogLevel(), node.getName(), prefix, node.getLogger());
     }
 
-    public NodeLoggerHelper(LogLevel logLevel, String name, String prefix, Logger logger) {
+    public LoggerHelper(LogLevel logLevel, String name, String prefix, Logger logger) {
         this.logLevel = logLevel;
         this.name = name;
         this.prefix = prefix==null? "" : prefix;
         this.logger = logger;
+    }
+    
+    public LoggerHelper(LoggerHelper logger, String prefix) {
+        this(logger.getLogLevel(), logger.getName(), prefix, logger.getLogger());
+    }
+
+    public LogLevel getLogLevel() {
+        return logLevel;
+    }
+
+    public Logger getLogger() {
+        return logger;
     }
 
     public String getName() {
