@@ -196,11 +196,11 @@ initiallyExpanded="true"
  				actionListener="#{sBean.show}">
 				<tr:outputText 
 					rendered="#{node.template}"
-					inlineStyle="color: grey; font-weight: bold; font-size: 70%;" 
+					inlineStyle="color: grey; font-weight: bold; font-size: 100%;" 
 					value="#{node.prefix}#{node.name}#{node.nodeTitle}"/>
 				<tr:outputText
 					rendered="#{!node.template}"
-					inlineStyle="font-size: 80%;" 
+					inlineStyle="font-size: 100%;" 
 					value="#{node.prefix}#{node.name}#{node.nodeTitle}"/>
  			</tr:commandLink>
  		</tr:panelHorizontalLayout>
