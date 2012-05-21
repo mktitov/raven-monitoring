@@ -60,40 +60,7 @@ import org.raven.expr.impl.ExpressionCacheImpl;
 import org.raven.expr.impl.ExpressionCompilerImpl;
 import org.raven.expr.impl.GroovyExpressionCompiler;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
-import org.raven.impl.AttributeReferenceToStringConverter;
-import org.raven.impl.BooleanReferenceValues;
-import org.raven.impl.ByteArrayDataSourceToByteArrayConverter;
-import org.raven.impl.DataSourceToInputStreamConverter;
-import org.raven.impl.CharsetReferenceValues;
-import org.raven.impl.ClassToStringConverter;
-import org.raven.impl.ClobToStringConverter;
-import org.raven.impl.CollectionToTableConverter;
-import org.raven.impl.DateToDateConverter;
-import org.raven.impl.DateToLongConverter;
-import org.raven.impl.EnumReferenceValues;
-import org.raven.impl.InputStreamToStringConverter;
-import org.raven.impl.IntegerToIpConverter;
-import org.raven.impl.LocaleReferenceValues;
-import org.raven.impl.LongToTimestampConverter;
-import org.raven.impl.NodeAccessToNodeConverter;
-import org.raven.impl.NodeAttributeToStringConverter;
-import org.raven.impl.NodeToStringConverter;
-import org.raven.impl.NumberToNumberConverter;
-import org.raven.impl.OracleTimestampToTimestampConverter;
-import org.raven.impl.SimpleCache;
-import org.raven.impl.SnmpVariableToNumberConverter;
-import org.raven.impl.StringToAttributeReferenceConverter;
-import org.raven.impl.StringToByteArrayConverter;
-import org.raven.impl.StringToCharsetConverter;
-import org.raven.impl.StringToClassConverter;
-import org.raven.impl.StringToInputStreamConverter;
-import org.raven.impl.StringToIpConverter;
-import org.raven.impl.StringToLocaleConverter;
-import org.raven.impl.StringToNodeConverter;
-import org.raven.impl.StringToTemplateVariableConverter;
-import org.raven.impl.StringToTimeZoneConverter;
-import org.raven.impl.TimeZoneReferenceValues;
-import org.raven.impl.TimeZoneToStringConverter;
+import org.raven.impl.*;
 import org.raven.log.NodeLogger;
 import org.raven.log.impl.NodeLoggerImpl;
 import org.raven.net.NetworkResponseService;
@@ -191,11 +158,11 @@ public class RavenCoreModule
         return new AttributeValueHandlerRegistryImpl(factories);
     }
 
-	public static ExpressionCompiler buildExpressionCompiler(
-			ChainBuilder builder, List<ExpressionCompiler> commands)
-	{
-		return builder.build(ExpressionCompiler.class, commands);
-	}
+    public static ExpressionCompiler buildExpressionCompiler(
+                    ChainBuilder builder, List<ExpressionCompiler> commands)
+    {
+            return builder.build(ExpressionCompiler.class, commands);
+    }
 
     public static Authenticator buildAuthenticator(
             ChainBuilder builder, List<Authenticator> commands)
@@ -246,6 +213,7 @@ public class RavenCoreModule
         conf.add(new ClobToStringConverter());
         conf.add(new StringToTimeZoneConverter());
         conf.add(new TimeZoneToStringConverter());
+        conf.add(new RecordToMapConverter());
     }
     
     @SuppressWarnings("unchecked")
