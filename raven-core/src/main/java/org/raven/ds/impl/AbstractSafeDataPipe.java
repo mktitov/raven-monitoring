@@ -212,33 +212,36 @@ public abstract class AbstractSafeDataPipe
                 }
 
         Object preprocessResult = null;
-        if (usePreProcess)
-        {
+        if (usePreProcess) {
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug("Preprocessing...");
             bindingSupport.put(SESSIONATTRIBUTES_BINDING, context.getSessionAttributes());
             bindingSupport.put(DATA_CONTEXT_BINDING, context);
             bindingSupport.put(REQUESTER_BINDING, dataConsumer);
-            try
-            {
+            try {
                 preprocessResult = getNodeAttribute(PREPROCESS_ATTRIBUTE).getRealValue();
                 if (isLogLevelEnabled(LogLevel.DEBUG))
                     debug(String.format("Preprocessed value is (%s)", preprocessResult));
-            }
-            finally
-            {
+            } finally {
                 bindingSupport.reset();
             }
         }
         boolean result = true;
-        if (preprocessResult==null)
-            result = dataSource.getDataImmediate(this, context);
+        if (preprocessResult==null) 
+            try {
+                bindingSupport.put(SESSIONATTRIBUTES_BINDING, context.getSessionAttributes());
+                bindingSupport.put(DATA_CONTEXT_BINDING, context);
+                bindingSupport.put(REQUESTER_BINDING, dataConsumer);
+                result = dataSource.getDataImmediate(this, context);
+            } finally {
+                bindingSupport.reset();
+            }
         else
             setData(this, preprocessResult, context);
 
         return result;
     }
-
+    
     @Override
     public Collection<NodeAttribute> generateAttributes()
     {
