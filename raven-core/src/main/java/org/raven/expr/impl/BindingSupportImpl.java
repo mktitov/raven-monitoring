@@ -59,7 +59,7 @@ public class BindingSupportImpl implements BindingSupport {
         }
         binds.putAll(bindMap);
     }
-
+    
     public void reset() {
         bindings.remove();
     }
