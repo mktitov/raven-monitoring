@@ -18,7 +18,6 @@
 package org.raven.tree.impl;
 
 import org.raven.annotations.NodeClass;
-import org.weda.annotations.Description;
 
 /**
  *

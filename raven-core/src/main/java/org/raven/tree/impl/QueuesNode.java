@@ -14,19 +14,17 @@
  *  limitations under the License.
  *  under the License.
  */
-
 package org.raven.tree.impl;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class QueuesNode extends BaseNode
-{
-	public final static String NAME = "Queues" ;
+public class QueuesNode extends BaseNode {
 
-	public QueuesNode()
-	{
-		super(NAME);
-	}
+    public final static String NAME = "Queues";
+
+    public QueuesNode() {
+        super(NAME);
+    }
 }
