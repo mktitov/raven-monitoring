@@ -98,8 +98,8 @@ public class ExcelRecordReaderNode extends AbstractDataPipe
                         Record record = recordSchema.createRecord();
                         for (Map.Entry<String, FieldInfo> fieldCol: fieldsColumns.entrySet()) {
                             Cell cell = row.getCell(fieldCol.getValue().getColumnNumber()-1, Row.RETURN_BLANK_AS_NULL);
+                            Object value = null;
                             if (cell!=null){
-                                Object value = null;
                                 switch(cell.getCellType()){
                                     case Cell.CELL_TYPE_BOOLEAN: value = cell.getBooleanCellValue(); break;
                                     case Cell.CELL_TYPE_NUMERIC:
@@ -115,9 +115,10 @@ public class ExcelRecordReaderNode extends AbstractDataPipe
                                             value = null;
                                         break;
                                 }
-                                value = fieldCol.getValue().prepareValue(value);
-                                record.setValue(fieldCol.getKey(), value);
                             }
+                            value = fieldCol.getValue().prepareValue(value);
+                            if (value!=null)
+                                record.setValue(fieldCol.getKey(), value);
                         }
                         sendDataToConsumers(record, context);
                     }
