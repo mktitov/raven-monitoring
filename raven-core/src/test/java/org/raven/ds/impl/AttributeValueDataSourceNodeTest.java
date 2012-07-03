@@ -20,6 +20,7 @@ package org.raven.ds.impl;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.Test;
+import org.raven.TestScheduler;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
@@ -122,5 +123,85 @@ public class AttributeValueDataSourceNodeTest extends RavenCoreTestCase
         attr.init();
 
         assertEquals("hello world!", ((List)collector.refereshData(Arrays.asList(attr))).get(0));
+    }
+    
+    @Test
+    public void noDataFoundTest() throws Exception {
+        AttributeValueDataSourceNode ds = new AttributeValueDataSourceNode();
+        ds.setName("ds");
+        tree.getRootNode().addAndSaveChildren(ds);
+        ds.getNodeAttribute(AttributeValueDataSourceNode.VALUE_ATTR).setValueHandlerType(
+                ScriptAttributeValueHandlerFactory.TYPE);
+        ds.setValue("'test'");
+        assertTrue(ds.start());
+        
+        
+        SafeDataPipeNode pipe = new SafeDataPipeNode();
+        pipe.setName("pipe");
+        tree.getRootNode().addAndSaveChildren(pipe);
+        pipe.setDataSource(ds);
+        assertTrue(pipe.start());
+        
+        SafeDataConsumer collector = new SafeDataConsumer();
+        collector.setName("collector");
+        tree.getRootNode().addAndSaveChildren(collector);
+        collector.setDataSource(pipe);
+        assertTrue(collector.start());
+        
+        assertEquals("test", ((List)collector.refereshData(null)).get(0));
+        
+        pipe.getNodeAttribute("expression").setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        pipe.setUseExpression(Boolean.TRUE);
+        pipe.setExpression("data+'test'");
+        assertEquals("testtest", ((List)collector.refereshData(null)).get(0));
+    }
+    
+    @Test
+    public void noDataFoundTest2() throws Exception {
+        TestScheduler scheduler = new TestScheduler();
+        scheduler.setName("scheduler");
+        tree.getRootNode().addAndSaveChildren(scheduler);
+        assertTrue(scheduler.start());
+        
+        AttributeValueDataSourceNode ds = new AttributeValueDataSourceNode();
+        ds.setName("ds");
+        tree.getRootNode().addAndSaveChildren(ds);
+        ds.getNodeAttribute(AttributeValueDataSourceNode.VALUE_ATTR).setValueHandlerType(
+                ScriptAttributeValueHandlerFactory.TYPE);
+        ds.setValue("'test'");
+        assertTrue(ds.start());
+        
+        
+        SafeDataPipeNode pipe = new SafeDataPipeNode();
+        pipe.setName("pipe");
+        tree.getRootNode().addAndSaveChildren(pipe);
+        pipe.setDataSource(ds);
+        assertTrue(pipe.start());
+        
+        SchedulableDataPipe schedule = new SchedulableDataPipe();
+        schedule.setName("schedule");
+        tree.getRootNode().addAndSaveChildren(schedule);
+        schedule.setScheduler(scheduler);
+        schedule.setDataSource(pipe);
+        assertTrue(schedule.start());
+        
+        DataCollector collector = new DataCollector();
+        collector.setName("collector");
+        tree.getRootNode().addAndSaveChildren(collector);
+        collector.setDataSource(schedule);
+        assertTrue(collector.start());
+        
+        schedule.executeScheduledJob(scheduler);
+        
+        assertEquals(1, collector.getDataListSize());
+        assertEquals("test", collector.getDataList().get(0));
+        
+        pipe.getNodeAttribute("expression").setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        pipe.setUseExpression(Boolean.TRUE);
+        pipe.setExpression("data+'test'");
+        
+        collector.getDataList().clear();        
+        schedule.executeScheduledJob(scheduler);
+        assertEquals("testtest", collector.getDataList().get(0));
     }
 }

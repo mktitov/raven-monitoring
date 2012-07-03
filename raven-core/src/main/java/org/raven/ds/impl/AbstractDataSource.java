@@ -58,7 +58,7 @@ public abstract class AbstractDataSource extends BaseNode implements DataSource
         {
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug(String.format(
-                        "Skiping gathering data for data consumer (%s). Data consumer not ready"
+                        "Skipping gathering data for data consumer (%s). Data consumer not ready"
                         , dataConsumer.getPath()));
             return false;
         }
@@ -66,7 +66,7 @@ public abstract class AbstractDataSource extends BaseNode implements DataSource
         {
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug(String.format(
-                        "Recieved pull data request from consumer (%s)"
+                        "Received pull data request from consumer (%s)"
                         , dataConsumer.getPath()));
             return gatherDataForConsumer(dataConsumer, context);
         }

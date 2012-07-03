@@ -29,6 +29,6 @@ import org.raven.tree.impl.BaseNode;
 public class TestScheduler extends BaseNode implements Scheduler
 {
     public Collection<NodeAttribute> generateAttributes() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return null;
     }
 }

@@ -109,43 +109,38 @@ public class AttributeValueDataSourceNode extends BaseNode implements DataSource
             for (NodeAttribute attr: consumerAttributes)
                 consumerAttrNames.add(attr.getName());
 
-        Map<String, Object> values = new HashMap<String, Object>();
-        for (Map.Entry<String, NodeAttribute> attrEntry: context.getSessionAttributes().entrySet())
-        {
-            Object attrValue = attrEntry.getValue().getRealValue();
-            if (attrValue==null && attrEntry.getValue().isRequired())
-            {
-                if (isLogLevelEnabled(LogLevel.WARN))
-                    warn(String.format(
-                            "Skiping gathering data for data consumer (%s). " +
-                            "Value for required attribute (%s) was not provided"
-                            , dataConsumer.getPath(), attrEntry.getKey()));
-                return false;
-            }
-            values.put(attrEntry.getKey(), attrValue);
-        }
+//        Map<String, Object> values = new HashMap<String, Object>();
+//        for (Map.Entry<String, NodeAttribute> attrEntry: context.getSessionAttributes().entrySet())
+//        {
+//            Object attrValue = attrEntry.getValue().getRealValue();
+//            if (attrValue==null && attrEntry.getValue().isRequired())
+//            {
+//                if (isLogLevelEnabled(LogLevel.WARN))
+//                    warn(String.format(
+//                            "Skiping gathering data for data consumer (%s). " +
+//                            "Value for required attribute (%s) was not provided"
+//                            , dataConsumer.getPath(), attrEntry.getKey()));
+//                return false;
+//            }
+//            values.put(attrEntry.getKey(), attrValue);
+//        }
             
-        try
-        {
-            try
-            {
-                bindingSupport.put(SESSIONATTRIBUTES_BINDING, values);
+        try {
+            Object val = null;
+            try {
+                bindingSupport.put(SESSIONATTRIBUTES_BINDING, context.getSessionAttributes());
                 bindingSupport.put(DATA_CONTEXT_BINDING, context);
                 bindingSupport.put(DATA_STREAM_BINDING, new DataStreamImpl(this, context));
                 if (!consumerAttrNames.isEmpty())
                     for (String name: consumerAttrNames)
-                        bindingSupport.put(name, values.get(name));
-                NodeAttribute valueAttr = getNodeAttribute(VALUE_ATTR);
-                dataConsumer.setData(this, valueAttr.getRealValue(), context);
-                return true;
-            }
-            finally
-            {
+                        bindingSupport.put(name, context.getSessionAttributes().get(name).getRealValue());
+                val = getNodeAttribute(VALUE_ATTR).getRealValue();
+            } finally {
                 bindingSupport.reset();
             }
-        }
-        catch(Throwable e)
-        {
+            dataConsumer.setData(this, val, context);
+            return true;
+        } catch(Throwable e) {
             if (isLogLevelEnabled(LogLevel.ERROR))
                 error(String.format(
                         "Error gathering data for consumer (%s)", dataConsumer.getPath()));
