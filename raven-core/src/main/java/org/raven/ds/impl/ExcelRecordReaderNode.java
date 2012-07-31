@@ -53,6 +53,12 @@ public class ExcelRecordReaderNode extends AbstractDataPipe
 
     @NotNull @Parameter(defaultValue="true")
     private Boolean treatEmptyStringAsNull;
+    
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean ignoreEmptyRows;
+    
+    @Parameter
+    private Integer maxEmptyRowsCount;
 
     @NotNull @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
     private RecordSchemaNode recordSchema;
@@ -69,16 +75,14 @@ public class ExcelRecordReaderNode extends AbstractDataPipe
     protected void doSetData(DataSource dataSource, Object data, DataContext context)
             throws Exception
     {
-        if (data==null)
-        {
+        if (data==null) {
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug(String.format("Recieved null data from node (%s)", dataSource.getPath()));
             return;
         }
 
         Map<String, FieldInfo> fieldsColumns = getFieldsColumns();
-        if (fieldsColumns==null)
-        {
+        if (fieldsColumns==null) {
             if (isLogLevelEnabled(LogLevel.WARN))
                 debug(String.format(
                         "CsvRecordFieldExtension was not defined for fields in the record schema (%s)"
@@ -91,36 +95,30 @@ public class ExcelRecordReaderNode extends AbstractDataPipe
             Workbook wb = WorkbookFactory.create(new PushbackInputStream(dataStream));
             Sheet sheet = wb.getSheetAt(sheetNumber-1);
             try{
-                for (int r=startFromRow-1; r<=sheet.getLastRowNum(); ++r)
-                {
+                int nullRowCount = 0;
+                boolean _treatEmptyStringAsNull = treatEmptyStringAsNull;
+                boolean _ignoreEmptyRows = ignoreEmptyRows;
+                int _maxEmptyRowsCount = maxEmptyRowsCount==null? Integer.MAX_VALUE : maxEmptyRowsCount;
+                for (int r=startFromRow-1; r<=sheet.getLastRowNum(); ++r) {
                     Row row = sheet.getRow(r);
+                    boolean nullRow = true;
                     if (row!=null){
                         Record record = recordSchema.createRecord();
                         for (Map.Entry<String, FieldInfo> fieldCol: fieldsColumns.entrySet()) {
-                            Cell cell = row.getCell(fieldCol.getValue().getColumnNumber()-1, Row.RETURN_BLANK_AS_NULL);
-                            Object value = null;
-                            if (cell!=null){
-                                switch(cell.getCellType()){
-                                    case Cell.CELL_TYPE_BOOLEAN: value = cell.getBooleanCellValue(); break;
-                                    case Cell.CELL_TYPE_NUMERIC:
-                                        double num = cell.getNumericCellValue();
-                                        if (HSSFDateUtil.isCellDateFormatted(cell) && HSSFDateUtil.isValidExcelDate(num))
-                                            value = cell.getDateCellValue();
-                                        else
-                                            value = num;
-                                        break;
-                                    case Cell.CELL_TYPE_STRING :
-                                        value = cell.getStringCellValue();
-                                        if (value!=null && "".equals(value) && treatEmptyStringAsNull)
-                                            value = null;
-                                        break;
-                                }
-                            }
-                            value = fieldCol.getValue().prepareValue(value);
-                            if (value!=null)
-                                record.setValue(fieldCol.getKey(), value);
+                            Object value = processValue(row, fieldCol.getValue().getColumnNumber()-1
+                                    , fieldCol.getValue(), record, fieldCol.getKey(), _treatEmptyStringAsNull);
+                            if (nullRow && value!=null)
+                                nullRow = false;
                         }
-                        sendDataToConsumers(record, context);
+                        if (!_ignoreEmptyRows || !nullRow)
+                            sendDataToConsumers(record, context);
+                    }
+                    nullRowCount = nullRow? nullRowCount+1 : 0;
+                    if (_maxEmptyRowsCount==nullRowCount) {
+                        if (isLogLevelEnabled(LogLevel.DEBUG))
+                            logger.debug("Stopping processing EXCEL file because of maxEmptyRowsCount "
+                                    + "value ({}) reached", _maxEmptyRowsCount);
+                        break;
                     }
                 }
             }finally{
@@ -129,6 +127,51 @@ public class ExcelRecordReaderNode extends AbstractDataPipe
         }finally{
             dataStream.close();
         }
+    }
+    
+    private Object processValue(Row row, int colNumber, FieldInfo fieldInfo, Record record
+        , String fieldName, boolean emptyStringAsNull) 
+            throws Exception 
+    {
+        Cell cell = row.getCell(colNumber, Row.RETURN_BLANK_AS_NULL);
+        Object value = null;
+        if (cell!=null){
+            switch(cell.getCellType()){
+                case Cell.CELL_TYPE_BOOLEAN: value = cell.getBooleanCellValue(); break;
+                case Cell.CELL_TYPE_NUMERIC:
+                    double num = cell.getNumericCellValue();
+                    if (HSSFDateUtil.isCellDateFormatted(cell) && HSSFDateUtil.isValidExcelDate(num))
+                        value = cell.getDateCellValue();
+                    else
+                        value = num;
+                    break;
+                case Cell.CELL_TYPE_STRING :
+                    value = cell.getStringCellValue();
+                    if (value!=null && "".equals(value) && emptyStringAsNull)
+                        value = null;
+                    break;
+            }
+        }
+        value = fieldInfo.prepareValue(value);
+        if (value!=null)
+            record.setValue(fieldName, value);
+        return value;
+    }
+
+    public Boolean getIgnoreEmptyRows() {
+        return ignoreEmptyRows;
+    }
+
+    public void setIgnoreEmptyRows(Boolean ignoreEmptyRows) {
+        this.ignoreEmptyRows = ignoreEmptyRows;
+    }
+
+    public Integer getMaxEmptyRowsCount() {
+        return maxEmptyRowsCount;
+    }
+
+    public void setMaxEmptyRowsCount(Integer maxEmptyRowsCount) {
+        this.maxEmptyRowsCount = maxEmptyRowsCount;
     }
 
     public Integer getSheetNumber() {

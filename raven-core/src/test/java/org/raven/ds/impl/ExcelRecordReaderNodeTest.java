@@ -18,6 +18,7 @@
 package org.raven.ds.impl;
 
 import java.io.FileInputStream;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import org.junit.Before;
@@ -27,6 +28,8 @@ import org.raven.ds.RecordSchemaFieldType;
 import org.raven.test.DataCollector;
 import org.raven.test.PushDataSource;
 import static org.junit.Assert.*;
+import org.raven.ds.RecordException;
+import org.raven.log.LogLevel;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.Node.Status;
 
@@ -105,6 +108,7 @@ public class ExcelRecordReaderNodeTest extends RavenCoreTestCase
         reader.setRecordSchema(schema);
         reader.setStartFromRow(2);
         reader.start();
+        reader.setLogLevel(LogLevel.TRACE);
         assertEquals(Status.STARTED, reader.getStatus());
 
         consumer = new DataCollector();
@@ -125,13 +129,65 @@ public class ExcelRecordReaderNodeTest extends RavenCoreTestCase
             List data = consumer.getDataList();
             assertNull(data.get(1));
             assertTrue(data.get(0) instanceof Record);
-            Record rec = (Record) data.get(0);
-            assertEquals(123456789012l, ((Number)rec.getValue("field1")).longValue());
-            assertEquals(new SimpleDateFormat("dd.MM.yyyy").parse("01.01.2010"), rec.getValue("field2"));
-            assertEquals("Строка", rec.getValue("field3"));
+            checkRecord((Record)data.get(0));
         }finally{
             st.close();
         }
     }
 
+    @Test
+    public void testIgnoreEmptyRows() throws Exception
+    {
+        FileInputStream st = new FileInputStream("src/test/conf/test1.xls");
+        try{
+            ds.pushData(st);
+            assertEquals(8, consumer.getDataListSize());
+        }finally{
+            st.close();
+        }
+        
+        consumer.getDataList().clear();
+        reader.setIgnoreEmptyRows(Boolean.TRUE);
+        st = new FileInputStream("src/test/conf/test1.xls");
+        try{
+            ds.pushData(st);
+            assertEquals(2, consumer.getDataListSize());            
+            List data = consumer.getDataList();
+            assertNull(data.get(1));
+            assertTrue(data.get(0) instanceof Record);
+            checkRecord((Record)data.get(0));
+        }finally{
+            st.close();
+        }
+    }
+
+    @Test
+    public void testMaxEmptyRowsCount() throws Exception {
+        reader.setMaxEmptyRowsCount(1);
+        FileInputStream st = new FileInputStream("src/test/conf/test1.xls");
+        try{
+            ds.pushData(st);
+            assertEquals(3, consumer.getDataListSize());
+            List data = consumer.getDataList();
+            assertNull(data.get(2));
+            assertTrue(data.get(1) instanceof Record);
+            assertTrue(data.get(0) instanceof Record);
+            checkRecord((Record)data.get(0));
+            checkEmptyRecord((Record)data.get(1));
+        }finally{
+            st.close();
+        }
+    }
+    
+    private void checkRecord(Record rec) throws ParseException, RecordException {
+        assertEquals(123456789012l, ((Number)rec.getValue("field1")).longValue());
+        assertEquals(new SimpleDateFormat("dd.MM.yyyy").parse("01.01.2010"), rec.getValue("field2"));
+        assertEquals("Строка", rec.getValue("field3"));
+    }
+
+    private void checkEmptyRecord(Record rec) throws Exception {
+        assertNull(rec.getValue("field1"));
+        assertNull(rec.getValue("field2"));
+        assertNull(rec.getValue("field3"));
+    }
 }
