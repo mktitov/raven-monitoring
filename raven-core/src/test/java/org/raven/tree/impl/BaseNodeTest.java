@@ -20,6 +20,7 @@ package org.raven.tree.impl;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
 import org.junit.Test;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.test.RavenCoreTestCase;
@@ -213,7 +214,15 @@ public class BaseNodeTest extends RavenCoreTestCase
         BaseNode node3 = new BaseNode("test3");
         node2.addAndSaveChildren(node3);
         
-        assertSame(node2, node1.getChildrenByPath("test"));
+        assertSame(node2, node1.getChildrenByPath("test2"));
         assertSame(node3, node1.getChildrenByPath("test2/test3"));
+    }
+    
+    @Test
+    public void getVariablesTest() {
+        BaseNode node = new BaseNode("test");
+        tree.getRootNode().addAndSaveChildren(node);
+        assertNotNull(node.getVariables());
+        assertTrue(node.getVariables() instanceof Map);
     }
 }

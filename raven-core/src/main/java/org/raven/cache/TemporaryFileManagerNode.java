@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -220,8 +219,24 @@ public class TemporaryFileManagerNode extends BaseNode implements TemporaryFileM
         streamsToClose = new LinkedList<InputStream>();
     }
 
-    public DataSource saveFile(Node creator, String key, InputStream stream, String contentType
-            , boolean rewrite)
+    public File createFile(Node requester, String key, String contentType) throws IOException {
+        lock.writeLock().lock();
+        File file = null;
+        try {
+            FileInfo fileInfo = files.remove(key);
+            file = File.createTempFile(tempFilePrefix, ".tmp", dirFile);
+            if (fileInfo!=null)
+                streamsToClose.addAll(fileInfo.streams);
+            fileInfo = new FileInfo(requester, System.currentTimeMillis(), key, file, contentType);
+            files.put(key, fileInfo);
+            fileInfo.initialized.set(true);
+        } finally {
+            lock.writeLock().unlock();
+        }
+        return file;
+    }
+
+    public DataSource saveFile(Node creator, String key, InputStream stream, String contentType, boolean rewrite)
         throws IOException
     {
         lock.writeLock().lock();

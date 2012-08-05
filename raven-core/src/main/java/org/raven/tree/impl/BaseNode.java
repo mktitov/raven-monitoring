@@ -131,6 +131,7 @@ public class BaseNode implements Node, NodeListener, Logger
         parameters = null;
         nodeAttributes = new ConcurrentHashMap<String, NodeAttribute>();
         childrens = new ConcurrentHashMap<String, Node>();
+        variables = new ConcurrentHashMap<String, Object>();
         index = 0;
     }
 
@@ -793,7 +794,7 @@ public class BaseNode implements Node, NodeListener, Logger
     {
         try
         {
-            variables = null;
+            variables.clear();
             doStop();
 //            if (!Status.REMOVING.equals(getStatus()))
             setStatus(Status.INITIALIZED);
@@ -1320,27 +1321,27 @@ public class BaseNode implements Node, NodeListener, Logger
             parent.formExpressionBindings(bindings);
     }
 
-    private static final String[] ex = {"org.apache.myfaces","javax.faces"};
-	public static void getTraceX(StringBuffer sb,Throwable t)
-	{
-		boolean stop = false;
-		sb.append(t.getClass().getCanonicalName());
-		sb.append(": ").append(t.getMessage()).append("\n");
-		StackTraceElement[] stea = t.getStackTrace();
-		for(StackTraceElement ste :stea)
-		{
-			String x = ste.toString();
-			sb.append("at ").append(x).append("\n");
-			for(String s : ex)
-				if(x.startsWith(s))
-				{
-					stop = true;
-					sb.append("...\n");
-					break;
-				}
-			if(stop) break;
-		}
-	}
+    private static final String[] ex = {"org.apache.myfaces", "javax.faces"};
+
+    public static void getTraceX(StringBuffer sb, Throwable t) {
+        boolean stop = false;
+        sb.append(t.getClass().getCanonicalName());
+        sb.append(": ").append(t.getMessage()).append("\n");
+        StackTraceElement[] stea = t.getStackTrace();
+        for (StackTraceElement ste : stea) {
+            String x = ste.toString();
+            sb.append("at ").append(x).append("\n");
+            for (String s : ex) {
+                if (x.startsWith(s)) {
+                    stop = true;
+                    sb.append("...\n");
+                    break;
+                }
+            }
+            if (stop) 
+                break;
+        }
+    }
 
 	public static String getTrace(Throwable t)
 	{
@@ -1704,10 +1705,7 @@ public class BaseNode implements Node, NodeListener, Logger
 		return "";
 	}
 
-    public Map<String, Object> getVariables()
-    {
-        if (variables==null)
-            variables = new HashMap<String, Object>();
+    public Map<String, Object> getVariables() {
         return variables;
     }
 }

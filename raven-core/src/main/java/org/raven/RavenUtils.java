@@ -26,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.text.StrMatcher;
 import org.apache.commons.lang.text.StrTokenizer;
@@ -54,6 +55,7 @@ public class RavenUtils
 {
     public final static String MASTER_FIELDS_PARAM = "master_field_values";
     public static final String DEFAULT_SPLIT_DELIMITER = ",";
+    private final static AtomicLong index = new AtomicLong();
 
     @Service
     public static TypeConverter converter;
@@ -66,6 +68,10 @@ public class RavenUtils
     public static String generateKey(String name, Node node)
     {
         return name + "_" + node.getId();
+    }
+    
+    public static String generateUniqKey(String name) {
+        return name+"_"+index.incrementAndGet();
     }
 
     /**
