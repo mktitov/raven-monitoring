@@ -85,7 +85,8 @@ public class JDBCConnectionPoolNode extends BaseNode implements ConnectionPool
         
         Properties props = new Properties();
         props.setProperty("user", userName);
-        props.setProperty("password", password);
+        String _pass = password;
+        props.setProperty("password", _pass==null?"":_pass);
         String _connectionProperties = connectionProperties;
         if (_connectionProperties!=null) {
             String[] lines = _connectionProperties.split("\\s*;\\s*");

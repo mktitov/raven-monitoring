@@ -22,8 +22,6 @@ import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.conf.Config;
 import org.raven.conf.Configurator;
-import org.raven.tree.Node.Status;
-import org.raven.tree.impl.SystemNode;
 
 /**
  *
@@ -41,8 +39,9 @@ public class JDBCConnectionPoolNodeTest extends RavenCoreTestCase
         pool.setName("pool");
         tree.getRootNode().addAndSaveChildren(pool);
         pool.setUserName(conf.getStringProperty(Configurator.TREE_STORE_USER, null));
-        pool.setPassword(conf.getStringProperty(Configurator.TREE_STORE_PASSWORD, null));
+        pool.setPassword(null);
         pool.setUrl(conf.getStringProperty(Configurator.TREE_STORE_URL, null));
+//        pool.setUrl("jdbc:h2:tcp://localhost/~/documents/h2/test2");
         pool.setMinIdleTime(30000l);
         pool.setDriver("org.h2.Driver");
         pool.setConnectionProperties("prop1=value;prop2=value2");
