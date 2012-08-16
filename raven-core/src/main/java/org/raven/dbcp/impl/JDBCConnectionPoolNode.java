@@ -17,9 +17,11 @@
 
 package org.raven.dbcp.impl;
 
+import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
 import org.apache.commons.dbcp.ConnectionFactory;
 import org.apache.commons.dbcp.DriverManagerConnectionFactory;
 import org.apache.commons.dbcp.PoolableConnectionFactory;
@@ -28,6 +30,7 @@ import org.apache.commons.pool.impl.GenericObjectPool;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.dbcp.ConnectionPool;
+import org.raven.log.LogLevel;
 import org.raven.tree.NodeError;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.constraints.NotNull;
@@ -63,6 +66,8 @@ public class JDBCConnectionPoolNode extends BaseNode implements ConnectionPool
     private Long minIdleTime;
     @Parameter
     private String validationQuery;
+    @Parameter
+    private String connectionProperties;
 
     private GenericObjectPool connectionPool;
 	private PoolingDriver poolingDriver;
@@ -78,9 +83,23 @@ public class JDBCConnectionPoolNode extends BaseNode implements ConnectionPool
         connectionPool.setMinEvictableIdleTimeMillis(minIdleTime);
         connectionPool.setTestWhileIdle(true);
         
-        
+        Properties props = new Properties();
+        props.setProperty("user", userName);
+        props.setProperty("password", password);
+        String _connectionProperties = connectionProperties;
+        if (_connectionProperties!=null) {
+            String[] lines = _connectionProperties.split("\\s*;\\s*");
+            if (lines!=null)
+                for (String line: lines) {
+                    String[] prop = line.split("\\s*=\\s*");
+                    if (prop!=null && prop.length==2)
+                        props.setProperty(prop[0], prop[1]);
+                    else 
+                        throw new Exception("Invalid connection property: "+line);
+                }
+        }
         ConnectionFactory connectionFactory =
-                new DriverManagerConnectionFactory(url, userName, password);
+                new DriverManagerConnectionFactory(url, props);
         PoolableConnectionFactory poolableConnectionFactory =
                 new PoolableConnectionFactory(
                     connectionFactory, connectionPool, null, validationQuery, false, autoCommit);
@@ -114,6 +133,14 @@ public class JDBCConnectionPoolNode extends BaseNode implements ConnectionPool
                 throw new NodeError(message, ex);
             }
         }
+    }
+
+    public String getConnectionProperties() {
+        return connectionProperties;
+    }
+
+    public void setConnectionProperties(String connectionProperties) {
+        this.connectionProperties = connectionProperties;
     }
     
     @Parameter(readOnly=true)

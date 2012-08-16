@@ -37,23 +37,16 @@ public class JDBCConnectionPoolNodeTest extends RavenCoreTestCase
         Config conf = configurator.getConfig();
         assertNotNull(conf);
         
-        ConnectionPoolsNode poolsNode =
-                (ConnectionPoolsNode) 
-                tree.getNode(SystemNode.NAME).getChildren(ConnectionPoolsNode.NAME);
-        assertNotNull(poolsNode);
         JDBCConnectionPoolNode pool = new JDBCConnectionPoolNode();
         pool.setName("pool");
-        poolsNode.addChildren(pool);
-        pool.save();
-        pool.init();
-
+        tree.getRootNode().addAndSaveChildren(pool);
         pool.setUserName(conf.getStringProperty(Configurator.TREE_STORE_USER, null));
         pool.setPassword(conf.getStringProperty(Configurator.TREE_STORE_PASSWORD, null));
         pool.setUrl(conf.getStringProperty(Configurator.TREE_STORE_URL, null));
         pool.setMinIdleTime(30000l);
         pool.setDriver("org.h2.Driver");
-        pool.start();
-        assertEquals(Status.STARTED, pool.getStatus());
+        pool.setConnectionProperties("prop1=value;prop2=value2");
+        assertTrue(pool.start());
         Connection connection = pool.getConnection();
         assertNotNull(connection);
         connection.close();
