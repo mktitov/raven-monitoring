@@ -49,6 +49,13 @@ public class SetValueRule extends Rule
             }
         }
         else
-            attr.setValue(text.isEmpty()? null : text);
+            try {
+                attr.setValue(text.isEmpty()? null : text);
+            } catch (Throwable e) {
+                attr.getOwner().getLogger().error(String.format(
+                        "Error setting value for attribute (%s). Saving attribute value as raw value", attr.getName()), e);
+                attr.setRawValue(text);
+                attr.save();
+            }
     }
 }

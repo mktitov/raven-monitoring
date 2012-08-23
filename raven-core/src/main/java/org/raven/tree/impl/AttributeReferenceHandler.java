@@ -51,18 +51,24 @@ public class AttributeReferenceHandler extends NodeReferenceValueHandler
         return referencedAttribute;
     }
     
-    private void resolveAttribute(String data, boolean init) throws InvalidPathException, Exception
+    private void resolveAttribute(String data, boolean init) throws Exception
     {
         if (ObjectUtils.equals(attrData, data) && expressionValid)
             return;
-        if (data!=null)
-        {
+        referencedAttribute = null;
+        if (data!=null) {
             int pos = data.lastIndexOf(Node.ATTRIBUTE_SEPARATOR);
-            if (pos<0)
-                throw new InvalidPathException(String.format(
+            if (pos<0) {
+                attribute.getOwner().getLogger().error(String.format(
                         "Invalid path (%s) to the attribute. " +
                         "Attribute separator symbol (%s) not found"
                         , data, Node.ATTRIBUTE_SEPARATOR));
+                return;                
+//                throw new InvalidPathException(String.format(
+//                        "Invalid path (%s) to the attribute. " +
+//                        "Attribute separator symbol (%s) not found"
+//                        , data, Node.ATTRIBUTE_SEPARATOR));
+            }
             String pathToNode = data.substring(0, pos);
             String attributeName = data.substring(pos+1);
 
@@ -71,13 +77,18 @@ public class AttributeReferenceHandler extends NodeReferenceValueHandler
             else
                 super.setData(pathToNode);
             
-            referencedAttribute = node.getNodeAttribute(attributeName);
-            
-            if (referencedAttribute==null)
-                throw new AttributeNotFoundException(String.format(
-                        "Invalid path (%s) to the attribute. " +
-                        "Node (%s) does not contains attribute (%s)"
-                        , data, node.getName(), attributeName));
+            if (node!=null) {
+                referencedAttribute = node.getNodeAttribute(attributeName);
+                if (referencedAttribute==null)
+                    attribute.getOwner().getLogger().error(String.format(
+                            "Invalid path (%s) to the attribute. " +
+                            "Node (%s) does not contains attribute (%s)"
+                            , data, node.getName(), attributeName));
+//                    throw new AttributeNotFoundException(String.format(
+//                            "Invalid path (%s) to the attribute. " +
+//                            "Node (%s) does not contains attribute (%s)"
+//                            , data, node.getName(), attributeName));
+            }
         }
         attrData = data;
     }
@@ -87,7 +98,7 @@ public class AttributeReferenceHandler extends NodeReferenceValueHandler
     {
         String oldAttrData = attrData;
         resolveAttribute(data, false);
-        attrData = data;
+//        attrData = data;
         
         if (!ObjectUtils.equals(oldAttrData, attrData))
             attribute.save();
