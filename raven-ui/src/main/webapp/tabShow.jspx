@@ -300,6 +300,9 @@ partialTriggers=":poolStatus"
 					<f:attribute 
 						name="uid" 
 						value="#{row.uid}"/>
+                    <f:attribute 
+                        name="#{otherVO.paramNODE}" 
+                        value="#{cNode.node}"/>
 				</tr:commandLink>
 				</tr:panelHorizontalLayout>
  <!--  		</tr:subform>  -->
@@ -579,7 +582,10 @@ partialTriggers=":poolStatus"
 							actionListener="#{otherVO.exportX}">
 							<f:attribute 
 								name="#{otherVO.paramVO}" 
-								value="#{rowa[vxStat.index].item}"/>
+								value="#{rowa[vxStat.index].itemWrapper}"/>
+							<f:attribute 
+								name="#{otherVO.paramNODE}" 
+								value="#{cNode.node}"/>
 						</tr:commandLink>
 					<!-- is action -->
 <!--
