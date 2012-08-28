@@ -20,6 +20,7 @@ public enum Action
 	
 	VIEW(ActionType.VIEW),
 	VIEW_WITH_ATTR(ActionType.VIEW),
+    VIEW_FILE(ActionType.VIEW),    
 	
 	ACTION(ActionType.ACTION),
 	ACTION_WITH_ATTR(ActionType.ACTION)		;
