@@ -98,7 +98,7 @@ public class OtherVOExportBean
             Node node = (Node) map.get(PAR_NODE);
 			String contentType = vo.getMimeType();
             auditExport(node, vo);
-			writeResponce(vo.getData(), contentType, vo.toString());
+			writeResponce(vo.getData(), contentType, vo.getViewableObject().toString());
 		} catch(Exception e) {
 			logger.error("on export VO from table:", e);
 		}
