@@ -43,7 +43,7 @@ public class LoggerHelper implements Logger {
     }
     
     public LoggerHelper(LoggerHelper logger, String prefix) {
-        this(logger.getLogLevel(), logger.getName(), prefix, logger.getLogger());
+        this(logger.getLogLevel(), logger.getName(), prefix, logger);
     }
 
     public LogLevel getLogLevel() {
@@ -56,6 +56,10 @@ public class LoggerHelper implements Logger {
 
     public String getName() {
         return name;
+    }
+
+    public String getPrefix() {
+        return prefix;
     }
     
     public String logMess(String message, Object... args) {
