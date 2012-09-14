@@ -185,10 +185,10 @@ public class TableViewNodeTest extends RavenCoreTestCase
     }
 
     @Test
-    public void tableTableTitleExpression() throws Exception {
+    public void tableTitleExpressionTest() throws Exception {
         tableDs.setSendTitle(true);
         tableView.setUseTableTitleExpression(Boolean.TRUE);
-        tableView.setTableTitleExpression("'super title'");
+        tableView.setTableTitleExpression("\"super $tableTitle\".toString()");
 
         List<ViewableObject> objects = tableView.getViewableObjects(null);
         assertNotNull(objects);
