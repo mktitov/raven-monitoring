@@ -185,6 +185,24 @@ public class TableViewNodeTest extends RavenCoreTestCase
     }
 
     @Test
+    public void tableTableTitleExpression() throws Exception {
+        tableDs.setSendTitle(true);
+        tableView.setUseTableTitleExpression(Boolean.TRUE);
+        tableView.setTableTitleExpression("'super title'");
+
+        List<ViewableObject> objects = tableView.getViewableObjects(null);
+        assertNotNull(objects);
+        assertEquals(2, objects.size());
+
+        ViewableObject vo = objects.get(0);
+        assertEquals(Viewable.RAVEN_TEXT_MIMETYPE, vo.getMimeType());
+        assertEquals("super title", vo.getData());
+        
+        vo = objects.get(1);
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, vo.getMimeType());
+    }
+
+    @Test
     public void twoTablesTest() throws Exception
     {
         tableDs.setSendTitle(true);

@@ -18,6 +18,7 @@
 package org.raven.table;
 
 import java.util.*;
+import org.raven.BindingNames;
 import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
@@ -47,11 +48,18 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
     public static final String ROW_NUMBER_BINDING = "rowNumber";
     public static final String ROW_TAGS_BINDING = "rowTags";
     public static final String VALUE_BINDING = "value";
+    public static final String TABLE_TITLE_BINDING = "tableTitle";
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
     private String cellValueExpression;
 
     @NotNull @Parameter(defaultValue="false")
     private Boolean useCellValueExpression;
+    
+    @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
+    private String tableTitleExpression;
+    
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean useTableTitleExpression;
 
     @NotNull @Parameter(defaultValue="false")
     private Boolean autoRefresh;
@@ -82,7 +90,7 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
                         voList.add(new ViewableObjectImpl(RAVEN_TEXT_MIMETYPE, "<br>"));
                     if (table.getTitle()!=null)
                         voList.add(new ViewableObjectImpl(
-                                RAVEN_TEXT_MIMETYPE, "<b>"+table.getTitle()+"</b>"));
+                                RAVEN_TEXT_MIMETYPE, formTableTitleExpression(table.getTitle(), context)));
                     table = hideColumnsIfNeed(table, refreshAttributes, context);
                     ViewableObject tableVO = new ViewableObjectImpl(RAVEN_TABLE_MIMETYPE, table);
                     voList.add(new ViewableObjectImpl(RAVEN_TABLE_MIMETYPE, table));
@@ -92,6 +100,19 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
         }
         else
             return null;
+    }
+    
+    private String formTableTitleExpression(String title, DataContext context) {
+        bindingSupport.put(BindingNames.DATA_CONTEXT_BINDING, context);
+        bindingSupport.put(TABLE_TITLE_BINDING, title);
+        try {
+            if (useTableTitleExpression)
+                return tableTitleExpression;
+            else
+                return "<b>"+title+"</b>";
+        } finally {
+            bindingSupport.reset();
+        }
     }
 
     public Map<String, NodeAttribute> getRefreshAttributes() throws Exception {
@@ -124,6 +145,22 @@ public class TableViewNode extends SafeDataConsumer implements Viewable
     public void setUseCellValueExpression(Boolean useCellValueExpression)
     {
         this.useCellValueExpression = useCellValueExpression;
+    }
+
+    public String getTableTitleExpression() {
+        return tableTitleExpression;
+    }
+
+    public void setTableTitleExpression(String tableTitleExpression) {
+        this.tableTitleExpression = tableTitleExpression;
+    }
+
+    public Boolean getUseTableTitleExpression() {
+        return useTableTitleExpression;
+    }
+
+    public void setUseTableTitleExpression(Boolean useTableTitleExpression) {
+        this.useTableTitleExpression = useTableTitleExpression;
     }
 
     public String getHideColumns() {
