@@ -76,8 +76,10 @@ public class TextToLinesNode extends AbstractSafeDataPipe
     protected void doSetData(DataSource dataSource, Object data, DataContext context) 
             throws Exception
     {
-        if (data==null)
+        if (data==null) {
+            sendDataToConsumers(null, context);
             return;
+        }
 
         InputStream is = converter.convert(InputStream.class, data, encoding.name());
         if (is==null)
@@ -99,6 +101,7 @@ public class TextToLinesNode extends AbstractSafeDataPipe
                     sendDataToConsumers(line, context);
                 }
             }
+            sendDataToConsumers(null, context);
         } finally {
             bindingSupport.reset();
         }

@@ -73,15 +73,17 @@ public class TextToLinesNodeTest extends RavenCoreTestCase
         collector.setDataHandler(new DataHandler() {
             public void handleData(Object data, DataContext context) {
                 dataList.add(data);
-                lineNumbers.add(context.getAt(TextToLinesNode.LINE_NUMBER_PARAM));
+                if (data!=null)
+                    lineNumbers.add(context.getAt(TextToLinesNode.LINE_NUMBER_PARAM));
             }
         });
 
         ds.pushData("Строка1\nline2");
 
-        assertEquals(2, dataList.size());
+        assertEquals(3, dataList.size());
         assertEquals("Строка1", dataList.get(0));
         assertEquals("line2", dataList.get(1));
+        assertNull(dataList.get(2));
 
         assertArrayEquals(new Object[]{1,2}, lineNumbers.toArray());
     }
@@ -95,7 +97,8 @@ public class TextToLinesNodeTest extends RavenCoreTestCase
         collector.setDataHandler(new DataHandler() {
             public void handleData(Object data, DataContext context) {
                 dataList.add(data);
-                lineNumbers.add(context.getAt(TextToLinesNode.LINE_NUMBER_PARAM));
+                if (data!=null)
+                    lineNumbers.add(context.getAt(TextToLinesNode.LINE_NUMBER_PARAM));
             }
         });
 
@@ -105,7 +108,7 @@ public class TextToLinesNodeTest extends RavenCoreTestCase
 
         ds.pushData("Строка1\nline2");
 
-        assertEquals(1, dataList.size());
+        assertEquals(2, dataList.size());
         assertEquals("line2", dataList.get(0));
 
         assertArrayEquals(new Object[]{2}, lineNumbers.toArray());
@@ -117,7 +120,7 @@ public class TextToLinesNodeTest extends RavenCoreTestCase
         ByteArrayInputStream is = new ByteArrayInputStream("Строка1\nline2".getBytes("utf-8"));
         ds.pushData(is);
 
-        assertEquals(2, collector.getDataListSize());
+        assertEquals(3, collector.getDataListSize());
         assertEquals("Строка1", collector.getDataList().get(0));
         assertEquals("line2", collector.getDataList().get(1));
     }
@@ -128,7 +131,7 @@ public class TextToLinesNodeTest extends RavenCoreTestCase
         splitter.setStartFromLine(2);
         ds.pushData("Строка1\nline2");
 
-        assertEquals(1, collector.getDataListSize());
+        assertEquals(2, collector.getDataListSize());
         assertEquals("line2", collector.getDataList().get(0));
     }
 }
