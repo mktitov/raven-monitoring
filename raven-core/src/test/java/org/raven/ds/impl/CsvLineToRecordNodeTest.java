@@ -98,8 +98,7 @@ public class CsvLineToRecordNodeTest extends RavenCoreTestCase
     }
 
     @Test
-    public void test() throws RecordException
-    {
+    public void test() throws RecordException {
         ds.pushData("10,something,hello");
 
         assertEquals(1, consumer.getDataListSize());
@@ -107,5 +106,12 @@ public class CsvLineToRecordNodeTest extends RavenCoreTestCase
         Record rec = (Record) consumer.getDataList().get(0);
         assertEquals(10, rec.getValue("field1"));
         assertEquals("hello", rec.getValue("field2"));
+    }
+    
+    @Test
+    public void nullDataTest() throws Exception {
+        ds.pushData(null);
+        assertEquals(1, consumer.getDataListSize());
+        assertNull(consumer.getDataList().get(0));
     }
 }

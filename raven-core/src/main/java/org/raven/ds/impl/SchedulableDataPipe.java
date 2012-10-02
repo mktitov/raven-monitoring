@@ -104,13 +104,10 @@ public class SchedulableDataPipe extends SafeDataPipeNode
 //        getDataSource().getDataImmediate(this, new DataContextImpl());
         gatherDataForConsumer(null, new DataContextImpl());
         Collection<Node> deps = getDependentNodes();
-        if (deps != null) {
-            for (Node node : deps) {
-                if (node instanceof Schedulable) {
+        if (deps != null) 
+            for (Node node : deps) 
+                if (node instanceof Schedulable) 
                     ((Schedulable) node).executeScheduledJob(this);
-                }
-            }
-        }
     }
 
     public String getStatusMessage()

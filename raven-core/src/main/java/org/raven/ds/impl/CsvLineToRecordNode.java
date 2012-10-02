@@ -84,8 +84,7 @@ public class CsvLineToRecordNode extends AbstractSafeDataPipe
     protected void doSetData(DataSource dataSource, Object data, DataContext context) 
             throws Exception
     {
-        if (data!=null)
-        {
+        if (data!=null) {
             Map<String, FieldInfo> fieldsColumns = CsvRecordReaderNode.getFieldsColumns(recordSchema, csvExtensionName);
             if (fieldsColumns==null)
             {
@@ -119,7 +118,8 @@ public class CsvLineToRecordNode extends AbstractSafeDataPipe
                 }
                 sendDataToConsumers(record, context);
             }
-        }
+        } else 
+            sendDataToConsumers(null, context);
     }
 
     @Override
