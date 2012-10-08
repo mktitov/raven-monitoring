@@ -56,9 +56,24 @@ public class RavenUtilsTest extends ServiceTestCase
     }
 
     @Test
-    public void splitTest()
-    {
+    public void splitTest() {
         assertArrayEquals(new String[]{"1", "2"}, RavenUtils.split("1, 2 "));
+    }
+
+    @Test
+    public void splitTest2() {
+        assertArrayEquals(new String[]{"1", ""}, RavenUtils.split("1,", ",", false));
+    }
+
+    @Test
+    public void splitTest3() {
+        assertArrayEquals(new String[]{""}, RavenUtils.split(" ", ",", false));
+        assertArrayEquals(new String[]{""}, RavenUtils.split("", ",", false));
+    }
+
+    @Test
+    public void splitWithQuoteChar() {
+        assertArrayEquals(new String[]{"val 1", "val_2"}, RavenUtils.split("\"val 1\" val_2", " ", false));
     }
 
     @Test

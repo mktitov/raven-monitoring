@@ -176,12 +176,24 @@ public class RavenUtils
      * Splits the string.
      * @return returns null if str is null or array of strings
      */
-    public static String[] split(String str, String delimiter)
-    {
+    public static String[] split(String str, String delimiter) {
         if (str==null)
             return null;
         StrTokenizer tokenizer = new StrTokenizer(str, delimiter);
         tokenizer.setTrimmerMatcher(StrMatcher.trimMatcher());
+        tokenizer.setQuoteChar('"');
+
+        return tokenizer.getTokenArray();
+    }
+
+    public static String[] split(String str, String delimiter, boolean ignoreEmptyTokens) {
+        if (str==null)
+            return null;
+        if (str.isEmpty())
+            return new String[]{""};
+        StrTokenizer tokenizer = new StrTokenizer(str, delimiter);
+        tokenizer.setTrimmerMatcher(StrMatcher.trimMatcher());
+        tokenizer.setIgnoreEmptyTokens(false);
         tokenizer.setQuoteChar('"');
 
         return tokenizer.getTokenArray();
