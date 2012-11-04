@@ -19,6 +19,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
@@ -34,6 +35,7 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
+@NodeClass
 public class QueueDataPipe extends AbstractSafeDataPipe {
     
     @NotNull @Parameter(defaultValue="512")
@@ -77,6 +79,12 @@ public class QueueDataPipe extends AbstractSafeDataPipe {
     public Integer getMaxQueueSize() {
         Worker aworker = worker;
         return aworker!=null? aworker.maxQueueSize : null;
+    }
+    
+    @Parameter(readOnly=true)
+    public Integer getCurrentQueueSize() {
+        Worker aworker = worker;
+        return aworker!=null? aworker.queue.size() : null;
     }
     
     public Integer getQueueSize() {
