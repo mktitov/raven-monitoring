@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.raven.ds.InvalidRecordFieldException;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;
@@ -45,21 +46,17 @@ public class RecordImpl implements Record
     private final Map<String, RecordSchemaField> fields;
     private Map<String, Object> tags;
 
-    public RecordImpl(RecordSchema schema) throws RecordException
-    {
+    public RecordImpl(RecordSchema schema) throws RecordException {
         this.schema = schema;
         RecordSchemaField[] schemaFields = schema.getFields();
         if (schemaFields==null || schemaFields.length==0)
             throw new RecordException(String.format(
                     "The record schema (%s) does contains fields", schema.getName()));
 
-        values = new HashMap<String, Object>();
+        values = new ConcurrentHashMap<String, Object>();
         fields = new HashMap<String, RecordSchemaField>();
-        for (RecordSchemaField field: schemaFields)
-        {
-//            values.put(field.getName(), null);
+        for (RecordSchemaField field: schemaFields) 
             fields.put(field.getName(), field);
-        }
     }
 
     public RecordSchema getSchema()
