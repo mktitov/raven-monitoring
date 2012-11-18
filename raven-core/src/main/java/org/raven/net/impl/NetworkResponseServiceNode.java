@@ -27,6 +27,7 @@ import org.raven.net.NetworkResponseContext;
 import org.raven.net.NetworkResponseNode;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.NetworkResponseServiceExeption;
+import org.raven.net.Response;
 import org.raven.tree.impl.BaseNode;
 import org.weda.internal.annotations.Service;
 
@@ -92,21 +93,19 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
         return getContext(context, null).getAuthentication();
     }
     
-    public String getResponse(String context, String requesterIp, Map<String, Object> params)
+    public Response getResponse(String context, String requesterIp, Map<String, Object> params)
             throws NetworkResponseServiceExeption
     {
         long requestId = requestsCount.incrementAndGet();
         NetworkResponseContext contextNode = null;
-        if (isLogLevelEnabled(LogLevel.DEBUG))
-        {
+        if (isLogLevelEnabled(LogLevel.DEBUG)) {
             String requestInfo = String.format(
                     "[%d] Processing request. " +
                     "Remote address (%s), context (%s), request parameters: %s"
                     , requestId, requesterIp, context, paramsToString(params));
             debug(requestInfo);
         }
-        try
-        {
+        try {
             contextNode = getContext(context, params);
 
             if (isLogLevelEnabled(LogLevel.DEBUG))
@@ -116,7 +115,7 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
                     "[%d] Processing request. " +
                     "Remote address (%s), context (%s), request parameters: %s"
                     , requestId, requesterIp, context, paramsToString(params)));
-            String response = contextNode.getResponse(requesterIp, params);
+            Response response = contextNode.getResponse(requesterIp, params);
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug(String.format("[%d] Request successfully processed", requestId));
             if (contextNode.isLogLevelEnabled(LogLevel.DEBUG))
@@ -128,9 +127,7 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
                 contextNode.getLogger().trace(String.format(
                         "[%d] Request response \n>>>>\n%s\n<<<<", requestId, response));
             return response;
-        }
-        catch(NetworkResponseServiceExeption e)
-        {
+        } catch(NetworkResponseServiceExeption e) {
             requestsWithErrors.incrementAndGet();
             if (isLogLevelEnabled(LogLevel.WARN))
                 warn(String.format(
@@ -141,9 +138,7 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
                         "[%d] Error processing request from (%s). %s"
                         , requestId, context, e.getMessage()));
             throw e;
-        }
-        catch(RuntimeException e)
-        {
+        } catch(RuntimeException e) {
             requestsWithErrors.incrementAndGet();
             if (isLogLevelEnabled(LogLevel.ERROR))
                 error(
@@ -171,7 +166,7 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
         {
             if (!firstIteration)
                 buf.append("; ");
-            buf.append(param.getKey()+" - ("+param.getValue()+")");
+            buf.append(param.getKey()).append(" - (").append(param.getValue()).append(")");
             if (firstIteration)
                 firstIteration = false;
         }
@@ -182,8 +177,7 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
             throws ContextUnavailableException
     {
         int pos = context.indexOf('/');
-        if (pos>=0)
-        {
+        if (pos>=0) {
             String subcontext = context.substring(pos+1);
             context = context.substring(0, pos);
             if (params!=null)

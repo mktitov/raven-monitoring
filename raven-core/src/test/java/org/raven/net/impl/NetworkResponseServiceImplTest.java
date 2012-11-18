@@ -117,7 +117,7 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase
         ds.addDataPortion("test");
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("param", "response");
-        assertEquals("test", responseService.getResponse("context", "1.1.1.1", params));
+        assertEquals("test", responseService.getResponse("context", "1.1.1.1", params).getContent());
     }
 
     @Test
@@ -151,7 +151,7 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase
         params.put("param", "response");
         assertEquals(
                 "subcontextName",
-                responseService.getResponse("context/subcontextName", "1.1.1.1", params));
+                responseService.getResponse("context/subcontextName", "1.1.1.1", params).getContent());
     }
 
     @Test

@@ -25,7 +25,7 @@ import java.util.Map;
  */
 public interface NetworkResponse
 {
-    public String getResponse(String context, String requesterIp, Map<String, Object> params)
+    public Response getResponse(String context, String requesterIp, Map<String, Object> params)
             throws NetworkResponseServiceExeption;
     /**
      * Returns authentication object for context or null if context does not need

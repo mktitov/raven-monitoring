@@ -33,6 +33,7 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.log.LogLevel;
+import org.raven.net.Response;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.util.OperationStatistic;
 import org.weda.annotations.constraints.NotNull;
@@ -55,6 +56,9 @@ public abstract class AbstractNetworkResponseContext extends BaseNode implements
     @NotNull() @Parameter(defaultValue="false")
     private Boolean needsAuthentication;
 
+    @NotNull @Parameter(defaultValue="text/plain")
+    private String responseContentType;
+    
     @Parameter(readOnly=true)
     private OperationStatistic requestsStat;
 
@@ -96,6 +100,14 @@ public abstract class AbstractNetworkResponseContext extends BaseNode implements
                 }
             }
         }
+    }
+    
+    public String getResponseContentType() {
+        return responseContentType;
+    }
+
+    public void setResponseContentType(String responseContentType) {
+        this.responseContentType = responseContentType;
     }
 
     public Boolean getNeedsAuthentication() {
@@ -214,28 +226,23 @@ public abstract class AbstractNetworkResponseContext extends BaseNode implements
                     , getNodeAttribute(PASSWORD_ATTR).getValue());
     }
 
-    public String getResponse(String requesterIp, Map<String, Object> params)
+    public Response getResponse(String requesterIp, Map<String, Object> params)
             throws NetworkResponseServiceExeption
     {
         long operationStart = requestsStat.markOperationProcessingStart();
-        try
-        {
+        try {
             bindingSupport.put(PARAMS_BINDING, params);
             checkIp(requesterIp);
             params = checkParameters(params);
             bindingSupport.put(PARAMS_BINDING, params);
-            String result = doGetResponse(requesterIp, params);
-
-            return result;
-        }
-        finally
-        {
+            return new ResponseImpl(responseContentType, doGetResponse(requesterIp, params));
+        } finally {
             requestsStat.markOperationProcessingEnd(operationStart);
             bindingSupport.reset();
         }
     }
 
-    public abstract String doGetResponse(String requesterIp, Map<String, Object> params)
+    public abstract Object doGetResponse(String requesterIp, Map<String, Object> params)
             throws NetworkResponseServiceExeption;
 
     @Override

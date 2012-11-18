@@ -36,55 +36,42 @@ import org.weda.annotations.constraints.NotNull;
  */
 @NodeClass(parentNode=NetworkResponseServiceNode.class, anyChildTypes=true)
 public class NetworkResponseContextNode
-        extends AbstractNetworkResponseContext implements DataConsumer
+       extends AbstractNetworkResponseContext implements DataConsumer
 {
     @NotNull @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     private DataSource dataSource;
     
     private ThreadLocal value;
 
-    public DataSource getDataSource()
-    {
+    public DataSource getDataSource() {
         return dataSource;
     }
 
-    public void setDataSource(DataSource dataSource)
-    {
+    public void setDataSource(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
     @Override
-    protected void initFields()
-    {
+    protected void initFields() {
         super.initFields();
         value = new ThreadLocal();
     }
 
-    public String doGetResponse(String requesterIp, Map<String, Object> params)
-            throws NetworkResponseServiceExeption
-    {
-        Object val = refereshData(null);
-        String result = converter.convert(String.class, val, null);
-        
-        return result;
+    public Object doGetResponse(String requesteIrp, Map<String, Object> params) throws NetworkResponseServiceExeption {
+        return refereshData(null);
     }
 
-    public void setData(DataSource dataSource, Object data, DataContext context)
-    {
+    public void setData(DataSource dataSource, Object data, DataContext context) {
         value.set(data);
     }
 
-    public Object refereshData(Collection<NodeAttribute> sessionAttributes)
-    {
-        try
-        {
+    public Object refereshData(Collection<NodeAttribute> sessionAttributes) {
+        try {
             dataSource.getDataImmediate(this, new DataContextImpl(sessionAttributes));
             Object val = value.get();
             
             return val;
-        }
-        finally
-        {
+        } finally {
             value.remove();
         }
     }

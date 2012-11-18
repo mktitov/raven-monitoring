@@ -38,8 +38,7 @@ public class NetworkResponseContextNodeTest extends RavenCoreTestCase
     private NetworkResponseContextNode context ;
 
     @Before
-    public void prepare()
-    {
+    public void prepare() {
         ds = new PushOnDemandDataSource();
         ds.setName("ds");
         tree.getRootNode().addAndSaveChildren(ds);
@@ -53,8 +52,7 @@ public class NetworkResponseContextNodeTest extends RavenCoreTestCase
     }
 
     @Test(expected=AccessDeniedException.class)
-    public void accessDeniedTest() throws NetworkResponseServiceExeption
-    {
+    public void accessDeniedTest() throws NetworkResponseServiceExeption {
         assertTrue(context.start());
         context.getResponse("1.1.1.1", null);
     }
@@ -129,7 +127,7 @@ public class NetworkResponseContextNodeTest extends RavenCoreTestCase
         ds.addDataPortion("test");
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("param", "1");
-        assertEquals("test", context.getResponse("1.1.1.1", params));
+        assertEquals("test", context.getResponse("1.1.1.1", params).getContent());
     }
 
     @Test
@@ -139,6 +137,6 @@ public class NetworkResponseContextNodeTest extends RavenCoreTestCase
         assertTrue(context.start());
 
         ds.addDataPortion("test");
-        assertEquals("test", context.getResponse("1.1.1.1", null));
+        assertEquals("test", context.getResponse("1.1.1.1", null).getContent());
     }
 }

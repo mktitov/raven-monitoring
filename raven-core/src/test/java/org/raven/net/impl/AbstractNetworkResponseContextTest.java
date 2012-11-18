@@ -29,8 +29,7 @@ import org.raven.tree.NodeAttribute;
 public class AbstractNetworkResponseContextTest extends RavenCoreTestCase
 {
     @Test
-    public void authTest() throws Exception
-    {
+    public void authTest() throws Exception {
         TestNetworkResponseContext context = new TestNetworkResponseContext();
         context.setName("context");
         tree.getRootNode().addAndSaveChildren(context);

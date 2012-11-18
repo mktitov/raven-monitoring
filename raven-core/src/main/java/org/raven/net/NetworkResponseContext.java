@@ -27,11 +27,11 @@ import org.raven.tree.Node;
 public interface NetworkResponseContext extends Node
 {
     /**
-     * Returns the response for the request from recieved from the <b>requesterIp</b>
+     * Returns the response for the request from received from the <b>requesterIp</b>
      *
      * @throws org.raven.net.NetworkResponseServiceExeption
      */
-    public String getResponse(String requesterIp, Map<String, Object> params)
+    public Response getResponse(String requesterIp, Map<String, Object> params)
             throws NetworkResponseServiceExeption;
 
     /**

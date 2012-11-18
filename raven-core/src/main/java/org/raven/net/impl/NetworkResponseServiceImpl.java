@@ -23,6 +23,7 @@ import org.raven.net.NetworkResponseNode;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.net.NetworkResponseServiceUnavailableException;
+import org.raven.net.Response;
 import org.raven.tree.Node.Status;
 
 /**
@@ -44,7 +45,7 @@ public class NetworkResponseServiceImpl implements NetworkResponseService
         this.networkResponseServiceNode = networkResponseServiceNode;
     }
     
-    public String getResponse(String context, String requesterIp, Map<String, Object> params)
+    public Response getResponse(String context, String requesterIp, Map<String, Object> params)
             throws NetworkResponseServiceExeption
     {
         NetworkResponseNode serviceNode = checkNetworkResponseServiceNode();
