@@ -69,13 +69,14 @@ public class RecordImpl implements Record
         RecordSchemaField field = fields.get(fieldName);
         if (field==null)
             throw new InvalidRecordFieldException(fieldName, schema.getName());
-        try
-        {
-            value = converter.convert(field.getFieldType().getType(), value, field.getPattern());
-            values.put(fieldName, value);
-        }
-        catch(TypeConverterException e)
-        {
+        try {
+            if (value==null)
+                values.remove(fieldName);
+            else {
+                value = converter.convert(field.getFieldType().getType(), value, field.getPattern());
+                values.put(fieldName, value);
+            }
+        } catch(TypeConverterException e) {
             throw new RecordException(String.format(
                     "Error setting value (%s) for field (%s)", value, fieldName), e);
         }

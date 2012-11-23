@@ -90,6 +90,9 @@ public class RecordImplTest extends RavenCoreTestCase
 
         assertEquals(1, record.getValue("field1"));
         
+        record.setValue("field1", null);
+        assertNull(record.getValue("field1"));
+        
         verify(schema, field);
     }
 
