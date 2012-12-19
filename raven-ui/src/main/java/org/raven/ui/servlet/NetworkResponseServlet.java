@@ -108,6 +108,10 @@ public class NetworkResponseServlet extends HttpServlet //implements CometProces
         if (serviceResponse.getContent()==null)
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
         else {
+            Map<String, String> headers = serviceResponse.getHeaders();
+            if (headers!=null)
+                for (Map.Entry<String, String> e: headers.entrySet())
+                    response.addHeader(e.getKey(), e.getValue());
             String charset = getCharset(request);
             if (serviceResponse.getContentType().toUpperCase().startsWith("TEXT"))
                 response.setCharacterEncoding(charset);
