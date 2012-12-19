@@ -15,6 +15,8 @@
  */
 package org.raven.net;
 
+import java.util.Map;
+
 /**
  *
  * @author Mikhail Titov
@@ -22,4 +24,5 @@ package org.raven.net;
 public interface Response {
     public String getContentType();
     public Object getContent();
+    public Map<String, String> getHeaders();
 }

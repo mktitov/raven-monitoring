@@ -49,6 +49,7 @@ public abstract class AbstractNetworkResponseContext extends BaseNode implements
     public static final String NEEDS_AUTHENTICATION_ATTR = "needsAuthentication";
     public static final String USER_ATTR = "user";
     public static final String PASSWORD_ATTR = "password";
+    public static final String HEADERS_PARAM = "headers";
 
     @NotNull() @Parameter(defaultValue="false")
     private Boolean allowRequestsFromAnyIp;
@@ -235,7 +236,9 @@ public abstract class AbstractNetworkResponseContext extends BaseNode implements
             checkIp(requesterIp);
             params = checkParameters(params);
             bindingSupport.put(PARAMS_BINDING, params);
-            return new ResponseImpl(responseContentType, doGetResponse(requesterIp, params));
+            Object content = doGetResponse(requesterIp, params);
+            Map<String, String> headers = (Map<String, String>) params.get(HEADERS_PARAM);
+            return new ResponseImpl(responseContentType, content, headers);
         } finally {
             requestsStat.markOperationProcessingEnd(operationStart);
             bindingSupport.reset();

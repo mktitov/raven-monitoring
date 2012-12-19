@@ -15,6 +15,7 @@
  */
 package org.raven.net.impl;
 
+import java.util.Map;
 import org.raven.net.Response;
 
 /**
@@ -24,10 +25,12 @@ import org.raven.net.Response;
 public class ResponseImpl implements Response {
     private final String contentType;
     private final Object content;
+    private final Map<String, String> headers;
 
-    public ResponseImpl(String contentType, Object content) {
+    public ResponseImpl(String contentType, Object content, Map<String, String> headers) {
         this.contentType = contentType;
         this.content = content;
+        this.headers = headers;
     }
 
     public String getContentType() {
@@ -36,5 +39,9 @@ public class ResponseImpl implements Response {
 
     public Object getContent() {
         return content;
+    }
+
+    public Map<String, String> getHeaders() {
+        return headers;
     }
 }
