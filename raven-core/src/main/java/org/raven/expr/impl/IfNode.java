@@ -45,6 +45,8 @@ public class IfNode extends BaseNode
     @Override
     public Collection<Node> getEffectiveChildrens() 
     {
+        if (!Node.Status.STARTED.equals(getStatus()) && !usedInTemplate)
+            return null;
         Boolean res = expression;
         return !isConditionalNode() || res==null || res==false? 
             null : super.getEffectiveChildrens();

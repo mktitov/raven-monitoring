@@ -76,6 +76,7 @@ public class IfNodeTest extends RavenCoreTestCase
         ifNode.addChildren(child);
         child.save();
         child.init();
+        assertTrue(ifNode.start());
         
         ifNode.getNodeAttribute(IfNode.USEDINTEMPLATE_ATTRIBUTE).setValue("false");
         ifNode.getNodeAttribute(IfNode.EXPRESSION_ATTRIBUTE).setValue("false");
