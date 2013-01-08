@@ -118,6 +118,30 @@ public class ResourceManagerImplTest extends RavenCoreTestCase {
         assertEquals("\"test bundle\"/\"test\"/", manager.getKeyForResource(node.getParent()));
     }
     
+    @Test
+    public void getResourceTest() {
+        Node bundle = manager.getResource("test bundle", Locale.ENGLISH);
+        assertNotNull(bundle);
+        Node res = manager.getResource(bundle, "test", Locale.ENGLISH);
+        assertNotNull(res);
+        NodeAttribute attr = res.getNodeAttribute("attr");
+        assertNotNull(attr);
+    }
+    
+    @Test
+    public void getResourceTest2() {
+        ContainerNode container = new ContainerNode("container");
+        tree.getRootNode().addAndSaveChildren(container);
+        assertTrue(container.start());
+        
+        BaseNode res = new BaseNode("res");
+        container.addAndSaveChildren(res);
+        assertTrue(res.start());
+        
+        Node node = manager.getResource(container, "res", null);
+        assertSame(res, node);
+    }
+    
     private static class TestResourceRegistrator implements ResourceRegistrator {
         public void registerResources(ResourceManager resourceManager) {
             try {

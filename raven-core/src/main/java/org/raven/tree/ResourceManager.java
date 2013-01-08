@@ -16,6 +16,7 @@
 package org.raven.tree;
 
 import java.util.Locale;
+import org.raven.tree.impl.ResourceBundleNode;
 
 /**
  *
@@ -45,6 +46,15 @@ public interface ResourceManager extends TreeListener {
      *      default locale must be specified in the <i>Resources</i> node
      */
     public Node getResource(String key, Locale locale);
+    /**
+     * Returns resource contained in the <b>resourceContainer</b>. If <b>resourceContainer<b> is instance of
+     * {@link ResourceBundleNode} then method returns the resource else method returns the child node of the
+     * <b>resourceContainer</b> node with name <b>resourceName</b> (in this case <b>locale</b> will be ignored).
+     * @param resourceConstainer resource container node
+     * @param resourceName the name of the resource
+     * @param locale the resource locale
+     */
+    public Node getResource(Node resourceContainer, String resourceName, Locale locale);
     /**
      * Returns the key for resource node or null if node is not a resource node
      * @param resource This node or it's parent must be an instance of ResouceNode
