@@ -34,7 +34,7 @@ public class ResourceManagerImpl implements ResourceManager, TreeListener {
     }
     
     public boolean containsResource(String key, Locale locale) {
-        return resourcesNode.getChildrenByPath(getPath(key, locale))!=null;
+        return getChildrenByPath(getPaths(key, locale))!=null;
     }
 
     public boolean registerResource(String key, Locale locale, Node resource) throws ResourceManagerException {
@@ -74,7 +74,7 @@ public class ResourceManagerImpl implements ResourceManager, TreeListener {
     public Node getResource(String key, Locale locale) {
         Node res = resourcesNode.getChildrenByPath(key);
         return res!=null && res instanceof ResourceBundleNode? 
-            res : resourcesNode.getChildrenByPath(getPath(key, locale));
+            res : getChildrenByPath(getPaths(key, locale));
     }
 
     public Node getResource(Node resourceContainer, String resourceName, Locale locale) {
@@ -101,8 +101,26 @@ public class ResourceManagerImpl implements ResourceManager, TreeListener {
 
     public void treeReloaded(Tree tree) { }
     
-    private String getPath(String key, Locale locale) {
-        return key+Node.NODE_SEPARATOR+getLocale(locale).toString();
+    private String[] getPaths(String key, Locale locale) {
+        String localeStr = getLocale(locale).toString();
+        String[] elems = localeStr.split("_");
+        String[] paths = new String[elems.length];
+        StringBuilder buf = new StringBuilder();
+        int j = elems.length-1;
+        for (int i=0; i<elems.length; ++i, j--) {
+            if (buf.length()>0) buf.append("_");
+            buf.append(elems[i]);
+            paths[j] = key+Node.NODE_SEPARATOR+buf.toString();
+        }
+        return paths;
+    }
+    
+    private Node getChildrenByPath(String[] paths) {
+        for (int i=0; i<paths.length; ++i) {
+            Node res = resourcesNode.getChildrenByPath(paths[i]);
+            if (res!=null) return res;
+        }
+        return null;
     }
     
     private Locale getLocale(Locale locale) {

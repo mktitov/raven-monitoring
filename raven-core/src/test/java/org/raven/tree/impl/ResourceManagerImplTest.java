@@ -126,6 +126,12 @@ public class ResourceManagerImplTest extends RavenCoreTestCase {
         assertNotNull(res);
         NodeAttribute attr = res.getNodeAttribute("attr");
         assertNotNull(attr);
+        assertEquals("value", attr.getValue());
+        res = manager.getResource(bundle, "test", new Locale("en_EN"));
+        assertNotNull(res);
+        attr = res.getNodeAttribute("attr");
+        assertNotNull(attr);
+        assertEquals("value2", attr.getValue());
     }
     
     @Test
@@ -151,6 +157,12 @@ public class ResourceManagerImplTest extends RavenCoreTestCase {
                 attr.init();
                 testRes.addNodeAttribute(attr);
                 assertTrue(resourceManager.registerResource("test bundle/test", Locale.ENGLISH, testRes));
+                Node testRes2 = new BaseNode("test1");
+                NodeAttributeImpl attr2 = new NodeAttributeImpl("attr", String.class, "value2", null);
+                attr2.setOwner(testRes2);
+                attr2.init();
+                testRes2.addNodeAttribute(attr2);
+                assertTrue(resourceManager.registerResource("test bundle/test", new Locale("en_EN"), testRes2));
             } catch (Exception ex) {
                 Logger.getLogger(ResourceManagerImplTest.class.getName()).log(Level.SEVERE, null, ex);
             }

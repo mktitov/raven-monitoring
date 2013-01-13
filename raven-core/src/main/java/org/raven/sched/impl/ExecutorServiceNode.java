@@ -142,8 +142,10 @@ public class ExecutorServiceNode extends BaseNode
 
     public void execute(Task task) throws ExecutorServiceException {
         try {
-            if (Status.STARTED.equals(getStatus())) 
-                    executor.execute(new TaskWrapper(task));
+            if (Status.STARTED.equals(getStatus())) { 
+//                getLogger().debug("Executing: "+task.getStatusMessage());
+                executor.execute(new TaskWrapper(task));
+            }
         } catch (RejectedExecutionException e) {
             rejectedTasks.incrementAndGet();
             String message = String.format(
