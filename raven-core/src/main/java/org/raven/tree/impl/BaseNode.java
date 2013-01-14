@@ -526,7 +526,7 @@ public class BaseNode implements Node, NodeListener, Logger
     
     public Collection<Node> getChildrens()
     {
-        return childrens==null? null : childrens.values();
+        return childrens==null? Collections.EMPTY_LIST : childrens.values();
     }
     
     public List<Node> getSortedChildrens()
