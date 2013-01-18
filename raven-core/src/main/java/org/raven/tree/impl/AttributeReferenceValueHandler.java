@@ -17,6 +17,7 @@
 
 package org.raven.tree.impl;
 
+import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
 import org.weda.internal.annotations.Service;
 import org.weda.services.TypeConverter;
@@ -35,8 +36,15 @@ public class AttributeReferenceValueHandler extends AttributeReferenceHandler
     }
 
     @Override
-    public Object handleData()
-    {
-        return referencedAttribute==null? null : converter.convert(attribute.getType(), referencedAttribute.getRealValue(), null);
+    public Object handleData() {
+        if (referencedAttribute==null && attribute.getRawValue()!=null) try {
+            setData(attribute.getRawValue());
+        } catch (Exception ex) {
+            if (attribute.getOwner().isLogLevelEnabled(LogLevel.ERROR))
+                attribute.getOwner().getLogger().error(
+                        String.format("Error getting value for attribute (%s)", attribute.getName()), ex);
+        }
+        return referencedAttribute==null? null : converter.convert(
+                attribute.getType(), referencedAttribute.getRealValue(), null);
     }
 }

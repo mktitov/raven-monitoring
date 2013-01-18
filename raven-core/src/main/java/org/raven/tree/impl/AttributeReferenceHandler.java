@@ -17,8 +17,6 @@
 
 package org.raven.tree.impl;
 
-import org.raven.tree.AttributeNotFoundException;
-import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
