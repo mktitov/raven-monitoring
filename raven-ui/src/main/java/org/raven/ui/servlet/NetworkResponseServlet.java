@@ -60,7 +60,7 @@ public class NetworkResponseServlet extends HttpServlet //implements CometProces
     private boolean checkAuth(HttpServletRequest request, HttpServletResponse response, 
         NetworkResponseService responseService, String context) throws Exception
     {
-        Authentication contextAuth = responseService.getAuthentication(context);
+        Authentication contextAuth = responseService.getAuthentication(context, request.getRemoteAddr());
         if (contextAuth!=null) {
             String requestAuth = request.getHeader("Authorization");
             if (requestAuth==null) {
