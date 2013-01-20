@@ -17,15 +17,13 @@
 
 package org.raven.tree.impl;
 
+import static org.easymock.EasyMock.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;
-import org.raven.tree.AttributeNotFoundException;
-import org.raven.tree.InvalidPathException;
-import org.raven.tree.NodeAttribute;
-import org.raven.tree.Node;
 import org.raven.tree.AttributeValueHandlerListener;
-import static org.easymock.EasyMock.*;
+import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
 /**
  *
  * @author Mikhail Titov
@@ -59,11 +57,13 @@ public class AttributeReferenceValueHandlerTest extends RavenCoreTestCase
         node.init();
     }
     
-    @Test(expected=InvalidPathException.class)
+//    @Test(expected=InvalidPathException.class)
+    @Test
     public void setData_noAttributeSeparatorInPath() throws Exception
     {
         NodeAttribute attr = createMock(NodeAttribute.class);
         expect(attr.getRawValue()).andReturn(null);
+        expect(attr.getOwner()).andReturn(node).anyTimes();
         replay(attr);
         
         AttributeReferenceValueHandler valueHandler = new AttributeReferenceValueHandler(attr);
@@ -73,11 +73,13 @@ public class AttributeReferenceValueHandlerTest extends RavenCoreTestCase
     }
     
 //    @Test(expected=AttributeNotFoundException.class)
+    @Test()
     public void setData_attributeNotFound1() throws Exception
     {
         NodeAttribute attr = createMock(NodeAttribute.class);
-        expect(attr.getOwner()).andReturn(node);
+        expect(attr.getOwner()).andReturn(node).anyTimes();
         expect(attr.getRawValue()).andReturn(null).atLeastOnce();
+        attr.save();
         replay(attr);
         
         AttributeReferenceValueHandler valueHandler = new AttributeReferenceValueHandler(attr);
@@ -87,11 +89,13 @@ public class AttributeReferenceValueHandlerTest extends RavenCoreTestCase
     }
     
 //    @Test(expected=AttributeNotFoundException.class)
+    @Test()
     public void setData_attributeNotFound2() throws Exception
     {
         NodeAttribute attr = createMock(NodeAttribute.class);
-        expect(attr.getOwner()).andReturn(node);
+        expect(attr.getOwner()).andReturn(node).anyTimes();
         expect(attr.getRawValue()).andReturn(null);
+        attr.save();
         replay(attr);
         
         AttributeReferenceValueHandler valueHandler = new AttributeReferenceValueHandler(attr);
@@ -100,7 +104,7 @@ public class AttributeReferenceValueHandlerTest extends RavenCoreTestCase
         verify(attr);
     }
     
-//    @Test
+    @Test
     public void setData() throws Exception
     {
         NodeAttribute refAttr = createMock(NodeAttribute.class);
@@ -125,15 +129,15 @@ public class AttributeReferenceValueHandlerTest extends RavenCoreTestCase
         verify(refAttr, listener);
     }
     
-//    @Test
+    @Test
     public void attributeRemoved() throws Exception
     {
         NodeAttribute refAttr = createMock(NodeAttribute.class);
         AttributeValueHandlerListener listener = createMock(AttributeValueHandlerListener.class);
         
-        expect(refAttr.getOwner()).andReturn(node).times(2);
-        expect(refAttr.getRawValue()).andReturn(null);
-        expect(refAttr.getType()).andReturn(Integer.class).times(2);
+        expect(refAttr.getOwner()).andReturn(node).atLeastOnce();
+        expect(refAttr.getRawValue()).andReturn(null).atLeastOnce();
+        expect(refAttr.getType()).andReturn(Integer.class).atLeastOnce();
         refAttr.save();
 //        listener.valueChanged(null, 10);
         listener.expressionInvalidated(anyObject());
@@ -163,15 +167,15 @@ public class AttributeReferenceValueHandlerTest extends RavenCoreTestCase
         verify(refAttr, listener);
     }
     
-//    @Test
+    @Test
     public void attributeRenamed() throws Exception
     {
         NodeAttribute refAttr = createMock(NodeAttribute.class);
         AttributeValueHandlerListener listener = createMock(AttributeValueHandlerListener.class);
         
-        expect(refAttr.getOwner()).andReturn(node).times(1);
-        expect(refAttr.getRawValue()).andReturn(null);
-        expect(refAttr.getType()).andReturn(Integer.class).times(3);
+        expect(refAttr.getOwner()).andReturn(node).atLeastOnce();
+        expect(refAttr.getRawValue()).andReturn(null).atLeastOnce();
+        expect(refAttr.getType()).andReturn(Integer.class).atLeastOnce();
         refAttr.save();
         refAttr.save();
         listener.valueChanged(null, 10);
@@ -192,7 +196,7 @@ public class AttributeReferenceValueHandlerTest extends RavenCoreTestCase
         assertEquals(20, valueHandler.handleData());
     }
 
-//    @Test
+    @Test
     public void moveTest() throws Exception
     {
         NodeAttribute refAttr = new NodeAttributeImpl("refAttr", Integer.class, null, null);
@@ -220,7 +224,7 @@ public class AttributeReferenceValueHandlerTest extends RavenCoreTestCase
         assertEquals(10, refAttr.getRealValue());
     }
     
-//    @Test
+    @Test
     public void realTest() throws Exception
     {
         NodeAttribute refAttr = new NodeAttributeImpl("refAttr", Integer.class, null, null);

@@ -51,8 +51,9 @@ public class AttributeReferenceHandler extends NodeReferenceValueHandler
     
     private void resolveAttribute(String data, boolean init) throws Exception
     {
-        if (ObjectUtils.equals(attrData, data) && expressionValid)
-            return;
+//        if (ObjectUtils.equals(attrData, data) && expressionValid)
+//        if (ObjectUtils.equals(attrData, data))
+//            return;
         referencedAttribute = null;
         if (data!=null) {
             int pos = data.lastIndexOf(Node.ATTRIBUTE_SEPARATOR);
