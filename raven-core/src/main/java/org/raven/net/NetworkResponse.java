@@ -31,5 +31,5 @@ public interface NetworkResponse
      * Returns authentication object for context or null if context does not need
      * authentication.
      */
-    public Authentication getAuthentication(String context) throws NetworkResponseServiceExeption;
+    public Authentication getAuthentication(String context, String requesterIp) throws NetworkResponseServiceExeption;
 }

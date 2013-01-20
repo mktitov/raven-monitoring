@@ -21,9 +21,8 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
-import org.raven.test.PushOnDemandDataSource;
-import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.impl.AttributeValueDataSourceNode;
+import org.raven.expr.impl.IfNode;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.net.Authentication;
@@ -31,6 +30,9 @@ import org.raven.net.ContextUnavailableException;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.net.NetworkResponseServiceUnavailableException;
+import org.raven.test.PushOnDemandDataSource;
+import org.raven.test.RavenCoreTestCase;
+import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.ServicesNode;
 import org.raven.tree.impl.SystemNode;
@@ -59,12 +61,7 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase
     @Test(expected=NetworkResponseServiceUnavailableException.class)
     public void serviceUnavailableTest2() throws NetworkResponseServiceExeption
     {
-        NetworkResponseServiceNode responseNode = (NetworkResponseServiceNode) 
-                tree.getRootNode()
-                .getChildren(SystemNode.NAME)
-                .getChildren(ServicesNode.NAME)
-                .getChildren(NetworkResponseServiceNode.NAME);
-        assertNotNull(responseNode);
+        NetworkResponseServiceNode responseNode = getSRINode();
         responseNode.stop();
         NetworkResponseServiceNode responseServiceNode = new NetworkResponseServiceNode();
         responseServiceNode.setName("responseService");
@@ -87,14 +84,7 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase
     @Test
     public void getResponseTest() throws NetworkResponseServiceExeption
     {
-        NetworkResponseServiceNode responseServiceNode = (NetworkResponseServiceNode)
-                tree.getRootNode()
-                .getChildren(SystemNode.NAME)
-                .getChildren(ServicesNode.NAME)
-                .getChildren(NetworkResponseServiceNode.NAME);
-        assertNotNull(responseServiceNode);
-        responseServiceNode.setLogLevel(LogLevel.TRACE);
-
+        NetworkResponseServiceNode responseServiceNode = getSRINode();
         PushOnDemandDataSource ds = new PushOnDemandDataSource();
         ds.setName("ds");
         tree.getRootNode().addAndSaveChildren(ds);
@@ -123,29 +113,8 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase
     @Test
     public void getSubcontextTest() throws NetworkResponseServiceExeption, Exception
     {
-        NetworkResponseServiceNode responseServiceNode = (NetworkResponseServiceNode)
-                tree.getRootNode()
-                .getChildren(SystemNode.NAME)
-                .getChildren(ServicesNode.NAME)
-                .getChildren(NetworkResponseServiceNode.NAME);
-        assertNotNull(responseServiceNode);
-        responseServiceNode.setLogLevel(LogLevel.TRACE);
-
-        NetworkResponseContextNode context = new NetworkResponseContextNode();
-        context.setName("context");
-        responseServiceNode.addAndSaveChildren(context);
-        context.setAllowRequestsFromAnyIp(true);
-
-        AttributeValueDataSourceNode ds = new AttributeValueDataSourceNode();
-        ds.setName("ds");
-        context.addAndSaveChildren(ds);
-        NodeAttribute expr = ds.getNodeAttribute("value");
-        expr.setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
-        expr.setValue("params['subcontext']");
-        assertTrue(ds.start());
-
-        context.setDataSource(ds);
-        assertTrue(context.start());
+        NetworkResponseServiceNode responseServiceNode = getSRINode();
+        NetworkResponseContextNode context = createResponseNode(responseServiceNode, "context");
         
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("param", "response");
@@ -153,17 +122,49 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase
                 "subcontextName",
                 responseService.getResponse("context/subcontextName", "1.1.1.1", params).getContent());
     }
+    
+    @Test
+    public void contextGroupTest() throws Exception {
+        NetworkResponseServiceNode sriNode = getSRINode();
+        NetworkResponseGroupNode group = new NetworkResponseGroupNode();
+        group.setName("group");
+        sriNode.addAndSaveChildren(group);
+        assertTrue(group.start());
+        
+        NetworkResponseContextNode context = createResponseNode(group, "context");
+        
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("param", "response");
+        assertEquals(
+                "subcontextName",
+                responseService.getResponse("group/context/subcontextName", "1.1.1.1", params).getContent());
+    }
+    
+    @Test
+    public void ifNodeTest() throws Exception {
+        NetworkResponseServiceNode sri = getSRINode();
+        IfNode if1 = createIfNode(sri, "if1", "requesterIp=='1.1.1.1'");
+        createResponseNode(if1, "context1");
+        if1 = createIfNode(sri, "if2", "requesterIp=='1.1.1.2'");
+        createResponseNode(if1, "context2");
+        assertEquals(
+                "subcontext1",
+                responseService.getResponse("context1/subcontext1", "1.1.1.1", new HashMap<String, Object>())
+                    .getContent());
+        assertEquals(
+                "subcontext2",
+                responseService.getResponse("context2/subcontext2", "1.1.1.2", new HashMap<String, Object>())
+                    .getContent());
+        try {
+            responseService.getResponse("context2/subcontext1", "1.1.1.1", new HashMap<String, Object>());
+            fail();
+        } catch (NetworkResponseServiceExeption e) {}
+    }
 
     @Test
     public void authTest() throws NetworkResponseServiceExeption, Exception
     {
-        NetworkResponseServiceNode responseServiceNode = (NetworkResponseServiceNode)
-                tree.getRootNode()
-                .getChildren(SystemNode.NAME)
-                .getChildren(ServicesNode.NAME)
-                .getChildren(NetworkResponseServiceNode.NAME);
-        assertNotNull(responseServiceNode);
-        responseServiceNode.setLogLevel(LogLevel.TRACE);
+        NetworkResponseServiceNode responseServiceNode = getSRINode();
 
         PushOnDemandDataSource ds = new PushOnDemandDataSource();
         ds.setName("ds");
@@ -177,7 +178,7 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase
         context.setDataSource(ds);
         assertTrue(context.start());
 
-        assertNull(responseService.getAuthentication("context"));
+        assertNull(responseService.getAuthentication("context", "1.1.1.1"));
 
         context.setNeedsAuthentication(true);
         context.getNodeAttribute(AbstractNetworkResponseContext.USER_ATTR).setValue("user_name");
@@ -187,6 +188,85 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase
         assertNotNull(auth);
         assertEquals("user_name", auth.getUser());
         assertEquals("pass", auth.getPassword());
+    }
+    
+    @Test
+    public void ifNodeWithAuthTest() throws Exception {
+        NetworkResponseServiceNode responseServiceNode = getSRINode();
+
+        PushOnDemandDataSource ds = new PushOnDemandDataSource();
+        ds.setName("ds");
+        tree.getRootNode().addAndSaveChildren(ds);
+        assertTrue(ds.start());
+        
+        IfNode if1 = createIfNode(responseServiceNode, "if1", "requesterIp=='1.1.1.1'");
+
+        NetworkResponseContextNode context = new NetworkResponseContextNode();
+        context.setName("context");
+        if1.addAndSaveChildren(context);
+        context.setAllowRequestsFromAnyIp(true);
+        context.setDataSource(ds);
+        assertTrue(context.start());
+
+        assertNull(responseService.getAuthentication("context", "1.1.1.1"));
+
+        context.setNeedsAuthentication(true);
+        context.getNodeAttribute(AbstractNetworkResponseContext.USER_ATTR).setValue("user_name");
+        context.getNodeAttribute(AbstractNetworkResponseContext.PASSWORD_ATTR).setValue("pass");
+
+        assertNotNull(responseService.getAuthentication("context", "1.1.1.1"));
+        try {
+            responseService.getAuthentication("context", "1.1.1.2");
+            fail();
+        } catch (NetworkResponseServiceExeption e) {}
+        
+        Authentication auth = context.getAuthentication();
+        assertNotNull(auth);
+        assertEquals("user_name", auth.getUser());
+        assertEquals("pass", auth.getPassword());
+        
+    }
+    
+    private NetworkResponseContextNode createResponseNode(Node owner, String name) throws Exception {
+        NetworkResponseContextNode context = new NetworkResponseContextNode();
+        context.setName(name);
+        owner.addAndSaveChildren(context);
+        context.setAllowRequestsFromAnyIp(true);
+
+        AttributeValueDataSourceNode ds = new AttributeValueDataSourceNode();
+        ds.setName("ds");
+        context.addAndSaveChildren(ds);
+        NodeAttribute expr = ds.getNodeAttribute("value");
+        expr.setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        expr.setValue("params['subcontext']");
+        assertTrue(ds.start());
+
+        context.setDataSource(ds);
+        assertTrue(context.start());
+        return context;
+    }
+    
+    private IfNode createIfNode(Node owner, String name, String expression) throws Exception {
+        IfNode if1 = new IfNode();
+        if1.setName(name);
+        owner.addAndSaveChildren(if1);
+        if1.setUsedInTemplate(false);
+        NodeAttribute expr = if1.getNodeAttribute(IfNode.EXPRESSION_ATTRIBUTE);
+        expr.setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        expr.setValue(expression);
+        assertTrue(if1.start());
+        return if1;
+    }
+    
+    private NetworkResponseServiceNode getSRINode() {
+        NetworkResponseServiceNode responseServiceNode = (NetworkResponseServiceNode)
+                tree.getRootNode()
+                .getChildren(SystemNode.NAME)
+                .getChildren(ServicesNode.NAME)
+                .getChildren(NetworkResponseServiceNode.NAME);
+        assertNotNull(responseServiceNode);
+        responseServiceNode.setLogLevel(LogLevel.TRACE);
+        return responseServiceNode;
     }
 
 }

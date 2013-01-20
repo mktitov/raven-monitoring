@@ -52,10 +52,10 @@ public class NetworkResponseServiceImpl implements NetworkResponseService
         return serviceNode.getResponse(context, requesterIp, params);
     }
 
-    public Authentication getAuthentication(String context) throws NetworkResponseServiceExeption
+    public Authentication getAuthentication(String context, String requesterIp) throws NetworkResponseServiceExeption
     {
         NetworkResponseNode serviceNode = checkNetworkResponseServiceNode();
-        return serviceNode.getAuthentication(context);
+        return serviceNode.getAuthentication(context, requesterIp);
     }
 
     private NetworkResponseNode checkNetworkResponseServiceNode()
