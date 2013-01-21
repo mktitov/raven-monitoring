@@ -70,7 +70,7 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
     public void withConnectionTest() throws Exception
     {
         String script = "res=null; withConnection(con){c -> res='ok'}\n res";
-	ExpressionCache cache = trainCache(script, false);
+        ExpressionCache cache = trainCache(script, false);
         Connection connection = createMock(Connection.class);
         connection.close();
         replay(connection, cache);
@@ -89,7 +89,7 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
     public void withSqlTest() throws Exception
     {
         String script = "res=null; withSql(con){c -> res='ok'}\n res";
-	ExpressionCache cache = trainCache(script, false);
+        ExpressionCache cache = trainCache(script, false);
         Connection connection = createMock(Connection.class);
         connection.commit();
         connection.close();
@@ -109,7 +109,7 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
     public void withSqlTest2() throws Exception
     {
         String script = "res=null; withSql(con){c -> res='ok'; res.notDefinedProperty}\n res";
-	ExpressionCache cache = trainCache(script, false);
+        ExpressionCache cache = trainCache(script, false);
         Connection connection = createMock(Connection.class);
         connection.rollback();
         connection.close();
@@ -176,6 +176,23 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         assertTrue(res instanceof Number);
 
         verify(cache);
+    }
+    
+    @Test
+    public void buildJsonTest() throws Exception {
+        String script = "buildJson test:true, test2:false";
+        ExpressionCache cache = trainCache(script, false);
+        
+        replay(cache);
+
+        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
+        Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
+        assertNotNull(expression);
+        Object res = expression.eval(new SimpleBindings());
+        assertNotNull(res);
+        assertEquals("{\"test\":true,\"test2\":false}", res);
+
+        verify(cache);       
     }
 
     @Test

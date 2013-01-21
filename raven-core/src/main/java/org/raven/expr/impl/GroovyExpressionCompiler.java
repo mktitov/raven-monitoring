@@ -62,6 +62,8 @@ public class GroovyExpressionCompiler implements ExpressionCompiler
                 .append("}\n");
             if (expression.contains("sendData"))
                 buf.append("\ndef sendData(target, data) { sendData(node.asNode(), target, data); }\n");
+//            if (expression.contains("buildJson"))
+//                buf.append("\ndef buildJson(Closure c){buildJson(")
             String name = convert(scriptName);
 			Class expressionClass = classLoader.parseClass(buf.toString(), name);
 			GroovyExpression groovyExpression = new GroovyExpression(expressionClass);

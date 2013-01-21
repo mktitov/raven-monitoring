@@ -17,10 +17,12 @@
 
 package org.raven.api.impl;
 
+import groovy.json.JsonBuilder;
 import groovy.lang.Closure;
 import groovy.sql.Sql;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
@@ -41,40 +43,31 @@ public class ApiUtils
         return TreeImpl.INSTANCE;
     }
 
-    public static void withConnection(Connection connection, Closure closure) throws SQLException
-    {
-        try
-        {
+    public static void withConnection(Connection connection, Closure closure) throws SQLException {
+        try {
             closure.call(connection);
-        }
-        finally
-        {
+        } finally {
             connection.close();
         }
     }
 
-    public static Object withSql(Connection connection, Closure closure) throws Exception
-    {
-        try
-        {
+    public static Object withSql(Connection connection, Closure closure) throws Exception {
+        try {
             Sql sql = new Sql(connection);
             try{
                 Object res = closure.call(sql);
                 connection.commit();
                 return res;
-            }catch(Exception e){
+            } catch(Exception e){
                 connection.rollback();
                 throw e;
             }
-        }
-        finally
-        {
+        } finally {
             connection.close();
         }
     }
 
-    public static void sendData(DataSource source, DataConsumer target, Object data) throws Exception
-    {
+    public static void sendData(DataSource source, DataConsumer target, Object data) throws Exception {
         target.setData(source, data, new DataContextImpl());
     }
 
@@ -82,5 +75,18 @@ public class ApiUtils
             , Map<String, String> vars) throws Exception
     {
         new TemplateWizard(templateNode, destination, newNodeName, vars).createNodes();
+    }
+    
+    public static String buildJson(Object data) {        
+        JsonBuilder json = new JsonBuilder();
+        if (data instanceof Closure)
+            json.call((Closure) data);
+        else if (data instanceof List)
+            json.call((List)data);
+        else if (data instanceof Map)
+            json.call((Map)data);
+        else
+            json.call(data);
+        return json.toString();
     }
 }
