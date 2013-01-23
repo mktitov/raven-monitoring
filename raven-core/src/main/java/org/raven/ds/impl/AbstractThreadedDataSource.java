@@ -84,6 +84,10 @@ public abstract class AbstractThreadedDataSource
         fillConsumerAttributes(consumerAttributes);
     }
 
+    public Boolean getStopProcessingOnError() {
+        return false;
+    }
+
     public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
     {
         context.addSessionAttributes(

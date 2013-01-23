@@ -49,6 +49,10 @@ public abstract class AbstractDataPipe extends AbstractDataConsumer implements D
         return forwardDataSourceAttributes;
     }
 
+    public Boolean getStopProcessingOnError() {
+        return false;
+    }
+
     public void setForwardDataSourceAttributes(Boolean forwardDataSourceAttributes)
     {
         this.forwardDataSourceAttributes = forwardDataSourceAttributes;

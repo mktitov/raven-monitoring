@@ -165,6 +165,10 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
         bindingSupport.addTo(bindings);
     }
 
+    public Boolean getStopProcessingOnError() {
+        return false;
+    }
+
     public String getIndexFields() {
         return indexFields;
     }

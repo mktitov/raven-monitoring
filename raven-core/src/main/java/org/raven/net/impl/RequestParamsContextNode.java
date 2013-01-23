@@ -45,6 +45,10 @@ public class RequestParamsContextNode extends AbstractNetworkResponseContext imp
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    public Boolean getStopProcessingOnError() {
+        return false;
+    }
+
     public Collection<NodeAttribute> generateAttributes()
     {
         return null;

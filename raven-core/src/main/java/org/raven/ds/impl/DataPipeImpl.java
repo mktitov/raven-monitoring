@@ -70,6 +70,10 @@ public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
         bindingSupport = new BindingSupportImpl();
     }
 
+    public Boolean getStopProcessingOnError() {
+        return false;
+    }
+    
     public Boolean getSkipFirstCycle()
     {
         return skipFirstCycle;

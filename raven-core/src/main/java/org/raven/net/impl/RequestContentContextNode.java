@@ -35,8 +35,7 @@ import org.raven.tree.NodeAttribute;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=NetworkResponseServiceNode.class, anyChildTypes=true)
-public class RequestContentContextNode
-        extends AbstractNetworkResponseContext implements DataSource
+public class RequestContentContextNode extends AbstractNetworkResponseContext implements DataSource
 {
     @Override
     protected void generateNodes()
@@ -48,6 +47,10 @@ public class RequestContentContextNode
         if (contentParam==null)
             addParameter(
                 NetworkResponseService.REQUEST_CONTENT_PARAMETER, InputStream.class, true, null);
+    }
+
+    public Boolean getStopProcessingOnError() {
+        return false;
     }
     
     @Override

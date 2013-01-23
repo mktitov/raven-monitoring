@@ -79,6 +79,10 @@ public class AttributeValueDataSourceNode extends BaseNode implements DataSource
         this.value = value;
     }
 
+    public Boolean getStopProcessingOnError() {
+        return false;
+    }
+
     public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
     {
         if (!getStatus().equals(Status.STARTED))
@@ -109,22 +113,6 @@ public class AttributeValueDataSourceNode extends BaseNode implements DataSource
             for (NodeAttribute attr: consumerAttributes)
                 consumerAttrNames.add(attr.getName());
 
-//        Map<String, Object> values = new HashMap<String, Object>();
-//        for (Map.Entry<String, NodeAttribute> attrEntry: context.getSessionAttributes().entrySet())
-//        {
-//            Object attrValue = attrEntry.getValue().getRealValue();
-//            if (attrValue==null && attrEntry.getValue().isRequired())
-//            {
-//                if (isLogLevelEnabled(LogLevel.WARN))
-//                    warn(String.format(
-//                            "Skiping gathering data for data consumer (%s). " +
-//                            "Value for required attribute (%s) was not provided"
-//                            , dataConsumer.getPath(), attrEntry.getKey()));
-//                return false;
-//            }
-//            values.put(attrEntry.getKey(), attrValue);
-//        }
-            
         try {
             Object val = null;
             try {

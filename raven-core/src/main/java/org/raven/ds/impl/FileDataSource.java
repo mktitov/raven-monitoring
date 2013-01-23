@@ -99,6 +99,10 @@ public class FileDataSource extends BaseNode implements DataSource, Task, Viewab
         return file;
     }
 
+    public Boolean getStopProcessingOnError() {
+        return false;
+    }
+
     public void setFile(DataFile file)
     {
         this.file = file;
@@ -176,19 +180,15 @@ public class FileDataSource extends BaseNode implements DataSource, Task, Viewab
         }
     }
 
-    public void run()
-    {
-        try
-        {
+    public void run() {
+        try {
             resetStatFields();
             Collection<Node> depNodes = getDependentNodes();
             if (depNodes!=null)
                 for (Node dep: depNodes)
                     if (dep instanceof DataConsumer && Status.STARTED.equals(dep.getStatus()))
                         sendDataToConsumer((DataConsumer) dep, context, true);
-        }
-        finally
-        {
+        } finally {
             sendingData.set(false);
             resetStatFields();
         }

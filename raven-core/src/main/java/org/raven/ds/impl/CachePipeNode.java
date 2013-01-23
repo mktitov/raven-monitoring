@@ -78,6 +78,10 @@ public class CachePipeNode extends AbstractDataPipe
 
     private ThreadLocal<DataStore> localDataStore;
 
+    public Boolean getStopProcessingOnError() {
+        return false;
+    }
+
     public CacheScope getCacheScope()
     {
         return cacheScope;

@@ -276,18 +276,17 @@ public abstract class AbstractSafeDataPipe
 
     public void setData(DataSource dataSource, Object data, DataContext context)
     {
-        if (!Status.STARTED.equals(getStatus()))
-        {
-            if (isLogLevelEnabled(LogLevel.DEBUG))
+        final boolean debugEnabled = isLogLevelEnabled(LogLevel.DEBUG);
+        if (!Status.STARTED.equals(getStatus())) {
+            if (debugEnabled)
                 debug(String.format(
                         "Can't recieve DATA from data source (%s). Node not STARTED", dataSource.getPath()));
             return;
         }
-        if (isLogLevelEnabled(LogLevel.DEBUG))
+        if (debugEnabled)
             getLogger().debug("Recieved data from the ({}). Processing...", dataSource.getPath());
-        if (useExpression)
-        {
-            if (isLogLevelEnabled(LogLevel.DEBUG))
+        if (useExpression) {
+            if (debugEnabled)
                 getLogger().debug("Using expression to transform data", dataSource.getPath());
             bindingSupport.put(DATA_BINDING, data);
             bindingSupport.put(SKIP_DATA_BINDING, SKIP_DATA);
@@ -295,25 +294,20 @@ public abstract class AbstractSafeDataPipe
             bindingSupport.put(DATA_CONTEXT_BINDING, context);
             bindingSupport.put(DATA_STREAM_BINDING, new DataStreamImpl(this, context));
             doAddBindingsForExpression(dataSource, data, context, bindingSupport);
-            try
-            {
+            try {
                 NodeAttribute exprAttr = getNodeAttribute(EXPRESSION_ATTRIBUTE);
                 data = exprAttr.getRealValue();
-            }
-            finally
-            {
+            } finally {
                 bindingSupport.reset();
             }
         }
-        try
-        {
+        try  {
             if (data!=SKIP_DATA)
                 doSetData(dataSource, data, context);
-            else if (isLogLevelEnabled(LogLevel.DEBUG))
+            else if (debugEnabled)
                 getLogger().debug("Expression return SKIP_DATA. Terminating push data process");
-        }
-        catch(Throwable e)
-        {
+        } catch (Throwable e) {
+            context.addError(this, e);
             if (isLogLevelEnabled(LogLevel.ERROR))
                 error(
                     String.format("Error handling data from (%s) data source", dataSource.getPath())

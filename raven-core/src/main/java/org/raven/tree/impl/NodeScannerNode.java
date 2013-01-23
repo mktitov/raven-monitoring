@@ -98,6 +98,10 @@ public class NodeScannerNode extends BaseNode implements DataSource, Schedulable
     {
         scannNodes();
     }
+
+    public Boolean getStopProcessingOnError() {
+        return false;
+    }
     
     public synchronized void scannNodes()
     {

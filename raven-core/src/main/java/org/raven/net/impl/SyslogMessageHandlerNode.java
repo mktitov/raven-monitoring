@@ -68,6 +68,10 @@ public class SyslogMessageHandlerNode extends BaseNode implements DataSource, Sy
         messagesStat = new OperationStatistic();
     }
 
+    public Boolean getStopProcessingOnError() {
+        return false;
+    }
+
     public Boolean getAcceptMessageExpression() {
         return acceptMessageExpression;
     }

@@ -59,6 +59,10 @@ public class RecordsAsTableBaseAction extends AbstractActionNode implements Data
         return null;
     }
 
+    public Boolean getStopProcessingOnError() {
+        return false;
+    }
+
     protected Map<String, NodeAttribute> prepareFieldsAttributes(
             RecordSchema recordSchema, Record record, String fieldsOrder, boolean setAttrValue)
         throws Exception

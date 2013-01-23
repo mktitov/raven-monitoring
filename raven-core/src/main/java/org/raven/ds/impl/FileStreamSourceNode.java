@@ -20,7 +20,6 @@ package org.raven.ds.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -150,6 +149,10 @@ public class FileStreamSourceNode extends BaseNode implements DataSource, Viewab
 
     public Boolean getAutoRefresh() {
         return Boolean.TRUE;
+    }
+
+    public Boolean getStopProcessingOnError() {
+        return false;
     }
 
     private class UploadFileViewObjectImpl implements UploadFileViewableObject

@@ -35,6 +35,10 @@ public class PushDataSource extends BaseNode implements DataSource {
         return true;
     }
 
+    public Boolean getStopProcessingOnError() {
+        return false;
+    }
+
     public Collection<NodeAttribute> generateAttributes() {
         return null;
     }

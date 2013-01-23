@@ -74,7 +74,7 @@ public abstract class AbstractNetworkResponseContext extends BaseNode implements
         requestsStat = new OperationStatistic();
         bindingSupport = new BindingSupportImpl();
     }
-
+    
     @Override
     public void nodeAttributeValueChanged(
             Node node, NodeAttribute attribute, Object oldValue, Object newValue)

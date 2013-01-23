@@ -60,6 +60,10 @@ public class SdbQueryResultToRecordsNode extends AbstractDataPipe
         this.recordSchema = recordSchema;
     }
 
+    public Boolean getStopProcessingOnError() {
+        return false;
+    }
+
     @Override
     public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
     {

@@ -34,6 +34,7 @@ import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
+import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
 import org.weda.annotations.constraints.NotNull;
@@ -43,7 +44,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass
-public class CsvRecordReaderNode extends AbstractDataPipe
+public class CsvRecordReaderNode extends AbstractSafeDataPipe
 {
     public final static String LINEFILTER_ATTRIBUTE = "lineFilter";
 
@@ -91,6 +92,10 @@ public class CsvRecordReaderNode extends AbstractDataPipe
     @Override
     public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
     {
+    }
+
+    @Override
+    protected void doAddBindingsForExpression(DataSource dataSource, Object data, DataContext context, BindingSupport bindingSupport) {
     }
 
     @Override
