@@ -18,7 +18,9 @@
 package org.raven.ds;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import org.raven.auth.UserContext;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -61,15 +63,19 @@ public interface DataContext
      */
     public Object removeNodeParameter(Node node, String parameterName);
     /**
+     * Returns <b>true</b> if data context has errors
+     */
+    public boolean hasErrors();
+    /**
      * Adds error to the errors list
      * @param path the path to the node where error occurs
      * @param error eth error message
      */
-    public void addError(String path, String error);
+    public void addError(Node node, Throwable error);
     /**
      * Returns the list of all errors
      */
-    public Collection<String> getErrors();
+    public Queue<DataError> getErrors();
     /**
      * Returns the session attributes or null. Returned map is editable
      */

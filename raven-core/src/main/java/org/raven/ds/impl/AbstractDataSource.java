@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import org.raven.Helper;
+import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
@@ -28,6 +29,7 @@ import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
@@ -38,6 +40,9 @@ public abstract class AbstractDataSource extends BaseNode implements DataSource
     public final static String DATASOURCE_ATTRIBUTE = "dataSource";
     
     private Collection<NodeAttribute> consumerAttributes;
+    
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean stopProcessingOnError;
 
     @Override
     protected void initFields()
@@ -95,6 +100,15 @@ public abstract class AbstractDataSource extends BaseNode implements DataSource
      * @param consumerAttributes the collection 
      */
     public abstract void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes);
+
+    public Boolean getStopProcessingOnError() {
+        return stopProcessingOnError;
+    }
+
+    public void setStopProcessingOnError(Boolean stopProcessingOnError) {
+        this.stopProcessingOnError = stopProcessingOnError;
+    }
+    
     
     protected boolean checkDataConsumer(
             DataConsumer consumer, Map<String, NodeAttribute> attributes)
@@ -103,12 +117,7 @@ public abstract class AbstractDataSource extends BaseNode implements DataSource
                 && Helper.checkAttributes(this, consumerAttributes, consumer, attributes);
     }
     
-    protected void sendDataToConsumers(Object data, DataContext context)
-    {
-        Collection<Node> deps = getDependentNodes();
-        if (deps!=null && deps.size()>0)
-            for (Node dep: deps)
-                if (dep instanceof DataConsumer)
-                    ((DataConsumer)dep).setData(this, data, context);
+    protected void sendDataToConsumers(Object data, DataContext context) {
+        DataSourceHelper.sendDataToConsumers(this, data, context);
     }
 }

@@ -34,6 +34,10 @@ public class TestDataSource2 extends ContainerNode implements DataSource
     {
         return true;
     }
+    
+    public Boolean getStopProcessingOnError() {
+        return false;
+    }
 
     public Collection<NodeAttribute> generateAttributes() {
         return null;

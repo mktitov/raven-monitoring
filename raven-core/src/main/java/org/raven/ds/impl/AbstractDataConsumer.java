@@ -151,8 +151,7 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
 
     public void setData(DataSource dataSource, Object data, DataContext context)
     {
-        if (Status.STARTED!=getStatus())
-        {
+        if (Status.STARTED!=getStatus()) {
             logger.error(String.format(
                     "Error pushing data to the node (%s) from the (%s) node. Node NOT STARTED"
                     , getPath(), dataSource.getPath()));
@@ -162,17 +161,15 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
         this.previousDataTime = this.lastDataTime;
         this.data = data;
         this.lastDataTime = System.currentTimeMillis();
-        try{
-            try
-            {
+        try {
+            try {
                 doSetData(dataSource, data, context);
-            }catch(Exception e)
-            {
+            } catch(Throwable e) {
+                context.addError(this, e);
                 if (isLogLevelEnabled(LogLevel.ERROR))
                     error(String.format("Error processing data by consumer (%s)", getPath()), e);
             }
-        }finally
-        {
+        } finally {
             switch(resetDataPolicy)
             {
                 case RESET_LAST_AND_PREVIOUS_DATA: this.data = null; previousData = null; break;

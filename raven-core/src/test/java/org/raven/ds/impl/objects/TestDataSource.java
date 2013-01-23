@@ -41,4 +41,8 @@ public class TestDataSource extends AbstractThreadedDataSource
         return true;
     }
     
+    public Boolean getStopProcessingOnError() {
+        return false;
+    }
+    
 }

@@ -33,4 +33,5 @@ public interface DataSource extends Node, AttributesGenerator
      * @return <b>true</b> if data got successfull, else <b>false</b 
      */
     public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context);
+    public Boolean getStopProcessingOnError();
 }

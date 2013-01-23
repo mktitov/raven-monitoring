@@ -39,6 +39,10 @@ public class TestTableDataSource extends BaseNode implements DataSource
         return sendTwoTable;
     }
 
+    public Boolean getStopProcessingOnError() {
+        return false;
+    }
+
     public void setSendTwoTable(boolean sendTwoTable)
     {
         this.sendTwoTable = sendTwoTable;

@@ -40,8 +40,9 @@ public class DataSourceHelper
      * @param data this data will be sent to the consumers
      * @param context the data context
      */
-    public static void sendDataToConsumers(DataSource source, Object data, DataContext context)
-    {
+    public static void sendDataToConsumers(DataSource source, Object data, DataContext context) {
+        if (context.hasErrors() && source.getStopProcessingOnError())
+            return;
         DataConsumer cons = (DataConsumer) context.getNodeParameter(source, BindingNames.CONSUMER_PARAM);
         if (cons!=null) {
             if (source.isLogLevelEnabled(LogLevel.DEBUG))

@@ -34,6 +34,7 @@ import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchemaField;
+import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
 import org.weda.annotations.constraints.NotNull;
@@ -43,7 +44,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass
-public class ExcelRecordReaderNode extends AbstractDataPipe
+public class ExcelRecordReaderNode extends AbstractSafeDataPipe
 {
     @NotNull @Parameter(defaultValue="1")
     private Integer sheetNumber;
@@ -67,7 +68,12 @@ public class ExcelRecordReaderNode extends AbstractDataPipe
     private String cvsExtensionName;
 
     @Override
-    public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
+    public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes) {
+    }
+
+    @Override
+    protected void doAddBindingsForExpression(DataSource dataSource, Object data, DataContext context, 
+        BindingSupport bindingSupport) 
     {
     }
 
@@ -90,6 +96,7 @@ public class ExcelRecordReaderNode extends AbstractDataPipe
             return;
         }
 
+        boolean _stopOnError = getStopProcessingOnError();
         InputStream dataStream = converter.convert(InputStream.class, data, null);
         try{
             Workbook wb = WorkbookFactory.create(new PushbackInputStream(dataStream));
@@ -110,8 +117,11 @@ public class ExcelRecordReaderNode extends AbstractDataPipe
                             if (nullRow && value!=null)
                                 nullRow = false;
                         }
-                        if (!_ignoreEmptyRows || !nullRow)
+                        if (!_ignoreEmptyRows || !nullRow) {
                             sendDataToConsumers(record, context);
+                            if (_stopOnError && context.hasErrors())
+                                break;
+                        }
                     }
                     nullRowCount = nullRow? nullRowCount+1 : 0;
                     if (_maxEmptyRowsCount==nullRowCount) {

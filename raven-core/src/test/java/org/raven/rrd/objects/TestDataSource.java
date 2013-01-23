@@ -37,6 +37,10 @@ public class TestDataSource extends AbstractThreadedDataSource
     public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
     {
     }
+    
+    public Boolean getStopProcessingOnError() {
+        return false;
+    }
 
     @Override
     public boolean gatherDataForConsumer(DataConsumer dataConsumer, DataContext context)

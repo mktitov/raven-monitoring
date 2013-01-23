@@ -40,4 +40,8 @@ public class TestDataSource2 extends BaseNode implements DataSource
         return null;
     }
 
+    public Boolean getStopProcessingOnError() {
+        return false;
+    }
+
 }

@@ -22,10 +22,14 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentSkipListMap;
 import org.raven.auth.UserContext;
 import org.raven.auth.UserContextService;
 import org.raven.ds.DataContext;
+import org.raven.ds.DataError;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.weda.internal.annotations.Service;
@@ -41,14 +45,14 @@ public class DataContextImpl implements DataContext
 
     private final UserContext userContext;
     private final Map parameters;
-    private final Map<String, List<String>> errors;
+    private final Queue<DataError> errors;
     private final Map<String, NodeAttribute> sessionAttributes;
 
     public DataContextImpl()
     {
         this.userContext = userContextService.getUserContext();
         this.parameters = new ConcurrentHashMap();
-        this.errors = new LinkedHashMap<String, List<String>>();
+        this.errors = new ConcurrentLinkedQueue<DataError>();
         this.sessionAttributes = new HashMap<String, NodeAttribute>();
     }
 
@@ -106,23 +110,23 @@ public class DataContextImpl implements DataContext
         return ""+node.getId()+"_"+parameterName;
     }
 
-    public void addError(String path, String error)
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public boolean hasErrors() {
+        return !errors.isEmpty();
     }
 
-    public Collection<String> getErrors()
-    {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public void addError(Node node, Throwable error) {
+        errors.add(new DataErrorImpl(node, error));
     }
 
-    public Map<String, NodeAttribute> getSessionAttributes() 
-    {
+    public Queue<DataError> getErrors() {
+        return errors;
+    }
+
+    public Map<String, NodeAttribute> getSessionAttributes() {
         return sessionAttributes;
     }
 
-    public void addSessionAttribute(NodeAttribute attr) 
-    {
+    public void addSessionAttribute(NodeAttribute attr) {
         sessionAttributes.put(attr.getName(), attr);
     }
 

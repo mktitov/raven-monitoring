@@ -44,6 +44,10 @@ public class TestDataSource extends BaseNode implements DataSource
         super(name);
     }
     
+    public Boolean getStopProcessingOnError() {
+        return false;
+    }
+    
     public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
     {
         Table table = createTable();

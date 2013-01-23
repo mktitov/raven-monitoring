@@ -51,7 +51,7 @@ public abstract class AbstractSafeDataPipe
 
     @NotNull @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     private DataSource dataSource;
-
+    
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
     private Object expression;
 
@@ -328,9 +328,9 @@ public abstract class AbstractSafeDataPipe
             DataSource dataSource, Object data, DataContext context, BindingSupport bindingSupport);
 
     @Override
-    public void sendDataToConsumers(Object data, DataContext context)
-    {
-        DataSourceHelper.sendDataToConsumers(this, data, context);
+    public void sendDataToConsumers(Object data, DataContext context) {
+        super.sendDataToConsumers(data, context);
+//        DataSourceHelper.sendDataToConsumers(this, data, context);
     }
 
 //    @Override

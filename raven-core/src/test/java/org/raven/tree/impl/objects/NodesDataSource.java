@@ -38,6 +38,10 @@ public class NodesDataSource extends BaseNode implements DataSource
     {
         this.nodes = nodes;
     }
+    
+    public Boolean getStopProcessingOnError() {
+        return false;
+    }
 
     public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context)
     {

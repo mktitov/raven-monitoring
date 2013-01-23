@@ -169,56 +169,32 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     }
 
     @Override
-    protected synchronized void doSetData(DataSource dataSource, Object data, DataContext context)
-    {
-        try
-        {
-            if (data==null)
-            {
-                if (isLogLevelEnabled(LogLevel.DEBUG))
-                    debug(String.format(
-                            "Recieved the end marker from record source (%s)"
-                            , dataSource.getPath()));
-                ++recordSetsRecieved;
-                flushRecords();
-                return;
-            }
-            if (!(data instanceof Record))
-            {
-                error(String.format(
-                        "Invalid type (%s) recieved from data source (%s). The valid type is (%s) "
-                        , data==null? "null" : data.getClass().getName(), dataSource.getPath()
-                        , Record.class.getName()));
-                return;
-            }
-
-            Record record = (Record) data;
-
-//            RecordSchemaNode _recordSchema = recordSchema;
-//            if (!_recordSchema.equals(record.getSchema()))
-//            {
-//                error(String.format(
-//                        "Invalid record schema recived from data source (%s). " +
-//                        "Recieved schema is (%s), valid schema is (%s) "
-//                        , dataSource.getPath(), record.getSchema().getName()
-//                        , _recordSchema.getName()));
-//                return;
-//            }
-
-            ++recordsRecieved;
-
-            int _recordBufferSize = recordBufferSize;
-            if (recordBuffer==null)
-                recordBuffer = new ArrayList<Record>(_recordBufferSize);
-            recordBuffer.add(record);
-
-            if (recordBuffer.size()>=_recordBufferSize)
-                flushRecords();
+    protected synchronized void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception {
+        if (data==null) {
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug(String.format(
+                        "Recieved the end marker from record source (%s)"
+                        , dataSource.getPath()));
+            ++recordSetsRecieved;
+            flushRecords();
+            return;
         }
-        catch(Exception e)
-        {
-            error("Error writing record to database", e);
+        if (!(data instanceof Record)) {
+            error(String.format(
+                    "Invalid type (%s) recieved from data source (%s). The valid type is (%s) "
+                    , data==null? "null" : data.getClass().getName(), dataSource.getPath()
+                    , Record.class.getName()));
+            return;
         }
+        Record record = (Record) data;
+        ++recordsRecieved;
+        int _recordBufferSize = recordBufferSize;
+        if (recordBuffer==null)
+            recordBuffer = new ArrayList<Record>(_recordBufferSize);
+        recordBuffer.add(record);
+
+        if (recordBuffer.size()>=_recordBufferSize)
+            flushRecords();
     }
 
     private String createQuery(String tableName, List<String> columnNames)

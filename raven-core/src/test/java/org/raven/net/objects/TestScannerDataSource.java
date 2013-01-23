@@ -47,6 +47,10 @@ public class TestScannerDataSource extends BaseNode implements DataSource
         ips.add(ip);
         return "10.50.1.1".equals(ip)? false : true;
     }
+    
+    public Boolean getStopProcessingOnError() {
+        return false;
+    }
 
     public Collection<NodeAttribute> generateAttributes() {
         return null;
