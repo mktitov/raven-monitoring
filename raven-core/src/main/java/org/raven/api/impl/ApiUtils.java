@@ -19,17 +19,23 @@ package org.raven.api.impl;
 
 import groovy.json.JsonBuilder;
 import groovy.lang.Closure;
+import groovy.lang.GroovyObject;
+import groovy.lang.MissingMethodException;
+import groovy.lang.MissingPropertyException;
 import groovy.sql.Sql;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import org.raven.api.NodeAccess;
+import org.raven.api.NodeAttributeAccess;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.DataContextImpl;
 import org.raven.template.impl.TemplateNode;
 import org.raven.template.impl.TemplateWizard;
 import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.TreeImpl;
 
@@ -88,5 +94,55 @@ public class ApiUtils
         else
             json.call(data);
         return json.toString();
+    }
+    
+    public static Object invokeMissingMethod(Object obj, NodeAccess node, String name, Object args) {
+        Object[] list = (Object[]) args;
+        if (list.length==1 && list[0] instanceof Map) {
+            NodeAttributeAccess attr = node.getAt(name);
+            if (attr!=null) 
+                return attr.getValue((Map)list[0]);
+        }
+        throw new MissingMethodException(name, obj.getClass(), list);
+    }
+    
+//    public static Object getMissingProperty(NodeAccess node, String name) {
+//        NodeAttributeAccess attr = node.getAt(name);
+//        if (attr!=null)
+//            return attr.getValue();
+//        else
+//            throw new MissingPropertyException(name);
+//    }
+    
+    public static Object getMissingProperty(String name, Map props) {
+        NodeAccess node = (NodeAccess) props.get("node");
+        if (node!=null) {
+            NodeAttributeAccess attr = node.getAt(name);
+            if (attr!=null)
+                return attr.getValue();
+        }
+        return props.get(name);
+    }
+    
+//    public static Object[] getMissingProperty(NodeAccess node, String name, Map props) {
+//        NodeAttributeAccess attr = node.getAt(name);
+//        return attr==null? null : new Object[]{attr.getValue()};
+//    }
+    
+    public static Object setMissingProperty(String name, Object value, Map props) {
+        NodeAccess node = (NodeAccess) props.get("node");
+        if (node!=null) {
+            NodeAttribute attr = node.asNode().getNodeAttribute(name);
+            if (attr!=null) 
+                try {
+                    attr.setValue(value==null? null : value.toString());
+                    attr.save();
+                    return attr.getRealValue();
+                } catch (Exception e) {
+                    throw new java.lang.IllegalArgumentException(e);
+                }
+        }
+        props.put(name, value);
+        return value;
     }
 }

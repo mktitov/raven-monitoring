@@ -52,7 +52,13 @@ public class GroovyExpressionCompiler implements ExpressionCompiler
 		try {
             StringBuilder buf = new StringBuilder()
                 .append("import static ").append(ApiUtils.class.getName()).append(".*; ")
+                .append("_={}; _.delegate = new ").append(PropertySupport.class.getName()).append("(_, node); ")
+                .append("_.resolveStrategy = Closure.DELEGATE_FIRST; ")
                 .append(expression);
+//                .append("action = {").append(expression).append("}")
+//                .append("\naction.delegate = new ").append(PropertySupport.class.getName()).append("(action,node)")
+//                .append("\naction.resolveStrategy = Closure.DELEGATE_FIRST")
+//                .append("\naction()");
             if (expression.contains("withSql"))
                 buf
                 .append("\ndef withSql(Closure c){\n")
@@ -62,8 +68,17 @@ public class GroovyExpressionCompiler implements ExpressionCompiler
                 .append("}\n");
             if (expression.contains("sendData"))
                 buf.append("\ndef sendData(target, data) { sendData(node.asNode(), target, data); }\n");
-//            if (expression.contains("buildJson"))
-//                buf.append("\ndef buildJson(Closure c){buildJson(")
+//            buf.append("\ndef methodMissing(String name, Object args) {"
+//                    + "invokeMissingMethod(this, node, name, args)}");
+//            buf.append("\ndef getProperty(String name) { "
+//                    + "getMissingProperty(name, __props) }");
+//            buf.append("\ndef void setProperty(String name, val) { "
+//                    + " setMissingProperty(name, val, __props) }");
+//            buf.append("\ndef getProperty(String name) { "
+//                    + "val = getMissingProperty(node, name);"
+//                    + "val? val[0] : super.getProperty(name) }");
+//            buf.append("\ndef propertyMissing(String name, val) { setMissingProperty(node, name, val) }");
+//            buf.append("\ndef hasProperty(String name) { println 'PROP CHECK: '+name }");
             String name = convert(scriptName);
 			Class expressionClass = classLoader.parseClass(buf.toString(), name);
 			GroovyExpression groovyExpression = new GroovyExpression(expressionClass);

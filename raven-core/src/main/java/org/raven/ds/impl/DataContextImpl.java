@@ -19,13 +19,10 @@ package org.raven.ds.impl;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import org.raven.auth.UserContext;
 import org.raven.auth.UserContextService;
 import org.raven.ds.DataContext;
@@ -40,6 +37,8 @@ import org.weda.internal.annotations.Service;
  */
 public class DataContextImpl implements DataContext
 {
+    public static final int MAX_ERROR_STACK_SIZE = 50;
+    
     @Service
     private static UserContextService userContextService;
 
@@ -52,7 +51,7 @@ public class DataContextImpl implements DataContext
     {
         this.userContext = userContextService.getUserContext();
         this.parameters = new ConcurrentHashMap();
-        this.errors = new ConcurrentLinkedQueue<DataError>();
+        this.errors = new LinkedBlockingQueue<DataError>(MAX_ERROR_STACK_SIZE);
         this.sessionAttributes = new HashMap<String, NodeAttribute>();
     }
 
@@ -115,11 +114,15 @@ public class DataContextImpl implements DataContext
     }
 
     public void addError(Node node, Throwable error) {
-        errors.add(new DataErrorImpl(node, error));
+        errors.offer(new DataErrorImpl(node, error));
     }
 
     public Queue<DataError> getErrors() {
         return errors;
+    }
+    
+    public DataError getFirstError() {
+        return errors.peek();
     }
 
     public Map<String, NodeAttribute> getSessionAttributes() {
@@ -130,8 +133,7 @@ public class DataContextImpl implements DataContext
         sessionAttributes.put(attr.getName(), attr);
     }
 
-    public final void addSessionAttributes(Collection<NodeAttribute> attrs)
-    {
+    public final void addSessionAttributes(Collection<NodeAttribute> attrs) {
         addSessionAttributes(attrs, true);
     }
 

@@ -34,6 +34,7 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
+import org.raven.statdb.impl.StopProcessingRuleNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.util.NodeUtils;
 import org.weda.annotations.constraints.NotNull;
@@ -281,6 +282,13 @@ public abstract class AbstractSafeDataPipe
             if (debugEnabled)
                 debug(String.format(
                         "Can't recieve DATA from data source (%s). Node not STARTED", dataSource.getPath()));
+            return;
+        }
+        if (context.hasErrors() && getStopProcessingOnError()) {
+            if (debugEnabled)
+                debug(String.format(
+                        "Data context has error flag and stopProcessingOnError is true, so IGNORING", 
+                        dataSource.getPath()));
             return;
         }
         if (debugEnabled)

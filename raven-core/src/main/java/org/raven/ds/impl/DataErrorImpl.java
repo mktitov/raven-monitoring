@@ -38,4 +38,8 @@ public class DataErrorImpl implements DataError {
     public Node getNode() {
         return node;
     }
+
+    public String getMessage() {
+        return error.getMessage();
+    }
 }

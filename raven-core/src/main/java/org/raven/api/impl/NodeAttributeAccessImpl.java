@@ -79,8 +79,7 @@ public class NodeAttributeAccessImpl implements NodeAttributeAccess
         }
     }
 
-    public void setValue(Object value) throws Exception
-    {
+    public void setValue(Object value) throws Exception {
         String strValue = converter.convert(String.class, value, null);
         attribute.setValue(strValue);
         tree.saveNodeAttribute(attribute);

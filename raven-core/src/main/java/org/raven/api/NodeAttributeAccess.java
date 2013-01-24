@@ -17,6 +17,8 @@
 
 package org.raven.api;
 
+import java.util.Map;
+
 /**
  * Stricted access to the {@link org.raven.tree.NodeAttribute}.
  * @author Mikhail Titov
@@ -25,5 +27,7 @@ public interface NodeAttributeAccess
 {
     public String getName();
     public Object getValue();
+    public void setValue(Object val) throws Exception;
+    public Object getValue(Map args);
     public String getValueAsString();
 }

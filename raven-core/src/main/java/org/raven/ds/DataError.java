@@ -24,4 +24,5 @@ import org.raven.tree.Node;
 public interface DataError {
     public Node getNode();
     public Throwable getError();
+    public String getMessage();
 }
