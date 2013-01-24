@@ -36,22 +36,29 @@ public class PropertySupport extends GroovyObjectSupport {
     }
     
     public Object propertyMissing(String name) {
-        NodeAttributeAccess attr = node.getAttr(name);
-        if (attr!=null)
-            return attr.getValue();
-//        throw new MissingPropertyException(name);
+        if ("nodes".equals(name))
+            return node.asNode().getSortedChildrens();
+        else if ("self".equals(name))
+            return node.asNode();
+        else if (name.startsWith("$")) {
+            NodeAttributeAccess attr = node.getAttr(name.substring(1));
+            if (attr!=null)
+                return attr.getValue();
+        }
         throw new IllegalArgumentException(String.format(
             "Attribute (%s) not found in the node (%s)", name, node.getPath()));
     }
     
     public Object propertyMissing(String name, Object value) {
-        NodeAttributeAccess attr = node.getAttr(name);
-        if (attr!=null) {
-            try {
-                attr.setValue(value);
-                return attr.getValue();
-            } catch (Exception e) {
-                throw new IllegalArgumentException(e);
+        if (name.startsWith("$")) {
+            NodeAttributeAccess attr = node.getAttr(name.substring(1));
+            if (attr!=null) {
+                try {
+                    attr.setValue(value);
+                    return attr.getValue();
+                } catch (Exception e) {
+                    throw new IllegalArgumentException(e);
+                }
             }
         }
         throw new IllegalArgumentException(String.format(
@@ -60,11 +67,15 @@ public class PropertySupport extends GroovyObjectSupport {
     
     public Object methodMissing(String name, Object args) {
         Object[] list = (Object[]) args;
-        if (list.length==1 && list[0] instanceof Map) {
-            NodeAttributeAccess attr = node.getAt(name);
+        if (name.startsWith("$") && list.length==1 && list[0] instanceof Map) {
+            NodeAttributeAccess attr = node.getAt(name.substring(1));
             if (attr!=null) 
                 return attr.getValue((Map)list[0]);
-        }
+        } 
+        if ("getNode".equals(name) && list.length==1 && list[0] instanceof String)
+            return node.asNode().getChildren((String)list[0]);
+        if ("getAttr".equals(name) && list.length==1 && list[0] instanceof String)
+            return node.asNode().getNodeAttribute((String)list[0]);
         throw new MissingMethodException(name, action.getClass(), list);
-    }   
+    }
 }

@@ -32,6 +32,7 @@ import org.raven.api.NodeAttributeAccess;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.DataContextImpl;
+import org.raven.expr.impl.PropertySupport;
 import org.raven.template.impl.TemplateNode;
 import org.raven.template.impl.TemplateWizard;
 import org.raven.tree.Node;
@@ -96,15 +97,28 @@ public class ApiUtils
         return json.toString();
     }
     
-    public static Object invokeMissingMethod(Object obj, NodeAccess node, String name, Object args) {
-        Object[] list = (Object[]) args;
-        if (list.length==1 && list[0] instanceof Map) {
-            NodeAttributeAccess attr = node.getAt(name);
-            if (attr!=null) 
-                return attr.getValue((Map)list[0]);
-        }
-        throw new MissingMethodException(name, obj.getClass(), list);
+    public static Closure wrapNode(Object nodeObj, Closure closure) {
+        NodeAccess node = null;
+        if (nodeObj instanceof Node)
+            node = new NodeAccessImpl((Node)nodeObj);
+        else if (nodeObj instanceof NodeAccess)
+            node = (NodeAccess) nodeObj;
+        else
+            throw new IllegalArgumentException("Invalid type of nodeObj. Expected Node or NodeAccess");
+        closure.setDelegate(new PropertySupport(closure, node));
+        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
+        return closure;
     }
+    
+//    public static Object invokeMissingMethod(Object obj, NodeAccess node, String name, Object args) {
+//        Object[] list = (Object[]) args;
+//        if (list.length==1 && list[0] instanceof Map) {
+//            NodeAttributeAccess attr = node.getAt(name);
+//            if (attr!=null) 
+//                return attr.getValue((Map)list[0]);
+//        }
+//        throw new MissingMethodException(name, obj.getClass(), list);
+//    }
     
 //    public static Object getMissingProperty(NodeAccess node, String name) {
 //        NodeAttributeAccess attr = node.getAt(name);
@@ -114,35 +128,35 @@ public class ApiUtils
 //            throw new MissingPropertyException(name);
 //    }
     
-    public static Object getMissingProperty(String name, Map props) {
-        NodeAccess node = (NodeAccess) props.get("node");
-        if (node!=null) {
-            NodeAttributeAccess attr = node.getAt(name);
-            if (attr!=null)
-                return attr.getValue();
-        }
-        return props.get(name);
-    }
+//    public static Object getMissingProperty(String name, Map props) {
+//        NodeAccess node = (NodeAccess) props.get("node");
+//        if (node!=null) {
+//            NodeAttributeAccess attr = node.getAt(name);
+//            if (attr!=null)
+//                return attr.getValue();
+//        }
+//        return props.get(name);
+//    }
     
 //    public static Object[] getMissingProperty(NodeAccess node, String name, Map props) {
 //        NodeAttributeAccess attr = node.getAt(name);
 //        return attr==null? null : new Object[]{attr.getValue()};
 //    }
     
-    public static Object setMissingProperty(String name, Object value, Map props) {
-        NodeAccess node = (NodeAccess) props.get("node");
-        if (node!=null) {
-            NodeAttribute attr = node.asNode().getNodeAttribute(name);
-            if (attr!=null) 
-                try {
-                    attr.setValue(value==null? null : value.toString());
-                    attr.save();
-                    return attr.getRealValue();
-                } catch (Exception e) {
-                    throw new java.lang.IllegalArgumentException(e);
-                }
-        }
-        props.put(name, value);
-        return value;
-    }
+//    public static Object setMissingProperty(String name, Object value, Map props) {
+//        NodeAccess node = (NodeAccess) props.get("node");
+//        if (node!=null) {
+//            NodeAttribute attr = node.asNode().getNodeAttribute(name);
+//            if (attr!=null) 
+//                try {
+//                    attr.setValue(value==null? null : value.toString());
+//                    attr.save();
+//                    return attr.getRealValue();
+//                } catch (Exception e) {
+//                    throw new java.lang.IllegalArgumentException(e);
+//                }
+//        }
+//        props.put(name, value);
+//        return value;
+//    }
 }

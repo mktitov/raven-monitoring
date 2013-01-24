@@ -18,6 +18,7 @@
 package org.raven.expr.impl;
 
 import java.sql.Connection;
+import java.util.List;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
@@ -36,10 +37,40 @@ import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.tree.impl.SystemNode;
 import static org.easymock.EasyMock.*;
+import org.junit.Before;
 import org.raven.tree.impl.BaseNode;
 
 public class GroovyExpressionCompilerTest extends RavenCoreTestCase
 {
+    private Bindings bindings;
+    private Node node;
+    private Node child;
+    
+    @Before
+    public void prepare() throws Exception {
+        node = new BaseNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        assertTrue(node.start());
+        
+        NodeAttributeImpl attr = new NodeAttributeImpl("attr1", String.class, "val1", null);
+        attr.setOwner(node);
+        attr.init();
+        node.addNodeAttribute(attr);
+        assertNotNull(node.getNodeAttribute("attr1"));
+        attr = new NodeAttributeImpl("attr2", String.class, "param1", null);        
+        attr.setOwner(node);
+        attr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
+        attr.init();
+        node.addNodeAttribute(attr);
+        
+        child = new BaseNode("child");
+        node.addAndSaveChildren(child);
+        assertTrue(child.start());
+        
+        bindings = new SimpleBindings();
+        bindings.put("node", new NodeAccessImpl(node));
+    }
+    
     @Test
     public void simpleTest() throws ScriptException
     {
@@ -152,9 +183,6 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         pool.setDriver("org.h2.Driver");
         assertTrue(pool.start());
 
-        ContainerNode node = new ContainerNode("node");
-        tree.getRootNode().addAndSaveChildren(node);
-        assertTrue(node.start());
         NodeAttributeImpl attr = new NodeAttributeImpl("connectionPool", Node.class, null, null);
         attr.setOwner(node);
         attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
@@ -197,144 +225,25 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
     }
     
     @Test
-    public void getNodeAttrValueTest() throws Exception {
-        Node node = new BaseNode("node");
-        tree.getRootNode().addAndSaveChildren(node);
-        assertTrue(node.start());
-        
-        NodeAttributeImpl attr = new NodeAttributeImpl("attr1", String.class, "val1", null);
-        attr.setOwner(node);
-        attr.init();
-        node.addNodeAttribute(attr);
-        assertNotNull(node.getNodeAttribute("attr1"));
-        
-        String script = "_.attr1";
-        ExpressionCache cache = trainCache(script, false);
-        
-        replay(cache);
-
+    public void getNodeWrapperTest() throws Exception {
+        ExpressionCache cache = trainCache();
         GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
-        Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
-        assertNotNull(expression);
-        Bindings bindings = new SimpleBindings();
-        bindings.put("node", new NodeAccessImpl(node));
-        Object res = expression.eval(bindings);
-        assertNotNull(res);
-        assertEquals("val1", res);
-
-        verify(cache);       
-    }
-
-    @Test(expected=ScriptException.class)
-//    @Test
-    public void getNotExistNodeAttrValueTest() throws Exception {
-        Node node = new BaseNode("node");
-        tree.getRootNode().addAndSaveChildren(node);
-        assertTrue(node.start());
         
-        String script = "_.attr1";
-        ExpressionCache cache = trainCache(script, false);
+        assertSame(node, executeExpr(compiler, "_.self"));
+        assertSame(child, executeExpr(compiler, "_.getNode('child')"));
+        Object nodes = executeExpr(compiler, "_.nodes");
+        assertTrue(nodes instanceof List);
+        List list = (List) nodes;
+        assertEquals(1, list.size());
+        assertSame(child, list.get(0));
+        verify(cache);     
         
-        replay(cache);
-
-        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
-        Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
-        assertNotNull(expression);
-        Bindings bindings = new SimpleBindings();
-        bindings.put("node", new NodeAccessImpl(node));
-        Object res = expression.eval(bindings);
-
-        verify(cache);       
-    }
-
-    @Test
-    public void setNodeAttrValueTest() throws Exception {
-        Node node = new BaseNode("node");
-        tree.getRootNode().addAndSaveChildren(node);
-        assertTrue(node.start());
-        
-        NodeAttributeImpl attr = new NodeAttributeImpl("attr1", String.class, "val1", null);
-        attr.setOwner(node);
-        attr.init();
-        node.addNodeAttribute(attr);
-        assertNotNull(node.getNodeAttribute("attr1"));
-        
-        String script = "_.attr1='val2'";
-        ExpressionCache cache = trainCache(script, false);
-        
-        replay(cache);
-
-        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
-        Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
-        assertNotNull(expression);
-        Bindings bindings = new SimpleBindings();
-        bindings.put("node", new NodeAccessImpl(node));
-        assertEquals("val1", attr.getValue());
-        Object res = expression.eval(bindings);
-        assertEquals("val2", res);
-        assertEquals("val2", attr.getValue());
-
-        verify(cache);       
-    }
-
-    @Test
-    public void getNodeAttrValueWithParamsTest() throws Exception {
-        Node node = new BaseNode("node");
-        tree.getRootNode().addAndSaveChildren(node);
-        assertTrue(node.start());
-        
-        NodeAttributeImpl attr = new NodeAttributeImpl("attr1", String.class, "param1", null);        
-        attr.setOwner(node);
-        attr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
-        attr.init();
-        node.addNodeAttribute(attr);
-        assertNotNull(node.getNodeAttribute("attr1"));
-        
-        String script = "_.attr1 param1:'val1'";
-        ExpressionCache cache = trainCache(script, false);
-        
-        replay(cache);
-
-        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
-        Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
-        assertNotNull(expression);
-        Bindings bindings = new SimpleBindings();
-        bindings.put("node", new NodeAccessImpl(node));
-        Object res = expression.eval(bindings);
-        assertNotNull(res);
-        assertEquals("val1", res);
-
-        verify(cache);       
-    }
-    
-    @Test
-    public void getNodeAttrValueWithParamsTest2() throws Exception {
-        Node node = new BaseNode("node");
-        tree.getRootNode().addAndSaveChildren(node);
-        assertTrue(node.start());
-        
-        NodeAttributeImpl attr = new NodeAttributeImpl("attr1", String.class, "param1", null);        
-        attr.setOwner(node);
-        attr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
-        attr.init();
-        node.addNodeAttribute(attr);
-        assertNotNull(node.getNodeAttribute("attr1"));
-        
-        String script = "def attr1(args){'ok'}; attr1([:])";
-        ExpressionCache cache = trainCache(script, false);
-        
-        replay(cache);
-
-        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
-        Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
-        assertNotNull(expression);
-        Bindings bindings = new SimpleBindings();
-        bindings.put("node", new NodeAccessImpl(node));
-        Object res = expression.eval(bindings);
-        assertNotNull(res);
-        assertEquals("ok", res);
-
-        verify(cache);       
+        assertEquals("val1", executeExpr(compiler, "_.$attr1"));        
+        assertEquals("val2", executeExpr(compiler, "_.$attr1 = 'val2'"));        
+        assertEquals("val2", executeExpr(compiler, "_.$attr1"));
+        assertEquals("val", executeExpr(compiler, "_.$attr2 param1:'val'"));
+        assertSame(child, executeExpr(compiler, "_(_.getNode('child')).self"));
+        assertSame(node.getNodeAttribute("attr1"), executeExpr(compiler, "_.getAttr 'attr1'"));
     }
 
     @Test
@@ -350,11 +259,25 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
     private ExpressionCache trainCache(String expressionSource, boolean replay) {
         ExpressionCache cache = createMock(ExpressionCache.class);
         cache.putExpression(eq(expressionSource), isA(Expression.class));
-
+        
         if (replay) {
             replay(cache);
         }
 
         return cache;
+    }
+    
+    private ExpressionCache trainCache() {
+        ExpressionCache cache = createMock(ExpressionCache.class);
+        cache.putExpression(isA(String.class), isA(Expression.class));
+        expectLastCall().atLeastOnce();
+        replay(cache);
+        return cache;
+    }
+    
+    private Object executeExpr(GroovyExpressionCompiler compiler, String expr) throws Exception {
+        Expression expression = compiler.compile(expr, GroovyExpressionCompiler.LANGUAGE, "test");
+        assertNotNull(expression);
+        return expression.eval(bindings);
     }
 }
