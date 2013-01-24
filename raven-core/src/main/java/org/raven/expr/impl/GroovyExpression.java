@@ -37,6 +37,7 @@ public class GroovyExpression implements Expression {
     public Object eval(Bindings bindings) throws ScriptException {
         try {
             GroovyObject obj = (GroovyObject) expressionClass.newInstance();
+            obj.setProperty("node", null);
             if (bindings != null && bindings.size() > 0) {
                 for (Map.Entry<String, Object> prop : bindings.entrySet()) {
                     obj.setProperty(prop.getKey(), prop.getValue());

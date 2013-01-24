@@ -18,7 +18,6 @@ package org.raven.expr.impl;
 import groovy.lang.Closure;
 import groovy.lang.GroovyObjectSupport;
 import groovy.lang.MissingMethodException;
-import groovy.lang.MissingPropertyException;
 import java.util.Map;
 import org.raven.api.NodeAccess;
 import org.raven.api.NodeAttributeAccess;
@@ -40,7 +39,9 @@ public class PropertySupport extends GroovyObjectSupport {
         NodeAttributeAccess attr = node.getAttr(name);
         if (attr!=null)
             return attr.getValue();
-        throw new MissingPropertyException(name);
+//        throw new MissingPropertyException(name);
+        throw new IllegalArgumentException(String.format(
+            "Attribute (%s) not found in the node (%s)", name, node.getPath()));
     }
     
     public Object propertyMissing(String name, Object value) {
@@ -53,7 +54,8 @@ public class PropertySupport extends GroovyObjectSupport {
                 throw new IllegalArgumentException(e);
             }
         }
-        throw new MissingPropertyException(name);
+        throw new IllegalArgumentException(String.format(
+            "Attribute (%s) not found in the node (%s)", name, node.getPath()));
     }
     
     public Object methodMissing(String name, Object args) {

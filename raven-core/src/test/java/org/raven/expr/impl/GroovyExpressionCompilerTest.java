@@ -40,10 +40,10 @@ import org.raven.tree.impl.BaseNode;
 
 public class GroovyExpressionCompilerTest extends RavenCoreTestCase
 {
-//    @Test
+    @Test
     public void simpleTest() throws ScriptException
     {
-	ExpressionCache cache = trainCache("1+1", true);
+        ExpressionCache cache = trainCache("1+1", true);
         GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
         Expression expression = compiler.compile("1+1", GroovyExpressionCompiler.LANGUAGE, null);
         assertNotNull(expression);
@@ -52,10 +52,10 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         verify(cache);
     }
 
-//    @Test
+    @Test
     public void bindginsTest() throws ScriptException
     {
-	ExpressionCache cache = trainCache("var+=1", true);
+        ExpressionCache cache = trainCache("var+=1", true);
 
         GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
         Expression expression = compiler.compile("var+=1", GroovyExpressionCompiler.LANGUAGE, "test");
@@ -64,10 +64,10 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         bindings.put("var", 1);
         assertEquals(2, expression.eval(bindings));
 
-	verify(cache);
+        verify(cache);
     }
 
-//    @Test
+    @Test
     public void withConnectionTest() throws Exception
     {
         String script = "res=null; withConnection(con){c -> res='ok'}\n res";
@@ -86,7 +86,7 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         verify(connection, cache);
     }
     
-//    @Test
+    @Test
     public void withSqlTest() throws Exception
     {
         String script = "res=null; withSql(con){c -> res='ok'}\n res";
@@ -106,7 +106,7 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         verify(connection, cache);
     }
 
-//    @Test
+    @Test
     public void withSqlTest2() throws Exception
     {
         String script = "res=null; withSql(con){c -> res='ok'; res.notDefinedProperty}\n res";
@@ -130,7 +130,7 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         verify(connection, cache);
     }
 
-//    @Test
+    @Test
     public void withSqlTest3() throws Exception
     {
         Config conf = configurator.getConfig();
@@ -179,7 +179,7 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         verify(cache);
     }
     
-//    @Test
+    @Test
     public void buildJsonTest() throws Exception {
         String script = "buildJson test:true, test2:false";
         ExpressionCache cache = trainCache(script, false);
@@ -221,6 +221,28 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         Object res = expression.eval(bindings);
         assertNotNull(res);
         assertEquals("val1", res);
+
+        verify(cache);       
+    }
+
+    @Test(expected=ScriptException.class)
+//    @Test
+    public void getNotExistNodeAttrValueTest() throws Exception {
+        Node node = new BaseNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        assertTrue(node.start());
+        
+        String script = "_.attr1";
+        ExpressionCache cache = trainCache(script, false);
+        
+        replay(cache);
+
+        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
+        Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
+        assertNotNull(expression);
+        Bindings bindings = new SimpleBindings();
+        bindings.put("node", new NodeAccessImpl(node));
+        Object res = expression.eval(bindings);
 
         verify(cache);       
     }
@@ -315,7 +337,7 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         verify(cache);       
     }
 
-//    @Test
+    @Test
     public void nonGroovyLanguageTest() throws Exception {
         ExpressionCache cache = createMock(ExpressionCache.class);
         replay(cache);

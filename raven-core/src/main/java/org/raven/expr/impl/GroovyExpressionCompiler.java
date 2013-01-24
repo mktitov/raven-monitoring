@@ -52,8 +52,8 @@ public class GroovyExpressionCompiler implements ExpressionCompiler
 		try {
             StringBuilder buf = new StringBuilder()
                 .append("import static ").append(ApiUtils.class.getName()).append(".*; ")
-                .append("_={}; _.delegate = new ").append(PropertySupport.class.getName()).append("(_, node); ")
-                .append("_.resolveStrategy = Closure.DELEGATE_FIRST; ")
+                .append("_={}; if (node) { _.delegate = new ").append(PropertySupport.class.getName()).append("(_, node); ")
+                .append("_.resolveStrategy = Closure.DELEGATE_FIRST; };")
                 .append(expression);
 //                .append("action = {").append(expression).append("}")
 //                .append("\naction.delegate = new ").append(PropertySupport.class.getName()).append("(action,node)")
@@ -96,7 +96,7 @@ public class GroovyExpressionCompiler implements ExpressionCompiler
     private String convert(String ident) {
         StringBuilder sb = new StringBuilder("org.raven.EXPR.");
         if (ident==null || ident.length() == 0)
-            sb.append("_");
+            sb.append("__");
         else {
             CharacterIterator ci = new StringCharacterIterator(ident);
             for (char c = ci.first(); c != CharacterIterator.DONE; c = ci.next()) {
