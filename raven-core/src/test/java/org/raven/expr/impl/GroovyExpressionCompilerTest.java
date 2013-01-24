@@ -244,6 +244,7 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         assertEquals("val", executeExpr(compiler, "_.$attr2 param1:'val'"));
         assertSame(child, executeExpr(compiler, "_(_.getNode('child')).self"));
         assertSame(node.getNodeAttribute("attr1"), executeExpr(compiler, "_.getAttr 'attr1'"));
+        assertNull(executeExpr(compiler, "_(null)"));        
     }
 
     @Test

@@ -98,6 +98,8 @@ public class ApiUtils
     }
     
     public static Closure wrapNode(Object nodeObj, Closure closure) {
+        if (nodeObj==null)
+            return null;
         NodeAccess node = null;
         if (nodeObj instanceof Node)
             node = new NodeAccessImpl((Node)nodeObj);
