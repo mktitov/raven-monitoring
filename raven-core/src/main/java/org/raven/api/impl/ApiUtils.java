@@ -26,7 +26,9 @@ import java.util.List;
 import java.util.Map;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
+import org.raven.ds.DataContext;
 import org.raven.ds.impl.DataContextImpl;
+import org.raven.ds.impl.ListDataConsumer;
 import org.raven.template.impl.TemplateNode;
 import org.raven.template.impl.TemplateWizard;
 import org.raven.tree.Node;
@@ -66,9 +68,19 @@ public class ApiUtils
             connection.close();
         }
     }
+    
+    public static DataContext createDataContext() {
+        return new DataContextImpl();
+    }
 
     public static void sendData(DataSource source, DataConsumer target, Object data) throws Exception {
         target.setData(source, data, new DataContextImpl());
+    }
+    
+    public static List getData(Node initiator, DataSource dataSource, DataContext context) {
+        ListDataConsumer consumer = new ListDataConsumer(initiator, context);
+        dataSource.getDataImmediate(consumer, context);
+        return consumer.getDataList();
     }
 
     public static void createNodeFromTemplate(TemplateNode templateNode, Node destination, String newNodeName

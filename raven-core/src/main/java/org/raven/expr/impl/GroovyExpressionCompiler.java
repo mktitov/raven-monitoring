@@ -57,6 +57,8 @@ public class GroovyExpressionCompiler implements ExpressionCompiler
                 buf.append("\ndef withSql(Closure c){ withSql(node.$connectionPool.connection, c) }\n");
             if (expression.contains("sendData"))
                 buf.append("\ndef sendData(target, data) { sendData(node, target, data); }\n");
+            if (expression.contains("getData")) 
+                buf.append("\ndef getData(dataSource, context) { getData(node, dataSource, context); }\n");
             String name = convert(scriptName);
 			Class expressionClass = classLoader.parseClass(buf.toString(), name);
 			GroovyExpression groovyExpression = new GroovyExpression(expressionClass);

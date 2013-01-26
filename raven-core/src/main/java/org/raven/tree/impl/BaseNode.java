@@ -323,7 +323,7 @@ public class BaseNode implements Node, NodeListener, Logger
     
     public void removeListener(NodeListener listener)
     {
-        Collection<Node> childs = getChildrens();
+        Collection<Node> childs = nodes.values();
         if (listeners.remove(listener) && listener.isSubtreeListener() && childs!=null)
             for (Node children: childs)
                 children.removeListener(listener);
@@ -578,7 +578,8 @@ public class BaseNode implements Node, NodeListener, Logger
     
     @Deprecated
     public Collection<Node> getChildrens() {
-        return getNodes();
+        return nodes.values();
+//        return getNodes();
 //        return nodes==null? Collections.EMPTY_LIST : nodes.values();
     }
     
@@ -610,7 +611,7 @@ public class BaseNode implements Node, NodeListener, Logger
         //calculating effective childrens in right direction
         for (Node child: sortedChildrens)
             if (child.isConditionalNode())
-                effChilds.put(child, child.getEffectiveNodes());
+                effChilds.put(child, child.getEffectiveChildrens());
         //composing sortedChildrens in reverse direction
         for (int i=sortedChildrens.size()-1; i>=0; --i) {
             Node node = sortedChildrens.get(i);

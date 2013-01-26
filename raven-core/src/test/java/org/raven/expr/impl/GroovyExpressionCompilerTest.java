@@ -31,12 +31,14 @@ import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.dbcp.impl.JDBCConnectionPoolNode;
 import org.raven.expr.Expression;
 import org.raven.expr.ExpressionCache;
+import org.raven.test.PushOnDemandDataSource;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.tree.impl.SystemNode;
+import org.raven.ds.impl.DataContextImpl;
 
 public class GroovyExpressionCompilerTest extends RavenCoreTestCase
 {
@@ -240,6 +242,34 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         assertEquals("val", executeExpr(compiler, "node.$attr2 param1:'val'"));
         assertSame(child, executeExpr(compiler, "node.getNode('child')"));
         assertSame(node.getAttr("attr1"), executeExpr(compiler, "node.getAttr 'attr1'"));
+    }
+    
+    @Test
+    public void getDataTest() throws Exception {
+        PushOnDemandDataSource ds = new PushOnDemandDataSource();
+        ds.setName("dataSource");
+        tree.getRootNode().addAndSaveChildren(ds);
+        assertTrue(ds.start());
+        
+        ExpressionCache cache = trainCache();
+        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
+//        bindings.put("context", new DataContextImpl());
+        
+        Object res = executeExpr(compiler, "getData(node.parent.getNode('dataSource'), createDataContext())");
+        assertNotNull(res);
+        assertTrue(res instanceof List);
+        assertTrue(((List)res).isEmpty());
+        
+        ds.addDataPortion("test");
+        ds.addDataPortion(null);
+        res = executeExpr(compiler, "getData(node.parent.getNode('dataSource'), createDataContext())");
+        assertNotNull(res);
+        assertTrue(res instanceof List);
+        List data = (List) res;
+        assertEquals(1, data.size());
+        assertEquals("test", data.get(0));
+        
+        verify(cache);
     }
 
     @Test
