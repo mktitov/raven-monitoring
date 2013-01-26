@@ -22,8 +22,9 @@ import java.util.List;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
+import static org.easymock.EasyMock.*;
+import org.junit.Before;
 import org.junit.Test;
-import org.raven.api.impl.NodeAccessImpl;
 import org.raven.conf.Config;
 import org.raven.conf.Configurator;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
@@ -32,13 +33,10 @@ import org.raven.expr.Expression;
 import org.raven.expr.ExpressionCache;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.Node;
-import org.raven.tree.impl.ContainerNode;
+import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.tree.impl.SystemNode;
-import static org.easymock.EasyMock.*;
-import org.junit.Before;
-import org.raven.tree.impl.BaseNode;
 
 public class GroovyExpressionCompilerTest extends RavenCoreTestCase
 {
@@ -56,7 +54,7 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         attr.setOwner(node);
         attr.init();
         node.addNodeAttribute(attr);
-        assertNotNull(node.getNodeAttribute("attr1"));
+        assertNotNull(node.getAttr("attr1"));
         attr = new NodeAttributeImpl("attr2", String.class, "param1", null);        
         attr.setOwner(node);
         attr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
@@ -67,8 +65,8 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         node.addAndSaveChildren(child);
         assertTrue(child.start());
         
-        bindings = new SimpleBindings();
-        bindings.put("node", new NodeAccessImpl(node));
+        bindings = new SimpleBindings(); //containsNode hasNode '
+        bindings.put("node", node);
     }
     
     @Test
@@ -198,8 +196,7 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
         assertNotNull(expression);
         SimpleBindings bindings = new SimpleBindings();
-        NodeAccessImpl nodeAccess = new NodeAccessImpl(node);
-        bindings.put("node", nodeAccess);
+        bindings.put("node", node);
         Object res=expression.eval(bindings);
         assertNotNull(res);
         assertTrue(res instanceof Number);
@@ -229,22 +226,20 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         ExpressionCache cache = trainCache();
         GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
         
-        assertSame(node, executeExpr(compiler, "_.self"));
-        assertSame(child, executeExpr(compiler, "_.getNode('child')"));
-        Object nodes = executeExpr(compiler, "_.nodes");
+        assertSame(child, executeExpr(compiler, "node.getNode('child')"));
+        Object nodes = executeExpr(compiler, "node.nodes");
         assertTrue(nodes instanceof List);
         List list = (List) nodes;
         assertEquals(1, list.size());
         assertSame(child, list.get(0));
         verify(cache);     
         
-        assertEquals("val1", executeExpr(compiler, "_.$attr1"));        
-        assertEquals("val2", executeExpr(compiler, "_.$attr1 = 'val2'"));        
-        assertEquals("val2", executeExpr(compiler, "_.$attr1"));
-        assertEquals("val", executeExpr(compiler, "_.$attr2 param1:'val'"));
-        assertSame(child, executeExpr(compiler, "_(_.getNode('child')).self"));
-        assertSame(node.getNodeAttribute("attr1"), executeExpr(compiler, "_.getAttr 'attr1'"));
-        assertNull(executeExpr(compiler, "_(null)"));        
+        assertEquals("val1", executeExpr(compiler, "node.$attr1"));        
+        assertEquals("val2", executeExpr(compiler, "node.$attr1 = 'val2'"));        
+        assertEquals("val2", executeExpr(compiler, "node.$attr1"));
+        assertEquals("val", executeExpr(compiler, "node.$attr2 param1:'val'"));
+        assertSame(child, executeExpr(compiler, "node.getNode('child')"));
+        assertSame(node.getAttr("attr1"), executeExpr(compiler, "node.getAttr 'attr1'"));
     }
 
     @Test

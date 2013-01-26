@@ -17,6 +17,9 @@
 
 package org.raven.tree.impl;
 
+import groovy.lang.Closure;
+import groovy.lang.MissingMethodException;
+import groovy.lang.MissingPropertyException;
 import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,7 +28,9 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.script.Bindings;
 import org.raven.annotations.Parameter;
+import org.raven.api.NodeAttributeAccess;
 import org.raven.conf.Configurator;
+import org.raven.expr.BindingSupport;
 import org.raven.expr.impl.ExpressionAttributeValueHandler;
 import org.raven.log.LogLevel;
 import org.raven.log.NodeLogger;
@@ -79,7 +84,7 @@ public class BaseNode implements Node, NodeListener, Logger
     
     private Node parent;
     
-    private Map<String, Node> childrens;
+    private Map<String, Node> nodes;
     private Map<String, NodeAttribute> nodeAttributes;
     private Map<Node, Node> dependentNodes;
     private Collection<NodeListener>  listeners;
@@ -130,7 +135,7 @@ public class BaseNode implements Node, NodeListener, Logger
         statusLock = new ReentrantLock();
         parameters = null;
         nodeAttributes = new ConcurrentHashMap<String, NodeAttribute>();
-        childrens = new ConcurrentHashMap<String, Node>();
+        nodes = new ConcurrentHashMap<String, Node>();
         variables = new ConcurrentHashMap<String, Object>();
         index = 0;
     }
@@ -246,9 +251,9 @@ public class BaseNode implements Node, NodeListener, Logger
         this.id = id;
     }
     
-    public List<Node> getChildrenList() 
-    { 
-        return getSortedChildrens(); 
+    @Deprecated
+    public List<Node> getChildrenList() { 
+        return getNodes(); 
     }
 
     public boolean isTemplate()
@@ -285,14 +290,21 @@ public class BaseNode implements Node, NodeListener, Logger
         }
     }
 
-    public Status getStatus()
-    {
+    public Status getStatus() {
         statusLock.lock();
         try{
             return status;
         }finally{
             statusLock.unlock();
         }
+    }
+
+    public boolean isStarted() {
+        return Status.STARTED.equals(getStatus());
+    }
+
+    public boolean isInitialized() {
+        return Status.INITIALIZED.equals(getStatus());
     }
 
     public void addListener(NodeListener listener)
@@ -324,7 +336,7 @@ public class BaseNode implements Node, NodeListener, Logger
 
     public void addChildren(Node node)
     {
-        if (childrens.containsKey(node.getName()))
+        if (nodes.containsKey(node.getName()))
             throw new NodeError(String.format(
                     "Node (%s) already contains children node with name (%s)"
                     , getPath(), node.getName()));
@@ -338,7 +350,7 @@ public class BaseNode implements Node, NodeListener, Logger
                 node.save();
         }
         
-        childrens.put(node.getName(), node);
+        nodes.put(node.getName(), node);
         node.addListener(this);
         
         if (listeners!=null)
@@ -352,7 +364,7 @@ public class BaseNode implements Node, NodeListener, Logger
     {
         int maxIndex = 0;
         boolean hasIndex = false;
-        for (Node child: childrens.values())
+        for (Node child: nodes.values())
         {
             if (maxIndex<child.getIndex())
                 maxIndex = child.getIndex();
@@ -367,7 +379,7 @@ public class BaseNode implements Node, NodeListener, Logger
 
     public void addAndSaveChildren(Node node)
     {
-        if (childrens.containsKey(node.getName()))
+        if (nodes.containsKey(node.getName()))
             throw new NodeError(String.format(
                     "Node (%s) already contains children node with name (%s)"
                     , getPath(), node.getName()));
@@ -379,9 +391,9 @@ public class BaseNode implements Node, NodeListener, Logger
 
     public void detachChildren(Node node)
     {
-        if (childrens!=null)
+        if (nodes!=null)
         {
-            Node removedNode = childrens.remove(node.getName());
+            Node removedNode = nodes.remove(node.getName());
             if (removedNode!=null)
                 removedNode.removeListener(this);
         }
@@ -393,9 +405,9 @@ public class BaseNode implements Node, NodeListener, Logger
             logger.debug(String.format(
                     "Removing children node (%s) from (%s) node", node.getPath(), getPath()));
         
-        if (childrens!=null)
+        if (nodes!=null)
         {
-            Node removedNode = childrens.remove(node.getName());
+            Node removedNode = nodes.remove(node.getName());
             if (removedNode!=null)
             {
                 removedNode.removeListener(this);
@@ -419,7 +431,7 @@ public class BaseNode implements Node, NodeListener, Logger
     public void addNodeAttributeDependency(
             String attributeName, NodeAttributeListener listener)
     {
-        NodeAttribute attr = getNodeAttribute(attributeName);
+        NodeAttribute attr = getAttr(attributeName);
         if (attr==null)
             throw new NodeError(String.format(
                     "Attribute (%s) not found in the node (%s)", attributeName, getPath()));
@@ -450,13 +462,23 @@ public class BaseNode implements Node, NodeListener, Logger
             return false;
     }
 
-    public void addNodeAttribute(NodeAttribute attr)
-    {
+    @Deprecated
+    public void addNodeAttribute(NodeAttribute attr) {
+        addAttr(attr);
+    }
+
+    public void addAttr(NodeAttribute attr) {
         nodeAttributes.put(attr.getName(), attr);
     }
 
-    public void removeNodeAttribute(String name)
-    {
+    @Deprecated
+    public void removeNodeAttribute(String name) {
+        NodeAttribute attr = nodeAttributes.remove(name);
+        if (attr!=null)
+            fireNodeAttributeRemoved(attr);
+    }
+
+    public void removeAttr(String name) {
         NodeAttribute attr = nodeAttributes.remove(name);
         if (attr!=null)
             fireNodeAttributeRemoved(attr);
@@ -514,29 +536,55 @@ public class BaseNode implements Node, NodeListener, Logger
 //        return container;
 //    }
 
-    public List<Class> getChildNodeTypes()
-    {
+    public List<Class> getChildNodeTypes() {
         return tree.getChildNodesTypes(this);
     }
 
-    public int getChildrenCount()
-    {
-        return childrens==null? 0 : childrens.size();
-    }
-    
-    public Collection<Node> getChildrens()
-    {
-        return childrens==null? Collections.EMPTY_LIST : childrens.values();
-    }
-    
-    public List<Node> getSortedChildrens()
-    {
-        Collection<Node> childs = getChildrens();
-        if (childs==null)
+    public List<Node> getNodes() {
+        Collection<Node> childs = nodes.values();
+        if (childs.isEmpty())
             return Collections.EMPTY_LIST;
         List<Node> sortedChildrens = new ArrayList<Node>(childs);
         Collections.sort(sortedChildrens);
         return sortedChildrens;
+    }
+
+    public Node find(final Closure<Boolean> filter) {
+        List<Node> res = tree.search(this, new SearchOptionsImpl().setFindFirst(true), new SearchFilter() {
+            public boolean filter(Node node) {
+                return filter.call(node);
+            }
+        });
+        return res.isEmpty()? null : res.get(0);
+    }
+
+    public List<Node> findAll(final Closure<Boolean> filter) {
+        List<Node> res = tree.search(this, new SearchOptionsImpl().setFindFirst(false), new SearchFilter() {
+            public boolean filter(Node node) {
+                return filter.call(node);
+            }
+        });
+        return res;
+    }
+
+    public int getNodesCount() {
+        return nodes.size();
+    }
+    
+    @Deprecated
+    public int getChildrenCount() {
+        return getNodesCount();
+    }
+    
+    @Deprecated
+    public Collection<Node> getChildrens() {
+        return getNodes();
+//        return nodes==null? Collections.EMPTY_LIST : nodes.values();
+    }
+    
+    @Deprecated
+    public List<Node> getSortedChildrens() {
+        return getNodes();
     }
 
     public boolean isConditionalNode() {
@@ -551,14 +599,18 @@ public class BaseNode implements Node, NodeListener, Logger
         return node;
     }
 
-    public Collection<Node> getEffectiveChildrens() 
-    {
-        List<Node> sortedChildrens = getSortedChildrens();
+    @Deprecated
+    public Collection<Node> getEffectiveChildrens() {
+        return getEffectiveNodes();
+    }
+    
+    public Collection<Node> getEffectiveNodes() {
+        List<Node> sortedChildrens = getNodes();
         Map<Node, Collection<Node>> effChilds = new HashMap<Node, Collection<Node>>();
         //calculating effective childrens in right direction
         for (Node child: sortedChildrens)
             if (child.isConditionalNode())
-                effChilds.put(child, child.getEffectiveChildrens());
+                effChilds.put(child, child.getEffectiveNodes());
         //composing sortedChildrens in reverse direction
         for (int i=sortedChildrens.size()-1; i>=0; --i) {
             Node node = sortedChildrens.get(i);
@@ -572,12 +624,25 @@ public class BaseNode implements Node, NodeListener, Logger
         return sortedChildrens.isEmpty()? null : sortedChildrens;
     }
 
-    public Node getChildren(String name)
-    {
-        return childrens==null? null : childrens.get(name);
+    @Deprecated
+    public Node getChildren(String name) {
+        return nodes==null? null : nodes.get(name);
     }
 
+    public Node getNode(String name) {
+        return nodes.get(name);
+    }
+
+    public boolean hasNode(String name) {
+        return nodes.containsKey(name);
+    }
+
+    @Deprecated
     public Node getChildrenByPath(String path) {
+        return getNodeByPath(path);
+    }
+
+    public Node getNodeByPath(String path) {
         try {
             PathInfo<Node> pathInfo = pathResolver.resolvePath(path, this);
             return pathInfo.getReferencedObject();
@@ -586,18 +651,29 @@ public class BaseNode implements Node, NodeListener, Logger
         }
     }
 
-    public Collection<NodeAttribute> getNodeAttributes()
-    {
-        return nodeAttributes==null? null : nodeAttributes.values();
+    @Deprecated
+    public Collection<NodeAttribute> getNodeAttributes() {
+        return getAttrs();
     }
 
-    public NodeAttribute getNodeAttribute(String name)
-    {
+    public Collection<NodeAttribute> getAttrs() {
+        return nodeAttributes.values();
+    }
+
+    public boolean hasAttr(String name) {
+        return nodeAttributes.containsKey(name);
+    }
+
+    @Deprecated
+    public NodeAttribute getNodeAttribute(String name) {
+        return getAttr(name);
+    }
+
+    public NodeAttribute getAttr(String name) {
         return nodeAttributes.get(name);
     }
 
-    public Set<Node> getDependentNodes()
-    {
+    public Set<Node> getDependentNodes() {
         return dependentNodes.keySet();
     }
 
@@ -886,42 +962,52 @@ public class BaseNode implements Node, NodeListener, Logger
                 listener.nodeIndexChanged(this, oldIndex, newIndex);
     }
 
-    public NodeAttribute getParentAttribute(String attributeName)
-    {
+    @Deprecated
+    public NodeAttribute getParentAttribute(String attributeName) {
+        return getParentAttr(attributeName);
+    }
+
+    public NodeAttribute getParentAttr(String attributeName) {
         Node node = this;
-        while ( (node=node.getParent())!=null )
-        {
-            NodeAttribute attr = node.getNodeAttribute(attributeName);
+        while ( (node=node.getParent())!=null ) {
+            NodeAttribute attr = node.getAttr(attributeName);
             if (attr!=null)
                 return attr;
         }
         return null;
     }
 
-    /**
-     * Method returns the first not null value of the attribute, with name passed in the 
-     * <code>attributeName</code> parameter, of the nearest parent or null if parents does not
-     * contains the attribute with name passed in the parameter.
-     * @param attributeName the name of the attribute
-     */
-    public String getParentAttributeValue(String attributeName)
-    {
+    @Deprecated
+    public String getParentAttributeValue(String attributeName) {
+        return getParentAttrValue(attributeName);
+    }
+
+    public String getParentAttrValue(String attributeName) {
         Node node = this;
-        while ( (node=node.getParent())!=null )
-        {
-            NodeAttribute attr = node.getNodeAttribute(attributeName);
+        while ( (node=node.getParent())!=null ) {
+            NodeAttribute attr = node.getAttr(attributeName);
             if (attr!=null)
                 return attr.getValue();
         }
         return null;
     }
 
-    public <T> T getParentAttributeRealValue(String attributeName)
-    {
+    @Deprecated
+    public <T> T getParentAttributeRealValue(String attributeName) {
         Node node = this;
         while ( (node=node.getParent())!=null )
         {
             NodeAttribute attr = node.getNodeAttribute(attributeName);
+            if (attr!=null)
+                return (T) attr.getRealValue();
+        }
+        return null;
+    }
+    
+    public <T> T getParentAttrRealValue(String attributeName) {
+        Node node = this;
+        while ( (node=node.getParent())!=null ) {
+            NodeAttribute attr = node.getAttr(attributeName);
             if (attr!=null)
                 return (T) attr.getRealValue();
         }
@@ -1184,6 +1270,70 @@ public class BaseNode implements Node, NodeListener, Logger
         return hash;
     }
 
+    //groovy support methods
+    public Object propertyMissing(String name, Object value) {
+        if (name.startsWith("$")) {
+            NodeAttribute attr = getAttr(name.substring(1));
+            if (attr!=null) {
+                try {
+                    setAttrValue(attr, value);
+                    return attr.getRealValue();
+                } catch (Exception e) {
+                    throw new IllegalArgumentException(e);
+                }
+            }
+            throw new IllegalArgumentException(String.format(
+                "Attribute (%s) not found in the node (%s)", name.substring(1), getPath()));
+        }
+        throw new MissingPropertyException(String.format("Property (%s) not found in (%s)", name, getPath()));
+    }
+    
+    public Object propertyMissing(String name) {
+        if (name.startsWith("$")) {
+            NodeAttribute attr = getAttr(name.substring(1));
+            if (attr!=null)
+                return attr.getRealValue();
+            throw new IllegalArgumentException(String.format(
+                "Attribute (%s) not found in the node (%s)", name.substring(1), getPath()));
+        }
+        throw new MissingPropertyException(String.format("Property (%s) not found in (%s)", name, getPath()));
+    }
+    
+    public Object methodMissing(String name, Object args) {
+        Object[] list = (Object[]) args;
+        if (name.startsWith("$") && list.length==1 && list[0] instanceof Map) {
+            NodeAttribute attr = getAttr(name.substring(1));
+            if (attr!=null) 
+                return getAttrValue(attr, (Map)list[0]);
+            throw new IllegalArgumentException(String.format(
+                "Attribute (%s) not found in the node (%s)", name.substring(1), getPath()));
+        } 
+        throw new MissingMethodException(name, getClass(), list);
+    }
+    
+    public NodeAttribute getAt(String attrName) {
+        return getAttr(attrName);
+    }
+    //end of groovy support
+    
+    private void setAttrValue(NodeAttribute attr, Object value) throws Exception {
+        String strValue = converter.convert(String.class, value, null);
+        attr.setValue(strValue);
+        tree.saveNodeAttribute(attr);
+    }
+  
+    private Object getAttrValue(NodeAttribute attr, Map args) {
+        BindingSupport varsSupport = tree.getGlobalBindings(Tree.EXPRESSION_VARS_BINDINGS);
+        boolean initiated = varsSupport.contains(
+                ExpressionAttributeValueHandler.RAVEN_EXPRESSION_VARS_INITIATED_BINDING);
+        try {
+            varsSupport.put(ExpressionAttributeValueHandler.RAVEN_EXPRESSION_ARGS_BINDING, args);
+            return attr.getRealValue();
+        } finally {
+            if (!initiated)
+                varsSupport.reset();
+        }
+    }
     public void setSubtreeListener(boolean subtreeListener)
     {
         this.subtreeListener = subtreeListener;
@@ -1204,12 +1354,12 @@ public class BaseNode implements Node, NodeListener, Logger
 
     public void nodeNameChanged(Node node, String oldName, String newName)
     {
-        if (   childrens!=null 
-            && childrens.containsKey(oldName) 
-            && node.equals(childrens.get(oldName)))
+        if (   nodes!=null 
+            && nodes.containsKey(oldName) 
+            && node.equals(nodes.get(oldName)))
         {
-            childrens.remove(oldName);
-            childrens.put(newName, node);
+            nodes.remove(oldName);
+            nodes.put(newName, node);
         }
     }
 

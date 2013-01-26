@@ -19,24 +19,17 @@ package org.raven.api.impl;
 
 import groovy.json.JsonBuilder;
 import groovy.lang.Closure;
-import groovy.lang.GroovyObject;
-import groovy.lang.MissingMethodException;
-import groovy.lang.MissingPropertyException;
 import groovy.sql.Sql;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-import org.raven.api.NodeAccess;
-import org.raven.api.NodeAttributeAccess;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.DataContextImpl;
-import org.raven.expr.impl.PropertySupport;
 import org.raven.template.impl.TemplateNode;
 import org.raven.template.impl.TemplateWizard;
 import org.raven.tree.Node;
-import org.raven.tree.NodeAttribute;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.TreeImpl;
 
@@ -97,20 +90,20 @@ public class ApiUtils
         return json.toString();
     }
     
-    public static Closure wrapNode(Object nodeObj, Closure closure) {
-        if (nodeObj==null)
-            return null;
-        NodeAccess node = null;
-        if (nodeObj instanceof Node)
-            node = new NodeAccessImpl((Node)nodeObj);
-        else if (nodeObj instanceof NodeAccess)
-            node = (NodeAccess) nodeObj;
-        else
-            throw new IllegalArgumentException("Invalid type of nodeObj. Expected Node or NodeAccess");
-        closure.setDelegate(new PropertySupport(closure, node));
-        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
-        return closure;
-    }
+//    public static Closure wrapNode(Object nodeObj, Closure closure) {
+//        if (nodeObj==null)
+//            return null;
+//        NodeAccess node = null;
+//        if (nodeObj instanceof Node)
+//            node = new NodeAccessImpl((Node)nodeObj);
+//        else if (nodeObj instanceof NodeAccess)
+//            node = (NodeAccess) nodeObj;
+//        else
+//            throw new IllegalArgumentException("Invalid type of nodeObj. Expected Node or NodeAccess");
+//        closure.setDelegate(new PropertySupport(closure, node));
+//        closure.setResolveStrategy(Closure.DELEGATE_FIRST);
+//        return closure;
+//    }
     
 //    public static Object invokeMissingMethod(Object obj, NodeAccess node, String name, Object args) {
 //        Object[] list = (Object[]) args;

@@ -30,7 +30,6 @@ import javax.script.Bindings;
 import org.apache.commons.lang.StringUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
-import org.raven.api.impl.NodeAccessImpl;
 import org.raven.ds.DataSource;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.rrd.data.RRDataSource;
@@ -174,8 +173,10 @@ public class RRGraphManager extends BaseNode
         if (rrds==null)
             return;
 
-        expressionContext.put("dataSource", new NodeAccessImpl(dataSource));
-        expressionContext.put("rrDataSource", new NodeAccessImpl(rrds));
+//        expressionContext.put("dataSource", new NodeAccessImpl(dataSource));
+        expressionContext.put("dataSource", dataSource);
+//        expressionContext.put("rrDataSource", new NodeAccessImpl(rrds));
+        expressionContext.put("rrDataSource", rrds);
         expressionContext.put(TemplateNode.TEMPLATE_EXPRESSION_BINDING, this);
         
         if (filterExpression==null || filterExpression.equals(Boolean.FALSE))

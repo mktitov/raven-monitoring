@@ -17,9 +17,14 @@
 
 package org.raven.tree.impl;
 
+import groovy.lang.Closure;
+import groovy.lang.MissingMethodException;
+import groovy.lang.MissingPropertyException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
@@ -106,7 +111,7 @@ public class BaseNodeTest extends RavenCoreTestCase
     public void getEffectiveChildrens()
     {
         BaseNode node = new BaseNode();
-        assertNull(node.getEffectiveChildrens());
+        assertNull(node.getEffectiveNodes());
         
         Node child1 = createMock("child1", Node.class);
         Node child3 = createMock("child3", Node.class);
@@ -129,7 +134,7 @@ public class BaseNodeTest extends RavenCoreTestCase
         expect(condChild.getIndex()).andReturn(3);
         expect(condChild.compareTo(child1)).andReturn(1).anyTimes();
         expect(condChild.compareTo(child3)).andReturn(-1).anyTimes();
-        expect(condChild.getEffectiveChildrens()).andReturn(Arrays.asList(condChildChild));
+        expect(condChild.getEffectiveNodes()).andReturn(Arrays.asList(condChildChild));
         
         child3.setParent(node);
         child3.addListener(node);
@@ -145,7 +150,7 @@ public class BaseNodeTest extends RavenCoreTestCase
         node.addChildren(child1);
         node.addChildren(condChild);
         
-        Collection childs = node.getEffectiveChildrens();
+        Collection childs = node.getEffectiveNodes();
         assertNotNull(childs);
         assertEquals(3, childs.size());
         
@@ -224,5 +229,92 @@ public class BaseNodeTest extends RavenCoreTestCase
         tree.getRootNode().addAndSaveChildren(node);
         assertNotNull(node.getVariables());
         assertTrue(node.getVariables() instanceof Map);
+    }
+    
+    @Test
+    public void findTest() {
+        BaseNode node = new BaseNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        ContainerNode container = new ContainerNode("container");
+        tree.getRootNode().addAndSaveChildren(container);
+        BaseNode child = new BaseNode("node");
+        container.addAndSaveChildren(child);
+        BaseNode child1 = new BaseNode("node1");
+        container.addAndSaveChildren(child1);
+        
+        Node res = tree.getRootNode().find(new Closure<Boolean>(this){
+            @Override public Boolean call(Object arg) {
+                return ((Node)arg).getName().equals("node");
+            }            
+        });
+        assertNotNull(res);
+        assertSame(node, res);
+        
+        res = tree.getRootNode().find(new Closure<Boolean>(this){
+            @Override public Boolean call(Object arg) {
+                return ((Node)arg).getName().equals("node1");
+            }            
+        });
+        assertNotNull(res);
+        assertSame(child1, res);
+        
+        List<Node> nodes = tree.getRootNode().findAll(new Closure<Boolean>(this){
+            @Override public Boolean call(Object arg) {
+                return ((Node)arg).getName().equals("node");
+            }            
+        });
+        assertNotNull(nodes);
+        assertEquals(2, nodes.size());
+        assertArrayEquals(new Object[]{node, child}, nodes.toArray());
+    }
+    
+    @Test
+    public void groovyAttrAccessTest() throws Exception {
+        BaseNode node = new BaseNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        NodeAttribute attr1 = new NodeAttributeImpl("attr1", Integer.class, 1, null);
+        attr1.setOwner(node);
+        attr1.init();
+        node.addAttr(attr1);
+        NodeAttribute attr2 = new NodeAttributeImpl("attr2", String.class, "param1", null);
+        attr2.setOwner(node);
+        attr2.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
+        attr2.init();
+        node.addAttr(attr2);
+        
+        assertEquals(1, node.propertyMissing("$attr1"));
+        assertEquals(2, node.propertyMissing("$attr1", 2));
+        assertEquals(2, attr1.getRealValue());
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("param1", 50);
+        assertEquals(50, node.methodMissing("$attr2", new Object[]{args}));
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void groovyAttrNotFoundTest() throws Exception {
+        BaseNode node = new BaseNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        node.propertyMissing("$attr1");
+    }
+    
+    @Test(expected=MissingPropertyException.class)
+    public void groovyPropertyNotFoundTest() throws Exception {
+        BaseNode node = new BaseNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        node.propertyMissing("attr1");
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void groovyAttrNotFoundTest2() throws Exception {
+        BaseNode node = new BaseNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        node.methodMissing("$attr1", new Object[]{new HashMap()});
+    }
+    
+    @Test(expected=MissingMethodException.class)
+    public void groovyPropertyNotFoundTest2() throws Exception {
+        BaseNode node = new BaseNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        node.methodMissing("attr1", new Object[]{new HashMap()});
     }
 }

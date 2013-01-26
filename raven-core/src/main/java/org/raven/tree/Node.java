@@ -17,6 +17,7 @@
 
 package org.raven.tree;
 
+import groovy.lang.Closure;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -96,6 +97,14 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
      */
     public Status getStatus();
     /**
+     * Returns <b>true</b> if {@link #getStatus() } equals to {@link Status#STARTED}
+     */
+    public boolean isStarted();
+    /**
+     * Returns <b>true</b> if {@link #getStatus() } equals to {@link Status#INITIALIZED}
+     */
+    public boolean isInitialized();
+    /**
      * Sets the new node status.
      */
     public void setStatus(Status status);
@@ -159,17 +168,42 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
      */
     public void detachChildren(Node node);
     /**
-     * Returns nodes that belongs to this node. Method returns <code>null</code> if this node
-     * has not childrens.
+     * @deprecated use {@link #getNodes()}
      */
     public Collection<Node> getChildrens();
     /**
-     * Returns <b>count</b> of the childrens in this node or <b>zero</b> if this node has not childrens.
+     * Returns child nodes sorted by {@link #getIndex() index}. Method returns an empty list if node does 
+     * has not children
+     */
+    public List<Node> getNodes();
+    /**
+     * Returns <b>true</b> if this node has child node with name passed in the parameter
+     * @param name node name
+     */
+    public boolean hasNode(String name);
+    /**
+     * recursion search for first node that satisfy the filter
+     */
+    public Node find(Closure<Boolean> filter);
+    /**
+     * recursion search for all nodes that satisfy the filter
+     */
+    public List<Node> findAll(Closure<Boolean> filter);
+    /**
+     * @deprecated use {@link #getNodesCount()}
      */
     public int getChildrenCount();
     /**
-     * Returns children nodes sorted by {@link #getIndex() index}. Method returns an empty list if node does 
-     * not have child nodes
+     * Returns children <b>count</b> in this node or <b>zero</b> if node has not children.
+     */
+    public int getNodesCount();
+    /**
+     * @deprecated use {@link #getNodes()}
+     */
+    public List<Node> getChildrenList();
+    
+    /**
+     * @deprecated use {@link #getNodes()}
      */
     public List<Node> getSortedChildrens();
     /**
@@ -183,23 +217,35 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
      */
     public Node getEffectiveParent(); 
     /**
+     * @deprecated use {@link #getEffectiveNodes()}
+     */
+    public Collection<Node> getEffectiveChildrens();
+    /**
      * Returns the children of this node excluding {@link #isConditionalNode() conditional nodes}
      * and the {@link #getEffectiveChildrens() effective childrens} of the conditional nodes. 
      * Returned nodes are sorted by the {@link #getIndex() index property} and effective childrens 
      * from the {@link #isConditionalNode() conditional nodes} are inserted to the returned list at
      * the conditional node position.
      */
-    public Collection<Node> getEffectiveChildrens();
+    public Collection<Node> getEffectiveNodes();
     /**
-     * Returns the children node by its name or <code>null</code> if no children node with specified
-     * name.
-     * @param name the children node name
+     * @deprecated use {@link #getNode(java.lang.String) }
      */
     public Node getChildren(String name);
     /**
-     * Returns children by path relative to this node
+     * Returns the child node by its name or <code>null</code> if no children node with specified
+     * name.
+     * @param name the children node name
+     */
+    public Node getNode(String name);
+    /**
+     * @deprecated use {@link #getNodeByPath(java.lang.String)} 
      */
     public Node getChildrenByPath(String path);
+    /**
+     * Returns child by path relative to this node
+     */
+    public Node getNodeByPath(String path);
     /**
      * Adds listener to the node.
      */
@@ -227,9 +273,13 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
      */
     public boolean isContainer();
     /**
-     * Adds new attribute to the node.
+     * @deprecated use {@link #addAttr(org.raven.tree.NodeAttribute)}
      */
     public void addNodeAttribute(NodeAttribute attr);
+    /**
+     * Adds new attribute to the node.
+     */
+    public void addAttr(NodeAttribute attr);
     /**
      * Adds node attribute dependency.
      * @param attributeName attribute name.
@@ -241,19 +291,36 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
      */
     public void removeNodeAttributeDependency(String attributeName, NodeAttributeListener listener);
     /**
-     * Removes node attribute by its name.
+     * @deprecated use {@link #removeAttr(java.lang.String)}
      */
     public void removeNodeAttribute(String name);
     /**
-     * Returns node attributes
+     * Removes node attribute by its name.
+     */
+    public void removeAttr(String name);
+    /**
+     * @deprecated use {@link #getAttrs()} instead
      */
     public Collection<NodeAttribute> getNodeAttributes();
+    /**
+     * Returns node attributes
+     */
+    public Collection<NodeAttribute> getAttrs();
+    /**
+     * Returns <b>true</b> if this node contains attribute with name passed in the parameter
+     * @param name attribute name
+     */
+    public boolean hasAttr(String name);
+    /**
+     * @deprecated Use {@link #getAttr(java.lang.String)} instead
+     */
+    public NodeAttribute getNodeAttribute(String name);
     /**
      * Returns node attribute by its name or null if node does not contains the attribute with name
      * passed in parameter <code>name</code>.
      * @param name the attribute name
      */
-    public NodeAttribute getNodeAttribute(String name);
+    public NodeAttribute getAttr(String name);
     /**
      * If returns <code>true</code> then node will be initialized after child nodes else before.
      */
@@ -313,23 +380,31 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
      */
     public Set<Node> getDependentNodes();
     /**
+     * @deprecated use {@link #getParentAttr(java.lang.String)}
+     */
+    public NodeAttribute getParentAttribute(String attributeName);
+    /**
      * Method returns the first attribute, with name passed in the 
      * <code>attributeName</code> parameter, of the nearest parent or null if parents does not
      * contains the attribute with name passed in the parameter.
      * @param attributeName the name of the attribute
      */
-    public NodeAttribute getParentAttribute(String attributeName);
+    public NodeAttribute getParentAttr(String attributeName);
     /**
-     * If method returns <code>true</code> then node permits read only operations.
+     * @deprecated use {@link #getParentAttrValue(java.lang.String) 
      */
-//    public boolean isReadOnly();
+    public String getParentAttributeValue(String attributeName);
     /**
      * Method returns the first not null value of the attribute, with name passed in the 
      * <code>attributeName</code> parameter, of the nearest parent or null if parents does not
      * contains the attribute with name passed in the parameter.
      * @param attributeName the name of the attribute
      */
-    public String getParentAttributeValue(String attributeName);
+    public String getParentAttrValue(String attributeName);
+    /**
+     * @deprecated use {@link #getParentAttrRealValue(java.lang.String)}
+     */
+    public <T> T getParentAttributeRealValue(String attributeName);
     /**
      * Method returns the first not null real value (the value of the 
      * {@link NodeAttribute#getType() attribute type}) 
@@ -338,9 +413,7 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
      * contains the attribute with name passed in the parameter.
      * @param attributeName the name of the attribute
      */
-    public <T> T getParentAttributeRealValue(String attributeName);
-    
-    public List<Node> getChildrenList();
+    public <T> T getParentAttrRealValue(String attributeName);
     
     public boolean isLogLevelEnabled(LogLevel level);
     /**
@@ -365,7 +438,7 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
      * Copy this node to the destination node passed in the parameter.
      * @param dest the destination node.
      * @param newNodeName if specified then the copied node will get the new name
-     * @param useEffectiveChildrens if seted to <code>true</code> then method 
+     * @param useEffectiveChildrens if setted to <code>true</code> then method 
      *      {@link #getEffectiveChildrens()} will be used to clone children nodes of this node.
      * @throws java.lang.CloneNotSupportedException
      */

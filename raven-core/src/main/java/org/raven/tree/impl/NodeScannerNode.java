@@ -28,7 +28,6 @@ import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.api.NodeAccess;
-import org.raven.api.impl.NodeAccessImpl;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
@@ -216,11 +215,9 @@ public class NodeScannerNode extends BaseNode implements DataSource, Schedulable
     }
 
     @Override
-    public void formExpressionBindings(Bindings bindings)
-    {
+    public void formExpressionBindings(Bindings bindings) {
         super.formExpressionBindings(bindings);
-
-        bindings.put("scanningNode", new NodeAccessImpl(scanningNode));
+        bindings.put("scanningNode", scanningNode);
     }
 
     private void addAdditionalNodes(TableImpl table, Node node)

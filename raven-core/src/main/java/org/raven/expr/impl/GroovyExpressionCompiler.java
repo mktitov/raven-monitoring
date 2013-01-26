@@ -52,19 +52,11 @@ public class GroovyExpressionCompiler implements ExpressionCompiler
 		try {
             StringBuilder buf = new StringBuilder()
                 .append("import static ").append(ApiUtils.class.getName()).append(".*; ")
-                .append("_={}; if (node) { _.delegate = new ").append(PropertySupport.class.getName()).append("(_, node); ")
-                .append("_.resolveStrategy = Closure.DELEGATE_FIRST; };")
-                .append(expression)
-                .append("\ndef _(node) { wrapNode(node, {}) } ");
+                .append(expression);
             if (expression.contains("withSql"))
-                buf
-                .append("\ndef withSql(Closure c){\n")
-                .append("  con = node['connectionPool']?.value?.connection\n")
-                .append("  if (!con) throw new Exception(\"Attribute (connectionPool) not found in the node (${node.path})\".toString())\n")
-                .append("  withSql(con, c)\n")
-                .append("}\n");
+                buf.append("\ndef withSql(Closure c){ withSql(node.$connectionPool.connection, c) }\n");
             if (expression.contains("sendData"))
-                buf.append("\ndef sendData(target, data) { sendData(node.asNode(), target, data); }\n");
+                buf.append("\ndef sendData(target, data) { sendData(node, target, data); }\n");
             String name = convert(scriptName);
 			Class expressionClass = classLoader.parseClass(buf.toString(), name);
 			GroovyExpression groovyExpression = new GroovyExpression(expressionClass);

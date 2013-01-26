@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
-import org.raven.api.impl.NodeAccessImpl;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
@@ -213,7 +212,7 @@ public class NodeUtils
             throws Exception
     {
         Map<String, NodeAttribute> refreshAttributes = new LinkedHashMap<String, NodeAttribute>();
-        Collection<NodeAttribute> attrs = node.getNodeAttributes();
+        Collection<NodeAttribute> attrs = node.getAttrs();
         int id=-1;
         if (attrs!=null)
             for (NodeAttribute attr: attrs)
@@ -223,8 +222,8 @@ public class NodeUtils
                     clone.setOwner(node);
                     clone.setId(id--);
                     Bindings bindings = new SimpleBindings();
-                    bindings.put(
-                            ExpressionAttributeValueHandler.NODE_BINDING, new NodeAccessImpl(node));
+//                    bindings.put(ExpressionAttributeValueHandler.NODE_BINDING, new NodeAccessImpl(node));
+                    bindings.put(ExpressionAttributeValueHandler.NODE_BINDING, node);
                     Object val = TemplateExpression.eval(clone.getRawValue(), bindings);
                     clone.setRawValue(converter.convert(String.class, val, null));
                     clone.init();

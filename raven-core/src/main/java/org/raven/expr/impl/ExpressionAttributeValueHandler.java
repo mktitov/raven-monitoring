@@ -23,7 +23,6 @@ import javax.script.Bindings;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 import org.raven.RavenRuntimeException;
-import org.raven.api.impl.NodeAccessImpl;
 import org.raven.expr.BindingSupport;
 import org.raven.expr.Expression;
 import org.raven.expr.ExpressionCompiler;
@@ -31,8 +30,6 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodePathResolver;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.AbstractAttributeValueHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.weda.beans.ObjectUtils;
 import org.weda.internal.annotations.Service;
 
@@ -109,7 +106,8 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
         Object res = null;
         if (expression!=null && expressionValid) {
             Bindings bindings = new SimpleBindings();
-            bindings.put(NODE_BINDING, new NodeAccessImpl(attribute.getOwner()));
+//            bindings.put(NODE_BINDING, new NodeAccessImpl(attribute.getOwner()));
+            bindings.put(NODE_BINDING, attribute.getOwner());
             bindings.put(LOGGER, attribute.getOwner().getLogger());
 
             BindingSupport varsSupport = tree.getGlobalBindings(Tree.EXPRESSION_VARS_BINDINGS);

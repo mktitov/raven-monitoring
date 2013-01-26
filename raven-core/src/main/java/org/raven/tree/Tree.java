@@ -181,7 +181,7 @@ public interface Tree
      */
     public List<ReferenceValue> getAttributeValueHandlerTypes(NodeAttribute attr);
     /**
-     * Scans every node (all childrens and all childrens of childrens) begining 
+     * Scans every node (all children and all children of children) begining 
      * from <b>startingPoint</b> (excluding <code>startingPoint</code> node) and pass
      * every scaned node to the <b>handler</b>. 
      * @param startingPoint the node from which scan must begin
@@ -189,8 +189,7 @@ public interface Tree
      * @param nodeTypes only the nodes of types in this array will be passed to the node handler.
      *      if the parameter was not seted then any node will be passed to the node handler.
      */
-    public boolean scanSubtree(
-            Node startingPoint, ScannedNodeHandler handler, ScanOptions options);
+    public boolean scanSubtree(Node startingPoint, ScannedNodeHandler handler, ScanOptions options);
         
     /**
      * Adds global binding support to the tree. If binding already exists then bindingSupport 
