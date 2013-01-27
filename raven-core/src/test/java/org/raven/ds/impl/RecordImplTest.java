@@ -19,6 +19,7 @@ package org.raven.ds.impl;
 
 import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Map;
 import org.junit.Test;
 import org.raven.ds.InvalidRecordFieldException;
 import org.raven.ds.Record;
@@ -230,6 +231,24 @@ public class RecordImplTest extends RavenCoreTestCase
         assertSame(Collections.EMPTY_MAP, rec.getTags());
         
         verify(schema, field);
+    }
+    
+    @Test
+    public void getValuesTest() throws Exception {
+        RecordSchemaNode schema = new RecordSchemaNode();
+        schema.setName("schema");
+        tree.getRootNode().addAndSaveChildren(schema);
+        assertTrue(schema.start());
+
+        RecordSchemaFieldNode.create(schema, "field1", null, RecordSchemaFieldType.INTEGER, null);
+        RecordSchemaFieldNode.create(schema, "field2", null, RecordSchemaFieldType.INTEGER, null);
+        Record rec = schema.createRecord();
+        rec.setValue("field1", 10);
+        Map<String, Object> values = rec.getValues();
+        assertNotNull(values);
+        assertEquals(2, values.size());
+        assertEquals(10, values.get("field1"));
+        assertNull(values.get("field2"));
     }
 
     @Test

@@ -101,9 +101,12 @@ public class RecordImpl implements Record
         setValue(fieldName, value);
     }
     
-    public Map<String, Object> getValues()
-    {
-        return Collections.unmodifiableMap(values);
+    public Map<String, Object> getValues() {
+        Map<String, Object> res = new HashMap<String, Object>(values);
+        for (String fieldName: fields.keySet())
+            if (!res.containsKey(fieldName))
+                res.put(fieldName, null);
+        return res;
     }
 
     public void setValues(Map<String, Object> values) throws RecordException
@@ -112,9 +115,9 @@ public class RecordImpl implements Record
 
         if (values!=null && !values.isEmpty())
             for (Map.Entry<String, Object> entry: values.entrySet())
-                try{
+                try {
                     setValue(entry.getKey(), entry.getValue());
-                }catch(InvalidRecordFieldException e){ }
+                } catch(InvalidRecordFieldException e){ }
     }
 
     public void copyFrom(Record record) throws RecordException
