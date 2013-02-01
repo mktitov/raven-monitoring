@@ -21,6 +21,7 @@ import java.security.Security;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.activation.DataHandler;
 import javax.mail.Message;
 import javax.mail.Multipart;
@@ -103,7 +104,7 @@ public class MailWriterNode extends AbstractSafeDataPipe
     
     @NotNull @Parameter(defaultValue="false")
     private Boolean useErrorHandler;
-
+    
     static {
         Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
     }
@@ -138,20 +139,17 @@ public class MailWriterNode extends AbstractSafeDataPipe
         try {
             Session session = null;
             if (useAuth) {
-                session = Session.getDefaultInstance(props, new javax.mail.Authenticator() {
-
+                session = Session.getInstance(props, new javax.mail.Authenticator() {
                     @Override
                     protected PasswordAuthentication getPasswordAuthentication() {
                         return new PasswordAuthentication(user, password);
                     }
                 });
-            } else {
+            } else 
                 session = Session.getDefaultInstance(props);
-            }
             
-            if (isLogLevelEnabled(LogLevel.DEBUG)) {
+            if (isLogLevelEnabled(LogLevel.DEBUG)) 
                 session.setDebug(true);
-            }
             
             try {
                 bindingSupport.put(DATA_BINDING, data);
