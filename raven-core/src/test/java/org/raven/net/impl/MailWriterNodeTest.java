@@ -58,7 +58,7 @@ public class MailWriterNodeTest extends RavenCoreTestCase
         mailer.setLogLevel(LogLevel.DEBUG);
 
 //        mailer.setSmtpHost("mail.spb.mts.ru");
-        mailer.setSmtpHost("mail.komi.mts.ru");
+        mailer.setSmtpHost("relay.spb.mts.ru");
         mailer.setFrom("it@komi.mts.ru");
         mailer.setFromPersonalName("Генератор отчетов");
         mailer.setTo("tim@komi.mts.ru");
@@ -83,7 +83,7 @@ public class MailWriterNodeTest extends RavenCoreTestCase
         assertTrue(collector.start());
     }
 
-//    @Test
+    @Test
     public void sendToGoogleTest() throws Exception
     {
         AttributeValueMessagePartNode part = new AttributeValueMessagePartNode();
@@ -106,7 +106,7 @@ public class MailWriterNodeTest extends RavenCoreTestCase
         ds.pushData(is);
     }
     
-    @Test
+//    @Test
     public void errorHandlerTest() throws Exception
     {
         mailer.setConnectionTimeout(500);
