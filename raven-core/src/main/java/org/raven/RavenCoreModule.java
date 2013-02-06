@@ -26,12 +26,14 @@ import org.apache.tapestry5.ioc.ServiceBinder;
 import org.apache.tapestry5.ioc.services.ChainBuilder;
 import org.raven.audit.Auditor;
 import org.raven.audit.impl.AuditorImpl;
+import org.raven.auth.AuthManager;
 import org.raven.auth.AuthProvider;
 import org.raven.auth.AuthService;
 import org.raven.auth.Authenticator;
 import org.raven.auth.NodeAccessService;
 import org.raven.auth.UserContextConfigurator;
 import org.raven.auth.UserContextConfiguratorService;
+import org.raven.auth.impl.AuthManagerService;
 import org.raven.auth.impl.AuthServiceImpl;
 import org.raven.auth.impl.BasicAuthenticator;
 import org.raven.auth.impl.NodeAccessServiceImpl;
@@ -97,9 +99,12 @@ public class RavenCoreModule
         binder.bind(NetworkResponseService.class, NetworkResponseServiceImpl.class);
     }
 
-    public static TemporaryCacheManager buildTemporaryCacheManager(CacheManager cacheManager)
-    {
+    public static TemporaryCacheManager buildTemporaryCacheManager(CacheManager cacheManager) {
         return new TemporaryCacheManagerImpl(cacheManager);
+    }
+    
+    public static AuthManager buildAuthManager(Tree tree) {
+        return new AuthManagerService(tree);
     }
     
     @SuppressWarnings("unchecked")
@@ -170,12 +175,12 @@ public class RavenCoreModule
         return builder.build(Authenticator.class, commands);
     }
 
-    public static UserContextConfiguratorService buildContextConfiguratorService(
-            Collection<UserContextConfigurator> configurators)
-    {
-        return new UserContextConfiguratorServiceImpl(configurators);
-    }
-
+//    public static UserContextConfiguratorService buildContextConfiguratorService(
+//            Collection<UserContextConfigurator> configurators)
+//    {
+//        return new UserContextConfiguratorServiceImpl(configurators);
+//    }
+//
     @SuppressWarnings("unchecked")
 	public static void contributeConfigurator(MappedConfiguration<String, Class> conf)
     {
@@ -377,11 +382,11 @@ public class RavenCoreModule
         conf.add(CacheScope.GLOBAL, new SimpleCache());
     }
 
-    public static void contributeContextConfiguratorService(
-            Configuration<UserContextConfigurator> conf, Tree tree)
-    {
-        conf.add(new RavenUserContextConfigurator(tree));
-    }
+//    public static void contributeContextConfiguratorService(
+//            Configuration<UserContextConfigurator> conf, Tree tree)
+//    {
+////        conf.add(new RavenUserContextConfigurator(tree));
+//    }
     
     public static void contributeTreeListeners(Configuration<TreeListener> listeners
             , ResourceManager resourceManager) 

@@ -21,7 +21,6 @@ package org.raven.auth;
  * Base interface for user authentication.
  * @author Mikhail Titov
  */
-public interface Authenticator
-{
+public interface Authenticator {
     public boolean checkAuth(String user, String password) throws AuthenticatorException;
 }

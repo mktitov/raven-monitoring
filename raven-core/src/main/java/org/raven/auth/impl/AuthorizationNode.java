@@ -26,26 +26,25 @@ public class AuthorizationNode extends BaseNode
 		}
 	}
 
-	private void initChildren()
-	{
-		if(getChildren(ResourcesListNode.NODE_NAME)==null)
+	private void initChildren() {
+        if (!hasNode(AuthManagerNode.NAME))
+            addAndSaveChildren(new AuthManagerNode());
+		if(!hasNode(ResourcesListNode.NODE_NAME))
 			addAndSaveChildren(new ResourcesListNode());
-		if(getChildren(GroupsListNode.NODE_NAME)==null)
+		if(!hasNode(GroupsListNode.NODE_NAME))
 			addAndSaveChildren(new GroupsListNode());
-        if(getChildren(ContextsNode.NODE_NAME)==null)
+        if(!hasNode(ContextsNode.NODE_NAME))
             addAndSaveChildren(new ContextsNode());
 	}
 	
     @Override
-	public synchronized void doInit() throws Exception
-	{
+	public synchronized void doInit() throws Exception	{
 		super.doInit();
 		initChildren();
 	}
 
     @Override
-	public synchronized void doStart() throws Exception
-	{
+	public synchronized void doStart() throws Exception {
 		super.doStart();
 		initChildren();
 		setAllowEvents(true);

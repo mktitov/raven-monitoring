@@ -40,7 +40,7 @@ public class FSDirectoryResourceContext extends AbstractNetworkResponseContext {
         File file = new File(directory+File.separator+subpath);
         if (!file.exists() || !file.isFile())
             throw new ContextUnavailableException("File not found: "+subpath);
-        File
+//        File
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

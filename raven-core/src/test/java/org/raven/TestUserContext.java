@@ -20,6 +20,7 @@ package org.raven;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.raven.auth.UserContext;
 import org.raven.tree.Node;
 
@@ -31,7 +32,7 @@ public class TestUserContext implements UserContext
 {
     private Map<String, Object> params = new HashMap<String, Object>();
 
-    public String getAuthProvider() {
+    public String getAuthenticator() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -43,11 +44,7 @@ public class TestUserContext implements UserContext
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public void setAdmin(boolean admin) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public List<String> getGroups() {
+    public Set<String> getGroups() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -58,17 +55,4 @@ public class TestUserContext implements UserContext
     public int getAccessForNode(Node node) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-
-    public String getDN() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public void setDN(String dn) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public Map<String, List<Object>> getAttrs() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
 }

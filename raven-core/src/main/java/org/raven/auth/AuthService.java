@@ -25,5 +25,5 @@ public interface AuthService
 {
     public static final String ROOT_USER_NAME = "root";
     
-    public UserContext authenticate(String username, String password);
+    public UserContext authenticate(String username, String password) throws AuthException;
 }

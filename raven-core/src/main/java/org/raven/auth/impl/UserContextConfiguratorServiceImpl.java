@@ -26,7 +26,8 @@ import org.raven.auth.UserContextConfiguratorService;
  *
  * @author Mikhail Titov
  */
-public class UserContextConfiguratorServiceImpl implements UserContextConfiguratorService
+@Deprecated
+public class UserContextConfiguratorServiceImpl //implements UserContextConfiguratorService
 {
     private final Collection<UserContextConfigurator> configurators;
 
@@ -35,9 +36,9 @@ public class UserContextConfiguratorServiceImpl implements UserContextConfigurat
         this.configurators = configurators;
     }
 
-    public void configure(UserContext userContext)
-    {
-        for (UserContextConfigurator configurator: configurators)
-            configurator.configure(userContext);
-    }
+//    public void configure(UserContext userContext)
+//    {
+//        for (UserContextConfigurator configurator: configurators)
+//            configurator.configure(userContext);
+//    }
 }

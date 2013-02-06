@@ -155,6 +155,7 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
     public void addChildren(Node node);
     /**
      * Adds children node to this node save it and makes initialization.
+     * Returns the added
      * @param node the children node
      */
     public void addAndSaveChildren(Node node);

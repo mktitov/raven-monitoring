@@ -24,7 +24,7 @@ package org.raven.auth;
 public interface AuthProvider
 {
     /**
-     * Returns the name of the provider (the provider cat present the group of providers)
+     * Returns the name of the provider (the provider can present by the group of providers)
      * thats authenticate the user or null if user not authenticated
      * by this provider.
      * @param username the user name that must be authenticated

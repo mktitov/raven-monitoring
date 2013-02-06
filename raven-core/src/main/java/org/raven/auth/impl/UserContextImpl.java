@@ -17,8 +17,10 @@
 
 package org.raven.auth.impl;
 
-import java.util.List;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import org.raven.auth.UserContext;
 import org.raven.tree.Node;
 
@@ -29,14 +31,17 @@ import org.raven.tree.Node;
 public class UserContextImpl implements UserContext
 {
     private final String username;
-    private final String authProvider;
-    private String dn;
-    private boolean admin;
+    private final String authenticator;
+    private final boolean admin;
+    private final Map<String, Object> params;
+    private final Set<String> groups;
 
-    public UserContextImpl(String username, String authProvider)
-    {
-        this.username = username;
-        this.authProvider = authProvider;
+    public UserContextImpl(UserContextConfigImpl config) {
+        this.username = config.getUsername();
+        this.authenticator = config.getAuthenticator();
+        this.groups = Collections.unmodifiableSet(config.getGroups());
+        this.params = new ConcurrentHashMap<String, Object>(config.getParams());
+        this.admin = config.isAdmin();
     }
 
     public String getUsername() {
@@ -47,37 +52,19 @@ public class UserContextImpl implements UserContext
         return admin;
     }
 
-    public void setAdmin(boolean admin) {
-        this.admin = admin;
+    public String getAuthenticator() {
+        return authenticator;
     }
 
-    public String getAuthProvider() {
-        return authProvider;
-    }
-
-    public List<String> getGroups() {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public Set<String> getGroups() {
+        return groups;
     }
 
     public Map<String, Object> getParams() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return params;
     }
 
     public int getAccessForNode(Node node) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-
-    public String getDN() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public Map<String, List<Object>> getAttrs() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public void setDN(String dn) 
-    {
-        this.dn = dn;
-    }
-
 }

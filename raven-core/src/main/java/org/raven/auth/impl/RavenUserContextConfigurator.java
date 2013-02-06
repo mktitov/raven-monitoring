@@ -29,7 +29,8 @@ import org.raven.util.NodeUtils;
  *
  * @author Mikhail Titov
  */
-public class RavenUserContextConfigurator implements UserContextConfigurator
+@Deprecated
+public class RavenUserContextConfigurator //implements UserContextConfigurator
 {
     private final Tree tree;
 
@@ -37,15 +38,15 @@ public class RavenUserContextConfigurator implements UserContextConfigurator
         this.tree = tree;
     }
 
-    public void configure(UserContext userContext)
-    {
-        Node configuratorsNode = 
-                tree.getRootNode().getChildren(SystemNode.NAME)
-                .getChildren(AuthorizationNode.NODE_NAME)
-                .getChildren(ContextsNode.NODE_NAME);
-        Collection<UserContextConfigurator> configurators =
-                NodeUtils.getChildsOfType(configuratorsNode, UserContextConfigurator.class);
-        for (UserContextConfigurator configurator: configurators)
-            configurator.configure(userContext);
-    }
+//    public void configure(UserContext userContext)
+//    {
+//        Node configuratorsNode = 
+//                tree.getRootNode().getChildren(SystemNode.NAME)
+//                .getChildren(AuthorizationNode.NODE_NAME)
+//                .getChildren(ContextsNode.NODE_NAME);
+//        Collection<UserContextConfigurator> configurators =
+//                NodeUtils.getChildsOfType(configuratorsNode, UserContextConfigurator.class);
+//        for (UserContextConfigurator configurator: configurators)
+//            configurator.configure(userContext);
+//    }
 }

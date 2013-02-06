@@ -28,6 +28,7 @@ import org.slf4j.Logger;
  *
  * @author Mikhail Titov
  */
+@Deprecated
 public class AuthServiceImpl implements AuthService
 {
     private final static String ROOT_USER_NAME = "root";
@@ -59,9 +60,10 @@ public class AuthServiceImpl implements AuthService
                 if (!rootPass.equals(password))
                     return null;
                 else {
-                    UserContext context = new UserContextImpl(username, "root");
-                    context.setAdmin(true);
-                    return context;
+//                    UserContext context = new UserContextImpl(username, "root");
+//                    context.setAdmin(true);
+//                    return context;
+                    return null;
                 }
             } catch (Exception ex) {
                 if (logger.isErrorEnabled())
@@ -76,7 +78,8 @@ public class AuthServiceImpl implements AuthService
                 if (logger.isInfoEnabled())
                     logger.info("User ({}) was successefully authenticated by provider ({})",
                             username, providerName);
-                return new UserContextImpl(username, providerName);
+//                return new UserContextImpl(username, providerName);
+                return null;
             }
         }
         return null;

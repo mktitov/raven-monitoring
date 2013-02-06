@@ -17,8 +17,8 @@
 
 package org.raven.auth;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.raven.tree.Node;
 
 /**
@@ -28,9 +28,9 @@ import org.raven.tree.Node;
 public interface UserContext
 {
     /**
-     * Return the name of the provider that authenticate the user
+     * Return the name of the authenticator that authenticate the user
      */
-    public String getAuthProvider();
+    public String getAuthenticator();
     /**
      * Returns the user login.
      */
@@ -40,13 +40,9 @@ public interface UserContext
      */
     public boolean isAdmin();
     /**
-     * Sets administrator marker to this user.
-     */
-    public void setAdmin(boolean admin);
-    /**
      * Returns the user groups.
      */
-    public List<String> getGroups();
+    public Set<String> getGroups();
     /**
      * Returns the user context parameters.
      */
@@ -55,16 +51,4 @@ public interface UserContext
      * Returns access flags for given node.
      */
     public int getAccessForNode(Node node);
-    /**
-     * Returns the user distinguished name.
-     */
-    public String getDN();
-    /**
-     * Sets the user distinguished name.
-     */
-    public void setDN(String dn);
-    /**
-     * Returns the user context attributes.
-     */
-    public Map<String, List<Object>> getAttrs();
 }

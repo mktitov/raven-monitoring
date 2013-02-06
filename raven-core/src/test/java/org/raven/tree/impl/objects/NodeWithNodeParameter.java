@@ -27,16 +27,16 @@ import org.raven.tree.impl.ContainerNode;
 public class NodeWithNodeParameter extends ContainerNode
 {
     @Parameter
-    private AttributesGeneratorNode node;
+    private AttributesGeneratorNode genNode;
 
-    public AttributesGeneratorNode getNode()
+    public AttributesGeneratorNode getGenNode()
     {
-        return node;
+        return genNode;
     }
 
-    public void setNode(AttributesGeneratorNode node)
+    public void setGenNode(AttributesGeneratorNode node)
     {
-        this.node = node;
+        this.genNode = node;
     }
     
 }

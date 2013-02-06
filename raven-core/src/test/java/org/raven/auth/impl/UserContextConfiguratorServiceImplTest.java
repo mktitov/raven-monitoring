@@ -28,29 +28,30 @@ import static org.easymock.EasyMock.*;
  *
  * @author Mikhail Titov
  */
+@Deprecated
 public class UserContextConfiguratorServiceImplTest extends RavenCoreTestCase
 {
-    @Test
-    public void instanceTest()
-    {
-        UserContextConfigurator conf = createMock(UserContextConfigurator.class);
-        UserContext context = createMock(UserContext.class);
-        conf.configure(eq(context));
-
-        replay(conf);
-
-        UserContextConfiguratorServiceImpl service =
-                new UserContextConfiguratorServiceImpl(Arrays.asList(conf));
-        service.configure(context);
-
-        verify(conf);
-    }
-
-    @Test
-    public void serviceTest()
-    {
-        UserContextConfiguratorService serv = registry.getService(UserContextConfiguratorService.class);
-        assertNotNull(serv);
-        serv.configure(new UserContextImpl("test", "test"));
-    }
+//    @Test
+//    public void instanceTest()
+//    {
+//        UserContextConfigurator conf = createMock(UserContextConfigurator.class);
+//        UserContext context = createMock(UserContext.class);
+//        conf.configure(eq(context));
+//
+//        replay(conf);
+//
+//        UserContextConfiguratorServiceImpl service =
+//                new UserContextConfiguratorServiceImpl(Arrays.asList(conf));
+//        service.configure(context);
+//
+//        verify(conf);
+//    }
+//
+//    @Test
+//    public void serviceTest()
+//    {
+//        UserContextConfiguratorService serv = registry.getService(UserContextConfiguratorService.class);
+//        assertNotNull(serv);
+//        serv.configure(new UserContextImpl("test", "test"));
+//    }
 }

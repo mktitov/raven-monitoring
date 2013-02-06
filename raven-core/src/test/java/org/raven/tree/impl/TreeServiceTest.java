@@ -64,6 +64,7 @@ import org.raven.tree.store.TreeStore;
 import org.weda.constraints.ReferenceValue;
 import org.weda.services.TypeConverter;
 import static org.easymock.EasyMock.*;
+import org.raven.auth.impl.AuthManagerNode;
 /**
  *
  * @author Mikhail Titov
@@ -156,11 +157,11 @@ public class TreeServiceTest extends ServiceTestCase
             int rootId = root.getId();
             assertNotNull(root);
 
-            Node systemNode = root.getChildren(SystemNode.NAME);
+            Node systemNode = root.getNode(SystemNode.NAME);
             int systemNodeId = systemNode.getId();
             assertNotNull(systemNode);
 
-            Node dsNode = systemNode.getChildren(DataSourcesNode.NAME);
+            Node dsNode = systemNode.getNode(DataSourcesNode.NAME);
             int dsNodeId = dsNode.getId();
             assertNotNull(dsNode);
 
@@ -279,7 +280,7 @@ public class TreeServiceTest extends ServiceTestCase
         
         tree.reloadTree();
         
-        node = (NodeWithParameters) tree.getRootNode().getChildren("node");
+        node = (NodeWithParameters) tree.getRootNode().getNode("node");
         checkAttributes(node, "value");
         
         NodeAttribute enumAttr = node.getNodeAttribute("enumParameter");
@@ -383,12 +384,12 @@ public class TreeServiceTest extends ServiceTestCase
         childNode.save();
         childNode.init();
         
-        assertEquals(childNode, node.getChildren("child"));
+        assertEquals(childNode, node.getNode("child"));
         
         childNode.setName("newChildNodeName");
 
-        assertNull(node.getChildren("child"));
-        assertEquals(childNode, node.getChildren("newChildNodeName"));
+        assertNull(node.getNode("child"));
+        assertEquals(childNode, node.getNode("newChildNodeName"));
     }
     
     @Test
@@ -409,7 +410,7 @@ public class TreeServiceTest extends ServiceTestCase
         tree.saveNode(node1);
         node1.init();
         
-        NodeAttribute attr = node1.getNodeAttribute("node");
+        NodeAttribute attr = node1.getAttr("genNode");
         assertNotNull(attr);
         attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
         attr.setValue(Node.NODE_SEPARATOR+"genNode");
@@ -417,25 +418,25 @@ public class TreeServiceTest extends ServiceTestCase
         
         attr = node1.getNodeAttribute("gAttr");
         assertNotNull(attr);
-        assertEquals("node", attr.getParentAttribute());
-        assertSame(node, node1.getNode());
+        assertEquals("genNode", attr.getParentAttribute());
+        assertSame(node, node1.getGenNode());
         attr.setValue("testVal");
         tree.saveNodeAttribute(attr);
         
         tree.reloadTree();
         
-        node1 = (NodeWithNodeParameter) tree.getRootNode().getChildren("node");
+        node1 = (NodeWithNodeParameter) tree.getRootNode().getNode("node");
         assertNotNull(node1);
         
         attr = node1.getNodeAttribute("gAttr");
         assertNotNull(attr);
-        assertEquals("node", attr.getParentAttribute());
+        assertEquals("genNode", attr.getParentAttribute());
         assertEquals("testVal", attr.getValue());
-        assertEquals(node, node1.getNode());
+        assertEquals(node, node1.getGenNode());
         
 //        store.removeNodeAttribute(attr.getId());
 //        tree.reloadTree();
-//        node1 = (NodeWithNodeParameter) tree.getRootNode().getChildren("node");
+//        node1 = (NodeWithNodeParameter) tree.getRootNode().getNode("node");
 //        assertNotNull(node1);
 //        attr = node1.getNodeAttribute("gAttr");
 //        assertNotNull(attr);
@@ -443,17 +444,17 @@ public class TreeServiceTest extends ServiceTestCase
 //        assertNull(attr.getValue());
 //        assertEquals(node, node1.getNode());
         
-        node1.getNodeAttribute("node").setValue(null);
-        tree.saveNodeAttribute(node1.getNodeAttribute("node"));
-        attr = node1.getNodeAttribute("gAttr");
+        node1.getAttr("genNode").setValue(null);
+        tree.saveNodeAttribute(node1.getAttr("genNode"));
+        attr = node1.getAttr("gAttr");
         assertNull(attr);
         
         tree.reloadTree();
         
-        node1 = (NodeWithNodeParameter) tree.getRootNode().getChildren("node");
+        node1 = (NodeWithNodeParameter) tree.getRootNode().getNode("node");
         assertNotNull(node1);
         
-        attr = node1.getNodeAttribute("gAttr");
+        attr = node1.getAttr("gAttr");
         assertNull(attr);
     }
     
@@ -784,57 +785,60 @@ public class TreeServiceTest extends ServiceTestCase
         assertNotNull(systemNode);
 
         SchedulersNode schedulersNode = 
-                (SchedulersNode) systemNode.getChildren(SchedulersNode.NAME);
+                (SchedulersNode) systemNode.getNode(SchedulersNode.NAME);
         assertNotNull(schedulersNode);
 
         LocalDatabaseNode localDatabaseNode =
-                (LocalDatabaseNode) systemNode.getChildren(LocalDatabaseNode.NAME);
+                (LocalDatabaseNode) systemNode.getNode(LocalDatabaseNode.NAME);
         assertNotNull(localDatabaseNode);
         
         DataSourcesNode dataSourcesNode = 
-                (DataSourcesNode) systemNode.getChildren(DataSourcesNode.NAME);
+                (DataSourcesNode) systemNode.getNode(DataSourcesNode.NAME);
         assertNotNull(dataSourcesNode);
 
-		QueuesNode queuesNode = (QueuesNode) systemNode.getChildren(QueuesNode.NAME);
+		QueuesNode queuesNode = (QueuesNode) systemNode.getNode(QueuesNode.NAME);
 		assertNotNull(queuesNode);
 
         ConnectionPoolsNode connectionPoolsNode = 
-                (ConnectionPoolsNode) systemNode.getChildren(ConnectionPoolsNode.NAME);
+                (ConnectionPoolsNode) systemNode.getNode(ConnectionPoolsNode.NAME);
         assertNotNull(connectionPoolsNode);
         
-        SchemasNode schemasNode = (SchemasNode) systemNode.getChildren(SchemasNode.NAME);
+        SchemasNode schemasNode = (SchemasNode) systemNode.getNode(SchemasNode.NAME);
         assertNotNull(schemasNode);
 
         RecordSchemasNode recordSchemasNode =
-                (RecordSchemasNode) schemasNode.getChildren(RecordSchemasNode.NAME);
+                (RecordSchemasNode) schemasNode.getNode(RecordSchemasNode.NAME);
         assertNotNull(recordSchemasNode);
 
         TemporaryFileManagersNode temporaryFileManagersNode =
-                (TemporaryFileManagersNode) systemNode.getChildren(TemporaryFileManagersNode.NAME);
+                (TemporaryFileManagersNode) systemNode.getNode(TemporaryFileManagersNode.NAME);
         assertNotNull(temporaryFileManagersNode);
         
         TemplatesNode templatesNode = 
-                (TemplatesNode) tree.getRootNode().getChildren(TemplatesNode.NAME);
+                (TemplatesNode) tree.getRootNode().getNode(TemplatesNode.NAME);
         assertNotNull(templatesNode);
         
-        ResourcesNode resourcesNode = (ResourcesNode) tree.getRootNode().getChildren(ResourcesNode.NAME);
+        ResourcesNode resourcesNode = (ResourcesNode) tree.getRootNode().getNode(ResourcesNode.NAME);
         assertNotNull(resourcesNode);
 
-        ServicesNode servicesNode = (ServicesNode) systemNode.getChildren(ServicesNode.NAME);
+        ServicesNode servicesNode = (ServicesNode) systemNode.getNode(ServicesNode.NAME);
         assertNotNull(servicesNode);
         
         NetworkResponseServiceNode responseServiceNode = (NetworkResponseServiceNode)
-                servicesNode.getChildren(NetworkResponseServiceNode.NAME);
+                servicesNode.getNode(NetworkResponseServiceNode.NAME);
         assertNotNull(responseServiceNode);
 
-        NodeLoggerNode loggerNode = (NodeLoggerNode) servicesNode.getChildren(NodeLoggerNode.NAME);
+        NodeLoggerNode loggerNode = (NodeLoggerNode) servicesNode.getNode(NodeLoggerNode.NAME);
         assertNotNull(loggerNode);
 
-        AuthorizationNode authNode = (AuthorizationNode) systemNode.getChildren(AuthorizationNode.NODE_NAME);
+        AuthorizationNode authNode = (AuthorizationNode) systemNode.getNode(AuthorizationNode.NODE_NAME);
         assertNotNull(authNode);
+        
+        AuthManagerNode authManager = (AuthManagerNode) authNode.getNode(AuthManagerNode.NAME);
+        assertNotNull(authManager);
 
-        assertNotNull(authNode.getChildren(ContextsNode.NODE_NAME));
-        assertNotNull(authNode.getChildren(GroupsListNode.NODE_NAME));
-        assertNotNull(authNode.getChildren(ResourcesListNode.NODE_NAME));
+        assertNotNull(authNode.getNode(ContextsNode.NODE_NAME));
+        assertNotNull(authNode.getNode(GroupsListNode.NODE_NAME));
+        assertNotNull(authNode.getNode(ResourcesListNode.NODE_NAME));
     }
 }

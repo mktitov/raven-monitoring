@@ -33,58 +33,59 @@ import static org.easymock.EasyMock.*;
  *
  * @author Mikhail Titov
  */
+@Deprecated
 public class RavenUserContextConfiguratorTest extends RavenCoreTestCase
 {
-    @Test
-    public void objectTest()
-    {
-        Tree treeService = createMock(Tree.class);
-        UserContextAndNode node = createStrictMock(UserContextAndNode.class);
-        UserContext context = createMock(UserContext.class);
-
-        expect(treeService.getRootNode()).andReturn(node);
-        expect(node.getChildren(SystemNode.NAME)).andReturn(node);
-        expect(node.getChildren(AuthorizationNode.NODE_NAME)).andReturn(node);
-        expect(node.getChildren(ContextsNode.NODE_NAME)).andReturn(node);
-        expect(node.getSortedChildrens()).andReturn(Arrays.asList((Node)node));
-        expect(node.getStatus()).andReturn(Node.Status.STARTED);
-        node.configure(context);
-
-        replay(treeService, node, context);
-
-        RavenUserContextConfigurator configuratorService = new RavenUserContextConfigurator(treeService);
-        configuratorService.configure(context);
-
-        verify(treeService, node, context);
-    }
-
-    @Test
-    public void serviceTest()
-    {
-        ContextsNode contexts = (ContextsNode) tree.getRootNode()
-                .getChildren(SystemNode.NAME)
-                .getChildren(AuthorizationNode.NODE_NAME)
-                .getChildren(ContextsNode.NODE_NAME);
-        UserContextConfiguratorNode configuratorNode = new UserContextConfiguratorNode();
-        configuratorNode.setName("configurator");
-        contexts.addAndSaveChildren(configuratorNode);
-        configuratorNode.setExpression("userContext.params.test='value'");
-        assertTrue(configuratorNode.start());
-
-        UserContextConfigurator configuratorService = registry.getService(
-                UserContextConfiguratorService.class);
-        assertNotNull(configuratorService);
-
-        UserContext context = createMock(UserContext.class);
-        Map params = createMock(Map.class);
-
-        expect(context.getParams()).andReturn(params);
-        expect(params.put("test", "value")).andReturn(null);
-
-        replay(context, params);
-
-        configuratorService.configure(context);
-
-        verify(context, params);
-    }
+//    @Test
+//    public void objectTest()
+//    {
+//        Tree treeService = createMock(Tree.class);
+//        UserContextAndNode node = createStrictMock(UserContextAndNode.class);
+//        UserContext context = createMock(UserContext.class);
+//
+//        expect(treeService.getRootNode()).andReturn(node);
+//        expect(node.getChildren(SystemNode.NAME)).andReturn(node);
+//        expect(node.getChildren(AuthorizationNode.NODE_NAME)).andReturn(node);
+//        expect(node.getChildren(ContextsNode.NODE_NAME)).andReturn(node);
+//        expect(node.getSortedChildrens()).andReturn(Arrays.asList((Node)node));
+//        expect(node.getStatus()).andReturn(Node.Status.STARTED);
+//        node.configure(context);
+//
+//        replay(treeService, node, context);
+//
+//        RavenUserContextConfigurator configuratorService = new RavenUserContextConfigurator(treeService);
+//        configuratorService.configure(context);
+//
+//        verify(treeService, node, context);
+//    }
+//
+//    @Test
+//    public void serviceTest()
+//    {
+//        ContextsNode contexts = (ContextsNode) tree.getRootNode()
+//                .getChildren(SystemNode.NAME)
+//                .getChildren(AuthorizationNode.NODE_NAME)
+//                .getChildren(ContextsNode.NODE_NAME);
+//        UserContextConfiguratorNode configuratorNode = new UserContextConfiguratorNode();
+//        configuratorNode.setName("configurator");
+//        contexts.addAndSaveChildren(configuratorNode);
+//        configuratorNode.setExpression("userContext.params.test='value'");
+//        assertTrue(configuratorNode.start());
+//
+//        UserContextConfigurator configuratorService = registry.getService(
+//                UserContextConfiguratorService.class);
+//        assertNotNull(configuratorService);
+//
+//        UserContext context = createMock(UserContext.class);
+//        Map params = createMock(Map.class);
+//
+//        expect(context.getParams()).andReturn(params);
+//        expect(params.put("test", "value")).andReturn(null);
+//
+//        replay(context, params);
+//
+//        configuratorService.configure(context);
+//
+//        verify(context, params);
+//    }
 }

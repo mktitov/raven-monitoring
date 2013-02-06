@@ -32,7 +32,7 @@ import org.raven.tree.impl.BaseNode;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=ContextsNode.class)
-public class UserContextConfiguratorNode extends BaseNode implements UserContextConfigurator
+public class UserContextConfiguratorNode extends BaseNode //implements UserContextConfigurator
 {
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
     private String expression;
