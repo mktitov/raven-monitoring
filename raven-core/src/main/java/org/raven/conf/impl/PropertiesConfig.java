@@ -159,7 +159,7 @@ public class PropertiesConfig implements Config
 		AuthorizationNode n = null;
 		try 
 		{ 
-			n = (AuthorizationNode) TreeImpl.INSTANCE.getNode(ANPATH);
+//			n = (AuthorizationNode) TreeImpl.INSTANCE.getNode(ANPATH);
 			n = (AuthorizationNode) tree.getNode(ANPATH);
 			return n.getAuthorizationData();
 		}

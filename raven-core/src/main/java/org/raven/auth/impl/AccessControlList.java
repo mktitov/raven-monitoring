@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 public abstract class AccessControlList implements Comparator<AccessControl> 
 {
     protected Logger logger = LoggerFactory.getLogger(AccessControlList.class);
+    
 	static final long serialVersionUID = 1;
 	public static final String NAME_PARAM = "name";
 	public static final String FILTER_PARAM = "filter";

@@ -70,7 +70,7 @@ public class GroupsAclStorage
 		{
 			String gname = RESOURSE_PARAM_NAME+i;
 			String val = config.getStringProperty(gname, null);
-			StringBuffer sb = new StringBuffer();
+			StringBuilder sb = new StringBuilder();
 			if(val!=null && val.length()>0)
 				sb.append(val);
 			int lastSubNum = 0;
@@ -125,7 +125,7 @@ public class GroupsAclStorage
 		{
 			String gname = GROUP_PARAM_NAME+i;
 			String val = config.getStringProperty(gname, null);
-			StringBuffer sb = new StringBuffer();
+			StringBuilder sb = new StringBuilder();
 			if(val!=null && val.length()>0)
 				sb.append(val);
 			int lastSubNum = 0;
@@ -171,7 +171,7 @@ public class GroupsAclStorage
 	 * Returns a GroupsAclStorage object.
 	 * @param config configurations parameters storage.
 	 */
-    public static final synchronized GroupsAclStorage getInstance(Config config)  
+    public static synchronized GroupsAclStorage getInstance(Config config)  
     {
         if( instance == null ) instance = new GroupsAclStorage(config);
         return instance;
