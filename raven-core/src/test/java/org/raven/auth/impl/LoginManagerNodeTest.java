@@ -24,23 +24,16 @@ import org.raven.tree.Node;
  *
  * @author Mikhail Titov
  */
-public class AuthServiceNodeTest extends RavenCoreTestCase {
+public class LoginManagerNodeTest extends RavenCoreTestCase {
     
     @Test
     public void structureTest() {
-        AuthServiceNode auth = new AuthServiceNode();
-        auth.setName("service1");
-        tree.getRootNode().addAndSaveChildren(auth);
-        assertTrue(auth.start());
-        checkNode(auth, AuthenticatorsNode.NAME);
-        checkNode(auth, UserContextConfiguratorsNode.NAME);
-        checkNode(auth, ResourcesListNode.NODE_NAME);
-        checkNode(auth, GroupsListNode.NODE_NAME);
-    }
-    
-    private void checkNode(Node owner, String child) {
-        Node node = owner.getNode(child);
-        assertNotNull(node);
-        assertTrue(node.isStarted());
+        LoginManagerNode manager = new LoginManagerNode();
+        tree.getRootNode().addAndSaveChildren(manager);
+        assertTrue(manager.start());
+        Node systemService = manager.getNode(SystemLoginService.NAME);
+        assertNotNull(systemService);
+        assertTrue(systemService instanceof SystemLoginService);
+        assertStarted(systemService);
     }
 }

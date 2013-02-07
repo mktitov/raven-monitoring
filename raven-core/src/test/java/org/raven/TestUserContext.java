@@ -36,7 +36,7 @@ public class TestUserContext implements UserContext
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public String getUsername() {
+    public String getLogin() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -53,6 +53,14 @@ public class TestUserContext implements UserContext
     }
 
     public int getAccessForNode(Node node) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public String getName() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public String getHost() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }

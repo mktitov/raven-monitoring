@@ -15,21 +15,13 @@
  */
 package org.raven.auth;
 
-import java.util.Map;
-import java.util.Set;
-
 /**
  *
  * @author Mikhail Titov
  */
-public interface UserContextConfig {
-    public String getLogin();
-    public String getHost();
-    public String getName();
-    public void setName(String name);
-    public String getAuthenticator();
-    public boolean isAdmin();
-    public void setAdmin(boolean admin);
-    public Set<String> getGroups();
-    public Map<String, Object> getParams();
+public class AuthenticationFailedException extends LoginException {
+
+    public AuthenticationFailedException(String login, String loginService) {
+        super(String.format("Authentication failed: login (%s), login service (%s)", login, loginService));
+    }
 }

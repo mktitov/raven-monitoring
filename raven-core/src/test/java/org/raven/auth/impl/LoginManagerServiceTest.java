@@ -17,8 +17,8 @@ package org.raven.auth.impl;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
-import org.raven.auth.AuthException;
-import org.raven.auth.AuthManager;
+import org.raven.auth.LoginException;
+import org.raven.auth.LoginManager;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.impl.SystemNode;
 
@@ -26,48 +26,48 @@ import org.raven.tree.impl.SystemNode;
  *
  * @author Mikhail Titov
  */
-public class AuthManagerServiceTest extends RavenCoreTestCase {
+public class LoginManagerServiceTest extends RavenCoreTestCase {
     
-    @Test(expected=AuthException.class)
-    public void authServiceNotFoundTest() throws AuthException {
-        AuthManager manager = registry.getService(AuthManager.class);
+    @Test(expected=LoginException.class)
+    public void authServiceNotFoundTest() throws LoginException {
+        LoginManager manager = registry.getService(LoginManager.class);
         assertNotNull(manager);
-        manager.getAuthService("service1");
+        manager.getLoginService("service1");
     }
     
-    @Test(expected=AuthException.class)
-    public void authServiceUnavailableTest() throws AuthException {
-        AuthManagerNode managerNode = (AuthManagerNode) 
+    @Test(expected=LoginException.class)
+    public void authServiceUnavailableTest() throws LoginException {
+        LoginManagerNode managerNode = (LoginManagerNode) 
                 tree.getRootNode()
                 .getNode(SystemNode.NAME)
                 .getNode(AuthorizationNode.NODE_NAME)
-                .getNode(AuthManagerNode.NAME);
+                .getNode(LoginManagerNode.NAME);
         assertNotNull(managerNode);
         
         TestAuthService authService = new TestAuthService("service1");
         managerNode.addAndSaveChildren(authService);
         
-        AuthManager manager = registry.getService(AuthManager.class);
+        LoginManager manager = registry.getService(LoginManager.class);
         assertNotNull(manager);
-        manager.getAuthService("service1");
+        manager.getLoginService("service1");
     }
     
     @Test
-    public void test() throws AuthException {
-        AuthManagerNode managerNode = (AuthManagerNode) 
+    public void test() throws LoginException {
+        LoginManagerNode managerNode = (LoginManagerNode) 
                 tree.getRootNode()
                 .getNode(SystemNode.NAME)
                 .getNode(AuthorizationNode.NODE_NAME)
-                .getNode(AuthManagerNode.NAME);
+                .getNode(LoginManagerNode.NAME);
         assertNotNull(managerNode);
         
         TestAuthService authService = new TestAuthService("service1");
         managerNode.addAndSaveChildren(authService);
         assertTrue(authService.start());
         
-        AuthManager manager = registry.getService(AuthManager.class);
+        LoginManager manager = registry.getService(LoginManager.class);
         assertNotNull(manager);
-        assertSame(authService, manager.getAuthService("service1"));
+        assertSame(authService, manager.getLoginService("service1"));
     }
     
 }

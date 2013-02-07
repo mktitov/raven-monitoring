@@ -19,7 +19,7 @@ package org.raven.auth.impl;
 
 import java.util.Collection;
 import org.raven.auth.AuthProvider;
-import org.raven.auth.AuthService;
+import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
 import org.raven.conf.Configurator;
 import org.slf4j.Logger;
@@ -29,7 +29,7 @@ import org.slf4j.Logger;
  * @author Mikhail Titov
  */
 @Deprecated
-public class AuthServiceImpl implements AuthService
+public class AuthServiceImpl implements LoginService
 {
     private final static String ROOT_USER_NAME = "root";
 
@@ -44,7 +44,7 @@ public class AuthServiceImpl implements AuthService
         this.logger = logger;
     }
 
-    public UserContext authenticate(String username, String password)
+    public UserContext login(String username, String password, String host)
     {
         if (logger.isInfoEnabled())
             logger.info("Authenticating user ({})", username);

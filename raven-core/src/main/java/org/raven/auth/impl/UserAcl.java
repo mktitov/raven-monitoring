@@ -19,9 +19,11 @@ package org.raven.auth.impl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -85,8 +87,8 @@ public class UserAcl implements UserContext
         return params;
     }
 
-    public List<String> getGroups() {
-        return gList;
+    public Set<String> getGroups() {
+        return new HashSet<String>(gList);
     }
     
     public String getDN()
@@ -232,7 +234,7 @@ public class UserAcl implements UserContext
 		return acl.getAccessForNode(node);
 	}
 
-	public String getUsername() { return accountName; }
+	public String getLogin() { return accountName; }
 
 	
 	public HashMap<String,String>  getResourcesList(Tree tree)
@@ -269,4 +271,16 @@ public class UserAcl implements UserContext
 	public Map<String, List<Object>> getAttrs() {
 		return attributes;
 	}
+
+    public String getAuthenticator() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public String getName() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public String getHost() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

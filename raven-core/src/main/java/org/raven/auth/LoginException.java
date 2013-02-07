@@ -15,21 +15,19 @@
  */
 package org.raven.auth;
 
-import java.util.Map;
-import java.util.Set;
-
 /**
  *
  * @author Mikhail Titov
  */
-public interface UserContextConfig {
-    public String getLogin();
-    public String getHost();
-    public String getName();
-    public void setName(String name);
-    public String getAuthenticator();
-    public boolean isAdmin();
-    public void setAdmin(boolean admin);
-    public Set<String> getGroups();
-    public Map<String, Object> getParams();
+public class LoginException extends Exception {
+
+    public LoginException() { }
+    
+    public LoginException(String msg) {
+        super(msg);
+    }
+
+    public LoginException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

@@ -19,6 +19,6 @@ package org.raven.auth;
  *
  * @author Mikhail Titov
  */
-public interface AuthManager {
-    public AuthService getAuthService(String name) throws AuthException;
+public interface LoginManager {
+    public LoginService getLoginService(String name) throws LoginException;
 }

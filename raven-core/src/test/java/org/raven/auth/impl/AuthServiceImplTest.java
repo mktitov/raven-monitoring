@@ -23,7 +23,7 @@ import java.util.Collection;
 import org.raven.auth.UserContext;
 import org.junit.Test;
 import org.raven.auth.AuthProvider;
-import org.raven.auth.AuthService;
+import org.raven.auth.LoginService;
 import org.raven.conf.Config;
 import org.raven.test.RavenCoreTestCase;
 import org.slf4j.LoggerFactory;

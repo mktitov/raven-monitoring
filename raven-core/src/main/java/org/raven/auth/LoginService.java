@@ -21,9 +21,9 @@ package org.raven.auth;
  *
  * @author Mikhail Titov
  */
-public interface AuthService
+public interface LoginService
 {
     public static final String ROOT_USER_NAME = "root";
     
-    public UserContext authenticate(String username, String password) throws AuthException;
+    public UserContext login(String username, String password, String host) throws LoginException;
 }

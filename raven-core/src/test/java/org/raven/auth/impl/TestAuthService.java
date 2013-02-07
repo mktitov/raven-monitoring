@@ -15,7 +15,7 @@
  */
 package org.raven.auth.impl;
 
-import org.raven.auth.AuthService;
+import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
 import org.raven.tree.impl.BaseNode;
 
@@ -23,13 +23,13 @@ import org.raven.tree.impl.BaseNode;
  *
  * @author Mikhail Titov
  */
-public class TestAuthService extends BaseNode implements AuthService {
+public class TestAuthService extends BaseNode implements LoginService {
 
     public TestAuthService(String name) {
         super(name);
     }
 
-    public UserContext authenticate(String username, String password) {
+    public UserContext login(String username, String password, String host) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }

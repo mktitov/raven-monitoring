@@ -17,12 +17,12 @@ import org.raven.tree.impl.ViewableObjectImpl;
 		parentNode=org.raven.auth.impl.AuthorizationNode.class)
 public class GroupsListNode extends BaseNode implements Viewable
 {
-	public static final String NODE_NAME = "Groups";
+	public static final String NAME = "Groups";
 	public static final int START_NUM = 50000;
 	
 	public GroupsListNode()
 	{
-		super(NODE_NAME);
+		super(NAME);
 	}
 	
 	public List<String> getAllGroups()

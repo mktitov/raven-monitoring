@@ -15,7 +15,7 @@ import org.raven.tree.impl.ViewableObjectImpl;
 @NodeClass(childNodes={org.raven.auth.impl.ResourceNode.class,org.raven.auth.impl.ResourcesContainerNode.class})
 public class ResourcesListNode extends BaseNode implements Viewable 
 {
-	public static final String NODE_NAME = "Resources";
+	public static final String NAME = "Resources";
 	public static final int START_NUM = 50000;
 	public static final String LB = "<ol>";
 	public static final String LE = "</ol>";
@@ -35,7 +35,7 @@ public class ResourcesListNode extends BaseNode implements Viewable
 	
 	public ResourcesListNode()
 	{
-		super(NODE_NAME);
+		super(NAME);
 	}
 	
 	public List<String> getAllResources()

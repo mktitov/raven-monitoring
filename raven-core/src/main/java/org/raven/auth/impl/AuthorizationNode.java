@@ -27,11 +27,11 @@ public class AuthorizationNode extends BaseNode
 	}
 
 	private void initChildren() {
-        if (!hasNode(AuthManagerNode.NAME))
-            addAndSaveChildren(new AuthManagerNode());
-		if(!hasNode(ResourcesListNode.NODE_NAME))
+        if (!hasNode(LoginManagerNode.NAME))
+            addAndSaveChildren(new LoginManagerNode());
+		if(!hasNode(ResourcesListNode.NAME))
 			addAndSaveChildren(new ResourcesListNode());
-		if(!hasNode(GroupsListNode.NODE_NAME))
+		if(!hasNode(GroupsListNode.NAME))
 			addAndSaveChildren(new GroupsListNode());
         if(!hasNode(ContextsNode.NODE_NAME))
             addAndSaveChildren(new ContextsNode());
@@ -70,10 +70,10 @@ public class AuthorizationNode extends BaseNode
 	{
 		StringBuffer sb = new StringBuffer();
 		try {
-			ResourcesListNode res = (ResourcesListNode) getChildren(ResourcesListNode.NODE_NAME);
+			ResourcesListNode res = (ResourcesListNode) getChildren(ResourcesListNode.NAME);
 			if(res!=null && res.getStatus()==Status.STARTED)
 				sb.append(res.getAllResourcesString());
-			GroupsListNode gr = (GroupsListNode) getChildren(GroupsListNode.NODE_NAME);
+			GroupsListNode gr = (GroupsListNode) getChildren(GroupsListNode.NAME);
 			if(gr!=null && gr.getStatus()==Status.STARTED)
 				sb.append(gr.getAllGroupsString());
 		} catch(Exception e) {

@@ -26,23 +26,30 @@ import org.raven.auth.UserContextConfig;
  * @author Mikhail Titov
  */
 public class UserContextConfigImpl implements UserContextConfig {
-    private final String authenticator;
-    private final String username;
+    private final String login;
+    private final String host;
+    private String authenticator;
+    private String name;
     private boolean admin;
     private final Set<String> groups = new HashSet<String>();
     private final Map<String, Object> params = new HashMap<String, Object>();
 
-    public UserContextConfigImpl(String authenticator, String username) {
+    public UserContextConfigImpl(String authenticator, String login, String host) {
         this.authenticator = authenticator;
-        this.username = username;
+        this.login = login;
+        this.host = host;
     }
 
     public String getAuthenticator() {
         return authenticator;
     }
 
-    public String getUsername() {
-        return username;
+    public String getLogin() {
+        return login;
+    }
+
+    public String getHost() {
+        return host;
     }
 
     public boolean isAdmin() {
@@ -59,5 +66,13 @@ public class UserContextConfigImpl implements UserContextConfig {
 
     public Map<String, Object> getParams() {
         return params;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

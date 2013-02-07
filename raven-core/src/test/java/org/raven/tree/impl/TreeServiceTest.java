@@ -64,7 +64,7 @@ import org.raven.tree.store.TreeStore;
 import org.weda.constraints.ReferenceValue;
 import org.weda.services.TypeConverter;
 import static org.easymock.EasyMock.*;
-import org.raven.auth.impl.AuthManagerNode;
+import org.raven.auth.impl.LoginManagerNode;
 /**
  *
  * @author Mikhail Titov
@@ -834,11 +834,11 @@ public class TreeServiceTest extends ServiceTestCase
         AuthorizationNode authNode = (AuthorizationNode) systemNode.getNode(AuthorizationNode.NODE_NAME);
         assertNotNull(authNode);
         
-        AuthManagerNode authManager = (AuthManagerNode) authNode.getNode(AuthManagerNode.NAME);
+        LoginManagerNode authManager = (LoginManagerNode) authNode.getNode(LoginManagerNode.NAME);
         assertNotNull(authManager);
 
         assertNotNull(authNode.getNode(ContextsNode.NODE_NAME));
-        assertNotNull(authNode.getNode(GroupsListNode.NODE_NAME));
-        assertNotNull(authNode.getNode(ResourcesListNode.NODE_NAME));
+        assertNotNull(authNode.getNode(GroupsListNode.NAME));
+        assertNotNull(authNode.getNode(ResourcesListNode.NAME));
     }
 }

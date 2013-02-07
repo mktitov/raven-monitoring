@@ -25,8 +25,7 @@ import org.raven.tree.Node;
  *
  * @author Mikhail Titov
  */
-public interface UserContext
-{
+public interface UserContext {
     /**
      * Return the name of the authenticator that authenticate the user
      */
@@ -34,11 +33,19 @@ public interface UserContext
     /**
      * Returns the user login.
      */
-    public String getUsername();
+    public String getLogin();
+    /**
+     * Returns the user name
+     */
+    public String getName();
     /**
      * Returns true if this user is administrator
      */
     public boolean isAdmin();
+    /**
+     * Returns the ip address or host name from which user interact with system
+     */
+    public String getHost();
     /**
      * Returns the user groups.
      */

@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.raven.auth.UserContext;
+import org.raven.auth.UserContextConfig;
 import org.raven.tree.Node;
 
 /**
@@ -30,22 +31,34 @@ import org.raven.tree.Node;
  */
 public class UserContextImpl implements UserContext
 {
-    private final String username;
+    private final String login;
     private final String authenticator;
+    private final String name;
+    private final String host;
     private final boolean admin;
     private final Map<String, Object> params;
     private final Set<String> groups;
 
-    public UserContextImpl(UserContextConfigImpl config) {
-        this.username = config.getUsername();
+    public UserContextImpl(UserContextConfig config) {
+        this.login = config.getLogin();
         this.authenticator = config.getAuthenticator();
         this.groups = Collections.unmodifiableSet(config.getGroups());
         this.params = new ConcurrentHashMap<String, Object>(config.getParams());
         this.admin = config.isAdmin();
+        this.name = config.getName();
+        this.host = config.getHost();
     }
 
-    public String getUsername() {
-        return username;
+    public String getLogin() {
+        return login;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getHost() {
+        return host;
     }
 
     public boolean isAdmin() {

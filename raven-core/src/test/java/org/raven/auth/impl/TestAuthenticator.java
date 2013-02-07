@@ -13,23 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.auth;
+package org.raven.auth.impl;
 
-import java.util.Map;
-import java.util.Set;
+import org.raven.auth.Authenticator;
+import org.raven.auth.AuthenticatorException;
+import org.raven.tree.impl.BaseNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface UserContextConfig {
-    public String getLogin();
-    public String getHost();
-    public String getName();
-    public void setName(String name);
-    public String getAuthenticator();
-    public boolean isAdmin();
-    public void setAdmin(boolean admin);
-    public Set<String> getGroups();
-    public Map<String, Object> getParams();
+public class TestAuthenticator extends BaseNode implements Authenticator {
+    private final boolean successAuth;
+
+    public TestAuthenticator(String name, boolean successAuth) {
+        super(name);
+        this.successAuth = successAuth;
+    }
+
+    public boolean checkAuth(String user, String password) throws AuthenticatorException {
+        return successAuth;
+    }
 }

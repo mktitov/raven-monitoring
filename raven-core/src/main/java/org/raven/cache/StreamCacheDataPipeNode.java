@@ -79,7 +79,7 @@ public class StreamCacheDataPipeNode extends AbstractSafeDataPipe
                     key.append(dataSource.getPath());
                     UserContext userContext = context.getUserContext();
                     if (userContext!=null)
-                        key.append("_").append(userContext.getUsername());
+                        key.append("_").append(userContext.getLogin());
                     break;
                 default:
                     sequence.compareAndSet(Long.MAX_VALUE, 1);

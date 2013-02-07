@@ -26,5 +26,5 @@ public interface UserContextConfigurator
     /**
      * Make additional user context configuration
      */
-    public void configure(UserContextConfig userContext);
+    public void configure(UserContextConfig userContext) throws UserContextConfiguratorException;
 }

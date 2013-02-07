@@ -15,29 +15,16 @@
  */
 package org.raven.auth.impl;
 
-import org.raven.auth.AuthException;
-import org.raven.auth.AuthManager;
-import org.raven.auth.AuthService;
-import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class AuthManagerNode extends BaseNode implements AuthManager{
-    public final static String NAME = "Services";
+public class LoginListenersNode extends BaseNode {
+    public final static String NAME = "Login listeners";
 
-    public AuthManagerNode() {
+    public LoginListenersNode() {
         super(NAME);
-    }
-
-    public AuthService getAuthService(String name) throws AuthException {
-        Node authServiceNode = getNode(name);
-        if (authServiceNode==null)
-            throw new AuthException(String.format("Auth service (%s) not found", name));
-        if (!authServiceNode.isStarted())
-            throw new AuthException(String.format("Auth service (%s) unavailable", name));
-        return (AuthService) authServiceNode;
     }
 }

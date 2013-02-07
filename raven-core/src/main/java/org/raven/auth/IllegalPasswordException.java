@@ -19,13 +19,11 @@ package org.raven.auth;
  *
  * @author Mikhail Titov
  */
-public class AuthException extends Exception {
+public class IllegalPasswordException extends LoginException {
     
-    public AuthException(String msg) {
-        super(msg);
-    }
+    public IllegalPasswordException() { }
 
-    public AuthException(String message, Throwable cause) {
-        super(message, cause);
+    public IllegalPasswordException(String msg) {
+        super(msg);
     }
 }

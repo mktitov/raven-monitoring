@@ -15,9 +15,9 @@
  */
 package org.raven.auth.impl;
 
-import org.raven.auth.AuthException;
-import org.raven.auth.AuthManager;
-import org.raven.auth.AuthService;
+import org.raven.auth.LoginException;
+import org.raven.auth.LoginManager;
+import org.raven.auth.LoginService;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.SystemNode;
 
@@ -25,26 +25,26 @@ import org.raven.tree.impl.SystemNode;
  *
  * @author Mikhail Titov
  */
-public class AuthManagerService implements AuthManager {
+public class LoginManagerService implements LoginManager {
     private final Tree tree;
 
-    public AuthManagerService(Tree tree) {
+    public LoginManagerService(Tree tree) {
         this.tree = tree;
     }
 
-    public AuthService getAuthService(String name) throws AuthException {
+    public LoginService getLoginService(String name) throws LoginException {
         try {
-            AuthManagerNode managerNode = (AuthManagerNode) 
+            LoginManagerNode managerNode = (LoginManagerNode) 
                     tree.getRootNode()
                     .getNode(SystemNode.NAME)
                     .getNode(AuthorizationNode.NODE_NAME)
-                    .getNode(AuthManagerNode.NAME);
-            return managerNode.getAuthService(name);
+                    .getNode(LoginManagerNode.NAME);
+            return managerNode.getLoginService(name);
         } catch (Throwable e) {
-            if (e instanceof AuthException)
-                throw (AuthException)e;
+            if (e instanceof LoginException)
+                throw (LoginException)e;
             else
-                throw new AuthException("Authentication service resolving error", e);
+                throw new LoginException("Login service resolving error", e);
         }       
     }
 }

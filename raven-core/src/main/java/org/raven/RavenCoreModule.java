@@ -26,19 +26,14 @@ import org.apache.tapestry5.ioc.ServiceBinder;
 import org.apache.tapestry5.ioc.services.ChainBuilder;
 import org.raven.audit.Auditor;
 import org.raven.audit.impl.AuditorImpl;
-import org.raven.auth.AuthManager;
+import org.raven.auth.LoginManager;
 import org.raven.auth.AuthProvider;
-import org.raven.auth.AuthService;
+import org.raven.auth.LoginService;
 import org.raven.auth.Authenticator;
 import org.raven.auth.NodeAccessService;
-import org.raven.auth.UserContextConfigurator;
-import org.raven.auth.UserContextConfiguratorService;
-import org.raven.auth.impl.AuthManagerService;
+import org.raven.auth.impl.LoginManagerService;
 import org.raven.auth.impl.AuthServiceImpl;
-import org.raven.auth.impl.BasicAuthenticator;
 import org.raven.auth.impl.NodeAccessServiceImpl;
-import org.raven.auth.impl.RavenUserContextConfigurator;
-import org.raven.auth.impl.UserContextConfiguratorServiceImpl;
 import org.raven.cache.TemporaryCacheManager;
 import org.raven.cache.TemporaryCacheManagerImpl;
 import org.raven.cache.TemporaryFileManagerValueHandlerFactory;
@@ -103,8 +98,8 @@ public class RavenCoreModule
         return new TemporaryCacheManagerImpl(cacheManager);
     }
     
-    public static AuthManager buildAuthManager(Tree tree) {
-        return new AuthManagerService(tree);
+    public static LoginManager buildAuthManager(Tree tree) {
+        return new LoginManagerService(tree);
     }
     
     @SuppressWarnings("unchecked")
@@ -140,7 +135,7 @@ public class RavenCoreModule
         return new ResourceManagerImpl(registrators);
     }
 
-    public static AuthService buildAuthService(
+    public static LoginService buildAuthService(
             List<AuthProvider> providers, Configurator configurator, Logger logger)
     {
         return new AuthServiceImpl(providers, configurator, logger);
@@ -371,12 +366,12 @@ public class RavenCoreModule
                             , "after:*");
     }
 
-    public static void contributeAuthenticator(
-            OrderedConfiguration<Authenticator> conf, Configurator configurator) throws Exception
-    {
-        conf.add(BasicAuthenticator.class.getName(), new BasicAuthenticator(configurator.getConfig()));
-    }
-
+//    public static void contributeAuthenticator(
+//            OrderedConfiguration<Authenticator> conf, Configurator configurator) throws Exception
+//    {
+//        conf.add(BasicAuthenticator.class.getName(), new BasicAuthenticator(configurator.getConfig()));
+//    }
+//
     public static void contributeCacheManager(MappedConfiguration<CacheScope, Cache> conf)
     {
         conf.add(CacheScope.GLOBAL, new SimpleCache());

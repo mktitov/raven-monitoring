@@ -15,21 +15,15 @@
  */
 package org.raven.auth;
 
-import java.util.Map;
-import java.util.Set;
-
 /**
  *
  * @author Mikhail Titov
  */
-public interface UserContextConfig {
-    public String getLogin();
-    public String getHost();
-    public String getName();
-    public void setName(String name);
-    public String getAuthenticator();
-    public boolean isAdmin();
-    public void setAdmin(boolean admin);
-    public Set<String> getGroups();
-    public Map<String, Object> getParams();
+public class IllegalLoginException extends LoginException {
+
+    public IllegalLoginException() { }
+
+    public IllegalLoginException(String msg) {
+        super(msg);
+    }
 }

@@ -109,7 +109,7 @@ public class StreamCacheDataPipeNodeTest extends RavenCoreTestCase
         String id = ""+cache.getId()+"_";
         
         UserContext userContext = createMock(UserContext.class);
-        expect(userContext.getUsername()).andReturn("user");
+        expect(userContext.getLogin()).andReturn("user");
 
         replay(userContext);
 
