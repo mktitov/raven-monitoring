@@ -18,6 +18,7 @@
 package org.raven.auth.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Collections;
 import java.util.HashSet;
@@ -39,7 +40,8 @@ public abstract class AccessControlList implements Comparator<AccessControl>
 	public static final String AC_PARAM = "ac";
 	public static final String DSC_PARAM = "dsc";
 	public static final String TITLE_PARAM = "title";
-	private ArrayList<AccessControl> acl = new ArrayList<AccessControl>();
+    
+	private final ArrayList<AccessControl> acl;
 	private Set<String> filters = new HashSet<String>();
 	private boolean filtersDisabled = false;
 	//private String group = null;
@@ -48,14 +50,23 @@ public abstract class AccessControlList implements Comparator<AccessControl>
 	private String title = null;
 	private AccessControl first = null;
 
-	public AccessControlList() 
-	{ 
+	public AccessControlList() { 
+        acl = new ArrayList<AccessControl>();
 	}
 	
-	public AccessControlList(String list) 
-	{
+	public AccessControlList(String list) {
+        acl = new ArrayList<AccessControl>();
 		init(list);
 	}
+    
+    public AccessControlList(String name, String title, Collection<AccessControl> accessControls) {
+        this.name = name;
+        this.title = title;
+        this.acl = new ArrayList<AccessControl>(accessControls);
+        Collections.sort(acl, new AccessControllComparator());
+		filters = null;
+		this.filtersDisabled = true;
+    }
 	
 	protected void init(String list)
 	{
@@ -293,14 +304,11 @@ public abstract class AccessControlList implements Comparator<AccessControl>
  */
 	
 	
-    public String toString()
-    {
-    	StringBuffer sb = new StringBuffer();
-    	for(AccessControl ac : acl)
-    	{
-    		sb.append(ac.toString());
-    		sb.append(";");
-    	}
+    @Override
+    public String toString() {
+    	StringBuilder sb = new StringBuilder();
+    	for(AccessControl ac : acl) 
+    		sb.append(ac.toString()).append(";");
     	return sb.toString();
     }
     
@@ -359,5 +367,20 @@ public abstract class AccessControlList implements Comparator<AccessControl>
 	public AccessControl getFirst() {
 		return first;
 	}
-
+    
+    private static class AccessControllComparator implements Comparator<AccessControl> {
+        public int compare(AccessControl a, AccessControl b) {
+            int rightA = a.getRight();
+            int rightB = b.getRight();
+            int adm = (rightA & AccessControl.ADMIN) - (rightB & AccessControl.ADMIN);
+            if(adm>0) return -1;
+            if(adm<0) return 1;
+            int lenCmp = a.getResource().length() - b.getResource().length();
+            if(lenCmp>0) return -1;
+            if(lenCmp<0) return 1;
+            if(rightA > rightB) return -1; 
+            if(rightA < rightB) return 1; 
+            return 0;
+        }
+    }
 }

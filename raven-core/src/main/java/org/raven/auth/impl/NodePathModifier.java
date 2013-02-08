@@ -10,13 +10,11 @@ public enum NodePathModifier
 	
 	private final String modifier;
 	
-	private NodePathModifier(String modifier)
-	{
+	private NodePathModifier(String modifier) {
 		this.modifier = modifier;
 	}
 
-	public String getModifier() 
-	{
+	public String getModifier() {
 		return modifier;
 	}
 }

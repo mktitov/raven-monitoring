@@ -1,6 +1,7 @@
 package org.raven.auth.impl;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.raven.annotations.NodeClass;
@@ -9,10 +10,10 @@ import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
-//import org.raven.tree.Node.Status;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.tree.impl.ViewableObjectImpl;
+import org.raven.util.NodeUtils;
 
 @NodeClass(childNodes=org.raven.auth.impl.AccessControlNode.class)
 public class ResourceNode extends BaseNode implements Viewable 
@@ -31,23 +32,16 @@ public class ResourceNode extends BaseNode implements Viewable
 	@Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
 	private Node show;
 
-	public ResourceNode()
-	{
-		super();
-	}
 	
-	public Boolean getAutoRefresh() 
-	{
+	public Boolean getAutoRefresh() {
 		return true;
 	}
 
-	public Map<String, NodeAttribute> getRefreshAttributes() throws Exception 
-	{
+	public Map<String, NodeAttribute> getRefreshAttributes() throws Exception {
 		return null;
 	}
 
-	public static StringBuffer appendParam(StringBuffer buf,String parName,String parValue)
-	{
+	public static StringBuffer appendParam(StringBuffer buf,String parName,String parValue) {
 		buf.append(parName);
 		buf.append(AccessControl.DELIMITER);
 		if(AccessControlList.AC_PARAM.equals(parName))
@@ -57,9 +51,16 @@ public class ResourceNode extends BaseNode implements Viewable
 		buf.append(AccessControl.EXPRESSION_DELIMITER);
 		return buf;
 	}
+    
+    public AccessResource getAccessResource() {
+        LinkedList<AccessControl> accessControls = new LinkedList<AccessControl>();
+        for (AccessControlNode node: NodeUtils.getChildsOfType(this, AccessControlNode.class))
+            accessControls.addAll(node.getAccessControls());
+        
+        return null;
+    }
 	
-	public String getResourceString()
-	{
+	public String getResourceString()	{
 		if (getStatus()!=Status.STARTED)
 		    return "";
 		StringBuffer sb = new StringBuffer();

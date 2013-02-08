@@ -51,28 +51,30 @@ public class AccessControl {
 	private String regExp = "";
 	private int right = 0;
 	
-	private AccessControl(String rule)
-	{
+	private AccessControl(String rule)	{
 		String[] x = rule.split(DELIMITER);
 		if(x.length==2) loadData(x[0],x[1]);
 	}
 
-	private AccessControl(String resource, String right) { loadData(resource, right); }
+	public AccessControl(String resource, String right) { 
+        loadData(resource, right); 
+    }
+    
+//    private AccessControl
 	
-	public static String removeDeniedSymbols(String s)
-	{
+	public static String removeDeniedSymbols(String s) {
 		return s.replaceAll(AccessControl.disabledInParValues, "");
 	}
 	
 	private void loadData(String resource, String rightString)
 	{
 		this.resource = resource;
-		if(resource.endsWith(CHILDREN))
-		{
+		if(resource.endsWith(CHILDREN)) {
 			regExp = resource.substring(0, resource.length()-1);
 			regExp = Pattern.quote(regExp)+".+";
 		}
-		else regExp = Pattern.quote(resource);
+		else 
+            regExp = Pattern.quote(resource);
 		//regExp = this.resource.replaceAll("\\*", ".*");
 		String tmp = rightString.toLowerCase();
 		if(tmp.length()==0) tmp = ""+READ_SYMBOL;

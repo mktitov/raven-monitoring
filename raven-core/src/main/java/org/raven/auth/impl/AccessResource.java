@@ -1,5 +1,7 @@
 package org.raven.auth.impl;
 
+import java.util.Collection;
+
 /*
  *  Copyright 2008 Sergey Pinevskiy.
  * 
@@ -16,72 +18,78 @@ package org.raven.auth.impl;
  *  limitations under the License.
  *  under the License.
  */
+public class AccessResource extends AccessControlList {
 
-
-public class AccessResource extends AccessControlList 
-{
-		static final long serialVersionUID = 1;
-		public static final String SHOW_PARAM = "show";
-		/**
-		 * Путь до целевого узла
-		 */
-		private String show = null;
-		private boolean present = true;
+    static final long serialVersionUID = 1;
+    public static final String SHOW_PARAM = "show";
+    /**
+     * Путь до целевого узла
+     */
+    private String show = null;
+    private boolean present = true;
 //		private long lastCheck = 0;
 
-		public AccessResource(String list)
-		{
-			super.init(list);
-		}
-		
-		protected boolean applyExpression(String[] x) 
-		{
-			if(x[0].equals(SHOW_PARAM))
-			{
-				setShow(x[1]);
-				return true;
-			}
-			return false;		
-		}
+    public AccessResource(String list) {
+        super.init(list);
+    }
 
-	    public boolean isValid()
-	    {
-	    	if(getName()==null) return false;
-    		if( getAcl().size() > 0 ) return true;
-    		if( getShow()!=null && getTitle()!=null) return true;
-	    	return false;
-	    }
+    public AccessResource(String name, String title, String show, Collection<AccessControl> accessControls) {
+        super(name, title, accessControls);
+        this.show = show;
+    }
 
-	    /**
-		 * Устанавливает путь до целевого узла
-	     * @param show
-	     */
-		public void setShow(String show) {
-			this.show = show;
-		}
-		
-		private static final String notPresent = "not present";
-		/**
-		 * 
-		 * @return путь до целевого узла
-		 */
-		public String getShow() 
-		{
-			try { if(show==null)
-					show = getFirst().getNodePath(); }
-			catch(Exception e) {
-				logger.warn("on getShow:", e);
-				show = notPresent;
-			}
-			return show;
-		}
+    protected boolean applyExpression(String[] x) {
+        if (x[0].equals(SHOW_PARAM)) {
+            setShow(x[1]);
+            return true;
+        }
+        return false;
+    }
 
-		public void setPresent(boolean present) {
-			this.present = present;
-		}
+    public boolean isValid() {
+        if (getName() == null) {
+            return false;
+        }
+        if (getAcl().size() > 0) {
+            return true;
+        }
+        if (getShow() != null && getTitle() != null) {
+            return true;
+        }
+        return false;
+    }
 
-		public boolean isPresent() {
-			return present;
-		}
-		
+    /**
+     * Устанавливает путь до целевого узла
+     *
+     * @param show
+     */
+    public void setShow(String show) {
+        this.show = show;
+    }
+    private static final String notPresent = "not present";
+
+    /**
+     *
+     * @return путь до целевого узла
+     */
+    public String getShow() {
+        try {
+            if (show == null) {
+                show = getFirst().getNodePath();
+            }
+        } catch (Exception e) {
+            logger.warn("on getShow:", e);
+            show = notPresent;
+        }
+        return show;
+    }
+
+    public void setPresent(boolean present) {
+        this.present = present;
+    }
+
+    public boolean isPresent() {
+        return present;
+    }
 }
