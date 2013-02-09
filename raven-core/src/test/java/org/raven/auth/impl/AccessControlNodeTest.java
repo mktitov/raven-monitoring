@@ -16,6 +16,8 @@
 package org.raven.auth.impl;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.regex.Pattern;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;
@@ -39,6 +41,59 @@ public class AccessControlNodeTest extends RavenCoreTestCase
     @Test
     public void getAccessControlsOnNotStartedTest() {
         assertEquals(Collections.EMPTY_LIST, controlNode.getAccessControls());
+    }
+    
+    @Test
+    public void nodeAccessTest() {
+        controlNode.setModifier(NodePathModifier.NODE_ONLY);
+        controlNode.setRight(AccessRight.READ);
+        assertTrue(controlNode.start());
+        List<AccessControl> controls = controlNode.getAccessControls();
+        assertEquals(1, controls.size());
+        AccessControl control = controls.get(0);
+        assertEquals(AccessControl.READ, control.getRight());
+        assertEquals(controlNode.getPath(), control.getNodePath());
+        checkRegexp(control, controlNode.getPath(), true);
+        checkRegexp(control, controlNode.getPath()+"/child", false);
+    }
+    
+    @Test
+    public void childAccessTest() {
+        controlNode.setModifier(NodePathModifier.CHILDREN_ONLY);
+        controlNode.setRight(AccessRight.READ);
+        assertTrue(controlNode.start());
+        List<AccessControl> controls = controlNode.getAccessControls();
+        assertEquals(1, controls.size());
+        AccessControl control = controls.get(0);
+        assertEquals(AccessControl.READ, control.getRight());
+        assertEquals(controlNode.getPath(), control.getNodePath());
+        checkRegexp(control, controlNode.getPath(), false);
+        checkRegexp(control, controlNode.getPath()+"/child", true);
+    }
+    
+    @Test
+    public void nodeAndChildAccessTest() {
+        controlNode.setModifier(NodePathModifier.NODE_and_CHILDREN);
+        controlNode.setRight(AccessRight.READ);
+        assertTrue(controlNode.start());
+        List<AccessControl> controls = controlNode.getAccessControls();
+        assertEquals(2, controls.size());
+        
+        AccessControl control = controls.get(0);
+        assertEquals(AccessControl.READ, control.getRight());
+        assertEquals(controlNode.getPath(), control.getNodePath());
+        checkRegexp(control, controlNode.getPath(), true);
+        checkRegexp(control, controlNode.getPath()+"/child", false);
+        
+        control = controls.get(1);
+        assertEquals(AccessControl.READ, control.getRight());
+        assertEquals(controlNode.getPath(), control.getNodePath());
+        checkRegexp(control, controlNode.getPath(), false);
+        checkRegexp(control, controlNode.getPath()+"/child", true);
+    }
+    
+    private void checkRegexp(AccessControl control, String path, boolean expectedResult) {
+        assertEquals(expectedResult, Pattern.matches(control.getRegExp(), path));
     }
     
 }

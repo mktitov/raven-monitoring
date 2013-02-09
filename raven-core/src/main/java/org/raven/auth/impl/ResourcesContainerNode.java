@@ -2,6 +2,7 @@ package org.raven.auth.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.raven.annotations.NodeClass;
@@ -12,17 +13,19 @@ import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.ViewableObjectImpl;
 
-@NodeClass(childNodes={org.raven.auth.impl.ResourceNode.class,
-		org.raven.auth.impl.ResourcesContainerNode.class})
+@NodeClass(importChildTypesFromParent=true)
 public class ResourcesContainerNode extends BaseNode implements Viewable 
 {
-
-	public List<String> getResourceStrings()
-	{
+    @Override
+    public boolean isConditionalNode() {
+        return true;
+    }
+    
+	public List<String> getResourceStrings() {
 		ArrayList<String> ret = new ArrayList<String>();
-		if (getStatus()!=Status.STARTED) return ret;
-		for(Node n: getChildrenList())
-		{
+		if (!isStarted()) 
+            return Collections.EMPTY_LIST;
+		for (Node n: getNodes()) {
 			if(n.getStatus()!=Status.STARTED) continue;
 			if (n instanceof ResourceNode) {
 				String rs = ((ResourceNode) n).getResourceString();

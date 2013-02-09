@@ -26,6 +26,7 @@ import org.junit.Before;
 import org.raven.conf.Configurator;
 import org.raven.tree.Node;
 import org.raven.tree.Tree;
+import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.store.TreeStore;
 
 /**
@@ -37,6 +38,7 @@ public class RavenCoreTestCase extends ServiceTestCase
     protected Tree tree;
     protected Configurator configurator;
     protected TreeStore store;
+    protected ContainerNode testsNode;
     
     @Override
     protected void configureRegistry(Set<Class> builder)
@@ -65,6 +67,9 @@ public class RavenCoreTestCase extends ServiceTestCase
         tree = registry.getService(Tree.class);
         assertNotNull(tree);
         tree.reloadTree();
+        testsNode = new ContainerNode("tests node");
+        tree.getRootNode().addAndSaveChildren(testsNode);
+        assertTrue(testsNode.start());
     }
 
     @After

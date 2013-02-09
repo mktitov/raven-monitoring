@@ -51,7 +51,7 @@ public class AccessControlNode extends BaseNode implements Viewable
 		return sb.toString();
 	}
     
-    public Collection<AccessControl> getAccessControls() {
+    public List<AccessControl> getAccessControls() {
         if (!isStarted())
             return Collections.EMPTY_LIST;
         LinkedList<AccessControl> controls = new LinkedList<AccessControl>();

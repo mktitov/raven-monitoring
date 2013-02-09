@@ -56,8 +56,9 @@ public class ResourceNode extends BaseNode implements Viewable
         LinkedList<AccessControl> accessControls = new LinkedList<AccessControl>();
         for (AccessControlNode node: NodeUtils.getChildsOfType(this, AccessControlNode.class))
             accessControls.addAll(node.getAccessControls());
-        
-        return null;
+        Node _show = show;
+        return new AccessResource(getName(), showInResources? getName():null, 
+                                  _show!=null? _show.getPath():null, accessControls);
     }
 	
 	public String getResourceString()	{

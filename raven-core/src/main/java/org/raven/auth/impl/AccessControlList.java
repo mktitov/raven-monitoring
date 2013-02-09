@@ -222,9 +222,8 @@ public abstract class AccessControlList implements Comparator<AccessControl>
     public boolean dropByFilter(Node n)
     {
     	if(!dropByFilterNodeOnly(n)) return false;
-    	for(Node x : n.getChildrenList())
-    	{
-    		if(x.getChildrenCount()>0) return false;
+    	for(Node x : n.getNodes()) {
+    		if(x.getNodesCount()>0) return false;
     		if(!dropByFilterNodeOnly(x)) return false;
     	}
     	return true;

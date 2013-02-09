@@ -3,10 +3,8 @@ package org.raven.auth.impl;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
-import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
@@ -21,14 +19,8 @@ public class ResourceLinkNode extends BaseNode implements Viewable
 	public static final String prefix = "res: ";
 	public static final String PREFIX = LdapGroupAcl.RESOURCE_PARAM+AccessControl.DELIMITER+" ";
 	
-	@Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
-	@NotNull
-	private Node node;
-	
-	public ResourceLinkNode()
-	{
-		super();
-	}
+	@NotNull @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
+	private ResourceNode node;
 	
 	public List<ViewableObject> getViewableObjects(
 			Map<String, NodeAttribute> refreshAttributes) throws Exception 
@@ -40,33 +32,29 @@ public class ResourceLinkNode extends BaseNode implements Viewable
 		return Arrays.asList(textObj);		
 	}
 
-	public Boolean getAutoRefresh() 
-	{
+	public Boolean getAutoRefresh() {
 		return true;
 	}
 
-	public Map<String, NodeAttribute> getRefreshAttributes() throws Exception 
-	{
+	public Map<String, NodeAttribute> getRefreshAttributes() throws Exception {
 		return null;
 	}
 
-	public void setNode(Node node) {
-		this.node = node;
-	}
+    public ResourceNode getNode() {
+        return node;
+    }
 
-	public Node getNode() {
-		return node;
-	}
+    public void setNode(ResourceNode node) {
+        this.node = node;
+    }
 
-	public String getResourceName()
-	{
+	public String getResourceName()	{
 		if (getStatus()!=Status.STARTED)
 		    return null;
 		return node.getName();
 	}
 	
-	public String getPrefix()
-	{
+	public String getPrefix() {
 		return PREFIX;
 	}
 

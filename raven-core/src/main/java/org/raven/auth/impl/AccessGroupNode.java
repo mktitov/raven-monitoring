@@ -1,29 +1,37 @@
 package org.raven.auth.impl;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
-//import org.raven.tree.Node.Status;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.ViewableObjectImpl;
 import org.weda.annotations.constraints.NotNull;
 
-@NodeClass(childNodes={org.raven.auth.impl.ResourceLinkNode.class,
-		org.raven.auth.impl.AccessUserNode.class},
-		parentNode=org.raven.auth.impl.GroupsListNode.class)
+@NodeClass(childNodes={ResourceLinkNode.class, AccessUserNode.class}, parentNode=GroupsListNode.class)
 public class AccessGroupNode extends BaseNode implements Viewable 
 {
-
-	@Parameter
-	@NotNull
+	@NotNull @Parameter
 	private String ldapGroup;
+    
+    public AccessGroup getAccessGroup() {
+        LinkedList<String> users = new LinkedList<String>();
+        LinkedList<AccessResource> resources = new LinkedList<AccessResource>();
+        for (Node node: getNodes())
+            if (node.isStarted()) {
+                if (node instanceof ResourceLinkNode)
+                    resources.add(((ResourceLinkNode)node).getNode().getAccessResource());
+                else if (node instanceof AccessUserNode)
+                    users.add(node.getName());
+            }
+        return new AccessGroup(getName(), ldapGroup, resources, users);
+    }
 	
 	public String getGroupString()
 	{
@@ -64,13 +72,11 @@ public class AccessGroupNode extends BaseNode implements Viewable
 		return Arrays.asList(textObj);		
 	}
 
-	public Boolean getAutoRefresh() 
-	{
+	public Boolean getAutoRefresh() {
 		return true;
 	}
 
-	public Map<String, NodeAttribute> getRefreshAttributes() throws Exception 
-	{
+	public Map<String, NodeAttribute> getRefreshAttributes() throws Exception {
 		return null;
 	}
 

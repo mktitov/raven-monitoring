@@ -1,8 +1,11 @@
 package org.raven.auth.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Хранилище ACL для конкрентной LDAP-группы
@@ -15,7 +18,7 @@ public class LdapGroupAcl extends AccessControlList
 	public static final String USER_PARAM = "user";
 	private String group = null;
 	private List<String> users = null;
-	private HashMap<String,AccessResource> resources = null;
+	private Map<String,AccessResource> resources = null;
 
 	public LdapGroupAcl()
 	{
@@ -27,6 +30,23 @@ public class LdapGroupAcl extends AccessControlList
 		setResources(res);
 		init(x);
 	}
+
+    public LdapGroupAcl(String name, String group, Collection<String> resourcesNames, 
+        Collection<String> users, Map<String, AccessResource> resources) 
+    {
+        super(name, null, Collections.EMPTY_LIST);
+        this.group = group;
+        if (users!=null && !users.isEmpty())
+            this.users = new ArrayList<String>(users);
+        if (resources!=null) {
+            if (resourcesNames!=null && !resourcesNames.isEmpty())
+                for (String resourceName: resourcesNames) {
+                    AccessResource res = resources.get(resourceName);
+                    if (res!=null) addAll(res);
+                }
+            this.resources = resources;
+        }
+    }
 	
 	protected boolean applyExpression(String[] tokens) 
 	{
@@ -52,7 +72,7 @@ public class LdapGroupAcl extends AccessControlList
 		return false;		
 	}
 	
-    public HashMap<String, AccessResource> getResources() {
+    public Map<String, AccessResource> getResources() {
 		return resources;
 	}
 

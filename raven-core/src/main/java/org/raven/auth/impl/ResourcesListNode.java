@@ -2,6 +2,9 @@ package org.raven.auth.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.raven.annotations.NodeClass;
@@ -55,6 +58,17 @@ public class ResourcesListNode extends BaseNode implements Viewable
 		}
 		return all;
 	}
+    
+    public List<AccessResource> getResources() {
+        Collection<Node> resourceNodes = getEffectiveNodes();
+        if (resourceNodes==null)
+            return Collections.EMPTY_LIST;
+        LinkedList<AccessResource> resources = new LinkedList<AccessResource>();
+        for (Node child: resourceNodes)
+            if (child instanceof ResourceNode && child.isStarted())
+                resources.add(((ResourceNode)child).getAccessResource());
+        return resources;
+    }
 	
 	public String getAllResourcesString()
 	{

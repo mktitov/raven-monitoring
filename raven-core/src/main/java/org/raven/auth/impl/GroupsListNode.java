@@ -2,6 +2,9 @@ package org.raven.auth.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.raven.annotations.NodeClass;
@@ -10,26 +13,35 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.InvisibleNode;
 import org.raven.tree.impl.ViewableObjectImpl;
 
-@NodeClass(childNodes={org.raven.auth.impl.AccessGroupNode.class,
-		org.raven.auth.impl.GroupsContainerNode.class},
-		parentNode=org.raven.auth.impl.AuthorizationNode.class)
+@NodeClass(parentNode=InvisibleNode.class, childNodes={AccessGroupNode.class, GroupsContainerNode.class})
 public class GroupsListNode extends BaseNode implements Viewable
 {
 	public static final String NAME = "Groups";
 	public static final int START_NUM = 50000;
 	
-	public GroupsListNode()
-	{
+	public GroupsListNode()	{
 		super(NAME);
 	}
+    
+    public List<AccessGroup> getAccessGroups() {
+        Collection<Node> nodes = getEffectiveNodes();
+        if (nodes!=null) {
+            LinkedList<AccessGroup> groups = new LinkedList<AccessGroup>();
+            for (Node node: nodes)
+                if (node instanceof AccessGroupNode && node.isStarted())
+                    groups.add(((AccessGroupNode)node).getAccessGroup());
+            return groups;
+        } else return Collections.EMPTY_LIST;
+    }
 	
 	public List<String> getAllGroups()
 	{
 		ArrayList<String> all = new ArrayList<String>();
 		if (getStatus()!=Status.STARTED) return all;
-		for(Node n: getChildrenList())
+		for(Node n: getNodes())
 		{
 			if(n.getStatus()!=Status.STARTED) continue;
 			if (n instanceof AccessGroupNode) {

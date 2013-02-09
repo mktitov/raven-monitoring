@@ -10,12 +10,16 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.InvisibleNode;
 import org.raven.tree.impl.ViewableObjectImpl;
 
-@NodeClass(childNodes={org.raven.auth.impl.AccessGroupNode.class,
-		org.raven.auth.impl.GroupsContainerNode.class})
+@NodeClass(parentNode=InvisibleNode.class, importChildTypesFromParent=true)
 public class GroupsContainerNode extends BaseNode implements Viewable
 {
+    @Override
+    public boolean isConditionalNode() {
+        return true;
+    }
 
 	public List<String> getGroupStrings()
 	{
