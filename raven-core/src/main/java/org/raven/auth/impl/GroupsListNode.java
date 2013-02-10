@@ -1,13 +1,16 @@
 package org.raven.auth.impl;
 
+import org.raven.auth.AccessPolicyManager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.raven.annotations.NodeClass;
+import org.raven.auth.UserContext;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
@@ -17,7 +20,7 @@ import org.raven.tree.impl.InvisibleNode;
 import org.raven.tree.impl.ViewableObjectImpl;
 
 @NodeClass(parentNode=InvisibleNode.class, childNodes={AccessGroupNode.class, GroupsContainerNode.class})
-public class GroupsListNode extends BaseNode implements Viewable
+public class GroupsListNode extends BaseNode implements Viewable, AccessPolicyManager
 {
 	public static final String NAME = "Groups";
 	public static final int START_NUM = 50000;
@@ -36,6 +39,28 @@ public class GroupsListNode extends BaseNode implements Viewable
             return groups;
         } else return Collections.EMPTY_LIST;
     }
+     
+   public AccessControlList getAccessPoliciesForUser(UserContext user) {
+        Collection<Node> nodes = getEffectiveNodes();
+        AccessGroup accessPolicy = new AccessGroup();
+        if (nodes!=null) 
+            for (Node node: nodes)
+                if (node instanceof AccessGroupNode && node.isStarted()) 
+                    ((AccessGroupNode)node).addPoliciesIfNeed(user, accessPolicy);
+        return accessPolicy;
+    }
+   
+   public Map<String, AccessResource> getAccessResourcesForUser(UserContext user) {
+        Collection<Node> nodes = getEffectiveNodes();
+        if (nodes==null || nodes.isEmpty())
+            return Collections.EMPTY_MAP;
+        Map<String, AccessResource> resourcesMap = new HashMap<String, AccessResource>();
+        for (Node node: nodes)
+            if (node instanceof AccessGroupNode && node.isStarted()) 
+                for (AccessResource res: ((AccessGroupNode)node).getResourcesForUser(user))
+                    resourcesMap.put(res.getName(), res);
+        return resourcesMap;
+   }
 	
 	public List<String> getAllGroups()
 	{

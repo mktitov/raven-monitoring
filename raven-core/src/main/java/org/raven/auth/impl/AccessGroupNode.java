@@ -1,17 +1,20 @@
 package org.raven.auth.impl;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.auth.UserContext;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.ViewableObjectImpl;
+import org.raven.util.NodeUtils;
 import org.weda.annotations.constraints.NotNull;
 
 @NodeClass(childNodes={ResourceLinkNode.class, AccessUserNode.class}, parentNode=GroupsListNode.class)
@@ -31,6 +34,37 @@ public class AccessGroupNode extends BaseNode implements Viewable
                     users.add(node.getName());
             }
         return new AccessGroup(getName(), ldapGroup, resources, users);
+    }
+    
+    public void addPoliciesIfNeed(UserContext user, AccessControlList policies) {
+        if (!isUserAllowed(user))
+            return;
+        for (ResourceLinkNode resLink: NodeUtils.getChildsOfType(this, ResourceLinkNode.class)) {
+            ResourceNode resNode = resLink.getNode();
+            if (resNode.isStarted())
+                policies.appendACL(resNode.getAccessResource());
+        }
+    }
+    
+    public List<AccessResource> getResourcesForUser(UserContext user) {
+        if (!isUserAllowed(user))
+            return Collections.EMPTY_LIST;
+        LinkedList<AccessResource> resources = new LinkedList<AccessResource>();
+        for (ResourceLinkNode resLink: NodeUtils.getChildsOfType(this, ResourceLinkNode.class)) {
+            ResourceNode resNode = resLink.getNode();
+            if (resNode.isStarted())
+                resources.add(resNode.getAccessResource());
+        }
+        return resources;
+    }
+    
+    private boolean isUserAllowed(UserContext user) {
+        if (!user.getGroups().contains(ldapGroup))
+            return false;
+        Node userNode = getNode(user.getLogin());
+        if (userNode!=null && userNode instanceof AccessUserNode)
+            return true;
+        return NodeUtils.getChildsOfType(this, AccessUserNode.class).isEmpty();
     }
 	
 	public String getGroupString()

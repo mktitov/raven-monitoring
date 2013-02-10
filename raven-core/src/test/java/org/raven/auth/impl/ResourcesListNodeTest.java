@@ -36,21 +36,21 @@ public class ResourcesListNodeTest extends RavenCoreTestCase {
         assertTrue(resourcesNode.start());
     }
     
-    @Test
-    public void test() {
-        ResourcesContainerNode container = new ResourcesContainerNode();
-        container.setName("group");
-        resourcesNode.addAndSaveChildren(container);
-        assertTrue(container.start());
-        
-        addResourceNode("res1", container);
-        addResourceNode("res2", resourcesNode);
-        List<AccessResource> resources = resourcesNode.getResources();
-        assertNotNull(resources);
-        assertEquals(2, resources.size());
-        assertEquals("res1", resources.get(0).getName());
-        assertEquals("res2", resources.get(1).getName());
-    }
+//    @Test
+//    public void test() {
+//        ResourcesContainerNode container = new ResourcesContainerNode();
+//        container.setName("group");
+//        resourcesNode.addAndSaveChildren(container);
+//        assertTrue(container.start());
+//        
+//        addResourceNode("res1", container);
+//        addResourceNode("res2", resourcesNode);
+//        List<AccessResource> resources = resourcesNode.getResources();
+//        assertNotNull(resources);
+//        assertEquals(2, resources.size());
+//        assertEquals("res1", resources.get(0).getName());
+//        assertEquals("res2", resources.get(1).getName());
+//    }
     
     private void addResourceNode(String name, Node owner) {
         ResourceNode res = new ResourceNode();

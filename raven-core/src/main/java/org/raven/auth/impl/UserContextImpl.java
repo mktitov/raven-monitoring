@@ -17,13 +17,19 @@
 
 package org.raven.auth.impl;
 
+import org.raven.auth.AccessPolicyManager;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.raven.auth.UserContext;
 import org.raven.auth.UserContextConfig;
+import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
+import org.raven.tree.Tree;
 
 /**
  *
@@ -38,8 +44,9 @@ public class UserContextImpl implements UserContext
     private final boolean admin;
     private final Map<String, Object> params;
     private final Set<String> groups;
+    private final AccessPolicyManager policyManager;
 
-    public UserContextImpl(UserContextConfig config) {
+    public UserContextImpl(UserContextConfig config, AccessPolicyManager policyManager) {
         this.login = config.getLogin();
         this.authenticator = config.getAuthenticator();
         this.groups = Collections.unmodifiableSet(config.getGroups());
@@ -47,6 +54,7 @@ public class UserContextImpl implements UserContext
         this.admin = config.isAdmin();
         this.name = config.getName();
         this.host = config.getHost();
+        this.policyManager = policyManager;
     }
 
     public String getLogin() {
@@ -78,6 +86,28 @@ public class UserContextImpl implements UserContext
     }
 
     public int getAccessForNode(Node node) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return policyManager.getAccessPoliciesForUser(this).getAccessForNode(node);
     }
+    
+	public HashMap<String,String>  getResourcesList(Tree tree)
+	{
+		HashMap<String,String> rl = new HashMap<String,String>();
+		for(AccessResource ar : policyManager.getAccessResourcesForUser(this).values()) {
+			String title = ar.getTitle();
+			if(title==null || title.length()==0) continue;
+			String path = null;
+			if(ar.isPresent()) {
+				path = ar.getShow();
+                try {
+                    if (getAccessForNode(tree.getNode(path)) < AccessControl.READ)				
+                        continue;
+                } catch (InvalidPathException ex) {
+                    continue;
+                }
+			}	
+			rl.put(title, path);
+		}
+		return rl;
+	}
+    
 }

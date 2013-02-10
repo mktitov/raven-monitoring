@@ -13,25 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.auth.impl;
+package org.raven.auth;
 
-import org.raven.auth.AccessPolicies;
-import org.raven.auth.UserAccessPolicies;
-import org.raven.auth.UserContext;
+import java.util.Map;
+import org.raven.auth.impl.AccessControlList;
+import org.raven.auth.impl.AccessResource;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class AccessPoliciesImpl implements AccessPolicies {
-    private final LoginServiceNode loginService;
-
-    public AccessPoliciesImpl(LoginServiceNode loginService) {
-        this.loginService = loginService;
-    }
-
-    public UserAccessPolicies getPolicies(UserContext user) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-    
+public interface AccessPolicyManager {
+    /**
+     * Return access policies for given user (never return null).
+     */
+    public AccessControlList getAccessPoliciesForUser(UserContext user);
+    public Map<String, AccessResource> getAccessResourcesForUser(UserContext user);
 }

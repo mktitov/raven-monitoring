@@ -17,9 +17,11 @@
 
 package org.raven.auth;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import org.raven.tree.Node;
+import org.raven.tree.Tree;
 
 /**
  *
@@ -58,4 +60,6 @@ public interface UserContext {
      * Returns access flags for given node.
      */
     public int getAccessForNode(Node node);
+    
+	public Map<String,String>  getResourcesList(Tree tree);
 }

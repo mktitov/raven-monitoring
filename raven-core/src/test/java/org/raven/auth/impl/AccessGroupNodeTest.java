@@ -15,11 +15,16 @@
  */
 package org.raven.auth.impl;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.Node;
+import static org.easymock.EasyMock.*;
+import org.raven.auth.UserContext;
 
 /**
  *
@@ -62,6 +67,72 @@ public class AccessGroupNodeTest extends RavenCoreTestCase {
         assertEquals(AccessControl.NONE, group.getAccessForNode(resNode));
         assertEquals(AccessControl.READ, group.getAccessForNode(testsNode));
     }
+    
+    @Test
+    public void addPolicyIfNeed_InvalidGroupTest() {
+        ResourceNode resNode = createResource();
+        addResourceLink(resNode);
+        UserContext context = createMock(UserContext.class);
+        expect(context.getGroups()).andReturn(Collections.EMPTY_SET);
+        replay(context);
+        
+        AccessGroup policy = new AccessGroup();
+        groupNode.addPoliciesIfNeed(context, policy);
+        assertEquals(AccessControl.NONE, policy.getAccessForNode(testsNode));
+        verify(context);
+    }
+    
+    @Test
+    public void addPolicyIfNeed_AllUsersTest() {
+        ResourceNode resNode = createResource();
+        addResourceLink(resNode);
+        UserContext context = createMock(UserContext.class);
+        HashSet<String> groupNames = new HashSet<String>(Arrays.asList("group"));
+        expect(context.getGroups()).andReturn(groupNames);
+        expect(context.getLogin()).andReturn("test");
+        replay(context);
+        
+        AccessGroup policy = new AccessGroup();
+        groupNode.addPoliciesIfNeed(context, policy);
+        assertEquals(AccessControl.READ, policy.getAccessForNode(testsNode));
+        verify(context);
+    }
+    
+    @Test
+    public void addPolicyIfNeed_UserNotInListTest() {
+        ResourceNode resNode = createResource();
+        addResourceLink(resNode);
+        addUser("test1");
+        UserContext context = createMock(UserContext.class);
+        HashSet<String> groupNames = new HashSet<String>(Arrays.asList("group"));
+        expect(context.getGroups()).andReturn(groupNames);
+        expect(context.getLogin()).andReturn("test");
+        replay(context);
+        
+        AccessGroup policy = new AccessGroup();
+        groupNode.addPoliciesIfNeed(context, policy);
+        assertEquals(AccessControl.NONE, policy.getAccessForNode(testsNode));
+        verify(context);
+    }
+    
+    @Test
+    public void addPolicyIfNeed_UserInListTest() {
+        ResourceNode resNode = createResource();
+        addResourceLink(resNode);
+        addUser("test");
+        UserContext context = createMock(UserContext.class);
+        HashSet<String> groupNames = new HashSet<String>(Arrays.asList("group"));
+        expect(context.getGroups()).andReturn(groupNames);
+        expect(context.getLogin()).andReturn("test");
+        replay(context);
+        
+        AccessGroup policy = new AccessGroup();
+        groupNode.addPoliciesIfNeed(context, policy);
+        assertEquals(AccessControl.READ, policy.getAccessForNode(testsNode));
+        verify(context);
+    }
+    
+    
     
     private ResourceNode createResource() {
         ResourceNode res = new ResourceNode();

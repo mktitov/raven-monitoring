@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import org.raven.auth.UserContext;
 import org.raven.tree.Node;
+import org.raven.tree.Tree;
 
 /**
  *
@@ -61,6 +62,10 @@ public class TestUserContext implements UserContext
     }
 
     public String getHost() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public Map<String, String> getResourcesList(Tree tree) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }

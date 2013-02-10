@@ -71,6 +71,10 @@ public class LoginServiceNode extends BaseNode implements LoginService {
         return (UserContextConfiguratorsNode) getNode(UserContextConfiguratorsNode.NAME);
     }
     
+    public GroupsListNode getGroupsNode() {
+        return (GroupsListNode) getNode(GroupsListNode.NAME);
+    }
+    
     private void addAndStart(Node node) {
         addAndSaveChildren(node);
         node.start();
@@ -134,7 +138,7 @@ public class LoginServiceNode extends BaseNode implements LoginService {
         Node configurators = getNodeOrThrowEx(UserContextConfiguratorsNode.NAME);
         for (UserContextConfigurator ctxCfgr: getChildsOfType(configurators, UserContextConfigurator.class))            
             ctxCfgr.configure(config);
-        return new UserContextImpl(config);
+        return new UserContextImpl(config, getGroupsNode());
     }
 
     private void informLoginListeners(UserContext userContext) throws Exception {

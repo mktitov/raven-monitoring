@@ -27,6 +27,12 @@ import java.util.Set;
 public class AccessGroup extends AccessControlList {
 	private final String group;
 	private final Set<String> users;
+
+    public AccessGroup() {
+        super(null, null, Collections.EMPTY_LIST);
+        group = null;
+        users = null;
+    }
     
     public AccessGroup(String name, String group, Collection<AccessResource> resources, Collection<String> users) {
         super(name, null, Collections.EMPTY_LIST);
