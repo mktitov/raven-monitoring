@@ -164,7 +164,7 @@ public class ViewableObjectWrapper
     
 	public static String getAccountName()
 	{
-		return SessionBean.getUserAcl().getUsername();
+		return SessionBean.getUserContext().getLogin();
 	}
 
 	

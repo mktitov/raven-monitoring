@@ -20,13 +20,13 @@ package org.raven.ui;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.myfaces.trinidad.model.ChildPropertyTreeModel;
+import org.raven.auth.UserContext;
 import org.raven.auth.impl.AccessControl;
-import org.raven.auth.impl.UserAcl;
 import org.raven.ui.node.NodeWrapper;
 
 public class RavenTreeModel extends ChildPropertyTreeModel 
 {
-	private UserAcl userAcl = null;
+	private UserContext user = null;
 
 	public RavenTreeModel() { super(); }
 	
@@ -40,7 +40,7 @@ public class RavenTreeModel extends ChildPropertyTreeModel
     @Override
 	protected Object getChildData(Object parentData)
 	  {
-		  if(userAcl==null) return null;
+		  if(user==null) return null;
 		  Object o = super.getChildData(parentData);
 		  if(o==null ) return null;
 		  Object[] olist = null;
@@ -54,7 +54,7 @@ public class RavenTreeModel extends ChildPropertyTreeModel
 		  	{
 			  //Node n = (Node) ob;
 			  NodeWrapper n = (NodeWrapper) ob; //new NodeWrapper((Node)ob);
-			  int acc = userAcl.getAccessForNode(n.getNode());
+			  int acc = user.getAccessForNode(n.getNode());
 			  if(acc > AccessControl.NONE)
 			  {
 				  access = acc;
@@ -67,7 +67,7 @@ public class RavenTreeModel extends ChildPropertyTreeModel
 	    return ret;
 	  }
 	
-	public UserAcl getUserAcl() { return userAcl; }
-	public void setUserAcl(UserAcl userAcl) { this.userAcl = userAcl; }
+	public UserContext getUserAcl() { return user; }
+	public void setUserAcl(UserContext user) { this.user = user; }
 
 }

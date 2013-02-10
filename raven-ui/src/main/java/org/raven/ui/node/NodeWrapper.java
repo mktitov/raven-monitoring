@@ -328,7 +328,7 @@ implements Comparator<NodeAttribute>, INodeScanner, ScannedNodeHandler
 	
 	public static String getAccountName()
 	{
-		return SessionBean.getUserAcl().getUsername();
+		return SessionBean.getUserContext().getLogin();
 	}
 	
 	public static String mesFormat(String arg0, String arg1)
@@ -1346,7 +1346,7 @@ implements Comparator<NodeAttribute>, INodeScanner, ScannedNodeHandler
 	
 	public ScanOperation nodeScanned(Node node) 
 	{
-		if(SessionBean.getUserAcl().getAccessForNode(node) < AccessControl.WRITE)
+		if(SessionBean.getUserContext().getAccessForNode(node) < AccessControl.WRITE)
 			return ScanOperation.SKIP_NODE;
 		idList.add(node.getId());
 		return ScanOperation.CONTINUE;

@@ -21,7 +21,7 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpSession;
 import org.raven.auth.UserContext;
 import org.raven.auth.UserContextService;
-import org.raven.ui.filter.AuthFilter;
+import org.raven.ui.filter.LoginFilter;
 
 /**
  *
@@ -35,6 +35,6 @@ public class UserContextServiceImpl implements UserContextService
         if (facesContext==null)
             return null;
         HttpSession session = (HttpSession)facesContext.getExternalContext().getSession(false);
-        return (UserContext) (session == null ? null : session.getAttribute(AuthFilter.USER_ACL));
+        return (UserContext) (session == null ? null : session.getAttribute(LoginFilter.USER_CONTEXT_ATTR));
     }
 }

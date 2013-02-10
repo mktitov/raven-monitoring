@@ -46,7 +46,7 @@ public class NewNodeFromTemplate
 		try { 
 			wizard.createNodes();
 			String mes = MessageFormatter.format("template: id='{}' path='{}'"+template.getPath(),template.getId(),template.getPath());
-			SessionBean.getInstance().getAuditor().write(wrapper.getNode(), SessionBean.getUserAcl().getUsername(), Action.NODE_CREATE, mes);
+			SessionBean.getInstance().getAuditor().write(wrapper.getNode(), SessionBean.getUserContext().getLogin(), Action.NODE_CREATE, mes);
 		} 
 		catch(Throwable e) {
 			logger.error("on wizard.createNodes:", e);

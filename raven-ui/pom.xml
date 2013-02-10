@@ -95,7 +95,7 @@
                     <artifactId>easymock</artifactId>
                 </dependency>
                 <dependency>
-                    <groupId>jcifs</groupId>
+                    <groupId>org.samba.jcifs</groupId>
                     <artifactId>jcifs</artifactId>
                 </dependency>
                 <!--

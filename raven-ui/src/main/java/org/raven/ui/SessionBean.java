@@ -68,6 +68,8 @@ import javax.faces.component.UIComponent;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import org.apache.myfaces.trinidad.event.PollEvent;
+import org.raven.auth.UserContext;
+import org.raven.ui.filter.LoginFilter;
 
 public class SessionBean 
 {
@@ -82,7 +84,7 @@ public class SessionBean
     @org.weda.internal.annotations.Service
     private Auditor auditor;
     
-	private UserAcl userAcl = null;
+	private UserContext user = null;
 	private Tree tree = null;
 	private RavenTreeModel treeModel = null;   
 	private NodeWrapper wrapper = null;
@@ -133,7 +135,7 @@ public class SessionBean
 	
 	    charsets = UIUtil.findCharsets();
 	    
-		userAcl = getUserAcl();
+		user = getUserContext();
 		tree = getTree();
 
 	    wrapper = (NodeWrapper) getElValue(NodeWrapper.BEAN_NAME);
@@ -142,7 +144,7 @@ public class SessionBean
 		Node x = tree.getRootNode();
 		while(true)
 		{
-			int ac = userAcl.getAccessForNode(x);
+			int ac = user.getAccessForNode(x);
 			if(ac>AccessControl.TRANSIT) break;
 			if(ac==AccessControl.TRANSIT)
 			{
@@ -150,7 +152,7 @@ public class SessionBean
 				Node z = null;
 				for(Node y : x.getChildrens())
 				{
-					if(userAcl.getAccessForNode(y) > AccessControl.NONE)
+					if(user.getAccessForNode(y) > AccessControl.NONE)
 					{
 						if(++cnt>1) break;
 						z = y;
@@ -174,7 +176,7 @@ public class SessionBean
 		nodes.add(nw);
 		
 		treeModel = new RavenTreeModel(nodes, "childrenList");
-		treeModel.setUserAcl(userAcl);
+		treeModel.setUserAcl(user);
 		
 		wrapper.createNewAttribute();
 		template = new NewNodeFromTemplate();
@@ -195,13 +197,13 @@ public class SessionBean
 	public void onSessionStart()
 	{
 		writeAuditRecord(null, Action.SESSION_START, remoteIp);
-		logger.info("session started, login:{} ip:{}",userAcl.getUsername(),remoteIp);
+		logger.info("session started, login:{} ip:{}",user.getLogin(),remoteIp);
 	}
 
 	public void onSessionStop()
 	{
 		writeAuditRecord(null, Action.SESSION_STOP, remoteIp);
-		logger.info("session stopped, login:{} ip:{}",userAcl.getUsername(),remoteIp);
+		logger.info("session stopped, login:{} ip:{}",user.getLogin(),remoteIp);
 	}
 	
 	/**
@@ -232,7 +234,7 @@ public class SessionBean
 	public String logout() 
 	{
 		String ret = "logout"; 
-		logger.info("logout, user:'{}'",userAcl.getUsername());
+		logger.info("logout, user:'{}'",user.getLogin());
 		FacesContext fc = FacesContext.getCurrentInstance();
 		ret = getOutcomeWithLang(fc,ret);
 	    HttpSession s = (HttpSession) fc.getExternalContext().getSession(false);
@@ -241,7 +243,7 @@ public class SessionBean
 	}
 	
 	public static boolean isSuperUserS() {
-		return getUserAcl().isSuperUser();
+		return getUserContext().isAdmin();
 	}
 
 	public boolean isSuperUser() {
@@ -292,7 +294,7 @@ public class SessionBean
 	 
 	 public static void initNodeWrapper(NodeWrapper nw)
 	 {
-		 nw.setUserAcl(getUserAcl());
+		 nw.setUserAcl(getUserContext());
 		 nw.setTree(getTree());
 		 nw.setClassDesc(getClassDscRegistry());
 		 nw.setConfigurator(getConfigurator());
@@ -310,11 +312,11 @@ public class SessionBean
 		 return z; //getElValue("row"); 
 	 }
 	 
-	 public static UserAcl getUserAcl()
+	 public static UserContext getUserContext()
 	 {
 		FacesContext fc = FacesContext.getCurrentInstance();
 		Map<String,Object> session = fc.getExternalContext().getSessionMap();
-		return (UserAcl)session.get(AuthFilter.USER_ACL);
+		return (UserContext)session.get(LoginFilter.USER_CONTEXT_ATTR);
 	 }	
 
 	 public static Tree getTree()
@@ -380,7 +382,7 @@ public class SessionBean
 	  
 	  public List<String[]> getResourcesList()
 	  {
-		  HashMap<String,String> rl = userAcl.getResourcesList(tree);
+		  Map<String,String> rl = user.getResourcesList(tree);
 		  List<String[]> ret = new ArrayList<String[]>();
 		  if(rl==null)
 		  {
@@ -400,7 +402,7 @@ public class SessionBean
 	  
 	  public List<ResourceInfo> getResources()
 	  {
-		  HashMap<String,String> rl = userAcl.getResourcesList(tree);
+		  Map<String,String> rl = user.getResourcesList(tree);
 		  List<ResourceInfo> ret = new ArrayList<ResourceInfo>();
 		  if(rl==null)
 		  {
@@ -541,7 +543,7 @@ public class SessionBean
 			n.init();
 			if(n.isAutoStart()) n.start();
 			logger.warn("Added new node name={}",getNewNodeName());
-	        auditor.write(n, getUserAcl().getUsername(), Action.NODE_CREATE, "class: "+newNodeType);
+	        auditor.write(n, getUserContext().getLogin(), Action.NODE_CREATE, "class: "+newNodeType);
 	        clearNewNode();
 			return wrapper.goToEditNewAttribute(n);
 		} catch(NodeError e) {
@@ -584,7 +586,7 @@ public class SessionBean
 
 	public int forceDeleteNode(Node n)
 	{
-        auditor.write(n, getUserAcl().getUsername(), Action.NODE_DEL, null);
+        auditor.write(n, getUserContext().getLogin(), Action.NODE_DEL, null);
 		tree.remove(n);
 		logger.warn("removed node: {}",n.getName());
 		return 0;
@@ -608,7 +610,7 @@ public class SessionBean
 			}
 			tree.remove(n);
 			logger.warn("removed node: {}",n.getName());
-	        auditor.write(n, getUserAcl().getUsername(), Action.NODE_DEL, null);
+	        auditor.write(n, getUserContext().getLogin(), Action.NODE_DEL, null);
 			FacesContext.getCurrentInstance().getExternalContext().log("removed node: "+n.getName());
 		}
 		wrapper.onSetNode();
@@ -706,21 +708,21 @@ public class SessionBean
 	}
 
 	public String getAccountName() {
-		return userAcl.getUsername();
+		return user.getLogin();
 	}		
 	
 	public static String getAccountNameS() {
-		return SessionBean.getUserAcl().getUsername();
+		return SessionBean.getUserContext().getLogin();
 	}		
 	
 	public void writeAuditRecord(Node n,Action a,String mes) 
 	{
-		auditor.write(n, userAcl.getUsername(), a, mes);
+		auditor.write(n, user.getLogin(), a, mes);
 	}
 
 	public void writeAuditRecord(Action a,String mes) 
 	{
-		auditor.write(getCurrentNode(), userAcl.getUsername(), a, mes);
+		auditor.write(getCurrentNode(), user.getLogin(), a, mes);
 	}
 	
 	public String getRemoteIp() {

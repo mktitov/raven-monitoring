@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-
+import org.raven.auth.UserContext;
 import org.raven.auth.impl.AccessControl;
 import org.raven.auth.impl.UserAcl;
 import org.raven.conf.Configurator;
@@ -37,7 +37,7 @@ import org.weda.services.ClassDescriptorRegistry;
 public abstract class AbstractNodeWrapper
 {
     protected Logger logger = LoggerFactory.getLogger(AbstractNodeWrapper.class);	
-	private UserAcl userAcl = null;
+	private UserContext user = null;
 	private Tree tree = null;
 	private Node node = null;
 	private ClassDescriptorRegistry classDesc = null;
@@ -85,12 +85,12 @@ public abstract class AbstractNodeWrapper
 	
 	public boolean isAllowViewAudit()
 	{
-		return userAcl.isSuperUser();
+		return user.isAdmin();
 	}
 	
 	public boolean isAllowControl()
 	{
-		if( (userAcl.getAccessForNode(node) & AccessControl.CONTROL) ==0) return false;
+		if( (user.getAccessForNode(node) & AccessControl.CONTROL) ==0) return false;
 		return true;
 	}
 
@@ -102,26 +102,26 @@ public abstract class AbstractNodeWrapper
 	
 	public boolean isAllowTreeEdit()
 	{
-		if( (userAcl.getAccessForNode(node) & AccessControl.TREE_EDIT) ==0 ) return false;
+		if( (user.getAccessForNode(node) & AccessControl.TREE_EDIT) ==0 ) return false;
 		return true;
 	}
 
 	public boolean isAllowNodeEdit()
 	{
-		if( (userAcl.getAccessForNode(node) & AccessControl.WRITE) ==0 ) return false;
+		if( (user.getAccessForNode(node) & AccessControl.WRITE) ==0 ) return false;
 		return true;
 	}
 
 	public boolean isAllowNodeRead()
 	{
-		int acc = userAcl.getAccessForNode(node);
+		int acc = user.getAccessForNode(node);
 		if( ( acc & AccessControl.READ) ==0 ) return false;
 		return true;
 	}
 
 	public boolean isAnyAccess()
 	{
-		int acc = userAcl.getAccessForNode(node);
+		int acc = user.getAccessForNode(node);
 		if( acc > AccessControl.NONE ) return true;
 		return false;
 	}
@@ -240,8 +240,8 @@ public abstract class AbstractNodeWrapper
 		  onSetNode();
 	  }
 
-	  public UserAcl getUserAcl() { return userAcl; }
-	  public void setUserAcl(UserAcl userAcl) { this.userAcl = userAcl; }
+	  public UserContext getUserAcl() { return user; }
+	  public void setUserAcl(UserContext user) { this.user = user; }
 
 	  public ClassDescriptorRegistry getClassDesc() { return classDesc; }
 	  public void setClassDesc(ClassDescriptorRegistry classDesc) { this.classDesc = classDesc; }

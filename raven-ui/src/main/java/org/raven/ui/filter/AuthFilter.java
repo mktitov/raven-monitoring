@@ -35,6 +35,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import org.raven.auth.UserContextConfiguratorService;
 
+@Deprecated
 public class AuthFilter implements Filter 
 {
 	public static final String NTLM_AUTH = "NtlmHttpAuth";
@@ -106,7 +107,7 @@ public class AuthFilter implements Filter
            	
            	UserAcl ua = new UserAcl(account,config);
            	if(ua.isEmpty()) break;
-            userContextConfigurator.configure(ua);
+//            userContextConfigurator.configure(ua);
            	ses.getServletContext().log("UA is not empty !");
            	ses.getServletContext().log("UA = "+ua.toString());
            	ok = true;

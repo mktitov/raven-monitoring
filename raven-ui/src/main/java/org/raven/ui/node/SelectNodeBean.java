@@ -26,7 +26,7 @@ public class SelectNodeBean {
 		nodes.add(new NodeWrapper(tree.getRootNode()));
 		
 		treeModel = new RavenTreeModel(nodes, "childrenList");
-		treeModel.setUserAcl(SessionBean.getUserAcl());
+		treeModel.setUserAcl(SessionBean.getUserContext());
 	}
 	
 	  public void setNode(ActionEvent event)

@@ -80,12 +80,12 @@ public class OtherVOExportBean
     }
     
 	public static String getAccountName() {
-		return SessionBean.getUserAcl().getUsername();
+		return SessionBean.getUserContext().getLogin();
 	}
     
     private void auditExport(Node node, ViewableObjectWrapper voWrapper) {
         AuditRecord rec = auditor.prepare(node
-                , SessionBean.getUserAcl().getUsername(), Action.VIEW_FILE
+                , SessionBean.getUserContext().getLogin(), Action.VIEW_FILE
                 , "Downloaded file ({})", voWrapper.getViewableObject().toString());
         auditor.write(rec);
         
