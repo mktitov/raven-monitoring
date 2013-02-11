@@ -87,9 +87,11 @@ public class LoginFilter implements Filter {
                     UserContext user = loginManager.getLoginService(SystemLoginService.NAME).login(
                         elems[0], elems[1], request.getRemoteAddr());
                     session.setAttribute(USER_CONTEXT_ATTR, user);
+                    session.getServletContext().log(String.format("User (%s) successfully logged in", user.getLogin()));
                     return true;
-                } catch (LoginException ex) { }
+                } catch (LoginException ex) { }                
             }
+            session.getServletContext().log("Authentification failed for user");
         }
         response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
         return false;    
