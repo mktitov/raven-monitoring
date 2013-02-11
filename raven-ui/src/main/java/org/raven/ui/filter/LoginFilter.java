@@ -32,6 +32,7 @@ import org.apache.tapestry5.ioc.Registry;
 import org.raven.auth.LoginException;
 import org.raven.auth.LoginManager;
 import org.raven.auth.UserContext;
+import org.raven.auth.impl.AccessControl;
 import org.raven.auth.impl.SystemLoginService;
 import org.raven.conf.Configurator;
 import org.raven.tree.Tree;
@@ -44,9 +45,11 @@ import org.raven.ui.util.RavenRegistry;
 public class LoginFilter implements Filter {
     public final static String USER_CONTEXT_ATTR = "raven_user_context";
     private LoginManager loginManager;
+    private Tree tree;
 
     public void init(FilterConfig filterConfig) throws ServletException {
     	Registry registry = RavenRegistry.getRegistry();
+        tree = registry.getService(Tree.class);
         loginManager = registry.getService(LoginManager.class);
     }
 
@@ -77,22 +80,26 @@ public class LoginFilter implements Filter {
         throws IOException 
     {
         String requestAuth = request.getHeader("Authorization");
-        if (requestAuth==null) 
-            response.setHeader("WWW-Authenticate", "BASIC realm=\"RAVEN\"");
-        else {
+        if (requestAuth!=null) {
             String userAndPath = new String(Base64.decodeBase64(requestAuth.substring(6).getBytes()));
             String elems[] = userAndPath.split(":");
             if (elems.length==2) {
                 try {
                     UserContext user = loginManager.getLoginService(SystemLoginService.NAME).login(
                         elems[0], elems[1], request.getRemoteAddr());
-                    session.setAttribute(USER_CONTEXT_ATTR, user);
-                    session.getServletContext().log(String.format("User (%s) successfully logged in", user.getLogin()));
-                    return true;
+                    if (user.getAccessForNode(tree.getRootNode())==AccessControl.NONE) {
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                        return false;
+                    } else {
+                        session.setAttribute(USER_CONTEXT_ATTR, user);
+                        session.getServletContext().log(String.format("User (%s) successfully logged in", user.getLogin()));
+                        return true;
+                    }
                 } catch (LoginException ex) { }                
             }
             session.getServletContext().log("Authentification failed for user");
         }
+        response.setHeader("WWW-Authenticate", "BASIC realm=\"RAVEN\"");
         response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
         return false;    
     }
