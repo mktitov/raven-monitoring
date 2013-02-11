@@ -90,6 +90,8 @@ public class LoginServiceNode extends BaseNode implements LoginService {
             UserContext userContext = configureUserContext(
                     new UserContextConfigImpl(authenticator, login, host));
             informLoginListeners(userContext);
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                getLogger().debug("User ({}) successfully logged in");
             return userContext;
         } catch (Throwable e) {
             if (e instanceof LoginException)
