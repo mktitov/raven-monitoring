@@ -86,7 +86,7 @@ public class UserContextImpl implements UserContext
     }
 
     public int getAccessForNode(Node node) {
-        return policyManager.getAccessPoliciesForUser(this).getAccessForNode(node);
+        return admin? AccessControl.ALL_RIGHTS : policyManager.getAccessPoliciesForUser(this).getAccessForNode(node);
     }
     
 	public HashMap<String,String>  getResourcesList(Tree tree)

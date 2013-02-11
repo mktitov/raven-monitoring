@@ -23,6 +23,7 @@ import java.util.regex.Pattern;
 
 public class AccessControl {
 	public static final int ADMIN = 64;
+    public static final int ALL_RIGHTS = 63;
 	public static final char ADMIN_SYMBOL = 'a';
 	public static final int TREE_EDIT = 32;
 	public static final char TREE_EDIT_SYMBOL = 't';

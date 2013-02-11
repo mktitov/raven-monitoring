@@ -59,6 +59,8 @@ public class AccessGroupNode extends BaseNode implements Viewable
     }
     
     private boolean isUserAllowed(UserContext user) {
+        if (user.isAdmin())
+            return true;
         if (!user.getGroups().contains(ldapGroup))
             return false;
         Node userNode = getNode(user.getLogin());

@@ -94,8 +94,11 @@ public class LoginServiceNode extends BaseNode implements LoginService {
                 getLogger().debug("User ({}) successfully logged in");
             return userContext;
         } catch (Throwable e) {
-            if (e instanceof LoginException)
+            if (e instanceof LoginException) {
+                if (isLogLevelEnabled(LogLevel.WARN))
+                    getLogger().warn("Login failed for user ({}). {}", login, e.getMessage());
                 throw (LoginException)e;
+            }
             String mess = String.format("Error in login service (%s)", getName());
             if (isLogLevelEnabled(LogLevel.ERROR))
                 getLogger().error(mess, e);
@@ -127,7 +130,7 @@ public class LoginServiceNode extends BaseNode implements LoginService {
                         , login, authenticator);
         } else {
             if (isLogLevelEnabled(LogLevel.WARN))
-                getLogger().warn("User ({}) authentication was unsuccessfull");
+                getLogger().warn("User ({}) authentication was unsuccessfull", login);
             throw new AuthenticationFailedException(login, getName());
         }
         return authenticator;

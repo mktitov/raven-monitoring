@@ -18,13 +18,13 @@ package org.raven.auth.impl;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import static org.easymock.EasyMock.*;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
+import org.raven.auth.UserContext;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.Node;
-import static org.easymock.EasyMock.*;
-import org.raven.auth.UserContext;
 
 /**
  *
@@ -73,6 +73,7 @@ public class AccessGroupNodeTest extends RavenCoreTestCase {
         ResourceNode resNode = createResource();
         addResourceLink(resNode);
         UserContext context = createMock(UserContext.class);
+        expect(context.isAdmin()).andReturn(false);
         expect(context.getGroups()).andReturn(Collections.EMPTY_SET);
         replay(context);
         
@@ -89,6 +90,7 @@ public class AccessGroupNodeTest extends RavenCoreTestCase {
         UserContext context = createMock(UserContext.class);
         HashSet<String> groupNames = new HashSet<String>(Arrays.asList("group"));
         expect(context.getGroups()).andReturn(groupNames);
+        expect(context.isAdmin()).andReturn(false);
         expect(context.getLogin()).andReturn("test");
         replay(context);
         
@@ -105,6 +107,7 @@ public class AccessGroupNodeTest extends RavenCoreTestCase {
         addUser("test1");
         UserContext context = createMock(UserContext.class);
         HashSet<String> groupNames = new HashSet<String>(Arrays.asList("group"));
+        expect(context.isAdmin()).andReturn(false);
         expect(context.getGroups()).andReturn(groupNames);
         expect(context.getLogin()).andReturn("test");
         replay(context);
@@ -122,6 +125,7 @@ public class AccessGroupNodeTest extends RavenCoreTestCase {
         addUser("test");
         UserContext context = createMock(UserContext.class);
         HashSet<String> groupNames = new HashSet<String>(Arrays.asList("group"));
+        expect(context.isAdmin()).andReturn(false);
         expect(context.getGroups()).andReturn(groupNames);
         expect(context.getLogin()).andReturn("test");
         replay(context);

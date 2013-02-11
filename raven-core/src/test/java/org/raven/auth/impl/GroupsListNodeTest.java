@@ -66,7 +66,6 @@ public class GroupsListNodeTest extends RavenCoreTestCase {
         container.setName("container");
         groupsNode.addAndSaveChildren(container);
         assertTrue(container.start());
-        
     }
     
     @Test
@@ -75,6 +74,7 @@ public class GroupsListNodeTest extends RavenCoreTestCase {
         addAccessGroup(groupsNode, "grp2", "group1", res2);
         addAccessGroup(groupsNode, "grp3", "group3", res3);
         UserContext user = createMock(UserContext.class);
+        expect(user.isAdmin()).andReturn(false).atLeastOnce();
         HashSet<String> groupNames = new HashSet<String>(Arrays.asList("group1"));
         expect(user.getGroups()).andReturn(groupNames).atLeastOnce();
         expect(user.getLogin()).andReturn("test").atLeastOnce();
