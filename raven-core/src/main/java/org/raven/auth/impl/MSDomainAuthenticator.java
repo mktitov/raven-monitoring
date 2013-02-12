@@ -16,7 +16,11 @@
 package org.raven.auth.impl;
 
 import jcifs.UniAddress;
+import jcifs.smb.NtlmPasswordAuthentication;
+import jcifs.smb.SmbAuthException;
+import jcifs.smb.SmbSession;
 import org.raven.RavenUtils;
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.auth.Authenticator;
 import org.raven.auth.AuthenticatorException;
@@ -28,6 +32,7 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
+@NodeClass(parentNode=AuthenticatorsNode.class)
 public class MSDomainAuthenticator extends BaseNode implements Authenticator {
     @NotNull @Parameter
     private String domainController;
@@ -45,13 +50,20 @@ public class MSDomainAuthenticator extends BaseNode implements Authenticator {
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 getLogger().debug(String.format("Trying to authenticate user (%s) at domain (%s) "
                         + "using domain controller (%s)", user, domain, controller));
+            NtlmPasswordAuthentication ntlm = new NtlmPasswordAuthentication(domain, user, password);
             UniAddress controllerAddr = UniAddress.getByName(controller, true);
-            
+            try {
+                SmbSession.logon(controllerAddr, ntlm);
+                return true;
+            } catch (SmbAuthException ae) {
+                if (isLogLevelEnabled(LogLevel.WARN)) 
+                    getLogger().warn(String.format("Authentication failed for user (%s) at domain (%s) using "
+                        + "domain controller (%s). %s", user, domain, controller, ae.getMessage()));
+                return false;
+            }
         } catch (Throwable e) {
             throw new AuthenticatorException("MS Domain authentication error", e);
         }
-        
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public String getDomainController() {
