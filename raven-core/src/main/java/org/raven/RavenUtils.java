@@ -18,18 +18,22 @@
 package org.raven;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.text.StrMatcher;
 import org.apache.commons.lang.text.StrTokenizer;
+import org.apache.poi.ss.formula.functions.T;
 import org.raven.auth.UserContext;
 import org.raven.auth.UserContextService;
 import org.raven.ds.RecordSchema;
@@ -170,6 +174,18 @@ public class RavenUtils
                 buf.append(Character.toLowerCase(dbName.charAt(i)));
         }
         return buf.toString();
+    }
+    
+    public static<T> Set<T> arrayToSet(T[] arr) {
+        if (arr==null || arr.length==0)
+            return Collections.EMPTY_SET;
+        return new HashSet<T>(Arrays.asList(arr));
+    }
+    
+    public static<T> List<T> arrayToList(T[] arr) {
+        if (arr==null || arr.length==0)
+            return Collections.EMPTY_LIST;
+        return Arrays.asList(arr);
     }
     
     /**

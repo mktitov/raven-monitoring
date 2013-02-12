@@ -18,7 +18,7 @@ package org.raven.auth.impl;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import org.raven.RavenUtils;
+import static org.raven.RavenUtils.*;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.auth.UserContextConfig;
@@ -41,13 +41,7 @@ public class AdminsConfigurator extends BaseNode implements UserContextConfigura
     @Override
     protected void doStart() throws Exception {
         super.doStart();
-        String[] userArr = RavenUtils.split(users);
-        if (userArr!=null && userArr.length>0) {
-            userSet = new HashSet<String>();
-            for (String user: userArr)
-                userSet.add(user);
-        } else 
-            userSet = Collections.EMPTY_SET;
+        userSet = arrayToSet(split(users));
     }
 
     @Override
