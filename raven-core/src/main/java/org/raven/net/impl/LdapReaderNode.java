@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import javax.naming.Context;
@@ -239,21 +240,25 @@ public class LdapReaderNode extends AbstractDataSource
                 }
                 Attributes objAttrs = searchResult.getAttributes();
                 NamingEnumeration<? extends Attribute> attrsIterator = objAttrs.getAll();
-                while (attrsIterator.hasMore())
-                {
+                while (attrsIterator.hasMore()) {
                     Attribute objAttr = attrsIterator.next();
                     NamingEnumeration values = objAttr.getAll();
-                    boolean firstCycle=true;
-                    StringBuilder value = new StringBuilder();
+//                    objAttr.getAttributeDefinition().
+//                    boolean firstCycle=true;
+//                    StringBuilder value = new StringBuilder();
+                    LinkedList<String> valuesList = new LinkedList<String>();
                     while (values.hasMore())
-                    {
-                        if (!firstCycle)
-                            value.append(", ");
-                        value.append(values.next());
-                        if (firstCycle)
-                            firstCycle=false;
-                    }
-                    row.put(objAttr.getID(), value.toString());
+                        valuesList.add(values.next().toString());
+//                    {
+//                        if (!firstCycle)
+//                            value.append(", ");
+//                        value.append(values.next());
+//                        if (firstCycle)
+//                            firstCycle=false;
+//                    }
+                    Object value = valuesList.isEmpty()? null : 
+                            (valuesList.size()==1? valuesList.getFirst() : valuesList);
+                    row.put(objAttr.getID(),value);
                     colNames.add(objAttr.getID());
                 }
                 boolean skipRow = false;

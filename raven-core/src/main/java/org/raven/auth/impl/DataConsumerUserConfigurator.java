@@ -33,6 +33,7 @@ import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -41,7 +42,8 @@ import org.weda.annotations.constraints.NotNull;
  */
 @NodeClass(parentNode=UserContextConfiguratorsNode.class)
 public class DataConsumerUserConfigurator extends BaseNode implements DataConsumer, UserContextConfigurator, BindingNames {
-    @NotNull @Parameter
+    
+    @NotNull @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     private DataSource dataSource;
     
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
