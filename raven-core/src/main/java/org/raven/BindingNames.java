@@ -38,4 +38,7 @@ public interface BindingNames
     public static final String SESSIONATTRIBUTES_BINDING = "sessAttrs";
     public static final String EXCEPTION_BINDING = "exception";
     public static final String USER_CONTEXT_CONFIGURATOR_BINDING = "user";
+    public static final String USER_BINDING = "user";
+    public static final String LOGIN_BINDING = "login";
+    public static final String PASSWORD_BINDING = "password";
 }
