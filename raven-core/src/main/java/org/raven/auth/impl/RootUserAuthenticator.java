@@ -15,16 +15,14 @@
  */
 package org.raven.auth.impl;
 
-import org.raven.auth.Authenticator;
 import org.raven.auth.AuthenticatorException;
 import org.raven.conf.Configurator;
-import org.raven.tree.impl.BaseNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class RootUserAuthenticator extends BaseNode implements Authenticator {
+public class RootUserAuthenticator extends AbstractAuthenticatorNode {
     public final static String ROOT_USER_NAME = "root";
     public final static String NAME = "Root user authenticator";
 
@@ -32,7 +30,7 @@ public class RootUserAuthenticator extends BaseNode implements Authenticator {
         super(NAME);
     }
 
-    public boolean checkAuth(String login, String password) throws AuthenticatorException {
+    public boolean doCheckAuth(String login, String password) throws AuthenticatorException {
         try {
             return ROOT_USER_NAME.equals(login) 
                 && password.equals(configurator.getConfig().getStringProperty(

@@ -23,7 +23,6 @@ import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.auth.UserContextConfig;
-import org.raven.auth.UserContextConfigurator;
 import org.raven.auth.UserContextConfiguratorException;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
@@ -32,7 +31,6 @@ import org.raven.ds.impl.DataContextImpl;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.tree.NodeAttribute;
-import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
 
@@ -41,7 +39,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=UserContextConfiguratorsNode.class)
-public class DataConsumerUserConfigurator extends BaseNode implements DataConsumer, UserContextConfigurator, BindingNames {
+public class DataConsumerUserConfigurator extends AbstractUserContextConfigurator implements DataConsumer, BindingNames {
     
     @NotNull @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     private DataSource dataSource;
@@ -81,7 +79,7 @@ public class DataConsumerUserConfigurator extends BaseNode implements DataConsum
         throw new UnsupportedOperationException("Not supported operation for this data consumer.");
     }
 
-    public void configure(UserContextConfig userContext) throws UserContextConfiguratorException {
+    public void doConfigure(UserContextConfig userContext) throws UserContextConfiguratorException {
         if (!isStarted())
             return;
         dataHolder.remove();
@@ -122,5 +120,4 @@ public class DataConsumerUserConfigurator extends BaseNode implements DataConsum
     public void setConfigure(Object configure) {
         this.configure = configure;
     }
-
 }

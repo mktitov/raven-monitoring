@@ -16,22 +16,19 @@
 package org.raven.auth.impl;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 import static org.raven.RavenUtils.*;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.auth.UserContextConfig;
-import org.raven.auth.UserContextConfigurator;
 import org.raven.auth.UserContextConfiguratorException;
-import org.raven.tree.impl.BaseNode;
 
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=UserContextConfiguratorsNode.class)
-public class AdminsConfigurator extends BaseNode implements UserContextConfigurator {
+public class AdminsConfigurator extends AbstractUserContextConfigurator {
     
     @Parameter
     private String users;
@@ -50,7 +47,7 @@ public class AdminsConfigurator extends BaseNode implements UserContextConfigura
         userSet = Collections.EMPTY_SET;
     }
 
-    public void configure(UserContextConfig userContext) throws UserContextConfiguratorException {
+    public void doConfigure(UserContextConfig userContext) throws UserContextConfiguratorException {
         if (userSet.contains(userContext.getLogin()))
             userContext.setAdmin(true);
     }

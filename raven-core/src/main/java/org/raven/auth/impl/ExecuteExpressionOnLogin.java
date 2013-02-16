@@ -19,18 +19,16 @@ import javax.script.Bindings;
 import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
-import org.raven.auth.LoginListener;
 import org.raven.auth.UserContext;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
-import org.raven.tree.impl.BaseNode;
 
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=LoginListenersNode.class)
-public class ExecuteExpressionOnLogin extends BaseNode implements LoginListener, BindingNames {
+public class ExecuteExpressionOnLogin extends AbstractLoginListener implements BindingNames {
     
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
     private Object onUserLoggedIn;
@@ -49,7 +47,7 @@ public class ExecuteExpressionOnLogin extends BaseNode implements LoginListener,
         bindingSupport.addTo(bindings);
     }
 
-    public void userLoggedIn(UserContext userContext) {
+    public void onUserLoggedIn(UserContext userContext) {
         if (!isStarted())
             return;
         try {

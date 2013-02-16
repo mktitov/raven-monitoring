@@ -22,10 +22,8 @@ import jcifs.smb.SmbSession;
 import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
-import org.raven.auth.Authenticator;
 import org.raven.auth.AuthenticatorException;
 import org.raven.log.LogLevel;
-import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -33,13 +31,13 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=AuthenticatorsNode.class)
-public class MSDomainAuthenticator extends BaseNode implements Authenticator {
+public class MSDomainAuthenticator extends AbstractAuthenticatorNode {
     @NotNull @Parameter
     private String domainController;
     @NotNull @Parameter
     private String defaultDomain;
 
-    public boolean checkAuth(String login, String password) throws AuthenticatorException {
+    public boolean doCheckAuth(String login, String password) throws AuthenticatorException {
         if (!isStarted()) 
             return false;
         try {

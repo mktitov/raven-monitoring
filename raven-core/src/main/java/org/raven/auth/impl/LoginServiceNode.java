@@ -15,7 +15,10 @@
  */
 package org.raven.auth.impl;
 
+import javax.script.Bindings;
+import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
+import org.raven.annotations.Parameter;
 import org.raven.auth.AuthenticationFailedException;
 import org.raven.auth.Authenticator;
 import org.raven.auth.IllegalLoginException;
@@ -26,10 +29,12 @@ import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
 import org.raven.auth.UserContextConfig;
 import org.raven.auth.UserContextConfigurator;
+import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import static org.raven.util.NodeUtils.*;
+import org.raven.util.OperationStatistic;
 
 /**
  *
@@ -37,6 +42,13 @@ import static org.raven.util.NodeUtils.*;
  */
 @NodeClass(parentNode=LoginManagerNode.class)
 public class LoginServiceNode extends BaseNode implements LoginService {
+    
+    private OperationStatistic loginStat;
+    private OperationStatistic authStat;
+    private OperationStatistic configureStat;
+    private OperationStatistic loginListenersStat;
+    
+    private BindingSupportImpl bindingSupport;
 
     public LoginServiceNode() { }
 
@@ -45,9 +57,30 @@ public class LoginServiceNode extends BaseNode implements LoginService {
     }
 
     @Override
+    protected void initFields() {
+        super.initFields();
+        initStat();
+        bindingSupport = new BindingSupportImpl();
+    }
+
+    @Override
+    public void formExpressionBindings(Bindings bindings) {
+        super.formExpressionBindings(bindings);
+        bindingSupport.addTo(bindings);
+    }
+
+    @Override
     protected void doStart() throws Exception {
         super.doStart();
+        initStat();
         initChildren();
+    }
+    
+    private void initStat() {
+        loginStat = new OperationStatistic();
+        authStat = new OperationStatistic();
+        configureStat = new OperationStatistic();
+        loginListenersStat = new OperationStatistic();
     }
     
     protected void initChildren() {
@@ -61,6 +94,26 @@ public class LoginServiceNode extends BaseNode implements LoginService {
 			addAndStart(new ResourcesListNode());
 		if (!hasNode(GroupsListNode.NAME))
 			addAndStart(new GroupsListNode());
+    }
+
+    @Parameter(readOnly=true)
+    public OperationStatistic getLoginStat() {
+        return loginStat;
+    }
+
+    @Parameter(readOnly=true)
+    public OperationStatistic getAuthStat() {
+        return authStat;
+    }
+
+    @Parameter(readOnly=true)
+    public OperationStatistic getConfigureStat() {
+        return configureStat;
+    }
+
+    @Parameter(readOnly=true)
+    public OperationStatistic getLoginListenersStat() {
+        return loginListenersStat;
     }
     
     public AuthenticatorsNode getAuthenticatorsNode() {
@@ -86,12 +139,14 @@ public class LoginServiceNode extends BaseNode implements LoginService {
                 throw new IllegalLoginException();
             if (password==null || password.trim().isEmpty())
                 throw new IllegalPasswordException();
+            long ts = loginStat.markOperationProcessingStart();
             String authenticator = authenticateUser(login, password);
             UserContext userContext = configureUserContext(
                     new UserContextConfigImpl(authenticator, login, host));
             informLoginListeners(userContext);
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 getLogger().debug("User ({}) successfully logged in");
+            loginStat.markOperationProcessingEnd(ts);
             return userContext;
         } catch (Throwable e) {
             if (e instanceof LoginException) {
@@ -114,41 +169,62 @@ public class LoginServiceNode extends BaseNode implements LoginService {
     }
 
     private String authenticateUser(String login, String password) throws Exception {
-        boolean debugEnabled = isLogLevelEnabled(LogLevel.DEBUG);
-        if (debugEnabled)
-            getLogger().debug("Authenticating user ({})", login);
-        Node authenticators = getNodeOrThrowEx(AuthenticatorsNode.NAME);
-        String authenticator = null;
-        for (Authenticator auth: getChildsOfType(authenticators, Authenticator.class)) 
+        long ts = authStat.markOperationProcessingStart();
+        try {
+            boolean debugEnabled = isLogLevelEnabled(LogLevel.DEBUG);
+            if (debugEnabled)
+                getLogger().debug("Authenticating user ({})", login);
+            Node authenticators = getNodeOrThrowEx(AuthenticatorsNode.NAME);
+            String authenticator = null;
+            for (Authenticator auth: getChildsOfType(authenticators, Authenticator.class)) 
                 if (auth.checkAuth(login, password)) {
                     authenticator = auth.getName();
                     break;
                 }
-        if (authenticator!=null) {
-            if (debugEnabled)
-                getLogger().debug("User ({}) successfully authenticated by authenticator ({})"
-                        , login, authenticator);
-        } else {
-            if (isLogLevelEnabled(LogLevel.WARN))
-                getLogger().warn("User ({}) authentication was unsuccessfull", login);
-            throw new AuthenticationFailedException(login, getName());
+            if (authenticator!=null) {
+                if (debugEnabled)
+                    getLogger().debug("User ({}) successfully authenticated by authenticator ({})"
+                            , login, authenticator);
+            } else {
+                if (isLogLevelEnabled(LogLevel.WARN))
+                    getLogger().warn("User ({}) authentication was unsuccessfull", login);
+                throw new AuthenticationFailedException(login, getName());
+            }
+            return authenticator;
+        } finally {
+            authStat.markOperationProcessingEnd(ts);
         }
-        return authenticator;
     }
     
     private UserContext configureUserContext(UserContextConfig config) throws Exception {
-        boolean debugEnabled = isLogLevelEnabled(LogLevel.DEBUG);
-        if (debugEnabled)
-            getLogger().debug("Configuring context for user ({})", config.getLogin());
-        Node configurators = getNodeOrThrowEx(UserContextConfiguratorsNode.NAME);
-        for (UserContextConfigurator ctxCfgr: getChildsOfType(configurators, UserContextConfigurator.class))            
-            ctxCfgr.configure(config);
-        return new UserContextImpl(config, getGroupsNode());
+        long ts = configureStat.markOperationProcessingStart();
+        try {
+            boolean debugEnabled = isLogLevelEnabled(LogLevel.DEBUG);
+            if (debugEnabled)
+                getLogger().debug("Configuring context for user ({})", config.getLogin());
+            Node configurators = getNodeOrThrowEx(UserContextConfiguratorsNode.NAME);
+            try {
+                bindingSupport.put(BindingNames.USER_CONTEXT_CONFIGURATOR_BINDING, config);
+                for (UserContextConfigurator ctxCfgr: getEffectiveChildsOfType(configurators, UserContextConfigurator.class))            
+                    ctxCfgr.configure(config);
+                return new UserContextImpl(config, getGroupsNode());
+            } finally {
+                bindingSupport.reset();
+            }
+        } finally {
+            configureStat.markOperationProcessingEnd(ts);
+        }
     }
 
     private void informLoginListeners(UserContext userContext) throws Exception {
-        Node listeners = getNodeOrThrowEx(LoginListenersNode.NAME);
-        for (LoginListener listener: getChildsOfType(listeners, LoginListener.class))
-            listener.userLoggedIn(userContext);
+        long ts = loginListenersStat.markOperationProcessingStart();
+        try {
+            Node listeners = getNodeOrThrowEx(LoginListenersNode.NAME);
+            for (LoginListener listener: getChildsOfType(listeners, LoginListener.class))
+                listener.userLoggedIn(userContext);
+        } finally {
+            loginListenersStat.markOperationProcessingEnd(ts);
+        }
     }
+
 }

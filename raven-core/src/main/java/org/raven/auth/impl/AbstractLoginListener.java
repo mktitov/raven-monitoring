@@ -15,20 +15,24 @@
  */
 package org.raven.auth.impl;
 
-import org.raven.annotations.NodeClass;
-import org.raven.expr.impl.IfNode;
-import org.raven.tree.impl.BaseNode;
-import org.raven.tree.impl.InvisibleNode;
+import org.raven.auth.LoginListener;
+import org.raven.auth.UserContext;
+import org.raven.tree.impl.BaseNodeWithStat;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=InvisibleNode.class, childNodes=IfNode.class)
-public class UserContextConfiguratorsNode extends BaseNode {
-    public final static String NAME = "User context configurators";
+public abstract class AbstractLoginListener extends BaseNodeWithStat implements LoginListener {
 
-    public UserContextConfiguratorsNode() {
-        super(NAME);
+    public void userLoggedIn(UserContext userContext) {
+        long ts = stat.markOperationProcessingStart();
+        try {
+            onUserLoggedIn(userContext);
+        } finally {
+            stat.markOperationProcessingEnd(ts);
+        }
     }
+    
+    protected abstract void onUserLoggedIn(UserContext userContext);
 }

@@ -21,9 +21,7 @@ import static org.raven.RavenUtils.*;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.auth.UserContextConfig;
-import org.raven.auth.UserContextConfigurator;
 import org.raven.auth.UserContextConfiguratorException;
-import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -31,7 +29,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode = UserContextConfiguratorsNode.class)
-public class BasicUserRolesConfigurator extends BaseNode implements UserContextConfigurator {
+public class BasicUserRolesConfigurator extends AbstractUserContextConfigurator {
     
     @NotNull @Parameter
     private String users;
@@ -56,7 +54,7 @@ public class BasicUserRolesConfigurator extends BaseNode implements UserContextC
         groupsSet = Collections.EMPTY_SET;
     }
 
-    public void configure(UserContextConfig user) throws UserContextConfiguratorException {
+    public void doConfigure(UserContextConfig user) throws UserContextConfiguratorException {
         if (isStarted() && usersSet.contains(user.getLogin()))
             user.getGroups().addAll(groupsSet);
     }

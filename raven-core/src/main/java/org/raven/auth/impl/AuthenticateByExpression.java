@@ -19,18 +19,16 @@ import javax.script.Bindings;
 import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
-import org.raven.auth.Authenticator;
 import org.raven.auth.AuthenticatorException;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
-import org.raven.tree.impl.BaseNode;
 
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=AuthenticatorsNode.class)
-public class AuthenticateByExpression extends BaseNode implements Authenticator, BindingNames {
+public class AuthenticateByExpression extends AbstractAuthenticatorNode implements BindingNames {
     
     public final static String AUTHENTICATE_ATTR = "authenticate";
     
@@ -51,7 +49,7 @@ public class AuthenticateByExpression extends BaseNode implements Authenticator,
         bindingSupport.addTo(bindings);
     }
 
-    public boolean checkAuth(String login, String password) throws AuthenticatorException {
+    public boolean doCheckAuth(String login, String password) throws AuthenticatorException {
         if (!isStarted())
             return false;
         try {

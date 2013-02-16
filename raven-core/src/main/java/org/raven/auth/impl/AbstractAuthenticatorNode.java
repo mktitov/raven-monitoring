@@ -15,31 +15,31 @@
  */
 package org.raven.auth.impl;
 
-import org.raven.annotations.NodeClass;
-import org.raven.annotations.Parameter;
 import org.raven.auth.Authenticator;
 import org.raven.auth.AuthenticatorException;
-import org.raven.tree.impl.BaseNode;
-import org.weda.annotations.constraints.NotNull;
+import org.raven.tree.impl.BaseNodeWithStat;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=AuthenticatorsNode.class)
-public class BasicAuthenticator extends AbstractAuthenticatorNode {
-    @NotNull @Parameter
-    private String password;
+public abstract class AbstractAuthenticatorNode extends BaseNodeWithStat implements Authenticator {
 
-    public boolean doCheckAuth(String login, String password) throws AuthenticatorException {
-        return isStarted() && login.equals(getName()) && password.equals(this.password);
+    public AbstractAuthenticatorNode() {
     }
 
-    public String getPassword() {
-        return password;
+    public AbstractAuthenticatorNode(String name) {
+        super(name);
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public boolean checkAuth(String login, String password) throws AuthenticatorException {
+        long ts = stat.markOperationProcessingStart();
+        try {
+            return doCheckAuth(login, password);
+        } finally {
+            stat.markOperationProcessingEnd(ts);
+        }
     }
+    
+    protected abstract boolean doCheckAuth(String login, String password) throws AuthenticatorException;
 }

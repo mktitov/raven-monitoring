@@ -125,7 +125,7 @@ public class NodeUtils
      */
     public static <T> List<T> getEffectiveChildsOfType(Node owner, Class<T> childType)
     {
-        return extractNodesOfType(owner.getEffectiveChildrens(), childType);
+        return extractNodesOfType(owner.getEffectiveNodes(), childType);
     }
 
     /**

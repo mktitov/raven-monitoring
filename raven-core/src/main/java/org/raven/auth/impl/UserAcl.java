@@ -40,6 +40,7 @@ import org.raven.tree.Tree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Deprecated
 public class UserAcl implements UserContext
 {
 	protected Logger logger = LoggerFactory.getLogger(UserAcl.class);
