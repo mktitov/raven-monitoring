@@ -56,12 +56,16 @@ public class LoginFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) 
         throws IOException, ServletException 
     {
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
         HttpServletRequest req = (HttpServletRequest)request;
         HttpServletResponse resp = (HttpServletResponse)response;
-        HttpSession session = req.getSession();
-        UserContext user = (UserContext) session.getAttribute(USER_CONTEXT_ATTR);
-        if (user==null && !checkAuth(req, resp, session))
-            return;
+        if (!req.getPathInfo().startsWith("/logout")) {
+            HttpSession session = req.getSession();
+            UserContext user = (UserContext) session.getAttribute(USER_CONTEXT_ATTR);
+            if (user==null && !checkAuth(req, resp, session))
+                return;
+        }
         chain.doFilter(request, response);
     }
 
