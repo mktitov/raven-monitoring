@@ -20,9 +20,12 @@ package org.raven.tree.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import org.raven.conf.Configurator;
 import org.raven.ds.ReferenceValuesSource;
 import org.raven.ds.ValueValidatorController;
+import org.raven.expr.BindingSupport;
+import org.raven.expr.impl.ExpressionAttributeValueHandler;
 import org.raven.log.LogLevel;
 import org.raven.tree.AttributeValueHandler;
 import org.raven.tree.AttributeValueHandlerListener;
@@ -191,6 +194,19 @@ public class NodeAttributeImpl
                         , e);
             return null;
         }
+    }
+    
+    public Object getValue(Map args) {
+        BindingSupport varsSupport = tree.getGlobalBindings(Tree.EXPRESSION_VARS_BINDINGS);
+        boolean initiated = varsSupport.contains(
+                ExpressionAttributeValueHandler.RAVEN_EXPRESSION_VARS_INITIATED_BINDING);
+        try {
+            varsSupport.put(ExpressionAttributeValueHandler.RAVEN_EXPRESSION_ARGS_BINDING, args);
+            return this.getRealValue();
+        } finally {
+            if (!initiated)
+                varsSupport.reset();
+        }        
     }
 
     public String getRawValue()

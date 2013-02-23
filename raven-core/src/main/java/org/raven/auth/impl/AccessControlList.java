@@ -63,6 +63,8 @@ public abstract class AccessControlList implements Comparator<AccessControl>
         this.name = name;
         this.title = title;
         this.acl = new ArrayList<AccessControl>(accessControls);
+        if (!this.acl.isEmpty())
+            first = acl.get(0);
         Collections.sort(acl, new AccessControllComparator());
 		filters = null;
 		this.filtersDisabled = true;

@@ -202,6 +202,7 @@ public class LoginServiceNode extends BaseNode implements LoginService {
             boolean debugEnabled = isLogLevelEnabled(LogLevel.DEBUG);
             if (debugEnabled)
                 getLogger().debug("Configuring context for user ({})", config.getLogin());
+            config.getGroups().add(PUBLIC_GROUP);
             Node configurators = getNodeOrThrowEx(UserContextConfiguratorsNode.NAME);
             try {
                 bindingSupport.put(BindingNames.USER_CONTEXT_CONFIGURATOR_BINDING, config);

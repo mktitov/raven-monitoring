@@ -24,11 +24,13 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import org.raven.RavenUtils;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
 import org.raven.ds.DataContext;
 import org.raven.ds.impl.DataContextImpl;
 import org.raven.ds.impl.ListDataConsumer;
+import org.raven.table.Table;
 import org.raven.template.impl.TemplateNode;
 import org.raven.template.impl.TemplateWizard;
 import org.raven.tree.Node;
@@ -67,6 +69,10 @@ public class ApiUtils
         } finally {
             connection.close();
         }
+    }
+    
+    public static List<Object[]> getTableRows(Table table) {
+        return RavenUtils.tableAsList(table);
     }
     
     public static DataContext createDataContext() {
