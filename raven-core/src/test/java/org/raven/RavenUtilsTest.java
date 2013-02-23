@@ -243,4 +243,21 @@ public class RavenUtilsTest extends ServiceTestCase
 
         verify(node, child, vo);
     }
+    
+    @Test
+    public void tableRowsAsMap() throws Exception {
+        assertSame(Collections.EMPTY_LIST, RavenUtils.tableRowsAsMap(null));
+        
+        TableImpl table = new TableImpl(new String[]{"col1", "col2"});
+        table.addRow(new Object[]{"val11", "val12"});
+        table.addRow(new Object[]{"val21", "val22"});
+        
+        List<Map<String, Object>> rows = RavenUtils.tableRowsAsMap(table);
+        assertNotNull(rows);
+        assertEquals(2, rows.size());
+        assertEquals("val11", rows.get(0).get("CoL1"));
+        assertEquals("val12", rows.get(0).get("CoL2"));
+        assertEquals("val21", rows.get(1).get("col1"));
+        assertEquals("val22", rows.get(1).get("COL2"));
+    }
 }

@@ -15,12 +15,16 @@
  */
 package org.raven.auth.impl;
 
+import org.raven.annotations.NodeClass;
+import org.raven.expr.impl.IfNode;
 import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.InvisibleNode;
 
 /**
  *
  * @author Mikhail Titov
  */
+@NodeClass(parentNode = InvisibleNode.class, childNodes=IfNode.class)
 public class LoginListenersNode extends BaseNode {
     public final static String NAME = "Login listeners";
 

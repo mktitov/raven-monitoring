@@ -76,14 +76,21 @@ public class AccessControl {
 		}
 		else 
             regExp = Pattern.quote(resource);
-		//regExp = this.resource.replaceAll("\\*", ".*");
+//		//regExp = this.resource.replaceAll("\\*", ".*");
+//		String tmp = rightString.toLowerCase();
+//		if(tmp.length()==0) tmp = ""+READ_SYMBOL;
+//		
+//		char[] chars = tmp.toCharArray();
+		right = decodeRight(rightString);
+	}
+    
+    public static int decodeRight(String rightString) {
 		String tmp = rightString.toLowerCase();
-		if(tmp.length()==0) tmp = ""+READ_SYMBOL;
-		
-		char[] chars = tmp.toCharArray();
-		right = 0;
+		if(tmp.isEmpty()) 
+            tmp = ""+READ_SYMBOL;
+		int right = 0;
 		boolean none = false;
-		for(char cc: chars)
+		for(char cc: tmp.toCharArray())
 		{
 			switch(cc)
 			{
@@ -97,7 +104,8 @@ public class AccessControl {
 			}
 			if(none) break;
 		}
-	}
+        return right;
+    }
 	
 	public static List<AccessControl> getACs(String rule)
 	{

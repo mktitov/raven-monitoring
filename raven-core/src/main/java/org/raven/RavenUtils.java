@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import org.apache.commons.collections.map.CaseInsensitiveMap;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.text.StrMatcher;
 import org.apache.commons.lang.text.StrTokenizer;
@@ -227,6 +228,21 @@ public class RavenUtils
 
             return result;
         }
+    }
+    
+    public static List<Map<String, Object>> tableRowsAsMap(Table table) {
+        if (table==null)
+            return Collections.EMPTY_LIST;
+        String[] colnames = table.getColumnNames();
+        List<Map<String, Object>> rows = new LinkedList<Map<String, Object>>();
+        for (Iterator<Object[]> it=table.getRowIterator(); it.hasNext();) {
+            CaseInsensitiveMap map = new CaseInsensitiveMap(colnames.length);
+            int i=0;
+            for (Object val: it.next())
+                map.put(colnames[i++], val);
+            rows.add(map);
+        }
+        return rows;
     }
 
 //    public static Table hideTableColumns(Table table, int[] columns)

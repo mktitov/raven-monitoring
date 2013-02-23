@@ -75,6 +75,10 @@ public class ApiUtils
         return RavenUtils.tableAsList(table);
     }
     
+    public static List<Map<String, Object>> getTableRowsAsMap(Table table) {
+        return RavenUtils.tableRowsAsMap(table);
+    }
+    
     public static DataContext createDataContext() {
         return new DataContextImpl();
     }

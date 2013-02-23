@@ -145,7 +145,7 @@ public class LoginServiceNode extends BaseNode implements LoginService {
                     new UserContextConfigImpl(authenticator, login, host));
             informLoginListeners(userContext);
             if (isLogLevelEnabled(LogLevel.DEBUG))
-                getLogger().debug("User ({}) successfully logged in");
+                getLogger().debug("User ({}) successfully logged in", login);
             loginStat.markOperationProcessingEnd(ts);
             return userContext;
         } catch (Throwable e) {
@@ -221,9 +221,11 @@ public class LoginServiceNode extends BaseNode implements LoginService {
         long ts = loginListenersStat.markOperationProcessingStart();
         try {
             Node listeners = getNodeOrThrowEx(LoginListenersNode.NAME);
-            for (LoginListener listener: getChildsOfType(listeners, LoginListener.class))
+            bindingSupport.put(BindingNames.USER_BINDING, userContext);
+            for (LoginListener listener: getEffectiveChildsOfType(listeners, LoginListener.class))
                 listener.userLoggedIn(userContext);
         } finally {
+            bindingSupport.reset();
             loginListenersStat.markOperationProcessingEnd(ts);
         }
     }

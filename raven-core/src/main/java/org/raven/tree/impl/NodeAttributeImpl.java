@@ -502,6 +502,12 @@ public class NodeAttributeImpl
         return parameter==null? false : parameter.isReadOnly();
     }
 
+    @Override
+    public String toString() {
+        String path = getPath();
+        return path==null? name : path;
+    }
+
     private class ReferenceValuesSourceWrapper implements ReferenceValuesSource
     {
         private final ReferenceValuesSource source;
