@@ -44,6 +44,10 @@ public class AuthServiceImpl implements LoginService
         this.logger = logger;
     }
 
+    public boolean isLoginAllowedFromIp(String ip) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
     public UserContext login(String username, String password, String host)
     {
         if (logger.isInfoEnabled())

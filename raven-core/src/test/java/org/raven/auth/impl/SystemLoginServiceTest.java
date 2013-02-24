@@ -52,10 +52,15 @@ public class SystemLoginServiceTest extends RavenCoreTestCase {
         assertNotNull(adminsConfig);
         assertTrue(adminsConfig instanceof AdminsConfigurator);
         assertEquals(RootUserAuthenticator.ROOT_USER_NAME, ((AdminsConfigurator)adminsConfig).getUsers());
+        
+        Node allowAnyFilter = service.getIpFiltersNode().getNode(SystemLoginService.ALLOW_ANY_FILTER);
+        assertNotNull(allowAnyFilter);
+        assertTrue(allowAnyFilter instanceof AllowAnyIPs);
     }
     
     @Test
     public void rootLoginTest() throws LoginException {
+        assertTrue(service.isLoginAllowedFromIp("1.1.1.1"));
         UserContext user = service.login(RootUserAuthenticator.ROOT_USER_NAME, "12345", "host");
         assertNotNull(user);
         assertEquals(RootUserAuthenticator.ROOT_USER_NAME, user.getLogin());

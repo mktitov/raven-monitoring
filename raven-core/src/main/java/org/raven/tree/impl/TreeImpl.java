@@ -106,6 +106,7 @@ public class TreeImpl implements Tree
 	private final Set<Class> anyChildTypeNodes = new HashSet<Class>();
     @SuppressWarnings("unchecked")
 	private final Set<Class> importParentChildTypeNodes = new HashSet<Class>();
+    private final Map<Class, Class> importChildTypesFrom = new HashMap<Class, Class>();
     private final AtomicInteger dynamicNodeId = new AtomicInteger();
     private final AtomicInteger dynamicAttributeId = new AtomicInteger();
     private final AtomicInteger globalBindingsId = new AtomicInteger();
@@ -146,8 +147,7 @@ public class TreeImpl implements Tree
         INSTANCE = this;
         
         List<String> nodesTypesList = 
-                resourceProvider.getResourceStrings(
-                    NodeClassTransformerWorker.NODES_TYPES_RESOURCE);
+                resourceProvider.getResourceStrings(NodeClassTransformerWorker.NODES_TYPES_RESOURCE);
 
         allNodeTypes = new ArrayList(nodesTypesList.size());
         
@@ -514,48 +514,38 @@ public class TreeImpl implements Tree
     }
 
     @SuppressWarnings("unchecked")
-	private void collectChildTypes(Node node, Set<Class> types) 
-    {
-//        Class[] typesArr = null;
-//        if (anyChildTypeNodes.contains(node.getClass()))
-//            typesArr = new Class[]{Void.class, node.getClass()};
-//        else
-//            typesArr = new Class[]{node.getClass()};
-//        for (Class nodeType: typesArr)
-//        {
-//            List<Class> childTypes = nodeTypes.get(nodeType);
-//            if (childTypes!=null)
-//                types.addAll(childTypes);
-//        }
+	private void collectChildTypes(Node node, Set<Class> types) {
         collectChildTypes(node.getClass(), types);
-        
         if (node.getParent()!=null && importParentChildTypeNodes.contains(node.getClass()))
             collectChildTypes(node.getParent(), types);
     }
     
-	private void collectChildTypes(Class nodeType, Set<Class> types)
-    {
+	private void collectChildTypes(Class nodeType, Set<Class> types) {
+//        ArrayList<Class> typesArr = new ArrayList<Class>(3);
+//        if (anyChildTypeNodes.contains(nodeType))
+//            typesArr.add(Void.class);
+//        typesArr.add(nodeType);
+        Class addType = importChildTypesFrom.get(nodeType);
+        if (addType!=null)
+            collectChildTypes(addType, types);
         Class[] typesArr = null;
         if (anyChildTypeNodes.contains(nodeType))
             typesArr = new Class[]{Void.class, nodeType};
         else
             typesArr = new Class[]{nodeType};
-        for (Class type: typesArr)
-        {
+        for (Class type: typesArr) {
             List<Class> childTypes = nodeTypes.get(type);
             if (childTypes!=null)
                 types.addAll(childTypes);
         }
     }
 
-    private void createRootNode()
-    {
+    private void createRootNode() {
         rootNode = new RootNode();
         saveNode(rootNode);
     }
 
-    private void createSystemNodes()
-    {
+    private void createSystemNodes() {
         createSystemSubtree();
         createTempatesSubtree();
         createResourcesSubtree();
@@ -789,6 +779,8 @@ public class TreeImpl implements Tree
             anyChildTypeNodes.add(nodeType);
         if (ann.importChildTypesFromParent())
             importParentChildTypeNodes.add(nodeType);
+        if (ann.importChildTypesFrom()!=Void.class)
+            importChildTypesFrom.put(nodeType, ann.importChildTypesFrom());
         addChildsToParent(ann.parentNode(), nodeType);
         addChildsToParent(nodeType, ann.childNodes());
     }

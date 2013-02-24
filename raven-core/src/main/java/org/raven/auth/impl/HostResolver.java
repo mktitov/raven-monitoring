@@ -15,25 +15,25 @@
  */
 package org.raven.auth.impl;
 
-import org.raven.auth.LoginService;
-import org.raven.auth.UserContext;
-import org.raven.tree.impl.BaseNode;
+import java.net.InetAddress;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class TestAuthService extends BaseNode implements LoginService {
+public class HostResolver {
+    private final String ip;
 
-    public TestAuthService(String name) {
-        super(name);
+    public HostResolver(String ip) {
+        this.ip = ip;
     }
 
-    public UserContext login(String username, String password, String host) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public String getIp() {
+        return ip;
     }
 
-    public boolean isLoginAllowedFromIp(String ip) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public String getName() throws Exception {
+        InetAddress addr = InetAddress.getByName(ip);
+        return addr.getCanonicalHostName();
     }
 }

@@ -22,6 +22,7 @@ package org.raven.auth.impl;
 public class SystemLoginService extends LoginServiceNode {
     public final static String NAME = "System";
     public final static String ADMINISTRATORS = "Administrators";
+    public final static String ALLOW_ANY_FILTER = "Allow any";
 
     public SystemLoginService() {
         super(NAME);
@@ -30,6 +31,13 @@ public class SystemLoginService extends LoginServiceNode {
     @Override
     protected void initChildren() {
         super.initChildren();
+        IpFiltersNode filtersNode = getIpFiltersNode();
+        if (!filtersNode.hasNode(ALLOW_ANY_FILTER)) {
+            AllowAnyIPs allowAny = new AllowAnyIPs();
+            allowAny.setName(ALLOW_ANY_FILTER);
+            filtersNode.addAndSaveChildren(allowAny);
+            allowAny.start();
+        }
         AuthenticatorsNode authsNode = getAuthenticatorsNode();
         if (!authsNode.hasNode(RootUserAuthenticator.NAME)) {
             RootUserAuthenticator node = new RootUserAuthenticator();

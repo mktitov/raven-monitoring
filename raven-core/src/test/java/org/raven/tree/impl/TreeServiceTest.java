@@ -65,6 +65,7 @@ import org.weda.constraints.ReferenceValue;
 import org.weda.services.TypeConverter;
 import static org.easymock.EasyMock.*;
 import org.raven.auth.impl.LoginManagerNode;
+import org.raven.tree.impl.objects.NodeWithChildsFromOther;
 /**
  *
  * @author Mikhail Titov
@@ -112,6 +113,14 @@ public class TreeServiceTest extends ServiceTestCase
         
         NodeWithFixedChilds nodeWithFixedChilds = new NodeWithFixedChilds();
         types = tree.getChildNodesTypes(nodeWithFixedChilds);
+        assertNotNull(types);
+        assertEquals(3, types.size());
+        assertTrue(types.contains(ChildNode1.class));
+        assertTrue(types.contains(ChildNode2.class));
+        assertTrue(types.contains(ChildNode3.class));
+        
+        NodeWithChildsFromOther nodeWithChildsFromOther = new NodeWithChildsFromOther();
+        types = tree.getChildNodesTypes(nodeWithChildsFromOther);
         assertNotNull(types);
         assertEquals(3, types.size());
         assertTrue(types.contains(ChildNode1.class));

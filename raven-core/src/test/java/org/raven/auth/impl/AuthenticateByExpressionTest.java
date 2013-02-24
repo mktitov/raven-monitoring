@@ -43,24 +43,24 @@ public class AuthenticateByExpressionTest extends RavenCoreTestCase {
     
     @Test
     public void notStartedTest() throws AuthenticatorException {
-        assertFalse(auth.checkAuth("test", "pwd"));
+        assertFalse(auth.checkAuth("test", "pwd", ""));
     }
     
     @Test
     public void invalidUserTest() throws AuthenticatorException {
         assertTrue(auth.start());
-        assertFalse(auth.checkAuth("test1", "pwd"));
+        assertFalse(auth.checkAuth("test1", "pwd", ""));
     }
     
     @Test
     public void invalidPwdTest() throws AuthenticatorException {
         assertTrue(auth.start());
-        assertFalse(auth.checkAuth("test", "pwd1"));
+        assertFalse(auth.checkAuth("test", "pwd1", ""));
     }
     
     @Test
     public void successTest() throws AuthenticatorException {
         assertTrue(auth.start());
-        assertTrue(auth.checkAuth("test", "pwd"));
+        assertTrue(auth.checkAuth("test", "pwd", ""));
     }
 }

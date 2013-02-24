@@ -43,6 +43,7 @@ public class LoginServiceNodeTest extends RavenCoreTestCase {
     
     @Test
     public void structureTest() {
+        checkNode(loginService, IpFiltersNode.NAME);
         checkNode(loginService, AuthenticatorsNode.NAME);
         checkNode(loginService, UserContextConfiguratorsNode.NAME);
         checkNode(loginService, ResourcesListNode.NAME);
@@ -87,10 +88,27 @@ public class LoginServiceNodeTest extends RavenCoreTestCase {
         loginService.login("test", "pwd", "host");
     }
     
+    @Test
+    public void isLoginAllowedFromIp_withoutFilters() {
+        assertFalse(loginService.isLoginAllowedFromIp("1.1.1.1"));
+    }
+    
+    @Test
+    public void isLoginAllowedFromIp_withFilter() {
+        addIpFilter(new AllowAnyIPs(), "allow any");
+        assertTrue(loginService.isLoginAllowedFromIp("1.1.1.1"));
+    }
+    
     private void checkNode(Node owner, String child) {
         Node node = owner.getNode(child);
         assertNotNull(node);
         assertTrue(node.isStarted());
+    }
+    
+    private void addIpFilter(Node filter, String name) {
+        filter.setName(name);
+        loginService.getIpFiltersNode().addAndSaveChildren(filter);
+        assertTrue(filter.start());
     }
     
     private void addAuthenticator(Node authenticator) {

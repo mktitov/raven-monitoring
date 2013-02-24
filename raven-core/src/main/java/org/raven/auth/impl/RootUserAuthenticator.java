@@ -30,7 +30,7 @@ public class RootUserAuthenticator extends AbstractAuthenticatorNode {
         super(NAME);
     }
 
-    public boolean doCheckAuth(String login, String password) throws AuthenticatorException {
+    public boolean doCheckAuth(String login, String password, String ip) throws AuthenticatorException {
         try {
             return ROOT_USER_NAME.equals(login) 
                 && password.equals(configurator.getConfig().getStringProperty(

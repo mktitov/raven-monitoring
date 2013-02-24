@@ -37,7 +37,7 @@ public class MSDomainAuthenticator extends AbstractAuthenticatorNode {
     @NotNull @Parameter
     private String defaultDomain;
 
-    public boolean doCheckAuth(String login, String password) throws AuthenticatorException {
+    public boolean doCheckAuth(String login, String password, String ip) throws AuthenticatorException {
         if (!isStarted()) 
             return false;
         try {

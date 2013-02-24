@@ -33,11 +33,11 @@ public class BasicAuthenticatorTest extends RavenCoreTestCase
         testsNode.addAndSaveChildren(auth);
         auth.setPassword("testPwd");
         
-        assertFalse(auth.checkAuth("testLogin", "testPwd"));
+        assertFalse(auth.checkAuth("testLogin", "testPwd", ""));
         
         assertTrue(auth.start());        
-        assertTrue(auth.checkAuth("testLogin", "testPwd"));
-        assertFalse(auth.checkAuth("testLogin1", "testPwd"));
-        assertFalse(auth.checkAuth("testLogin", "testPwd1"));
+        assertTrue(auth.checkAuth("testLogin", "testPwd", ""));
+        assertFalse(auth.checkAuth("testLogin1", "testPwd", ""));
+        assertFalse(auth.checkAuth("testLogin", "testPwd1", ""));
     }
 }

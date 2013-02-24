@@ -23,6 +23,7 @@ import org.raven.auth.AuthenticationFailedException;
 import org.raven.auth.Authenticator;
 import org.raven.auth.IllegalLoginException;
 import org.raven.auth.IllegalPasswordException;
+import org.raven.auth.IpFilter;
 import org.raven.auth.LoginException;
 import org.raven.auth.LoginListener;
 import org.raven.auth.LoginService;
@@ -84,6 +85,8 @@ public class LoginServiceNode extends BaseNode implements LoginService {
     }
     
     protected void initChildren() {
+        if (!hasNode(IpFiltersNode.NAME))
+            addAndStart(new IpFiltersNode());
         if (!hasNode(AuthenticatorsNode.NAME))
             addAndStart(new AuthenticatorsNode());
         if (!hasNode(UserContextConfiguratorsNode.NAME))
@@ -128,21 +131,37 @@ public class LoginServiceNode extends BaseNode implements LoginService {
         return (GroupsListNode) getNode(GroupsListNode.NAME);
     }
     
+    public IpFiltersNode getIpFiltersNode() {
+        return (IpFiltersNode) getNode(IpFiltersNode.NAME);
+    }
+    
     private void addAndStart(Node node) {
         addAndSaveChildren(node);
         node.start();
     }
+
+    public boolean isLoginAllowedFromIp(String ip) {
+        for (IpFilter filter: getChildsOfType(getIpFiltersNode(), IpFilter.class))
+            try {
+                if (filter.isIpAllowed(ip))
+                    return true;
+            } catch (Exception e) {
+                if (isLogLevelEnabled(LogLevel.ERROR))
+                    getLogger().error(String.format("Error in (%s) ip filter", ((Node)filter).getName()));
+            }
+        return false;
+    }
     
-    public UserContext login(String login, String password, String host) throws LoginException {
+    public UserContext login(String login, String password, String ip) throws LoginException {
         try {
             if (login==null || login.trim().isEmpty())
                 throw new IllegalLoginException();
             if (password==null || password.trim().isEmpty())
                 throw new IllegalPasswordException();
             long ts = loginStat.markOperationProcessingStart();
-            String authenticator = authenticateUser(login, password);
+            String authenticator = authenticateUser(login, password, ip);
             UserContext userContext = configureUserContext(
-                    new UserContextConfigImpl(authenticator, login, host));
+                    new UserContextConfigImpl(authenticator, login, ip));
             informLoginListeners(userContext);
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 getLogger().debug("User ({}) successfully logged in", login);
@@ -168,7 +187,7 @@ public class LoginServiceNode extends BaseNode implements LoginService {
         return node;
     }
 
-    private String authenticateUser(String login, String password) throws Exception {
+    private String authenticateUser(String login, String password, String ip) throws Exception {
         long ts = authStat.markOperationProcessingStart();
         try {
             boolean debugEnabled = isLogLevelEnabled(LogLevel.DEBUG);
@@ -177,7 +196,7 @@ public class LoginServiceNode extends BaseNode implements LoginService {
             Node authenticators = getNodeOrThrowEx(AuthenticatorsNode.NAME);
             String authenticator = null;
             for (Authenticator auth: getChildsOfType(authenticators, Authenticator.class)) 
-                if (auth.checkAuth(login, password)) {
+                if (auth.checkAuth(login, password, ip)) {
                     authenticator = auth.getName();
                     break;
                 }

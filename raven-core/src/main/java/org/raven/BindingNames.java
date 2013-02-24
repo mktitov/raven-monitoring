@@ -41,4 +41,5 @@ public interface BindingNames
     public static final String USER_BINDING = "user";
     public static final String LOGIN_BINDING = "login";
     public static final String PASSWORD_BINDING = "password";
+    public static final String HOST_BINDING = "host";
 }

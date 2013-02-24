@@ -31,7 +31,7 @@ public class TestAuthenticator extends BaseNode implements Authenticator {
         this.successAuth = successAuth;
     }
 
-    public boolean checkAuth(String user, String password) throws AuthenticatorException {
+    public boolean checkAuth(String user, String password, String ip) throws AuthenticatorException {
         return successAuth;
     }
 }

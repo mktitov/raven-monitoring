@@ -39,7 +39,7 @@ public class MSDomainAuthenticatorTest extends RavenCoreTestCase {
         auth.setDefaultDomain(privateProperties.getProperty("domain"));
         assertTrue(auth.start());
         assertTrue(auth.checkAuth(privateProperties.getProperty("domain-user"), 
-                   privateProperties.getProperty("domain-pwd")));
+                   privateProperties.getProperty("domain-pwd"), ""));
     }
     
     @Test
@@ -52,7 +52,7 @@ public class MSDomainAuthenticatorTest extends RavenCoreTestCase {
         assertTrue(auth.start());
         assertTrue(auth.checkAuth(
                    privateProperties.getProperty("domain")+"\\"+privateProperties.getProperty("domain-user"), 
-                   privateProperties.getProperty("domain-pwd")));
+                   privateProperties.getProperty("domain-pwd"), ""));
     }
     
     @Test
@@ -65,6 +65,6 @@ public class MSDomainAuthenticatorTest extends RavenCoreTestCase {
         assertTrue(auth.start());
         assertFalse(auth.checkAuth(
                    "unknown-user", 
-                   privateProperties.getProperty("domain-pwd")));
+                   privateProperties.getProperty("domain-pwd"), ""));
     }
 }

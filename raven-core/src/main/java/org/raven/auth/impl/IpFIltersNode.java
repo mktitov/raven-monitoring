@@ -15,25 +15,17 @@
  */
 package org.raven.auth.impl;
 
-import org.raven.auth.LoginService;
-import org.raven.auth.UserContext;
 import org.raven.tree.impl.BaseNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class TestAuthService extends BaseNode implements LoginService {
+public class IpFiltersNode extends BaseNode {
+    public final static String NAME = "IP filters";
 
-    public TestAuthService(String name) {
-        super(name);
+    public IpFiltersNode() {
+        super(NAME);
     }
-
-    public UserContext login(String username, String password, String host) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public boolean isLoginAllowedFromIp(String ip) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+    
 }

@@ -13,27 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.auth.impl;
+package org.raven.tree.impl.objects;
 
-import org.raven.auth.LoginService;
-import org.raven.auth.UserContext;
-import org.raven.tree.impl.BaseNode;
+import org.raven.annotations.NodeClass;
+import org.raven.tree.impl.ContainerNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class TestAuthService extends BaseNode implements LoginService {
-
-    public TestAuthService(String name) {
-        super(name);
-    }
-
-    public UserContext login(String username, String password, String host) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public boolean isLoginAllowedFromIp(String ip) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+@NodeClass(importChildTypesFrom=NodeWithFixedChilds.class)
+public class NodeWithChildsFromOther extends ContainerNode {
 }

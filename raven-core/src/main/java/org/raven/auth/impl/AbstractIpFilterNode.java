@@ -15,31 +15,24 @@
  */
 package org.raven.auth.impl;
 
-import org.raven.auth.Authenticator;
-import org.raven.auth.AuthenticatorException;
+import org.raven.auth.IpFilter;
 import org.raven.tree.impl.BaseNodeWithStat;
 
 /**
  *
  * @author Mikhail Titov
  */
-public abstract class AbstractAuthenticatorNode extends BaseNodeWithStat implements Authenticator {
+public abstract class AbstractIpFilterNode extends BaseNodeWithStat implements IpFilter {
 
-    public AbstractAuthenticatorNode() {
-    }
-
-    public AbstractAuthenticatorNode(String name) {
-        super(name);
-    }
-
-    public boolean checkAuth(String login, String password, String ip) throws AuthenticatorException {
+    public boolean isIpAllowed(String ip) throws Exception {
         long ts = stat.markOperationProcessingStart();
         try {
-            return doCheckAuth(login, password, ip);
+            return doIsIpAllowed(ip);
         } finally {
             stat.markOperationProcessingEnd(ts);
         }
     }
     
-    protected abstract boolean doCheckAuth(String login, String password, String ip) throws AuthenticatorException;
+    public abstract boolean doIsIpAllowed(String ip) throws Exception;
+    
 }

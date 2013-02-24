@@ -15,25 +15,22 @@
  */
 package org.raven.auth.impl;
 
-import org.raven.auth.LoginService;
-import org.raven.auth.UserContext;
-import org.raven.tree.impl.BaseNode;
+import org.junit.Test;
+import static org.junit.Assert.*;
+import org.raven.test.RavenCoreTestCase;
 
 /**
  *
- * @author Mikhail Titov
+ * @author MIkhail Titov
  */
-public class TestAuthService extends BaseNode implements LoginService {
-
-    public TestAuthService(String name) {
-        super(name);
-    }
-
-    public UserContext login(String username, String password, String host) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public boolean isLoginAllowedFromIp(String ip) {
-        throw new UnsupportedOperationException("Not supported yet.");
+public class SimpleIpFilterTest extends RavenCoreTestCase {
+    @Test
+    public void test() throws Exception {
+        SimpleIpFilter filter = new SimpleIpFilter();
+        filter.setName("1.1.1.1");
+        testsNode.addAndSaveChildren(filter);
+        assertTrue(filter.start());
+        assertTrue(filter.isIpAllowed("1.1.1.1"));
+        assertFalse(filter.isIpAllowed("2.1.1.1"));
     }
 }

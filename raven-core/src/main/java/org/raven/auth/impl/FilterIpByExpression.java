@@ -15,25 +15,26 @@
  */
 package org.raven.auth.impl;
 
+import java.net.InetAddress;
 import javax.script.Bindings;
 import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
-import org.raven.auth.AuthenticatorException;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=AuthenticatorsNode.class)
-public class AuthenticateByExpression extends AbstractAuthenticatorNode implements BindingNames {
+@NodeClass(parentNode=IpFiltersNode.class)
+public class FilterIpByExpression extends AbstractIpFilterNode {
     
-    public final static String AUTHENTICATE_ATTR = "authenticate";
+    public final static String FILTER_ATTR = "filter";
     
-    @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
-    private Boolean authenticate;
+    @NotNull @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
+    private Boolean filter;
     
     private BindingSupportImpl bindingSupport;
 
@@ -49,25 +50,39 @@ public class AuthenticateByExpression extends AbstractAuthenticatorNode implemen
         bindingSupport.addTo(bindings);
     }
 
-    public boolean doCheckAuth(String login, String password, String ip) throws AuthenticatorException {
-        if (!isStarted())
-            return false;
+    @Override
+    public boolean doIsIpAllowed(String ip) throws Exception {
         try {
-            bindingSupport.put(LOGIN_BINDING, login);
-            bindingSupport.put(PASSWORD_BINDING, password);
-            bindingSupport.put(HOST_BINDING, new HostResolver(ip));
-            Boolean res = authenticate;
+            bindingSupport.put(BindingNames.HOST_BINDING, new HostResolver(ip));
+            Boolean res = filter;
             return res==null? false : res;
         } finally {
             bindingSupport.reset();
         }
     }
 
-    public Boolean getAuthenticate() {
-        return authenticate;
+    public Boolean getFilter() {
+        return filter;
     }
 
-    public void setAuthenticate(Boolean authenticate) {
-        this.authenticate = authenticate;
+    public void setFilter(Boolean filter) {
+        this.filter = filter;
+    }
+    
+    private class HostResolver {
+        private final String ip;
+
+        public HostResolver(String ip) {
+            this.ip = ip;
+        }
+
+        public String getIp() {
+            return ip;
+        }
+        
+        public String getName() throws Exception {
+            InetAddress addr = InetAddress.getByName(ip);
+            return addr.getCanonicalHostName();
+        }
     }
 }

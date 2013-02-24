@@ -48,4 +48,8 @@ public @interface NodeClass
      * to the list of the child node types.
      */
     boolean importChildTypesFromParent() default false;
+    /**
+     * Imports child node types from the node passed in the parameter
+     */
+    Class importChildTypesFrom() default Void.class;
 }
