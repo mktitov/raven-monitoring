@@ -66,7 +66,7 @@ public class NodeUtils
      * Method returns <b>empty list</b> if owner node does not have started child of the specified type.
      * @param owner the owner node
      * @param childType the type of child node
-     * @param startedOnly if <b>true</b> then only started nodes fall into the result map
+     * @param startedOnly if <b>true</b> then only started nodes fall into the result list
      */
     public static <T> List<T> getChildsOfType(Node owner, Class<T> childType, boolean startedOnly)
     {
