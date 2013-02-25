@@ -44,6 +44,7 @@ import org.raven.util.OperationStatistic;
 @NodeClass(parentNode=LoginManagerNode.class)
 public class LoginServiceNode extends BaseNode implements LoginService {
     
+    private OperationStatistic ipFiltersStat;
     private OperationStatistic loginStat;
     private OperationStatistic authStat;
     private OperationStatistic configureStat;
@@ -78,6 +79,7 @@ public class LoginServiceNode extends BaseNode implements LoginService {
     }
     
     private void initStat() {
+        ipFiltersStat = new OperationStatistic();
         loginStat = new OperationStatistic();
         authStat = new OperationStatistic();
         configureStat = new OperationStatistic();
@@ -97,6 +99,11 @@ public class LoginServiceNode extends BaseNode implements LoginService {
 			addAndStart(new ResourcesListNode());
 		if (!hasNode(GroupsListNode.NAME))
 			addAndStart(new GroupsListNode());
+    }
+
+    @Parameter(readOnly=true)
+    public OperationStatistic getIpFiltersStat() {
+        return ipFiltersStat;
     }
 
     @Parameter(readOnly=true)
@@ -141,15 +148,20 @@ public class LoginServiceNode extends BaseNode implements LoginService {
     }
 
     public boolean isLoginAllowedFromIp(String ip) {
-        for (IpFilter filter: getChildsOfType(getIpFiltersNode(), IpFilter.class))
-            try {
-                if (filter.isIpAllowed(ip))
-                    return true;
-            } catch (Exception e) {
-                if (isLogLevelEnabled(LogLevel.ERROR))
-                    getLogger().error(String.format("Error in (%s) ip filter", ((Node)filter).getName()));
-            }
-        return false;
+        final long ts = ipFiltersStat.markOperationProcessingStart();
+        try {
+            for (IpFilter filter: getChildsOfType(getIpFiltersNode(), IpFilter.class))
+                try {
+                    if (filter.isIpAllowed(ip))
+                        return true;
+                } catch (Exception e) {
+                    if (isLogLevelEnabled(LogLevel.ERROR))
+                        getLogger().error(String.format("Error in (%s) ip filter", ((Node)filter).getName()));
+                }
+            return false;
+        } finally {
+            ipFiltersStat.markOperationProcessingEnd(ts);
+        }
     }
     
     public UserContext login(String login, String password, String ip) throws LoginException {
