@@ -409,6 +409,17 @@ implements Comparator<NodeAttribute>, INodeScanner, ScannedNodeHandler
 		return "ok";
 	}
 	
+	public String nodeStopRecursive()
+	{
+		//if( ! isAllowControl() ) return "err";
+		if(!isNodeAccessible()) return "err";
+		try {
+			getTree().stop(getNode());
+			auditor.write(getNode(), getAccountName(), Action.NODE_STOP_RECURSIVE, null);
+		} catch (NodeError e) {log.error("on start recursive {} : {}",getNodeName(),e.getMessage());}
+		return "ok";
+	}
+	
 	public List<Attr> getAttributes() 
 	{
 		if(editingAttrs==null) loadAttributes();

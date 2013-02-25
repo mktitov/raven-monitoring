@@ -31,18 +31,22 @@ partialTriggers="::poolStatus"
 	<tr:panelButtonBar 
 		halign="left" 
 		rendered="#{cNode.allowControl}" >
-   		<tr:commandButton 
-   			action="#{cNode.nodeStart}" 
-   			disabled="#{! cNode.canNodeStart}"  
-   			text="#{msgs.start}" />
-   		<tr:commandButton 
-   			shortDesc="#{msgs.dscStartRecursive}" 
-   			action="#{cNode.nodeStartRecursive}" 
-   			text="#{msgs.startRecursive}" />
+    <tr:commandButton 
+      action="#{cNode.nodeStart}" 
+      disabled="#{! cNode.canNodeStart}"  
+      text="#{msgs.start}" />
+    <tr:commandButton 
+      shortDesc="#{msgs.dscStartRecursive}" 
+      action="#{cNode.nodeStartRecursive}" 
+      text="#{msgs.startRecursive}" />
 		<tr:commandButton 
 			action="#{cNode.nodeStop}" 
 			disabled="#{! cNode.canNodeStop}" 
 			text="#{msgs.stop}"/>
+    <tr:commandButton 
+      shortDesc="#{msgs.dscStopRecursive}" 
+      action="#{cNode.nodeStopRecursive}" 
+      text="#{msgs.stopRecursive}" />
 	</tr:panelButtonBar>
 </tr:form>
 </tr:panelCaptionGroup>
