@@ -15,6 +15,7 @@
  */
 package org.raven.auth.impl;
 
+import java.util.List;
 import javax.script.Bindings;
 import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
@@ -34,8 +35,10 @@ import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
+import org.raven.util.NodeUtils;
 import static org.raven.util.NodeUtils.*;
 import org.raven.util.OperationStatistic;
+import org.slf4j.Logger;
 
 /**
  *
@@ -150,18 +153,25 @@ public class LoginServiceNode extends BaseNode implements LoginService {
     public boolean isLoginAllowedFromIp(String ip) {
         final long ts = ipFiltersStat.markOperationProcessingStart();
         try {
-            for (IpFilter filter: getChildsOfType(getIpFiltersNode(), IpFilter.class))
-                try {
-                    if (filter.isIpAllowed(ip))
-                        return true;
-                } catch (Exception e) {
-                    if (isLogLevelEnabled(LogLevel.ERROR))
-                        getLogger().error(String.format("Error in (%s) ip filter", ((Node)filter).getName()));
-                }
-            return false;
+            return isIpAllowed(getIpFiltersNode(), getLogger(), ip);
         } finally {
             ipFiltersStat.markOperationProcessingEnd(ts);
         }
+    }
+    
+    public static boolean isIpAllowed(Node filtersNode, Logger logger, String ip) {
+        List<IpFilter> filters = getChildsOfType(filtersNode, IpFilter.class);
+        if (filters.isEmpty())
+            return true;
+        for (IpFilter filter: getChildsOfType(filtersNode, IpFilter.class))
+            try {
+                if (filter.isIpAllowed(ip))
+                    return true;
+            } catch (Exception e) {
+                if (logger.isErrorEnabled())
+                    logger.error(String.format("Error in (%s) ip filter", ((Node)filter).getName()));
+            }
+        return false;
     }
     
     public UserContext login(String login, String password, String ip) throws LoginException {

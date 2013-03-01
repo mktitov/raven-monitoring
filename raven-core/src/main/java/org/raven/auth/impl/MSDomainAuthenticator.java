@@ -30,7 +30,7 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=AuthenticatorsNode.class)
+@NodeClass(parentNode=AuthenticatorsNode.class, importChildTypesFrom=IpFiltersNode.class)
 public class MSDomainAuthenticator extends AbstractAuthenticatorNode {
     @NotNull @Parameter
     private String domainController;

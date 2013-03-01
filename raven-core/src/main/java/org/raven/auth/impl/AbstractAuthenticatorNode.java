@@ -35,7 +35,7 @@ public abstract class AbstractAuthenticatorNode extends BaseNodeWithStat impleme
     public boolean checkAuth(String login, String password, String ip) throws AuthenticatorException {
         long ts = stat.markOperationProcessingStart();
         try {
-            return doCheckAuth(login, password, ip);
+            return LoginServiceNode.isIpAllowed(this, getLogger(), ip)? doCheckAuth(login, password, ip) : false;
         } finally {
             stat.markOperationProcessingEnd(ts);
         }

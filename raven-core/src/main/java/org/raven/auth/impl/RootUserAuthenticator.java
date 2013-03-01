@@ -15,13 +15,16 @@
  */
 package org.raven.auth.impl;
 
+import org.raven.annotations.NodeClass;
 import org.raven.auth.AuthenticatorException;
 import org.raven.conf.Configurator;
+import org.raven.tree.impl.InvisibleNode;
 
 /**
  *
  * @author Mikhail Titov
  */
+@NodeClass(parentNode=InvisibleNode.class, importChildTypesFrom=IpFiltersNode.class)
 public class RootUserAuthenticator extends AbstractAuthenticatorNode {
     public final static String ROOT_USER_NAME = "root";
     public final static String NAME = "Root user authenticator";

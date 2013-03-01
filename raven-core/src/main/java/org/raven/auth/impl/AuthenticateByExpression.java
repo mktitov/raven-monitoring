@@ -27,7 +27,7 @@ import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=AuthenticatorsNode.class)
+@NodeClass(parentNode=AuthenticatorsNode.class, importChildTypesFrom=IpFiltersNode.class)
 public class AuthenticateByExpression extends AbstractAuthenticatorNode implements BindingNames {
     
     public final static String AUTHENTICATE_ATTR = "authenticate";
