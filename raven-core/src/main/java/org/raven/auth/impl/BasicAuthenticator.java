@@ -18,6 +18,7 @@ package org.raven.auth.impl;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.auth.AuthenticatorException;
+import org.raven.auth.UserContextConfig;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -29,10 +30,11 @@ public class BasicAuthenticator extends AbstractAuthenticatorNode {
     @NotNull @Parameter
     private String password;
 
-    public boolean doCheckAuth(String login, String password, String ip) throws AuthenticatorException {
-        return isStarted() && login.equals(getName()) && password.equals(this.password);
+    @Override
+    protected boolean doCheckAuth(UserContextConfig user, String password) throws AuthenticatorException {
+        return isStarted() && user.getLogin().equals(getName()) && password.equals(this.password);
     }
-
+    
     public String getPassword() {
         return password;
     }

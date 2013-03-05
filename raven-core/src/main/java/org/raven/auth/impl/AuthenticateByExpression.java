@@ -20,6 +20,7 @@ import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.auth.AuthenticatorException;
+import org.raven.auth.UserContextConfig;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 
@@ -49,13 +50,14 @@ public class AuthenticateByExpression extends AbstractAuthenticatorNode implemen
         bindingSupport.addTo(bindings);
     }
 
-    public boolean doCheckAuth(String login, String password, String ip) throws AuthenticatorException {
+    @Override
+    protected boolean doCheckAuth(UserContextConfig user, String password) throws AuthenticatorException {
         if (!isStarted())
             return false;
         try {
-            bindingSupport.put(LOGIN_BINDING, login);
+            bindingSupport.put(LOGIN_BINDING, user.getLogin());
             bindingSupport.put(PASSWORD_BINDING, password);
-            bindingSupport.put(HOST_BINDING, new HostResolver(ip));
+            bindingSupport.put(HOST_BINDING, new HostResolver(user.getHost()));
             Boolean res = authenticate;
             return res==null? false : res;
         } finally {

@@ -18,6 +18,7 @@ package org.raven.auth.impl;
 import static org.junit.Assert.*;
 import org.junit.Test;
 import org.raven.auth.AuthenticatorException;
+import org.raven.auth.UserContextConfig;
 import org.raven.test.RavenCoreTestCase;
 
 /**
@@ -33,11 +34,15 @@ public class BasicAuthenticatorTest extends RavenCoreTestCase
         testsNode.addAndSaveChildren(auth);
         auth.setPassword("testPwd");
         
-        assertFalse(auth.checkAuth("testLogin", "testPwd", ""));
+        assertFalse(auth.checkAuth(user("testLogin"), "testPwd"));
         
         assertTrue(auth.start());        
-        assertTrue(auth.checkAuth("testLogin", "testPwd", ""));
-        assertFalse(auth.checkAuth("testLogin1", "testPwd", ""));
-        assertFalse(auth.checkAuth("testLogin", "testPwd1", ""));
+        assertTrue(auth.checkAuth(user("testLogin"), "testPwd"));
+        assertFalse(auth.checkAuth(user("testLogin1"), "testPwd"));
+        assertFalse(auth.checkAuth(user("testLogin"), "testPwd1"));
+    }
+    
+    public static UserContextConfig user(String login) {
+        return new UserContextConfigImpl(login, "");
     }
 }

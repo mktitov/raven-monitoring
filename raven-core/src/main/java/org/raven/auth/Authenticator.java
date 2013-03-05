@@ -22,6 +22,6 @@ package org.raven.auth;
  * @author Mikhail Titov
  */
 public interface Authenticator {
-    public boolean checkAuth(String login, String password, String ip) throws AuthenticatorException;
+    public boolean checkAuth(UserContextConfig user, String password) throws AuthenticatorException;
     public String getName();
 }

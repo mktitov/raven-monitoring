@@ -17,6 +17,7 @@ package org.raven.auth.impl;
 
 import org.raven.annotations.NodeClass;
 import org.raven.auth.AuthenticatorException;
+import org.raven.auth.UserContextConfig;
 import org.raven.conf.Configurator;
 import org.raven.tree.impl.InvisibleNode;
 
@@ -33,14 +34,14 @@ public class RootUserAuthenticator extends AbstractAuthenticatorNode {
         super(NAME);
     }
 
-    public boolean doCheckAuth(String login, String password, String ip) throws AuthenticatorException {
+    @Override
+    protected boolean doCheckAuth(UserContextConfig user, String password) throws AuthenticatorException {
         try {
-            return ROOT_USER_NAME.equals(login) 
+            return ROOT_USER_NAME.equals(user.getLogin()) 
                 && password.equals(configurator.getConfig().getStringProperty(
                     Configurator.AUTH_ROOT_PASSWORD, null));
         } catch (Exception e) {
             throw new AuthenticatorException(String.format("Error in (%s) authenticator", getPath()), e);
         }
     }
-    
 }

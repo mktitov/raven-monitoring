@@ -17,6 +17,7 @@ package org.raven.auth.impl;
 
 import org.raven.auth.Authenticator;
 import org.raven.auth.AuthenticatorException;
+import org.raven.auth.UserContextConfig;
 import org.raven.tree.impl.BaseNode;
 
 /**
@@ -31,7 +32,7 @@ public class TestAuthenticator extends BaseNode implements Authenticator {
         this.successAuth = successAuth;
     }
 
-    public boolean checkAuth(String user, String password, String ip) throws AuthenticatorException {
+    public boolean checkAuth(UserContextConfig user, String password) throws AuthenticatorException {
         return successAuth;
     }
 }

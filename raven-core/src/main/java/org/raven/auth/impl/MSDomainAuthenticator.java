@@ -23,6 +23,7 @@ import org.raven.RavenUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.auth.AuthenticatorException;
+import org.raven.auth.UserContextConfig;
 import org.raven.log.LogLevel;
 import org.weda.annotations.constraints.NotNull;
 
@@ -32,16 +33,20 @@ import org.weda.annotations.constraints.NotNull;
  */
 @NodeClass(parentNode=AuthenticatorsNode.class, importChildTypesFrom=IpFiltersNode.class)
 public class MSDomainAuthenticator extends AbstractAuthenticatorNode {
+    
+    public final static String DOMAIN_PARAM = "domain";
+    
     @NotNull @Parameter
     private String domainController;
     @NotNull @Parameter
     private String defaultDomain;
 
-    public boolean doCheckAuth(String login, String password, String ip) throws AuthenticatorException {
+    @Override
+    protected boolean doCheckAuth(UserContextConfig userCtx, String password) throws AuthenticatorException {
         if (!isStarted()) 
             return false;
         try {
-            String[] elems = RavenUtils.split(login, "\\");
+            String[] elems = RavenUtils.split(userCtx.getLogin(), "\\");
             String user = elems[elems.length-1];
             String domain = elems.length==2? elems[0] : defaultDomain;
             String controller = domainController;
@@ -52,6 +57,8 @@ public class MSDomainAuthenticator extends AbstractAuthenticatorNode {
             UniAddress controllerAddr = UniAddress.getByName(controller, true);
             try {
                 SmbSession.logon(controllerAddr, ntlm);
+                userCtx.setLogin(user);
+                userCtx.getParams().put(DOMAIN_PARAM, domain);
                 return true;
             } catch (SmbAuthException ae) {
                 if (isLogLevelEnabled(LogLevel.WARN)) 

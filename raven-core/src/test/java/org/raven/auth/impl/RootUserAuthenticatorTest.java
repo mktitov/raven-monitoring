@@ -19,6 +19,7 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.raven.auth.AuthenticatorException;
+import org.raven.auth.UserContextConfig;
 import org.raven.test.RavenCoreTestCase;
 
 /**
@@ -37,16 +38,20 @@ public class RootUserAuthenticatorTest extends RavenCoreTestCase {
     
     @Test
     public void notRootTest() throws AuthenticatorException {
-        assertFalse(rootAuth.checkAuth("test", "test", ""));
+        assertFalse(rootAuth.checkAuth(user("test"), "test"));
     }
     
     @Test
     public void invalidPasswordTest() throws AuthenticatorException {
-        assertFalse(rootAuth.checkAuth("root", "test", ""));
+        assertFalse(rootAuth.checkAuth(user("root"), "test"));
     }
     
     @Test
     public void validAuthTest() throws AuthenticatorException {
-        assertTrue(rootAuth.checkAuth("root", "12345", ""));
+        assertTrue(rootAuth.checkAuth(user("root"), "12345"));
+    }
+    
+    public static UserContextConfig user(String login) {
+        return new UserContextConfigImpl(login, "");
     }
 }

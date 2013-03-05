@@ -17,6 +17,7 @@ package org.raven.auth.impl;
 
 import org.raven.auth.Authenticator;
 import org.raven.auth.AuthenticatorException;
+import org.raven.auth.UserContextConfig;
 import org.raven.tree.impl.BaseNodeWithStat;
 
 /**
@@ -32,14 +33,18 @@ public abstract class AbstractAuthenticatorNode extends BaseNodeWithStat impleme
         super(name);
     }
 
-    public boolean checkAuth(String login, String password, String ip) throws AuthenticatorException {
+    public boolean checkAuth(UserContextConfig user, String password) throws AuthenticatorException {
         long ts = stat.markOperationProcessingStart();
         try {
-            return LoginServiceNode.isIpAllowed(this, getLogger(), ip)? doCheckAuth(login, password, ip) : false;
+            boolean res = LoginServiceNode.isIpAllowed(this, getLogger(), user.getHost())? 
+                    doCheckAuth(user, password) : false;
+            if (res)
+                user.setAuthenticator(getName());
+            return res;
         } finally {
             stat.markOperationProcessingEnd(ts);
         }
     }
-    
-    protected abstract boolean doCheckAuth(String login, String password, String ip) throws AuthenticatorException;
+
+    protected abstract boolean doCheckAuth(UserContextConfig user, String password) throws AuthenticatorException;
 }

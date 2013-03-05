@@ -26,16 +26,15 @@ import org.raven.auth.UserContextConfig;
  * @author Mikhail Titov
  */
 public class UserContextConfigImpl implements UserContextConfig {
-    private final String login;
     private final String host;
+    private String login;
     private String authenticator;
     private String name;
     private boolean admin;
     private final Set<String> groups = new HashSet<String>();
     private final Map<String, Object> params = new HashMap<String, Object>();
 
-    public UserContextConfigImpl(String authenticator, String login, String host) {
-        this.authenticator = authenticator;
+    public UserContextConfigImpl(String login, String host) {
         this.login = login;
         this.host = host;
     }
@@ -44,8 +43,16 @@ public class UserContextConfigImpl implements UserContextConfig {
         return authenticator;
     }
 
+    public void setAuthenticator(String authenticator) {
+        this.authenticator = authenticator;
+    }
+
     public String getLogin() {
         return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
     }
 
     public String getHost() {

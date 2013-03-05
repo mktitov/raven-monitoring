@@ -90,7 +90,7 @@ public class LoginServiceNodeTest extends RavenCoreTestCase {
     
     @Test
     public void isLoginAllowedFromIp_withoutFilters() {
-        assertFalse(loginService.isLoginAllowedFromIp("1.1.1.1"));
+        assertTrue(loginService.isLoginAllowedFromIp("1.1.1.1"));
     }
     
     @Test

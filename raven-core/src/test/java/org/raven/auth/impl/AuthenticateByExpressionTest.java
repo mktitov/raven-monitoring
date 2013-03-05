@@ -15,14 +15,11 @@
  */
 package org.raven.auth.impl;
 
-import javax.script.Bindings;
-import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.raven.auth.AuthenticatorException;
+import org.raven.auth.UserContextConfig;
 import org.raven.test.RavenCoreTestCase;
 
 /**
@@ -43,24 +40,28 @@ public class AuthenticateByExpressionTest extends RavenCoreTestCase {
     
     @Test
     public void notStartedTest() throws AuthenticatorException {
-        assertFalse(auth.checkAuth("test", "pwd", ""));
+        assertFalse(auth.checkAuth(user("test"), "pwd"));
     }
     
     @Test
     public void invalidUserTest() throws AuthenticatorException {
         assertTrue(auth.start());
-        assertFalse(auth.checkAuth("test1", "pwd", ""));
+        assertFalse(auth.checkAuth(user("test1"), "pwd"));
     }
     
     @Test
     public void invalidPwdTest() throws AuthenticatorException {
         assertTrue(auth.start());
-        assertFalse(auth.checkAuth("test", "pwd1", ""));
+        assertFalse(auth.checkAuth(user("test"), "pwd1"));
     }
     
     @Test
     public void successTest() throws AuthenticatorException {
         assertTrue(auth.start());
-        assertTrue(auth.checkAuth("test", "pwd", ""));
+        assertTrue(auth.checkAuth(user("test"), "pwd"));
+    }
+    
+    public static UserContextConfig user(String login) {
+        return new UserContextConfigImpl(login, "");
     }
 }

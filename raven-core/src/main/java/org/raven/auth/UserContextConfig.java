@@ -24,10 +24,12 @@ import java.util.Set;
  */
 public interface UserContextConfig {
     public String getLogin();
+    public void setLogin(String login);
     public String getHost();
     public String getName();
     public void setName(String name);
     public String getAuthenticator();
+    public void setAuthenticator(String authenticator);
     public boolean isAdmin();
     public void setAdmin(boolean admin);
     public Set<String> getGroups();

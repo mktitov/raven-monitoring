@@ -22,6 +22,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.raven.auth.AuthenticatorException;
+import org.raven.auth.UserContextConfig;
 import org.raven.test.RavenCoreTestCase;
 
 /**
@@ -38,8 +39,9 @@ public class MSDomainAuthenticatorTest extends RavenCoreTestCase {
         auth.setDomainController(privateProperties.getProperty("domain-controller"));
         auth.setDefaultDomain(privateProperties.getProperty("domain"));
         assertTrue(auth.start());
-        assertTrue(auth.checkAuth(privateProperties.getProperty("domain-user"), 
-                   privateProperties.getProperty("domain-pwd"), ""));
+        UserContextConfig user = user(privateProperties.getProperty("domain-user"));
+        assertTrue(auth.checkAuth(user, privateProperties.getProperty("domain-pwd")));
+        assertEquals(auth.getDefaultDomain(), user.getParams().get(MSDomainAuthenticator.DOMAIN_PARAM));
     }
     
     @Test
@@ -50,9 +52,9 @@ public class MSDomainAuthenticatorTest extends RavenCoreTestCase {
         auth.setDomainController(privateProperties.getProperty("domain-controller"));
         auth.setDefaultDomain("UNKNOWN");
         assertTrue(auth.start());
-        assertTrue(auth.checkAuth(
-                   privateProperties.getProperty("domain")+"\\"+privateProperties.getProperty("domain-user"), 
-                   privateProperties.getProperty("domain-pwd"), ""));
+        UserContextConfig user = user(privateProperties.getProperty("domain")+"\\"+privateProperties.getProperty("domain-user"));
+        assertTrue(auth.checkAuth(user, privateProperties.getProperty("domain-pwd")));
+        assertEquals(privateProperties.getProperty("domain"), user.getParams().get(MSDomainAuthenticator.DOMAIN_PARAM));
     }
     
     @Test
@@ -64,7 +66,12 @@ public class MSDomainAuthenticatorTest extends RavenCoreTestCase {
         auth.setDefaultDomain(privateProperties.getProperty("domain"));
         assertTrue(auth.start());
         assertFalse(auth.checkAuth(
-                   "unknown-user", 
-                   privateProperties.getProperty("domain-pwd"), ""));
+                   user("unknown-user"), 
+                   privateProperties.getProperty("domain-pwd")));
     }
+    
+    public static UserContextConfig user(String login) {
+        return new UserContextConfigImpl(login, "");
+    }
+    
 }

@@ -35,7 +35,6 @@ import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
-import org.raven.util.NodeUtils;
 import static org.raven.util.NodeUtils.*;
 import org.raven.util.OperationStatistic;
 import org.slf4j.Logger;
@@ -180,12 +179,15 @@ public class LoginServiceNode extends BaseNode implements LoginService {
                 throw new IllegalLoginException();
             if (password==null || password.trim().isEmpty())
                 throw new IllegalPasswordException();
+            boolean debugEnabled = isLogLevelEnabled(LogLevel.DEBUG);
             long ts = loginStat.markOperationProcessingStart();
-            String authenticator = authenticateUser(login, password, ip);
-            UserContext userContext = configureUserContext(
-                    new UserContextConfigImpl(authenticator, login, ip));
+            UserContextConfig userConfig = authenticateUser(login, password, ip);
+            if (debugEnabled)
+                getLogger().debug("User ({}) successfully authenticated by authenticator ({})"
+                        , login, userConfig.getAuthenticator());
+            UserContext userContext = configureUserContext(userConfig);
             informLoginListeners(userContext);
-            if (isLogLevelEnabled(LogLevel.DEBUG))
+            if (debugEnabled)
                 getLogger().debug("User ({}) successfully logged in", login);
             loginStat.markOperationProcessingEnd(ts);
             return userContext;
@@ -209,29 +211,20 @@ public class LoginServiceNode extends BaseNode implements LoginService {
         return node;
     }
 
-    private String authenticateUser(String login, String password, String ip) throws Exception {
+    private UserContextConfig authenticateUser(String login, String password, String ip) throws Exception {
         long ts = authStat.markOperationProcessingStart();
         try {
             boolean debugEnabled = isLogLevelEnabled(LogLevel.DEBUG);
             if (debugEnabled)
                 getLogger().debug("Authenticating user ({})", login);
             Node authenticators = getNodeOrThrowEx(AuthenticatorsNode.NAME);
-            String authenticator = null;
+            UserContextConfig user = new UserContextConfigImpl(login, ip);
             for (Authenticator auth: getChildsOfType(authenticators, Authenticator.class)) 
-                if (auth.checkAuth(login, password, ip)) {
-                    authenticator = auth.getName();
-                    break;
-                }
-            if (authenticator!=null) {
-                if (debugEnabled)
-                    getLogger().debug("User ({}) successfully authenticated by authenticator ({})"
-                            , login, authenticator);
-            } else {
-                if (isLogLevelEnabled(LogLevel.WARN))
-                    getLogger().warn("User ({}) authentication was unsuccessfull", login);
-                throw new AuthenticationFailedException(login, getName());
-            }
-            return authenticator;
+                if (auth.checkAuth(user, password)) 
+                    return user;
+            if (isLogLevelEnabled(LogLevel.WARN))
+                getLogger().warn("User ({}) authentication was unsuccessfull", login);
+            throw new AuthenticationFailedException(login, getName());
         } finally {
             authStat.markOperationProcessingEnd(ts);
         }
