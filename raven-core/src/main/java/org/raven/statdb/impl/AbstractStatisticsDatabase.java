@@ -133,7 +133,7 @@ public abstract class AbstractStatisticsDatabase
             if (data!=null && isLogLevelEnabled(LogLevel.WARN))
     			warn(String.format(
 					"Invalid data type recieved from (%s). The data must have (%s) type, " +
-					"but recieved (%s)"
+					"but received (%s)"
 					, dataSource.getPath(), StatisticsRecord.class.getName()
 					, (data==null? "null" : data.getClass().getName())));
 			return;
@@ -197,23 +197,17 @@ public abstract class AbstractStatisticsDatabase
 		bindingSupport.put("value", value);
 		bindingSupport.put("record", record);
         Collection<Node> rules = null;
-        try
-        {
-            rules = rulesNode.getEffectiveChildrens();
-        }
-        finally
-        {
+        try {
+            rules = rulesNode.getEffectiveNodes();
+        } finally {
             bindingSupport.reset();
         }
 		
 		RuleProcessingResultImpl result =
 				new RuleProcessingResultImpl(ProcessingInstruction.CONTINUE_PROCESSING, value);
-        if (rules!=null)
-        {
-            for (Node ruleNode: rules)
-            {
-				if (ruleNode instanceof Rule)
-				{
+        if (rules!=null) {
+            for (Node ruleNode: rules) {
+				if (ruleNode instanceof Rule) {
 					Rule rule = (Rule) ruleNode;
                     if (isLogLevelEnabled(LogLevel.DEBUG))
                         debug(String.format(
@@ -224,8 +218,7 @@ public abstract class AbstractStatisticsDatabase
 					if (result.getInstruction()!=ProcessingInstruction.CONTINUE_PROCESSING)
 						return result;
 					result.setInstruction(ProcessingInstruction.CONTINUE_PROCESSING);
-				}
-				else
+				} else
 					error(String.format(
 							"Node (%s) is not a rule. Rule node must implement the (%s) interface"
 							, ruleNode.getPath(), Rule.class.getName()));

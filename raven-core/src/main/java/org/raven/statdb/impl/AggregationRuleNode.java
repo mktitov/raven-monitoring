@@ -89,12 +89,11 @@ public class AggregationRuleNode extends BaseNode implements Rule
 		String aggregationKey = key+"#"+name;
         Aggregation aggregation = null;
 		aggregationsLock.readLock().lock();
-		try
-		{
-			if (getStatus()!=Status.STARTED)
+		try {
+			if (!isStarted())
 				return;
 			aggregation = aggregations.get(aggregationKey);
-		}finally{
+		} finally {
 			aggregationsLock.readLock().unlock();
 		}
         long ntime = Util.normalize(record.getTime(), database.getStep());
