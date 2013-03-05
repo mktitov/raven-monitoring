@@ -35,8 +35,7 @@ public class AccessResource extends AccessControlList {
 
     public AccessResource(String name, String title, String show, Collection<AccessControl> accessControls) {
         super(name, title, accessControls);
-        if (show!=null)
-            setPresent(true);
+        present = show!=null;
         this.show = show;
     }
 

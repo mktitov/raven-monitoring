@@ -57,8 +57,16 @@ public class ResourceNode extends BaseNode implements Viewable
         for (AccessControlNode node: NodeUtils.getChildsOfType(this, AccessControlNode.class))
             accessControls.addAll(node.getAccessControls());
         Node _show = show;
-        return new AccessResource(getName(), showInResources? getName():null, 
-                                  _show!=null? _show.getPath():null, accessControls);
+        String _showPath = null;
+        String _name = null;
+        if (showInResources) {
+            _show = show;
+            if (_show!=null) _showPath = _show.getPath();
+            if (_showPath==null && !accessControls.isEmpty())
+                _showPath = accessControls.get(0).getNodePath();
+            if (_showPath!=null) _name = getName();
+        }
+        return new AccessResource(getName(), _name, _showPath, accessControls);
     }
 	
 	public String getResourceString()	{
