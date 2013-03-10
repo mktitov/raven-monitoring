@@ -18,7 +18,13 @@
 package org.raven.tree.store.impl;
 
 import java.io.InputStream;
+import java.util.Collections;
+import java.util.EmptyStackException;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import org.apache.commons.digester.Digester;
+import org.apache.commons.digester.Rule;
 import org.raven.tree.Node;
 
 /**
@@ -26,18 +32,40 @@ import org.raven.tree.Node;
  * 
  * @author Mikhail Titov
  */
-public class XMLReader
-{
-    public void read(Node owner, InputStream xmlStream) throws Exception
-    {
+public class XMLReader {
+    public final static String NODES_STACK = "nodes";
+    
+//    private final String
+    
+    public List<Node> read(Node owner, InputStream xmlStream) throws Exception {
         Digester digester = new Digester();
         digester.push(owner);
         digester.setValidating(false);
+        digester.addRule("nodes", new NodesRule());
         digester.addFactoryCreate("*/node", new NodeCreationFactory());
         digester.addFactoryCreate("*/node/attribute", new AttributeCreationFactory());
         digester.addRule("*/node/attribute/description", new SetDescriptionRule());
         digester.addRule("*/node/attribute/value", new SetValueRule());
         digester.addRule("*/node/attribute", new SaveAttributeRule());
-        digester.parse(xmlStream);
+        List<Node> nodes = (List<Node>)digester.parse(xmlStream);
+        for (Iterator<Node> it=nodes.iterator(); it.hasNext();)
+            if (!owner.equals(it.next().getParent()))
+                it.remove();
+        return nodes;
+    }
+    
+    private static class NodesRule extends Rule {
+        @Override
+        public void end(String namespace, String name) throws Exception {
+            digester.pop();
+            LinkedList<Node> nodes = new LinkedList<Node>();
+            Node node;
+            try {
+                while ( (node=(Node)digester.pop(NODES_STACK)) != null)
+                    nodes.add(node);
+            } catch (EmptyStackException e) { }
+            Collections.reverse(nodes);
+            digester.push(nodes);
+        }
     }
 }

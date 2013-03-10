@@ -59,7 +59,7 @@ public class RavenCoreTestCase extends ServiceTestCase
 				Configurator.RRD_STAT_DATABASES_PATH, null));
 		try{
 			FileUtils.forceDelete(statdbPath);
-		}catch(Exception e){}
+		} catch (Exception e) { }
 		statdbPath.mkdirs();
         store = configurator.getTreeStore();
         store.removeNodes();

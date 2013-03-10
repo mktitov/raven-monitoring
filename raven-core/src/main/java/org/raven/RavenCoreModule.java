@@ -140,6 +140,12 @@ public class RavenCoreModule
     {
         return new AuthServiceImpl(providers, configurator, logger);
     }
+    
+    public static TemplateNodeBuildersProvider builderTemplateNodeBuildersProvider(
+        final Collection<ResourceDescriptor> resourceDescriptors) 
+    {
+        return new TemplateNodeBuildersProviderImpl(resourceDescriptors);
+    }
 
     public static NodeAccessService buildNodeAccessService(Tree tree, Configurator configurator)
     {

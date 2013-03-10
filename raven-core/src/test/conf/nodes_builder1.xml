@@ -1,0 +1,5 @@
+<nodes>
+  <node class="org.raven.tree.impl.ContainerNode" name="testNode">
+    <node class="org.raven.tree.impl.ContainerNode" name="testNode-1"/>
+  </node>
+</nodes>

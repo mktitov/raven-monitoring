@@ -41,7 +41,7 @@ public class NodePathResolverImplTest extends Assert
         Node childNode = createMock(Node.class);
         
         expect(tree.getRootNode()).andReturn(rootNode);
-        expect(rootNode.getChildren("child node")).andReturn(childNode);
+        expect(rootNode.getNode("child node")).andReturn(childNode);
         expect(childNode.getName()).andReturn("child node");
         replay(tree, rootNode, childNode);
         
@@ -81,7 +81,7 @@ public class NodePathResolverImplTest extends Assert
         Node node = createMock(Node.class);
         Node childNode = createMock(Node.class);
         
-        expect(node.getChildren("child")).andReturn(childNode);
+        expect(node.getNode("child")).andReturn(childNode);
         replay(tree, node, childNode);
         
         TreeImpl.INSTANCE = tree;
@@ -98,7 +98,7 @@ public class NodePathResolverImplTest extends Assert
         Node node = createMock(Node.class);
         Node childNode = createMock(Node.class);
         
-        expect(node.getChildren("child")).andReturn(childNode);
+        expect(node.getNode("child")).andReturn(childNode);
         replay(tree, node, childNode);
         
         TreeImpl.INSTANCE = tree;
@@ -116,7 +116,7 @@ public class NodePathResolverImplTest extends Assert
         Node childNode = createMock(Node.class);
         
         expect(childNode.getParent()).andReturn(node);
-        expect(node.getChildren("child")).andReturn(childNode);
+        expect(node.getNode("child")).andReturn(childNode);
         replay(tree, node, childNode);
         
         TreeImpl.INSTANCE = tree;
@@ -134,7 +134,7 @@ public class NodePathResolverImplTest extends Assert
         Node childNode = createMock(Node.class);
         
         expect(childNode.getParent()).andReturn(node);
-        expect(node.getChildren("child")).andReturn(childNode);
+        expect(node.getNode("child")).andReturn(childNode);
         replay(tree, node, childNode);
         
         TreeImpl.INSTANCE = tree;
@@ -168,7 +168,7 @@ public class NodePathResolverImplTest extends Assert
         Tree tree = createMock(Tree.class);
         Node node = createMock(Node.class);
         
-        expect(node.getChildren("child")).andReturn(null);
+        expect(node.getNode("child")).andReturn(null);
         expect(node.getPath()).andReturn("node");
         replay(tree, node);
         

@@ -19,6 +19,7 @@ package org.raven.tree.store.impl;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
@@ -41,16 +42,17 @@ public class XMLReaderTest extends RavenCoreTestCase
     {
         FileInputStream is = new FileInputStream("src/test/conf/nodes1.xml");
         XMLReader reader = new XMLReader();
-        reader.read(tree.getRootNode(), is);
-        Node node1 = tree.getRootNode().getChildren("testNode-1");
+        List<Node> nodes = reader.read(tree.getRootNode(), is);
+        Node node1 = tree.getRootNode().getNode("testNode-1");
         assertNotNull(node1);
         assertTrue(node1 instanceof ContainerNode);
-        Node node1_1 = node1.getChildren("testNode-1-1");
+        Node node1_1 = node1.getNode("testNode-1-1");
         assertNotNull(node1_1);
         assertTrue(node1_1 instanceof ContainerNode);
-        Node node2 = tree.getRootNode().getChildren("testNode-2");
+        Node node2 = tree.getRootNode().getNode("testNode-2");
         assertNotNull(node2);
         assertTrue(node2 instanceof ContainerNode);
+        assertArrayEquals(new Object[]{node1, node2}, nodes.toArray());
     }
 
     @Test
@@ -59,7 +61,7 @@ public class XMLReaderTest extends RavenCoreTestCase
         FileInputStream is = new FileInputStream("src/test/conf/nodes2.xml");
         XMLReader reader = new XMLReader();
         reader.read(tree.getRootNode(), is);
-        Node node = tree.getRootNode().getChildren("node");
+        Node node = tree.getRootNode().getNode("node");
         assertNotNull(node);
         assertTrue(node.start());
         
@@ -79,7 +81,7 @@ public class XMLReaderTest extends RavenCoreTestCase
         FileInputStream is = new FileInputStream("src/test/conf/nodes3.xml");
         XMLReader reader = new XMLReader();
         reader.read(tree.getRootNode(), is);
-        Node node = tree.getRootNode().getChildren("node");
+        Node node = tree.getRootNode().getNode("node");
         assertNotNull(node);
         assertTrue(node instanceof FileNode);
         FileNode fileNode = (FileNode) node;
@@ -93,14 +95,14 @@ public class XMLReaderTest extends RavenCoreTestCase
 
     private void checkAttributes(Node node)
     {
-        assertEquals(5, node.getNodeAttributes().size());
+        assertEquals(5, node.getAttrs().size());
 
-        NodeAttribute logLevel = node.getNodeAttribute(BaseNode.LOGLEVEL_ATTRIBUTE);
+        NodeAttribute logLevel = node.getAttr(BaseNode.LOGLEVEL_ATTRIBUTE);
         assertNotNull(logLevel);
         LogLevel level = logLevel.getRealValue();
         assertEquals(LogLevel.DEBUG, level);
 
-        NodeAttribute attr1 = node.getNodeAttribute("attr1");
+        NodeAttribute attr1 = node.getAttr("attr1");
         assertNotNull(attr1);
         assertEquals(String.class, attr1.getType());
         assertNull(attr1.getValue());
@@ -109,7 +111,7 @@ public class XMLReaderTest extends RavenCoreTestCase
         assertFalse(attr1.isRequired());
         assertFalse(attr1.isTemplateExpression());
 
-        NodeAttribute attr2 = node.getNodeAttribute("attr2");
+        NodeAttribute attr2 = node.getAttr("attr2");
         assertNotNull(attr2);
         assertEquals(Long.class, attr2.getType());
         assertTrue(attr2.isRequired());
@@ -118,12 +120,12 @@ public class XMLReaderTest extends RavenCoreTestCase
         assertNull(attr2.getValueHandlerType());
         assertEquals(new Long(10), attr2.getRealValue());
 
-        NodeAttribute attr3 = node.getNodeAttribute("attr3");
+        NodeAttribute attr3 = node.getAttr("attr3");
         assertNotNull(attr3);
         assertTrue(attr3.isTemplateExpression());
 
 
-        NodeAttribute attr4 = node.getNodeAttribute("attr4");
+        NodeAttribute attr4 = node.getAttr("attr4");
         assertNotNull(attr4);
         assertEquals(ExpressionAttributeValueHandlerFactory.TYPE, attr4.getValueHandlerType());
         assertEquals(2, attr4.getRealValue());

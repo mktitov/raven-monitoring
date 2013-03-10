@@ -17,6 +17,8 @@
 
 package org.raven.tree;
 
+import java.util.List;
+
 /**
  * Allows to resolve the node by path.
  * @author Mikhail Titov
@@ -27,6 +29,11 @@ public interface NodePathResolver
     public final static String PARENT_REFERENCE = "..";
     public final static String SELF_REFERENCE = ".";
     
+    /**
+     * Splits the path passed in the parameter to the path elements
+     * @param path string representation of the parh
+     */
+    public List<String> splitToPathElements(String path);
     /**
      * Resolve path relative (if the path type is relative) from node passed 
      * in the parameter <code>currentNode</code>.

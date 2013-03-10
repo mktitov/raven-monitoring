@@ -37,51 +37,43 @@ public class NodePathResolverImpl implements NodePathResolver
 {
     private final Tree tree = TreeImpl.INSTANCE;
 
+    public List<String> splitToPathElements(String path) {
+        return new StrTokenizer(path, Node.NODE_SEPARATOR, QUOTE).getTokenList();
+    }
+
     public PathInfo<Node> resolvePath(String path, Node currentNode) throws InvalidPathException
     {
         List<PathElement> pathElements = new ArrayList<PathElement>();
-        if (path.charAt(0)==Node.NODE_SEPARATOR)
-        {
+        if (path.charAt(0)==Node.NODE_SEPARATOR) {
             currentNode = tree.getRootNode();
             pathElements.add(new PathElementImpl(null, PathElement.Type.ROOT_REFERENCE));
-        } 
-        else if (currentNode==null)
+        } else if (currentNode==null)
             throw new InvalidPathException(String.format(
                     "Invalid path (%s). " +
                     "Parameter currentNode can not be null for relative path"
                     , path));
-
-        StrTokenizer tokenizer = new StrTokenizer(path, Node.NODE_SEPARATOR, QUOTE);
-        while (tokenizer.hasNext())
-        {
-            String nodeName = tokenizer.nextToken();
-            if (PARENT_REFERENCE.equals(nodeName))
-            {
+        for (String nodeName: splitToPathElements(path)) 
+//        StrTokenizer tokenizer = new StrTokenizer(path, Node.NODE_SEPARATOR, QUOTE);
+//        while (tokenizer.hasNext())
+//            String nodeName = tokenizer.nextToken();
+            if (PARENT_REFERENCE.equals(nodeName)) {
                 currentNode = currentNode.getParent();
                 if (currentNode==null)
-                    throw new InvalidPathException(String.format(
-                            "Invalid path (%s) to the node", path));
+                    throw new InvalidPathException(String.format("Invalid path (%s) to the node", path));
                 pathElements.add(new PathElementImpl(null, PathElement.Type.PARENT_REFERENCE));
-            }
-            else if (!SELF_REFERENCE.equals(nodeName))
-            {
-                Node nextNode = currentNode.getChildren(nodeName);                    
+            } else if (!SELF_REFERENCE.equals(nodeName)) {
+                Node nextNode = currentNode.getNode(nodeName);                    
                 if (nextNode==null)
                     throw new InvalidPathException(String.format(
                             "Invalid path (%s) to the node. " +
                             "Node (%s) does not exists in the (%s) node."
                             , path, nodeName, currentNode.getPath()));
                 currentNode = nextNode;
-                pathElements.add(
-                        new PathElementImpl(currentNode, PathElement.Type.NODE_REFERENCE));
-            } 
-            else
+                pathElements.add(new PathElementImpl(currentNode, PathElement.Type.NODE_REFERENCE));
+            } else
                 pathElements.add(new PathElementImpl(null, PathElement.Type.SELF_REFERENCE));
-        }
-        
         PathElement[] elements = new PathElement[pathElements.size()];
         elements = pathElements.toArray(elements);
-        
         return new PathInfoImpl(elements, currentNode);
     }
     

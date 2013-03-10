@@ -27,8 +27,7 @@ import org.raven.annotations.NodeClass;
 public class GroupNode extends BaseNode
 {
     @Override
-    public boolean isConditionalNode()
-    {
+    public boolean isConditionalNode() {
         return true;
     }
 }
