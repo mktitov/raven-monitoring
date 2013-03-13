@@ -24,6 +24,7 @@ import org.raven.tree.NodeBuildersProvider;
 import org.raven.tree.NodePathResolver;
 import org.raven.tree.Tree;
 import org.raven.tree.TreeListener;
+import org.raven.tree.TreeNodesBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +32,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Mikhail Titov
  */
-public class TreeNodesBuilderImpl implements TreeListener {
+public class TreeNodesBuilderImpl implements TreeNodesBuilder {
     private final Logger logger = LoggerFactory.getLogger(Tree.class);
     private final Collection<NodeBuildersProvider> providers;
     private final NodePathResolver pathResolver;

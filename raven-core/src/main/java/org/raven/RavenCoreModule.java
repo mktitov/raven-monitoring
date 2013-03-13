@@ -141,7 +141,13 @@ public class RavenCoreModule
         return new AuthServiceImpl(providers, configurator, logger);
     }
     
-    public static TemplateNodeBuildersProvider builderTemplateNodeBuildersProvider(
+    public static TreeNodesBuilder buildTreeNodesBuilder(final Collection<NodeBuildersProvider> providers,
+            NodePathResolver pathResolver) 
+    {
+        return new TreeNodesBuilderImpl(providers, pathResolver);
+    }
+    
+    public static TemplateNodeBuildersProvider buildTemplateNodeBuildersProvider(
         final Collection<ResourceDescriptor> resourceDescriptors) 
     {
         return new TemplateNodeBuildersProviderImpl(resourceDescriptors);
@@ -390,8 +396,15 @@ public class RavenCoreModule
 //    }
     
     public static void contributeTreeListeners(Configuration<TreeListener> listeners
-            , ResourceManager resourceManager) 
+            , ResourceManager resourceManager, TreeNodesBuilder nodesBuilder) 
     {
         listeners.add(resourceManager);
+        listeners.add(nodesBuilder);
+    }
+    
+    public static void contributeTreeNodesBuilder(Configuration<NodeBuildersProvider> providers,
+            TemplateNodeBuildersProvider templateNodeBuildersProvider) 
+    {
+        providers.add(templateNodeBuildersProvider);
     }
 }

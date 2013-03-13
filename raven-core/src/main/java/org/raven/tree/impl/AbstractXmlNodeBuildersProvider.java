@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import org.apache.commons.io.FilenameUtils;
 import org.raven.ds.InputStreamSource;
 import org.raven.tree.NodeBuilder;
 import org.raven.tree.NodeBuildersProvider;
@@ -44,7 +45,7 @@ public abstract class AbstractXmlNodeBuildersProvider implements NodeBuildersPro
         List<NodeBuilder> builders = new ArrayList<NodeBuilder>(resources.size());
         for (ResourceDescriptor res: resources) 
             builders.add(new XmlNodeBuilder(
-                res.getResourcePath(), 
+                FilenameUtils.removeExtension(res.getResourcePath()), 
                 new ResourceInputStreamSource(getClass(), res.getResourceBase()+res.getResourcePath())));
         return builders;
     }
