@@ -322,7 +322,11 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
             if (!busy.compareAndSet(false, true) || stop)
                 return false;
             operationStartTime = stat.markOperationProcessingStart();
-            if (handler==null)
+            if (handler!=null && !handler.isValid()) {
+                handler.releaseHandler();
+                handler = null;
+            }
+            if (handler==null) 
                 handler = createDataHandler();
             this.data = data;
             this.dataSource = dataSource;

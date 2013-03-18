@@ -30,6 +30,10 @@ public class TestDataHandler implements DataHandler {
     public void releaseHandler() {
     }
 
+    public boolean isValid() {
+        return true;
+    }
+
     public Object handleData(Object data, DataSource dataSource, DataContext context, Node owner)
             throws Exception
     {

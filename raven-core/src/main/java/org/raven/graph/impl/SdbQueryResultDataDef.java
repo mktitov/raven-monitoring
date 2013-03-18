@@ -138,8 +138,8 @@ public class SdbQueryResultDataDef extends AbstractDataDef implements DataConsum
                         }
                 }
 
-            if (isLogLevelEnabled(LogLevel.WARN))
-                warn(String.format(
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug(String.format(
                         "No data found in query result for key (%s) and statistics name (%s)"
                         , _key, _statisticsName));
 
@@ -154,7 +154,7 @@ public class SdbQueryResultDataDef extends AbstractDataDef implements DataConsum
         {
             queryResult.set((QueryResult)data);
         }
-        else if (isLogLevelEnabled(LogLevel.WARN))
+        else if (isLogLevelEnabled(LogLevel.DEBUG))
         {
             debug(String.format(
                     "Invalid data type recieved from (%s). Expected (%s) but recieved (%s)"

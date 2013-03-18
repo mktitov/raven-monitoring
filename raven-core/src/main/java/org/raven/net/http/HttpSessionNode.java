@@ -269,13 +269,10 @@ public class HttpSessionNode extends AbstractAsyncDataPipe
     {
         for (Map.Entry<String, Object> param: params.entrySet())
             bindingSupport.put(param.getKey(), param.getValue());
-        try
-        {
+        try {
             Object res = errorHandler;
             return res==null? params.get(DATA_BINDING) : res;
-        }
-        finally
-        {
+        } finally {
             bindingSupport.reset();
         }
     }

@@ -26,6 +26,10 @@ import org.raven.tree.Node;
 public interface DataHandler
 {
     /**
+     * If returns <b>true</b> then handler can be used. Else handler must be released.
+     */
+    public boolean isValid();
+    /**
      * Releases handler resources
      */
     public void releaseHandler();

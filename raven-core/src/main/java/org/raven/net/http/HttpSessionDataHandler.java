@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.http.HttpEntity;
@@ -49,10 +50,15 @@ public class HttpSessionDataHandler implements DataHandler
     private int requestNumber;
     private AtomicInteger errorsCounter;
     private AtomicInteger handledCounter;
+    private final AtomicBoolean valid = new AtomicBoolean(true);
 
     public HttpSessionDataHandler(HttpClient client) {
         this.client = client;
         statusMessage = new AtomicReference<String>("http session handler created");
+    }
+
+    public boolean isValid() {
+        return valid.get();
     }
 
     public void releaseHandler() { }
@@ -134,6 +140,7 @@ public class HttpSessionDataHandler implements DataHandler
                         try{
                             response = client.execute(target, request);
                         }catch(Throwable e){
+                            valid.compareAndSet(true, false);
                             if (session.isLogLevelEnabled(LogLevel.WARN))
                                 session.getLogger().warn(logMess(
                                         "Executing request error. "+e.getMessage()));
