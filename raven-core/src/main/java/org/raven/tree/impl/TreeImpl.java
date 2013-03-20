@@ -107,6 +107,7 @@ public class TreeImpl implements Tree
     @SuppressWarnings("unchecked")
 	private final Set<Class> importParentChildTypeNodes = new HashSet<Class>();
     private final Map<Class, Class> importChildTypesFrom = new HashMap<Class, Class>();
+    private final Map<Class, Integer> importChildTypesFromParentLevel = new HashMap<Class, Integer>();
     private final AtomicInteger dynamicNodeId = new AtomicInteger();
     private final AtomicInteger dynamicAttributeId = new AtomicInteger();
     private final AtomicInteger globalBindingsId = new AtomicInteger();
@@ -515,9 +516,16 @@ public class TreeImpl implements Tree
 
     @SuppressWarnings("unchecked")
 	private void collectChildTypes(Node node, Set<Class> types) {
+        if (node==null) return;
         collectChildTypes(node.getClass(), types);
-        if (node.getParent()!=null && importParentChildTypeNodes.contains(node.getClass()))
+        if (importParentChildTypeNodes.contains(node.getClass()))
             collectChildTypes(node.getParent(), types);
+        if (importChildTypesFromParentLevel.containsKey(node.getClass()))
+            collectChildTypes(getParentByLevel(node, importChildTypesFromParentLevel.get(node.getClass())), types);
+    }
+    
+    private Node getParentByLevel(Node node, int parentLevel) {
+        return parentLevel==0 || node==null? node : getParentByLevel(node.getParent(), parentLevel-1);
     }
     
 	private void collectChildTypes(Class nodeType, Set<Class> types) {
@@ -781,6 +789,8 @@ public class TreeImpl implements Tree
             importParentChildTypeNodes.add(nodeType);
         if (ann.importChildTypesFrom()!=Void.class)
             importChildTypesFrom.put(nodeType, ann.importChildTypesFrom());
+        if (ann.importChildTypesFromParentLevel()>0)
+            importChildTypesFromParentLevel.put(nodeType, ann.importChildTypesFromParentLevel());
         addChildsToParent(ann.parentNode(), nodeType);
         addChildsToParent(nodeType, ann.childNodes());
     }

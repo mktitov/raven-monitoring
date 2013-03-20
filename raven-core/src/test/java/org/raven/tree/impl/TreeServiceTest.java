@@ -66,6 +66,7 @@ import org.weda.services.TypeConverter;
 import static org.easymock.EasyMock.*;
 import org.raven.auth.impl.LoginManagerNode;
 import org.raven.tree.impl.objects.NodeWithChildsFromOther;
+import org.raven.tree.impl.objects.NodeWithChildsFromParentLevel;
 /**
  *
  * @author Mikhail Titov
@@ -140,6 +141,17 @@ public class TreeServiceTest extends ServiceTestCase
         assertNotNull(types);
         assertEquals(2, types.size());
         assertTrue(types.contains(ChildNode1.class));
+        assertTrue(types.contains(ChildNode3.class));
+        
+        ContainerNode directParent = new ContainerNode("direct parent");
+        nodeWithFixedChilds.addAndSaveChildren(directParent);
+        NodeWithChildsFromParentLevel nodeWithParentLevelChilds = new NodeWithChildsFromParentLevel();
+        nodeWithParentLevelChilds.setName("nodeWithParentLevelChilds");
+        directParent.addAndSaveChildren(nodeWithParentLevelChilds);
+        types = tree.getChildNodesTypes(nodeWithParentLevelChilds);
+        assertEquals(3, types.size());
+        assertTrue(types.contains(ChildNode1.class));
+        assertTrue(types.contains(ChildNode2.class));
         assertTrue(types.contains(ChildNode3.class));
     }
     

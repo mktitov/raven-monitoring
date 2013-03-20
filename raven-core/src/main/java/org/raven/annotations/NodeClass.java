@@ -49,6 +49,13 @@ public @interface NodeClass
      */
     boolean importChildTypesFromParent() default false;
     /**
+     * Imports child node types from parent of level passed in the parameter. For instance, if
+     * parameter value is 1 then child node types will be imported from direct parent (Node.getParent()),
+     * if value equals to 2 then child node types will be imported from parent of direct parent 
+     * (node.getParent().getParent())
+     */
+    int importChildTypesFromParentLevel() default 0;
+    /**
      * Imports child node types from the node passed in the parameter
      */
     Class importChildTypesFrom() default Void.class;
