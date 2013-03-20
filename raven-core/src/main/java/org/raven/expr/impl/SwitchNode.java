@@ -30,7 +30,7 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass(childNodes=ExpressionConditionNode.class)
+@NodeClass(childNodes={ExpressionConditionNode.class, DefaultCondition.class})
 public class SwitchNode extends BaseNode {
     
     @NotNull @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
