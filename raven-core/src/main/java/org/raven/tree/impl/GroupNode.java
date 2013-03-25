@@ -17,7 +17,9 @@
 
 package org.raven.tree.impl;
 
+import java.util.Collection;
 import org.raven.annotations.NodeClass;
+import org.raven.tree.Node;
 
 /**
  *
@@ -29,5 +31,10 @@ public class GroupNode extends BaseNode
     @Override
     public boolean isConditionalNode() {
         return true;
+    }
+
+    @Override
+    public Collection<Node> getEffectiveNodes() {
+        return !isStarted()? null : super.getEffectiveNodes();
     }
 }

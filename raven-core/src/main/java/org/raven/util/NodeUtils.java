@@ -20,6 +20,7 @@ package org.raven.util;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -230,6 +231,31 @@ public class NodeUtils
                     refreshAttributes.put(clone.getName(), clone);
                 }
         return refreshAttributes.isEmpty()? null : refreshAttributes;
+    }
+    
+    /**
+     * Returns the list of attributes values which starts with prefix and has a type passed 
+     * in parameters
+     * @param owner node 
+     * @param prefix the attributes prefix
+     * @param type the attribute value type
+     */
+    public static<T> List<T> getAttrValuesByPrefixAndType(Node owner, String prefix, Class<T> type) {
+        ArrayList<T> values = new ArrayList<T>();
+        ArrayList<NodeAttribute> attrs = new ArrayList<NodeAttribute>();
+        for (NodeAttribute attr: owner.getAttrs())
+            if (attr.getName().startsWith(prefix) && type.equals(attr.getType()))
+                attrs.add(attr);
+        if (attrs.isEmpty())
+            return Collections.EMPTY_LIST;
+        Collections.sort(attrs, new Comparator<NodeAttribute>() {
+            public int compare(NodeAttribute o1, NodeAttribute o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
+        for (NodeAttribute attr: attrs)
+                values.add((T)attr.getRealValue());
+        return values;
     }
 
     public static void reconnectDataSources(Node node) 

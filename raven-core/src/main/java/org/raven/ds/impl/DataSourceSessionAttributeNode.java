@@ -74,7 +74,7 @@ public class DataSourceSessionAttributeNode
     @Override
     protected boolean allowAttributesGeneration(NodeAttribute attr)
     {
-        if (   attr.getName().equals(DATASOURCE_ATTRIBUTE)
+        if (   attr.getName().equals(DATASOURCE_ATTR)
             && forwardDataSourceAttributes!=null
             && forwardDataSourceAttributes)
         {

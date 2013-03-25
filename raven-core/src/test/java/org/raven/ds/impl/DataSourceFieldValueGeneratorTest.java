@@ -17,7 +17,9 @@
 
 package org.raven.ds.impl;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.raven.ds.DataContext;
 import org.raven.log.LogLevel;
 import org.raven.test.PushOnDemandDataSource;
 import org.raven.test.RavenCoreTestCase;
@@ -26,19 +28,24 @@ import org.raven.test.RavenCoreTestCase;
  *
  * @author Mikhail Titov
  */
-public class DataSourceFieldValueGeneratorTest extends RavenCoreTestCase
-{
-    @Test
-    public void test() {
-        PushOnDemandDataSource ds = new PushOnDemandDataSource();
+public class DataSourceFieldValueGeneratorTest extends RavenCoreTestCase {
+    private PushOnDemandDataSource ds;
+    
+    @Before
+    public void prepare() {
+        ds = new PushOnDemandDataSource();
         ds.setName("ds");
-        tree.getRootNode().addAndSaveChildren(ds);
+        testsNode.addAndSaveChildren(ds);
         ds.setLogLevel(LogLevel.DEBUG);
         assertTrue(ds.start());
-
+        
+    }
+    
+    @Test
+    public void test() {
         DataSourceFieldValueGenerator fieldValue = new DataSourceFieldValueGenerator();
         fieldValue.setName("fieldValue");
-        tree.getRootNode().addAndSaveChildren(fieldValue);
+        testsNode.addAndSaveChildren(fieldValue);
         fieldValue.setDataSource(ds);
         assertTrue(fieldValue.start());
 
@@ -47,17 +54,10 @@ public class DataSourceFieldValueGeneratorTest extends RavenCoreTestCase
     }
 
     @Test
-    public void expressionTest()
-    {
-        PushOnDemandDataSource ds = new PushOnDemandDataSource();
-        ds.setName("ds");
-        tree.getRootNode().addAndSaveChildren(ds);
-        ds.setLogLevel(LogLevel.DEBUG);
-        assertTrue(ds.start());
-
+    public void expressionTest() {
         DataSourceFieldValueGenerator fieldValue = new DataSourceFieldValueGenerator();
         fieldValue.setName("fieldValue");
-        tree.getRootNode().addAndSaveChildren(fieldValue);
+        testsNode.addAndSaveChildren(fieldValue);
         fieldValue.setDataSource(ds);
         fieldValue.setExpression("data+1");
         fieldValue.setUseExpression(true);
@@ -65,5 +65,19 @@ public class DataSourceFieldValueGeneratorTest extends RavenCoreTestCase
 
         ds.addDataPortion(1);
         assertEquals(2, fieldValue.getFieldValue(new DataContextImpl()));
+    }
+    
+    @Test
+    public void preprocessTest() {
+        DataSourceFieldValueGenerator fieldValue = new DataSourceFieldValueGenerator();
+        fieldValue.setName("fieldValue");
+        testsNode.addAndSaveChildren(fieldValue);
+        fieldValue.setDataSource(ds);
+        fieldValue.setUsePreProcess(Boolean.TRUE);
+        fieldValue.setPreProcess("context.parameters.testValue");
+        assertTrue(fieldValue.start());
+        DataContext context = new DataContextImpl();
+        context.putAt("testValue", 10);
+        assertEquals(10, fieldValue.getFieldValue(context));
     }
 }

@@ -72,13 +72,14 @@ public class ResourceManagerImpl implements ResourceManager, TreeListener {
     }
 
     public Node getResource(String key, Locale locale) {
-        Node res = resourcesNode.getChildrenByPath(key);
+        Node res = resourcesNode.getNodeByPath(key);
         return res!=null && res instanceof ResourceBundleNode? 
             res : getChildrenByPath(getPaths(key, locale));
     }
 
     public Node getResource(Node resourceContainer, String resourceName, Locale locale) {
-        Node res = resourceContainer.getChildren(resourceName);
+        Node res = resourceContainer.getNode(resourceName);
+        if (res==null) return null;
         return resourceContainer instanceof ResourceBundleNode? 
             getResource(getKeyForResource(res), locale) : res;
     }

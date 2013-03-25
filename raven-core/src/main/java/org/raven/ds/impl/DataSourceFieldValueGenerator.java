@@ -36,10 +36,11 @@ import org.weda.annotations.constraints.NotNull;
 public class DataSourceFieldValueGenerator
         extends AbstractFieldValueGenerator implements DataConsumer
 {
-    public final static String DATASOURCE_ATTRIBUTE = "dataSource";
+    public final static String DATASOURCE_ATTR = "dataSource";
     public static final String DATA_BINDING = "data";
     public static final String DATA_CONTEXT_BINDING = "context";
-    public static final String EXPRESSION_ATTRIBUTE = "expression";
+    public static final String EXPRESSION_ATTR = "expression";
+    public static final String PREPROCESS_ATTR = "preProcess";
 
     @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     @NotNull
@@ -50,6 +51,12 @@ public class DataSourceFieldValueGenerator
 
     @NotNull @Parameter(defaultValue="false")
     private Boolean useExpression;
+    
+    @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
+    private String preProcess;
+
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean usePreProcess;
 
     private ThreadLocal<DataInfo> dataInfo;
 
@@ -83,6 +90,22 @@ public class DataSourceFieldValueGenerator
         this.dataSource = dataSource;
     }
 
+    public String getPreProcess() {
+        return preProcess;
+    }
+
+    public void setPreProcess(String preProcess) {
+        this.preProcess = preProcess;
+    }
+
+    public Boolean getUsePreProcess() {
+        return usePreProcess;
+    }
+
+    public void setUsePreProcess(Boolean usePreProcess) {
+        this.usePreProcess = usePreProcess;
+    }
+
     @Override
     protected void initFields() {
         super.initFields();
@@ -103,16 +126,27 @@ public class DataSourceFieldValueGenerator
     @Override
     protected Object doGetFieldValue(DataContext context) {
         dataInfo.remove();
+        Object val = preProcess(context);
+        if (val!=null)
+            return val;
         dataSource.getDataImmediate(this, context);
         DataInfo info = dataInfo.get();
-        Object val = info==null? null : info.data;
+        val = info==null? null : info.data;
         dataInfo.remove();
         if (useExpression) {
             bindingSupport.put(DATA_BINDING, info.data);
             bindingSupport.put(DATA_CONTEXT_BINDING, info.context);
-            val = getNodeAttribute(EXPRESSION_ATTRIBUTE).getRealValue();
+            val = getAttr(EXPRESSION_ATTR).getRealValue();
         }
         return val;
+    }
+    
+    private Object preProcess(DataContext context) {
+        Boolean _usePreProcess = usePreProcess;
+        if (_usePreProcess==null || !_usePreProcess)
+            return null;
+        bindingSupport.put(DATA_CONTEXT_BINDING, context);
+        return getAttr(PREPROCESS_ATTR).getRealValue();
     }
 
     private class DataInfo {

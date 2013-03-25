@@ -1461,8 +1461,7 @@ public class BaseNode implements Node, NodeListener, Logger
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return getPath();
     }
 
