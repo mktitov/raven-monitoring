@@ -62,7 +62,7 @@ public class ConversationScenarioNode
         bindingSupport.putAll(state.getBindings());
         try
         {
-            Collection<Node> childs = nextPoint.getEffectiveChildrens();
+            Collection<Node> childs = nextPoint.getEffectiveNodes();
             Long repetitionCount =  (Long) state.getBindings().get(REPEITION_COUNT_PARAM);
             state.getBindings().put(REPEITION_COUNT_PARAM, repetitionCount+1);
             if (childs==null || childs.isEmpty())

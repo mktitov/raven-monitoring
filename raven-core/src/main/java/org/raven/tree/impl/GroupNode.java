@@ -18,6 +18,7 @@
 package org.raven.tree.impl;
 
 import java.util.Collection;
+import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.tree.Node;
 
@@ -28,6 +29,27 @@ import org.raven.tree.Node;
 @NodeClass(parentNode=InvisibleNode.class, importChildTypesFromParent=true)
 public class GroupNode extends BaseNode
 {
+    private ThreadLocal<Node> effectiveParent;
+
+    @Override
+    protected void initFields() {
+        super.initFields();
+        effectiveParent = new ThreadLocal<Node>();
+    }
+
+    @Override
+    public void formExpressionBindings(Bindings bindings) {
+        Node newParent = effectiveParent.get();
+        if (newParent==null) super.formExpressionBindings(bindings);
+        else newParent.formExpressionBindings(bindings);
+    }
+
+    @Override
+    public Node getEffectiveParent() {
+        Node newParent = effectiveParent.get();
+        return newParent==null? super.getEffectiveParent() : newParent.getEffectiveParent();
+    }
+    
     @Override
     public boolean isConditionalNode() {
         return true;
@@ -36,5 +58,14 @@ public class GroupNode extends BaseNode
     @Override
     public Collection<Node> getEffectiveNodes() {
         return !isStarted()? null : super.getEffectiveNodes();
+    }
+    
+    public Collection<Node> getEffectiveNodes(Node effectiveParent) {
+        this.effectiveParent.set(effectiveParent);
+        try {
+            return getEffectiveNodes();
+        } finally {
+            this.effectiveParent.remove();
+        }
     }
 }
