@@ -473,7 +473,7 @@ public class TreeImpl implements Tree {
         {
             attributeReferenceValues.getReferenceValues(attr, values);
             List<ReferenceValue> result = values.asList();
-            return result.size()==0? null : values.asList();
+            return result.isEmpty()? null : values.asList();
         } 
         catch (TooManyReferenceValuesException ex)
         {
