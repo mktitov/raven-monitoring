@@ -85,8 +85,7 @@ import org.weda.internal.services.ResourceProvider;
  *
  * @author Mikhail Titov
  */
-public class TreeImpl implements Tree
-{
+public class TreeImpl implements Tree {
     protected Logger logger = LoggerFactory.getLogger(Tree.class);
     
     public static Tree INSTANCE;
@@ -483,9 +482,8 @@ public class TreeImpl implements Tree
     }
 
     @SuppressWarnings("unchecked")
-	public List<Node> getTempltateNodes()
-    {
-        Collection<Node> result = templatesNode.getSortedChildrens();
+	public List<Node> getTempltateNodes() {
+        Collection<Node> result = templatesNode.getEffectiveNodes();
         return result==null? Collections.EMPTY_LIST : new ArrayList<Node>(result);
     }
 

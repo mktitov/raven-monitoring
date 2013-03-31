@@ -19,19 +19,18 @@ package org.raven.template.impl;
 
 import org.raven.annotations.NodeClass;
 import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.GroupNode;
 
 /**
  *
  * @author Mikhail Titov
  */
 //@Description("The root for template")
-@NodeClass(parentNode=org.raven.tree.impl.InvisibleNode.class)
-public class TemplatesNode extends BaseNode
-{
+@NodeClass(parentNode=org.raven.tree.impl.InvisibleNode.class, childNodes={GroupNode.class})
+public class TemplatesNode extends BaseNode {
     public static String NAME = "Templates";
     
-    public TemplatesNode()
-    {
+    public TemplatesNode() {
         setName(NAME);
     }
 }
