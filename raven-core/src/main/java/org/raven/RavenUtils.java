@@ -34,7 +34,6 @@ import org.apache.commons.collections.map.CaseInsensitiveMap;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.text.StrMatcher;
 import org.apache.commons.lang.text.StrTokenizer;
-import org.apache.poi.ss.formula.functions.T;
 import org.raven.auth.UserContext;
 import org.raven.auth.UserContextService;
 import org.raven.ds.RecordSchema;
@@ -69,6 +68,19 @@ public class RavenUtils
     public static UserContextService userContextService;
     
     private RavenUtils(){ }
+    
+    public static<K,V> Map<K,V> asMap(Pair<K,V>... pairs) {
+        if (pairs==null || pairs.length==0)
+            return Collections.EMPTY_MAP;
+        HashMap<K,V> map = new HashMap<K, V>();
+        for (Pair<K,V> pair: pairs)
+            map.put(pair.getKey(), pair.getValue());
+        return map;
+    }
+    
+    public static<K,V> Pair<K,V> pair(K key, V value) {
+        return new Pair(key, value);
+    }
 
     public static String generateKey(String name, Node node)
     {
