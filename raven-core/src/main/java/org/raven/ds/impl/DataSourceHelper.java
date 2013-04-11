@@ -22,6 +22,8 @@ import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.log.LogLevel;
+import org.raven.sched.ExecutorService;
+import org.raven.sched.impl.AbstractTask;
 import org.raven.tree.Node;
 import org.raven.util.NodeUtils;
 
@@ -62,5 +64,22 @@ public class DataSourceHelper
                 }
             }
         }
+    }
+    
+    /**
+     * <b>Asynchronously</b> sends data to all {@link Node#getDependentNodes() dependent nodes} 
+     * which are in STARTED state and instance of {@link DataConsumer}
+     * @param source consumers of this data source receive the data
+     * @param data this data will be sent to the consumers
+     * @param context the data context
+     */
+    public static void sendDataToConsumers(ExecutorService executor, final DataSource source, 
+            final Object data, final DataContext context) 
+    {
+        executor.executeQuietly(new AbstractTask(source, "Sending data to consumers") {
+            @Override public void doRun() throws Exception {
+                sendDataToConsumers(source, data, context);
+            }
+        });
     }
 }

@@ -29,11 +29,13 @@ public class DataSourceViewableObject implements ViewableObject {
     private final javax.activation.DataSource dataSource;
     private final String mimeType;
     private final Node owner;
+    private final String description;
 
-    public DataSourceViewableObject(DataSource dataSource, String mimeType, Node owner) {
+    public DataSourceViewableObject(DataSource dataSource, String mimeType, Node owner, String description) {
         this.dataSource = dataSource;
         this.mimeType = mimeType;
         this.owner = owner;
+        this.description = description;
     }
 
 
@@ -61,5 +63,10 @@ public class DataSourceViewableObject implements ViewableObject {
 
     public int getHeight() {
         return 0;
+    }
+
+    @Override
+    public String toString() {
+        return description;
     }
 }
