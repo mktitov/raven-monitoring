@@ -18,6 +18,7 @@
 package org.raven.template.impl;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,7 +47,7 @@ public class TemplateWizardTest extends RavenCoreTestCase
     {
         pathResolver = registry.getService(NodePathResolver.class);
 
-        TemplatesNode templates = (TemplatesNode)tree.getRootNode().getChildren(TemplatesNode.NAME);
+        TemplatesNode templates = (TemplatesNode)tree.getRootNode().getNode(TemplatesNode.NAME);
         template = new TemplateNode();
         template.setName("template");
         templates.addChildren(template);
@@ -60,14 +61,14 @@ public class TemplateWizardTest extends RavenCoreTestCase
 
         NodeAttribute stringVar = new NodeAttributeImpl("stringVar", String.class, null, null);
         stringVar.setOwner(varsNode);
-        varsNode.addNodeAttribute(stringVar);
+        varsNode.addAttr(stringVar);
         stringVar.init();
         stringVar.save();
 
         NodeAttribute integerVar = new NodeAttributeImpl("integerVar", Integer.class, null, null);
         integerVar.setOwner(varsNode);
         integerVar.setRequired(true);
-        varsNode.addNodeAttribute(integerVar);
+        varsNode.addAttr(integerVar);
         integerVar.init();
         integerVar.save();
 
@@ -76,11 +77,16 @@ public class TemplateWizardTest extends RavenCoreTestCase
         template.getEntryNode().addChildren(node);
         tree.saveNode(node);
         node.init();
+        NodeAttribute testAttr = new NodeAttributeImpl("testAttr", String.class, null, null);
+        testAttr.setOwner(node);
+        node.addAttr(testAttr);
+        testAttr.init();
+        testAttr.save();
 
         NodeAttribute stringAttr =
                 new NodeAttributeImpl("stringAttr", String.class, null, null);
         stringAttr.setOwner(node);
-        node.addNodeAttribute(stringAttr);
+        node.addAttr(stringAttr);
         stringAttr.setValueHandlerType(TemplateVariableValueHandlerFactory.TYPE);
         stringAttr.setValue(pathResolver.getAbsolutePath(stringVar));
         stringAttr.init();
@@ -93,7 +99,7 @@ public class TemplateWizardTest extends RavenCoreTestCase
         NodeAttribute integerAttr =
                 new NodeAttributeImpl("integerAttr", Integer.class, null, null);
         integerAttr.setOwner(child);
-        child.addNodeAttribute(integerAttr);
+        child.addAttr(integerAttr);
         integerAttr.setValueHandlerType(TemplateVariableValueHandlerFactory.TYPE);
         integerAttr.setValue(pathResolver.getAbsolutePath(integerVar));
         integerAttr.init();
@@ -110,8 +116,8 @@ public class TemplateWizardTest extends RavenCoreTestCase
             fail();
         }catch(ConstraintException e){           
         }
-        wizard.getVariablesNode().getNodeAttribute("integerVar").setValue("10");
-        wizard.getVariablesNode().getNodeAttribute("stringVar").setValue("child");
+        wizard.getVariablesNode().getAttr("integerVar").setValue("10");
+        wizard.getVariablesNode().getAttr("stringVar").setValue("child");
         wizard.createNodes();
         
         checkCreatedNodes(tree);
@@ -122,8 +128,7 @@ public class TemplateWizardTest extends RavenCoreTestCase
     }
 
     @Test
-    public void testConstructorWithVarValues() throws Exception
-    {
+    public void testConstructorWithVarValues() throws Exception {
         Map<String, String> vals = new HashMap<String, String>();
         vals.put("integerVar", "10");
         vals.put("stringVar", "child");
@@ -135,21 +140,36 @@ public class TemplateWizardTest extends RavenCoreTestCase
         checkCreatedNodes(tree);
     }
     
-    private void checkCreatedNodes(Tree tree)
-    {
-        assertNull(tree.getRootNode().getChildren(TemplateWizard.TEMPLATE_VARIABLES_NODE));
-        Node newNode = tree.getRootNode().getChildren("newName");
+    @Test
+    public void executeAfterTest() throws Exception {
+        Map<String, String> vals = new HashMap<String, String>();
+        vals.put("integerVar", "10");
+        vals.put("stringVar", "child");
+        template.setExecuteAfter("newNodes[0].$testAttr = vars.stringVar+vars.integerVar");
+
+        List<Node> newNodes = new TemplateWizard(template, tree.getRootNode(), "newName", vals).createNodes();
+
+        checkCreatedNodes(tree);
+        assertEquals("child10", newNodes.get(0).getAttr("testAttr").getValue());
+        tree.reloadTree();
+        checkCreatedNodes(tree);       
+        assertEquals("child10", newNodes.get(0).getAttr("testAttr").getValue());
+    }
+    
+    private void checkCreatedNodes(Tree tree) {
+        assertNull(tree.getRootNode().getNode(TemplateWizard.TEMPLATE_VARIABLES_NODE));
+        Node newNode = tree.getRootNode().getNode("newName");
         assertNotNull(newNode);
         assertEquals(Status.STARTED, newNode.getStatus());
-        NodeAttribute attr = newNode.getNodeAttribute("stringAttr");
+        NodeAttribute attr = newNode.getAttr("stringAttr");
         assertNotNull(attr);
         assertEquals("child", attr.getValue());
         assertEquals(String.class, attr.getType());
         
-        Node newChild = newNode.getChildren("child");
+        Node newChild = newNode.getNode("child");
         assertNotNull(newChild);
         assertEquals(Status.STARTED, newChild.getStatus());
-        attr = newChild.getNodeAttribute("integerAttr");
+        attr = newChild.getAttr("integerAttr");
         assertNotNull(attr);
         assertEquals(Integer.class, attr.getType());
         assertEquals("10", attr.getValue());

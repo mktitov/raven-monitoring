@@ -23,6 +23,9 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
+import org.raven.annotations.Parameter;
+import org.raven.expr.impl.BindingSupportImpl;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
 
@@ -39,19 +42,27 @@ public class TemplateNode extends BaseNode
     public final static String VARIABLES_NODE = "Variables";
     public final static String ENTRY_NODE = "Entry";
     public final static String TEMPLATE_EXPRESSION_BINDING = "template";
+    public static final String NEW_NODES_BINDING = "newNodes";
+    
+    @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
+    private String executeAfter;
     
     private TemplateVariablesNode variablesNode;
     private TemplateEntry entryNode;
+    private BindingSupportImpl bindingSupport;
 
     @Override
-    protected void initFields() 
-    {
+    protected void initFields() {
         super.initFields();
-        
         variablesNode = null;
         entryNode = null;
+        bindingSupport = new BindingSupportImpl();
     }
-
+    
+    public BindingSupportImpl getBindingSupport() {
+        return bindingSupport;
+    }
+    
     @Override
     protected void doInit()
     {
@@ -89,19 +100,25 @@ public class TemplateNode extends BaseNode
     }
 
     @Override
-    public void formExpressionBindings(Bindings bindings) 
-    {
+    public void formExpressionBindings(Bindings bindings) {
         super.formExpressionBindings(bindings);
         bindings.put(TEMPLATE_EXPRESSION_BINDING, this);
-        Collection<NodeAttribute> varsAttrs = variablesNode.getNodeAttributes();
+        Collection<NodeAttribute> varsAttrs = variablesNode.getAttrs();
         Map<String, Object> vars = Collections.EMPTY_MAP;
-        if (varsAttrs!=null)
-        {
+        if (varsAttrs!=null) {
             vars = new HashMap<String, Object>();
             for (NodeAttribute var: varsAttrs)
                 vars.put(var.getName(), var.getRealValue());
         }
         bindings.put(VARIABLES_EXPRESSION_BINDINGS, vars);
+        bindingSupport.addTo(bindings);
     }
     
+    public String getExecuteAfter() {
+        return executeAfter;
+    }
+
+    public void setExecuteAfter(String executeAfter) {
+        this.executeAfter = executeAfter;
+    }
 }

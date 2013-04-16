@@ -471,6 +471,31 @@ public class BaseNode implements Node, NodeListener, Logger
         nodeAttributes.put(attr.getName(), attr);
     }
 
+    public NodeAttribute addUniqAttr(String protoAttrName, Object value) throws Exception {
+        NodeAttribute protoAttr = getAttr(protoAttrName);
+        if (protoAttr==null) throw new Exception(String.format(
+                "Not found prototype attribute (%s) for node (%s)", protoAttrName, this));
+        for (NodeAttribute attr: getAttrs())
+            if (attr.getName().startsWith(protoAttrName) && org.apache.commons.lang.ObjectUtils.equals(value, attr.getRealValue())) 
+                return attr;        
+        return tryAddAttr(protoAttr, value, index);
+    }
+    
+    private NodeAttribute tryAddAttr(NodeAttribute baseAttr, Object val, int index) throws Exception {
+        NodeAttribute attr = getAttr(baseAttr.getName()+(index==0?"":index));
+        if (attr!=null) return tryAddAttr(baseAttr, val, index+1);
+        else {
+            attr = new NodeAttributeImpl(baseAttr.getName()+index, baseAttr.getType(), null, null);
+            attr.setOwner(this);
+            attr.setValueHandlerType(baseAttr.getValueHandlerType());
+            addAttr(attr);
+            attr.init();
+            attr.setValue(converter.convert(String.class, val, null));
+            attr.save();
+            return attr;
+        }
+    }
+    
     @Deprecated
     public void removeNodeAttribute(String name) {
         NodeAttribute attr = nodeAttributes.remove(name);

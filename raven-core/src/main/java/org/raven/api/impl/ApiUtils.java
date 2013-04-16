@@ -24,6 +24,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang.ObjectUtils;
 import org.raven.RavenUtils;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
@@ -34,7 +35,9 @@ import org.raven.table.Table;
 import org.raven.template.impl.TemplateNode;
 import org.raven.template.impl.TemplateWizard;
 import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.Tree;
+import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.impl.TreeImpl;
 
 /**
@@ -70,7 +73,7 @@ public class ApiUtils
             connection.close();
         }
     }
-    
+        
     public static List<Object[]> getTableRows(Table table) {
         return RavenUtils.tableAsList(table);
     }

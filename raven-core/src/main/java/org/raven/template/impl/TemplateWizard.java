@@ -17,8 +17,11 @@
 
 package org.raven.template.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.script.Bindings;
 import org.raven.log.LogLevel;
@@ -26,8 +29,8 @@ import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeTuner;
 import org.raven.tree.Tree;
-import org.weda.internal.annotations.Service;
 import org.weda.constraints.ConstraintException;
+import org.weda.internal.annotations.Service;
 import org.weda.services.TypeConverter;
 
 /**
@@ -73,10 +76,10 @@ public class TemplateWizard
         throws Exception
     {
         this(templateNode, destination, newNodeName);
-        if (vars!=null && !vars.isEmpty()){
-            for (Map.Entry<String, String> entry: vars.entrySet()){
-                try{
-                    NodeAttribute attr = variablesNode.getNodeAttribute(entry.getKey());
+        if (vars!=null && !vars.isEmpty())
+            for (Map.Entry<String, String> entry: vars.entrySet())
+                try {
+                    NodeAttribute attr = variablesNode.getAttr(entry.getKey());
                     if (attr==null){
                         if (templateNode.isLogLevelEnabled(LogLevel.WARN))
                             templateNode.getLogger().warn("Template variable ({}) not found", entry.getKey());
@@ -84,15 +87,13 @@ public class TemplateWizard
                         String val = converter.convert(String.class, entry.getValue(), null);
                         attr.setValue(val);
                     }
-                }catch (Exception e){
+                } catch (Exception e){
                     if (templateNode.isLogLevelEnabled(LogLevel.WARN))
                         templateNode.getLogger().warn(
                                 "Error creating template. Can't set value for template variable ({})", e);
                     cancelWizard();
                     throw e;
                 }
-            }
-        }
     }
 
     public TemplateVariablesNode getVariablesNode()
@@ -100,40 +101,54 @@ public class TemplateWizard
         return variablesNode;
     }
     
-    public void createNodes() throws ConstraintException
-    {
-        try
-        {
-            Collection<NodeAttribute> vars = variablesNode.getNodeAttributes();
+    public List<Node> createNodes() throws ConstraintException {
+        try {
+            Collection<NodeAttribute> vars = variablesNode.getAttrs();
             if (vars!=null)
                 for (NodeAttribute var: vars)
                     if (var.isRequired() && var.getValue()==null)
                         throw new ConstraintException(String.format(
                                 "The value for required variable (%s) was not seted.", var.getName()));
 
-            Collection<Node> nodesToCopy = template.getEntryNode().getSortedChildrens();
-            if (nodesToCopy!=null)
-            {
+            Collection<Node> nodesToCopy = template.getEntryNode().getNodes();
+            List<Node> newNodes = nodesToCopy.isEmpty()? Collections.EMPTY_LIST : new ArrayList<Node>(nodesToCopy.size());
+            if (!nodesToCopy.isEmpty()) {
                 NodeTuner nodeTuner = new Tuner();
                 boolean useNewNodeName = nodesToCopy.size()==1;
-                for (Node node: nodesToCopy)
-                {
+                for (Node node: nodesToCopy) {
                     Node newNode = tree.copy(
                             node, destination, useNewNodeName? newNodeName : null
                             , nodeTuner, true, false, false);
                     tree.start(newNode, false);
+                    newNodes.add(newNode);
                 }
             }
-        }
-        finally
-        {
+            try {
+                template.getBindingSupport().put(TemplateNode.NEW_NODES_BINDING, newNodes);
+                template.getBindingSupport().put(TemplateNode.TEMPLATE_VARIABLES_EXPRESSION_BINDING, getVars());
+                template.getExecuteAfter();
+            } finally {
+                template.getBindingSupport().reset();
+            }
+            return newNodes;
+        } finally {
             destination.removeChildren(variablesNode);
         }
     }
     
-    public void cancelWizard()
-    {
+    public void cancelWizard() {
         destination.removeChildren(variablesNode);        
+    }
+    
+    private Map<String, Object> getVars() {
+        Collection<NodeAttribute> attrs = variablesNode.getAttrs();
+        if (attrs.isEmpty()) return Collections.EMPTY_MAP;
+        else {
+            Map<String, Object> vars = new HashMap<String, Object>();
+            for (NodeAttribute attr: attrs)
+                vars.put(attr.getName(), attr.getRealValue());
+            return vars;
+        }
     }
     
     private class Tuner extends TemplateExpressionNodeTuner
@@ -143,7 +158,7 @@ public class TemplateWizard
         {
             super.tuneNode(sourceNode, sourceClone);
             
-            Collection<NodeAttribute> attrs = sourceClone.getNodeAttributes();
+            Collection<NodeAttribute> attrs = sourceClone.getAttrs();
             if (attrs!=null)
                 for (NodeAttribute attr: attrs)
                     if (TemplateVariableValueHandlerFactory.TYPE.equals(attr.getValueHandlerType()))
@@ -153,7 +168,7 @@ public class TemplateWizard
                             int attrSepPos = 
                                     attr.getRawValue().lastIndexOf(Node.ATTRIBUTE_SEPARATOR);
                             String varName = attr.getRawValue().substring(++attrSepPos);
-                            NodeAttribute var = variablesNode.getNodeAttribute(varName);
+                            NodeAttribute var = variablesNode.getAttr(varName);
                             attr.setValueHandlerType(var.getValueHandlerType());
                             attr.setValue(var.getRawValue());
                         } catch (Exception ex)
@@ -166,8 +181,7 @@ public class TemplateWizard
         }
 
         @Override
-        public Node cloneNode(Node sourceNode)
-        {
+        public Node cloneNode(Node sourceNode) {
             return super.cloneNode(sourceNode);
         }
 
@@ -175,14 +189,8 @@ public class TemplateWizard
         public void finishTuning(Node sourceClone) { }
 
         @Override
-        protected void formBindings(Bindings bindings) 
-        {
-            Map<String, Object> vars = new HashMap<String, Object>();
-            Collection<NodeAttribute> attrs = variablesNode.getNodeAttributes();
-            if (attrs!=null)
-                for (NodeAttribute attr: attrs)
-                    vars.put(attr.getName(), attr.getRealValue());
-            bindings.put(TemplateNode.TEMPLATE_VARIABLES_EXPRESSION_BINDING, vars);
+        protected void formBindings(Bindings bindings) {
+            bindings.put(TemplateNode.TEMPLATE_VARIABLES_EXPRESSION_BINDING, getVars());
         }
     }
 }
