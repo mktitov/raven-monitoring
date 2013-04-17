@@ -27,6 +27,7 @@ import org.raven.auth.UserContext;
 import org.raven.auth.impl.AccessControl;
 import org.raven.auth.impl.UserAcl;
 import org.raven.conf.Configurator;
+import org.raven.template.impl.TemplatesNode;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Tree;
@@ -170,86 +171,108 @@ public abstract class AbstractNodeWrapper
 		return al;
 	}
 
-	public List<NodeType> getValidSubNodeTemplatesList()
-	{
+	public List<NodeType> getValidSubNodeTemplatesList() {
 		List<Node> templates = tree.getTempltateNodes();
+        if (templates==null || templates.isEmpty()) 
+            return Collections.EMPTY_LIST;
+        int templatePathLen = tree.getRootNode().getNode(TemplatesNode.NAME).getPath().length();
 		ArrayList<NodeType> al = new ArrayList<NodeType>();
-		if(templates==null) return al;
-		for(Node n: templates)
-		{
-			//String dispName = classDesc.getClassDescriptor(n.getClass()).getDisplayName();
-			//String dsc = classDesc.getClassDescriptor(n.getClass()).getDescription();
-			al.add(new NodeType(n.getPath(),n.getName(), "", ""));
-		}
+		for(Node n: templates) 
+			al.add(new NodeType(n.getPath(), n.getPath().substring(templatePathLen), "", ""));
 		Collections.sort(al, new NodeTypeComparator());
 		return al;
 	}
 	
-	  public String getNodeName()
-	  {
-		 Node n = getNode();
-		 if(n==null) return "isNull";
-		 if(n.getParent()==null) return "@";
-		 return n.getName();
-	  }
+    public String getNodeName() {
+        Node n = getNode();
+        if (n == null) {
+            return "isNull";
+        }
+        if (n.getParent() == null) {
+            return "@";
+        }
+        return n.getName();
+    }
 
-	  public String getNodePath()
-	  {
-		 Node n = getNode();
-		 if(n==null) return "isNull";
-		 return n.getPath();
-	  }
-	
-	  public List<Node> getDependencies()
-	  {
-		  Set<Node> s = getNode().getDependentNodes();
-		  ArrayList<Node> al = new ArrayList<Node>();
-		  if(s!=null) al.addAll(s);
-		  return al;
-	  }
-		
-	  public List<NodeAttribute> getNodeAttributes()
-	  {
-		  Collection<NodeAttribute> c = getNode().getNodeAttributes();
-		  ArrayList<NodeAttribute> al = new ArrayList<NodeAttribute>();
-		  if(c!=null) al.addAll(c);
-		  return al;
-	  }
-	  
-	  public String getClassSimpleName()
-	  {
-		  return classDesc.getClassDescriptor(getNode().getClass()).getType().getSimpleName();
-	  }
+    public String getNodePath() {
+        Node n = getNode();
+        if (n == null) {
+            return "isNull";
+        }
+        return n.getPath();
+    }
 
-	  public String getClassShortDescription()
-	  {
-		  return classDesc.getClassDescriptor(getNode().getClass()).getDisplayName();
-	  }
-	  
-	  public String getClassDescription()
-	  {
-		  return classDesc.getClassDescriptor(getNode().getClass()).getDescription();
-	  }
-	  
-	  public abstract void onSetNode(); 
-	  
-	  public Node getNode() { return node; }
-	  public void setNode(Node node) 
-	  { 
-		  this.node = node;
-		  onSetNode();
-	  }
+    public List<Node> getDependencies() {
+        Set<Node> s = getNode().getDependentNodes();
+        ArrayList<Node> al = new ArrayList<Node>();
+        if (s != null) {
+            al.addAll(s);
+        }
+        return al;
+    }
 
-	  public UserContext getUserAcl() { return user; }
-	  public void setUserAcl(UserContext user) { this.user = user; }
+    public List<NodeAttribute> getNodeAttributes() {
+        Collection<NodeAttribute> c = getNode().getNodeAttributes();
+        ArrayList<NodeAttribute> al = new ArrayList<NodeAttribute>();
+        if (c != null) {
+            al.addAll(c);
+        }
+        return al;
+    }
 
-	  public ClassDescriptorRegistry getClassDesc() { return classDesc; }
-	  public void setClassDesc(ClassDescriptorRegistry classDesc) { this.classDesc = classDesc; }
+    public String getClassSimpleName() {
+        return classDesc.getClassDescriptor(getNode().getClass()).getType().getSimpleName();
+    }
 
-	  public Tree getTree() { return tree; }
-	  public void setTree(Tree tree) { this.tree = tree; }
+    public String getClassShortDescription() {
+        return classDesc.getClassDescriptor(getNode().getClass()).getDisplayName();
+    }
 
-	  public Configurator getConfigurator() { return configurator; }
-	  public void setConfigurator(Configurator configurator) { this.configurator = configurator; }
+    public String getClassDescription() {
+        return classDesc.getClassDescriptor(getNode().getClass()).getDescription();
+    }
+
+    public abstract void onSetNode();
+
+    public Node getNode() {
+        return node;
+    }
+
+    public void setNode(Node node) {
+        this.node = node;
+        onSetNode();
+    }
+
+    public UserContext getUserAcl() {
+        return user;
+    }
+
+    public void setUserAcl(UserContext user) {
+        this.user = user;
+    }
+
+    public ClassDescriptorRegistry getClassDesc() {
+        return classDesc;
+    }
+
+    public void setClassDesc(ClassDescriptorRegistry classDesc) {
+        this.classDesc = classDesc;
+    }
+
+    public Tree getTree() {
+        return tree;
+    }
+
+    public void setTree(Tree tree) {
+        this.tree = tree;
+    }
+
+    public Configurator getConfigurator() {
+        return configurator;
+    }
+
+    public void setConfigurator(Configurator configurator) {
+        this.configurator = configurator;
+    }
 
 }

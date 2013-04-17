@@ -24,7 +24,7 @@ public class NodeType
 	private String description;
 	private String shortDescription;
 	
-	public NodeType(String className,String shortName, String description, String sd)
+	public NodeType(String className, String shortName, String description, String sd)
 	{
 		this.className = className;
 		this.description = description;
