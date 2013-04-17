@@ -33,6 +33,7 @@ import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeError;
 import static org.easymock.EasyMock.*;
+import org.weda.services.TypeConverter;
 
 /**
  *
@@ -134,7 +135,7 @@ public class BaseNodeTest extends RavenCoreTestCase
         expect(condChild.getIndex()).andReturn(3);
         expect(condChild.compareTo(child1)).andReturn(1).anyTimes();
         expect(condChild.compareTo(child3)).andReturn(-1).anyTimes();
-        expect(condChild.getEffectiveNodes()).andReturn(Arrays.asList(condChildChild));
+        expect(condChild.getEffectiveChildrens()).andReturn(Arrays.asList(condChildChild));
         
         child3.setParent(node);
         child3.addListener(node);
@@ -316,5 +317,50 @@ public class BaseNodeTest extends RavenCoreTestCase
         BaseNode node = new BaseNode("node");
         tree.getRootNode().addAndSaveChildren(node);
         node.methodMissing("attr1", new Object[]{new HashMap()});
+    }
+    
+    @Test
+    public void addUniqAttrTest() throws Exception {
+        BaseNode node2 = new BaseNode("node2");
+        testsNode.addAndSaveChildren(node2);
+        BaseNode node3 = new BaseNode("node3");
+        testsNode.addAndSaveChildren(node3);
+        BaseNode node = new BaseNode("node");
+        testsNode.addAndSaveChildren(node);
+        NodeAttribute attr = createAttr(node, "attr", Node.class, NodeReferenceValueHandlerFactory.TYPE, testsNode);
+        
+        assertSame(testsNode, attr.getRealValue());
+        assertSame(attr, node.addUniqAttr("attr", testsNode));
+        
+        NodeAttribute attr1 = node.addUniqAttr("attr", node2);
+        assertNotSame(attr, attr1);
+        assertEquals("attr1", attr1.getName());
+        assertEquals(node2, attr1.getRealValue());
+        
+        assertSame(attr1, node.addUniqAttr("attr", node2));
+        
+        NodeAttribute attr2 = node.addUniqAttr("attr", node3);
+        assertEquals("attr2", attr2.getName());
+        assertEquals(node3, attr2.getRealValue());
+        
+        attr.setValue(null);
+        assertNull(attr.getRealValue());
+        assertSame(attr, node.addUniqAttr("attr", testsNode, true));
+        assertSame(testsNode, attr.getRealValue());
+    }
+    
+    private NodeAttribute createAttr(Node owner, String name, Class type, String valueHandlerType, Object val) throws Exception {
+        NodeAttribute attr = new NodeAttributeImpl(name, type, null, null);        
+        attr.setOwner(owner);
+        attr.init();
+        owner.addAttr(attr);
+        if (valueHandlerType!=null)
+            attr.setValueHandlerType(valueHandlerType);
+        attr.setValue(getConverter().convert(String.class, val, null));
+        return attr;
+    }
+    
+    private TypeConverter getConverter() {
+        return registry.getService(TypeConverter.class);
     }
 }

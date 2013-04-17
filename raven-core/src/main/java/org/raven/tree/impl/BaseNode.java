@@ -472,17 +472,32 @@ public class BaseNode implements Node, NodeListener, Logger
     }
 
     public NodeAttribute addUniqAttr(String protoAttrName, Object value) throws Exception {
+        return addUniqAttr(protoAttrName, value, false);
+    }
+    
+    public NodeAttribute addUniqAttr(String protoAttrName, Object value, boolean reuseAttrWithNullValue) 
+            throws Exception 
+    {
         NodeAttribute protoAttr = getAttr(protoAttrName);
         if (protoAttr==null) throw new Exception(String.format(
                 "Not found prototype attribute (%s) for node (%s)", protoAttrName, this));
+        NodeAttribute nullValAttr = null;
         for (NodeAttribute attr: getAttrs())
-            if (attr.getName().startsWith(protoAttrName) && org.apache.commons.lang.ObjectUtils.equals(value, attr.getRealValue())) 
-                return attr;        
-        return tryAddAttr(protoAttr, value, index);
+            if (attr.getName().startsWith(protoAttrName)) {
+                if (ObjectUtils.equals(value, attr.getRealValue())) return attr;
+                else if (reuseAttrWithNullValue && nullValAttr==null && attr.getRealValue()==null)
+                    nullValAttr = attr;
+            }
+        if (nullValAttr!=null) {
+            nullValAttr.setValue(converter.convert(String.class, value, null));
+            nullValAttr.save();
+            return nullValAttr;
+        } else
+            return tryAddAttr(protoAttr, value, 1);
     }
     
     private NodeAttribute tryAddAttr(NodeAttribute baseAttr, Object val, int index) throws Exception {
-        NodeAttribute attr = getAttr(baseAttr.getName()+(index==0?"":index));
+        NodeAttribute attr = getAttr(baseAttr.getName()+index);
         if (attr!=null) return tryAddAttr(baseAttr, val, index+1);
         else {
             attr = new NodeAttributeImpl(baseAttr.getName()+index, baseAttr.getType(), null, null);
@@ -516,6 +531,8 @@ public class BaseNode implements Node, NodeListener, Logger
     
     public void setName(String name)
     {
+        if (ObjectUtils.equals(this.name, name))
+            return;
         if (parent!=null && parent.getChildren(name)!=null)
             throw new NodeError(String.format(
                     "Node (%s) already has children with name (%s)", parent.getPath(), name));

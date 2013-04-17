@@ -282,6 +282,26 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
      */
     public void addAttr(NodeAttribute attr);
     /**
+     * Return existing attribute or create new attribute based on attribute with name passed in the
+     * parameter <b>protoAttrName</b>. Algorithm:
+     * <ul>
+     * <li>Search for prototype attribute with name <b>protoAttrName</b>. If not found throws exception
+     * <li>Search for all attributes which name starts with <b>protoAttrName</b> and if find any with value
+     *     that equals to <b>value</b> then returns this attribute
+     * <li>Else creates new attribute (based on prototype attribute):
+     *      <ul>
+     *      <li>with name that starts with the name of prototype attribute name plus index (integer number).
+     *      <li>attribute type and value handler type will be copied from prototype attribute
+     *      <li>The parameter <b>value</b> will be converted to string and passed to attribute as it's value
+     *      </ul>
+     * </ul>
+     * @param protoAttrName the name of the prototype attribute
+     * @param value the value of the attribute
+     * @throws Exception 
+     */
+    public NodeAttribute addUniqAttr(String protoAttrName, Object value) throws Exception;
+    public NodeAttribute addUniqAttr(String protoAttrName, Object value, boolean reuseAttrWithNullValue) throws Exception;
+    /**
      * Adds node attribute dependency.
      * @param attributeName attribute name.
      * @param listener the node attribute listener.
