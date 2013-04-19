@@ -28,7 +28,6 @@ import org.raven.ds.DataSource;
 import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
 import org.raven.sched.ExecutorService;
-import org.raven.sched.ExecutorServiceException;
 import org.raven.sched.Task;
 import org.raven.sched.impl.AbstractTask;
 import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
