@@ -3,7 +3,6 @@ package org.raven.log;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Comparator;
-
 import org.raven.store.IRecord;
 import org.raven.util.Utl;
 
@@ -47,8 +46,7 @@ public class NodeLogRecord implements Comparator<NodeLogRecord>, IRecord
 		return nlr;
 	}
 	
-	public NodeLogRecord(int nodeId,String nodePath,LogLevel level,String message)
-	{
+	public NodeLogRecord(int nodeId,String nodePath,LogLevel level,String message) {
 		fd = System.currentTimeMillis();
 		this.nodeId = nodeId;
 		this.level = level;
@@ -56,19 +54,17 @@ public class NodeLogRecord implements Comparator<NodeLogRecord>, IRecord
 		this.nodePath = nodePath;
 	}
 
-	public NodeLogRecord()
-	{
+	public NodeLogRecord()	{
 	}
 
-	public String toString()
-	{
-		StringBuffer sb = new StringBuffer();
-		sb.append(""+fd);
-		sb.append("; "+nodeId);
-		sb.append("; "+nodePath);
-		sb.append("; "+level);
-		sb.append("; "+message);
-		return sb.toString();
+    @Override
+	public String toString() {
+		return new StringBuilder()
+            .append("").append(fd)
+            .append("; ").append(nodeId)
+            .append("; ").append(nodePath)
+            .append("; ").append(level)
+            .append("; ").append(message).toString();
 	}
 	
 	public long getFd() {

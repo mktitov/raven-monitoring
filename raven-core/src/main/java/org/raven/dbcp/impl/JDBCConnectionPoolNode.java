@@ -17,7 +17,6 @@
 
 package org.raven.dbcp.impl;
 
-import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -30,7 +29,6 @@ import org.apache.commons.pool.impl.GenericObjectPool;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.dbcp.ConnectionPool;
-import org.raven.log.LogLevel;
 import org.raven.tree.NodeError;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.constraints.NotNull;

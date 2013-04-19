@@ -15,6 +15,8 @@
  */
 package org.raven.ds.impl;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -26,7 +28,9 @@ import org.raven.ds.DataSource;
 import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
 import org.raven.sched.ExecutorService;
+import org.raven.sched.ExecutorServiceException;
 import org.raven.sched.Task;
+import org.raven.sched.impl.AbstractTask;
 import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
 import org.raven.tree.Node;
 import org.weda.annotations.constraints.NotNull;
@@ -37,6 +41,7 @@ import org.weda.annotations.constraints.NotNull;
  */
 @NodeClass
 public class QueueDataPipe extends AbstractSafeDataPipe {
+    public enum QueueType {ACTIVE, ACTIVE_ON_FULL, PASSIVE}
     
     @NotNull @Parameter(defaultValue="512")
     private Integer queueSize;
@@ -44,12 +49,21 @@ public class QueueDataPipe extends AbstractSafeDataPipe {
     @NotNull @Parameter(valueHandlerType=SystemSchedulerValueHandlerFactory.TYPE)
     private ExecutorService executor;
     
+    @NotNull @Parameter(defaultValue="ACTIVE")
+    private QueueType queueType;
+    
+    @Parameter
+    private Integer dataLifetime;
+    
+    @NotNull @Parameter(defaultValue="SECONDS")
+    private TimeUnit dataLifetimeUnit;
+    
     private volatile Worker worker;
     
     @Override
     protected void doStart() throws Exception {
         super.doStart();
-        worker = new Worker(queueSize);
+        worker = new Worker(queueSize, queueType, executor);
     }
 
     @Override
@@ -102,14 +116,45 @@ public class QueueDataPipe extends AbstractSafeDataPipe {
     public void setExecutor(ExecutorService executor) {
         this.executor = executor;
     }
+
+    public QueueType getQueueType() {
+        return queueType;
+    }
+
+    public void setQueueType(QueueType queueType) {
+        this.queueType = queueType;
+    }
+
+    public Integer getDataLifetime() {
+        return dataLifetime;
+    }
+
+    public void setDataLifetime(Integer dataLifetime) {
+        this.dataLifetime = dataLifetime;
+    }
+
+    public TimeUnit getDataLifetimeUnit() {
+        return dataLifetimeUnit;
+    }
+
+    public void setDataLifetimeUnit(TimeUnit dataLifetimeUnit) {
+        this.dataLifetimeUnit = dataLifetimeUnit;
+    }
     
     private class Worker implements Task {
+        public static final int OFFER_TIMEOUT = 100;
+        
         private final BlockingQueue<DataWrapper> queue;
         private final AtomicBoolean running = new AtomicBoolean(false);
+        private final AtomicBoolean flushing = new AtomicBoolean(false);
+        private final QueueType queueType;
+        private final ExecutorService executor;
         private volatile int maxQueueSize = 0;
 
-        public Worker(int queueSize) {
+        public Worker(int queueSize, QueueType queueType, ExecutorService executor) {
             this.queue = new ArrayBlockingQueue<DataWrapper>(queueSize);
+            this.queueType = queueType;
+            this.executor = executor;
         }
         
         public Node getTaskNode() {
@@ -121,16 +166,35 @@ public class QueueDataPipe extends AbstractSafeDataPipe {
         }
         
         public void offer(Object data, DataContext context) throws Exception {
-            if (!queue.offer(new DataWrapper(data, context), 100, TimeUnit.MILLISECONDS))
-                throw new Exception("Queue exhausted. Received DATA discarded");
-            int queueSize = queue.size();
-            if (queueSize > maxQueueSize)
-                maxQueueSize = queueSize;
+            DataWrapper dataWrapper = new DataWrapper(data, context);
+            switch (queueType) {
+                case ACTIVE        : processOfferForActive(dataWrapper); break;
+                case ACTIVE_ON_FULL: processOfferForActiveOnFull(dataWrapper); break;
+                case PASSIVE       : processOfferForPassive(dataWrapper); break;
+            }
+        }
+        
+        public void processOfferForActive(DataWrapper dataWrapper) throws Exception {            
+            offerWithTimeout(dataWrapper);
+            processQueueSizeStat();
             if (running.compareAndSet(false, true))
                 if (!executor.executeQuietly(this)) 
                     running.set(false);
         }
-
+        
+        private void processOfferForActiveOnFull(DataWrapper dataWrapper) throws Exception {
+            if (!queue.offer(dataWrapper)) {
+                flushQueue();
+                offerWithTimeout(dataWrapper);
+            }
+            if (maxQueueSize < queueSize) processQueueSizeStat();
+        }
+        
+        private void processOfferForPassive(DataWrapper dataWrapper) throws Exception {
+            offerWithTimeout(dataWrapper);
+            processQueueSizeStat();
+        }
+        
         public void run() {
             try {
                 while(true) {
@@ -148,6 +212,34 @@ public class QueueDataPipe extends AbstractSafeDataPipe {
             }
         }
         
+        private void flushQueue() throws Exception {
+            if (!flushing.compareAndSet(false, true))
+                return;
+            try {
+                final List<DataWrapper> dataList = new ArrayList<DataWrapper>(queueSize);
+                queue.drainTo(dataList);
+                executor.execute(new AbstractTask(QueueDataPipe.this, "Flushing data from queue to consumers") {
+                    @Override public void doRun() throws Exception {
+                        for (DataWrapper dataWrapper: dataList)
+                            sendDataToConsumers(dataWrapper.data, dataWrapper.context);
+                        sendDataToConsumers(null, new DataContextImpl());
+                    }
+                });
+            } finally {
+                flushing.set(false);
+            }
+        }
+
+        private void offerWithTimeout(DataWrapper dataWrapper) throws Exception {
+            if (!queue.offer(dataWrapper, OFFER_TIMEOUT, TimeUnit.MILLISECONDS)) 
+                throw new Exception("Queue exhausted. Received DATA discarded");
+        }
+
+        private void processQueueSizeStat() {
+            int queueSize = queue.size();
+            if (queueSize > maxQueueSize)
+                maxQueueSize = queueSize;
+        }
     }
 
     private class DataWrapper {
