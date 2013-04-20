@@ -48,6 +48,8 @@ public class NodeLoggerImpl extends AbstractDbWorker<NodeLogRecord> implements N
 	private static final String sSelLogsFromSingleTableNN = sMainSelect + " and " +
 	NodeLogRecord.NODE_ID + " in(" + NODES_MARKER + ") " + orderBy;
 	
+    private volatile NodeLoggerNode nodeLogger;
+    
     public NodeLoggerImpl() 
     {
     	setMetaTableNamePrefix("log");
@@ -62,7 +64,11 @@ public class NodeLoggerImpl extends AbstractDbWorker<NodeLogRecord> implements N
 	}
 
 	public void write(Node node, LogLevel level, String message) {
-		write(new NodeLogRecord(node.getId(),node.getPath(),level,message));
+        final NodeLogRecord rec = new NodeLogRecord(node.getId(),node.getPath(),level,message);
+		write(rec);
+        final NodeLoggerNode _nodeLogger = nodeLogger;
+        if (_nodeLogger!=null)
+            _nodeLogger.pushLogRecordToHandlers(rec);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -97,6 +103,7 @@ public class NodeLoggerImpl extends AbstractDbWorker<NodeLogRecord> implements N
     public synchronized void setNodeLoggerNode(NodeLoggerNode nodeLoggerNode)
     {
         setNode(nodeLoggerNode);
+        this.nodeLogger = nodeLoggerNode;
     }
 
     public synchronized NodeLoggerNode getNodeLoggerNode()

@@ -30,7 +30,7 @@ public interface DataSource extends Node, AttributesGenerator
      * Immediate gathers data for data consumer.
      * @param dataConsumer data consumer for which data will gather
      * @param context the context of this data processing.
-     * @return <b>true</b> if data got successfull, else <b>false</b 
+     * @return <b>true</b> if data got successful, else <b>false</b 
      */
     public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context);
     public Boolean getStopProcessingOnError();

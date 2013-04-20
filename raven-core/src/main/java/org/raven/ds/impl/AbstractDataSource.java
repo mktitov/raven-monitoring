@@ -52,12 +52,8 @@ public abstract class AbstractDataSource extends BaseNode implements DataSource
         fillConsumerAttributes(consumerAttributes);
     }
 
-    public boolean getDataImmediate(
-            DataConsumer dataConsumer, DataContext context)
-    {
-        context.addSessionAttributes(
-                dataConsumer instanceof Node? ((Node)dataConsumer).getNodeAttributes() : null
-                , false);
+    public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context) {
+        context.addSessionAttributes(dataConsumer instanceof Node? ((Node)dataConsumer).getAttrs() : null, false);
 
         if (!checkDataConsumer(dataConsumer, context.getSessionAttributes()))
         {

@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.impl.ExecutorServiceNode;
 import org.raven.test.DataCollector;
+import org.raven.test.InThreadExecutorService;
 import org.raven.test.PushDataSource;
 import org.raven.test.RavenCoreTestCase;
 
@@ -31,15 +32,15 @@ public class QueueDataPipeTest extends RavenCoreTestCase {
     private ExecutorServiceNode executor;
     private PushDataSource ds;
     private DataCollector collector;
-    private QueueDataPipe queuePipe;
+    private QueueDataPipe queue;
     
     @Before
     public void prepare() {
         executor = new ExecutorServiceNode();
         executor.setName("executor");
         tree.getRootNode().addAndSaveChildren(executor);
-        executor.setCorePoolSize(2);
-        executor.setMaximumQueueSize(2);
+        executor.setCorePoolSize(4);
+        executor.setMaximumQueueSize(4);
         assertTrue(executor.start());
         
         ds = new PushDataSource();
@@ -47,22 +48,22 @@ public class QueueDataPipeTest extends RavenCoreTestCase {
         tree.getRootNode().addAndSaveChildren(ds);
         assertTrue(ds.start());
         
-        queuePipe = new QueueDataPipe();
-        queuePipe.setName("queuePipe");
-        tree.getRootNode().addAndSaveChildren(queuePipe);
-        queuePipe.setDataSource(ds);
-        queuePipe.setExecutor(executor);
-        assertTrue(queuePipe.start());
+        queue = new QueueDataPipe();
+        queue.setName("queuePipe");
+        tree.getRootNode().addAndSaveChildren(queue);
+        queue.setDataSource(ds);
+        queue.setExecutor(executor);
+        assertTrue(queue.start());
         
         collector = new DataCollector();
         collector.setName("collector");
         tree.getRootNode().addAndSaveChildren(collector);
-        collector.setDataSource(queuePipe);
+        collector.setDataSource(queue);
         assertTrue(collector.start());
     }
     
     @Test
-    public void test() throws Exception {
+    public void activeTest() throws Exception {
         for (int i=0; i<512; ++i)
             ds.pushData(i);
         Thread.sleep(1000);
@@ -70,7 +71,7 @@ public class QueueDataPipeTest extends RavenCoreTestCase {
     }
     
     @Test
-    public void test2() throws Exception {
+    public void activeTest2() throws Exception {
         for (int i=0; i<512; ++i) {
             ds.pushData(i);
             Thread.sleep(1);
@@ -80,12 +81,96 @@ public class QueueDataPipeTest extends RavenCoreTestCase {
     }
     
     @Test
-    public void test3() throws Exception {
+    public void activeTest3() throws Exception {
         for (int i=0; i<512; ++i) {
             ds.pushData(i);
             Thread.sleep(i%100==0?1100 : 1);
         }
         Thread.sleep(7000);
         assertEquals(512, collector.getDataListSize());
+    }
+    
+    @Test
+    public void activeOnFullTest() throws Exception {
+        queue.stop();
+        queue.setQueueType(QueueDataPipe.QueueType.ACTIVE_ON_FULL);
+        queue.setExecutor(createInThreadExecutor());
+        queue.setQueueSize(2);
+        assertTrue(queue.start());
+        
+        ds.pushData(1);
+        ds.pushData(2);
+        assertEquals(0, collector.getDataListSize());
+        ds.pushData(3);
+        assertEquals(3, collector.getDataListSize());
+        assertArrayEquals(new Object[]{1,2,null}, collector.getDataList().toArray());
+        collector.getDataList().clear();
+        ds.pushData(4);
+        ds.pushData(5);
+        assertArrayEquals(new Object[]{3,4,null}, collector.getDataList().toArray());
+    }
+    
+    @Test
+    public void passiveTest() throws Exception {
+        queue.stop();
+        queue.setQueueType(QueueDataPipe.QueueType.PASSIVE);
+        queue.setExecutor(createInThreadExecutor());
+        assertTrue(queue.start());
+
+        ds.pushData(1);
+        ds.pushData(2);
+        assertEquals(0, collector.getDataListSize());
+        collector.refereshData(null);
+        assertEquals(3, collector.getDataListSize());
+        assertArrayEquals(new Object[]{1,2,null}, collector.getDataList().toArray());
+    }
+    
+    @Test
+    public void passiveThresholdTest() throws Exception {
+        queue.stop();
+        queue.setQueueType(QueueDataPipe.QueueType.PASSIVE);
+        queue.setExecutor(createInThreadExecutor());
+        queue.setDataCountThreshold(2);
+        assertTrue(queue.start());
+
+        ds.pushData(1);
+        collector.refereshData(null);
+        assertEquals(0, collector.getDataListSize());
+        ds.pushData(2);
+        collector.refereshData(null);
+        assertEquals(3, collector.getDataListSize());
+        assertArrayEquals(new Object[]{1,2,null}, collector.getDataList().toArray());
+    }
+    
+    @Test
+    public void dataLifetimeTest() throws Exception {
+        queue.stop();
+        queue.setDataLifetime(1);
+        queue.setQueueType(QueueDataPipe.QueueType.PASSIVE);
+        queue.start();
+        
+        ds.pushData(1);
+        Thread.sleep(100);
+        collector.refereshData(null);
+        Thread.sleep(100);
+        assertEquals(2, collector.getDataListSize());
+        collector.getDataList().clear();
+        
+        ds.pushData(1);
+        Thread.sleep(500);
+        ds.pushData(2);
+        Thread.sleep(600);
+        collector.refereshData(null);
+        Thread.sleep(100);
+        assertEquals(2, collector.getDataListSize());
+        assertArrayEquals(new Object[]{2, null}, collector.getDataList().toArray());
+    }
+    
+    public ExecutorService createInThreadExecutor() {
+        InThreadExecutorService executor = new InThreadExecutorService();
+        executor.setName("in thread executor");
+        testsNode.addAndSaveChildren(executor);
+        assertTrue(executor.start());
+        return executor;
     }
 }

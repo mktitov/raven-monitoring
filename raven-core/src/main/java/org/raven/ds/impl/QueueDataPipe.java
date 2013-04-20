@@ -23,11 +23,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
 import org.raven.sched.ExecutorService;
+import org.raven.sched.ExecutorServiceException;
 import org.raven.sched.Task;
 import org.raven.sched.impl.AbstractTask;
 import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
@@ -51,18 +53,25 @@ public class QueueDataPipe extends AbstractSafeDataPipe {
     @NotNull @Parameter(defaultValue="ACTIVE")
     private QueueType queueType;
     
-    @Parameter
+    @NotNull @Parameter(defaultValue="0")
     private Integer dataLifetime;
     
     @NotNull @Parameter(defaultValue="SECONDS")
     private TimeUnit dataLifetimeUnit;
+    
+    @NotNull @Parameter(defaultValue="1")
+    private Integer dataCountThreshold;
+    
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean forwardPullRequest;
     
     private volatile Worker worker;
     
     @Override
     protected void doStart() throws Exception {
         super.doStart();
-        worker = new Worker(queueSize, queueType, executor);
+        worker = new Worker(queueSize, queueType, executor, dataCountThreshold, 
+            dataLifetimeUnit.toMillis(dataLifetime));
     }
 
     @Override
@@ -80,6 +89,19 @@ public class QueueDataPipe extends AbstractSafeDataPipe {
         Worker aworker = worker;
         if (aworker!=null)
             aworker.offer(data, context);
+    }
+
+    @Override
+    public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context) {
+        if (!isStarted()) return false;
+        try {
+            Worker _worker = worker;
+            if (_worker!=null) _worker.flushQueue();
+        } catch (Exception e) {
+            if (isLogLevelEnabled(LogLevel.ERROR))
+                getLogger().error("Error flushing queue", e);
+        }
+        return forwardPullRequest? super.getDataImmediate(dataConsumer, context) : true;
     }
 
     @Override
@@ -139,6 +161,22 @@ public class QueueDataPipe extends AbstractSafeDataPipe {
     public void setDataLifetimeUnit(TimeUnit dataLifetimeUnit) {
         this.dataLifetimeUnit = dataLifetimeUnit;
     }
+
+    public Integer getDataCountThreshold() {
+        return dataCountThreshold;
+    }
+
+    public void setDataCountThreshold(Integer dataCountThreshold) {
+        this.dataCountThreshold = dataCountThreshold;
+    }
+
+    public Boolean getForwardPullRequest() {
+        return forwardPullRequest;
+    }
+
+    public void setForwardPullRequest(Boolean forwardPullRequest) {
+        this.forwardPullRequest = forwardPullRequest;
+    }
     
     private class Worker implements Task {
         public static final int OFFER_TIMEOUT = 100;
@@ -146,14 +184,21 @@ public class QueueDataPipe extends AbstractSafeDataPipe {
         private final BlockingQueue<DataWrapper> queue;
         private final AtomicBoolean running = new AtomicBoolean(false);
         private final AtomicBoolean flushing = new AtomicBoolean(false);
+        private final AtomicBoolean deleting = new AtomicBoolean(false);
         private final QueueType queueType;
+        private final int dataCountThreshold;
         private final ExecutorService executor;
+        private final long lifetime;
         private volatile int maxQueueSize = 0;
 
-        public Worker(int queueSize, QueueType queueType, ExecutorService executor) {
+        public Worker(int queueSize, QueueType queueType, ExecutorService executor, int dataCountThreshold, 
+            long lifetime) 
+        {
             this.queue = new ArrayBlockingQueue<DataWrapper>(queueSize);
             this.queueType = queueType;
             this.executor = executor;
+            this.dataCountThreshold = dataCountThreshold;
+            this.lifetime = lifetime;
         }
         
         public Node getTaskNode() {
@@ -165,7 +210,7 @@ public class QueueDataPipe extends AbstractSafeDataPipe {
         }
         
         public void offer(Object data, DataContext context) throws Exception {
-            DataWrapper dataWrapper = new DataWrapper(data, context);
+            DataWrapper dataWrapper = new DataWrapper(data, context, System.currentTimeMillis());
             switch (queueType) {
                 case ACTIVE        : processOfferForActive(dataWrapper); break;
                 case ACTIVE_ON_FULL: processOfferForActiveOnFull(dataWrapper); break;
@@ -186,11 +231,13 @@ public class QueueDataPipe extends AbstractSafeDataPipe {
                 flushQueue();
                 offerWithTimeout(dataWrapper);
             }
+            executeDeleteTask(lifetime);
             if (maxQueueSize < queueSize) processQueueSizeStat();
         }
         
         private void processOfferForPassive(DataWrapper dataWrapper) throws Exception {
             offerWithTimeout(dataWrapper);
+            executeDeleteTask(lifetime);
             processQueueSizeStat();
         }
         
@@ -215,17 +262,53 @@ public class QueueDataPipe extends AbstractSafeDataPipe {
             if (!flushing.compareAndSet(false, true))
                 return;
             try {
-                final List<DataWrapper> dataList = new ArrayList<DataWrapper>(queueSize);
-                queue.drainTo(dataList);
-                executor.execute(new AbstractTask(QueueDataPipe.this, "Flushing data from queue to consumers") {
-                    @Override public void doRun() throws Exception {
-                        for (DataWrapper dataWrapper: dataList)
-                            sendDataToConsumers(dataWrapper.data, dataWrapper.context);
-                        sendDataToConsumers(null, new DataContextImpl());
-                    }
-                });
+                List<DataWrapper> dataList;
+                synchronized(queue) {
+                    if (queue.size()<dataCountThreshold) return;
+                    dataList = new ArrayList<DataWrapper>(queueSize);
+                    queue.drainTo(dataList);
+                }
+                final List<DataWrapper> _dataList = dataList;
+                if (dataList.size()>=dataCountThreshold)
+                    executor.execute(new AbstractTask(QueueDataPipe.this, "Flushing data from queue to consumers") {
+                        @Override public void doRun() throws Exception {
+                            for (DataWrapper dataWrapper: _dataList)
+                                sendDataToConsumers(dataWrapper.data, dataWrapper.context);
+                            sendDataToConsumers(null, new DataContextImpl());
+                        }
+                    });
             } finally {
                 flushing.set(false);
+            }
+        }
+        
+        private void executeDeleteTask(long interval) {
+            if (lifetime<=0 || !deleting.compareAndSet(false, true))
+                return;
+            try {
+                executor.execute(interval, new AbstractTask(QueueDataPipe.this, "Deleting old data in queue") {
+                    @Override public void doRun() throws Exception {
+                        DataWrapper dataWrapper = null;
+                        long timeBound = System.currentTimeMillis()-lifetime;
+                        try {
+                            synchronized(queue) {
+                                dataWrapper = queue.peek();
+                                while (dataWrapper!=null && dataWrapper.created<timeBound) {
+                                    queue.poll();
+                                    dataWrapper = queue.peek();
+                                }
+                            }
+                        } finally {
+                            deleting.set(false);
+                        }
+                        if (dataWrapper!=null) 
+                            executeDeleteTask(dataWrapper.created-timeBound);
+                    }
+                });
+            } catch (ExecutorServiceException e) {
+                deleting.set(false);
+                if (isLogLevelEnabled(LogLevel.ERROR))
+                    getLogger().error("Error executing delete task");
             }
         }
 
@@ -244,10 +327,12 @@ public class QueueDataPipe extends AbstractSafeDataPipe {
     private class DataWrapper {
         private final Object data;
         private final DataContext context;
+        private final long created;
 
-        public DataWrapper(Object data, DataContext context) {
+        public DataWrapper(Object data, DataContext context, long created) {
             this.data = data;
             this.context = context;
+            this.created = created;
         }
     }
 }

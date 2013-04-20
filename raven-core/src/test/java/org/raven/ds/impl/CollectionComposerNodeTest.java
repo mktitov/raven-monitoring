@@ -32,8 +32,16 @@ import org.raven.test.RavenCoreTestCase;
 public class CollectionComposerNodeTest extends RavenCoreTestCase
 {
     @Test
-    public void test()
-    {
+    public void test() {
+        doTest(true);
+    }
+    
+    @Test
+    public void test2() {
+        doTest(false);
+    }
+    
+    private void doTest(boolean collectDataInContext) {
         PushDataSource ds = new PushDataSource();
         ds.setName("dataSource");
         tree.getRootNode().addAndSaveChildren(ds);
@@ -43,6 +51,7 @@ public class CollectionComposerNodeTest extends RavenCoreTestCase
         composer.setName("composer");
         tree.getRootNode().addAndSaveChildren(composer);
         composer.setDataSource(ds);
+        composer.setCollectDataInContext(collectDataInContext);
         assertTrue(composer.start());
 
         DataCollector collector = new DataCollector();

@@ -17,12 +17,16 @@
 
 package org.raven.ds.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 import org.raven.annotations.NodeClass;
+import org.raven.annotations.Parameter;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.expr.BindingSupport;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
@@ -32,30 +36,67 @@ import org.raven.expr.BindingSupport;
 public class CollectionComposerNode extends AbstractSafeDataPipe
 {
     public final static String COLLECTION_PARAM = "collection";
+    
+    @NotNull @Parameter(defaultValue="true")
+    private Boolean collectDataInContext;
+    
+    private List dataList;
 
     @Override
-    protected synchronized void doSetData(DataSource dataSource, Object data, DataContext context)
+    protected void doSetData(DataSource dataSource, Object data, DataContext context)
             throws Exception
     {
-        Collection collection = (Collection) context.getNodeParameter(this, COLLECTION_PARAM);
-        if (data==null){
-            if (collection!=null){
-                sendDataToConsumers(collection, context);
-                context.removeNodeParameter(this, COLLECTION_PARAM);
-            }
+        Collection dataToSend = null;
+        synchronized(this) {
+            if (data==null) dataToSend = removeCollection(context);
+            else getOrCreateCollection(context).add(data);
+        }
+        if (data==null) {
+            if (dataToSend!=null)
+                sendDataToConsumers(dataToSend, context);
             sendDataToConsumers(null, context);
-        }else{
-            if (collection==null){
+        }
+    }
+    
+    private Collection removeCollection(DataContext context) {
+        if (collectDataInContext) 
+            return (Collection)context.removeNodeParameter(this, COLLECTION_PARAM);
+        else {
+            Collection collection = null;
+            if (dataList!=null) {
+                collection = new ArrayList(dataList);
+                dataList = null;
+            }
+            return collection;
+        }
+    }
+    
+    private Collection getOrCreateCollection(DataContext context) {
+        Collection collection = null;
+        if (collectDataInContext) {
+            collection = (Collection) context.getNodeParameter(this, COLLECTION_PARAM);
+            if (collection==null) {
                 collection = new LinkedList();
                 context.putNodeParameter(this, COLLECTION_PARAM, collection);
             }
-            collection.add(data);
+        } else {
+            if (dataList==null) dataList = new LinkedList();
+            collection = dataList;
         }
+        return collection;
     }
-
+    
     @Override
     protected void doAddBindingsForExpression(
             DataSource dataSource, Object data, DataContext context, BindingSupport bindingSupport)
     {
+    }
+
+    public Boolean getCollectDataInContext() {
+        return collectDataInContext;
+    }
+
+    public void setCollectDataInContext(Boolean collectDataInContext) {
+        this.collectDataInContext = collectDataInContext;
     }
 }

@@ -183,13 +183,11 @@ public abstract class AbstractSafeDataPipe
     }
 
     @Override
-    public boolean gatherDataForConsumer(
-            DataConsumer dataConsumer, DataContext context) throws Exception
-    {
+    public boolean gatherDataForConsumer(DataConsumer dataConsumer, DataContext context) throws Exception {
         if (dataConsumer!=null)
             context.putNodeParameter(this, CONSUMER_PARAM, dataConsumer);
 
-        Collection<Node> childs = getEffectiveChildrens();
+        Collection<Node> childs = getEffectiveNodes();
         if (childs!=null && !childs.isEmpty())
             for (Node child: childs)
                 if (   child.getStatus().equals(Status.STARTED)
@@ -219,7 +217,7 @@ public abstract class AbstractSafeDataPipe
             bindingSupport.put(DATA_CONTEXT_BINDING, context);
             bindingSupport.put(REQUESTER_BINDING, dataConsumer);
             try {
-                preprocessResult = getNodeAttribute(PREPROCESS_ATTRIBUTE).getRealValue();
+                preprocessResult = getAttr(PREPROCESS_ATTRIBUTE).getRealValue();
                 if (isLogLevelEnabled(LogLevel.DEBUG))
                     debug(String.format("Preprocessed value is (%s)", preprocessResult));
             } finally {
@@ -243,8 +241,7 @@ public abstract class AbstractSafeDataPipe
     }
     
     @Override
-    public Collection<NodeAttribute> generateAttributes()
-    {
+    public Collection<NodeAttribute> generateAttributes() {
         Collection<NodeAttribute> consumerAttributes = new ArrayList<NodeAttribute>();
         Boolean _forwardDataSourceAttributes = forwardDataSourceAttributes;
         DataSource _dataSource = getDataSource();
@@ -255,7 +252,7 @@ public abstract class AbstractSafeDataPipe
                 consumerAttributes.addAll(dsAttrs);
         }
 
-        Collection<Node> childs = getEffectiveChildrens();
+        Collection<Node> childs = getEffectiveNodes();
         if (childs!=null && !childs.isEmpty())
             for (Node child: childs)
                 if (   child.getStatus().equals(Status.STARTED)
