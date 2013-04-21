@@ -24,8 +24,7 @@ import org.raven.tree.NodeAttribute;
  *
  * @author Mikhail Titov
  */
-public interface SessionAttributeGenerator extends FieldValueGenerator
-{
+public interface SessionAttributeGenerator extends FieldValueGenerator {
     /**
      * Returns the session attribute type
      */

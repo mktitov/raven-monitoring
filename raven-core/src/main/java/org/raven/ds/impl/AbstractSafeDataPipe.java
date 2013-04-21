@@ -72,6 +72,7 @@ public abstract class AbstractSafeDataPipe
 
     protected BindingSupportImpl bindingSupport;
     private boolean supportedPullOperation = true;
+    private boolean hasSessAttrGenChildType = false;
 
     protected boolean isSupportedPullOperation() {
         return supportedPullOperation;
@@ -89,71 +90,68 @@ public abstract class AbstractSafeDataPipe
         this.autoLinkDataSource = autoLinkDataSource;
     }
 
-    public String getPreProcess()
-    {
+    public String getPreProcess() {
         return preProcess;
     }
 
-    public void setPreProcess(String preProcess)
-    {
+    public void setPreProcess(String preProcess) {
         this.preProcess = preProcess;
     }
 
-    public Boolean getUsePreProcess()
-    {
+    public Boolean getUsePreProcess() {
         return usePreProcess;
     }
 
-    public void setUsePreProcess(Boolean usePreProcess)
-    {
+    public void setUsePreProcess(Boolean usePreProcess) {
         this.usePreProcess = usePreProcess;
     }
 
-    public Boolean getForwardDataSourceAttributes()
-    {
+    public Boolean getForwardDataSourceAttributes() {
         return forwardDataSourceAttributes;
     }
 
-    public void setForwardDataSourceAttributes(Boolean forwardDataSourceAttributes)
-    {
+    public void setForwardDataSourceAttributes(Boolean forwardDataSourceAttributes) {
         this.forwardDataSourceAttributes = forwardDataSourceAttributes;
     }
 
-    public DataSource getDataSource()
-    {
+    public DataSource getDataSource() {
         return dataSource;
     }
 
-    public void setDataSource(DataSource dataSource)
-    {
+    public void setDataSource(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
-    public Object getExpression()
-    {
+    public Object getExpression() {
         return expression;
     }
 
-    public void setExpression(Object expression)
-    {
+    public void setExpression(Object expression) {
         this.expression = expression;
     }
 
-    public Boolean getUseExpression()
-    {
+    public Boolean getUseExpression() {
         return useExpression;
     }
 
-    public void setUseExpression(Boolean useExpression)
-    {
+    public void setUseExpression(Boolean useExpression) {
         this.useExpression = useExpression;
     }
 
     @Override
-    protected void initFields()
-    {
+    protected void initFields() {
         super.initFields();
         bindingSupport = new BindingSupportImpl();
+    }
+
+    @Override
+    protected void doStart() throws Exception {
+        super.doStart();
+        for (Class nodeType: getChildNodeTypes()) 
+            if (SessionAttributeGenerator.class.isAssignableFrom(nodeType)) {
+                hasSessAttrGenChildType = true;
+                break;
+            }
     }
 
     @Override
@@ -187,28 +185,20 @@ public abstract class AbstractSafeDataPipe
         if (dataConsumer!=null)
             context.putNodeParameter(this, CONSUMER_PARAM, dataConsumer);
 
-        Collection<Node> childs = getEffectiveNodes();
-        if (childs!=null && !childs.isEmpty())
-            for (Node child: childs)
-                if (   child.getStatus().equals(Status.STARTED)
-                    && child instanceof SessionAttributeGenerator)
-                {
-                    if (isLogLevelEnabled(LogLevel.DEBUG))
-                        debug(String.format(
-                                "Creating session attribute (%s)", child.getName()));
-                    SessionAttributeGenerator gen = (SessionAttributeGenerator)child;
-                    Object value = gen.getFieldValue(context);
-                    NodeAttributeImpl attr = new NodeAttributeImpl(
-                            gen.getName(), gen.getAttributeType(), value, null);
-                    attr.setOwner(this);
-                    attr.init();
-                    context.addSessionAttribute(attr);
-                    if (isLogLevelEnabled(LogLevel.DEBUG))
-                        debug(String.format(
-                                "Attribute information: type - (%s), value (%s)"
-                                , gen.getAttributeType(), value));
-                }
-
+        if (hasSessAttrGenChildType)
+            for (SessionAttributeGenerator gen: NodeUtils.getEffectiveChildsOfType(this, SessionAttributeGenerator.class)) {
+                if (isLogLevelEnabled(LogLevel.DEBUG))
+                    debug(String.format("Creating session attribute (%s)", gen.getName()));
+                Object value = gen.getFieldValue(context);
+                NodeAttributeImpl attr = new NodeAttributeImpl(
+                        gen.getName(), gen.getAttributeType(), value, null);
+                attr.setOwner(this);
+                attr.init();
+                context.addSessionAttribute(attr);
+                if (isLogLevelEnabled(LogLevel.DEBUG))
+                    debug(String.format(
+                        "Attribute information: type - (%s), value (%s)", gen.getAttributeType(), value));
+            }
         Object preprocessResult = null;
         if (usePreProcess) {
             if (isLogLevelEnabled(LogLevel.DEBUG))
@@ -265,8 +255,7 @@ public abstract class AbstractSafeDataPipe
     }
 
     @Override
-    public void formExpressionBindings(Bindings bindings)
-    {
+    public void formExpressionBindings(Bindings bindings) {
         super.formExpressionBindings(bindings);
         bindingSupport.addTo(bindings);
     }

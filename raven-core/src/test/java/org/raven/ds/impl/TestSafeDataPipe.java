@@ -17,6 +17,7 @@
 
 package org.raven.ds.impl;
 
+import org.raven.annotations.NodeClass;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.expr.BindingSupport;
@@ -25,6 +26,7 @@ import org.raven.expr.BindingSupport;
  *
  * @author Mikhail Titov
  */
+@NodeClass(childNodes=TestSessionAttributeNode.class)
 public class TestSafeDataPipe extends AbstractSafeDataPipe
 {
     @Override

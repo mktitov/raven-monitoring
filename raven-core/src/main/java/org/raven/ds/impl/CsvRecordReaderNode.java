@@ -22,8 +22,7 @@ import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import javax.script.Bindings;
-import javax.script.SimpleBindings;
+import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang.text.StrTokenizer;
@@ -70,28 +69,22 @@ public class CsvRecordReaderNode extends AbstractSafeDataPipe
     @Parameter(defaultValue="true")
     private Boolean lineFilter;
 
+    private AtomicLong validRecords;
     @Parameter(readOnly=true)
-    private long validRecords;
-    @Parameter(readOnly=true)
-    private long errorRecords;
+    private AtomicLong errorRecords;
 
-    private long processingTime;
-
-    private Bindings localBindings;
+    private AtomicLong processingTime;
 
     @Override
-    protected void initFields()
-    {
+    protected void initFields() {
         super.initFields();
-
-        validRecords = 0;
-        errorRecords = 0;
-        processingTime = 0;
+        validRecords = new AtomicLong();
+        errorRecords = new AtomicLong();
+        processingTime = new AtomicLong();
     }
 
     @Override
-    public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes)
-    {
+    public void fillConsumerAttributes(Collection<NodeAttribute> consumerAttributes) {
     }
 
     @Override
@@ -99,196 +92,118 @@ public class CsvRecordReaderNode extends AbstractSafeDataPipe
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data, DataContext context)
-    {
+    protected void doSetData(DataSource dataSource, Object data, DataContext context)  {
         long start = System.currentTimeMillis();
-        if (data==null)
-        {
+        if (data==null) {
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug(String.format("Recieved null data from node (%s)", dataSource.getPath()));
             return;
         }
-
         Map<String, FieldInfo> fieldsColumns = getFieldsColumns(recordSchema, cvsExtensionName);
-        if (fieldsColumns==null)
-        {
+        if (fieldsColumns==null) {
             if (isLogLevelEnabled(LogLevel.WARN))
                 debug(String.format(
                         "CsvRecordFieldExtension was not defined for fields in the record schema (%s)"
                         , recordSchema.getName()));
             return;
         }
-
         InputStream dataStream = converter.convert(InputStream.class, data, null);
         Charset _charset = dataEncoding;
         RecordSchemaNode _recordSchema = recordSchema;
-        try
-        {
-            try
-            {
-                LineIterator it =
-                        IOUtils.lineIterator(dataStream, _charset==null? null : _charset.name());
+        try {
+            try {
+                LineIterator it = IOUtils.lineIterator(dataStream, _charset==null? null : _charset.name());
                 if (isLogLevelEnabled(LogLevel.TRACE))
                     trace(String.format("Lines recieved from the node (%s)", dataSource.getPath()));
-                localBindings = new SimpleBindings();
                 int linenum=1;
                 StrTokenizer tokenizer = new StrTokenizer();
                 tokenizer.setDelimiterString(delimiter);
                 tokenizer.setQuoteChar(quoteChar.charAt(0));
                 tokenizer.setEmptyTokenAsNull(true);
                 tokenizer.setIgnoreEmptyTokens(false);
-
-                while (it.hasNext())
-                {
-                    String line = it.nextLine();
-                    if (isLogLevelEnabled(LogLevel.TRACE))
-                        trace(line);
-
-                    localBindings.put(LINE_BINDING, line);
-                    localBindings.put(LINENUMBER_BINDING, linenum);
-                    if (!lineFilter)
-                    {
-                        if (isLogLevelEnabled(LogLevel.DEBUG))
-                            debug(String.format("Skiping line (%s). FILTERED", line));
-                    }
-                    else
-                    {
-                        try
-                        {
-                            tokenizer.reset(line);
-                            String[] tokens = tokenizer.getTokenArray();
-                            Record record = recordSchema.createRecord();
-                            for (Map.Entry<String, FieldInfo> entry: fieldsColumns.entrySet())
-                            {
-                                int colNum = entry.getValue().getColumnNumber()-1;
-                                if (colNum<tokens.length)
-                                {
-                                    Object value = entry.getValue().prepareValue(
-                                            tokens[entry.getValue().getColumnNumber()-1]);
-                                    record.setValue(entry.getKey(), value);
-                                }
-                            }
-                            sendDataToConsumers(record, context);
-                            ++validRecords;
-                        }catch(Throwable e)
-                        {
-                            ++errorRecords;
-                            error("Error creating or sending record to consumers. ", e);
-                            error(line);
-                        }
-                    }
-                    linenum++;
-                }
+                while (it.hasNext()) 
+                    processLine(it.nextLine(), linenum++, tokenizer, fieldsColumns, context);
                 sendDataToConsumers(null, context);
-            }
-            catch(Exception e)
-            {
+            } catch(Exception e) {
                 if (isLogLevelEnabled(LogLevel.ERROR))
-                    error(
-                        String.format("Error reading data from node (%s).", dataSource.getPath())
-                        , e);
+                    error(String.format("Error reading data from node (%s).", dataSource.getPath()), e);
             }
-        }finally
-        {
-            localBindings = null;
-            processingTime += System.currentTimeMillis() - start;
+        } finally {
+            bindingSupport.reset();
+            processingTime.addAndGet(System.currentTimeMillis() - start);
         }
     }
 
-    @Override
-    public void formExpressionBindings(Bindings bindings)
-    {
-        if (localBindings!=null)
-            bindings.putAll(localBindings);
-        super.formExpressionBindings(bindings);
+    @Parameter(readOnly=true)
+    public double getRecordsPerSecond() {
+        double count = validRecords.get()+errorRecords.get();
+        return count==0.? 0. : processingTime.get()/count*1000;
     }
 
     @Parameter(readOnly=true)
-    public double getRecordsPerSecond()
-    {
-        double count = validRecords+errorRecords;
-        return count==0.? 0. : processingTime/count*1000;
+    public long getErrorRecords() {
+        return errorRecords.get();
     }
 
-    public long getErrorRecords()
-    {
-        return errorRecords;
+    @Parameter(readOnly=true)
+    public long getValidRecords() {
+        return validRecords.get();
     }
 
-    public long getValidRecords()
-    {
-        return validRecords;
-    }
-
-    public RecordSchemaNode getRecordSchema()
-    {
+    public RecordSchemaNode getRecordSchema() {
         return recordSchema;
     }
 
-    public void setRecordSchema(RecordSchemaNode recordSchema)
-    {
+    public void setRecordSchema(RecordSchemaNode recordSchema) {
         this.recordSchema = recordSchema;
     }
 
-    public String getCvsExtensionName()
-    {
+    public String getCvsExtensionName() {
         return cvsExtensionName;
     }
 
-    public void setCvsExtensionName(String cvsExtensionName)
-    {
+    public void setCvsExtensionName(String cvsExtensionName) {
         this.cvsExtensionName = cvsExtensionName;
     }
 
-    public Charset getDataEncoding()
-    {
+    public Charset getDataEncoding() {
         return dataEncoding;
     }
 
-    public void setDataEncoding(Charset dataEncoding)
-    {
+    public void setDataEncoding(Charset dataEncoding) {
         this.dataEncoding = dataEncoding;
     }
 
-    public String getDelimiter()
-    {
+    public String getDelimiter() {
         return delimiter;
     }
 
-    public void setDelimiter(String delimiter)
-    {
+    public void setDelimiter(String delimiter) {
         this.delimiter = delimiter;
     }
 
-    public String getQuoteChar()
-    {
+    public String getQuoteChar() {
         return quoteChar;
     }
 
-    public void setQuoteChar(String quoteChar)
-    {
+    public void setQuoteChar(String quoteChar) {
         this.quoteChar = quoteChar;
     }
 
-    public Boolean getLineFilter()
-    {
+    public Boolean getLineFilter() {
         return lineFilter;
     }
 
-    public void setLineFilter(Boolean lineFilter)
-    {
+    public void setLineFilter(Boolean lineFilter) {
         this.lineFilter = lineFilter;
     }
 
-    static Map<String, FieldInfo> getFieldsColumns(RecordSchema recordSchema, String csvExtensionName)
-    {
+    static Map<String, FieldInfo> getFieldsColumns(RecordSchema recordSchema, String csvExtensionName) {
         RecordSchemaField[] fields = recordSchema.getFields();
         if (fields==null)
             return null;
-
         Map<String, FieldInfo> result = new HashMap<String, FieldInfo>();
-        for (RecordSchemaField field: fields)
-        {
+        for (RecordSchemaField field: fields) {
             CsvRecordFieldExtension extension =
                     field.getFieldExtension(CsvRecordFieldExtension.class, csvExtensionName);
             if (extension!=null)
@@ -297,24 +212,53 @@ public class CsvRecordReaderNode extends AbstractSafeDataPipe
         return result;
     }
 
-    static class FieldInfo
+    private void processLine(String line, int linenum, StrTokenizer tokenizer, Map<String, FieldInfo> fieldsColumns, 
+        DataContext context) 
     {
+        if (isLogLevelEnabled(LogLevel.TRACE))
+            trace(line);
+        bindingSupport.put(LINE_BINDING, line);
+        bindingSupport.put(LINENUMBER_BINDING, linenum);
+        if (!lineFilter) {
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug(String.format("Skiping line (%s). FILTERED", line));
+        } else {
+            try {
+                tokenizer.reset(line);
+                String[] tokens = tokenizer.getTokenArray();
+                Record record = recordSchema.createRecord();
+                for (Map.Entry<String, FieldInfo> entry: fieldsColumns.entrySet()) {
+                    int colNum = entry.getValue().getColumnNumber()-1;
+                    if (colNum<tokens.length) {
+                        Object value = entry.getValue().prepareValue(
+                                tokens[entry.getValue().getColumnNumber()-1]);
+                        record.setValue(entry.getKey(), value);
+                    }
+                }
+                sendDataToConsumers(record, context);
+                validRecords.incrementAndGet();
+            } catch(Throwable e) {
+                errorRecords.incrementAndGet();
+                error("Error creating or sending record to consumers. ", e);
+                error(line);
+            }
+        }
+    }
+
+    static class FieldInfo {
         private final int columnNumber;
         private final CsvRecordFieldExtension extension;
 
-        public FieldInfo(CsvRecordFieldExtension extension)
-        {
+        public FieldInfo(CsvRecordFieldExtension extension) {
             this.extension = extension;
             this.columnNumber = extension.getColumnNumber();
         }
 
-        public int getColumnNumber()
-        {
+        public int getColumnNumber() {
             return columnNumber;
         }
 
-        public Object prepareValue(Object value)
-        {
+        public Object prepareValue(Object value) {
             return extension.prepareValue(value, null);
         }
     }
