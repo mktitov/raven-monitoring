@@ -693,6 +693,13 @@ public class BaseNode implements Node, NodeListener, Logger
             return null;
         }
     }
+    
+    public Node getNodeById(int id) {
+        for (Node node: getNodes())
+            if (node.getId()==id)
+                return node;
+        return null;
+    }
 
     @Deprecated
     public Collection<NodeAttribute> getNodeAttributes() {

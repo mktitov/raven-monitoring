@@ -240,6 +240,11 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
      */
     public Node getNode(String name);
     /**
+     * Returns the child node by its id or <code>null</code> if no child node with specified id.
+     * @param id the child node id
+     */
+    public Node getNodeById(int id);
+    /**
      * @deprecated use {@link #getNodeByPath(java.lang.String)} 
      */
     public Node getChildrenByPath(String path);

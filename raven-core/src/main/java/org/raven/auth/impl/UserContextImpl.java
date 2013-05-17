@@ -23,8 +23,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.raven.auth.UserContext;
 import org.raven.auth.UserContextConfig;
 import org.raven.tree.InvalidPathException;
