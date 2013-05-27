@@ -21,7 +21,6 @@ import java.security.Security;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicReference;
 import javax.activation.DataHandler;
 import javax.mail.Message;
 import javax.mail.Multipart;
