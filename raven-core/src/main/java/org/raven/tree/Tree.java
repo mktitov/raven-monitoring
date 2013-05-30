@@ -143,7 +143,7 @@ public interface Tree
      * Moves source node to the destination node
      * @param source the node that must be moved
      * @param destination the node to which source node will be moved
-     * @param newSourceName new name of the source node
+     * @param newSourceName new name of the source node. If null then source name will be th same
      */
     public void move(Node source, Node destination, String newSourceName) throws TreeException;
     /**
