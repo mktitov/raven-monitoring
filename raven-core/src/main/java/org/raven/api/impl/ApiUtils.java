@@ -96,10 +96,10 @@ public class ApiUtils
         return consumer.getDataList();
     }
 
-    public static void createNodeFromTemplate(TemplateNode templateNode, Node destination, String newNodeName
-            , Map<String, String> vars) throws Exception
+    public static List<Node> createNodeFromTemplate(TemplateNode templateNode, Node destination, 
+            String newNodeName, Map<String, String> vars) throws Exception
     {
-        new TemplateWizard(templateNode, destination, newNodeName, vars).createNodes();
+        return new TemplateWizard(templateNode, destination, newNodeName, vars).createNodes();
     }
     
     public static String buildJson(Object data) {        
