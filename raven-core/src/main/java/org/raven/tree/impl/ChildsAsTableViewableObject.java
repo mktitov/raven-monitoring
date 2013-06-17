@@ -43,11 +43,14 @@ public class ChildsAsTableViewableObject implements ViewableObject
      * @param owner the child of this node will be used on table creation
      * @param attrNames the attribute names of child nodes values of which will form the table columns
      * @param attrTitles the title for attributes that will be displayed in the table column headers
+     * @param visualizer allows to tune the attribute value
      * @throws Exception when something wrong
      */
-    public ChildsAsTableViewableObject(Node owner, String[] attrNames, String[] attrTitles) throws Exception
+    public ChildsAsTableViewableObject(Node owner, String[] attrNames, String[] attrTitles, 
+            AttributeValueVisualizer visualizer) 
+        throws Exception
     {
-        List<Node> childs = owner.getSortedChildrens();
+        List<Node> childs = owner.getNodes();
         TableImpl _table = null;
         if (!childs.isEmpty()){
             if (attrNames.length!=attrTitles.length)
@@ -61,9 +64,9 @@ public class ChildsAsTableViewableObject implements ViewableObject
                 row[0] = new ViewableObjectImpl(
                         Viewable.RAVEN_NODE_MIMETYPE, child.getPath(), child.getName());
                 for (int i=1; i<row.length; ++i) {
-                    NodeAttribute attr = child.getNodeAttribute(attrNames[i-1]);
+                    NodeAttribute attr = child.getAttr(attrNames[i-1]);                    
                     if (attr!=null)
-                        row[i] = attr.getValue();
+                        row[i] = visualizer==null? attr.getValue() : visualizer.visualize(child, attr);
                 }
                 _table.addRow(row);
             }
@@ -71,6 +74,19 @@ public class ChildsAsTableViewableObject implements ViewableObject
         table = _table;
     }
 
+    /**
+     * Creates table from <b>owner</b> child nodes
+     * @param owner the child of this node will be used on table creation
+     * @param attrNames the attribute names of child nodes values of which will form the table columns
+     * @param attrTitles the title for attributes that will be displayed in the table column headers
+     * @throws Exception when something wrong
+     */
+    public ChildsAsTableViewableObject(Node owner, String[] attrNames, String[] attrTitles) 
+        throws Exception
+    {
+        this(owner, attrNames, attrTitles, null);
+    }
+    
     public String getMimeType() {
         return Viewable.RAVEN_TABLE_MIMETYPE;
     }
