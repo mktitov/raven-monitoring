@@ -44,9 +44,8 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
-public class NetworkResponseServlet extends HttpServlet //implements CometProcessor
-{
-	private static final long serialVersionUID = 3540687833508728534L;
+public class NetworkResponseServlet extends HttpServlet {
+    private static final long serialVersionUID = 3540687833508728534L;
     private class BadRequestException extends Exception {}
     
     private boolean checkRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -152,6 +151,7 @@ public class NetworkResponseServlet extends HttpServlet //implements CometProces
     {
         Registry registry = RavenRegistry.getRegistry();
         NetworkResponseService responseService = registry.getService(NetworkResponseService.class);
+//        request.setCharacterEncoding("windows-1251");
         try {
             if (!checkRequest(request, response))
                 return;
