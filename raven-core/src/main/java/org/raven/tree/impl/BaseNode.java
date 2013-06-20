@@ -28,7 +28,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.script.Bindings;
 import org.raven.annotations.Parameter;
-import org.raven.api.NodeAttributeAccess;
 import org.raven.conf.Configurator;
 import org.raven.expr.BindingSupport;
 import org.raven.expr.impl.ExpressionAttributeValueHandler;
