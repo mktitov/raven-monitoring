@@ -88,11 +88,11 @@ public class ChildsAsTableViewableObject implements ViewableObject
     }
     
     public String getMimeType() {
-        return Viewable.RAVEN_TABLE_MIMETYPE;
+        return table==null? Viewable.RAVEN_TEXT_MIMETYPE : Viewable.RAVEN_TABLE_MIMETYPE;
     }
 
     public Object getData() {
-        return table;
+        return table==null? "" : table;
     }
 
     public boolean cacheData() {
