@@ -88,8 +88,11 @@ public class TextToLinesNode extends AbstractSafeDataPipe
         LineIterator it = IOUtils.lineIterator(is, encoding.name());
         int lineNumber = 0;
         int _startFromLine = startFromLine;
+        boolean _stopOnError = getStopProcessingOnError();
         try{
             while (it.hasNext()) {
+                if (_stopOnError && context.hasErrors())
+                    break;
                 ++lineNumber;
                 String line = it.nextLine();
                 if (lineNumber<_startFromLine)

@@ -288,7 +288,7 @@ public abstract class AbstractSafeDataPipe
             bindingSupport.put(DATA_STREAM_BINDING, new DataStreamImpl(this, context));
             doAddBindingsForExpression(dataSource, data, context, bindingSupport);
             try {
-                NodeAttribute exprAttr = getNodeAttribute(EXPRESSION_ATTRIBUTE);
+                NodeAttribute exprAttr = getAttr(EXPRESSION_ATTRIBUTE);
                 data = exprAttr.getRealValue();
             } finally {
                 bindingSupport.reset();

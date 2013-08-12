@@ -110,6 +110,7 @@ public class CsvRecordReaderNode extends AbstractSafeDataPipe
         InputStream dataStream = converter.convert(InputStream.class, data, null);
         Charset _charset = dataEncoding;
         RecordSchemaNode _recordSchema = recordSchema;
+        boolean _stopOnError = getStopProcessingOnError();
         try {
             try {
                 LineIterator it = IOUtils.lineIterator(dataStream, _charset==null? null : _charset.name());
@@ -122,7 +123,10 @@ public class CsvRecordReaderNode extends AbstractSafeDataPipe
                 tokenizer.setEmptyTokenAsNull(true);
                 tokenizer.setIgnoreEmptyTokens(false);
                 while (it.hasNext()) 
-                    processLine(it.nextLine(), linenum++, tokenizer, fieldsColumns, context);
+                    if (_stopOnError && context.hasErrors())
+                        break;
+                    else
+                        processLine(it.nextLine(), linenum++, tokenizer, fieldsColumns, context, _recordSchema);
                 sendDataToConsumers(null, context);
             } catch(Exception e) {
                 if (isLogLevelEnabled(LogLevel.ERROR))
@@ -212,8 +216,8 @@ public class CsvRecordReaderNode extends AbstractSafeDataPipe
         return result;
     }
 
-    private void processLine(String line, int linenum, StrTokenizer tokenizer, Map<String, FieldInfo> fieldsColumns, 
-        DataContext context) 
+    private void processLine(String line, int linenum, StrTokenizer tokenizer, 
+            Map<String, FieldInfo> fieldsColumns, DataContext context, RecordSchema schema) 
     {
         if (isLogLevelEnabled(LogLevel.TRACE))
             trace(line);
@@ -226,7 +230,7 @@ public class CsvRecordReaderNode extends AbstractSafeDataPipe
             try {
                 tokenizer.reset(line);
                 String[] tokens = tokenizer.getTokenArray();
-                Record record = recordSchema.createRecord();
+                Record record = schema.createRecord();
                 for (Map.Entry<String, FieldInfo> entry: fieldsColumns.entrySet()) {
                     int colNum = entry.getValue().getColumnNumber()-1;
                     if (colNum<tokens.length) {
