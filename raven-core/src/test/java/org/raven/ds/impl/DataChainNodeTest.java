@@ -47,11 +47,31 @@ public class DataChainNodeTest extends RavenCoreTestCase {
         
         chainPipe = new SafeDataPipeNode();
         chainPipe.setName("chain pipe");
-        chainPipe
+        chain.addAndSaveChildren(chainPipe);
+        chainPipe.setDataSource(chain);
+        chainPipe.setUseExpression(Boolean.TRUE);
+        chainPipe.setExpression("data+10");
+        assertTrue(chainPipe.start());
+        
+        chainCollector = new DataCollector();
+        chainCollector.setName("chain collector");
+        chain.addAndSaveChildren(chainCollector);
+        chainCollector.setDataSource(chainPipe);
+        assertTrue(chainCollector.start());
+        
+        collector = new DataCollector();
+        collector.setName("collector");
+        testsNode.addAndSaveChildren(collector);
+        collector.setDataSource(chain);
+        assertTrue(collector.start());
     }
     
     @Test
     public void test() {
-        
+        ds.pushData(1);
+        assertEquals(1, collector.getDataListSize());
+        assertEquals(1, collector.getDataList().get(0));
+        assertEquals(1, chainCollector.getDataListSize());
+        assertEquals(11, chainCollector.getDataList().get(0));
     }
 }
