@@ -22,12 +22,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.raven.ds.DataContext;
 import org.raven.ds.InvalidRecordFieldException;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordValidationErrors;
+import org.raven.tree.Node;
 import org.weda.converter.TypeConverterException;
 import org.weda.internal.annotations.Service;
 import org.weda.services.TypeConverter;
@@ -171,6 +173,15 @@ public class RecordImpl implements Record
         return errors;
     }
 
+    public boolean validate(Node node, DataContext context) {
+        RecordValidationErrors errors = validate();
+        if (errors==null) return true;
+        else {
+            context.addError(node, new Exception(errors.toText()));
+            return false;
+        }
+    }
+    
     @Override
     public String toString()
     {

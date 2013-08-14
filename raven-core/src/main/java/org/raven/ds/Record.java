@@ -18,6 +18,7 @@
 package org.raven.ds;
 
 import java.util.Map;
+import org.raven.tree.Node;
 
 /**
  *
@@ -102,4 +103,11 @@ public interface Record
      * errors
      */
     public RecordValidationErrors validate() throws RecordException;
+    /**
+     * Validates record. If record has validation errors that errors will be added as error to the 
+     * <b>context</b>
+     * @return <b>true</b> on success validation or <b>false</b> on validation error's
+     * @throws RecordException 
+     */
+    public boolean validate(Node node, DataContext context) throws RecordException;
 }

@@ -20,6 +20,7 @@ package org.raven.api.impl;
 import groovy.json.JsonBuilder;
 import groovy.lang.Closure;
 import groovy.sql.Sql;
+import groovyx.net.http.HTTPBuilder;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -69,6 +70,16 @@ public class ApiUtils
         } finally {
             connection.close();
         }
+    }
+    
+    public static Object withHttpClient(String url, Closure closure) throws Exception {
+      HTTPBuilder builder = new HTTPBuilder(url);
+      try {
+          Object res = closure.call(builder);
+          return res;
+      } finally {
+          builder.shutdown();
+      }
     }
         
     public static List<Object[]> getTableRows(Table table) {

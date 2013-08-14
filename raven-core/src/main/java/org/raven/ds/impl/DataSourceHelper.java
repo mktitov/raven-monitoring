@@ -25,7 +25,7 @@ import org.raven.log.LogLevel;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.impl.AbstractTask;
 import org.raven.tree.Node;
-import org.raven.util.NodeUtils;
+import static org.raven.util.NodeUtils.*;
 
 /**
  *
@@ -42,7 +42,9 @@ public class DataSourceHelper
      * @param data this data will be sent to the consumers
      * @param context the data context
      */
-    public static void sendDataToConsumers(DataSource source, Object data, DataContext context) {
+    public static void sendDataToConsumers(DataSource source, Object data, DataContext context, 
+            DataConsumer excludeConsumer) 
+    {
         if (context.hasErrors() && source.getStopProcessingOnError())
             return;
         DataConsumer cons = (DataConsumer) context.getNodeParameter(source, BindingNames.CONSUMER_PARAM);
@@ -51,19 +53,31 @@ public class DataSourceHelper
                 source.getLogger().debug("Pushing data ONLY for consumer ({})", cons.getPath());
             cons.setData(source, data, context);
         } else {
-            for (DataConsumer con: NodeUtils.extractNodesOfType(source.getDependentNodes(), DataConsumer.class)) {
-                try{
-                    if (source.isLogLevelEnabled(LogLevel.DEBUG))
-                        source.getLogger().debug("Pushing data to the consumer ({})", con.getPath());
-                    con.setData(source, data, context);
-                }catch(Throwable e){
-                    if (source.isLogLevelEnabled(LogLevel.ERROR))
-                        source.getLogger().error(String.format(
-                                "Error pushing data to the consumer (%s)", con.getPath())
-                                , e);
-                }
+            for (DataConsumer con: extractNodesOfType(source.getDependentNodes(), DataConsumer.class)) {
+                if (excludeConsumer==null || !con.equals(excludeConsumer)) 
+                    try {
+                        if (source.isLogLevelEnabled(LogLevel.DEBUG))
+                            source.getLogger().debug("Pushing data to the consumer ({})", con.getPath());
+                        con.setData(source, data, context);
+                    } catch(Throwable e) {
+                        if (source.isLogLevelEnabled(LogLevel.ERROR))
+                            source.getLogger().error(String.format(
+                                    "Error pushing data to the consumer (%s)", con.getPath())
+                                    , e);
+                    }
             }
         }
+    }
+    
+    /**
+     * Sends data to all {@link Node#getDependentNodes() dependent nodes} which are in STARTED state and
+     * instance of {@link DataConsumer}
+     * @param source consumers of this data source receive the data
+     * @param data this data will be sent to the consumers
+     * @param context the data context
+     */
+    public static void sendDataToConsumers(DataSource source, Object data, DataContext context) {
+        sendDataToConsumers(source, data, context, null);
     }
     
     /**

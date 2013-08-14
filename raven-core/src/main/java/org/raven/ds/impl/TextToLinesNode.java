@@ -23,6 +23,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.expr.BindingSupport;
@@ -73,14 +74,11 @@ public class TextToLinesNode extends AbstractSafeDataPipe
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data, DataContext context) 
-            throws Exception
-    {
+    protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception {
         if (data==null) {
             sendDataToConsumers(null, context);
             return;
         }
-
         InputStream is = converter.convert(InputStream.class, data, encoding.name());
         if (is==null)
             return;
@@ -89,10 +87,9 @@ public class TextToLinesNode extends AbstractSafeDataPipe
         int lineNumber = 0;
         int _startFromLine = startFromLine;
         boolean _stopOnError = getStopProcessingOnError();
+        DataConsumer _errorConsumer = getErrorConsumer();
         try{
             while (it.hasNext()) {
-                if (_stopOnError && context.hasErrors())
-                    break;
                 ++lineNumber;
                 String line = it.nextLine();
                 if (lineNumber<_startFromLine)
@@ -101,10 +98,11 @@ public class TextToLinesNode extends AbstractSafeDataPipe
                 bindingSupport.put(LINE_BINDING, line);
                 if (lineFilter){
                     context.putAt(LINE_NUMBER_PARAM, lineNumber);
-                    sendDataToConsumers(line, context);
+                    if (!sendDataAndError(line, context, _stopOnError, _errorConsumer))
+                        break;
                 }
             }
-            sendDataToConsumers(null, context);
+            sendDataAndError(null, context, _stopOnError, _errorConsumer);
         } finally {
             bindingSupport.reset();
         }

@@ -28,6 +28,7 @@ import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang.text.StrTokenizer;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
@@ -111,6 +112,7 @@ public class CsvRecordReaderNode extends AbstractSafeDataPipe
         Charset _charset = dataEncoding;
         RecordSchemaNode _recordSchema = recordSchema;
         boolean _stopOnError = getStopProcessingOnError();
+        DataConsumer _errorConsumer = getErrorConsumer();
         try {
             try {
                 LineIterator it = IOUtils.lineIterator(dataStream, _charset==null? null : _charset.name());
@@ -123,11 +125,9 @@ public class CsvRecordReaderNode extends AbstractSafeDataPipe
                 tokenizer.setEmptyTokenAsNull(true);
                 tokenizer.setIgnoreEmptyTokens(false);
                 while (it.hasNext()) 
-                    if (_stopOnError && context.hasErrors())
+                    if (!processLine(it.nextLine(), linenum++, tokenizer, fieldsColumns, context, _recordSchema, _stopOnError, _errorConsumer))
                         break;
-                    else
-                        processLine(it.nextLine(), linenum++, tokenizer, fieldsColumns, context, _recordSchema);
-                sendDataToConsumers(null, context);
+                sendDataAndError(null, context, _stopOnError, _errorConsumer);
             } catch(Exception e) {
                 if (isLogLevelEnabled(LogLevel.ERROR))
                     error(String.format("Error reading data from node (%s).", dataSource.getPath()), e);
@@ -216,8 +216,9 @@ public class CsvRecordReaderNode extends AbstractSafeDataPipe
         return result;
     }
 
-    private void processLine(String line, int linenum, StrTokenizer tokenizer, 
-            Map<String, FieldInfo> fieldsColumns, DataContext context, RecordSchema schema) 
+    private boolean processLine(String line, int linenum, StrTokenizer tokenizer, 
+            Map<String, FieldInfo> fieldsColumns, DataContext context, RecordSchema schema,
+            boolean stopProcessingOnError, DataConsumer errorConsumer) 
     {
         if (isLogLevelEnabled(LogLevel.TRACE))
             trace(line);
@@ -239,14 +240,18 @@ public class CsvRecordReaderNode extends AbstractSafeDataPipe
                         record.setValue(entry.getKey(), value);
                     }
                 }
-                sendDataToConsumers(record, context);
                 validRecords.incrementAndGet();
+                return sendDataAndError(record, context, stopProcessingOnError, errorConsumer);
             } catch(Throwable e) {
+                context.addError(this, e);
+                sendError(line, context, errorConsumer, stopProcessingOnError);
                 errorRecords.incrementAndGet();
                 error("Error creating or sending record to consumers. ", e);
                 error(line);
+                return !stopProcessingOnError;
             }
         }
+        return true;
     }
 
     static class FieldInfo {

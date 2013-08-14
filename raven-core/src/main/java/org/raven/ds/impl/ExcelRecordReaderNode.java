@@ -30,6 +30,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
@@ -97,6 +98,7 @@ public class ExcelRecordReaderNode extends AbstractSafeDataPipe
         }
 
         boolean _stopOnError = getStopProcessingOnError();
+        DataConsumer _errorConsumer = getErrorConsumer();
         InputStream dataStream = converter.convert(InputStream.class, data, null);
         try{
             Workbook wb = WorkbookFactory.create(new PushbackInputStream(dataStream));
@@ -118,8 +120,7 @@ public class ExcelRecordReaderNode extends AbstractSafeDataPipe
                                 nullRow = false;
                         }
                         if (!_ignoreEmptyRows || !nullRow) {
-                            sendDataToConsumers(record, context);
-                            if (_stopOnError && context.hasErrors())
+                            if (!sendDataAndError(record, context, _stopOnError, _errorConsumer))
                                 break;
                         }
                     }
@@ -131,8 +132,8 @@ public class ExcelRecordReaderNode extends AbstractSafeDataPipe
                         break;
                     }
                 }
-            }finally{
-                sendDataToConsumers(null, context);
+            } finally {
+                sendDataAndError(null, context, _stopOnError, _errorConsumer);
             }
         }finally{
             dataStream.close();

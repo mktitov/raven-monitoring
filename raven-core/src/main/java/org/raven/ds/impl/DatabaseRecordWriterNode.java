@@ -159,6 +159,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         recordSetsRecieved = 0l;
         recordsRecieved = 0l;
         recordsSaved = 0l;
+        recordBuffer = null;
     }
 
     @Override

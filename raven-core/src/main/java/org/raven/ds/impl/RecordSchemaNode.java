@@ -154,6 +154,12 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema, Viewable
         return new RecordImpl(this);
     }
 
+    public Record createRecord(Map<String, Object> values) throws RecordException {
+        Record rec = createRecord();
+        rec.setValues(values);
+        return rec;
+    }
+
     public <E> E getRecordExtension(Class<E> extensionType, String extensionName)
     {
         Collection<Node> childs = recordExtensionsNode.getChildrens();

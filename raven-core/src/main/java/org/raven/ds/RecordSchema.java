@@ -17,6 +17,8 @@
 
 package org.raven.ds;
 
+import java.util.Map;
+
 /**
  *
  * @author Mikhail Titov
@@ -35,6 +37,10 @@ public interface RecordSchema
      * Creates the record based on this schema
      */
     public Record createRecord() throws RecordException;
+    /**
+     * Creates record with initial values
+     */
+    public Record createRecord(Map<String, Object> values) throws RecordException;
     /**
      * Returns the record extension by its type and name or null if the record does not contain the
      * extension of the type passed in the parameter.

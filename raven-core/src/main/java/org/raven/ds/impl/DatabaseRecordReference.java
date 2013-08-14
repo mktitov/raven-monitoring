@@ -21,11 +21,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import org.raven.dbcp.ConnectionPool;
+import org.raven.ds.DataContext;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordValidationErrors;
+import org.raven.tree.Node;
 import org.weda.services.TypeConverter;
 
 /**
@@ -157,4 +159,12 @@ public class DatabaseRecordReference extends AbstractDatabaseRecordReference imp
         return wrappedRecord==null? null : wrappedRecord.validate();
     }
 
+    public boolean validate(Node node, DataContext context) throws RecordException {
+        RecordValidationErrors errors = validate();
+        if (errors==null) return true;
+        else {
+            context.addError(node, new Exception(errors.toText()));
+            return false;
+        }
+    }
 }

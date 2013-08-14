@@ -52,6 +52,9 @@ public abstract class AbstractSafeDataPipe
     @NotNull @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
     private DataSource dataSource;
     
+    @Parameter(valueHandlerType=NodeReferenceValueHandlerFactory.TYPE)
+    private DataConsumer errorConsumer;
+    
     @Parameter(valueHandlerType=ScriptAttributeValueHandlerFactory.TYPE)
     private Object expression;
 
@@ -120,6 +123,14 @@ public abstract class AbstractSafeDataPipe
 
     public void setDataSource(DataSource dataSource) {
         this.dataSource = dataSource;
+    }
+
+    public DataConsumer getErrorConsumer() {
+        return errorConsumer;
+    }
+
+    public void setErrorConsumer(DataConsumer errorConsumer) {
+        this.errorConsumer = errorConsumer;
     }
 
     public Object getExpression() {
@@ -301,6 +312,7 @@ public abstract class AbstractSafeDataPipe
                 getLogger().debug("Expression return SKIP_DATA. Terminating push data process");
         } catch (Throwable e) {
             context.addError(this, e);
+            sendError(data, context);
             if (isLogLevelEnabled(LogLevel.ERROR))
                 error(
                     String.format("Error handling data from (%s) data source", dataSource.getPath())
@@ -318,6 +330,22 @@ public abstract class AbstractSafeDataPipe
     public void sendDataToConsumers(Object data, DataContext context) {
         super.sendDataToConsumers(data, context);
 //        DataSourceHelper.sendDataToConsumers(this, data, context);
+    }
+    
+    /**
+     * 
+     * @return Returns <b>false</b> if pipe must stop sending data to consumers.
+     */
+    protected boolean sendDataAndError(Object data, DataContext context, boolean stopProcessingOnError, 
+            DataConsumer errorConsumer) 
+    {
+        if (context.hasErrors() && stopProcessingOnError) return false;        
+        sendDataToConsumers(data, context);
+        if (!context.hasErrors() || !stopProcessingOnError) return true;
+        else {
+            sendError(data, context, errorConsumer, stopProcessingOnError);
+            return false;
+        }
     }
 
 //    @Override
@@ -353,4 +381,17 @@ public abstract class AbstractSafeDataPipe
     {
     }
 
+    protected boolean sendError(Object data, DataContext context) {
+        return sendError(data, context, errorConsumer, getStopProcessingOnError());
+    }
+    
+    protected boolean sendError(Object data, DataContext context, DataConsumer errorConsumer, 
+            boolean stopProcessingOnError)
+    {
+        if (stopProcessingOnError && errorConsumer!=null) {
+            errorConsumer.setData(this, data, context);
+            return true;
+        } else return false;
+            
+    }
 }
