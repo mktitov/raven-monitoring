@@ -35,4 +35,12 @@
                 <goal>clean</goal>
             </goals>
         </action>
+        <action>
+            <actionName>CUSTOM-install nr</actionName>
+            <displayName>install nr</displayName>
+            <recursive>false</recursive>
+            <goals>
+                <goal>install</goal>
+            </goals>
+        </action>
     </actions>
