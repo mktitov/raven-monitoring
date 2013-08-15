@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <actions>
         <action>
-            <actionName>run</actionName>
+            <actionName>CUSTOM-run with-onesec</actionName>
+            <displayName>run with-onesec</displayName>
             <goals>
+                <goal>clean</goal>
                 <goal>package</goal>
             </goals>
+            <activatedProfiles>
+                <activatedProfile>with-onesec</activatedProfile>
+            </activatedProfiles>
             <properties>
                 <netbeans.deploy>true</netbeans.deploy>
             </properties>
