@@ -28,7 +28,7 @@ import static org.raven.util.NodeUtils.*;
  *
  * @author Mikhail Titov
  */
-@NodeClass
+@NodeClass(anyChildTypes = true)
 public class DataChainNode extends AbstractSafeDataPipe {
     public static final String FIRST_CHAIN_CONSUMER_PARAM = "firstChainConsumer";
     
@@ -37,10 +37,8 @@ public class DataChainNode extends AbstractSafeDataPipe {
         DataConsumer firstCons = (DataConsumer) context.getNodeParameter(this, FIRST_CHAIN_CONSUMER_PARAM);
         if (firstCons==null) {
             firstCons = getFirstConsumerInChain();
-            if (firstCons==null)
-                throw new Exception("Not found first dataConsumer in chain");
-            else
-                context.putNodeParameter(this, FIRST_CHAIN_CONSUMER_PARAM, firstCons);
+            if (firstCons==null) throw new Exception("Not found first dataConsumer in chain");
+            else context.putNodeParameter(this, FIRST_CHAIN_CONSUMER_PARAM, firstCons);
         }
         firstCons.setData(this, data, context);
     }
@@ -57,6 +55,7 @@ public class DataChainNode extends AbstractSafeDataPipe {
     }
     
     public void dataProcessedByChain(Object data, DataContext context) {
+        sendError(data, context);
         DataSourceHelper.sendDataToConsumers(this, data, context, 
                 (DataConsumer)context.getNodeParameter(this, FIRST_CHAIN_CONSUMER_PARAM));
     }

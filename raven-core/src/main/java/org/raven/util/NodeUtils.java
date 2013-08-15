@@ -261,17 +261,13 @@ public class NodeUtils
     public static void reconnectDataSources(Node node) 
     {
         try{
-            List<Node> childs = node.getSortedChildrens();
-            if (childs!=null && !childs.isEmpty())
-            {
+            List<Node> childs = node.getNodes();
+            if (childs!=null && !childs.isEmpty()) {
                 Node prevDs = null;
                 for (Node child: childs){
-                    if (child instanceof DataConsumer)
-                    {
-                        NodeAttribute autoLinkAttr =
-                                child.getNodeAttribute(AbstractDataConsumer.AUTO_LINK_DATA_SOURCE_ATTR);
-                        NodeAttribute dsAttr =
-                                child.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE);
+                    if (child instanceof DataConsumer) {
+                        NodeAttribute autoLinkAttr = child.getAttr(AbstractDataConsumer.AUTO_LINK_DATA_SOURCE_ATTR);
+                        NodeAttribute dsAttr = child.getAttr(AbstractDataConsumer.DATASOURCE_ATTRIBUTE);
                         if (   autoLinkAttr!=null && dsAttr!=null && prevDs!=null
                             && Boolean.class.equals(autoLinkAttr.getType())
                             && (Boolean)autoLinkAttr.getRealValue()

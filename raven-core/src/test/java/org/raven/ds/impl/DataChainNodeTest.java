@@ -15,6 +15,7 @@
  */
 package org.raven.ds.impl;
 
+import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.test.DataCollector;
@@ -31,6 +32,7 @@ public class DataChainNodeTest extends RavenCoreTestCase {
     private SafeDataPipeNode chainPipe;
     private DataCollector chainCollector;
     private DataCollector collector;
+    private DataChainStubNode stub;
     
     @Before
     public void prepare() {
@@ -53,11 +55,17 @@ public class DataChainNodeTest extends RavenCoreTestCase {
         chainPipe.setExpression("data+10");
         assertTrue(chainPipe.start());
         
-        chainCollector = new DataCollector();
-        chainCollector.setName("chain collector");
-        chain.addAndSaveChildren(chainCollector);
-        chainCollector.setDataSource(chainPipe);
-        assertTrue(chainCollector.start());
+        stub = new DataChainStubNode();
+        stub.setName("stub");
+        chain.addAndSaveChildren(stub);
+        assertTrue(stub.start());
+        assertSame(chainPipe, stub.getDataSource());
+//        chainCollector = new DataCollector();
+//        chainCollector.setName("chain collector");
+//        chain.addAndSaveChildren(chainCollector);
+//        chainCollector.setDataSource(chainPipe);
+//        assertTrue(chainCollector.start());
+        
         
         collector = new DataCollector();
         collector.setName("collector");
@@ -70,8 +78,8 @@ public class DataChainNodeTest extends RavenCoreTestCase {
     public void test() {
         ds.pushData(1);
         assertEquals(1, collector.getDataListSize());
-        assertEquals(1, collector.getDataList().get(0));
-        assertEquals(1, chainCollector.getDataListSize());
-        assertEquals(11, chainCollector.getDataList().get(0));
+        assertEquals(11, collector.getDataList().get(0));
+//        assertEquals(1, chainCollector.getDataListSize());
+//        assertEquals(11, chainCollector.getDataList().get(0));
     }
 }
