@@ -134,41 +134,33 @@ public class CachePipeNode extends AbstractDataPipe
     }
 
     @Override
-    public boolean gatherDataForConsumer(
-            DataConsumer dataConsumer, DataContext context)
+    public boolean gatherDataForConsumer(DataConsumer dataConsumer, DataContext context)
         throws Exception
     {
         NodeAttribute activeConsumerAttr = context.getSessionAttributes().get(CONSUMER_TYPE_ATTR);
         Boolean activeConsumer = activeConsumerAttr.getRealValue();
         DataState dataState = getDataState(activeConsumer, dataConsumer);
         if (dataState.getDataStore()!=null)
-            replayDataToConsumer(dataConsumer, dataState.getDataStore());
-        else
-        {
-            if (activeConsumer && !dataState.isPreparing())
-            {
+            replayDataToConsumer(dataConsumer, dataState.getDataStore(), context);
+        else {
+            if (activeConsumer && !dataState.isPreparing()) {
                 if (isLogLevelEnabled(LogLevel.DEBUG))
                     debug(String.format(
                             "Gathering data for cache using active consumer (%s)"
                             , dataConsumer.getPath()));
-                try
-                {
+                try {
                     localDataStore.set(new MemoryDataStore());
                     localDataStore.get().setDataContext(context);
                     getDataSource().getDataImmediate(this, context);
                     cacheDataStore();
                     if (isLogLevelEnabled(LogLevel.DEBUG))
                         debug("Data cached");
-                    replayDataToConsumer(dataConsumer, localDataStore.get());
-                }
-                finally
-                {
+                    replayDataToConsumer(dataConsumer, localDataStore.get(), context);
+                } finally {
                     localDataStore.remove();
                     removePreparingFlag();
                 }
-            }
-            else
-            {
+            } else {
                 long waitInterval = 0l;
                 long waitStartTime = System.currentTimeMillis();
                 long _waitTimeout = waitTimeout;
@@ -176,22 +168,19 @@ public class CachePipeNode extends AbstractDataPipe
                 if (isLogLevelEnabled(LogLevel.DEBUG))
                     debug(String.format(
                             "Data consumer (%s) is waiting for data", dataConsumer.getPath()));
-                while (dataStore==null && waitInterval<=_waitTimeout)
-                {
+                while (dataStore==null && waitInterval<=_waitTimeout) {
                     TimeUnit.MILLISECONDS.sleep(100l);
                     dataStore = getDataState(false, dataConsumer).getDataStore();
                     waitInterval=System.currentTimeMillis()-waitStartTime;
                 }
-                if (dataStore==null)
-                {
+                if (dataStore==null) {
                     if (isLogLevelEnabled(LogLevel.DEBUG))
                         debug(String.format(
                                 "Error sending cached data to consumer (%s) because " +
                                 "of data wait timeout"
                                 , dataConsumer.getPath()));
-                }
-                else
-                    replayDataToConsumer(dataConsumer, dataStore);
+                } else
+                    replayDataToConsumer(dataConsumer, dataStore, context);
             }
         }
         return true;
@@ -203,8 +192,7 @@ public class CachePipeNode extends AbstractDataPipe
                 getDataStoreId(), localDataStore.get(), expirationTime);
     }
 
-    private synchronized DataState getDataState(Boolean activeConsumer, DataConsumer consumer)
-    {
+    private synchronized DataState getDataState(Boolean activeConsumer, DataConsumer consumer) {
         if (isLogLevelEnabled(LogLevel.DEBUG))
             debug(String.format(
                     "Data consumer (%s) is %s consumer"
@@ -213,8 +201,7 @@ public class CachePipeNode extends AbstractDataPipe
         
         TemporaryCache tempCache = temporaryCacheManager.getCache(cacheScope);
         DataStore store = (DataStore) tempCache.get(getDataStoreId());
-        if (store!=null)
-        {
+        if (store!=null) {
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug(String.format("Data found in cache for consumer (%s)", consumer.getPath()));
             return new DataState(false, store);
@@ -247,26 +234,21 @@ public class CachePipeNode extends AbstractDataPipe
         cacheManager.getCache(cacheScope).remove(PREPARING_FLAG_ATTR);
     }
 
-    private void replayDataToConsumer(DataConsumer dataConsumer, DataStore dataStore)
-    {
+    private void replayDataToConsumer(DataConsumer dataConsumer, DataStore dataStore, DataContext context) {
         if (isLogLevelEnabled(LogLevel.DEBUG))
             debug(String.format("Replaying cached data to consumer (%s)", dataConsumer.getPath()));
-        try
-        {
+        try {
             dataStore.open();
-            try
-            {
+            try {
                 Iterator it = dataStore.getDataIterator();
                 while (it.hasNext())
-                    dataConsumer.setData(this, it.next(), dataStore.getDataContext());
-            }
-            finally
-            {
+                    dataConsumer.setData(this, it.next(), context);
+//                    dataConsumer.setData(this, it.next(), dataStore.getDataContext());
+            } finally {
                 dataStore.close();
             }
         }
-        catch(Throwable e)
-        {
+        catch(Throwable e) {
             if (isLogLevelEnabled(LogLevel.ERROR))
                 error(String.format(
                         "Error replaying cached data to consumer (%s)", dataConsumer.getPath()), e);
@@ -274,14 +256,11 @@ public class CachePipeNode extends AbstractDataPipe
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data, DataContext context)
-    {
-        try
-        {
+    protected void doSetData(DataSource dataSource, Object data, DataContext context) {
+        try {
             localDataStore.get().addDataPortion(data);
         }
-        catch (DataStoreException ex)
-        {
+        catch (DataStoreException ex) {
             if (isLogLevelEnabled(LogLevel.ERROR))
                 error("Data caching error", ex);
         }
