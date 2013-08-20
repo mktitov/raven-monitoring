@@ -35,6 +35,7 @@ import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.expr.BindingSupport;
+import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
 import org.weda.annotations.constraints.NotNull;
@@ -75,7 +76,7 @@ public class CsvRecordReaderNode extends AbstractSafeDataPipe
     private AtomicLong errorRecords;
 
     private AtomicLong processingTime;
-
+    
     @Override
     protected void initFields() {
         super.initFields();
@@ -113,6 +114,7 @@ public class CsvRecordReaderNode extends AbstractSafeDataPipe
         RecordSchemaNode _recordSchema = recordSchema;
         boolean _stopOnError = getStopProcessingOnError();
         DataConsumer _errorConsumer = getErrorConsumer();
+        bindingSupport.enableScriptExecution();
         try {
             try {
                 LineIterator it = IOUtils.lineIterator(dataStream, _charset==null? null : _charset.name());
