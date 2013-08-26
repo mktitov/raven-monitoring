@@ -117,6 +117,10 @@ public class DataContextImpl implements DataContext
         errors.offer(new DataErrorImpl(node, error));
     }
 
+    public void addError(Node node, String errorMessage) {
+        addError(node, new Exception(errorMessage));
+    }
+
     public Queue<DataError> getErrors() {
         return errors;
     }

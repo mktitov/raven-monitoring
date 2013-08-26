@@ -16,6 +16,8 @@
 
 package org.raven.ds.impl;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.raven.annotations.NodeClass;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
@@ -34,29 +36,38 @@ public class DataChainNode extends AbstractSafeDataPipe {
     
     @Override
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception {
-        DataConsumer firstCons = (DataConsumer) context.getNodeParameter(this, FIRST_CHAIN_CONSUMER_PARAM);
-        if (firstCons==null) {
-            firstCons = getFirstConsumerInChain();
-            if (firstCons==null) throw new Exception("Not found first dataConsumer in chain");
-            else context.putNodeParameter(this, FIRST_CHAIN_CONSUMER_PARAM, firstCons);
-        }
-        firstCons.setData(this, data, context);
+//        DataConsumer firstCons = (DataConsumer) context.getNodeParameter(this, FIRST_CHAIN_CONSUMER_PARAM);
+//        if (firstCons==null) {
+//            firstCons = getFirstConsumerInChain();
+//            if (firstCons==null) throw new Exception("Not found first dataConsumer in chain");
+//            else context.putNodeParameter(this, FIRST_CHAIN_CONSUMER_PARAM, firstCons);
+//        }
+//        firstCons.setData(this, data, context);
+        getFirstConsumerInChain(context).setData(this, data, context);
     }
     
     @Override
     protected void doAddBindingsForExpression(DataSource dataSource, Object data, DataContext context, BindingSupport bindingSupport) {
     }
     
-    private DataConsumer getFirstConsumerInChain() {
+    private DataConsumer getFirstConsumerInChain(DataContext context) throws Exception {
+        DataConsumer firstCons = (DataConsumer) context.getNodeParameter(this, FIRST_CHAIN_CONSUMER_PARAM);
+        if (firstCons!=null) return firstCons;
         for (DataConsumer cons: extractNodesOfType(getDependentNodes(), DataConsumer.class))
-            if (cons instanceof Node && ((Node)cons).getEffectiveParent().equals(this))
+            if (cons instanceof Node && ((Node)cons).getEffectiveParent().equals(this)) {
+                context.putNodeParameter(this, FIRST_CHAIN_CONSUMER_PARAM, cons);
                 return cons;
-        return null;
+            }
+        throw new Exception("Not found first dataConsumer in chain");
     }
     
     public void dataProcessedByChain(Object data, DataContext context) {
-        sendError(data, context);
-        DataSourceHelper.sendDataToConsumers(this, data, context, 
-                (DataConsumer)context.getNodeParameter(this, FIRST_CHAIN_CONSUMER_PARAM));
+        try {
+            sendError(data, context);
+            DataSourceHelper.sendDataToConsumers(this, data, context, getFirstConsumerInChain(context));
+        } catch (Exception ex) {
+            context.addError(this, ex);
+            sendError(data, context);
+        }
     }
 }

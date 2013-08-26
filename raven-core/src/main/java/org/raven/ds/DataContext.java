@@ -69,9 +69,15 @@ public interface DataContext
     /**
      * Adds error to the errors list
      * @param path the path to the node where error occurs
-     * @param error eth error message
+     * @param error error
      */
     public void addError(Node node, Throwable error);
+    /**
+     * Adds error to the errors list
+     * @param path the path to the node where error occurs
+     * @param error error message
+     */
+    public void addError(Node node, String errorMessage);
     /**
      * Returns the list of all errors
      */
