@@ -120,7 +120,7 @@ public class TreeImpl implements Tree {
     private SchedulersNode schedulersNode;
     private NodeLoggerNode nodeLoggerNode;
     private AuditorNode auditorNode;
-	private QueuesNode queuesNode;
+	 private QueuesNode queuesNode;
     private SchemasNode schemasNode;
     private LocalDatabaseNode localDatabaseNode;
     private NetworkResponseServiceNode responseServiceNode;
