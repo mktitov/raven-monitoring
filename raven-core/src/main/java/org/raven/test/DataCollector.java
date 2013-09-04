@@ -18,6 +18,7 @@
 package org.raven.test;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
@@ -29,7 +30,7 @@ import org.raven.ds.impl.AbstractDataConsumer;
  */
 public class DataCollector extends AbstractDataConsumer
 {
-    private List<Object> dataList = new ArrayList<Object>();
+    private final List<Object> dataList = Collections.synchronizedList(new ArrayList<Object>());
     private long pauseBeforeRecieve = 0;
     private DataHandler dataHandler;
 
@@ -50,6 +51,27 @@ public class DataCollector extends AbstractDataConsumer
     {
         this.pauseBeforeRecieve = pauseBeforeRecieve;
     }
+    
+    public boolean waitForData(long timeout) throws InterruptedException {
+        return waitForData(timeout, 1);
+    }
+
+    public boolean waitForData(long timeout, int dataCount) throws InterruptedException {
+        if (dataList.size()>=dataCount) return true;
+        else {
+            synchronized(this){
+                if (dataList.size()>=dataCount) return true;
+                else {
+                    long waitFor = System.currentTimeMillis()+timeout;
+                    do {
+                        wait(timeout);
+                        if (dataList.size()>=dataCount) return true;
+                    } while (waitFor>System.currentTimeMillis());
+                    return false;
+                }
+            }
+        }
+    }
 
     @Override
     protected void doSetData(DataSource dataSource, Object data, DataContext context)
@@ -62,6 +84,9 @@ public class DataCollector extends AbstractDataConsumer
                 dataHandler.handleData(data, context);
             else
                 dataList.add(data);
+            synchronized(this) {
+                notify();
+            }
         }
         catch (InterruptedException ex)
         {
