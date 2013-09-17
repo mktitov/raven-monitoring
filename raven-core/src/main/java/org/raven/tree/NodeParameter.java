@@ -38,6 +38,10 @@ public interface NodeParameter
      */
     public String getName();
     /**
+     * Returns parent parameter name or null
+     */
+    public String getParentName();
+    /**
      * Returns the display name of the parameter.
      */
     public String getDisplayName();

@@ -45,6 +45,7 @@ public class NodeParameterImpl implements NodeParameter
     private final String defaultValue;
     private final String valueHandlerType;
     private final boolean readOnly;
+    private final String parentName;
     
     private PropertyDescriptor propertyDescriptor;
     private NodeAttribute nodeAttribute;
@@ -52,22 +53,14 @@ public class NodeParameterImpl implements NodeParameter
 //    private SetOperation setter;
     private boolean required = false;
 
-    public NodeParameterImpl(Parameter parameterAnn, Node node, PropertyDescriptor desc)
-    {
+    public NodeParameterImpl(Parameter parameterAnn, Node node, PropertyDescriptor desc) {
         this.node = node;
         this.name = desc.getName();
         
-        if (!"".equals(parameterAnn.defaultValue()))
-            defaultValue = parameterAnn.defaultValue();
-        else
-            defaultValue = null;
-        
-        if (!"".equals(parameterAnn.valueHandlerType()))
-            valueHandlerType = parameterAnn.valueHandlerType();
-        else
-            valueHandlerType = null;
-
+        defaultValue = "".equals(parameterAnn.defaultValue())? null : parameterAnn.defaultValue();
+        valueHandlerType = "".equals(parameterAnn.valueHandlerType())? null : parameterAnn.valueHandlerType();
         readOnly = parameterAnn.readOnly();
+        parentName = "".equals(parameterAnn.parent())? null : parameterAnn.parent();
         
         propertyDescriptor = desc;
         getter = operationCompiler.compileGetOperation(node.getClass(), name);
@@ -85,6 +78,10 @@ public class NodeParameterImpl implements NodeParameter
     public String getName()
     {
         return name;
+    }
+
+    public String getParentName() {
+        return parentName;
     }
 
     public String getDisplayName()

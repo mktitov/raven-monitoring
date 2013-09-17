@@ -1237,6 +1237,7 @@ public class BaseNode implements Node, NodeListener, Logger
                     {
                         param.setNodeAttribute(attr);
                         attr.setParameter(param);
+                        attr.setParentAttribute(param.getParentName());
 //                        if (!attr.isAttributeReference())
 //                            param.setValue(attr.getValue());
                     }
@@ -1259,6 +1260,7 @@ public class BaseNode implements Node, NodeListener, Logger
         NodeAttributeImpl attr = new NodeAttributeImpl();
         attr.setOwner(this);
         attr.setName(param.getDisplayName());
+        attr.setParentAttribute(param.getParentName());
         attr.setParameterName(param.getName());
         attr.setParameter(param);
         attr.setDescription(param.getDescription());
@@ -1268,7 +1270,7 @@ public class BaseNode implements Node, NodeListener, Logger
         tree.saveNodeAttribute(attr);
         attr.init();
         
-        addNodeAttribute(attr);
+        addAttr(attr);
         
     }
     

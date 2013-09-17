@@ -286,18 +286,11 @@ public class RavenCoreModule
         conf.add(
             TemporaryFileManagerValueHandlerFactory.TYPE
             , new TemporaryFileManagerValueHandlerFactory(pathResolver));
-        conf.add(
-            DataFileValueHandlerFactory.TYPE
-            , new DataFileValueHandlerFactory(pathResolver));
-        conf.add(
-            DataStreamValueHandlerFactory.TYPE
-            , new DataStreamValueHandlerFactory(pathResolver));
-        conf.add(
-            DataConsumerAttributeValueHandlerFactory.TYPE
-            , new DataConsumerAttributeValueHandlerFactory());
-        conf.add(
-            ResourceReferenceValueHandlerFactory.TYPE
-            , new ResourceReferenceValueHandlerFactory());
+        conf.add(DataFileValueHandlerFactory.TYPE, new DataFileValueHandlerFactory(pathResolver));
+        conf.add(DataStreamValueHandlerFactory.TYPE, new DataStreamValueHandlerFactory(pathResolver));
+        conf.add(DataConsumerAttributeValueHandlerFactory.TYPE, new DataConsumerAttributeValueHandlerFactory());
+        conf.add(ResourceReferenceValueHandlerFactory.TYPE, new ResourceReferenceValueHandlerFactory());
+        conf.add(ChildAttributesValueHandlerFactory.TYPE, new ChildAttributesValueHandlerFactory());
     }
     
     public static void contributeAttributeReferenceValues(

@@ -48,4 +48,8 @@ public @interface Parameter
      * The default value handler type.
      */
     String valueHandlerType() default "";
+    /**
+     * The parent parameter name
+     */
+    String parent() default "";
 }
