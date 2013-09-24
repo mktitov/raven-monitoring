@@ -57,6 +57,7 @@ import javax.faces.context.FacesContext;
 	   public static final String RA_CHILD = "refreshAttributesOfChildren";
 	   public static final String RA_NODE = "refreshAttributesOfNode";
 	   public static final String RA_NODE_AND_CHILD = "refreshAttributesOfNodeAndChildren";
+       public final static String PARENT_ATTR_NOT_FOUND = "parentAttributeNotFound";
 	   
 		public static FacesMessage getMessage(String bundleName, String resourceId, Object[] params) 
 	   {

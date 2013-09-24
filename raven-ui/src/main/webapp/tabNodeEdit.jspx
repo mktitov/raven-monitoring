@@ -61,9 +61,17 @@
     	rendered="#{cNode.allowNodeEdit}" 
     	captionText="#{msgs.attributeCreate}" >
         <tr:panelFormLayout>
+            <tr:message 
+              binding="#{cNode.newAttribute.message}"               
+              messageType="error" />
             <tr:inputText 
             	label="#{msgs.name}" 
             	value="#{cNode.newAttribute.name}" >
+                <tr:validateRegExp pattern="#{sBean.nodeNamePattern}"/>
+            </tr:inputText>
+            <tr:inputText 
+            	label="#{msgs.parentAttributeName}" 
+            	value="#{cNode.newAttribute.parentName}" >
                 <tr:validateRegExp pattern="#{sBean.nodeNamePattern}"/>
             </tr:inputText>
             <tr:selectOneChoice 

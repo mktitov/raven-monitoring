@@ -50,6 +50,7 @@ import org.apache.myfaces.custom.fileupload.UploadedFile;
 
 import org.raven.tree.DataFile;
 import org.raven.tree.DataStream;
+import org.raven.tree.impl.ChildAttributesValueHandlerFactory;
 import org.raven.tree.impl.DataFileValueHandlerFactory;
 import org.raven.tree.impl.DataStreamValueHandlerFactory;
 //import org.apache.myfaces.trinidad.component.core.nav.CoreCommandButton;
@@ -169,6 +170,10 @@ public class Attr implements Comparable<Attr>
                 ||(   DataStream.class.isAssignableFrom(attribute.getType()))
                    && DataStreamValueHandlerFactory.TYPE.equals(attribute.getValueHandlerType());
     }
+    
+    public boolean isGroupAttribute() {
+        return ChildAttributesValueHandlerFactory.TYPE.equals(attribute.getValueHandlerType());
+    }
 
     public UploadedFile getFile()
     {
@@ -189,7 +194,7 @@ public class Attr implements Comparable<Attr>
     
     public boolean isEnableEditValue()
     {
-    	if(expressionSupported || isFileAttribute() || getSelectItems() != null ) return false;
+    	if(expressionSupported || isFileAttribute() || getSelectItems() != null || isGroupAttribute()) return false;
     	return true; 
     }
 
