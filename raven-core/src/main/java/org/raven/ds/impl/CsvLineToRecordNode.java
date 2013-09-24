@@ -81,13 +81,10 @@ public class CsvLineToRecordNode extends AbstractSafeDataPipe
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data, DataContext context) 
-            throws Exception
-    {
+    protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception {
         if (data!=null) {
             Map<String, FieldInfo> fieldsColumns = CsvRecordReaderNode.getFieldsColumns(recordSchema, csvExtensionName);
-            if (fieldsColumns==null)
-            {
+            if (fieldsColumns==null) {
                 if (isLogLevelEnabled(LogLevel.WARN))
                     debug(String.format(
                             "CsvRecordFieldExtension was not defined for fields in the record schema (%s)"
@@ -106,17 +103,16 @@ public class CsvLineToRecordNode extends AbstractSafeDataPipe
                 tokenizer.reset(line);
                 String[] tokens = tokenizer.getTokenArray();
                 Record record = recordSchema.createRecord();
-                for (Map.Entry<String, FieldInfo> entry: fieldsColumns.entrySet())
-                {
+                for (Map.Entry<String, FieldInfo> entry: fieldsColumns.entrySet()) {
                     int colNum = entry.getValue().getColumnNumber()-1;
-                    if (colNum<tokens.length)
-                    {
+                    if (colNum<tokens.length) {
                         Object value = entry.getValue().prepareValue(
                                 tokens[entry.getValue().getColumnNumber()-1]);
                         record.setValue(entry.getKey(), value);
                     }
                 }
-                sendDataToConsumers(record, context);
+                if (record.validate(this, context)) sendDataToConsumers(record, context);
+                else sendError(data, context);
             }
         } else 
             sendDataToConsumers(null, context);
