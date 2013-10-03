@@ -17,6 +17,8 @@
 
 package org.raven.tree.impl;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import org.raven.table.Table;
 import org.raven.table.TableImpl;
@@ -47,12 +49,14 @@ public class ChildsAsTableViewableObject implements ViewableObject
      * @throws Exception when something wrong
      */
     public ChildsAsTableViewableObject(Node owner, String[] attrNames, String[] attrTitles, 
-            AttributeValueVisualizer visualizer) 
+            AttributeValueVisualizer visualizer, Comparator<Node> orderComparator) 
         throws Exception
     {
         List<Node> childs = owner.getNodes();
         TableImpl _table = null;
         if (!childs.isEmpty()){
+            if (orderComparator!=null)
+                Collections.sort(childs, orderComparator);
             if (attrNames.length!=attrTitles.length)
                 throw new Exception("The number of attrNames and attrTitles must be the same and must not be empty");
             String[] colNames = new String[attrTitles.length+1];
@@ -84,7 +88,7 @@ public class ChildsAsTableViewableObject implements ViewableObject
     public ChildsAsTableViewableObject(Node owner, String[] attrNames, String[] attrTitles) 
         throws Exception
     {
-        this(owner, attrNames, attrTitles, null);
+        this(owner, attrNames, attrTitles, null, null);
     }
     
     public String getMimeType() {

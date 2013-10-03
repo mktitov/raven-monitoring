@@ -352,8 +352,7 @@ public class TreeImpl implements Tree {
         }
     }
 
-    public void move(Node source, Node destination, String newSourceName) throws TreeException
-    {
+    public void move(Node source, Node destination, String newSourceName) throws TreeException {
         Node sourceParent = source.getParent();
         if (sourceParent==null)
             throw new UnableMoveRootException();
@@ -372,8 +371,7 @@ public class TreeImpl implements Tree {
         source.save();
 
         fireNodeMovedEvent(source);
-        if (source.getChildrenCount()>0)
-        {
+        if (source.getNodesCount()>0) {
             boolean saveChilds = oldLevel!=source.getLevel();
             ScannedNodeHandler handler = new SaveSubtreeHandler(saveChilds);
             scanSubtree(source, handler, ScanOptionsImpl.EMPTY_OPTIONS);

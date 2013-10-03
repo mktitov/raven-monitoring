@@ -130,6 +130,19 @@ public class NodeUtils
     }
 
     /**
+     * Returns the sorted list of the effective child nodes of the type
+     * <b>childType</b> of the <b>owner</b> node.
+     * Method returns <b>empty list</b> if owner node does not have started child of the specified type.
+     * @param owner the owner node
+     * @param childType the type of child node
+     * @param onlyStarted if <b>true</b> then only started nodes fall into the result list
+     */
+    public static <T> List<T> getEffectiveChildsOfType(Node owner, Class<T> childType, boolean onlyStarted)
+    {
+        return extractNodesOfType(owner.getEffectiveNodes(), childType, onlyStarted);
+    }
+
+    /**
      * Extracts <i>STARTED</i> nodes of specified type from the list. Method return the empty list if the
      * input list is empty or list doesn't contains the nodes of specified type.
      * @param list
@@ -145,7 +158,7 @@ public class NodeUtils
      * input list is empty or list doesn't contains the nodes of specified type.
      * @param list
      * @param elementType
-     * @param startedOnly if <b>true</b> then only started nodes fall into the result list
+     * @param onlyStarted if <b>true</b> then only started nodes fall into the result list
      */
     public static <T> List<T> extractNodesOfType(Collection<Node> list, Class<T> elementType
             , boolean onlyStarted)
