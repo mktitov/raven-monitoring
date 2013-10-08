@@ -17,8 +17,8 @@
 
 package org.raven.sched.impl;
 
-import java.util.Collection;
 import org.raven.tree.Node;
+import org.raven.util.NodeUtils;
 
 /**
  *
@@ -30,18 +30,17 @@ public class TimeWindowHelper
     {
     }
 
-    public static boolean isCurrentDateInPeriod(Node timeWindowNodesOwner)
-    {
-        Collection<Node> childs = timeWindowNodesOwner.getChildrens();
-        if (childs!=null && !childs.isEmpty())
-            for (Node child: childs)
-                if (   child instanceof TimeWindowNode
-                    && Node.Status.STARTED.equals(child.getStatus())
-                    && ((TimeWindowNode)child).isCurrentTimeInPeriod())
-                {
-                    return true;
-                }
-
+    public static boolean isCurrentDateInPeriod(Node timeWindowNodesOwner) {
+        for (TimeWindowNode window: NodeUtils.getChildsOfType(timeWindowNodesOwner, TimeWindowNode.class))
+            if (window.isCurrentTimeInPeriod()) 
+                return true;
         return false;
+    }
+    
+    public static TimeWindowNode getTimeWindowForCurrentDate(Node timeWindowNodesOwner) {
+        for (TimeWindowNode window: NodeUtils.getChildsOfType(timeWindowNodesOwner, TimeWindowNode.class))
+            if (window.isCurrentTimeInPeriod()) 
+                return window;
+        return null;
     }
 }

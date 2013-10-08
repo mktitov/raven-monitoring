@@ -182,10 +182,8 @@ public class NodeAttributeImpl
             if (isReadonly())
                 return converter.convert(String.class, parameter.getValue(), parameter.getPattern());
             else {
-                if (templateExpression)
-                    return null;
-                else
-                    return converter.convert(String.class, valueHandler.handleData(), null);
+                if (templateExpression) return null;
+                else return converter.convert(String.class, valueHandler.handleData(), null);
             }
         } catch(Throwable e) {
             if (owner.isLogLevelEnabled(LogLevel.WARN))
