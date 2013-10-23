@@ -17,6 +17,7 @@
 
 package org.raven.tree.store.impl;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -24,6 +25,7 @@ import java.io.Writer;
 import java.util.Collection;
 import org.apache.commons.codec.binary.Base64OutputStream;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang.StringUtils;
 import org.raven.tree.DataFile;
 import org.raven.tree.Node;
@@ -63,8 +65,7 @@ public class XMLWriter implements XMLConsts
                 , CLASS_ATTRIBUTE, node.getClass().getName()));
         offset+=2;
         String childOffset = StringUtils.repeat(" ", offset);
-        for (NodeAttribute attr: node.getNodeAttributes())
-        {
+        for (NodeAttribute attr: node.getAttrs()) {
             if (attr.isReadonly())
                 continue;
             writer.append(childOffset+String.format(
@@ -110,9 +111,11 @@ public class XMLWriter implements XMLConsts
                     {
                         writer.append(childOffset+"  <value><![CDATA[\n");
                         writer.flush();
-                        Base64OutputStream coder = new Base64OutputStream(out, true);
+                        ByteArrayOutputStream dataStream = new  ByteArrayOutputStream();
+                        Base64OutputStream coder = new Base64OutputStream(dataStream, true);
                         IOUtils.copy(data, coder);
-                        coder.flush();
+                        coder.close();
+                        out.write(dataStream.toByteArray());
                         writer.append("\n"+childOffset+"  ]]></value>\n");
                     }
                     else
