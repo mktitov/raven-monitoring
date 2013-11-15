@@ -15,14 +15,11 @@
  */
 package org.raven.auth.impl;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.raven.auth.AuthenticatorException;
 import org.raven.auth.UserContextConfig;
+import org.raven.log.LogLevel;
 import org.raven.test.RavenCoreTestCase;
 
 /**
@@ -36,6 +33,7 @@ public class MSDomainAuthenticatorTest extends RavenCoreTestCase {
         MSDomainAuthenticator auth = new MSDomainAuthenticator();
         auth.setName("domain auth");
         testsNode.addAndSaveChildren(auth);
+        auth.setLogLevel(LogLevel.TRACE);
         auth.setDomainController(privateProperties.getProperty("domain-controller"));
         auth.setDefaultDomain(privateProperties.getProperty("domain"));
         assertTrue(auth.start());
@@ -49,7 +47,7 @@ public class MSDomainAuthenticatorTest extends RavenCoreTestCase {
         MSDomainAuthenticator auth = new MSDomainAuthenticator();
         auth.setName("domain auth");
         testsNode.addAndSaveChildren(auth);
-        auth.setDomainController(privateProperties.getProperty("domain-controller"));
+        auth.setDomainController(privateProperties.getProperty("domain-controller2"));
         auth.setDefaultDomain("UNKNOWN");
         assertTrue(auth.start());
         UserContextConfig user = user(privateProperties.getProperty("domain")+"\\"+privateProperties.getProperty("domain-user"));
@@ -62,7 +60,7 @@ public class MSDomainAuthenticatorTest extends RavenCoreTestCase {
         MSDomainAuthenticator auth = new MSDomainAuthenticator();
         auth.setName("domain auth");
         testsNode.addAndSaveChildren(auth);
-        auth.setDomainController(privateProperties.getProperty("domain-controller"));
+        auth.setDomainController(privateProperties.getProperty("domain-controller2"));
         auth.setDefaultDomain(privateProperties.getProperty("domain"));
         assertTrue(auth.start());
         assertFalse(auth.checkAuth(

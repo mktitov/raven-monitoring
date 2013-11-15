@@ -44,30 +44,29 @@ public class MSDomainAuthenticator extends AbstractAuthenticatorNode {
     @Override
     protected boolean doCheckAuth(UserContextConfig userCtx, String password) throws AuthenticatorException {
         if (!isStarted()) 
-            return false;
+            return false;        
         try {
             String[] elems = RavenUtils.split(userCtx.getLogin(), "\\");
             String user = elems[elems.length-1];
             String domain = elems.length==2? elems[0] : defaultDomain;
-            String controller = domainController;
-            if (isLogLevelEnabled(LogLevel.DEBUG))
-                getLogger().debug(String.format("Trying to authenticate user (%s) at domain (%s) "
-                        + "using domain controller (%s)", user, domain, controller));
-            NtlmPasswordAuthentication ntlm = new NtlmPasswordAuthentication(domain, user, password);
-            UniAddress controllerAddr = UniAddress.getByName(controller, true);
-            try {
-                SmbSession.logon(controllerAddr, ntlm);
-                userCtx.setLogin(user);
-                userCtx.getParams().put(DOMAIN_PARAM, domain);
-                return true;
-            } catch (SmbAuthException ae) {
-                if (isLogLevelEnabled(LogLevel.WARN)) 
-                    getLogger().warn(String.format("Authentication failed for user (%s) at domain (%s) using "
-                        + "domain controller (%s). %s", user, domain, controller, ae.getMessage()));
-                return false;
-            }
+            String[] controllers = domainController.split("\\s*,\\s*");
+            int ind = -1;
+            while (++ind < controllers.length)
+                try {
+                    boolean res = checkAuthOnController(controllers[ind], domain, user, password, userCtx);
+                    if (ind>0) reorderControllers(controllers, ind);
+                    return res;
+                } catch (Throwable e) {
+                    if (isLogLevelEnabled(LogLevel.ERROR))
+                        getLogger().error(String.format("Authentication error on MS domain controller (%s)", controllers[ind]), e);
+                    if (ind==controllers.length-1)
+                        throw new AuthenticatorException(
+                            String.format("Authentication error on MS domain controller (%s)", controllers[ind]), e);
+                }
+            return false;
         } catch (Throwable e) {
-            throw new AuthenticatorException("MS Domain authentication error", e);
+            if (e instanceof AuthenticatorException) throw (AuthenticatorException)e;
+            else throw new AuthenticatorException("MS Domain authentication error.", e);
         }
     }
 
@@ -85,5 +84,35 @@ public class MSDomainAuthenticator extends AbstractAuthenticatorNode {
 
     public void setDefaultDomain(String defaultDomain) {
         this.defaultDomain = defaultDomain;
+    }
+
+    private boolean checkAuthOnController(String controller, String domain, String user, String password, UserContextConfig userCtx) 
+            throws Exception 
+    {
+        if (isLogLevelEnabled(LogLevel.DEBUG))
+            getLogger().debug(String.format("Trying to authenticate user (%s) at domain (%s) "
+                    + "using domain controller (%s)", user, domain, controller));
+        NtlmPasswordAuthentication ntlm = new NtlmPasswordAuthentication(domain, user, password);
+        UniAddress controllerAddr = UniAddress.getByName(controller, true);
+        try {
+            SmbSession.logon(controllerAddr, ntlm);
+            userCtx.setLogin(user);
+            userCtx.getParams().put(DOMAIN_PARAM, domain);
+            return true;
+        } catch (SmbAuthException ae) {
+            if (isLogLevelEnabled(LogLevel.WARN)) 
+                getLogger().warn(String.format("Authentication failed for user (%s) at domain (%s) using "
+                    + "domain controller (%s). %s", user, domain, controller, ae.getMessage()));
+            return false;
+        }
+    }
+
+    private void reorderControllers(String[] controllers, int ind) {
+        StringBuilder buf = new StringBuilder(controllers[ind]);
+        for (int i=0; i<controllers.length; ++i)
+            if (ind!=i) buf.append(", ").append(controllers[i]);        
+        domainController = buf.toString();
+        if (isLogLevelEnabled(LogLevel.WARN))
+            getLogger().warn("Domain controllers order were reordered. New order is ({})", domainController);
     }
 }
