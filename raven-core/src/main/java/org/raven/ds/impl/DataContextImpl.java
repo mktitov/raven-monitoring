@@ -17,16 +17,19 @@
 
 package org.raven.ds.impl;
 
+import groovy.lang.Closure;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import org.codehaus.groovy.runtime.InvokerInvocationException;
 import org.raven.auth.UserContext;
 import org.raven.auth.UserContextService;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataError;
+import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.weda.internal.annotations.Service;
@@ -84,6 +87,29 @@ public class DataContextImpl implements DataContext
             parameters.remove(parameterName);
         else
             parameters.put(parameterName, value);
+    }
+    
+    public <T> T tryBlock(Node owner, Closure<T> block) {
+        try {
+            return block.call();
+        } catch (InvokerInvocationException e) {
+            addError(owner, e.getCause());
+            return null;
+        }
+    }
+    
+    public <T> T tryBlock(Node owner, T finalValue, Closure<T> block) {
+        try {
+            try {
+                block.call();
+            } catch (InvokerInvocationException e) {
+                if (owner.isLogLevelEnabled(LogLevel.ERROR))
+                    owner.getLogger().error("Exception captured and added to DataContext", e);
+                addError(owner, e.getCause());
+            }
+        } finally {
+            return finalValue;
+        }
     }
 
     public void putNodeParameter(Node node, String parameterName, Object value)

@@ -29,6 +29,7 @@ import org.raven.conf.Config;
 import org.raven.conf.Configurator;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.dbcp.impl.JDBCConnectionPoolNode;
+import org.raven.ds.impl.DataContextImpl;
 import org.raven.expr.Expression;
 import org.raven.expr.ExpressionCache;
 import org.raven.test.PushOnDemandDataSource;
@@ -38,7 +39,6 @@ import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.tree.impl.SystemNode;
-import org.raven.ds.impl.DataContextImpl;
 
 public class GroovyExpressionCompilerTest extends RavenCoreTestCase
 {
@@ -219,6 +219,80 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         Object res = expression.eval(new SimpleBindings());
         assertNotNull(res);
         assertEquals("{\"test\":true,\"test2\":false}", res);
+
+        verify(cache);       
+    }
+    
+    @Test
+    public void tryBlock_successTest() throws Exception {
+        String script = "tryBlock { 1 }";
+        ExpressionCache cache = trainCache(script, false);
+        
+        replay(cache);
+
+        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
+        Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
+        assertNotNull(expression);
+        DataContextImpl context = new DataContextImpl();
+        bindings.put("context", context);
+        assertEquals(1, expression.eval(bindings));
+        assertFalse(context.hasErrors());
+
+        verify(cache);       
+    }
+    
+    @Test
+    public void tryBlock_successWithFinalValueTest() throws Exception {
+        String script = "tryBlock(2) { 1 }";
+        ExpressionCache cache = trainCache(script, false);
+        
+        replay(cache);
+
+        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
+        Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
+        assertNotNull(expression);
+        DataContextImpl context = new DataContextImpl();
+        bindings.put("context", context);
+        assertEquals(2, expression.eval(bindings));
+        assertFalse(context.hasErrors());
+
+        verify(cache);       
+    }
+    
+    @Test
+    public void tryBlock_withExceptionTest() throws Exception {
+        String script = "tryBlock { throw new Exception('test error') }";
+        ExpressionCache cache = trainCache(script, false);
+        
+        replay(cache);
+
+        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
+        Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
+        assertNotNull(expression);
+        DataContextImpl context = new DataContextImpl();
+        bindings.put("context", context);
+        assertNull(expression.eval(bindings));
+        assertTrue(context.hasErrors());
+        assertEquals("test error", context.getFirstError().getMessage());
+
+        verify(cache);       
+    }
+    
+    @Test
+    public void tryBlock_withFinalValueAndExceptionTest() throws Exception {
+        String script = "tryBlock(2) { throw new Exception('test error') }";
+        ExpressionCache cache = trainCache(script, false);
+        
+        replay(cache);
+
+        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
+        Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
+        assertNotNull(expression);
+        DataContextImpl context = new DataContextImpl();
+        bindings.put("context", context);
+        assertEquals(2, expression.eval(bindings));
+        assertTrue(context.hasErrors());
+        assertEquals("test error", context.getFirstError().getMessage());
 
         verify(cache);       
     }

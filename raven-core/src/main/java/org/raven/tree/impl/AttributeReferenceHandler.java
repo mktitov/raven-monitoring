@@ -77,7 +77,7 @@ public class AttributeReferenceHandler extends NodeReferenceValueHandler
                 super.setData(pathToNode);
             
             if (node!=null) {
-                referencedAttribute = node.getNodeAttribute(attributeName);
+                referencedAttribute = node.getAttr(attributeName);
                 if (referencedAttribute==null)
                     attribute.getOwner().getLogger().error(String.format(
                             "Invalid path (%s) to the attribute. " +

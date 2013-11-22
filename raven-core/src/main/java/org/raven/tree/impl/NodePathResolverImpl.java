@@ -114,13 +114,11 @@ public class NodePathResolverImpl implements NodePathResolver
         return path.toString();
     }
 
-    public String getRelativePath(Node fromNode, Node toNode)
-    {
+    public String getRelativePath(Node fromNode, Node toNode) {
         List<Node> fPath = new ArrayList<Node>();
         fPath.add(fromNode);
         Node parent = fromNode.getParent();
-        while (parent!=null)
-        {
+        while (parent!=null) {
             fPath.add(parent);
             parent = parent.getParent();
         }
@@ -128,8 +126,7 @@ public class NodePathResolverImpl implements NodePathResolver
         Node intersectionNode = null;
         Node curNode = toNode;
         List<Node> tPath = new ArrayList<Node>();
-        while (intersectionNode==null)
-        {
+        while (intersectionNode==null) {
             tPath.add(curNode);
             for (Node node: fPath)
                 if (curNode.equals(node))
@@ -145,15 +142,20 @@ public class NodePathResolverImpl implements NodePathResolver
         curNode = fromNode;
         for (Node node: fPath)
             if (!node.equals(intersectionNode))
-                path.append(PARENT_REFERENCE+Node.NODE_SEPARATOR);
+                path.append(PARENT_REFERENCE).append(Node.NODE_SEPARATOR);
             else
                 break;
 
         ListIterator<Node> it = tPath.listIterator(tPath.size()-1);
         for (; it.hasPrevious();)
-            path.append(QUOTE+it.previous().getName()+QUOTE+Node.NODE_SEPARATOR);
+            path.append(QUOTE).append(it.previous().getName()).append(QUOTE).append(Node.NODE_SEPARATOR);
 
         return path.toString();
+    }
+
+    public String getRelativePath(Node fromNode, NodeAttribute toAttr) {
+        final String res = getRelativePath(fromNode, toAttr.getOwner());
+        return res.substring(0, res.length()-1)+Node.ATTRIBUTE_SEPARATOR+toAttr.getName();
     }
 
     public String getAbsolutePath(NodeAttribute attribute)

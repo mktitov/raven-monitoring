@@ -59,6 +59,10 @@ public interface NodePathResolver
      */
     public String getRelativePath(Node fromNode, Node toNode);
     /**
+     * Returns the relative path from the node to the attribute of another node
+     */
+    public String getRelativePath(Node fromNode, NodeAttribute toAttr);
+    /**
      * Return <b>true</b> if the path is absolute path or <b>false</b> if the path is relative.
      * @param path the path to the node
      * @return

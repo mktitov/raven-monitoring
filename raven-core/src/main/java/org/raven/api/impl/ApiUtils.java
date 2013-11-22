@@ -81,7 +81,7 @@ public class ApiUtils
           builder.shutdown();
       }
     }
-        
+    
     public static List<Object[]> getTableRows(Table table) {
         return RavenUtils.tableAsList(table);
     }

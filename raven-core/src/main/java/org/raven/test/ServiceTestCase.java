@@ -41,8 +41,7 @@ public class ServiceTestCase extends Assert
     protected Registry registry;
     protected Properties privateProperties;
     
-    protected void configureRegistry(Set<Class> builder)
-    {
+    protected void configureRegistry(Set<Class> builder) {
     }
 
     @Before

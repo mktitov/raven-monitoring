@@ -57,6 +57,14 @@ public class GroovyExpressionCompiler implements ExpressionCompiler {
                 buf.append("\ndef sendData(target, data) { sendData(node, target, data); }\n");
             if (expression.contains("getData")) 
                 buf.append("\ndef getData(dataSource, context) { getData(node, dataSource, context); }\n");
+            if (expression.contains("onData")) {
+                buf.append("\ndef onData(Closure c) { data? c() : data }\n");
+                buf.append("\ndef onData(Object rdata, Closure c) { data? c() : rdata }\n");
+            } if (expression.contains("tryBlock")) {
+                buf.append("\ndef tryBlock(Closure c){ context.tryBlock(node, c); }");
+                buf.append("\ndef tryBlock(finalValue, Closure c){ context.tryBlock(node, finalValue, c); }");
+            }
+            
             String name = convert(scriptName);
             Class expressionClass = classLoader.parseClass(buf.toString(), name);
             GroovyExpression groovyExpression = new GroovyExpression(expressionClass);
