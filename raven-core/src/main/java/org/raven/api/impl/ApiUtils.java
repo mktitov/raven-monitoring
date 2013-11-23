@@ -82,6 +82,24 @@ public class ApiUtils
       }
     }
     
+    public static Object catchErrors(DataContext context, Node node, Closure block) throws Throwable {
+        try {
+            return block.call();
+        } catch (Throwable e) {
+            context.addError(node, e.getCause());
+            throw e;
+        }
+    }
+    
+    public static Object catchErrors(DataContext context, Node node, Object finalValue, Closure block) throws Throwable {
+        try {
+            block.call();
+        } catch (Throwable e) {
+            context.addError(node, e.getCause());
+        }
+        return finalValue;
+    }
+    
     public static List<Object[]> getTableRows(Table table) {
         return RavenUtils.tableAsList(table);
     }

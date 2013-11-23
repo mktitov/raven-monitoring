@@ -22,6 +22,7 @@ import java.util.List;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
+import org.codehaus.groovy.runtime.InvokerInvocationException;
 import static org.easymock.EasyMock.*;
 import org.junit.Before;
 import org.junit.Test;
@@ -224,8 +225,72 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
     }
     
     @Test
-    public void tryBlock_successTest() throws Exception {
-        String script = "tryBlock { 1 }";
+    public void ifDataTest() throws Exception {
+        String script = "ifData { 1 }";
+        ExpressionCache cache = trainCache(script, false);
+        
+        replay(cache);
+
+        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
+        Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
+        assertNotNull(expression);
+        bindings.put("data", 0);
+        assertEquals(0, expression.eval(bindings));
+
+        verify(cache);       
+    }
+    
+    @Test
+    public void ifDataTest2() throws Exception {
+        String script = "ifData { 5 }";
+        ExpressionCache cache = trainCache(script, false);
+        
+        replay(cache);
+
+        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
+        Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
+        assertNotNull(expression);
+        bindings.put("data", 2);
+        assertEquals(5, expression.eval(bindings));
+
+        verify(cache);       
+    }
+    
+    @Test
+    public void ifDataTest3() throws Exception {
+        String script = "ifData(10) { 1 }";
+        ExpressionCache cache = trainCache(script, false);
+        
+        replay(cache);
+
+        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
+        Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
+        assertNotNull(expression);
+        bindings.put("data", 0);
+        assertEquals(10, expression.eval(bindings));
+
+        verify(cache);       
+    }
+    
+    @Test
+    public void ifDataTest4() throws Exception {
+        String script = "ifData(10) { 1 }";
+        ExpressionCache cache = trainCache(script, false);
+        
+        replay(cache);
+
+        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
+        Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
+        assertNotNull(expression);
+        bindings.put("data", 2);
+        assertEquals(1, expression.eval(bindings));
+
+        verify(cache);       
+    }
+    
+    @Test
+    public void catchErrors_successTest() throws Exception {
+        String script = "catchErrors { 1 }";
         ExpressionCache cache = trainCache(script, false);
         
         replay(cache);
@@ -242,8 +307,8 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
     }
     
     @Test
-    public void tryBlock_successWithFinalValueTest() throws Exception {
-        String script = "tryBlock(2) { 1 }";
+    public void catchErrors_successWithFinalValueTest() throws Exception {
+        String script = "catchErrors(2) { 1 }";
         ExpressionCache cache = trainCache(script, false);
         
         replay(cache);
@@ -259,9 +324,9 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         verify(cache);       
     }
     
-    @Test
-    public void tryBlock_withExceptionTest() throws Exception {
-        String script = "tryBlock { throw new Exception('test error') }";
+    @Test()
+    public void catchErrors_withExceptionTest() throws Exception {
+        String script = "catchErrors { throw new Exception('test error') }";
         ExpressionCache cache = trainCache(script, false);
         
         replay(cache);
@@ -271,7 +336,10 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         assertNotNull(expression);
         DataContextImpl context = new DataContextImpl();
         bindings.put("context", context);
-        assertNull(expression.eval(bindings));
+        try {
+            expression.eval(bindings);
+            fail();
+        } catch (ScriptException e) { }
         assertTrue(context.hasErrors());
         assertEquals("test error", context.getFirstError().getMessage());
 
@@ -279,8 +347,8 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
     }
     
     @Test
-    public void tryBlock_withFinalValueAndExceptionTest() throws Exception {
-        String script = "tryBlock(2) { throw new Exception('test error') }";
+    public void catchErrors_withFinalValueAndExceptionTest() throws Exception {
+        String script = "catchErrors(2) { throw new Exception('test error') }";
         ExpressionCache cache = trainCache(script, false);
         
         replay(cache);

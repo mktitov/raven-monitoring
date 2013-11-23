@@ -26,6 +26,8 @@ import org.raven.RavenRuntimeException;
 import org.raven.expr.BindingSupport;
 import org.raven.expr.Expression;
 import org.raven.expr.ExpressionCompiler;
+import org.raven.log.LogLevel;
+import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodePathResolver;
 import org.raven.tree.Tree;
@@ -56,6 +58,7 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
     private boolean expressionValid = false;
     private volatile String data;
     private volatile Expression expression;
+    private volatile String expressionIdent;
     private Object value;
     
     public ExpressionAttributeValueHandler(NodeAttribute attribute) {
@@ -84,8 +87,11 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
             expression = null;
         else {
             try {
-                expression = compiler.compile(data, GroovyExpressionCompiler.LANGUAGE
-                        , attribute.getOwner().getName()+"@"+attribute.getName());
+                synchronized(this) {
+                    expressionIdent = GroovyExpressionCompiler.convertToIdentificator(
+                            "n"+attribute.getOwner().getId()+"_a"+attribute.getId());
+                    expression = compiler.compile(data, GroovyExpressionCompiler.LANGUAGE, expressionIdent);
+                }
             } catch(ScriptException e) {
                 expressionValid = false;
                 attribute.getOwner().getLogger().warn(String.format(
@@ -134,13 +140,22 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
                         bindings.remove(ENABLE_SCRIPT_EXECUTION_BINDING);
                         res = expression.eval(bindings);
                     } catch (Throwable ex) {
-//                    } catch (ScriptException ex) {
+                        final Node owner = attribute.getOwner();
                         String mess = String.format(
-                                "Attribute (%s) getValue error. Error executing expression (%s). %s"
-                                , pathResolver.getAbsolutePath(attribute), data, ex.getMessage());
-                        attribute.getOwner().getLogger().warn(mess, ex);
+                                "Exception in @%s (%s)"
+                                , attribute.getName(), owner.getPath());
+                        GroovyExpressionExceptionAnalyzator an = new GroovyExpressionExceptionAnalyzator(
+                                expressionIdent, data, ex, 2);
+                        GroovyExpressionException error = new GroovyExpressionException(mess, ex, an);
                         if (varsInitiated)
-                            throw new RavenRuntimeException(mess, ex);
+                            throw error;
+                        else if (owner.isLogLevelEnabled(LogLevel.ERROR)) {
+                            String errMess = GroovyExpressionExceptionAnalyzator.aggregate(error);
+                            if (errMess==null || errMess.isEmpty())
+                                owner.getLogger().error(mess, ex);
+                            else
+                                owner.getLogger().error(errMess, ex);
+                        }
                     }
                 }
             }finally{
@@ -155,7 +170,7 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
 //        }
         return res;
     }
-
+    
     public void close() {
     }
 

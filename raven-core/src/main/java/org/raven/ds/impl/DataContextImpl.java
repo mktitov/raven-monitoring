@@ -89,29 +89,6 @@ public class DataContextImpl implements DataContext
             parameters.put(parameterName, value);
     }
     
-    public <T> T tryBlock(Node owner, Closure<T> block) {
-        try {
-            return block.call();
-        } catch (InvokerInvocationException e) {
-            addError(owner, e.getCause());
-            return null;
-        }
-    }
-    
-    public <T> T tryBlock(Node owner, T finalValue, Closure<T> block) {
-        try {
-            try {
-                block.call();
-            } catch (InvokerInvocationException e) {
-                if (owner.isLogLevelEnabled(LogLevel.ERROR))
-                    owner.getLogger().error("Exception captured and added to DataContext", e);
-                addError(owner, e.getCause());
-            }
-        } finally {
-            return finalValue;
-        }
-    }
-
     public void putNodeParameter(Node node, String parameterName, Object value)
     {
         if (value==null)

@@ -49,7 +49,7 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         attr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
         attr.setOwner(node);
         attr.init();
-        node.addNodeAttribute(attr);
+        node.addAttr(attr);
         
         assertEquals("test", attr.getRealValue());
         long startTime = System.currentTimeMillis();
@@ -67,14 +67,16 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         Logger logger = createMock(Logger.class);
         
         expect(attribute.getRawValue()).andReturn(null);
-        expect(attribute.getName()).andReturn("attr").atLeastOnce();
+        expect(attribute.getName()).andReturn("attr").anyTimes();
+        expect(attribute.getId()).andReturn(1).atLeastOnce();
         attribute.save();
         expectLastCall().times(3);
         expect(attribute.getValueHandlerType())
                 .andReturn(ExpressionAttributeValueHandlerFactory.TYPE).anyTimes();
 //        listener.valueChanged(isNull(), eq(2));
         expect(attribute.getOwner()).andReturn(node).anyTimes();
-        expect(node.getName()).andReturn("node").atLeastOnce();
+        expect(node.getId()).andReturn(1).atLeastOnce();
+//        expect(node.getName()).andReturn("node").atLeastOnce();
         node.formExpressionBindings(isA(Bindings.class));
         expectLastCall().times(2);
         expect(node.getLogger()).andReturn(logger).anyTimes();
@@ -115,8 +117,10 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         Node node = createMock(Node.class);
         AttributeValueHandlerListener listener = createMock(AttributeValueHandlerListener.class);
 
-        expect(attr.getName()).andReturn("attr").atLeastOnce();
-        expect(node.getName()).andReturn("node").atLeastOnce();
+        expect(attr.getName()).andReturn("attr").anyTimes();
+        expect(attr.getId()).andReturn(1);
+//        expect(node.getName()).andReturn("node").atLeastOnce();
+        expect(node.getId()).andReturn(1).atLeastOnce();
         expect(attr.getRawValue()).andReturn("1+1");
         expect(attr.getOwner()).andReturn(node).atLeastOnce();
         expect(attr.getValueHandlerType())
@@ -142,8 +146,10 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         NodeAttribute attr = createMock(NodeAttribute.class);
         Node node = createMock(Node.class);
         
-        expect(attr.getName()).andReturn("attr").atLeastOnce();
-        expect(node.getName()).andReturn("node").atLeastOnce();
+        expect(attr.getName()).andReturn("attr").anyTimes();
+        expect(attr.getId()).andReturn(1);
+//        expect(node.getName()).andReturn("node").atLeastOnce();
+        expect(node.getId()).andReturn(1).atLeastOnce();
         expect(attr.getRawValue()).andReturn(null);
         expect(attr.getValueHandlerType())
                 .andReturn(ExpressionAttributeValueHandlerFactory.TYPE).anyTimes();
@@ -171,8 +177,10 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         NodeAttribute attr = createMock(NodeAttribute.class);
         Node node = createMock(Node.class);
         
-        expect(attr.getName()).andReturn("attr").atLeastOnce();
+        expect(attr.getName()).andReturn("attr").anyTimes();
+        expect(attr.getId()).andReturn(1).atLeastOnce();
         expect(node.getName()).andReturn("node").atLeastOnce();
+        expect(node.getId()).andReturn(1).atLeastOnce();
         expect(attr.getRawValue()).andReturn(null);
         expect(attr.getValueHandlerType())
                 .andReturn(ExpressionAttributeValueHandlerFactory.TYPE).anyTimes();
@@ -198,8 +206,10 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         NodeAttribute attr = createMock(NodeAttribute.class);
         Node node = createMock(Node.class);
 
-        expect(attr.getName()).andReturn("attr").atLeastOnce();
-        expect(node.getName()).andReturn("node").atLeastOnce();
+        expect(attr.getName()).andReturn("attr").anyTimes();
+        expect(attr.getId()).andReturn(1).atLeastOnce();
+//        expect(node.getName()).andReturn("node").atLeastOnce();
+        expect(node.getId()).andReturn(1).atLeastOnce();
         expect(attr.getRawValue()).andReturn(null);
         expect(attr.getValueHandlerType())
                 .andReturn(ScriptAttributeValueHandlerFactory.TYPE).anyTimes();
@@ -246,26 +256,50 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
     }
 
     @Test
-    public void varsBindingTest() throws Exception
-    {
+    public void varsBindingTest() throws Exception {
         Node node = new BaseNode("node");
         tree.getRootNode().addChildren(node);
         node.save();
         node.init();
 
-        NodeAttribute attr = new NodeAttributeImpl("attr", Integer.class, "vars.val=10; node['attr2'].value+vars.val", null);
+        NodeAttribute attr = new NodeAttributeImpl("attr", Integer.class, "vars.val=10; node.$attr2+vars.val", null);
         attr.setOwner(node);
-        node.addNodeAttribute(attr);
+        node.addAttr(attr);
         attr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
         attr.init();
 
         NodeAttribute attr2 = new NodeAttributeImpl("attr2", Integer.class, "vars.val+=10", null);
         attr2.setOwner(node);
-        node.addNodeAttribute(attr2);
+        node.addAttr(attr2);
         attr2.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
         attr2.init();
 
         assertEquals(40, attr.getRealValue());
+    }
+    
+    @Test
+    public void exceptionThrowTest() throws Exception {
+        Node node = new BaseNode("node");
+        testsNode.addAndSaveChildren(node);
+        assertTrue(node.start());
+        
+        NodeAttributeImpl attr = new NodeAttributeImpl("attr1", String.class, null, "test");
+        attr.setOwner(node);
+        node.addAttr(attr);
+        attr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);        
+        attr.init();
+        attr.setValue("println 'Hello world!'\na = {throw new Exception('Test exception throwed')}\na()");
+        attr.getValue();
+        
+        attr = new NodeAttributeImpl("attr2", String.class, "node.$attr1", "test");
+        attr.setOwner(node);
+        node.addAttr(attr);
+        attr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);        
+        attr.init();
+        attr.getValue();
+        
+//        attr.setValue("1");
+//        assertEquals(1, attr.getRealValue());
     }
     
     @Test

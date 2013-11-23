@@ -33,9 +33,9 @@ import org.raven.expr.ExpressionCompiler;
 public class GroovyExpressionCompiler implements ExpressionCompiler {
 
     public final static String LANGUAGE = "groovy";
+//    private final static AtomicLong counter = new AtomicLong(0);
     private final ExpressionCache cache;
     private final GroovyClassLoader classLoader;
-    private final AtomicLong counter = new AtomicLong(0);
 
     public GroovyExpressionCompiler(ExpressionCache cache) {
         this.cache = cache;
@@ -57,15 +57,15 @@ public class GroovyExpressionCompiler implements ExpressionCompiler {
                 buf.append("\ndef sendData(target, data) { sendData(node, target, data); }\n");
             if (expression.contains("getData")) 
                 buf.append("\ndef getData(dataSource, context) { getData(node, dataSource, context); }\n");
-            if (expression.contains("onData")) {
-                buf.append("\ndef onData(Closure c) { data? c() : data }\n");
-                buf.append("\ndef onData(Object rdata, Closure c) { data? c() : rdata }\n");
-            } if (expression.contains("tryBlock")) {
-                buf.append("\ndef tryBlock(Closure c){ context.tryBlock(node, c); }");
-                buf.append("\ndef tryBlock(finalValue, Closure c){ context.tryBlock(node, finalValue, c); }");
+            if (expression.contains("ifData")) {
+                buf.append("\ndef ifData(Closure c) { data? c() : data }\n");
+                buf.append("\ndef ifData(Object rdata, Closure c) { data? c() : rdata }\n");
+            } if (expression.contains("catchErrors")) {
+                buf.append("\ndef catchErrors(Closure c){ catchErrors(context, node, c); }");
+                buf.append("\ndef catchErrors(finalValue, Closure c){ catchErrors(context, node, finalValue, c); }");
             }
             
-            String name = convert(scriptName);
+            String name = convertToIdentificator(scriptName);
             Class expressionClass = classLoader.parseClass(buf.toString(), name);
             GroovyExpression groovyExpression = new GroovyExpression(expressionClass);
             cache.putExpression(expression, groovyExpression);
@@ -76,7 +76,9 @@ public class GroovyExpressionCompiler implements ExpressionCompiler {
         }
     }
 
-    private String convert(String ident) {
+    public static String convertToIdentificator(String ident) {
+        if (ident!=null && ident.startsWith("org.raven.EXPR."))
+            return ident;
         StringBuilder sb = new StringBuilder("org.raven.EXPR.");
         if (ident == null || ident.length() == 0) {
             sb.append("__");
@@ -101,7 +103,7 @@ public class GroovyExpressionCompiler implements ExpressionCompiler {
                 }
             }
         }
-        sb.append("._").append(counter.incrementAndGet());
+//        sb.append("._").append(counter.incrementAndGet());
         return sb.toString();
     }
 }
