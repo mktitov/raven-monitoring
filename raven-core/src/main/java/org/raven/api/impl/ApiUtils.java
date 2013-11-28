@@ -86,7 +86,7 @@ public class ApiUtils
         try {
             return block.call();
         } catch (Throwable e) {
-            context.addError(node, e.getCause());
+            context.addError(node, e.getCause()==null? e : e.getCause());
             throw e;
         }
     }
@@ -95,7 +95,7 @@ public class ApiUtils
         try {
             block.call();
         } catch (Throwable e) {
-            context.addError(node, e.getCause());
+            context.addError(node, e.getCause()==null? e : e.getCause());
         }
         return finalValue;
     }
@@ -112,6 +112,14 @@ public class ApiUtils
         return new DataContextImpl();
     }
 
+    public static DataContext createDataContext(Map<String, Object> params) {
+        DataContext ctx = new DataContextImpl();
+        if (params!=null)
+            for (Map.Entry<String, Object> entry: params.entrySet())
+                ctx.putAt(entry.getKey(), entry.getValue());
+        return ctx;
+    }
+
     public static void sendData(DataSource source, DataConsumer target, Object data) throws Exception {
         target.setData(source, data, new DataContextImpl());
     }
@@ -121,6 +129,10 @@ public class ApiUtils
         dataSource.getDataImmediate(consumer, context);
         return consumer.getDataList();
     }
+
+//    public static List getData(Node initiator, DataSource dataSource) {
+//        return getData(initiator, dataSource, new DataContextImpl());
+//    }
 
     public static List<Node> createNodeFromTemplate(TemplateNode templateNode, Node destination, 
             String newNodeName, Map<String, String> vars) throws Exception

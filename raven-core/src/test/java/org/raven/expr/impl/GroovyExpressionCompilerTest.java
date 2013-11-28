@@ -346,6 +346,28 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         verify(cache);       
     }
     
+    @Test()
+    public void catchErrors_withExceptionTest2() throws Exception {
+        String script = "catchErrors { throw new NullPointerException() }";
+        ExpressionCache cache = trainCache(script, false);
+        
+        replay(cache);
+
+        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
+        Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
+        assertNotNull(expression);
+        DataContextImpl context = new DataContextImpl();
+        bindings.put("context", context);
+        try {
+            expression.eval(bindings);
+            fail();
+        } catch (ScriptException e) { }
+        assertTrue(context.hasErrors());
+        assertTrue(context.getFirstError().getError() instanceof NullPointerException);
+
+        verify(cache);       
+    }
+    
     @Test
     public void catchErrors_withFinalValueAndExceptionTest() throws Exception {
         String script = "catchErrors(2) { throw new Exception('test error') }";
@@ -405,6 +427,34 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         ds.addDataPortion("test");
         ds.addDataPortion(null);
         res = executeExpr(compiler, "getData(node.parent.getNode('dataSource'), createDataContext())");
+        assertNotNull(res);
+        assertTrue(res instanceof List);
+        List data = (List) res;
+        assertEquals(1, data.size());
+        assertEquals("test", data.get(0));
+        
+        verify(cache);
+    }
+
+    @Test
+    public void getDataTest2() throws Exception {
+        PushOnDemandDataSource ds = new PushOnDemandDataSource();
+        ds.setName("dataSource");
+        tree.getRootNode().addAndSaveChildren(ds);
+        assertTrue(ds.start());
+        
+        ExpressionCache cache = trainCache();
+        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
+//        bindings.put("context", new DataContextImpl());
+        
+        Object res = executeExpr(compiler, "getData(node.parent.getNode('dataSource'))");
+        assertNotNull(res);
+        assertTrue(res instanceof List);
+        assertTrue(((List)res).isEmpty());
+        
+        ds.addDataPortion("test");
+        ds.addDataPortion(null);
+        res = executeExpr(compiler, "getData(node.parent.getNode('dataSource'))");
         assertNotNull(res);
         assertTrue(res instanceof List);
         List data = (List) res;

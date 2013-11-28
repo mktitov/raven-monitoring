@@ -55,9 +55,10 @@ public class GroovyExpressionCompiler implements ExpressionCompiler {
                 buf.append("\ndef withSql(Closure c){ withSql(node.$connectionPool.connection, c) }\n");
             if (expression.contains("sendData")) 
                 buf.append("\ndef sendData(target, data) { sendData(node, target, data); }\n");
-            if (expression.contains("getData")) 
-                buf.append("\ndef getData(dataSource, context) { getData(node, dataSource, context); }\n");
-            if (expression.contains("ifData")) {
+            if (expression.contains("getData")) {
+                buf.append("\ndef getData(org.raven.ds.DataSource dataSource, org.raven.ds.DataContext context) { getData(node, dataSource, context); }\n");
+                buf.append("\ndef getData(dataSource) { getData(node, dataSource, createDataContext()); }\n");
+            } if (expression.contains("ifData")) {
                 buf.append("\ndef ifData(Closure c) { data? c() : data }\n");
                 buf.append("\ndef ifData(Object rdata, Closure c) { data? c() : rdata }\n");
             } if (expression.contains("catchErrors")) {

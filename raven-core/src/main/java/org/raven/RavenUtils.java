@@ -58,8 +58,11 @@ import org.weda.services.TypeConverter;
 public class RavenUtils
 {
     public final static String MASTER_FIELDS_PARAM = "master_field_values";
-    public static final String DEFAULT_SPLIT_DELIMITER = ",";
+    public final static String DEFAULT_SPLIT_DELIMITER = ",";
+    public final static String[] EMPTY_ARRAY = new String[]{};
+    
     private final static AtomicLong index = new AtomicLong();
+    
 
     @Service
     public static TypeConverter converter;
@@ -207,7 +210,7 @@ public class RavenUtils
      */
     public static String[] split(String str, String delimiter) {
         if (str==null)
-            return null;
+            return EMPTY_ARRAY;
         StrTokenizer tokenizer = new StrTokenizer(str, delimiter);
         tokenizer.setTrimmerMatcher(StrMatcher.trimMatcher());
         tokenizer.setQuoteChar('"');
@@ -222,7 +225,7 @@ public class RavenUtils
             return new String[]{""};
         StrTokenizer tokenizer = new StrTokenizer(str, delimiter);
         tokenizer.setTrimmerMatcher(StrMatcher.trimMatcher());
-        tokenizer.setIgnoreEmptyTokens(false);
+        tokenizer.setIgnoreEmptyTokens(ignoreEmptyTokens);
         tokenizer.setQuoteChar('"');
 
         return tokenizer.getTokenArray();

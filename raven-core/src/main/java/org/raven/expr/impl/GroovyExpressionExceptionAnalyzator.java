@@ -44,7 +44,7 @@ public class GroovyExpressionExceptionAnalyzator {
         
         this.error = getLineNumbersWithErrors(error, errorLineNumbers);
         if (!errorLineNumbers.isEmpty()) {
-            final String[] lines = StringUtils.split(source, '\n');
+            final String[] lines = StringUtils.splitPreserveAllTokens(source, '\n');
             List<SourceCodeBlock> codeBlocks = new ArrayList<SourceCodeBlock>(errorLineNumbers.size());
             int pos = 1;
             for (int lineNumber: errorLineNumbers)
@@ -59,9 +59,9 @@ public class GroovyExpressionExceptionAnalyzator {
     
     public StringBuilder addResultToBuilder(String prefix, StringBuilder builder) {
         if (!(error instanceof GroovyExpressionException)) {
-            builder.append(prefix).append("Cause: ").append(error.getClass().getName()).append('\n');
             if (error.getMessage()!=null)
                 builder.append(prefix).append("Message: ").append(error.getMessage()).append('\n');
+            builder.append(prefix).append("Cause: ").append(error.getClass().getName()).append('\n');
         }
         int lastLine=-1;
         for (SourceCodeBlock block: errorCodeBlocks) {
@@ -77,12 +77,13 @@ public class GroovyExpressionExceptionAnalyzator {
     private List<SourceCodeBlock> mergeCodeBlocks(List<SourceCodeBlock> blocks) {
         int mergedCount = 0;
         for (int i=0; i<blocks.size(); ++i)
-            for (int j=i+1; j<blocks.size(); ++j)
-                if (blocks.get(i).intersectsWith(blocks.get(j))) {
-                    mergedCount++;
-                    blocks.set(i, blocks.get(i).mergeWith(blocks.get(j)));
-                    blocks.set(j, null);
-                }
+            if (blocks.get(i)!=null)
+                for (int j=i+1; j<blocks.size(); ++j)
+                    if (blocks.get(i).intersectsWith(blocks.get(j))) {
+                        mergedCount++;
+                        blocks.set(i, blocks.get(i).mergeWith(blocks.get(j)));
+                        blocks.set(j, null);
+                    }
         if (mergedCount==0) return blocks;
         else {
             List<SourceCodeBlock> newBlocks = new ArrayList<SourceCodeBlock>(blocks.size()-mergedCount);

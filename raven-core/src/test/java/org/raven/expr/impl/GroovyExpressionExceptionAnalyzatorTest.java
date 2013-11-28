@@ -57,9 +57,18 @@ public class GroovyExpressionExceptionAnalyzatorTest extends RavenCoreTestCase {
     }
     
     @Test 
+    public void emptyLinesTest() throws Exception {
+        check(
+            "\nthrow new Exception('Test exception')", 
+              "         (  1) \n"
+            + ">>> [ 1] (  2) throw new Exception('Test exception')\n"
+        );
+    }
+    
+    @Test 
     public void linesBeforeAndAfterTest() throws Exception {
         check(
-            "1\n2\nthrow new Exception('Test exception')\n4\n", 
+            "1\n2\nthrow new Exception('Test exception')\n4", 
               "         (  2) 2\n"
             + ">>> [ 1] (  3) throw new Exception('Test exception')\n"
             + "         (  4) 4\n"
@@ -69,7 +78,7 @@ public class GroovyExpressionExceptionAnalyzatorTest extends RavenCoreTestCase {
     @Test 
     public void twoErrorsTest() throws Exception {
         check(
-            "a = {throw new Exception('Test exception')}\n2\n3\n4\na()\n", 
+            "a = {throw new Exception('Test exception')}\n2\n3\n4\na()", 
               ">>> [ 1] (  1) a = {throw new Exception('Test exception')}\n"
             + "         (  2) 2\n"
             + "...\n"
@@ -81,7 +90,7 @@ public class GroovyExpressionExceptionAnalyzatorTest extends RavenCoreTestCase {
     @Test 
     public void twoErrorsNearTest() throws Exception {
         check(
-            "a = {throw new Exception('Test exception')}\n2\n3\na()\n", 
+            "a = {throw new Exception('Test exception')}\n2\n3\na()", 
               ">>> [ 1] (  1) a = {throw new Exception('Test exception')}\n"
             + "         (  2) 2\n"
             + "         (  3) 3\n"
@@ -92,7 +101,7 @@ public class GroovyExpressionExceptionAnalyzatorTest extends RavenCoreTestCase {
     @Test 
     public void twoErrorsMergeTest1() throws Exception {
         check(
-            "a = {throw new Exception('Test exception')}\na()\n", 
+            "a = {throw new Exception('Test exception')}\na()", 
               ">>> [ 1] (  1) a = {throw new Exception('Test exception')}\n"
             + ">>> [ 2] (  2) a()\n"
         );
@@ -101,8 +110,18 @@ public class GroovyExpressionExceptionAnalyzatorTest extends RavenCoreTestCase {
     @Test 
     public void twoErrorsMergeTest2() throws Exception {
         check(
-            "a = {throw new Exception('Test exception')};a()\n", 
+            "a = {throw new Exception('Test exception')};a()", 
               ">>> [ 1] (  1) a = {throw new Exception('Test exception')};a()\n"
+        );
+    }
+    
+    @Test 
+    public void twoErrorsMergeTest3() throws Exception {
+        check(
+            "[1].each{\nthrow new Exception('Test exception')\n}", 
+              ">>> [ 2] (  1) [1].each{\n"
+            + ">>> [ 1] (  2) throw new Exception('Test exception')\n"
+            + "         (  3) }\n"
         );
     }
     
@@ -110,7 +129,7 @@ public class GroovyExpressionExceptionAnalyzatorTest extends RavenCoreTestCase {
         try {
             compileAndExecute(source);
         } catch (ScriptException e) {
-            checkAnalyzer(e, source, "Cause: java.lang.Exception\nMessage: Test exception\n...\n"+expectedRes);
+            checkAnalyzer(e, source, "Message: Test exception\nCause: java.lang.Exception\n...\n"+expectedRes);
         }
         
     }
