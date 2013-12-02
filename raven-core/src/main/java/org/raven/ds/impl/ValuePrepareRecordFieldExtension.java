@@ -93,7 +93,7 @@ public class ValuePrepareRecordFieldExtension extends BaseNode
         this.pattern = pattern;
     }
 
-    public Object prepareValue(Object value, Bindings bindings)
+    public <T> T prepareValue(Object value, Bindings bindings)
     {
         Class _convertToType = convertToType;
         if (_convertToType!=null)
@@ -113,7 +113,7 @@ public class ValuePrepareRecordFieldExtension extends BaseNode
                 bindingSupport.reset();
             }
         }
-        return value;
+        return (T)value;
     }
 
     @Override

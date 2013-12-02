@@ -19,6 +19,7 @@ package org.raven.ds.impl;
 
 import java.util.Map;
 import org.apache.commons.lang.text.StrTokenizer;
+import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataContext;
@@ -83,36 +84,44 @@ public class CsvLineToRecordNode extends AbstractSafeDataPipe
     @Override
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception {
         if (data!=null) {
-            Map<String, FieldInfo> fieldsColumns = CsvRecordReaderNode.getFieldsColumns(recordSchema, csvExtensionName);
-            if (fieldsColumns==null) {
-                if (isLogLevelEnabled(LogLevel.WARN))
-                    debug(String.format(
-                            "CsvRecordFieldExtension was not defined for fields in the record schema (%s)"
-                            , recordSchema.getName()));
-                return;
-            }
-
-            String line = converter.convert(String.class, data, null);
-            if (line!=null)
-            {
-                StrTokenizer tokenizer = new StrTokenizer();
-                tokenizer.setDelimiterString(delimiter);
-                tokenizer.setQuoteChar(quoteChar.charAt(0));
-                tokenizer.setEmptyTokenAsNull(true);
-                tokenizer.setIgnoreEmptyTokens(false);
-                tokenizer.reset(line);
-                String[] tokens = tokenizer.getTokenArray();
-                Record record = recordSchema.createRecord();
-                for (Map.Entry<String, FieldInfo> entry: fieldsColumns.entrySet()) {
-                    int colNum = entry.getValue().getColumnNumber()-1;
-                    if (colNum<tokens.length) {
-                        Object value = entry.getValue().prepareValue(
-                                tokens[entry.getValue().getColumnNumber()-1]);
-                        record.setValue(entry.getKey(), value);
-                    }
+            bindingSupport.enableScriptExecution();
+            bindingSupport.put(BindingNames.RECORD_SCHEMA_BINDING, recordSchema);
+            bindingSupport.put(BindingNames.DATA_CONTEXT_BINDING, context);
+            try {
+                Map<String, FieldInfo> fieldsColumns = CsvRecordReaderNode.getFieldsColumns(
+                        recordSchema, csvExtensionName, bindingSupport);
+                if (fieldsColumns==null) {
+                    if (isLogLevelEnabled(LogLevel.WARN))
+                        debug(String.format(
+                                "CsvRecordFieldExtension was not defined for fields in the record schema (%s)"
+                                , recordSchema.getName()));
+                    return;
                 }
-                if (record.validate(this, context)) sendDataToConsumers(record, context);
-                else sendError(data, context);
+
+                String line = converter.convert(String.class, data, null);
+                if (line!=null)
+                {
+                    StrTokenizer tokenizer = new StrTokenizer();
+                    tokenizer.setDelimiterString(delimiter);
+                    tokenizer.setQuoteChar(quoteChar.charAt(0));
+                    tokenizer.setEmptyTokenAsNull(true);
+                    tokenizer.setIgnoreEmptyTokens(false);
+                    tokenizer.reset(line);
+                    String[] tokens = tokenizer.getTokenArray();
+                    Record record = recordSchema.createRecord();
+                    for (Map.Entry<String, FieldInfo> entry: fieldsColumns.entrySet()) {
+                        int colNum = entry.getValue().getColumnNumber()-1;
+                        if (colNum<tokens.length) {
+                            Object value = entry.getValue().prepareValue(
+                                    tokens[entry.getValue().getColumnNumber()-1]);
+                            record.setValue(entry.getKey(), value);
+                        }
+                    }
+                    if (record.validate(this, context)) sendDataToConsumers(record, context);
+                    else sendError(data, context);
+                }
+            } finally {
+                bindingSupport.reset();
             }
         } else 
             sendDataToConsumers(null, context);

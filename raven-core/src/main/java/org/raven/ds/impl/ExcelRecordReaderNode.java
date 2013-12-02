@@ -22,6 +22,8 @@ import java.io.PushbackInputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import javax.script.Bindings;
+import javax.script.SimpleBindings;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -225,41 +227,38 @@ public class ExcelRecordReaderNode extends AbstractSafeDataPipe
         this.recordSchema = recordSchema;
     }
 
-    private Map<String, FieldInfo> getFieldsColumns()
-    {
+    private Map<String, FieldInfo> getFieldsColumns() {
+        final Bindings bindings = new SimpleBindings();
+        bindingSupport.addTo(bindings);
+        
         RecordSchemaField[] fields = recordSchema.getFields();
         if (fields==null)
             return null;
 
         Map<String, FieldInfo> result = new HashMap<String, FieldInfo>();
-        for (RecordSchemaField field: fields)
-        {
+        for (RecordSchemaField field: fields) {
             CsvRecordFieldExtension extension =
                     field.getFieldExtension(CsvRecordFieldExtension.class, cvsExtensionName);
             if (extension!=null)
-                result.put(field.getName(), new FieldInfo(extension));
+                result.put(field.getName(), new FieldInfo(extension, bindings));
         }
         return result;
     }
 
-    private class FieldInfo
-    {
+    private class FieldInfo {
         private final int columnNumber;
         private final CsvRecordFieldExtension extension;
 
-        public FieldInfo(CsvRecordFieldExtension extension)
-        {
+        public FieldInfo(CsvRecordFieldExtension extension, Bindings bindings) {
             this.extension = extension;
-            this.columnNumber = extension.getColumnNumber();
+            this.columnNumber = extension.getPreparedColumnNumber(bindings);
         }
 
-        public int getColumnNumber()
-        {
+        public int getColumnNumber() {
             return columnNumber;
         }
 
-        public Object prepareValue(Object value)
-        {
+        public Object prepareValue(Object value) {
             return extension.prepareValue(value, null);
         }
     }
