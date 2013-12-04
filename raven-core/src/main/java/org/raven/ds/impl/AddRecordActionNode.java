@@ -67,7 +67,7 @@ public class AddRecordActionNode extends RecordsAsTableActionNode
         initDetailFieldsValues(record);
         bindingSupport.put(RecordsAsTableNode.RECORD_BINDING, record);
 
-        getNodeAttribute(PREPARE_RECORD_BINDING).getValue();
+        getAttr(PREPARE_RECORD_BINDING).getValue();
         
         additionalBindings.put(RecordsAsTableNode.RECORD_BINDING, record);
         //creating action attributes from record fields

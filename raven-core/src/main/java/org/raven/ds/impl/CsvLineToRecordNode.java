@@ -84,20 +84,19 @@ public class CsvLineToRecordNode extends AbstractSafeDataPipe
     @Override
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception {
         if (data!=null) {
+            Map<String, FieldInfo> fieldsColumns = CsvRecordReaderNode.getFieldsColumns(
+                    recordSchema, csvExtensionName, dataSource, context, tree, bindingSupport);
+            if (fieldsColumns==null) {
+                if (isLogLevelEnabled(LogLevel.WARN))
+                    debug(String.format(
+                            "CsvRecordFieldExtension was not defined for fields in the record schema (%s)"
+                            , recordSchema.getName()));
+                return;
+            }
             bindingSupport.enableScriptExecution();
-            bindingSupport.put(BindingNames.RECORD_SCHEMA_BINDING, recordSchema);
-            bindingSupport.put(BindingNames.DATA_CONTEXT_BINDING, context);
+//            bindingSupport.put(BindingNames.RECORD_SCHEMA_BINDING, recordSchema);
+//            bindingSupport.put(BindingNames.DATA_CONTEXT_BINDING, context);
             try {
-                Map<String, FieldInfo> fieldsColumns = CsvRecordReaderNode.getFieldsColumns(
-                        recordSchema, csvExtensionName, bindingSupport);
-                if (fieldsColumns==null) {
-                    if (isLogLevelEnabled(LogLevel.WARN))
-                        debug(String.format(
-                                "CsvRecordFieldExtension was not defined for fields in the record schema (%s)"
-                                , recordSchema.getName()));
-                    return;
-                }
-
                 String line = converter.convert(String.class, data, null);
                 if (line!=null)
                 {

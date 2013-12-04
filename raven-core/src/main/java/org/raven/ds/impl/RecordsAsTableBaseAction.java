@@ -73,9 +73,10 @@ public class RecordsAsTableBaseAction extends AbstractActionNode implements Data
         if (fieldsOrder==null)
         {
             for (RecordSchemaField field: fields.values()){
-                if (actionAttrs!=null && actionAttrs.containsKey(field.getName()))
+                if (actionAttrs!=null && actionAttrs.containsKey(field.getName())) {
+                    actionAttrs.get(field.getName()).setDisplayName(field.getDisplayName());
                     fieldsAttrs.put(field.getName(), actionAttrs.get(field.getName()));
-                else
+                } else
                     fieldsAttrs.put(
                             field.getName(), createNodeAttribute(field, record, setAttrValue));
             }
@@ -95,7 +96,7 @@ public class RecordsAsTableBaseAction extends AbstractActionNode implements Data
         addValueValidatorsToAttributes(fields.values(), fieldsAttrs);
 
         bindingSupport.put(AbstractActionNode.ACTION_ATTRIBUTES_BINDING, fieldsAttrs);
-        getNodeAttribute(PREPARE_ACTION_ATTRIBUTES_BINDING).getValue();
+        getAttr(PREPARE_ACTION_ATTRIBUTES_BINDING).getValue();
 
         return fieldsAttrs;
     }

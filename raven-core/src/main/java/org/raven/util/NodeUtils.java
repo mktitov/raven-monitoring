@@ -18,6 +18,7 @@
 package org.raven.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -25,6 +26,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
 import org.raven.ds.DataConsumer;
@@ -38,6 +40,7 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.ActionAttributeValueHandlerFactory;
 import org.raven.tree.impl.HiddenRefreshAttributeValueHandlerFactory;
 import org.raven.tree.impl.RefreshAttributeValueHandlerFactory;
+import org.raven.tree.impl.TextActionAttributeValueHandlerFactory;
 import org.weda.beans.ObjectUtils;
 import org.weda.internal.annotations.Service;
 import org.weda.services.TypeConverter;
@@ -211,9 +214,10 @@ public class NodeUtils
      * {@link ActionAttributeValueHandlerFactory#TYPE}.
      * The ids of attributes are numbers less than zero.
      */
-    public static Map<String, NodeAttribute> extractActionAttributes(Node node) throws Exception
-    {
-        return extractAttributes(node, ActionAttributeValueHandlerFactory.TYPE);
+    public static Map<String, NodeAttribute> extractActionAttributes(Node node) throws Exception {
+        return extractAttributes(node, Arrays.asList(
+                ActionAttributeValueHandlerFactory.TYPE, TextActionAttributeValueHandlerFactory.TYPE));
+        
     }
 
     /**
@@ -225,13 +229,43 @@ public class NodeUtils
     public static Map<String, NodeAttribute> extractAttributes(Node node, String valueHandlerType)
             throws Exception
     {
+        return extractAttributes(node, Arrays.asList(valueHandlerType));
+//        Map<String, NodeAttribute> refreshAttributes = new LinkedHashMap<String, NodeAttribute>();
+//        Collection<NodeAttribute> attrs = node.getAttrs();
+//        int id=-1;
+//        if (attrs!=null)
+//            for (NodeAttribute attr: attrs)
+//                if (valueHandlerType.equals(attr.getValueHandlerType()))
+//                {
+//                    NodeAttribute clone = (NodeAttribute) attr.clone();
+//                    clone.setOwner(node);
+//                    clone.setId(id--);
+//                    Bindings bindings = new SimpleBindings();
+////                    bindings.put(ExpressionAttributeValueHandler.NODE_BINDING, new NodeAccessImpl(node));
+//                    bindings.put(ExpressionAttributeValueHandler.NODE_BINDING, node);
+//                    Object val = TemplateExpression.eval(clone.getRawValue(), bindings);
+//                    clone.setRawValue(converter.convert(String.class, val, null));
+//                    clone.init();
+//                    refreshAttributes.put(clone.getName(), clone);
+//                }
+//        return refreshAttributes.isEmpty()? null : refreshAttributes;
+    }
+    
+    /**
+     * Returns the map of cloned attributes which value handler type is the value of the <b>valueHandlerType</b>
+     * parameter. The ids of attributes are numbers less than zero.
+     * @param node the source node
+     * @param valueHandlerTypes the value handler type
+     */
+    public static Map<String, NodeAttribute> extractAttributes(Node node, List<String> valueHandlerTypes)
+            throws Exception
+    {
         Map<String, NodeAttribute> refreshAttributes = new LinkedHashMap<String, NodeAttribute>();
         Collection<NodeAttribute> attrs = node.getAttrs();
         int id=-1;
         if (attrs!=null)
             for (NodeAttribute attr: attrs)
-                if (valueHandlerType.equals(attr.getValueHandlerType()))
-                {
+                if (valueHandlerTypes.contains(attr.getValueHandlerType())) {
                     NodeAttribute clone = (NodeAttribute) attr.clone();
                     clone.setOwner(node);
                     clone.setId(id--);

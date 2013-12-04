@@ -20,10 +20,7 @@ package org.raven.ds.impl;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
-import javax.script.Bindings;
-import javax.script.SimpleBindings;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -36,7 +33,7 @@ import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
-import org.raven.ds.RecordSchemaField;
+import org.raven.ds.impl.CsvRecordReaderNode.FieldInfo;
 import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
@@ -90,7 +87,8 @@ public class ExcelRecordReaderNode extends AbstractSafeDataPipe
             return;
         }
 
-        Map<String, FieldInfo> fieldsColumns = getFieldsColumns();
+        Map<String, FieldInfo> fieldsColumns = CsvRecordReaderNode.getFieldsColumns(
+                recordSchema, cvsExtensionName, dataSource, context, tree, bindingSupport);
         if (fieldsColumns==null) {
             if (isLogLevelEnabled(LogLevel.WARN))
                 debug(String.format(
@@ -227,39 +225,40 @@ public class ExcelRecordReaderNode extends AbstractSafeDataPipe
         this.recordSchema = recordSchema;
     }
 
-    private Map<String, FieldInfo> getFieldsColumns() {
-        final Bindings bindings = new SimpleBindings();
-        bindingSupport.addTo(bindings);
-        
-        RecordSchemaField[] fields = recordSchema.getFields();
-        if (fields==null)
-            return null;
+//    private Map<String, FieldInfo> getFieldsColumns() {
+//        final Bindings bindings = new SimpleBindings();
+//        bindingSupport.addTo(bindings);
+//        
+//        RecordSchemaField[] fields = recordSchema.getFields();
+//        if (fields==null)
+//            return null;
+//
+//        Map<String, FieldInfo> result = new HashMap<String, FieldInfo>();
+//        for (RecordSchemaField field: fields) {
+//            CsvRecordFieldExtension extension =
+//                    field.getFieldExtension(CsvRecordFieldExtension.class, cvsExtensionName);
+//            if (extension!=null)
+//                result.put(field.getName(), new FieldInfo(extension, bindings));
+//        }
+//        return result;
+//    }
 
-        Map<String, FieldInfo> result = new HashMap<String, FieldInfo>();
-        for (RecordSchemaField field: fields) {
-            CsvRecordFieldExtension extension =
-                    field.getFieldExtension(CsvRecordFieldExtension.class, cvsExtensionName);
-            if (extension!=null)
-                result.put(field.getName(), new FieldInfo(extension, bindings));
-        }
-        return result;
-    }
-
-    private class FieldInfo {
-        private final int columnNumber;
-        private final CsvRecordFieldExtension extension;
-
-        public FieldInfo(CsvRecordFieldExtension extension, Bindings bindings) {
-            this.extension = extension;
-            this.columnNumber = extension.getPreparedColumnNumber(bindings);
-        }
-
-        public int getColumnNumber() {
-            return columnNumber;
-        }
-
-        public Object prepareValue(Object value) {
-            return extension.prepareValue(value, null);
-        }
-    }
+//    private class FieldInfo {
+//        private final int columnNumber;
+//        private final CsvRecordFieldExtension extension;
+//
+//        public FieldInfo(CsvRecordFieldExtension extension, Bindings bindings) {
+//            this.extension = extension;
+////            this.columnNumber = extension.getPreparedColumnNumber(bindings);
+//            this.columnNumber = extension.getColumnNumber();
+//        }
+//
+//        public int getColumnNumber() {
+//            return columnNumber;
+//        }
+//
+//        public Object prepareValue(Object value) {
+//            return extension.prepareValue(value, null);
+//        }
+//    }
 }

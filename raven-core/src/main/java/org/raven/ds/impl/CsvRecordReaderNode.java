@@ -23,8 +23,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-import javax.script.Bindings;
-import javax.script.SimpleBindings;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang.text.StrTokenizer;
@@ -40,6 +38,7 @@ import org.raven.ds.RecordSchemaField;
 import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.Tree;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -103,23 +102,22 @@ public class CsvRecordReaderNode extends AbstractSafeDataPipe
                 debug(String.format("Recieved null data from node (%s)", dataSource.getPath()));
             return;
         }
+        Map<String, FieldInfo> fieldsColumns = getFieldsColumns(
+                recordSchema, cvsExtensionName, dataSource, context, tree, bindingSupport);
+        if (fieldsColumns==null) {
+            if (isLogLevelEnabled(LogLevel.WARN))
+                debug(String.format(
+                        "CsvRecordFieldExtension was not defined for fields in the record schema (%s)"
+                        , recordSchema.getName()));
+            return;
+        }
+        InputStream dataStream = converter.convert(InputStream.class, data, null);
+        Charset _charset = dataEncoding;
+        RecordSchemaNode _recordSchema = recordSchema;
+        boolean _stopOnError = getStopProcessingOnError();
+        DataConsumer _errorConsumer = getErrorConsumer();
         bindingSupport.enableScriptExecution();
-        bindingSupport.put(BindingNames.RECORD_SCHEMA_BINDING, recordSchema);
-        bindingSupport.put(BindingNames.DATA_CONTEXT_BINDING, context);
         try {
-            Map<String, FieldInfo> fieldsColumns = getFieldsColumns(recordSchema, cvsExtensionName, bindingSupport);
-            if (fieldsColumns==null) {
-                if (isLogLevelEnabled(LogLevel.WARN))
-                    debug(String.format(
-                            "CsvRecordFieldExtension was not defined for fields in the record schema (%s)"
-                            , recordSchema.getName()));
-                return;
-            }
-            InputStream dataStream = converter.convert(InputStream.class, data, null);
-            Charset _charset = dataEncoding;
-            RecordSchemaNode _recordSchema = recordSchema;
-            boolean _stopOnError = getStopProcessingOnError();
-            DataConsumer _errorConsumer = getErrorConsumer();
             try {
                 LineIterator it = IOUtils.lineIterator(dataStream, _charset==null? null : _charset.name());
                 if (isLogLevelEnabled(LogLevel.TRACE))
@@ -209,21 +207,28 @@ public class CsvRecordReaderNode extends AbstractSafeDataPipe
     }
 
     static Map<String, FieldInfo> getFieldsColumns(RecordSchema recordSchema, String csvExtensionName, 
-            BindingSupport bindingSupport) 
+            DataSource dataSource, DataContext context, Tree tree, BindingSupport bindingSupport) 
     {
-        Bindings bindings = new SimpleBindings();
-        bindingSupport.addTo(bindings);
-        RecordSchemaField[] fields = recordSchema.getFields();
-        if (fields==null)
-            return null;
-        Map<String, FieldInfo> result = new HashMap<String, FieldInfo>();
-        for (RecordSchemaField field: fields) {
-            CsvRecordFieldExtension extension =
-                    field.getFieldExtension(CsvRecordFieldExtension.class, csvExtensionName);
-            if (extension!=null)
-                result.put(field.getName(), new FieldInfo(extension, bindings));
+        String bId = tree.addGlobalBindings(bindingSupport);
+        try {
+            bindingSupport.put(BindingNames.RECORD_SCHEMA_BINDING, recordSchema);
+            bindingSupport.put(BindingNames.DATA_CONTEXT_BINDING, context);
+            bindingSupport.put(BindingNames.DATASOURCE_BINDING, context);
+            RecordSchemaField[] fields = recordSchema.getFields();
+            if (fields==null)
+                return null;
+            Map<String, FieldInfo> result = new HashMap<String, FieldInfo>();
+            for (RecordSchemaField field: fields) {
+                CsvRecordFieldExtension extension =
+                        field.getFieldExtension(CsvRecordFieldExtension.class, csvExtensionName);
+                if (extension!=null)
+                    result.put(field.getName(), new FieldInfo(extension));
+            }
+            return result;
+        } finally {            
+            tree.removeGlobalBindings(bId);
+            bindingSupport.reset();
         }
-        return result;
     }
 
     private boolean processLine(String line, int linenum, StrTokenizer tokenizer, 
@@ -268,9 +273,9 @@ public class CsvRecordReaderNode extends AbstractSafeDataPipe
         private final int columnNumber;
         private final CsvRecordFieldExtension extension;
 
-        public FieldInfo(CsvRecordFieldExtension extension, Bindings bindings) {
+        public FieldInfo(CsvRecordFieldExtension extension) {
             this.extension = extension;
-            this.columnNumber = extension.getPreparedColumnNumber(bindings);
+            this.columnNumber = extension.getColumnNumber();
         }
 
         public int getColumnNumber() {

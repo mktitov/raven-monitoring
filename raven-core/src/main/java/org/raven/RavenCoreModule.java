@@ -275,6 +275,9 @@ public class RavenCoreModule
             ActionAttributeValueHandlerFactory.TYPE
             , new ActionAttributeValueHandlerFactory());
         conf.add(
+            TextActionAttributeValueHandlerFactory.TYPE
+            , new TextActionAttributeValueHandlerFactory());
+        conf.add(
             SystemSchedulerValueHandlerFactory.TYPE
             , new SystemSchedulerValueHandlerFactory(pathResolver));
         conf.add(

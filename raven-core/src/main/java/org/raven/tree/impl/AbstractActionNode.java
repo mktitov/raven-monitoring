@@ -73,14 +73,10 @@ public abstract class AbstractActionNode extends BaseNode
     public abstract ViewableObject createActionViewableObject(
             DataContext context, Map<String, Object> additionalBindings) throws Exception;
 
-    protected Map<String, NodeAttribute> getActionAttributes()
-    {
-        try
-        {
+    protected Map<String, NodeAttribute> getActionAttributes() {
+        try {
             return NodeUtils.extractActionAttributes(this);
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             if (isLogLevelEnabled(LogLevel.ERROR))
                 getLogger().error("Error extraxting action attributes", ex);
             return null;
