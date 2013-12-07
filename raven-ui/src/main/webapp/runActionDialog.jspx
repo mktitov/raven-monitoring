@@ -25,18 +25,22 @@
 <f:view>
 <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
 <tr:document title="#{msgs.runAction}" >
-<trh:script text="function submitEnter(commandId,e)
-{
-	var keycode;
-    if (window.event) keycode = window.event.keyCode;
-   	else if(e) keycode = e.which;
-        	else return true;
-    if (keycode == 13) {
-    	document.getElementById(commandId).click(); 
-       	return false;
-   	} 
-    return true;
-}" />
+<trh:script>
+    <![CDATA[
+    function submitEnter(commandId,e) {
+        var keycode;
+        if (window.event) keycode = window.event.keyCode;
+        else if(e) keycode = e.which;
+        else return true;
+        if (keycode == 13 && e.ctrlKey) {
+            document.getElementById(commandId).click(); 
+            return false;
+        } 
+        return true;
+    }
+    ]]>
+    
+</trh:script>
 
 <tr:form >
 <tr:messages/>
@@ -90,11 +94,13 @@
 		<!-- value of attribute-->
             <tr:column headerText="#{msgs.value}">
                 <tr:inputText 
+                  wrap="soft"
                 	onkeypress="return submitEnter('#{defButtonDA.id}',event)"
                 	readOnly="#{row.expressionSupported}" 
                 	rendered="#{row.expressionSupported or (row.selectItems == null)}" 
-                	value="#{row.value}" 
-                	columns="45" />
+                	value="#{row.value}"
+                  rows="#{row.textFieldRows}"
+                	columns="#{row.textFieldCols}" />
                 <tr:selectOneChoice 
                 	rendered="#{!row.expressionSupported and !(row.selectItems == null)}" 
                 	value="#{row.value}" >
@@ -119,8 +125,8 @@
 			    <tr:inputText 
 			    	onkeypress="return submitEnter('#{defButtonDA.id}',event)"
 			    	label="#{msgs.expression}"
-               		rows="7" 
-               		wrap="hard"
+                  rows="7" 
+                  wrap="hard"
             		rendered="#{row.enableEditExpression}" 
             		value="#{row.expression}"
             		columns="100" />

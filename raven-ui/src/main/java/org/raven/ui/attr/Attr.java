@@ -53,6 +53,7 @@ import org.raven.tree.DataStream;
 import org.raven.tree.impl.ChildAttributesValueHandlerFactory;
 import org.raven.tree.impl.DataFileValueHandlerFactory;
 import org.raven.tree.impl.DataStreamValueHandlerFactory;
+import org.raven.tree.impl.TextActionAttributeValueHandlerFactory;
 //import org.apache.myfaces.trinidad.component.core.nav.CoreCommandButton;
 
 public class Attr implements Comparable<Attr>  
@@ -312,6 +313,66 @@ public class Attr implements Comparable<Attr>
     public String getDisplayName() { return attribute.getDisplayName(); }
 
 	public String getValue() { return value; }
+    
+    public int getTextFieldRows() {
+        Integer rowsCount = getIntFromAttr("_rowsCount");
+        if (rowsCount==null)
+            rowsCount = getRowsCountFromBounds();
+        if (   rowsCount==null 
+            && TextActionAttributeValueHandlerFactory.TYPE.equals(attribute.getValueHandlerType())) 
+        {
+            rowsCount = 4;
+        }
+        return rowsCount==null || rowsCount<=0? 1 : rowsCount;
+    }
+
+    public int getTextFieldCols() {
+        Integer colsCount = getIntFromAttr("_colsCount");
+        if (colsCount==null)
+            colsCount = getColsCountFromBounds();
+        return colsCount==null || colsCount<0? 45 : colsCount;
+    }
+        
+    private Integer getIntFromAttr(String attrSuffix) {
+        NodeAttribute attr = attribute.getOwner().getAttr(attribute.getName()+attrSuffix);
+        Integer res = null;
+        if (attr!=null && Integer.class.isAssignableFrom(attr.getType()))
+            res = attr.getRealValue();
+        return res;
+    }
+    
+    
+    private Integer getRowsCountFromBounds() {
+        final int[] bounds = decodeBounds();
+        return bounds==null? null : bounds[0];
+    }
+    
+    private Integer getColsCountFromBounds() {
+        final int[] bounds = decodeBounds();
+        return bounds==null? null : bounds[1];
+    }
+    
+    private int[] decodeBounds() {
+        NodeAttribute boundsAttr = attribute.getOwner().getAttr(attribute.getName()+"_bounds"); 
+        if (boundsAttr==null || !String.class.isAssignableFrom(boundsAttr.getType()))
+            return null;
+        String val = boundsAttr.getValue();
+        if (val==null)
+            return null;
+        String[] elems = val.split("\\s*,\\s*");
+        if (elems.length!=2)
+            return null;
+        int[] bounds = new int[elems.length];
+        try {
+            for (int i=0; i<elems.length; ++i)
+                bounds[i] = Integer.parseInt(elems[i]);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+        return bounds;
+    }
+    
+    
 	public void setValue(String value) 
 	{ 
 		if(value!=null && value.length()==0) this.value = null;

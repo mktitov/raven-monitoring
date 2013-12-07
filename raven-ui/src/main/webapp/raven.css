@@ -18,9 +18,9 @@ af|panelTabbed::orientation-bottom
 }
 
 af|panelTabbed::separator {
-  margin-width:4px;
-  border-top: #ADBCC5; solid 4pt ;
-  border-bottom: #ADBCC5; solid 4pt ;
+  margin-width: 4px;
+  border-top: #ADBCC5 solid 4pt ;
+  border-bottom: #ADBCC5 solid 4pt ;
   BACKGROUND-COLOR: white;
   PADDING-LEFT: 1px;}
 

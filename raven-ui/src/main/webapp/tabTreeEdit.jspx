@@ -188,7 +188,7 @@
 				<tr:panelButtonBar>
 					<tr:commandButton 
 						shortDesc="#{msgs.importNodes}" 
-						text="#{msgs.import}" 
+						text="#{msgs.import}"
 						action="#{subNodes.doUpload}"/>
 					<t:inputFileUpload 
 						title="#{msgs.importNodes}"
