@@ -18,6 +18,7 @@
 package org.raven.ds.impl;
 
 import java.util.List;
+import java.util.Map;
 import org.junit.Test;
 import org.raven.RavenUtils;
 import org.raven.conf.Config;
@@ -25,6 +26,7 @@ import org.raven.conf.Configurator;
 import org.raven.dbcp.ConnectionPool;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.dbcp.impl.JDBCConnectionPoolNode;
+import org.raven.ds.RecordSchemaField;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.tree.Node.Status;
@@ -76,12 +78,16 @@ public class RecordSchemaNodeTest extends RavenCoreTestCase
         assertEquals(Status.STARTED, schemaNode.getStatus());
 
         assertNull(schemaNode.getFields());
+        assertTrue(schemaNode.getFieldsMap().isEmpty());
+        assertNull(schemaNode.getField("field"));
 
         RecordSchemaFieldNode fieldNode = new RecordSchemaFieldNode();
         fieldNode.setName("field");
         schemaNode.addAndSaveChildren(fieldNode);
 
         assertNull(schemaNode.getFields());
+        assertTrue(schemaNode.getFieldsMap().isEmpty());
+        assertNull(schemaNode.getField("field"));
 
         fieldNode.setFieldType(RecordSchemaFieldType.INTEGER);
         fieldNode.start();
@@ -89,6 +95,11 @@ public class RecordSchemaNodeTest extends RavenCoreTestCase
         assertNotNull(schemaNode.getFields());
         assertEquals(1, schemaNode.getFields().length);
         assertSame(fieldNode, schemaNode.getFields()[0]);
+        Map<String, RecordSchemaField> fields = schemaNode.getFieldsMap();
+        assertNotNull(fields);
+        assertEquals(1, fields.size());
+        assertSame(fieldNode, fields.get("field"));
+        assertSame(fieldNode, schemaNode.getField("field"));
     }
 
     @Test

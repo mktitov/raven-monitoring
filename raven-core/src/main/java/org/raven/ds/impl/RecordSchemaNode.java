@@ -123,11 +123,9 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema, Viewable
                         fields.add(field);
             }
         }
-        Collection<Node> childs = getSortedChildrens();
-        if (childs!=null || childs.size()>0)
-            for (Node child: childs)
-                if (child instanceof RecordSchemaField && child.getStatus()==Status.STARTED)
-                    fields.add((RecordSchemaField)child);
+        for (Node child: getNodes())
+            if (child instanceof RecordSchemaField && child.getStatus()==Status.STARTED)
+                fields.add((RecordSchemaField)child);
 
         if (fields.isEmpty())
             return null;
@@ -149,6 +147,14 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema, Viewable
         return result;
     }
 
+    public Map<String, RecordSchemaField> getFieldsMap() {
+        return RavenUtils.getRecordSchemaFields(this);
+    }
+    
+    public RecordSchemaField getField(String name) {
+        return getFieldsMap().get(name);
+    }
+    
     public Record createRecord() throws RecordException
     {
         return new RecordImpl(this);

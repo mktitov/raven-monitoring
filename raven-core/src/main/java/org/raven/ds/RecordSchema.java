@@ -34,6 +34,14 @@ public interface RecordSchema
      */
     public RecordSchemaField[] getFields();
     /**
+     * Returns fields as associative array or EMPTY MAP if schema does not have fields
+     */
+    public Map<String, RecordSchemaField> getFieldsMap();
+    /**
+     * Returns the field by it's name or null if schema does not have field with specified name
+     */
+    public RecordSchemaField getField(String name);
+    /**
      * Creates the record based on this schema
      */
     public Record createRecord() throws RecordException;

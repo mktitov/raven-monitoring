@@ -20,6 +20,7 @@ package org.raven.ds.impl;
 import javax.script.Bindings;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.tree.Node;
 import org.weda.annotations.constraints.NotNull;
 
@@ -29,14 +30,32 @@ import org.weda.annotations.constraints.NotNull;
  */
 @NodeClass(
     parentNode=RecordSchemaFieldNode.class, childNodes=ValuePrepareRecordFieldExtension.class)
-public class CsvRecordFieldExtension extends AbstractRecordFieldExtension
-{
+public class CsvRecordFieldExtension extends AbstractRecordFieldExtension {
+    
+    private BindingSupportImpl bindingSupport;
+    
     @Parameter @NotNull
     private Integer columnNumber;
 
+    @Override
+    protected void initFields() {
+        super.initFields(); 
+        bindingSupport = new BindingSupportImpl();
+    }
+
+    @Override
+    public void formExpressionBindings(Bindings bindings) {
+        super.formExpressionBindings(bindings); 
+        bindingSupport.addTo(bindings);
+    }
 
     public Integer getColumnNumber() {
-        return columnNumber;
+        bindingSupport.enableScriptExecution();
+        try {
+            return columnNumber;
+        } finally {
+            bindingSupport.reset();
+        }
     }
 
     public void setColumnNumber(Integer columnNumber) {

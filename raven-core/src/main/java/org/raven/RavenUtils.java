@@ -273,9 +273,7 @@ public class RavenUtils
      * @param recordSchema record schema
      * @param fieldName field name
      */
-    public static RecordSchemaField getRecordSchemaField(
-            RecordSchema recordSchema, String fieldName)
-    {
+    public static RecordSchemaField getRecordSchemaField(RecordSchema recordSchema, String fieldName) {
         RecordSchemaField[] fields = recordSchema.getFields();
         if (fields!=null)
             for (RecordSchemaField field: fields)
@@ -285,18 +283,15 @@ public class RavenUtils
         return null;
     }
 
-    public static Map<String, RecordSchemaField> getRecordSchemaFields(RecordSchema recordSchema)
-    {
+    public static Map<String, RecordSchemaField> getRecordSchemaFields(RecordSchema recordSchema) {
         RecordSchemaField[] fields = recordSchema.getFields();
-        if (fields!=null)
-        {
+        if (fields==null) return Collections.EMPTY_MAP;
+        else {
             Map<String, RecordSchemaField> fieldsMap = new LinkedHashMap<String, RecordSchemaField>();
             for (RecordSchemaField field: fields)
                 fieldsMap.put(field.getName(), field);
             return fieldsMap;
         }
-        else
-            return Collections.EMPTY_MAP;
     }
 
 	public static void copyAttributes(

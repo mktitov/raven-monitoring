@@ -27,9 +27,11 @@ import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.test.PushDataSource;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.impl.NodeAttributeImpl;
 
 /**
  *
@@ -41,6 +43,7 @@ public class CsvRecordReaderNodeTest extends RavenCoreTestCase
     private PushDataSource ds;
     private CsvRecordReaderNode converter;
     private DataCollector consumer;
+    private CsvRecordFieldExtension field1CsvExtension;
     
     @Before
     public void prepare()
@@ -58,12 +61,12 @@ public class CsvRecordReaderNodeTest extends RavenCoreTestCase
         field1.start();
         assertEquals(Status.STARTED, field1.getStatus());
 
-        CsvRecordFieldExtension csvExtension = new CsvRecordFieldExtension();
-        csvExtension.setName("csv");
-        field1.addAndSaveChildren(csvExtension);
-        csvExtension.setColumnNumber(1);
-        csvExtension.start();
-        assertEquals(Status.STARTED, csvExtension.getStatus());
+        field1CsvExtension = new CsvRecordFieldExtension();
+        field1CsvExtension.setName("csv");
+        field1.addAndSaveChildren(field1CsvExtension);
+        field1CsvExtension.setColumnNumber(1);
+        field1CsvExtension.start();
+        assertEquals(Status.STARTED, field1CsvExtension.getStatus());
 
         field1 = new RecordSchemaFieldNode();
         field1.setName("field2");
@@ -72,7 +75,7 @@ public class CsvRecordReaderNodeTest extends RavenCoreTestCase
         field1.start();
         assertEquals(Status.STARTED, field1.getStatus());
 
-        csvExtension = new CsvRecordFieldExtension();
+        CsvRecordFieldExtension csvExtension = new CsvRecordFieldExtension();
         csvExtension.setName("csv");
         field1.addAndSaveChildren(csvExtension);
         csvExtension.setColumnNumber(3);
@@ -155,5 +158,26 @@ public class CsvRecordReaderNodeTest extends RavenCoreTestCase
         Record record = (Record) dataList.get(0);
         assertEquals(1, record.getValue("field1"));
         assertEquals("test,тест", record.getValue("field2"));
+    }
+    
+    @Test
+    public void bindingTestForGetColumnNumber() throws Exception {
+        NodeAttribute attr = new NodeAttributeImpl("colNum", Integer.class, 2, null);
+        attr.setOwner(schema);
+        attr.init();
+        schema.addAttr(attr);
+        
+        attr = field1CsvExtension.getAttr("columnNumber");
+        attr.setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        attr.setValue("recordSchema.$colNum");
+        
+        ByteArrayInputStream stream = new ByteArrayInputStream("1,2,\"3\"".getBytes());
+        ds.pushData(stream);
+
+        List dataList = consumer.getDataList();
+        assertEquals(2, dataList.size());
+
+        Record record = (Record) dataList.get(0);
+        assertEquals(2, record.getValue("field1"));       
     }
 }
