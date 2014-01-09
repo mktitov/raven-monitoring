@@ -70,8 +70,8 @@ public class SchedulableDataPipe extends SafeDataPipeNode
         lock = new ReentrantLock();
     }
 
-    public void executeScheduledJob(Scheduler scheduler)
-    {
+    public void executeScheduledJob(Scheduler scheduler) {
+        if (!isStarted()) return;
         try{
             if (allowAsyncExecution)
                 doExecuteJob();
