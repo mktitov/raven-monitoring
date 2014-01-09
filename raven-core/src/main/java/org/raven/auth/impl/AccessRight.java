@@ -22,5 +22,8 @@ public enum AccessRight
 	{
 		return rights;
 	}
-	
+    
+    public int getDecodedRights() {
+        return AccessControl.decodeRight(rights);
+    }
 }

@@ -23,8 +23,7 @@ package org.raven.net;
  */
 public class AccessDeniedException extends NetworkResponseServiceExeption
 {
-    public AccessDeniedException()
-    {
+    public AccessDeniedException() {
         super("Access denied.");
     }
 }

@@ -23,8 +23,16 @@ package org.raven.net;
  */
 public class ContextUnavailableException extends NetworkResponseServiceExeption
 {
-    public ContextUnavailableException(String context)
-    {
+    public ContextUnavailableException(String context) {
         super(String.format("Context (%s) unavailable", context));
     }
+    
+    public ContextUnavailableException(String contextPath, String pathElem) {
+        super(String.format("Context (%s) unavailable. Can't resolve (%s) path element", contextPath, pathElem));
+    }
+
+    public ContextUnavailableException(String contextPath, Throwable cause) {
+        super(String.format("Context (%s) unavailable", contextPath), cause);
+    }
+    
 }

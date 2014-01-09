@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.net.impl;
-
-import org.raven.annotations.NodeClass;
+package org.raven.net;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(importChildTypesFromParent=true, parentNode=NetworkResponseServiceNode.class)
-public class NetworkResponseGroupNode extends NetworkResponseBaseNode {
+public class InvalidParameterValueException extends NetworkResponseServiceExeption {
+    public InvalidParameterValueException(String paramName, Object paramValue, Class paramType) {
+        super(String.format("Invalid parameter (%s) value (%s). Can't convert to type (%s)", 
+                paramName, paramValue, paramType.getName()));
+    }
 }

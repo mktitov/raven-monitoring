@@ -13,14 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.net.impl;
-
-import org.raven.annotations.NodeClass;
+package org.raven.net;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(importChildTypesFromParent=true, parentNode=NetworkResponseServiceNode.class)
-public class NetworkResponseGroupNode extends NetworkResponseBaseNode {
+public interface ResponseContextProvider {
+    public ResponseContext getResponseContext(Request request) throws NetworkResponseServiceExeption;
 }

@@ -13,14 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.net.impl;
+package org.raven.net;
 
-import org.raven.annotations.NodeClass;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(importChildTypesFromParent=true, parentNode=NetworkResponseServiceNode.class)
-public class NetworkResponseGroupNode extends NetworkResponseBaseNode {
+public interface Request {
+    public String getRemoteAddr();
+    public Map<String, Object> getHeaders();
+    public Map<String, Object> getParams();
+    public String getContextPath();
+    public String getMethod();
+    public InputStream getContent() throws IOException;
 }

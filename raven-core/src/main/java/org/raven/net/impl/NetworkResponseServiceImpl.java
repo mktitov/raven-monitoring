@@ -17,14 +17,12 @@
 
 package org.raven.net.impl;
 
-import java.util.Map;
-import org.raven.net.Authentication;
 import org.raven.net.NetworkResponseNode;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.net.NetworkResponseServiceUnavailableException;
-import org.raven.net.Response;
-import org.raven.tree.Node.Status;
+import org.raven.net.Request;
+import org.raven.net.ResponseContext;
 
 /**
  *
@@ -45,26 +43,33 @@ public class NetworkResponseServiceImpl implements NetworkResponseService
         this.networkResponseServiceNode = networkResponseServiceNode;
     }
     
-    public Response getResponse(String context, String requesterIp, Map<String, Object> params)
-            throws NetworkResponseServiceExeption
+//    public Response getResponse(String context, String requesterIp, Map<String, Object> params)
+//            throws NetworkResponseServiceExeption
+//    {
+//        NetworkResponseNode serviceNode = checkNetworkResponseServiceNode();
+//        return serviceNode.getResponse(context, requesterIp, params);
+//    }
+//
+//    public Authentication getAuthentication(String context, String requesterIp) throws NetworkResponseServiceExeption
+//    {
+//        NetworkResponseNode serviceNode = checkNetworkResponseServiceNode();
+//        return serviceNode.getAuthentication(context, requesterIp);
+//    }
+
+    public ResponseContext getResponseContext(Request request) 
+            throws NetworkResponseServiceExeption 
     {
         NetworkResponseNode serviceNode = checkNetworkResponseServiceNode();
-        return serviceNode.getResponse(context, requesterIp, params);
+        return serviceNode.getResponseContext(request);
     }
-
-    public Authentication getAuthentication(String context, String requesterIp) throws NetworkResponseServiceExeption
-    {
-        NetworkResponseNode serviceNode = checkNetworkResponseServiceNode();
-        return serviceNode.getAuthentication(context, requesterIp);
-    }
-
+    
     private NetworkResponseNode checkNetworkResponseServiceNode()
             throws NetworkResponseServiceUnavailableException
     {
         NetworkResponseNode serviceNode = getNetworkResponseServiceNode();
-        if (serviceNode == null || !serviceNode.getStatus().equals(Status.STARTED)) {
+        if (serviceNode == null || !serviceNode.isStarted()) 
             throw new NetworkResponseServiceUnavailableException();
-        }
         return serviceNode;
     }
+
 }

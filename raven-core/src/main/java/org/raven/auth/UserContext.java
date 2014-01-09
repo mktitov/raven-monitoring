@@ -61,5 +61,5 @@ public interface UserContext {
      */
     public int getAccessForNode(Node node);
     
-	public Map<String,String>  getResourcesList(Tree tree);
+    public Map<String,String>  getResourcesList(Tree tree);
 }

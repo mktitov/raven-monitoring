@@ -15,10 +15,12 @@
  */
 package org.raven.net.impl;
 
-import java.util.HashMap;
 import java.util.Map;
+import org.raven.net.InvalidParameterValueException;
 import org.raven.net.RequiredParameterMissedException;
 import org.raven.tree.Node;
+import org.raven.util.NodeUtils;
+import org.weda.converter.TypeConverterException;
 import org.weda.services.TypeConverter;
 
 /**
@@ -32,34 +34,32 @@ public class ParametersSupport {
         this.converter = converter;
     }
     
-    public void initNodes(Node owner) {
-        if (owner.hasNode(ContextParameters.NAME))
-            return;
-        ContextParameters paramsNode = new ContextParameters();
-        owner.addAndSaveChildren(paramsNode);
-        paramsNode.start();
+    public void initNodes(Node owner, boolean start) {
+        if (!owner.hasNode(ContextParameters.NAME)) {
+            ContextParameters paramsNode = new ContextParameters();
+            owner.addAndSaveChildren(paramsNode);
+            if (start)
+                paramsNode.start();
+        }
     }
     
-    public Map<String, Object> checkParameters(Node owner, Map<String, Object> params) 
-        throws RequiredParameterMissedException 
+    public void checkParameters(Node owner, Map<String, Object> params) 
+        throws RequiredParameterMissedException, InvalidParameterValueException
     {
         ContextParameters paramsNode = (ContextParameters) owner.getNode(ContextParameters.NAME);
-        if (paramsNode==null)
-            return params;
-        Map<String, Object> newParams = new HashMap<String, Object>();
-        if (params!=null)
-            newParams.putAll(params);
-        for (Node node: paramsNode.getEffectiveNodes())
-            if (node.isStarted() && node instanceof ParameterNode) {
-                ParameterNode param = (ParameterNode) node;
+        if (paramsNode!=null) 
+            for (ParameterNode param: NodeUtils.getEffectiveChildsOfType(paramsNode, ParameterNode.class)) {
                 Object value = params==null? null : params.get(param.getName());
-                if (value!=null)
-                    value = converter.convert(param.getParameterType(), value, param.getPattern());
+                if (value!=null) 
+                    try {
+                        value = converter.convert(param.getParameterType(), value, param.getPattern());
+                    } catch (TypeConverterException e) {
+                        throw new InvalidParameterValueException(param.getName(), value, param.getParameterType());
+                    }
                 if (value==null && param.getRequired())
                     throw new RequiredParameterMissedException(param.getName(), owner.getName());
                 if (value!=null)
-                    newParams.put(param.getName(), value);
+                    params.put(param.getName(), value);
             }
-        return newParams;
     }
 }

@@ -35,6 +35,7 @@ public interface BindingNames
     public static final String DATA_BINDING = "data";
     public static final String REQUESTER_BINDING = "requester";
     public static final String REQUEST_BINDING = "request";
+    public static final String RESPONSE_BINDING = "response";
     public static final String SESSIONATTRIBUTES_BINDING = "sessAttrs";
     public static final String EXCEPTION_BINDING = "exception";
     public static final String USER_CONTEXT_CONFIGURATOR_BINDING = "user";

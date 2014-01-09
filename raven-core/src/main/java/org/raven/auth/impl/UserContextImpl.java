@@ -87,25 +87,27 @@ public class UserContextImpl implements UserContext
         return admin? AccessControl.ALL_RIGHTS : policyManager.getAccessPoliciesForUser(this).getAccessForNode(node);
     }
     
-	public HashMap<String,String>  getResourcesList(Tree tree)
-	{
-		HashMap<String,String> rl = new HashMap<String,String>();
-		for(AccessResource ar : policyManager.getAccessResourcesForUser(this).values()) {
-			String title = ar.getTitle();
-			if(title==null || title.length()==0) continue;
-			String path = null;
-			if(ar.isPresent()) {
-				path = ar.getShow();
+    public HashMap<String, String> getResourcesList(Tree tree) {
+        HashMap<String, String> rl = new HashMap<String, String>();
+        for (AccessResource ar : policyManager.getAccessResourcesForUser(this).values()) {
+            String title = ar.getTitle();
+            if (title == null || title.length() == 0) {
+                continue;
+            }
+            String path = null;
+            if (ar.isPresent()) {
+                path = ar.getShow();
                 try {
-                    if (getAccessForNode(tree.getNode(path)) < AccessControl.READ)				
+                    if (getAccessForNode(tree.getNode(path)) < AccessControl.READ) {
                         continue;
+                    }
                 } catch (InvalidPathException ex) {
                     continue;
                 }
-			}	
-			rl.put(title, path);
-		}
-		return rl;
-	}
-    
+            }
+            rl.put(title, path);
+        }
+        return rl;
+    }
+
 }

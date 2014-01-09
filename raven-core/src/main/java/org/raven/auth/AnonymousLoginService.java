@@ -13,14 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.net.impl;
-
-import org.raven.annotations.NodeClass;
+package org.raven.auth;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(importChildTypesFromParent=true, parentNode=NetworkResponseServiceNode.class)
-public class NetworkResponseGroupNode extends NetworkResponseBaseNode {
+public interface AnonymousLoginService extends LoginService {
+    
 }

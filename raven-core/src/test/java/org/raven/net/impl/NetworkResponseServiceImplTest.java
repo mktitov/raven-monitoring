@@ -19,75 +19,246 @@ package org.raven.net.impl;
 
 import java.util.HashMap;
 import java.util.Map;
+import javax.script.Bindings;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.ds.impl.AttributeValueDataSourceNode;
 import org.raven.expr.impl.IfNode;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
-import org.raven.net.Authentication;
-import org.raven.net.ContextUnavailableException;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.NetworkResponseServiceExeption;
-import org.raven.net.NetworkResponseServiceUnavailableException;
-import org.raven.test.PushOnDemandDataSource;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.ServicesNode;
 import org.raven.tree.impl.SystemNode;
+import static org.easymock.EasyMock.*;
+import org.easymock.IArgumentMatcher;
+import org.easymock.IMocksControl;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import org.raven.BindingNames;
+import org.raven.auth.AuthenticationFailedException;
+import org.raven.auth.LoginException;
+import org.raven.auth.LoginService;
+import org.raven.auth.UserContext;
+import org.raven.auth.impl.AccessControl;
+import org.raven.auth.impl.AccessRight;
+import org.raven.auth.impl.LoginServiceWrapper;
+import org.raven.net.AccessDeniedException;
+import org.raven.net.ContextUnavailableException;
+import org.raven.net.NetworkResponseServiceUnavailableException;
+import org.raven.net.Request;
+import org.raven.net.Response;
+import org.raven.net.ResponseContext;
+import org.raven.test.PushOnDemandDataSource;
+import org.raven.tree.impl.LoggerHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class NetworkResponseServiceImplTest extends RavenCoreTestCase
-{
-    NetworkResponseService responseService;
+public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
+    private final static Logger logger = LoggerFactory.getLogger(NetworkResponseServiceImplTest.class);
+    private final static LoggerHelper loggerHelper = new LoggerHelper(LogLevel.TRACE, "SRI", "[SRI] ", logger);
+    
+    private NetworkResponseService responseService;
+    private NetworkResponseServiceNode responseServiceNode;
+    private IMocksControl mocks;
+    private Map<String, Object> params;
+    private LoginServiceWrapper loginService;
 
     @Before
-    public void prepare()
-    {
+    public void prepare() {
         responseService = registry.getService(NetworkResponseService.class);
         assertNotNull(responseService);
+        responseServiceNode = getSRINode();
+        mocks = createControl();
+        params = new HashMap<String, Object>();
+        
+        loginService = createLoginService("main login service");
     }
-
-//    @Test(expected=NetworkResponseServiceUnavailableException.class)
-//    public void serviceUnavailableTest() throws NetworkResponseServiceExeption
-//    {
-//        responseService.getResponse("context", "1.1.1.1", null);
-//    }
 
     @Test(expected=NetworkResponseServiceUnavailableException.class)
-    public void serviceUnavailableTest2() throws NetworkResponseServiceExeption
-    {
-        NetworkResponseServiceNode responseNode = getSRINode();
-        responseNode.stop();
-        NetworkResponseServiceNode responseServiceNode = new NetworkResponseServiceNode();
-        responseServiceNode.setName("responseService");
-        tree.getRootNode().addAndSaveChildren(responseServiceNode);
-        
-        responseService.getResponse("context", "1.1.1.1", null);
+    public void serviceUnavailableTest() throws NetworkResponseServiceExeption {
+        responseServiceNode.stop();
+        Request request = trainRequest("context");
+        mocks.replay();
+        responseService.getResponseContext(request);
+        mocks.verify();
     }
-
+    
     @Test(expected=ContextUnavailableException.class)
-    public void contextUnavailableTest() throws NetworkResponseServiceExeption
-    {
-        NetworkResponseServiceNode responseServiceNode = new NetworkResponseServiceNode();
-        responseServiceNode.setName("responseService");
-        tree.getRootNode().addAndSaveChildren(responseServiceNode);
-        assertTrue(responseServiceNode.start());
-        
-        responseService.getResponse("context", "1.1.1.1", null);
+    public void contextUnavailableTest() throws NetworkResponseServiceExeption {
+        Request request = trainRequest("context");
+        mocks.replay();
+        responseService.getResponseContext(request);
+        mocks.verify();
     }
-
+    
+    @Test(expected=ContextUnavailableException.class)
+    public void contextUnavailable_lastElementIsGroupTest() throws NetworkResponseServiceExeption {
+        Request request = trainRequest("context", "GET");
+        mocks.replay();
+        createGroup(responseServiceNode, "context");
+        responseService.getResponseContext(request);
+        mocks.verify();
+    }
+    
+    //Testing context without login service
+    @Test(expected = AccessDeniedException.class)
+    public void authenticationFailedTest() throws NetworkResponseServiceExeption {
+        Request request = trainRequest("context");
+        mocks.replay();
+        SimpleResponseBuilder builder = createSimpleResponseBuilder(responseServiceNode, "context");
+        responseService.getResponseContext(request);
+        mocks.verify();
+    }
+    
+    //Success response context get test
     @Test
-    public void getResponseTest() throws NetworkResponseServiceExeption
+    public void getResponseContext() throws NetworkResponseServiceExeption {
+        Request request = trainRequest("context");
+        mocks.replay();
+        SimpleResponseBuilder builder = createSimpleResponseBuilder(responseServiceNode, "context");
+        builder.setLoginService(loginService);
+        ResponseContext responseContext = responseService.getResponseContext(request);
+        assertNotNull(responseContext);
+        assertSame(loginService, responseContext.getLoginService());
+        assertSame(request, responseContext.getRequest());
+        mocks.verify();
+    }
+    
+    @Test
+    public void loginServiceInheritanceTest() throws NetworkResponseServiceExeption {
+        Request request = trainRequest("group/context");
+        mocks.replay();
+        
+        NetworkResponseGroupNode group = createGroup(responseServiceNode, "group");
+        group.setLoginService(loginService);
+        SimpleResponseBuilder builder = createSimpleResponseBuilder(group, "context");
+        
+        ResponseContext responseContext = responseService.getResponseContext(request);
+        assertNotNull(responseContext);
+        assertSame(loginService, responseContext.getLoginService());
+        assertSame(request, responseContext.getRequest());
+        assertSame(builder, responseContext.getResponseBuilder());
+        mocks.verify();
+    }
+    
+    @Test
+    public void getResponseBuilderByHttpMethod() throws NetworkResponseServiceExeption {
+        Request request = trainRequest("group", "GET");
+        mocks.replay();
+        
+        NetworkResponseGroupNode group = createGroup(responseServiceNode, "group");
+        group.setLoginService(loginService);
+        SimpleResponseBuilder builder = createSimpleResponseBuilder(group, "?GET");
+        
+        ResponseContext responseContext = responseService.getResponseContext(request);
+        assertNotNull(responseContext);
+        assertSame(loginService, responseContext.getLoginService());
+        assertSame(request, responseContext.getRequest());
+        assertSame(builder, responseContext.getResponseBuilder());
+        mocks.verify();
+    }
+    
+    @Test
+    public void namedParametersTest() throws NetworkResponseServiceExeption {
+        Request request = trainRequest("test/1");
+        mocks.replay();
+        
+        NetworkResponseGroupNode group = createGroup(responseServiceNode, "{param1}");
+        group.setLoginService(loginService);
+        SimpleResponseBuilder builder = createSimpleResponseBuilder(group, "{param2}");
+        builder.setNamedParameterType(Integer.class);
+        
+        ResponseContext responseContext = responseService.getResponseContext(request);
+        assertNotNull(responseContext);
+        assertSame(loginService, responseContext.getLoginService());
+        assertSame(request, responseContext.getRequest());
+        assertSame(builder, responseContext.getResponseBuilder());
+        assertEquals("test", request.getParams().get("param1"));
+        assertEquals(new Integer(1), request.getParams().get("param2"));
+        mocks.verify();
+    }
+    
+    //ResponseBuilder.getAccessRight returns NULL
+    @Test
+    public void accessNotGrantedTest() throws Exception {
+        assertFalse(testAccessGranted(null, AccessControl.READ));
+    }
+    
+    //granted access lower then needed
+    @Test
+    public void accessNotGrantedTest2() throws Exception {
+        assertFalse(testAccessGranted(AccessRight.READ, AccessControl.WRITE));
+    }
+    
+    @Test
+    public void accessGrantedTest() throws Exception {
+        assertTrue(testAccessGranted(AccessRight.READ, AccessControl.READ));
+    }
+    
+    @Test
+    public void accessGrantedTest2() throws Exception {
+        assertTrue(testAccessGranted(AccessRight.WRITE, AccessControl.WRITE|AccessControl.READ));
+    }
+    
+    @Test
+    public void getResponseTest() throws Exception {
+//        Request request = trainRequest("context");
+        ResponseBuilderWrapperNode responseBuilder = createResponseBuilderWrapper(responseServiceNode, "context");
+        ResponseBuilderWrapperNode.ResponseBuilderWrapper wrapper = mocks.createMock(
+                ResponseBuilderWrapperNode.ResponseBuilderWrapper.class);
+        Response response = mocks.createMock(Response.class);
+        UserContext user = mocks.createMock(UserContext.class);
+        LoginService loginService = mocks.createMock(LoginService.class);
+        Request request = mocks.createMock(Request.class);
+        Map<String, Object> params = mocks.createMock(Map.class);
+        
+        responseServiceNode.setLogLevel(LogLevel.ERROR);
+        ResponseContextImpl responseContext = new ResponseContextImpl(
+                request, "context", "sub", 1, loginService, responseBuilder, responseServiceNode);
+        
+        expect(request.getParams()).andReturn(params);
+        expect(params.put(NetworkResponseServiceNode.SUBCONTEXT_PARAM, "sub")).andReturn(null);
+        expect(user.getLogin()).andReturn("Test user").anyTimes();
+        expect(wrapper.buildResponse(same(user), same(responseContext), checkBindings(user, request, responseContext))).andReturn(response);
+        mocks.replay();
+        responseBuilder.setWrappedResponseBuilder(wrapper);
+        Response result = responseContext.getResponse(user);
+        assertSame(response, result);
+        mocks.verify();
+    }
+    
+    public static Bindings checkBindings(final UserContext user, final Request request, final ResponseContext responseContext) {
+        reportMatcher(new IArgumentMatcher() {
+            public boolean matches(Object obj) {
+                assertNotNull(obj);
+                Bindings bindings = (Bindings) obj;
+                assertSame(user, bindings.get(BindingNames.USER_CONTEXT));
+                assertSame(request, bindings.get(BindingNames.REQUEST_BINDING));
+                assertSame(responseContext, bindings.get(BindingNames.RESPONSE_BINDING));
+                return true;
+            }
+            public void appendTo(StringBuffer buffer) {
+            }
+        });
+        return null;
+    }
+    
+    @Test
+    public void getOldResponseTest() throws Exception
     {
-        NetworkResponseServiceNode responseServiceNode = getSRINode();
         PushOnDemandDataSource ds = new PushOnDemandDataSource();
         ds.setName("ds");
-        tree.getRootNode().addAndSaveChildren(ds);
+        testsNode.addAndSaveChildren(ds);
         assertTrue(ds.start());
         
         NetworkResponseContextNode context = new NetworkResponseContextNode();
@@ -107,65 +278,67 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase
         ds.addDataPortion("test");
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("param", "response");
-        assertEquals("test", responseService.getResponse("context", "1.1.1.1", params).getContent());
+        
+        Request request = trainRequest("context", params);
+        mocks.replay();
+        Response resp = getResponse(request);
+        assertEquals("test", resp.getContent());
+        
+//        assertEquals("test", responseService.getResponseContext("context", "1.1.1.1", params).getContent());
+        mocks.verify();
     }
 
     @Test
-    public void getSubcontextTest() throws NetworkResponseServiceExeption, Exception
-    {
-        NetworkResponseServiceNode responseServiceNode = getSRINode();
+    public void getOldSubcontextTest() throws Exception {
         NetworkResponseContextNode context = createResponseNode(responseServiceNode, "context");
+        Request request = trainRequest("context/subcontextName");
+        mocks.replay();
+        Response resp = getResponse(request);
         
-        Map<String, Object> params = new HashMap<String, Object>();
-        params.put("param", "response");
-        assertEquals(
-                "subcontextName",
-                responseService.getResponse("context/subcontextName", "1.1.1.1", params).getContent());
+        assertEquals("subcontextName", resp.getContent());
+        
+        mocks.verify();
     }
     
     @Test
-    public void contextGroupTest() throws Exception {
+    public void oldContextGroupTest() throws Exception {
         NetworkResponseServiceNode sriNode = getSRINode();
         NetworkResponseGroupNode group = new NetworkResponseGroupNode();
         group.setName("group");
         sriNode.addAndSaveChildren(group);
         assertTrue(group.start());
-        
         NetworkResponseContextNode context = createResponseNode(group, "context");
+        Request request = trainRequest("group/context/subcontextName");
+        mocks.replay();
         
-        Map<String, Object> params = new HashMap<String, Object>();
-        params.put("param", "response");
-        assertEquals(
-                "subcontextName",
-                responseService.getResponse("group/context/subcontextName", "1.1.1.1", params).getContent());
+        Response resp = getResponse(request);
+        assertEquals("subcontextName", resp.getContent());
+        
+        mocks.verify();
     }
     
     @Test
-    public void ifNodeTest() throws Exception {
+    public void oldIfNodeTest() throws Exception {
         NetworkResponseServiceNode sri = getSRINode();
         IfNode if1 = createIfNode(sri, "if1", "requesterIp=='1.1.1.1'");
         createResponseNode(if1, "context1");
         if1 = createIfNode(sri, "if2", "requesterIp=='1.1.1.2'");
         createResponseNode(if1, "context2");
-        assertEquals(
-                "subcontext1",
-                responseService.getResponse("context1/subcontext1", "1.1.1.1", new HashMap<String, Object>())
-                    .getContent());
-        assertEquals(
-                "subcontext2",
-                responseService.getResponse("context2/subcontext2", "1.1.1.2", new HashMap<String, Object>())
-                    .getContent());
+        
+        Request request1 = trainRequest("context1/subcontext1");
+        Request request2 = trainRequestWithRemoteIp("context2/subcontext2", "1.1.1.2");
+        Request request3 = trainRequest("context2/subcontext1");
+        mocks.replay();
+        assertEquals("subcontext1", getResponse(request1, "1.1.1.1").getContent());
+        assertEquals("subcontext2", getResponse(request2, "1.1.1.2").getContent());
         try {
-            responseService.getResponse("context2/subcontext1", "1.1.1.1", new HashMap<String, Object>());
-            fail();
+             getResponse(request3, "1.1.1.1").getContent();
         } catch (NetworkResponseServiceExeption e) {}
+        mocks.verify();
     }
 
     @Test
-    public void authTest() throws NetworkResponseServiceExeption, Exception
-    {
-        NetworkResponseServiceNode responseServiceNode = getSRINode();
-
+    public void authTest() throws NetworkResponseServiceExeption, Exception {
         PushOnDemandDataSource ds = new PushOnDemandDataSource();
         ds.setName("ds");
         tree.getRootNode().addAndSaveChildren(ds);
@@ -177,26 +350,30 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase
         context.setAllowRequestsFromAnyIp(true);
         context.setDataSource(ds);
         assertTrue(context.start());
-
-        assertNull(responseService.getAuthentication("context", "1.1.1.1"));
-
         context.setNeedsAuthentication(true);
-        context.getNodeAttribute(AbstractNetworkResponseContext.USER_ATTR).setValue("user_name");
-        context.getNodeAttribute(AbstractNetworkResponseContext.PASSWORD_ATTR).setValue("pass");
-
-        Authentication auth = context.getAuthentication();
-        assertNotNull(auth);
-        assertEquals("user_name", auth.getUser());
-        assertEquals("pass", auth.getPassword());
+        context.getAttr(AbstractNetworkResponseContext.USER_ATTR).setValue("user_name");
+        context.getAttr(AbstractNetworkResponseContext.PASSWORD_ATTR).setValue("pass");
+        
+        Request request = trainRequest("context");
+        mocks.replay();
+        
+        ResponseContext responseContext = responseService.getResponseContext(request);
+        LoginService loginService = responseContext.getLoginService();
+        assertNotNull(loginService);
+        checkForInvalid(loginService, "invalid_user", "pass", "1.1.1.1");
+        checkForInvalid(loginService, "user_name", "invalid_pass", "1.1.1.1");
+        checkForInvalid(loginService, null, "pass", "1.1.1.1");
+        checkForInvalid(loginService, "user_name", null, "1.1.1.1");
+        UserContext user = loginService.login("user_name", "pass", null);
+        assertTrue(responseContext.isAccessGranted(user));
+        mocks.verify();
     }
     
     @Test
     public void ifNodeWithAuthTest() throws Exception {
-        NetworkResponseServiceNode responseServiceNode = getSRINode();
-
         PushOnDemandDataSource ds = new PushOnDemandDataSource();
         ds.setName("ds");
-        tree.getRootNode().addAndSaveChildren(ds);
+        testsNode.addAndSaveChildren(ds);
         assertTrue(ds.start());
         
         IfNode if1 = createIfNode(responseServiceNode, "if1", "requesterIp=='1.1.1.1'");
@@ -207,24 +384,93 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase
         context.setAllowRequestsFromAnyIp(true);
         context.setDataSource(ds);
         assertTrue(context.start());
-
-        assertNull(responseService.getAuthentication("context", "1.1.1.1"));
-
+        
+        Request request1 = trainRequest("context");
+        Request request2 = trainRequest("context");
+        Request request3 = trainRequestWithRemoteIp("context", "1.1.1.2");
+        mocks.replay();
+        ResponseContext responseContext = responseService.getResponseContext(request1);
+        LoginService loginService = responseContext.getLoginService();
+        UserContext user = loginService.login("any_user", "any_pass", "any_ip");
+        assertTrue(responseContext.isAccessGranted(user));
+        
         context.setNeedsAuthentication(true);
-        context.getNodeAttribute(AbstractNetworkResponseContext.USER_ATTR).setValue("user_name");
-        context.getNodeAttribute(AbstractNetworkResponseContext.PASSWORD_ATTR).setValue("pass");
-
-        assertNotNull(responseService.getAuthentication("context", "1.1.1.1"));
+        context.getAttr(AbstractNetworkResponseContext.USER_ATTR).setValue("user_name");
+        context.getAttr(AbstractNetworkResponseContext.PASSWORD_ATTR).setValue("pass");
+        
+        responseContext = responseService.getResponseContext(request2);
+        loginService = responseContext.getLoginService();
+        user = loginService.login("user_name", "pass", "1.1.1.2");
+        assertTrue(responseContext.isAccessGranted(user));
+        
         try {
-            responseService.getAuthentication("context", "1.1.1.2");
+            responseContext = responseService.getResponseContext(request3);
             fail();
         } catch (NetworkResponseServiceExeption e) {}
         
-        Authentication auth = context.getAuthentication();
-        assertNotNull(auth);
-        assertEquals("user_name", auth.getUser());
-        assertEquals("pass", auth.getPassword());
+        mocks.verify();
+    }
+    
+    private boolean testAccessGranted(AccessRight builderRights, int rights) throws Exception {
+        SimpleResponseBuilder builder = createSimpleResponseBuilder(responseServiceNode, "context");
+        builder.setMinimalAccessRight(builderRights);
+        Request request = trainRequest("context");
+        UserContext user = mocks.createMock(UserContext.class);
+        if (builderRights!=null) 
+            expect(user.getAccessForNode(builder)).andReturn(rights);
         
+        mocks.replay();
+        
+        builder.setLoginService(loginService);
+        ResponseContext responseContext = responseService.getResponseContext(request);
+        assertNotNull(responseContext);
+        boolean res = responseContext.isAccessGranted(user);
+        
+        mocks.verify();
+        return res;
+    }
+    
+    private Request trainRequest(String contextPath) {
+        Request request = mocks.createMock(Request.class);
+        expect(request.getContextPath()).andReturn(contextPath).anyTimes();
+        expect(request.getRemoteAddr()).andReturn("1.1.1.1").anyTimes();
+        expect(request.getParams()).andReturn(params).anyTimes();
+        return request;
+    }
+    
+    private Request trainRequestWithRemoteIp(String contextPath, String remoteIp) {
+        Request request = mocks.createMock(Request.class);
+        expect(request.getContextPath()).andReturn(contextPath).anyTimes();
+        expect(request.getRemoteAddr()).andReturn(remoteIp).anyTimes();
+        expect(request.getParams()).andReturn(params).anyTimes();
+        return request;
+    }
+    
+    private Request trainRequest(String contextPath, Map<String, Object> params) {
+        Request request = mocks.createMock(Request.class);
+        expect(request.getContextPath()).andReturn(contextPath).anyTimes();
+        expect(request.getRemoteAddr()).andReturn("1.1.1.1").anyTimes();
+        expect(request.getParams()).andReturn(params).atLeastOnce();
+        return request;
+    }
+    
+    private Request trainRequest(String contextPath, String method) {
+        Request request = trainRequest(contextPath);
+        expect(request.getMethod()).andReturn(method);
+        return request;
+    }
+    
+    private UserContext trainUserContext() {
+        UserContext user = mocks.createMock(UserContext.class);
+        return user;
+    }
+    
+    private NetworkResponseGroupNode createGroup(Node owner, String name) {
+        NetworkResponseGroupNode group = new NetworkResponseGroupNode();
+        group.setName(name);
+        owner.addAndSaveChildren(group);
+        assertTrue(group.start());
+        return group;
     }
     
     private NetworkResponseContextNode createResponseNode(Node owner, String name) throws Exception {
@@ -236,7 +482,7 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase
         AttributeValueDataSourceNode ds = new AttributeValueDataSourceNode();
         ds.setName("ds");
         context.addAndSaveChildren(ds);
-        NodeAttribute expr = ds.getNodeAttribute("value");
+        NodeAttribute expr = ds.getAttr("value");
         expr.setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
         expr.setValue("params['subcontext']");
         assertTrue(ds.start());
@@ -244,6 +490,22 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase
         context.setDataSource(ds);
         assertTrue(context.start());
         return context;
+    }
+    
+    private SimpleResponseBuilder createSimpleResponseBuilder(Node owner, String name) {
+        SimpleResponseBuilder builder = new SimpleResponseBuilder();
+        builder.setName(name);
+        owner.addAndSaveChildren(builder);
+        assertTrue(builder.start());
+        return builder;
+    }
+    
+    private ResponseBuilderWrapperNode createResponseBuilderWrapper(Node owner, String name) {
+        ResponseBuilderWrapperNode wrapper = new ResponseBuilderWrapperNode();
+        wrapper.setName(name);
+        owner.addAndSaveChildren(wrapper);
+        assertTrue(wrapper.start());
+        return wrapper;
     }
     
     private IfNode createIfNode(Node owner, String name, String expression) throws Exception {
@@ -261,12 +523,40 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase
     private NetworkResponseServiceNode getSRINode() {
         NetworkResponseServiceNode responseServiceNode = (NetworkResponseServiceNode)
                 tree.getRootNode()
-                .getChildren(SystemNode.NAME)
-                .getChildren(ServicesNode.NAME)
-                .getChildren(NetworkResponseServiceNode.NAME);
+                .getNode(SystemNode.NAME)
+                .getNode(ServicesNode.NAME)
+                .getNode(NetworkResponseServiceNode.NAME);
         assertNotNull(responseServiceNode);
         responseServiceNode.setLogLevel(LogLevel.TRACE);
         return responseServiceNode;
     }
 
+    private LoginServiceWrapper createLoginService(String name) {
+        LoginServiceWrapper loginService = new LoginServiceWrapper();
+        loginService.setName(name);
+        testsNode.addAndSaveChildren(loginService);
+        assertTrue(loginService.start());
+        return loginService;
+    }
+
+    private Response getResponse(Request request) throws Exception {
+        return getResponse(request, "1.1.1.1");
+    }
+
+    private Response getResponse(Request request, String remoteIp) throws Exception {
+        ResponseContext responseContext = responseService.getResponseContext(request);
+        UserContext user = responseContext.getLoginService().login("test", "test_pwd", remoteIp);
+        assertTrue(responseContext.isAccessGranted(user));
+        Response resp = responseContext.getResponse(user);
+        return resp;
+    }
+    
+    private void checkForInvalid(LoginService loginService, String user, String pass, String remoteIp) 
+            throws LoginException 
+    {
+        try {
+            loginService.login(user, pass, remoteIp);
+            fail();
+        } catch (AuthenticationFailedException ex) {}
+    } 
 }

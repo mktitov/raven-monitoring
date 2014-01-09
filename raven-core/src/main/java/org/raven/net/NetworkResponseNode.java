@@ -23,6 +23,6 @@ import org.raven.tree.Node;
  *
  * @author Mikhail Titov
  */
-public interface NetworkResponseNode extends NetworkResponse, Node
+public interface NetworkResponseNode extends ResponseContextProvider, Node
 {
 }

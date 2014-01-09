@@ -157,8 +157,8 @@ public abstract class AccessControlList implements Comparator<AccessControl>
     	for(AccessControl ac : x.acl)
     		acl.add(ac);
     	if(x.isFiltersDisabled()) setFiltersLocked();
-    		else if(!isFiltersDisabled())
-    				filters.addAll(x.getFilters());
+        else if(!isFiltersDisabled())
+                filters.addAll(x.getFilters());
 	}
 
 /*    

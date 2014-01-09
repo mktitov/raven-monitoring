@@ -18,25 +18,33 @@
 package org.raven.net.impl;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.script.Bindings;
 import org.apache.commons.lang.StringUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.auth.LoginService;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.IfNode;
 import org.raven.log.LogLevel;
+import org.raven.net.AccessDeniedException;
 import org.raven.net.Authentication;
 import org.raven.net.ContextUnavailableException;
 import org.raven.net.NetworkResponseContext;
 import org.raven.net.NetworkResponseNode;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.NetworkResponseServiceExeption;
+import org.raven.net.Request;
 import org.raven.net.Response;
+import org.raven.net.ResponseBuilder;
+import org.raven.net.ResponseContext;
 import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.InvisibleNode;
+import org.weda.converter.TypeConverterException;
 import org.weda.internal.annotations.Service;
 
 /**
@@ -54,6 +62,12 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
     private static NetworkResponseService networkResponseService;
     public static final String REQUEST_PARAMS_BINDING = "requestParams";
     public static final String CONTEXT_BINDING = "requestContext";
+    public static final String LOGIN_SERVICE_ATTR = "loginService";
+    public static final String HTTP_METHOD_BINDING = "httpMethod";
+    public static final String REQUEST_BINDING = "request";
+    public static final String NAMED_PARAMETER_TYPE_ATTR = "namedParameterType";
+    
+    private final static NetRespAnonymousLoginService netRespAnonLoginService = new NetRespAnonymousLoginService();
 
     @Parameter(readOnly=true)
     private AtomicLong requestsCount;
@@ -75,6 +89,10 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
     public AtomicLong getRequestsWithErrors()
     {
         return requestsWithErrors;
+    }
+
+    public BindingSupportImpl getBindingSupport() {
+        return bindingSupport;
     }
 
     @Override
@@ -106,7 +124,63 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
         super.formExpressionBindings(bindings);
         bindingSupport.addTo(bindings);
     }
+    
+    public void incRequestsCountWithErrors() {
+        requestsWithErrors.incrementAndGet();
+    }
 
+    public ResponseContext getResponseContext(Request request) throws NetworkResponseServiceExeption {
+        try {
+            bindingSupport.put(CONTEXT_BINDING, request.getContextPath());
+            bindingSupport.put(REQUESTER_IP_BINDING, request.getRemoteAddr());
+            bindingSupport.put(REQUEST_BINDING, request);
+            PathInfo pathInfo = new PathInfo();
+            ResponseBuilder respBuilder = findResponseBuilder(
+                    this, splitContextToPathElements(request.getContextPath()), pathInfo, request);
+            LoginService loginService = findLoginService(respBuilder);
+            return new ResponseContextImpl(request, pathInfo.getBuilderPath(), pathInfo.getSubpath(), 
+                    requestsCount.incrementAndGet(), loginService, respBuilder, this);
+        } finally {
+            bindingSupport.reset();
+        }
+    }
+    
+    private ResponseBuilder findResponseBuilder(Node node, String[] path, PathInfo pathInfo, Request request) 
+            throws ContextUnavailableException 
+    {
+        ResponseBuilder respBuilder;
+        try {
+            respBuilder = getResponseBuilder(node, path, 0, pathInfo, request);
+        } catch (ContextUnavailableException ex) {
+            Map<String, Object> params = new HashMap<String, Object>();
+            NetworkResponseContext respContext = getContext(node, path, 0, pathInfo);
+            respBuilder = new NetRespContextRespBuilderWrapper(respContext);
+        }
+        return respBuilder;
+    }
+    
+    private LoginService findLoginService(ResponseBuilder respBuilder) throws AccessDeniedException {
+        return respBuilder.getResponseBuilderNode() instanceof NetworkResponseContext?
+            createLoginServiceForNetRespCtx((NetworkResponseContext)respBuilder.getResponseBuilderNode()) :
+            getLoginService(respBuilder.getResponseBuilderNode());
+    }
+    
+    private LoginService createLoginServiceForNetRespCtx(NetworkResponseContext respContext) {
+        Authentication auth = respContext.getAuthentication();
+        return auth==null? netRespAnonLoginService : new NetRespContextLoginServiceWrapper(respContext);
+    }
+    
+    private LoginService getLoginService(Node node) throws AccessDeniedException {
+        if (node==this) throw new AccessDeniedException();
+        else {
+            NodeAttribute attr = node.getAttr(LOGIN_SERVICE_ATTR);
+            Object loginService = attr.getRealValue();
+            return loginService instanceof LoginService? (LoginService)loginService : getLoginService(node.getParent());
+        }
+    }
+
+
+    @Deprecated
     public Authentication getAuthentication(String context, String requesterIp) 
         throws NetworkResponseServiceExeption
     {
@@ -119,6 +193,7 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
         }
     }
     
+    @Deprecated
     public Response getResponse(String context, String requesterIp, Map<String, Object> params)
             throws NetworkResponseServiceExeption
     {
@@ -136,7 +211,10 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
                 bindingSupport.put(REQUESTER_IP_BINDING, requesterIp);
                 bindingSupport.put(REQUEST_PARAMS_BINDING, params);
                 bindingSupport.put(CONTEXT_BINDING, context);
-                contextNode = getContext(this, splitContextToPathElements(context), 0, params);
+                PathInfo pathInfo = new PathInfo();
+                contextNode = getContext(this, splitContextToPathElements(context), 0, pathInfo);
+                if (pathInfo.getSubpath()!=null)
+                    params.put(SUBCONTEXT_PARAM, pathInfo.getSubpath());
             } finally {
                 bindingSupport.reset();
             }
@@ -209,30 +287,107 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
         }
         return buf.toString();
     }
-
-    private NetworkResponseContext getContext(Node node, String[] path, int pathIndex, Map<String, Object> params) 
+    
+    private ResponseBuilder getResponseBuilder(Node node, String[] path, int pathIndex, PathInfo pathInfo, 
+            Request request) 
         throws ContextUnavailableException
     {
+        if (node instanceof NetworkResponseGroupNode && pathIndex==path.length) {
+            Node builder = node.getNode("?"+request.getMethod());
+            if (builder instanceof ResponseBuilder) return (ResponseBuilder)builder;
+            else throw new ContextUnavailableException(path[pathIndex-1], request.getContextPath());
+        }
+        final String pathElem = path[pathIndex];
+        for (Node child: node.getEffectiveNodes()) {
+            if (child.isStarted() && (pathElem.equals(child.getName()) || isNameOfParameter(child.getName()))) {
+                if (isNameOfParameter(child.getName()))
+                    addNamedParameter(child, request.getParams(), pathElem, request);
+                if (child instanceof NetworkResponseGroupNode) {
+//                    if (pathIndex==path.length-1)
+                    return getResponseBuilder(child, path, pathIndex+1, pathInfo, request);
+                } else {
+                    if (pathIndex!=path.length-1)
+                        pathInfo.setSubpath(getContextFromPath(path, pathIndex+1));
+                    pathInfo.setBuilderPath(StringUtils.join(path, "/", 0, pathIndex));
+                    if (child instanceof ResponseBuilder) 
+                        return (ResponseBuilder)child;
+                }
+            }
+        }
+        throw new ContextUnavailableException(request.getContextPath(), pathElem);
+    }
+    
+    private boolean isNameOfParameter(String name) {
+        return name.length()>2 && name.startsWith("{") && name.endsWith("}");
+    }
+    
+    private void addNamedParameter(Node child, Map<String, Object> params, Object paramValue, Request request) 
+            throws ContextUnavailableException 
+    {
+        String paramName = child.getName().substring(1, child.getName().length()-1);
+        NodeAttribute paramType = child.getAttr(NAMED_PARAMETER_TYPE_ATTR);
+        if (paramType!=null) {
+            Object clazz = paramType.getRealValue();
+            if (clazz instanceof Class) 
+                try {
+                    paramValue = converter.convert((Class)clazz, paramValue, null);
+                } catch (TypeConverterException e) {
+                    throw new ContextUnavailableException(request.getContextPath(), e);
+                }
+        }
+        params.put(paramName, paramValue);
+    }
+    
+    @Deprecated
+    private NetworkResponseContext getContext(Node node, String[] path, int pathIndex, PathInfo pathInfo) 
+        throws ContextUnavailableException
+    {
+        if (pathIndex==path.length)
+            throw new ContextUnavailableException(getContextFromPath(path, 0), path[pathIndex-1]);
         final Collection<Node> childs = node.getEffectiveChildrens();
         final String pathElem = path[pathIndex];
         if (childs!=null && !childs.isEmpty())
             for (Node child: childs) {
                 if (pathElem.equals(child.getName()) && Node.Status.STARTED.equals(child.getStatus())) {
                     if (child instanceof NetworkResponseGroupNode)
-                        return getContext(child, path, pathIndex+1, params);
+                        return getContext(child, path, pathIndex+1, pathInfo);
                     else {
                         if (pathIndex!=path.length-1)
-                            params.put(SUBCONTEXT_PARAM, getContextFromPath(path, pathIndex+1));
-                        return (NetworkResponseContext) child;
+                            pathInfo.setSubpath(getContextFromPath(path, pathIndex+1));
+                        pathInfo.setBuilderPath(StringUtils.join(path, "/", 0, pathIndex));
+//                        if (pathIndex!=path.length-1)
+//                            params.put(SUBCONTEXT_PARAM, getContextFromPath(path, pathIndex+1));
+                        if (child instanceof NetworkResponseContext)
+                            return (NetworkResponseContext) child;
                     }
                 }
             }
-        throw new ContextUnavailableException(String.format(
-            "Can't resolve path element (%s) for path (%s) ", pathElem, getContextFromPath(path, 0)));
+        throw new ContextUnavailableException(getContextFromPath(path, 0), pathElem);
     }
     
     private String getContextFromPath(String[] path, int fromIndex) {
         return StringUtils.join(path, "/", fromIndex, path.length);
+    }
+
+    private class PathInfo {
+        private String builderPath;
+        private String subpath;
+
+        public String getBuilderPath() {
+            return builderPath;
+        }
+
+        public void setBuilderPath(String builderPath) {
+            this.builderPath = builderPath;
+        }
+
+        public String getSubpath() {
+            return subpath;
+        }
+
+        public void setSubpath(String subpath) {
+            this.subpath = subpath;
+        }
     }
     
 //    private NetworkResponseContext getContext(String context, Map<String, Object> params)

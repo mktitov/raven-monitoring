@@ -21,10 +21,10 @@ package org.raven.net;
  *
  * @author Mikhail Titov
  */
-public interface NetworkResponseService extends NetworkResponse
+public interface NetworkResponseService extends ResponseContextProvider
 {
     public final static String REQUEST_CONTENT_PARAMETER = "request-content";
-
+    
     public NetworkResponseNode getNetworkResponseServiceNode();
 
     public void setNetworkResponseServiceNode(NetworkResponseNode networkResponseNode);

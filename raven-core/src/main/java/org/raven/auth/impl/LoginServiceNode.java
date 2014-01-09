@@ -88,10 +88,14 @@ public class LoginServiceNode extends BaseNode implements LoginService {
         loginListenersStat = new OperationStatistic();
     }
     
+    protected boolean createAuthenticatorsNode() {
+        return true;
+    }
+    
     protected void initChildren() {
         if (!hasNode(IpFiltersNode.NAME))
             addAndStart(new IpFiltersNode());
-        if (!hasNode(AuthenticatorsNode.NAME))
+        if (!hasNode(AuthenticatorsNode.NAME) && createAuthenticatorsNode())
             addAndStart(new AuthenticatorsNode());
         if (!hasNode(UserContextConfiguratorsNode.NAME))
             addAndStart(new UserContextConfiguratorsNode());

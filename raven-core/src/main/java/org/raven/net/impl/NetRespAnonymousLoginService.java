@@ -15,12 +15,22 @@
  */
 package org.raven.net.impl;
 
-import org.raven.annotations.NodeClass;
+import org.raven.auth.AnonymousLoginService;
+import org.raven.auth.LoginException;
+import org.raven.auth.UserContext;
+import org.raven.auth.impl.AnonymousLoginServiceNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(importChildTypesFromParent=true, parentNode=NetworkResponseServiceNode.class)
-public class NetworkResponseGroupNode extends NetworkResponseBaseNode {
+public class NetRespAnonymousLoginService implements AnonymousLoginService {
+
+    public UserContext login(String username, String password, String ip) throws LoginException {
+        return AnonymousLoginServiceNode.ANONYMOUS_USER;
+    }
+
+    public boolean isLoginAllowedFromIp(String ip) {
+        return true;
+    }
 }

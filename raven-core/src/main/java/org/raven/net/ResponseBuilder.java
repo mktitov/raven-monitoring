@@ -13,14 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.net.impl;
+package org.raven.net;
 
-import org.raven.annotations.NodeClass;
+import org.raven.auth.UserContext;
+import org.raven.auth.impl.AccessRight;
+import org.raven.tree.Node;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(importChildTypesFromParent=true, parentNode=NetworkResponseServiceNode.class)
-public class NetworkResponseGroupNode extends NetworkResponseBaseNode {
+public interface ResponseBuilder {
+    public Response buildResponse(UserContext user, ResponseContext responseContext) 
+            throws NetworkResponseServiceExeption;
+    public AccessRight getAccessRight();
+    public Node getResponseBuilderNode();
 }

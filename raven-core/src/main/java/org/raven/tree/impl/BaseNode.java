@@ -663,7 +663,7 @@ public class BaseNode implements Node, NodeListener, Logger
                     sortedChildrens.addAll(i, list);
             }
         }
-        return sortedChildrens.isEmpty()? null : sortedChildrens;
+        return sortedChildrens.isEmpty()? Collections.EMPTY_LIST : sortedChildrens;
     }
 
     @Deprecated
