@@ -20,308 +20,317 @@
           xmlns:f="http://java.sun.com/jsf/core"
           xmlns:tr="http://myfaces.apache.org/trinidad"
           xmlns:h="http://java.sun.com/jsf/html"
-          xmlns:t="http://myfaces.apache.org/tomahawk" >
-    <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>          
+          xmlns:t="http://myfaces.apache.org/tomahawk"
+          xmlns:trh="http://myfaces.apache.org/trinidad/html">
+  <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>          
     <!--           
-    <tr:panelCaptionGroup captionText="Create node" rendered="#{cNode.allowNodeEdit}">
-        <tr:panelFormLayout>
-            <tr:inputText 
-            	label="Name" 
-            	value="#{sBean.newNodeName}" >
-            </tr:inputText>
-            <tr:inputListOfValues  
-                label="Type" value="#{sBean.newNodeType}"
-                action="dialog:chooseType" 
-                windowWidth="400" windowHeight="300"/>
-            <tr:commandButton text="Create" action="#{sBean.createNode}"/>        
-        </tr:panelFormLayout>
-    </tr:panelCaptionGroup>        
-    
-    -->
-<h:form id="form1" enctype="multipart/form-data" >
-<tr:panelAccordion discloseNone="true" >
-	<tr:showDetailItem text="#{msgs.dsc}">
-    <!-- ********************* -->
-    <!-- show node description -->
-    <!-- ********************* -->
-    <tr:panelCaptionGroup captionText="" >
-    	<tr:outputText
-	       	escape="false" 
-	        value="#{cNode.classDescription}"/>
-    </tr:panelCaptionGroup>    
-	</tr:showDetailItem>
-</tr:panelAccordion>
-    
-<tr:panelAccordion discloseNone="true" >
-	<tr:showDetailItem text="#{msgs.attributeCreate}">
-    <!-- ********************* -->
-    <!-- attribute create -->
-    <!-- ********************* -->
-    <tr:panelCaptionGroup 
-    	rendered="#{cNode.allowNodeEdit}" 
-    	captionText="#{msgs.attributeCreate}" >
-        <tr:panelFormLayout>
+  <tr:panelCaptionGroup captionText="Create node" rendered="#{cNode.allowNodeEdit}">
+    <tr:panelFormLayout>
+      <tr:inputText 
+        label="Name" 
+        value="#{sBean.newNodeName}" >
+      </tr:inputText>
+      <tr:inputListOfValues  
+        label="Type" value="#{sBean.newNodeType}"
+        action="dialog:chooseType" 
+        windowWidth="400" windowHeight="300"/>
+      <tr:commandButton text="Create" action="#{sBean.createNode}"/>        
+    </tr:panelFormLayout>
+  </tr:panelCaptionGroup>        
+  -->
+  <trh:script>
+    <![CDATA[
+    var nodePath = '${cNode.node.path}'
+    function openInEditor(nodePath, attrName) {
+      
+    }
+    ]]>
+  </trh:script>
+  <h:form id="form1" enctype="multipart/form-data" >
+    <tr:panelAccordion discloseNone="true" >
+      <tr:showDetailItem text="#{msgs.dsc}">
+        <!-- ********************* -->
+        <!-- show node description -->
+        <!-- ********************* -->
+        <tr:panelCaptionGroup captionText="" >
+          <tr:outputText
+            escape="false" 
+            value="#{cNode.classDescription}"/>
+        </tr:panelCaptionGroup>    
+      </tr:showDetailItem>
+    </tr:panelAccordion>
+
+    <tr:panelAccordion discloseNone="true" >
+      <tr:showDetailItem text="#{msgs.attributeCreate}">
+        <!-- ********************* -->
+        <!-- attribute create -->
+        <!-- ********************* -->
+        <tr:panelCaptionGroup 
+          rendered="#{cNode.allowNodeEdit}" 
+          captionText="#{msgs.attributeCreate}" >
+          <tr:panelFormLayout>
             <tr:message 
               binding="#{cNode.newAttribute.message}"               
               messageType="error" />
             <tr:inputText 
-            	label="#{msgs.name}" 
-            	value="#{cNode.newAttribute.name}" >
-                <tr:validateRegExp pattern="#{sBean.nodeNamePattern}"/>
+              label="#{msgs.name}" 
+              value="#{cNode.newAttribute.name}" >
+              <tr:validateRegExp pattern="#{sBean.nodeNamePattern}"/>
             </tr:inputText>
             <tr:inputText 
-            	label="#{msgs.parentAttributeName}" 
-            	value="#{cNode.newAttribute.parentName}" >
-                <tr:validateRegExp pattern="#{sBean.nodeNamePattern}"/>
+              label="#{msgs.parentAttributeName}" 
+              value="#{cNode.newAttribute.parentName}" >
+              <tr:validateRegExp pattern="#{sBean.nodeNamePattern}"/>
             </tr:inputText>
             <tr:selectOneChoice 
-            	label="#{msgs.type}" 
-            	value="#{cNode.newAttribute.attrClass}" >
-                <f:selectItems value="#{cNode.newAttribute.selectItems}" />
+              label="#{msgs.type}" 
+              value="#{cNode.newAttribute.attrClass}" >
+              <f:selectItems value="#{cNode.newAttribute.selectItems}" />
             </tr:selectOneChoice>
             <tr:selectBooleanCheckbox 
-            	label="#{msgs.required}" 
-            	value="#{cNode.newAttribute.required}" />
-            
+              label="#{msgs.required}" 
+              value="#{cNode.newAttribute.required}" />
+
             <tr:inputText 
-            	columns="90" 
-            	label="#{msgs.dsc}" 
-            	value="#{cNode.newAttribute.description}" ></tr:inputText>
-            <!-- 		
+              columns="90" 
+              label="#{msgs.dsc}" 
+              value="#{cNode.newAttribute.description}" ></tr:inputText>
+              <!-- 		
             <tr:inputListOfValues  
-                label="#{msgs.type}" value="#{sBean.newNodeType}"
-                action="dialog:chooseType" 
-                windowWidth="800" windowHeight="400"/>
+              label="#{msgs.type}" value="#{sBean.newNodeType}"
+              action="dialog:chooseType" 
+              windowWidth="800" windowHeight="400"/>
             -->
             <tr:commandButton 
-            	text="#{msgs.create}" 
-            	action="#{cNode.createAttribute}"/>        
-        </tr:panelFormLayout>
-    </tr:panelCaptionGroup>    
-	</tr:showDetailItem>
-</tr:panelAccordion>
-<tr:separator></tr:separator>
-    <!-- ********************* -->
-    <!-- existing attributes -->
-    <!-- ********************* -->
+              text="#{msgs.create}" 
+              action="#{cNode.createAttribute}"/>        
+          </tr:panelFormLayout>
+        </tr:panelCaptionGroup>    
+      </tr:showDetailItem>
+    </tr:panelAccordion>
+    <tr:separator></tr:separator>
+      <!-- ********************* -->
+      <!-- existing attributes -->
+      <!-- ********************* -->
     <tr:panelCaptionGroup 
-    	rendered="#{cNode.allowNodeEdit}"  
-    	captionText="#{msgs.nodeAttributes}"  >
-        <tr:message 
-        	binding="#{cNodeAttrs.message}" 
-        	for="attrs" 
-        	messageType="error" />
-<!-- attributes table -->
-        <tr:table 
-        	allDetailsEnabled="true" 
-        	binding="#{cNodeAttrs.table}" 
-            width="90%" 
-            rowSelection="multiple" 
-            summary="Nodes" 
-            value="#{cNode.attributes}" 
-            var="row" 
-            rows="12" 
-            id="attrs">
-<!-- on\off changing dsc and name of attribute -->            
-            <tr:column 
-            	headerText="*" 
-            	shortDesc="#{msgs.dscEnableRenameAttr}" >
-                <tr:selectBooleanCheckbox 
-                	onclick="submit();" 
-                	shortDesc="#{msgs.dscEnableRenameAttr}" 
-                	value="#{row.edit}" 
-                	rendered="#{row.allowDelete}"/>
-            </tr:column>
-<!-- name of attribute-->            
-            <tr:column headerText="#{msgs.name}">
-				<tr:panelHorizontalLayout>
-                <tr:outputText 
-                	rendered="#{!row.edit and !row.attribute.required}" 
-                	value="#{row.name}"/>
-                <tr:outputFormatted 
-                		rendered="#{!row.edit and row.attribute.required}"
-						inlineStyle="font-weight: bold;" 
-                		value="#{row.name}"/>
-                <tr:outputFormatted 
-                		inlineStyle="color: #cc0000;" 
-                		rendered="#{!row.edit and row.attribute.required and (row.attribute.value == null) }"
-                		value=" *"/>
-			
-                <tr:inputText 
-                	columns="8" 
-                	rendered="#{row.edit}" 
-                	required="true" 
-                	value="#{row.name}"/>
-				</tr:panelHorizontalLayout>
-            </tr:column>
-<!-- value of attribute-->
-            <tr:column headerText="#{msgs.value}">
-                <tr:outputText  
-                	rendered="#{row.expressionSupported or (row.selectItems == null)}" 
-                	value="#{row.value}"/>
-                <tr:selectOneChoice 
-                	rendered="#{!row.expressionSupported and !(row.selectItems == null)}" 
-                	value="#{row.value}" >
-                    <f:selectItems value="#{row.selectItems}" />
-                </tr:selectOneChoice>
-            </tr:column>
-<!-- type of attribute-->            
-            <tr:column headerText="#{msgs.type}">
-                <tr:outputText value="#{row.classDisplayName}"/>
-            </tr:column>
-<!-- subtype of attribute-->            
-            <tr:column headerText="#{msgs.subtype}">
-                <tr:selectOneChoice 
-                	valueChangeListener="#{row.applySubType}"
-					onchange="submit();"            
-                	value="#{row.valueHandlerType}">
-                    <f:selectItems value="#{row.valueHandlerTypes}" />
-                </tr:selectOneChoice>
-            </tr:column>
+      rendered="#{cNode.allowNodeEdit}"  
+      captionText="#{msgs.nodeAttributes}"  >
+      <tr:message 
+        binding="#{cNodeAttrs.message}" 
+        for="attrs" 
+        messageType="error" />
+      <!-- attributes table -->
+      <tr:table 
+        allDetailsEnabled="true" 
+        binding="#{cNodeAttrs.table}" 
+        width="90%" 
+        rowSelection="multiple" 
+        summary="Nodes" 
+        value="#{cNode.attributes}" 
+        var="row" 
+        rows="12" 
+        id="attrs">
+        <!-- on\off changing dsc and name of attribute -->            
+        <tr:column 
+          headerText="*" 
+          shortDesc="#{msgs.dscEnableRenameAttr}" >
+          <tr:selectBooleanCheckbox 
+            onclick="submit();" 
+            shortDesc="#{msgs.dscEnableRenameAttr}" 
+            value="#{row.edit}" 
+            rendered="#{row.allowDelete}"/>
+        </tr:column>
+        <!-- name of attribute-->            
+        <tr:column headerText="#{msgs.name}">
+          <tr:panelHorizontalLayout>
+            <tr:outputText 
+              rendered="#{!row.edit and !row.attribute.required}" 
+              value="#{row.name}"/>
+            <tr:outputFormatted 
+              rendered="#{!row.edit and row.attribute.required}"
+              inlineStyle="font-weight: bold;" 
+              value="#{row.name}"/>
+            <tr:outputFormatted 
+              inlineStyle="color: #cc0000;" 
+              rendered="#{!row.edit and row.attribute.required and (row.attribute.value == null) }"
+              value=" *"/>
+
+            <tr:inputText 
+              columns="8" 
+              rendered="#{row.edit}" 
+              required="true" 
+              value="#{row.name}"/>
+          </tr:panelHorizontalLayout>
+        </tr:column>
+        <!-- value of attribute-->
+        <tr:column headerText="#{msgs.value}">
+          <tr:outputText  
+            rendered="#{row.expressionSupported or (row.selectItems == null)}" 
+            value="#{row.value}"/>
+          <tr:selectOneChoice 
+            rendered="#{!row.expressionSupported and !(row.selectItems == null)}" 
+            value="#{row.value}" >
+            <f:selectItems value="#{row.selectItems}" />
+          </tr:selectOneChoice>
+        </tr:column>
+        <!-- type of attribute-->            
+        <tr:column headerText="#{msgs.type}">
+          <tr:outputText value="#{row.classDisplayName}"/>
+        </tr:column>
+        <!-- subtype of attribute-->            
+        <tr:column headerText="#{msgs.subtype}">
+          <tr:selectOneChoice 
+            valueChangeListener="#{row.applySubType}"
+            onchange="submit();"            
+            value="#{row.valueHandlerType}">
+            <f:selectItems value="#{row.valueHandlerTypes}" />
+          </tr:selectOneChoice>
+        </tr:column>
 <!-- valueChangeListener="#{cNodeAttrs.saveAttributesWithoutWrite}"  onchange="submit();" -->
-            <tr:column rendered="#{cNode.node.template}" headerText="#{msgs.templateExpression}" >
-                <tr:selectBooleanCheckbox 
-					valueChangeListener="#{row.applyTemplateExpression}"  
-					onchange="submit();"                	
-                	value="#{row.templateExpression}" />
-            </tr:column>
-<!-- 
-            <tr:column headerText="#{msgs.dsc}">
-                <tr:outputText rendered="#{!row.edit}" value="#{row.description}"/>
-                <tr:inputText rendered="#{row.edit}" value="#{row.description}"/>
-            </tr:column>
- -->
-            <f:facet name="detailStamp">
-                <tr:panelGroupLayout layout="vertical"  >
-				<tr:panelCaptionGroup captionText="#{msgs.dsc}">
-	                <tr:outputText
-	                	escape="false" 
-	                	rendered="#{!row.edit}" 
-	                	value="#{row.description}"/>
-    	            <tr:inputText 
-    	            	columns="100"
-    	            	rows="8"
-    	            	rendered="#{row.edit}"  
-    	            	value="#{row.description}"/>
-				</tr:panelCaptionGroup>
-<!-- edit value of attribute
-readOnly="#{row.expressionSupported}"
--->
+        <tr:column rendered="#{cNode.node.template}" headerText="#{msgs.templateExpression}" >
+          <tr:selectBooleanCheckbox 
+            valueChangeListener="#{row.applyTemplateExpression}"  
+            onchange="submit();"                	
+            value="#{row.templateExpression}" />
+        </tr:column>
+        <!-- 
+        <tr:column headerText="#{msgs.dsc}">
+          <tr:outputText rendered="#{!row.edit}" value="#{row.description}"/>
+          <tr:inputText rendered="#{row.edit}" value="#{row.description}"/>
+        </tr:column>
+        -->
+        <f:facet name="detailStamp">
+          <tr:panelGroupLayout layout="vertical"  >
+            <tr:panelCaptionGroup captionText="#{msgs.dsc}">
+              <tr:outputText
+                escape="false" 
+                rendered="#{!row.edit}" 
+                value="#{row.description}"/>
+              <tr:inputText 
+                columns="100"
+                rows="8"
+                rendered="#{row.edit}"  
+                value="#{row.description}"/>
+            </tr:panelCaptionGroup>
+            <!-- edit value of attribute
+            readOnly="#{row.expressionSupported}"
+            -->
 
-			    <tr:inputText
-			    	label="#{msgs.value}"
-               		rows="7" 
-               		wrap="off" 
-            		rendered="#{row.enableEditValue}" 
-            		value="#{row.value}" 
-            		columns="100" />
+            <tr:inputText
+              label="#{msgs.value}"
+              rows="7" 
+              wrap="off" 
+              rendered="#{row.enableEditValue}" 
+              value="#{row.value}" 
+              columns="100" />
 
-			    <tr:inputText
-			    	label="#{msgs.expression}"
-               		rows="7" 
-               		wrap="off"
-            		rendered="#{row.enableEditExpression}" 
-            		value="#{row.expression}" 
-            		columns="100" />
+            <tr:inputText
+              label="#{msgs.expression}"
+              rows="7" 
+              wrap="off"
+              rendered="#{row.enableEditExpression}" 
+              value="#{row.expression}" 
+              columns="100" />
+            <tr:commandButton onclick="alert(nodePath)" text="#{msgs.openInEditor}"/>
 
-				<tr:inputListOfValues 
-					rendered="#{row.enableSelectNodeDialog}"
-					value="#{row.expression}"
-					returnListener="#{row.selectNodeHandleReturn}" 
-					action="dialog:selectNode"
-					actionListener="#{row.setNode}"
-					immediate="true" 
-					windowWidth="500" windowHeight="400"
-					columns="40" label="#{msgs.node}"
-				>
-				</tr:inputListOfValues>
-                <tr:group rendered="#{row.fileAttribute}">
-                
-                <t:inputFileUpload  
-                	id="fileupload"
-					value="#{row.file}"
-					storage="file"
-					maxlength="600000"/>
-					</tr:group>
-	            <tr:selectOneChoice 
-	            	label="#{msgs.expression}" 
-	            	rendered="#{row.enableExpressionChoice}" 
-	            	value="#{row.expression}" >
-    	            <f:selectItems value="#{row.selectItems}" />
-                </tr:selectOneChoice>
-				
-				<tr:spacer height="5"/>
-				<tr:panelGroupLayout layout="horizontal">
-					<tr:spacer width="40"/>
-						<jsp:include page="childAttributes.jspx" flush="true"/>
-					</tr:panelGroupLayout>
-				<tr:spacer height="10"></tr:spacer>
+            <tr:inputListOfValues 
+              rendered="#{row.enableSelectNodeDialog}"
+              value="#{row.expression}"
+              returnListener="#{row.selectNodeHandleReturn}" 
+              action="dialog:selectNode"
+              actionListener="#{row.setNode}"
+              immediate="true" 
+              windowWidth="500" windowHeight="400"
+              columns="40" label="#{msgs.node}"
+              >
+            </tr:inputListOfValues>
+            <tr:group rendered="#{row.fileAttribute}">
 
-                </tr:panelGroupLayout>					
-                <!-- <tr:panelGroupLayout layout="vertical">
-                </tr:panelGroupLayout>  -->
-            </f:facet>
-            
-        </tr:table>
-        <tr:panelButtonBar halign="left" >
-            <tr:commandButton 
-            	shortDesc="#{msgs.dscDelSelAttr}" 
-            	disabled="#{!cNode.allowNodeEdit}"
-            	onclick="if (!confirm('#{msgs.areYouSure}')) return false" 
-            	text="#{msgs.delete}" 
-            	action="#{cNodeAttrs.deleteAttributes}"  />
-            <tr:spacer width="60"></tr:spacer>
-            <tr:commandButton 
-            	shortDesc="#{msgs.dscSaveAttr}" 
-            	disabled="#{!cNode.allowNodeEdit}" 
-            	text="#{msgs.save}" 
-            	action="#{cNodeAttrs.saveAttributes}"  />
-            <tr:commandButton 
-            	shortDesc="#{msgs.dscSaveAttrAndStart}"
-            	rendered="#{cNode.allowControl and cNode.allowNodeEdit}"  
-            	text="#{msgs.saveAndStart}" 
-            	action="#{cNodeAttrs.saveAttributesAndStart}"  />
-            <tr:commandButton 
-            	shortDesc="#{msgs.dscCancelAttr}" 
-            	disabled="#{!cNode.allowNodeEdit}" 
-            	text="#{msgs.cancel}" 
-            	action="#{cNode.cancel}" />
-        </tr:panelButtonBar>
+              <t:inputFileUpload  
+                id="fileupload"
+                value="#{row.file}"
+                storage="file"
+                maxlength="600000"/>
+            </tr:group>
+            <tr:selectOneChoice 
+              label="#{msgs.expression}" 
+              rendered="#{row.enableExpressionChoice}" 
+              value="#{row.expression}" >
+              <f:selectItems value="#{row.selectItems}" />
+            </tr:selectOneChoice>
+
+            <tr:spacer height="5"/>
+            <tr:panelGroupLayout layout="horizontal">
+              <tr:spacer width="40"/>
+              <jsp:include page="childAttributes.jspx" flush="true"/>
+            </tr:panelGroupLayout>
+            <tr:spacer height="10"></tr:spacer>
+
+          </tr:panelGroupLayout>					
+          <!-- <tr:panelGroupLayout layout="vertical">
+          </tr:panelGroupLayout>  -->
+        </f:facet>
+
+      </tr:table>
+      <tr:panelButtonBar halign="left" >
+        <tr:commandButton 
+          shortDesc="#{msgs.dscDelSelAttr}" 
+          disabled="#{!cNode.allowNodeEdit}"
+          onclick="if (!confirm('#{msgs.areYouSure}')) return false" 
+          text="#{msgs.delete}" 
+          action="#{cNodeAttrs.deleteAttributes}"  />
+        <tr:spacer width="60"></tr:spacer>
+        <tr:commandButton 
+          shortDesc="#{msgs.dscSaveAttr}" 
+          disabled="#{!cNode.allowNodeEdit}" 
+          text="#{msgs.save}" 
+          action="#{cNodeAttrs.saveAttributes}"  />
+        <tr:commandButton 
+          shortDesc="#{msgs.dscSaveAttrAndStart}"
+          rendered="#{cNode.allowControl and cNode.allowNodeEdit}"  
+          text="#{msgs.saveAndStart}" 
+          action="#{cNodeAttrs.saveAttributesAndStart}"  />
+        <tr:commandButton 
+          shortDesc="#{msgs.dscCancelAttr}" 
+          disabled="#{!cNode.allowNodeEdit}" 
+          text="#{msgs.cancel}" 
+          action="#{cNode.cancel}" />
+      </tr:panelButtonBar>
     </tr:panelCaptionGroup>
-	
-	<tr:spacer height="20" />
-        
-<!-- ********************* -->
-<!-- read only attributes -->
-<!-- ********************* -->
+
+    <tr:spacer height="20" />
+
+    <!-- ********************* -->
+    <!-- read only attributes -->
+    <!-- ********************* -->
     <tr:panelCaptionGroup 
-    	rendered="#{cNode.allowNodeEdit}"  
-    	captionText="#{msgs.statistics}"  >
-<!-- read only attributes table -->
-        <tr:table 
-        	allDetailsEnabled="true" 
-        	width="90%" 
-            rowSelection="none" 
-            summary="RONodes" 
-            value="#{cNode.readOnlyAttributes}" 
-            var="row" 
-            rows="12" 
-            id="roattrs">
-<!-- name of attribute-->            
-            <tr:column headerText="#{msgs.name}">
-                <tr:outputText value="#{row.name}"/>
-            </tr:column>
-<!-- value of attribute-->
-            <tr:column headerText="#{msgs.value}">
-                <tr:outputFormatted value="#{row.value}"  /> 
-            </tr:column>
-<!-- description of attribute in detailStamp -->
-            <f:facet name="detailStamp">
-				<tr:panelCaptionGroup captionText="#{msgs.dsc}">
-	                <tr:outputText value="#{row.description}"/>
-				</tr:panelCaptionGroup>
-            </f:facet>
-        </tr:table>
+      rendered="#{cNode.allowNodeEdit}"  
+      captionText="#{msgs.statistics}"  >
+      <!-- read only attributes table -->
+      <tr:table 
+        allDetailsEnabled="true" 
+        width="90%" 
+        rowSelection="none" 
+        summary="RONodes" 
+        value="#{cNode.readOnlyAttributes}" 
+        var="row" 
+        rows="12" 
+        id="roattrs">
+        <!-- name of attribute-->            
+        <tr:column headerText="#{msgs.name}">
+          <tr:outputText value="#{row.name}"/>
+        </tr:column>
+        <!-- value of attribute-->
+        <tr:column headerText="#{msgs.value}">
+          <tr:outputFormatted value="#{row.value}"  /> 
+        </tr:column>
+        <!-- description of attribute in detailStamp -->
+        <f:facet name="detailStamp">
+          <tr:panelCaptionGroup captionText="#{msgs.dsc}">
+            <tr:outputText value="#{row.description}"/>
+          </tr:panelCaptionGroup>
+        </f:facet>
+      </tr:table>
     </tr:panelCaptionGroup>        
-</h:form>
+  </h:form>
 </jsp:root>

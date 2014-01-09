@@ -37,3 +37,7 @@ raven-editor-tab {
 .editor-content-loading {
     background: white url('../images/ui-anim_basic_16x16.gif') right center no-repeat;
 }
+
+li .ui-icon-close { 
+    float: left; margin: 0.4em 0.2em 0 0; cursor: pointer; 
+}

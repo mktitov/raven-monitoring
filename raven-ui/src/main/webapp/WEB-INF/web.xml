@@ -107,7 +107,7 @@
         <servlet-name>NetworkResponseServlet</servlet-name>
         <servlet-class>org.raven.ui.servlet.NetworkResponseServlet</servlet-class>
     </servlet>
-    <servlet>
+<!--    <servlet>
         <servlet-name>raven-editor-api</servlet-name>
         <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
         <init-param>
@@ -118,7 +118,7 @@
             <param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
             <param-value>true</param-value>
         </init-param>
-    </servlet>
+    </servlet>-->
     
     <servlet-mapping>
         <servlet-name>Faces Servlet</servlet-name>
@@ -132,10 +132,10 @@
         <servlet-name>NetworkResponseServlet</servlet-name>
         <url-pattern>/sri/*</url-pattern>
     </servlet-mapping>
-    <servlet-mapping>
+<!--    <servlet-mapping>
         <servlet-name>raven-editor-api</servlet-name>
         <url-pattern>/rest/*</url-pattern>
-    </servlet-mapping>
+    </servlet-mapping>-->
     <session-config>
         <session-timeout>15</session-timeout>
     </session-config>

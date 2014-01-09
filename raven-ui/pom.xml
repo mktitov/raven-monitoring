@@ -78,6 +78,7 @@
                     <groupId>org.apache.tapestry</groupId>
                     <artifactId>tapestry-ioc</artifactId>
                 </dependency>
+                <!--
                 <dependency>
                   <groupId>com.sun.jersey</groupId>
                   <artifactId>jersey-servlet</artifactId>
@@ -90,6 +91,7 @@
                     <groupId>com.sun.jersey</groupId>
                     <artifactId>jersey-json</artifactId>
                 </dependency>
+                -->
                 <dependency>
                     <groupId>javax.servlet</groupId>
                     <artifactId>servlet-api</artifactId>

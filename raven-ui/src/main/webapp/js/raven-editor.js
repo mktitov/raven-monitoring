@@ -16,7 +16,7 @@
 
 var editors = {} //
 var tabsCounter = 0
-var tabTemplate = "<li title='_2_'><a href='#_1_' class='center'>_3_</a> <span class='ui-icon ui-icon-close' role='presentation'>Remove Tab</span></li>"
+var tabTemplate = "<li title='_2_'><a href='#_1_' class='center'>_3_</a><span class='ui-icon ui-icon-close' role='presentation'>Remove Tab</span></li>"
 var waitingImage = "<img class='editor-loading-image' src='images/ui-anim_basic_16x16.gif'/>"
 var tabs
 var currentTheme = "eclipse"
@@ -53,6 +53,7 @@ $(document).ready(function(){
     }
   })
   tabs = $("#tabs").tabs({
+    heightStyle: "fill",
     activate: function(event, ui) {
       newTab = ui.newTab
       editorParams = editors[ui.newTab.attr('title')]
@@ -160,7 +161,10 @@ function switchToWorking(editorParams) {
 }
 
 function resizeTab(editorParams) {
-  editorParams.tab.css("height", ""+Math.round(78+tabs.outerHeight()*7/400)+"%")
+//  editorParams.tab.css("height", ""+Math.round(78+tabs.innerHeight()*7/410)+"%")
+  var h = tabs.outerHeight() - tabs.find("ul").outerHeight()-30
+  console.log("new height: "+h)
+  editorParams.tab.css("height", ''+h+'px' )
   if (editorParams.editor)
     editorParams.editor.resize(true)  
 }
@@ -226,14 +230,32 @@ function saveEditorContent(params) {
         params.hasErrors = false
         params.error = null
         syncState(params)
+        clearRavenErrors(params.editor)
       } else {
         params.hasErrors = true
         params.error = res.error
+        clearRavenErrors(params.editor)
+        params.editor.gotoLine(res.lineNumber, res.colNumber-1, true)
+        addErrorToEditor(params.editor, res)
         syncState(params)
       }
     }
   })
   console.log("Saving content for editor: "+params.key)
+}
+
+function clearRavenErrors(editor) {
+  var ann = []
+  for (a in editor.getSession().getAnnotations())
+    if (!a.ravenError)
+      ann.push(a)
+  editor.getSession().setAnnotations(ann)
+}
+
+function addErrorToEditor(editor, err) {
+  var anns = editor.getSession().getAnnotations()
+  anns.push({row:err.lineNumber-1,column:err.colNumber-1,text:err.error,type:'error'})
+  editor.getSession().setAnnotations(anns)
 }
 
 function loadEditorContent(params) {
