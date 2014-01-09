@@ -19,9 +19,31 @@
 <jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
 		  xmlns:c="http://java.sun.com/jsp/jstl/core"
           xmlns:f="http://java.sun.com/jsf/core"
-          xmlns:tr="http://myfaces.apache.org/trinidad" >
+          xmlns:tr="http://myfaces.apache.org/trinidad" 
+          xmlns:trh="http://myfaces.apache.org/trinidad/html">
     <jsp:directive.page pageEncoding="utf-8" contentType="text/html; charset=utf-8"/>
     <f:view>
+    <trh:html>
+          <trh:head title="#{sBean.title}">
+            <trh:script source="jquery/jquery-1.9.1.js"/>
+            <trh:script source="jquery/ui/jquery-ui.js"/>
+            <link rel="stylesheet" href="jquery/themes/base/jquery.ui.all.css" />
+            <!--
+            <trh:script>
+              var path = '${cNode.node.path}'
+              $(document).ready(function(){
+                console.log("Document loaded!!!")
+                $('#body\\:typeList').autocomplete({source:function(request, response){
+                  console.log("Executing autocomplete")
+                  $.getJSON('${pageContext.request.contextPath}/sri/system/nodes/child-types', {
+                    filter:request.term,
+                    nodePath:path
+                  }, response)
+                }})
+              })
+            </trh:script>
+            -->
+          </trh:head>
         <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
         <tr:document title="TabbedPanel" >
         <tr:panelGroupLayout layout="vertical">
@@ -82,5 +104,6 @@
             
             </tr:panelGroupLayout>
         </tr:document>
+    </trh:html>
     </f:view>
 </jsp:root>

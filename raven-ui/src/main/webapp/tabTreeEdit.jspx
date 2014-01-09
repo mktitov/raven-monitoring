@@ -19,9 +19,26 @@
 <jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
           xmlns:f="http://java.sun.com/jsf/core"
           xmlns:t="http://myfaces.apache.org/tomahawk"
-          xmlns:tr="http://myfaces.apache.org/trinidad" >
+          xmlns:tr="http://myfaces.apache.org/trinidad" 
+          xmlns:trh="http://myfaces.apache.org/trinidad/html">
 <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
-
+<!--  
+<trh:script>
+  var path = '${cNode.node.path}'
+  $(document).ready(function(){
+    console.log("Document loaded!!!")
+    /*
+    $('#body\\:typeList').autocomplete({source:function(request, response){
+      console.log("Executing autocomplete")
+      $.getJSON('${pageContext.request.contextPath}/sri/system/nodes/child-types', {
+        filter:request.term,
+        nodePath:path
+      }, response)
+    }})
+    */
+  })
+</trh:script>
+-->
 <tr:form usesUpload="true">
 <tr:panelHorizontalLayout rendered="#{cNode.allowTreeEdit}" >
 	<tr:panelAccordion discloseNone="true" >
@@ -29,6 +46,19 @@
 <!-- ********************* -->
 <!-- create new node -->
 <!-- ********************* -->
+      <trh:script>
+        var path = '${cNode.node.path}'
+        $(document).ready(function(){
+          console.log("Document loaded!!!")
+          $('#body\\:typeList').autocomplete({source:function(request, response){
+            console.log("Executing autocomplete")
+            $.getJSON('${pageContext.request.contextPath}/sri/system/nodes/child-types', {
+              filter:request.term,
+              nodePath:path
+            }, response)
+          }})
+        })
+      </trh:script>
 		<tr:panelHorizontalLayout 
 			halign="start" 
 			valign="top">
