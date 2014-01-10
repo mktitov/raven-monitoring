@@ -34,6 +34,9 @@ $(document).ready(function(){
   loadModes()
   loadThemes()
   setInterval(checkChanges, 100)
+  saveButton.click(function(){
+    saveEditorContent(editorParams)
+  })
   $("#add-tab").on("click", function(){
     openTab("/nodes", "test")
   })
@@ -136,6 +139,7 @@ function loadSelectOptions(selectId, path) {
     if (selectId==='themes')
       modesSelect.val(currentTheme)
     if (loaded===0) 
+//      openTab(initialTab.nodePath, initialTab.attrName)
       $.each(pendingTabs, function(i,v){
         openTab(v.nodePath, v.attrName)
       })
@@ -314,7 +318,7 @@ function detectMode(mimeType) {
 
 function getNodeName(nodePath) {
   var nodeName = nodePath.split('/')
-  nodeName = nodeName[nodeName.length-1]
+  nodeName = nodeName[nodeName.length-2]
   nodeName = nodeName.replace(/"/g, '')
   return nodeName  
 }

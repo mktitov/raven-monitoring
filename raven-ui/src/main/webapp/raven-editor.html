@@ -26,43 +26,19 @@ limitations under the License.
     <script src="ace/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
   </head>
   <body style="height:100%">
-<!--    <div id="editor-area" class="raven-editor" style="height:95%">
-      <div id="editor" class="raven-editor">
-        <h3>First header</h3>
-        <div id="editor-tab1">
-          function foo(items) {
-          var x = "All this is syntax highlighted";
-          return x;
-          }</div>
-        <h3>Second header</h3>
-        <div>Second content panel</div>
-      </div>     
-    </div>-->
-    <button id="add-tab">Add tab</button>
-    <button id="save">Сохранить</button>
-    <button id="refresh">Обновить</button>
-    Подсветка синтаксиса для <select id="modes"></select>
-    Схема <select id="themes"></select>
-    <div id="tabs" style="height:95%">
+    <div class="ui-widget ui-widget-content ui-corner-all" style="margin-bottom: 10px; padding: 5px">
+      <button id="save">Сохранить</button>
+      <button id="refresh">Обновить</button>
+      Синтаксис <select id="modes"></select>
+      Тема <select id="themes"></select>
+    </div>
+    <div id="tabs" style="height:90%">
       <ul>
       </ul>
     </div>
     <div id="error" style="visibility: hidden"></div>
     <script>
-//      var editor = ace.edit("editor-tab1");
-//      editor.setTheme("ace/theme/monokai");
-//      editor.getSession().setMode("ace/mode/javascript");
-//      $("#date").datepicker();
-//      $("#editor").accordion({heightStyle: "fill", collapsible: true});
-//
-//      $(window).resize(function() {
-//        $("#editor").accordion("refresh")
-//        editor.resize()
-//      })
-//
-//      function hello() {
-//        alert("Hello from EDITOR!")
-//      }
+      window.editorLoaded = true
     </script>
   </body>
 </html>

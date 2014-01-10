@@ -17,70 +17,76 @@
 -->
 
 <jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
-		  xmlns:c="http://java.sun.com/jsp/jstl/core"
-		  xmlns:h="http://java.sun.com/jsf/html"
+          xmlns:c="http://java.sun.com/jsp/jstl/core"
+          xmlns:h="http://java.sun.com/jsf/html"
           xmlns:f="http://java.sun.com/jsf/core"
-          xmlns:tr="http://myfaces.apache.org/trinidad" >
-    <jsp:directive.page pageEncoding="utf-8" contentType="text/html; charset=utf-8"/>
-    <f:view>
-        <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
-        <tr:document title="TabbedPanel" >
+          xmlns:tr="http://myfaces.apache.org/trinidad" 
+          xmlns:trh="http://myfaces.apache.org/trinidad/html">
+  <jsp:directive.page pageEncoding="utf-8" contentType="text/html; charset=utf-8"/>
+  <f:view>
+    <trh:html>
+      <trh:head title="#{sBean.title}">
+        <trh:script source="jquery/jquery-1.10.1.min.js"/>
+      </trh:head>
+      <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
+      <tr:document title="TabbedPanel" >
         <tr:panelGroupLayout layout="vertical">
-        	<f:subview id="header">
-            	<jsp:include page="tabHeader.jspx" flush="true"/>
-            </f:subview>
-        
-            <!-- <tr:form usesUpload="true"> -->
-            
+          <f:subview id="header">
+            <jsp:include page="tabHeader.jspx" flush="true"/>
+          </f:subview>
+
+          <!-- <tr:form usesUpload="true"> -->
+
             <tr:panelGroupLayout layout="horizontal">
-            <tr:form>
-            <tr:navigationPane hint="tabs">
-              	<tr:commandNavigationItem
-              		rendered="#{cNode.allowNodeRead}"
-              		action="tabShow" 
-              		text="#{msgs.view}"
-              		immediate="true" 
-              		partialSubmit="true" />
-              	<tr:commandNavigationItem
-              		selected="true" 
-              		rendered="#{cNode.allowNodeEdit}"
-              		action="tabNodeEdit" 
-              		text="#{msgs.setting}" 
-              		partialSubmit="true"
-              		immediate="true"/>
-              	<tr:commandNavigationItem
-              		rendered="#{cNode.allowTreeEdit}"
-              		action="tabTreeEdit" 
-              		text="#{msgs.treeEdit}"
-              		immediate="true" 
-              		partialSubmit="true"/>
-              	<tr:commandNavigationItem
-              		rendered="#{cNode.allowControl}"
-              		action="tabControl" 
-              		text="#{msgs.control}"
-              		immediate="true" 
-              		partialSubmit="true"/>
-              	<tr:commandNavigationItem 
-              		rendered="#{cNode.allowNodeEdit}"
-              		action="tabLogsTab"
-              		text="#{msgs.log}" 
-              		partialSubmit="true" 
-              		immediate="true"/>
-       			<tr:commandNavigationItem 
-       				rendered="#{cNode.allowViewAudit}"
-       				action="tabAudit"
-       				text="#{msgs.audit}" 
-       				partialSubmit="true" 
-       				immediate="true"/>
-            </tr:navigationPane>
-            </tr:form>
-            <tr:spacer width="5"/>
-            <tr:statusIndicator/>
+              <tr:form>
+                <tr:navigationPane hint="tabs">
+                  <tr:commandNavigationItem
+                    rendered="#{cNode.allowNodeRead}"
+                    action="tabShow" 
+                    text="#{msgs.view}"
+                    immediate="true" 
+                    partialSubmit="true" />
+                  <tr:commandNavigationItem
+                    selected="true" 
+                    rendered="#{cNode.allowNodeEdit}"
+                    action="tabNodeEdit" 
+                    text="#{msgs.setting}" 
+                    partialSubmit="true"
+                    immediate="true"/>
+                  <tr:commandNavigationItem
+                    rendered="#{cNode.allowTreeEdit}"
+                    action="tabTreeEdit" 
+                    text="#{msgs.treeEdit}"
+                    immediate="true" 
+                    partialSubmit="true"/>
+                  <tr:commandNavigationItem
+                    rendered="#{cNode.allowControl}"
+                    action="tabControl" 
+                    text="#{msgs.control}"
+                    immediate="true" 
+                    partialSubmit="true"/>
+                  <tr:commandNavigationItem 
+                    rendered="#{cNode.allowNodeEdit}"
+                    action="tabLogsTab"
+                    text="#{msgs.log}" 
+                    partialSubmit="true" 
+                    immediate="true"/>
+                  <tr:commandNavigationItem 
+                    rendered="#{cNode.allowViewAudit}"
+                    action="tabAudit"
+                    text="#{msgs.audit}" 
+                    partialSubmit="true" 
+                    immediate="true"/>
+                </tr:navigationPane>
+              </tr:form>
+              <tr:spacer width="5"/>
+              <tr:statusIndicator/>
             </tr:panelGroupLayout>
-        	<f:subview id="body" rendered="#{cNode.allowNodeEdit}" >
-            	<jsp:include page="tabNodeEdit.jspx" flush="true"/>
+            <f:subview id="body" rendered="#{cNode.allowNodeEdit}" >
+              <jsp:include page="tabNodeEdit.jspx" flush="true"/>
             </f:subview>
-            </tr:panelGroupLayout>
-        </tr:document>
-    </f:view>
+        </tr:panelGroupLayout>
+      </tr:document>
+    </trh:html>
+  </f:view>
 </jsp:root>

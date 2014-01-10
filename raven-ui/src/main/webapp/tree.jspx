@@ -14,7 +14,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *  under the License.
- -->
+-->
 
 <jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
           xmlns:f="http://java.sun.com/jsf/core"
@@ -23,195 +23,195 @@
           xmlns:trh="http://myfaces.apache.org/trinidad/html"
           xmlns:t="http://myfaces.apache.org/tomahawk" 
           >
- <jsp:output omit-xml-declaration="true" doctype-root-element="HTML"
+  <jsp:output omit-xml-declaration="true" doctype-root-element="HTML"
               doctype-system="http://www.w3.org/TR/html4/loose.dtd"
               doctype-public="-//W3C//DTD HTML 4.01 Transitional//EN"/>
   <jsp:directive.page pageEncoding="utf-8" contentType="text/html;charset=utf-8"/>
   <f:view>
-  <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
+    <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
     <tr:document title="tree">
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-       	<tr:form 
-       		id="treeform0" 
-       		targetFrame="_top">
-       		
-			<tr:panelBorderLayout>    
-				<f:facet name="left">
-    				<tr:statusIndicator/>
-    			</f:facet>
-				<f:facet name="innerLeft">
-	    			<tr:outputText 
-    					inlineStyle="font-size: 70%" 
-    					value="#{sBean.accountName} (#{sBean.remoteIp})" />
-    			</f:facet>
-				<f:facet name="right">
-					<t:commandLink 
-						value="#{msgs.exit}"
-						title="#{msgs.dscExit}"
-						forceId="true"
-						id="logout"
-						immediate="true"
-						action="#{sBean.logout}"/>
-    			</f:facet>
-		</tr:panelBorderLayout>    			
-  	</tr:form>
-    <tr:form id="treeform">
-       <!-- 
-       <tr:panelGroupLayout layout="horizontal">
-           	<tr:statusIndicator/>
-    		<tr:selectBooleanCheckbox id="reftree" onclick="submit();" label="#{msgs.refreshTree}" value="#{sBean.refreshTree}"/>
-    		<tr:outputText value="#{sBean.refreshTreeInterval}"/>
-    		<tr:outputText partialTriggers="::pooltree" value="QQQQQQ :#{sBean.focusRowKey}" />
-    	</tr:panelGroupLayout>
-    	 -->
-        <tr:panelPage>
-<!--
-        partialTriggers="::pooltree"
-        partialTriggers="::pooltree :reftree"
-        onclick="parent.frames.frame1.document.treeform.reftree.focus();"
-        title="title"
- 		shortDesc="desc"
- 		
- 		<tr:panelGroupLayout layout="vertical">
- 		</tr:panelGroupLayout>
- 		
- 		<tr:panelHorizontalLayout>
- -->
-       	<tr:poll rendered="false"
-       		pollListener="#{sBean.onTreePoll}" 
-       		id="pooltree" 
-       		interval="#{sBean.refreshTreeInterval}" />
-       	<tr:spacer height="3" />
-<!--       		
-       	<tr:panelPopup 
- 			text="#{msgs.resources}">
-         	  
-        	<tr:panelList>
-       	        <tr:forEach 
-       	        	var="res" 
-       	        	items="#{sBean.resourcesList}">
-       	        	<tr:panelHorizontalLayout>
-        	    	<tr:commandLink 
-        	    		rendered="#{res[1] != null}"
-        	        	text="#{res[0]}"
-		 				partialSubmit="true" 
-	                    immediate="true"
-	                    onclick="top.switchFrameSet()"
-    	                actionListener="#{sBean.selectNodeAndMaximize}">
-        	            <f:attribute
-        					name="#{sBean.nodePathParName}"
-        					value="#{res[1]}" 
-        				/>
-        			</tr:commandLink>
-        			<tr:outputText
-        				inlineStyle="font-size: 80%"
-        				rendered="#{res[1] == null}" 
-        				value="#{res[0]}" />
-        			<tr:spacer width="12"/>
-        			</tr:panelHorizontalLayout>
-				</tr:forEach>
-			</tr:panelList>
-	 </tr:panelPopup>  			
-initiallyExpanded="true"			
- -->
-       	<tr:panelAccordion>
- 
- <!-- *************** -->
- <!-- RESOURCES TREE  -->
- <!-- *************** -->				
-   		<tr:showDetailItem text="#{msgs.resources}">
-   			<tr:separator/>
-			<tr:tree 
-    	    	partialTriggers="::pooltree" 
-        		id="treeRes" 
-        		var="res" 
-        		value="#{sBean.resourcesTreeModel}"  >
- 				<f:facet name="nodeStamp">
- 				<tr:panelHorizontalLayout valign="middle">
-	        	  	<tr:commandLink 
-    	    	    	rendered="#{res.valid}"
-       		 	        text="#{res.visibleTitle}"
-			 			partialSubmit="true" 
-	   			        immediate="true"
-	   	        	    onclick="top.switchFrameSet()"
-    	            	actionListener="#{sBean.selectNodeAndMaximize}">
-        	        	<f:attribute
-	        				name="#{sBean.nodePathParName}"
-    	    				value="#{res.path}" 
-        				/>
-        			</tr:commandLink>
-        			<tr:outputText
-	        			inlineStyle="font-size: 80%"
-   		     			rendered="#{not res.valid}" 
-   	   		  			value="#{res.title}" />
- 				</tr:panelHorizontalLayout>
-  				</f:facet>
-        	</tr:tree>
-	        <tr:separator/>
-			<tr:spacer height="8" />        
-		</tr:showDetailItem>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+      <tr:form 
+        id="treeform0" 
+        targetFrame="_top">
 
-<!-- *************** -->
- <!-- NODES TREE  -->
- <!-- *************** -->				
-  		<tr:showDetailItem text="#{msgs.nodes}" >
-		<tr:commandLink 
- 			id="refLink" 
-			immediate="true"
-			partialSubmit="false">
-			<tr:separator/>
-		</tr:commandLink>		
-        <tr:tree 
-        	partialTriggers="::pooltree" 
-        	id="tree1" 
-        	var="node" 
-        	binding="#{sBean.coreTree}" 
-        	value="#{sBean.treeModel}"  >
- 		<f:facet name="nodeStamp">
- 		<tr:panelHorizontalLayout valign="middle">
-			<tr:image 
-				rendered="#{not node.started}"
-				source="/images/#{node.status}.gif" 
-				shortDesc="#{node.status}" />
-			<tr:spacer 
-				rendered="#{not node.started}"
-			 	width="3" /> 
-			 	<h:graphicImage 
-			 		alt=""
-			 		rendered="#{node.hasIconPath}"
-			 		height="16"
-			 		width="16"
-			 		url="#{node.iconPath}" />
-	<!-- 				
-			<tr:image  
-				rendered="#{node.hasIconPath}" 
-				source="#{node.iconPath}" 
-				 />
- 	-->				 
-			<tr:spacer width="3" />
- 			<tr:commandLink 
-	 			id="pSub_link" 
- 				immediate="true"
- 				partialSubmit="true" 
- 				actionListener="#{sBean.show}">
-				<tr:outputText 
-					rendered="#{node.template}"
-					inlineStyle="color: grey; font-weight: bold; font-size: 100%;" 
-					value="#{node.prefix}#{node.name}#{node.nodeTitle}"/>
-				<tr:outputText
-					rendered="#{!node.template}"
-					inlineStyle="font-size: 100%;" 
-					value="#{node.prefix}#{node.name}#{node.nodeTitle}"/>
- 			</tr:commandLink>
- 		</tr:panelHorizontalLayout>
-  		</f:facet>
-        
-        </tr:tree>
-        </tr:showDetailItem>
-     </tr:panelAccordion>
+        <tr:panelBorderLayout>    
+          <f:facet name="left">
+            <tr:statusIndicator/>
+          </f:facet>
+          <f:facet name="innerLeft">
+            <tr:outputText 
+              inlineStyle="font-size: 70%" 
+              value="#{sBean.accountName} (#{sBean.remoteIp})" />
+          </f:facet>
+          <f:facet name="right">
+            <t:commandLink 
+              value="#{msgs.exit}"
+              title="#{msgs.dscExit}"
+              forceId="true"
+              id="logout"
+              immediate="true"
+              action="#{sBean.logout}"/>
+          </f:facet>
+        </tr:panelBorderLayout>    			
+      </tr:form>
+      <tr:form id="treeform">
+        <!-- 
+        <tr:panelGroupLayout layout="horizontal">
+          <tr:statusIndicator/>
+          <tr:selectBooleanCheckbox id="reftree" onclick="submit();" label="#{msgs.refreshTree}" value="#{sBean.refreshTree}"/>
+          <tr:outputText value="#{sBean.refreshTreeInterval}"/>
+          <tr:outputText partialTriggers="::pooltree" value="QQQQQQ :#{sBean.focusRowKey}" />
+        </tr:panelGroupLayout>
+        -->
+        <tr:panelPage>
+          <!--
+                  partialTriggers="::pooltree"
+                  partialTriggers="::pooltree :reftree"
+                  onclick="parent.frames.frame1.document.treeform.reftree.focus();"
+                  title="title"
+              shortDesc="desc"
+              
+          <tr:panelGroupLayout layout="vertical">
+          </tr:panelGroupLayout>
+          
+          <tr:panelHorizontalLayout>
+            -->
+            <tr:poll rendered="false"
+                     pollListener="#{sBean.onTreePoll}" 
+                     id="pooltree" 
+                     interval="#{sBean.refreshTreeInterval}" />
+            <tr:spacer height="3" />
+            <!--       		
+            <tr:panelPopup 
+              text="#{msgs.resources}">
+                    
+              <tr:panelList>
+       	        <tr:forEach 
+                  var="res" 
+                  items="#{sBean.resourcesList}">
+                  <tr:panelHorizontalLayout>
+                    <tr:commandLink 
+                      rendered="#{res[1] != null}"
+                      text="#{res[0]}"
+                      partialSubmit="true" 
+                      immediate="true"
+                      onclick="top.switchFrameSet()"
+                      actionListener="#{sBean.selectNodeAndMaximize}">
+                      <f:attribute
+                        name="#{sBean.nodePathParName}"
+                        value="#{res[1]}" 
+                        />
+                    </tr:commandLink>
+                    <tr:outputText
+                      inlineStyle="font-size: 80%"
+                      rendered="#{res[1] == null}" 
+                      value="#{res[0]}" />
+                    <tr:spacer width="12"/>
+                  </tr:panelHorizontalLayout>
+                </tr:forEach>
+              </tr:panelList>
+            </tr:panelPopup>  			
+         initiallyExpanded="true"			
+            -->
+            <tr:panelAccordion>
+
+              <!-- *************** -->
+              <!-- RESOURCES TREE  -->
+              <!-- *************** -->				
+              <tr:showDetailItem text="#{msgs.resources}">
+                <tr:separator/>
+                <tr:tree 
+                  partialTriggers="::pooltree" 
+                  id="treeRes" 
+                  var="res" 
+                  value="#{sBean.resourcesTreeModel}"  >
+                  <f:facet name="nodeStamp">
+                    <tr:panelHorizontalLayout valign="middle">
+                      <tr:commandLink 
+                        rendered="#{res.valid}"
+                        text="#{res.visibleTitle}"
+                        partialSubmit="true" 
+                        immediate="true"
+                        onclick="top.switchFrameSet()"
+                        actionListener="#{sBean.selectNodeAndMaximize}">
+                        <f:attribute
+                          name="#{sBean.nodePathParName}"
+                          value="#{res.path}" 
+                          />
+                      </tr:commandLink>
+                      <tr:outputText
+                        inlineStyle="font-size: 80%"
+                        rendered="#{not res.valid}" 
+                        value="#{res.title}" />
+                    </tr:panelHorizontalLayout>
+                  </f:facet>
+                </tr:tree>
+                <tr:separator/>
+                <tr:spacer height="8" />        
+              </tr:showDetailItem>
+
+              <!-- *************** -->
+              <!-- NODES TREE  -->
+              <!-- *************** -->				
+              <tr:showDetailItem text="#{msgs.nodes}" >
+                <tr:commandLink 
+                  id="refLink" 
+                  immediate="true"
+                  partialSubmit="false">
+                  <tr:separator/>
+                </tr:commandLink>		
+                <tr:tree 
+                  partialTriggers="::pooltree" 
+                  id="tree1" 
+                  var="node" 
+                  binding="#{sBean.coreTree}" 
+                  value="#{sBean.treeModel}"  >
+                  <f:facet name="nodeStamp">
+                    <tr:panelHorizontalLayout valign="middle">
+                      <tr:image 
+                        rendered="#{not node.started}"
+                        source="/images/#{node.status}.gif" 
+                        shortDesc="#{node.status}" />
+                      <tr:spacer 
+                        rendered="#{not node.started}"
+                        width="3" /> 
+                      <h:graphicImage 
+                        alt=""
+                        rendered="#{node.hasIconPath}"
+                        height="16"
+                        width="16"
+                        url="#{node.iconPath}" />
+                      <!-- 				
+                      <tr:image  
+                        rendered="#{node.hasIconPath}" 
+                        source="#{node.iconPath}" 
+                        />
+                      -->				 
+                      <tr:spacer width="3" />
+                      <tr:commandLink 
+                        id="pSub_link" 
+                        immediate="true"
+                        partialSubmit="true" 
+                        actionListener="#{sBean.show}">
+                        <tr:outputText 
+                          rendered="#{node.template}"
+                          inlineStyle="color: grey; font-weight: bold; font-size: 100%;" 
+                          value="#{node.prefix}#{node.name}#{node.nodeTitle}"/>
+                        <tr:outputText
+                          rendered="#{!node.template}"
+                          inlineStyle="font-size: 100%;" 
+                          value="#{node.prefix}#{node.name}#{node.nodeTitle}"/>
+                      </tr:commandLink>
+                    </tr:panelHorizontalLayout>
+                  </f:facet>
+
+                </tr:tree>
+              </tr:showDetailItem>
+            </tr:panelAccordion>
         </tr:panelPage>
-       
-       </tr:form>
+
+      </tr:form>
     </tr:document>
   </f:view>
 </jsp:root>

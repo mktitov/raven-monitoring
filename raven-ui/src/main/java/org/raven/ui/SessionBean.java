@@ -100,6 +100,7 @@ public class SessionBean
 //	private LogViewAttributesCache logViewAttributesCache;
 	private boolean collapsed = false;
 	private String remoteIp = null;
+    private String remoteHost = null;
 	private AuditView audit = new AuditView(); 
 	private TreeModel resourcesTreeModel;
 	private CoreTable coreTable; 
@@ -132,6 +133,7 @@ public class SessionBean
 		FacesContext context = FacesContext.getCurrentInstance();
 		HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
 		remoteIp = request.getRemoteAddr();
+        remoteHost = request.getRemoteHost();
 	
 	    charsets = UIUtil.findCharsets();
 	    
@@ -728,6 +730,10 @@ public class SessionBean
 	public String getRemoteIp() {
 		return remoteIp;
 	}
+
+    public String getRemoteHost() {
+        return remoteHost;
+    }
 
 	public TreeModel getResourcesTreeModel() {
 		return resourcesTreeModel;

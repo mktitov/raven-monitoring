@@ -41,8 +41,29 @@
   <trh:script>
     <![CDATA[
     var nodePath = '${cNode.node.path}'
-    function openInEditor(nodePath, attrName) {
-      
+    var serverHost = '${sBean.remoteHost}'
+    scriptThis = this
+    function openInEditor(attrName) {
+      var editor = window.open("", "raven-editor on "+serverHost, "height=800;width=1024")
+      if (editor) {
+        if (editor.location.host==="") {
+          //editor.initialTab = {nodePath:nodePath, attrName:attrName}
+          editor.location.href = '../raven-editor.html'          
+          waitAndOpen(editor, nodePath, attrName)
+        } else
+          editor.openTab(nodePath, attrName)
+      }
+    }
+    
+    function waitAndOpen(editor, nodePath, attrName) {
+      if (editor.editorLoaded) {
+        editor.document.title = 'Raven-editor on '+serverHost
+        editor.openTab(nodePath, attrName)
+      }
+      else {
+        console.log("Wating...")
+        setTimeout(function(){waitAndOpen(editor,nodePath, attrName)}, 100)
+      }
     }
     ]]>
   </trh:script>
@@ -128,6 +149,7 @@
         summary="Nodes" 
         value="#{cNode.attributes}" 
         var="row" 
+        varStatus="status"
         rows="12" 
         id="attrs">
         <!-- on\off changing dsc and name of attribute -->            
@@ -231,7 +253,12 @@
               rendered="#{row.enableEditExpression}" 
               value="#{row.expression}" 
               columns="100" />
-            <tr:commandButton onclick="alert(nodePath)" text="#{msgs.openInEditor}"/>
+            <tr:goButton onclick="openInEditor('#{row.name}')" text="#{msgs.openInEditor}" 
+              rendered="#{row.enableEditValue or row.enableEditExpression}"              
+           />
+            <!--
+            <tr:commandLink text="#{msgs.openInEditor}"  onclick="openInEditor('#{row.name}')"/>
+            -->
 
             <tr:inputListOfValues 
               rendered="#{row.enableSelectNodeDialog}"
@@ -265,7 +292,15 @@
               <jsp:include page="childAttributes.jspx" flush="true"/>
             </tr:panelGroupLayout>
             <tr:spacer height="10"></tr:spacer>
-
+            <!--
+            <trh:script>
+              var scripts = document.getElementsByTagName("script");
+              var sTag = scripts[scripts.length-1]
+              var button = $(sTag).parent().find('button#'+'body:form1:attrs:2:re')
+              console.log('BUTTON:')
+              console.log(button)
+            </trh:script>
+            -->
           </tr:panelGroupLayout>					
           <!-- <tr:panelGroupLayout layout="vertical">
           </tr:panelGroupLayout>  -->
