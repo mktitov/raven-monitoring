@@ -25,9 +25,9 @@
     <f:view>
     <trh:html>
           <trh:head title="#{sBean.title}">
-            <trh:script source="jquery/jquery-1.9.1.js"/>
-            <trh:script source="jquery/ui/jquery-ui.js"/>
-            <link rel="stylesheet" href="jquery/themes/base/jquery.ui.all.css" />
+            <trh:script source="../jquery/jquery-1.10.1.min.js"/>
+            <trh:script source="../jquery/ui/jquery-ui.js"/>
+            <link rel="stylesheet" href="../jquery/themes/base/jquery.ui.all.css" />
             <!--
             <trh:script>
               var path = '${cNode.node.path}'

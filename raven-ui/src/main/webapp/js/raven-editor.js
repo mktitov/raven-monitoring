@@ -37,6 +37,15 @@ $(document).ready(function(){
   saveButton.click(function(){
     saveEditorContent(editorParams)
   })
+  $('button#refresh').click(function(){
+    if (editorParams) {
+      var refresh = true
+      if (editorParams.hasChanges)
+        refresh = confirm("В редакторе '"+editorParams.key+"' есть несохраненные изменения! Обновить?")
+      if (refresh)
+        loadEditorContent(editorParams)
+    }
+  })
   $("#add-tab").on("click", function(){
     openTab("/nodes", "test")
   })
@@ -63,6 +72,21 @@ $(document).ready(function(){
       activateEditor(editorParams)
       syncState(editorParams)
       console.debug(event, ui)  
+    }
+  })
+  tabs.delegate('span.ui-icon-close', 'click', function(ev) {
+    var key = $(ev.target).parent().attr('title')
+    console.log("key: "+key)
+    var params = editors[key]
+    console.log(params)
+    var close = true
+    if (params.hasChanges)
+      close = confirm("В редакторе '"+key+"' есть несохраненные изменения! Закрыть?")
+    if (close) {
+      params.tabHeader.remove()
+      params.tab.remove()
+      delete editors[key]
+      tabs.tabs("refresh")
     }
   })
 })
@@ -189,7 +213,7 @@ function openTab(nodePath, attrName) {
       var editorId = 'editor-'+tabsCounter
       var tabHeader = tabTemplate.replace('_1_', id).replace('_2_', key).replace('_3_', title)
       tabs.find(".ui-tabs-nav").append(tabHeader)
-      tabs.append("<div id='" + id + "' style='height:90%'><div id='"+editorId+"' style='height:100%'>function(){ \nreturn 'test'\n}</div></div>")
+      tabs.append("<div id='" + id + "' style='height:90%'><div id='"+editorId+"' style='height:100%;fontSize:14px'>function(){ \nreturn 'test'\n}</div></div>")
       tabs.tabs("refresh")
       params = {
         key: key,
@@ -276,30 +300,11 @@ function loadEditorContent(params) {
     },
     success: function(res) {
       console.debug(res)
-      var editor = ace.edit(params.editorId);
       params.mode = detectMode(res.mimeType)
       params.value = res.data
-      editor.setValue(res.data)
-      setTheme(editor, currentTheme)
-      setMode(editor, params.mode)
-      editor.resize(true)
-      editor.getSession().setTabSize(2)
-      editor.commands.addCommand({
-        name: 'Save',
-        bindKey: {win: 'Ctrl-S',  mac: 'Command-S'},
-        exec: function() {
-          saveEditorContent(params)
-        },
-        readOnly: true // false if this command should not apply in readOnly mode
-      });
-      editor.on("change", function(){
-        params.lastChangeTime = new Date().getTime()
-        if (!params.hasChanges) {
-          params.hasChanges = true
-          syncState(params)
-        }
-      })
-      params.editor = editor
+      if (params.editor===undefined)
+        params.editor = createEditor(params)
+      params.editor.setValue(res.data)
       if (editorParams===params)
         activateEditor(params)
     },
@@ -307,6 +312,30 @@ function loadEditorContent(params) {
       
     }
   })
+}
+
+function createEditor(params) {
+  var editor = ace.edit(params.editorId);
+  setTheme(editor, currentTheme)
+  setMode(editor, params.mode)
+  editor.resize(true)
+  editor.getSession().setTabSize(2)
+  editor.commands.addCommand({
+    name: 'Save',
+    bindKey: {win: 'Ctrl-S',  mac: 'Command-S'},
+    exec: function() {
+      saveEditorContent(params)
+    },
+    readOnly: true // false if this command should not apply in readOnly mode
+  });
+  editor.on("change", function(){
+    params.lastChangeTime = new Date().getTime()
+    if (!params.hasChanges) {
+      params.hasChanges = true
+      syncState(params)
+    }
+  })
+  return editor
 }
 
 function detectMode(mimeType) {

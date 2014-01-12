@@ -27,8 +27,6 @@
 <f:view>
 <trh:html>
 	<trh:head title="#{sBean.title}">
-    <trh:script source="jquery/jquery-1.9.1.js"/>
-    <trh:script source="jquery/ui/jquery-ui.js"/>
 		<script>
 			var framesOn = true;
 			function switchFrameSet()
