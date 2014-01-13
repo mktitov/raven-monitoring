@@ -151,7 +151,7 @@
     	messageType="error" />
   	<tr:table  
   		width="100%" 
-  		summary="Nodes"  
+  		summary="Nodes" 
   		rowBandingInterval="1"
   		value="#{cNode.childrenList}" 
   		binding="#{subNodes.table}"
