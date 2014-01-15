@@ -31,7 +31,7 @@ public interface NodePathResolver
     
     /**
      * Splits the path passed in the parameter to the path elements
-     * @param path string representation of the parh
+     * @param path string representation of the path
      */
     public List<String> splitToPathElements(String path);
     /**

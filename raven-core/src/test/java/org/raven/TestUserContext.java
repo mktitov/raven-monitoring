@@ -57,6 +57,10 @@ public class TestUserContext implements UserContext
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    public boolean hasAccessToNode(Node node, String rights) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
     public String getName() {
         throw new UnsupportedOperationException("Not supported yet.");
     }

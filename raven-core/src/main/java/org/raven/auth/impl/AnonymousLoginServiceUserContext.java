@@ -60,6 +60,11 @@ public class AnonymousLoginServiceUserContext implements UserContext {
         return AccessControl.READ;
     }
 
+    public boolean hasAccessToNode(Node node, String rights) {
+        final int decodedRights = AccessControl.decodeRight(rights);
+        return (getAccessForNode(node) & decodedRights) == decodedRights;
+    }
+    
     public Map<String, String> getResourcesList(Tree tree) {
         return Collections.EMPTY_MAP;
     }

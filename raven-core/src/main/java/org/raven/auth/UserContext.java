@@ -20,6 +20,7 @@ package org.raven.auth;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import org.raven.auth.impl.AccessControl;
 import org.raven.tree.Node;
 import org.raven.tree.Tree;
 
@@ -60,6 +61,12 @@ public interface UserContext {
      * Returns access flags for given node.
      */
     public int getAccessForNode(Node node);
+    /**
+     * Returns <b>true</b> if user has rights passed in the parameter <b>rights</b>
+     * @param node the node which access checked
+     * @param rights the rights string (see {@link AccessControl})
+     */
+    public boolean hasAccessToNode(Node node, String rights);
     
     public Map<String,String>  getResourcesList(Tree tree);
 }

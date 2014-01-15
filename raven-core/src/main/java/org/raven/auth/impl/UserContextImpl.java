@@ -86,7 +86,12 @@ public class UserContextImpl implements UserContext
     public int getAccessForNode(Node node) {
         return admin? AccessControl.ALL_RIGHTS : policyManager.getAccessPoliciesForUser(this).getAccessForNode(node);
     }
-    
+
+    public boolean hasAccessToNode(Node node, String rights) {
+        final int decodedRights = AccessControl.decodeRight(rights);
+        return (getAccessForNode(node) & decodedRights) == decodedRights;
+    }
+
     public HashMap<String, String> getResourcesList(Tree tree) {
         HashMap<String, String> rl = new HashMap<String, String>();
         for (AccessResource ar : policyManager.getAccessResourcesForUser(this).values()) {

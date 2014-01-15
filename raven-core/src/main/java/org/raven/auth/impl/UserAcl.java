@@ -235,6 +235,10 @@ public class UserAcl implements UserContext
 		return acl.getAccessForNode(node);
 	}
 
+    public boolean hasAccessToNode(Node node, String rights) {
+        throw new UnsupportedOperationException("Not supported yet."); 
+    }
+
 	public String getLogin() { return accountName; }
 
 	

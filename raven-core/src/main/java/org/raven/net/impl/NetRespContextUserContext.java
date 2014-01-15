@@ -71,6 +71,11 @@ public class NetRespContextUserContext implements UserContext {
         return node==respContext? AccessControl.READ : AccessControl.NONE;
     }
 
+    public boolean hasAccessToNode(Node node, String rights) {
+        final int decodedRights = AccessControl.decodeRight(rights);
+        return (getAccessForNode(node) & decodedRights) == decodedRights;
+    }
+
     public Map<String, String> getResourcesList(Tree tree) {
         return Collections.EMPTY_MAP;
     }
