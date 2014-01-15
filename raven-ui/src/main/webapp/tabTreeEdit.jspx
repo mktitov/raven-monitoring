@@ -42,27 +42,31 @@
   
   $(document).ready(function(){
     console.log("Document loaded!!!")
-    var childs = $("table[summary='Nodes'] tbody").sortable({
-      items:'tr:has(td)', 
-      stop: function(e,u){
-        item = u.item
-        var movedNodeName = getNodeName(u.item)
-        var insertBefore = true
-        var targetNodeName = getNodeName(u.item.next())
-        if (!targetNodeName) {
-          insertBefore = false
-          targetNodeName = getNodeName(u.item.prev())
-        }
-        console.log("moved node name: "+movedNodeName+"; target node: "+targetNodeName+"; insertBefore: "+insertBefore)
-        $.getJSON('../sri/system/nodes/reorder', {
-          type:'POST',
-          nodePath:path,
-          movedNodeName: movedNodeName,
-          targetNodeName: targetNodeName,
-          insertBefore: insertBefore
+    var selector = "table[summary='Nodes'] tbody"
+    $(selector).parents('fieldset').delegate(selector, 'mouseenter', function() {
+      var table = $(this)
+      if (!table.is(':data(draggable)'))
+        table.sortable({
+          items:'tr:has(td)', 
+          stop: function(e,u){
+            item = u.item
+            var movedNodeName = getNodeName(u.item)
+            var insertBefore = true
+            var targetNodeName = getNodeName(u.item.next())
+            if (!targetNodeName) {
+              insertBefore = false
+              targetNodeName = getNodeName(u.item.prev())
+            }
+            console.log("moved node name: "+movedNodeName+"; target node: "+targetNodeName+"; insertBefore: "+insertBefore)
+            $.getJSON('../sri/system/nodes/reorder', {
+              type:'POST',
+              nodePath:path,
+              movedNodeName: movedNodeName,
+              targetNodeName: targetNodeName,
+              insertBefore: insertBefore
+            })
+          }
         })
-        console.log("Resorted!")
-      }
     })
   })
   ]]>

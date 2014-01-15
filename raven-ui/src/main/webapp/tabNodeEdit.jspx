@@ -65,6 +65,67 @@
         setTimeout(function(){waitAndOpen(editor,nodePath, attrName)}, 100)
       }
     }
+    
+    function changePathType(reqName, button) {
+      var buttons = $(button).parent().find('button')
+      var input = $(button).parent().parent().find('input')
+      buttons.attr('disabled','true')
+      $.ajax({
+        url:'../sri/system/nodes/'+reqName,
+        dataType: 'json',
+        type: 'POST',
+        data: {
+          nodePath:nodePath,
+          path:$(input).val(),
+        },
+        complete: function() {
+          buttons.removeAttr('disabled')
+        },
+        success: function(res) {
+          if (res.success) 
+            $(input).val(res.data)
+        }
+      })
+    }
+    
+    $(document).ready(function(){
+      $(document).delegate("table.node-reference input", 'mouseenter', function(){
+        var input = $(this)
+        if (!input.is(':data(uiAutocomplete)')) {
+          console.log('attaching autocomplete for node references')
+          input.autocomplete({
+            source: function(request, response){
+              console.log("Executing autocomplete")
+              $.getJSON('${pageContext.request.contextPath}/sri/system/nodes/resolve-path', {
+                pathPart:request.term,
+                nodePath:nodePath
+              }, response)
+            }
+          })
+        }
+      })
+      $(document).delegate('button.convert-path', 'click', function(){
+        var button = $(this)
+        var input = $(button).parent().parent().find('input')
+        button.attr('disabled','true')
+        $.ajax({
+          url:'../sri/system/nodes/convert-path',
+          dataType: 'json',
+          type: 'POST',
+          data: {
+            nodePath:nodePath,
+            path:$(input).val(),
+          },
+          complete: function() {
+            button.removeAttr('disabled')
+          },
+          success: function(res) {
+            if (res.success) 
+              $(input).val(res.data)
+          }
+        })
+      })
+    })
     ]]>
   </trh:script>
   <h:form id="form1" enctype="multipart/form-data" >
@@ -256,21 +317,22 @@
             <tr:goButton onclick="openInEditor('#{row.name}')" text="#{msgs.openInEditor}" 
               rendered="#{row.enableEditValue or row.enableEditExpression}"              
            />
-            <!--
-            <tr:commandLink text="#{msgs.openInEditor}"  onclick="openInEditor('#{row.name}')"/>
-            -->
-
-            <tr:inputListOfValues 
-              rendered="#{row.enableSelectNodeDialog}"
-              value="#{row.expression}"
-              returnListener="#{row.selectNodeHandleReturn}" 
-              action="dialog:selectNode"
-              actionListener="#{row.setNode}"
-              immediate="true" 
-              windowWidth="500" windowHeight="400"
-              columns="40" label="#{msgs.node}"
-              >
-            </tr:inputListOfValues>
+            <tr:panelHorizontalLayout>
+              <tr:inputListOfValues styleClass="node-reference"
+                rendered="#{row.enableSelectNodeDialog}"
+                value="#{row.expression}"
+                returnListener="#{row.selectNodeHandleReturn}" 
+                action="dialog:selectNode"
+                actionListener="#{row.setNode}"
+                immediate="true" 
+                windowWidth="500" windowHeight="400"
+                columns="40" label="#{msgs.node}"
+                >
+              </tr:inputListOfValues>
+              <tr:spacer width="10"/>
+              <tr:goButton rendered="#{row.enableSelectNodeDialog}" text="#{msgs.openInEditor}" 
+                           styleClass="convert-path"/>
+            </tr:panelHorizontalLayout>
             <tr:group rendered="#{row.fileAttribute}">
 
               <t:inputFileUpload  
