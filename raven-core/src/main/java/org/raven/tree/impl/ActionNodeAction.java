@@ -62,7 +62,7 @@ public class ActionNodeAction implements ActionViewableObject
         bindingSupport.put(AbstractActionNode.ACTION_ATTRIBUTES_BINDING, actionAttributes);
         try{
             actionNode.addToBindingSupport(additionalBindings);
-            return actionNode.getNodeAttribute(AbstractActionNode.ACTION_EXPRESSION_ATTR).getValue();
+            return actionNode.getAttr(AbstractActionNode.ACTION_EXPRESSION_ATTR).getValue();
         }finally {
             bindingSupport.reset();
         }
@@ -89,7 +89,7 @@ public class ActionNodeAction implements ActionViewableObject
         bindingSupport.put(AbstractActionNode.DATA_CONTEXT_BINDING, context);
         try{
             actionNode.addToBindingSupport(additionalBindings);
-            return actionNode.getNodeAttribute(AbstractActionNode.CONFIRMATION_MESSAGE_ATTR).getValue();
+            return actionNode.getAttr(AbstractActionNode.CONFIRMATION_MESSAGE_ATTR).getValue();
         }finally {
             bindingSupport.reset();
         }
@@ -104,7 +104,7 @@ public class ActionNodeAction implements ActionViewableObject
         bindingSupport.put(AbstractActionNode.DATA_CONTEXT_BINDING, context);
         try{
             actionNode.addToBindingSupport(additionalBindings);
-            return actionNode.getNodeAttribute(AbstractActionNode.ENABLED_ACTION_TEXT_ATTR).getValue();
+            return actionNode.getAttr(AbstractActionNode.ENABLED_ACTION_TEXT_ATTR).getValue();
         }finally {
             bindingSupport.reset();
         }
@@ -121,7 +121,7 @@ public class ActionNodeAction implements ActionViewableObject
         bindingSupport.put(AbstractActionNode.DATA_CONTEXT_BINDING, context);
         try{
             actionNode.addToBindingSupport(additionalBindings);
-            Boolean res = actionNode.getNodeAttribute(AbstractActionNode.REFRESH_VIEW_AFTER_ACTION_ATTR).getRealValue();
+            Boolean res = actionNode.getAttr(AbstractActionNode.REFRESH_VIEW_AFTER_ACTION_ATTR).getRealValue();
             return res;
         }finally {
             bindingSupport.reset();

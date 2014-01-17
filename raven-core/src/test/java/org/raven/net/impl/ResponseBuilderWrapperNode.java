@@ -15,12 +15,10 @@
  */
 package org.raven.net.impl;
 
-import com.sun.script.util.BindingsImpl;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
 import org.raven.auth.UserContext;
 import org.raven.auth.impl.AccessRight;
-import org.raven.expr.BindingSupport;
 import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.net.Response;
 import org.raven.net.ResponseBuilder;

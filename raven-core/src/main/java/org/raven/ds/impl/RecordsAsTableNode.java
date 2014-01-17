@@ -377,7 +377,9 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
             } finally {
                 bindingSupport.reset();
             }
-            dataSource.getDataImmediate(dataConsumer, new DataContextImpl(attrs));
+            DataContext context = new DataContextImpl(attrs);
+            context.putNodeParameter(this, "hasSelectedRow", false);            
+            dataSource.getDataImmediate(dataConsumer, context);
 
             List<ViewableObject> vos = new ArrayList<ViewableObject>();
             List<ViewableObject> actions = getActions(refreshAttributes, records, dataConsumer.context);
@@ -771,6 +773,10 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                 if (isLogLevelEnabled(LogLevel.DEBUG))
                     debug(String.format(
                             "All records recieved from data source (%s)", dataSource.getPath()));
+                if (!rowSelected) {            
+                    context.getUserContext().getParams().remove(getIndexFieldsValuesParamName());
+                    RavenUtils.setMasterFieldValues(RecordsAsTableNode.this, null);
+                }
                 return;
             }
 
