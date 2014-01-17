@@ -172,6 +172,7 @@
                   value="#{sBean.treeModel}"  >
                   <f:facet name="nodeStamp">
                     <tr:panelHorizontalLayout valign="middle" styleClass="tree-node">
+                      <tr:outputText shortDesc="#{node.path}" inlineStyle="visibility:hidden; width:0px" styleClass="node-path"/>
                       <tr:image 
                         rendered="#{not node.started}"
                         source="/images/#{node.status}.gif" 
@@ -204,6 +205,7 @@
                         <tr:outputText
                           rendered="#{!node.template}"
                           inlineStyle="font-size: 100%;" 
+                          shortDesc="#{node.path}"
                           value="#{node.prefix}#{node.name}#{node.nodeTitle}"/>
                       </tr:commandLink>
                     </tr:panelHorizontalLayout>
