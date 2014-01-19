@@ -246,7 +246,7 @@
                 >
               </tr:inputListOfValues>
               <tr:spacer width="10"/>
-              <tr:goButton rendered="#{row.enableSelectNodeDialog}" text="#{msgs.openInEditor}" 
+              <tr:goButton rendered="#{row.enableSelectNodeDialog}" text="#{msgs.convertPath}" 
                            styleClass="convert-path"/>
             </tr:panelHorizontalLayout>
             <tr:group rendered="#{row.fileAttribute}">

@@ -29,6 +29,8 @@
         <trh:script source="jquery/jquery-1.10.1.min.js"/>
         <trh:script source="../jquery/ui/jquery-ui.js"/>
         <link rel="stylesheet" href="../jquery/themes/base/jquery.ui.all.css" />
+        <link rel="stylesheet" href="../css/raven.css" />
+
       </trh:head>
       <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
       <tr:document title="TabbedPanel" >

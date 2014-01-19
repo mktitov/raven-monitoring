@@ -1,5 +1,5 @@
 /* 
- * Copyright 2014 tim.
+ * Copyright 2014 Mikhail Titov.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,20 +62,22 @@ function changePathType(reqName, button) {
 }
 
 $(document).ready(function(){
-  $(document).delegate("table.node-reference input", 'dragover', function(e){
+  $(document).delegate("table.node-reference input", 'dragenter', function(e){
     e.originalEvent.preventDefault()
     var input = $(this)
-//    console.log("drag over")
+    input.addClass('dragover')
     if (!input.is(":data(droppable)")) {      
-//      console.log('attaching ondrop')
       input.data("droppable", true)
       input.bind('drop', function(e){
+        input.removeClass('dragover')
         e.originalEvent.preventDefault()
         input.val(e.originalEvent.dataTransfer.getData('text/plain'))
-//            e.originalEvent.stopPropagation()
         console.log("dropped")
       })
     }
+  })
+  $(document).delegate("table.node-reference input", 'dragleave', function(e){
+    $(this).removeClass('dragover')
   })
   $(document).delegate("table.node-reference input", 'mouseenter', function(){
     var input = $(this)
@@ -90,53 +92,6 @@ $(document).ready(function(){
           }, response)
         }
       })
-//      var region = input.parents('div')
-//          .first()
-//          .bind('dragover', function(e){
-//            e.originalEvent.preventDefault()
-////            e.originalEvent.stopPropagation()
-//          })
-////          .bind('dragenter', function(e){
-////            e.originalEvent.preventDefault()
-////            e.originalEvent.stopPropagation()
-////          })
-////          .bind('dragleave', function(e){
-////            e.originalEvent.preventDefault()
-////            e.originalEvent.stopPropagation()
-////          })
-//          .bind('drop', function(e){
-//            e.originalEvent.preventDefault()
-////            e.originalEvent.stopPropagation()
-//            console.log("dropped")
-//          })
-          
-      
-//      region.bind('dragenter', function(ev) {
-////        if (ev.originalEvent.preventDefault)
-//          ev.originalEvent.preventDefault()
-//        console.log('drag enter')
-//        var data = ev.originalEvent.dataTransfer
-//        data.dropEffect = 'none'
-////        console.log('dragover data: '+ev.originalEvent.dataTransfer.getData('Text'))
-//        console.log(ev.originalEvent.dataTransfer)
-////        return false
-//      })
-////      region.bind('dragover', function(ev) {
-//////        if (ev.originalEvent.preventDefault)
-////          ev.originalEvent.preventDefault()
-////        console.log('drag over')
-////        var data = ev.originalEvent.dataTransfer
-////        data.dropEffect = 'none'
-//////        console.log('dragover data: '+ev.originalEvent.dataTransfer.getData('Text'))
-////        console.log(ev.originalEvent.dataTransfer)
-//////        return false
-////      })
-//      region.bind('drop'), function(ev) {
-//        var path = ev.originalEvent.dataTransfer.getData('text/plain')
-//        console.log("dropped new path: "+path)
-//        input.val(path)
-//        ev.originalEvent.preventDefault()
-//      }
     }
   })
   $(document).delegate('button.convert-path', 'click', function(){
