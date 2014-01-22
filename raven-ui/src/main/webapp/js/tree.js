@@ -69,15 +69,74 @@ $(document).ready(function(){
 
   $(document).delegate("table.tree-node", "drop", function(ev) {
     ev.originalEvent.preventDefault()
-    $(this).removeClass('dragover')
-    var dropEffect = ev.originalEvent.dataTransfer.dropEffect
-    if (!dropEffect || dropEffect==='none') 
-      dropEffect = ev.altKey? 'copy' : 'move'
-    console.log('original dropEffect: ' + ev.originalEvent.dataTransfer.dropEffect)
-    console.log('computed dropEffect: ' + dropEffect)
+    var targetNode = $(this)
+    targetNode.removeClass('dragover')
+    var dropEffect = getDropEffect(ev)
+    var sourceNodePath = getNodePathFromData(ev)
+    console.log("DROPPED")
+    console.log(ev)
+    transferNode(sourceNodePath, getNodePath(targetNode), dropEffect==='move', ev.shiftKey)
+//    console.log('original dropEffect: ' + ev.originalEvent.dataTransfer.dropEffect)
+//    console.log('computed dropEffect: ' + dropEffect)
 //    console.log(ev.originalEvent.dataTransfer)
   })
 })
+
+function getDropEffect(ev) {
+  var dropEffect = ev.originalEvent.dataTransfer.dropEffect
+  if (!dropEffect || dropEffect==='none') 
+    dropEffect = ev.altKey? 'copy' : 'move'
+  return dropEffect  
+}
+
+function transferNode(sourceNodePath, targetNodePath, isMoveOp, askNewName, positionNodePath, after) {
+  var newName=null;
+  if (askNewName) {
+    newName = prompt("Введите новое имя узла", getNodeName(sourceNodePath))
+    if (newName===null)
+      return;
+    else if (newName==='') {
+      alert("Имя не может быть пустым")
+      return;
+    }
+  }
+  $.ajax({
+    url:"../sri/system/nodes/move",
+    dataType:"json",
+    data: {
+      sourceNodePath:sourceNodePath,
+      targetNodePath:targetNodePath,
+      newName:newName,
+      positionNodePath: positionNodePath,
+      insertBefore: !after
+    },
+    success: function(res) {
+      if (res.success) {
+        //refresh tree or node
+        _adftreetree1.treeState.action('refresh','0',this)
+      } else
+        alert('Возникла ошибка при копировании/перемещении объекта. '+res.error)
+    },
+    error: function() {
+      alert('Возникла ошибка при копировании/перемещении объекта')
+    }
+  })
+}
+
+function getNodeName(nodePath) {
+  var elems = nodePath.split('/')
+  return elems[elems.length-2].replace(/"/g, '')
+}
+
+function getParentNodePath(nodePath) {
+  var elems = nodePath.split('/')
+  elems.splice(elems.length-2,1)
+  return elems.join('/')
+}
+
+function getNodePathFromData(ev) {
+  return ev.originalEvent.dataTransfer.getData('text/plain')
+}
 
 function getNodePath(elem) {
   return elem.find('a span').attr('title')
@@ -101,5 +160,9 @@ function configureInsertPlace(insElem, nodePath, after) {
     ev.originalEvent.preventDefault()
     console.log('Dropped in insert place')
     insElem.removeClass('dragover')    
+    var sourceNodePath = getNodePathFromData(ev)
+    var targetNodePath = getParentNodePath(nodePath)
+    var positionNodePath = nodePath    
+    transferNode(sourceNodePath, targetNodePath, getDropEffect(ev)==='move', ev.shiftKey, positionNodePath, after)
   })
 }
