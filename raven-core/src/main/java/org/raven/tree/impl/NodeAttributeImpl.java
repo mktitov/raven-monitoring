@@ -321,7 +321,8 @@ public class NodeAttributeImpl
         if (templateExpression || !initialized)
             this.value = value;
         else {
-            String prevValue = getValue();
+//            String prevValue = isExpression()? getRawValue() : getValue();
+            String prevValue = getRawValue();
             validationErrors = null;
             valueHandler.setData(value);
             if (valueValidatorController!=null) {
