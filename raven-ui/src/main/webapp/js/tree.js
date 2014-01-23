@@ -101,11 +101,13 @@ function transferNode(sourceNodePath, targetNodePath, isMoveOp, askNewName, posi
     }
   }
   $.ajax({
-    url:"../sri/system/nodes/move",
+    url:"../sri/system/nodes/transfer",
     dataType:"json",
+    type:'POST',
     data: {
       sourceNodePath:sourceNodePath,
       targetNodePath:targetNodePath,
+      isMoveOp: isMoveOp,
       newName:newName,
       positionNodePath: positionNodePath,
       insertBefore: !after

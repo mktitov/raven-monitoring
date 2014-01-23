@@ -25,52 +25,10 @@
 <trh:script>
   <![CDATA[
   var path = '${cNode.node.path}'
-  function getIndex(obj) {
-    var elems = obj.find('td:last-child')
-    var res = null
-    if (elems)
-      res = elems.map(function(i,v){return $(v).text()})[0]
-    return res
-  }
-  function getNodeName(obj){
-    var td = obj.find('td:nth-child(3)')
-    if (td && td.length>0)
-      return td.text()
-    else
-      return null
-  }
-  
-  $(document).ready(function(){
-    console.log("Document loaded!!!")
-    var selector = "table[summary='Nodes'] tbody"
-    $(selector).parents('fieldset').delegate(selector, 'mouseenter', function() {
-      var table = $(this)
-      if (!table.is(':data(draggable)'))
-        table.sortable({
-          items:'tr:has(td)', 
-          stop: function(e,u){
-            item = u.item
-            var movedNodeName = getNodeName(u.item)
-            var insertBefore = true
-            var targetNodeName = getNodeName(u.item.next())
-            if (!targetNodeName) {
-              insertBefore = false
-              targetNodeName = getNodeName(u.item.prev())
-            }
-            console.log("moved node name: "+movedNodeName+"; target node: "+targetNodeName+"; insertBefore: "+insertBefore)
-            $.getJSON('../sri/system/nodes/reorder', {
-              type:'POST',
-              nodePath:path,
-              movedNodeName: movedNodeName,
-              targetNodeName: targetNodeName,
-              insertBefore: insertBefore
-            })
-          }
-        })
-    })
-  })
   ]]>
 </trh:script>
+<trh:script source="../js/tree-edit.js"/>
+  
 <tr:form usesUpload="true">
 <tr:panelHorizontalLayout rendered="#{cNode.allowTreeEdit}" >
 	<tr:panelAccordion discloseNone="true" >
@@ -78,18 +36,6 @@
 <!-- ********************* -->
 <!-- create new node -->
 <!-- ********************* -->
-      <trh:script>
-        var path = '${cNode.node.path}'
-        $(document).ready(function(){
-          $('#body\\:typeList').autocomplete({source:function(request, response){
-            console.log("Executing autocomplete")
-            $.getJSON('${pageContext.request.contextPath}/sri/system/nodes/child-types', {
-              filter:request.term,
-              nodePath:path
-            }, response)
-          }})
-        })
-      </trh:script>
 		<tr:panelHorizontalLayout 
 			halign="start" 
 			valign="top">
@@ -162,6 +108,7 @@
   		var="row" 
   		rows="20" 
   		rowSelection="multiple" 
+      styleClass='child-nodes'
   		id="delSubNode" >
 		<f:facet name="detailStamp">
 			<tr:panelCaptionGroup captionText="#{msgs.dsc}">
@@ -171,7 +118,7 @@
 			</tr:panelCaptionGroup>
 		</f:facet>				  		
     	<tr:column headerText="#{msgs.name}">
-	      <tr:outputText value="#{row.nodeName}"/>
+        <tr:outputText styleClass="node-name" shortDesc="#{row.path}" value="#{row.nodeName}"/>
         </tr:column>
     	<tr:column headerText="#{msgs.type}">
 	      <tr:outputText value="#{row.classSimpleName}"/>
