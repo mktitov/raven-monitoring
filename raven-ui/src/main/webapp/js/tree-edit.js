@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
+var dragoverRow;
+var draggingRow;
+
 $(document).ready(function() {
   console.log("Document loaded!!!")
   //node type autocomplete
-  $(document).delegate("#body\\:typeList", "mouseenter", function() {
+//  $(document).delegate("#body\\:typeList", "mouseenter", function() {
+  $(document).delegate("tr.node-type-input input", "mouseenter", function() {
     var input = $(this)
     if (!input.is(':data(uiAutocomplete)')) {
       input.autocomplete({ 
@@ -25,7 +29,7 @@ $(document).ready(function() {
             console.log("Executing autocomplete")
             $.getJSON('../sri/system/nodes/child-types', {
               filter:request.term,
-              nodePath:path
+              nodePath:nodePath
             }, response)
         }
       })
@@ -39,7 +43,7 @@ $(document).ready(function() {
       console.log('making draggable child node row')
       child.attr("draggable", 'true')
       child.bind('dragstart', function(ev){
-//        draggindNode = $(this)
+        draggingRow = $(this)
         console.log('Dragging')
         var data = ev.originalEvent.dataTransfer
         data.effectAllowed = "copyMove"
@@ -48,18 +52,38 @@ $(document).ready(function() {
         data.setData('text/plain', getNodePath(child))
         console.log(data)
       })
-      child.bind('dragend', function(){
-        console.log('drag finished')
-//        removeInsertPlaces(dragoverNode)
+      child.bind('dragend', function(ev) {        
+        try {
+          console.log('drag finished')
+          console.log(ev.originalEvent.dataTransfer)
+          removeInsertPlaces()
+        } finally {
+          draggingRow = null
+        }
 //        dragoverNode = null
 //        draggingNode = null
         return false
       })
     }
   })
-  $(document).delegage(selector, 'dragover', function(ev){
-    
+  $(document).delegate(selector, 'dragover', function(ev) {
+    var row = $(this)
+    if (!row.prev().is('tr.insert-node-place')) {
+      removeInsertPlaces()
+      var template = "<tr class='insert-node-place'><th colspan=5 class='insert-node-place'></th></tr>"
+      dragoverRow = row
+      var before = $(template).insertBefore(row)
+      configureInsertPlace(before, getNodePath(row), false)
+      var after = $(template).insertAfter(row)
+      configureInsertPlace(after, getNodePath(row), true)
+//      if (getNodePath(row)!==getNodePath(draggingRow))
+//        row.addClass('dragover')
+    }
   })
+  $(document).delegate(selector, 'dragleave', function(ev) {
+    $(this).removeClass('dragover')
+  })
+  
 //  var selector = "table[summary='Nodes'] tbody"
 //  $(selector).parents('fieldset').delegate(selector, 'mouseenter', function() {
 //    var table = $(this)
@@ -87,15 +111,49 @@ $(document).ready(function() {
 //      })
 //  })
 })
+//function removeInsertPlaces(row) {
+//  if (row) 
+//    row.parent().find('tr.insert-node-place').remove()
+//}
 
-function getNodeName(obj) {
-  var td = obj.find('td:nth-child(3)')
+function getNodeName(elem) {
+  var td = elem.find('td:nth-child(3)')
   if (td && td.length>0)
     return td.text()
   else
     return null
 }
 
-function getNodePath(elem) {
-  elem.find('span.node-name').attr('title')
+function getNodePath(elem) {  
+  return elem.find('span.node-name').attr('title')
+}
+
+function configureInsertPlace(insElem, nodePath, after) {
+  console.log("nodePath: "+nodePath)
+  insElem.bind('dragover', function(ev) {
+    ev.originalEvent.preventDefault()
+    console.log('dragover insert place')
+    $(this).addClass('dragover')
+  })
+  insElem.bind('dragleave', function(ev) {
+    $(this).removeClass('dragover')
+  })
+  insElem.bind('drop', function(ev){
+    ev.originalEvent.preventDefault()
+    console.log('Dropped into insert place')
+    insElem.removeClass('dragover')    
+    var sourceNodePath = getNodePathFromData(ev)
+    var targetNodePath = getParentNodePath(nodePath)
+    var positionNodePath = nodePath        
+    transferNode(sourceNodePath, targetNodePath, getDropEffect(ev)==='move', ev.shiftKey, positionNodePath, after, function(){
+      location.reload()
+    })
+  })
+}
+
+function getDropEffect(ev) {
+  var dropEffect = ev.originalEvent.dataTransfer.dropEffect
+  if (!dropEffect || dropEffect==='none') 
+    dropEffect = ev.altKey? 'copy' : 'move'
+  return dropEffect  
 }

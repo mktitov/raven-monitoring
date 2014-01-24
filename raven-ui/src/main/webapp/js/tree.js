@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var draggingNode;
-var dragoverNode;
+var draggingNode = null;
+var dragoverNode = null;
 
 $(document).ready(function(){
   $(document).delegate("table.tree-node", "mouseenter", function() {
@@ -33,9 +33,9 @@ $(document).ready(function(){
         data.setData('text/plain', getNodePath(table))
         console.log(data)
       })
-      table.bind('dragend', function(){
+      table.bind('dragend', function(ev){
         console.log('drag finished')
-        removeInsertPlaces(dragoverNode)
+        removeInsertPlaces()
         dragoverNode = null
         draggingNode = null
         return false
@@ -46,7 +46,7 @@ $(document).ready(function(){
   $(document).delegate("table.tree-node", "dragover", function(ev) {
     var node = $(this)
     if (!node.prev().is('div')) {
-      removeInsertPlaces(dragoverNode)
+      removeInsertPlaces()
       dragoverNode = node
       console.log('inserting div')
       var template = "<div class='insert-node-place'></div>"
@@ -56,7 +56,7 @@ $(document).ready(function(){
       var after = $(template).insertAfter(node)
       configureInsertPlace(after, nodePath, true)
     }
-    if (getNodePath(node)!==getNodePath(draggindNode)) {
+    if (getNodePath(node)!==getNodePath(draggingNode)) {
       ev.originalEvent.preventDefault()
 //      console.log('drop effect: '+ev.originalEvent.dataTransfer.dropEffect)
       node.addClass('dragover')
@@ -89,41 +89,41 @@ function getDropEffect(ev) {
   return dropEffect  
 }
 
-function transferNode(sourceNodePath, targetNodePath, isMoveOp, askNewName, positionNodePath, after) {
-  var newName=null;
-  if (askNewName) {
-    newName = prompt("Введите новое имя узла", getNodeName(sourceNodePath))
-    if (newName===null)
-      return;
-    else if (newName==='') {
-      alert("Имя не может быть пустым")
-      return;
-    }
-  }
-  $.ajax({
-    url:"../sri/system/nodes/transfer",
-    dataType:"json",
-    type:'POST',
-    data: {
-      sourceNodePath:sourceNodePath,
-      targetNodePath:targetNodePath,
-      isMoveOp: isMoveOp,
-      newName:newName,
-      positionNodePath: positionNodePath,
-      insertBefore: !after
-    },
-    success: function(res) {
-      if (res.success) {
-        //refresh tree or node
-        _adftreetree1.treeState.action('refresh','0',this)
-      } else
-        alert('Возникла ошибка при копировании/перемещении объекта. '+res.error)
-    },
-    error: function() {
-      alert('Возникла ошибка при копировании/перемещении объекта')
-    }
-  })
-}
+//function transferNode(sourceNodePath, targetNodePath, isMoveOp, askNewName, positionNodePath, after) {
+//  var newName=null;
+//  if (askNewName) {
+//    newName = prompt("Введите новое имя узла", getNodeName(sourceNodePath))
+//    if (newName===null)
+//      return;
+//    else if (newName==='') {
+//      alert("Имя не может быть пустым")
+//      return;
+//    }
+//  }
+//  $.ajax({
+//    url:"../sri/system/nodes/transfer",
+//    dataType:"json",
+//    type:'POST',
+//    data: {
+//      sourceNodePath:sourceNodePath,
+//      targetNodePath:targetNodePath,
+//      isMoveOp: isMoveOp,
+//      newName:newName,
+//      positionNodePath: positionNodePath,
+//      insertBefore: !after
+//    },
+//    success: function(res) {
+//      if (res.success) {
+//        //refresh tree or node
+//        _adftreetree1.treeState.action('refresh','0',this)
+//      } else
+//        alert('Возникла ошибка при копировании/перемещении объекта. '+res.error)
+//    },
+//    error: function() {
+//      alert('Возникла ошибка при копировании/перемещении объекта')
+//    }
+//  })
+//}
 
 function getNodeName(nodePath) {
   var elems = nodePath.split('/')
@@ -141,13 +141,13 @@ function getNodePathFromData(ev) {
 }
 
 function getNodePath(elem) {
-  return elem.find('a span').attr('title')
+  return elem? elem.find('a span').attr('title') : null
 }
 
-function removeInsertPlaces(node) {
-  if (node) 
-    node.parent().find('div.insert-node-place').remove()
-}
+//function removeInsertPlaces(node) {
+//  if (node) 
+//    node.parent().find('div.insert-node-place').remove()
+//}
 
 function configureInsertPlace(insElem, nodePath, after) {
   insElem.bind('dragover', function(ev) {

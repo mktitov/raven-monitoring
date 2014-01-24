@@ -24,7 +24,7 @@
 <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
 <trh:script>
   <![CDATA[
-  var path = '${cNode.node.path}'
+  var nodePath = '${cNode.node.path}'
   ]]>
 </trh:script>
 <trh:script source="../js/tree-edit.js"/>
@@ -50,6 +50,7 @@
 					</tr:inputText>
 					<tr:inputListOfValues 
 						id="typeList"
+            styleClass="node-type-input"
 						label="#{msgs.type}" 
 						value="#{sBean.newNodeType}"
 		        		action="dialog:chooseType" 

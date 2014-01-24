@@ -33,6 +33,7 @@
       <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
       <trh:script source="../jquery/jquery-1.10.1.min.js"/>
       <trh:script source="../jquery/ui/jquery-ui.js"/>
+      <trh:script source="../js/utils.js"/>
       <trh:script source="../js/tree.js"/>
       <link rel="stylesheet" href="../jquery/themes/base/jquery.ui.all.css" />
       <link rel="stylesheet" href="../css/raven.css" />
