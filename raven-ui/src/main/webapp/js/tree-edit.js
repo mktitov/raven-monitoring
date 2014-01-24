@@ -46,10 +46,16 @@ $(document).ready(function() {
         draggingRow = $(this)
         console.log('Dragging')
         var data = ev.originalEvent.dataTransfer
+        var checkedNodes = child.parent().find("tr:has(td):has(input:checked)").map(function(i, r){
+          return getNodePath($(r))
+        })
+        checkedNodes = checkedNodes.length===0? [getNodePath(child)] : checkedNodes.toArray()
+        console.log("SELECTED rows count: "+checkedNodes.length)
+        console.log(checkedNodes)
         data.effectAllowed = "copyMove"
         data.dropEffect = "move"
         data.setDragImage(child[0], 1, 1)
-        data.setData('text/plain', getNodePath(child))
+        data.setData('text/plain', checkedNodes.join(' / '))
         console.log(data)
       })
       child.bind('dragend', function(ev) {        
@@ -145,9 +151,7 @@ function configureInsertPlace(insElem, nodePath, after) {
     var sourceNodePath = getNodePathFromData(ev)
     var targetNodePath = getParentNodePath(nodePath)
     var positionNodePath = nodePath        
-    transferNode(sourceNodePath, targetNodePath, getDropEffect(ev)==='move', ev.shiftKey, positionNodePath, after, function(){
-      location.reload()
-    })
+    transferNode(sourceNodePath, targetNodePath, getDropEffect(ev)==='move', ev.shiftKey, positionNodePath, after)
   })
 }
 
