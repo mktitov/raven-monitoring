@@ -230,9 +230,6 @@
               rendered="#{row.enableEditExpression}" 
               value="#{row.expression}" 
               columns="100" />
-            <tr:goButton onclick="openInEditor('#{row.name}')" text="#{msgs.openInEditor}" 
-              rendered="#{row.enableEditValue or row.enableEditExpression}"              
-           />
             <tr:panelHorizontalLayout>
               <tr:inputListOfValues styleClass="node-reference"
                 rendered="#{row.enableSelectNodeDialog}"
@@ -257,6 +254,9 @@
                 storage="file"
                 maxlength="600000"/>
             </tr:group>
+            <tr:goButton onclick="openInEditor('#{row.name}')" text="#{msgs.openInEditor}" 
+              rendered="#{row.enableEditValue or row.enableEditExpression or row.fileAttribute}"              
+            />
             <tr:selectOneChoice 
               label="#{msgs.expression}" 
               rendered="#{row.enableExpressionChoice}" 

@@ -16,6 +16,7 @@
  */
 package org.raven.ui.servlet;
 
+import groovy.lang.Writable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -128,7 +129,8 @@ public class NetworkResponseServlet extends HttpServlet {
     }
 
     private void processServiceResponse(HttpServletRequest request, HttpServletResponse response,
-            Response serviceResponse, Registry registry) throws IOException {
+            Response serviceResponse, Registry registry) throws IOException 
+    {
         if (serviceResponse.getContent() == null) {
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
         } else {
@@ -141,13 +143,19 @@ public class NetworkResponseServlet extends HttpServlet {
                 response.setCharacterEncoding(charset);
             response.setContentType(serviceResponse.getContentType());
             TypeConverter converter = registry.getService(TypeConverter.class);
-            OutputStream out = response.getOutputStream();
-            InputStream contentStream = converter.convert(InputStream.class, serviceResponse.getContent(), charset);
-            try {
-                IOUtils.copy(contentStream, out);
-            } finally {
-                IOUtils.closeQuietly(out);
-                IOUtils.closeQuietly(contentStream);
+            Object content = serviceResponse.getContent();
+            if (content instanceof Writable) {
+                Writable writable = (Writable) content;
+                writable.writeTo(response.getWriter());
+            } else {
+                OutputStream out = response.getOutputStream();
+                InputStream contentStream = converter.convert(InputStream.class, serviceResponse.getContent(), charset);
+                try {
+                    IOUtils.copy(contentStream, out);
+                } finally {
+                    IOUtils.closeQuietly(out);
+                    IOUtils.closeQuietly(contentStream);
+                }
             }
             response.setStatus(HttpServletResponse.SC_OK);
         }
