@@ -24,5 +24,6 @@ import java.util.Map;
 public interface Response {
     public String getContentType();
     public Object getContent();
+//    public Charset getContentEncoding();
     public Map<String, String> getHeaders();
 }

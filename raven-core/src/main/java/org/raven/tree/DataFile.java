@@ -18,6 +18,8 @@
 package org.raven.tree;
 
 import java.io.InputStream;
+import java.io.Reader;
+import java.nio.charset.Charset;
 
 /**
  *
@@ -46,9 +48,20 @@ public interface DataFile extends AttributesGenerator
      */
     public InputStream getDataStream() throws DataFileException;
     /**
+     * Returns content as reader if {@link #getEncoding() encoding} is set
+     * @throws DataFileException 
+     */
+    public Reader getDataReader() throws DataFileException;
+    /**
      * Sets the file data
      */
     public void setDataStream(InputStream data) throws DataFileException;
+    /**
+     * Sets data as string. Passed string will be encoded using charset which returns method {@link #getEncoding()}
+     * or with default encoding if {@link #getEncoding()} return null
+     * @throws DataFileException 
+     */
+    public void setDataString(String data) throws DataFileException;
     /**
      * Returns the file size in bytes
      */
@@ -57,4 +70,14 @@ public interface DataFile extends AttributesGenerator
      * Returns the checksum of the file. Adler32 is used to calculate checksum
      */
     public Long getChecksum() throws DataFileException;
+    /**
+     * Returns the charset encoding for the content
+     * @throws DataFileException 
+     */
+    public Charset getEncoding() throws DataFileException;
+    /**
+     * Sets charset with which content was encoded
+     * @throws DataFileException 
+     */
+    public void setEncoding(Charset encoding) throws DataFileException;
 }

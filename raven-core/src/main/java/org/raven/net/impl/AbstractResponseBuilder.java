@@ -18,6 +18,7 @@ package org.raven.net.impl;
 import org.raven.annotations.Parameter;
 import org.raven.auth.UserContext;
 import org.raven.auth.impl.AccessRight;
+import org.raven.log.LogLevel;
 import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.net.Response;
 import org.raven.net.ResponseBuilder;
@@ -72,10 +73,16 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
         long ts = requestsStat.markOperationProcessingStart();
         try {
             paramsSupport.checkParameters(this, responseContext.getRequest().getParams());
-            return new ResponseImpl(
-                    responseContentType, 
-                    buildResponseContent(user, responseContext), 
-                    responseContext.getHeaders());
+            try {
+                return new ResponseImpl(
+                        responseContentType, 
+                        buildResponseContent(user, responseContext), 
+                        responseContext.getHeaders());
+            } catch (Exception e) {
+                if (isLogLevelEnabled(LogLevel.ERROR))
+                    getLogger().error("Problem with building response", e);
+                throw new NetworkResponseServiceExeption("Problem with building response", e);
+            }
         } finally {
             requestsStat.markOperationProcessingEnd(ts);
         }
@@ -97,7 +104,7 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
         else return null;
     }
     
-    protected abstract Object buildResponseContent(UserContext user, ResponseContext responseContext);
+    protected abstract Object buildResponseContent(UserContext user, ResponseContext responseContext) throws Exception;
 
     public Node getResponseBuilderNode() {
         return this;

@@ -28,7 +28,9 @@ public interface BindingNames
     public static final String USER_CONTEXT = "userContext";
 
     public static final String REFRESH_ATTRIBUTES = "refreshAttributes";
-    
+
+    public static final String NODE_BINDING = "node";
+    public static final String LOGGER_BINDING = "logger";
     public static final String DATA_CONTEXT_BINDING = "context";
     public static final String DATASOURCE_BINDING = "dataSource";
     public static final String DATA_STREAM_BINDING = "dataStream";

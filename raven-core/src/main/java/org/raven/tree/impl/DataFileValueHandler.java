@@ -17,7 +17,11 @@
 
 package org.raven.tree.impl;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.zip.Adler32;
@@ -42,6 +46,7 @@ public class DataFileValueHandler extends AbstractAttributeValueHandler implemen
     public static final String MIMETYPE_SUFFIX = "mimeType";
     public static final String SIZE_SUFFIX = "filesize";
     public static final String CHECKSUM_SUFFIX = "checksum";
+    public static final String ENCODING_SUFFIX = "encoding";
 
     @Service
     private static MessagesRegistry messagesRegistry;
@@ -144,6 +149,20 @@ public class DataFileValueHandler extends AbstractAttributeValueHandler implemen
         }
     }
 
+    public Charset getEncoding() throws DataFileException {
+        return getOrCreateAttribute(ENCODING_SUFFIX, Charset.class).getRealValue();
+    }
+
+    public void setEncoding(Charset encoding) throws DataFileException {
+        NodeAttribute attr = getOrCreateAttribute(ENCODING_SUFFIX, Charset.class);
+        try {
+            attr.setValue(encoding!=null?encoding.name():null);
+        } catch (Exception e) {
+            throw new DataFileException(String.format(
+                    "Error stting value for encoding attribute (%s)", attr.getPath()));
+        }
+    }
+    
     public Long getFileSize() throws DataFileException
     {
         return getOrCreateAttribute(SIZE_SUFFIX, Long.class).getRealValue();
@@ -174,9 +193,16 @@ public class DataFileValueHandler extends AbstractAttributeValueHandler implemen
         return val;
     }
 
-    public InputStream getDataStream()
-    {
+    public InputStream getDataStream() {
         return configurator.getTreeStore().getNodeAttributeBinaryData(attribute);
+    }
+    
+    public Reader getDataReader() throws DataFileException {
+        Charset encoding = getEncoding();
+        if (encoding==null)
+            encoding = Charset.defaultCharset();
+        InputStream dataStream = getDataStream();
+        return dataStream==null? null : new InputStreamReader(dataStream, encoding);
     }
 
     public void setDataStream(InputStream data) throws DataFileException
@@ -210,11 +236,19 @@ public class DataFileValueHandler extends AbstractAttributeValueHandler implemen
         }
     }
 
+    public void setDataString(String data) throws DataFileException {
+        Charset encoding = getEncoding();
+        if (encoding==null)
+            encoding = Charset.defaultCharset();
+        InputStream stream = data==null? null : new ByteArrayInputStream(data.getBytes(encoding));
+        setDataStream(stream);
+    }
+    
     private NodeAttribute getFileAttribute(String suffix) throws DataFileException
     {
         Node owner = attribute.getOwner();
         String attrName = attribute.getName()+"."+suffix;
-        NodeAttribute fileAttr = owner.getNodeAttribute(attrName);
+        NodeAttribute fileAttr = owner.getAttr(attrName);
         if (fileAttr==null)
             throw new DataFileException(String.format(
                     "Attribute (%s) not found in the node (%s)"
@@ -235,15 +269,18 @@ public class DataFileValueHandler extends AbstractAttributeValueHandler implemen
 
         NodeAttribute checksumAttr = new NodeAttributeImpl(
                 attribute.getName()+"."+CHECKSUM_SUFFIX, Long.class, null, null);
+        
+        NodeAttribute encodingAttr = new NodeAttributeImpl(
+                attribute.getName()+"."+ENCODING_SUFFIX, Charset.class, null, null);
 
-        return Arrays.asList(filenameAttr, mimeTypeAttr, sizeAttr, checksumAttr);
+        return Arrays.asList(filenameAttr, mimeTypeAttr, sizeAttr, checksumAttr, encodingAttr);
     }
 
     private NodeAttribute getOrCreateAttribute(String suffix, Class type) throws DataFileException
     {
         String name = attribute.getName()+"."+suffix;
         Node owner = attribute.getOwner();
-        NodeAttribute attr = owner.getNodeAttribute(name);
+        NodeAttribute attr = owner.getAttr(name);
         if (attr==null)
         {
             try

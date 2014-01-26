@@ -227,6 +227,7 @@ public class RavenCoreModule
         conf.add(new StringToTimeZoneConverter());
         conf.add(new TimeZoneToStringConverter());
         conf.add(new RecordToMapConverter());
+        conf.add(new DataFileToInputStreamConverter());
     }
     
     @SuppressWarnings("unchecked")
