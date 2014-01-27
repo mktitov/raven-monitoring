@@ -341,6 +341,7 @@ function createEditor(params) {
 function detectMode(mimeType) {
   var mode = null
   if (mimeType==='text/plain') mode = 'text'
+  else if (mimeType==='text/gsp') mode = 'jsp'
   else mode = mimeType.split('/')[1] 
   return mode
 }
