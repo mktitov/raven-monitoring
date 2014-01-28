@@ -30,5 +30,10 @@ public interface Request {
     public String getContextPath();
     public String getAppPath();
     public String getMethod();
+    /**
+     * Returns the value of the <b>If-Modified-Since</b> header encoded in long or -1 if value for this header
+     * not assigned
+     */
+    public long getIfModifiedSince();
     public InputStream getContent() throws IOException;
 }

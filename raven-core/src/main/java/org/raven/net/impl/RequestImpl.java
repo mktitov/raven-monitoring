@@ -71,4 +71,8 @@ public class RequestImpl implements Request {
     public String getAppPath() {
         return httpRequest.getContextPath();
     }
+
+    public long getIfModifiedSince() {
+        return httpRequest.getDateHeader("If-Modified-Since");
+    }
 }

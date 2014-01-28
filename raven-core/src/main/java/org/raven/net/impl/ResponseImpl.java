@@ -26,11 +26,13 @@ public class ResponseImpl implements Response {
     private final String contentType;
     private final Object content;
     private final Map<String, String> headers;
+    private final Long lastModified;
 
-    public ResponseImpl(String contentType, Object content, Map<String, String> headers) {
+    public ResponseImpl(String contentType, Object content, Map<String, String> headers, Long lastModified) {
         this.contentType = contentType;
         this.content = content;
         this.headers = headers;
+        this.lastModified = lastModified;
     }
 
     public String getContentType() {
@@ -43,5 +45,9 @@ public class ResponseImpl implements Response {
 
     public Map<String, String> getHeaders() {
         return headers;
+    }
+
+    public Long getLastModified() {
+        return lastModified;
     }
 }

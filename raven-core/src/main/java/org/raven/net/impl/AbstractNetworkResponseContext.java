@@ -238,7 +238,7 @@ public abstract class AbstractNetworkResponseContext extends BaseNode implements
             bindingSupport.put(PARAMS_BINDING, params);
             Object content = doGetResponse(requesterIp, params);
             Map<String, String> headers = (Map<String, String>) params.get(HEADERS_PARAM);
-            return new ResponseImpl(responseContentType, content, headers);
+            return new ResponseImpl(responseContentType, content, headers, null);
         } finally {
             requestsStat.markOperationProcessingEnd(operationStart);
             bindingSupport.reset();

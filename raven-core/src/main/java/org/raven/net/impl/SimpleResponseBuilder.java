@@ -37,6 +37,11 @@ public class SimpleResponseBuilder extends AbstractResponseBuilder {
         return responseContent;
     }
 
+    @Override
+    protected Long doGetLastModified() {
+        return null;
+    }
+
     public Object getResponseContent() {
         return responseContent;
     }

@@ -45,7 +45,12 @@ public class FileResponseBuilderTest extends RavenCoreTestCase {
     @Test
     public void simpleFileTest() throws Exception {
         byte[] data = "test".getBytes();
+        assertNull(builder.doGetLastModified());
+        long curTime = System.currentTimeMillis();
         builder.getFile().setDataStream(new ByteArrayInputStream(data));
+        Long lastModified = builder.doGetLastModified();
+        assertNotNull(lastModified);
+        assertTrue(lastModified >= curTime);
         assertTrue(builder.start());
         Object resp = builder.buildResponseContent(null, null);
         assertNotNull(resp);
@@ -57,11 +62,12 @@ public class FileResponseBuilderTest extends RavenCoreTestCase {
     @Test
     public void templateTest() throws Exception {
         builder.getFile().setMimeType(FileResponseBuilder.GSP_MIME_TYPE);
+        assertNull(builder.doGetLastModified());
         builder.getFile().setDataString("${node.name}");
+        assertNull(builder.doGetLastModified());
         assertTrue(builder.start());
         Object resp = builder.buildResponseContent(null, null);
         assertNotNull(resp);
-        String.class.isAssignableFrom(null);
         assertTrue(resp instanceof Writable);
         assertEquals(NODE_NAME, resp.toString());
         Template template = builder.getResponseTemplate();
@@ -74,8 +80,12 @@ public class FileResponseBuilderTest extends RavenCoreTestCase {
         assertEquals(NODE_NAME, builder.buildResponseContent(null, null).toString());
         assertSame(template, builder.getResponseTemplate());
         
+        Long lastModified = builder.getLastModified();
         builder.getFile().setMimeType("text/html");
+        assertEquals(lastModified, builder.getLastModified());
+        assertEquals(lastModified, builder.doGetLastModified());
         builder.getFile().setMimeType(FileResponseBuilder.GSP_MIME_TYPE);
+        assertEquals(lastModified, builder.getLastModified());
         assertEquals(NODE_NAME, builder.buildResponseContent(null, null).toString());
         assertNotSame(template, builder.getResponseTemplate());
         template = builder.getResponseTemplate();

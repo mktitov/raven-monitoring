@@ -15,6 +15,9 @@
  */
 package org.raven.net.impl;
 
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.raven.annotations.Parameter;
 import org.raven.auth.UserContext;
 import org.raven.auth.impl.AccessRight;
@@ -72,12 +75,18 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
     {
         long ts = requestsStat.markOperationProcessingStart();
         try {
-            paramsSupport.checkParameters(this, responseContext.getRequest().getParams());
+            final long ifModifiedSince = responseContext.getRequest().getIfModifiedSince();
             try {
-                return new ResponseImpl(
-                        responseContentType, 
-                        buildResponseContent(user, responseContext), 
-                        responseContext.getHeaders());
+                Long lastModified = doGetLastModified();
+                if (ifModifiedSince>=0 && lastModified!=null && lastModified <= ifModifiedSince)
+                    return Response.NOT_MODIFIED;
+                else {
+                    paramsSupport.checkParameters(this, responseContext.getRequest().getParams());
+                    return new ResponseImpl(
+                            responseContentType, 
+                            buildResponseContent(user, responseContext), 
+                            responseContext.getHeaders(), lastModified);
+                }
             } catch (Exception e) {
                 if (isLogLevelEnabled(LogLevel.ERROR))
                     getLogger().error("Problem with building response", e);
@@ -86,7 +95,11 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
         } finally {
             requestsStat.markOperationProcessingEnd(ts);
         }
-                
+    }
+    
+    private long getLastModifiedAsLong() throws Exception {
+        Long _lastModified = doGetLastModified();
+        return _lastModified==null? Long.MAX_VALUE : _lastModified;
     }
 
     public AccessRight getAccessRight() {
@@ -104,6 +117,7 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
         else return null;
     }
     
+    protected abstract Long doGetLastModified() throws Exception;
     protected abstract Object buildResponseContent(UserContext user, ResponseContext responseContext) throws Exception;
 
     public Node getResponseBuilderNode() {
@@ -130,4 +144,14 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
         this.minimalAccessRight = minimalAccessRight;
     }
 
+    @Parameter(readOnly = true)
+    public String getLastModifiedDate() {
+        try {
+            return doGetLastModified()==null? null : new Date(doGetLastModified()).toString();
+        } catch (Exception ex) {
+            if (isLogLevelEnabled(LogLevel.ERROR))
+                logger.error("Error in getLastModifiedDate", ex);
+            return null;
+        }
+    }
 }

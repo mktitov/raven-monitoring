@@ -47,6 +47,9 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
     @NotNull @Parameter(valueHandlerType = DataFileValueHandlerFactory.TYPE)
     private DataFile file;
     
+    @Parameter
+    private Long lastModified;
+    
     private AtomicReference<Template> template;
 
     @Override
@@ -65,6 +68,12 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
     protected void doStop() throws Exception {
         super.doStop();
         template.set(null);
+    }
+
+    @Override
+    protected Long doGetLastModified() throws Exception {
+//        NodeAttribute mimeTypeAttr = getAttr(MIME_TYPE_ATTR); 
+        return GSP_MIME_TYPE.equals(getFile().getMimeType())? null : lastModified;
     }
 
     @Override
@@ -95,6 +104,14 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
         this.file = file;
     }
     
+    public Long getLastModified() {
+        return lastModified;
+    }
+
+    public void setLastModified(Long lastModified) {
+        this.lastModified = lastModified;
+    }
+    
     public Template getResponseTemplate() {
         return template.get();
     }
@@ -117,6 +134,8 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 getLogger().debug("Reseting template...");
             template.set(null);
+            if (FILE_ATTR.equals(attr.getName()))
+                setLastModified(System.currentTimeMillis());
         } 
     }
 }

@@ -22,8 +22,23 @@ import java.util.Map;
  * @author Mikhail Titov
  */
 public interface Response {
+    public final static Response NOT_MODIFIED = new Response() {
+        public String getContentType() {
+            throw new UnsupportedOperationException("Not supported operation");
+        }
+        public Object getContent() {
+            throw new UnsupportedOperationException("Not supported operation");
+        }
+        public Map<String, String> getHeaders() {
+            throw new UnsupportedOperationException("Not supported operation");
+        }
+        public Long getLastModified() {
+            throw new UnsupportedOperationException("Not supported operation");
+        }
+    };
     public String getContentType();
     public Object getContent();
 //    public Charset getContentEncoding();
     public Map<String, String> getHeaders();
+    public Long getLastModified();
 }
