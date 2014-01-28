@@ -227,7 +227,7 @@ public class TemporaryFileManagerNode extends BaseNode implements TemporaryFileM
             file = File.createTempFile(tempFilePrefix, ".tmp", dirFile);
             if (fileInfo!=null)
                 streamsToClose.addAll(fileInfo.streams);
-            fileInfo = new FileInfo(requester, System.currentTimeMillis(), key, file, contentType);
+            fileInfo = new FileInfo(requester, System.currentTimeMillis(), key, file, contentType, null);
             files.put(key, fileInfo);
             fileInfo.initialized.set(true);
         } finally {
@@ -236,7 +236,14 @@ public class TemporaryFileManagerNode extends BaseNode implements TemporaryFileM
         return file;
     }
 
-    public DataSource saveFile(Node creator, String key, InputStream stream, String contentType, boolean rewrite)
+    public DataSource saveFile(Node creator, String key, InputStream stream, String contentType, boolean rewrite) 
+        throws IOException
+    {
+        return saveFile(creator, key, stream, contentType, rewrite, null);
+    }
+    
+    public DataSource saveFile(Node creator, String key, InputStream stream, String contentType, boolean 
+            rewrite, String filename)
         throws IOException
     {
         lock.writeLock().lock();
@@ -250,7 +257,7 @@ public class TemporaryFileManagerNode extends BaseNode implements TemporaryFileM
             if (fileInfo!=null)
                 streamsToClose.addAll(fileInfo.streams);
             fileInfo = new FileInfo(
-                    creator, System.currentTimeMillis(), key, tempFile, contentType);
+                    creator, System.currentTimeMillis(), key, tempFile, contentType, filename);
             files.put(key, fileInfo);
         } finally {
             lock.writeLock().unlock();
@@ -305,17 +312,18 @@ public class TemporaryFileManagerNode extends BaseNode implements TemporaryFileM
         private final long time;
         private final String key;
         private final File file;
+        private final String filename;
         private final String contentType;
         private final AtomicBoolean initialized = new AtomicBoolean(false);
         private final List<InputStream> streams = new LinkedList<InputStream>();
 
-        public FileInfo(Node creator, long time, String key, File file, String contentType)
-        {
+        public FileInfo(Node creator, long time, String key, File file, String contentType, String filename) {
             this.time = time;
             this.key = key;
             this.file = file;
             this.creator = creator;
             this.contentType = contentType;
+            this.filename = filename;
         }
     }
 
@@ -364,7 +372,9 @@ public class TemporaryFileManagerNode extends BaseNode implements TemporaryFileM
             lock.readLock().lock();
             try {
                 FileInfo fileInfo = files.get(key);
-                return fileInfo==null? null : fileInfo.file.getAbsolutePath();
+                if (fileInfo==null) return null;
+                else 
+                    return fileInfo.filename!=null? fileInfo.filename : fileInfo.file.getAbsolutePath();
             } finally {
                 lock.readLock().unlock();
             }

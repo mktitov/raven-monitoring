@@ -17,6 +17,9 @@
 
 package org.raven.net;
 
+import org.raven.cache.TemporaryFileManager;
+import org.raven.net.impl.NetworkResponseServiceNode;
+
 /**
  *
  * @author Mikhail Titov
@@ -28,5 +31,10 @@ public interface NetworkResponseService extends ResponseContextProvider
     public NetworkResponseNode getNetworkResponseServiceNode();
 
     public void setNetworkResponseServiceNode(NetworkResponseNode networkResponseNode);
+    /**
+     * Returns the temporary file manager that will be used to store uploaded files or null if temporary file
+     * manager not assigned to {@link NetworkResponseServiceNode}
+     */
+    public TemporaryFileManager getTemporaryFileManager() throws NetworkResponseServiceExeption;
 
 }

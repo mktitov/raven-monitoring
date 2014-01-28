@@ -28,6 +28,7 @@ public interface Request {
     public Map<String, Object> getHeaders();
     public Map<String, Object> getParams();
     public String getContextPath();
+    public String getAppPath();
     public String getMethod();
     public InputStream getContent() throws IOException;
 }

@@ -19,7 +19,6 @@ package org.raven.cache;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import javax.activation.DataSource;

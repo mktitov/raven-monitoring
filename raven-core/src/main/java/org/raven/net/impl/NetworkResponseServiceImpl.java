@@ -17,6 +17,7 @@
 
 package org.raven.net.impl;
 
+import org.raven.cache.TemporaryFileManager;
 import org.raven.net.NetworkResponseNode;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.NetworkResponseServiceExeption;
@@ -72,4 +73,8 @@ public class NetworkResponseServiceImpl implements NetworkResponseService
         return serviceNode;
     }
 
+    public TemporaryFileManager getTemporaryFileManager() throws NetworkResponseServiceExeption {
+        NetworkResponseNode serviceNode = checkNetworkResponseServiceNode();
+        return ((NetworkResponseServiceNode)serviceNode).getTemporaryFileManager();
+    }
 }

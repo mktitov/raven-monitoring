@@ -38,6 +38,7 @@ public interface BindingNames
     public static final String REQUESTER_BINDING = "requester";
     public static final String REQUEST_BINDING = "request";
     public static final String RESPONSE_BINDING = "response";
+    public static final String APP_PATH = "appPath";
     public static final String SESSIONATTRIBUTES_BINDING = "sessAttrs";
     public static final String EXCEPTION_BINDING = "exception";
     public static final String USER_CONTEXT_CONFIGURATOR_BINDING = "user";
@@ -47,4 +48,8 @@ public interface BindingNames
     public static final String HOST_BINDING = "host";
     public static final String VALUE_BINDING = "value";
     public static final String RECORD_SCHEMA_BINDING = "recordSchema";
+    public static final String INCLUDE_JQUERY = "includeJQuery";
+    public static final String INCLUDE_JQUERY_CSS = "includeJQueryCSS";
+    public static final String INCLUDE_JQUERY_UI = "includeJQueryUI";
+    public static final String INCLUDE_JQUERY_ALL = "includeJQueryAll";
 }

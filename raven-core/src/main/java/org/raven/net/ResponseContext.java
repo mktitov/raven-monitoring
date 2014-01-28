@@ -18,6 +18,7 @@ package org.raven.net;
 import java.util.Map;
 import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
+import org.slf4j.Logger;
 
 /**
  * Response context for SRI (simple response interface)
@@ -56,6 +57,14 @@ public interface ResponseContext {
      * don't use the result of this method to build response
      */
     public ResponseBuilder getResponseBuilder();
+    /**
+     * Returns the response service logger
+     */
+    public Logger getLogger();
+    /**
+     * Returns the response builder logger
+     */
+    public Logger getResponseBuilderLogger();
 //    public String getPath();
 //    public String getBuilderPath();
 //    public String getSubpath();

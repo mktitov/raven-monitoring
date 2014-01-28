@@ -38,6 +38,22 @@ public interface TemporaryFileManager extends Node
      * @param rewrite if true and manager have the temporary file with the same key, then the
      *      existent file will be rewrote by this one. If false but manager contains the temporary
      *      file with the same key, then the method returns the data source for the existent file.
+     * @param filename if not null then DataSource.getName() returns this value else absolute path of the
+     *      temporary file in which stored <b>stream</b>
+     * @throws IOException
+     */
+    public DataSource saveFile(Node requester, String key, InputStream stream, String contentType
+            , boolean rewrite, String filename)
+        throws IOException;
+    /**
+     * Stores inputStream to the temporary file and returns the DataSource for created file
+     * @param requester the node that creates the temporary file
+     * @param key the unique key for this temporary file
+     * @param stream the stream from which temporary file will created
+     * @param contentType the mime type of the stream content
+     * @param rewrite if true and manager have the temporary file with the same key, then the
+     *      existent file will be rewrote by this one. If false but manager contains the temporary
+     *      file with the same key, then the method returns the data source for the existent file.
      * @throws IOException
      */
     public DataSource saveFile(Node requester, String key, InputStream stream, String contentType

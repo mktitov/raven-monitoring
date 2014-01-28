@@ -28,12 +28,19 @@ import org.raven.net.Response;
 import org.raven.net.ResponseBuilder;
 import org.raven.net.ResponseContext;
 import org.raven.tree.impl.LoggerHelper;
+import org.slf4j.Logger;
 
 /**
  *
  * @author Mikhail Titov
  */
 public class ResponseContextImpl implements ResponseContext {
+    public final static String INCLUDE_JQUERY_STR = 
+            "<script src=\"%s/jquery/jquery-1.10.1.min.js\"></script>";
+    public final static String INCLUDE_JQUERY_CSS_STR = 
+            "<link rel=\"%s/stylesheet\" href=\"jquery/themes/base/jquery.ui.all.css\"/>";
+    public final static String INCLUDE_JQUERY_UI_STR = 
+            "<script src=\"%s/jquery/ui/jquery-ui.js\"></script>";
     private final Request request;
 //    private final String contextPath;
     private final String builderPath;
@@ -43,6 +50,7 @@ public class ResponseContextImpl implements ResponseContext {
     private final LoginService loginService;
     private final ResponseBuilder responseBuilder;
     private final LoggerHelper logger;
+    private final LoggerHelper responseBuilderLogger;
     private final NetworkResponseServiceNode serviceNode;
     private Map<String, String> headers;
 
@@ -57,6 +65,7 @@ public class ResponseContextImpl implements ResponseContext {
         this.responseBuilder = responseBuilder;
         this.serviceNode = serviceNode;
         this.logger = new LoggerHelper(serviceNode, "["+requestId+"] ");
+        this.responseBuilderLogger = new LoggerHelper(responseBuilder.getResponseBuilderNode(), "["+requestId+"] ");
     }
     
     public LoginService getLoginService() {
@@ -69,6 +78,14 @@ public class ResponseContextImpl implements ResponseContext {
 
     public Request getRequest() {
         return request;
+    }
+
+    public Logger getLogger() {
+        return logger;
+    }
+
+    public LoggerHelper getResponseBuilderLogger() {
+        return responseBuilderLogger;
     }
 
     public Map<String, String> getHeaders() {
@@ -105,7 +122,10 @@ public class ResponseContextImpl implements ResponseContext {
                 try {
                     bindingSupport.put(BindingNames.USER_CONTEXT, user);
                     bindingSupport.put(BindingNames.REQUEST_BINDING, request);
-                    bindingSupport.put(BindingNames.RESPONSE_BINDING, this);                
+                    bindingSupport.put(BindingNames.RESPONSE_BINDING, request.getAppPath());
+                    bindingSupport.put(BindingNames.INCLUDE_JQUERY, preparePath(INCLUDE_JQUERY_STR));
+                    bindingSupport.put(BindingNames.INCLUDE_JQUERY_CSS, preparePath(INCLUDE_JQUERY_CSS_STR));
+                    bindingSupport.put(BindingNames.INCLUDE_JQUERY_UI, preparePath(INCLUDE_JQUERY_UI_STR));
                     Response response = responseBuilder.buildResponse(user, this);
                     return response;
                 } finally {
@@ -127,6 +147,10 @@ public class ResponseContextImpl implements ResponseContext {
                     , e);
             throw e;
         }
+    }
+    
+    private String preparePath(String path) {
+        return String.format(path, request.getAppPath());
     }
     
     private static String paramsToString(Map<String, Object> params) {

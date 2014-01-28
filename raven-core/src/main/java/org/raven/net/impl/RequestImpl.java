@@ -67,4 +67,8 @@ public class RequestImpl implements Request {
     public InputStream getContent() throws IOException {
         return httpRequest.getInputStream();
     }
+
+    public String getAppPath() {
+        return httpRequest.getContextPath();
+    }
 }

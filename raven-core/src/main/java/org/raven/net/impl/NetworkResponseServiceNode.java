@@ -26,6 +26,8 @@ import org.apache.commons.lang.StringUtils;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.auth.LoginService;
+import org.raven.cache.TemporaryFileManager;
+import org.raven.cache.TemporaryFileManagerValueHandlerFactory;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.IfNode;
 import org.raven.log.LogLevel;
@@ -68,12 +70,16 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
     public static final String NAMED_PARAMETER_TYPE_ATTR = "namedParameterType";
     
     private final static NetRespAnonymousLoginService netRespAnonLoginService = new NetRespAnonymousLoginService();
+    
+    @Parameter(valueHandlerType = TemporaryFileManagerValueHandlerFactory.TYPE)
+    private TemporaryFileManager temporaryFileManager;
 
     @Parameter(readOnly=true)
     private AtomicLong requestsCount;
 
     @Parameter(readOnly=true)
     private AtomicLong requestsWithErrors;
+    
     
     private BindingSupportImpl bindingSupport;
 
@@ -117,6 +123,14 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
     {
         super.doStop();
         networkResponseService.setNetworkResponseServiceNode(null);
+    }
+
+    public TemporaryFileManager getTemporaryFileManager() {
+        return temporaryFileManager;
+    }
+
+    public void setTemporaryFileManager(TemporaryFileManager temporaryFileManager) {
+        this.temporaryFileManager = temporaryFileManager;
     }
 
     @Override
