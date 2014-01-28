@@ -178,6 +178,8 @@ public class NetworkResponseServlet extends HttpServlet  {
     {
         if (serviceResponse.getContent() == null) {
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+        } else if (serviceResponse == Response.NOT_MODIFIED) {
+            response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
         } else {
             Map<String, String> headers = serviceResponse.getHeaders();
             if (headers != null) 
@@ -202,6 +204,8 @@ public class NetworkResponseServlet extends HttpServlet  {
                     IOUtils.closeQuietly(contentStream);
                 }
             }
+            if (serviceResponse.getLastModified()!=null) 
+                response.setDateHeader("Last-Modified", serviceResponse.getLastModified());
             response.setStatus(HttpServletResponse.SC_OK);
         }
     }
