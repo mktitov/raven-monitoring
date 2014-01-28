@@ -82,12 +82,12 @@ $(document).ready(function(){
   })
 })
 
-function getDropEffect(ev) {
-  var dropEffect = ev.originalEvent.dataTransfer.dropEffect
-  if (!dropEffect || dropEffect==='none') 
-    dropEffect = ev.altKey? 'copy' : 'move'
-  return dropEffect  
-}
+//function getDropEffect(ev) {
+//  var dropEffect = ev.originalEvent.dataTransfer.dropEffect
+//  if (!dropEffect || dropEffect==='none') 
+//    dropEffect = ev.altKey || ev.ctrlKey? 'copy' : 'move'
+//  return dropEffect  
+//}
 
 //function transferNode(sourceNodePath, targetNodePath, isMoveOp, askNewName, positionNodePath, after) {
 //  var newName=null;

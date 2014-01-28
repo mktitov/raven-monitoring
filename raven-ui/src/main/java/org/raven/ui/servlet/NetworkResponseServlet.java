@@ -22,12 +22,21 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
+import javax.activation.DataSource;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.catalina.CometEvent;
+import org.apache.catalina.CometProcessor;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.fileupload.FileItemIterator;
+import org.apache.commons.fileupload.FileItemStream;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.fileupload.util.Streams;
 import org.apache.commons.io.IOUtils;
 import org.apache.tapestry5.ioc.Registry;
 import org.raven.auth.AnonymousLoginService;
@@ -35,9 +44,11 @@ import org.raven.auth.AuthenticationFailedException;
 import org.raven.auth.LoginException;
 import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
+import org.raven.cache.TemporaryFileManager;
 import org.raven.net.AccessDeniedException;
 import org.raven.net.ContextUnavailableException;
 import org.raven.net.NetworkResponseService;
+import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.net.NetworkResponseServiceUnavailableException;
 import org.raven.net.Request;
 import org.raven.net.RequiredParameterMissedException;
@@ -52,9 +63,10 @@ import org.weda.services.TypeConverter;
  *
  * @author Mikhail Titov
  */
-public class NetworkResponseServlet extends HttpServlet {
+public class NetworkResponseServlet extends HttpServlet  {
 
     private static final long serialVersionUID = 3540687833508728534L;
+    private final AtomicLong fileUploadsCounter = new AtomicLong();
 
     private class BadRequestException extends Exception {
         public BadRequestException() {
@@ -106,7 +118,9 @@ public class NetworkResponseServlet extends HttpServlet {
         } else return responseContext.getLoginService().login(null, null, null);
     }
 
-    private Map<String, Object> extractParams(HttpServletRequest request) {
+    private Map<String, Object> extractParams(HttpServletRequest request, NetworkResponseService responseService) 
+            throws Exception 
+    {
         Map<String, Object> params = new HashMap<String, Object>();
         Enumeration<String> reqParams = request.getParameterNames();
         if (reqParams != null) 
@@ -114,7 +128,38 @@ public class NetworkResponseServlet extends HttpServlet {
                 String paramName = reqParams.nextElement();
                 params.put(paramName, request.getParameter(paramName));
             }
+        if (ServletFileUpload.isMultipartContent(request)) {
+            TemporaryFileManager tempFileManager = responseService.getTemporaryFileManager();
+            if (tempFileManager==null) 
+                throw new NetworkResponseServiceExeption("Can't store uploaded file because of "
+                        + "TemporaryFileManager not assigned to NetworkResponseServiceNode");
+            ServletFileUpload upload = new ServletFileUpload();
+            FileItemIterator it = upload.getItemIterator(request);
+            while (it.hasNext()) {
+                FileItemStream item = it.next();
+                String name = item.getFieldName();
+                if (item.isFormField())
+                    params.put(name, Streams.asString(item.openStream(), getTextFieldCharset(item)));
+                else {
+                    DataSource tempFile = tempFileManager.saveFile(
+                            responseService.getNetworkResponseServiceNode(), 
+                            "sri_fileupload_"+fileUploadsCounter.incrementAndGet(), 
+                            item.openStream(), item.getContentType(), true, item.getName());
+                    params.put(item.getFieldName(), tempFile);
+                }
+            }
+        }
         return params;
+    }
+    
+    private String getTextFieldCharset(FileItemStream item) {
+        Iterator<String> elems = item.getHeaders().getHeaders("content-type");
+        while (elems.hasNext()) {
+            String elem = elems.next();
+            if (elem.startsWith("charset")) 
+                return elem.split("=")[1];
+        }
+        return "utf-8";
     }
     
     private Map<String, Object> extractHeaders(HttpServletRequest request) {
@@ -183,15 +228,16 @@ public class NetworkResponseServlet extends HttpServlet {
             throws ServletException, IOException {
         Registry registry = RavenRegistry.getRegistry();
         NetworkResponseService responseService = registry.getService(NetworkResponseService.class);
+        ResponseContext responseContext = null;
         try {
             checkRequest(request, response);
             String context = request.getPathInfo().substring(1);
-            Map<String, Object> params = extractParams(request);
+            Map<String, Object> params = extractParams(request, responseService);
             Map<String, Object> headers = extractHeaders(request);
             Request serviceRequest = new RequestImpl(request.getRemoteAddr(), params, headers, context, 
                     request.getMethod().toUpperCase(), request);
-            ResponseContext responseContext = responseService.getResponseContext(serviceRequest);
-
+            responseContext = responseService.getResponseContext(serviceRequest);
+            
             UserContext user = checkAuth(request, response, responseContext, context);
 //            if (!checkAuth(request, response, responseService, context))
 //                return;
@@ -203,6 +249,7 @@ public class NetworkResponseServlet extends HttpServlet {
             Response result = responseContext.getResponse(user);
             processServiceResponse(request, response, result, registry);
         } catch (Throwable e) {
+            boolean rethrow = false;
             if (e instanceof NetworkResponseServiceUnavailableException) {
                 response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, e.getMessage());
             } else if (e instanceof ContextUnavailableException) {
@@ -215,8 +262,19 @@ public class NetworkResponseServlet extends HttpServlet {
                 response.setHeader("WWW-Authenticate", "BASIC realm=\"RAVEN\"");
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
             } else {
-                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+                rethrow = true;
+//                StringWriter buffer = new StringWriter();
+//                PrintWriter writer = new PrintWriter(buffer);
+//                e.printStackTrace(writer);
+//                String mess = e.getMessage()==null? "" : e.getMessage();
+//                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, 
+//                        mess+"<br>"+"<pre style='font-size: 10pt; font-style: normal'>"+buffer.toString()+"</pre>");
             }
+            if (responseContext!=null && responseContext.getResponseBuilderLogger().isErrorEnabled()) 
+                responseContext.getResponseBuilderLogger().error(
+                        String.format("Request (%s) processing error", request.getPathInfo()), e);
+            if (rethrow)
+                throw new ServletException(e);
         }
     }
 

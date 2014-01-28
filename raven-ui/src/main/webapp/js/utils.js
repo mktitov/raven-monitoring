@@ -76,3 +76,9 @@ function removeInsertPlaces() {
     top.frame2.dragoverRow.parent().find('.insert-node-place').remove()
 }
 
+function getDropEffect(ev) {
+  var dropEffect = ev.originalEvent.dataTransfer.dropEffect
+  if (!dropEffect || dropEffect==='none') 
+    dropEffect = ev.altKey || ev.ctrlKey? 'copy' : 'move'
+  return dropEffect  
+}

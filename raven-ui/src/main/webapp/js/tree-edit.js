@@ -155,9 +155,9 @@ function configureInsertPlace(insElem, nodePath, after) {
   })
 }
 
-function getDropEffect(ev) {
-  var dropEffect = ev.originalEvent.dataTransfer.dropEffect
-  if (!dropEffect || dropEffect==='none') 
-    dropEffect = ev.altKey? 'copy' : 'move'
-  return dropEffect  
-}
+//function getDropEffect(ev) {
+//  var dropEffect = ev.originalEvent.dataTransfer.dropEffect
+//  if (!dropEffect || dropEffect==='none') 
+//    dropEffect = ev.altKey? 'copy' : 'move'
+//  return dropEffect  
+//}
