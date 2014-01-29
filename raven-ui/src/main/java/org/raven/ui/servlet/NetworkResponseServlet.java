@@ -30,8 +30,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.catalina.CometEvent;
-import org.apache.catalina.CometProcessor;
+import javax.servlet.http.HttpSession;
+//import org.apache.catalina.CometEvent;
+//import org.apache.catalina.CometProcessor;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
@@ -98,24 +99,34 @@ public class NetworkResponseServlet extends HttpServlet  {
         final LoginService loginService = responseContext.getLoginService();
         if (!loginService.isLoginAllowedFromIp(request.getRemoteAddr()))
             throw new AccessDeniedException();
-        if (!(loginService instanceof AnonymousLoginService)) {
+        if (loginService instanceof AnonymousLoginService)
+            return responseContext.getLoginService().login(null, null, null);        
+        UserContext userContext = null;
+        String userContextAttrName = "sri_user_context_"+loginService.getId();
+        if (responseContext.isSessionAllowed()) {
+            HttpSession session = request.getSession(false);
+            if (session!=null) 
+                userContext = (UserContext) session.getAttribute(userContextAttrName);                
+        }
+        if (userContext==null) {
             String requestAuth = request.getHeader("Authorization");
             if (requestAuth == null) throw new UnauthoriedException();
             else {
                 String userAndPath = new String(Base64.decodeBase64(requestAuth.substring(6).getBytes()));
                 String elems[] = userAndPath.split(":");
-                UserContext user = responseContext.getLoginService().login(elems[0], elems[1], request.getRemoteAddr());
-                if (responseContext.isAccessGranted(user)) return user;
+                userContext = responseContext.getLoginService().login(elems[0], elems[1], request.getRemoteAddr());
+                if (responseContext.isAccessGranted(userContext)) {
+                    if (responseContext.isSessionAllowed()) {
+                        if (responseContext.getResponseBuilderLogger().isDebugEnabled())
+                            responseContext.getResponseBuilderLogger().debug("Created new session for user: "+userContext);
+                        request.getSession().setAttribute(userContextAttrName, userContext);
+                    }
+                }
                 else throw new AccessDeniedException();
-//                if (elems.length!=2
-//                    || !contextAuth.getUser().equals(elems[0])
-//                    || !contextAuth.getPassword().equals(elems[1]))
-//                {
-//                    throw new AccessDeniedException();
-//                } 
-//                return true;
             }
-        } else return responseContext.getLoginService().login(null, null, null);
+        } else if (responseContext.getResponseBuilderLogger().isDebugEnabled())
+            responseContext.getResponseBuilderLogger().debug("User ({}) already logged in. Skiping auth.", userContext);
+        return userContext;
     }
 
     private Map<String, Object> extractParams(HttpServletRequest request, NetworkResponseService responseService) 
@@ -176,9 +187,7 @@ public class NetworkResponseServlet extends HttpServlet  {
     private void processServiceResponse(HttpServletRequest request, HttpServletResponse response,
             Response serviceResponse, Registry registry) throws IOException 
     {
-        if (serviceResponse.getContent() == null) {
-            response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-        } else if (serviceResponse == Response.NOT_MODIFIED) {
+        if (serviceResponse == Response.NOT_MODIFIED) {
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
         } else {
             Map<String, String> headers = serviceResponse.getHeaders();
@@ -188,25 +197,29 @@ public class NetworkResponseServlet extends HttpServlet  {
             String charset = getCharset(request);
             if (serviceResponse.getContentType().toUpperCase().startsWith("TEXT")) 
                 response.setCharacterEncoding(charset);
-            response.setContentType(serviceResponse.getContentType());
-            TypeConverter converter = registry.getService(TypeConverter.class);
-            Object content = serviceResponse.getContent();
-            if (content instanceof Writable) {
-                Writable writable = (Writable) content;
-                writable.writeTo(response.getWriter());
-            } else {
-                OutputStream out = response.getOutputStream();
-                InputStream contentStream = converter.convert(InputStream.class, serviceResponse.getContent(), charset);
-                try {
-                    IOUtils.copy(contentStream, out);
-                } finally {
-                    IOUtils.closeQuietly(out);
-                    IOUtils.closeQuietly(contentStream);
-                }
-            }
+            response.setContentType(serviceResponse.getContentType());            
             if (serviceResponse.getLastModified()!=null) 
                 response.setDateHeader("Last-Modified", serviceResponse.getLastModified());
-            response.setStatus(HttpServletResponse.SC_OK);
+            response.addHeader("Cache-control", "no-cache");
+            response.addHeader("Pragma", "no-cache");
+            TypeConverter converter = registry.getService(TypeConverter.class);
+            Object content = serviceResponse.getContent();
+            if (content!=null) {
+                if (content instanceof Writable) {
+                    Writable writable = (Writable) content;
+                    writable.writeTo(response.getWriter());
+                } else {
+                    OutputStream out = response.getOutputStream();
+                    InputStream contentStream = converter.convert(InputStream.class, serviceResponse.getContent(), charset);
+                    try {
+                        IOUtils.copy(contentStream, out);
+                    } finally {
+                        IOUtils.closeQuietly(out);
+                        IOUtils.closeQuietly(contentStream);
+                    }
+                }
+            }
+            response.setStatus(content!=null? HttpServletResponse.SC_OK : HttpServletResponse.SC_NO_CONTENT);
         }
     }
 
@@ -241,7 +254,6 @@ public class NetworkResponseServlet extends HttpServlet  {
             Request serviceRequest = new RequestImpl(request.getRemoteAddr(), params, headers, context, 
                     request.getMethod().toUpperCase(), request);
             responseContext = responseService.getResponseContext(serviceRequest);
-            
             UserContext user = checkAuth(request, response, responseContext, context);
 //            if (!checkAuth(request, response, responseService, context))
 //                return;
