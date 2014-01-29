@@ -16,6 +16,7 @@
 package org.raven.net.impl;
 
 import groovy.lang.Writable;
+import groovy.text.SimpleTemplateEngine;
 import groovy.text.Template;
 import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
@@ -24,6 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.DataFile;
+import org.raven.tree.DataFileException;
 
 /**
  *
@@ -35,11 +37,8 @@ public class FileResponseBuilderTest extends RavenCoreTestCase {
     private FileResponseBuilder builder;
     
     @Before
-    public void prepare() {
-        builder = new FileResponseBuilder();
-        builder.setName(NODE_NAME);
-        testsNode.addAndSaveChildren(builder);
-        builder.setResponseContentType("text/html");
+    public void prepare() throws Exception {
+        builder = createBuilder(NODE_NAME, "text/html");
     }
     
     @Test
@@ -93,6 +92,48 @@ public class FileResponseBuilderTest extends RavenCoreTestCase {
         builder.getFile().setDataString("${node.name}");
         assertEquals(NODE_NAME, builder.buildResponseContent(null, null).toString());
         assertNotSame(template, builder.getResponseTemplate());
+    }
+    
+    @Test
+    public void extendsTemplateTest() throws Exception {
+        FileResponseBuilder rootBuilder = createBuilder("root", FileResponseBuilder.GSP_MIME_TYPE);
+        rootBuilder.getFile().setDataString("${node.name}-${body()}");
+        assertTrue(rootBuilder.start());
         
+        builder.getFile().setMimeType(FileResponseBuilder.GSP_MIME_TYPE);
+        builder.getFile().setDataString("${node.name}");
+        builder.setExtendsTemplate(rootBuilder);
+        assertTrue(builder.start());
+        
+        assertEquals("root-"+NODE_NAME, builder.buildResponseContent(null, null).toString());
+    }
+
+    @Test
+    public void extendsTemplateWithParamsTest() throws Exception {
+        FileResponseBuilder rootBuilder = createBuilder("root", FileResponseBuilder.GSP_MIME_TYPE);
+        rootBuilder.getFile().setDataString("${node.name}-${body(p:'test')}");
+        assertTrue(rootBuilder.start());
+        
+        builder.getFile().setMimeType(FileResponseBuilder.GSP_MIME_TYPE);
+        builder.getFile().setDataString("${p}");
+        builder.setExtendsTemplate(rootBuilder);
+        assertTrue(builder.start());
+        
+        assertEquals("root-test", builder.buildResponseContent(null, null).toString());
+    }
+    
+    @Test
+    public void exceptionTest() throws Exception {
+        Object res = new SimpleTemplateEngine().createTemplate("\n\n$a\n123").make();
+        System.out.println("RES: "+res.toString());
+    }
+
+    private FileResponseBuilder createBuilder(String nodeName, String contentType) throws DataFileException {
+        FileResponseBuilder fileBuilder = new FileResponseBuilder();
+        fileBuilder.setName(nodeName);
+        testsNode.addAndSaveChildren(fileBuilder);
+        fileBuilder.getFile().setMimeType(contentType);
+        fileBuilder.setResponseContentType("text/html");
+        return fileBuilder;
     }
 }

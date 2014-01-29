@@ -86,28 +86,19 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
 
     @Override
     protected Object buildResponseContent(UserContext user, ResponseContext responseContext) throws Exception {
-        if (!GSP_MIME_TYPE.equals(file.getMimeType()))
-            return file;
-        else {
-            Template _template = template.get();
-            if (_template==null) 
-                _template = compile();
-            if (_template==null) 
-                return "<<EMPTY TEMPLATE>>";
-            else {
-                Bindings bindings = new SimpleBindings();
-                formExpressionBindings(bindings);
-                bindings.put(BindingNames.NODE_BINDING, this);
-                bindings.put(BindingNames.LOGGER_BINDING, getLogger());
-                return _template.make(bindings);
-            }
-        }
+        Bindings bindings = new SimpleBindings();
+        formExpressionBindings(bindings);
+        return buildResponseContent(bindings);
     }
     
     public Object buildResponseContent(final Bindings bindings) throws Exception {
-        if (!GSP_MIME_TYPE.equals(file.getMimeType()))
+        if (!GSP_MIME_TYPE.equals(file.getMimeType())) {
+            if (bindings.containsKey("template_bodies") && isLogLevelEnabled(LogLevel.WARN))
+                getLogger().warn(String.format(
+                        "File response builder (%s) used as script ROOT template "
+                        + "but has mime type different from (%s)", getPath(), GSP_MIME_TYPE));
             return file;
-        else {
+        } else {
             Template _template = template.get();
             if (_template==null) 
                 _template = compile();
@@ -130,19 +121,20 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
                                 bodyBindings.putAll(params);
                             } else
                                 bodyBindings = bindings;
-                            addBodyBinding(bindings);
+                            addBinding(bodyBindings);
                             return thisTemplate.make(bodyBindings);
                         }
                     });
+                    return _extendsTemplate.buildResponseContent(bindings);
+                } else {
+                    addBinding(bindings);
+                    return _template.make(bindings);
                 }
-                bindings.put(BindingNames.NODE_BINDING, this);
-                bindings.put(BindingNames.LOGGER_BINDING, getLogger());
-                return _template.make(bindings);
             }
         }        
     }
     
-    private LinkedList getBodies(Bindings bindings, boolean create) {
+    private LinkedList getBodies(Map bindings, boolean create) {
         LinkedList bodies = (LinkedList) bindings.get("template_bodies");
         if (bodies==null && create) {
             bodies = new LinkedList();
@@ -151,13 +143,12 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
         return bodies;
     }
     
-    private void addBodyBinding(Bindings bindings) {
+    private void addBinding(Map bindings) {
+        bindings.put(BindingNames.NODE_BINDING, this);
+        bindings.put(BindingNames.LOGGER_BINDING, getLogger());
         LinkedList bodies = getBodies(bindings, false);
-        if (bodies != null) {
-            Object body = bodies.pop();
-            if (body!=null)
-                bindings.put("body", body);
-        }
+        if (bodies != null && !bodies.isEmpty()) 
+            bindings.put("body", bodies.pop());
     }
 
     public DataFile getFile() {
@@ -174,6 +165,14 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
 
     public void setLastModified(Long lastModified) {
         this.lastModified = lastModified;
+    }
+
+    public FileResponseBuilder getExtendsTemplate() {
+        return extendsTemplate;
+    }
+
+    public void setExtendsTemplate(FileResponseBuilder extendsTemplate) {
+        this.extendsTemplate = extendsTemplate;
     }
     
     public Template getResponseTemplate() {
