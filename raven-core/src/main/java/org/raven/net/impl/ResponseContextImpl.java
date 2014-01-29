@@ -52,6 +52,7 @@ public class ResponseContextImpl implements ResponseContext {
     private final LoggerHelper logger;
     private final LoggerHelper responseBuilderLogger;
     private final NetworkResponseServiceNode serviceNode;
+    private final boolean sessionAllowed;
     private Map<String, String> headers;
 
     public ResponseContextImpl(Request request, String builderPath, String subcontext, long requestId, 
@@ -66,6 +67,8 @@ public class ResponseContextImpl implements ResponseContext {
         this.serviceNode = serviceNode;
         this.logger = new LoggerHelper(serviceNode, "["+requestId+"] ");
         this.responseBuilderLogger = new LoggerHelper(responseBuilder.getResponseBuilderNode(), "["+requestId+"] ");
+        Boolean _sessionAllowed = responseBuilder.isSessionAllowed();
+        this.sessionAllowed = _sessionAllowed==null? false : _sessionAllowed;
     }
     
     public LoginService getLoginService() {
@@ -107,7 +110,11 @@ public class ResponseContextImpl implements ResponseContext {
             return (rights & needRights)==needRights;
         }
     }
-    
+
+    public boolean isSessionAllowed() {
+        return sessionAllowed;
+    }
+
     public Response getResponse(UserContext user) throws NetworkResponseServiceExeption {
         if (subcontext!=null && !subcontext.isEmpty())
             request.getParams().put(NetworkResponseServiceNode.SUBCONTEXT_PARAM, subcontext);

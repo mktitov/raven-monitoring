@@ -92,6 +92,11 @@ public class UserContextImpl implements UserContext
         return (getAccessForNode(node) & decodedRights) == decodedRights;
     }
 
+    @Override
+    public String toString() {
+        return "login: "+login+"; host: "+host+"; admin: "+admin+"; authenticator: "+authenticator;
+    }
+
     public HashMap<String, String> getResourcesList(Tree tree) {
         HashMap<String, String> rl = new HashMap<String, String>();
         for (AccessResource ar : policyManager.getAccessResourcesForUser(this).values()) {

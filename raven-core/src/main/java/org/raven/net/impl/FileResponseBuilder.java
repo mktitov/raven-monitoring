@@ -15,9 +15,13 @@
  */
 package org.raven.net.impl;
 
+import groovy.lang.Closure;
 import groovy.text.SimpleTemplateEngine;
 import groovy.text.Template;
 import java.io.Reader;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
@@ -31,6 +35,7 @@ import org.raven.tree.DataFile;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.DataFileValueHandlerFactory;
+import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.beans.ObjectUtils;
 
@@ -46,6 +51,9 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
     
     @NotNull @Parameter(valueHandlerType = DataFileValueHandlerFactory.TYPE)
     private DataFile file;
+    
+    @Parameter(valueHandlerType = NodeReferenceValueHandlerFactory.TYPE)
+    FileResponseBuilder extendsTemplate;
     
     @Parameter
     private Long lastModified;
@@ -93,6 +101,62 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
                 bindings.put(BindingNames.LOGGER_BINDING, getLogger());
                 return _template.make(bindings);
             }
+        }
+    }
+    
+    public Object buildResponseContent(final Bindings bindings) throws Exception {
+        if (!GSP_MIME_TYPE.equals(file.getMimeType()))
+            return file;
+        else {
+            Template _template = template.get();
+            if (_template==null) 
+                _template = compile();
+            if (_template==null) 
+                return "<<EMPTY TEMPLATE>>";
+            else {
+                final FileResponseBuilder _extendsTemplate = extendsTemplate;
+                final Template thisTemplate = _template;
+                if (_extendsTemplate!=null) {
+                    final LinkedList bodies = getBodies(bindings, true);
+                    bodies.push(new Closure(this) {
+                        public Object doCall() {
+                            return doCall(null);
+                        }
+                        public Object doCall(Map params) {
+                            Map bodyBindings = null;
+                            if (params!=null) {
+                                bodyBindings = new HashMap();
+                                bodyBindings.putAll(bindings);
+                                bodyBindings.putAll(params);
+                            } else
+                                bodyBindings = bindings;
+                            addBodyBinding(bindings);
+                            return thisTemplate.make(bodyBindings);
+                        }
+                    });
+                }
+                bindings.put(BindingNames.NODE_BINDING, this);
+                bindings.put(BindingNames.LOGGER_BINDING, getLogger());
+                return _template.make(bindings);
+            }
+        }        
+    }
+    
+    private LinkedList getBodies(Bindings bindings, boolean create) {
+        LinkedList bodies = (LinkedList) bindings.get("template_bodies");
+        if (bodies==null && create) {
+            bodies = new LinkedList();
+            bindings.put("template_bodies", bodies);                        
+        }                    
+        return bodies;
+    }
+    
+    private void addBodyBinding(Bindings bindings) {
+        LinkedList bodies = getBodies(bindings, false);
+        if (bodies != null) {
+            Object body = bodies.pop();
+            if (body!=null)
+                bindings.put("body", body);
         }
     }
 

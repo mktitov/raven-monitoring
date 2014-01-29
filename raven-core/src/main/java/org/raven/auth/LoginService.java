@@ -28,4 +28,6 @@ public interface LoginService
     
     public UserContext login(String username, String password, String ip) throws LoginException;
     public boolean isLoginAllowedFromIp(String ip);
+    public int getId();
+    public String getName();
 }

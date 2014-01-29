@@ -33,6 +33,9 @@ public class NetworkResponseBaseNode extends BaseNode {
     @Parameter(valueHandlerType = NodeReferenceValueHandlerFactory.TYPE)
     private LoginService loginService;
     
+    @Parameter
+    private Boolean useServerSession;
+    
     protected BindingSupportImpl bindingSupport;
 
     @Override
@@ -61,5 +64,13 @@ public class NetworkResponseBaseNode extends BaseNode {
 
     public void setLoginService(LoginService loginService) {
         this.loginService = loginService;
+    }
+
+    public Boolean isUseServerSession() {
+        return useServerSession;
+    }
+
+    public void setUseServerSession(Boolean useServerSession) {
+        this.useServerSession = useServerSession;
     }
 }

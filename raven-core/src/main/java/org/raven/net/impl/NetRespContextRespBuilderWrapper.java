@@ -48,4 +48,8 @@ public class NetRespContextRespBuilderWrapper implements ResponseBuilder {
     public Node getResponseBuilderNode() {
         return responseContext;
     }
+
+    public Boolean isSessionAllowed() {
+        return false;
+    }
 }

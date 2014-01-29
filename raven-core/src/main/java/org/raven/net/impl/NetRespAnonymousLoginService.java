@@ -33,4 +33,12 @@ public class NetRespAnonymousLoginService implements AnonymousLoginService {
     public boolean isLoginAllowedFromIp(String ip) {
         return true;
     }
+
+    public int getId() {
+        return 0;
+    }
+
+    public String getName() {
+        return "Anonymous login service";
+    }
 }

@@ -48,6 +48,10 @@ public interface ResponseContext {
      */
     public boolean isAccessGranted(UserContext user);
     /**
+     * Returns <b>true</b> if session creation allowed
+     */
+    public boolean isSessionAllowed();
+    /**
      * Generate and return the response for given user and request parameters
      * @throws NetworkResponseServiceExeption 
      */

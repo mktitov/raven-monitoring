@@ -48,6 +48,14 @@ public class AuthServiceImpl implements LoginService
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    public int getId() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public String getName() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
     public UserContext login(String username, String password, String host)
     {
         if (logger.isInfoEnabled())

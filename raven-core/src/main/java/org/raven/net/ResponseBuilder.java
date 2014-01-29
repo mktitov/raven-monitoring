@@ -28,4 +28,5 @@ public interface ResponseBuilder {
             throws NetworkResponseServiceExeption;
     public AccessRight getAccessRight();
     public Node getResponseBuilderNode();
+    public Boolean isSessionAllowed();
 }

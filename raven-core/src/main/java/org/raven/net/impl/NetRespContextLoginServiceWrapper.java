@@ -43,4 +43,12 @@ public class NetRespContextLoginServiceWrapper implements LoginService {
     public boolean isLoginAllowedFromIp(String ip) {
         return true;
     }
+
+    public int getId() {
+        return respContext.getId();
+    }
+
+    public String getName() {
+        return respContext.getName();
+    }
 }

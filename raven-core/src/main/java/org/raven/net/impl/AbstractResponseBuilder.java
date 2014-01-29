@@ -16,8 +16,6 @@
 package org.raven.net.impl;
 
 import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.raven.annotations.Parameter;
 import org.raven.auth.UserContext;
 import org.raven.auth.impl.AccessRight;
@@ -44,6 +42,9 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
     
     @Parameter
     private AccessRight minimalAccessRight;
+    
+    @Parameter
+    private Boolean useServerSession;
     
     private ParametersSupport paramsSupport;
 
@@ -78,7 +79,7 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
             final long ifModifiedSince = responseContext.getRequest().getIfModifiedSince();
             try {
                 Long lastModified = doGetLastModified();
-                if (ifModifiedSince>=0 && lastModified!=null && lastModified <= ifModifiedSince)
+                if (ifModifiedSince>=0 && lastModified!=null && lastModified/1000 <= ifModifiedSince/1000)
                     return Response.NOT_MODIFIED;
                 else {
                     paramsSupport.checkParameters(this, responseContext.getRequest().getParams());
@@ -96,12 +97,11 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
             requestsStat.markOperationProcessingEnd(ts);
         }
     }
-    
-    private long getLastModifiedAsLong() throws Exception {
-        Long _lastModified = doGetLastModified();
-        return _lastModified==null? Long.MAX_VALUE : _lastModified;
-    }
 
+    public Boolean isSessionAllowed() {
+        return useServerSession;
+    }
+    
     public AccessRight getAccessRight() {
         final AccessRight _right = minimalAccessRight;
         if (_right!=null) 
@@ -142,6 +142,14 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
 
     public void setMinimalAccessRight(AccessRight minimalAccessRight) {
         this.minimalAccessRight = minimalAccessRight;
+    }
+
+    public Boolean getUseServerSession() {
+        return useServerSession;
+    }
+
+    public void setUseServerSession(Boolean useServerSession) {
+        this.useServerSession = useServerSession;
     }
 
     @Parameter(readOnly = true)
