@@ -263,9 +263,9 @@ public class NetworkResponseServlet extends HttpServlet  {
 //            if (!checkAuth(request, response, responseService, context))
 //                return;
 
-            boolean isPut = request.getMethod().equalsIgnoreCase("PUT");
-            if (isPut) 
-                params.put(NetworkResponseService.REQUEST_CONTENT_PARAMETER, request.getInputStream());
+//            boolean isPut = request.getMethod().equalsIgnoreCase("PUT");
+//            if (isPut) 
+//                params.put(NetworkResponseService.REQUEST_CONTENT_PARAMETER, request.getInputStream());
 //            Response result = responseService.getResponse(context, request.getRemoteAddr(), params);
             Response result = responseContext.getResponse(user);
             processServiceResponse(request, response, result, registry);
