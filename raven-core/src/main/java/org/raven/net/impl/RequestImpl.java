@@ -68,7 +68,7 @@ public class RequestImpl implements Request {
         return httpRequest.getInputStream();
     }
 
-    public String getAppPath() {
+    public String getRootPath() {
         return httpRequest.getContextPath();
     }
 

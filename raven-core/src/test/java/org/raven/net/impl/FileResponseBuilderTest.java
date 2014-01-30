@@ -121,6 +121,21 @@ public class FileResponseBuilderTest extends RavenCoreTestCase {
     @Test
     public void extendsTemplateWithParamsTest() throws Exception {
         FileResponseBuilder rootBuilder = createBuilder("root", FileResponseBuilder.GSP_MIME_TYPE);
+        rootBuilder.getFile().setDataString("$title-${body()}");
+        assertTrue(rootBuilder.start());
+        
+        builder.getFile().setMimeType(FileResponseBuilder.GSP_MIME_TYPE);
+        builder.getFile().setDataString("${node.name}");
+        builder.setExtendsTemplate(rootBuilder);
+        builder.getAttr("extendsTemplateParams").setValue("[title:'template title']");
+        assertTrue(builder.start());
+        
+        assertEquals("template title-"+NODE_NAME, builder.buildResponseContent(null, null).toString());
+    }
+
+    @Test
+    public void extendsTemplateWithBodyParamsTest() throws Exception {
+        FileResponseBuilder rootBuilder = createBuilder("root", FileResponseBuilder.GSP_MIME_TYPE);
         rootBuilder.getFile().setDataString("${node.name}-${body(p:'test')}");
         assertTrue(rootBuilder.start());
         
@@ -198,7 +213,7 @@ public class FileResponseBuilderTest extends RavenCoreTestCase {
         group.setName("group");
         sriRootNode.addAndSaveChildren(group);
         assertTrue(group.start());
-        group.addBinding(BindingNames.APP_PATH, "/raven");
+        group.addBinding(BindingNames.ROOT_PATH, "/raven");
         return group;
     }
     

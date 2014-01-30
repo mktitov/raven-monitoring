@@ -129,7 +129,10 @@ public class ResponseContextImpl implements ResponseContext {
                 try {
                     bindingSupport.put(BindingNames.USER_CONTEXT, user);
                     bindingSupport.put(BindingNames.REQUEST_BINDING, request);
-                    bindingSupport.put(BindingNames.RESPONSE_BINDING, request.getAppPath());
+                    bindingSupport.put(BindingNames.RESPONSE_BINDING, this);
+                    bindingSupport.put(BindingNames.ROOT_PATH, request.getRootPath());
+                    bindingSupport.put(BindingNames.APP_NODE, request.getParams().get(BindingNames.APP_NODE));
+                    bindingSupport.put(BindingNames.APP_PATH, request.getParams().get(BindingNames.APP_PATH));
                     bindingSupport.put(BindingNames.INCLUDE_JQUERY, preparePath(INCLUDE_JQUERY_STR));
                     bindingSupport.put(BindingNames.INCLUDE_JQUERY_CSS, preparePath(INCLUDE_JQUERY_CSS_STR));
                     bindingSupport.put(BindingNames.INCLUDE_JQUERY_UI, preparePath(INCLUDE_JQUERY_UI_STR));
@@ -157,7 +160,7 @@ public class ResponseContextImpl implements ResponseContext {
     }
     
     private String preparePath(String path) {
-        return String.format(path, request.getAppPath());
+        return String.format(path, request.getRootPath());
     }
     
     private static String paramsToString(Map<String, Object> params) {

@@ -69,7 +69,7 @@ public class SimpleResponseBuilder extends AbstractResponseBuilder {
     }
     
     private PathClosure createPathClosure(ResponseContext responseContext) {
-        return new PathClosure(this, responseContext.getRequest().getAppPath(), pathResolver, 
+        return new PathClosure(this, responseContext.getRequest().getRootPath(), pathResolver, 
                     responseService.getNetworkResponseServiceNode());
     }
     

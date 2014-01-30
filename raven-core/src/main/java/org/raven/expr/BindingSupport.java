@@ -17,6 +17,7 @@
 
 package org.raven.expr;
 
+import java.util.Map;
 import javax.script.Bindings;
 
 /**
@@ -27,7 +28,7 @@ public interface BindingSupport
 {
     public void setForceDisableScriptExcecution(boolean value);
     public void put(String bindingName, Object value);
-    public void putAll(Bindings bindMap);
+    public void putAll(Map<String, Object> bindMap);
     public void addTo(Bindings scriptBindings);
     public Object get(String bindingName);
     public boolean contains(String bindingName);

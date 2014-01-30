@@ -19,6 +19,7 @@ import groovy.lang.Closure;
 import groovy.text.SimpleTemplateEngine;
 import groovy.text.Template;
 import java.io.Reader;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -29,6 +30,7 @@ import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.auth.UserContext;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.ResponseContext;
@@ -58,7 +60,10 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
     private DataFile file;
     
     @Parameter(valueHandlerType = NodeReferenceValueHandlerFactory.TYPE)
-    FileResponseBuilder extendsTemplate;
+    private FileResponseBuilder extendsTemplate;
+    
+    @Parameter(valueHandlerType = ScriptAttributeValueHandlerFactory.TYPE)
+    private Map extendsTemplateParams;
     
     @Parameter
     private Long lastModified;
@@ -134,7 +139,7 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
                             return thisTemplate.make(bodyBindings);
                         }
                     });
-                    return _extendsTemplate.buildResponseContent(bindings);
+                    return _extendsTemplate.buildResponseContent(addExtendsTemplateParams(bindings));
                 } else {
                     addBinding(bindings);
                     return _template.make(bindings);
@@ -142,6 +147,18 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
             }
         }        
     }
+    
+    private Map addExtendsTemplateParams(Map bindings) {
+        try {
+            bindingSupport.putAll(bindings);
+            Map params = extendsTemplateParams;
+            if (params!=null)
+                bindings.putAll(params);
+            return bindings;
+        } finally {
+            bindingSupport.reset();
+        }
+    } 
     
     private LinkedList getBodies(Map bindings, boolean create) {
         LinkedList bodies = (LinkedList) bindings.get("template_bodies");
@@ -157,7 +174,7 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
         bindings.put(BindingNames.LOGGER_BINDING, getLogger());
         bindings.put(BindingNames.INCLUDE_BINDING, new Include(bindings));
         bindings.put(BindingNames.PATH_BINDING, new PathClosure(
-                this, (String)bindings.get(BindingNames.APP_PATH), pathResolver, 
+                this, (String)bindings.get(BindingNames.ROOT_PATH), pathResolver, 
                 responceService.getNetworkResponseServiceNode()));
         LinkedList bodies = getBodies(bindings, false);
         if (bodies != null && !bodies.isEmpty()) 
@@ -190,6 +207,14 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
     
     public Template getResponseTemplate() {
         return template.get();
+    }
+
+    public Map getExtendsTemplateParams() {
+        return extendsTemplateParams;
+    }
+
+    public void setExtendsTemplateParams(Map extendsTemplateParams) {
+        this.extendsTemplateParams = extendsTemplateParams;
     }
     
     public Template compile() throws Exception {

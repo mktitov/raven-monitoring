@@ -90,7 +90,7 @@ public class SimpleResponseBuilderTest extends RavenCoreTestCase {
     @Test
     public void renderWithParamsTest() throws Exception {
         FileResponseBuilder fileBuilder = createFileBuilder(sriRootNode, "file", FileResponseBuilder.GSP_MIME_TYPE);
-        fileBuilder.getFile().setDataString("$p-$appPath-${node.name}");
+        fileBuilder.getFile().setDataString("$p-$rootPath-${node.name}");
         BindingsContainer group = createGroup();
         SimpleResponseBuilder respBuilder = createBuilder(
                 group, "builder", "render(node.parent.parent.getNode('file'), [p:'param'])");
@@ -134,7 +134,7 @@ public class SimpleResponseBuilderTest extends RavenCoreTestCase {
         group.setName("group");
         sriRootNode.addAndSaveChildren(group);
         assertTrue(group.start());
-        group.addBinding(BindingNames.APP_PATH, "/raven");
+        group.addBinding(BindingNames.ROOT_PATH, "/raven");
         return group;
     }
     
@@ -160,7 +160,7 @@ public class SimpleResponseBuilderTest extends RavenCoreTestCase {
         ResponseContext respContext = mocks.createMock(ResponseContext.class);
         Request request = mocks.createMock(Request.class);
         expect(respContext.getRequest()).andReturn(request).atLeastOnce();
-        expect(request.getAppPath()).andReturn("/raven").atLeastOnce();
+        expect(request.getRootPath()).andReturn("/raven").atLeastOnce();
         return respContext;
     }   
 }

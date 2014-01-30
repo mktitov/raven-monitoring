@@ -49,7 +49,7 @@ public class BindingSupportImpl implements BindingSupport {
         binds.put(bindingName, value);
     }
 
-    public void putAll(Bindings bindMap) {
+    public void putAll(Map<String, Object> bindMap) {
         Map<String, Object> binds = bindings.get();
         if (binds == null) {
             binds = new HashMap<String, Object>();

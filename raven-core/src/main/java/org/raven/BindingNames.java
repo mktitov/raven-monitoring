@@ -33,6 +33,10 @@ public interface BindingNames
     public static final String LOGGER_BINDING = "logger";
     public static final String INCLUDE_BINDING = "include";
     public static final String PATH_BINDING = "path";
+    public static final String ROOT_PATH = "rootPath";
+    public static final String APP_ROOT_ATTR = "appRoot";
+    public static final String APP_PATH = "appPath";
+    public static final String APP_NODE = "appNode";
     public static final String RENDER_BINDING = "render";
     public static final String REDIRECT_BINDING = "redirect";
     public static final String DATA_CONTEXT_BINDING = "context";
@@ -42,7 +46,6 @@ public interface BindingNames
     public static final String REQUESTER_BINDING = "requester";
     public static final String REQUEST_BINDING = "request";
     public static final String RESPONSE_BINDING = "response";
-    public static final String APP_PATH = "appPath";
     public static final String SESSIONATTRIBUTES_BINDING = "sessAttrs";
     public static final String EXCEPTION_BINDING = "exception";
     public static final String USER_CONTEXT_CONFIGURATOR_BINDING = "user";

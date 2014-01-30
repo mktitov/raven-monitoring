@@ -24,16 +24,41 @@ import java.util.Map;
  * @author Mikhail Titov
  */
 public interface Request {
+    /**
+     * Returns the requester address
+     */
     public String getRemoteAddr();
+    /**
+     * Returns the request headers
+     */
     public Map<String, Object> getHeaders();
+    /**
+     * Returns the request parameters. It may be a query string parameters or form parameters.
+     * If form parameter is a file, then the parameter type would be javax.activation.DataSource
+     */
     public Map<String, Object> getParams();
+    /**
+     * Returns the context path. For instance for path 
+     * <b>http://some.host.name/raven/sri/some/context</b> it returns <b>some/context</b>
+     * @return 
+     */
     public String getContextPath();
-    public String getAppPath();
+    /**Returns the raven application path in web server. For instance for path 
+     * <b>http://some.host.name/raven/sri/some/context</b> it returns <b>/raven</b>
+     */
+    public String getRootPath();
+    /**
+     * Returns http method: POST, GET, PUT or DELETE
+     */
     public String getMethod();
     /**
      * Returns the value of the <b>If-Modified-Since</b> header encoded in long or -1 if value for this header
      * not assigned
      */
     public long getIfModifiedSince();
+    /**
+     * Returns the request content
+     * @throws IOException 
+     */
     public InputStream getContent() throws IOException;
 }

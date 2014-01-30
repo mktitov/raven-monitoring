@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.script.Bindings;
 import org.apache.commons.lang.StringUtils;
+import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.auth.LoginService;
@@ -165,6 +166,11 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
         ResponseBuilder respBuilder;
         try {
             respBuilder = getResponseBuilder(node, path, 0, pathInfo, request);
+            Node appRoot = (Node) request.getParams().get(BindingNames.APP_NODE);
+            if (appRoot != null) {
+                PathClosure pathCl = new PathClosure(this, request.getRootPath(), pathResolver, this);
+                request.getParams().put(BindingNames.APP_PATH, pathCl.doCall(appRoot));
+            }
         } catch (ContextUnavailableException ex) {
             Map<String, Object> params = new HashMap<String, Object>();
             NetworkResponseContext respContext = getContext(node, path, 0, pathInfo);
@@ -314,6 +320,8 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
         final String pathElem = path[pathIndex];
         for (Node child: node.getEffectiveNodes()) {
             if (child.isStarted() && (pathElem.equals(child.getName()) || isNameOfParameter(child.getName()))) {
+                if (child.getAttr(BindingNames.APP_ROOT_ATTR)!=null)
+                    request.getParams().put(BindingNames.APP_NODE, child);
                 if (isNameOfParameter(child.getName()))
                     addNamedParameter(child, request.getParams(), pathElem, request);
                 if (child instanceof NetworkResponseGroupNode) {
