@@ -51,6 +51,7 @@ import org.raven.net.ContextUnavailableException;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.net.NetworkResponseServiceUnavailableException;
+import org.raven.net.RedirectResult;
 import org.raven.net.Request;
 import org.raven.net.RequiredParameterMissedException;
 import org.raven.net.Response;
@@ -194,32 +195,36 @@ public class NetworkResponseServlet extends HttpServlet  {
             if (headers != null) 
                 for (Map.Entry<String, String> e : headers.entrySet()) 
                     response.addHeader(e.getKey(), e.getValue());
-            String charset = getCharset(request);
-            if (serviceResponse.getContentType().toUpperCase().startsWith("TEXT")) 
-                response.setCharacterEncoding(charset);
-            response.setContentType(serviceResponse.getContentType());            
-            if (serviceResponse.getLastModified()!=null) 
-                response.setDateHeader("Last-Modified", serviceResponse.getLastModified());
-            response.addHeader("Cache-control", "no-cache");
-            response.addHeader("Pragma", "no-cache");
-            TypeConverter converter = registry.getService(TypeConverter.class);
             Object content = serviceResponse.getContent();
-            if (content!=null) {
-                if (content instanceof Writable) {
-                    Writable writable = (Writable) content;
-                    writable.writeTo(response.getWriter());
-                } else {
-                    OutputStream out = response.getOutputStream();
-                    InputStream contentStream = converter.convert(InputStream.class, serviceResponse.getContent(), charset);
-                    try {
-                        IOUtils.copy(contentStream, out);
-                    } finally {
-                        IOUtils.closeQuietly(out);
-                        IOUtils.closeQuietly(contentStream);
+            if (content instanceof RedirectResult)
+                response.sendRedirect(((RedirectResult)content).getUrl());
+            else {
+                String charset = getCharset(request);
+                if (serviceResponse.getContentType().toUpperCase().startsWith("TEXT")) 
+                    response.setCharacterEncoding(charset);
+                response.setContentType(serviceResponse.getContentType());            
+                if (serviceResponse.getLastModified()!=null) 
+                    response.setDateHeader("Last-Modified", serviceResponse.getLastModified());
+                response.addHeader("Cache-control", "no-cache");
+                response.addHeader("Pragma", "no-cache");
+                TypeConverter converter = registry.getService(TypeConverter.class);
+                if (content!=null) {
+                    if (content instanceof Writable) {
+                        Writable writable = (Writable) content;
+                        writable.writeTo(response.getWriter());
+                    } else {
+                        OutputStream out = response.getOutputStream();
+                        InputStream contentStream = converter.convert(InputStream.class, serviceResponse.getContent(), charset);
+                        try {
+                            IOUtils.copy(contentStream, out);
+                        } finally {
+                            IOUtils.closeQuietly(out);
+                            IOUtils.closeQuietly(contentStream);
+                        }
                     }
                 }
+                response.setStatus(content!=null? HttpServletResponse.SC_OK : HttpServletResponse.SC_NO_CONTENT);
             }
-            response.setStatus(content!=null? HttpServletResponse.SC_OK : HttpServletResponse.SC_NO_CONTENT);
         }
     }
 

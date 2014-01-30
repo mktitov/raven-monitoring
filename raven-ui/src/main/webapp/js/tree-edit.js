@@ -21,7 +21,7 @@ $(document).ready(function() {
   console.log("Document loaded!!!")
   //node type autocomplete
 //  $(document).delegate("#body\\:typeList", "mouseenter", function() {
-  $(document).delegate("tr.node-type-input input", "mouseenter", function() {
+  $(document).delegate("tr.node-type-input input", "mouseenter focus", function() {
     var input = $(this)
     if (!input.is(':data(uiAutocomplete)')) {
       input.autocomplete({ 

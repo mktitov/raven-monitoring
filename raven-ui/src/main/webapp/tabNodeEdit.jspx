@@ -82,7 +82,7 @@
             </tr:inputText>
             <tr:selectOneChoice 
               label="#{msgs.type}" 
-              value="#{cNode.newAttribute.attrClass}" >
+              value="#{cNode.newAttribute.attrClass}" unselectedLabel="">
               <f:selectItems value="#{cNode.newAttribute.selectItems}" />
             </tr:selectOneChoice>
             <tr:selectBooleanCheckbox 
@@ -168,7 +168,7 @@
             value="#{row.value}"/>
           <tr:selectOneChoice 
             rendered="#{!row.expressionSupported and !(row.selectItems == null)}" 
-            value="#{row.value}" >
+            value="#{row.value}" unselectedLabel="">
             <f:selectItems value="#{row.selectItems}" />
           </tr:selectOneChoice>
         </tr:column>
