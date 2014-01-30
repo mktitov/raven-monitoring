@@ -19,13 +19,20 @@ import groovy.lang.Writable;
 import groovy.text.SimpleTemplateEngine;
 import groovy.text.Template;
 import java.io.ByteArrayInputStream;
-import java.io.StringWriter;
+import java.io.StringReader;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.raven.BindingNames;
+import org.raven.net.NetworkResponseService;
+import org.raven.test.BindingsContainer;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.DataFile;
 import org.raven.tree.DataFileException;
+import org.raven.tree.Node;
+import org.raven.tree.NodeError;
 
 /**
  *
@@ -35,9 +42,12 @@ public class FileResponseBuilderTest extends RavenCoreTestCase {
     
     private final static String NODE_NAME = "file response";
     private FileResponseBuilder builder;
+    private Node sriRootNode;
     
     @Before
     public void prepare() throws Exception {
+        NetworkResponseService respService = registry.getService(NetworkResponseService.class);
+        sriRootNode = respService.getNetworkResponseServiceNode();
         builder = createBuilder(NODE_NAME, "text/html");
     }
     
@@ -123,15 +133,93 @@ public class FileResponseBuilderTest extends RavenCoreTestCase {
     }
     
     @Test
+    public void includeFileTest() throws Exception {
+        builder.getFile().setMimeType(FileResponseBuilder.GSP_MIME_TYPE);
+        builder.getFile().setDataString("(${include(node.parent.getNode('include-builder'))})");
+        assertTrue(builder.start());
+        
+        FileResponseBuilder includeBuilder = createBuilder("include-builder", "text/html");
+        includeBuilder.getFile().setDataString("test");
+        assertTrue(includeBuilder.start());
+        
+        assertEquals("(test)", builder.buildResponseContent(null, null).toString());
+    }
+    
+    @Test
+    public void includeTemplateTest() throws Exception {
+        builder.getFile().setMimeType(FileResponseBuilder.GSP_MIME_TYPE);
+        builder.getFile().setDataString("(${include(node.parent.getNode('include-builder'))})");
+        assertTrue(builder.start());
+        
+        FileResponseBuilder includeBuilder = createBuilder("include-builder", FileResponseBuilder.GSP_MIME_TYPE);
+        includeBuilder.getFile().setDataString("${node.name}");
+        assertTrue(includeBuilder.start());
+        
+        assertEquals("(include-builder)", builder.buildResponseContent(null, null).toString());
+    }
+    
+    @Test
+    public void includeTemplateWithParamsTest() throws Exception {
+        builder.getFile().setMimeType(FileResponseBuilder.GSP_MIME_TYPE);
+        builder.getFile().setDataString("(${include(node.parent.getNode('include-builder'), [p:'test'])})");
+        assertTrue(builder.start());
+        
+        FileResponseBuilder includeBuilder = createBuilder("include-builder", FileResponseBuilder.GSP_MIME_TYPE);
+        includeBuilder.getFile().setDataString("${p}");
+        assertTrue(includeBuilder.start());
+        
+        assertEquals("(test)", builder.buildResponseContent(null, null).toString());
+    }
+    
+    @Test
+    public void stringPathTest() throws Exception {
+        BindingsContainer group = createGroup();
+        
+        FileResponseBuilder resp = createBuilder(group, "test", FileResponseBuilder.GSP_MIME_TYPE);
+        resp.getFile().setDataString("${path('group/test')}");
+        assertTrue(resp.start());
+        
+        assertEquals("/raven/sri/group/test", resp.buildResponseContent(null, null).toString());
+    }
+    
+    @Test
+    public void nodePathTest() throws Exception {
+        BindingsContainer group = createGroup();
+        
+        FileResponseBuilder resp = createBuilder(group, "test", FileResponseBuilder.GSP_MIME_TYPE);
+        resp.getFile().setDataString("${path(node.parent)}");
+        assertTrue(resp.start());
+        
+        assertEquals("/raven/sri/group/", resp.buildResponseContent(null, null).toString());
+    }
+
+    private BindingsContainer createGroup() throws NodeError {
+        BindingsContainer group = new BindingsContainer();
+        group.setName("group");
+        sriRootNode.addAndSaveChildren(group);
+        assertTrue(group.start());
+        group.addBinding(BindingNames.APP_PATH, "/raven");
+        return group;
+    }
+    
+    @Test
     public void exceptionTest() throws Exception {
-        Object res = new SimpleTemplateEngine().createTemplate("\n\n$a\n123").make();
+//        Object res = new SimpleTemplateEngine().createTemplate("\n\n$a\n123").make();
+        StringReader reader = new StringReader("Тест");
+        Map bindings = new HashMap();
+        bindings.put("reader", reader);
+        Object res = new SimpleTemplateEngine().createTemplate("($reader)").make(bindings);
         System.out.println("RES: "+res.toString());
     }
 
     private FileResponseBuilder createBuilder(String nodeName, String contentType) throws DataFileException {
+        return createBuilder(sriRootNode, nodeName, contentType);
+    }
+    
+    private FileResponseBuilder createBuilder(Node owner, String nodeName, String contentType) throws DataFileException {
         FileResponseBuilder fileBuilder = new FileResponseBuilder();
         fileBuilder.setName(nodeName);
-        testsNode.addAndSaveChildren(fileBuilder);
+        owner.addAndSaveChildren(fileBuilder);
         fileBuilder.getFile().setMimeType(contentType);
         fileBuilder.setResponseContentType("text/html");
         return fileBuilder;

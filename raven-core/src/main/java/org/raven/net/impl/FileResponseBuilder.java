@@ -30,6 +30,7 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.auth.UserContext;
 import org.raven.log.LogLevel;
+import org.raven.net.NetworkResponseService;
 import org.raven.net.ResponseContext;
 import org.raven.tree.DataFile;
 import org.raven.tree.Node;
@@ -38,6 +39,7 @@ import org.raven.tree.impl.DataFileValueHandlerFactory;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.beans.ObjectUtils;
+import org.weda.internal.annotations.Service;
 
 /**
  *
@@ -48,6 +50,9 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
     public final static String FILE_ATTR = "file";
     public final static String GSP_MIME_TYPE = "text/gsp";
     public static final String MIME_TYPE_ATTR = "file.mimeType";
+    
+    @Service
+    private static NetworkResponseService responceService;
     
     @NotNull @Parameter(valueHandlerType = DataFileValueHandlerFactory.TYPE)
     private DataFile file;
@@ -77,6 +82,10 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
         super.doStop();
         template.set(null);
     }
+    
+    public boolean isGrooveTemplate() throws Exception {
+        return GSP_MIME_TYPE.equals(getFile().getMimeType());
+    }
 
     @Override
     protected Long doGetLastModified() throws Exception {
@@ -91,7 +100,7 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
         return buildResponseContent(bindings);
     }
     
-    public Object buildResponseContent(final Bindings bindings) throws Exception {
+    public Object buildResponseContent(final Map bindings) throws Exception {
         if (!GSP_MIME_TYPE.equals(file.getMimeType())) {
             if (bindings.containsKey("template_bodies") && isLogLevelEnabled(LogLevel.WARN))
                 getLogger().warn(String.format(
@@ -146,11 +155,15 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
     private void addBinding(Map bindings) {
         bindings.put(BindingNames.NODE_BINDING, this);
         bindings.put(BindingNames.LOGGER_BINDING, getLogger());
+        bindings.put(BindingNames.INCLUDE_BINDING, new Include(bindings));
+        bindings.put(BindingNames.PATH_BINDING, new PathClosure(
+                this, (String)bindings.get(BindingNames.APP_PATH), pathResolver, 
+                responceService.getNetworkResponseServiceNode()));
         LinkedList bodies = getBodies(bindings, false);
         if (bodies != null && !bodies.isEmpty()) 
             bindings.put("body", bodies.pop());
     }
-
+    
     public DataFile getFile() {
         return file;
     }
@@ -200,5 +213,35 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
             if (FILE_ATTR.equals(attr.getName()))
                 setLastModified(System.currentTimeMillis());
         } 
+    }
+    
+    private class Include extends Closure {
+        private final Map bindings;
+
+        public Include(Map bindings) {
+            super(FileResponseBuilder.this);
+            this.bindings = bindings;
+        }
+        
+        public Object doCall(FileResponseBuilder builder) throws Throwable {
+            return doCall(builder, null);
+        }
+        
+        public Object doCall(FileResponseBuilder builder, Map params) throws Throwable {
+            Map includeBindings = bindings;
+            if (params!=null && !params.isEmpty()) {
+                includeBindings = new HashMap();
+                includeBindings.putAll(bindings);
+                includeBindings.putAll(params);
+            }
+            try {
+                Object res = builder.buildResponseContent(includeBindings);
+                return res instanceof DataFile? ((DataFile)res).getDataReader() : res;
+            } catch (Throwable e) {
+                if (isLogLevelEnabled(LogLevel.ERROR))
+                    getLogger().error(String.format("Error including file/template (%s)", builder));
+                throw e;
+            }
+        }
     }
 }

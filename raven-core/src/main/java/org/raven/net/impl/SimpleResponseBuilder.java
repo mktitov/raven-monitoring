@@ -15,12 +15,21 @@
  */
 package org.raven.net.impl;
 
+import groovy.lang.Closure;
+import java.util.Map;
+import javax.script.Bindings;
+import javax.script.SimpleBindings;
+import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.auth.UserContext;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
+import org.raven.log.LogLevel;
+import org.raven.net.NetworkResponseService;
 import org.raven.net.ResponseContext;
+import org.raven.tree.Node;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.internal.annotations.Service;
 
 /**
  *
@@ -28,13 +37,22 @@ import org.weda.annotations.constraints.NotNull;
  */
 @NodeClass(parentNode = NetworkResponseServiceNode.class)
 public class SimpleResponseBuilder extends AbstractResponseBuilder {
+    @Service
+    private static NetworkResponseService responseService;
     
     @NotNull @Parameter(valueHandlerType = ScriptAttributeValueHandlerFactory.TYPE)
     private Object responseContent;
-
+    
     @Override
     protected Object buildResponseContent(UserContext user, ResponseContext responseContext) {
-        return responseContent;
+        try {
+            bindingSupport.put(BindingNames.PATH_BINDING, createPathClosure(responseContext));
+            bindingSupport.put(BindingNames.RENDER_BINDING, createRenderClosure());
+            bindingSupport.put(BindingNames.REDIRECT_BINDING, createRedirectClosure(responseContext));
+            return responseContent;
+        } finally {
+            bindingSupport.reset();
+        }
     }
 
     @Override
@@ -42,11 +60,53 @@ public class SimpleResponseBuilder extends AbstractResponseBuilder {
         return null;
     }
 
-    public Object getResponseContent() {
+    public Object getResponseContent() {        
         return responseContent;
     }
 
     public void setResponseContent(Object responseContent) {
         this.responseContent = responseContent;
+    }
+    
+    private PathClosure createPathClosure(ResponseContext responseContext) {
+        return new PathClosure(this, responseContext.getRequest().getAppPath(), pathResolver, 
+                    responseService.getNetworkResponseServiceNode());
+    }
+    
+    private Closure createRedirectClosure(final ResponseContext responseContext) {
+        return new Closure(this) {
+            public Object doCall(String path) {
+                return new RedirectResultImpl(path);
+            }
+            public Object doCall(Node path) {
+                PathClosure pathBuilder = createPathClosure(responseContext);
+                return new RedirectResultImpl(pathBuilder.doCall(path));
+            }
+        };
+    }
+    
+    private Closure createRenderClosure() {
+        return new Closure(this) {
+            public Object doCall(FileResponseBuilder builder) throws Throwable {
+                return doCall(builder, null);
+            }
+            public Object doCall(FileResponseBuilder builder, Map params) throws Throwable {
+                try {
+                    if (!builder.isGrooveTemplate()) 
+                        return builder.getFile();
+                    else {
+                        Bindings bindings = new SimpleBindings();
+                        SimpleResponseBuilder.this.formExpressionBindings(bindings);
+                        if (params!=null && !params.isEmpty())
+                            bindings.putAll(params);
+                        return builder.buildResponseContent(bindings);
+                    } 
+                } catch (Throwable e) {
+                    if (isLogLevelEnabled(LogLevel.ERROR))
+                        getLogger().error(String.format("Error rendering file/template (%s)", builder), e);
+                    throw e;
+                }
+            }
+        };
     }
 }

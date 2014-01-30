@@ -31,6 +31,10 @@ public interface BindingNames
 
     public static final String NODE_BINDING = "node";
     public static final String LOGGER_BINDING = "logger";
+    public static final String INCLUDE_BINDING = "include";
+    public static final String PATH_BINDING = "path";
+    public static final String RENDER_BINDING = "render";
+    public static final String REDIRECT_BINDING = "redirect";
     public static final String DATA_CONTEXT_BINDING = "context";
     public static final String DATASOURCE_BINDING = "dataSource";
     public static final String DATA_STREAM_BINDING = "dataStream";
