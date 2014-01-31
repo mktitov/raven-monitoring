@@ -50,6 +50,6 @@ public class PathClosureTest extends RavenCoreTestCase {
         NetworkResponseGroupNode group = new NetworkResponseGroupNode();
         group.setName("test");
         sriRootNode.addAndSaveChildren(group);
-        assertEquals("/raven/sri/test/", path.doCall(group));
+        assertEquals("/raven/sri/test", path.doCall(group));
     }
 }

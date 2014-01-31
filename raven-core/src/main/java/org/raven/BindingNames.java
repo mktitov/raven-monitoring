@@ -37,6 +37,7 @@ public interface BindingNames
     public static final String APP_ROOT_ATTR = "appRoot";
     public static final String APP_PATH = "appPath";
     public static final String APP_NODE = "appNode";
+    public static final String CONTEXT_PATH = "contextPath";
     public static final String RENDER_BINDING = "render";
     public static final String REDIRECT_BINDING = "redirect";
     public static final String DATA_CONTEXT_BINDING = "context";

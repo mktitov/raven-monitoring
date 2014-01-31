@@ -205,7 +205,7 @@ public class FileResponseBuilderTest extends RavenCoreTestCase {
         resp.getFile().setDataString("${path(node.parent)}");
         assertTrue(resp.start());
         
-        assertEquals("/raven/sri/group/", resp.buildResponseContent(null, null).toString());
+        assertEquals("/raven/sri/group", resp.buildResponseContent(null, null).toString());
     }
 
     private BindingsContainer createGroup() throws NodeError {

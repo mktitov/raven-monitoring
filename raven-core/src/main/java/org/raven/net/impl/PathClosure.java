@@ -25,22 +25,23 @@ import org.raven.tree.NodePathResolver;
  * @author Mikhail Titov
  */
 public class PathClosure extends Closure {
-    private final String appPath;
+    private final String rootPath;
     private final NodePathResolver pathResolver;
     private final Node sriRootNode;
 
-    public PathClosure(Object owner, String appPath, NodePathResolver pathResolver, Node sriRootNode) {
+    public PathClosure(Object owner, String rootPath, NodePathResolver pathResolver, Node sriRootNode) {
         super(owner);
-        this.appPath = appPath + "/sri";
+        this.rootPath = rootPath + "/sri";
         this.pathResolver = pathResolver;
         this.sriRootNode = sriRootNode;
     }
     
     public String doCall(String subpath) {
-        return appPath+"/"+subpath;
+        return rootPath+"/"+subpath;
     }
     
     public String doCall(Node node) {
-        return appPath + "/" + pathResolver.getRelativePath(sriRootNode, node).replace("\"", "");        
+        String path = rootPath + "/" + pathResolver.getRelativePath(sriRootNode, node).replace("\"", "");
+        return path.substring(0, path.length()-1);
     }
 }

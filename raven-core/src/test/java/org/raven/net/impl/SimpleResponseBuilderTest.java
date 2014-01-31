@@ -67,7 +67,7 @@ public class SimpleResponseBuilderTest extends RavenCoreTestCase {
         SimpleResponseBuilder respBuilder = createBuilder(group, "builder", "path(node.parent)");
         ResponseContext responcetContext = trainResponseContext();
         mocks.replay();
-        assertEquals("/raven/sri/group/", respBuilder.buildResponseContent(null, responcetContext));
+        assertEquals("/raven/sri/group", respBuilder.buildResponseContent(null, responcetContext));
         mocks.verify();
     }
     
@@ -125,7 +125,7 @@ public class SimpleResponseBuilderTest extends RavenCoreTestCase {
         Object res = respBuilder.buildResponseContent(null, responcetContext);
         assertNotNull(res);
         assertTrue(res instanceof RedirectResult);
-        assertEquals("/raven/sri/group/builder/", ((RedirectResult)res).getUrl());
+        assertEquals("/raven/sri/group/builder", ((RedirectResult)res).getUrl());
         mocks.verify();        
     }
     

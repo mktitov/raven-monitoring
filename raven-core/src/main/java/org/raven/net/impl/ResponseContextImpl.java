@@ -133,6 +133,7 @@ public class ResponseContextImpl implements ResponseContext {
                     bindingSupport.put(BindingNames.ROOT_PATH, request.getRootPath());
                     bindingSupport.put(BindingNames.APP_NODE, request.getParams().get(BindingNames.APP_NODE));
                     bindingSupport.put(BindingNames.APP_PATH, request.getParams().get(BindingNames.APP_PATH));
+                    bindingSupport.put(BindingNames.CONTEXT_PATH, request.getContextPath());
                     bindingSupport.put(BindingNames.INCLUDE_JQUERY, preparePath(INCLUDE_JQUERY_STR));
                     bindingSupport.put(BindingNames.INCLUDE_JQUERY_CSS, preparePath(INCLUDE_JQUERY_CSS_STR));
                     bindingSupport.put(BindingNames.INCLUDE_JQUERY_UI, preparePath(INCLUDE_JQUERY_UI_STR));
