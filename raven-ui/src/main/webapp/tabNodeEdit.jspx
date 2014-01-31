@@ -207,7 +207,7 @@
                 value="#{row.description}"/>
               <tr:inputText 
                 columns="100"
-                rows="8"
+                rows="2"
                 rendered="#{row.edit}"  
                 value="#{row.description}"/>
             </tr:panelCaptionGroup>
@@ -217,7 +217,7 @@
 
             <tr:inputText
               label="#{msgs.value}"
-              rows="7" 
+              rows="2" 
               wrap="off" 
               rendered="#{row.enableEditValue}" 
               value="#{row.value}" 
@@ -225,7 +225,7 @@
 
             <tr:inputText
               label="#{msgs.expression}"
-              rows="7" 
+              rows="2" 
               wrap="off"
               rendered="#{row.enableEditExpression}" 
               value="#{row.expression}" 
@@ -257,7 +257,7 @@
             <tr:goButton onclick="openInEditor('#{row.name}')" text="#{msgs.openInEditor}" 
               rendered="#{row.enableEditValue or row.enableEditExpression or row.fileAttribute}"              
             />
-            <tr:selectOneChoice 
+            <tr:selectOneChoice  unselectedLabel=""
               label="#{msgs.expression}" 
               rendered="#{row.enableExpressionChoice}" 
               value="#{row.expression}" >

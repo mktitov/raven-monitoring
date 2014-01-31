@@ -26,11 +26,13 @@ var buttons;
 var saveButton;
 var editorParams
 var errorElem;
+var fontSize;
 
 $(document).ready(function(){
   buttons = $('button')
   saveButton = $('button#save')
   errorElem = $('div#error')
+  fontSize = parseInt($('#font-sizes').val())
   loadModes()
   loadThemes()
   setInterval(checkChanges, 100)
@@ -56,6 +58,12 @@ $(document).ready(function(){
     currentTheme = $(e.target).val()
     $.each(editors, function(k,e){
       setTheme(e.editor, currentTheme)
+    })
+  })
+  $('#font-sizes').on("change", function(e){
+    fontSize = parseInt($(e.target).val())
+    $.each(editors, function(k,e){
+      e.editor.setFontSize(fontSize)
     })
   })
   $("#modes").change(function(e){
@@ -213,7 +221,7 @@ function openTab(nodePath, attrName) {
       var editorId = 'editor-'+tabsCounter
       var tabHeader = tabTemplate.replace('_1_', id).replace('_2_', key).replace('_3_', title)
       tabs.find(".ui-tabs-nav").append(tabHeader)
-      tabs.append("<div id='" + id + "' style='height:90%'><div id='"+editorId+"' style='height:100%;fontSize:14px'>function(){ \nreturn 'test'\n}</div></div>")
+      tabs.append("<div id='" + id + "' style='height:90%'><div id='"+editorId+"' style='height:100%;font-size:14px'>function(){ \nreturn 'test'\n}</div></div>")
       tabs.tabs("refresh")
       params = {
         key: key,
@@ -320,6 +328,7 @@ function createEditor(params) {
   setMode(editor, params.mode)
   editor.resize(true)
   editor.getSession().setTabSize(2)
+  editor.setFontSize(fontSize);
   editor.commands.addCommand({
     name: 'Save',
     bindKey: {win: 'Ctrl-S',  mac: 'Command-S'},

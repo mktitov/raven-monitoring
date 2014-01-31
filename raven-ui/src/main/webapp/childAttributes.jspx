@@ -18,152 +18,158 @@
 <jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0"
           xmlns:f="http://java.sun.com/jsf/core"
           xmlns:tr="http://myfaces.apache.org/trinidad" >
-    <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>          
+  <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>          
 <!-- binding="#{cNodeAttrs.table}" -->     
-<!-- partialTriggers="subtypes" --> 
-        <tr:table 
-        	allDetailsEnabled="true" 
-        	rowBandingInterval="1"
-        	rendered="#{cNode.useChildAttributesView and row.hasChildren}"  
-            width="90%" 
-            summary="Nodes" 
-            value="#{row.childAttributes}" 
-            var="rowz" 
-            rows="12" 
-            id="attrsz" 
-            >
-            
+  <!-- partialTriggers="subtypes" --> 
+  <tr:table 
+    allDetailsEnabled="true" 
+    rowBandingInterval="1"
+    rendered="#{cNode.useChildAttributesView and row.hasChildren}"  
+    width="90%" 
+    summary="Nodes" 
+    value="#{row.childAttributes}" 
+    var="rowz" 
+    rows="12" 
+    id="attrsz" 
+    >
 
-<!-- name of attribute-->            
-            <tr:column headerText="#{msgs.name}">
-				<tr:panelHorizontalLayout>
-                <tr:outputText 
-                	rendered="#{!rowz.attribute.required}" 
-                	value="#{rowz.name}"/>
-                <tr:outputFormatted 
-                		rendered="#{rowz.attribute.required}"
-						inlineStyle="font-weight: bold;" 
-                		value="#{rowz.name}"/>
-                <tr:outputFormatted 
-                		inlineStyle="color: #cc0000;" 
-                		rendered="#{rowz.attribute.required and (rowz.attribute.value == null) }"
-                		value=" *"/>
-				</tr:panelHorizontalLayout>
-            </tr:column>
 
-<!-- value of attribute-->
-            <tr:column headerText="#{msgs.value}">
-                <tr:outputText  
-                	rendered="#{rowz.expressionSupported or (rowz.selectItems == null)}" 
-                	value="#{rowz.value}"/>
-                <tr:selectOneChoice 
-                	rendered="#{!rowz.expressionSupported and !(rowz.selectItems == null)}" 
-                	value="#{rowz.value}" >
-                    <f:selectItems value="#{rowz.selectItems}" />
-                </tr:selectOneChoice>
-            </tr:column>
-<!-- 
-            <tr:column headerText="#{msgs.value}">
-                <tr:inputText readOnly="#{rowz.expressionSupported}" rendered="#{rowz.expressionSupported or (rowz.selectItems == null)}" value="#{rowz.value}" columns="30" />
-                <tr:selectOneChoice rendered="#{!rowz.expressionSupported and !(rowz.selectItems == null)}" value="#{rowz.value}" >
-                    <f:selectItems value="#{rowz.selectItems}" />
-                </tr:selectOneChoice>
-            </tr:column>
--->            
-            <tr:column headerText="#{msgs.type}">
-                <tr:outputText value="#{rowz.classDisplayName}"/>
-            </tr:column>
-            <tr:column headerText="#{msgs.subtype}">
-                <tr:selectOneChoice
-                   	valueChangeListener="#{rowz.applySubType}"
-					onchange="submit();"            
-                	value="#{rowz.valueHandlerType}">
-                    <f:selectItems value="#{rowz.valueHandlerTypes}" />
-                </tr:selectOneChoice>
-            </tr:column>
-            <tr:column 
-            	rendered="#{cNode.node.template}" 
-            	headerText="#{msgs.templateExpression}" >
-                <tr:selectBooleanCheckbox 
-					valueChangeListener="#{rowz.applyTemplateExpression}"  
-					onchange="submit();"                	
-                	value="#{rowz.templateExpression}" />
-            </tr:column>
-<!-- 
-            <tr:column headerText="#{msgs.dsc}">
-                <tr:outputText rendered="#{!rowz.edit}" value="#{rowz.description}"/>
-                <tr:inputText rendered="#{rowz.edit}" value="#{rowz.description}"/>
-            </tr:column>
- -->            
-            <f:facet name="detailStamp">
-                <tr:panelGroupLayout layout="vertical">
-				<tr:panelCaptionGroup captionText="#{msgs.dsc}">
-	                <tr:outputText 
-	                	escape="false" 
-	                	rendered="#{!rowz.edit}" 
-	                	value="#{rowz.description}"/>
-    	            <tr:inputText 
-    	            	columns="60" rows="2" 
-    	            	rendered="#{rowz.edit}"  
-    	            	value="#{rowz.description}"/>
-				</tr:panelCaptionGroup>
-			    <tr:inputText
-			    	label="#{msgs.value}"
-               		rows="7" 
-               		wrap="hard"
-            		rendered="#{rowz.enableEditValue}" 
-            		value="#{rowz.value}" 
-            		columns="100" />
+    <!-- name of attribute-->            
+    <tr:column headerText="#{msgs.name}">
+      <tr:panelHorizontalLayout>
+        <tr:outputText 
+          rendered="#{!rowz.attribute.required}" 
+          value="#{rowz.name}"/>
+        <tr:outputFormatted 
+          rendered="#{rowz.attribute.required}"
+          inlineStyle="font-weight: bold;" 
+          value="#{rowz.name}"/>
+        <tr:outputFormatted 
+          inlineStyle="color: #cc0000;" 
+          rendered="#{rowz.attribute.required and (rowz.attribute.value == null) }"
+          value=" *"/>
+      </tr:panelHorizontalLayout>
+    </tr:column>
 
-			    <tr:inputText
-			    	label="#{msgs.expression}"
-               		rows="7" 
-               		wrap="hard"
-            		rendered="#{rowz.enableEditExpression}" 
-            		value="#{rowz.expression}" 
-            		columns="100" />
+    <!-- value of attribute-->
+    <tr:column headerText="#{msgs.value}">
+      <tr:outputText  
+        rendered="#{rowz.expressionSupported or (rowz.selectItems == null)}" 
+        value="#{rowz.value}"/>
+      <tr:selectOneChoice 
+        rendered="#{!rowz.expressionSupported and !(rowz.selectItems == null)}" 
+        value="#{rowz.value}" >
+        <f:selectItems value="#{rowz.selectItems}" />
+      </tr:selectOneChoice>
+    </tr:column>
+    <!-- 
+    <tr:column headerText="#{msgs.value}">
+      <tr:inputText readOnly="#{rowz.expressionSupported}" rendered="#{rowz.expressionSupported or (rowz.selectItems == null)}" value="#{rowz.value}" columns="30" />
+      <tr:selectOneChoice rendered="#{!rowz.expressionSupported and !(rowz.selectItems == null)}" value="#{rowz.value}" >
+        <f:selectItems value="#{rowz.selectItems}" />
+      </tr:selectOneChoice>
+    </tr:column>
+    -->            
+    <tr:column headerText="#{msgs.type}">
+      <tr:outputText value="#{rowz.classDisplayName}"/>
+    </tr:column>
+    <tr:column headerText="#{msgs.subtype}">
+      <tr:selectOneChoice
+        valueChangeListener="#{rowz.applySubType}"
+        onchange="submit();"            
+        value="#{rowz.valueHandlerType}">
+        <f:selectItems value="#{rowz.valueHandlerTypes}" />
+      </tr:selectOneChoice>
+    </tr:column>
+    <tr:column 
+      rendered="#{cNode.node.template}" 
+      headerText="#{msgs.templateExpression}" >
+      <tr:selectBooleanCheckbox 
+        valueChangeListener="#{rowz.applyTemplateExpression}"  
+        onchange="submit();"                	
+        value="#{rowz.templateExpression}" />
+    </tr:column>
+    <!-- 
+    <tr:column headerText="#{msgs.dsc}">
+      <tr:outputText rendered="#{!rowz.edit}" value="#{rowz.description}"/>
+      <tr:inputText rendered="#{rowz.edit}" value="#{rowz.description}"/>
+    </tr:column>
+    -->            
+    <f:facet name="detailStamp">
+      <tr:panelGroupLayout layout="vertical">
+        <tr:panelCaptionGroup captionText="#{msgs.dsc}">
+          <tr:outputText 
+            escape="false" 
+            rendered="#{!rowz.edit}" 
+            value="#{rowz.description}"/>
+          <tr:inputText 
+            columns="60" rows="2" 
+            rendered="#{rowz.edit}"  
+            value="#{rowz.description}"/>
+        </tr:panelCaptionGroup>
+        <tr:inputText
+          label="#{msgs.value}"
+          rows="2" 
+          wrap="hard"
+          rendered="#{rowz.enableEditValue}" 
+          value="#{rowz.value}" 
+          columns="100" />
 
-				<tr:inputListOfValues 
-					rendered="#{rowz.enableSelectNodeDialog}"
-					value="#{rowz.expression}"
-					returnListener="#{rowz.selectNodeHandleReturn}" 
-					action="dialog:selectNode"
-					actionListener="#{rowz.setNode}"
-					immediate="true" 
-					windowWidth="500" windowHeight="400"
-					columns="40" label="#{msgs.node}"
-				>
-				</tr:inputListOfValues>
-	            <tr:selectOneChoice 
-	            	label="#{msgs.expression}" 
-	            	rendered="#{rowz.enableExpressionChoice}" 
-	            	value="#{rowz.expression}" >
-    	            <f:selectItems value="#{rowz.selectItems}" />
-                </tr:selectOneChoice>
-				
-<!--  
-				<tr:inputListOfValues 
-					rendered="#{rowz.expressionSupported and (rowz.selectItems == null) }"
-					value="#{rowz.expression}" 
-					action="dialog:editExpression"
-					actionListener="#{editExpression.selectAttr}"
-					windowWidth="300" windowHeight="300"
-					columns="40" label="#{msgs.expression}"
-				>
-					<f:attribute name="#{editExpression.paramName}" value="#{rowz}" />
-				</tr:inputListOfValues>
-	            <tr:selectOneChoice 
-	            	label="#{msgs.expression}" 
-	            	rendered="#{rowz.expressionSupported and !(rowz.selectItems == null)}" 
-	            	value="#{rowz.expression}" >
-    	            <f:selectItems value="#{rowz.selectItems}" />
-                </tr:selectOneChoice>
--->                
-                </tr:panelGroupLayout>					
-                <!-- <tr:panelGroupLayout layout="vertical">
-                </tr:panelGroupLayout>  -->
-            </f:facet>
-            
-        </tr:table>
+        <tr:inputText
+          label="#{msgs.expression}"
+          rows="2" 
+          wrap="hard"
+          rendered="#{rowz.enableEditExpression}" 
+          value="#{rowz.expression}" 
+          columns="100" />
+        <tr:goButton onclick="openInEditor('#{rowz.name}')" text="#{msgs.openInEditor}" 
+          rendered="#{rowz.enableEditValue or rowz.enableEditExpression or rowz.fileAttribute}"              
+        />
+
+        <tr:inputListOfValues 
+          rendered="#{rowz.enableSelectNodeDialog}"
+          value="#{rowz.expression}"
+          returnListener="#{rowz.selectNodeHandleReturn}" 
+          action="dialog:selectNode"
+          actionListener="#{rowz.setNode}"
+          immediate="true" 
+          windowWidth="500" windowHeight="400"
+          columns="40" label="#{msgs.node}"
+          >
+        </tr:inputListOfValues>
+        <tr:goButton rendered="#{rowz.enableSelectNodeDialog}" text="#{msgs.convertPath}" 
+             styleClass="convert-path"/>
+
+        <tr:selectOneChoice 
+          label="#{msgs.expression}" 
+          rendered="#{rowz.enableExpressionChoice}" 
+          value="#{rowz.expression}" >
+          <f:selectItems value="#{rowz.selectItems}" />
+        </tr:selectOneChoice>
+
+        <!--  
+        <tr:inputListOfValues 
+          rendered="#{rowz.expressionSupported and (rowz.selectItems == null) }"
+          value="#{rowz.expression}" 
+          action="dialog:editExpression"
+          actionListener="#{editExpression.selectAttr}"
+          windowWidth="300" windowHeight="300"
+          columns="40" label="#{msgs.expression}"
+          >
+          <f:attribute name="#{editExpression.paramName}" value="#{rowz}" />
+        </tr:inputListOfValues>
+        <tr:selectOneChoice 
+          label="#{msgs.expression}" 
+          rendered="#{rowz.expressionSupported and !(rowz.selectItems == null)}" 
+          value="#{rowz.expression}" >
+          <f:selectItems value="#{rowz.selectItems}" />
+        </tr:selectOneChoice>
+        -->                
+      </tr:panelGroupLayout>					
+      <!-- <tr:panelGroupLayout layout="vertical">
+      </tr:panelGroupLayout>  -->
+    </f:facet>
+
+  </tr:table>
 
 </jsp:root>

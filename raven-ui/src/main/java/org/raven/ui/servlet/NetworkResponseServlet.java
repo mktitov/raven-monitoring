@@ -123,7 +123,7 @@ public class NetworkResponseServlet extends HttpServlet  {
                         request.getSession().setAttribute(userContextAttrName, userContext);
                     }
                 }
-                else throw new AccessDeniedException();
+                else throw new UnauthoriedException();
             }
         } else if (responseContext.getResponseBuilderLogger().isDebugEnabled())
             responseContext.getResponseBuilderLogger().debug("User ({}) already logged in. Skiping auth.", userContext);
@@ -275,11 +275,11 @@ public class NetworkResponseServlet extends HttpServlet  {
                 response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, e.getMessage());
             } else if (e instanceof ContextUnavailableException) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
-            } else if (e instanceof AccessDeniedException || e instanceof AuthenticationFailedException) {
+            } else if (e instanceof AccessDeniedException) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN);
             } else if (e instanceof RequiredParameterMissedException || e instanceof BadRequestException) {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-            } else if (e instanceof UnauthoriedException) {
+            } else if (e instanceof UnauthoriedException || e instanceof AuthenticationFailedException) {
                 response.setHeader("WWW-Authenticate", "BASIC realm=\"RAVEN\"");
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
             } else {
