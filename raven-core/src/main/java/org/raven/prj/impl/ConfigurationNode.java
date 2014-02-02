@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Mikhail Titov.
+ * Copyright 2014 Mikhail Titov.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.net.impl;
+
+package org.raven.prj.impl;
 
 import org.raven.annotations.NodeClass;
+import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.InvisibleNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(importChildTypesFromParent=true, parentNode=NetworkResponseServiceNode.class)
-public class NetworkResponseGroupNode extends NetworkResponseBaseNode {
+@NodeClass(parentNode = InvisibleNode.class, anyChildTypes = true)
+public class ConfigurationNode extends BaseNode {
+    public final static String NAME = "Configuration";
 
-    public NetworkResponseGroupNode() {
-        super();
-    }
-    
-    public NetworkResponseGroupNode(String name) {
-        super(name);
+    public ConfigurationNode() {
+        super(NAME);
     }
 }

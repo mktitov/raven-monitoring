@@ -13,18 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.prj;
+package org.raven.prj.impl;
 
+import org.raven.annotations.NodeClass;
 import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.InvisibleNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class ProjectsNode extends BaseNode {
-    public final static String NAME = "Projects";
+@NodeClass(parentNode = InvisibleNode.class, anyChildTypes = true)
+public class UserInterfaceNode extends BaseNode {
+    public final static String NAME = "User Interface";
 
-    public ProjectsNode() {
+    public UserInterfaceNode() {
         super(NAME);
     }
 }

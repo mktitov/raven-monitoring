@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 import org.raven.conf.Configurator;
 import org.raven.expr.BindingSupport;
+import org.raven.prj.Projects;
 import org.raven.tree.store.TreeStore;
 import org.raven.tree.store.TreeStoreError;
 import org.weda.constraints.ReferenceValue;
@@ -43,6 +44,10 @@ public interface Tree
      * Returns the root node of the tree
      */
     public Node getRootNode();
+    /**
+     * Returns the projects node
+     */
+    public Projects getProjectsNode();
     /**
      * Look up the node by it path.
      * @param path the path to the node.

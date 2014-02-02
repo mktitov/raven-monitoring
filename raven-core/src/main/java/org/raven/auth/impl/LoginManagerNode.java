@@ -42,6 +42,7 @@ public class LoginManagerNode extends BaseNode implements LoginManager {
     protected void doStart() throws Exception {
         super.doStart();
         createSystemLoginService();
+        createAnonymousLoginService();
     }
     
     private void createSystemLoginService() {
@@ -49,6 +50,14 @@ public class LoginManagerNode extends BaseNode implements LoginManager {
             SystemLoginService systemLoginService = new SystemLoginService();
             addAndSaveChildren(systemLoginService);
             systemLoginService.start();
+        }
+    }
+    
+    private void createAnonymousLoginService() {
+        if (!hasNode(AnonymousLoginServiceNode.NAME)) {
+            AnonymousLoginServiceNode node = new AnonymousLoginServiceNode();
+            addAndSaveChildren(node);
+            node.start();
         }
     }
 

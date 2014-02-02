@@ -31,6 +31,7 @@ public class RequestImpl implements Request {
     private final Map<String, Object> headers;
     private final String contextPath;
     private final String method;
+    private final String servicePath;
     private final HttpServletRequest httpRequest;
 
     public RequestImpl(String remoteAddr, Map<String, Object> params, Map<String, Object> headers, 
@@ -42,6 +43,7 @@ public class RequestImpl implements Request {
         this.contextPath = contextPath;
         this.method = method;
         this.httpRequest = httpRequest;
+        this.servicePath = httpRequest.getServletPath().substring(1);
     }
 
     public String getRemoteAddr() {
@@ -54,6 +56,10 @@ public class RequestImpl implements Request {
 
     public Map<String, Object> getHeaders() {
         return headers;
+    }
+
+    public String getServicePath() {
+        return servicePath;
     }
 
     public String getContextPath() {

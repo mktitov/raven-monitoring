@@ -18,11 +18,13 @@
 package org.raven.tree.impl;
 
 import java.util.Collection;
+import org.raven.prj.Project;
 import org.raven.tree.AttributeReferenceValues;
 import org.raven.tree.InvalidPathException;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodePathResolver;
+import org.raven.util.NodeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weda.constraints.ReferenceValue;
@@ -44,11 +46,13 @@ public class ChildrenNodesAsReferenceValues implements AttributeReferenceValues
 
     private final String attributeType;
     private final String nodePath;
+    private final String nodeInProjectPath;
 
-    public ChildrenNodesAsReferenceValues(String attributeType, String nodePath)
+    public ChildrenNodesAsReferenceValues(String attributeType, String nodePath, String nodeInProjectPath)
     {
         this.attributeType = attributeType;
         this.nodePath = nodePath;
+        this.nodeInProjectPath = nodeInProjectPath;
     }
 
     public boolean getReferenceValues(NodeAttribute attr, ReferenceValueCollection referenceValues)
@@ -56,25 +60,34 @@ public class ChildrenNodesAsReferenceValues implements AttributeReferenceValues
     {
         if (!attributeType.equals(attr.getValueHandlerType()))
             return false;
-        try
-        {
-            Node node = (Node) pathResolver.resolvePath(nodePath, null).getReferencedObject();
-            Collection<Node> childs = node.getEffectiveChildrens();
-            if (childs!=null && childs.size()>0)
-                for (Node child: childs)
-                {
-                    ReferenceValue refVal = new ReferenceValueImpl(
-                            pathResolver.getAbsolutePath(child), child.getName());
-                    referenceValues.add(refVal, null);
+        try {
+            if (nodeInProjectPath!=null) {
+                Node project = NodeUtils.getParentOfType(attr.getOwner(), Project.class, true);
+                if (project!=null) {
+                    Node node = project.getNodeByPath(nodeInProjectPath);
+                    if (node!=null)
+                        addReferenceValues(node, attr.getOwner(), referenceValues, true);
                 }
+            }
+            Node node = (Node) pathResolver.resolvePath(nodePath, null).getReferencedObject();
+            addReferenceValues(node, attr.getOwner(), referenceValues, false);
         }
-        catch (InvalidPathException ex)
-        {
+        catch (InvalidPathException ex) {
             logger.error(String.format(
                     "Error creating attribute reference values for value handler type (%s). %s"
                     , attributeType, ex.getMessage()));
         }
 
         return true;
+    }
+    
+    private void addReferenceValues(Node node, Node attrNode, ReferenceValueCollection referenceValues, boolean relative) 
+            throws TooManyReferenceValuesException 
+    {
+        for (Node child: node.getEffectiveNodes()) {
+            String path = relative? pathResolver.getRelativePath(attrNode, node): child.getPath();
+            ReferenceValue refVal = new ReferenceValueImpl(child.getPath(), (relative? "(Project) ":"")+child.getName());
+            referenceValues.add(refVal, null);
+        }
     }
 }

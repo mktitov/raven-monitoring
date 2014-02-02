@@ -13,18 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.raven.prj;
 
-import org.raven.tree.impl.BaseNode;
+import org.raven.expr.BindingSupport;
+import org.raven.tree.Node;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class WebInterfaceNode extends BaseNode {
-    public final static String NAME = "Web interface";
-
-    public WebInterfaceNode() {
-        super(NAME);
-    }
+public interface WebInterface extends Node {
+    public BindingSupport getBindingSupport();
 }

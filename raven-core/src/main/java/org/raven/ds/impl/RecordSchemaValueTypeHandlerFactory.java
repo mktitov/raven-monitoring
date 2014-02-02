@@ -34,19 +34,14 @@ public class RecordSchemaValueTypeHandlerFactory implements AttributeValueHandle
 
     private final NodePathResolver pathResolver;
 
-    public RecordSchemaValueTypeHandlerFactory(NodePathResolver pathResolver)
-    {
+    public RecordSchemaValueTypeHandlerFactory(NodePathResolver pathResolver) {
         this.pathResolver = pathResolver;
     }
 
-    public AttributeValueHandler createValueHandler(NodeAttribute attribute)
-    {
-        try
-        {
+    public AttributeValueHandler createValueHandler(NodeAttribute attribute) {
+        try {
             return new RecordSchemaValueTypeHandler(attribute);
-        }
-        catch (InvalidPathException ex)
-        {
+        } catch (InvalidPathException ex) {
             throw new RavenRuntimeException(String.format(
                     "Error creating reference to record schema value handler for attribute (%s)"
                     , pathResolver.getAbsolutePath(attribute))

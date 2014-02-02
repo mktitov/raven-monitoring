@@ -13,18 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.prj;
+package org.raven.prj.impl;
 
+import org.raven.prj.Project;
+import org.raven.prj.Projects;
 import org.raven.tree.impl.BaseNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class UserInterfaceNode extends BaseNode {
-    public final static String NAME = "User Interface";
+public class ProjectsNode extends BaseNode implements Projects {
+    public final static String NAME = "Projects";
 
-    public UserInterfaceNode() {
+    public ProjectsNode() {
         super(NAME);
+    }
+
+    public Project getProject(String name) {
+        return (Project) getNode(name);
     }
 }

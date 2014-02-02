@@ -17,7 +17,7 @@
 
 package org.raven.tree.impl;
 
-import org.raven.prj.ProjectsNode;
+import org.raven.prj.impl.ProjectsNode;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,6 +42,7 @@ import org.raven.impl.ClassNameComparator;
 import org.raven.impl.NodeClassTransformerWorker;
 import org.raven.log.impl.NodeLoggerNode;
 import org.raven.net.impl.NetworkResponseServiceNode;
+import org.raven.prj.Projects;
 import org.raven.sched.impl.SchedulersNode;
 import org.raven.template.impl.TemplateVariable;
 import org.raven.template.impl.TemplatesNode;
@@ -209,9 +210,12 @@ public class TreeImpl implements Tree {
                 , AttributeReference.class};
     }
 
-    public Node getRootNode()
-    {
+    public Node getRootNode() {
         return rootNode;
+    }
+
+    public Projects getProjectsNode() {
+        return projectsNode;
     }
 
     @SuppressWarnings("unchecked")

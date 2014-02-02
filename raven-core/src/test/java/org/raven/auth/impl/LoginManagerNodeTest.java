@@ -35,5 +35,10 @@ public class LoginManagerNodeTest extends RavenCoreTestCase {
         assertNotNull(systemService);
         assertTrue(systemService instanceof SystemLoginService);
         assertStarted(systemService);
+        
+        Node anonymService = manager.getNode(AnonymousLoginServiceNode.NAME);
+        assertNotNull(anonymService);
+        assertTrue(anonymService instanceof AnonymousLoginServiceNode);
+        assertStarted(anonymService);
     }
 }

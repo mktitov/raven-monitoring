@@ -24,6 +24,8 @@ import java.util.Map;
  * @author Mikhail Titov
  */
 public interface Request {
+    public final static String PROJECTS_SERVICE = "projects";
+    public final static String SRI_SERVICE = "sri";
     /**
      * Returns the requester address
      */
@@ -37,6 +39,11 @@ public interface Request {
      * If form parameter is a file, then the parameter type would be javax.activation.DataSource
      */
     public Map<String, Object> getParams();
+    /**
+     * Returns the service path: "sri" or "projects"
+     * @return 
+     */
+    public String getServicePath();
     /**
      * Returns the context path. For instance for path 
      * <b>http://some.host.name/raven/sri/some/context</b> it returns <b>some/context</b>

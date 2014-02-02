@@ -15,7 +15,6 @@
  */
 package org.raven.auth.impl;
 
-import org.raven.annotations.NodeClass;
 import org.raven.auth.AnonymousLoginService;
 import org.raven.auth.LoginException;
 import org.raven.auth.UserContext;
@@ -24,10 +23,14 @@ import org.raven.auth.UserContext;
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode = LoginManagerNode.class)
+//@NodeClass(parentNode = LoginManagerNode.class)
 public class AnonymousLoginServiceNode extends LoginServiceNode implements AnonymousLoginService {
-    public static final String NAME = "Anonymous login service";
+    public static final String NAME = "Anonymous";
     public final static UserContext ANONYMOUS_USER = new AnonymousLoginServiceUserContext();
+
+    public AnonymousLoginServiceNode() {
+        super(NAME);
+    }
     
     @Override
     protected boolean createAuthenticatorsNode() {

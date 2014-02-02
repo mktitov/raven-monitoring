@@ -17,7 +17,7 @@
 
 package org.raven.tree.impl;
 
-import org.raven.prj.ProjectsNode;
+import org.raven.prj.impl.ProjectsNode;
 import java.util.List;
 import java.util.Set;
 import org.junit.Before;

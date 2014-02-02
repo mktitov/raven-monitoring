@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.prj;
+package org.raven.prj.impl;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -44,6 +44,7 @@ public class ProjectNodeTest extends RavenCoreTestCase {
         checkNode(ConnectionPoolsNode.NAME, false);
         checkNode(SchemasNode.NAME, false);
         checkNode(WebInterfaceNode.NAME, false);
+        checkNode(ConfigurationNode.NAME, false);
         checkNode(UserInterfaceNode.NAME, false);
     }
     
@@ -53,6 +54,7 @@ public class ProjectNodeTest extends RavenCoreTestCase {
         checkNode(LoginManagerNode.NAME, true);
         checkNode(ConnectionPoolsNode.NAME, true);
         checkNode(SchemasNode.NAME, true);
+        checkNode(ConfigurationNode.NAME, true);
         checkNode(WebInterfaceNode.NAME, true);
         checkNode(UserInterfaceNode.NAME, true);
     }

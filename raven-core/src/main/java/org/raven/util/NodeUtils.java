@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
 import org.raven.ds.DataConsumer;
@@ -54,6 +53,20 @@ public class NodeUtils
     @Service
     private static TypeConverter converter;
 
+    /**
+     * Returns the parent node of specified type
+     * @param <T> the type of the parent node
+     * @param node the node from which search starts
+     * @param parentType the class of the parent node
+     * @param includingSelf if <b>true</b> search will starts from <b>node</> (i.e. first parent is node itself)
+     */
+    public static <T> T getParentOfType(Node node, Class<T> parentType, boolean includingSelf) {
+        Node parent = includingSelf? node : node.getParent();
+        while (parent!=null && !parentType.isAssignableFrom(parent.getClass())) 
+            parent =  parent.getParent();
+        return (T)parent;
+    }
+    
     /**
      * Returns the sorted list of the <b>started</b> child nodes of the type <b>childType</b> of the <b>owner</b> node.
      * Method returns <b>empty list</b> if owner node does not have started child of the specified type.

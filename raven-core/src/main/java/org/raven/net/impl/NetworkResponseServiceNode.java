@@ -29,6 +29,7 @@ import org.raven.annotations.Parameter;
 import org.raven.auth.LoginService;
 import org.raven.cache.TemporaryFileManager;
 import org.raven.cache.TemporaryFileManagerValueHandlerFactory;
+import org.raven.expr.BindingSupport;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.IfNode;
 import org.raven.log.LogLevel;
@@ -43,6 +44,9 @@ import org.raven.net.Request;
 import org.raven.net.Response;
 import org.raven.net.ResponseBuilder;
 import org.raven.net.ResponseContext;
+import org.raven.prj.Project;
+import org.raven.prj.WebInterface;
+import org.raven.prj.impl.WebInterfaceNode;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
@@ -146,12 +150,30 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
 
     public ResponseContext getResponseContext(Request request) throws NetworkResponseServiceExeption {
         try {
-            bindingSupport.put(CONTEXT_BINDING, request.getContextPath());
-            bindingSupport.put(REQUESTER_IP_BINDING, request.getRemoteAddr());
-            bindingSupport.put(REQUEST_BINDING, request);
             PathInfo pathInfo = new PathInfo();
-            ResponseBuilder respBuilder = findResponseBuilder(
-                    this, splitContextToPathElements(request.getContextPath()), pathInfo, request);
+            BindingSupport bindings = null;
+            Node startNode = null;
+            int pathIndex = 0;
+            String[] pathElems = splitContextToPathElements(request.getContextPath());
+            if (Request.SRI_SERVICE.equals(request.getServicePath())) {
+                bindings = bindingSupport;
+                startNode = this;
+            } else {
+                Project project = tree.getProjectsNode().getProject(pathElems[0]);
+                if (project==null || !project.isStarted())
+                    throw new ContextUnavailableException(request.getContextPath(), pathElems[0]);
+                WebInterfaceNode webi = project.getWebInterface();
+                if (webi==null || !webi.isStarted())
+                    throw new ContextUnavailableException(request.getContextPath(), pathElems[0]);
+                bindings = webi.getBindingSupport();
+                startNode = webi;
+                pathIndex = 1;
+            }
+            bindings.put(CONTEXT_BINDING, request.getContextPath());
+            bindings.put(REQUESTER_IP_BINDING, request.getRemoteAddr());
+            bindings.put(REQUEST_BINDING, request);
+            ResponseBuilder respBuilder = findResponseBuilder(startNode, pathElems, pathIndex, pathInfo, request);
+            
             LoginService loginService = findLoginService(respBuilder);
             return new ResponseContextImpl(request, pathInfo.getBuilderPath(), pathInfo.getSubpath(), 
                     requestsCount.incrementAndGet(), loginService, respBuilder, this);
@@ -160,12 +182,12 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
         }
     }
     
-    private ResponseBuilder findResponseBuilder(Node node, String[] path, PathInfo pathInfo, Request request) 
+    private ResponseBuilder findResponseBuilder(Node node, String[] path, int pathIndex, PathInfo pathInfo, Request request) 
             throws ContextUnavailableException 
     {
         ResponseBuilder respBuilder;
         try {
-            respBuilder = getResponseBuilder(node, path, 0, pathInfo, request);
+            respBuilder = getResponseBuilder(node, path, pathIndex, pathInfo, request);
             Node appRoot = (Node) request.getParams().get(BindingNames.APP_NODE);
             if (appRoot != null) {
                 PathClosure pathCl = new PathClosure(this, request.getRootPath(), pathResolver, this);
@@ -191,7 +213,7 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
     }
     
     private LoginService getLoginService(Node node) throws AccessDeniedException {
-        if (node==this) throw new AccessDeniedException();
+        if (node==this || node instanceof WebInterfaceNode) throw new AccessDeniedException();
         else {
             NodeAttribute attr = node.getAttr(LOGIN_SERVICE_ATTR);
             Object loginService = attr.getRealValue();
@@ -325,7 +347,6 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
                 if (isNameOfParameter(child.getName()))
                     addNamedParameter(child, request.getParams(), pathElem, request);
                 if (child instanceof NetworkResponseGroupNode) {
-//                    if (pathIndex==path.length-1)
                     return getResponseBuilder(child, path, pathIndex+1, pathInfo, request);
                 } else {
                     if (pathIndex!=path.length-1)
@@ -337,7 +358,7 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
             }
         }
         throw new ContextUnavailableException(request.getContextPath(), pathElem);
-    }
+    }    
     
     private boolean isNameOfParameter(String name) {
         return name.length()>2 && name.startsWith("{") && name.endsWith("}");

@@ -338,22 +338,23 @@ public class RavenCoreModule
             RecordSchemasNode.class.getSimpleName()
             , new ChildrenNodesAsReferenceValues(
                 RecordSchemaValueTypeHandlerFactory.TYPE
-                , pathResolver.createPath(
-                    true, SystemNode.NAME, SchemasNode.NAME, RecordSchemasNode.NAME))
+                , pathResolver.createPath(true, SystemNode.NAME, SchemasNode.NAME, RecordSchemasNode.NAME)
+                , pathResolver.createPath(false, SchemasNode.NAME, RecordSchemasNode.NAME))
             , "after:"+LocaleReferenceValues.class.getSimpleName());
         conf.add(
             ConnectionPoolsNode.class.getSimpleName()
             , new ChildrenNodesAsReferenceValues(
                 ConnectionPoolValueHandlerFactory.TYPE
-                , pathResolver.createPath(
-                    true, SystemNode.NAME, ConnectionPoolsNode.NAME))
+                , pathResolver.createPath(true, SystemNode.NAME, ConnectionPoolsNode.NAME)
+                , pathResolver.createPath(false, ConnectionPoolsNode.NAME)
+            )
             , "after:"+RecordSchemasNode.class.getSimpleName());
         conf.add(
             TemporaryFileManagersNode.class.getSimpleName()
             , new ChildrenNodesAsReferenceValues(
                 TemporaryFileManagerValueHandlerFactory.TYPE
-                , pathResolver.createPath(
-                    true, SystemNode.NAME, TemporaryFileManagersNode.NAME))
+                , pathResolver.createPath(true, SystemNode.NAME, TemporaryFileManagersNode.NAME)
+                , pathResolver.createPath(false, TemporaryFileManagersNode.NAME))
             , "after:"+ConnectionPoolsNode.class.getSimpleName());
     }
 

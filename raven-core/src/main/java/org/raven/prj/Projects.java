@@ -13,18 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.raven.prj;
 
-import org.raven.auth.impl.LoginManagerNode;
+import org.raven.tree.Node;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class ProjectLoginManagerNode extends LoginManagerNode {
-
-    public ProjectLoginManagerNode() {
-        super(false);
-    }
-    
+public interface Projects extends Node {
+    public Project getProject(String name);
 }

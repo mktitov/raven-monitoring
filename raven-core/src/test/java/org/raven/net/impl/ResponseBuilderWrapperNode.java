@@ -56,7 +56,7 @@ public class ResponseBuilderWrapperNode extends BaseNode implements ResponseBuil
     }
 
     public Boolean isSessionAllowed() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return false;
     }
     
     public interface ResponseBuilderWrapper {

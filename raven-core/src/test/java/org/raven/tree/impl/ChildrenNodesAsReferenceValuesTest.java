@@ -42,7 +42,7 @@ public class ChildrenNodesAsReferenceValuesTest extends RavenCoreTestCase
         replay(attr, valuesCollection);
 
         ChildrenNodesAsReferenceValues refValues =
-                new ChildrenNodesAsReferenceValues("TEST_TYPE", "/datasources");
+                new ChildrenNodesAsReferenceValues("TEST_TYPE", "/datasources", null);
 
         assertFalse(refValues.getReferenceValues(attr, valuesCollection));
         
@@ -61,6 +61,7 @@ public class ChildrenNodesAsReferenceValuesTest extends RavenCoreTestCase
 
         NodeAttribute attr = createMock(NodeAttribute.class);
         expect(attr.getValueHandlerType()).andReturn("TEST_TYPE");
+        expect(attr.getOwner()).andReturn(null);        
 
         ReferenceValueCollection valuesCollection = createMock(ReferenceValueCollection.class);
         valuesCollection.add(new ReferenceValueImpl(node1.getPath(), node1.getName()), null);
@@ -69,7 +70,7 @@ public class ChildrenNodesAsReferenceValuesTest extends RavenCoreTestCase
         replay(attr, valuesCollection);
 
         ChildrenNodesAsReferenceValues refValues =
-                new ChildrenNodesAsReferenceValues("TEST_TYPE", "/datasources");
+                new ChildrenNodesAsReferenceValues("TEST_TYPE", "/datasources", null);
 
 
         assertTrue(refValues.getReferenceValues(attr, valuesCollection));

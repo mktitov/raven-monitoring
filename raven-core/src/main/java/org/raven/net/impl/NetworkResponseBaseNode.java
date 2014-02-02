@@ -38,6 +38,18 @@ public class NetworkResponseBaseNode extends BaseNode {
     
     protected BindingSupportImpl bindingSupport;
 
+    public NetworkResponseBaseNode() {
+        super();
+    }
+    
+    public NetworkResponseBaseNode(String name) {
+        super(name);
+    }
+
+    public BindingSupportImpl getBindingSupport() {
+        return bindingSupport;
+    }
+
     @Override
     protected void initFields() {
         super.initFields(); 

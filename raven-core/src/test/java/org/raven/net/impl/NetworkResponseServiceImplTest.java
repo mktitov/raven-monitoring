@@ -54,6 +54,7 @@ import org.raven.net.NetworkResponseServiceUnavailableException;
 import org.raven.net.Request;
 import org.raven.net.Response;
 import org.raven.net.ResponseContext;
+import org.raven.prj.impl.ProjectNode;
 import org.raven.test.PushOnDemandDataSource;
 import org.raven.tree.impl.LoggerHelper;
 import org.slf4j.Logger;
@@ -72,12 +73,17 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
     private IMocksControl mocks;
     private Map<String, Object> params;
     private LoginServiceWrapper loginService;
+    private ProjectNode project;
 
     @Before
     public void prepare() {
         responseService = registry.getService(NetworkResponseService.class);
         assertNotNull(responseService);
         responseServiceNode = getSRINode();
+        project = new ProjectNode();
+        project.setName("project");
+        tree.getProjectsNode().addAndSaveChildren(project);
+        assertTrue(project.start());
         mocks = createControl();
         params = new HashMap<String, Object>();
         
@@ -98,6 +104,51 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
         Request request = trainRequest("context");
         mocks.replay();
         responseService.getResponseContext(request);
+        mocks.verify();
+    }
+    
+    //on stopped project
+    @Test(expected=ContextUnavailableException.class)
+    public void projectsContextUnavailableTest() throws NetworkResponseServiceExeption {
+        project.stop();
+        createSimpleResponseBuilder(project.getWebInterface(), "context");
+        Request request = trainRequest("project/context", true);
+        mocks.replay();
+        responseService.getResponseContext(request);
+        mocks.verify();
+    }
+    
+    //on stopped web interface
+    @Test(expected=ContextUnavailableException.class)
+    public void projectsContextUnavailableTest2() throws NetworkResponseServiceExeption {
+        project.getWebInterface().stop();
+        createSimpleResponseBuilder(project.getWebInterface(), "context");
+        Request request = trainRequest("project/context", true);
+        mocks.replay();
+        responseService.getResponseContext(request);
+        mocks.verify();
+    }
+    
+    @Test()
+    public void projectsGetContextSuccessTest() throws NetworkResponseServiceExeption {
+        SimpleResponseBuilder builder = createSimpleResponseBuilder(project.getWebInterface(), "context");
+        builder.setLoginService(loginService);
+        Request request = trainRequest("project/context", true);
+        mocks.replay();
+        ResponseContext response = responseService.getResponseContext(request);
+        assertSame(builder, response.getResponseBuilder());
+        assertSame(loginService, response.getLoginService());
+        mocks.verify();
+    }
+    
+    @Test(expected = AccessDeniedException.class)
+    public void projectsAccessDeniedTest() throws NetworkResponseServiceExeption {
+        SimpleResponseBuilder builder = createSimpleResponseBuilder(project.getWebInterface(), "context");
+        Request request = trainRequest("project/context", true);
+        mocks.replay();
+        ResponseContext response = responseService.getResponseContext(request);
+        assertSame(builder, response.getResponseBuilder());
+        assertSame(loginService, response.getLoginService());
         mocks.verify();
     }
     
@@ -226,7 +277,13 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
         ResponseContextImpl responseContext = new ResponseContextImpl(
                 request, "context", "sub", 1, loginService, responseBuilder, responseServiceNode);
         
-        expect(request.getParams()).andReturn(params);
+        expect(request.getParams()).andReturn(params).atLeastOnce();
+        expect(request.getRootPath()).andReturn("/raven").anyTimes();
+        expect(request.getServicePath()).andReturn(Request.SRI_SERVICE).anyTimes();
+        expect(request.getContextPath()).andReturn(null).anyTimes();
+        expect(params.get(BindingNames.APP_NODE)).andReturn(null).anyTimes();
+        expect(params.get(BindingNames.APP_PATH)).andReturn(null).anyTimes();
+        
         expect(params.put(NetworkResponseServiceNode.SUBCONTEXT_PARAM, "sub")).andReturn(null);
         expect(user.getLogin()).andReturn("Test user").anyTimes();
         expect(wrapper.buildResponse(same(user), same(responseContext), checkBindings(user, request, responseContext))).andReturn(response);
@@ -431,10 +488,16 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
     }
     
     private Request trainRequest(String contextPath) {
+        return trainRequest(contextPath, false);
+    }
+    
+    private Request trainRequest(String contextPath, boolean projectsService) {
         Request request = mocks.createMock(Request.class);
         expect(request.getContextPath()).andReturn(contextPath).anyTimes();
         expect(request.getRemoteAddr()).andReturn("1.1.1.1").anyTimes();
         expect(request.getParams()).andReturn(params).anyTimes();
+        expect(request.getServicePath()).andReturn(projectsService? Request.PROJECTS_SERVICE : Request.SRI_SERVICE).anyTimes();
+        expect(request.getRootPath()).andReturn("/raven").anyTimes();
         return request;
     }
     
@@ -443,6 +506,8 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
         expect(request.getContextPath()).andReturn(contextPath).anyTimes();
         expect(request.getRemoteAddr()).andReturn(remoteIp).anyTimes();
         expect(request.getParams()).andReturn(params).anyTimes();
+        expect(request.getServicePath()).andReturn(Request.SRI_SERVICE).anyTimes();
+        expect(request.getRootPath()).andReturn("/raven").anyTimes();
         return request;
     }
     
@@ -451,6 +516,8 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
         expect(request.getContextPath()).andReturn(contextPath).anyTimes();
         expect(request.getRemoteAddr()).andReturn("1.1.1.1").anyTimes();
         expect(request.getParams()).andReturn(params).atLeastOnce();
+        expect(request.getServicePath()).andReturn(Request.SRI_SERVICE).anyTimes();
+        expect(request.getRootPath()).andReturn("/raven").anyTimes();
         return request;
     }
     
