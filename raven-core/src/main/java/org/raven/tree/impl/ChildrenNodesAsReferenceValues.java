@@ -86,7 +86,7 @@ public class ChildrenNodesAsReferenceValues implements AttributeReferenceValues
     {
         for (Node child: node.getEffectiveNodes()) {
             String path = relative? pathResolver.getRelativePath(attrNode, node): child.getPath();
-            ReferenceValue refVal = new ReferenceValueImpl(child.getPath(), (relative? "(Project) ":"")+child.getName());
+            ReferenceValue refVal = new ReferenceValueImpl(path, (relative? "(Project) ":"")+child.getName());
             referenceValues.add(refVal, null);
         }
     }
