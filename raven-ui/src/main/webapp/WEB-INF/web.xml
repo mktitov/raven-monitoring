@@ -135,6 +135,7 @@
     <servlet-mapping>
         <servlet-name>NetworkResponseServlet</servlet-name>
         <url-pattern>/sri/*</url-pattern>
+        <url-pattern>/projects/*</url-pattern>
     </servlet-mapping>
 <!--    <servlet-mapping>
         <servlet-name>raven-editor-api</servlet-name>
