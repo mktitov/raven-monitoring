@@ -191,7 +191,7 @@ public class FileResponseBuilderTest extends RavenCoreTestCase {
         BindingsContainer group = createGroup();
         
         FileResponseBuilder resp = createBuilder(group, "test", FileResponseBuilder.GSP_MIME_TYPE);
-        resp.getFile().setDataString("${path('group/test')}");
+        resp.getFile().setDataString("${path('sri/group/test')}");
         assertTrue(resp.start());
         
         assertEquals("/raven/sri/group/test", resp.buildResponseContent(null, null).toString());

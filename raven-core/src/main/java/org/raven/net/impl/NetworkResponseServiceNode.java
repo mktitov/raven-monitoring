@@ -182,8 +182,9 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
         }
     }
     
-    private ResponseBuilder findResponseBuilder(Node node, String[] path, int pathIndex, PathInfo pathInfo, Request request) 
-            throws ContextUnavailableException 
+    private ResponseBuilder findResponseBuilder(Node node, String[] path, int pathIndex, PathInfo pathInfo, 
+            Request request) 
+        throws ContextUnavailableException 
     {
         ResponseBuilder respBuilder;
         try {

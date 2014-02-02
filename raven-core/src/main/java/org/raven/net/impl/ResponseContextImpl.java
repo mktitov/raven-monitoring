@@ -125,7 +125,7 @@ public class ResponseContextImpl implements ResponseContext {
                 paramsToString(request.getParams())));
         try {
             try {
-                BindingSupport bindingSupport = serviceNode.getBindingSupport();
+                BindingSupport bindingSupport = responseBuilder.getBindingSupport();
                 try {
                     bindingSupport.put(BindingNames.USER_CONTEXT, user);
                     bindingSupport.put(BindingNames.REQUEST_BINDING, request);

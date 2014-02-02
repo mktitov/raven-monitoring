@@ -17,8 +17,12 @@
 package org.raven.net.impl;
 
 import groovy.lang.Closure;
+import org.raven.net.Request;
+import org.raven.prj.Project;
+import org.raven.prj.impl.WebInterfaceNode;
 import org.raven.tree.Node;
 import org.raven.tree.NodePathResolver;
+import org.raven.util.NodeUtils;
 
 /**
  *
@@ -28,20 +32,39 @@ public class PathClosure extends Closure {
     private final String rootPath;
     private final NodePathResolver pathResolver;
     private final Node sriRootNode;
-
+    
     public PathClosure(Object owner, String rootPath, NodePathResolver pathResolver, Node sriRootNode) {
         super(owner);
-        this.rootPath = rootPath + "/sri";
+        this.rootPath = rootPath;
         this.pathResolver = pathResolver;
         this.sriRootNode = sriRootNode;
     }
     
+    /**
+     * Adding subpath to root path. 
+     * <br><b style='color:red'>WARNING!</b> Subpath must starts with service name! So it must starts like 
+     * <b>projects/...</b> or <b>sri/</b>
+     * @return 
+     */
     public String doCall(String subpath) {
         return rootPath+"/"+subpath;
     }
     
     public String doCall(Node node) {
-        String path = rootPath + "/" + pathResolver.getRelativePath(sriRootNode, node).replace("\"", "");
-        return path.substring(0, path.length()-1);
+        Node serviceNode;
+        StringBuilder path = new StringBuilder(rootPath).append("/");
+        WebInterfaceNode webi = NodeUtils.getParentOfType(node, WebInterfaceNode.class, true);
+        if (webi != null) {
+            path.append(Request.PROJECTS_SERVICE).append("/").append(webi.getParent().getName());
+            serviceNode = webi;
+        } else {
+            serviceNode = sriRootNode;
+            path.append(Request.SRI_SERVICE);
+        }
+        if (node != serviceNode) {
+            String nodePath = pathResolver.getRelativePath(serviceNode, node).replace("\"", "");
+            path.append("/").append(nodePath, 0, nodePath.length()-1);
+        }
+        return path.toString();
     }
 }

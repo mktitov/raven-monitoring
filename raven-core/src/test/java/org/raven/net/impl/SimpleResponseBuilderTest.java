@@ -54,7 +54,7 @@ public class SimpleResponseBuilderTest extends RavenCoreTestCase {
     @Test
     public void stringPathTest() {
         BindingsContainer group = createGroup();
-        SimpleResponseBuilder respBuilder = createBuilder(group, "builder", "path('test')");
+        SimpleResponseBuilder respBuilder = createBuilder(group, "builder", "path('sri/test')");
         ResponseContext responcetContext = trainResponseContext();
         mocks.replay();
         assertEquals("/raven/sri/test", respBuilder.buildResponseContent(null, responcetContext));
