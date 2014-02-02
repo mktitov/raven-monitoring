@@ -27,9 +27,15 @@ import org.raven.tree.impl.BaseNode;
  */
 public class LoginManagerNode extends BaseNode implements LoginManager {
     public final static String NAME = "Login services";
+    private final boolean needCreateSystemLoginService;
 
     public LoginManagerNode() {
+        this(true);
+    }
+
+    protected LoginManagerNode(boolean needCreateSystemLoginService) {
         super(NAME);
+        this.needCreateSystemLoginService = needCreateSystemLoginService;
     }
 
     @Override
@@ -39,7 +45,7 @@ public class LoginManagerNode extends BaseNode implements LoginManager {
     }
     
     private void createSystemLoginService() {
-        if (!hasNode(SystemLoginService.NAME)) {
+        if (needCreateSystemLoginService && !hasNode(SystemLoginService.NAME)) {
             SystemLoginService systemLoginService = new SystemLoginService();
             addAndSaveChildren(systemLoginService);
             systemLoginService.start();

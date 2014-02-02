@@ -27,8 +27,7 @@ public class ConnectionPoolsNode extends BaseNode
 {
     public final static String NAME = "Connection pools";
 
-    public ConnectionPoolsNode()
-    {
+    public ConnectionPoolsNode() {
         super(NAME);
     }
 }

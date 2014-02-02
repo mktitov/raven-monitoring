@@ -17,6 +17,7 @@
 
 package org.raven.tree.impl;
 
+import org.raven.prj.ProjectsNode;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -116,6 +117,7 @@ public class TreeImpl implements Tree {
     private DataSourcesNode dataSourcesNode;
     private TemplatesNode templatesNode;
     private ResourcesNode resourcesNode;
+    private ProjectsNode projectsNode;
     private ConnectionPoolsNode connectionPoolsNode;
     private SchedulersNode schedulersNode;
     private NodeLoggerNode nodeLoggerNode;
@@ -553,6 +555,7 @@ public class TreeImpl implements Tree {
         createSystemSubtree();
         createTempatesSubtree();
         createResourcesSubtree();
+        createProjectsSubtree();
     }
 
     private void createSystemSubtree()
@@ -689,6 +692,14 @@ public class TreeImpl implements Tree {
             resourcesNode = new ResourcesNode();
             rootNode.addChildren(resourcesNode);
             saveNode(resourcesNode);
+        }
+    }
+    
+    private void createProjectsSubtree() {
+        projectsNode = (ProjectsNode) rootNode.getNode(ProjectsNode.NAME);
+        if (projectsNode==null) {
+            projectsNode = new ProjectsNode();
+            rootNode.addAndSaveChildren(projectsNode);
         }
     }
 

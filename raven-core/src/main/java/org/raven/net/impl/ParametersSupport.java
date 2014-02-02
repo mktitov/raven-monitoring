@@ -35,19 +35,25 @@ public class ParametersSupport {
     }
     
     public void initNodes(Node owner, boolean start) {
-        if (!owner.hasNode(ContextParameters.NAME)) {
-            ContextParameters paramsNode = new ContextParameters();
+        ContextParameters paramsNode = (ContextParameters) owner.getNode(ContextParameters.NAME);
+        if (paramsNode==null) {
+             paramsNode = new ContextParameters();
             owner.addAndSaveChildren(paramsNode);
-            if (start)
-                paramsNode.start();
         }
+        if (start && paramsNode.isAutoStart())
+            paramsNode.start();
+        
+    }
+    
+    public ContextParameters getParametersNode(Node owner) {
+        return (ContextParameters) owner.getNode(ContextParameters.NAME);
     }
     
     public void checkParameters(Node owner, Map<String, Object> params) 
         throws RequiredParameterMissedException, InvalidParameterValueException
     {
         ContextParameters paramsNode = (ContextParameters) owner.getNode(ContextParameters.NAME);
-        if (paramsNode!=null) 
+        if (paramsNode!=null && paramsNode.isStarted()) 
             for (ParameterNode param: NodeUtils.getEffectiveChildsOfType(paramsNode, ParameterNode.class)) {
                 Object value = params==null? null : params.get(param.getName());
                 if (value!=null) 

@@ -25,6 +25,8 @@ import org.raven.net.Response;
 import org.raven.net.ResponseBuilder;
 import org.raven.net.ResponseContext;
 import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodeError;
 import org.raven.util.OperationStatistic;
 import org.weda.annotations.constraints.NotNull;
 
@@ -34,7 +36,9 @@ import org.weda.annotations.constraints.NotNull;
  */
 public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode implements ResponseBuilder {
     
-    @NotNull @Parameter(defaultValue="text/plain")
+    public final static String USE_PARAMETERS_ATTR = "useParameters";
+    
+    @Parameter
     private String responseContentType;
     
     @Parameter(readOnly=true)
@@ -45,6 +49,9 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
     
     @Parameter
     private Boolean useServerSession;
+    
+    @NotNull @Parameter(defaultValue = "false")
+    private Boolean useParameters;
     
     private ParametersSupport paramsSupport;
 
@@ -58,13 +65,20 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
     @Override
     protected void doInit() throws Exception {
         super.doInit(); 
-        initNodes(false);
+//        initNodes(false);
+//        syncParametersNodeState(useParameters);
     }
 
     @Override
     protected void doStart() throws Exception {
-        super.doStart(); 
-        initNodes(true);
+        super.doStart();
+        syncParametersNodeState(useParameters);
+//        initNodes(true);
+    }
+
+    @Override
+    public boolean isStartAfterChildrens() {
+        return true;
     }
 
     private void initNodes(boolean start) {
@@ -82,7 +96,8 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
                 if (ifModifiedSince>=0 && lastModified!=null && lastModified/1000 <= ifModifiedSince/1000)
                     return Response.NOT_MODIFIED;
                 else {
-                    paramsSupport.checkParameters(this, responseContext.getRequest().getParams());
+                    if (useParameters)
+                        paramsSupport.checkParameters(this, responseContext.getRequest().getParams());
                     return new ResponseImpl(
                             responseContentType, 
                             buildResponseContent(user, responseContext), 
@@ -120,6 +135,14 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
     protected abstract Long doGetLastModified() throws Exception;
     protected abstract Object buildResponseContent(UserContext user, ResponseContext responseContext) throws Exception;
 
+    public Boolean getUseParameters() {
+        return useParameters;
+    }
+
+    public void setUseParameters(Boolean useParameters) {
+        this.useParameters = useParameters;
+    }
+
     public Node getResponseBuilderNode() {
         return this;
     }
@@ -152,6 +175,14 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
         this.useServerSession = useServerSession;
     }
 
+    @Override
+    public void nodeAttributeValueChanged(Node node, NodeAttribute attr, Object oldValue, Object newValue) {
+        super.nodeAttributeValueChanged(node, attr, oldValue, newValue);
+        if (node==this && USE_PARAMETERS_ATTR.equals(attr.getName())) {
+            syncParametersNodeState(newValue);
+        }
+    }
+
     @Parameter(readOnly = true)
     public String getLastModifiedDate() {
         try {
@@ -160,6 +191,20 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
             if (isLogLevelEnabled(LogLevel.ERROR))
                 logger.error("Error in getLastModifiedDate", ex);
             return null;
+        }
+    }
+
+    private void syncParametersNodeState(Object newValue) throws NodeError {
+        if (Boolean.TRUE.equals(newValue))
+            paramsSupport.initNodes(this, true);
+        else {
+            Node parametersNode = paramsSupport.getParametersNode(this);
+            if (parametersNode!=null) {
+                if (parametersNode.getNodesCount()>0)
+                    parametersNode.stop();
+                else
+                    tree.remove(parametersNode);
+            }
         }
     }
 }

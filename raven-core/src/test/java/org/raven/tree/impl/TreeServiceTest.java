@@ -17,6 +17,7 @@
 
 package org.raven.tree.impl;
 
+import org.raven.prj.ProjectsNode;
 import java.util.List;
 import java.util.Set;
 import org.junit.Before;
@@ -857,6 +858,9 @@ public class TreeServiceTest extends ServiceTestCase
         
         LoginManagerNode authManager = (LoginManagerNode) authNode.getNode(LoginManagerNode.NAME);
         assertNotNull(authManager);
+        
+        ProjectsNode projects = (ProjectsNode) tree.getRootNode().getNode(ProjectsNode.NAME);
+        assertNotNull(projects);
 
         assertNotNull(authNode.getNode(ContextsNode.NODE_NAME));
         assertNotNull(authNode.getNode(GroupsListNode.NAME));
