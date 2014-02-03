@@ -15,6 +15,7 @@
  */
 package org.raven.net.impl;
 
+import java.nio.charset.Charset;
 import java.util.Map;
 import org.raven.net.Response;
 
@@ -27,12 +28,16 @@ public class ResponseImpl implements Response {
     private final Object content;
     private final Map<String, String> headers;
     private final Long lastModified;
+    private final Charset charset;
 
-    public ResponseImpl(String contentType, Object content, Map<String, String> headers, Long lastModified) {
+    public ResponseImpl(String contentType, Object content, Map<String, String> headers, Long lastModified, 
+            Charset charset) 
+    {
         this.contentType = contentType;
         this.content = content;
         this.headers = headers;
         this.lastModified = lastModified;
+        this.charset = charset;
     }
 
     public String getContentType() {
@@ -49,5 +54,9 @@ public class ResponseImpl implements Response {
 
     public Long getLastModified() {
         return lastModified;
+    }
+
+    public Charset getCharset() {
+        return charset;
     }
 }

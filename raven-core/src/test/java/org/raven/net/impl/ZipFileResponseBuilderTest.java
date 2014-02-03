@@ -18,50 +18,123 @@ package org.raven.net.impl;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import javax.activation.MimetypesFileTypeMap;
+import java.io.InputStream;
+import java.util.Map;
 import org.apache.commons.io.IOUtils;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.mime.MimeTypeException;
-import org.apache.tika.mime.MimeTypes;
-import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.raven.net.ContextUnavailableException;
+import org.raven.net.NetworkResponseService;
+import org.raven.test.RavenCoreTestCase;
+import org.raven.tree.Node;
+import static org.easymock.EasyMock.*;
+import org.easymock.IMocksControl;
+import org.raven.net.Request;
+import org.raven.net.Response;
+import org.raven.net.ResponseContext;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class ZipFileResponseBuilderTest extends Assert {
+public class ZipFileResponseBuilderTest extends RavenCoreTestCase {
+    private ZipFileResponseBuilder builder;
+    private Node sriRootNode;
+    private IMocksControl mocks;
+    private Request request;
+    private Map params;
     
-    @Test
-    public void test() throws Exception {
+    @Before
+    public void prepare() throws Exception {
+        NetworkResponseService respService = registry.getService(NetworkResponseService.class);
+        sriRootNode = respService.getNetworkResponseServiceNode();
+        builder = new ZipFileResponseBuilder();
+        builder.setName("builder");
+        sriRootNode.addAndSaveChildren(builder);
         File zipFile = new File("src/test/conf/test.zip");
         assertTrue(zipFile.exists());
-        ZipInputStream stream = new ZipInputStream(new FileInputStream(zipFile), null);
-        ZipEntry entry = stream.getNextEntry();
-        while (entry!=null) {
-            System.out.println("entry: "+entry.getName());
-            if (entry.getName().equals("1")) {
-                String content = IOUtils.toString(stream);
-                System.out.println("content: "+content);
-            }
-            entry = stream.getNextEntry();
-        }
+        builder.getFile().setDataStream(new FileInputStream(zipFile));
+        assertTrue(builder.start());
+        mocks = createControl();
+    }
+    
+    @Test(expected = ContextUnavailableException.class)
+    public void nullSubcontextTest() throws Exception {
+        ResponseContext respconseContext = trainResponseContext();
+        expect(params.get(NetworkResponseServiceNode.SUBCONTEXT_PARAM)).andReturn(null);
+        mocks.replay();
+        builder.buildResponseContent(null, respconseContext);
+        mocks.verify();
+    }
+    
+    @Test(expected = ContextUnavailableException.class)
+    public void entryNotFoundTest() throws Exception {
+        ResponseContext respconseContext = trainResponseContext();
+        expect(params.get(NetworkResponseServiceNode.SUBCONTEXT_PARAM)).andReturn("unknown");
+        mocks.replay();
+        builder.buildResponseContent(null, respconseContext);
+        mocks.verify();
     }
     
     @Test
-    public void  mimeTypeTest() throws Exception {
-        MimetypesFileTypeMap types = new MimetypesFileTypeMap();
-        System.out.println("png: "+types.getContentType("folder/test.png"));
-        System.out.println("PNG: "+types.getContentType("folder/test.PNG"));
-        System.out.println("gif: "+types.getContentType("folder/test.Gif"));
-        System.out.println("javascript: "+types.getContentType("folder/test.js"));
+    public void successTest() throws Exception {
+        ResponseContext respconseContext = trainResponseContext();
+        expect(params.get(NetworkResponseServiceNode.SUBCONTEXT_PARAM)).andReturn("folder/2.txt");
+        Map headers = mocks.createMock(Map.class);
+        expect(respconseContext.getHeaders()).andReturn(headers);
+        mocks.replay();
+        Object res = builder.buildResponseContent(null, respconseContext);
+        assertNotNull(res);
+        assertTrue(res instanceof Response);
+        Response response = (Response) res;
+        assertEquals("text/plain", response.getContentType());
+        Object content = response.getContent();
+        assertNotNull(content);
+        assertTrue(content instanceof InputStream);
+        assertEquals("file number 2", IOUtils.toString((InputStream)content));
+        mocks.verify();
         
-        MimeTypes mimeTypes = MimeTypes.getDefaultMimeTypes();
-        Metadata metadata = new Metadata();
-        metadata.add(Metadata.RESOURCE_NAME_KEY, "test.js");
-
-        System.out.println("tika jpg: "+mimeTypes.detect(null, metadata).toString());
+    }
+    
+    @Test
+    public void baseDirTest() throws Exception {
+        testBaseDir("folder");
+    }
+    
+    @Test
+    public void baseDirTest2() throws Exception {
+        testBaseDir("folder/");
+    }
+    
+    private void testBaseDir(String folder) throws Exception {
+        ResponseContext respconseContext = trainResponseContext();
+        expect(params.get(NetworkResponseServiceNode.SUBCONTEXT_PARAM)).andReturn("2.txt");
+        Map headers = mocks.createMock(Map.class);
+        expect(respconseContext.getHeaders()).andReturn(headers);
+        mocks.replay();
+        builder.setBaseDir(folder);
+        Object res = builder.buildResponseContent(null, respconseContext);
+        assertNotNull(res);
+        assertTrue(res instanceof Response);
+        Response response = (Response) res;
+        assertEquals("text/plain", response.getContentType());
+        Object content = response.getContent();
+        assertNotNull(content);
+        assertTrue(content instanceof InputStream);
+        assertEquals("file number 2", IOUtils.toString((InputStream)content));
+        mocks.verify();
+        
+    }
+    
+    private ResponseContext trainResponseContext() {
+        ResponseContext ctx = mocks.createMock(ResponseContext.class);
+        request = mocks.createMock(Request.class);
+        params = mocks.createMock(Map.class);
+        
+        expect(ctx.getRequest()).andReturn(request).atLeastOnce();
+        expect(request.getServicePath()).andReturn("sri").atLeastOnce();
+        expect(request.getContextPath()).andReturn("builder").atLeastOnce();
+        expect(request.getParams()).andReturn(params);
+        return ctx;
     }
 }

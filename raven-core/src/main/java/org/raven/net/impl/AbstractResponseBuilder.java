@@ -15,6 +15,7 @@
  */
 package org.raven.net.impl;
 
+import java.nio.charset.Charset;
 import java.util.Date;
 import org.raven.annotations.Parameter;
 import org.raven.auth.UserContext;
@@ -37,9 +38,6 @@ import org.weda.annotations.constraints.NotNull;
 public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode implements ResponseBuilder {
     
     public final static String USE_PARAMETERS_ATTR = "useParameters";
-    
-    @NotNull @Parameter
-    private String responseContentType;
     
     @Parameter(readOnly=true)
     private OperationStatistic requestsStat;
@@ -98,10 +96,12 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
                 else {
                     if (useParameters)
                         paramsSupport.checkParameters(this, responseContext.getRequest().getParams());
-                    return new ResponseImpl(
-                            responseContentType, 
-                            buildResponseContent(user, responseContext), 
-                            responseContext.getHeaders(), lastModified);
+                    Object result = buildResponseContent(user, responseContext);
+                    if (result instanceof Response)
+                        return (Response)result;
+                    else
+                        return new ResponseImpl(getContentType(), result, responseContext.getHeaders(), 
+                                lastModified, getContentCharset());
                 }
             } catch (Exception e) {
                 if (isLogLevelEnabled(LogLevel.ERROR))
@@ -136,6 +136,8 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
     }
     
     protected abstract Long doGetLastModified() throws Exception;
+    protected abstract String getContentType();
+    protected abstract Charset getContentCharset() throws Exception;
     protected abstract Object buildResponseContent(UserContext user, ResponseContext responseContext) throws Exception;
 
     public Boolean getUseParameters() {
@@ -148,14 +150,6 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
 
     public Node getResponseBuilderNode() {
         return this;
-    }
-
-    public String getResponseContentType() {
-        return responseContentType;
-    }
-
-    public void setResponseContentType(String responseContentType) {
-        this.responseContentType = responseContentType;
     }
 
     public OperationStatistic getRequestsStat() {

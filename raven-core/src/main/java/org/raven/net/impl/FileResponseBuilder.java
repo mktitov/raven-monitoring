@@ -19,9 +19,12 @@ import groovy.lang.Closure;
 import groovy.text.SimpleTemplateEngine;
 import groovy.text.Template;
 import java.io.Reader;
+import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.script.Bindings;
@@ -37,7 +40,10 @@ import org.raven.net.ResponseContext;
 import org.raven.tree.DataFile;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.Viewable;
+import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.DataFileValueHandlerFactory;
+import org.raven.tree.impl.DataFileViewableObject;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.beans.ObjectUtils;
@@ -48,13 +54,16 @@ import org.weda.internal.annotations.Service;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode = NetworkResponseServiceNode.class)
-public class FileResponseBuilder extends AbstractResponseBuilder {
+public class FileResponseBuilder extends AbstractResponseBuilder implements Viewable{
     public final static String FILE_ATTR = "file";
     public final static String GSP_MIME_TYPE = "text/gsp";
     public static final String MIME_TYPE_ATTR = "file.mimeType";
     
     @Service
     private static NetworkResponseService responceService;
+    
+    @NotNull @Parameter
+    private String responseContentType;
     
     @NotNull @Parameter(valueHandlerType = DataFileValueHandlerFactory.TYPE)
     private DataFile file;
@@ -96,6 +105,16 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
     protected Long doGetLastModified() throws Exception {
 //        NodeAttribute mimeTypeAttr = getAttr(MIME_TYPE_ATTR); 
         return GSP_MIME_TYPE.equals(getFile().getMimeType())? null : lastModified;
+    }
+
+    @Override
+    protected String getContentType() {
+        return responseContentType;
+    }
+
+    @Override
+    protected Charset getContentCharset() throws Exception {
+        return file.getEncoding();
     }
 
     @Override
@@ -180,6 +199,14 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
         if (bodies != null && !bodies.isEmpty()) 
             bindings.put("body", bodies.pop());
     }
+
+    public String getResponseContentType() {
+        return responseContentType;
+    }
+
+    public void setResponseContentType(String responseContentType) {
+        this.responseContentType = responseContentType;
+    }
     
     public DataFile getFile() {
         return file;
@@ -238,6 +265,18 @@ public class FileResponseBuilder extends AbstractResponseBuilder {
             if (FILE_ATTR.equals(attr.getName()))
                 setLastModified(System.currentTimeMillis());
         } 
+    }
+
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception {
+        return null;
+    }
+
+    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) throws Exception {
+        return Arrays.asList((ViewableObject)new DataFileViewableObject(file, this));
+    }
+
+    public Boolean getAutoRefresh() {
+        return Boolean.TRUE;
     }
     
     private class Include extends Closure {

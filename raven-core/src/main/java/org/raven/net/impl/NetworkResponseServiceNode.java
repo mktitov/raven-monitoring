@@ -165,10 +165,10 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
             } else {
                 Project project = tree.getProjectsNode().getProject(pathElems[0]);
                 if (project==null || !project.isStarted())
-                    throw new ContextUnavailableException(request.getContextPath(), pathElems[0]);
+                    throw new ContextUnavailableException(request, pathElems[0]);
                 WebInterfaceNode webi = project.getWebInterface();
                 if (webi==null || !webi.isStarted())
-                    throw new ContextUnavailableException(request.getContextPath(), pathElems[0]);
+                    throw new ContextUnavailableException(request, pathElems[0]);
                 bindings = webi.getBindingSupport();
                 serviceNode = webi;
                 pathIndex = 1;
@@ -203,8 +203,12 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
             }
         } catch (ContextUnavailableException ex) {
             Map<String, Object> params = new HashMap<String, Object>();
-            NetworkResponseContext respContext = getContext(node, path, 0, pathInfo);
-            respBuilder = new NetRespContextRespBuilderWrapper(respContext);
+            try {
+                NetworkResponseContext respContext = getContext(node, path, 0, pathInfo);
+                respBuilder = new NetRespContextRespBuilderWrapper(respContext);
+            } catch (ContextUnavailableException e) {
+                throw ex;
+            }
         }
         return respBuilder;
     }
@@ -345,7 +349,7 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
         if (node instanceof NetworkResponseGroupNode && pathIndex==path.length) {
             Node builder = node.getNode("?"+request.getMethod());
             if (builder instanceof ResponseBuilder) return (ResponseBuilder)builder;
-            else throw new ContextUnavailableException(path[pathIndex-1], request.getContextPath());
+            else throw new ContextUnavailableException(request, path[pathIndex-1]);
         }
         final String pathElem = path[pathIndex];
         for (Node child: node.getEffectiveNodes()) {
@@ -365,7 +369,7 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
                 }
             }
         }
-        throw new ContextUnavailableException(request.getContextPath(), pathElem);
+        throw new ContextUnavailableException(request, pathElem);
     }    
     
     private boolean isNameOfParameter(String name) {

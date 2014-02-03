@@ -142,6 +142,7 @@ public class SimpleResponseBuilderTest extends RavenCoreTestCase {
         SimpleResponseBuilder responseBuilder = new SimpleResponseBuilder();
         responseBuilder.setName("builder");
         owner.addAndSaveChildren(responseBuilder);
+        responseBuilder.setResponseContentType("text/html");
         responseBuilder.setResponseContent(script);
         assertTrue(responseBuilder.start());        
         return responseBuilder;

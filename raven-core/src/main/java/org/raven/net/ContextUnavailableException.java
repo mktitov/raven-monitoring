@@ -27,6 +27,11 @@ public class ContextUnavailableException extends NetworkResponseServiceExeption
         super(String.format("Context (%s) unavailable", context));
     }
     
+    public ContextUnavailableException(Request request, String pathElem) {
+        super(String.format("Context (%s/%s) unavailable. Can't resolve (%s) path element", 
+                request.getServicePath(), request.getContextPath(), pathElem));
+    }
+    
     public ContextUnavailableException(String contextPath, String pathElem) {
         super(String.format("Context (%s) unavailable. Can't resolve (%s) path element", contextPath, pathElem));
     }

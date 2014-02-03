@@ -17,8 +17,6 @@
 
 package org.raven.tree.impl;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.raven.log.LogLevel;
 import org.raven.tree.DataFile;
 import org.raven.tree.DataFileException;

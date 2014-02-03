@@ -15,6 +15,7 @@
  */
 package org.raven.net;
 
+import java.nio.charset.Charset;
 import java.util.Map;
 
 /**
@@ -35,8 +36,12 @@ public interface Response {
         public Long getLastModified() {
             throw new UnsupportedOperationException("Not supported operation");
         }
+        public Charset getCharset() {
+            throw new UnsupportedOperationException("Not supported operation");
+        }
     };
     public String getContentType();
+    public Charset getCharset();
     public Object getContent();
 //    public Charset getContentEncoding();
     public Map<String, String> getHeaders();

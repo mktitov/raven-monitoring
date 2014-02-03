@@ -16,6 +16,7 @@
 package org.raven.net.impl;
 
 import groovy.lang.Closure;
+import java.nio.charset.Charset;
 import java.util.Map;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
@@ -40,6 +41,12 @@ public class SimpleResponseBuilder extends AbstractResponseBuilder {
     @Service
     private static NetworkResponseService responseService;
     
+    @NotNull @Parameter
+    private String responseContentType;
+    
+    @Parameter
+    private Charset responseContentCharset;
+    
     @NotNull @Parameter(valueHandlerType = ScriptAttributeValueHandlerFactory.TYPE)
     private Object responseContent;
     
@@ -55,9 +62,27 @@ public class SimpleResponseBuilder extends AbstractResponseBuilder {
         }
     }
 
+    public String getResponseContentType() {
+        return responseContentType;
+    }
+
+    public void setResponseContentType(String responseContentType) {
+        this.responseContentType = responseContentType;
+    }
+
     @Override
     protected Long doGetLastModified() {
         return null;
+    }
+
+    @Override
+    protected String getContentType() {
+        return responseContentType;
+    }
+
+    @Override
+    protected Charset getContentCharset() throws Exception {
+        return responseContentCharset;
     }
 
     public Object getResponseContent() {        
@@ -66,6 +91,14 @@ public class SimpleResponseBuilder extends AbstractResponseBuilder {
 
     public void setResponseContent(Object responseContent) {
         this.responseContent = responseContent;
+    }
+
+    public Charset getResponseContentCharset() {
+        return responseContentCharset;
+    }
+
+    public void setResponseContentCharset(Charset responseContentCharset) {
+        this.responseContentCharset = responseContentCharset;
     }
     
     private PathClosure createPathClosure(ResponseContext responseContext) {
