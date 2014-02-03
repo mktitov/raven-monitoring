@@ -19,6 +19,7 @@ package org.raven.tree.impl;
 
 import org.raven.prj.impl.ProjectsNode;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -203,11 +204,11 @@ public class TreeImpl implements Tree {
         if (node.isTemplate())
             return new Class[]{
                 String.class, Integer.class, Double.class, Boolean.class, Object.class, Node.class
-                , AttributeReference.class, TemplateVariable.class};
+                , Charset.class, AttributeReference.class, TemplateVariable.class};
         else
             return new Class[]{
                 String.class, Integer.class, Double.class, Boolean.class, Object.class, Node.class
-                , AttributeReference.class};
+                , Charset.class, AttributeReference.class};
     }
 
     public Node getRootNode() {

@@ -38,7 +38,7 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
     
     public final static String USE_PARAMETERS_ATTR = "useParameters";
     
-    @Parameter
+    @NotNull @Parameter
     private String responseContentType;
     
     @Parameter(readOnly=true)
@@ -106,7 +106,10 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
             } catch (Exception e) {
                 if (isLogLevelEnabled(LogLevel.ERROR))
                     getLogger().error("Problem with building response", e);
-                throw new NetworkResponseServiceExeption("Problem with building response", e);
+                if (e instanceof NetworkResponseServiceExeption)
+                    throw (NetworkResponseServiceExeption)e;
+                else
+                    throw new NetworkResponseServiceExeption("Problem with building response", e);
             }
         } finally {
             requestsStat.markOperationProcessingEnd(ts);

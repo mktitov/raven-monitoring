@@ -15,11 +15,15 @@
  */
 package org.raven.prj.impl;
 
+import java.util.concurrent.atomic.AtomicLong;
 import org.raven.annotations.NodeClass;
+import org.raven.annotations.Parameter;
 import org.raven.expr.impl.IfNode;
+import org.raven.net.ResponseServiceNode;
 import org.raven.net.impl.FileResponseBuilder;
 import org.raven.net.impl.NetworkResponseGroupNode;
 import org.raven.net.impl.SimpleResponseBuilder;
+import org.raven.net.impl.ZipFileResponseBuilder;
 import org.raven.tree.impl.InvisibleNode;
 
 /**
@@ -29,12 +33,40 @@ import org.raven.tree.impl.InvisibleNode;
 @NodeClass(parentNode = InvisibleNode.class, 
         childNodes = {
             NetworkResponseGroupNode.class, SimpleResponseBuilder.class, FileResponseBuilder.class, 
-            IfNode.class
+            ZipFileResponseBuilder.class, IfNode.class
 })
-public class WebInterfaceNode extends NetworkResponseGroupNode {
+public class WebInterfaceNode extends NetworkResponseGroupNode implements ResponseServiceNode {
     public final static String NAME = "Web interface";
+    
+    @Parameter(readOnly=true)
+    private AtomicLong requestsCount;
+
+    @Parameter(readOnly=true)
+    private AtomicLong requestsWithErrors;
+
+    @Override
+    protected void doInit() throws Exception {
+        super.doInit();
+        requestsCount = new AtomicLong(0);
+        requestsWithErrors = new AtomicLong(0);
+    }
+
+    @Override
+    protected void doStart() throws Exception {
+        super.doStart();
+        requestsCount = new AtomicLong(0);
+        requestsWithErrors = new AtomicLong(0);
+    }
 
     public WebInterfaceNode() {
         super(NAME);
+    }
+
+    public void incRequestsCountWithErrors() {
+        requestsWithErrors.incrementAndGet();
+    }
+
+    public long getNextRequestId() {
+        return requestsCount.incrementAndGet();
     }
 }

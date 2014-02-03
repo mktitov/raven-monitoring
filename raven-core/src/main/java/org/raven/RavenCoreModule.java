@@ -93,6 +93,10 @@ public class RavenCoreModule
         binder.bind(ExpressionCache.class, ExpressionCacheImpl.class);
         binder.bind(NetworkResponseService.class, NetworkResponseServiceImpl.class);
     }
+    
+    public static MimeTypeService buildMimeTypeService() {
+        return new MimeTypeServiceImpl();
+    }
 
     public static TemporaryCacheManager buildTemporaryCacheManager(CacheManager cacheManager) {
         return new TemporaryCacheManagerImpl(cacheManager);

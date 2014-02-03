@@ -27,6 +27,7 @@ import org.raven.net.Request;
 import org.raven.net.Response;
 import org.raven.net.ResponseBuilder;
 import org.raven.net.ResponseContext;
+import org.raven.net.ResponseServiceNode;
 import org.raven.tree.impl.LoggerHelper;
 import org.slf4j.Logger;
 
@@ -51,12 +52,12 @@ public class ResponseContextImpl implements ResponseContext {
     private final ResponseBuilder responseBuilder;
     private final LoggerHelper logger;
     private final LoggerHelper responseBuilderLogger;
-    private final NetworkResponseServiceNode serviceNode;
+    private final ResponseServiceNode serviceNode;
     private final boolean sessionAllowed;
     private Map<String, String> headers;
 
     public ResponseContextImpl(Request request, String builderPath, String subcontext, long requestId, 
-            LoginService loginService, ResponseBuilder responseBuilder, NetworkResponseServiceNode serviceNode) 
+            LoginService loginService, ResponseBuilder responseBuilder, ResponseServiceNode serviceNode) 
     {
         this.request = request;
         this.builderPath = builderPath;
@@ -125,7 +126,7 @@ public class ResponseContextImpl implements ResponseContext {
                 paramsToString(request.getParams())));
         try {
             try {
-                BindingSupport bindingSupport = responseBuilder.getBindingSupport();
+                BindingSupport bindingSupport = serviceNode.getBindingSupport();
                 try {
                     bindingSupport.put(BindingNames.USER_CONTEXT, user);
                     bindingSupport.put(BindingNames.REQUEST_BINDING, request);

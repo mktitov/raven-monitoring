@@ -44,8 +44,8 @@ import org.raven.net.Request;
 import org.raven.net.Response;
 import org.raven.net.ResponseBuilder;
 import org.raven.net.ResponseContext;
+import org.raven.net.ResponseServiceNode;
 import org.raven.prj.Project;
-import org.raven.prj.WebInterface;
 import org.raven.prj.impl.WebInterfaceNode;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -59,7 +59,7 @@ import org.weda.internal.annotations.Service;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode=InvisibleNode.class, childNodes={IfNode.class})
-public class NetworkResponseServiceNode extends BaseNode implements NetworkResponseNode
+public class NetworkResponseServiceNode extends BaseNode implements NetworkResponseNode, ResponseServiceNode
 {
     public final static String NAME = "NetworkResponseService";
     public static final String SUBCONTEXT_PARAM = "subcontext";
@@ -147,17 +147,21 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
     public void incRequestsCountWithErrors() {
         requestsWithErrors.incrementAndGet();
     }
+    
+    public long getNextRequestId() {
+        return requestsCount.incrementAndGet();
+    }
 
     public ResponseContext getResponseContext(Request request) throws NetworkResponseServiceExeption {
         try {
             PathInfo pathInfo = new PathInfo();
             BindingSupport bindings = null;
-            Node startNode = null;
+            ResponseServiceNode serviceNode = null;
             int pathIndex = 0;
             String[] pathElems = splitContextToPathElements(request.getContextPath());
             if (Request.SRI_SERVICE.equals(request.getServicePath())) {
                 bindings = bindingSupport;
-                startNode = this;
+                serviceNode = this;
             } else {
                 Project project = tree.getProjectsNode().getProject(pathElems[0]);
                 if (project==null || !project.isStarted())
@@ -166,17 +170,20 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
                 if (webi==null || !webi.isStarted())
                     throw new ContextUnavailableException(request.getContextPath(), pathElems[0]);
                 bindings = webi.getBindingSupport();
-                startNode = webi;
+                serviceNode = webi;
                 pathIndex = 1;
+                PathClosure pathCl = new PathClosure(this, request.getRootPath(), pathResolver, this);
+                request.getParams().put(BindingNames.APP_NODE, webi);
+                request.getParams().put(BindingNames.APP_PATH, pathCl.doCall(webi));
             }
             bindings.put(CONTEXT_BINDING, request.getContextPath());
             bindings.put(REQUESTER_IP_BINDING, request.getRemoteAddr());
             bindings.put(REQUEST_BINDING, request);
-            ResponseBuilder respBuilder = findResponseBuilder(startNode, pathElems, pathIndex, pathInfo, request);
+            ResponseBuilder respBuilder = findResponseBuilder(serviceNode, pathElems, pathIndex, pathInfo, request);
             
             LoginService loginService = findLoginService(respBuilder);
             return new ResponseContextImpl(request, pathInfo.getBuilderPath(), pathInfo.getSubpath(), 
-                    requestsCount.incrementAndGet(), loginService, respBuilder, this);
+                    serviceNode.getNextRequestId(), loginService, respBuilder, serviceNode);
         } finally {
             bindingSupport.reset();
         }

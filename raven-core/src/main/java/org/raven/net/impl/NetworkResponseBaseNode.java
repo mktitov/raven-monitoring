@@ -18,7 +18,9 @@ package org.raven.net.impl;
 import javax.script.Bindings;
 import org.raven.annotations.Parameter;
 import org.raven.auth.LoginService;
+import org.raven.expr.BindingSupport;
 import org.raven.expr.impl.BindingSupportImpl;
+import org.raven.tree.NodeWithBindingSupport;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 
@@ -26,7 +28,7 @@ import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
  *
  * @author Mikhail Titov
  */
-public class NetworkResponseBaseNode extends BaseNode {
+public class NetworkResponseBaseNode extends BaseNode implements NodeWithBindingSupport {
     @Parameter
     private Class namedParameterType;
     
@@ -46,7 +48,7 @@ public class NetworkResponseBaseNode extends BaseNode {
         super(name);
     }
 
-    public BindingSupportImpl getBindingSupport() {
+    public BindingSupport getBindingSupport() {
         return bindingSupport;
     }
 
