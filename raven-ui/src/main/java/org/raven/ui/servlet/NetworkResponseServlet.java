@@ -199,8 +199,13 @@ public class NetworkResponseServlet extends HttpServlet  {
             if (content instanceof RedirectResult)
                 response.sendRedirect(((RedirectResult)content).getUrl());
             else {
-                String charset = getCharset(request);
-                if (serviceResponse.getContentType().toUpperCase().startsWith("TEXT")) 
+                String charset = getCharset(request, serviceResponse);
+//                if (serviceResponse.getCharset()!=null)
+//                    charset = serviceResponse.getCharset().name();
+//                else 
+//                    charset = getCharset(request);
+////                    if (serviceResponse.getContentType().toUpperCase().startsWith("TEXT")) 
+                if (charset!=null)
                     response.setCharacterEncoding(charset);
                 response.setContentType(serviceResponse.getContentType());            
                 if (serviceResponse.getLastModified()!=null) 
@@ -228,7 +233,9 @@ public class NetworkResponseServlet extends HttpServlet  {
         }
     }
 
-    private String getCharset(HttpServletRequest request) {
+    private String getCharset(HttpServletRequest request, Response serviceResponse) {
+        if (serviceResponse.getCharset()!=null)
+            return serviceResponse.getCharset().name();
         String charset = null;
         String charsetsStr = request.getHeader("Accept-Charset");
         if (charsetsStr != null) {
@@ -239,7 +246,7 @@ public class NetworkResponseServlet extends HttpServlet  {
             }
         }
         if (charset == null) {
-            getServletContext().log("Can't detect charset from request. Using default charset (UTF-8)");
+//            getServletContext().log("Can't detect charset from request. Using default charset (UTF-8)");
             charset = "UTF-8";
         }
         return charset;
