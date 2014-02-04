@@ -46,6 +46,7 @@ import org.raven.auth.LoginException;
 import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
 import org.raven.cache.TemporaryFileManager;
+import org.raven.log.LogLevel;
 import org.raven.net.AccessDeniedException;
 import org.raven.net.ContextUnavailableException;
 import org.raven.net.NetworkResponseService;
@@ -59,6 +60,7 @@ import org.raven.net.ResponseContext;
 import org.raven.net.UnauthoriedException;
 import org.raven.net.impl.RequestImpl;
 import org.raven.ui.util.RavenRegistry;
+import org.slf4j.Logger;
 import org.weda.services.TypeConverter;
 
 /**
@@ -298,9 +300,17 @@ public class NetworkResponseServlet extends HttpServlet  {
 //                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, 
 //                        mess+"<br>"+"<pre style='font-size: 10pt; font-style: normal'>"+buffer.toString()+"</pre>");
             }
+            String mess = String.format("Error processing request (%s) from host (%s)", 
+                    request.getPathInfo(), request.getRemoteAddr());
+            if (responseService.getNetworkResponseServiceNode().isLogLevelEnabled(LogLevel.WARN)) {
+                Logger logger = responseService.getNetworkResponseServiceNode().getLogger();
+                if (rethrow)
+                    logger.warn(mess, e);
+                else
+                    logger.warn(mess+"."+(e.getMessage()==null? e.getClass().getName() : e.getMessage()));
+            }
             if (responseContext!=null && responseContext.getResponseBuilderLogger().isErrorEnabled()) 
-                responseContext.getResponseBuilderLogger().error(
-                        String.format("Request (%s) processing error", request.getPathInfo()), e);
+                responseContext.getResponseBuilderLogger().error(mess, e);
             if (rethrow)
                 throw new ServletException(e);
         }

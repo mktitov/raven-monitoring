@@ -25,8 +25,7 @@ function transferNode(sourceNodePath, targetNodePath, isMoveOp, askNewName, posi
       return;
     }
   }
-  console.log("tree      dragging node: "+top.frame1.draggingNode)
-  console.log("tree-edit dragging node: "+top.frame2.draggingRow)
+  console.log((isMoveOp? 'MOVING':'COPIYNG')+" node ("+sourceNodePath+") to ("+targetNodePath+") "+(after?'AFTER':'BEFORE')+"  ("+positionNodePath+")")
   var reloadFrame2 = top.frame1.draggingNode===null || top.frame2.draggingRow
   $.ajax({
     url:"../sri/system/nodes/transfer",
@@ -77,8 +76,8 @@ function removeInsertPlaces() {
 }
 
 function getDropEffect(ev) {
-  var dropEffect = ev.originalEvent.dataTransfer.dropEffect
-  if (!dropEffect || dropEffect==='none') 
-    dropEffect = ev.altKey || ev.ctrlKey? 'copy' : 'move'
+//  var dropEffect = ev.originalEvent.dataTransfer.dropEffect
+//  if (!dropEffect || dropEffect==='none') 
+  var dropEffect = ev.altKey || ev.ctrlKey? 'copy' : 'move'
   return dropEffect  
 }

@@ -15,6 +15,7 @@
  */
 var draggingNode = null;
 var dragoverNode = null;
+var dragoverEvent = null;
 
 $(document).ready(function(){
   $(document).delegate("table.tree-node", "mouseenter", function() {
@@ -27,8 +28,8 @@ $(document).ready(function(){
         console.log('Dragging')
         console.log(draggindNode)
         var data = ev.originalEvent.dataTransfer
-        data.effectAllowed = "copyMove"
-        data.dropEffect = "move"
+//        data.effectAllowed = "copyMove"
+//        data.dropEffect = "move"
         data.setDragImage(table[0], 1, 1)
         data.setData('text/plain', getNodePath(table))
         console.log(data)
@@ -153,18 +154,23 @@ function configureInsertPlace(insElem, nodePath, after) {
   insElem.bind('dragover', function(ev) {
     ev.originalEvent.preventDefault()
     console.log('dragover insert place')
+    dragoverEvent = ev
     $(this).addClass('dragover')
   })
+  
   insElem.bind('dragleave', function(ev) {
     $(this).removeClass('dragover')
   })
+  
   insElem.bind('drop', function(ev){
     ev.originalEvent.preventDefault()
     console.log('Dropped in insert place')
+//    console.log(ev)
+//    console.log(dragoverevent)
     insElem.removeClass('dragover')    
     var sourceNodePath = getNodePathFromData(ev)
     var targetNodePath = getParentNodePath(nodePath)
     var positionNodePath = nodePath    
-    transferNode(sourceNodePath, targetNodePath, getDropEffect(ev)==='move', ev.shiftKey, positionNodePath, after)
+    transferNode(sourceNodePath, targetNodePath, getDropEffect(dragoverEvent)==='move', dragoverEvent.shiftKey, positionNodePath, after)
   })
 }
