@@ -207,6 +207,8 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
                 NetworkResponseContext respContext = getContext(node, path, 0, pathInfo);
                 respBuilder = new NetRespContextRespBuilderWrapper(respContext);
             } catch (ContextUnavailableException e) {
+                if (isLogLevelEnabled(LogLevel.WARN))
+                    getLogger().error("Response builder resolving error. "+e.getMessage());
                 throw ex;
             }
         }
