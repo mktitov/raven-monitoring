@@ -52,12 +52,13 @@ import org.raven.net.ContextUnavailableException;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.net.NetworkResponseServiceUnavailableException;
-import org.raven.net.RedirectResult;
 import org.raven.net.Request;
 import org.raven.net.RequiredParameterMissedException;
 import org.raven.net.Response;
 import org.raven.net.ResponseContext;
+import org.raven.net.Result;
 import org.raven.net.UnauthoriedException;
+import org.raven.net.impl.RedirectResult;
 import org.raven.net.impl.RequestImpl;
 import org.raven.ui.util.RavenRegistry;
 import org.slf4j.Logger;
@@ -199,14 +200,15 @@ public class NetworkResponseServlet extends HttpServlet  {
                     response.addHeader(e.getKey(), e.getValue());
             Object content = serviceResponse.getContent();
             if (content instanceof RedirectResult)
-                response.sendRedirect(((RedirectResult)content).getUrl());
+                response.sendRedirect(((RedirectResult)content).getContent().toString());
             else {
+                if (content instanceof Result) {
+                    Result result = (Result) content;
+                    response.setStatus(result.getStatusCode());
+                    content = result.getContent();
+                } else 
+                    response.setStatus(content!=null? HttpServletResponse.SC_OK : HttpServletResponse.SC_NO_CONTENT);
                 String charset = getCharset(request, serviceResponse);
-//                if (serviceResponse.getCharset()!=null)
-//                    charset = serviceResponse.getCharset().name();
-//                else 
-//                    charset = getCharset(request);
-////                    if (serviceResponse.getContentType().toUpperCase().startsWith("TEXT")) 
                 if (charset!=null)
                     response.setCharacterEncoding(charset);
                 response.setContentType(serviceResponse.getContentType());            
@@ -221,7 +223,7 @@ public class NetworkResponseServlet extends HttpServlet  {
                         writable.writeTo(response.getWriter());
                     } else {
                         OutputStream out = response.getOutputStream();
-                        InputStream contentStream = converter.convert(InputStream.class, serviceResponse.getContent(), charset);
+                        InputStream contentStream = converter.convert(InputStream.class, content, charset);
                         try {
                             IOUtils.copy(contentStream, out);
                         } finally {
@@ -230,7 +232,6 @@ public class NetworkResponseServlet extends HttpServlet  {
                         }
                     }
                 }
-                response.setStatus(content!=null? HttpServletResponse.SC_OK : HttpServletResponse.SC_NO_CONTENT);
             }
         }
     }
