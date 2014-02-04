@@ -17,8 +17,8 @@
 package org.raven.net.impl;
 
 import groovy.lang.Writable;
+import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
-import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.BindingNames;
@@ -29,9 +29,12 @@ import org.raven.tree.Node;
 import org.raven.tree.NodeError;
 import static org.easymock.EasyMock.*;
 import org.easymock.IMocksControl;
-import org.raven.net.RedirectResult;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import org.raven.net.Request;
 import org.raven.net.ResponseContext;
+import org.raven.net.Result;
 import org.raven.tree.DataFile;
 import org.raven.tree.DataFileException;
 
@@ -84,7 +87,24 @@ public class SimpleResponseBuilderTest extends RavenCoreTestCase {
         assertTrue(resp instanceof DataFile);        
         assertEquals("static", IOUtils.toString(((DataFile)resp).getDataReader()));
         mocks.verify();
-        
+    }
+    
+    @Test
+    public void renderWithStatusCodeTest() throws Exception {
+        FileResponseBuilder fileBuilder = createFileBuilder(sriRootNode, "file", "text/html");
+        fileBuilder.getFile().setDataString("static");
+        BindingsContainer group = createGroup();
+        SimpleResponseBuilder respBuilder = createBuilder(group, "builder", "render(201,node.parent.parent.getNode('file'))");
+        ResponseContext responseContext = trainResponseContext();
+        mocks.replay();
+        Object resp = respBuilder.buildResponseContent(null, responseContext);
+        assertNotNull(resp);
+        assertTrue(resp instanceof Result);
+        Result result = (Result) resp;
+        assertEquals(201, result.getStatusCode());
+        assertTrue(result.getContent() instanceof DataFile);
+        assertEquals("static", IOUtils.toString(((DataFile)result.getContent()).getDataReader()));
+        mocks.verify();
     }
     
     @Test
@@ -126,6 +146,36 @@ public class SimpleResponseBuilderTest extends RavenCoreTestCase {
         assertNotNull(res);
         assertTrue(res instanceof RedirectResult);
         assertEquals("/raven/sri/group/builder", ((RedirectResult)res).getUrl());
+        mocks.verify();        
+    }
+    
+    @Test
+    public void resultTest() throws Exception {
+        BindingsContainer group = createGroup();
+        SimpleResponseBuilder respBuilder = createBuilder(group, "builder", "result('test')");
+        ResponseContext responcetContext = trainResponseContext();
+        mocks.replay();
+        Object res = respBuilder.buildResponseContent(null, responcetContext);
+        assertNotNull(res);
+        assertTrue(res instanceof Result);
+        Result result = (Result) res;
+        assertEquals(HttpServletResponse.SC_OK, result.getStatusCode());
+        assertEquals("test", result.getContent());
+        mocks.verify();        
+    }
+    
+    @Test
+    public void resultWithStatusTest() throws Exception {
+        BindingsContainer group = createGroup();
+        SimpleResponseBuilder respBuilder = createBuilder(group, "builder", "result(400, 'test')");
+        ResponseContext responcetContext = trainResponseContext();
+        mocks.replay();
+        Object res = respBuilder.buildResponseContent(null, responcetContext);
+        assertNotNull(res);
+        assertTrue(res instanceof Result);
+        Result result = (Result) res;
+        assertEquals(400, result.getStatusCode());
+        assertEquals("test", result.getContent());
         mocks.verify();        
     }
     

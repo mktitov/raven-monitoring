@@ -14,12 +14,21 @@
  * limitations under the License.
  */
 
-package org.raven.net;
+package org.raven.net.impl;
+
+import javax.servlet.http.HttpServletResponse;
 
 /**
  *
- * @author Mikhail TItov
+ * @author Mikhail Titov
  */
-public interface RedirectResult {
-    public String getUrl();
+public class RedirectResult extends ResultImpl {
+
+    public RedirectResult(String url) {
+        super(HttpServletResponse.SC_MOVED_TEMPORARILY, url);
+    }
+    
+    public String getUrl() {
+        return getContent().toString();
+    }
 }

@@ -20,6 +20,8 @@ import java.nio.charset.Charset;
 import java.util.Map;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
+import javax.servlet.http.HttpServletResponse;
+import org.apache.http.HttpRequest;
 import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
@@ -56,6 +58,8 @@ public class SimpleResponseBuilder extends AbstractResponseBuilder {
             bindingSupport.put(BindingNames.PATH_BINDING, createPathClosure(responseContext));
             bindingSupport.put(BindingNames.RENDER_BINDING, createRenderClosure());
             bindingSupport.put(BindingNames.REDIRECT_BINDING, createRedirectClosure(responseContext));
+            bindingSupport.put(BindingNames.RESULT_BINDING, createResultClosure());
+            bindingSupport.put(BindingNames.PROPAGATE_EXPRESSION_EXCEPTION, null);
             return responseContent;
         } finally {
             bindingSupport.reset();
@@ -109,11 +113,22 @@ public class SimpleResponseBuilder extends AbstractResponseBuilder {
     private Closure createRedirectClosure(final ResponseContext responseContext) {
         return new Closure(this) {
             public Object doCall(String path) {
-                return new RedirectResultImpl(path);
+                return new RedirectResult(path);
             }
             public Object doCall(Node path) {
                 PathClosure pathBuilder = createPathClosure(responseContext);
-                return new RedirectResultImpl(pathBuilder.doCall(path));
+                return new RedirectResult(pathBuilder.doCall(path));
+            }
+        };
+    }
+    
+    private Closure createResultClosure() {
+        return new Closure(this) {
+            public Object doCall(Object content) {
+                return new ResultImpl(HttpServletResponse.SC_OK, content);
+            }
+            public Object doCall(int status, Object content) {
+                return new ResultImpl(status, content);
             }
         };
     }
@@ -123,6 +138,11 @@ public class SimpleResponseBuilder extends AbstractResponseBuilder {
             public Object doCall(FileResponseBuilder builder) throws Throwable {
                 return doCall(builder, null);
             }
+            
+            public Object doCall(int status, FileResponseBuilder builder) throws Throwable {
+                return new ResultImpl(status, doCall(builder, null));
+            }
+            
             public Object doCall(FileResponseBuilder builder, Map params) throws Throwable {
                 try {
                     if (!builder.isGrooveTemplate()) 
@@ -139,6 +159,10 @@ public class SimpleResponseBuilder extends AbstractResponseBuilder {
                         getLogger().error(String.format("Error rendering file/template (%s)", builder), e);
                     throw e;
                 }
+            }
+            
+            public Object doCall(int status, FileResponseBuilder builder, Map params) throws Throwable {
+                return new ResultImpl(status, doCall(builder, params));
             }
         };
     }

@@ -37,6 +37,7 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.NodeAttributeError;
 import org.raven.tree.NodeParameter;
 import org.raven.tree.NodePathResolver;
+import org.raven.tree.PropagatedAttributeValueError;
 import org.raven.tree.Tree;
 import org.weda.beans.ObjectUtils;
 import org.weda.constraints.ReferenceValue;
@@ -190,6 +191,8 @@ public class NodeAttributeImpl
                 owner.warn(
                         String.format("Error getting value for attribute (%s)", getName())
                         , e);
+            if (e instanceof PropagatedAttributeValueError) 
+                throw (PropagatedAttributeValueError)e;
             return null;
         }
     }

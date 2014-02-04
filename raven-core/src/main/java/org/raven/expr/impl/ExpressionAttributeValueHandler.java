@@ -17,11 +17,13 @@
 
 package org.raven.expr.impl;
 
+import org.raven.tree.PropagatedAttributeValueError;
 import java.util.HashMap;
 import java.util.Map;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
+import org.raven.BindingNames;
 import org.raven.RavenRuntimeException;
 import org.raven.expr.BindingSupport;
 import org.raven.expr.Expression;
@@ -155,6 +157,10 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
                                 owner.getLogger().error(mess, ex);
                             else
                                 owner.getLogger().error(errMess, ex);
+                            if (bindings.containsKey(BindingNames.PROPAGATE_EXPRESSION_EXCEPTION)) {
+                                String err = errMess==null || errMess.isEmpty()? mess : errMess;
+                                throw new PropagatedAttributeValueError(err, ex);
+                            }
                         }
                     }
                 }

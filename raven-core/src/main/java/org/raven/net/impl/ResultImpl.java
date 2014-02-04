@@ -13,23 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.raven.net.impl;
 
-import org.raven.net.RedirectResult;
+import org.raven.net.Result;
 
 /**
- *
+* 
  * @author Mikhail Titov
  */
-public class RedirectResultImpl implements RedirectResult {
-    private final String url;
+public class ResultImpl implements Result {
+    private final int statusCode;
+    private final Object content;
 
-    public RedirectResultImpl(String url) {
-        this.url = url;
+    public ResultImpl(int statusCode, Object content) {
+        this.statusCode = statusCode;
+        this.content = content;
     }
 
-    public String getUrl() {
-        return url;
+    public int getStatusCode() {
+        return statusCode;
+    }
+
+    public Object getContent() {
+        return content;
     }
 }

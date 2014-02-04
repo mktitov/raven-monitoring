@@ -17,6 +17,7 @@
 
 package org.raven.expr.impl;
 
+import org.raven.tree.PropagatedAttributeValueError;
 import java.util.HashMap;
 import java.util.Map;
 import javax.script.Bindings;
@@ -33,6 +34,9 @@ import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.slf4j.Logger;
 import static org.easymock.EasyMock.*;
+import static org.junit.Assert.assertTrue;
+import org.raven.BindingNames;
+import org.raven.BindingSourceNode;
 /**
  *
  * @author Mikhail Titov
@@ -300,6 +304,23 @@ public class ExpressionAttributeValueHandlerTest extends RavenCoreTestCase
         
 //        attr.setValue("1");
 //        assertEquals(1, attr.getRealValue());
+    }
+    
+    @Test(expected = PropagatedAttributeValueError.class)
+    public void propagateExceptionTest() throws Exception {
+        BindingSourceNode node = new BindingSourceNode();
+        node.setName("node");
+        testsNode.addAndSaveChildren(node);
+        assertTrue(node.start());
+        
+        NodeAttributeImpl attr = new NodeAttributeImpl("attr1", String.class, null, "test");
+        attr.setOwner(node);
+        node.addAttr(attr);
+        attr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);        
+        attr.init();
+        attr.setValue("println 'Hello world!'\na = {throw new Exception('Test exception throwed')}\na()");
+        node.addBinding(BindingNames.PROPAGATE_EXPRESSION_EXCEPTION, null);
+        attr.getValue();
     }
     
     @Test
