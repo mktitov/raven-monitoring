@@ -15,12 +15,17 @@
  */
 package org.raven.prj.impl;
 
+import org.raven.annotations.NodeClass;
+import org.raven.auth.impl.AnonymousLoginServiceNode;
 import org.raven.auth.impl.LoginManagerNode;
+import org.raven.auth.impl.LoginServiceNode;
+import org.raven.tree.impl.InvisibleNode;
 
 /**
  *
  * @author Mikhail Titov
  */
+@NodeClass(parentNode = InvisibleNode.class, childNodes = {LoginServiceNode.class, AnonymousLoginServiceNode.class})
 public class ProjectLoginManagerNode extends LoginManagerNode {
 
     public ProjectLoginManagerNode() {

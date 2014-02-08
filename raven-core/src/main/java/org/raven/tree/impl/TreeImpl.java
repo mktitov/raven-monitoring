@@ -33,6 +33,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.raven.annotations.NodeClass;
 import org.raven.audit.impl.AuditorNode;
+import org.raven.auth.impl.AccessRight;
 import org.raven.conf.Configurator;
 import org.raven.auth.impl.AuthorizationNode;
 import org.raven.cache.TemporaryFileManagersNode;
@@ -204,11 +205,11 @@ public class TreeImpl implements Tree {
         if (node.isTemplate())
             return new Class[]{
                 String.class, Integer.class, Double.class, Boolean.class, Object.class, Node.class
-                , Charset.class, AttributeReference.class, TemplateVariable.class};
+                , Charset.class, AttributeReference.class,  AccessRight.class, TemplateVariable.class};
         else
             return new Class[]{
                 String.class, Integer.class, Double.class, Boolean.class, Object.class, Node.class
-                , Charset.class, AttributeReference.class};
+                , Charset.class, AttributeReference.class, AccessRight.class};
     }
 
     public Node getRootNode() {
