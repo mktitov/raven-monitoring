@@ -42,6 +42,10 @@ $(document).ready(function(){
         return false
       })
     }
+    //adding context menu
+  })
+  $(document).delegate("table.tree-node", "contextmenu", function() {
+    console.log("context menu action")
   })
   
   $(document).delegate("table.tree-node", "dragover", function(ev) {
@@ -58,6 +62,7 @@ $(document).ready(function(){
       configureInsertPlace(after, nodePath, true)
     }
     if (getNodePath(node)!==getNodePath(draggingNode)) {
+      dragoverEvent = ev
       ev.originalEvent.preventDefault()
 //      console.log('drop effect: '+ev.originalEvent.dataTransfer.dropEffect)
       node.addClass('dragover')
@@ -76,55 +81,14 @@ $(document).ready(function(){
     var sourceNodePath = getNodePathFromData(ev)
     console.log("DROPPED")
     console.log(ev)
-    transferNode(sourceNodePath, getNodePath(targetNode), dropEffect==='move', ev.shiftKey)
+//    transferNode(sourceNodePath, getNodePath(targetNode), dropEffect==='move', ev.shiftKey)
+    transferNode(sourceNodePath, getNodePath(targetNode), getDropEffect(dragoverEvent)==='move', dragoverEvent.shiftKey)
+    dragoverEvent = null
 //    console.log('original dropEffect: ' + ev.originalEvent.dataTransfer.dropEffect)
 //    console.log('computed dropEffect: ' + dropEffect)
 //    console.log(ev.originalEvent.dataTransfer)
   })
 })
-
-//function getDropEffect(ev) {
-//  var dropEffect = ev.originalEvent.dataTransfer.dropEffect
-//  if (!dropEffect || dropEffect==='none') 
-//    dropEffect = ev.altKey || ev.ctrlKey? 'copy' : 'move'
-//  return dropEffect  
-//}
-
-//function transferNode(sourceNodePath, targetNodePath, isMoveOp, askNewName, positionNodePath, after) {
-//  var newName=null;
-//  if (askNewName) {
-//    newName = prompt("Введите новое имя узла", getNodeName(sourceNodePath))
-//    if (newName===null)
-//      return;
-//    else if (newName==='') {
-//      alert("Имя не может быть пустым")
-//      return;
-//    }
-//  }
-//  $.ajax({
-//    url:"../sri/system/nodes/transfer",
-//    dataType:"json",
-//    type:'POST',
-//    data: {
-//      sourceNodePath:sourceNodePath,
-//      targetNodePath:targetNodePath,
-//      isMoveOp: isMoveOp,
-//      newName:newName,
-//      positionNodePath: positionNodePath,
-//      insertBefore: !after
-//    },
-//    success: function(res) {
-//      if (res.success) {
-//        //refresh tree or node
-//        _adftreetree1.treeState.action('refresh','0',this)
-//      } else
-//        alert('Возникла ошибка при копировании/перемещении объекта. '+res.error)
-//    },
-//    error: function() {
-//      alert('Возникла ошибка при копировании/перемещении объекта')
-//    }
-//  })
-//}
 
 function getNodeName(nodePath) {
   var elems = nodePath.split('/')
@@ -145,10 +109,29 @@ function getNodePath(elem) {
   return elem? elem.find('a span').attr('title') : null
 }
 
-//function removeInsertPlaces(node) {
-//  if (node) 
-//    node.parent().find('div.insert-node-place').remove()
-//}
+function createContextMenu(nodeElem) {
+  $.ajax({
+    url:"../projects/system/nodes/actions",
+    dataType:"json",
+    type:'GET',
+    data: {
+      nodePath:getNodePath(nodeElem)
+    },
+    success: function(res) {
+      nodeElem.contextmenu({
+        menu: res,
+        select: function(event, ui) {
+          console.log("Item pressed...")
+          console.log(ui)
+        }
+      })  
+      
+    },
+    error: function() {
+      
+    }
+  })
+}
 
 function configureInsertPlace(insElem, nodePath, after) {
   insElem.bind('dragover', function(ev) {
@@ -172,5 +155,6 @@ function configureInsertPlace(insElem, nodePath, after) {
     var targetNodePath = getParentNodePath(nodePath)
     var positionNodePath = nodePath    
     transferNode(sourceNodePath, targetNodePath, getDropEffect(dragoverEvent)==='move', dragoverEvent.shiftKey, positionNodePath, after)
+    dragoverEvent = null
   })
 }

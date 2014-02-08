@@ -28,7 +28,7 @@ function transferNode(sourceNodePath, targetNodePath, isMoveOp, askNewName, posi
   console.log((isMoveOp? 'MOVING':'COPIYNG')+" node ("+sourceNodePath+") to ("+targetNodePath+") "+(after?'AFTER':'BEFORE')+"  ("+positionNodePath+")")
   var reloadFrame2 = top.frame1.draggingNode===null || top.frame2.draggingRow
   $.ajax({
-    url:"../sri/system/nodes/transfer",
+    url:"../projects/system/nodes/transfer",
     dataType:"json",
     type:'POST',
     data: {

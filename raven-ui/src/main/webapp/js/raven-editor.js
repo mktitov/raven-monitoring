@@ -162,7 +162,7 @@ function loadThemes() {
 }
 
 function loadSelectOptions(selectId, path) {
-  $.getJSON('sri/system/editor/'+path, function(res){
+  $.getJSON('projects/system/editor/'+path, function(res){
     --loaded
     var modesSelect = $("#"+selectId)
     $.each(res, function(i, v) {
@@ -246,7 +246,7 @@ function openTab(nodePath, attrName) {
 function saveEditorContent(params) {
   switchToWaiting(params)
   $.ajax({
-    url: 'sri/system/nodes/attrs/set-value',
+    url: 'projects/system/nodes/attrs/set-value',
     dataType: 'json',
     type: "POST",
     data: {
@@ -297,7 +297,7 @@ function addErrorToEditor(editor, err) {
 function loadEditorContent(params) {
   switchToWaiting(params)
   $.ajax({
-    url:'sri/system/nodes/attrs/get-value',
+    url:'projects/system/nodes/attrs/get-value',
     dataType: 'json',
     data: {
       nodePath:params.nodePath,

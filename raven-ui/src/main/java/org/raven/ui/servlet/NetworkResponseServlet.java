@@ -126,7 +126,13 @@ public class NetworkResponseServlet extends HttpServlet  {
                         request.getSession().setAttribute(userContextAttrName, userContext);
                     }
                 }
-                else throw new UnauthoriedException();
+                else {
+                    if (responseContext.getLogger().isWarnEnabled())
+                        responseContext.getLogger().warn(String.format(
+                                "User (%s) has no access to (%s) using (%s) operation", 
+                                userContext, request.getPathInfo(), request.getMethod()));
+                    throw new UnauthoriedException();
+                }
             }
         } else if (responseContext.getResponseBuilderLogger().isDebugEnabled())
             responseContext.getResponseBuilderLogger().debug("User ({}) already logged in. Skiping auth.", userContext);

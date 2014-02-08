@@ -44,7 +44,7 @@ function changePathType(reqName, button) {
   var input = $(button).parent().parent().find('input')
   buttons.attr('disabled','true')
   $.ajax({
-    url:'../sri/system/nodes/'+reqName,
+    url:'../projects/system/nodes/'+reqName,
     dataType: 'json',
     type: 'POST',
     data: {
@@ -86,7 +86,7 @@ $(document).ready(function(){
       input.autocomplete({
         source: function(request, response){
           console.log("Executing autocomplete")
-          $.getJSON('../sri/system/nodes/resolve-path', {
+          $.getJSON('../projects/system/nodes/resolve-path', {
             pathPart:request.term,
             nodePath:nodePath
           }, response)
@@ -99,7 +99,7 @@ $(document).ready(function(){
     var input = $(button).parent().parent().find('input')
     button.attr('disabled','true')
     $.ajax({
-      url:'../sri/system/nodes/convert-path',
+      url:'../projects/system/nodes/convert-path',
       dataType: 'json',
       type: 'POST',
       data: {

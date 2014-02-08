@@ -16,6 +16,7 @@
 
 var dragoverRow;
 var draggingRow;
+var dragoverEvent = null;
 
 $(document).ready(function() {
   console.log("Document loaded!!!")
@@ -27,7 +28,7 @@ $(document).ready(function() {
       input.autocomplete({ 
         source: function(request, response) {
             console.log("Executing autocomplete")
-            $.getJSON('../sri/system/nodes/child-types', {
+            $.getJSON('../projects/system/nodes/child-types', {
               filter:request.term,
               nodePath:nodePath
             }, response)
@@ -52,8 +53,8 @@ $(document).ready(function() {
         checkedNodes = checkedNodes.length===0? [getNodePath(child)] : checkedNodes.toArray()
         console.log("SELECTED rows count: "+checkedNodes.length)
         console.log(checkedNodes)
-        data.effectAllowed = "copyMove"
-        data.dropEffect = "move"
+//        data.effectAllowed = "copyMove"
+//        data.dropEffect = "move"
         data.setDragImage(child[0], 1, 1)
         data.setData('text/plain', checkedNodes.join(' / '))
         console.log(data)
@@ -75,6 +76,7 @@ $(document).ready(function() {
   $(document).delegate(selector, 'dragover', function(ev) {
     var row = $(this)
     if (!row.prev().is('tr.insert-node-place')) {
+      dragoverEvent = ev;
       removeInsertPlaces()
       var template = "<tr class='insert-node-place'><th colspan=5 class='insert-node-place'></th></tr>"
       dragoverRow = row
@@ -106,7 +108,7 @@ $(document).ready(function() {
 //            targetNodeName = getNodeName(u.item.prev())
 //          }
 //          console.log("moved node name: " + movedNodeName + "; target node: " + targetNodeName + "; insertBefore: " + insertBefore)
-//          $.getJSON('../sri/system/nodes/reorder', {
+//          $.getJSON('../projects/system/nodes/reorder', {
 //            type: 'POST',
 //            nodePath: path,
 //            movedNodeName: movedNodeName,
@@ -151,7 +153,9 @@ function configureInsertPlace(insElem, nodePath, after) {
     var sourceNodePath = getNodePathFromData(ev)
     var targetNodePath = getParentNodePath(nodePath)
     var positionNodePath = nodePath        
-    transferNode(sourceNodePath, targetNodePath, getDropEffect(ev)==='move', ev.shiftKey, positionNodePath, after)
+//    transferNode(sourceNodePath, targetNodePath, getDropEffect(ev)==='move', ev.shiftKey, positionNodePath, after)
+    transferNode(sourceNodePath, targetNodePath, getDropEffect(dragoverEvent)==='move', dragoverEvent.shiftKey, positionNodePath, after)
+    dragoverEvent = null
   })
 }
 

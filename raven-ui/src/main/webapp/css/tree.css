@@ -1,0 +1,16 @@
+/* 
+    Document   : raven-editor
+    Created on : Dec 29, 2013, 9:00:08 PM
+    Author     : Mikhail Titov
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+root { 
+  display: block;
+}
+
+body {
+  font-size: 14px;
+}
+
