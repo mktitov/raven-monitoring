@@ -44,8 +44,9 @@ $(document).ready(function(){
     }
     //adding context menu
   })
-  $(document).delegate("table.tree-node", "contextmenu", function() {
-    console.log("context menu action")
+  $(document).delegate("table.tree-node", "contextmenu", function(ev) {
+    ev.preventDefault()
+    createContextMenu($(this), ev)
   })
   
   $(document).delegate("table.tree-node", "dragover", function(ev) {
@@ -109,7 +110,14 @@ function getNodePath(elem) {
   return elem? elem.find('a span').attr('title') : null
 }
 
-function createContextMenu(nodeElem) {
+function createContextMenu(nodeElem, event) {
+  var nodePath = getNodePath(nodeElem)
+  if (nodeElem.data('menu-loading')) {
+    console.log("Context menu already loading for: " + nodePath)
+    return;
+  }
+  nodeElem.data('menu-loading', true)
+  console.log("Loading menu for node:", nodePath)
   $.ajax({
     url:"../projects/system/nodes/actions",
     dataType:"json",
@@ -118,17 +126,43 @@ function createContextMenu(nodeElem) {
       nodePath:getNodePath(nodeElem)
     },
     success: function(res) {
+      console.log("Menu loaded", res)
+      nodeElem.data('menu-item', res)
       nodeElem.contextmenu({
         menu: res,
+        position: {my: "left top", at: "center", of: event, collision: "fit"},
         select: function(event, ui) {
           console.log("Item pressed...")
           console.log(ui)
+          console.log($(ui).data())
+          executeMenuAction(nodeElem)
+        },
+        close: function() {
+          nodeElem.contextmenu("destroy")
         }
       })  
-      
+      nodeElem.contextmenu("open", nodeElem)
     },
     error: function() {
       
+    },
+    complete: function() {
+      nodeElem.data('menu-loading', null)
+    }
+  })
+}
+
+function executeMenuAction(nodeElem) {
+  var item = nodeElem.data('menu-item')
+  console.log("Handling item click for: ", item)
+  $.ajax({
+    url: item.url,
+    type: 'GET',
+    data: {
+      nodePath: getNodePath(nodeElem)
+    },
+    error: function(mess) {
+      alert('Возникла ошибка при выполнении действия. '+mess)
     }
   })
 }
