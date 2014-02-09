@@ -42,9 +42,10 @@ function transferNode(sourceNodePath, targetNodePath, isMoveOp, askNewName, posi
     success: function(res) {
       if (res.success) {
         //refresh tree or node
-        var tree = top.frame1._adftreetree1
-        if (tree)
-          tree.treeState.action('refresh','0',this)
+        refreshTree()
+//        var tree = top.frame1._adftreetree1
+//        if (tree)
+//          tree.treeState.action('refresh','0',this)
 //        if (onSuccess)
 //          onSuccess()
         if (reloadFrame2)
@@ -56,6 +57,12 @@ function transferNode(sourceNodePath, targetNodePath, isMoveOp, askNewName, posi
       alert('Возникла ошибка при копировании/перемещении объекта')
     }
   })
+}
+
+function refreshTree() {
+  var tree = top.frame1._adftreetree1
+  if (tree)
+    tree.treeState.action('refresh','0',this)
 }
 
 function getNodePathFromData(ev) {

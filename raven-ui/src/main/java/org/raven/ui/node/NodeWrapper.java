@@ -47,6 +47,7 @@ import org.raven.tree.Node.Status;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.tree.impl.NodeReferenceValueHandler;
+import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.raven.tree.impl.ScanOptionsImpl;
 import org.raven.ui.IconResource;
 import org.raven.ui.ResourcesCache;
@@ -917,7 +918,10 @@ public class NodeWrapper extends AbstractNodeWrapper
             return "err";
         }
         NodeAttribute na = null;
-        na = new NodeAttributeImpl(newAttribute.getName(), newAttribute.getAttrClass(), null, newAttribute.getDescription());
+        na = new NodeAttributeImpl(newAttribute.getName(), newAttribute.getAttrClass(), null, 
+                newAttribute.getDescription());
+        if (Node.class.isAssignableFrom(na.getType()))
+            na.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
         if (!newAttribute.getParentName().isEmpty())
             if (getNode().getAttr(newAttribute.getParentName())==null) {
                 getNode().getLogger().error("Error creating attribute {}. "

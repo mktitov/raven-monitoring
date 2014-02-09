@@ -127,7 +127,11 @@ function createContextMenu(nodeElem, event) {
     },
     success: function(res) {
       console.log("Menu loaded", res)
-      nodeElem.data('menu-item', res)
+      var items = {}
+      $.each(res, function(ind, item){
+        items[item.cmd] = item
+      })
+      nodeElem.data('menu-items', items)
       nodeElem.contextmenu({
         menu: res,
         position: {my: "left top", at: "center", of: event, collision: "fit"},
@@ -135,7 +139,7 @@ function createContextMenu(nodeElem, event) {
           console.log("Item pressed...")
           console.log(ui)
           console.log($(ui).data())
-          executeMenuAction(nodeElem)
+          executeMenuAction(nodeElem, ui.cmd)
         },
         close: function() {
           nodeElem.contextmenu("destroy")
@@ -152,19 +156,27 @@ function createContextMenu(nodeElem, event) {
   })
 }
 
-function executeMenuAction(nodeElem) {
-  var item = nodeElem.data('menu-item')
-  console.log("Handling item click for: ", item)
-  $.ajax({
-    url: item.url,
-    type: 'GET',
-    data: {
-      nodePath: getNodePath(nodeElem)
-    },
-    error: function(mess) {
-      alert('Возникла ошибка при выполнении действия. '+mess)
-    }
-  })
+function executeMenuAction(nodeElem, cmd) {
+  if (cmd==='refresh') 
+    refreshTree()
+  else {
+    var item = nodeElem.data('menu-items')[cmd]
+    console.log("Handling item click for: ", item)
+    $.ajax({
+      url: item.url,
+      type: 'GET',
+      data: {
+        nodePath: getNodePath(nodeElem)
+      },
+      success: function() {
+        if (item.refreshTree)
+          refreshTree()
+      },
+      error: function(mess) {
+        alert('Возникла ошибка при выполнении действия. '+mess)
+      }
+    })
+  }
 }
 
 function configureInsertPlace(insElem, nodePath, after) {
