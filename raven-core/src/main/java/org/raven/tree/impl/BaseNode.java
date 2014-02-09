@@ -1339,25 +1339,33 @@ public class BaseNode implements Node, NodeListener, Logger
         throw new MissingPropertyException(String.format("Property (%s) not found in (%s)", name, getPath()));
     }
     
-    public Object propertyMissing(String name) {
+    public Object propertyMissing(final String name) {
         if (name.startsWith("$")) {
-            NodeAttribute attr = getAttr(name.substring(1));
+            final int substrPos = name.startsWith("$$")? 2 : 1;
+            final NodeAttribute attr = getAttr(name.substring(substrPos));
             if (attr!=null)
                 return attr.getRealValue();
-            throw new IllegalArgumentException(String.format(
-                "Attribute (%s) not found in the node (%s)", name.substring(1), getPath()));
+            else if (substrPos==2)
+                return null;
+            else
+                throw new IllegalArgumentException(String.format(
+                    "Attribute (%s) not found in the node (%s)", name.substring(1), getPath()));
         }
         throw new MissingPropertyException(String.format("Property (%s) not found in (%s)", name, getPath()));
     }
     
-    public Object methodMissing(String name, Object args) {
-        Object[] list = (Object[]) args;
+    public Object methodMissing(final String name, final Object args) {
+        final Object[] list = (Object[]) args;
         if (name.startsWith("$") && list.length==1 && list[0] instanceof Map) {
-            NodeAttribute attr = getAttr(name.substring(1));
+            final int substrPos = name.startsWith("$$")? 2 : 1;
+            final NodeAttribute attr = getAttr(name.substring(substrPos));
             if (attr!=null) 
                 return getAttrValue(attr, (Map)list[0]);
-            throw new IllegalArgumentException(String.format(
-                "Attribute (%s) not found in the node (%s)", name.substring(1), getPath()));
+            if (substrPos==2)
+                return null;
+            else 
+                throw new IllegalArgumentException(String.format(
+                    "Attribute (%s) not found in the node (%s)", name.substring(1), getPath()));
         } 
         throw new MissingMethodException(name, getClass(), list);
     }

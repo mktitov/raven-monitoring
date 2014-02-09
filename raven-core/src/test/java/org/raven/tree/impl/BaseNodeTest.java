@@ -112,7 +112,7 @@ public class BaseNodeTest extends RavenCoreTestCase
     public void getEffectiveChildrens()
     {
         BaseNode node = new BaseNode();
-        assertNull(node.getEffectiveNodes());
+        assertTrue(node.getEffectiveNodes().isEmpty());
         
         Node child1 = createMock("child1", Node.class);
         Node child3 = createMock("child3", Node.class);
@@ -298,6 +298,13 @@ public class BaseNodeTest extends RavenCoreTestCase
         node.propertyMissing("$attr1");
     }
     
+    @Test()
+    public void groovyAttrNotFoundTest1() throws Exception {
+        BaseNode node = new BaseNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        assertNull(node.propertyMissing("$$attr1"));
+    }
+    
     @Test(expected=MissingPropertyException.class)
     public void groovyPropertyNotFoundTest() throws Exception {
         BaseNode node = new BaseNode("node");
@@ -310,6 +317,13 @@ public class BaseNodeTest extends RavenCoreTestCase
         BaseNode node = new BaseNode("node");
         tree.getRootNode().addAndSaveChildren(node);
         node.methodMissing("$attr1", new Object[]{new HashMap()});
+    }
+    
+    @Test()
+    public void groovyAttrNotFoundTest3() throws Exception {
+        BaseNode node = new BaseNode("node");
+        tree.getRootNode().addAndSaveChildren(node);
+        assertNull(node.methodMissing("$$attr1", new Object[]{new HashMap()}));
     }
     
     @Test(expected=MissingMethodException.class)
