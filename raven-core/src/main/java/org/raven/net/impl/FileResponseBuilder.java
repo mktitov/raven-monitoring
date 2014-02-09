@@ -189,6 +189,7 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
     }
     
     private void addBinding(Map bindings) {
+        
         bindings.put(BindingNames.NODE_BINDING, this);
         bindings.put(BindingNames.LOGGER_BINDING, getLogger());
         bindings.put(BindingNames.INCLUDE_BINDING, new Include(bindings));
