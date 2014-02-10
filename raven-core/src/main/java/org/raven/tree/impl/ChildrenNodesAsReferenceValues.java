@@ -85,7 +85,7 @@ public class ChildrenNodesAsReferenceValues implements AttributeReferenceValues
             throws TooManyReferenceValuesException 
     {
         for (Node child: node.getEffectiveNodes()) {
-            String path = relative? pathResolver.getRelativePath(attrNode, node): child.getPath();
+            String path = relative? pathResolver.getRelativePath(attrNode, child): child.getPath();
             ReferenceValue refVal = new ReferenceValueImpl(path, (relative? "(Project) ":"")+child.getName());
             referenceValues.add(refVal, null);
         }
