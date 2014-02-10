@@ -159,7 +159,8 @@ public class SubNodesTableBean
 	    	return;
 	    }
 	    sb.afterDeleteNodes();
-	    if(message!=null) message.setMessage(retb.toString());
+	    if(message!=null) message.setMessage(retb.toString());     
+        SessionBean.getInstance().reloadLeftFrame();
 	  }
 	  
 	  

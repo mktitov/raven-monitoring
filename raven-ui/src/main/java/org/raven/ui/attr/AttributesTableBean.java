@@ -122,6 +122,7 @@ public class AttributesTableBean
 		NodeWrapper nw = SessionBean.getNodeWrapper();
 		saveAttributes(nw,true);
 		nw.nodeStart();
+        SessionBean.getInstance().reloadLeftFrame();
 		return null;
 	}
 	

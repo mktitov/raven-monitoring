@@ -256,11 +256,13 @@ public class SessionBean
 	{
 		 FacesContext facesContext = FacesContext.getCurrentInstance();
 		 ExtendedRenderKitService service = (ExtendedRenderKitService)
+             Service.getRenderKitService(facesContext, ExtendedRenderKitService.class);
 		 //org.apache.myfaces.trinidad.util.
-		 Service.getRenderKitService(facesContext, ExtendedRenderKitService.class);
 		 //service.addScript(facesContext, "parent.frames.frame1.location.href=parent.frames.frame1.location.href");
 //		 service.addScript(facesContext, LEFT_FRAME+".location.reload()");
-		 service.addScript(facesContext, LEFT_FRAME+".location.href="+LEFT_FRAME+".location.href");
+//		 service.addScript(facesContext, LEFT_FRAME+".location.href="+LEFT_FRAME+".location.href");
+//		 service.addScript(facesContext, "refreshTree()");
+		 service.addScript(facesContext, "top.frame1._adftreetree1.treeState.action('refresh','0',this)");
 		 logger.info("reloadLeftFrame");
 	}
 	
@@ -547,11 +549,12 @@ public class SessionBean
 			logger.warn("Added new node name={}",getNewNodeName());
 	        auditor.write(n, getUserContext().getLogin(), Action.NODE_CREATE, "class: "+newNodeType);
 	        clearNewNode();
+            SessionBean.getInstance().reloadLeftFrame();
 			return wrapper.goToEditNewAttribute(n);
 		} catch(NodeError e) {
 			logger.error("",e);
 		}
-		clearNewNode();
+		clearNewNode();        
 		return null;
 		//return "ok";
 	}

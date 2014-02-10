@@ -162,20 +162,24 @@ function executeMenuAction(nodeElem, cmd) {
   else {
     var item = nodeElem.data('menu-items')[cmd]
     console.log("Handling item click for: ", item)
-    $.ajax({
-      url: item.url,
-      type: 'GET',
-      data: {
-        nodePath: getNodePath(nodeElem)
-      },
-      success: function() {
-        if (item.refreshTree)
-          refreshTree()
-      },
-      error: function(mess) {
-        alert('Возникла ошибка при выполнении действия. '+mess)
-      }
-    })
+    var execute = true
+    if (item.confirmMessage)
+      execute = confirm(item.confirmMessage)
+    if (execute) 
+      $.ajax({
+        url: item.url,
+        type: 'GET',
+        data: {
+          nodePath: getNodePath(nodeElem)
+        },
+        success: function() {
+          if (item.refreshTree)
+            refreshTree()
+        },
+        error: function(mess) {
+          alert('Возникла ошибка при выполнении действия. '+mess)
+        }
+      })
   }
 }
 
