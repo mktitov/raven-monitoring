@@ -16,12 +16,14 @@
 package org.raven.net.impl;
 
 import groovy.lang.Closure;
+import groovy.lang.Writable;
 import groovy.text.SimpleTemplateEngine;
 import groovy.text.Template;
+import java.io.IOException;
 import java.io.Reader;
+import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,6 +35,9 @@ import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.auth.UserContext;
+import org.raven.expr.BindingSupport;
+import static org.raven.expr.impl.ExpressionAttributeValueHandler.RAVEN_EXPRESSION_VARS_BINDING;
+import static org.raven.expr.impl.ExpressionAttributeValueHandler.RAVEN_EXPRESSION_VARS_INITIATED_BINDING;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.net.NetworkResponseService;
@@ -40,6 +45,7 @@ import org.raven.net.ResponseContext;
 import org.raven.tree.DataFile;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.Tree;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.DataFileValueHandlerFactory;
@@ -124,7 +130,7 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
         return buildResponseContent(bindings);
     }
     
-    public Object buildResponseContent(final Map bindings) throws Exception {
+    public Object buildResponseContent(final Map bindings) throws Exception {        
         if (!GSP_MIME_TYPE.equals(file.getMimeType())) {
             if (bindings.containsKey("template_bodies") && isLogLevelEnabled(LogLevel.WARN))
                 getLogger().warn(String.format(
@@ -161,10 +167,21 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
                     return _extendsTemplate.buildResponseContent(addExtendsTemplateParams(bindings));
                 } else {
                     addBinding(bindings);
-                    return _template.make(bindings);
+                    return new WritableWrapper(_template.make(bindings));
                 }
             }
         }        
+    }
+    
+    private BindingSupport initExpressionExecutionContext() {
+        BindingSupport varsSupport = tree.getGlobalBindings(Tree.EXPRESSION_VARS_BINDINGS);
+        boolean varsInitiated = varsSupport.contains(RAVEN_EXPRESSION_VARS_INITIATED_BINDING);
+        if (!varsInitiated) {
+            varsSupport.put(RAVEN_EXPRESSION_VARS_INITIATED_BINDING, true);
+            varsSupport.put(RAVEN_EXPRESSION_VARS_BINDING, new HashMap());
+            return varsSupport;
+        } else
+            return null;
     }
     
     private Map addExtendsTemplateParams(Map bindings) {
@@ -309,4 +326,45 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
             }
         }
     }
+    
+    private class WritableWrapper implements Writable {
+        private final Writable writable;
+
+        public WritableWrapper(Writable writable) {
+            this.writable = writable;
+        }
+
+        public Writer writeTo(Writer out) throws IOException {
+            BindingSupport varsSupport = initExpressionExecutionContext();
+            try {
+                return writable.writeTo(out);
+            } finally {
+                if (varsSupport!=null)
+                    varsSupport.reset();
+            }
+        }
+        
+        private BindingSupport initExpressionExecutionContext() {
+            BindingSupport varsSupport = tree.getGlobalBindings(Tree.EXPRESSION_VARS_BINDINGS);
+            boolean varsInitiated = varsSupport.contains(RAVEN_EXPRESSION_VARS_INITIATED_BINDING);
+            if (!varsInitiated) {
+                varsSupport.put(RAVEN_EXPRESSION_VARS_INITIATED_BINDING, true);
+                varsSupport.put(RAVEN_EXPRESSION_VARS_BINDING, new HashMap());
+                return varsSupport;
+            } else
+                return null;
+        }
+
+        @Override
+        public String toString() {
+            BindingSupport varsSupport = initExpressionExecutionContext();
+            try {
+                return writable.toString();
+            } finally {
+                if (varsSupport!=null)
+                    varsSupport.reset();
+            }
+        }
+        
+    } 
 }

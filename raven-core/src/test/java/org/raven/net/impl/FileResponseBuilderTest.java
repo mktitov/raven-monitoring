@@ -26,6 +26,8 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.BindingNames;
+import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.net.NetworkResponseService;
 import org.raven.test.BindingsContainer;
 import org.raven.test.RavenCoreTestCase;
@@ -33,6 +35,7 @@ import org.raven.tree.DataFile;
 import org.raven.tree.DataFileException;
 import org.raven.tree.Node;
 import org.raven.tree.NodeError;
+import org.raven.tree.impl.NodeAttributeImpl;
 
 /**
  *
@@ -104,6 +107,22 @@ public class FileResponseBuilderTest extends RavenCoreTestCase {
         assertNotSame(template, builder.getResponseTemplate());
     }
     
+    @Test
+    public void executeScriptFromTemplateTest() throws Exception {
+        NodeAttributeImpl attr = new NodeAttributeImpl("script", String.class, "param1", null);
+        attr.setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        attr.setOwner(testsNode);
+        attr.init();
+        testsNode.addAttr(attr);
+        
+        builder.getFile().setMimeType(FileResponseBuilder.GSP_MIME_TYPE);
+        builder.getFile().setDataString("${node.tree.getNode('"+testsNode.getPath()+"').$script(param1:'test')}");
+//        builder.setExtendsTemplate(rootBuilder);
+        assertTrue(builder.start());
+        
+        assertEquals("test", builder.buildResponseContent(null, null).toString());
+    }
+
     @Test
     public void extendsTemplateTest() throws Exception {
         FileResponseBuilder rootBuilder = createBuilder("root", FileResponseBuilder.GSP_MIME_TYPE);
