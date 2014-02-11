@@ -19,7 +19,6 @@ package org.raven.expr.impl;
 import groovy.lang.GroovyClassLoader;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
-import java.util.concurrent.atomic.AtomicLong;
 import javax.script.ScriptException;
 import org.raven.api.impl.ApiUtils;
 import org.raven.expr.Expression;

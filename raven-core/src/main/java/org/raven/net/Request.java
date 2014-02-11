@@ -17,6 +17,7 @@ package org.raven.net;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.util.Map;
 
 /**
@@ -68,4 +69,9 @@ public interface Request {
      * @throws IOException 
      */
     public InputStream getContent() throws IOException;
+    /**
+     * Returns the request content
+     * @throws IOException 
+     */
+    public Reader getContentReader() throws IOException;
 }

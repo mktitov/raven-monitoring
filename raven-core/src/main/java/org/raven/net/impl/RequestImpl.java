@@ -17,6 +17,7 @@ package org.raven.net.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import org.raven.net.Request;
@@ -72,6 +73,10 @@ public class RequestImpl implements Request {
 
     public InputStream getContent() throws IOException {
         return httpRequest.getInputStream();
+    }
+
+    public Reader getContentReader() throws IOException {
+        return httpRequest.getReader();
     }
 
     public String getRootPath() {

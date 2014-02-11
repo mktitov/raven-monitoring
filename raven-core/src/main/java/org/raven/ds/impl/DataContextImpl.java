@@ -17,21 +17,19 @@
 
 package org.raven.ds.impl;
 
-import groovy.lang.Closure;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
-import org.codehaus.groovy.runtime.InvokerInvocationException;
 import org.raven.auth.UserContext;
 import org.raven.auth.UserContextService;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataError;
-import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.impl.NodeAttributeImpl;
 import org.weda.internal.annotations.Service;
 
 /**
@@ -138,6 +136,15 @@ public class DataContextImpl implements DataContext
 
     public void addSessionAttribute(NodeAttribute attr) {
         sessionAttributes.put(attr.getName(), attr);
+    }
+
+    public NodeAttribute addSessionAttribute(Node owner, String name, String value) throws Exception {
+        NodeAttributeImpl attr = new NodeAttributeImpl(name, String.class, value, null);
+        attr.setOwner(owner);
+        attr.setId(-1);
+        attr.init();
+        addSessionAttribute(attr);
+        return attr;
     }
 
     public final void addSessionAttributes(Collection<NodeAttribute> attrs) {

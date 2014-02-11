@@ -21,7 +21,6 @@ import java.util.Map;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.http.HttpRequest;
 import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;

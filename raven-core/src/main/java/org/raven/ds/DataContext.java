@@ -92,6 +92,15 @@ public interface DataContext
      */
     public void addSessionAttribute(NodeAttribute attr);
     /**
+     * Adds new session attribute with specified name and value. The type of the attribute will be a
+     * String
+     * @param owner node that owns attribute
+     * @param name the name of the attribute
+     * @param value the value of the attribute
+     * @return Created node attribute
+     */
+    public NodeAttribute addSessionAttribute(Node owner, String name, String value) throws Exception;
+    /**
      * Adds attributes passed in the parameter to session attributes.
      * @param attrs The collection of the attributes that must be added to the session attributes of
      *      the data context. The value of this parameter can be <b>null</b>

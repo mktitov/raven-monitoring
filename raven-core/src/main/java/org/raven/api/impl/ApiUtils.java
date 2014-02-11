@@ -18,9 +18,11 @@
 package org.raven.api.impl;
 
 import groovy.json.JsonBuilder;
+import groovy.json.JsonSlurper;
 import groovy.lang.Closure;
 import groovy.sql.Sql;
 import groovyx.net.http.HTTPBuilder;
+import java.io.Reader;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -151,6 +153,16 @@ public class ApiUtils
         else
             json.call(data);
         return json.toString();
+    }
+    
+    public static Object parseJson(String jsonStr) {
+        JsonSlurper parser =  new JsonSlurper();
+        return parser.parseText(jsonStr);
+    }
+    
+    public static Object parseJson(Reader jsonReader) {
+        JsonSlurper parser =  new JsonSlurper();
+        return parser.parse(jsonReader);
     }
     
 //    public static String buildXml(Object data) {        
