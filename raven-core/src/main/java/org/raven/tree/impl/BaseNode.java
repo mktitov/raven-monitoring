@@ -31,6 +31,7 @@ import org.raven.annotations.Parameter;
 import org.raven.conf.Configurator;
 import org.raven.expr.BindingSupport;
 import org.raven.expr.impl.ExpressionAttributeValueHandler;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.log.NodeLogger;
 import org.raven.template.impl.TemplateEntry;
@@ -875,23 +876,21 @@ public class BaseNode implements Node, NodeListener, Logger
     {
     }
 
-    public boolean start() throws NodeError
-    {
-        try
-        {
+    public boolean start() throws NodeError {
+        try {
             if (Status.STARTED.equals(getStatus()))
                 return true;
             if (isTemplate())
                 return false;
             if (nodeAttributes!=null) {
-                //TODO: Не работает :(
-                for (NodeAttribute attr: nodeAttributes.values())
-                    if (attr.isGeneratorType())
+                //TODO: Не работает :(                
+                for (NodeAttribute attr: nodeAttributes.values()) 
+                    if (attr.isGeneratorType() && !isScript(attr))                            
                         syncParentAttributes(attr);
-                for (NodeAttribute attr: nodeAttributes.values())
-                    if ( (attr.isRequired() && attr.getValue()==null)
-                       && (   !(attr.getValueHandler() instanceof ExpressionAttributeValueHandler)
-                           || !attr.isExpressionValid() )
+                for (NodeAttribute attr: nodeAttributes.values()) {
+                    if ((   !(attr.getValueHandler() instanceof ExpressionAttributeValueHandler)
+                         || !attr.isExpressionValid() )
+                       && (attr.isRequired() && attr.getValue()==null)
                        && !ObjectUtils.in(attr.getValueHandlerType()
                             , ActionAttributeValueHandlerFactory.TYPE
                             , RefreshAttributeValueHandlerFactory.TYPE))
@@ -902,17 +901,19 @@ public class BaseNode implements Node, NodeListener, Logger
                                 , getPath(), attr.getName()));
                         return false;
                     }
-                
+                }
             }
             doStart();
             setStatus(Status.STARTED);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             error(String.format("Error starting node (%s)", getPath()), e);
             return false;
         }
         return true;
+    }
+    
+    private static boolean isScript(NodeAttribute attr) {
+        return  ScriptAttributeValueHandlerFactory.TYPE.equals(attr.getValueHandlerType());
     }
 
     public synchronized void stop() throws NodeError
