@@ -33,9 +33,11 @@ import org.raven.conf.Config;
 import org.raven.conf.Configurator;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.dbcp.impl.JDBCConnectionPoolNode;
+import org.raven.ds.DataContext;
 import org.raven.ds.Record;
 import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchemaFieldType;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.tree.Node.Status;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.SystemNode;
@@ -220,7 +222,7 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         prepareData();
 
         reader.setRecordSchema(schema);
-        reader.getNodeAttribute("field1").setValue(null);
+        reader.getAttr("field1").setValue(null);
         assertTrue(reader.start());
         reader.getDataImmediate(collector, new DataContextImpl());
 
@@ -234,7 +236,7 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         prepareData();
 
         reader.setRecordSchema(schema);
-        reader.getNodeAttribute("field1").setValue(null);
+        reader.getAttr("field1").setValue(null);
         reader.setOrderByExpression("col1");
         assertTrue(reader.start());
         reader.getDataImmediate(collector, new DataContextImpl());
@@ -249,7 +251,7 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         prepareData();
 
         reader.setRecordSchema(schema);
-        reader.getNodeAttribute("field1").setValue(null);
+        reader.getAttr("field1").setValue(null);
         reader.setOrderByExpression("col1");
         reader.setWhereExpression("col1 in ('3', '5')");
         assertTrue(reader.start());
@@ -275,8 +277,8 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         prepareData();
 
         reader.setRecordSchema(schema);
-        reader.getNodeAttribute("field1").setValue(null);
-        reader.getNodeAttribute("field2").setValue("5");
+        reader.getAttr("field1").setValue(null);
+        reader.getAttr("field2").setValue("5");
         reader.setOrderByExpression("col1");
         reader.setWhereExpression("col1 ${field2}");
         assertTrue(reader.start());
@@ -292,7 +294,7 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         prepareData();
 
         reader.setRecordSchema(schema);
-        reader.getNodeAttribute("field1").setValue(null);
+        reader.getAttr("field1").setValue(null);
         reader.setOrderByExpression("col1");
         reader.setFetchSize(2);
         reader.setMaxRows(2);
@@ -309,7 +311,7 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         prepareData();
 
         reader.setRecordSchema(schema);
-        reader.getNodeAttribute("field1").setValue(null);
+        reader.getAttr("field1").setValue(null);
         reader.setQuery("select * from record_data where col1 in ('1', '4') order by col1");
         assertTrue(reader.start());
         reader.getDataImmediate(collector, new DataContextImpl());
@@ -328,6 +330,26 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         reader.getNodeAttribute("field1").setValue("{3, 5}");
         assertTrue(reader.start());
         reader.getDataImmediate(collector, new DataContextImpl());
+
+        checkRecords(collector.getDataList(), "3", "5");
+    }
+
+    //attribute value recordSchema forming by script
+    @Test
+    public void gatherDataWithFilterAttributesTest2() throws SQLException, RecordException, Exception
+    {
+        prepareCollector();
+        prepareData();
+
+        NodeAttribute attr = reader.getAttr(DatabaseRecordReaderNode.RECORD_SCHEMA_ATTR);
+        attr.setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        attr.setValue("context['schema']");
+        reader.setOrderByExpression("col1");
+        assertTrue(reader.start());
+        DataContext context = new DataContextImpl();
+        context.putAt("schema", schema);
+        context.addSessionAttribute(collector, "field1", "{3, 5}");
+        reader.getDataImmediate(collector, context);
 
         checkRecords(collector.getDataList(), "3", "5");
     }
@@ -356,13 +378,13 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
 
         reader.setRecordSchema(schema);
         reader.setQuery("select * from record_data t where 1=1 {#} order by col1");
-        reader.getNodeAttribute("field1").setValue("{1, 4}");
+        reader.getAttr("field1").setValue("{1, 4}");
         assertTrue(reader.start());
 
         FieldTableAliasNode alias = new FieldTableAliasNode();
         alias.setName("field1");
         reader.addAndSaveChildren(alias);
-        alias.getNodeAttribute("tableAlias").setValue("t");
+        alias.getAttr("tableAlias").setValue("t");
         assertTrue(alias.start());
 
         reader.getDataImmediate(collector, new DataContextImpl());
