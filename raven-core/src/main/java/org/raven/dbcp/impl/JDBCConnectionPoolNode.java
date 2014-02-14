@@ -29,6 +29,7 @@ import org.apache.commons.pool.impl.GenericObjectPool;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.dbcp.ConnectionPool;
+import org.raven.log.LogLevel;
 import org.raven.tree.NodeError;
 import org.raven.tree.impl.BaseNode;
 import org.weda.annotations.constraints.NotNull;
@@ -119,10 +120,13 @@ public class JDBCConnectionPoolNode extends BaseNode implements ConnectionPool
         super.stop();
     }
     
-    public Connection getConnection() {
-        if (getStatus()!=Status.STARTED)
-            return null;
-        else {
+    public Connection getConnection() throws SQLException {
+        if (!isStarted()) {
+            final String mess = "Can't get connection because of connection pool not started";
+            if (isLogLevelEnabled(LogLevel.ERROR))
+                getLogger().error(mess);
+            throw new SQLException(mess);
+        } else {
             try {
                 return DriverManager.getConnection("jdbc:apache:commons:dbcp:"+getName());
             } catch (SQLException ex) {

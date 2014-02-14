@@ -21,6 +21,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.script.Bindings;
 import org.apache.commons.lang.StringUtils;
 import org.raven.BindingNames;
@@ -73,6 +75,7 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
     public static final String HTTP_METHOD_BINDING = "httpMethod";
     public static final String REQUEST_BINDING = "request";
     public static final String NAMED_PARAMETER_TYPE_ATTR = "namedParameterType";
+    public static final String NAMED_PARAMETER_PATTERN_ATTR = "namedParameterPattern";
     
     private final static NetRespAnonymousLoginService netRespAnonLoginService = new NetRespAnonymousLoginService();
     
@@ -355,11 +358,11 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
         }
         final String pathElem = path[pathIndex];
         for (Node child: node.getEffectiveNodes()) {
-            if (child.isStarted() && (pathElem.equals(child.getName()) || isNameOfParameter(child.getName()))) {
+            if (   child.isStarted() 
+                && (pathElem.equals(child.getName()) || addNamedParameter(child, pathElem, request))) 
+            {
                 if (child.getAttr(BindingNames.APP_ROOT_ATTR)!=null)
                     request.getParams().put(BindingNames.APP_NODE, child);
-                if (isNameOfParameter(child.getName()))
-                    addNamedParameter(child, request.getParams(), pathElem, request);
                 if (child instanceof NetworkResponseGroupNode) {
                     return getResponseBuilder(child, path, pathIndex+1, pathInfo, request);
                 } else {
@@ -374,25 +377,45 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
         throw new ContextUnavailableException(request, pathElem);
     }    
     
-    private boolean isNameOfParameter(String name) {
-        return name.length()>2 && name.startsWith("{") && name.endsWith("}");
-    }
-    
-    private void addNamedParameter(Node child, Map<String, Object> params, Object paramValue, Request request) 
+    private boolean addNamedParameter(Node child, String paramValue, Request request) 
             throws ContextUnavailableException 
     {
-        String paramName = child.getName().substring(1, child.getName().length()-1);
-        NodeAttribute paramType = child.getAttr(NAMED_PARAMETER_TYPE_ATTR);
-        if (paramType!=null) {
-            Object clazz = paramType.getRealValue();
-            if (clazz instanceof Class) 
-                try {
-                    paramValue = converter.convert((Class)clazz, paramValue, null);
-                } catch (TypeConverterException e) {
-                    throw new ContextUnavailableException(request.getContextPath(), e);
+        final String name = child.getName();
+        if (name.length()>2 && name.startsWith("{") && name.endsWith("}")) {
+            String paramName = name.substring(1, child.getName().length()-1);
+            Object value = applyNamedParameterPattern(child, paramValue);
+            if (value!=null) {
+                NodeAttribute paramType = child.getAttr(NAMED_PARAMETER_TYPE_ATTR);
+                if (paramType!=null) {
+                    Object clazz = paramType.getRealValue();
+                    if (clazz instanceof Class) 
+                        try {
+                            value = converter.convert((Class)clazz, value, null);
+                        } catch (TypeConverterException e) {
+                            throw new ContextUnavailableException(request.getContextPath(), e);
+                        }
                 }
-        }
-        params.put(paramName, paramValue);
+                request.getParams().put(paramName, value);
+                return true;
+            }
+        } 
+        return false;
+    }
+    
+    private String applyNamedParameterPattern(Node child, String paramValue) {
+        NodeAttribute patternAttr = child.getAttr(NAMED_PARAMETER_PATTERN_ATTR);
+        if (patternAttr==null)
+            return paramValue;
+        String pattern = patternAttr.getValue();
+        if (pattern==null || pattern.isEmpty())
+            return paramValue;
+        Pattern regexpPattern = Pattern.compile(pattern);
+        Matcher matcher = regexpPattern.matcher(paramValue);
+        if (!matcher.matches())
+            return null;
+        if (matcher.groupCount()==0)
+            return paramValue;
+        return matcher.group(1);
     }
     
     @Deprecated

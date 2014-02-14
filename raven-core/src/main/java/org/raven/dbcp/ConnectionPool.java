@@ -18,6 +18,7 @@
 package org.raven.dbcp;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import org.raven.tree.Node;
 
 /**
@@ -29,5 +30,5 @@ public interface ConnectionPool extends Node
     /**
      * Returns the database connection. Connection must be closed after use.
      */
-    public Connection getConnection();
+    public Connection getConnection() throws SQLException;
 }

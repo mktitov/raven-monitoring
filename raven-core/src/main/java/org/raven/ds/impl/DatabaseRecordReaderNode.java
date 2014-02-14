@@ -407,8 +407,11 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
                 NodeAttribute consumerAttr = attributes.get(fieldName);
                 if (consumerAttr != null)
                     expression = consumerAttr.getValue();
-                if (expression == null)
-                    expression = getAttr(fieldName).getValue();
+                if (expression == null) {
+                    NodeAttribute filterAttr = getAttr(fieldName);
+                    if (filterAttr!=null)
+                        expression = filterAttr.getValue();
+                }
                 Class fieldType = RecordSchemaFieldType.getSqlType(
                         field.getFieldInfo().getFieldType());
                 String alias = null;

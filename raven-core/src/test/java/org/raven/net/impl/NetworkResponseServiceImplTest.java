@@ -239,6 +239,69 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
         mocks.verify();
     }
     
+    @Test
+    public void namedParameterPatternTest() throws NetworkResponseServiceExeption {
+        Request request = trainRequest("test/1.js");
+        mocks.replay();
+        
+        NetworkResponseGroupNode group = createGroup(responseServiceNode, "{param1}");
+        group.setLoginService(loginService);
+        SimpleResponseBuilder builder = createSimpleResponseBuilder(group, "{param2}");
+        builder.setNamedParameterType(Integer.class);
+        builder.setNamedParameterPattern("(.*)\\.js");
+        
+        ResponseContext responseContext = responseService.getResponseContext(request);
+        assertNotNull(responseContext);
+        assertSame(loginService, responseContext.getLoginService());
+        assertSame(request, responseContext.getRequest());
+        assertSame(builder, responseContext.getResponseBuilder());
+        assertEquals("test", request.getParams().get("param1"));
+        assertEquals(new Integer(1), request.getParams().get("param2"));
+        mocks.verify();
+    }
+    
+    @Test
+    public void namedParameterPattern2Test() throws NetworkResponseServiceExeption {
+        Request request = trainRequest("test/1");
+        mocks.replay();
+        
+        NetworkResponseGroupNode group = createGroup(responseServiceNode, "{param1}");
+        group.setLoginService(loginService);
+        SimpleResponseBuilder builder = createSimpleResponseBuilder(group, "{param2}");
+        builder.setNamedParameterType(Integer.class);
+        builder.setNamedParameterPattern("1");
+        
+        ResponseContext responseContext = responseService.getResponseContext(request);
+        assertNotNull(responseContext);
+        assertSame(loginService, responseContext.getLoginService());
+        assertSame(request, responseContext.getRequest());
+        assertSame(builder, responseContext.getResponseBuilder());
+        assertEquals("test", request.getParams().get("param1"));
+        assertEquals(new Integer(1), request.getParams().get("param2"));
+        mocks.verify();
+    }
+    
+    @Test(expected=ContextUnavailableException.class)
+    public void namedParameterPattern3Test() throws NetworkResponseServiceExeption {
+        Request request = trainRequest("test/1");
+        mocks.replay();
+        
+        NetworkResponseGroupNode group = createGroup(responseServiceNode, "{param1}");
+        group.setLoginService(loginService);
+        SimpleResponseBuilder builder = createSimpleResponseBuilder(group, "{param2}");
+        builder.setNamedParameterType(Integer.class);
+        builder.setNamedParameterPattern("2");
+        
+        ResponseContext responseContext = responseService.getResponseContext(request);
+//        assertNotNull(responseContext);
+//        assertSame(loginService, responseContext.getLoginService());
+//        assertSame(request, responseContext.getRequest());
+//        assertSame(builder, responseContext.getResponseBuilder());
+//        assertEquals("test", request.getParams().get("param1"));
+//        assertEquals(new Integer(1), request.getParams().get("param2"));
+        mocks.verify();
+    }
+    
     //ResponseBuilder.getAccessRight returns NULL
     @Test
     public void accessNotGrantedTest() throws Exception {
@@ -563,6 +626,7 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
         SimpleResponseBuilder builder = new SimpleResponseBuilder();
         builder.setName(name);
         owner.addAndSaveChildren(builder);
+        builder.setResponseContentType("text/plain");
         assertTrue(builder.start());
         return builder;
     }
@@ -580,7 +644,7 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
         if1.setName(name);
         owner.addAndSaveChildren(if1);
         if1.setUsedInTemplate(false);
-        NodeAttribute expr = if1.getNodeAttribute(IfNode.EXPRESSION_ATTRIBUTE);
+        NodeAttribute expr = if1.getAttr(IfNode.EXPRESSION_ATTRIBUTE);
         expr.setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
         expr.setValue(expression);
         assertTrue(if1.start());

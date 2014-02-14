@@ -228,6 +228,24 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
 
         assertEquals(5, collector.getDataList().size());
     }
+    
+    @Test
+    public void gatherDataTest2() throws Exception
+    {
+        prepareCollector();
+        prepareData();
+        
+        NodeAttribute attr = reader.getAttr(DatabaseRecordReaderNode.RECORD_SCHEMA_ATTR);
+        attr.setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        attr.setValue("context['schema']");
+
+        assertTrue(reader.start());
+        DataContext context = new DataContextImpl();
+        context.putAt("schema", schema);
+        reader.getDataImmediate(collector, context);
+
+        assertEquals(5, collector.getDataList().size());
+    }
 
     @Test
     public void gatherDataWithOrderByTest() throws Exception
@@ -449,7 +467,7 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         assertTrue(collector.start());
     }
 
-    private void prepareData() throws SQLException
+    private void prepareData() throws Exception
     {
         Connection con = pool.getConnection();
         Statement st = con.createStatement();

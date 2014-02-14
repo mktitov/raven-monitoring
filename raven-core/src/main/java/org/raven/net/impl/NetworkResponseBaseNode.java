@@ -21,6 +21,7 @@ import org.raven.auth.LoginService;
 import org.raven.expr.BindingSupport;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.tree.NodeWithBindingSupport;
+import org.raven.tree.impl.AttributeReferenceValueHandlerFactory;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 
@@ -31,6 +32,13 @@ import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 public class NetworkResponseBaseNode extends BaseNode implements NodeWithBindingSupport {
     @Parameter
     private Class namedParameterType;
+    
+    @Parameter
+    private String namedParameterPattern;
+    
+    @Parameter(valueHandlerType = AttributeReferenceValueHandlerFactory.TYPE,
+                defaultValue = "./@namedParameterPattern")
+    private String nodeTitle;
     
     @Parameter(valueHandlerType = NodeReferenceValueHandlerFactory.TYPE)
     private LoginService loginService;
@@ -70,6 +78,22 @@ public class NetworkResponseBaseNode extends BaseNode implements NodeWithBinding
 
     public void setNamedParameterType(Class namedParameterType) {
         this.namedParameterType = namedParameterType;
+    }
+
+    public String getNamedParameterPattern() {
+        return namedParameterPattern;
+    }
+
+    public void setNamedParameterPattern(String namedParameterPattern) {
+        this.namedParameterPattern = namedParameterPattern;
+    }
+
+    public String getNodeTitle() {
+        return nodeTitle;
+    }
+
+    public void setNodeTitle(String nodeTitle) {
+        this.nodeTitle = nodeTitle;
     }
 
     public LoginService getLoginService() {

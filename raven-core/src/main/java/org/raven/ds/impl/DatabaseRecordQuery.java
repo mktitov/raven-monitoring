@@ -126,11 +126,9 @@ public class DatabaseRecordQuery
         this.query = createQuery(filterElements);
     }
 
-    public RecordIterator execute() throws DatabaseRecordQueryException
-    {
-        connection = connectionPool.getConnection();
-        try
-        {
+    public RecordIterator execute() throws DatabaseRecordQueryException {
+        try {
+            connection = connectionPool.getConnection();
             connection.setAutoCommit(false);
             statement = connection.prepareStatement(query);
             statement.setMaxRows(maxRows);
@@ -145,9 +143,7 @@ public class DatabaseRecordQuery
 
             return new RecordIterator(
                     resultSet, recordSchema, selectFields, idColumnName, hasRecordsFieldType);
-        }
-        catch(Throwable e)
-        {
+        } catch(Throwable e) {
             close();
             throw new DatabaseRecordQueryException(e);
         }
@@ -281,23 +277,15 @@ public class DatabaseRecordQuery
             //injecting ${var} parameter types
 
             Map<String, FilterInfo> filterInfos = new HashMap<String, FilterInfo>();
-            if (filterElements!=null && filterElements.size()>0)
-            {
+            if (filterElements!=null && filterElements.size()>0) {
                 values = new ArrayList();
-                for (DatabaseFilterElement filterElement: filterElements)
-                {
-                    boolean caseSensitive = !caseInSensitiveFields.contains(
-                            filterElement.getColumnName());
+                for (DatabaseFilterElement filterElement: filterElements) {
+                    boolean caseSensitive = !caseInSensitiveFields.contains(filterElement.getColumnName());
                     filterInfos.put(
                             filterElement.getColumnName().toUpperCase()
                             , new FilterInfo(filterElement, caseSensitive));
-                    if (!filterElement.isVirtual())
-                    {
-                        queryBuf.append(
-                                "\n   AND (${"+filterElement.getColumnName().toUpperCase()+"})");
-                    }
-//                    queryBuf.append(
-//                            "\n   AND ("+createWhereEntry(filterElement, caseSensitive)+")");
+                    if (!filterElement.isVirtual()) 
+                        queryBuf.append("\n   AND (${"+filterElement.getColumnName().toUpperCase()+"})");
                 }
             }
 
@@ -312,9 +300,7 @@ public class DatabaseRecordQuery
             StrSubstitutor subst = new StrSubstitutor(new ParameterLookup(filterInfos));
             
             return subst.replace(resultQuery);
-        }
-        catch (Throwable e)
-        {
+        } catch (Throwable e) {
             throw new DatabaseRecordQueryException(
                     String.format(
                         "Error creating database query for record schema (%s)"

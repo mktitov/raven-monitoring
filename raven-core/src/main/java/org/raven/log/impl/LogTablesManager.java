@@ -27,9 +27,9 @@ import com.sun.rowset.CachedRowSetImpl;
 
 public abstract class LogTablesManager 
 {
-	private static Logger logger = LoggerFactory.getLogger(LogTablesManager.class);
+	private static final Logger logger = LoggerFactory.getLogger(LogTablesManager.class);
 	public static final String DATE_FORMAT = "'log_'yyyyMMdd";
-	private static SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+	private static final SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
 	private static final String metaTableName = "logTables";
 	private static final String sDelTable = "drop table "; 
 	private static final String sTableExists = "select count(*) from "; 
@@ -45,6 +45,14 @@ public abstract class LogTablesManager
 	//    private NodeLoggerNode nodeLoggerNode;
     private ConnectionPool pool = null;
     
+    private Connection getConn() {
+        try {
+            return pool.getConnection();
+        } catch (SQLException ex) {
+            return null;
+        }
+    }
+    
 	protected int executeUpdate(String sql, Object[] args, boolean hideError)  
 	{
 		if(sql==null || sql.length()==0)
@@ -52,9 +60,8 @@ public abstract class LogTablesManager
 			logger.error("invalid ddl :\""+sql+"\""); 
 			return -1;
 		}	
-		Connection con = pool.getConnection();
-		if(con==null)
-		{
+		Connection con = getConn();
+		if(con==null) {
 			logger.error("connection is null"); 
 			return -2;
 		}	
@@ -146,7 +153,7 @@ public abstract class LogTablesManager
 	{
 		if(name==null || name.length()==0) return false;
 		String sql = sTableExists+name;
-		Connection con = pool.getConnection();
+		Connection con = getConn();
 		Statement st = null;
 		boolean ok = false;
 		try {
@@ -169,7 +176,7 @@ public abstract class LogTablesManager
 	protected CachedRowSet select(String sql, Object[] args) 
 	{
 		boolean ok = false;
-		Connection con = pool.getConnection();
+		Connection con = getConn();
 		if(con==null)
 		{
 			logger.error("connection is null"); 

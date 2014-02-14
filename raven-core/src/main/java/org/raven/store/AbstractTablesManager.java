@@ -60,15 +60,15 @@ public abstract class AbstractTablesManager {
 		try { con.close();} catch(Exception e) {};
 	}	
 
-	protected boolean setConnection()
+	protected boolean setConnection() 
 	{
-		connection = pool.getConnection();
-		if(connection==null)
-		{
-			logger.error("connection is null");
-			return false;
-		}	
-		return true;
+        try {
+            connection = pool.getConnection();
+            return true;
+        } catch (SQLException e) {
+			logger.error("Connection pool error", e);
+            return false;
+        }
 	}
 
 	protected Connection getConnection()
@@ -120,7 +120,7 @@ public abstract class AbstractTablesManager {
 			solidCon = true;
 			con = connection;
 		} 
-			else con = pool.getConnection();
+			else con = getConn();
 		if(con==null) return -2;
 		Statement st = null;
 		int ret = -3;
@@ -205,12 +205,20 @@ public abstract class AbstractTablesManager {
 		}
 		return ok;
 	}
+    
+    private Connection getConn() {
+        try {
+            return pool.getConnection();
+        } catch (SQLException ex) {
+            return null;
+        }
+    }
 
 	private boolean tableExists(String name)  
 	{
 		if(name==null || name.length()==0) return false;
 		String sql = sTableExists+name;
-		Connection con = pool.getConnection();
+		Connection con = getConn();
 		Statement st = null;
 		boolean ok = false;
 		try {
@@ -233,7 +241,7 @@ public abstract class AbstractTablesManager {
 	protected CachedRowSet select(String sql, Object[] args) 
 	{
 		boolean ok = false;
-		Connection con = pool.getConnection();
+		Connection con = getConn();
 		if(con==null)
 		{
 			logger.error("connection is null"); 
