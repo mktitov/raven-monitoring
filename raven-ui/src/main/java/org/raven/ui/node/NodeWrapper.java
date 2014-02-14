@@ -1427,8 +1427,11 @@ public class NodeWrapper extends AbstractNodeWrapper
     }
 
     public String getNodeTitle() {
-        NodeAttribute titleAttr = getNode().getNodeAttribute("nodeTitle");
-        return titleAttr == null ? null : " (" + titleAttr.getValue() + ")";
+        final NodeAttribute titleAttr = getNode().getAttr("nodeTitle");
+        if (titleAttr==null) 
+            return null;
+        final String title = titleAttr.getValue();
+        return title == null || title.isEmpty()? null : " (" + title + ")";
     }
 
     public boolean isStarted() {
