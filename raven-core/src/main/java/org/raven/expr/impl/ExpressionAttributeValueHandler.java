@@ -134,6 +134,8 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
             try{
                 bindings.remove(ENABLE_SCRIPT_EXECUTION_BINDING);
                 attribute.getOwner().formExpressionBindings(bindings);
+                bindings.put(NODE_BINDING, attribute.getOwner());
+                bindings.put(LOGGER, attribute.getOwner().getLogger());
                 if (   !attribute.getValueHandlerType().equals(ScriptAttributeValueHandlerFactory.TYPE)
                     || bindings.containsKey(ENABLE_SCRIPT_EXECUTION_BINDING)
                     || varsInitiated)

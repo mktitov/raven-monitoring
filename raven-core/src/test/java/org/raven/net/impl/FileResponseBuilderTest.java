@@ -26,7 +26,6 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.BindingNames;
-import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.net.NetworkResponseService;
 import org.raven.test.BindingsContainer;

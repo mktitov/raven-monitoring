@@ -122,8 +122,17 @@ public class ApiUtils
         return ctx;
     }
 
-    public static void sendData(DataSource source, DataConsumer target, Object data) throws Exception {
-        target.setData(source, data, new DataContextImpl());
+    public static DataContext sendData(DataSource source, DataConsumer target, Object data) throws Exception {
+        final DataContext context = new DataContextImpl();
+        target.setData(source, data, context);
+        return context;
+    }
+    
+    public static DataContext sendData(DataSource source, DataConsumer target, DataContext context, Object data) 
+            throws Exception 
+    {
+        target.setData(source, data, context);
+        return context;
     }
     
     public static List getData(Node initiator, DataSource dataSource, DataContext context) {

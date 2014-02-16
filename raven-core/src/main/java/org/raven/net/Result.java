@@ -28,4 +28,8 @@ public interface Result {
      * Returns the content
      */
     public Object getContent();
+    /**
+     * Returns the content type of the result
+     */
+    public String getContentType();
 }

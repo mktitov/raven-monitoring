@@ -36,6 +36,7 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.auth.UserContext;
 import org.raven.expr.BindingSupport;
+import org.raven.expr.impl.BindingSupportImpl;
 import static org.raven.expr.impl.ExpressionAttributeValueHandler.RAVEN_EXPRESSION_VARS_BINDING;
 import static org.raven.expr.impl.ExpressionAttributeValueHandler.RAVEN_EXPRESSION_VARS_INITIATED_BINDING;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
@@ -167,7 +168,7 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
                     return _extendsTemplate.buildResponseContent(addExtendsTemplateParams(bindings));
                 } else {
                     addBinding(bindings);
-                    return new WritableWrapper(_template.make(bindings));
+                    return new WritableWrapper(_template.make(bindings), bindings);
                 }
             }
         }        
@@ -329,18 +330,28 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
     
     private class WritableWrapper implements Writable {
         private final Writable writable;
+        private final Map bindings;
 
-        public WritableWrapper(Writable writable) {
+        public WritableWrapper(Writable writable, Map bindings) {
             this.writable = writable;
+            this.bindings = bindings;
         }
 
         public Writer writeTo(Writer out) throws IOException {
             BindingSupport varsSupport = initExpressionExecutionContext();
+            final BindingSupportImpl bindingsSupport = new BindingSupportImpl();
+            final String bindingsId = tree.addGlobalBindings(bindingsSupport);
             try {
+                bindingsSupport.putAll(bindings);
+                bindingsSupport.remove(BindingNames.NODE_BINDING);
+                bindingsSupport.remove(BindingNames.LOGGER_BINDING);
+                bindingsSupport.remove(BindingNames.INCLUDE_BINDING);
+                bindingsSupport.remove(BindingNames.PATH_BINDING);
                 return writable.writeTo(out);
             } finally {
                 if (varsSupport!=null)
                     varsSupport.reset();
+                tree.removeGlobalBindings(bindingsId);
             }
         }
         

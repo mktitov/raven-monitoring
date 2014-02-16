@@ -129,6 +129,9 @@ public class SimpleResponseBuilder extends AbstractResponseBuilder {
             public Object doCall(int status, Object content) {
                 return new ResultImpl(status, content);
             }
+            public Object doCall(int status, String contentType, Object content) {
+                return new ResultImpl(status, content, contentType);
+            }
         };
     }
     

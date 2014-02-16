@@ -24,10 +24,18 @@ import org.raven.net.Result;
 public class ResultImpl implements Result {
     private final int statusCode;
     private final Object content;
+    private final String contentType;
 
     public ResultImpl(int statusCode, Object content) {
         this.statusCode = statusCode;
         this.content = content;
+        this.contentType = null;
+    }
+
+    public ResultImpl(int statusCode, Object content, String contentType) {
+        this.statusCode = statusCode;
+        this.content = content;
+        this.contentType = contentType;
     }
 
     public int getStatusCode() {
@@ -36,5 +44,9 @@ public class ResultImpl implements Result {
 
     public Object getContent() {
         return content;
+    }
+
+    public String getContentType() {
+        return contentType;
     }
 }

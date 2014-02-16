@@ -25,7 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 public class RedirectResult extends ResultImpl {
 
     public RedirectResult(String url) {
-        super(HttpServletResponse.SC_MOVED_TEMPORARILY, url);
+        super(HttpServletResponse.SC_MOVED_TEMPORARILY, url, null);
     }
     
     public String getUrl() {
