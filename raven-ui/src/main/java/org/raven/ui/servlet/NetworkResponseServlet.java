@@ -208,16 +208,19 @@ public class NetworkResponseServlet extends HttpServlet  {
             if (content instanceof RedirectResult)
                 response.sendRedirect(((RedirectResult)content).getContent().toString());
             else {
+                response.setContentType(serviceResponse.getContentType());
                 if (content instanceof Result) {
                     Result result = (Result) content;
                     response.setStatus(result.getStatusCode());
                     content = result.getContent();
+                    if (result.getContentType()!=null)
+                        response.setContentType(result.getContentType());
                 } else 
                     response.setStatus(content!=null? HttpServletResponse.SC_OK : HttpServletResponse.SC_NO_CONTENT);
                 String charset = getCharset(request, serviceResponse);
                 if (charset!=null)
                     response.setCharacterEncoding(charset);
-                response.setContentType(serviceResponse.getContentType());            
+//                response.setContentType(serviceResponse.getContentType());            
                 if (serviceResponse.getLastModified()!=null) 
                     response.setDateHeader("Last-Modified", serviceResponse.getLastModified());
                 response.addHeader("Cache-control", "no-cache");
@@ -339,6 +342,13 @@ public class NetworkResponseServlet extends HttpServlet  {
     protected void doPut(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) 
+            throws ServletException, IOException 
+    {
+        processRequest(req, resp);
     }
 
     @Override
