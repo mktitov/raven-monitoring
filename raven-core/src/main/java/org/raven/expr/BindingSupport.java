@@ -27,6 +27,7 @@ import javax.script.Bindings;
 public interface BindingSupport
 {
     public void setForceDisableScriptExcecution(boolean value);
+    public void enableScriptExecution();
     public void put(String bindingName, Object value);
     public void putAll(Map<String, Object> bindMap);
     public void addTo(Bindings scriptBindings);

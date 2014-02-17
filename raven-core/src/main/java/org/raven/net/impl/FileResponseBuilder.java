@@ -104,7 +104,7 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
         template.set(null);
     }
     
-    public boolean isGrooveTemplate() throws Exception {
+    public boolean isGroovyTemplate() throws Exception {
         return GSP_MIME_TYPE.equals(getFile().getMimeType());
     }
 

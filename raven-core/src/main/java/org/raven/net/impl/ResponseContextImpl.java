@@ -22,14 +22,17 @@ import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
 import org.raven.auth.impl.AccessRight;
 import org.raven.expr.BindingSupport;
+import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.net.Request;
 import org.raven.net.Response;
 import org.raven.net.ResponseBuilder;
 import org.raven.net.ResponseContext;
 import org.raven.net.ResponseServiceNode;
+import org.raven.tree.Tree;
 import org.raven.tree.impl.LoggerHelper;
 import org.slf4j.Logger;
+import org.weda.internal.annotations.Service;
 
 /**
  *
@@ -42,6 +45,10 @@ public class ResponseContextImpl implements ResponseContext {
             "<link rel=\"%s/stylesheet\" href=\"jquery/themes/base/jquery.ui.all.css\"/>";
     public final static String INCLUDE_JQUERY_UI_STR = 
             "<script src=\"%s/jquery/ui/jquery-ui.js\"></script>";
+    
+    @Service
+    private static Tree tree;
+    
     private final Request request;
 //    private final String contextPath;
     private final String builderPath;
@@ -127,20 +134,25 @@ public class ResponseContextImpl implements ResponseContext {
         try {
             try {
                 BindingSupport bindingSupport = serviceNode.getBindingSupport();
+                bindingSupport.enableScriptExecution();
+                final BindingSupport globalBindings = new BindingSupportImpl();
+                final String bindingsId = tree.addGlobalBindings(globalBindings);
                 try {
-                    bindingSupport.put(BindingNames.USER_CONTEXT, user);
-                    bindingSupport.put(BindingNames.REQUEST_BINDING, request);
-                    bindingSupport.put(BindingNames.RESPONSE_BINDING, this);
-                    bindingSupport.put(BindingNames.ROOT_PATH, request.getRootPath());
-                    bindingSupport.put(BindingNames.APP_NODE, request.getParams().get(BindingNames.APP_NODE));
-                    bindingSupport.put(BindingNames.APP_PATH, request.getParams().get(BindingNames.APP_PATH));
-                    bindingSupport.put(BindingNames.CONTEXT_PATH, request.getContextPath());
-                    bindingSupport.put(BindingNames.INCLUDE_JQUERY, preparePath(INCLUDE_JQUERY_STR));
-                    bindingSupport.put(BindingNames.INCLUDE_JQUERY_CSS, preparePath(INCLUDE_JQUERY_CSS_STR));
-                    bindingSupport.put(BindingNames.INCLUDE_JQUERY_UI, preparePath(INCLUDE_JQUERY_UI_STR));
+                    globalBindings.put(BindingNames.USER_CONTEXT, user);
+                    globalBindings.put(BindingNames.REQUEST_BINDING, request);
+                    globalBindings.put(BindingNames.RESPONSE_BINDING, this);
+                    globalBindings.put(BindingNames.ROOT_PATH, request.getRootPath());
+                    globalBindings.put(BindingNames.APP_NODE, request.getParams().get(BindingNames.APP_NODE));
+                    globalBindings.put(BindingNames.APP_PATH, request.getParams().get(BindingNames.APP_PATH));
+                    globalBindings.put(BindingNames.CONTEXT_PATH, request.getContextPath());
+                    globalBindings.put(BindingNames.INCLUDE_JQUERY, preparePath(INCLUDE_JQUERY_STR));
+                    globalBindings.put(BindingNames.INCLUDE_JQUERY_CSS, preparePath(INCLUDE_JQUERY_CSS_STR));
+                    globalBindings.put(BindingNames.INCLUDE_JQUERY_UI, preparePath(INCLUDE_JQUERY_UI_STR));
                     Response response = responseBuilder.buildResponse(user, this);
                     return response;
                 } finally {
+                    globalBindings.reset();
+                    tree.removeGlobalBindings(bindingsId);
                     bindingSupport.reset();
                 }
             } catch (NetworkResponseServiceExeption e) {

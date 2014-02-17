@@ -147,7 +147,7 @@ public class SimpleResponseBuilder extends AbstractResponseBuilder {
             
             public Object doCall(FileResponseBuilder builder, Map params) throws Throwable {
                 try {
-                    if (!builder.isGrooveTemplate()) 
+                    if (!builder.isGroovyTemplate()) 
                         return builder.getFile();
                     else {
                         Bindings bindings = new SimpleBindings();

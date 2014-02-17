@@ -424,24 +424,22 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
     {
         if (pathIndex==path.length)
             throw new ContextUnavailableException(getContextFromPath(path, 0), path[pathIndex-1]);
-        final Collection<Node> childs = node.getEffectiveChildrens();
         final String pathElem = path[pathIndex];
-        if (childs!=null && !childs.isEmpty())
-            for (Node child: childs) {
-                if (pathElem.equals(child.getName()) && Node.Status.STARTED.equals(child.getStatus())) {
-                    if (child instanceof NetworkResponseGroupNode)
-                        return getContext(child, path, pathIndex+1, pathInfo);
-                    else {
-                        if (pathIndex!=path.length-1)
-                            pathInfo.setSubpath(getContextFromPath(path, pathIndex+1));
-                        pathInfo.setBuilderPath(StringUtils.join(path, "/", 0, pathIndex));
+        for (Node child: node.getEffectiveNodes()) {
+            if (pathElem.equals(child.getName()) && child.isStarted()) {
+                if (child instanceof NetworkResponseGroupNode)
+                    return getContext(child, path, pathIndex+1, pathInfo);
+                else {
+                    if (pathIndex!=path.length-1)
+                        pathInfo.setSubpath(getContextFromPath(path, pathIndex+1));
+                    pathInfo.setBuilderPath(StringUtils.join(path, "/", 0, pathIndex));
 //                        if (pathIndex!=path.length-1)
 //                            params.put(SUBCONTEXT_PARAM, getContextFromPath(path, pathIndex+1));
-                        if (child instanceof NetworkResponseContext)
-                            return (NetworkResponseContext) child;
-                    }
+                    if (child instanceof NetworkResponseContext)
+                        return (NetworkResponseContext) child;
                 }
             }
+        }
         throw new ContextUnavailableException(getContextFromPath(path, 0), pathElem);
     }
     
