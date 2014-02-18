@@ -17,8 +17,6 @@
 
 package org.raven.ds;
 
-import java.util.Collection;
-
 /**
  *
  * @author Mikhail Titov
