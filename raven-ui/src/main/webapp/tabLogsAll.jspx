@@ -87,7 +87,7 @@
 				</tr:panelPopup>
 			</f:facet>
 	    	<tr:outputText
-				inlineStyle="font-size: 80%;"	       
+				inlineStyle="font-size:100%;"	       
 	      		value="#{row.fdString}" />
         </tr:column>
     	<tr:column 
@@ -115,17 +115,17 @@
         </tr:column>
     	<tr:column headerText="#{msgs.node}">
 	      	<tr:outputText
-	    		inlineStyle="font-size: 80%;"	       
+	    		inlineStyle="font-size:100%;"	       
 		      	value="#{row.nodePath}"/>
         </tr:column>
     	<tr:column headerText="#{msgs.message}">
 	      	<tr:outputText
-	    		inlineStyle="font-size: 80%;"	       
+	    		inlineStyle="font-size:100%;"	       
 		      	value="#{row.shortMessage}"/>
         </tr:column>
         <f:facet name="detailStamp">
 	      	<tr:outputText escape="false"
-	    		inlineStyle="font-size: 80%;"	       
+	    		inlineStyle="font-size:120%;"	       
 		      	value="&lt;pre&gt;&lt;small&gt;&lt;small&gt;#{row.message}&lt;/small&gt;&lt;/small&gt;&lt;/pre&gt;"/>
 	    </f:facet>
 </tr:table>
@@ -162,7 +162,7 @@
 						</tr:panelPopup>
 					</f:facet>
 	    			<tr:outputText
-						inlineStyle="font-size: 80%;"	       
+						inlineStyle="font-size:100%;"	       
 			      		value="#{rowx.fdString}" />
         		</tr:column>
     			<tr:column 
@@ -190,12 +190,12 @@
         		</tr:column>
 		    	<tr:column headerText="#{msgs.message}">
 	    		  	<tr:outputText
-	    				inlineStyle="font-size: 80%;"	       
+	    				inlineStyle="font-size:100%;"	       
 		      			value="#{rowx.shortMessage}"/>
         			</tr:column>
         		<f:facet name="detailStamp">
 	    		  	<tr:outputText escape="false"
-		    			inlineStyle="font-size: 80%;"	       
+		    			inlineStyle="font-size:120%;"	       
 				      	value="&lt;pre&gt;#{rowx.message}&lt;/pre&gt;"/>
 				</f:facet>
 			</tr:table>
