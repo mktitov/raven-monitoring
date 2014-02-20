@@ -37,6 +37,7 @@ import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ExpressionAttributeValueHandler;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
@@ -144,11 +145,16 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
     {
         super.doStart();
 
-        syncFilterFields(recordSchema, true);
+        if (!isRecordSchemaScript())
+            syncFilterFields(recordSchema, true);
         
         validRecords = 0l;
         errorRecords = 0l;
         processingTime = 0l;
+    }
+    
+    private boolean isRecordSchemaScript() {
+        return ScriptAttributeValueHandlerFactory.TYPE.equals(getAttr(RECORD_SCHEMA_ATTR).getValueHandlerType());
     }
 
     @Override
