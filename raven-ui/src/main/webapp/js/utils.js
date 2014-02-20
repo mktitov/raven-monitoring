@@ -30,7 +30,7 @@ function transferNode(sourceNodePath, targetNodePath, isMoveOp, askNewName, posi
   $.ajax({
     url:"../projects/system/nodes/transfer",
     dataType:"json",
-    type:'POST',
+    type:'GET',
     data: {
       sourceNodePath:sourceNodePath,
       targetNodePath:targetNodePath,

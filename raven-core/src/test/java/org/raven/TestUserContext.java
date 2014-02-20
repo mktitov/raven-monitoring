@@ -18,7 +18,6 @@
 package org.raven;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.raven.auth.UserContext;
@@ -70,6 +69,14 @@ public class TestUserContext implements UserContext
     }
 
     public Map<String, String> getResourcesList(Tree tree) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void needRelogin() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public boolean isNeedRelogin() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }

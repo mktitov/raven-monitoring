@@ -79,4 +79,11 @@ public class NetRespContextUserContext implements UserContext {
     public Map<String, String> getResourcesList(Tree tree) {
         return Collections.EMPTY_MAP;
     }
+
+    public void needRelogin() {
+    }
+
+    public boolean isNeedRelogin() {
+        return false;
+    }
 }

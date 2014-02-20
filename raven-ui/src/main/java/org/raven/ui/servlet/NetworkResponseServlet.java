@@ -107,11 +107,27 @@ public class NetworkResponseServlet extends HttpServlet  {
             return responseContext.getLoginService().login(null, null, null);        
         UserContext userContext = null;
         String userContextAttrName = "sri_user_context_"+loginService.getId();
+        HttpSession session = null;
         if (responseContext.isSessionAllowed()) {
-            HttpSession session = request.getSession(false);
-            if (session!=null) 
-                userContext = (UserContext) session.getAttribute(userContextAttrName);                
+            session = request.getSession(false);
+            if (session!=null) {
+                userContext = (UserContext) session.getAttribute(userContextAttrName);
+                if (userContext!=null && userContext.isNeedRelogin()) {
+                    //handling relogin event
+                    if (responseContext.getLogger().isDebugEnabled())
+                        responseContext.getLogger().debug("User ({}, {}) logged out", userContext.getLogin(), 
+                                userContext.getName());
+                    session.invalidate();
+                    userContext = null;
+                    throw new UnauthoriedException();
+                }
+            }
         }
+//        if (responseContext.getRequest().getParams().containsKey("logout")) {
+//            if (session!=null)
+//                session.invalidate();
+//            throw new UnauthoriedException();
+//        }
         if (userContext==null) {
             String requestAuth = request.getHeader("Authorization");
             if (requestAuth == null) throw new UnauthoriedException();

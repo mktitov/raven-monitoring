@@ -288,4 +288,12 @@ public class UserAcl implements UserContext
     public String getHost() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+
+    public void needRelogin() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public boolean isNeedRelogin() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

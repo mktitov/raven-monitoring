@@ -67,6 +67,16 @@ public interface UserContext {
      * @param rights the rights string (see {@link AccessControl})
      */
     public boolean hasAccessToNode(Node node, String rights);
+    /**
+     * Next request to sri will reset the session and reauthenticate the user (if need) after this function 
+     * call
+     */
+    public void needRelogin();
+    /**
+     * Return the current status of the need relogin flag
+     * @see UserContext#setNeedRelogin(boolean) 
+     */
+    public boolean isNeedRelogin();
     
     public Map<String,String>  getResourcesList(Tree tree);
 }

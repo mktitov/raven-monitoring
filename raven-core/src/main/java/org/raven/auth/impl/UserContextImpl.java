@@ -43,6 +43,7 @@ public class UserContextImpl implements UserContext
     private final Map<String, Object> params;
     private final Set<String> groups;
     private final AccessPolicyManager policyManager;
+    private volatile boolean needRelogin = false;
 
     public UserContextImpl(UserContextConfig config, AccessPolicyManager policyManager) {
         this.login = config.getLogin();
@@ -90,6 +91,14 @@ public class UserContextImpl implements UserContext
     public boolean hasAccessToNode(Node node, String rights) {
         final int decodedRights = AccessControl.decodeRight(rights);
         return (getAccessForNode(node) & decodedRights) == decodedRights;
+    }
+
+    public boolean isNeedRelogin() {
+        return needRelogin;
+    }
+
+    public void needRelogin() {
+        this.needRelogin = true;
     }
 
     @Override
