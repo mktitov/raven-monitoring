@@ -163,7 +163,7 @@ public class ExcelRecordReaderNode extends AbstractSafeDataPipe
                     break;
             }
         }
-        value = fieldInfo.prepareValue(value);
+        value = fieldInfo.decode(value);
         if (value!=null)
             record.setValue(fieldName, value);
         return value;

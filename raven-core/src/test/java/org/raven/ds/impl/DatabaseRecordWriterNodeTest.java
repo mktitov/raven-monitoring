@@ -48,6 +48,7 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
     private JDBCConnectionPoolNode pool;
     private DatabaseRecordWriterNode writer;
     private RecordSchemaFieldNode idField;
+    private DatabaseRecordFieldExtension field1DbExt;
 
     @Before
     public void prepare() throws Exception
@@ -117,6 +118,7 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
         dbExtension.setColumnName("col1");
         dbExtension.start();
         assertEquals(Status.STARTED, dbExtension.getStatus());
+        field1DbExt = dbExtension;
 
         IdRecordFieldExtension idExtension = new IdRecordFieldExtension();
         idExtension.setName("id");
@@ -140,8 +142,14 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
     }
 
     @Test
-    public void setData_test() throws Exception
-    {
+    public void setData_test() throws Exception {
+        RecordSchemaFieldCodecNode codec = new RecordSchemaFieldCodecNode();
+        codec.setName("codec");
+        field1DbExt.addAndSaveChildren(codec);
+        codec.setUseEncodeExpression(Boolean.TRUE);
+        codec.setEncodeExpression("value*100");
+        assertTrue(codec.start());
+        
         Record record = schema.createRecord();
         record.setValue("field1", 10);
         record.setValue("field2", "10.50.1.1");
@@ -159,7 +167,7 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
         con.close();
 
         assertEquals(1, rows.size());
-        assertEquals(10, rows.get(0)[0]);
+        assertEquals(1000, rows.get(0)[0]);
         assertEquals("10.50.1.1", rows.get(0)[1]);
     }
 

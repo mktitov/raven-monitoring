@@ -34,6 +34,7 @@ import org.raven.ds.Record;
 import org.raven.ds.RecordException;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
+import org.raven.ds.RecordSchemaFieldCodec;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.log.LogLevel;
 import org.weda.annotations.constraints.NotNull;
@@ -319,11 +320,27 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
             con.close();
         }
     }
+    
+    private static class FieldInfo {
+        private final RecordSchemaField field;
+        private final RecordSchemaFieldCodec codec;
+
+        public FieldInfo(RecordSchemaField field, DatabaseRecordFieldExtension dbExt) {
+            this.field = field;
+            this.codec = dbExt.getCodec();
+        }
+        
+        public Object encode(Object val) {
+            return codec==null? val : codec.encode(val, null);
+        }
+        
+    }
 
     private class SchemaMeta
     {
-        private final List<RecordSchemaField> dbFields;
+        private final List<FieldInfo> dbFields;
         private final List<String> columnNames;
+//        private final Map<String, RecordSchema> codecs;
         private String idColumnName;
         private String idFieldName;
         private String sequenceName;
@@ -356,7 +373,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                         "Schema (%s) does not contains fields", recordSchema.getName()));
 
             columnNames = new ArrayList<String>(fields.length);
-            dbFields =  new ArrayList<RecordSchemaField>(fields.length);
+            dbFields =  new ArrayList<FieldInfo>(fields.length);
             idColumnName = null;
             this.batchUpdate = batchUpdate;
             this.updateIdField = updateIdField;
@@ -367,7 +384,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                 if (extension != null)
                 {
                     columnNames.add(extension.getColumnName());
-                    dbFields.add(field);
+                    dbFields.add(new FieldInfo(field, extension));
                     IdRecordFieldExtension idExtension =
                             field.getFieldExtension(IdRecordFieldExtension.class, null);
                     if (idExtension!=null)
@@ -451,18 +468,14 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
             return false;
         }
 
-        private Object getNextSequenceValue(Record record) throws RecordException, SQLException
-        {
+        private Object getNextSequenceValue(Record record) throws RecordException, SQLException {
             ResultSet rs = sequence.executeQuery();
-            try
-            {
+            try {
                 rs.next();
                 Object nextVal = rs.getObject(1);
                 record.setValue(idFieldName, nextVal);
                 return nextVal;
-            }
-            finally
-            {
+            } finally {
                 rs.close();
             }
         }
@@ -472,27 +485,23 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
             PreparedStatement st = null;
             boolean recordFound = false;
             boolean deleteRecord = deleteQuery!=null && record.containsTag(Record.DELETE_TAG);
-            try
-            {
-                if (!deleteRecord)
-                {
+            try {
+                if (!deleteRecord) {
                     recordFound = findRecord(record);
                     st = recordFound? update : insert;
-                }
-                else
+                } else
                     st = delete;
                 int i=1;
                 Object idFieldValue = null;
-                for (RecordSchemaField field: dbFields)
-                {
+                for (FieldInfo fi: dbFields) {
                     Object val = RecordSchemaFieldType.getSqlObject(
-                            field, record.getValue(field.getName()));
-                    if (   val==null && field.getName().equals(idFieldName) && updateIdField
+                            fi.field, fi.encode(record.getValue(fi.field.getName())));
+                    if (   val==null && fi.field.getName().equals(idFieldName) && updateIdField
                         && sequenceName!=null && !recordFound && !deleteRecord)
                     {
                         val = getNextSequenceValue(record);
                     }
-                    if ((recordFound || deleteRecord) && field.getName().equals(idFieldName))
+                    if ((recordFound || deleteRecord) && fi.field.getName().equals(idFieldName))
                         idFieldValue = val;
                     else if (!deleteRecord)
                         st.setObject(i++, val);

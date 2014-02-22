@@ -28,6 +28,7 @@ import org.raven.util.NodeUtils;
  */
 public class AbstractRecordFieldExtension extends BaseNode {
     
+    @Deprecated
     public <T> T prepareValue(Object value, Bindings bindings) {
         for (ValuePrepareRecordFieldExtension child: NodeUtils.getChildsOfType(this, ValuePrepareRecordFieldExtension.class))
             return child.prepareValue(value, bindings);

@@ -44,10 +44,7 @@ public class ReferenceToReferenceValuesSourceNode extends BaseNode implements Re
         this.referenceValuesSource = referenceValuesSource;
     }
 
-    public List<ReferenceValue> getReferenceValues() 
-    {
-        if (!Status.STARTED.equals(getStatus()))
-            return null;
-        return getReferenceValuesSource().getReferenceValues();
+    public List<ReferenceValue> getReferenceValues() {
+        return isStarted()? getReferenceValuesSource().getReferenceValues() : null;
     }
 }

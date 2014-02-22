@@ -29,7 +29,9 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass(
-    parentNode=RecordSchemaFieldNode.class, childNodes=ValuePrepareRecordFieldExtension.class)
+    parentNode=RecordSchemaFieldNode.class, childNodes={
+        RecordSchemaFieldCodecNode.class, FieldCodecReferenceNode.class
+    })
 public class CsvRecordFieldExtension extends AbstractRecordFieldExtension {
     
     private BindingSupportImpl bindingSupport;

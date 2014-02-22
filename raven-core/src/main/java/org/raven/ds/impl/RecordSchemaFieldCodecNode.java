@@ -25,14 +25,13 @@ import org.raven.expr.BindingSupport;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.tree.impl.BaseNode;
-import org.raven.tree.impl.InvisibleNode;
 import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode = InvisibleNode.class)
+@NodeClass()
 public class RecordSchemaFieldCodecNode extends BaseNode implements RecordSchemaFieldCodec {
     
     @Parameter(valueHandlerType = ScriptAttributeValueHandlerFactory.TYPE)

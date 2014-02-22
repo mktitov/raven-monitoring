@@ -38,6 +38,7 @@ import org.raven.dbcp.ConnectionPool;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
+import org.raven.ds.RecordSchemaFieldCodec;
 import org.raven.ds.RecordSchemaFieldType;
 import org.weda.services.TypeConverter;
 
@@ -444,7 +445,8 @@ public class DatabaseRecordQuery
                                 idColumnValue=value;
                                 idFieldType = fieldType.getType();
                             }
-                            value = fieldInfo.getDbExtension().prepareValue(value, null);
+//                            value = fieldInfo.getDbExtension().prepareValue(value, null);
+                            value = fieldInfo.decode(value);
                             if (RecordSchemaFieldType.RECORD.equals(fieldType))
                                 value = createRecordValue(fieldInfo, null, value);
                             next.setValue(fieldInfo.getFieldName(), value);
@@ -547,73 +549,66 @@ public class DatabaseRecordQuery
         }
     }
 
-    private class FieldInfo
-    {
+    private class FieldInfo {
         private final RecordSchemaField field;
         private final DatabaseRecordFieldExtension dbExtension;
+        private final RecordSchemaFieldCodec codec;
 
-        public FieldInfo(RecordSchemaField field, DatabaseRecordFieldExtension dbExtension)
-        {
+        public FieldInfo(RecordSchemaField field, DatabaseRecordFieldExtension dbExtension) {
             this.field = field;
             this.dbExtension = dbExtension;
+            this.codec = dbExtension==null? null : dbExtension.getCodec();
         }
 
-        public RecordSchemaField getField()
-        {
+        public RecordSchemaField getField() {
             return field;
         }
+        
+        public Object decode(Object val) {
+            return codec==null? val : codec.decode(val, null);
+        }
 
-        public DatabaseRecordFieldExtension getDbExtension()
-        {
+        public DatabaseRecordFieldExtension getDbExtension() {
             return dbExtension;
         }
 
-        public String getFieldName()
-        {
+        public String getFieldName() {
             return field.getName();
         }
     }
 
-    private class FilterInfo
-    {
+    private class FilterInfo {
         private final DatabaseFilterElement filterElement;
         private final boolean caseSensitive;
 
-        public FilterInfo(DatabaseFilterElement filterElement, boolean caseSensitive)
-        {
+        public FilterInfo(DatabaseFilterElement filterElement, boolean caseSensitive) {
             this.filterElement = filterElement;
             this.caseSensitive = caseSensitive;
         }
 
-        public boolean isCaseSensitive()
-        {
+        public boolean isCaseSensitive() {
             return caseSensitive;
         }
 
-        public DatabaseFilterElement getFilterElement()
-        {
+        public DatabaseFilterElement getFilterElement() {
             return filterElement;
         }
     }
 
-    private class ParameterLookup extends StrLookup
-    {
+    private class ParameterLookup extends StrLookup {
         private final Map<String, FilterInfo> filterElements;
 
-        public ParameterLookup(Map<String, FilterInfo> filterElements)
-        {
+        public ParameterLookup(Map<String, FilterInfo> filterElements) {
             this.filterElements = filterElements;
         }
 
         @Override
-        public String lookup(String key)
-        {
+        public String lookup(String key) {
             FilterInfo filterInfo = filterElements.get(key.toUpperCase());
             if (filterInfo==null)
                 throw new Error(String.format("Filter element (%s) was not defined", key));
             
             return createWhereEntry(filterInfo.getFilterElement(), filterInfo.isCaseSensitive());
         }
-        
     }
 }

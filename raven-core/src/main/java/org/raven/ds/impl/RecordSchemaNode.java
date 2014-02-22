@@ -81,9 +81,8 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema, Viewable
     {
         super.doInit();
 
-        recordExtensionsNode = (RecordExtensionsNode) getChildren(RecordExtensionsNode.NAME);
-        if (recordExtensionsNode==null)
-        {
+        recordExtensionsNode = (RecordExtensionsNode) getNode(RecordExtensionsNode.NAME);
+        if (recordExtensionsNode==null) {
             recordExtensionsNode = new RecordExtensionsNode();
             this.addAndSaveChildren(recordExtensionsNode);
             recordExtensionsNode.start();

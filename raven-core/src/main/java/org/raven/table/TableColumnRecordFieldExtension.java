@@ -20,16 +20,18 @@ package org.raven.table;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.impl.AbstractRecordFieldExtension;
+import org.raven.ds.impl.FieldCodecReferenceNode;
+import org.raven.ds.impl.RecordSchemaFieldCodecNode;
 import org.raven.ds.impl.RecordSchemaFieldNode;
-import org.raven.ds.impl.ValuePrepareRecordFieldExtension;
 import org.weda.annotations.constraints.NotNull;
 
 /**
  *
  * @author Mikhail Titov
  */
-@NodeClass(
-    parentNode=RecordSchemaFieldNode.class, childNodes=ValuePrepareRecordFieldExtension.class)
+@NodeClass(parentNode=RecordSchemaFieldNode.class, childNodes={
+        RecordSchemaFieldCodecNode.class, FieldCodecReferenceNode.class
+    })
 public class TableColumnRecordFieldExtension extends AbstractRecordFieldExtension
 {
     @Parameter @NotNull

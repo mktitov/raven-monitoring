@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.apache.commons.io.IOUtils;
+import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;
@@ -52,6 +53,7 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
     private JDBCConnectionPoolNode pool;
     private TypeConverter converter;
     private FilterableRecordFieldExtension filterExtension;
+    private DatabaseRecordFieldExtension field1DbExt;
 
     @Before
     public void prepare() throws Exception
@@ -99,6 +101,7 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
         field.addAndSaveChildren(fieldExtension);
         fieldExtension.setColumnName("column1");
         assertTrue(fieldExtension.start());
+        field1DbExt = fieldExtension;
 
         IdRecordFieldExtension idExtension = new IdRecordFieldExtension();
         idExtension.setName("id");
@@ -510,6 +513,29 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
     }
 
     @Test
+    public void execute_fieldCodecTest() throws Exception {
+        RecordSchemaFieldCodecNode codec = new RecordSchemaFieldCodecNode();
+        codec.setName("codec");
+        field1DbExt.addAndSaveChildren(codec);
+        codec.setUseDecodeExpression(Boolean.TRUE);
+        codec.setDecodeExpression("value*100");
+        assertTrue(codec.start());
+        
+        createTable(pool);
+        insertData5(pool);
+        DatabaseRecordQuery query = new DatabaseRecordQuery(
+                schema, null, null, null, null, pool, null, null, converter);
+
+        DatabaseRecordQuery.RecordIterator it = query.execute();
+        assertNotNull(it);
+        List<Record> recs = iteratorToList(it);
+        assertEquals(1, recs.size());
+        assertEquals(100, recs.get(0).getValue("field1"));
+        
+        query.close();
+    }
+    
+    @Test
     public void execute_noRecords() throws Exception
     {
         createTable(pool);
@@ -832,6 +858,12 @@ public class DatabaseRecordQueryTest extends RavenCoreTestCase
         Statement st = con.createStatement();
         st.executeUpdate("insert into record_data (column1, column2) values(1,'aa')");
         st.executeUpdate("insert into record_data_detail(record_data_id, column2) values(1, 'bb')");
+    }
+    
+    private void insertData5(JDBCConnectionPoolNode pool) throws SQLException {
+        Connection con = pool.getConnection();
+        Statement st = con.createStatement();
+        st.executeUpdate("insert into record_data (column1, column2) values(1,'10')");
     }
 
     private List<Record> iteratorToList(DatabaseRecordQuery.RecordIterator it)

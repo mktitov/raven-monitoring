@@ -26,7 +26,7 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=RecordSchemaFieldNode.class, childNodes=ValuePrepareRecordFieldExtension.class)
+@NodeClass(parentNode=RecordSchemaFieldNode.class)
 public class DatabaseSequenceRecordFieldExtension  extends AbstractRecordFieldExtension
 {
     @NotNull @Parameter
@@ -50,7 +50,7 @@ public class DatabaseSequenceRecordFieldExtension  extends AbstractRecordFieldEx
     public final static DatabaseSequenceRecordFieldExtension create(
             Node owner, String extensionName, String sequenceName)
     {
-        if (owner.getChildren(extensionName)!=null)
+        if (owner.getNode(extensionName)!=null)
             return null;
         DatabaseSequenceRecordFieldExtension seqExt = new DatabaseSequenceRecordFieldExtension();
         seqExt.setName(extensionName);

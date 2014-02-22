@@ -35,6 +35,7 @@ import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
+import org.raven.ds.RecordSchemaFieldCodec;
 import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
 import org.raven.tree.NodeAttribute;
@@ -250,8 +251,8 @@ public class CsvRecordReaderNode extends AbstractSafeDataPipe
                 for (Map.Entry<String, FieldInfo> entry: fieldsColumns.entrySet()) {
                     int colNum = entry.getValue().getColumnNumber()-1;
                     if (colNum<tokens.length) {
-                        Object value = entry.getValue().prepareValue(
-                                tokens[entry.getValue().getColumnNumber()-1]);
+                        final String token = tokens[entry.getValue().getColumnNumber()-1];
+                        Object value = entry.getValue().decode(token);
                         record.setValue(entry.getKey(), value);
                     }
                 }
@@ -271,19 +272,26 @@ public class CsvRecordReaderNode extends AbstractSafeDataPipe
 
     static class FieldInfo {
         private final int columnNumber;
-        private final CsvRecordFieldExtension extension;
+        private final CsvRecordFieldExtension ext;
+        private final RecordSchemaFieldCodec codec;
 
         public FieldInfo(CsvRecordFieldExtension extension) {
-            this.extension = extension;
+            this.ext = extension;
             this.columnNumber = extension.getColumnNumber();
+            this.codec = extension.getCodec();
         }
 
         public int getColumnNumber() {
             return columnNumber;
         }
 
-        public Object prepareValue(Object value) {
-            return extension.prepareValue(value, null);
+//        @Deprecated
+//        public Object prepareValue(Object value) {
+//            return extension.prepareValue(value, null);
+//        }
+        
+        public Object decode(Object val) {
+            return codec==null? ext.prepareValue(val, null) : codec.decode(val, null);
         }
     }
 }

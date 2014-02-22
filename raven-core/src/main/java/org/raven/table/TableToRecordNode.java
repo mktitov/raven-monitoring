@@ -31,6 +31,7 @@ import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
+import org.raven.ds.RecordSchemaFieldCodec;
 import org.raven.ds.impl.AbstractDataPipe;
 import org.raven.ds.impl.RecordSchemaNode;
 import org.raven.ds.impl.RecordSchemaValueTypeHandlerFactory;
@@ -166,13 +167,11 @@ public class TableToRecordNode extends AbstractDataPipe
             Bindings bindings = new SimpleBindings();
             bindings.put(ROW_BINDING ,row);
             Record record = _recordSchema.createRecord();
-            for (int i=0; i<row.length; ++i)
-            {
+            for (int i=0; i<row.length; ++i) {
                 Collection<FieldInfo> fieldInfos = fieldCols.get(i);
                 if (fieldInfos!=null)
-                    for (FieldInfo fieldInfo: fieldInfos)
-                    {
-                        Object val = fieldInfo.getColumnExtension().prepareValue(row[i], bindings);
+                    for (FieldInfo fieldInfo: fieldInfos) {
+                        Object val = fieldInfo.decode(row[i], bindings);
                         record.setValue(fieldInfo.getField().getName(), val);
                     }
             }
@@ -209,24 +208,26 @@ public class TableToRecordNode extends AbstractDataPipe
         fieldInfos.add(new FieldInfo(field, colExt));
     }
 
-    private class FieldInfo
-    {
+    private class FieldInfo {
         private final RecordSchemaField field;
         private final TableColumnRecordFieldExtension columnExtension;
+        private final RecordSchemaFieldCodec codec;
 
-        public FieldInfo(RecordSchemaField field, TableColumnRecordFieldExtension columnExtension)
-        {
+        public FieldInfo(RecordSchemaField field, TableColumnRecordFieldExtension columnExtension) {
             this.field = field;
             this.columnExtension = columnExtension;
+            this.codec = columnExtension.getCodec();
         }
 
-        public TableColumnRecordFieldExtension getColumnExtension()
-        {
-            return columnExtension;
+//        public TableColumnRecordFieldExtension getColumnExtension() {
+//            return columnExtension;
+//        }
+        
+        public Object decode(Object val, Bindings bindings) {
+            return codec==null? columnExtension.prepareValue(val, bindings) : codec.decode(val, bindings);
         }
 
-        public RecordSchemaField getField()
-        {
+        public RecordSchemaField getField() {
             return field;
         }
     }

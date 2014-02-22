@@ -17,12 +17,13 @@
 package org.raven.ds;
 
 import javax.script.Bindings;
+import org.raven.tree.Node;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface RecordSchemaFieldCodec {
+public interface RecordSchemaFieldCodec extends Node {
     /**
      * Encode record schema field value to the value needed for field extension.
      */

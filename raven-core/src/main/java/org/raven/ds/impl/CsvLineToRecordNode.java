@@ -111,8 +111,7 @@ public class CsvLineToRecordNode extends AbstractSafeDataPipe
                     for (Map.Entry<String, FieldInfo> entry: fieldsColumns.entrySet()) {
                         int colNum = entry.getValue().getColumnNumber()-1;
                         if (colNum<tokens.length) {
-                            Object value = entry.getValue().prepareValue(
-                                    tokens[entry.getValue().getColumnNumber()-1]);
+                            Object value = entry.getValue().decode(tokens[entry.getValue().getColumnNumber()-1]);
                             record.setValue(entry.getKey(), value);
                         }
                     }

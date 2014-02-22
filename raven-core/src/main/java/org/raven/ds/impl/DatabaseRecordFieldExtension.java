@@ -28,7 +28,9 @@ import org.weda.annotations.constraints.NotNull;
  *
  * @author Mikhail Titov
  */
-@NodeClass(parentNode=RecordSchemaFieldNode.class, childNodes=ValuePrepareRecordFieldExtension.class)
+@NodeClass(parentNode=RecordSchemaFieldNode.class, childNodes={
+        RecordSchemaFieldCodecNode.class, FieldCodecReferenceNode.class
+    })
 public class DatabaseRecordFieldExtension extends AbstractRecordFieldExtension
 {
     public static final String COLUMN_NAME_ATTR = "columnName";
