@@ -17,6 +17,7 @@
 
 package org.raven.ds.impl;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.Node.Status;
@@ -25,23 +26,37 @@ import org.raven.tree.Node.Status;
  *
  * @author Mikhail Titov
  */
-public class AbstractRecordFieldExtensionTest extends RavenCoreTestCase
-{
+public class AbstractRecordFieldExtensionTest extends RavenCoreTestCase {
+    AbstractRecordFieldExtension ext;
+    
+    @Before
+    public void prepare() {
+        ext = new AbstractRecordFieldExtension();
+        ext.setName("ext");
+        testsNode.addAndSaveChildren(ext);
+    }
+    
     @Test
-    public void test()
-    {
-        AbstractRecordFieldExtension extension = new AbstractRecordFieldExtension();
-        extension.setName("ext");
-
-        assertEquals("1", extension.prepareValue("1", null));
-
+    public void prepareValueTest() {
+        assertEquals("1", ext.prepareValue("1", null));
         ValuePrepareRecordFieldExtension valuePrepare = new ValuePrepareRecordFieldExtension();
         valuePrepare.setName("prepare");
-        extension.addAndSaveChildren(valuePrepare);
+        ext.addAndSaveChildren(valuePrepare);
         valuePrepare.setConvertToType(Integer.class);
         valuePrepare.start();
         assertEquals(Status.STARTED, valuePrepare.getStatus());
         
-        assertEquals(1, extension.prepareValue("1", null));
+        assertEquals(1, ext.prepareValue("1", null));
+    }
+    
+    @Test
+    public void getCodecTest() {
+        assertNull(ext.getCodec());
+        
+        RecordSchemaFieldCodecNode codec = new RecordSchemaFieldCodecNode();
+        codec.setName("codec");
+        ext.addAndSaveChildren(codec);
+        assertTrue(codec.start());
+        assertSame(codec, ext.getCodec());
     }
 }

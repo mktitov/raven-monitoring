@@ -21,7 +21,6 @@ import java.io.FileInputStream;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.raven.EnLocaleModule;
 import org.apache.tapestry5.ioc.IOCUtilities;

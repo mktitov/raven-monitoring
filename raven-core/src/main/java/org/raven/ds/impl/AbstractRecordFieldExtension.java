@@ -18,6 +18,7 @@
 package org.raven.ds.impl;
 
 import javax.script.Bindings;
+import org.raven.ds.RecordSchemaFieldCodec;
 import org.raven.tree.impl.BaseNode;
 import org.raven.util.NodeUtils;
 
@@ -29,7 +30,13 @@ public class AbstractRecordFieldExtension extends BaseNode {
     
     public <T> T prepareValue(Object value, Bindings bindings) {
         for (ValuePrepareRecordFieldExtension child: NodeUtils.getChildsOfType(this, ValuePrepareRecordFieldExtension.class))
-                return child.prepareValue(value, bindings);
+            return child.prepareValue(value, bindings);
         return (T)value;
+    }
+    
+    public RecordSchemaFieldCodec getCodec() {
+        for (RecordSchemaFieldCodec codec: NodeUtils.getChildsOfType(this, RecordSchemaFieldCodec.class))
+            return codec;
+        return null;
     }
 }
