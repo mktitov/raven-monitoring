@@ -101,6 +101,7 @@ public class SessionBean
 	private boolean collapsed = false;
 	private String remoteIp = null;
     private String remoteHost = null;
+    private String serverHost = null;
 	private AuditView audit = new AuditView(); 
 	private TreeModel resourcesTreeModel;
 	private CoreTable coreTable; 
@@ -133,7 +134,8 @@ public class SessionBean
 		FacesContext context = FacesContext.getCurrentInstance();
 		HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
 		remoteIp = request.getRemoteAddr();
-        remoteHost = request.getRemoteHost();
+		remoteHost = request.getRemoteHost();
+        serverHost = request.getLocalName();
 	
 	    charsets = UIUtil.findCharsets();
 	    
@@ -736,6 +738,10 @@ public class SessionBean
 
     public String getRemoteHost() {
         return remoteHost;
+    }
+
+    public String getServerHost() {
+        return serverHost;
     }
 
 	public TreeModel getResourcesTreeModel() {

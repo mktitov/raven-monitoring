@@ -31,13 +31,13 @@
     <f:loadBundle basename="org.raven.ui.messages" var="msgs"></f:loadBundle>
     <tr:document title="tree">
       <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-      <trh:script source="../jquery/jquery-1.10.1.min.js"/>
-      <trh:script source="../jquery/ui/jquery-ui.js"/>
+      <trh:script source="../projects/system/js/jquery/jquery-1.10.1.min.js"/>
+      <trh:script source="../projects/system/js/jquery/ui/jquery-ui.js"/>
       <trh:script source="../projects/system/js/jquery.ui-contextmenu.js"/>
-      <trh:script source="../js/utils.js"/>
-      <trh:script source="../js/tree.js"/>
-      <link rel="stylesheet" href="../jquery/themes/base/jquery.ui.all.css" />
-      <link rel="stylesheet" href="../css/raven.css" />
+      <trh:script source="../projects/system/js/utils.js"/>
+      <trh:script source="../projects/system/js/tree.js"/>
+      <link rel="stylesheet" href="../projects/system/js/jquery/themes/base/jquery.ui.all.css" />
+      <link rel="stylesheet" href="../projects/system/css/raven.css" />
       <link rel="stylesheet" href="../css/tree.css" />
       <tr:form 
         id="treeform0" 

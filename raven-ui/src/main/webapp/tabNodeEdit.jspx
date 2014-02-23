@@ -40,9 +40,9 @@
   -->
   <trh:script>
     var nodePath = '${cNode.node.path}'
-    var serverHost = '${sBean.remoteHost}'
+    var serverHost = '${sBean.serverHost}'
   </trh:script>
-  <trh:script source="../js/node-edit.js"/>
+  <trh:script source="../projects/system/js/node-edit.js"/>
 
   <h:form id="form1" enctype="multipart/form-data" >
     <tr:panelAccordion discloseNone="true" >

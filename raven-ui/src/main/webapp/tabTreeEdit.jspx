@@ -27,7 +27,7 @@
   var nodePath = '${cNode.node.path}'
   ]]>
 </trh:script>
-<trh:script source="../js/tree-edit.js"/>
+<trh:script source="../projects/system/js/tree-edit.js"/>
   
 <tr:form usesUpload="true">
 <tr:panelHorizontalLayout rendered="#{cNode.allowTreeEdit}" >
