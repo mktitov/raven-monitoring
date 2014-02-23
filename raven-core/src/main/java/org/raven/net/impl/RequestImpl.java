@@ -51,6 +51,10 @@ public class RequestImpl implements Request {
         return remoteAddr;
     }
 
+    public String getServerHost() {
+        return httpRequest.getLocalName();
+    }
+
     public Map<String, Object> getParams() {
         return params;
     }

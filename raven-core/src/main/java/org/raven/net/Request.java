@@ -32,6 +32,10 @@ public interface Request {
      */
     public String getRemoteAddr();
     /**
+     * Returns server host name
+     */
+    public String getServerHost();
+    /**
      * Returns the request headers
      */
     public Map<String, Object> getHeaders();
