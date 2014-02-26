@@ -71,6 +71,16 @@ public class JDBCConnectionPoolNode extends BaseNode implements ConnectionPool
     private GenericObjectPool connectionPool;
 	private PoolingDriver poolingDriver;
 
+    @Override
+    protected void initFields() {
+        super.initFields();
+        connectionPool = null;
+        poolingDriver = null;
+    }
+    
+    private String getPoolName() {
+        return "connectionPool_"+getId();
+    }
 
     @Override
     protected void doStart() throws Exception {
@@ -106,20 +116,15 @@ public class JDBCConnectionPoolNode extends BaseNode implements ConnectionPool
         Class.forName("org.apache.commons.dbcp.PoolingDriver");
         Class.forName(driver);
         poolingDriver = (PoolingDriver) DriverManager.getDriver("jdbc:apache:commons:dbcp:");
-        poolingDriver.registerPool(getName(), connectionPool);
+        poolingDriver.registerPool(getPoolName(), connectionPool);
     }
 
     @Override
-    public synchronized void stop() throws NodeError {
-        try {
-            poolingDriver.closePool(getName());
-        } catch (SQLException ex) {
-            error("Error stoping node", ex);
-            throw new NodeError(String.format("Error stoping node (%s)", getPath()), ex);
-        }
-        super.stop();
+    protected void doStop() throws Exception {
+        super.doStop();
+        poolingDriver.closePool(getPoolName());
     }
-    
+       
     public Connection getConnection() throws SQLException {
         if (!isStarted()) {
             final String mess = "Can't get connection because of connection pool not started";
@@ -128,7 +133,7 @@ public class JDBCConnectionPoolNode extends BaseNode implements ConnectionPool
             throw new SQLException(mess);
         } else {
             try {
-                return DriverManager.getConnection("jdbc:apache:commons:dbcp:"+getName());
+                return DriverManager.getConnection("jdbc:apache:commons:dbcp:"+getPoolName());
             } catch (SQLException ex) {
                 String message = String.format(
                         "Error creating connection in connection pool (%s)", getPath());
