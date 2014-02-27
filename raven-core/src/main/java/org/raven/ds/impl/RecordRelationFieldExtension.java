@@ -29,13 +29,14 @@ import org.weda.annotations.constraints.NotNull;
 @NodeClass(parentNode=RecordSchemaFieldNode.class)
 public class RecordRelationFieldExtension extends BaseNode
 {
-    @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
-    @NotNull
+    @NotNull @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
     private RecordSchemaNode relatedSchema;
     
-    @Parameter()
-    @NotNull
+    @NotNull @Parameter()
     private String relatedField;
+    
+    @Parameter
+    private String relatedDisplayField;
 
     public String getRelatedField()
     {
@@ -55,5 +56,13 @@ public class RecordRelationFieldExtension extends BaseNode
     public void setRelatedSchema(RecordSchemaNode relatedSchema)
     {
         this.relatedSchema = relatedSchema;
+    }
+
+    public String getRelatedDisplayField() {
+        return relatedDisplayField;
+    }
+
+    public void setRelatedDisplayField(String relatedDisplayField) {
+        this.relatedDisplayField = relatedDisplayField;
     }
 }

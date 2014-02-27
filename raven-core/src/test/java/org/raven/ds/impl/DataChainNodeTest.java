@@ -18,9 +18,11 @@ package org.raven.ds.impl;
 import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.test.DataCollector;
 import org.raven.test.PushDataSource;
 import org.raven.test.RavenCoreTestCase;
+import org.raven.tree.NodeAttribute;
 
 /**
  *
@@ -78,8 +80,27 @@ public class DataChainNodeTest extends RavenCoreTestCase {
     public void test() {
         ds.pushData(1);
         assertEquals(1, collector.getDataListSize());
-        assertEquals(11, collector.getDataList().get(0));
-//        assertEquals(1, chainCollector.getDataListSize());
-//        assertEquals(11, chainCollector.getDataList().get(0));
+        assertEquals(11, collector.getDataList().get(0));        
     }
+    
+    @Test
+    public void useChainFalse() {
+        chain.setUseChain(false);
+        ds.pushData(1);
+        assertEquals(1, collector.getDataListSize());
+        assertEquals(1, collector.getDataList().get(0));        
+    }
+    
+    @Test
+    public void useChainExpressionTest() throws Exception {
+        NodeAttribute attr = chain.getAttr("useChain");
+        attr.setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        attr.setValue("data==1");
+        ds.pushData(1);
+        ds.pushData(2);
+        assertEquals(2, collector.getDataListSize());
+        assertEquals(11, collector.getDataList().get(0));        
+        assertEquals(2, collector.getDataList().get(1));        
+    }
+    
 }

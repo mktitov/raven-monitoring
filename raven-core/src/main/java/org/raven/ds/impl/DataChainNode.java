@@ -16,15 +16,17 @@
 
 package org.raven.ds.impl;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
+import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.expr.BindingSupport;
+import org.raven.expr.impl.ExpressionAttributeValueHandler;
 import org.raven.tree.Node;
 import static org.raven.util.NodeUtils.*;
+import org.weda.annotations.constraints.NotNull;
 
 /**
  *
@@ -32,18 +34,34 @@ import static org.raven.util.NodeUtils.*;
  */
 @NodeClass(anyChildTypes = true)
 public class DataChainNode extends AbstractSafeDataPipe {
+    
     public static final String FIRST_CHAIN_CONSUMER_PARAM = "firstChainConsumer";
+    public static final String USER_CHAIN_ATTR = "useChain";
+    
+    @NotNull @Parameter(defaultValue = "true")
+    private Boolean useChain;
     
     @Override
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception {
-//        DataConsumer firstCons = (DataConsumer) context.getNodeParameter(this, FIRST_CHAIN_CONSUMER_PARAM);
-//        if (firstCons==null) {
-//            firstCons = getFirstConsumerInChain();
-//            if (firstCons==null) throw new Exception("Not found first dataConsumer in chain");
-//            else context.putNodeParameter(this, FIRST_CHAIN_CONSUMER_PARAM, firstCons);
-//        }
-//        firstCons.setData(this, data, context);
-        getFirstConsumerInChain(context).setData(this, data, context);
+        final DataConsumer firstChainConsumer = getFirstConsumerInChain(context);
+        if (isUsingChain(dataSource, data, context))
+            firstChainConsumer.setData(this, data, context);
+        else
+            DataSourceHelper.sendDataToConsumers(this, data, context, firstChainConsumer);
+    }
+    
+    private boolean isUsingChain(DataSource dataSource, Object data, DataContext context) {
+        if (getAttr("useChain").getValueHandler() instanceof ExpressionAttributeValueHandler) {
+            bindingSupport.put(BindingNames.DATASOURCE_BINDING, dataSource);
+            bindingSupport.put(BindingNames.DATA_CONTEXT_BINDING, context);
+            bindingSupport.put(BindingNames.DATA_BINDING, data);
+            try {
+                return useChain;
+            } finally {
+                bindingSupport.reset();
+            }
+        } else
+            return useChain;
     }
     
     @Override
@@ -69,5 +87,13 @@ public class DataChainNode extends AbstractSafeDataPipe {
             context.addError(this, ex);
             sendError(data, context);
         }
+    }
+
+    public Boolean getUseChain() {
+        return useChain;
+    }
+
+    public void setUseChain(Boolean useChain) {
+        this.useChain = useChain;
     }
 }
