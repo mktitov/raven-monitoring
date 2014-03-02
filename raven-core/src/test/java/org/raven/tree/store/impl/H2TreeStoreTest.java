@@ -24,6 +24,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -244,8 +248,7 @@ public class H2TreeStoreTest extends ServiceTestCase
     }
 
     @Test
-    public void getNodeAttributeBinaryData() throws SQLException, IOException
-    {
+    public void getNodeAttributeBinaryData() throws SQLException, IOException {
         store.removeNodes();
         ContainerNode node = new ContainerNode();
         node.setName("node");
@@ -275,6 +278,67 @@ public class H2TreeStoreTest extends ServiceTestCase
         assertNotNull(result);
         byte[] rArr = IOUtils.toByteArray(result);
         assertArrayEquals(oArr, rArr);
+    }
+    
+    @Test
+    public void getBinaryDataMultiThread() throws Exception {
+        store.removeNodes();
+        ContainerNode node = new ContainerNode();
+        node.setName("node");
+        store.saveNode(node);
+        final NodeAttributeImpl attr = new NodeAttributeImpl("name", String.class, "value", null);
+        attr.setOwner(node);
+        attr.setTemplateExpression(true);
+        store.saveNodeAttribute(attr);
+        //insert bynary data
+//        Connection con = store.getConnection();
+//        PreparedStatement st = con.prepareStatement(String.format(
+//                "insert into %s (id, data) values (?, ?)"
+//                , H2TreeStore.NODE_ATTRIBUTES_BINARY_DATA_TABLE_NAME));
+        final byte[] oArr = new byte[1000000];
+        int checkSum = 0;
+        byte v = 0;
+        for (int i=0; i<oArr.length; ++i) {
+            oArr[i] = v;
+            checkSum += v++;
+            if (v>100) v=0;
+        }
+        final int finalCheckSum = checkSum;
+        ByteArrayInputStream data = new ByteArrayInputStream(oArr);
+        store.saveNodeAttributeBinaryData(attr, data);
+//        st.setInt(1, attr.getId());
+//        st.setBinaryStream(2, data);
+//        st.executeUpdate();
+//        con.commit();
+        final int workersCount = 100;
+        List<Thread> workers = new ArrayList<Thread>(workersCount);
+        for (int i=0; i<workersCount; i++) {
+            workers.add(new Thread() {
+                @Override public void run() {
+                    try {
+                        InputStream result = store.getNodeAttributeBinaryData(attr);
+                        int data;
+                        int cs = 0;
+                        while ( (data=result.read())!=-1 ) {
+//                            sleep(1);
+                            cs+=data;
+                        }
+                        result.close();
+                        System.out.println("Calculated checksum: "+cs);
+                        assertEquals(finalCheckSum, cs);
+//                        assertNotNull(result);
+//                        byte[] rArr = IOUtils.toByteArray(result);
+//                        assertArrayEquals(oArr, rArr);
+                    } catch (Exception ex) {
+                        Logger.getLogger(H2TreeStoreTest.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+        }
+        for (Thread worker: workers)
+            worker.start();
+        for (Thread worker: workers)
+            worker.join();
     }
 
     @Test
