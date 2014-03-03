@@ -212,45 +212,31 @@ public class H2TreeStore implements TreeStore
         }
     }
 
-    public synchronized InputStream getNodeAttributeBinaryData(NodeAttribute attr)
-    {
-        try
-        {
-            try
-            {
+    public synchronized InputStream getNodeAttributeBinaryData(NodeAttribute attr) {
+        try {
+            try {
                 if (getBinaryDataStatement==null)
                     getBinaryDataStatement = connection.prepareStatement(String .format(
                             "select data from %s where id=?"
                             , NODE_ATTRIBUTES_BINARY_DATA_TABLE_NAME));
                 getBinaryDataStatement.setInt(1, attr.getId());
                 ResultSet rs = getBinaryDataStatement.executeQuery();
-                try
-                {
-                    if (rs.next())
-                        return rs.getBinaryStream(1);
-                    else
-                        return null;
-                }
-                finally
-                {
+                try {
+                    return rs.next()? rs.getBinaryStream(1) : null;
+                } finally {
                     rs.close();
                     connection.commit();
                 }
-            }
-            catch(Exception e)
-            {
+            } catch(Exception e) {
 //                connection.rollback();
                 throw e;
             }
-        }
-        catch(Exception e)
-        {
+        } catch(Exception e) {
             throw new TreeStoreError(
                     String.format(
                         "Error getting binary data for attribute (%s)"
                         , attr.getPath())
                     , e);
-
         }
     }
 

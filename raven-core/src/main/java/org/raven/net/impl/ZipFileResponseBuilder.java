@@ -21,8 +21,8 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.raven.MimeTypeService;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
@@ -92,15 +92,15 @@ public class ZipFileResponseBuilder extends AbstractResponseBuilder implements V
         if (dataStream==null)
             throw new ContextUnavailableException(contextPath);
         Charset charset = zipFilenamesCharset;
-        ZipInputStream stream = new ZipInputStream(dataStream);
-//        ZipInputStream stream = charset==null? 
-//                new ZipInputStream(file.getDataStream()) : 
-//                new ZipInputStream(file.getDataStream(), charset); //java6 not have this constructor
         String _baseDir = baseDir;
         if (_baseDir != null && !baseDir.isEmpty()) {
             filename = baseDir + (baseDir.endsWith("/")? "" : "/") + filename;
         }
-        ZipEntry entry = stream.getNextEntry();
+        
+        ZipArchiveInputStream stream = charset==null? 
+                    new ZipArchiveInputStream(dataStream) :
+                    new ZipArchiveInputStream(dataStream, charset.name());
+        ArchiveEntry entry = stream.getNextEntry();
         while (entry!=null) {
             if (!entry.isDirectory() && filename.equals(entry.getName())) {
                 if (isLogLevelEnabled(LogLevel.DEBUG))
@@ -114,6 +114,24 @@ public class ZipFileResponseBuilder extends AbstractResponseBuilder implements V
         stream.close();
         throw new ContextUnavailableException(String.format(
                 "Context %s not found. Not found zip entry (%s)", contextPath, filename));
+////        ZipInputStream stream = charset==null? 
+////                new ZipInputStream(file.getDataStream()) : 
+////                new ZipInputStream(file.getDataStream(), charset); //java6 not have this constructor
+//        ZipInputStream stream = new ZipInputStream(dataStream);
+//        ZipEntry entry = stream.getNextEntry();
+//        while (entry!=null) {
+//            if (!entry.isDirectory() && filename.equals(entry.getName())) {
+//                if (isLogLevelEnabled(LogLevel.DEBUG))
+//                    getLogger().debug("Found file {} in zip archive", filename);
+//                return new ResponseImpl(
+//                        mimeTypeService.getContentType(filename), stream, ctx.getHeaders(), lastModified, 
+//                        defaultFileContentCharset);
+//            }
+//            entry = stream.getNextEntry();
+//        }
+//        stream.close();
+//        throw new ContextUnavailableException(String.format(
+//                "Context %s not found. Not found zip entry (%s)", contextPath, filename));
     }
     
     public Long getLastModified() {
