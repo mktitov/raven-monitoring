@@ -21,13 +21,16 @@ import groovy.json.JsonBuilder;
 import groovy.json.JsonSlurper;
 import groovy.lang.Closure;
 import groovy.sql.Sql;
+import groovy.xml.MarkupBuilder;
+import groovy.xml.MarkupBuilderHelper;
 import groovyx.net.http.HTTPBuilder;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-import org.raven.RavenUtils;
+import static org.raven.RavenUtils.*;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
 import org.raven.ds.DataContext;
@@ -103,11 +106,11 @@ public class ApiUtils
     }
     
     public static List<Object[]> getTableRows(Table table) {
-        return RavenUtils.tableAsList(table);
+        return tableAsList(table);
     }
     
     public static List<Map<String, Object>> getTableRowsAsMap(Table table) {
-        return RavenUtils.tableRowsAsMap(table);
+        return tableRowsAsMap(table);
     }
     
     public static DataContext createDataContext() {
@@ -162,6 +165,24 @@ public class ApiUtils
         else
             json.call(data);
         return json.toString();
+    }
+    
+    public static String buildXml(Closure closure) {
+        final StringWriter writer = new StringWriter();
+        final MarkupBuilder xml = new MarkupBuilder(writer);
+        closure.call(xml);
+        return writer.toString();
+    }
+    
+    public static String buildXml(String encoding, Closure closure) {
+        final StringWriter writer = new StringWriter();
+        final MarkupBuilder xml = new MarkupBuilder(writer);
+        MarkupBuilderHelper helper = (MarkupBuilderHelper) xml.getMkp();
+        helper.xmlDeclaration(asMap(
+                pair("version", (Object)"1.0"), 
+                pair("encoding", (Object)encoding)));
+        closure.call(xml);
+        return writer.toString();
     }
     
     public static Object parseJson(String jsonStr) {

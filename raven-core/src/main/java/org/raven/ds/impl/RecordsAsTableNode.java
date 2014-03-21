@@ -773,9 +773,11 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                 if (isLogLevelEnabled(LogLevel.DEBUG))
                     debug(String.format(
                             "All records recieved from data source (%s)", dataSource.getPath()));
-                if (!rowSelected) {            
-                    context.getUserContext().getParams().remove(getIndexFieldsValuesParamName());
-                    RavenUtils.setMasterFieldValues(RecordsAsTableNode.this, null);
+                if (!rowSelected) {
+                    if (context.getUserContext()!=null) {
+                        context.getUserContext().getParams().remove(getIndexFieldsValuesParamName());
+                        RavenUtils.setMasterFieldValues(RecordsAsTableNode.this, null);
+                    }
                 }
                 return;
             }

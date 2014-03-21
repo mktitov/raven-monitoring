@@ -225,6 +225,40 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
     }
     
     @Test
+    public void buildXmlTest() throws Exception {
+        String script = "buildXml{it.hello('world')}";
+        ExpressionCache cache = trainCache(script, false);
+        
+        replay(cache);
+
+        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
+        Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
+        assertNotNull(expression);
+        Object res = expression.eval(new SimpleBindings());
+        assertNotNull(res);
+        assertEquals("<hello>world</hello>", res);
+
+        verify(cache);       
+    }
+    
+    @Test
+    public void buildXmlWithEncodingTest() throws Exception {
+        String script = "buildXml('utf-8'){it.hello('world')}";
+        ExpressionCache cache = trainCache(script, false);
+        
+        replay(cache);
+
+        GroovyExpressionCompiler compiler = new GroovyExpressionCompiler(cache);
+        Expression expression = compiler.compile(script, GroovyExpressionCompiler.LANGUAGE, "test");
+        assertNotNull(expression);
+        Object res = expression.eval(new SimpleBindings());
+        assertNotNull(res);
+        assertEquals("<?xml encoding='utf-8' version='1.0'?>\n<hello>world</hello>", res);
+
+        verify(cache);       
+    }
+    
+    @Test
     public void ifDataTest() throws Exception {
         String script = "ifData { 1 }";
         ExpressionCache cache = trainCache(script, false);

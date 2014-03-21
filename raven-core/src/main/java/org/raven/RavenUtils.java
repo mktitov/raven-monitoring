@@ -135,10 +135,13 @@ public class RavenUtils
      * @param masterNode the master node
      * @param values the collection of the master fields values
      */
-    public static void setMasterFieldValues(Node masterNode, Collection<String> values)
-    {
-        userContextService.getUserContext().getParams().put(
-                getMasterFieldsParam(masterNode), values);
+    public static void setMasterFieldValues(Node masterNode, Collection<String> values) {
+        final Map<String, Object> params = userContextService.getUserContext().getParams();
+        final String param = getMasterFieldsParam(masterNode);
+        if (values==null)
+            params.remove(param);
+        else
+            params.put(param, values);
     }
 
     /**
