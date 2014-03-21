@@ -45,7 +45,7 @@ public class ConversationScenarioNode
         extends ConversationScenarioPointNode
         implements ConversationScenario
 {
-    private BindingSupportImpl bindingSupport;
+    protected BindingSupportImpl bindingSupport;
 
     @Override
     protected void initFields()
