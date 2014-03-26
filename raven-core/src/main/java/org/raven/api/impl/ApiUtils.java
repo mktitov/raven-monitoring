@@ -76,7 +76,7 @@ public class ApiUtils
             connection.close();
         }
     }
-    
+    //
     public static Object withHttpClient(String url, Closure closure) throws Exception {
       HTTPBuilder builder = new HTTPBuilder(url);
       try {
