@@ -17,6 +17,7 @@
 
 package org.raven.ds.impl;
 
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.dbcp.ConnectionPool;
@@ -197,7 +199,8 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
                 tree.removeGlobalBindings(key);
             }
             try {
-                DatabaseRecordQuery.RecordIterator it = recordQuery.execute();
+                Connection con = (Connection) context.getAt(BindingNames.DB_CONNECTION);
+                DatabaseRecordQuery.RecordIterator it = con==null? recordQuery.execute() : recordQuery.execute(con);
                 processingTime+=System.currentTimeMillis()-startTime;
                 try {
                     startTime = System.currentTimeMillis();

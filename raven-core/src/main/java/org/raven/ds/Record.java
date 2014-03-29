@@ -18,6 +18,7 @@
 package org.raven.ds;
 
 import java.util.Map;
+import org.raven.BindingNames;
 import org.raven.tree.Node;
 
 /**
@@ -27,6 +28,7 @@ import org.raven.tree.Node;
 public interface Record
 {
     public final static String DELETE_TAG = "DELETE";
+    public final static String DB_CONNECTION = BindingNames.DB_CONNECTION;
 
     /**
      * Returns the record schema.

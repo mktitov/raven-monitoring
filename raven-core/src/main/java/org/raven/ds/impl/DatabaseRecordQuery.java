@@ -30,6 +30,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrBuilder;
 import org.apache.commons.lang.text.StrLookup;
@@ -130,6 +132,14 @@ public class DatabaseRecordQuery
     public RecordIterator execute() throws DatabaseRecordQueryException {
         try {
             connection = connectionPool.getConnection();
+            return execute(connection);
+        } catch (SQLException ex) {
+            throw new DatabaseRecordQueryException(ex);
+        }
+    }
+    
+    public RecordIterator execute(Connection connection) throws DatabaseRecordQueryException {
+        try {
             connection.setAutoCommit(false);
             statement = connection.prepareStatement(query);
             statement.setMaxRows(maxRows);

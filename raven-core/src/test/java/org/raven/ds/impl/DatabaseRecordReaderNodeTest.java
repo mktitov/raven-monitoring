@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
+import org.raven.BindingNames;
 import org.raven.test.DataCollector;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.conf.Config;
@@ -225,6 +226,22 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         reader.getAttr("field1").setValue(null);
         assertTrue(reader.start());
         reader.getDataImmediate(collector, new DataContextImpl());
+
+        assertEquals(5, collector.getDataList().size());
+    }
+    
+    @Test
+    public void gatherDataWithConnectionTest() throws Exception
+    {
+        prepareCollector();
+        prepareData();
+
+        reader.setRecordSchema(schema);
+        reader.getAttr("field1").setValue(null);
+        assertTrue(reader.start());
+        DataContextImpl context = new DataContextImpl();
+        context.putAt(BindingNames.DB_CONNECTION, pool.getConnection());
+        reader.getDataImmediate(collector, context);
 
         assertEquals(5, collector.getDataList().size());
     }

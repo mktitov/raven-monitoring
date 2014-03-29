@@ -17,6 +17,7 @@
 
 package org.raven.ds.impl;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -58,20 +59,20 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
 
         ConnectionPoolsNode poolsNode =
                 (ConnectionPoolsNode)
-                tree.getNode(SystemNode.NAME).getChildren(ConnectionPoolsNode.NAME);
+                tree.getNode(SystemNode.NAME).getNode(ConnectionPoolsNode.NAME);
         assertNotNull(poolsNode);
         pool = new JDBCConnectionPoolNode();
         pool.setName("pool");
         poolsNode.addChildren(pool);
         pool.save();
         pool.init();
-
         pool.setUserName(conf.getStringProperty(Configurator.TREE_STORE_USER, null));
         pool.setPassword(conf.getStringProperty(Configurator.TREE_STORE_PASSWORD, null));
-        pool.setUrl(conf.getStringProperty(Configurator.TREE_STORE_URL, null));
+        File dbPath = new File("target/test_db");
+        pool.setUrl("jdbc:h2:file:"+dbPath.getAbsolutePath()+";MVCC=TRUE");
         pool.setDriver("org.h2.Driver");
-
-        pool.start();
+        pool.setAutoCommit(true);
+        assertTrue(pool.start());
 
         createTable(pool, true);
 
@@ -184,6 +185,31 @@ public class DatabaseRecordWriterNodeTest extends RavenCoreTestCase
         assertEquals(1, rows.size());
         assertEquals(10, rows.get(0)[0]);
         assertEquals("10.50.1.1", rows.get(0)[1]);
+    }
+
+    @Test
+    public void connectionInRecord_test() throws Exception
+    {
+        Connection recordConnection = pool.getConnection();
+        recordConnection.setAutoCommit(false);
+        Record record = schema.createRecord();
+        record.setValue("field1", 10);
+        record.setValue("field2", "10.50.1.1");
+        record.setTag(Record.DB_CONNECTION, recordConnection);
+        ds.pushData(record);
+        record = schema.createRecord();
+        record.setValue("field1", 11);
+        record.setValue("field2", "10.50.1.2");
+        ds.pushData(record);
+        ds.pushData(null);
+        
+        List<Object[]> rows = getRows(pool.getConnection());
+        assertEquals(1, rows.size());
+        assertEquals(11, rows.get(0)[0]);
+        assertEquals("10.50.1.2", rows.get(0)[1]);
+        recordConnection.commit();
+        rows = getRows(pool.getConnection());
+        assertEquals(2, rows.size());
     }
 
     @Test

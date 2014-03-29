@@ -248,6 +248,24 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     {
         return String.format("DELETE FROM %s where %s=?", tableName, idColumnName);
     }
+    
+    private SchemaMeta getOrCreateSchemeMeta(Connection con, RecordSchema schema, boolean batchUpdate,
+            Map<RecordSchema, Map<Connection, SchemaMeta>> metas) 
+        throws Exception
+    {
+        Map<Connection, SchemaMeta> conMetas = metas.get(schema);
+        if (conMetas==null) {
+            conMetas = new HashMap<Connection, SchemaMeta>();
+            metas.put(schema, conMetas);            
+        }
+        SchemaMeta meta = conMetas.get(con);
+        if (meta==null) {
+            meta = new SchemaMeta(schema, enableUpdates, enableDeletes, batchUpdate, updateIdField);
+            meta.init(con);
+            conMetas.put(con, meta);            
+        }
+        return meta;
+    }
 
     private synchronized void flushRecords() throws Exception
     {
@@ -260,13 +278,19 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
             return;
         }
 
-        Map<RecordSchema, SchemaMeta> metas = new HashMap<RecordSchema, SchemaMeta>();
+        Map<RecordSchema, Map<Connection, SchemaMeta>> metas = new HashMap<RecordSchema, Map<Connection, SchemaMeta>>();
 
         Connection con = connectionPool.getConnection();
         con.setAutoCommit(false);
         try {
             try {
-                boolean batchUpdate = !updateIdField && con.getMetaData().supportsBatchUpdates();
+                boolean hasConnectionInRecord = false;
+                for (Record record: recordBuffer)
+                    if (record.getTag(Record.DB_CONNECTION) instanceof Connection) {
+                        hasConnectionInRecord = true;
+                        break;
+                    }
+                boolean batchUpdate = !updateIdField && con.getMetaData().supportsBatchUpdates() && !hasConnectionInRecord;
 
                 if (isLogLevelEnabled(LogLevel.DEBUG))
                     debug(String.format(
@@ -274,13 +298,16 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                             , batchUpdate? "" : "does not "));
 
                 for (Record record: recordBuffer) {
-                    SchemaMeta meta = metas.get(record.getSchema());
-                    if (meta==null) {
-                        meta = new SchemaMeta(
-                                record.getSchema(), enableUpdates, enableDeletes, batchUpdate, updateIdField);
-                        meta.init(con);
-                        metas.put(record.getSchema(), meta);
-                    }
+                    final Connection recCon = (Connection) record.getTag(Record.DB_CONNECTION);
+                    SchemaMeta meta = getOrCreateSchemeMeta(
+                            recCon!=null? recCon : con, record.getSchema(), batchUpdate, metas);
+//                    SchemaMeta meta = metas.get(record.getSchema());
+//                    if (meta==null) {
+//                        meta = new SchemaMeta(
+//                                record.getSchema(), enableUpdates, enableDeletes, batchUpdate, updateIdField);
+//                        meta.init(recCon!=null? recCon : con);
+//                        metas.put(record.getSchema(), meta);
+//                    }
                     try {
                         meta.updateRecord(record);
                     } catch (Exception e) {
@@ -291,18 +318,19 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                 }
 
                 if (batchUpdate)
-                    for (SchemaMeta meta: metas.values())
-                        try {
-                            meta.executeBatch();
-                        } catch (Exception e) {
-                            if (isLogLevelEnabled(LogLevel.WARN)) {
-                                getLogger().warn("Error updating set of records");
-                                int i=0;
-                                for (Record rec: recordBuffer)
-                                    getLogger().warn("[{}] Record: {}", ++i, rec);
+                    for (Map<Connection, SchemaMeta> conMetas: metas.values())
+                        for (SchemaMeta meta: conMetas.values())
+                            try {
+                                meta.executeBatch();
+                            } catch (Exception e) {
+                                if (isLogLevelEnabled(LogLevel.WARN)) {
+                                    getLogger().warn("Error updating set of records");
+                                    int i=0;
+                                    for (Record rec: recordBuffer)
+                                        getLogger().warn("[{}] Record: {}", ++i, rec);
+                                }
+                                throw e;
                             }
-                            throw e;
-                        }
 
                 con.commit();
 
@@ -313,8 +341,9 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
 
             } finally {
                 recordBuffer = null;
-                for (SchemaMeta meta: metas.values())
-                    meta.close();
+                for (Map<Connection, SchemaMeta> conMetas: metas.values())
+                    for (SchemaMeta meta: conMetas.values())
+                        meta.close();
             }
         } finally {
             con.close();
