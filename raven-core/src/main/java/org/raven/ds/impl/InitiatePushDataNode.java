@@ -119,5 +119,9 @@ public class InitiatePushDataNode extends AbstractSafeDataPipe
         public DataStream leftShift(Object data) {
             return push(data);
         }
+
+        public DataContext getContext() {
+            return context;
+        }
     }
 }

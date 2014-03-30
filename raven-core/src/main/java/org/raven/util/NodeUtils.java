@@ -31,11 +31,15 @@ import javax.script.SimpleBindings;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
+import org.raven.expr.VarsSupportState;
 import org.raven.expr.impl.ExpressionAttributeValueHandler;
+import static org.raven.expr.impl.ExpressionAttributeValueHandler.RAVEN_EXPRESSION_VARS_INITIATED_BINDING;
+import org.raven.expr.impl.VarsSupportStateImpl;
 import org.raven.log.LogLevel;
 import org.raven.template.impl.TemplateExpression;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.Tree;
 import org.raven.tree.impl.ActionAttributeValueHandlerFactory;
 import org.raven.tree.impl.HiddenRefreshAttributeValueHandlerFactory;
 import org.raven.tree.impl.RefreshAttributeValueHandlerFactory;
@@ -52,6 +56,22 @@ public class NodeUtils
 {
     @Service
     private static TypeConverter converter;
+    
+    private static VarsSupportState dummyVarsSupportState = new VarsSupportState() {
+        public void restoreState() { }
+    };
+    
+    /**
+     * Reset global expressions vars support state and return current state. The returned state can be restored
+     * by {@link VarsSupportState#restoreState()}
+     * @param tree reference to nodes tree
+     */
+    public static VarsSupportState resetVarsSupport(Tree tree) {
+        if (tree.getGlobalBindings(Tree.EXPRESSION_VARS_BINDINGS).contains(RAVEN_EXPRESSION_VARS_INITIATED_BINDING))
+            return new VarsSupportStateImpl(tree);
+        else
+            return dummyVarsSupportState;
+    }
 
     /**
      * Returns the parent node of specified type

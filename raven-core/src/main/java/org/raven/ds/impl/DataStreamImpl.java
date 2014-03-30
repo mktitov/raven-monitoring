@@ -43,4 +43,8 @@ public class DataStreamImpl implements DataStream
     public DataStream leftShift(Object data) {
         return push(data);
     }
+
+    public DataContext getContext() {
+        return context;
+    }
 }

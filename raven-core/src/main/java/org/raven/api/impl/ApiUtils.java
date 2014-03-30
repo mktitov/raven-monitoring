@@ -53,9 +53,16 @@ public class ApiUtils
         return TreeImpl.INSTANCE;
     }
 
-    public static void withConnection(Connection connection, Closure closure) throws SQLException {
+    public static Object withConnection(Connection connection, Closure closure) throws Throwable {
         try {
-            closure.call(connection);
+            try {
+                Object res = closure.call(connection);
+                connection.commit();
+                return res;
+            } catch (Throwable e) {
+                connection.rollback();
+                throw e;
+            }
         } finally {
             connection.close();
         }

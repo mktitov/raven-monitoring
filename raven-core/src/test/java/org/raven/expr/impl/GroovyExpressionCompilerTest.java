@@ -105,6 +105,7 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         String script = "res=null; withConnection(con){c -> res='ok'}\n res";
         ExpressionCache cache = trainCache(script, false);
         Connection connection = createMock(Connection.class);
+        connection.commit();
         connection.close();
         replay(connection, cache);
         

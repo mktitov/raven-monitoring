@@ -31,4 +31,8 @@ public interface DataStream
      * Pushes data to the stream and returns reference to itself. In groovy  you can use &lt;&lt; operator 
      */
     public DataStream leftShift(Object data);
+    /**
+     * Returns the data context for this stream
+     */
+    public DataContext getContext();
 }

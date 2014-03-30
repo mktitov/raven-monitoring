@@ -28,6 +28,7 @@ import org.raven.ds.DataPipe;
 import org.raven.ds.DataSource;
 import org.raven.ds.SessionAttributeGenerator;
 import org.raven.expr.BindingSupport;
+import org.raven.expr.VarsSupportState;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
@@ -287,36 +288,41 @@ public abstract class AbstractSafeDataPipe
                         dataSource.getPath()));
             return;
         }
-        if (debugEnabled)
-            getLogger().debug("Recieved data from the ({}). Processing...", dataSource.getPath());
-        if (useExpression) {
+        VarsSupportState varsSupportState = NodeUtils.resetVarsSupport(tree);
+        try {
             if (debugEnabled)
-                getLogger().debug("Using expression to transform data", dataSource.getPath());
-            bindingSupport.put(DATA_BINDING, data);
-            bindingSupport.put(SKIP_DATA_BINDING, SKIP_DATA);
-            bindingSupport.put(DATASOURCE_BINDING, dataSource);
-            bindingSupport.put(DATA_CONTEXT_BINDING, context);
-            bindingSupport.put(DATA_STREAM_BINDING, new DataStreamImpl(this, context));
-            doAddBindingsForExpression(dataSource, data, context, bindingSupport);
-            try {
-                NodeAttribute exprAttr = getAttr(EXPRESSION_ATTRIBUTE);
-                data = exprAttr.getRealValue();
-            } finally {
-                bindingSupport.reset();
+                getLogger().debug("Recieved data from the ({}). Processing...", dataSource.getPath());
+            if (useExpression) {
+                if (debugEnabled)
+                    getLogger().debug("Using expression to transform data", dataSource.getPath());
+                bindingSupport.put(DATA_BINDING, data);
+                bindingSupport.put(SKIP_DATA_BINDING, SKIP_DATA);
+                bindingSupport.put(DATASOURCE_BINDING, dataSource);
+                bindingSupport.put(DATA_CONTEXT_BINDING, context);
+                bindingSupport.put(DATA_STREAM_BINDING, new DataStreamImpl(this, context));
+                doAddBindingsForExpression(dataSource, data, context, bindingSupport);
+                try {
+                    NodeAttribute exprAttr = getAttr(EXPRESSION_ATTRIBUTE);
+                    data = exprAttr.getRealValue();
+                } finally {
+                    bindingSupport.reset();
+                }
             }
-        }
-        try  {
-            if (data!=SKIP_DATA)
-                doSetData(dataSource, data, context);
-            else if (debugEnabled)
-                getLogger().debug("Expression return SKIP_DATA. Terminating push data process");
-        } catch (Throwable e) {
-            context.addError(this, e);
-            sendError(data, context);
-            if (isLogLevelEnabled(LogLevel.ERROR))
-                error(
-                    String.format("Error handling data from (%s) data source", dataSource.getPath())
-                    , e);
+            try  {
+                if (data!=SKIP_DATA)
+                    doSetData(dataSource, data, context);
+                else if (debugEnabled)
+                    getLogger().debug("Expression return SKIP_DATA. Terminating push data process");
+            } catch (Throwable e) {
+                context.addError(this, e);
+                sendError(data, context);
+                if (isLogLevelEnabled(LogLevel.ERROR))
+                    error(
+                        String.format("Error handling data from (%s) data source", dataSource.getPath())
+                        , e);
+            }
+        } finally {
+            varsSupportState.restoreState();
         }
     }
 

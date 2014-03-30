@@ -50,6 +50,8 @@ public class GroovyExpressionCompiler implements ExpressionCompiler {
             StringBuilder buf = new StringBuilder()
                     .append("import static ").append(ApiUtils.class.getName()).append(".*; ")
                     .append(expression);
+            if (expression.contains("withConnection")) 
+                buf.append("\ndef withConnection(Closure c){ withConnection(node.$connectionPool.connection, c) }\n");
             if (expression.contains("withSql")) 
                 buf.append("\ndef withSql(Closure c){ withSql(node.$connectionPool.connection, c) }\n");
             if (expression.contains("sendData")) 
