@@ -128,30 +128,31 @@ public class NetworkResponseServlet extends HttpServlet  {
 //                session.invalidate();
 //            throw new UnauthoriedException();
 //        }
+        boolean created = false;
         if (userContext==null) {
+            created = true;
             String requestAuth = request.getHeader("Authorization");
             if (requestAuth == null) throw new UnauthoriedException();
             else {
                 String userAndPath = new String(Base64.decodeBase64(requestAuth.substring(6).getBytes()));
                 String elems[] = userAndPath.split(":");
                 userContext = responseContext.getLoginService().login(elems[0], elems[1], request.getRemoteAddr());
-                if (responseContext.isAccessGranted(userContext)) {
-                    if (responseContext.isSessionAllowed()) {
-                        if (responseContext.getResponseBuilderLogger().isDebugEnabled())
-                            responseContext.getResponseBuilderLogger().debug("Created new session for user: "+userContext);
-                        request.getSession().setAttribute(userContextAttrName, userContext);
-                    }
-                }
-                else {
-                    if (responseContext.getLogger().isWarnEnabled())
-                        responseContext.getLogger().warn(String.format(
-                                "User (%s) has no access to (%s) using (%s) operation", 
-                                userContext, request.getPathInfo(), request.getMethod()));
-                    throw new UnauthoriedException();
-                }
             }
         } else if (responseContext.getResponseBuilderLogger().isDebugEnabled())
             responseContext.getResponseBuilderLogger().debug("User ({}) already logged in. Skiping auth.", userContext);
+        if (responseContext.isAccessGranted(userContext)) {
+            if (created && responseContext.isSessionAllowed()) {
+                if (responseContext.getResponseBuilderLogger().isDebugEnabled())
+                    responseContext.getResponseBuilderLogger().debug("Created new session for user: "+userContext);
+                request.getSession().setAttribute(userContextAttrName, userContext);
+            }
+        } else {
+            if (responseContext.getLogger().isWarnEnabled())
+                responseContext.getLogger().warn(String.format(
+                        "User (%s) has no access to (%s) using (%s) operation", 
+                        userContext, request.getPathInfo(), request.getMethod()));
+            throw new UnauthoriedException();
+        }
         return userContext;
     }
 
