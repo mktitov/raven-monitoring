@@ -226,6 +226,7 @@ public class RavenCoreModule
         conf.add(new CollectionToTableConverter());
         conf.add(new ByteArrayDataSourceToByteArrayConverter());
         conf.add(new DataSourceToInputStreamConverter());
+        conf.add(new BinaryFieldToInputStreamConverter());
         conf.add(new FileToInputStreamConverter());
         conf.add(new ClobToStringConverter());
         conf.add(new StringToTimeZoneConverter());
