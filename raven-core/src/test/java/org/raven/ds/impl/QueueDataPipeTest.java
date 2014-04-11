@@ -166,6 +166,22 @@ public class QueueDataPipeTest extends RavenCoreTestCase {
         assertArrayEquals(new Object[]{2, null}, collector.getDataList().toArray());
     }
     
+    @Test
+    public void flushSchedulerTest() throws Exception {
+        queue.stop();
+        queue.setQueueType(QueueDataPipe.QueueType.PASSIVE);
+        assertTrue(queue.start());
+        
+        ds.pushData(1);
+        Thread.sleep(100);
+        assertEquals(0, collector.getDataListSize());
+        queue.executeScheduledJob(null);
+        Thread.sleep(100);
+        assertEquals(2, collector.getDataListSize());
+        assertEquals(1, collector.getDataList().get(0));
+        assertNull(collector.getDataList().get(1));
+    }
+    
     public ExecutorService createInThreadExecutor() {
         InThreadExecutorService executor = new InThreadExecutorService();
         executor.setName("in thread executor");

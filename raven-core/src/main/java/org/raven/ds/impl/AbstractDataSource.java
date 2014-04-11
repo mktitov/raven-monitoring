@@ -44,6 +44,13 @@ public abstract class AbstractDataSource extends BaseNode implements DataSource
     @NotNull @Parameter(defaultValue="false")
     private Boolean stopProcessingOnError;
 
+    public AbstractDataSource() {
+    }
+
+    public AbstractDataSource(String name) {
+        super(name);
+    }
+
     @Override
     protected void initFields()
     {

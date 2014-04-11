@@ -21,6 +21,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
@@ -30,6 +31,8 @@ import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.ExecutorServiceException;
+import org.raven.sched.Schedulable;
+import org.raven.sched.Scheduler;
 import org.raven.sched.Task;
 import org.raven.sched.impl.AbstractTask;
 import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
@@ -41,7 +44,7 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass
-public class QueueDataPipe extends AbstractSafeDataPipe {
+public class QueueDataPipe extends AbstractSafeDataPipe implements Schedulable {
     public enum QueueType {ACTIVE, ACTIVE_ON_FULL, PASSIVE}
     
     @NotNull @Parameter(defaultValue="512")
@@ -65,8 +68,24 @@ public class QueueDataPipe extends AbstractSafeDataPipe {
     @NotNull @Parameter(defaultValue="false")
     private Boolean forwardPullRequest;
     
-    private volatile Worker worker;
+    @Parameter(valueHandlerType = SystemSchedulerValueHandlerFactory.TYPE)
+    private Scheduler flushScheduler;
     
+//    @NotNull @Parameter(defaultValue = "0")
+//    private Long flushTimePeriod;    
+//    
+//    @NotNull @Parameter(defaultValue = "SECONDS")
+//    private TimeUnit flushTimePeriodTimeUnit;
+    
+    private volatile Worker worker;
+    private ReentrantLock lock;
+
+    @Override
+    protected void initFields() {
+        super.initFields();
+        lock = new ReentrantLock();
+    }
+
     @Override
     protected void doStart() throws Exception {
         super.doStart();
@@ -102,6 +121,23 @@ public class QueueDataPipe extends AbstractSafeDataPipe {
                 getLogger().error("Error flushing queue", e);
         }
         return forwardPullRequest? super.getDataImmediate(dataConsumer, context) : true;
+    }
+
+    public void executeScheduledJob(Scheduler scheduler) {
+        try {
+            if (lock.tryLock()) {
+                try {
+                    Worker _worker = worker;
+                    if (_worker != null)
+                        _worker.flushQueue();
+                } finally {
+                    lock.unlock();
+                }
+            }
+        } catch (Exception ex) {
+            if (isLogLevelEnabled(LogLevel.ERROR))
+                getLogger().error("Error executing flush scheduler", ex);
+        }
     }
 
     @Override
@@ -177,7 +213,15 @@ public class QueueDataPipe extends AbstractSafeDataPipe {
     public void setForwardPullRequest(Boolean forwardPullRequest) {
         this.forwardPullRequest = forwardPullRequest;
     }
-    
+
+    public Scheduler getFlushScheduler() {
+        return flushScheduler;
+    }
+
+    public void setFlushScheduler(Scheduler flushScheduler) {
+        this.flushScheduler = flushScheduler;
+    }
+
     private class Worker implements Task {
         public static final int OFFER_TIMEOUT = 100;
         
@@ -264,7 +308,8 @@ public class QueueDataPipe extends AbstractSafeDataPipe {
             try {
                 List<DataWrapper> dataList;
                 synchronized(queue) {
-                    if (queue.size()<dataCountThreshold) return;
+                    if (queue.size()<dataCountThreshold) 
+                        return;
                     dataList = new ArrayList<DataWrapper>(queueSize);
                     queue.drainTo(dataList);
                 }

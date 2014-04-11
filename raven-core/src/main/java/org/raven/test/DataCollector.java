@@ -74,8 +74,9 @@ public class DataCollector extends AbstractDataConsumer
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data, DataContext context)
+    protected void doSetData(DataSource dataSource, Object data, DataContext context)            
     {
+        getLogger().debug(String.format("Received data (%s) from (%s)", data, dataSource));
         try {
             if (pauseBeforeRecieve > 0) {
                 Thread.sleep(pauseBeforeRecieve);
