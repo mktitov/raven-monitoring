@@ -1,0 +1,204 @@
+Выражения (expressions)
+
+  Выражения позволяют формировать значения атрибутов узла посредостом выполнения groovy скрипта. 
+  
+* Переменные доступные в скрипте
+  
+  * <<node>> (org.raven.tree.Node) - узел, в контексте которого выполняется скрипт
+
+  * <<logger>> (org.slf4j.Logger) - logger узла (того же самого можно достигнуть вызвав node.getLogger())
+
+  * <<args>> (java.util.Map\<String, Object\>) - аргументы переданные в скрипт
+
+  []
+
+* Функции доступные в скрипте
+
+  * Object <<withConnection>>(java.sql.Connection con, grovy.lang.Closure closure)
+    
+    Выполняет <<closure>> передавая <<con>> в качестве параметра. Если <<closure>> выполняется без ошибок,
+    тогда транзакция фиксируется (commit) и закрывается. При возникновении ошибки, транзакция 
+    откатывается (rollback), <<con>> закрывается, а  exception re-throws.
+
+    Функция возвращает, то что возвращает <<closure>>
+
+  * Object <<withConnection>>(Closure closure)
+
+    Функция делает тоже самое что и предыдущая. Отличие в том, что database connection формируется 
+    пулом соединений ссылка на который указана в атрибуте <<connectionPool>> (атрибут должен принадлежать 
+    тому же узлу и должен возвращать <org.raven.dbcp.ConnectionPool>, например можно сослаться на узел 
+    <<org.raven.dbcp.impl.JDBCConnectionPoolNode>>)
+    
+  * Object <<withSql>>(java.sql.Connection con, grovy.lang.Closure closure)
+
+    Выполняет <<closure>> передавая в <groovy.sql.Sql> в качестве параметра. 
+    Если <<closure>> выполняется без ошибок,
+    тогда транзакция фиксируется (commit) и закрывается. При возникновении ошибки, транзакция 
+    откатывается (rollback), <<con>> закрывается, а  exception re-throws.
+  
+    Функция возвращает, то что возвращает <<closure>>
+
+  * Object <<withSql>>(grovy.lang.Closure closure)
+ 
+    Функция делает тоже самое что и предыдущая. Отличие в том, что database connection формируется 
+    пулом соединений, ссылка на который указана в атрибуте <<connectionPool>> (атрибут должен принадлежать 
+    тому же узлу и должен возвращать <org.raven.dbcp.ConnectionPool>, например можно сослаться на узел 
+    <<org.raven.dbcp.impl.JDBCConnectionPoolNode>>)
+
+  * Object <<withHttpClient>>(String url, grovy.lang.Closure closure)
+    
+    Выполняет <<closure>> передавая в <groovyx.net.http.HTTPBuilder> в качестве параметра (<<url>> передается 
+    в качестве параметра в коструктор <HTTPBuilder>)
+    
+    Функция возвращает, то что возвращает <<closure>>
+
+  * Object <<catchErrors>>(org.raven.ds.DataContext context, org.raven.tree.Node node, groovy.lang.Closure block)
+
+    Выполняет <<block>>. И если при выполнении блока возникает ошибка, тогда:
+
+      * она регистрируется в <<context>> (вызывается метод <i>context.addError</i>)
+
+      * Выполнение исключительной ситуации (exception) возобновляется 
+      
+      []
+   
+  * Object <<catchErrors>>(groovy.lang.Closure block)
+
+    Делает тоже самое, что и предыдущая функция. 
+
+    * В качестве <<context>> - берется значение одноименной переменной контекста выполнения (например, 
+      SafeDataPipeNode инжектирует конекст передачи данных (DataContext) в переменную <<context>>
+
+    * В качестве <<node>> - берется значение одноименной переменной контекста выполнения (см. раздел <Переменные доступные в скрипте>)
+
+    []
+
+  * Object <<catchErrors>>(org.raven.ds.DataContext context, org.raven.tree.Node node, Object finalValue, groovy.lang.Closure block)
+
+    Выполняет <<block>>. И если при выполнении блока возникает ошибка, тогда:
+
+      * она регистрируется в <<context>> (вызывается метод <i>context.addError</i>)
+      
+      * Выполнение исключительной ситуации (exception) НЕ возобновляется 
+
+      []
+
+    В качестве результата всегда возвращается <<finalValue>>
+   
+  * Object <<catchErrors>>(Object finalValue, groovy.lang.Closure block)
+
+    Делает тоже самое, что и предыдущая функция. 
+
+    * В качестве <<context>> - берется значение одноименной переменной контекста выполнения (например, 
+      SafeDataPipeNode инжектирует конекст передачи данных (DataContext) в переменную <<context>>
+
+    * В качестве <<node>> - берется значение одноименной переменной контекста выполнения (см. раздел <Переменные доступные в скрипте>)
+
+    []
+
+  * List\<Object[]\> <<getTableRows>>(org.raven.table.Table table)
+
+    Преобразует таблицу в список строк.
+
+  * List\<Map\<String, Object\>\> <<getTableRowsAsMap>>(Table table)
+
+    Преобразует таблицу в список строк. Строка представлена в виде асоциативного массива, где в качестве ключа
+    используется имя поля в качестве значения его значения.
+
+  * org.raven.ds.DataContext createDataContext()
+
+    Создает и возвращает контекст передачи данных
+
+  * org.raven.ds.DataContext <<createDataContext>>(Map<String, Object> params)
+
+    Создает и возвращает контекст передачи данных, добавляя <<params>> к параметрам контекста
+
+  * org.raven.ds.DataContext <<sendData>>(DataSource source, DataConsumer target, Object data)
+
+    Инициирует передачу данных <<data>> от лица <<source>> в сторону <<target>>
+
+  * org.raven.ds.DataContext <<sendData>>(DataConsumer target, Object data)
+
+    Делает тоже самое, что и предыдущая функция. 
+    В качестве <<source>> выступает <<node>> (см. раздел <Переменные доступные в скрипте>).
+    Важно! <<node>> должен быть потребителем данных (т.е. наследовать интерфейс <org.raven.ds.DataConsumer>)
+
+  * org.raven.ds.DataContext <<sendData>>(DataSource source, DataConsumer target, DataContext context, Object data)
+
+    Инициирует передачу данных <<data>> от лица <<source>> в сторону <<target>>, используя <<context>> в
+    качестве контекста передачи данных
+
+  * org.raven.ds.DataContext <<sendData>>(DataConsumer target, DataContext context, Object data)
+  
+    Делает тоже самое, что и предыдущая функция. 
+    В качестве <<source>> выступает <<node>> (см. раздел <Переменные доступные в скрипте>).
+    Важно! <<node>> должен быть потребителем данных (т.е. наследовать интерфейс <org.raven.ds.DataConsumer>)
+
+  * List <<getData>>(Node initiator, DataSource dataSource, DataContext context) 
+
+    Запрашивает и получает данные в виде списка у <<dataSource>>. 
+    Где:
+    
+    * <<context>> - контекст передачи данных
+
+    * <<initiator>> - узел от которого будет инициирован процесс передачи данных
+
+    []
+
+  * List <<getData>>(DataSource dataSource) 
+
+    Делает тоже самое, что и предыдущая функция. 
+
+    * в качестве <<initiator>> берется <<node>> (см. раздел <Переменные доступные в скрипте>)
+
+    * <<dataContext>> - создается.
+    
+    []
+
+  * List\<Node\> <<createNodeFromTemplate>>(TemplateNode templateNode, Node destination, String newNodeName, Map\<String, String\> vars)
+
+    Создает узлы на основе шаблона <<templateNode>>
+    
+    * <<destination>> - узел в котором будут созданы узлы
+
+    * <<newNodeName>> - название вновь созданного узла
+
+    * <<vars>> - переменные шаблона
+
+    []
+
+  * String <<buildJson>>(Object data)
+
+    Формирует JSON строку на основе <<data>>. Для формирования строки используется <groovy.json.JsonBuilder>
+
+  * String buildXml(Closure closure)
+
+    Формирует XML строку, вызывая <<closure>>  передавая экземпляр <groovy.xml.MarkupBuilder> в качестве параметра
+
+  * String <<buildXml>>(String encoding, Closure closure)
+  
+    Формирует XML строку, используя <<encoding>> в качестве кодировки, вызывая <<closure>>  передавая экземпляр 
+    <groovy.xml.MarkupBuilder> в качестве параметра
+
+  * Object parseJson(String jsonStr)
+
+    Парсит <<jsonStr>> в JSON объект
+
+  * Object parseJson(java.io.Reader jsonReader)
+
+    Парсит <<jsonReader>> в JSON объект
+
+  * Object <<ifData>>(groovy.lang.Closure block)
+
+    Выполнит <<block>> в том случае если переменная контекста окружения <<data>> содержит данные 
+    ({{{http://docs.codehaus.org/display/GROOVY/Groovy+Truth}см. groovy truth}})
+    и вернет то что вернет <<block>>, иначе вернется значение <<data>>
+
+  * Object <<ifData>>(Object ret, groovy.lang.Closure block)
+
+    Выполнит <<block>> в том случае если переменная контекста окружения <<data>> содержит данные 
+    ({{{http://docs.codehaus.org/display/GROOVY/Groovy+Truth}см. groovy truth}})
+    и вернет то что вернет <<block>>, иначе вернется значение <<ret>>
+
+  []
+  

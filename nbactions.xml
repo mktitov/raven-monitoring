@@ -43,4 +43,19 @@
                 <goal>install</goal>
             </goals>
         </action>
+        <action>
+            <actionName>CUSTOM-site-stage</actionName>
+            <displayName>site-stage</displayName>
+            <recursive>false</recursive>
+            <goals>
+                <goal>site:stage</goal>
+            </goals>
+        </action>
+        <action>
+            <actionName>CUSTOM-site:stage</actionName>
+            <displayName>site:stage</displayName>
+            <goals>
+                <goal>site:stage</goal>
+            </goals>
+        </action>
     </actions>

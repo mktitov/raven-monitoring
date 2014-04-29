@@ -20,48 +20,50 @@ under the License.
 -->
 
 <project xmlns="http://maven.apache.org/DECORATION/1.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/DECORATION/1.0.0 http://maven.apache.org/xsd/decoration-1.0.0.xsd">
-    <skin>
-        <groupId>org.apache.maven.skins</groupId>
-        <artifactId>maven-stylus-skin</artifactId>
-        <version>1.3</version>
-    </skin>
-    <body>
-        <menu name="Документация">
-            <item name="Руководство пользователя">
-                <item name="Установка RAVEN">
-                    <item name="Настройка администраторов" href="configuring_admins.html"/>
-                    <item name="Настройка журналирования" href="configuring_log.html"/>
-                    <item name="Настройка аудита" href="configuring_audit.html"/>
-                    <item name="Настройка планировщика" href="configuring_scheduler.html"/>
-                    <item name="Настройка исполнителя" href="configuring_executor.html"/>
-                </item>
-                <item name="Настройка RAVEN">
-                    <item name="Общие операции">
-                        <item name="Создание узла" href="create_node.html"/>
-                        <item name="Редактирование атрибутов" href="edit_attributes.html"/>
-                        <item name="Запуск/остановка узла" href="start_stop_node.html"/>
-                        <item name="Копирование узла" href="copy_node.html"/>
-                        <item name="Перемещение узла" href="move_node.html"/>
-                        <item name="Переименование узла" href="rename_node.html"/>
-                        <item name="Удаление узла" href="delete_node.html"/>
-                        <item name="Работа с выражениями" href="expressions.html"/>
-                    </item>
-                    <item name="Аутентификация и авторизация">
-                        <item name="Ресурсы" href="auth_resources.html"/>
-                        <item name="Группы" href="auth_groups.html"/>
-                        <item name="Контексты" href="auth_contexts.html"/>		      
-		    </item>
-                    <item name="Пулы соединений с БД" href="connection_pools.html"></item>
-                    <item name="Записи (records)" href="records.html"></item>
-                    <item name="Цепочки обработки данных">
-		      <item name="Теория" href="data_chains_theory.html"/>
-		      <item name="Формирование цепочек" href="data_chains_form.html"/>
-		      <item name="Описание типов узлов образующих цепочки" href="data_chains_node_types.html"/>
-		    </item>
-                </item>
-            </item>
-        </menu>
-    </body>
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/DECORATION/1.0.0 http://maven.apache.org/xsd/decoration-1.0.0.xsd">
+  <skin>
+    <groupId>org.apache.maven.skins</groupId>
+    <artifactId>maven-stylus-skin</artifactId>
+    <version>1.3</version>
+  </skin>
+  <body>
+    <menu name="Документация">
+      <item name="Руководство пользователя" href="">
+        <item name="Установка RAVEN" href="">
+          <item name="Настройка администраторов" href="configuring_admins.html"/>
+          <item name="Настройка журналирования" href="configuring_log.html"/>
+          <item name="Настройка аудита" href="configuring_audit.html"/>
+          <item name="Настройка планировщика" href="configuring_scheduler.html"/>
+          <item name="Настройка исполнителя" href="configuring_executor.html"/>
+        </item>
+        <item name="Настройка RAVEN" href="">
+          <item name="Общие операции" href="">
+            <item name="Создание узла" href="create_node.html"/>
+            <item name="Редактирование атрибутов" href="edit_attributes.html"/>
+            <item name="Запуск/остановка узла" href="start_stop_node.html"/>
+            <item name="Копирование узла" href="copy_node.html"/>
+            <item name="Перемещение узла" href="move_node.html"/>
+            <item name="Переименование узла" href="rename_node.html"/>
+            <item name="Удаление узла" href="delete_node.html"/>
+            <item name="Работа с выражениями" href="expressions.html"/>
+          </item>
+          <item name="Аутентификация и авторизация" href="">
+            <item name="Ресурсы" href="auth_resources.html"/>
+            <item name="Группы" href="auth_groups.html"/>
+            <item name="Контексты" href="auth_contexts.html"/>		      
+          </item>
+          <item name="Пулы соединений с БД" href="connection_pools.html"></item>
+          <item name="Записи (records)" href="records.html"></item>
+          <item name="Цепочки обработки данных" href="">
+            <item name="Теория" href="data_chains_theory.html"/>
+            <item name="Формирование цепочек" href="data_chains_form.html"/>
+            <item name="Описание типов узлов образующих цепочки" href="data_chains_node_types.html"/>
+          </item>
+        </item>
+      </item>
+      <item name="Api docs" href="apidocs/index.html"/>
+      <item name="Sources" href="https://code.google.com/p/raven-monitoring/source/browse/#svn%2Ftrunk%2Fraven-core%2Fsrc%2Fmain%2Fjava%2Forg%2Fraven"/>      
+    </menu>
+  </body>
 </project>
