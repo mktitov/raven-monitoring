@@ -9,6 +9,14 @@
     <artifactId>raven-core</artifactId>
     <name>raven-core</name>
     <description>Core module of the raven project</description>
+    <reporting>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-site-plugin</artifactId>
+        </plugin>
+      </plugins>
+    </reporting>
     <build>
         <plugins>
             <plugin>
@@ -29,6 +37,9 @@
             </plugin>
             <plugin>
                 <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
             </plugin>
             <!--
             <plugin>
@@ -220,7 +231,7 @@
             <classifier>jdk15</classifier>
         </dependency>
         <dependency>
-            <groupId>tagsoup</groupId>
+            <groupId>org.ccil.cowan.tagsoup</groupId>
             <artifactId>tagsoup</artifactId>
         </dependency>
         <!--        <dependency>
