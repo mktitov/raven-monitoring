@@ -19,7 +19,9 @@ import groovy.lang.Writable;
 import groovy.text.SimpleTemplateEngine;
 import groovy.text.Template;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.StringReader;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.io.IOUtils;
@@ -28,6 +30,8 @@ import org.junit.Test;
 import org.raven.BindingNames;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.net.NetworkResponseService;
+import org.raven.net.Outputable;
+import org.raven.sched.impl.ExecutorServiceNode;
 import org.raven.test.BindingsContainer;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.DataFile;
@@ -45,12 +49,20 @@ public class FileResponseBuilderTest extends RavenCoreTestCase {
     private final static String NODE_NAME = "file response";
     private FileResponseBuilder builder;
     private Node sriRootNode;
+    private ExecutorServiceNode executor;
     
     @Before
     public void prepare() throws Exception {
         NetworkResponseService respService = registry.getService(NetworkResponseService.class);
         sriRootNode = respService.getNetworkResponseServiceNode();
+        executor = new ExecutorServiceNode();
+        executor.setName("executor");
+        testsNode.addAndSaveChildren(executor);
+        executor.setCorePoolSize(50);
+        executor.setMaximumPoolSize(50);
+        assertTrue(executor.start());
         builder = createBuilder(NODE_NAME, "text/html");
+        builder.setExecutor(executor);
     }
     
     @Test
@@ -233,6 +245,74 @@ public class FileResponseBuilderTest extends RavenCoreTestCase {
         assertTrue(group.start());
         group.addBinding(BindingNames.ROOT_PATH, "/raven");
         return group;
+    }
+    
+    @Test(timeout = 2000)
+    public void transformerTest() throws Exception {
+        int tasksCount = executor.getExecutingTaskCount();
+        byte[] data = "test".getBytes();
+        assertNull(builder.doGetLastModified());
+        long curTime = System.currentTimeMillis();
+        builder.getFile().setDataStream(new ByteArrayInputStream(data));
+        
+        TestContentTransformer transformer = new TestContentTransformer();
+        transformer.setName("t1");
+        builder.addAndSaveChildren(transformer);
+        assertTrue(transformer.start());
+        
+        assertTrue(builder.start());
+        Object resp = builder.buildResponseContent(null, null);
+        assertNotNull(resp);
+        assertTrue(resp instanceof Outputable);
+        ByteArrayOutputStream buf = new ByteArrayOutputStream();
+        ((Outputable)resp).outputTo(buf);
+        assertArrayEquals("Super test".getBytes(), buf.toByteArray());
+        assertEquals(1, tasksCount);
+    }
+    
+//    @Test(timeout = 2000)
+    @Test()
+    public void templateWithTransformerTest() throws Exception {
+        int tasksCount = executor.getExecutingTaskCount();
+        builder.getFile().setMimeType(FileResponseBuilder.GSP_MIME_TYPE);
+        builder.getFile().setDataString("${node.name}");
+        builder.getFile().setEncoding(Charset.forName("utf-8"));
+//        buildet
+        assertTrue(builder.start());
+        
+        TestContentTransformer transformer = new TestContentTransformer();
+        transformer.setName("t1");
+        builder.addAndSaveChildren(transformer);
+        assertTrue(transformer.start());             
+        
+        Object resp = builder.buildResponseContent(null, null);
+        assertNotNull(resp);
+        assertTrue(resp instanceof Outputable);
+        ByteArrayOutputStream buf = new ByteArrayOutputStream();
+        ((Outputable)resp).outputTo(buf);
+        assertArrayEquals(("Super "+NODE_NAME).getBytes(), buf.toByteArray());
+        assertEquals(1, tasksCount);
+    }
+
+    @Test
+    public void extendsTemplateWithTransformerTest() throws Exception {
+        FileResponseBuilder rootBuilder = createBuilder("root", FileResponseBuilder.GSP_MIME_TYPE);
+        rootBuilder.getFile().setDataString("${node.name}-${body()}!");
+        
+        assertTrue(rootBuilder.start());
+        
+        builder.getFile().setMimeType(FileResponseBuilder.GSP_MIME_TYPE);
+        builder.getFile().setEncoding(Charset.forName("utf-8"));
+        builder.getFile().setDataString("${node.name}");
+        builder.setExtendsTemplate(rootBuilder);
+        assertTrue(builder.start());
+        
+        TestContentTransformer transformer = new TestContentTransformer();
+        transformer.setName("t1");
+        builder.addAndSaveChildren(transformer);
+        assertTrue(transformer.start());             
+        
+        assertEquals("root-Super "+NODE_NAME+"!", builder.buildResponseContent(null, null).toString());
     }
     
     @Test

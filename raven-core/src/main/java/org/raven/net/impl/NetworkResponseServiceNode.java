@@ -351,30 +351,47 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
             Request request) 
         throws ContextUnavailableException
     {
-        if (node instanceof NetworkResponseGroupNode && pathIndex==path.length) {
+        ResponseBuilder groupBuilder = null;
+        if (node instanceof NetworkResponseGroupNode) {
             Node builder = node.getNode("?"+request.getMethod());
-            if (builder instanceof ResponseBuilder) return (ResponseBuilder)builder;
-            else throw new ContextUnavailableException(request, path[pathIndex-1]);
-        }
-        final String pathElem = path[pathIndex];
-        for (Node child: node.getEffectiveNodes()) {
-            if (   child.isStarted() 
-                && (pathElem.equals(child.getName()) || addNamedParameter(child, pathElem, request))) 
-            {
-                if (child.getAttr(BindingNames.APP_ROOT_ATTR)!=null)
-                    request.getParams().put(BindingNames.APP_NODE, child);
-                if (child instanceof NetworkResponseGroupNode) {
-                    return getResponseBuilder(child, path, pathIndex+1, pathInfo, request);
-                } else {
-                    if (pathIndex!=path.length-1)
-                        pathInfo.setSubpath(getContextFromPath(path, pathIndex+1));
-                    pathInfo.setBuilderPath(StringUtils.join(path, "/", 0, pathIndex));
-                    if (child instanceof ResponseBuilder) 
-                        return (ResponseBuilder)child;
-                }
+            if (builder instanceof ResponseBuilder) 
+                groupBuilder = (ResponseBuilder) builder;
+            if (pathIndex==path.length) {
+                if (groupBuilder!=null) return groupBuilder;
+                else throw new ContextUnavailableException(request, path[pathIndex-1]);                    
             }
         }
-        throw new ContextUnavailableException(request, pathElem);
+        final String pathElem = path[pathIndex];
+        ContextUnavailableException notFoundEx = null;
+        try {
+            for (Node child: node.getEffectiveNodes()) {
+                if (   child.isStarted() 
+                    && (pathElem.equals(child.getName()) || addNamedParameter(child, pathElem, request))) 
+                {
+                    if (child.getAttr(BindingNames.APP_ROOT_ATTR)!=null)
+                        request.getParams().put(BindingNames.APP_NODE, child);
+                    if (child instanceof NetworkResponseGroupNode) {
+                        return getResponseBuilder(child, path, pathIndex+1, pathInfo, request);
+                    } else {
+                        if (pathIndex!=path.length-1)
+                            pathInfo.setSubpath(getContextFromPath(path, pathIndex+1));
+                        pathInfo.setBuilderPath(StringUtils.join(path, "/", 0, pathIndex));
+                        if (child instanceof ResponseBuilder) 
+                            return (ResponseBuilder)child;
+                    }
+                }
+            }
+        } catch (ContextUnavailableException e) {
+            notFoundEx = e;
+        }
+        if (groupBuilder==null || !groupBuilder.canHandleUnknownPath()) {
+            if (notFoundEx!=null) throw notFoundEx;
+            else throw new ContextUnavailableException(request, pathElem);
+        } else {
+            pathInfo.setSubpath(getContextFromPath(path, pathIndex));
+            pathInfo.setBuilderPath(StringUtils.join(path, "/", 0, pathIndex));
+            return groupBuilder;
+        }
     }    
     
     private boolean addNamedParameter(Node child, String paramValue, Request request) 

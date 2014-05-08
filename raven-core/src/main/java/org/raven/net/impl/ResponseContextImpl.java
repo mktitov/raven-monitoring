@@ -52,7 +52,7 @@ public class ResponseContextImpl implements ResponseContext {
     private final Request request;
 //    private final String contextPath;
     private final String builderPath;
-    private final String subcontext;
+    private final String subcontextPath;
 //    private final String requesterIp;
     private final long requestId;
     private final LoginService loginService;
@@ -68,7 +68,7 @@ public class ResponseContextImpl implements ResponseContext {
     {
         this.request = request;
         this.builderPath = builderPath;
-        this.subcontext = subcontext;
+        this.subcontextPath = subcontext;
         this.requestId = requestId;
         this.loginService = loginService;
         this.responseBuilder = responseBuilder;
@@ -78,7 +78,11 @@ public class ResponseContextImpl implements ResponseContext {
         Boolean _sessionAllowed = responseBuilder.isSessionAllowed();
         this.sessionAllowed = _sessionAllowed==null? false : _sessionAllowed;
     }
-    
+
+    public String getSubcontextPath() {
+        return subcontextPath;
+    }
+
     public LoginService getLoginService() {
         return loginService;
     }
@@ -124,8 +128,8 @@ public class ResponseContextImpl implements ResponseContext {
     }
 
     public Response getResponse(UserContext user) throws NetworkResponseServiceExeption {
-        if (subcontext!=null && !subcontext.isEmpty())
-            request.getParams().put(NetworkResponseServiceNode.SUBCONTEXT_PARAM, subcontext);
+        if (subcontextPath!=null && !subcontextPath.isEmpty())
+            request.getParams().put(NetworkResponseServiceNode.SUBCONTEXT_PARAM, subcontextPath);
         if (logger.isDebugEnabled()) 
             logger.debug(String.format(
                 "[%d] Processing request. User (%s), remote address (%s), context (%s), request parameters: %s"

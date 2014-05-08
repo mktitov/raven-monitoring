@@ -52,4 +52,8 @@ public class NetRespContextRespBuilderWrapper implements ResponseBuilder {
     public Boolean isSessionAllowed() {
         return false;
     }
+
+    public boolean canHandleUnknownPath() {
+        return false;
+    }
 }

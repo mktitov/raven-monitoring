@@ -51,6 +51,9 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
     @NotNull @Parameter(defaultValue = "false")
     private Boolean useParameters;
     
+    @NotNull @Parameter(defaultValue = "false")
+    private Boolean canHandleUnknownPath;
+    
     private ParametersSupport paramsSupport;
 
     @Override
@@ -170,6 +173,18 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
 
     public void setUseServerSession(Boolean useServerSession) {
         this.useServerSession = useServerSession;
+    }
+
+    public Boolean getCanHandleUnknownPath() {
+        return canHandleUnknownPath;
+    }
+
+    public void setCanHandleUnknownPath(Boolean canHandleUnknownPath) {
+        this.canHandleUnknownPath = canHandleUnknownPath;
+    }
+
+    public boolean canHandleUnknownPath() {
+        return canHandleUnknownPath;
     }
 
     @Override

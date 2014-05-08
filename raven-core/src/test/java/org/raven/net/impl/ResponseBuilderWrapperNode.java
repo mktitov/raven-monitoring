@@ -58,6 +58,10 @@ public class ResponseBuilderWrapperNode extends BaseNode implements ResponseBuil
     public Boolean isSessionAllowed() {
         return false;
     }
+
+    public boolean canHandleUnknownPath() {
+        return false;
+    }
     
     public interface ResponseBuilderWrapper {
         public AccessRight getAccessRight();

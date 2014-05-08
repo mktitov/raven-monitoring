@@ -134,6 +134,7 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
         SimpleResponseBuilder builder = createSimpleResponseBuilder(project.getWebInterface(), "context");
         builder.setLoginService(loginService);
         Request request = trainRequest("project/context", true);
+        expect(request.getMethod()).andReturn("GET");
         mocks.replay();
         ResponseContext response = responseService.getResponseContext(request);
         assertSame(builder, response.getResponseBuilder());
@@ -145,6 +146,7 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
     public void projectsAccessDeniedTest() throws NetworkResponseServiceExeption {
         SimpleResponseBuilder builder = createSimpleResponseBuilder(project.getWebInterface(), "context");
         Request request = trainRequest("project/context", true);
+        expect(request.getMethod()).andReturn("GET");
         mocks.replay();
         ResponseContext response = responseService.getResponseContext(request);
         assertSame(builder, response.getResponseBuilder());
@@ -188,6 +190,7 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
     @Test
     public void loginServiceInheritanceTest() throws NetworkResponseServiceExeption {
         Request request = trainRequest("group/context");
+        expect(request.getMethod()).andReturn("GET");
         mocks.replay();
         
         NetworkResponseGroupNode group = createGroup(responseServiceNode, "group");
@@ -220,8 +223,40 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
     }
     
     @Test
+    public void getResponseBuilderByHttpMethod_UnknownPath() throws NetworkResponseServiceExeption {
+        Request request = trainRequest("group/test", "GET");
+        mocks.replay();
+        
+        NetworkResponseGroupNode group = createGroup(responseServiceNode, "group");
+        group.setLoginService(loginService);
+        SimpleResponseBuilder builder = createSimpleResponseBuilder(group, "?GET");
+        builder.setCanHandleUnknownPath(Boolean.TRUE);
+        
+        ResponseContext responseContext = responseService.getResponseContext(request);
+        assertNotNull(responseContext);
+        assertSame(loginService, responseContext.getLoginService());
+        assertSame(request, responseContext.getRequest());
+        assertSame(builder, responseContext.getResponseBuilder());
+        assertEquals("test", responseContext.getSubcontextPath());
+        mocks.verify();
+    }
+    
+    @Test(expected = ContextUnavailableException.class)
+    public void getResponseBuilderByHttpMethod_UnknownPath2() throws NetworkResponseServiceExeption {
+        Request request = trainRequest("group/test", "GET");
+        mocks.replay();
+        
+        NetworkResponseGroupNode group = createGroup(responseServiceNode, "group");
+        group.setLoginService(loginService);
+        SimpleResponseBuilder builder = createSimpleResponseBuilder(group, "?GET");
+        
+        ResponseContext responseContext = responseService.getResponseContext(request);
+    }
+    
+    @Test
     public void namedParametersTest() throws NetworkResponseServiceExeption {
         Request request = trainRequest("test/1");
+        expect(request.getMethod()).andReturn("GET");
         mocks.replay();
         
         NetworkResponseGroupNode group = createGroup(responseServiceNode, "{param1}");
@@ -242,6 +277,7 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
     @Test
     public void namedParameterPatternTest() throws NetworkResponseServiceExeption {
         Request request = trainRequest("test/1.js");
+        expect(request.getMethod()).andReturn("GET");
         mocks.replay();
         
         NetworkResponseGroupNode group = createGroup(responseServiceNode, "{param1}");
@@ -263,6 +299,7 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
     @Test
     public void namedParameterPattern2Test() throws NetworkResponseServiceExeption {
         Request request = trainRequest("test/1");
+        expect(request.getMethod()).andReturn("GET");
         mocks.replay();
         
         NetworkResponseGroupNode group = createGroup(responseServiceNode, "{param1}");
@@ -284,6 +321,7 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
     @Test(expected=ContextUnavailableException.class)
     public void namedParameterPattern3Test() throws NetworkResponseServiceExeption {
         Request request = trainRequest("test/1");
+        expect(request.getMethod()).andReturn("GET");
         mocks.replay();
         
         NetworkResponseGroupNode group = createGroup(responseServiceNode, "{param1}");
@@ -429,6 +467,7 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
         assertTrue(group.start());
         NetworkResponseContextNode context = createResponseNode(group, "context");
         Request request = trainRequest("group/context/subcontextName");
+        expect(request.getMethod()).andReturn("GET");
         mocks.replay();
         
         Response resp = getResponse(request);

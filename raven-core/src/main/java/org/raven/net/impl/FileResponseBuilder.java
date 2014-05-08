@@ -19,7 +19,13 @@ import groovy.lang.Closure;
 import groovy.lang.Writable;
 import groovy.text.SimpleTemplateEngine;
 import groovy.text.Template;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.Charset;
@@ -29,8 +35,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
+import org.apache.commons.io.output.WriterOutputStream;
+import org.apache.poi.util.IOUtils;
 import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
@@ -41,9 +51,15 @@ import static org.raven.expr.impl.ExpressionAttributeValueHandler.RAVEN_EXPRESSI
 import static org.raven.expr.impl.ExpressionAttributeValueHandler.RAVEN_EXPRESSION_VARS_INITIATED_BINDING;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
+import org.raven.net.ContentTransformer;
 import org.raven.net.NetworkResponseService;
+import org.raven.net.Outputable;
 import org.raven.net.ResponseContext;
+import org.raven.sched.ExecutorService;
+import org.raven.sched.impl.AbstractTask;
+import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
 import org.raven.tree.DataFile;
+import org.raven.tree.DataFileException;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Tree;
@@ -51,7 +67,9 @@ import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.DataFileValueHandlerFactory;
 import org.raven.tree.impl.DataFileViewableObject;
+import org.raven.tree.impl.LoggerHelper;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
+import org.raven.util.NodeUtils;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.beans.ObjectUtils;
 import org.weda.internal.annotations.Service;
@@ -61,7 +79,7 @@ import org.weda.internal.annotations.Service;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode = NetworkResponseServiceNode.class)
-public class FileResponseBuilder extends AbstractResponseBuilder implements Viewable{
+public class FileResponseBuilder extends AbstractResponseBuilder implements Viewable {
     public final static String FILE_ATTR = "file";
     public final static String GSP_MIME_TYPE = "text/gsp";
     public static final String MIME_TYPE_ATTR = "file.mimeType";
@@ -80,6 +98,9 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
     
     @Parameter(valueHandlerType = ScriptAttributeValueHandlerFactory.TYPE)
     private Map extendsTemplateParams;
+    
+    @Parameter(valueHandlerType = SystemSchedulerValueHandlerFactory.TYPE)
+    private ExecutorService executor;
     
     @Parameter
     private Long lastModified;
@@ -121,7 +142,11 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
 
     @Override
     protected Charset getContentCharset() throws Exception {
-        return file.getEncoding();
+        List<ContentTransformer> transformers = NodeUtils.getChildsOfType(this, ContentTransformer.class);
+        Charset charset = null;
+        if (!transformers.isEmpty())
+            charset = transformers.get(transformers.size()-1).getResultCharset();
+        return charset!=null? charset : file.getEncoding();
     }
 
     @Override
@@ -132,19 +157,19 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
     }
     
     public Object buildResponseContent(final Map bindings) throws Exception {        
+        Object result = null;
+        boolean needTransform = true;
         if (!GSP_MIME_TYPE.equals(file.getMimeType())) {
             if (bindings.containsKey("template_bodies") && isLogLevelEnabled(LogLevel.WARN))
                 getLogger().warn(String.format(
                         "File response builder (%s) used as script ROOT template "
                         + "but has mime type different from (%s)", getPath(), GSP_MIME_TYPE));
-            return file;
+            result = file;
         } else {
             Template _template = template.get();
             if (_template==null) 
                 _template = compile();
-            if (_template==null) 
-                return "<<EMPTY TEMPLATE>>";
-            else {
+            if (_template!=null) {
                 final FileResponseBuilder _extendsTemplate = extendsTemplate;
                 final Template thisTemplate = _template;
                 if (_extendsTemplate!=null) {
@@ -162,16 +187,63 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
                             } else
                                 bodyBindings = bindings;
                             addBinding(bodyBindings);
-                            return thisTemplate.make(bodyBindings);
+                            try {
+                                Object res = transform(thisTemplate.make(bodyBindings), bodyBindings);
+                                if (res instanceof Writable)
+                                    return (Writable)res;
+                                else 
+                                    return convertToWritable((Outputable)res);
+                            } catch (Exception e) {
+                                throw new Error(e);
+                            }
                         }
                     });
-                    return _extendsTemplate.buildResponseContent(addExtendsTemplateParams(bindings));
+                    needTransform = false;
+                    result = _extendsTemplate.buildResponseContent(addExtendsTemplateParams(bindings));
                 } else {
                     addBinding(bindings);
-                    return new WritableWrapper(_template.make(bindings), bindings);
+                    result = new WritableWrapper(_template.make(bindings), bindings);
                 }
             }
         }        
+        return needTransform? transform(result, bindings) : result;
+    }
+    
+    private Writable convertToWritable(final Outputable outputable) {
+        return new Writable() {
+            public Writer writeTo(Writer out) throws IOException {
+                WriterOutputStream stream = null;
+                Charset charset = null;
+                try {
+                    charset = getContentCharset();
+                } catch (Exception ex) {
+                    throw new IOException(ex);
+                }
+                try {
+                    stream = new WriterOutputStream(out, charset);
+                    outputable.outputTo(stream);
+                    return out;
+                } finally {
+                    stream.close();
+                }
+            }
+        };
+    }
+    
+    private Object transform(Object source, Map bindings) throws Exception {
+        List<ContentTransformer> transformers = NodeUtils.getEffectiveChildsOfType(this, ContentTransformer.class);
+        if (transformers.isEmpty())
+            return source;
+        else {
+            ExecutorService _executor = executor;
+            if (_executor==null)
+                throw new Exception("Can't initialize content transform chain because of executor attribute not specified");
+            Outputable initialSource = source instanceof Outputable? 
+                    (Outputable)source : new OutputabeWrapper(source, file.getEncoding());
+            
+            return new TransformController(initialSource, bindings, file.getEncoding(), getContentCharset(), 
+                    _executor, transformers);
+        }
     }
     
     private BindingSupport initExpressionExecutionContext() {
@@ -206,8 +278,7 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
         return bodies;
     }
     
-    private void addBinding(Map bindings) {
-        
+    private void addBinding(Map bindings) {        
         bindings.put(BindingNames.NODE_BINDING, this);
         bindings.put(BindingNames.LOGGER_BINDING, getLogger());
         bindings.put(BindingNames.INCLUDE_BINDING, new Include(bindings));
@@ -261,6 +332,14 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
 
     public void setExtendsTemplateParams(Map extendsTemplateParams) {
         this.extendsTemplateParams = extendsTemplateParams;
+    }
+
+    public ExecutorService getExecutor() {
+        return executor;
+    }
+
+    public void setExecutor(ExecutorService executor) {
+        this.executor = executor;
     }
     
     public Template compile() throws Exception {
@@ -324,6 +403,148 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
                 if (isLogLevelEnabled(LogLevel.ERROR))
                     getLogger().error(String.format("Error including file/template (%s)", builder));
                 throw e;
+            }
+        }
+    }
+    
+    private class OutputabeWrapper implements Outputable {
+        private final Object source;
+        private final Charset initialCharset;
+
+        public OutputabeWrapper(Object source, Charset initialCharset) {
+            this.source = source;
+            this.initialCharset = initialCharset;
+        }
+
+        public OutputStream outputTo(final OutputStream out) throws IOException {
+            if (source==null)
+                return out;          
+            if (source instanceof Writable) {
+                OutputStreamWriter writer = new OutputStreamWriter(out, initialCharset);
+                ((Writable)source).writeTo(writer);
+                writer.close();
+            } else if (source instanceof Outputable) {
+                ((Outputable)source).outputTo(out);
+            } else if (source instanceof DataFile) {
+                try {
+                    IOUtils.copy(((DataFile)source).getDataStream(), out);
+                } catch (DataFileException ex) {
+                    throw new IOException(ex);
+                }
+            } else
+                throw new IOException("Invalid source type: "+source.getClass().getName());
+            return out;
+        }
+    }
+    
+    private class TransformController implements Outputable {
+        private final Outputable outputable;
+        private final Map bindings;
+        private final List<ContentTransformer> transformers;
+        private final ExecutorService executor;
+        private final Charset initialCharset;
+        private final Charset finalCharset;
+        private final LoggerHelper logger;
+
+        public TransformController(Outputable outputable, Map bindings, Charset initialCharset, 
+                Charset finalCharset, ExecutorService executor, List<ContentTransformer> transformers) 
+        {
+            this.outputable = outputable;
+            this.bindings = bindings;
+            this.transformers = transformers;
+            this.executor = executor;
+            this.initialCharset = initialCharset;
+            this.finalCharset = finalCharset;
+            this.logger = new LoggerHelper(FileResponseBuilder.this, "Transform controller. ");
+        }
+
+        public OutputStream outputTo(OutputStream outStream) throws IOException {
+//            BindingsHolder bindingsHolder = new BindingsHolder();
+            try {
+                try {
+                    Outputable result = outputable;
+                    Charset charset = initialCharset;
+                    for (ContentTransformer transformer: transformers) {
+                        final Outputable source = result;
+                        final PipedOutputStream out = new PipedOutputStream();
+                        final PipedInputStream reader = new PipedInputStream(out);
+                        final String status = String.format("Transforming content using (%s) transformer", transformer.getName());
+                        executor.execute(new AbstractTask(FileResponseBuilder.this, status) {
+                            @Override public void doRun() throws Exception {
+//                                BindingsHolder bindingsHolder = new BindingsHolder();
+                                try {
+                                    source.outputTo(out);
+                                } finally {
+//                                    bindingsHolder.close();
+                                    out.close();
+                                }
+                            }
+                        });
+                        result = transformer.transform(reader, bindings, charset);
+                        Charset newCharset = transformer.getResultCharset();
+                        if (newCharset!=null)
+                            charset = newCharset;
+                    }
+                    return result.outputTo(outStream);
+                } catch (Throwable e) {
+                    throw new IOException(e);
+                }
+            } finally {
+//                bindingsHolder.close();
+            }
+        }
+        
+        private BindingSupport initExpressionExecutionContext() {
+            BindingSupport varsSupport = tree.getGlobalBindings(Tree.EXPRESSION_VARS_BINDINGS);
+            boolean varsInitiated = varsSupport.contains(RAVEN_EXPRESSION_VARS_INITIATED_BINDING);
+            if (!varsInitiated) {
+                varsSupport.put(RAVEN_EXPRESSION_VARS_INITIATED_BINDING, true);
+                varsSupport.put(RAVEN_EXPRESSION_VARS_BINDING, new HashMap());
+                return varsSupport;
+            } else
+                return null;
+        }
+
+        @Override
+        public String toString() {
+            BindingSupport varsSupport = initExpressionExecutionContext();
+            try {
+                try {
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    outputTo(out);
+                    final byte[] bytes = out.toByteArray();
+                    return finalCharset!=null? new String(bytes, finalCharset) : new String(bytes);
+                } catch (Throwable e) {
+                    if (logger.isErrorEnabled())
+                        logger.error("Error converting content to string", e);
+                    return "";
+                }
+            } finally {
+                if (varsSupport!=null)
+                    varsSupport.reset();
+            }
+        }
+        
+        private class BindingsHolder {
+            private final String id;
+            private final BindingSupport bindingsSupport;
+            private final BindingSupport varsSupport;
+
+            public BindingsHolder() {
+                varsSupport = initExpressionExecutionContext();
+                bindingsSupport = new BindingSupportImpl();
+                id = tree.addGlobalBindings(bindingsSupport);
+                bindingsSupport.putAll(bindings);
+                bindingsSupport.remove(BindingNames.NODE_BINDING);
+                bindingsSupport.remove(BindingNames.LOGGER_BINDING);
+                bindingsSupport.remove(BindingNames.INCLUDE_BINDING);
+                bindingsSupport.remove(BindingNames.PATH_BINDING);                
+            }
+            
+            public void close() {
+                if (varsSupport!=null)
+                    varsSupport.reset();
+                tree.removeGlobalBindings(id);                
             }
         }
     }

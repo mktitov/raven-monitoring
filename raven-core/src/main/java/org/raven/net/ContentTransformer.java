@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Mikhail Titov.
+ * Copyright 2014 Mikhail Titov.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,21 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.raven.net;
 
-import org.raven.auth.UserContext;
-import org.raven.auth.impl.AccessRight;
-import org.raven.tree.Node;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.util.Map;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface ResponseBuilder {
-    public Response buildResponse(UserContext user, ResponseContext responseContext) 
-            throws NetworkResponseServiceExeption;
-    public AccessRight getAccessRight();
-    public Node getResponseBuilderNode();
-    public Boolean isSessionAllowed();
-    public boolean canHandleUnknownPath();
+public interface ContentTransformer {
+    public String getName();
+    public Outputable transform(InputStream source, Map bindings, Charset charset);
+    public Charset getResultCharset();
 }

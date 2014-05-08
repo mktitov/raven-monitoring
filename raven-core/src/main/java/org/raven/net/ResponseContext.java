@@ -52,6 +52,10 @@ public interface ResponseContext {
      */
     public boolean isSessionAllowed();
     /**
+     * Returns the subcontext path
+     */
+    public String getSubcontextPath();
+    /**
      * Generate and return the response for given user and request parameters
      * @throws NetworkResponseServiceExeption 
      */
