@@ -52,6 +52,7 @@ import org.raven.net.ContextUnavailableException;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.net.NetworkResponseServiceUnavailableException;
+import org.raven.net.Outputable;
 import org.raven.net.Request;
 import org.raven.net.RequiredParameterMissedException;
 import org.raven.net.Response;
@@ -247,6 +248,8 @@ public class NetworkResponseServlet extends HttpServlet  {
                     if (content instanceof Writable) {
                         Writable writable = (Writable) content;
                         writable.writeTo(response.getWriter());
+                    } else if (content instanceof Outputable) {
+                        ((Outputable)content).outputTo(response.getOutputStream());
                     } else {
                         OutputStream out = response.getOutputStream();
                         InputStream contentStream = converter.convert(InputStream.class, content, charset);
