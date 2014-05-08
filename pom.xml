@@ -79,6 +79,16 @@
       <id>tomcat</id>
       <url>http://tomcat.apache.org/dev/dist/m2-repository/org/apache/tomcat</url>
     </repository>
+      <repository>
+        <id>info-bliki-repository</id>
+        <url>http://gwtwiki.googlecode.com/svn/maven-repository/</url>
+        <releases>
+          <enabled>true</enabled>
+        </releases>
+        <snapshots>
+          <enabled>false</enabled>
+        </snapshots>
+      </repository>
     <!--
     <repository>
         <id>maven2-repository.dev.java.net</id>
@@ -266,6 +276,11 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>info.bliki.wiki</groupId>
+        <artifactId>bliki-core</artifactId>
+        <version>3.0.19</version>
+      </dependency>
+      <dependency>
         <groupId>org.codehaus.groovy.modules.http-builder</groupId>
         <artifactId>http-builder</artifactId>
         <version>0.6</version>
@@ -325,6 +340,11 @@
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-compress</artifactId>
         <version>1.7</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>2.4</version>        
       </dependency>
             
       <dependency>
