@@ -213,6 +213,7 @@ public class RavenCoreModule
         conf.add(new StringToClassConverter());
         conf.add(new ClassToStringConverter());
         conf.add(new InputStreamToStringConverter());
+        conf.add(new InputStreamToBinaryFieldConverter());
         conf.add(new StringToCharsetConverter());
 		conf.add(new StringToLocaleConverter());
         conf.add(new StringToIpConverter());
@@ -225,7 +226,9 @@ public class RavenCoreModule
         conf.add(new DateToDateConverter());
         conf.add(new CollectionToTableConverter());
         conf.add(new ByteArrayDataSourceToByteArrayConverter());
+        conf.add(new ByteArrayToBinaryFieldConverter());
         conf.add(new DataSourceToInputStreamConverter());
+        conf.add(new DataSourceToBinaryFieldConverter());
         conf.add(new BinaryFieldToInputStreamConverter());
         conf.add(new FileToInputStreamConverter());
         conf.add(new ClobToStringConverter());

@@ -35,9 +35,8 @@ public class BinaryFieldValue implements BinaryFieldType
         this.data = data;
     }
 
-    public InputStream getData() throws BinaryFieldTypeException
-    {
-        return new ByteArrayInputStream(data);
+    public InputStream getData() throws BinaryFieldTypeException {
+        return data==null? null : new ByteArrayInputStream(data);
     }
 
     public void closeResources() throws BinaryFieldTypeException

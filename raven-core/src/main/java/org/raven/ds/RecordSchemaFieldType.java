@@ -54,19 +54,15 @@ public enum RecordSchemaFieldType
         return type;
     }
 
-    public static Object getSqlObject(RecordSchemaField field, Object value)
-            throws RecordSchemaFieldTypeException
+    public static Object getSqlObject(RecordSchemaField field, Object value) throws RecordSchemaFieldTypeException
     {
-        try
-        {
-            switch(field.getFieldType())
-            {
+        try {
+            if (value==null)
+                return null;
+            switch(field.getFieldType()) {
                 case IP: return value.toString();
                 case BINARY: return ((BinaryFieldType)value).getData();
-                case RECORD:
-                {
-                    if (value==null)
-                        return null;
+                case RECORD: {
                     Record record = (Record) value;
                     RecordRelationFieldExtension relationExtension =
                             field.getFieldExtension(RecordRelationFieldExtension.class, null);
@@ -80,9 +76,7 @@ public enum RecordSchemaFieldType
                 }
                 default: return value;
             }
-        }
-        catch(Exception e)
-        {
+        } catch(Exception e) {
             throw new RecordSchemaFieldTypeException(e);
         }
     }

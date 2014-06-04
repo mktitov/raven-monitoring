@@ -17,6 +17,7 @@
 
 package org.raven.ds.impl;
 
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -28,6 +29,7 @@ import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.dbcp.ConnectionPool;
+import org.raven.ds.BinaryFieldType;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
@@ -532,8 +534,13 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                     }
                     if ((recordFound || deleteRecord) && fi.field.getName().equals(idFieldName))
                         idFieldValue = val;
-                    else if (!deleteRecord)
-                        st.setObject(i++, val);
+                    else if (!deleteRecord) {
+                        if (fi.field.getFieldType()==RecordSchemaFieldType.BINARY)
+                            st.setBinaryStream(i, (InputStream) val);
+                        else
+                            st.setObject(i, val);
+                        i++;
+                    }
                 }
                 if (recordFound)
                     st.setObject(dbFields.size(), idFieldValue);
