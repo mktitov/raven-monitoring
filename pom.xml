@@ -484,13 +484,13 @@
       <dependency>
         <groupId>org.apache.poi</groupId>
         <artifactId>poi</artifactId>
-        <version>3.8</version>
+        <version>3.10-FINAL</version>
         <scope>compile</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.poi</groupId>
         <artifactId>poi-ooxml</artifactId>
-        <version>3.8</version>
+        <version>3.10-FINAL</version>
         <scope>compile</scope>
       </dependency>
       <dependency>
@@ -659,7 +659,7 @@
       <dependency>
         <groupId>commons-dbcp</groupId>
         <artifactId>commons-dbcp</artifactId>
-        <version>1.2.2</version>
+        <version>1.4</version>
         <scope>compile</scope>
       </dependency>
       <dependency>
