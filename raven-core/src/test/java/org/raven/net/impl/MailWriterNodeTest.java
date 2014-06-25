@@ -22,15 +22,21 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
+import org.raven.TestScheduler;
+import org.raven.cache.TemporaryFileManagerNode;
+import org.raven.ds.impl.GzipContentTransformer;
 import org.raven.expr.impl.IfNode;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
+import org.raven.sched.impl.ExecutorServiceNode;
 import org.raven.table.TableImpl;
 import org.raven.test.DataCollector;
 import org.raven.test.PushDataSource;
 import org.raven.test.RavenCoreTestCase;
+import org.raven.tree.NodeError;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
+import org.raven.tree.impl.TextNode;
 import org.raven.tree.impl.ViewableObjectImpl;
 
 /**
@@ -39,6 +45,9 @@ import org.raven.tree.impl.ViewableObjectImpl;
  */
 public class MailWriterNodeTest extends RavenCoreTestCase
 {
+    private TestScheduler scheduler;
+    private ExecutorServiceNode executor;
+    private TemporaryFileManagerNode manager;
     private MailWriterNode mailer;
     private PushDataSource ds;
     private DataCollector collector;
@@ -46,6 +55,25 @@ public class MailWriterNodeTest extends RavenCoreTestCase
     @Before
     public void prepare()
     {
+        scheduler = new TestScheduler();
+        scheduler.setName("scheduler");
+        testsNode.addAndSaveChildren(scheduler);
+        assertTrue(scheduler.start());
+        
+        executor = new ExecutorServiceNode();
+        executor.setName("executor");
+        testsNode.addAndSaveChildren(executor);
+        executor.setCorePoolSize(50);
+        executor.setMaximumPoolSize(50);
+        assertTrue(executor.start());
+
+        manager = new TemporaryFileManagerNode();
+        manager.setName("manager");
+        testsNode.addAndSaveChildren(manager);
+        manager.setDirectory("target/");
+        manager.setScheduler(scheduler);
+        
+        assertTrue(manager.start());        
         ds = new PushDataSource();
         ds.setName("ds");
         tree.getRootNode().addAndSaveChildren(ds);
@@ -80,10 +108,10 @@ public class MailWriterNodeTest extends RavenCoreTestCase
         collector.setName("collector");
         tree.getRootNode().addAndSaveChildren(collector);
         collector.setDataSource(mailer);
-        assertTrue(collector.start());
+        assertTrue(collector.start());        
     }
-
-    @Test
+    
+//    @Test
     public void sendToGoogleTest() throws Exception
     {
         AttributeValueMessagePartNode part = new AttributeValueMessagePartNode();
@@ -171,6 +199,64 @@ public class MailWriterNodeTest extends RavenCoreTestCase
 //    @Test
     public void viewableObjectsTest() throws Exception
     {
+        TestViewable source = createViewableObjectsSource();
+
+        ViewableObjectsMessagePartNode part = new ViewableObjectsMessagePartNode();
+        part.setName("part");
+        mailer.addAndSaveChildren(part);
+        part.setExecutor(executor);
+        part.setContentType("application/vnd.ms-excel");
+        part.setFileName("report.xls");
+        part.setSource(source);
+        assertTrue(part.start());
+
+        ds.pushData("marker");
+    }
+
+//    @Test
+    public void viewableObjectsWithTemporaryFileManagerTest() throws Exception
+    {
+        TestViewable source = createViewableObjectsSource();
+
+        ViewableObjectsMessagePartNode part = new ViewableObjectsMessagePartNode();
+        part.setName("part");
+        mailer.addAndSaveChildren(part);
+        part.setExecutor(executor);
+        part.setTemporaryFileManager(manager);
+        part.setUseTemporaryFileManager(Boolean.TRUE);
+        part.setContentType("application/vnd.ms-excel");
+        part.setFileName("report.xls");
+        part.setSource(source);
+        assertTrue(part.start());
+
+        ds.pushData("marker");
+    }
+
+    @Test
+    public void viewableObjectsWithTransformersTest() throws Exception
+    {
+        TestViewable source = createViewableObjectsSource();
+
+        ViewableObjectsMessagePartNode part = new ViewableObjectsMessagePartNode();
+        part.setName("part");
+        mailer.addAndSaveChildren(part);
+        part.setExecutor(executor);
+        part.setTemporaryFileManager(manager);
+        part.setUseTemporaryFileManager(Boolean.TRUE);
+        part.setContentType("application/x-gzip");
+        part.setFileName("report.xls.gz");
+        part.setSource(source);        
+        assertTrue(part.start());
+        
+        GzipContentTransformer gzip = new GzipContentTransformer();
+        gzip.setName("gzip");
+        part.addAndSaveChildren(gzip);
+        assertTrue(gzip.start());
+
+        ds.pushData("marker");
+    }
+
+    private TestViewable createViewableObjectsSource() throws NodeError {
         TestViewable source = new TestViewable();
         source.setName("source");
         tree.getRootNode().addAndSaveChildren(source);
@@ -182,15 +268,6 @@ public class MailWriterNodeTest extends RavenCoreTestCase
         table.addRow(new Object[]{1, "знач 1"});
         vos.add(new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table));
         source.setViewableObjects(vos);
-
-        ViewableObjectsMessagePartNode part = new ViewableObjectsMessagePartNode();
-        part.setName("part");
-        mailer.addAndSaveChildren(part);
-        part.setContentType("application/vnd.ms-excel");
-        part.setFileName("report.xls");
-        part.setSource(source);
-        assertTrue(part.start());
-
-        ds.pushData("marker");
+        return source;
     }
 }

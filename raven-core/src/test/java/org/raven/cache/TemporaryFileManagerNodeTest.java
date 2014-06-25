@@ -20,6 +20,7 @@ package org.raven.cache;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 import javax.activation.DataSource;
 import org.apache.commons.io.FileUtils;
@@ -86,12 +87,17 @@ public class TemporaryFileManagerNodeTest extends RavenCoreTestCase
         DataSource ds1 = manager.saveFile(manager, "test", in, null, true);
 
         TimeUnit.SECONDS.sleep(3);
+        in.reset();
         DataSource ds2 = manager.saveFile(manager, "test2", in, null, true);
+        assertArrayEquals(arr, IOUtils.toByteArray(ds2.getInputStream()));
+        InputStream is = ds2.getInputStream();
 
         TimeUnit.SECONDS.sleep(3);
         manager.executeScheduledJob(null);
 
         assertNotNull(manager.getDataSource("test2"));
+        assertArrayEquals(arr, IOUtils.toByteArray(is));
+        
         assertNull(manager.getDataSource("test"));
     }
 

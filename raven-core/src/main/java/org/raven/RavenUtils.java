@@ -17,6 +17,7 @@
 
 package org.raven;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -356,7 +357,7 @@ public class RavenUtils
         return groups;
     }
 
-    public static StringBuilder tableToHtml(Table table, StringBuilder builder)
+    public static Appendable tableToHtml(Table table, Appendable builder) throws IOException
     {
         if (builder==null)
             builder = new StringBuilder("<table>");
@@ -383,7 +384,7 @@ public class RavenUtils
                 builder.append(">").append(name==null||name.isEmpty()? "&nbsp;" : name)
                         .append("</th>");
             }else{
-                builder.append("<th colspan=\"").append(group.getColumnNames().size()).append("\">")
+                builder.append("<th colspan=\"").append(""+group.getColumnNames().size()).append("\">")
                         .append(name==null||name.isEmpty()? "&nbsp;" : name)
                         .append("</th>");
                 for (String columnName: group.getColumnNames())
@@ -424,14 +425,14 @@ public class RavenUtils
         return builder;
     }
 
-    public static StringBuilder viewableObjectToHtml(ViewableObject obj, StringBuilder builder)
+    public static Appendable viewableObjectToHtml(ViewableObject obj, Appendable builder) throws IOException
     {
         if (builder==null)
             builder = new StringBuilder();
         if (Viewable.RAVEN_TABLE_MIMETYPE.equals(obj.getMimeType()))
             tableToHtml((Table)obj.getData(), builder);
         else if (Viewable.RAVEN_TEXT_MIMETYPE.equals(obj.getMimeType()))
-            builder.append(obj.getData());
+            builder.append((String)obj.getData());
         return builder;
     }
 
@@ -466,7 +467,7 @@ public class RavenUtils
         ArrayList<ViewableObject> vos = new ArrayList<ViewableObject>();
         ArrayList<Node> nodes = new ArrayList<Node>();
         nodes.add(node);
-        List<Node> childs = node.getSortedChildrens();
+        List<Node> childs = node.getNodes();
         if (childs!=null)
             nodes.addAll(childs);
         for (Node n: nodes)

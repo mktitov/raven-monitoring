@@ -303,28 +303,43 @@ public class QueueDataPipe extends AbstractSafeDataPipe implements Schedulable {
         }
         
         private void flushQueue() throws Exception {
-            if (!flushing.compareAndSet(false, true))
+            if (!flushing.compareAndSet(false, true)) {
+                if (isLogLevelEnabled(LogLevel.WARN))
+                    getLogger().warn("Already flushing");
                 return;
-            try {
+            }
+//            try {
                 List<DataWrapper> dataList;
                 synchronized(queue) {
-                    if (queue.size()<dataCountThreshold) 
+                    if (queue.size()<dataCountThreshold) {
+                        flushing.set(false);
                         return;
+                    }
                     dataList = new ArrayList<DataWrapper>(queueSize);
                     queue.drainTo(dataList);
                 }
                 final List<DataWrapper> _dataList = dataList;
                 if (dataList.size()>=dataCountThreshold)
-                    executor.execute(new AbstractTask(QueueDataPipe.this, "Flushing data from queue to consumers") {
-                        @Override public void doRun() throws Exception {
-                            for (DataWrapper dataWrapper: _dataList)
-                                sendDataToConsumers(dataWrapper.data, dataWrapper.context);
-                            sendDataToConsumers(null, new DataContextImpl());
-                        }
-                    });
-            } finally {
-                flushing.set(false);
-            }
+                    try {
+                        executor.execute(new AbstractTask(QueueDataPipe.this, "Flushing data from queue to consumers") {
+                            @Override public void doRun() throws Exception {
+                                try {
+                                    for (DataWrapper dataWrapper: _dataList)
+                                        sendDataToConsumers(dataWrapper.data, dataWrapper.context);
+                                    sendDataToConsumers(null, new DataContextImpl());
+                                } finally {
+                                    flushing.set(false);
+                                }
+                            }
+                        });
+                    } catch (ExecutorServiceException e) {
+                        flushing.set(false);
+                    }
+                else 
+                    flushing.set(false);
+//            } finally {
+////                flushing.set(false);
+//            }
         }
         
         private void executeDeleteTask(long interval) {

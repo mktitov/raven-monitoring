@@ -203,8 +203,7 @@ public class MailWriterNode extends AbstractSafeDataPipe
 
     private void createContent(MimeMessage message, DataContext context) throws Exception
     {
-        List<MailMessagePart> parts = NodeUtils.getEffectiveChildsOfType(
-                this, MailMessagePart.class);
+        List<MailMessagePart> parts = NodeUtils.getEffectiveChildsOfType(this, MailMessagePart.class);
 
         if (parts.isEmpty())
             throw new Exception(
@@ -232,7 +231,7 @@ public class MailWriterNode extends AbstractSafeDataPipe
             bodyPart.setText((String) content, getContentEncoding(), subtype);
         } else {
             if (content instanceof javax.activation.DataSource)
-                ds = new DataSourceWrapper(ds, part.getContentType(), part.getName());
+                ds = new DataSourceWrapper((javax.activation.DataSource) content, part.getContentType(), part.getName());
             else {
                 byte[] is = converter.convert(byte[].class, content, getContentEncoding());
                 ds = new ByteArrayDataSource(is, part.getContentType(), part.getName());

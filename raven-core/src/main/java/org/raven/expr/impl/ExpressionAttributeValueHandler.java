@@ -17,6 +17,7 @@
 
 package org.raven.expr.impl;
 
+import java.util.Collections;
 import org.raven.tree.PropagatedAttributeValueError;
 import java.util.HashMap;
 import java.util.Map;
@@ -130,7 +131,8 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
                 bindings.putAll(args);
                 bindings.put(RAVEN_EXPRESSION_ARGS_BINDING, args);
                 varsSupport.remove(RAVEN_EXPRESSION_ARGS_BINDING);
-            }
+            } else 
+                bindings.put(RAVEN_EXPRESSION_ARGS_BINDING, Collections.EMPTY_MAP);
             try{
                 bindings.remove(ENABLE_SCRIPT_EXECUTION_BINDING);
                 attribute.getOwner().formExpressionBindings(bindings);

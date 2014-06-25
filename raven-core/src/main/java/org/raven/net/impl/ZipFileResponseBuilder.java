@@ -83,7 +83,7 @@ public class ZipFileResponseBuilder extends AbstractResponseBuilder implements V
     }
 
     @Override
-    protected Object buildResponseContent(UserContext user, ResponseContext ctx) throws Exception {
+    protected synchronized Object buildResponseContent(UserContext user, ResponseContext ctx) throws Exception {
         String filename = (String) ctx.getRequest().getParams().get(NetworkResponseServiceNode.SUBCONTEXT_PARAM);
         String contextPath = ctx.getRequest().getServicePath()+"/"+ctx.getRequest().getContextPath();
         if (filename==null)

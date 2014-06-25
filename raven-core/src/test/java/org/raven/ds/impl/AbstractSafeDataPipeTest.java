@@ -336,7 +336,7 @@ public class AbstractSafeDataPipeTest extends RavenCoreTestCase
         assertNull(pipes[1].getDataSource());
         pipes[0].setAutoLinkDataSource(true);
         assertNull(pipes[0].getDataSource());
-        pipes[1].getNodeAttribute(AbstractDataConsumer.AUTO_LINK_DATA_SOURCE_ATTR).setValue("true");
+        pipes[1].getAttr(AbstractDataConsumer.AUTO_LINK_DATA_SOURCE_ATTR).setValue("true");
         assertEquals(pipes[0], pipes[1].getDataSource());
     }
 

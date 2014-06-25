@@ -17,7 +17,6 @@
 
 package org.raven.auth;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import org.raven.auth.impl.AccessControl;
@@ -29,6 +28,10 @@ import org.raven.tree.Tree;
  * @author Mikhail Titov
  */
 public interface UserContext {
+    /**
+     * Return raven server session id for this user context
+     */
+//    public String getSessionId();
     /**
      * Return the name of the authenticator that authenticate the user
      */

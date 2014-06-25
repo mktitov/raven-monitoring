@@ -26,7 +26,9 @@ public interface LoginService
     public static final String ROOT_USER_NAME = "root";
     public static final String PUBLIC_GROUP = "PUBLIC";
     
+//    public UserContext login(String username, String password, String ip, boolean needServerSession) 
     public UserContext login(String username, String password, String ip) throws LoginException;
+//    public UserContext getUserForSessionId(String sessionId);
     public boolean isLoginAllowedFromIp(String ip);
     public int getId();
     public String getName();

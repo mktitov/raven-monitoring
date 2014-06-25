@@ -18,10 +18,18 @@
 package org.raven.net.impl;
 
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
+import javax.activation.DataSource;
+import org.apache.commons.io.IOUtils;
+import static org.junit.Assert.assertTrue;
 import org.raven.tree.NodeAttribute;
 import org.junit.Before;
 import org.junit.Test;
+import org.raven.TestScheduler;
+import org.raven.cache.TemporaryFileManagerNode;
 import org.raven.ds.impl.DataContextImpl;
+import org.raven.ds.impl.GzipContentTransformer;
+import org.raven.sched.impl.ExecutorServiceNode;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.impl.NodeAttributeImpl;
 
@@ -29,8 +37,10 @@ import org.raven.tree.impl.NodeAttributeImpl;
  *
  * @author Mikhail Titov
  */
-public class ViewableObjectsMessagePartNodeTest extends RavenCoreTestCase
-{
+public class ViewableObjectsMessagePartNodeTest extends RavenCoreTestCase {
+    private TestScheduler scheduler;
+    private ExecutorServiceNode executor;
+    private TemporaryFileManagerNode manager;
     private ViewableObjectsMessagePartNode part;
     private TestViewable source;
     private MailWriterNode mailer;
@@ -38,6 +48,25 @@ public class ViewableObjectsMessagePartNodeTest extends RavenCoreTestCase
     @Before
     public void prepare()
     {
+        scheduler = new TestScheduler();
+        scheduler.setName("scheduler");
+        testsNode.addAndSaveChildren(scheduler);
+        assertTrue(scheduler.start());
+        
+        executor = new ExecutorServiceNode();
+        executor.setName("executor");
+        testsNode.addAndSaveChildren(executor);
+        executor.setCorePoolSize(50);
+        executor.setMaximumPoolSize(50);
+        assertTrue(executor.start());
+
+        manager = new TemporaryFileManagerNode();
+        manager.setName("manager");
+        testsNode.addAndSaveChildren(manager);
+        manager.setDirectory("target/");
+        manager.setScheduler(scheduler);
+        assertTrue(manager.start());        
+        
         source = new TestViewable();
         source.setName("source");
         tree.getRootNode().addAndSaveChildren(source);
@@ -52,6 +81,7 @@ public class ViewableObjectsMessagePartNodeTest extends RavenCoreTestCase
         mailer.addAndSaveChildren(part);
         part.setContentType("test");
         part.setSource(source);
+        
     }
 
     @Test
@@ -59,20 +89,20 @@ public class ViewableObjectsMessagePartNodeTest extends RavenCoreTestCase
     {
         source.addRefreshAttribute(new NodeAttributeImpl("attr1", String.class, "v1", "d1"));
         assertTrue(part.start());
-        NodeAttribute attr = part.getNodeAttribute("attr1");
+        NodeAttribute attr = part.getAttr("attr1");
         checkAttribute(attr, "v1", "d1", String.class);
 
         attr.setValue("v1 updated");
         source.addRefreshAttribute(new NodeAttributeImpl("attr2", Integer.class, 1, "d2"));
         part.stop();
         assertTrue(part.start());
-        checkAttribute(part.getNodeAttribute("attr1"), "v1 updated", "d1", String.class);
-        checkAttribute(part.getNodeAttribute("attr2"), 1, "d2", Integer.class);
+        checkAttribute(part.getAttr("attr1"), "v1 updated", "d1", String.class);
+        checkAttribute(part.getAttr("attr2"), 1, "d2", Integer.class);
 
         source.removeRefreshAttribute("attr1");
         part.stop();
         assertTrue(part.start());
-        assertNull(part.getNodeAttribute("attr1"));
+        assertNull(part.getAttr("attr1"));
     }
 
     @Test
@@ -89,6 +119,43 @@ public class ViewableObjectsMessagePartNodeTest extends RavenCoreTestCase
                 + "</head><body><div>v1</div></body></html>"
                 , obj);
     }
+    
+    @Test
+    public void getContentWithTemporaryFileManager() throws Exception {
+        part.setTemporaryFileManager(manager);
+        part.setUseTemporaryFileManager(Boolean.TRUE);
+        source.addRefreshAttribute(new NodeAttributeImpl("attr1", String.class, "v1", "d1"));
+        assertTrue(part.start());
+        Object obj = part.getContent(new DataContextImpl());
+        assertNotNull(obj);
+        assertTrue(obj instanceof DataSource);        
+        assertEquals(
+                "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-8\"/>"
+                + "<style>table { border:2px solid; border-collapse: collapse; }th { border:2px solid; }td { border:1px solid; }</style>"
+                + "</head><body><div>v1</div></body></html>"
+                , IOUtils.toString(((DataSource)obj).getInputStream(), mailer.getContentEncoding()));
+    }
+
+    @Test
+    public void getContentWithContentTrandformers() throws Exception {
+        part.setTemporaryFileManager(manager);
+        part.setExecutor(executor);
+        GzipContentTransformer gzip = new GzipContentTransformer();
+        gzip.setName("gzip");
+        part.addAndSaveChildren(gzip);
+        assertTrue(gzip.start());
+        source.addRefreshAttribute(new NodeAttributeImpl("attr1", String.class, "v1", "d1"));
+        assertTrue(part.start());
+        Object obj = part.getContent(new DataContextImpl());
+        assertNotNull(obj);
+        assertTrue(obj instanceof DataSource);
+        GZIPInputStream gunzip = new GZIPInputStream(((DataSource)obj).getInputStream());
+        assertEquals(
+                "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-8\"/>"
+                + "<style>table { border:2px solid; border-collapse: collapse; }th { border:2px solid; }td { border:1px solid; }</style>"
+                + "</head><body><div>v1</div></body></html>"
+                , IOUtils.toString(gunzip, mailer.getContentEncoding()));
+    }
 
     @Test
     public void refreshAttributesAttrTest() throws Exception
@@ -96,12 +163,12 @@ public class ViewableObjectsMessagePartNodeTest extends RavenCoreTestCase
         NodeAttributeImpl attr = new NodeAttributeImpl("test", String.class, "test value", null);
         attr.setOwner(part);
         attr.init();
-        part.addNodeAttribute(attr);
+        part.addAttr(attr);
         attr.save();
 
         part.setRefreshAttributes("test");
         assertTrue(part.start());
-        assertNotNull(part.getNodeAttribute("test"));
+        assertNotNull(part.getAttr("test"));
         part.getContent(new DataContextImpl());
 
         Map<String, NodeAttribute> refAttrs = source.getLastSendedRefAttrs();
