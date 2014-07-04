@@ -74,7 +74,7 @@ public class NetworkResponseServlet extends HttpServlet  {
     private static final long serialVersionUID = 3540687833508728534L;
     private final AtomicLong fileUploadsCounter = new AtomicLong();
 
-    private class BadRequestException extends Exception {
+    protected class BadRequestException extends Exception {
         public BadRequestException() {
         }
         public BadRequestException(String string) {
@@ -83,7 +83,7 @@ public class NetworkResponseServlet extends HttpServlet  {
         
     }
 
-    private void checkRequest(HttpServletRequest request, HttpServletResponse response) 
+    protected void checkRequest(HttpServletRequest request, HttpServletResponse response) 
             throws IOException, BadRequestException 
     {
         if (request.getPathInfo().length() < 2) 
@@ -97,7 +97,7 @@ public class NetworkResponseServlet extends HttpServlet  {
 //        }
     }
 
-    private UserContext checkAuth(HttpServletRequest request, HttpServletResponse response,
+    protected UserContext checkAuth(HttpServletRequest request, HttpServletResponse response,
             ResponseContext responseContext, String context) 
         throws LoginException, AccessDeniedException, UnauthoriedException 
     {
@@ -157,7 +157,7 @@ public class NetworkResponseServlet extends HttpServlet  {
         return userContext;
     }
 
-    private Map<String, Object> extractParams(HttpServletRequest request, NetworkResponseService responseService) 
+    protected Map<String, Object> extractParams(HttpServletRequest request, NetworkResponseService responseService) 
             throws Exception 
     {
         Map<String, Object> params = new HashMap<String, Object>();
@@ -191,7 +191,7 @@ public class NetworkResponseServlet extends HttpServlet  {
         return params;
     }
     
-    private String getTextFieldCharset(FileItemStream item) {
+    protected String getTextFieldCharset(FileItemStream item) {
         Iterator<String> elems = item.getHeaders().getHeaders("content-type");
         while (elems.hasNext()) {
             String elem = elems.next();
@@ -201,7 +201,7 @@ public class NetworkResponseServlet extends HttpServlet  {
         return "utf-8";
     }
     
-    private Map<String, Object> extractHeaders(HttpServletRequest request) {
+    protected Map<String, Object> extractHeaders(HttpServletRequest request) {
         final Map<String, Object> headers = new HashMap<String, Object>();
         Enumeration<String> headerNames = request.getHeaderNames();
         if (headerNames != null) 
@@ -251,13 +251,15 @@ public class NetworkResponseServlet extends HttpServlet  {
                     } else if (content instanceof Outputable) {
                         ((Outputable)content).outputTo(response.getOutputStream());
                     } else {
-                        OutputStream out = response.getOutputStream();
                         InputStream contentStream = converter.convert(InputStream.class, content, charset);
-                        try {
-                            IOUtils.copy(contentStream, out);
-                        } finally {
-                            IOUtils.closeQuietly(out);
-                            IOUtils.closeQuietly(contentStream);
+                        if (contentStream!=null) {
+                            OutputStream out = response.getOutputStream();
+                            try {
+                                IOUtils.copy(contentStream, out);
+                            } finally {
+                                IOUtils.closeQuietly(out);
+                                IOUtils.closeQuietly(contentStream);
+                            }
                         }
                     }
                 }
@@ -309,41 +311,42 @@ public class NetworkResponseServlet extends HttpServlet  {
             Response result = responseContext.getResponse(user);
             processServiceResponse(request, response, result, registry);
         } catch (Throwable e) {
-            boolean rethrow = false;
-            if (e instanceof NetworkResponseServiceUnavailableException) {
-                response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, e.getMessage());
-            } else if (e instanceof ContextUnavailableException) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
-            } else if (e instanceof AccessDeniedException) {
-                response.sendError(HttpServletResponse.SC_FORBIDDEN);
-            } else if (e instanceof RequiredParameterMissedException || e instanceof BadRequestException) {
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-            } else if (e instanceof UnauthoriedException || e instanceof AuthenticationFailedException) {
-                response.setHeader("WWW-Authenticate", "BASIC realm=\"RAVEN\"");
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-            } else {
-                rethrow = true;
-//                StringWriter buffer = new StringWriter();
-//                PrintWriter writer = new PrintWriter(buffer);
-//                e.printStackTrace(writer);
-//                String mess = e.getMessage()==null? "" : e.getMessage();
-//                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, 
-//                        mess+"<br>"+"<pre style='font-size: 10pt; font-style: normal'>"+buffer.toString()+"</pre>");
-            }
-            String mess = String.format("Error processing request (%s) from host (%s)", 
-                    request.getPathInfo(), request.getRemoteAddr());
-            if (responseService.getNetworkResponseServiceNode().isLogLevelEnabled(LogLevel.WARN)) {
-                Logger logger = responseService.getNetworkResponseServiceNode().getLogger();
-                if (rethrow)
-                    logger.warn(mess, e);
-                else
-                    logger.warn(mess+"."+(e.getMessage()==null? e.getClass().getName() : e.getMessage()));
-            }
-            if (responseContext!=null && responseContext.getResponseBuilderLogger().isErrorEnabled()) 
-                responseContext.getResponseBuilderLogger().error(mess, e);
-            if (rethrow)
-                throw new ServletException(e);
+            processError(request, response, responseService, responseContext, e);
         }
+    }
+    
+    protected void processError(HttpServletRequest request, HttpServletResponse response, 
+            NetworkResponseService responseService, ResponseContext responseContext, Throwable e) 
+        throws ServletException, IOException
+    {
+        boolean rethrow = false;
+        if (e instanceof NetworkResponseServiceUnavailableException) {
+            response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, e.getMessage());
+        } else if (e instanceof ContextUnavailableException) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
+        } else if (e instanceof AccessDeniedException) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+        } else if (e instanceof RequiredParameterMissedException || e instanceof NetworkResponseServlet.BadRequestException) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+        } else if (e instanceof UnauthoriedException || e instanceof AuthenticationFailedException) {
+            response.setHeader("WWW-Authenticate", "BASIC realm=\"RAVEN\"");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+        } else {
+            rethrow = true;
+        }
+        String mess = String.format("Error processing request (%s) from host (%s)", 
+                request.getPathInfo(), request.getRemoteAddr());
+        if (responseService.getNetworkResponseServiceNode().isLogLevelEnabled(LogLevel.WARN)) {
+            Logger logger = responseService.getNetworkResponseServiceNode().getLogger();
+            if (rethrow)
+                logger.warn(mess, e);
+            else
+                logger.warn(mess+"."+(e.getMessage()==null? e.getClass().getName() : e.getMessage()));
+        }
+        if (responseContext!=null && responseContext.getResponseBuilderLogger().isErrorEnabled()) 
+            responseContext.getResponseBuilderLogger().error(mess, e);
+        if (rethrow)
+            throw new ServletException(e);
     }
 
     @Override

@@ -17,15 +17,30 @@
 package org.raven.ui.servlet;
 
 import java.io.IOException;
+import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.catalina.CometEvent;
 import org.apache.catalina.CometProcessor;
 import org.apache.tapestry5.ioc.Registry;
+import org.raven.auth.AuthenticationFailedException;
+import org.raven.auth.UserContext;
+import org.raven.log.LogLevel;
+import org.raven.net.AccessDeniedException;
+import org.raven.net.CometRequest;
+import org.raven.net.ContextUnavailableException;
 import org.raven.net.NetworkResponseService;
+import org.raven.net.NetworkResponseServiceUnavailableException;
+import org.raven.net.RequiredParameterMissedException;
+import org.raven.net.Response;
 import org.raven.net.ResponseContext;
+import org.raven.net.UnauthoriedException;
+import org.raven.net.impl.CometRequestImpl;
+import org.raven.sched.ExecutorService;
+import org.raven.sched.impl.AbstractTask;
 import org.raven.ui.util.RavenRegistry;
+import org.slf4j.Logger;
 
 /**
  *
@@ -49,10 +64,34 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
         }
     }
     
-    private void initResponseProcessing(CometEvent ce, HttpServletRequest request, HttpServletResponse response) {
-        Registry registry = RavenRegistry.getRegistry();
-        NetworkResponseService responseService = registry.getService(NetworkResponseService.class);
+    private void initResponseProcessing(CometEvent ce, HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException
+    {
+        final Registry registry = RavenRegistry.getRegistry();
+        final NetworkResponseService responseService = registry.getService(NetworkResponseService.class);
         ResponseContext responseContext = null;
+        
+        try {
+            final ExecutorService executor = responseService.getExecutor();
+            if (executor==null)
+                throw new ServletException("Comet servlet can't work without executor service");
+            checkRequest(request, response);
+            String context = request.getPathInfo().substring(1);
+            Map<String, Object> params = extractParams(request, responseService);
+            Map<String, Object> headers = extractHeaders(request);
+            CometRequest serviceRequest = new CometRequestImpl(request.getRemoteAddr(), params, headers, context, 
+                    request.getMethod().toUpperCase(), request);
+            responseContext = responseService.getResponseContext(serviceRequest);
+            UserContext user = checkAuth(request, response, responseContext, context);
+            Response result = responseContext.getResponse(user);
+            executor.execute(new AbstractTask(responseContext.getResponseBuilder().getResponseBuilderNode(), "Processing http request") {                
+                @Override
+                public void doRun() throws Exception {
+                    throw new UnsupportedOperationException("Not supported yet.");
+                }
+            });
+        } catch (Throwable e) {
+            processError(request, response, responseService, responseContext, e);
+        }
     }
-    
 }
