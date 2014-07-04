@@ -24,6 +24,7 @@ import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.net.NetworkResponseServiceUnavailableException;
 import org.raven.net.Request;
 import org.raven.net.ResponseContext;
+import org.raven.sched.ExecutorService;
 
 /**
  *
@@ -77,4 +78,10 @@ public class NetworkResponseServiceImpl implements NetworkResponseService
         NetworkResponseNode serviceNode = checkNetworkResponseServiceNode();
         return ((NetworkResponseServiceNode)serviceNode).getTemporaryFileManager();
     }
+
+    public ExecutorService getExecutor() throws NetworkResponseServiceExeption {
+        NetworkResponseNode serviceNode = checkNetworkResponseServiceNode();
+        return ((NetworkResponseServiceNode)serviceNode).getExecutor();
+    }
+    
 }

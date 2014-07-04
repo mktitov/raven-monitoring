@@ -27,9 +27,9 @@ import org.raven.net.CometRequest;
  *
  * @author Mikhail Titov
  */
-public class CommetRequestImpl extends RequestImpl implements CometRequest {
+public class CometRequestImpl extends RequestImpl implements CometRequest {
 
-    public CommetRequestImpl(String remoteAddr, Map<String, Object> params, Map<String, Object> headers, 
+    public CometRequestImpl(String remoteAddr, Map<String, Object> params, Map<String, Object> headers, 
             String contextPath, String method, HttpServletRequest httpRequest) 
     {
         super(remoteAddr, params, headers, contextPath, method, httpRequest);

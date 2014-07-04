@@ -51,6 +51,7 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.DataSourcesNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.raven.expr.impl.BindingSupportImpl;
+import org.raven.table.BalancedColumnBasedTable;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.internal.annotations.Service;
 import org.weda.internal.impl.MessageComposer;
@@ -223,7 +224,8 @@ public class LdapReaderNode extends AbstractDataSource
             control.setReturningAttributes(attrs);
             control.setReturningObjFlag(true);
             NamingEnumeration<SearchResult> answer = context.search("", filter, control);
-            table = new ColumnBasedTable();
+            table = new BalancedColumnBasedTable();
+//            table = new ColumnBasedTable();
             int rowsCount = 0;
             Map<String, Object> row = null;
             while (answer.hasMore())

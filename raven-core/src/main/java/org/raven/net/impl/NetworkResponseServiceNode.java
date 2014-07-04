@@ -49,6 +49,8 @@ import org.raven.net.ResponseContext;
 import org.raven.net.ResponseServiceNode;
 import org.raven.prj.Project;
 import org.raven.prj.impl.WebInterfaceNode;
+import org.raven.sched.ExecutorService;
+import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
@@ -81,6 +83,9 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
     
     @Parameter(valueHandlerType = TemporaryFileManagerValueHandlerFactory.TYPE)
     private TemporaryFileManager temporaryFileManager;
+    
+    @Parameter(valueHandlerType = SystemSchedulerValueHandlerFactory.TYPE)
+    private ExecutorService executor;
 
     @Parameter(readOnly=true)
     private AtomicLong requestsCount;
@@ -139,6 +144,14 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
 
     public void setTemporaryFileManager(TemporaryFileManager temporaryFileManager) {
         this.temporaryFileManager = temporaryFileManager;
+    }
+
+    public ExecutorService getExecutor() {
+        return executor;
+    }
+
+    public void setExecutor(ExecutorService executor) {
+        this.executor = executor;
     }
 
     @Override

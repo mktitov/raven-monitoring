@@ -19,6 +19,7 @@ package org.raven.net;
 
 import org.raven.cache.TemporaryFileManager;
 import org.raven.net.impl.NetworkResponseServiceNode;
+import org.raven.sched.ExecutorService;
 
 /**
  *
@@ -36,5 +37,10 @@ public interface NetworkResponseService extends ResponseContextProvider
      * manager not assigned to {@link NetworkResponseServiceNode}
      */
     public TemporaryFileManager getTemporaryFileManager() throws NetworkResponseServiceExeption;
+    /**
+     * Returns executor service that will be used for request processing
+     * @throws NetworkResponseServiceExeption 
+     */
+    public ExecutorService getExecutor() throws NetworkResponseServiceExeption;
 
 }
