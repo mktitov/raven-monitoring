@@ -212,9 +212,10 @@ public class NetworkResponseServlet extends HttpServlet  {
         return headers;
     }
 
-    private void processServiceResponse(HttpServletRequest request, HttpServletResponse response,
-            Response serviceResponse, Registry registry) throws IOException 
+    protected void processServiceResponse(RequestContext ctx, Response serviceResponse) throws IOException 
     {
+        final HttpServletRequest request = ctx.request;
+        final HttpServletResponse response = ctx.response;
         if (serviceResponse == Response.NOT_MODIFIED) {
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
         } else {
@@ -243,7 +244,7 @@ public class NetworkResponseServlet extends HttpServlet  {
                     response.setDateHeader("Last-Modified", serviceResponse.getLastModified());
                 response.addHeader("Cache-control", "no-cache");
                 response.addHeader("Pragma", "no-cache");
-                TypeConverter converter = registry.getService(TypeConverter.class);
+                TypeConverter converter = ctx.registry.getService(TypeConverter.class);
                 if (content!=null) {
                     if (content instanceof Writable) {
                         Writable writable = (Writable) content;
@@ -288,63 +289,84 @@ public class NetworkResponseServlet extends HttpServlet  {
 
     @SuppressWarnings("unchecked")
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        Registry registry = RavenRegistry.getRegistry();
-        NetworkResponseService responseService = registry.getService(NetworkResponseService.class);
-        ResponseContext responseContext = null;
+            throws ServletException, IOException 
+    {
+        final RequestContext ctx = createContext(request, response);
+//        Registry registry = RavenRegistry.getRegistry();
+//        NetworkResponseService responseService = registry.getService(NetworkResponseService.class);
+//        ResponseContext responseContext = null;
         try {
-            checkRequest(request, response);
-            String context = request.getPathInfo().substring(1);
-            Map<String, Object> params = extractParams(request, responseService);
-            Map<String, Object> headers = extractHeaders(request);
-            Request serviceRequest = new RequestImpl(request.getRemoteAddr(), params, headers, context, 
-                    request.getMethod().toUpperCase(), request);
-            responseContext = responseService.getResponseContext(serviceRequest);
-            UserContext user = checkAuth(request, response, responseContext, context);
-//            if (!checkAuth(request, response, responseService, context))
-//                return;
-
-//            boolean isPut = request.getMethod().equalsIgnoreCase("PUT");
-//            if (isPut) 
-//                params.put(NetworkResponseService.REQUEST_CONTENT_PARAMETER, request.getInputStream());
-//            Response result = responseService.getResponse(context, request.getRemoteAddr(), params);
-            Response result = responseContext.getResponse(user);
-            processServiceResponse(request, response, result, registry);
+//            checkRequest(request, response);
+//            String context = request.getPathInfo().substring(1);
+//            Map<String, Object> params = extractParams(request, responseService);
+//            Map<String, Object> headers = extractHeaders(request);
+//            Request serviceRequest = new RequestImpl(request.getRemoteAddr(), params, headers, context, 
+//                    request.getMethod().toUpperCase(), request);
+//            responseContext = responseService.getResponseContext(serviceRequest);
+//            UserContext user = checkAuth(request, response, responseContext, context);
+            configureRequestContext(ctx);
+            Response result = ctx.responseContext.getResponse(ctx.user);
+            processServiceResponse(ctx, result);
         } catch (Throwable e) {
-            processError(request, response, responseService, responseContext, e);
+            processError(ctx, e);
         }
     }
     
-    protected void processError(HttpServletRequest request, HttpServletResponse response, 
-            NetworkResponseService responseService, ResponseContext responseContext, Throwable e) 
+    protected RequestContext createContext(HttpServletRequest request, HttpServletResponse response) {
+        Registry registry = RavenRegistry.getRegistry();
+        return new RequestContext(request, response, registry);
+    }
+    
+    protected RequestContext configureRequestContext(RequestContext ctx)  
+        throws Exception
+    {
+        checkRequest(ctx.request, ctx.response);
+        String context = ctx.request.getPathInfo().substring(1);
+        Map<String, Object> params = extractParams(ctx.request, ctx.responseService);
+        Map<String, Object> headers = extractHeaders(ctx.request);
+        Request serviceRequest = new RequestImpl(ctx.request.getRemoteAddr(), params, headers, context, 
+                ctx.request.getMethod().toUpperCase(), ctx.request);
+        ctx.responseContext = ctx.responseService.getResponseContext(serviceRequest);
+        ctx.user = checkAuth(ctx.request, ctx.response, ctx.responseContext, context);
+        return ctx;
+    }
+    
+    protected Request createServiceRequest(RequestContext ctx, Map<String, Object> params, 
+            Map<String, Object> headers, String context) 
+    {
+        return new RequestImpl(ctx.request.getRemoteAddr(), params, headers, context, 
+                ctx.request.getMethod().toUpperCase(), ctx.request);
+    }
+    
+    protected void processError(RequestContext ctx, Throwable e) 
         throws ServletException, IOException
     {
         boolean rethrow = false;
         if (e instanceof NetworkResponseServiceUnavailableException) {
-            response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, e.getMessage());
+            ctx.response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, e.getMessage());
         } else if (e instanceof ContextUnavailableException) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
+            ctx.response.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
         } else if (e instanceof AccessDeniedException) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            ctx.response.sendError(HttpServletResponse.SC_FORBIDDEN);
         } else if (e instanceof RequiredParameterMissedException || e instanceof NetworkResponseServlet.BadRequestException) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            ctx.response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         } else if (e instanceof UnauthoriedException || e instanceof AuthenticationFailedException) {
-            response.setHeader("WWW-Authenticate", "BASIC realm=\"RAVEN\"");
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            ctx.response.setHeader("WWW-Authenticate", "BASIC realm=\"RAVEN\"");
+            ctx.response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
         } else {
             rethrow = true;
         }
         String mess = String.format("Error processing request (%s) from host (%s)", 
-                request.getPathInfo(), request.getRemoteAddr());
-        if (responseService.getNetworkResponseServiceNode().isLogLevelEnabled(LogLevel.WARN)) {
-            Logger logger = responseService.getNetworkResponseServiceNode().getLogger();
+                ctx.request.getPathInfo(), ctx.request.getRemoteAddr());
+        if (ctx.responseService.getNetworkResponseServiceNode().isLogLevelEnabled(LogLevel.WARN)) {
+            Logger logger = ctx.responseService.getNetworkResponseServiceNode().getLogger();
             if (rethrow)
                 logger.warn(mess, e);
             else
                 logger.warn(mess+"."+(e.getMessage()==null? e.getClass().getName() : e.getMessage()));
         }
-        if (responseContext!=null && responseContext.getResponseBuilderLogger().isErrorEnabled()) 
-            responseContext.getResponseBuilderLogger().error(mess, e);
+        if (ctx.responseContext!=null && ctx.responseContext.getResponseBuilderLogger().isErrorEnabled()) 
+            ctx.responseContext.getResponseBuilderLogger().error(mess, e);
         if (rethrow)
             throw new ServletException(e);
     }
@@ -378,4 +400,21 @@ public class NetworkResponseServlet extends HttpServlet  {
     public String getServletInfo() {
         return "Simple requests interface";
     }
+    
+    protected static class RequestContext {
+        public final HttpServletRequest request;
+        public final HttpServletResponse response;
+        public final Registry registry;
+        public final NetworkResponseService responseService;
+        public UserContext user;
+        public ResponseContext responseContext;
+
+        public RequestContext(HttpServletRequest request, HttpServletResponse response, Registry registry) 
+        {
+            this.request = request;
+            this.response = response;
+            this.registry = registry;
+            this.responseService = registry.getService(NetworkResponseService.class);;
+        }
+    } 
 }
