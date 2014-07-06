@@ -15,8 +15,14 @@
  */
 package org.raven.net.impl;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javax.servlet.http.HttpServletResponse;
+import org.apache.catalina.CometEvent;
 import org.raven.BindingNames;
 import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
@@ -195,4 +201,17 @@ public class ResponseContextImpl implements ResponseContext {
         }
         return buf.toString();
     }
+
+    public OutputStream getResponseStream() throws IOException {
+        throw new UnsupportedOperationException("Not supported by this response context implementation. Use comet servlet");
+    }
+
+    public PrintWriter getResponseWriter() throws IOException {
+        throw new UnsupportedOperationException("Not supported by this response context implementation. Use comet servlet");
+    }
+
+    public void closeChannel() throws IOException {
+        throw new UnsupportedOperationException("Not supported by this response context implementation. Use comet servlet");
+    }
+
 }

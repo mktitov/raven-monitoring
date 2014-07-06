@@ -23,7 +23,18 @@ import java.util.Map;
  * @author Mikhail Titov
  */
 public interface Response {
-    public final static Response NOT_MODIFIED = new Response() {
+    public final static Response NOT_MODIFIED = new DummyResponse();
+    public final static Response ALREADY_COMPOSED = new DummyResponse();
+    public final static Response MANAGING_BY_BUILDER = new DummyResponse();
+    
+    public String getContentType();
+    public Charset getCharset();
+    public Object getContent();
+//    public Charset getContentEncoding();
+    public Map<String, String> getHeaders();
+    public Long getLastModified();
+    
+    static class DummyResponse implements Response {
         public String getContentType() {
             throw new UnsupportedOperationException("Not supported operation");
         }
@@ -39,11 +50,5 @@ public interface Response {
         public Charset getCharset() {
             throw new UnsupportedOperationException("Not supported operation");
         }
-    };
-    public String getContentType();
-    public Charset getCharset();
-    public Object getContent();
-//    public Charset getContentEncoding();
-    public Map<String, String> getHeaders();
-    public Long getLastModified();
+    }
 }

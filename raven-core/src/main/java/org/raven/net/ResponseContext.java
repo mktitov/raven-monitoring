@@ -15,6 +15,9 @@
  */
 package org.raven.net;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.util.Map;
 import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
@@ -34,7 +37,8 @@ public interface ResponseContext {
      */
     public Request getRequest();
     /**
-     * Returns the map that can be used to add response headers (not thread safe!)
+     * Returns the map that can be used to add response headers (not thread safe!).
+     * Usable before first {@link #getResponseStream()} or {@link #getResponseWriter()}
      */
     public Map<String, String> getHeaders();
     /**
@@ -73,6 +77,23 @@ public interface ResponseContext {
      * Returns the response builder logger
      */
     public Logger getResponseBuilderLogger();
+    /**
+     * Returns the response output stream.
+     * Response builder must use this stream only when it returns the {@link Response#ALREADY_COMPOSED} or 
+     * {@link Response#MANAGING_BY_BUILDER} response
+     */
+    public OutputStream getResponseStream() throws IOException;
+    /**
+     * Returns the response writer.
+     * Response builder must use this stream only when it returns the {@link Response#ALREADY_COMPOSED} or 
+     * {@link Response#MANAGING_BY_BUILDER} response
+     */
+    public PrintWriter getResponseWriter() throws IOException;
+    /**
+     * Closes response channel. 
+     * Function must be used only when builder returns the {@link Response#MANAGING_BY_BUILDER} or 
+     */
+    public void closeChannel() throws IOException;
 //    public String getPath();
 //    public String getBuilderPath();
 //    public String getSubpath();
