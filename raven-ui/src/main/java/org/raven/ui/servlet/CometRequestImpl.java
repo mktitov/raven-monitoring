@@ -30,8 +30,8 @@ import org.raven.net.impl.RequestImpl;
  * @author Mikhail Titov
  */
 public class CometRequestImpl extends RequestImpl implements CometRequest {
-    private final AtomicReference<CometInputStream> inputStream = new AtomicReference<>();
-    private final AtomicReference<CometReader> reader = new AtomicReference<>();
+    private final AtomicReference<CometInputStream> inputStream = new AtomicReference<CometInputStream>();
+    private final AtomicReference<CometReader> reader = new AtomicReference<CometReader>();
     private final AtomicBoolean requestStreamClosed = new AtomicBoolean();
     
     public CometRequestImpl(String remoteAddr, Map<String, Object> params, Map<String, Object> headers, 
