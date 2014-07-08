@@ -16,6 +16,8 @@
 
 package org.raven.net.impl;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -26,6 +28,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.activation.DataSource;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.raven.MimeTypeService;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
@@ -98,12 +102,82 @@ public class ZipFileResponseBuilder extends AbstractResponseBuilder implements V
         throw new UnsupportedOperationException("Unsupported operation for this builder");
     }
     
+    private String getTempFileKey(DataFile dataFile) throws Exception {
+        return getId()+"_"+dataFile.getChecksum();
+    }
+    
+    private Response getFileFromArchive(ResponseContext ctx, String filename, String contextPath, 
+            TemporaryFileManager tempManager) 
+        throws Exception
+    {
+        File dir = getUnpackedArchiveDir(contextPath, tempManager);
+        File file = new File(dir, filename);
+        if (file.exists() && file.isFile())
+            return new ResponseImpl(
+                        mimeTypeService.getContentType(filename), file, ctx.getHeaders(), lastModified, 
+                        defaultFileContentCharset);
+        throw new ContextUnavailableException(String.format(
+                "Context %s not found. Not found zip entry (%s)", contextPath, filename));
+    }
+    
+    private File getUnpackedArchiveDir(String contextPath, TemporaryFileManager tempManager) throws Exception {
+        DataFile _file = file;
+        String key = getTempFileKey(_file);
+        File dir = tempManager.getFile(key);
+        if (dir==null) 
+            dir = unpackArchiveToTempDir(key, contextPath, tempManager);
+        return dir;
+    }
+    
+    private File unpackArchiveToTempDir(String key, String contextPath, TemporaryFileManager tempManager) 
+            throws Exception 
+    {
+        if (tempFileLock.tryLock(60, TimeUnit.SECONDS)) 
+            try {
+                File dir = tempManager.getFile(key);
+                if (dir!=null) 
+                    return dir;
+                dir = tempManager.createDir(this, key, "application/zip");
+                dir.mkdirs();
+                Charset charset = zipFilenamesCharset;
+                InputStream dataStream = getDataStream(contextPath);
+                final ZipArchiveInputStream stream = charset==null? 
+                            new ZipArchiveInputStream(dataStream) :
+                            new ZipArchiveInputStream(dataStream, charset.name());
+                try {
+                    ArchiveEntry entry = stream.getNextEntry();
+                    while (entry!=null) {
+                        if (!entry.isDirectory()) {
+                            if (isLogLevelEnabled(LogLevel.TRACE))
+                                getLogger().debug("Unpacking file {} in zip archive", entry.getName());
+                            File file = new File(dir, entry.getName());
+                            if (!file.getParentFile().exists())
+                                file.getParentFile().mkdirs();
+                            FileOutputStream out = new FileOutputStream(file);
+                            try {
+                                IOUtils.copy(stream, out);
+                            } finally  {
+                                out.close();
+                            }
+                        }
+                        entry = stream.getNextEntry();
+                    }
+                } finally {
+                    stream.close();
+                }  
+                return dir;
+            } finally {
+                tempFileLock.unlock();
+            }
+        throw new ContextUnavailableException("Timeout for wating while arhive copied to temporary file");
+    }
+    
     private InputStream getDataStreamFromTempFile(String filename, String contextPath, 
             TemporaryFileManager tempManager) 
         throws Exception 
     {
         DataFile _file = file;
-        String key = getId()+"_"+_file.getChecksum();
+        String key = getTempFileKey(_file);
         DataSource tempFile = tempManager.getDataSource(key);
         if (tempFile==null)
             tempFile = createTempFile(key, contextPath, tempManager);
@@ -141,26 +215,23 @@ public class ZipFileResponseBuilder extends AbstractResponseBuilder implements V
         String contextPath = ctx.getRequest().getServicePath()+"/"+ctx.getRequest().getContextPath();
         if (filename==null)
             throw new ContextUnavailableException(contextPath);
-        
-        TemporaryFileManager tempManager = temporaryFileManager;
-        InputStream dataStream = tempManager==null? 
-                getDataStream(contextPath) : 
-                getDataStreamFromTempFile(filename, contextPath, tempManager);
-        
         String _baseDir = baseDir;
         if (_baseDir != null && !baseDir.isEmpty()) {
             filename = baseDir + (baseDir.endsWith("/")? "" : "/") + filename;
         }        
+        
+        TemporaryFileManager tempManager = temporaryFileManager;
         if (tempManager==null) {
-            if (isLogLevelEnabled(LogLevel.DEBUG))
-                getLogger().debug("Searching for file {} in archive directly from node data stream", filename);
             synchronized(this) {
+                InputStream dataStream = getDataStream(contextPath);
+                if (isLogLevelEnabled(LogLevel.DEBUG))
+                    getLogger().debug("Searching for file {} in archive directly from node data stream", filename);
                 return createResponse(ctx, filename, contextPath, dataStream);
             }
         } else {
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 getLogger().debug("Searching for file {} in archive from temporary file", filename);
-            return createResponse(ctx, filename, contextPath, dataStream);
+            return getFileFromArchive(ctx, filename, contextPath, tempManager);
         }
         
 //        final ZipArchiveInputStream stream = charset==null? 

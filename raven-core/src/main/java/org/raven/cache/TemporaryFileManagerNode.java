@@ -193,7 +193,7 @@ public class TemporaryFileManagerNode extends BaseNode implements TemporaryFileM
                     }
                     if (!filesToDelete.isEmpty())
                         for (File file: filesToDelete)
-                            if (!file.delete() && isLogLevelEnabled(LogLevel.WARN))
+                            if (FileUtils.deleteQuietly(file) && isLogLevelEnabled(LogLevel.WARN))
                                 getLogger().warn(
                                         "Can't delete old temporary file ({})"
                                         , file.getAbsolutePath());
@@ -239,7 +239,26 @@ public class TemporaryFileManagerNode extends BaseNode implements TemporaryFileM
         }
         return file;
     }
-
+    
+    public File createDir(Node requester, String key, String contentType) throws IOException {
+        lock.writeLock().lock();
+        File file = null;
+        try {
+            FileInfo fileInfo = files.remove(key);
+            file = File.createTempFile(tempFilePrefix, ".tmp", dirFile);
+            if (fileInfo!=null)
+                streamsToClose.addAll(fileInfo.streams);
+            if (!file.delete() || !file.mkdir())
+                throw new IOException("Can't create temporary directory");
+            fileInfo = new FileInfo(requester, System.currentTimeMillis(), key, file, contentType, null);
+            files.put(key, fileInfo);
+            fileInfo.initialized.set(true);
+        } finally {
+            lock.writeLock().unlock();
+        }
+        return file;
+    }
+    
     public DataSource saveFile(Node creator, String key, InputStream stream, String contentType, boolean rewrite) 
         throws IOException
     {

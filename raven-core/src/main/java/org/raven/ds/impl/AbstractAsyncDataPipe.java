@@ -78,7 +78,7 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
     @Message
     private static String handlerStatusMessageColumn;
     @Message
-    private static String handlersTableTitle;
+    private static  String handlersTableTitle;
     @Message
     private static String handlerCreationsCountColumn;
     @Message
