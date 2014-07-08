@@ -109,7 +109,8 @@
     </servlet>
     <servlet>
         <servlet-name>NetworkResponseServlet</servlet-name>
-        <servlet-class>org.raven.ui.servlet.NetworkResponseServlet</servlet-class>
+        <!--<servlet-class>org.raven.ui.servlet.NetworkResponseServlet</servlet-class>-->
+        <servlet-class>org.raven.ui.servlet.CometNetworkResponseServlet</servlet-class>
     </servlet>
 <!--    <servlet>
         <servlet-name>raven-editor-api</servlet-name>

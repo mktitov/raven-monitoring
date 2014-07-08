@@ -61,6 +61,7 @@ import org.raven.net.Result;
 import org.raven.net.UnauthoriedException;
 import org.raven.net.impl.RedirectResult;
 import org.raven.net.impl.RequestImpl;
+import org.raven.tree.impl.LoggerHelper;
 import org.raven.ui.util.RavenRegistry;
 import org.slf4j.Logger;
 import org.weda.services.TypeConverter;
@@ -258,8 +259,9 @@ public class NetworkResponseServlet extends HttpServlet  {
                             try {
                                 IOUtils.copy(contentStream, out);
                             } finally {
-                                IOUtils.closeQuietly(out);
+//                                IOUtils.closeQuietly(out);
                                 IOUtils.closeQuietly(contentStream);
+                                out.flush();
                             }
                         }
                     }
@@ -324,8 +326,7 @@ public class NetworkResponseServlet extends HttpServlet  {
         String context = ctx.request.getPathInfo().substring(1);
         Map<String, Object> params = extractParams(ctx.request, ctx.responseService);
         Map<String, Object> headers = extractHeaders(ctx.request);
-        Request serviceRequest = new RequestImpl(ctx.request.getRemoteAddr(), params, headers, context, 
-                ctx.request.getMethod().toUpperCase(), ctx.request);
+        Request serviceRequest = createServiceRequest(ctx, params, headers, context);
         ctx.responseContext = ctx.responseService.getResponseContext(serviceRequest);
         ctx.user = checkAuth(ctx.request, ctx.response, ctx.responseContext, context);
         return ctx;
@@ -402,10 +403,12 @@ public class NetworkResponseServlet extends HttpServlet  {
     }
     
     protected static class RequestContext {
+        private final static AtomicLong requestId = new AtomicLong(0);
         public final HttpServletRequest request;
         public final HttpServletResponse response;
         public final Registry registry;
         public final NetworkResponseService responseService;
+        public final LoggerHelper servletLogger;
         public UserContext user;
         public ResponseContext responseContext;
 
@@ -415,6 +418,8 @@ public class NetworkResponseServlet extends HttpServlet  {
             this.response = response;
             this.registry = registry;
             this.responseService = registry.getService(NetworkResponseService.class);;
+            this.servletLogger = new LoggerHelper(responseService.getNetworkResponseServiceNode(), 
+                    "Servlet ["+requestId.incrementAndGet()+" "+request.getMethod()+" from "+request.getRemoteAddr()+"]");
         }
     } 
 }

@@ -140,7 +140,11 @@ public class TemporaryFileManagerNode extends BaseNode implements TemporaryFileM
         while (jobRunning.get())
             TimeUnit.MILLISECONDS.sleep(100);
         stopping.set(true);
-        executeScheduledJob(null);
+        try {
+            executeScheduledJob(null);
+        } finally {
+            stopping.set(false);
+        }
     }
 
     public void executeScheduledJob(Scheduler scheduler)
@@ -148,7 +152,7 @@ public class TemporaryFileManagerNode extends BaseNode implements TemporaryFileM
         if (!jobRunning.compareAndSet(false, true))
             return;
         try {
-            if (!Status.STARTED.equals(getStatus()))
+            if (!isStarted())
                 return;
             try {
                 if (lock.writeLock().tryLock(LOCK_WAIT_TIMEOUT, TimeUnit.MILLISECONDS)) {
@@ -161,12 +165,12 @@ public class TemporaryFileManagerNode extends BaseNode implements TemporaryFileM
 
                         //Looking for old files
                         long curtime = System.currentTimeMillis();
-                        long _timelife = timelife*1000;
+                        long _lifetime = timelife*1000;
                         Iterator<FileInfo> it = files.values().iterator();
                         while (it.hasNext()) {
                             FileInfo fileInfo = it.next();
                             fileNames.add(fileInfo.file.getName());
-                            if (curtime>fileInfo.time+_timelife || stopping.get()) {
+                            if (curtime>fileInfo.lastUsageTime+_lifetime || stopping.get()) {
                                 it.remove();
                                 filesToDelete.add(fileInfo.file);
                                 synchronized(fileInfo){
@@ -285,15 +289,29 @@ public class TemporaryFileManagerNode extends BaseNode implements TemporaryFileM
         return new TempDataSource(key);
     }
 
-    public DataSource getDataSource(String key)
-    {
+    public DataSource getDataSource(String key) {
+        FileInfo fileInfo = getFileInfo(key);
+        return fileInfo==null? null :  new TempDataSource(key);
+    }
+    
+    public File getFile(String key) {
+        FileInfo fileInfo = getFileInfo(key);
+        return fileInfo!=null? fileInfo.file : null;
+    }
+    
+    private FileInfo getFileInfo(String key) {
         lock.readLock().lock();
         try {
-            FileInfo fileInfo = files.get(key);
-            return fileInfo==null||!fileInfo.initialized.get()? null : new TempDataSource(key);
+            final FileInfo fileInfo = files.get(key);
+            if (fileInfo!=null && !fileInfo.initialized.get()) {
+                fileInfo.refreshUsageTime();
+                return fileInfo;
+            }                
+            return null;
         } finally {
             lock.readLock().unlock();
         }
+        
     }
 
     public void releaseDataSource(String key)
@@ -306,7 +324,7 @@ public class TemporaryFileManagerNode extends BaseNode implements TemporaryFileM
         }
     }
 
-    private class FileInfo
+    private static class FileInfo
     {
         private final Node creator;
         private final long time;
@@ -316,15 +334,21 @@ public class TemporaryFileManagerNode extends BaseNode implements TemporaryFileM
         private final String contentType;
         private final AtomicBoolean initialized = new AtomicBoolean(false);
         private final List<InputStream> streams = new LinkedList<InputStream>();
+        private volatile long lastUsageTime;
 
         public FileInfo(Node creator, long time, String key, File file, String contentType, String filename) {
             this.time = time;
+            this.lastUsageTime = time;
             this.key = key;
             this.file = file;
             this.creator = creator;
             this.contentType = contentType;
             this.filename = filename;
         }
+        
+        public void refreshUsageTime() {
+            lastUsageTime = System.currentTimeMillis();
+        }        
     }
 
     private class TempDataSource implements DataSource
@@ -343,6 +367,7 @@ public class TemporaryFileManagerNode extends BaseNode implements TemporaryFileM
                 FileInfo fileInfo = files.get(key);
                 if (fileInfo==null)
                     throw new IOException("Temporary file (%s) unavailable");
+                fileInfo.refreshUsageTime();
                 FileInputStream in = new FileInputStream(fileInfo.file);
                 synchronized(fileInfo) {
                     fileInfo.streams.add(in);
@@ -360,7 +385,7 @@ public class TemporaryFileManagerNode extends BaseNode implements TemporaryFileM
         public String getContentType() {
             lock.readLock().lock();
             try {
-                FileInfo fileInfo = files.get(key);
+                FileInfo fileInfo = files.get(key);                
                 return fileInfo==null? null : fileInfo.contentType;
             } finally {
                 lock.readLock().unlock();

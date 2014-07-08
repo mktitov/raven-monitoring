@@ -75,6 +75,13 @@ public interface TemporaryFileManager extends Node
      */
     public DataSource getDataSource(String key);
     /**
+     * Returns the file for key passed in the parameter or null if manager does not contain
+     * the temporary file for the given key.
+     * @param key of the previously created temporary file
+     * @see #createFile
+     */    
+    public File getFile(String key);
+    /**
      * Delete temporary for the given key from the manager
      */
     public void releaseDataSource(String key);

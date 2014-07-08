@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package org.raven.net;
+package org.raven.ui.servlet;
+
+import org.raven.net.Request;
 
 /**
  *
  * @author Mikhail Titov
  */
 public interface CometRequest extends Request {
-    public void processReadOperation();
+    public void requestStreamReady();
 }
