@@ -41,8 +41,8 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
         final HttpServletRequest request = ce.getHttpServletRequest();
         final HttpServletResponse response = ce.getHttpServletResponse();
         final RequestContext ctx = getRequestContext(ce);
-        if (ctx!=null && ctx.servletLogger.isDebugEnabled())
-            ctx.servletLogger.debug(String.format("Processing %s event for URI: %", ce.getEventType(), request.getRequestURI()));
+        if (ctx!=null && ctx.servletLogger.isDebugEnabled()) 
+            ctx.servletLogger.debug(String.format("Processing %s event (id: %s) for URI: %s", ce.getEventType(), ce, request.getRequestURI()));
         switch (ce.getEventType()) {
             case BEGIN:
                 initResponseProcessing(ce, request, response);
@@ -62,11 +62,12 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
     private void initResponseProcessing(CometEvent ce, HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException
     {
+        if (request.getAttribute(REQUEST_CONTEXT)!=null)
+            return;
         final RequestContext ctx = createContext(request, response);
-        request.setAttribute("org.apache.tomcat.comet.timeout", 30 * 1000); //30 seconds
-	
-        if (ctx.servletLogger.isDebugEnabled())
-            ctx.servletLogger.debug("Processing BEGIN event for URI - "+request.getRequestURI());
+        request.setAttribute("org.apache.tomcat.comet.timeout", 30 * 1000); //30 seconds	
+        if (ctx.servletLogger.isDebugEnabled()) 
+            ctx.servletLogger.debug(String.format("Processing %s event (id: %s) for URI: %s", ce.getEventType(), ce, request.getRequestURI()));            
         request.setAttribute(REQUEST_CONTEXT, ctx);
         try {
             final ExecutorService executor = ctx.responseService.getExecutor();
@@ -86,7 +87,9 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
                             ctx.responseContext.getResponseBuilderLogger().debug("Composing response");
                         Response result = ctx.responseContext.getResponse(ctx.user);
                         if (ctx.servletLogger.isDebugEnabled())
-                            ctx.servletLogger.debug("Composed by {}ms. Handling...", System.currentTimeMillis()-ts);
+                            ctx.servletLogger.debug(String.format(
+                                    "Composed by %sms. Handling response (%s)", 
+                                    System.currentTimeMillis()-ts, result));
                         processServiceResponse(ctx, result);
                         if (ctx.servletLogger.isDebugEnabled())
                             ctx.servletLogger.debug("Handled", System.currentTimeMillis()-ts);
@@ -102,15 +105,21 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
         }
     }
 
-    private void processEndEvent(CometEvent ev) {
+    private void processEndEvent(CometEvent ev) throws IOException {
+        RequestContext ctx = getRequestContext(ev);
         try {
-            RequestContext ctx = getRequestContext(ev);
-            if (ctx.servletLogger.isDebugEnabled())
-                ctx.servletLogger.debug("Processing END event for URI: {}", ctx.request.getRequestURI());
-            if (ctx!=null)
+            if (ctx!=null) {
                 ((CometRequestImpl)ctx.responseContext.getRequest()).requestStreamClosed();
+                ctx.readProcessed(ev);
+            }
         } finally {
-//            ev.close();
+            try {
+//                ev.close();
+            } catch (Throwable e) {
+                if (ctx!=null)
+                    ctx.servletLogger.warn("Read channel close error", e);
+            }
+//            ctx.
         }
     }
 
@@ -127,8 +136,15 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
             if (serviceResponse != Response.ALREADY_COMPOSED && serviceResponse != Response.MANAGING_BY_BUILDER)
                 super.processServiceResponse(ctx, serviceResponse);
         } finally {
+            ctx.response.flushBuffer();
+//            ctx.response.
             if (serviceResponse!=Response.MANAGING_BY_BUILDER)
-                ctx.responseContext.closeChannel();
+                try {
+//                    ctx.responseContext.closeChannel();
+                    ctx.writeProcessed();
+                } catch (Throwable e) {
+                    ctx.servletLogger.error("Write channel close error", e);
+                }
         }
     }
 

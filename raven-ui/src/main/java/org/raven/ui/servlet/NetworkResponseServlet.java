@@ -24,13 +24,16 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.activation.DataSource;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import org.apache.catalina.CometEvent;
 //import org.apache.catalina.CometEvent;
 //import org.apache.catalina.CometProcessor;
 import org.apache.commons.codec.binary.Base64;
@@ -250,8 +253,10 @@ public class NetworkResponseServlet extends HttpServlet  {
                     if (content instanceof Writable) {
                         Writable writable = (Writable) content;
                         writable.writeTo(response.getWriter());
+                        response.getWriter().flush();
                     } else if (content instanceof Outputable) {
                         ((Outputable)content).outputTo(response.getOutputStream());
+                        response.getOutputStream().flush();
                     } else {
                         InputStream contentStream = converter.convert(InputStream.class, content, charset);
                         if (contentStream!=null) {
@@ -409,6 +414,11 @@ public class NetworkResponseServlet extends HttpServlet  {
         public final Registry registry;
         public final NetworkResponseService responseService;
         public final LoggerHelper servletLogger;
+//        public final Atomic
+        private final AtomicReference<CometEvent> readProcessed = new AtomicReference<CometEvent>();
+        private final AtomicBoolean writeProcessed = new AtomicBoolean();
+        private final AtomicBoolean closed = new AtomicBoolean();
+        
         public UserContext user;
         public ResponseContext responseContext;
 
@@ -419,7 +429,39 @@ public class NetworkResponseServlet extends HttpServlet  {
             this.registry = registry;
             this.responseService = registry.getService(NetworkResponseService.class);;
             this.servletLogger = new LoggerHelper(responseService.getNetworkResponseServiceNode(), 
-                    "Servlet ["+requestId.incrementAndGet()+" "+request.getMethod()+" from "+request.getRemoteAddr()+"]");
+                    "Servlet ["+requestId.incrementAndGet()+" "+request.getMethod()+" from "
+                    +request.getRemoteAddr()+":"+request.getRemotePort()+"] ");
+        }
+        
+//        public void readChannelClosing() {
+//            readChannelStatus.compareAndSet(0, 1);
+//        }
+//        
+//        public void readChannelClosed() {
+//            readChannelStatus.compareAndSet(1, 2);
+//        }
+        
+        public void readProcessed(CometEvent ev) throws IOException {
+            if (readProcessed.compareAndSet(null, ev) && writeProcessed.get())
+                tryClose();
+        }
+        
+        public void writeProcessed() throws IOException {
+            if (writeProcessed.compareAndSet(false, true) && (readProcessed.get()!=null))
+                tryClose();
+        }              
+
+        private void tryClose() throws IOException{
+            if (closed.compareAndSet(false, true)) {                
+                if (servletLogger.isDebugEnabled())
+                    servletLogger.debug("Closing channel");
+                try {
+//                    if (readProcessed.get()!=null)
+//                        readProcessed.get().close();
+                } finally {
+                    ((CometResponseContext)responseContext).closeChannel();
+                }
+            }
         }
     } 
 }
