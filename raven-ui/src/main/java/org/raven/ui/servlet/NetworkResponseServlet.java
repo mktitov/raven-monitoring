@@ -442,13 +442,22 @@ public class NetworkResponseServlet extends HttpServlet  {
 //        }
         
         public void readProcessed(CometEvent ev) throws IOException {
-            if (readProcessed.compareAndSet(null, ev) && writeProcessed.get())
-                tryClose();
+            if (writeProcessed.get()) {
+                if (servletLogger.isDebugEnabled())
+                    servletLogger.debug("Closing channel");
+                ev.close();
+            }
+//                tryClose();
+        }
+        
+        public boolean isWriteProcessed() {
+            return writeProcessed.get();
         }
         
         public void writeProcessed() throws IOException {
-            if (writeProcessed.compareAndSet(false, true) && (readProcessed.get()!=null))
-                tryClose();
+            writeProcessed.set(true);
+//            if (writeProcessed.compareAndSet(false, true) && (readProcessed.get()!=null))
+//                tryClose();
         }              
 
         private void tryClose() throws IOException{
