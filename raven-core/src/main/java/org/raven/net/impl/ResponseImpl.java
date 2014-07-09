@@ -59,4 +59,10 @@ public class ResponseImpl implements Response {
     public Charset getCharset() {
         return charset;
     }
+
+    @Override
+    public String toString() {
+        return content==null? "NO_CONTENT" : "HAS_CONTENT";
+    }
+    
 }
