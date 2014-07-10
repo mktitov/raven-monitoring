@@ -16,11 +16,11 @@
 
 package org.raven.ui.servlet;
 
-import org.raven.net.Request;
-
 /**
  *
  * @author Mikhail Titov
  */
-public interface CometRequest extends Request, IncomingDataListener {
+public interface IncomingDataListener {
+    public void newDataAvailable();
+    public void dataStreamClosed();
 }

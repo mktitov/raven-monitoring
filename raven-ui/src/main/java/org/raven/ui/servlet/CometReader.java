@@ -26,7 +26,7 @@ import org.raven.tree.impl.LoggerHelper;
  *
  * @author Mikhail Titov 
  */
-public class CometReader extends Reader {
+public class CometReader extends Reader implements IncomingDataListener {
     private final Reader source;
     private final AtomicBoolean sourceClosed = new AtomicBoolean();
 
@@ -34,19 +34,6 @@ public class CometReader extends Reader {
         this.source = source;
     }
     
-    public void sourceClosed() {
-        if (sourceClosed.compareAndSet(false, true))
-            synchronized(this) {
-                notify();
-            }
-    }
-    
-    public void newDataAvailableInSource() {
-        synchronized(this) {
-            notify();
-        }
-    }
-   
     @Override
     public int read(char[] chars, int off, int len) throws IOException {
         if (sourceClosed.get())
@@ -71,5 +58,18 @@ public class CometReader extends Reader {
     @Override
     public void close() throws IOException {
         source.close();
+    }
+
+    public void newDataAvailable() {
+        synchronized(this) {
+            notify();
+        }
+    }
+
+    public void dataStreamClosed() {
+        if (sourceClosed.compareAndSet(false, true))
+            synchronized(this) {
+                notify();
+            }
     }
 }

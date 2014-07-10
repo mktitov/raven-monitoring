@@ -39,6 +39,7 @@ import org.apache.catalina.CometEvent;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
+import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.util.Streams;
 import org.apache.commons.io.IOUtils;
@@ -171,13 +172,39 @@ public class NetworkResponseServlet extends HttpServlet  {
                 String paramName = reqParams.nextElement();
                 params.put(paramName, request.getParameter(paramName));
             }
+//        if (ServletFileUpload.isMultipartContent(request)) {
+//            TemporaryFileManager tempFileManager = responseService.getTemporaryFileManager();
+//            if (tempFileManager==null) 
+//                throw new NetworkResponseServiceExeption("Can't store uploaded file because of "
+//                        + "TemporaryFileManager not assigned to NetworkResponseServiceNode");
+//            ServletFileUpload upload = new ServletFileUpload();
+//            FileItemIterator it = upload.getItemIterator(request);
+//            while (it.hasNext()) {
+//                FileItemStream item = it.next();
+//                String name = item.getFieldName();
+//                if (item.isFormField())
+//                    params.put(name, Streams.asString(item.openStream(), getTextFieldCharset(item)));
+//                else {
+//                    DataSource tempFile = tempFileManager.saveFile(
+//                            responseService.getNetworkResponseServiceNode(), 
+//                            "sri_fileupload_"+fileUploadsCounter.incrementAndGet(), 
+//                            item.openStream(), item.getContentType(), true, item.getName());
+//                    params.put(item.getFieldName(), tempFile);
+//                }
+//            }
+//        }
+        return params;
+    }
+    
+    protected void parseMultipartContentParams(Map<String, Object> params, HttpServletRequest request, 
+            NetworkResponseService responseService) throws Exception 
+    {
         if (ServletFileUpload.isMultipartContent(request)) {
             TemporaryFileManager tempFileManager = responseService.getTemporaryFileManager();
             if (tempFileManager==null) 
                 throw new NetworkResponseServiceExeption("Can't store uploaded file because of "
                         + "TemporaryFileManager not assigned to NetworkResponseServiceNode");
-            ServletFileUpload upload = new ServletFileUpload();
-            FileItemIterator it = upload.getItemIterator(request);
+            FileItemIterator it = getMultipartItemIterator(request);
             while (it.hasNext()) {
                 FileItemStream item = it.next();
                 String name = item.getFieldName();
@@ -191,8 +218,11 @@ public class NetworkResponseServlet extends HttpServlet  {
                     params.put(item.getFieldName(), tempFile);
                 }
             }
-        }
-        return params;
+        }        
+    }
+    
+    protected FileItemIterator getMultipartItemIterator(HttpServletRequest request) throws Exception {
+        return new ServletFileUpload().getItemIterator(request);
     }
     
     protected String getTextFieldCharset(FileItemStream item) {
@@ -222,15 +252,18 @@ public class NetworkResponseServlet extends HttpServlet  {
         final HttpServletResponse response = ctx.response;
         if (serviceResponse == Response.NOT_MODIFIED) {
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+            response.getOutputStream().close();
         } else {
             Map<String, String> headers = serviceResponse.getHeaders();
             if (headers != null) 
                 for (Map.Entry<String, String> e : headers.entrySet()) 
                     response.addHeader(e.getKey(), e.getValue());
             Object content = serviceResponse.getContent();
-            if (content instanceof RedirectResult)
+            if (content instanceof RedirectResult) {
                 response.sendRedirect(((RedirectResult)content).getContent().toString());
-            else {
+                response.flushBuffer();
+                response.getOutputStream().close();
+            } else {
                 response.setContentType(serviceResponse.getContentType());
                 if (content instanceof Result) {
                     Result result = (Result) content;
@@ -253,10 +286,10 @@ public class NetworkResponseServlet extends HttpServlet  {
                     if (content instanceof Writable) {
                         Writable writable = (Writable) content;
                         writable.writeTo(response.getWriter());
-                        response.getWriter().flush();
+                        response.getWriter().close();
                     } else if (content instanceof Outputable) {
                         ((Outputable)content).outputTo(response.getOutputStream());
-                        response.getOutputStream().flush();
+                        response.getOutputStream().close();
                     } else {
                         InputStream contentStream = converter.convert(InputStream.class, content, charset);
                         if (contentStream!=null) {
@@ -264,13 +297,14 @@ public class NetworkResponseServlet extends HttpServlet  {
                             try {
                                 IOUtils.copy(contentStream, out);
                             } finally {
-//                                IOUtils.closeQuietly(out);
+                                IOUtils.closeQuietly(out);
                                 IOUtils.closeQuietly(contentStream);
-                                out.flush();
+//                                out.flush();
                             }
                         }
                     }
-                }
+                } else
+                    response.getOutputStream().close();
             }
         }
     }
@@ -312,6 +346,7 @@ public class NetworkResponseServlet extends HttpServlet  {
 //            responseContext = responseService.getResponseContext(serviceRequest);
 //            UserContext user = checkAuth(request, response, responseContext, context);
             configureRequestContext(ctx);
+            parseMultipartContentParams(ctx.responseContext.getRequest().getParams(), request, ctx.responseService);
             Response result = ctx.responseContext.getResponse(ctx.user);
             processServiceResponse(ctx, result);
         } catch (Throwable e) {
@@ -407,13 +442,23 @@ public class NetworkResponseServlet extends HttpServlet  {
         return "Simple requests interface";
     }
     
-    protected static class RequestContext {
+    protected static class RequestContext implements IncomingDataListener {
         private final static AtomicLong requestId = new AtomicLong(0);
         public final HttpServletRequest request;
         public final HttpServletResponse response;
         public final Registry registry;
         public final NetworkResponseService responseService;
+        public volatile IncomingDataListener incomingDataListener;
         public final LoggerHelper servletLogger;
+        public volatile ServletException processingException;
+        
+        //timestamps for statistics 
+        public final long createdTs = System.currentTimeMillis();
+        public volatile long writeProcessedTs;
+        public volatile long channelClosedTs;
+        public volatile long builderExecutedTs;
+        public volatile long builderProcessedTs;
+        public volatile long waitForCloseTs;
 //        public final Atomic
         private final AtomicReference<CometEvent> readProcessed = new AtomicReference<CometEvent>();
         private final AtomicBoolean writeProcessed = new AtomicBoolean();
@@ -432,15 +477,7 @@ public class NetworkResponseServlet extends HttpServlet  {
                     "Servlet ["+requestId.incrementAndGet()+" "+request.getMethod()+" from "
                     +request.getRemoteAddr()+":"+request.getRemotePort()+"] ");
         }
-        
-//        public void readChannelClosing() {
-//            readChannelStatus.compareAndSet(0, 1);
-//        }
-//        
-//        public void readChannelClosed() {
-//            readChannelStatus.compareAndSet(1, 2);
-//        }
-        
+               
         public void readProcessed(CometEvent ev) throws IOException {
             if (writeProcessed.get()) {
                 if (servletLogger.isDebugEnabled())
@@ -471,6 +508,39 @@ public class NetworkResponseServlet extends HttpServlet  {
                     ((CometResponseContext)responseContext).closeChannel();
                 }
             }
+        }
+        
+        public void closeChannel(CometEvent ev) throws IOException, ServletException {
+            if (writeProcessed.get()) {
+                waitForCloseTs = System.currentTimeMillis();
+                channelClosedTs = System.currentTimeMillis();
+                logStat();
+                if (processingException!=null)
+                    throw processingException;
+                else 
+                    ev.close();
+            }
+        }
+        
+        public void logStat() {
+            if (servletLogger.isDebugEnabled())
+                servletLogger.debug(String.format(
+                        "Timing: TOTAL=%s; wait for buileder exec=%s; response compose time=%s; "
+                                + "response send time=%s; wait for close ev=%s; channel close=%s",
+                        channelClosedTs-createdTs, builderExecutedTs-createdTs, builderProcessedTs-builderExecutedTs, 
+                        writeProcessedTs-builderProcessedTs, waitForCloseTs-writeProcessedTs, channelClosedTs-waitForCloseTs));
+        }
+
+        public void newDataAvailable() {
+            final IncomingDataListener _listener = incomingDataListener;
+            if (_listener!=null)
+                _listener.newDataAvailable();
+        }
+
+        public void dataStreamClosed() {
+            final IncomingDataListener _listener = incomingDataListener;
+            if (_listener!=null)
+                _listener.dataStreamClosed();
         }
     } 
 }

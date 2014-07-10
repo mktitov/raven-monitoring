@@ -29,7 +29,7 @@ import org.raven.net.impl.RequestImpl;
  *
  * @author Mikhail Titov
  */
-public class CometRequestImpl extends RequestImpl implements CometRequest {
+public class CometRequestImpl extends RequestImpl implements CometRequest, IncomingDataListener {
     private final AtomicReference<CometInputStream> inputStream = new AtomicReference<CometInputStream>();
     private final AtomicReference<CometReader> reader = new AtomicReference<CometReader>();
     private final AtomicBoolean requestStreamClosed = new AtomicBoolean();
@@ -40,40 +40,36 @@ public class CometRequestImpl extends RequestImpl implements CometRequest {
         super(remoteAddr, params, headers, contextPath, method, httpRequest);
     }
 
-    @Override
-    public void requestStreamReady() {
-        CometInputStream stream = inputStream.get();
-        if (stream!=null)
-            stream.newDataAvailableInSource();
-        CometReader _reader = reader.get();
-        if (_reader!=null)
-            _reader.newDataAvailableInSource();       
-    }
-    
-    public void requestStreamClosed() {
-        if (requestStreamClosed.compareAndSet(false, true)) {
-            CometInputStream stream = inputStream.get();
-            if (stream!=null)
-                stream.sourceClosed();
-            CometReader _reader = reader.get();
-            if (_reader!=null)
-                _reader.sourceClosed();
+    public void newDataAvailable() {
+        for (AtomicReference ref: new AtomicReference[]{inputStream, reader}) {        
+            IncomingDataListener listener = (IncomingDataListener) ref.get();
+            if (listener!=null)
+                listener.newDataAvailable();                
         }
+    }
+
+    public void dataStreamClosed() {
+        if (requestStreamClosed.compareAndSet(false, true))
+            for (AtomicReference ref: new AtomicReference[]{inputStream, reader}) {        
+                IncomingDataListener listener = (IncomingDataListener) ref.get();
+                if (listener!=null)
+                    listener.dataStreamClosed();
+            }
     }
 
     @Override
     public InputStream getContent() throws IOException {
         if (inputStream.get()==null)
-            if (inputStream.compareAndSet(null, new CometInputStream(getContent())) && requestStreamClosed.get())
-                inputStream.get().sourceClosed();
+            if (inputStream.compareAndSet(null, new CometInputStream(super.getContent())) && requestStreamClosed.get())
+                inputStream.get().dataStreamClosed();
         return inputStream.get();
     }
 
     @Override
     public Reader getContentReader() throws IOException {
         if (reader.get()==null)
-            if (reader.compareAndSet(null, new CometReader(getContentReader())) && requestStreamClosed.get())
-                reader.get().sourceClosed();
+            if (reader.compareAndSet(null, new CometReader(super.getContentReader())) && requestStreamClosed.get())
+                reader.get().dataStreamClosed();
         return reader.get();
     }
 }

@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author Mikhail Titov
  */
-public class CometInputStream extends InputStream {
+public class CometInputStream extends InputStream implements IncomingDataListener{
     private final InputStream source;
     private final AtomicBoolean sourceClosed = new AtomicBoolean();
 
@@ -32,19 +32,6 @@ public class CometInputStream extends InputStream {
         this.source = sourceStream;
     }
     
-    public void sourceClosed() {
-        if (sourceClosed.compareAndSet(false, true))
-            synchronized(this) {
-                notify();
-            }
-    }
-    
-    public void newDataAvailableInSource() {
-        synchronized(this) {
-            notify();
-        }
-    }
-
     @Override
     public int read() throws IOException {
         if (sourceClosed.get())
@@ -64,6 +51,19 @@ public class CometInputStream extends InputStream {
             source.close();
             return -1;
         }
+    }
+
+    public void newDataAvailable() {
+        synchronized(this) {
+            notify();
+        }
+    }
+
+    public void dataStreamClosed() {
+        if (sourceClosed.compareAndSet(false, true))        
+            synchronized(this) {
+                notify();
+            }
     }
     
 }

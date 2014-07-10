@@ -23,6 +23,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.catalina.CometEvent;
 import org.apache.catalina.CometProcessor;
+import org.apache.commons.fileupload.FileItemIterator;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.raven.net.Request;
 import org.raven.net.Response;
 import org.raven.sched.ExecutorService;
@@ -41,8 +43,11 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
         final HttpServletRequest request = ce.getHttpServletRequest();
         final HttpServletResponse response = ce.getHttpServletResponse();
         final RequestContext ctx = getRequestContext(ce);
-        if (ctx!=null && ctx.servletLogger.isDebugEnabled()) 
-            ctx.servletLogger.debug(String.format("Processing %s event (id: %s) for URI: %s", ce.getEventType(), ce, request.getRequestURI()));
+        if (ctx!=null && ctx.servletLogger.isDebugEnabled()) {
+            CometEvent.EventSubType subtype = ce.getEventSubType();
+            String event = ce.getEventType()+(subtype==null?"":"/"+subtype);
+            ctx.servletLogger.debug(String.format("Processing %s event (id: %s) for URI: %s", event, ce, request.getRequestURI()));
+        }
         switch (ce.getEventType()) {
             case BEGIN:
                 if (ctx==null)
@@ -69,14 +74,16 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
         }
     }
     
-    private void initResponseProcessing(final CometEvent ce, HttpServletRequest request, HttpServletResponse response) 
+    private void initResponseProcessing(final CometEvent ce, final HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException
     {
         final RequestContext ctx = createContext(request, response);
 //        request.setAttribute("org.apache.tomcat.comet.timeout", 5); //30 seconds	
-//        request.setAttribute("org.apache.tomcat.comet.timeout", 30*1000); //30 seconds	
-        if (ctx.servletLogger.isDebugEnabled()) 
-            ctx.servletLogger.debug(String.format("Processing %s event (id: %s) for URI: %s", ce.getEventType(), ce, request.getRequestURI()));            
+        request.setAttribute("org.apache.tomcat.comet.timeout", 1000); //30 seconds	
+        final boolean debugEnabled = ctx.servletLogger.isDebugEnabled();
+        if (debugEnabled) 
+            ctx.servletLogger.debug(String.format("Processing %s event (id: %s) for URI: %s", 
+                    ce.getEventType(), ce, request.getRequestURI()));            
         request.setAttribute(REQUEST_CONTEXT, ctx);
         try {
             final ExecutorService executor = ctx.responseService.getExecutor();
@@ -85,28 +92,48 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
             configureRequestContext(ctx);
             ctx.responseContext = new CometResponseContext(ctx.responseContext, ctx.response, ce);
             final Node builderNode = ctx.responseContext.getResponseBuilder().getResponseBuilderNode();
+            final long ts = System.currentTimeMillis();
             executor.execute(new AbstractTask(builderNode, "Processing http request") {                
                 @Override public void doRun() throws Exception {
                     try {
-                        long ts = System.currentTimeMillis();
-                        if (ctx.servletLogger.isDebugEnabled())
+                        ctx.builderExecutedTs = System.currentTimeMillis();
+                        final boolean isMultipart = ServletFileUpload.isMultipartContent(request);
+                        if (isMultipart) {
+                            if (debugEnabled)
+                                ctx.servletLogger.debug("Processing multipart content");
+                            parseMultipartContentParams(ctx.responseContext.getRequest().getParams(), ctx.request, 
+                                    ctx.responseService);
+                            if (debugEnabled)
+                                ctx.servletLogger.debug("Multipart content processed");
+                        }
+                        if (debugEnabled)
                             ctx.servletLogger.debug("Composing response using builder: "
                                     +ctx.responseContext.getResponseBuilder().getResponseBuilderNode());
-                        if (ctx.responseContext.getResponseBuilderLogger().isDebugEnabled())
-                            ctx.responseContext.getResponseBuilderLogger().debug("Composing response");
+                        if (!isMultipart)
+                            ctx.incomingDataListener = (IncomingDataListener) ctx.responseContext.getRequest();
                         Response result = ctx.responseContext.getResponse(ctx.user);
-                        if (ctx.servletLogger.isDebugEnabled())
+                        ctx.builderProcessedTs = System.currentTimeMillis();
+                        if (debugEnabled)
                             ctx.servletLogger.debug(String.format(
                                     "Composed by %sms. Handling response (%s)", 
                                     System.currentTimeMillis()-ts, result));
                         processServiceResponse(ce, ctx, result);
+                        ctx.writeProcessedTs = System.currentTimeMillis();
 //                        ce.setTimeout(1);
-                        if (ctx.servletLogger.isDebugEnabled())
+                        if (debugEnabled)
                             ctx.servletLogger.debug("Handled", System.currentTimeMillis()-ts);
                     } catch (Throwable e) {
                         if (ctx.servletLogger.isErrorEnabled())
                             ctx.servletLogger.error("Response composing error", e);
-                        processError(ctx, e);
+                        try {
+                            processError(ctx, e);
+                        } catch (ServletException ex) {
+                            ctx.processingException = ex;
+                        } finally {
+                            if (ctx.processingException==null)
+                                ctx.response.flushBuffer();
+                            ctx.writeProcessed();                            
+                        }
                     }
                 }
             });
@@ -115,16 +142,24 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
         }
     }
 
-    private void processEndEvent(CometEvent ev) throws IOException {
+    @Override
+    protected FileItemIterator getMultipartItemIterator(HttpServletRequest request) throws Exception {
+        RequestContext ctx = (RequestContext) request.getAttribute(REQUEST_CONTEXT);
+        FileUploadContext fileUploadContext = new FileUploadContext(request);
+        ctx.incomingDataListener = fileUploadContext.getCometInputStream();
+        return new ServletFileUpload().getItemIterator(fileUploadContext);
+    }
+
+    private void processEndEvent(CometEvent ev) throws IOException, ServletException {
         RequestContext ctx = getRequestContext(ev);
         try {
             if (ctx!=null) {
-                ((CometRequestImpl)ctx.responseContext.getRequest()).requestStreamClosed();
-//                ctx.readProcessed(ev);
+                ctx.dataStreamClosed();
+                ctx.closeChannel(ev);                
             }
         } finally {
             try {
-                ev.close();
+//                ev.close();
             } catch (Throwable e) {
                 if (ctx!=null)
                     ctx.servletLogger.warn("Read channel close error", e);
@@ -145,14 +180,13 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
             if (serviceResponse != Response.ALREADY_COMPOSED && serviceResponse != Response.MANAGING_BY_BUILDER)
                 super.processServiceResponse(ctx, serviceResponse);
         } finally {
-//            ctx.response.flushBuffer();
-//            ctx.response.
             if (serviceResponse!=Response.MANAGING_BY_BUILDER)
                 try {
-//                    ctx.request.removeAttribute(REQUEST_CONTEXT);
-//                    ctx.responseContext.closeChannel();
-                    ctx.writeProcessed();
-                    ev.setTimeout(1);
+                    try {
+                        ev.setTimeout(1);
+                    } finally {
+                        ctx.writeProcessed();
+                    }                    
                 } catch (Throwable e) {
                     ctx.servletLogger.error("Write channel close error", e);
                 }
@@ -167,14 +201,15 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
                     ctx.request.getMethod().toUpperCase(), ctx.request);
     }
 
-    private void processErrorEvent(CometEvent ce) throws IOException {
+    private void processErrorEvent(CometEvent ce) throws IOException, ServletException {
         try {
             RequestContext ctx = getRequestContext(ce);
             Logger logger = ctx.responseContext.getResponseBuilderLogger();
             if (ce.getEventSubType()!=CometEvent.EventSubType.TIMEOUT || ctx.isWriteProcessed()) {
                 if (ctx.servletLogger.isDebugEnabled())
                     ctx.servletLogger.debug("Write finished. Closing channel");
-                ce.close();
+//                ce.close();
+                ctx.closeChannel(ce);
             }
         } finally {
 //            ce.close();
@@ -182,7 +217,6 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
     }
 
     private void processReadEvent(CometEvent ce) {
-        CometRequest req = (CometRequest) getRequestContext(ce).responseContext.getRequest();
-        req.requestStreamReady();
+        getRequestContext(ce).newDataAvailable();
     }
 }
