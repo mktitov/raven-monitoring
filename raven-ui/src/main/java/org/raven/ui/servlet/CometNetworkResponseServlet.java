@@ -16,7 +16,10 @@
 
 package org.raven.ui.servlet;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -37,7 +40,7 @@ import org.slf4j.Logger;
  * @author Mikhail Titov
  */
 public class CometNetworkResponseServlet extends NetworkResponseServlet implements CometProcessor {
-    private static final String REQUEST_CONTEXT = "RAVEN_REQUEST_CONTEXT";
+    public static final String REQUEST_CONTEXT = "RAVEN_REQUEST_CONTEXT";
 
     public void event(CometEvent ce) throws IOException, ServletException {
         final HttpServletRequest request = ce.getHttpServletRequest();
@@ -110,7 +113,7 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
                             ctx.servletLogger.debug("Composing response using builder: "
                                     +ctx.responseContext.getResponseBuilder().getResponseBuilderNode());
                         if (!isMultipart)
-                            ctx.incomingDataListener = (IncomingDataListener) ctx.responseContext.getRequest();
+                            ctx.incomingDataListener = (DataReceiver) ctx.responseContext.getRequest();
                         Response result = ctx.responseContext.getResponse(ctx.user);
                         ctx.builderProcessedTs = System.currentTimeMillis();
                         if (debugEnabled)
@@ -216,7 +219,19 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
         }
     }
 
-    private void processReadEvent(CometEvent ce) {
-        getRequestContext(ce).newDataAvailable();
+    private void processReadEvent(CometEvent ce) throws IOException {
+        final RequestContext ctx = getRequestContext(ce);
+        if (ctx.canPushBuffer()) {
+            final InputStream stream = ce.getHttpServletRequest().getInputStream();
+            final int size = stream.available();
+            if (size>0) {
+                ByteBuf buf = Unpooled.buffer(size);
+                int written = buf.writeBytes(stream, size);
+                ctx.pushBuffer(buf);
+                if (ctx.servletLogger.isDebugEnabled())
+                    ctx.servletLogger.debug("Written ({}) bytes to request stream consumer", written);
+            }
+        } else if (ctx.servletLogger.isDebugEnabled())
+            ctx.servletLogger.debug("Request stream consumer is FULL. Wating...");
     }
 }

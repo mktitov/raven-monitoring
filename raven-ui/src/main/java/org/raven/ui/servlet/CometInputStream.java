@@ -16,44 +16,55 @@
 
 package org.raven.ui.servlet;
 
+import io.netty.buffer.ByteBuf;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.raven.ds.RingQueue;
+import org.raven.ds.impl.RingQueueImpl;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class CometInputStream extends InputStream implements IncomingDataListener{
-    private final InputStream source;
+public class CometInputStream extends InputStream implements DataReceiver{
     private final AtomicBoolean sourceClosed = new AtomicBoolean();
+    private final RingQueue<ByteBuf> buffers = new RingQueueImpl<ByteBuf>(2);
 
-    public CometInputStream(InputStream sourceStream) {
-        this.source = sourceStream;
+    public CometInputStream() {
     }
     
     @Override
     public int read() throws IOException {
-        if (sourceClosed.get())
+        if (sourceClosed.get() && !buffers.hasElement())
             return -1;
-        final int data = source.read();
-        if (data!=-1)
-            return data;
-        //wait for data in source
+        ByteBuf buf;
         try {
-            while (!sourceClosed.get() && source.available()<=0) {
-                synchronized(this) {
-                    wait(100l);
+            while (true) {
+                while ((buf=buffers.peek())==null && !sourceClosed.get()) {
+                    synchronized(this) {
+                        wait(100l);
+                    }
                 }
+                if (buf!=null) {
+                    if (buf.isReadable())
+                        return buf.readByte();
+                    else 
+                        buffers.pop().release();
+                } else if (sourceClosed.get())
+                    return -1;
             }
-            return sourceClosed.get()? -1 : source.read();            
-        } catch (InterruptedException ex) {
-            source.close();
+        } catch (InterruptedException e) {
             return -1;
         }
     }
 
-    public void newDataAvailable() {
+    public boolean canPushBuffer() {
+        return buffers.canPush();
+    }
+
+    public void pushBuffer(ByteBuf buf) {
+        buffers.push(buf);
         synchronized(this) {
             notify();
         }

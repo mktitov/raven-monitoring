@@ -31,7 +31,7 @@ public class FileUploadContext implements RequestContext {
 
     public FileUploadContext(HttpServletRequest request) throws IOException {
         this.request = request;
-        this.stream = new CometInputStream(request.getInputStream());
+        this.stream = new CometInputStream();
     }
 
     public String getCharacterEncoding() {

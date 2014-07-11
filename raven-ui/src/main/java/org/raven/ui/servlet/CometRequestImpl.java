@@ -29,39 +29,28 @@ import org.raven.net.impl.RequestImpl;
  *
  * @author Mikhail Titov
  */
-public class CometRequestImpl extends RequestImpl implements CometRequest, IncomingDataListener {
+public class CometRequestImpl extends RequestImpl implements CometRequest {
     private final AtomicReference<CometInputStream> inputStream = new AtomicReference<CometInputStream>();
     private final AtomicReference<CometReader> reader = new AtomicReference<CometReader>();
     private final AtomicBoolean requestStreamClosed = new AtomicBoolean();
+    private final NetworkResponseServlet.RequestContext requestContext;
     
     public CometRequestImpl(String remoteAddr, Map<String, Object> params, Map<String, Object> headers, 
             String contextPath, String method, HttpServletRequest httpRequest) 
     {
         super(remoteAddr, params, headers, contextPath, method, httpRequest);
-    }
-
-    public void newDataAvailable() {
-        for (AtomicReference ref: new AtomicReference[]{inputStream, reader}) {        
-            IncomingDataListener listener = (IncomingDataListener) ref.get();
-            if (listener!=null)
-                listener.newDataAvailable();                
-        }
-    }
-
-    public void dataStreamClosed() {
-        if (requestStreamClosed.compareAndSet(false, true))
-            for (AtomicReference ref: new AtomicReference[]{inputStream, reader}) {        
-                IncomingDataListener listener = (IncomingDataListener) ref.get();
-                if (listener!=null)
-                    listener.dataStreamClosed();
-            }
+        this.requestContext = (NetworkResponseServlet.RequestContext) httpRequest.getAttribute(
+                CometNetworkResponseServlet.REQUEST_CONTEXT);
     }
 
     @Override
     public InputStream getContent() throws IOException {
         if (inputStream.get()==null)
-            if (inputStream.compareAndSet(null, new CometInputStream(super.getContent())) && requestStreamClosed.get())
-                inputStream.get().dataStreamClosed();
+            if (inputStream.compareAndSet(null, new CometInputStream())) {
+                requestContext.incomingDataListener = inputStream.get();
+                if (requestStreamClosed.get())
+                    inputStream.get().dataStreamClosed();
+            }
         return inputStream.get();
     }
 

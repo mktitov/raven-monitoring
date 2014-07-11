@@ -16,11 +16,14 @@
 
 package org.raven.ui.servlet;
 
+import io.netty.buffer.ByteBuf;
+
 /**
  *
  * @author Mikhail Titov
  */
-public interface IncomingDataListener {
-    public void newDataAvailable();
+public interface DataReceiver {
+    public boolean canPushBuffer();
+    public void pushBuffer(ByteBuf buf);
     public void dataStreamClosed();
 }

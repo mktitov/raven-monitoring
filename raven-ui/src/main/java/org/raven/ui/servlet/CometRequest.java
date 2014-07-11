@@ -22,5 +22,5 @@ import org.raven.net.Request;
  *
  * @author Mikhail Titov
  */
-public interface CometRequest extends Request, IncomingDataListener {
+public interface CometRequest extends Request {
 }

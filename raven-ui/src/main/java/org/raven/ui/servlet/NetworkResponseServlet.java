@@ -17,6 +17,7 @@
 package org.raven.ui.servlet;
 
 import groovy.lang.Writable;
+import io.netty.buffer.ByteBuf;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -39,7 +40,6 @@ import org.apache.catalina.CometEvent;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
-import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.util.Streams;
 import org.apache.commons.io.IOUtils;
@@ -442,13 +442,13 @@ public class NetworkResponseServlet extends HttpServlet  {
         return "Simple requests interface";
     }
     
-    protected static class RequestContext implements IncomingDataListener {
+    protected static class RequestContext implements DataReceiver {
         private final static AtomicLong requestId = new AtomicLong(0);
         public final HttpServletRequest request;
         public final HttpServletResponse response;
         public final Registry registry;
         public final NetworkResponseService responseService;
-        public volatile IncomingDataListener incomingDataListener;
+        public volatile DataReceiver incomingDataListener;
         public final LoggerHelper servletLogger;
         public volatile ServletException processingException;
         
@@ -531,14 +531,19 @@ public class NetworkResponseServlet extends HttpServlet  {
                         writeProcessedTs-builderProcessedTs, waitForCloseTs-writeProcessedTs, channelClosedTs-waitForCloseTs));
         }
 
-        public void newDataAvailable() {
-            final IncomingDataListener _listener = incomingDataListener;
+        public boolean canPushBuffer() {
+            final DataReceiver _listener = incomingDataListener;
+            return _listener==null? false : _listener.canPushBuffer();
+        }
+
+        public void pushBuffer(ByteBuf buf) {
+            final DataReceiver _listener = incomingDataListener;
             if (_listener!=null)
-                _listener.newDataAvailable();
+                _listener.pushBuffer(buf);
         }
 
         public void dataStreamClosed() {
-            final IncomingDataListener _listener = incomingDataListener;
+            final DataReceiver _listener = incomingDataListener;
             if (_listener!=null)
                 _listener.dataStreamClosed();
         }

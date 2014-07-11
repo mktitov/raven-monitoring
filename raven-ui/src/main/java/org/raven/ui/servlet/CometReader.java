@@ -16,6 +16,7 @@
 
 package org.raven.ui.servlet;
 
+import io.netty.buffer.ByteBuf;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -26,7 +27,7 @@ import org.raven.tree.impl.LoggerHelper;
  *
  * @author Mikhail Titov 
  */
-public class CometReader extends Reader implements IncomingDataListener {
+public class CometReader extends Reader implements DataReceiver {
     private final Reader source;
     private final AtomicBoolean sourceClosed = new AtomicBoolean();
 
@@ -60,7 +61,7 @@ public class CometReader extends Reader implements IncomingDataListener {
         source.close();
     }
 
-    public void newDataAvailable() {
+    public void pushBuffer() {
         synchronized(this) {
             notify();
         }
@@ -71,5 +72,13 @@ public class CometReader extends Reader implements IncomingDataListener {
             synchronized(this) {
                 notify();
             }
+    }
+
+    public boolean canPushBuffer() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void pushBuffer(ByteBuf buf) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
