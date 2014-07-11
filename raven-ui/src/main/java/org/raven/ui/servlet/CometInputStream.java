@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 tim.
+ * Copyright 2014 Mikhail Titov.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,62 +19,26 @@ package org.raven.ui.servlet;
 import io.netty.buffer.ByteBuf;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.atomic.AtomicBoolean;
-import org.raven.ds.RingQueue;
-import org.raven.ds.impl.RingQueueImpl;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class CometInputStream extends InputStream implements DataReceiver{
-    private final AtomicBoolean sourceClosed = new AtomicBoolean();
-    private final RingQueue<ByteBuf> buffers = new RingQueueImpl<ByteBuf>(2);
-
-    public CometInputStream() {
-    }
-    
-    @Override
-    public int read() throws IOException {
-        if (sourceClosed.get() && !buffers.hasElement())
-            return -1;
-        ByteBuf buf;
-        try {
-            while (true) {
-                while ((buf=buffers.peek())==null && !sourceClosed.get()) {
-                    synchronized(this) {
-                        wait(100l);
-                    }
-                }
-                if (buf!=null) {
-                    if (buf.isReadable())
-                        return buf.readByte();
-                    else 
-                        buffers.pop().release();
-                } else if (sourceClosed.get())
-                    return -1;
-            }
-        } catch (InterruptedException e) {
+public abstract class CometInputStream extends InputStream implements DataReceiver {
+    public final static CometInputStream EMPTY_STREAM = new CometInputStream() {
+        @Override
+        public int read() throws IOException {
             return -1;
         }
-    }
 
-    public boolean canPushBuffer() {
-        return buffers.canPush();
-    }
-
-    public void pushBuffer(ByteBuf buf) {
-        buffers.push(buf);
-        synchronized(this) {
-            notify();
+        public boolean canPushBuffer() {
+            return false;
         }
-    }
 
-    public void dataStreamClosed() {
-        if (sourceClosed.compareAndSet(false, true))        
-            synchronized(this) {
-                notify();
-            }
-    }
-    
+        public void pushBuffer(ByteBuf buf) {
+        }
+
+        public void dataStreamClosed() {
+        }
+    };
 }

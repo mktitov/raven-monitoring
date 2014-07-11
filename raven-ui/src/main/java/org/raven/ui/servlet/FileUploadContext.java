@@ -29,9 +29,9 @@ public class FileUploadContext implements RequestContext {
     private final HttpServletRequest request;
     private final CometInputStream stream;
 
-    public FileUploadContext(HttpServletRequest request) throws IOException {
+    public FileUploadContext(HttpServletRequest request, CometInputStream stream) throws IOException {
         this.request = request;
-        this.stream = new CometInputStream();
+        this.stream = stream;
     }
 
     public String getCharacterEncoding() {
@@ -48,9 +48,5 @@ public class FileUploadContext implements RequestContext {
 
     public InputStream getInputStream() throws IOException {
         return stream;
-    }
-    
-    public CometInputStream getCometInputStream() {
-        return stream;
-    }
+    }    
 }

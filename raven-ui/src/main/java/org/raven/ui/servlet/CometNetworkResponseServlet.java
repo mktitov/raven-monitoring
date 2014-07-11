@@ -18,6 +18,7 @@ package org.raven.ui.servlet;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -93,7 +94,7 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
             if (executor==null)
                 throw new ServletException("Comet servlet can't work without executor service");
             configureRequestContext(ctx);
-            ctx.responseContext = new CometResponseContext(ctx.responseContext, ctx.response, ce);
+            ctx.responseContext = new CometResponseContext(ctx);
             final Node builderNode = ctx.responseContext.getResponseBuilder().getResponseBuilderNode();
             final long ts = System.currentTimeMillis();
             executor.execute(new AbstractTask(builderNode, "Processing http request") {                
@@ -112,8 +113,8 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
                         if (debugEnabled)
                             ctx.servletLogger.debug("Composing response using builder: "
                                     +ctx.responseContext.getResponseBuilder().getResponseBuilderNode());
-                        if (!isMultipart)
-                            ctx.incomingDataListener = (DataReceiver) ctx.responseContext.getRequest();
+//                        if (!isMultipart)
+//                            ctx.incomingDataListener = (DataReceiver) ctx.responseContext.getRequest();
                         Response result = ctx.responseContext.getResponse(ctx.user);
                         ctx.builderProcessedTs = System.currentTimeMillis();
                         if (debugEnabled)
@@ -148,8 +149,7 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
     @Override
     protected FileItemIterator getMultipartItemIterator(HttpServletRequest request) throws Exception {
         RequestContext ctx = (RequestContext) request.getAttribute(REQUEST_CONTEXT);
-        FileUploadContext fileUploadContext = new FileUploadContext(request);
-        ctx.incomingDataListener = fileUploadContext.getCometInputStream();
+        FileUploadContext fileUploadContext = new FileUploadContext(request, ctx.getRequestStream());
         return new ServletFileUpload().getItemIterator(fileUploadContext);
     }
 
@@ -185,13 +185,11 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
         } finally {
             if (serviceResponse!=Response.MANAGING_BY_BUILDER)
                 try {
-                    try {
-                        ev.setTimeout(1);
-                    } finally {
-                        ctx.writeProcessed();
-                    }                    
+                    ev.setTimeout(1);
                 } catch (Throwable e) {
                     ctx.servletLogger.error("Write channel close error", e);
+                } finally {
+                    ctx.writeProcessed();
                 }
         }
     }
@@ -200,8 +198,7 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
     protected Request createServiceRequest(RequestContext ctx, Map<String, Object> params, 
             Map<String, Object> headers, String context) 
     {
-        return new CometRequestImpl(ctx.request.getRemoteAddr(), params, headers, context, 
-                    ctx.request.getMethod().toUpperCase(), ctx.request);
+        return new CometRequestImpl(ctx, params, headers, context);
     }
 
     private void processErrorEvent(CometEvent ce) throws IOException, ServletException {
@@ -221,15 +218,42 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
 
     private void processReadEvent(CometEvent ce) throws IOException {
         final RequestContext ctx = getRequestContext(ce);
+        if (ctx.servletLogger.isDebugEnabled())
+            ctx.servletLogger.debug("Request content length: {}", ctx.request.getContentLength());
         if (ctx.canPushBuffer()) {
             final InputStream stream = ce.getHttpServletRequest().getInputStream();
             final int size = stream.available();
             if (size>0) {
                 ByteBuf buf = Unpooled.buffer(size);
-                int written = buf.writeBytes(stream, size);
+                boolean eos = false;
+                int data;
+                int written=0;
+                while (stream.available()>0) {
+                    try {
+                        data = stream.read();
+                        if (data<0) {
+                            eos = true;
+                            break;
+                        } else {
+                            buf.writeByte(data);
+                            ++written;
+                        }
+                    } catch (IOException e) {
+                        eos = true;
+                        if (!(e instanceof EOFException) && ctx.servletLogger.isErrorEnabled())
+                            ctx.servletLogger.warn("Error while reading request content stream.");
+                        break;
+                    }
+
+                }
                 ctx.pushBuffer(buf);
                 if (ctx.servletLogger.isDebugEnabled())
                     ctx.servletLogger.debug("Written ({}) bytes to request stream consumer", written);
+                if (eos || ctx.request.getContentLength()==written) {
+                    if (ctx.servletLogger.isDebugEnabled())
+                        ctx.servletLogger.debug("End of stream detected. Closing");
+                    ctx.dataStreamClosed();
+                }
             }
         } else if (ctx.servletLogger.isDebugEnabled())
             ctx.servletLogger.debug("Request stream consumer is FULL. Wating...");

@@ -22,43 +22,34 @@ import java.io.Reader;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.servlet.http.HttpServletRequest;
 import org.raven.net.impl.RequestImpl;
+import org.raven.ui.servlet.NetworkResponseServlet.RequestContext;
 
 /**
  *
  * @author Mikhail Titov
  */
 public class CometRequestImpl extends RequestImpl implements CometRequest {
-    private final AtomicReference<CometInputStream> inputStream = new AtomicReference<CometInputStream>();
+    private final RequestContext requestContext;
+    private final AtomicReference<CometInputStreamImpl> inputStream = new AtomicReference<CometInputStreamImpl>();
     private final AtomicReference<CometReader> reader = new AtomicReference<CometReader>();
     private final AtomicBoolean requestStreamClosed = new AtomicBoolean();
-    private final NetworkResponseServlet.RequestContext requestContext;
     
-    public CometRequestImpl(String remoteAddr, Map<String, Object> params, Map<String, Object> headers, 
-            String contextPath, String method, HttpServletRequest httpRequest) 
+    public CometRequestImpl(RequestContext requestContext, Map<String, Object> params, Map<String, Object> headers, 
+            String contextPath) 
     {
-        super(remoteAddr, params, headers, contextPath, method, httpRequest);
-        this.requestContext = (NetworkResponseServlet.RequestContext) httpRequest.getAttribute(
-                CometNetworkResponseServlet.REQUEST_CONTEXT);
+        super(requestContext.request.getRemoteAddr(), params, headers, contextPath, 
+                requestContext.request.getMethod().toUpperCase(), requestContext.request);
+        this.requestContext = requestContext;
     }
 
     @Override
     public InputStream getContent() throws IOException {
-        if (inputStream.get()==null)
-            if (inputStream.compareAndSet(null, new CometInputStream())) {
-                requestContext.incomingDataListener = inputStream.get();
-                if (requestStreamClosed.get())
-                    inputStream.get().dataStreamClosed();
-            }
-        return inputStream.get();
+        return requestContext.getRequestStream();
     }
 
     @Override
     public Reader getContentReader() throws IOException {
-        if (reader.get()==null)
-            if (reader.compareAndSet(null, new CometReader(super.getContentReader())) && requestStreamClosed.get())
-                reader.get().dataStreamClosed();
-        return reader.get();
+        return requestContext.getRequestReader();
     }
 }

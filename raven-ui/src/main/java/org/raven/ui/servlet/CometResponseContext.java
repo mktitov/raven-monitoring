@@ -22,7 +22,6 @@ import java.io.PrintWriter;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.catalina.CometEvent;
 import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
 import org.raven.net.NetworkResponseServiceExeption;
@@ -30,6 +29,7 @@ import org.raven.net.Request;
 import org.raven.net.Response;
 import org.raven.net.ResponseBuilder;
 import org.raven.net.ResponseContext;
+import org.raven.ui.servlet.NetworkResponseServlet.RequestContext;
 import org.slf4j.Logger;
 
 /**
@@ -37,17 +37,16 @@ import org.slf4j.Logger;
  * @author Mikhail Titov
  */
 public class CometResponseContext implements ResponseContext {
+    private final RequestContext requestContext;
     private final ResponseContext responseContext;
     private final HttpServletResponse httpResponse;
-    private final CometEvent cometEvent;
     private final AtomicBoolean headersAdded = new AtomicBoolean();
 
-    public CometResponseContext(ResponseContext responseContext, HttpServletResponse httpResponse, 
-            CometEvent cometEvent) 
+    public CometResponseContext(RequestContext requestContext)
     {
-        this.responseContext = responseContext;
-        this.httpResponse = httpResponse;
-        this.cometEvent = cometEvent;
+        this.responseContext = requestContext.responseContext;
+        this.httpResponse = requestContext.response;
+        this.requestContext = requestContext;
     }
     
     private void addHeadersToResponse() {
@@ -68,8 +67,7 @@ public class CometResponseContext implements ResponseContext {
     }
 
     public void closeChannel() throws IOException {
-        if (cometEvent!=null)
-            cometEvent.close();
+        requestContext.writeProcessed();
     }
 
     //other calls to ResponseContext delegating to normal response context

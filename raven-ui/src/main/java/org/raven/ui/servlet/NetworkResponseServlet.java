@@ -20,7 +20,9 @@ import groovy.lang.Writable;
 import io.netty.buffer.ByteBuf;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -443,15 +445,21 @@ public class NetworkResponseServlet extends HttpServlet  {
     }
     
     protected static class RequestContext implements DataReceiver {
+        public final static long REQUEST_STREAM_WAIT_TIMEOUT = 5000;
+        public final static long RESPONSE_GENERATION_TIMOUT = 30000;
         private final static AtomicLong requestId = new AtomicLong(0);
         public final HttpServletRequest request;
         public final HttpServletResponse response;
         public final Registry registry;
         public final NetworkResponseService responseService;
-        public volatile DataReceiver incomingDataListener;
         public final LoggerHelper servletLogger;
+        private final CometInputStream requestStream;
+        private volatile Reader requestReader;
+        public final String requestEncoding;
         public volatile ServletException processingException;
         
+        private final AtomicLong requestStreamRequestTime = new AtomicLong();
+        private volatile boolean responseGenerated = false;
         //timestamps for statistics 
         public final long createdTs = System.currentTimeMillis();
         public volatile long writeProcessedTs;
@@ -472,10 +480,23 @@ public class NetworkResponseServlet extends HttpServlet  {
             this.request = request;
             this.response = response;
             this.registry = registry;
-            this.responseService = registry.getService(NetworkResponseService.class);;
+            this.responseService = registry.getService(NetworkResponseService.class);
+            if (!request.getMethod().equals("GET") && isStreamContentType(request))
+                requestStream = new CometInputStreamImpl();
+            else
+                requestStream = CometInputStream.EMPTY_STREAM;
             this.servletLogger = new LoggerHelper(responseService.getNetworkResponseServiceNode(), 
                     "Servlet ["+requestId.incrementAndGet()+" "+request.getMethod()+" from "
                     +request.getRemoteAddr()+":"+request.getRemotePort()+"] ");
+            this.requestEncoding = request.getCharacterEncoding()!=null? request.getCharacterEncoding() : "utf-8";
+        }
+        
+        private static boolean isStreamContentType(HttpServletRequest req) {
+            String ct = req.getContentType();
+            if (ct==null || ct.contains("application/x-www-form-urlencoded"))
+                return false;
+            else
+                return true;
         }
                
         public void readProcessed(CometEvent ev) throws IOException {
@@ -510,7 +531,7 @@ public class NetworkResponseServlet extends HttpServlet  {
             }
         }
         
-        public void closeChannel(CometEvent ev) throws IOException, ServletException {
+        public void closeChannel(CometEvent ev) throws IOException, ServletException {                        
             if (writeProcessed.get()) {
                 waitForCloseTs = System.currentTimeMillis();
                 channelClosedTs = System.currentTimeMillis();
@@ -519,6 +540,19 @@ public class NetworkResponseServlet extends HttpServlet  {
                     throw processingException;
                 else 
                     ev.close();
+            } else {
+                if (   requestStreamRequestTime.get()>0 
+                       && System.currentTimeMillis()>requestStreamRequestTime.get()+REQUEST_STREAM_WAIT_TIMEOUT)
+                {
+                    if (servletLogger.isWarnEnabled())
+                        servletLogger.warn("Request stream read timeout detected! Closing request stream");
+                    requestStream.dataStreamClosed();
+                }
+                if (!responseGenerated && System.currentTimeMillis()>createdTs + RESPONSE_GENERATION_TIMOUT) {
+                    if (servletLogger.isWarnEnabled())
+                        servletLogger.warn("Response generating by builder timeout detected! Closing channel");
+                    ev.close();
+                }                    
             }
         }
         
@@ -532,20 +566,34 @@ public class NetworkResponseServlet extends HttpServlet  {
         }
 
         public boolean canPushBuffer() {
-            final DataReceiver _listener = incomingDataListener;
-            return _listener==null? false : _listener.canPushBuffer();
+            return requestStream.canPushBuffer();
         }
 
         public void pushBuffer(ByteBuf buf) {
-            final DataReceiver _listener = incomingDataListener;
-            if (_listener!=null)
-                _listener.pushBuffer(buf);
+            requestStream.pushBuffer(buf);
         }
 
         public void dataStreamClosed() {
-            final DataReceiver _listener = incomingDataListener;
-            if (_listener!=null)
-                _listener.dataStreamClosed();
+            requestStream.dataStreamClosed();
+        }
+
+        public Reader getRequestReader() throws IOException {
+            if (requestReader==null)
+                synchronized(this) {
+                    if (requestReader==null)
+                        requestReader = new InputStreamReader(requestStream, requestEncoding);
+                }
+            return requestReader;
+        }
+
+        public CometInputStream getRequestStream() {
+            if (requestStreamRequestTime.get()==0)
+                requestStreamRequestTime.compareAndSet(0, System.currentTimeMillis());
+            return requestStream;
+        }        
+        
+        public void responseGenerated() {
+            responseGenerated = true;
         }
     } 
 }
