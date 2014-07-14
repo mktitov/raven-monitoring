@@ -16,7 +16,6 @@
 
 package org.raven.net.impl;
 
-import java.io.Flushable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
