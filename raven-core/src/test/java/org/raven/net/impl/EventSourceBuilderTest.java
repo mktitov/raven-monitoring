@@ -17,6 +17,7 @@
 package org.raven.net.impl;
 
 import java.io.Flushable;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
 import static org.easymock.EasyMock.*;
@@ -43,6 +44,7 @@ public class EventSourceBuilderTest extends RavenCoreTestCase {
     private DataCollector collector;
     private EventSourceBuilder eventsSource;
     private UserContext user;
+    private boolean flushed = false;
     
     @Before
     public void prepare() {
@@ -67,18 +69,17 @@ public class EventSourceBuilderTest extends RavenCoreTestCase {
     @Test
     public void channelCreationTest() throws Exception {
         IMocksControl mocks = createControl();
-        trainToStringMocks(mocks);
         ResponseContext responseContext = mocks.createMock(ResponseContext.class);
+        trainToStringMocks(mocks, responseContext);
         Map<String, String> headers = mocks.createMock(Map.class);
-        Flushable responseStream = mocks.createMock(Flushable.class);
         expect(responseContext.getHeaders()).andReturn(headers);
-        headers.put("Content-Type", "text/event-stream");
-        expect(responseContext.getResponseStream()).andReturn(responseStream);
-        responseStream.flush();
+        expect(headers.put("Content-Type", "text/event-stream")).andReturn(null);
+        expect(responseContext.getResponseStream()).andReturn(new TestOutputStream());
         mocks.replay();
         
         Response response = eventsSource.buildResponse(user, responseContext);
         assertSame(Response.MANAGING_BY_BUILDER, response);
+        assertTrue(flushed);
         
         assertEquals(1, collector.getDataListSize());
         Object obj = collector.getDataList().get(0);
@@ -87,10 +88,24 @@ public class EventSourceBuilderTest extends RavenCoreTestCase {
         mocks.verify();
     }
     
-    private void trainToStringMocks(IMocksControl mocks) {
+    private void trainToStringMocks(IMocksControl mocks, ResponseContext context) {
         Request request = mocks.createMock(Request.class);
         user = mocks.createMock(UserContext.class);
+        expect(context.getRequest()).andReturn(request).anyTimes();
         expect(request.getRemoteAddr()).andReturn("client-host").anyTimes();
         expect(user.getName()).andReturn("testUser").anyTimes();
+    }
+    
+    private class TestOutputStream extends OutputStream {
+
+        @Override
+        public void write(int b) throws IOException {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public void flush() throws IOException {
+            flushed = true;
+        }
     }
 }
