@@ -514,23 +514,8 @@ public class NetworkResponseServlet extends HttpServlet  {
         
         public void writeProcessed() throws IOException {
             writeProcessed.set(true);
-//            if (writeProcessed.compareAndSet(false, true) && (readProcessed.get()!=null))
-//                tryClose();
         }              
-
-        private void tryClose() throws IOException{
-            if (closed.compareAndSet(false, true)) {                
-                if (servletLogger.isDebugEnabled())
-                    servletLogger.debug("Closing channel");
-                try {
-//                    if (readProcessed.get()!=null)
-//                        readProcessed.get().close();
-                } finally {
-                    ((CometResponseContext)responseContext).closeChannel();
-                }
-            }
-        }
-        
+       
         public void closeChannel(CometEvent ev) throws IOException, ServletException {                        
             if (writeProcessed.get()) {
                 waitForCloseTs = System.currentTimeMillis();
