@@ -20,6 +20,7 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.expr.impl.IfNode;
 import org.raven.net.ResponseServiceNode;
+import org.raven.net.impl.EventSource;
 import org.raven.net.impl.FileResponseBuilder;
 import org.raven.net.impl.NetworkResponseGroupNode;
 import org.raven.net.impl.SimpleResponseBuilder;
@@ -33,7 +34,7 @@ import org.raven.tree.impl.InvisibleNode;
 @NodeClass(parentNode = InvisibleNode.class, 
         childNodes = {
             NetworkResponseGroupNode.class, SimpleResponseBuilder.class, FileResponseBuilder.class, 
-            ZipFileResponseBuilder.class, IfNode.class
+            ZipFileResponseBuilder.class, IfNode.class, EventSource.class
 })
 public class WebInterfaceNode extends NetworkResponseGroupNode implements ResponseServiceNode {
     public final static String NAME = "Web interface";
