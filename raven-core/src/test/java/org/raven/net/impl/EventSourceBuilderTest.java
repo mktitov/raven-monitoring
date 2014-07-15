@@ -24,7 +24,9 @@ import org.easymock.IMocksControl;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.raven.BindingNames;
 import org.raven.auth.UserContext;
+import org.raven.ds.DataContext;
 import org.raven.net.EventSourceChannel;
 import org.raven.net.Request;
 import org.raven.net.Response;
@@ -43,7 +45,9 @@ public class EventSourceBuilderTest extends RavenCoreTestCase {
     private DataCollector collector;
     private EventSourceBuilder eventsSource;
     private UserContext user;
+    private ResponseContext responseContext;
     private boolean flushed = false;
+    private byte[] writtenBytes;
     
     @Before
     public void prepare() {
@@ -68,23 +72,72 @@ public class EventSourceBuilderTest extends RavenCoreTestCase {
     @Test
     public void channelCreationTest() throws Exception {
         IMocksControl mocks = createControl();
-        ResponseContext responseContext = mocks.createMock(ResponseContext.class);
-        trainToStringMocks(mocks, responseContext);
-        Map<String, String> headers = mocks.createMock(Map.class);
-        expect(responseContext.getHeaders()).andReturn(headers);
-        expect(headers.put("Content-Type", "text/event-stream")).andReturn(null);
-        expect(responseContext.getResponseStream()).andReturn(new TestOutputStream());
+        trainChannelCreation(mocks);
         mocks.replay();
         
-        Response response = eventsSource.buildResponse(user, responseContext);
+        Object response = eventsSource.buildResponseContent(user, responseContext);
         assertSame(Response.MANAGING_BY_BUILDER, response);
         assertTrue(flushed);
         
         assertEquals(1, collector.getDataListSize());
         Object obj = collector.getDataList().get(0);
         assertTrue(obj instanceof EventSourceChannel);
+        DataContext context = collector.getLastDataContext();
+        assertNotNull(context);
+        assertSame(obj, context.getAt(BindingNames.CHANNEL_BINDING));
         
         mocks.verify();
+    }
+
+    @Test
+    public void sendMessageTest() throws Exception {
+        IMocksControl mocks = createControl();
+        trainChannelCreation(mocks);
+        expect(responseContext.getResponseStream()).andReturn(new TestOutputStream());
+        mocks.replay();
+        
+        eventsSource.buildResponseContent(user, responseContext);
+        ds.pushData("test");
+        assertNotNull(writtenBytes);
+        assertEquals("data: test\n\n", new String(writtenBytes, "utf-8"));
+        
+        mocks.verify();        
+    }
+    
+    @Test
+    public void sendMessageForSelectedChannel() throws Exception {
+        IMocksControl mocks = createControl();
+        trainChannelCreation(mocks);
+        mocks.replay();
+       
+        eventsSource.buildResponseContent(user, responseContext);
+        
+        IMocksControl mocks2 = createControl();
+        trainChannelCreation(mocks2);
+        expect(responseContext.getResponseStream()).andReturn(new TestOutputStream());
+        
+        eventsSource.buildResponseContent(user, responseContext);
+        
+        
+        
+        mocks2.verify();
+        mocks.verify();        
+    }
+    
+    @Test
+    public void asyncMessageSendTest() throws Exception {
+        
+    }
+    
+    private void trainChannelCreation(IMocksControl mocks) throws IOException {
+        responseContext = mocks.createMock(ResponseContext.class);
+        trainToStringMocks(mocks, responseContext);
+        Map<String, String> headers = mocks.createMock(Map.class);
+        expect(responseContext.getHeaders()).andReturn(headers);
+        expect(headers.put("Content-Type", "text/event-stream")).andReturn(null);
+        expect(responseContext.getResponseStream()).andReturn(new TestOutputStream());
+        responseContext.closeChannel();
+        expectLastCall().anyTimes();
     }
     
     private void trainToStringMocks(IMocksControl mocks, ResponseContext context) {
@@ -92,7 +145,7 @@ public class EventSourceBuilderTest extends RavenCoreTestCase {
         user = mocks.createMock(UserContext.class);
         expect(context.getRequest()).andReturn(request).anyTimes();
         expect(request.getRemoteAddr()).andReturn("client-host").anyTimes();
-        expect(user.getName()).andReturn("testUser").anyTimes();
+        expect(user.getLogin()).andReturn("testUser").anyTimes();
     }
     
     private class TestOutputStream extends OutputStream {
@@ -101,6 +154,11 @@ public class EventSourceBuilderTest extends RavenCoreTestCase {
         public void write(int b) throws IOException {
             throw new UnsupportedOperationException("Not supported yet.");
         }
+
+        @Override
+        public void write(byte[] b) throws IOException {
+            writtenBytes = b;
+        }                
 
         @Override
         public void flush() throws IOException {

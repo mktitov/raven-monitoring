@@ -33,6 +33,11 @@ public class DataCollector extends AbstractDataConsumer
     private final List<Object> dataList = Collections.synchronizedList(new ArrayList<Object>());
     private long pauseBeforeRecieve = 0;
     private DataHandler dataHandler;
+    private DataContext lastDataContext;
+
+    public DataContext getLastDataContext() {
+        return lastDataContext;
+    }
 
     public DataHandler getDataHandler() {
         return dataHandler;
@@ -77,6 +82,7 @@ public class DataCollector extends AbstractDataConsumer
     protected void doSetData(DataSource dataSource, Object data, DataContext context)            
     {
         getLogger().debug(String.format("Received data (%s) from (%s)", data, dataSource));
+        lastDataContext = context;
         try {
             if (pauseBeforeRecieve > 0) {
                 Thread.sleep(pauseBeforeRecieve);

@@ -68,6 +68,9 @@ public class QueueDataPipe extends AbstractSafeDataPipe implements Schedulable {
     @NotNull @Parameter(defaultValue="false")
     private Boolean forwardPullRequest;
     
+    @NotNull @Parameter(defaultValue="100")
+    private Long offerTimeout;
+    
     @Parameter(valueHandlerType = SystemSchedulerValueHandlerFactory.TYPE)
     private Scheduler flushScheduler;
     
@@ -90,7 +93,7 @@ public class QueueDataPipe extends AbstractSafeDataPipe implements Schedulable {
     protected void doStart() throws Exception {
         super.doStart();
         worker = new Worker(queueSize, queueType, executor, dataCountThreshold, 
-            dataLifetimeUnit.toMillis(dataLifetime));
+            dataLifetimeUnit.toMillis(dataLifetime), offerTimeout);
     }
 
     @Override
@@ -144,6 +147,14 @@ public class QueueDataPipe extends AbstractSafeDataPipe implements Schedulable {
     protected void doAddBindingsForExpression(DataSource dataSource, Object data, DataContext context, 
         BindingSupport bindingSupport) 
     {
+    }
+
+    public Long getOfferTimeout() {
+        return offerTimeout;
+    }
+
+    public void setOfferTimeout(Long offerTimeout) {
+        this.offerTimeout = offerTimeout;
     }
     
     @Parameter(readOnly=true)
@@ -233,16 +244,18 @@ public class QueueDataPipe extends AbstractSafeDataPipe implements Schedulable {
         private final int dataCountThreshold;
         private final ExecutorService executor;
         private final long lifetime;
+        private final long offerTimeout;
         private volatile int maxQueueSize = 0;
 
         public Worker(int queueSize, QueueType queueType, ExecutorService executor, int dataCountThreshold, 
-            long lifetime) 
+            long lifetime, long offerTimeout) 
         {
             this.queue = new ArrayBlockingQueue<DataWrapper>(queueSize);
             this.queueType = queueType;
             this.executor = executor;
             this.dataCountThreshold = dataCountThreshold;
             this.lifetime = lifetime;
+            this.offerTimeout = offerTimeout;
         }
         
         public Node getTaskNode() {
@@ -373,7 +386,7 @@ public class QueueDataPipe extends AbstractSafeDataPipe implements Schedulable {
         }
 
         private void offerWithTimeout(DataWrapper dataWrapper) throws Exception {
-            if (!queue.offer(dataWrapper, OFFER_TIMEOUT, TimeUnit.MILLISECONDS)) 
+            if (!queue.offer(dataWrapper, offerTimeout, TimeUnit.MILLISECONDS)) 
                 throw new Exception("Queue exhausted. Received DATA discarded");
         }
 
