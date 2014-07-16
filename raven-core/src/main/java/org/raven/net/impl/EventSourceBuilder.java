@@ -16,13 +16,16 @@
 
 package org.raven.net.impl;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import org.raven.BindingNames;
@@ -42,18 +45,25 @@ import org.raven.net.Request;
 import org.raven.net.Response;
 import org.raven.net.ResponseContext;
 import org.raven.net.ResponseContextListener;
+import org.raven.table.TableImpl;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.Viewable;
+import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
+import org.raven.tree.impl.ViewableObjectImpl;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.internal.annotations.Message;
 
 /**
  *
  * @author Mikhail Titov
  */
 @NodeClass(parentNode = NetworkResponseServiceNode.class)
-public class EventSourceBuilder extends AbstractResponseBuilder implements DataPipe, ResponseContextListener {
+public class EventSourceBuilder extends AbstractResponseBuilder 
+    implements DataPipe, ResponseContextListener,  Viewable
+{
     
-    private final static Charset UTF8 = Charset.forName("utf-8"); //standard for text/event-stream
+    public final static Charset UTF8 = Charset.forName("utf-8"); //standard for text/event-stream
     public final static String CLOSE_CHANNEL_EVENT = "CLOSE_CHANNEL";
     
     @NotNull @Parameter(valueHandlerType = NodeReferenceValueHandlerFactory.TYPE)
@@ -65,32 +75,38 @@ public class EventSourceBuilder extends AbstractResponseBuilder implements DataP
     @NotNull @Parameter(defaultValue = "false")
     private Boolean useChannelSelector;
     
-    private List<Channel> channels;
+    private Collection<Channel> channels;
     private AtomicInteger asyncUsageDetector;
     private AtomicLong totalChannelsCreated;
     private AtomicLong totalMessagesSent;
     private AtomicLong totalMessagesReceivedForDelivery;
     private AtomicLong totalSendErrors;
+    
+    @Message private static String channelMessage;
+    @Message private static String createdMessage;
+    @Message private static String messagesSentMessage;
+    
 
     @Override
     protected void initFields() {
         super.initFields();
         channels = null;
         asyncUsageDetector = null;
-        totalChannelsCreated = null;
-        totalMessagesReceivedForDelivery = null;
-        totalSendErrors = null;
+        totalChannelsCreated = new AtomicLong();
+        totalMessagesSent = new AtomicLong();
+        totalMessagesReceivedForDelivery = new AtomicLong();
+        totalSendErrors = new AtomicLong();
     }
 
     @Override
     protected void doStart() throws Exception {
         super.doStart();
-        channels = new CopyOnWriteArrayList<Channel>();
+        channels = new ConcurrentLinkedQueue<Channel>();
         asyncUsageDetector = new AtomicInteger();
-        totalChannelsCreated = new AtomicLong();
-        totalMessagesSent = new AtomicLong();
-        totalMessagesReceivedForDelivery = new AtomicLong();
-        totalSendErrors = new AtomicLong();
+        totalChannelsCreated.set(0);
+        totalMessagesSent.set(0);
+        totalMessagesReceivedForDelivery.set(0);
+        totalSendErrors.set(0);
     }
 
     @Override
@@ -162,11 +178,12 @@ public class EventSourceBuilder extends AbstractResponseBuilder implements DataP
     protected Object buildResponseContent(UserContext user, ResponseContext responseContext) throws Exception {
         Channel channel = new Channel(user, responseContext);
         channels.add(channel);
+        responseContext.addListener(this);
         totalChannelsCreated.incrementAndGet();
         if (logger.isInfoEnabled())
             getLogger().info("New channel created: {}", channel);
         //TODO: Может слать событие асинхронно через executor?
-        responseContext.getHeaders().put("Content-Type", getContentType());
+        responseContext.getHeaders().put("Content-Type", getContentType());        
         responseContext.getResponseStream().flush();
         
         DataContextImpl context = new DataContextImpl();
@@ -182,11 +199,16 @@ public class EventSourceBuilder extends AbstractResponseBuilder implements DataP
     public void setData(DataSource dataSource, final Object data, DataContext context) {        
         if (data==null || !isStarted()) 
             return;
+        if (channels.isEmpty()) {
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                getLogger().debug("Received data for submitting but no regegistered channels. Ignoring...");
+            return;
+        }
         final int counter = asyncUsageDetector.incrementAndGet();
         try {                
             final String message = "data: "+converter.convert(String.class, data, null);
             if (logger.isDebugEnabled())
-                getLogger().debug("Received data for sending for submitting to channels");
+                getLogger().debug("Received data for submitting to channels");
             if (counter>1) {
                 totalSendErrors.incrementAndGet();
                 if (logger.isErrorEnabled())
@@ -209,7 +231,9 @@ public class EventSourceBuilder extends AbstractResponseBuilder implements DataP
                 bindingSupport.put(BindingNames.DATASOURCE_BINDING, dataSource);
             }
             try {
-                for (Channel channel: channels)
+                final Iterator<Channel> it = channels.iterator();
+                while (it.hasNext()) {
+                    final Channel channel = it.next();
                     try {
                         if (   (messageForChannel==null && selectChannel(_useChannelSelector, channel))
                             || messageForChannel==channel) 
@@ -218,14 +242,17 @@ public class EventSourceBuilder extends AbstractResponseBuilder implements DataP
                             stream.write(messBytes);
                             stream.flush();
                             totalMessagesSent.incrementAndGet();
+                            channel.messagesSent.incrementAndGet();
                             if (messageForChannel!=null)
                                 break;
                         }
                     } catch (Exception e) {
                         totalSendErrors.incrementAndGet();
                         if (logger.isErrorEnabled())
-                            getLogger().error(String.format("Error writing to channel (%s)", channel), e);
+                            getLogger().error(String.format("Error writing to channel (%s). May be channel closed?. Unregistering...", channel), e);
+                        it.remove();
                     }
+                }
             } finally {
                 if (_useChannelSelector)
                     bindingSupport.reset();
@@ -263,23 +290,43 @@ public class EventSourceBuilder extends AbstractResponseBuilder implements DataP
     }
 
     public void contextClosed(ResponseContext context) {
-        List<Channel> _channels = channels;
+        Collection<Channel> _channels = channels;
         if (_channels!=null) {
-            ListIterator<Channel> it = _channels.listIterator();
+            Iterator<Channel> it = _channels.iterator();
             while (it.hasNext()) {
                 final Channel channel = it.next();
                 if (channel.responseContext==context) {
                     if (isLogLevelEnabled(LogLevel.DEBUG))
-                        getLogger().debug("Channel ({}) was closed by servlet. Removing it from channel list");
+                        getLogger().debug("Channel ({}) was closed by servlet. Removing it from channel list", channel);
                     it.remove();
                 }
             }
         }
     }
+
+    public Map<String, NodeAttribute> getRefreshAttributes() throws Exception {
+        return null;
+    }
+
+    public List<ViewableObject> getViewableObjects(Map<String, NodeAttribute> refreshAttributes) throws Exception {
+        ArrayList<ViewableObject> vos = new ArrayList<ViewableObject>(2);
+        TableImpl table = new TableImpl(new String[]{channelMessage, createdMessage, messagesSentMessage});
+        SimpleDateFormat fmt = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+        for (Channel channel: channels)
+            table.addRow(new Object[]{channel.toString(), fmt.format(new Date(channel.created)), channel.messagesSent});        
+        vos.add(new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table));
+        return vos;
+    }
+
+    public Boolean getAutoRefresh() {
+        return Boolean.TRUE;
+    }
     
     private static class Channel implements EventSourceChannel {
         private final UserContext user;
         private final ResponseContext responseContext;
+        private final long created = System.currentTimeMillis();
+        private final AtomicLong messagesSent = new AtomicLong();
 
         public Channel(UserContext user, ResponseContext responseContext) {
             this.user = user;
@@ -288,7 +335,7 @@ public class EventSourceBuilder extends AbstractResponseBuilder implements DataP
 
         @Override
         public String toString() {
-            return user.getLogin()+", host:"+responseContext.getRequest().getRemoteAddr();
+            return user.getLogin()+", host-"+responseContext.getRequest().getRemoteAddr()+":"+responseContext.getRequest().getRemotePort();
         }
 
         public UserContext getUser() {

@@ -66,6 +66,11 @@ public interface ResponseContext {
      */
     public Response getResponse(UserContext user) throws NetworkResponseServiceExeption;
     /**
+     * Generate and return the response for given user and request parameters
+     * @throws NetworkResponseServiceExeption 
+     */
+    public Response getResponse(ResponseContext delegate, UserContext user) throws NetworkResponseServiceExeption;
+    /**
      * Returns the response builder. To build response use {@link #getResponse(org.raven.auth.UserContext) }, 
      * don't use the result of this method to build response
      */

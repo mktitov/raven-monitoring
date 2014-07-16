@@ -151,6 +151,12 @@ public class ResponseContextImpl implements ResponseContext {
     }
 
     public Response getResponse(UserContext user) throws NetworkResponseServiceExeption {
+        return getResponse(this, user);
+    }
+
+    public Response getResponse(ResponseContext delegate, UserContext user) throws NetworkResponseServiceExeption {
+        final Request request = delegate.getRequest();
+        final String subcontextPath = delegate.getSubcontextPath();
         if (subcontextPath!=null && !subcontextPath.isEmpty())
             request.getParams().put(NetworkResponseServiceNode.SUBCONTEXT_PARAM, subcontextPath);
         if (logger.isDebugEnabled()) 
@@ -167,7 +173,7 @@ public class ResponseContextImpl implements ResponseContext {
                 try {
                     globalBindings.put(BindingNames.USER_CONTEXT, user);
                     globalBindings.put(BindingNames.REQUEST_BINDING, request);
-                    globalBindings.put(BindingNames.RESPONSE_BINDING, this);
+                    globalBindings.put(BindingNames.RESPONSE_BINDING, delegate);
                     globalBindings.put(BindingNames.ROOT_PATH, request.getRootPath());
                     globalBindings.put(BindingNames.APP_NODE, request.getParams().get(BindingNames.APP_NODE));
                     globalBindings.put(BindingNames.APP_PATH, request.getParams().get(BindingNames.APP_PATH));
@@ -175,7 +181,7 @@ public class ResponseContextImpl implements ResponseContext {
                     globalBindings.put(BindingNames.INCLUDE_JQUERY, preparePath(INCLUDE_JQUERY_STR));
                     globalBindings.put(BindingNames.INCLUDE_JQUERY_CSS, preparePath(INCLUDE_JQUERY_CSS_STR));
                     globalBindings.put(BindingNames.INCLUDE_JQUERY_UI, preparePath(INCLUDE_JQUERY_UI_STR));
-                    Response response = responseBuilder.buildResponse(user, this);
+                    Response response = delegate.getResponseBuilder().buildResponse(user, delegate);
                     return response;
                 } finally {
                     globalBindings.reset();

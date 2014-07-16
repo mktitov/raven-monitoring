@@ -187,6 +187,7 @@ public class EventSourceBuilderTest extends RavenCoreTestCase {
         responseContext = mocks.createMock(ResponseContext.class);
         trainToStringMocks(mocks, responseContext);
         Map<String, String> headers = mocks.createMock(Map.class);
+        responseContext.addListener(eventsSource);
         expect(responseContext.getHeaders()).andReturn(headers);
         expect(headers.put("Content-Type", "text/event-stream")).andReturn(null);
         expect(responseContext.getResponseStream()).andReturn(responseStream);
@@ -199,6 +200,7 @@ public class EventSourceBuilderTest extends RavenCoreTestCase {
         user = mocks.createMock(UserContext.class);
         expect(context.getRequest()).andReturn(request).anyTimes();
         expect(request.getRemoteAddr()).andReturn("client-host").anyTimes();
+        expect(request.getRemotePort()).andReturn(123).anyTimes();
         expect(user.getLogin()).andReturn("testUser").anyTimes();
     }
     

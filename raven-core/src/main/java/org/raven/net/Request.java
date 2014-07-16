@@ -32,6 +32,10 @@ public interface Request {
      */
     public String getRemoteAddr();
     /**
+     * Returns the requester port
+     */
+    public int getRemotePort();
+    /**
      * Returns server host name
      */
     public String getServerHost();

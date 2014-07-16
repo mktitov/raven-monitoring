@@ -51,6 +51,10 @@ public class RequestImpl implements Request {
         return remoteAddr;
     }
 
+    public int getRemotePort() {
+        return httpRequest.getRemotePort();
+    }
+
     public String getServerHost() {
         return httpRequest.getLocalName();
     }
