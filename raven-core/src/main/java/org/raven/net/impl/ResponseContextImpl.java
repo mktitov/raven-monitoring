@@ -19,7 +19,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
 import org.raven.BindingNames;
 import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
@@ -31,6 +34,7 @@ import org.raven.net.Request;
 import org.raven.net.Response;
 import org.raven.net.ResponseBuilder;
 import org.raven.net.ResponseContext;
+import org.raven.net.ResponseContextListener;
 import org.raven.net.ResponseServiceNode;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.LoggerHelper;
@@ -65,6 +69,7 @@ public class ResponseContextImpl implements ResponseContext {
     private final ResponseServiceNode serviceNode;
     private final boolean sessionAllowed;
     private Map<String, String> headers;
+    private Set<ResponseContextListener> listeners;
 
     public ResponseContextImpl(Request request, String builderPath, String subcontext, long requestId, 
             LoginService loginService, ResponseBuilder responseBuilder, ResponseServiceNode serviceNode) 
@@ -82,6 +87,21 @@ public class ResponseContextImpl implements ResponseContext {
         this.sessionAllowed = _sessionAllowed==null? false : _sessionAllowed;
     }
 
+    public synchronized void addListener(ResponseContextListener listener) {
+        if (listeners==null)
+            listeners = new ConcurrentSkipListSet<ResponseContextListener>();
+        listeners.add(listener);
+    }
+
+    public synchronized void removeListener(ResponseContextListener listener) {
+        if (listeners!=null)
+            listeners.remove(listener);
+    }
+
+    public Set<ResponseContextListener> getListeners() {
+        return listeners;
+    }
+    
     public String getSubcontextPath() {
         return subcontextPath;
     }
@@ -209,6 +229,13 @@ public class ResponseContextImpl implements ResponseContext {
 
     public void closeChannel() throws IOException {
         throw new UnsupportedOperationException("Not supported by this response context implementation. Use comet servlet");
+    }
+
+    public void channelClosed() {
+        Set<ResponseContextListener> _listeners = listeners;
+        if (_listeners!=null)
+            for (ResponseContextListener listener: _listeners)
+                listener.contextClosed(this);
     }
 
 }

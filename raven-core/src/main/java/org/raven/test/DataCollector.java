@@ -35,6 +35,11 @@ public class DataCollector extends AbstractDataConsumer
     private DataHandler dataHandler;
     private DataContext lastDataContext;
 
+    @Override
+    public Object getLastData() {
+        return dataList.isEmpty()? null : dataList.get(dataList.size()-1);
+    }
+
     public DataContext getLastDataContext() {
         return lastDataContext;
     }

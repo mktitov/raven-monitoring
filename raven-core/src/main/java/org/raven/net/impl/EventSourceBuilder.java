@@ -17,9 +17,11 @@
 package org.raven.net.impl;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -33,10 +35,13 @@ import org.raven.ds.DataPipe;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.DataContextImpl;
 import org.raven.ds.impl.DataSourceHelper;
+import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
+import org.raven.log.LogLevel;
 import org.raven.net.EventSourceChannel;
 import org.raven.net.Request;
 import org.raven.net.Response;
 import org.raven.net.ResponseContext;
+import org.raven.net.ResponseContextListener;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 import org.weda.annotations.constraints.NotNull;
@@ -46,13 +51,19 @@ import org.weda.annotations.constraints.NotNull;
  * @author Mikhail Titov
  */
 @NodeClass(parentNode = NetworkResponseServiceNode.class)
-public class EventSourceBuilder extends AbstractResponseBuilder implements DataPipe {
+public class EventSourceBuilder extends AbstractResponseBuilder implements DataPipe, ResponseContextListener {
     
     private final static Charset UTF8 = Charset.forName("utf-8"); //standard for text/event-stream
     public final static String CLOSE_CHANNEL_EVENT = "CLOSE_CHANNEL";
     
     @NotNull @Parameter(valueHandlerType = NodeReferenceValueHandlerFactory.TYPE)
     private DataSource dataSource;
+    
+    @Parameter(valueHandlerType = ScriptAttributeValueHandlerFactory.TYPE)
+    private Boolean channelSelector;
+    
+    @NotNull @Parameter(defaultValue = "false")
+    private Boolean useChannelSelector;
     
     private List<Channel> channels;
     private AtomicInteger asyncUsageDetector;
@@ -131,6 +142,22 @@ public class EventSourceBuilder extends AbstractResponseBuilder implements DataP
         this.dataSource = dataSource;
     }
 
+    public Boolean getChannelSelector() {
+        return channelSelector;
+    }
+
+    public void setChannelSelector(Boolean channelSelector) {
+        this.channelSelector = channelSelector;
+    }
+
+    public Boolean getUseChannelSelector() {
+        return useChannelSelector;
+    }
+
+    public void setUseChannelSelector(Boolean useChannelSelector) {
+        this.useChannelSelector = useChannelSelector;
+    }
+
     @Override
     protected Object buildResponseContent(UserContext user, ResponseContext responseContext) throws Exception {
         Channel channel = new Channel(user, responseContext);
@@ -152,8 +179,8 @@ public class EventSourceBuilder extends AbstractResponseBuilder implements DataP
     //TODO: По channelId? List of channelId
     //TODO: По channelForUser?
     //TODO: нужно событие по которому канал будет закрываться. Но работать событие должно совместно с channelSelector? или по channelForUser? или по channelId
-    public void setData(DataSource dataSource, Object data, DataContext context) {        
-        if (data==null) 
+    public void setData(DataSource dataSource, final Object data, DataContext context) {        
+        if (data==null || !isStarted()) 
             return;
         final int counter = asyncUsageDetector.incrementAndGet();
         try {                
@@ -175,22 +202,47 @@ public class EventSourceBuilder extends AbstractResponseBuilder implements DataP
                 else
                     getLogger().trace("Sending message to channels -> "+message);
             }
-            for (Channel channel: channels)
-                try {
-                    if (messageForChannel==null || messageForChannel==channel) {
-                        channel.responseContext.getResponseStream().write(messBytes);
-                        totalMessagesSent.incrementAndGet();
-                        if (messageForChannel!=null)
-                            break;
+            Boolean _useChannelSelector = messageForChannel==null && useChannelSelector;
+            if (_useChannelSelector) {
+                bindingSupport.put(BindingNames.DATA_BINDING, data);
+                bindingSupport.put(BindingNames.DATA_CONTEXT_BINDING, context);
+                bindingSupport.put(BindingNames.DATASOURCE_BINDING, dataSource);
+            }
+            try {
+                for (Channel channel: channels)
+                    try {
+                        if (   (messageForChannel==null && selectChannel(_useChannelSelector, channel))
+                            || messageForChannel==channel) 
+                        {
+                            final OutputStream stream = channel.responseContext.getResponseStream();
+                            stream.write(messBytes);
+                            stream.flush();
+                            totalMessagesSent.incrementAndGet();
+                            if (messageForChannel!=null)
+                                break;
+                        }
+                    } catch (Exception e) {
+                        totalSendErrors.incrementAndGet();
+                        if (logger.isErrorEnabled())
+                            getLogger().error(String.format("Error writing to channel (%s)", channel), e);
                     }
-                } catch (IOException e) {
-                    totalSendErrors.incrementAndGet();
-                    if (logger.isErrorEnabled())
-                        getLogger().error(String.format("Error writing to channel (%s)", channel), e);
-                }
+            } finally {
+                if (_useChannelSelector)
+                    bindingSupport.reset();
+            }
         } finally {
             asyncUsageDetector.decrementAndGet();
         }
+    }
+    
+    private boolean selectChannel(boolean useSelector, Channel channel) throws Exception {
+        if (!useSelector)
+            return true;
+        bindingSupport.put(BindingNames.CHANNEL_BINDING, channel);
+        Boolean res = channelSelector;
+        if (res==null)
+            throw new Exception("Attribute channelSelector returns null, but must return true or false");
+        return res;
     }
 
     public Object refereshData(Collection<NodeAttribute> sessionAttributes) {
@@ -208,6 +260,21 @@ public class EventSourceBuilder extends AbstractResponseBuilder implements DataP
 
     public Collection<NodeAttribute> generateAttributes() {
         return null;
+    }
+
+    public void contextClosed(ResponseContext context) {
+        List<Channel> _channels = channels;
+        if (_channels!=null) {
+            ListIterator<Channel> it = _channels.listIterator();
+            while (it.hasNext()) {
+                final Channel channel = it.next();
+                if (channel.responseContext==context) {
+                    if (isLogLevelEnabled(LogLevel.DEBUG))
+                        getLogger().debug("Channel ({}) was closed by servlet. Removing it from channel list");
+                    it.remove();
+                }
+            }
+        }
     }
     
     private static class Channel implements EventSourceChannel {

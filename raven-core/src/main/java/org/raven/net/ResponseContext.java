@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Map;
+import java.util.Set;
 import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
 import org.slf4j.Logger;
@@ -94,6 +95,23 @@ public interface ResponseContext {
      * Function must be used only when builder returns the {@link Response#MANAGING_BY_BUILDER} or 
      */
     public void closeChannel() throws IOException;
+    /**
+     * Servlet informs response context that response channel was closed by calling this method.
+     */
+    public void channelClosed();
+    /**
+     * Adds context listener
+     */
+    public void addListener(ResponseContextListener listener);
+    /**
+     * Removes context listener
+     */
+    public void removeListener(ResponseContextListener listener);
+    /**
+     * Returns the list of listeners
+     * @return 
+     */
+    public Set<ResponseContextListener> getListeners();
 //    public String getPath();
 //    public String getBuilderPath();
 //    public String getSubpath();
