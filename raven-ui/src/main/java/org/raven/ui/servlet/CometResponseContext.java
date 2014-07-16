@@ -86,7 +86,10 @@ public class CometResponseContext implements ResponseContext {
     }
 
     public void channelClosed() {
-        responseContext.channelClosed();
+        Set<ResponseContextListener> listeners = responseContext.getListeners();
+        if (listeners!=null)
+            for (ResponseContextListener listener: listeners)
+                listener.contextClosed(this);
     }
 
     @Override
@@ -121,7 +124,11 @@ public class CometResponseContext implements ResponseContext {
 
     @Override
     public Response getResponse(UserContext user) throws NetworkResponseServiceExeption {
-        return responseContext.getResponse(user);
+        return responseContext.getResponse(this, user);
+    }
+
+    public Response getResponse(ResponseContext delegate, UserContext user) throws NetworkResponseServiceExeption {
+        return responseContext.getResponse(delegate, user);
     }
 
     @Override

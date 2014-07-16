@@ -116,6 +116,7 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
 //                        if (!isMultipart)
 //                            ctx.incomingDataListener = (DataReceiver) ctx.responseContext.getRequest();
                         Response result = ctx.responseContext.getResponse(ctx.user);
+                        ctx.responseGenerated();
                         ctx.builderProcessedTs = System.currentTimeMillis();
                         if (debugEnabled)
                             ctx.servletLogger.debug(String.format(
@@ -183,7 +184,7 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
             if (serviceResponse != Response.ALREADY_COMPOSED && serviceResponse != Response.MANAGING_BY_BUILDER)
                 super.processServiceResponse(ctx, serviceResponse);
         } finally {
-            if (serviceResponse!=Response.MANAGING_BY_BUILDER)
+            if (serviceResponse!=Response.MANAGING_BY_BUILDER) {
                 try {
                     ev.setTimeout(1);
                 } catch (Throwable e) {
@@ -191,6 +192,9 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
                 } finally {
                     ctx.writeProcessed();
                 }
+            } else {
+                ctx.responseManagingByBuilder = true;
+            }
         }
     }
 

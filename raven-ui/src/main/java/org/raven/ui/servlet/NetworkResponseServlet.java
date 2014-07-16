@@ -262,8 +262,11 @@ public class NetworkResponseServlet extends HttpServlet  {
                     response.addHeader(e.getKey(), e.getValue());
             Object content = serviceResponse.getContent();
             if (content instanceof RedirectResult) {
-                response.sendRedirect(((RedirectResult)content).getContent().toString());
-                response.flushBuffer();
+//                response.sendRedirect(((RedirectResult)content).getContent().toString());
+                response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
+                response.addHeader("Location", ((RedirectResult)content).getContent().toString());
+//                response.flushBuffer();
+//                response.getOutputStream().flush();
                 response.getOutputStream().close();
             } else {
                 response.setContentType(serviceResponse.getContentType());
@@ -288,6 +291,7 @@ public class NetworkResponseServlet extends HttpServlet  {
                     if (content instanceof Writable) {
                         Writable writable = (Writable) content;
                         writable.writeTo(response.getWriter());
+                        response.getWriter().flush();
                         response.getWriter().close();
                     } else if (content instanceof Outputable) {
                         ((Outputable)content).outputTo(response.getOutputStream());
@@ -299,6 +303,7 @@ public class NetworkResponseServlet extends HttpServlet  {
                             try {
                                 IOUtils.copy(contentStream, out);
                             } finally {
+                                out.flush();
                                 IOUtils.closeQuietly(out);
                                 IOUtils.closeQuietly(contentStream);
 //                                out.flush();
@@ -457,6 +462,7 @@ public class NetworkResponseServlet extends HttpServlet  {
         private volatile Reader requestReader;
         public final String requestEncoding;
         public volatile ServletException processingException;
+        public volatile boolean responseManagingByBuilder = false;
         
         private final AtomicLong requestStreamRequestTime = new AtomicLong();
         private volatile boolean responseGenerated = false;
@@ -524,8 +530,7 @@ public class NetworkResponseServlet extends HttpServlet  {
                 if (processingException!=null)
                     throw processingException;
                 else {
-                    ev.close();
-                    responseContext.channelClosed();
+                    processChannelClose(ev);
                 }
             } else {
                 if (   requestStreamRequestTime.get()>0 
@@ -535,13 +540,23 @@ public class NetworkResponseServlet extends HttpServlet  {
                         servletLogger.warn("Request stream read timeout detected! Closing request stream");
                     requestStream.dataStreamClosed();
                 }
-                if (!responseGenerated && System.currentTimeMillis()>createdTs + RESPONSE_GENERATION_TIMOUT) {
+                if (!responseGenerated && System.currentTimeMillis()>createdTs + RESPONSE_GENERATION_TIMOUT) 
+                {
                     if (servletLogger.isWarnEnabled())
                         servletLogger.warn("Response generating by builder timeout detected! Closing channel");
-                    ev.close();
-                    responseContext.channelClosed();
-                }                    
+                    processChannelClose(ev);
+                } else if (responseManagingByBuilder) {
+                    if (servletLogger.isDebugEnabled())
+                        servletLogger.debug("Channel closed by client");
+                    processChannelClose(ev);
+                }
+                
             }
+        }
+
+        private void processChannelClose(CometEvent ev) throws IOException {
+            ev.close();
+            responseContext.channelClosed();
         }
         
         public void logStat() {
