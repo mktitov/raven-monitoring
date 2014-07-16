@@ -523,8 +523,10 @@ public class NetworkResponseServlet extends HttpServlet  {
                 logStat();
                 if (processingException!=null)
                     throw processingException;
-                else 
+                else {
                     ev.close();
+                    responseContext.channelClosed();
+                }
             } else {
                 if (   requestStreamRequestTime.get()>0 
                        && System.currentTimeMillis()>requestStreamRequestTime.get()+REQUEST_STREAM_WAIT_TIMEOUT)
@@ -537,6 +539,7 @@ public class NetworkResponseServlet extends HttpServlet  {
                     if (servletLogger.isWarnEnabled())
                         servletLogger.warn("Response generating by builder timeout detected! Closing channel");
                     ev.close();
+                    responseContext.channelClosed();
                 }                    
             }
         }

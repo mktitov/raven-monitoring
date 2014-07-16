@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.http.HttpServletResponse;
 import org.raven.auth.LoginService;
@@ -29,6 +30,7 @@ import org.raven.net.Request;
 import org.raven.net.Response;
 import org.raven.net.ResponseBuilder;
 import org.raven.net.ResponseContext;
+import org.raven.net.ResponseContextListener;
 import org.raven.ui.servlet.NetworkResponseServlet.RequestContext;
 import org.slf4j.Logger;
 
@@ -69,8 +71,24 @@ public class CometResponseContext implements ResponseContext {
     public void closeChannel() throws IOException {
         requestContext.writeProcessed();
     }
+    
+    //other calls to ResponseContext delegating to normal response context   
+    public void addListener(ResponseContextListener listener) {
+        responseContext.addListener(listener);
+    }
 
-    //other calls to ResponseContext delegating to normal response context
+    public void removeListener(ResponseContextListener listener) {
+        responseContext.removeListener(listener);
+    }
+
+    public Set<ResponseContextListener> getListeners() {
+        return responseContext.getListeners();
+    }
+
+    public void channelClosed() {
+        responseContext.channelClosed();
+    }
+
     @Override
     public LoginService getLoginService() {
         return responseContext.getLoginService();
