@@ -35,6 +35,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import static javax.servlet.http.HttpServletResponse.*;
 import javax.servlet.http.HttpSession;
 import org.apache.catalina.CometEvent;
 //import org.apache.catalina.CometEvent;
@@ -386,9 +387,29 @@ public class NetworkResponseServlet extends HttpServlet  {
                 ctx.request.getMethod().toUpperCase(), ctx.request);
     }
     
+    
     protected void processError(RequestContext ctx, Throwable e) 
         throws ServletException, IOException
     {
+        ErrorContext err;
+        boolean rethrow = false;
+        Request req = ctx.responseContext!=null? ctx.responseContext.getRequest() : null;
+        if (e instanceof NetworkResponseServiceUnavailableException) {
+            err = new ErrorContextImpl(SC_SERVICE_UNAVAILABLE, req, e.getMessage(), null);
+        } else if (e instanceof ContextUnavailableException) {
+            err = new ErrorContextImpl(SC_NOT_FOUND, req, e.getMessage(), null);
+        } else if (e instanceof AccessDeniedException) {
+            err = new ErrorContextImpl(SC_FORBIDDEN, req, e.getMessage(), null);
+        } else if (e instanceof RequiredParameterMissedException || e instanceof NetworkResponseServlet.BadRequestException) {
+            err = new ErrorContextImpl(SC_BAD_REQUEST, req, e.getMessage(), null);
+        } else if (e instanceof UnauthoriedException || e instanceof AuthenticationFailedException) {
+            ctx.response.setHeader("WWW-Authenticate", "BASIC realm=\"RAVEN\"");
+            ctx.response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+        } else {
+            rethrow = true;
+            err = new ErrorContextImpl(SC_BAD_REQUEST, req, e.getMessage(), e);
+        }
+            
         boolean rethrow = false;
         if (e instanceof NetworkResponseServiceUnavailableException) {
             ctx.response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, e.getMessage());
@@ -451,7 +472,7 @@ public class NetworkResponseServlet extends HttpServlet  {
     
     protected static class RequestContext implements DataReceiver {
         public final static long REQUEST_STREAM_WAIT_TIMEOUT = 5000;
-        public final static long RESPONSE_GENERATION_TIMOUT = 30000;
+        public final static long RESPONSE_GENERATION_TIMEOUT = 30000;
         private final static AtomicLong requestId = new AtomicLong(0);
         public final HttpServletRequest request;
         public final HttpServletResponse response;
@@ -540,7 +561,7 @@ public class NetworkResponseServlet extends HttpServlet  {
                         servletLogger.warn("Request stream read timeout detected! Closing request stream");
                     requestStream.dataStreamClosed();
                 }
-                if (!responseGenerated && System.currentTimeMillis()>createdTs + RESPONSE_GENERATION_TIMOUT) 
+                if (!responseGenerated && System.currentTimeMillis()>createdTs + RESPONSE_GENERATION_TIMEOUT) 
                 {
                     if (servletLogger.isWarnEnabled())
                         servletLogger.warn("Response generating by builder timeout detected! Closing channel");
@@ -550,7 +571,6 @@ public class NetworkResponseServlet extends HttpServlet  {
                         servletLogger.debug("Channel closed by client");
                     processChannelClose(ev);
                 }
-                
             }
         }
 
