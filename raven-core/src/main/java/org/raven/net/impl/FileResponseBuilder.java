@@ -41,6 +41,7 @@ import javax.script.Bindings;
 import javax.script.SimpleBindings;
 import org.apache.commons.io.output.WriterOutputStream;
 import org.apache.poi.util.IOUtils;
+import org.codehaus.groovy.control.CompilationFailedException;
 import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
@@ -82,6 +83,7 @@ import org.weda.internal.annotations.Service;
 public class FileResponseBuilder extends AbstractResponseBuilder implements Viewable {
     public final static String FILE_ATTR = "file";
     public final static String GSP_MIME_TYPE = "text/gsp";
+    private final static Template EMPTY_TEMPLATE = createEmptyTemplate();
     public static final String MIME_TYPE_ATTR = "file.mimeType";
     
     @Service
@@ -106,6 +108,14 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
     private Long lastModified;
     
     private AtomicReference<Template> template;
+    
+    private static Template createEmptyTemplate() {
+        try {
+            return new SimpleTemplateEngine().createTemplate("");
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
 
     @Override
     protected void initFields() {
@@ -159,20 +169,32 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
     public Object buildResponseContent(final Map bindings) throws Exception {        
         Object result = null;
         boolean needTransform = true;
+        final boolean debugEnabled = isLogLevelEnabled(LogLevel.DEBUG);        
         if (!GSP_MIME_TYPE.equals(file.getMimeType())) {
+            if (debugEnabled)
+                getLogger().debug("The content of the builder is not GSP template so sending content of the file as response");
             if (bindings.containsKey("template_bodies") && isLogLevelEnabled(LogLevel.WARN))
                 getLogger().warn(String.format(
                         "File response builder (%s) used as script ROOT template "
                         + "but has mime type different from (%s)", getPath(), GSP_MIME_TYPE));
             result = file;
         } else {
+            if (debugEnabled)
+                getLogger().debug("The content of the builder is GSP template. Generating dynamic content...");
             Template _template = template.get();
-            if (_template==null) 
+            if (_template==null) {
+                if (debugEnabled)
+                    getLogger().debug("GSP template not compiled. Compiling...");
                 _template = compile();
+            }
             if (_template!=null) {
+                if (debugEnabled)
+                    getLogger().debug("Generating content from GSP template");
                 final FileResponseBuilder _extendsTemplate = extendsTemplate;
                 final Template thisTemplate = _template;
                 if (_extendsTemplate!=null) {
+                    if (debugEnabled)
+                        getLogger().debug("Template extends ({}) another. Composing...", _extendsTemplate);
                     final LinkedList bodies = getBodies(bindings, true);
                     bodies.push(new Closure(this) {
                         public Object doCall() {
@@ -204,6 +226,8 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
                     addBinding(bindings);
                     result = new WritableWrapper(_template.make(bindings), bindings);
                 }
+            } else if (isLogLevelEnabled(LogLevel.WARN)) {
+                getLogger().warn("Generated empty content");
             }
         }        
         return needTransform? transform(result, bindings) : result;
@@ -346,9 +370,12 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
         if (!GSP_MIME_TYPE.equals(file.getMimeType()))
             return null;
         Reader reader = file.getDataReader();
-        if (reader==null)
+        if (reader==null && extendsTemplate==null) {
+            if (isLogLevelEnabled(LogLevel.WARN))
+                getLogger().debug("Builder does not have content nothing to compile!");
             return null;
-        Template _template = new SimpleTemplateEngine().createTemplate(reader);
+        }
+        Template _template = reader==null? EMPTY_TEMPLATE : new SimpleTemplateEngine().createTemplate(reader);
         template.set(_template);        
         return _template;
     }

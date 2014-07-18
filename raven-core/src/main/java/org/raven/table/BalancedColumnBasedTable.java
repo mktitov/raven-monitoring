@@ -27,6 +27,7 @@ import java.util.List;
 public class BalancedColumnBasedTable extends ColumnBasedTable
 {
     private int curRow = 0;
+    private int prevRow = 0;
     
     @Override
     public void addValue(String columnName, Object value)
@@ -47,4 +48,8 @@ public class BalancedColumnBasedTable extends ColumnBasedTable
         }
         values.add(value);
     }
+    
+    public void rowAdded() {
+        curRow++;
+    }    
 }

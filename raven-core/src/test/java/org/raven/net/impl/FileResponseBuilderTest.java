@@ -149,6 +149,20 @@ public class FileResponseBuilderTest extends RavenCoreTestCase {
     }
 
     @Test
+    public void emptyTemplateExtendsAnotherTemplateTest() throws Exception {
+        FileResponseBuilder rootBuilder = createBuilder("root", FileResponseBuilder.GSP_MIME_TYPE);
+        rootBuilder.getFile().setDataString("${node.name}-${body()}");
+        assertTrue(rootBuilder.start());
+        
+        builder.getFile().setMimeType(FileResponseBuilder.GSP_MIME_TYPE);
+        builder.getFile().setDataString("");
+        builder.setExtendsTemplate(rootBuilder);
+        assertTrue(builder.start());
+        
+        assertEquals("root-", builder.buildResponseContent(null, null).toString());
+    }
+
+    @Test
     public void extendsTemplateWithParamsTest() throws Exception {
         FileResponseBuilder rootBuilder = createBuilder("root", FileResponseBuilder.GSP_MIME_TYPE);
         rootBuilder.getFile().setDataString("$title-${body()}");

@@ -205,7 +205,7 @@ public class LdapReaderNode extends AbstractDataSource
                     "\n  startFromDN (%s)\n  filter >>>%s<<<\n  attributes (%s)"
                     , addObjectDNToResult, fetchAttrs, startFromDN, filter, attrsStr));
         }
-        ColumnBasedTable table = null;
+        BalancedColumnBasedTable table = null;
         boolean useRowFilter = (Boolean)attributes.get(USE_ROW_FILTER_ATTRIBUTE).getRealValue();
         NodeAttribute rowFilterAttr = attributes.get(ROW_FILTER_ATTRIBUTE);
         Expression filterExpression = null;
@@ -284,6 +284,7 @@ public class LdapReaderNode extends AbstractDataSource
                     ++rowsCount;
                     for (String colName: colNames)
                         table.addValue(colName, row.get(colName));
+                    table.rowAdded();
                 }
 
             }
