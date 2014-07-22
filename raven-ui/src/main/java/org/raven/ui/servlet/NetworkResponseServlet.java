@@ -391,24 +391,24 @@ public class NetworkResponseServlet extends HttpServlet  {
     protected void processError(RequestContext ctx, Throwable e) 
         throws ServletException, IOException
     {
-        ErrorContext err;
-        boolean rethrow = false;
-        Request req = ctx.responseContext!=null? ctx.responseContext.getRequest() : null;
-        if (e instanceof NetworkResponseServiceUnavailableException) {
-            err = new ErrorContextImpl(SC_SERVICE_UNAVAILABLE, req, e.getMessage(), null);
-        } else if (e instanceof ContextUnavailableException) {
-            err = new ErrorContextImpl(SC_NOT_FOUND, req, e.getMessage(), null);
-        } else if (e instanceof AccessDeniedException) {
-            err = new ErrorContextImpl(SC_FORBIDDEN, req, e.getMessage(), null);
-        } else if (e instanceof RequiredParameterMissedException || e instanceof NetworkResponseServlet.BadRequestException) {
-            err = new ErrorContextImpl(SC_BAD_REQUEST, req, e.getMessage(), null);
-        } else if (e instanceof UnauthoriedException || e instanceof AuthenticationFailedException) {
-            ctx.response.setHeader("WWW-Authenticate", "BASIC realm=\"RAVEN\"");
-            ctx.response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-        } else {
-            rethrow = true;
-            err = new ErrorContextImpl(SC_BAD_REQUEST, req, e.getMessage(), e);
-        }
+//        ErrorContext err;
+//        boolean rethrow = false;
+//        Request req = ctx.responseContext!=null? ctx.responseContext.getRequest() : null;
+//        if (e instanceof NetworkResponseServiceUnavailableException) {
+//            err = new ErrorContextImpl(SC_SERVICE_UNAVAILABLE, req, e.getMessage(), null);
+//        } else if (e instanceof ContextUnavailableException) {
+//            err = new ErrorContextImpl(SC_NOT_FOUND, req, e.getMessage(), null);
+//        } else if (e instanceof AccessDeniedException) {
+//            err = new ErrorContextImpl(SC_FORBIDDEN, req, e.getMessage(), null);
+//        } else if (e instanceof RequiredParameterMissedException || e instanceof NetworkResponseServlet.BadRequestException) {
+//            err = new ErrorContextImpl(SC_BAD_REQUEST, req, e.getMessage(), null);
+//        } else if (e instanceof UnauthoriedException || e instanceof AuthenticationFailedException) {
+//            ctx.response.setHeader("WWW-Authenticate", "BASIC realm=\"RAVEN\"");
+//            ctx.response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+//        } else {
+//            rethrow = true;
+//            err = new ErrorContextImpl(SC_BAD_REQUEST, req, e.getMessage(), e);
+//        }
             
         boolean rethrow = false;
         if (e instanceof NetworkResponseServiceUnavailableException) {
@@ -494,6 +494,7 @@ public class NetworkResponseServlet extends HttpServlet  {
         public volatile long builderExecutedTs;
         public volatile long builderProcessedTs;
         public volatile long waitForCloseTs;
+        public volatile long redBytes = 0;
 //        public final Atomic
         private final AtomicReference<CometEvent> readProcessed = new AtomicReference<CometEvent>();
         private final AtomicBoolean writeProcessed = new AtomicBoolean();
@@ -594,6 +595,11 @@ public class NetworkResponseServlet extends HttpServlet  {
 
         public void pushBuffer(ByteBuf buf) {
             requestStream.pushBuffer(buf);
+            redBytes += buf.readableBytes();
+        }
+
+        public long getRedBytes() {
+            return redBytes;
         }
 
         public void dataStreamClosed() {

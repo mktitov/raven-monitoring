@@ -231,7 +231,7 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
                 ByteBuf buf = Unpooled.buffer(size);
                 boolean eos = false;
                 int data;
-                int written=0;
+//                int written=0;
                 while (stream.available()>0) {
                     try {
                         data = stream.read();
@@ -240,7 +240,7 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
                             break;
                         } else {
                             buf.writeByte(data);
-                            ++written;
+//                            ++written;
                         }
                     } catch (IOException e) {
                         eos = true;
@@ -250,10 +250,13 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
                     }
 
                 }
+                int written = buf.readableBytes();
                 ctx.pushBuffer(buf);
                 if (ctx.servletLogger.isDebugEnabled())
-                    ctx.servletLogger.debug("Written ({}) bytes to request stream consumer", written);
-                if (eos || ctx.request.getContentLength()==written) {
+                    ctx.servletLogger.debug(String.format(
+                            "Written (%s) bytes to request stream consumer. Total written: %s", 
+                            written, ctx.getRedBytes()));
+                if (eos || ctx.request.getContentLength()==ctx.getRedBytes()) {
                     if (ctx.servletLogger.isDebugEnabled())
                         ctx.servletLogger.debug("End of stream detected. Closing");
                     ctx.dataStreamClosed();
