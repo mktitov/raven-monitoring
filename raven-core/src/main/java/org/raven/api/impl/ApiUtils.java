@@ -27,7 +27,6 @@ import groovyx.net.http.HTTPBuilder;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import static org.raven.RavenUtils.*;
