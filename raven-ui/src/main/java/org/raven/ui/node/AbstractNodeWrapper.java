@@ -27,10 +27,12 @@ import org.raven.auth.UserContext;
 import org.raven.auth.impl.AccessControl;
 import org.raven.auth.impl.UserAcl;
 import org.raven.conf.Configurator;
+import org.raven.prj.impl.ProjectNode;
 import org.raven.template.impl.TemplatesNode;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.Tree;
+import org.raven.util.NodeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.weda.services.ClassDescriptorRegistry;
@@ -172,15 +174,23 @@ public abstract class AbstractNodeWrapper
 	}
 
 	public List<NodeType> getValidSubNodeTemplatesList() {
-		List<Node> templates = tree.getTempltateNodes();
-        if (templates==null || templates.isEmpty()) 
-            return Collections.EMPTY_LIST;
-        int templatePathLen = tree.getRootNode().getNode(TemplatesNode.NAME).getPath().length();
 		ArrayList<NodeType> al = new ArrayList<NodeType>();
+        //project templates
+        if (node!=null) {
+            ProjectNode project = NodeUtils.getParentOfType(node, ProjectNode.class, true);
+            if (project!=null) {
+                int pathLen = project.getNode(TemplatesNode.NAME).getPath().length();
+                for (Node t: project.getTempltateNodes())
+                    al.add(new NodeType(t.getPath(), "(Project) "+t.getPath().substring(pathLen), "", ""));
+            }
+        }
+        //system templates
+		List<Node> templates = tree.getTempltateNodes();
+        int templatePathLen = tree.getRootNode().getNode(TemplatesNode.NAME).getPath().length();
 		for(Node n: templates) 
 			al.add(new NodeType(n.getPath(), n.getPath().substring(templatePathLen), "", ""));
 		Collections.sort(al, new NodeTypeComparator());
-		return al;
+		return al.isEmpty()? Collections.EMPTY_LIST : al;
 	}
 	
     public String getNodeName() {

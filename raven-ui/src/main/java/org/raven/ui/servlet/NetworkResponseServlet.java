@@ -304,7 +304,7 @@ public class NetworkResponseServlet extends HttpServlet  {
                             try {
                                 IOUtils.copy(contentStream, out);
                             } finally {
-                                out.flush();
+//                                out.flush();
                                 IOUtils.closeQuietly(out);
                                 IOUtils.closeQuietly(contentStream);
 //                                out.flush();

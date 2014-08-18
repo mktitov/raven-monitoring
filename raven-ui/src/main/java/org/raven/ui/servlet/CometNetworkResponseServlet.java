@@ -186,7 +186,7 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
         } finally {
             if (serviceResponse!=Response.MANAGING_BY_BUILDER) {
                 try {
-                    ev.setTimeout(1);
+//                    ev.setTimeout(1);
                 } catch (Throwable e) {
                     ctx.servletLogger.error("Write channel close error", e);
                 } finally {
