@@ -34,7 +34,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
         
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", null, Integer.class, null, false, converter);
+                new DatabaseFilterElement("col", null, Integer.class, null, false, converter, null);
 
         for (String expression: new String[]{null, "", " "})
         {
@@ -49,7 +49,7 @@ public class DatabaseFilterElementTest extends Assert
     public void getColumnNameWithTableAliasTest() throws Exception
     {
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", null, Integer.class, null, false, null);
+                new DatabaseFilterElement("col", null, Integer.class, null, false, null, null);
         assertEquals("col", element.getColumnNameWithTableAlias());
     }
 
@@ -57,7 +57,7 @@ public class DatabaseFilterElementTest extends Assert
     public void getColumnNameWithTableAliasTest2() throws Exception
     {
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", "t", Integer.class, null, false, null);
+                new DatabaseFilterElement("col", "t", Integer.class, null, false, null, null);
         assertEquals("t.col", element.getColumnNameWithTableAlias());
     }
 
@@ -68,7 +68,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
         
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", null, Integer.class, null, false, converter);
+                new DatabaseFilterElement("col", null, Integer.class, null, false, converter, null);
         
         element.setExpression("#test expression");
         assertEquals(DatabaseFilterElement.ExpressionType.COMPLETE, element.getExpressionType());
@@ -85,7 +85,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
 
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", null, Integer.class, null, false, converter);
+                new DatabaseFilterElement("col", null, Integer.class, null, false, converter, null);
 
         for (String operator: new String[]{">=", "<=", "<>", "=", ">", "<"})
         {
@@ -108,7 +108,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
 
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", null, Integer.class, "pattern", false, converter);
+                new DatabaseFilterElement("col", null, Integer.class, "pattern", false, converter, null);
 
         element.setExpression("1");
         assertEquals(DatabaseFilterElement.ExpressionType.OPERATOR, element.getExpressionType());
@@ -126,7 +126,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
 
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", null, Integer.class, null, false, converter);
+                new DatabaseFilterElement("col", null, Integer.class, null, false, converter, null);
 
         for (String expression: new String[]{"%1", "1%", "1_", "_1", "1%2_3"})
         {
@@ -149,7 +149,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
 
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", null, Integer.class, null, false, converter);
+                new DatabaseFilterElement("col", null, Integer.class, null, false, converter, null);
 
         element.setExpression("[1 , \"2\"]");
         assertEquals(DatabaseFilterElement.ExpressionType.OPERATOR, element.getExpressionType());
@@ -168,7 +168,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
 
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", null, Integer.class, null, false, converter);
+                new DatabaseFilterElement("col", null, Integer.class, null, false, converter, null);
 
         element.setExpression("{1 , \"2\"}");
         assertEquals(DatabaseFilterElement.ExpressionType.OPERATOR, element.getExpressionType());
@@ -186,7 +186,7 @@ public class DatabaseFilterElementTest extends Assert
         replay(converter);
 
         DatabaseFilterElement element =
-                new DatabaseFilterElement("col", null, Integer.class, "pattern", false, converter);
+                new DatabaseFilterElement("col", null, Integer.class, "pattern", false, converter, null);
 
         element.setExpression("=1");
 

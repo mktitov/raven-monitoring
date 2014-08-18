@@ -19,6 +19,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.raven.auth.impl.LoginManagerNode;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
+import org.raven.template.impl.TemplatesNode;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.Node;
 import org.raven.tree.impl.SchemasNode;
@@ -43,6 +44,7 @@ public class ProjectNodeTest extends RavenCoreTestCase {
         checkNode(LoginManagerNode.NAME, false);
         checkNode(ConnectionPoolsNode.NAME, false);
         checkNode(SchemasNode.NAME, false);
+        checkNode(TemplatesNode.NAME, false);
         checkNode(WebInterfaceNode.NAME, false);
         checkNode(ConfigurationNode.NAME, false);
         checkNode(UserInterfaceNode.NAME, false);
@@ -54,6 +56,7 @@ public class ProjectNodeTest extends RavenCoreTestCase {
         checkNode(LoginManagerNode.NAME, true);
         checkNode(ConnectionPoolsNode.NAME, true);
         checkNode(SchemasNode.NAME, true);
+        checkNode(TemplatesNode.NAME, true);
         checkNode(ConfigurationNode.NAME, true);
         checkNode(WebInterfaceNode.NAME, true);
         checkNode(UserInterfaceNode.NAME, true);

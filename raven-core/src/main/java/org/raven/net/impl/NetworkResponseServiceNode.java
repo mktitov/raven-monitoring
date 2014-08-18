@@ -169,9 +169,9 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
     }
 
     public ResponseContext getResponseContext(Request request) throws NetworkResponseServiceExeption {
+        BindingSupport bindings = null;
         try {
             PathInfo pathInfo = new PathInfo();
-            BindingSupport bindings = null;
             ResponseServiceNode serviceNode = null;
             int pathIndex = 0;
             String[] pathElems = splitContextToPathElements(request.getContextPath());
@@ -201,7 +201,8 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
             return new ResponseContextImpl(request, pathInfo.getBuilderPath(), pathInfo.getSubpath(), 
                     serviceNode.getNextRequestId(), loginService, respBuilder, serviceNode);
         } finally {
-            bindingSupport.reset();
+            if (bindings!=null)
+                bindings.reset();
         }
     }
     

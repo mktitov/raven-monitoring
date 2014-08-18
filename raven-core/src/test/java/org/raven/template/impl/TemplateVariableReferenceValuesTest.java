@@ -17,10 +17,6 @@
 
 package org.raven.template.impl;
 
-import org.raven.template.impl.TemplateVariableValueHandlerFactory;
-import org.raven.template.impl.TemplateEntry;
-import org.raven.template.impl.TemplateVariablesNode;
-import org.raven.template.impl.TemplateNode;
 import java.util.List;
 import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;

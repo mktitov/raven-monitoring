@@ -15,10 +15,12 @@
  */
 package org.raven.prj.impl;
 
+import java.util.Collection;
 import org.raven.annotations.NodeClass;
 import org.raven.auth.impl.LoginManagerNode;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.prj.Project;
+import org.raven.template.impl.TemplatesNode;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.SchemasNode;
@@ -53,12 +55,19 @@ public class ProjectNode extends BaseNode implements Project {
             addSaveAndStartNode(new ConnectionPoolsNode(), start);
         if (!checkNode(SchemasNode.NAME))
             addSaveAndStartNode(new SchemasNode(), start);
+        if (!checkNode(TemplatesNode.NAME))
+            addSaveAndStartNode(new TemplatesNode(), start);        
         if (!checkNode(ConfigurationNode.NAME))
             addSaveAndStartNode(new ConfigurationNode(), start);
         if (!checkNode(WebInterfaceNode.NAME))
             addSaveAndStartNode(new WebInterfaceNode(), start);
         if (!checkNode(UserInterfaceNode.NAME))
-            addSaveAndStartNode(new UserInterfaceNode(), start);
+            addSaveAndStartNode(new UserInterfaceNode(), start);        
+    }
+    
+	public Collection<Node> getTempltateNodes() {
+        return getNode(TemplatesNode.NAME).getEffectiveNodes();
+//        return result==null? Collections.EMPTY_LIST : new ArrayList<Node>(result);
     }
     
     private void addSaveAndStartNode(Node node, boolean start) {

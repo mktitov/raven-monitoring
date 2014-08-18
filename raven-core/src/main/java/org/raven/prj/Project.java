@@ -16,6 +16,7 @@
 
 package org.raven.prj;
 
+import java.util.Collection;
 import org.raven.prj.impl.WebInterfaceNode;
 import org.raven.tree.Node;
 
@@ -25,4 +26,5 @@ import org.raven.tree.Node;
  */
 public interface Project extends Node {
     public WebInterfaceNode getWebInterface();
+    public Collection<Node> getTempltateNodes();
 }

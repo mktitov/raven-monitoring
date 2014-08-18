@@ -401,8 +401,9 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
         this.whereExpression = whereExpression;
     }
 
-    private List<DatabaseFilterElement> createFilterElements(RecordSchema schema, Map<String, NodeAttribute> attributes)
-            throws DatabaseFilterElementException
+    private List<DatabaseFilterElement> createFilterElements(RecordSchema schema, 
+            Map<String, NodeAttribute> attributes)
+        throws DatabaseFilterElementException
     {
         List<DatabaseFilterElement> filterElements = null;
         Map<RecordSchemaField, FilterField> _filterFields = chooseFilterFields(schema);
@@ -429,7 +430,8 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
                     alias = aliasNode.getTableAlias();
                 DatabaseFilterElement element = new DatabaseFilterElement(
                         field.getColumnName(), alias, fieldType
-                        , field.getFieldInfo().getPattern(), field.isVirtual(), converter);
+                        , field.getFieldInfo().getPattern(), field.isVirtual(), converter
+                        , field.dbInfo==null? null : field.dbInfo.getCodec());
                 element.setExpression(expression);
                 if (element.getExpressionType() != DatabaseFilterElement.ExpressionType.EMPTY)
                     filterElements.add(element);

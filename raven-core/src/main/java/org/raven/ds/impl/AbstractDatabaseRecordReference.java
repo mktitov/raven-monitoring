@@ -86,7 +86,7 @@ public class AbstractDatabaseRecordReference
         throws DatabaseRecordQueryException
     {
         DatabaseFilterElement filter = new DatabaseFilterElement(
-                columnName, null, fieldType, null, false, converter);
+                columnName, null, fieldType, null, false, converter, null);
         filter.setValue(
                 value, DatabaseFilterElement.ExpressionType.OPERATOR
                 , DatabaseFilterElement.OperatorType.SIMPLE, "=");

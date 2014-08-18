@@ -48,19 +48,14 @@ public class TemplateVariableReferenceValues implements AttributeReferenceValues
             return false;
         
         Node node = attr.getOwner();
-        while ( (node=node.getParent())!=null )
-        {
-            if (node instanceof TemplateNode)
-            {
+        while ( (node=node.getParent())!=null ) 
+            if (node instanceof TemplateNode) {
                 TemplateVariablesNode varsNode = ((TemplateNode)node).getVariablesNode();
-                Collection<NodeAttribute> attrs = varsNode.getNodeAttributes();
-                if (attrs!=null && attrs.size()>0)
-                {
-                    List<NodeAttribute> vars = 
-                            new ArrayList<NodeAttribute>(varsNode.getNodeAttributes());
+                Collection<NodeAttribute> attrs = varsNode.getAttrs();
+                if (attrs!=null && attrs.size()>0) {
+                    List<NodeAttribute> vars = new ArrayList<NodeAttribute>(varsNode.getAttrs());
                     Collections.sort(vars, new AttributeNameComporator());
-                    for (NodeAttribute var: vars)
-                    {
+                    for (NodeAttribute var: vars) {
                         ReferenceValue referenceValue = new ReferenceValueImpl(
                             pathResolver.getAbsolutePath(var), var.getName());
                         referenceValues.add(referenceValue, null);
@@ -68,7 +63,6 @@ public class TemplateVariableReferenceValues implements AttributeReferenceValues
                 }
                 break;
             }
-        }
         return true;
     }
 }

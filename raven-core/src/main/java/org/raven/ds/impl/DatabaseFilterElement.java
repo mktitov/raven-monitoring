@@ -19,6 +19,7 @@ package org.raven.ds.impl;
 
 import org.apache.commons.lang.text.StrMatcher;
 import org.apache.commons.lang.text.StrTokenizer;
+import org.raven.ds.RecordSchemaFieldCodec;
 import org.weda.converter.TypeConverterException;
 import org.weda.services.TypeConverter;
 
@@ -77,6 +78,7 @@ public class DatabaseFilterElement
     private final Class columnType;
     private final String convertPattern;
     private final TypeConverter converter;
+    private final RecordSchemaFieldCodec codec;
     private final boolean virtual;
 
     private ExpressionType expressionType = ExpressionType.EMPTY;
@@ -86,13 +88,14 @@ public class DatabaseFilterElement
 
     public DatabaseFilterElement(
             String columnName, String tableAlias, Class columnType, String convertPattern
-            , boolean virtual, TypeConverter converter)
+            , boolean virtual, TypeConverter converter, RecordSchemaFieldCodec codec)
     {
         this.columnName = columnName;
         this.tableAlias = tableAlias;
         this.columnType = columnType;
         this.convertPattern = convertPattern;
         this.converter = converter;
+        this.codec = codec;
         this.virtual = virtual;
     }
 
@@ -239,14 +242,11 @@ public class DatabaseFilterElement
         return tokenizer.getTokenArray();
     }
 
-    private Object convertStringToValueType(Object value) throws DatabaseFilterElementException
-    {
-        try
-        {
-            return converter.convert(columnType, value, convertPattern);
-        }
-        catch(TypeConverterException e)
-        {
+    private Object convertStringToValueType(Object value) throws DatabaseFilterElementException {
+        try {
+            final Object val = converter.convert(columnType, value, convertPattern);
+            return codec==null? val : codec.encode(val, null);
+        } catch(TypeConverterException e) {
             throw new DatabaseFilterElementException(e.getMessage(), e);
         }
     }
