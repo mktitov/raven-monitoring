@@ -159,6 +159,15 @@ public interface Tree
      */
     public List<Node> search(Node searchFromNode, SearchOptions options, SearchFilter filter);
     /**
+     * Search for nodes that satisfy the node filter
+     * @param options search options
+     * @param filter filter options
+     * @param scanOptions scan options
+     * @return The list of found nodes. Method can return an empty list but never null.
+     */
+    public List<Node> search(Node searchFromNode, SearchOptions options, SearchFilter filter
+            , ScanOptions scanOptions);
+    /**
      * Starts all nodes in the subtree starting from the <code>node</code> passed in the parameter.
      * @param node the starting point.
      * @param autoStartOnly if sets to <code>true</code> then only nodes with 

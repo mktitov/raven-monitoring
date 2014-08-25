@@ -609,6 +609,15 @@ public class BaseNode implements Node, NodeListener, Logger
         return res;
     }
 
+    public List<Node> findAll(boolean sorted, final Closure<Boolean> filter) {
+        List<Node> res = tree.search(this, new SearchOptionsImpl().setFindFirst(false), new SearchFilter() {
+            public boolean filter(Node node) {
+                return filter.call(node);
+            }
+        }, new ScanOptionsImpl().setSortBeforeScan(sorted));
+        return res;
+    }
+
     public int getNodesCount() {
         return nodes.size();
     }

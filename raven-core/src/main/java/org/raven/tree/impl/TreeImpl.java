@@ -387,11 +387,16 @@ public class TreeImpl implements Tree {
         
     }
 
-    public List<Node> search(Node searchFromNode, SearchOptions options, SearchFilter filter) 
+    public List<Node> search(Node searchFromNode, SearchOptions options, SearchFilter filter) {
+        return search(searchFromNode, options, filter, ScanOptionsImpl.EMPTY_OPTIONS);
+    }
+    
+    public List<Node> search(Node searchFromNode, SearchOptions options, SearchFilter filter
+            , ScanOptions scanOptions) 
     {
         List<Node> result = new ArrayList<Node>();
         ScannedNodeHandler handler = new SearchScannedNodeHandler(result, options, filter);
-        scanSubtree(searchFromNode, handler, ScanOptionsImpl.EMPTY_OPTIONS);
+        scanSubtree(searchFromNode, handler, scanOptions);
         return result;
     }
     
