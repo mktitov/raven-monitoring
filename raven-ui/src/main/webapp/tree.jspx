@@ -49,7 +49,8 @@
           </f:facet>
           <f:facet name="innerLeft">
             <tr:outputText 
-              inlineStyle="font-size: 70%" 
+              inlineStyle="font-size: 60%" 
+              escape="false"
               value="#{sBean.accountName} (#{sBean.remoteIp})" />
           </f:facet>
           <f:facet name="right">
@@ -127,7 +128,7 @@
               <!-- *************** -->
               <!-- RESOURCES TREE  -->
               <!-- *************** -->				
-              <tr:showDetailItem text="#{msgs.resources}">
+              <tr:showDetailItem text=" #{msgs.resources}">
                 <tr:separator/>
                 <tr:tree 
                   partialTriggers="::pooltree" 
@@ -162,7 +163,7 @@
               <!-- *************** -->
               <!-- NODES TREE  -->
               <!-- *************** -->				
-              <tr:showDetailItem text="#{msgs.nodes}" >
+              <tr:showDetailItem text=" #{msgs.nodes}" >
                 <tr:commandLink 
                   id="refLink" 
                   immediate="true"
@@ -217,6 +218,11 @@
                   </f:facet>
 
                 </tr:tree>
+              </tr:showDetailItem>
+                <tr:showDetailItem text=" #{msgs.versionInfo}">
+                <tr:outputText
+                escape="false"
+                value="#{sBean.ravenVersion}"/>
               </tr:showDetailItem>
             </tr:panelAccordion>
         </tr:panelPage>

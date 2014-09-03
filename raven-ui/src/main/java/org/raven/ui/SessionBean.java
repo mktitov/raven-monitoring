@@ -18,7 +18,6 @@
 package org.raven.ui;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
@@ -30,7 +29,6 @@ import javax.faces.event.ActionEvent;
 import javax.faces.model.SelectItem;
 import org.raven.ui.attr.RefreshAttributesCache;
 import org.raven.ui.attr.RefreshIntervalCache;
-import org.raven.ui.filter.AuthFilter;
 import org.raven.ui.log.LogView;
 import org.raven.ui.log.LogViewAttributes;
 import org.raven.ui.node.CopyMoveNodeBean;
@@ -45,7 +43,6 @@ import org.raven.ui.vo.ImagesStorage;
 import org.raven.audit.Action;
 import org.raven.audit.Auditor;
 import org.raven.auth.impl.AccessControl;
-import org.raven.auth.impl.UserAcl;
 import org.raven.conf.Configurator;
 import org.raven.ui.util.Messages;
 import org.raven.template.impl.TemplateNode;
@@ -67,7 +64,9 @@ import org.raven.tree.InvalidPathException;
 import javax.faces.component.UIComponent;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import org.apache.commons.lang.StringUtils;
 import org.apache.myfaces.trinidad.event.PollEvent;
+import org.raven.VersionService;
 import org.raven.auth.UserContext;
 import org.raven.ui.filter.LoginFilter;
 
@@ -735,6 +734,11 @@ public class SessionBean
 	public String getRemoteIp() {
 		return remoteIp;
 	}
+    
+    public String getRavenVersion() {
+        VersionService versionService = RavenRegistry.getRegistry().getService(VersionService.class);
+        return "<div class='version-info'>"+StringUtils.join(versionService.getModulesVersion(), "<br>")+"</div>";
+    }
 
     public String getRemoteHost() {
         return remoteHost;
