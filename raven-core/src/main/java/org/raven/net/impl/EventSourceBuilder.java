@@ -201,7 +201,7 @@ public class EventSourceBuilder extends AbstractResponseBuilder
             return;
         if (channels.isEmpty()) {
             if (isLogLevelEnabled(LogLevel.DEBUG))
-                getLogger().debug("Received data for submitting but no regegistered channels. Ignoring...");
+                getLogger().debug("Received data for submitting but no registered channels. Ignoring...");
             return;
         }
         final int counter = asyncUsageDetector.incrementAndGet();

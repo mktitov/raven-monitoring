@@ -16,9 +16,11 @@
  */
 package org.raven;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.ResourceBundle;
 import org.apache.tapestry5.ioc.Configuration;
 import org.apache.tapestry5.ioc.MappedConfiguration;
 import org.apache.tapestry5.ioc.OrderedConfiguration;
@@ -96,6 +98,10 @@ public class RavenCoreModule
     
     public static MimeTypeService buildMimeTypeService() {
         return new MimeTypeServiceImpl();
+    }
+    
+    public static VersionService buildVersionService(Collection<String> modulesVersion) throws IOException {
+        return new VersionServiceImpl(modulesVersion);
     }
 
     public static TemporaryCacheManager buildTemporaryCacheManager(CacheManager cacheManager) {
@@ -192,6 +198,11 @@ public class RavenCoreModule
 //        return new UserContextConfiguratorServiceImpl(configurators);
 //    }
 //
+//    public static void contributeVersionService(Configuration<String> conf) {
+//        RavenCoreModule.class.getClassLoader().
+//        conf.add("raven-core: "+ResourceBundle.getBundle("org/raven/version").getString("version"));
+//    }
+    
     @SuppressWarnings("unchecked")
 	public static void contributeConfigurator(MappedConfiguration<String, Class> conf)
     {

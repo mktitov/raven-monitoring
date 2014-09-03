@@ -330,8 +330,11 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema, Viewable
                                 }
                             RecordSchemaFieldNode field = RecordSchemaFieldNode.create(
                                     RecordSchemaNode.this, fieldName, null, type, pattern);
-                            if (field!=null)
+                            if (field!=null) {
                                 DatabaseRecordFieldExtension.create(field, "dbColumn", columnName);
+                                if ("NO".equals(rs.getString("IS_NULLABLE"))) 
+                                    RequiredValueValidatorNode.create(field, "notNull");
+                            }
                         }
                         return "Record successfully created";
                     } finally {

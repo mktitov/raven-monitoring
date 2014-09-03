@@ -29,6 +29,7 @@ import org.raven.dbcp.impl.JDBCConnectionPoolNode;
 import org.raven.ds.RecordSchemaField;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.RecordSchemaFieldType;
+import org.raven.tree.Node;
 import org.raven.tree.Node.Status;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.ContainerNode;
@@ -369,5 +370,10 @@ public class RecordSchemaNodeTest extends RavenCoreTestCase
                 DatabaseRecordFieldExtension.class, "dbColumn");
         assertNotNull(dbExt);
         assertEquals(RavenUtils.nameToDbName(name), dbExt.getColumnName());
+        Node notNullValidator = rec.getNodeByPath(name+"/notNull");
+        assertNotNull(notNullValidator);
+        assertTrue(notNullValidator.isStarted());
+        assertTrue(notNullValidator instanceof RequiredValueValidatorNode);
+        
     }
 }

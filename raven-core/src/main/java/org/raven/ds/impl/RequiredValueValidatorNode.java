@@ -19,6 +19,7 @@ package org.raven.ds.impl;
 
 import org.raven.annotations.NodeClass;
 import org.raven.ds.ValueValidator;
+import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.InvisibleNode;
 import org.weda.internal.annotations.Message;
@@ -33,8 +34,17 @@ public class RequiredValueValidatorNode extends BaseNode implements ValueValidat
     @Message
     private static String requiredMessage;
 
-    public String validate(Object value)
-    {
+    public String validate(Object value) {
         return value==null? requiredMessage : null;
+    }
+    
+    public static RequiredValueValidatorNode create(Node owner, String name) {
+        if (owner.getNode(name)!=null)
+            return null;
+        RequiredValueValidatorNode validator = new RequiredValueValidatorNode();
+        validator.setName(name);
+        owner.addAndSaveChildren(validator);
+        validator.start();
+        return validator;
     }
 }
