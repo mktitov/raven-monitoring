@@ -68,18 +68,25 @@ public class ApiUtils
     }
 
     public static Object withSql(Connection connection, Closure closure) throws Exception {
+        return withSql(connection, true, closure);
+    }
+    
+    public static Object withSql(Connection connection, boolean autoCommit, Closure closure) throws Exception {
         try {
             Sql sql = new Sql(connection);
             try{
                 Object res = closure.call(sql);
-                connection.commit();
+                if (autoCommit)
+                    connection.commit();
                 return res;
             } catch(Exception e){
-                connection.rollback();
+                if (autoCommit)
+                    connection.rollback();
                 throw e;
             }
         } finally {
-            connection.close();
+            if (autoCommit)
+                connection.close();
         }
     }
     //
