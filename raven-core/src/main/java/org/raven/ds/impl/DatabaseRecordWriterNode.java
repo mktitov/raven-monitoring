@@ -29,7 +29,6 @@ import java.util.Map;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.dbcp.ConnectionPool;
-import org.raven.ds.BinaryFieldType;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
@@ -70,12 +69,16 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     @NotNull @Parameter(defaultValue="false")
     private Boolean updateIdField;
 
+    @NotNull @Parameter(defaultValue = "10")
+    private Integer operationTimeout;
+    
     @Parameter(readOnly=true)
     private long recordSetsRecieved;
     @Parameter(readOnly=true)
     private long recordsRecieved;
     @Parameter(readOnly=true)
     private long recordsSaved;
+    
 
     private List<Record> recordBuffer;
 
@@ -87,6 +90,14 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     public void setUpdateIdField(Boolean updateIdField)
     {
         this.updateIdField = updateIdField;
+    }
+
+    public Integer getOperationTimeout() {
+        return operationTimeout;
+    }
+
+    public void setOperationTimeout(Integer operationTimeout) {
+        this.operationTimeout = operationTimeout;
     }
 
     public Boolean getEnableUpdates()
@@ -262,7 +273,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         }
         SchemaMeta meta = conMetas.get(con);
         if (meta==null) {
-            meta = new SchemaMeta(schema, enableUpdates, enableDeletes, batchUpdate, updateIdField);
+            meta = new SchemaMeta(schema, enableUpdates, enableDeletes, batchUpdate, updateIdField, operationTimeout);
             meta.init(con);
             conMetas.put(con, meta);            
         }
@@ -382,6 +393,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         private boolean tryUpdate = false;
         private final boolean batchUpdate;
         private final boolean updateIdField;
+        private final int operationTimeout;
 
         private PreparedStatement select;
         private PreparedStatement insert;
@@ -394,7 +406,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
 
         public SchemaMeta(
                 RecordSchema recordSchema, boolean enableUpdates, boolean enableDeletes, boolean batchUpdate
-                , boolean updateIdField)
+                , boolean updateIdField, int operationTimeout)
             throws Exception
         {
             RecordSchemaField[] fields = recordSchema.getFields();
@@ -402,7 +414,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
             if (fields==null || fields.length==0)
                 throw new Exception(String.format(
                         "Schema (%s) does not contains fields", recordSchema.getName()));
-
+            this.operationTimeout = operationTimeout;
             columnNames = new ArrayList<String>(fields.length);
             dbFields =  new ArrayList<FieldInfo>(fields.length);
             idColumnName = null;
@@ -511,8 +523,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
             }
         }
 
-        public void updateRecord(Record record) throws Exception
-        {
+        public void updateRecord(Record record) throws Exception {
             PreparedStatement st = null;
             boolean recordFound = false;
             boolean deleteRecord = deleteQuery!=null && record.containsTag(Record.DELETE_TAG);
@@ -522,6 +533,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                     st = recordFound? update : insert;
                 } else
                     st = delete;
+                st.setQueryTimeout(operationTimeout);
                 int i=1;
                 Object idFieldValue = null;
                 for (FieldInfo fi: dbFields) {

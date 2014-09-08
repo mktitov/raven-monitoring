@@ -124,7 +124,7 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         assertEquals(1l, executor.getRejectedTasks().get());
     }
 
-//    @Test
+    @Test
     public void delayedTasksTest() throws InterruptedException {
         executor.setCorePoolSize(2);
         executor.setMaximumPoolSize(2);

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2008 tim.
+ *  Copyright 2008 Mikhail Titov.
  * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import java.util.List;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
-import org.codehaus.groovy.runtime.InvokerInvocationException;
 import static org.easymock.EasyMock.*;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,13 +55,13 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         NodeAttributeImpl attr = new NodeAttributeImpl("attr1", String.class, "val1", null);
         attr.setOwner(node);
         attr.init();
-        node.addNodeAttribute(attr);
+        node.addAttr(attr);
         assertNotNull(node.getAttr("attr1"));
         attr = new NodeAttributeImpl("attr2", String.class, "param1", null);        
         attr.setOwner(node);
         attr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
         attr.init();
-        node.addNodeAttribute(attr);
+        node.addAttr(attr);
         
         child = new BaseNode("child");
         node.addAndSaveChildren(child);
@@ -189,7 +188,7 @@ public class GroovyExpressionCompilerTest extends RavenCoreTestCase
         attr.setOwner(node);
         attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
         attr.init();
-        node.addNodeAttribute(attr);
+        node.addAttr(attr);
         attr.setValue(pool.getPath());
 
         String script = "res=null; withSql{sql-> res=sql.firstRow('select count(*) from nodes')[0]}; res";

@@ -25,6 +25,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.log.LogLevel;
+import org.raven.sched.CancelableTask;
+import org.raven.sched.CancelationProcessor;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.ExecutorServiceException;
 import org.raven.sched.ManagedTask;
@@ -125,7 +127,7 @@ public class ExecutorServiceNode extends BaseNode
         executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, timeUnit, queue);
         executor.execute(new TaskWrapper(new DelayedTaskExecutor()));
         delayedTasks.add(new DelayedTaskWrapper(new TasksManagerTask(checkManagedTasksInterval)
-                , checkManagedTasksInterval));
+                , checkManagedTasksInterval, delayedTasks));
         loadAverage = new LoadAverageStatistic(300000, maximumPoolSize);
     }
 
@@ -160,7 +162,7 @@ public class ExecutorServiceNode extends BaseNode
 
     public void execute(long delay, Task task) throws ExecutorServiceException {
         if (Status.STARTED.equals(getStatus()))
-            delayedTasks.add(new DelayedTaskWrapper(task, delay));
+            delayedTasks.add(new DelayedTaskWrapper(task, delay, delayedTasks));
     }
 
     public boolean executeQuietly(Task task) {
@@ -480,13 +482,17 @@ public class ExecutorServiceNode extends BaseNode
         }
     }
 
-    private class DelayedTaskWrapper implements Delayed {
+    private class DelayedTaskWrapper implements Delayed, CancelationProcessor {
         private final long startAt;
         private final Task task;
+        private final DelayQueue<DelayedTaskWrapper> queue;
 
-        public DelayedTaskWrapper(Task task, long delay) {
+        public DelayedTaskWrapper(Task task, long delay, DelayQueue<DelayedTaskWrapper> queue) {
             this.task = task;
             this.startAt = System.currentTimeMillis()+delay;
+            this.queue = queue;
+            if (task instanceof CancelableTask)
+                ((CancelableTask)task).setCancelationProcessor(this);
         }
 
         public long getDelay(TimeUnit unit) {
@@ -498,6 +504,10 @@ public class ExecutorServiceNode extends BaseNode
                 return 0;
             long d = getDelay(TimeUnit.MILLISECONDS)-o.getDelay(TimeUnit.MILLISECONDS);
             return d==0? 0 : (d<0? -1 : 1);
+        }
+
+        public void cancel() {
+            queue.remove(this);
         }
     }
 
