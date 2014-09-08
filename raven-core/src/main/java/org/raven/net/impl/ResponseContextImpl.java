@@ -114,6 +114,10 @@ public class ResponseContextImpl implements ResponseContext {
         return responseBuilder;
     }
 
+    public ResponseServiceNode getServiceNode() {
+        return serviceNode;
+    }
+
     public Request getRequest() {
         return request;
     }

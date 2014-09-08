@@ -24,6 +24,8 @@ import org.junit.Test;
 import org.raven.RavenUtils;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.log.LogLevel;
+import org.raven.sched.CancelableTask;
+import org.raven.sched.CancelationProcessor;
 import org.raven.sched.ExecutorServiceException;
 import org.raven.sched.Task;
 import org.raven.sched.TaskRestartPolicy;
@@ -145,6 +147,26 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         assertTrue(task1.time < task3.time);
         assertTrue(task3.time < task2.time);
     }
+    
+    @Test
+    public void cancelDelayedTaskTest() throws InterruptedException {
+        executor.setCorePoolSize(2);
+        executor.setMaximumPoolSize(2);
+        executor.setMaximumQueueSize(1);
+        executor.setLogLevel(LogLevel.DEBUG);
+        assertTrue(executor.start());
+        
+        TestCancelableTask task1 = new TestCancelableTask(executor);
+        TestCancelableTask task2 = new TestCancelableTask(executor);
+        assertTrue(executor.executeQuietly(100, task1));
+        assertTrue(executor.executeQuietly(100, task2));
+        task1.cancel();
+        Thread.currentThread().sleep(200l);
+        assertTrue(task2.executed);
+        assertFalse(task2.canceled);
+        assertFalse(task1.executed);
+        assertTrue(task1.canceled);
+    }
 
 //    @Test
     public  void managedTaskReexecutePolicyTest() throws Exception {
@@ -231,4 +253,38 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
             }
         }
     }
+    
+    private class TestCancelableTask implements CancelableTask {
+        private final Node initiator;
+        private volatile CancelationProcessor cancelationProcessor;
+        private volatile boolean executed = false;
+        private volatile boolean canceled = false;
+
+        public TestCancelableTask(Node initiator) {
+            this.initiator = initiator;
+        }
+
+        public void setCancelationProcessor(CancelationProcessor cancelationProcessor) {
+            this.cancelationProcessor = cancelationProcessor;
+        }
+
+        public void cancel() {
+            cancelationProcessor.cancel();
+            canceled = true;
+        }
+
+        public Node getTaskNode() {
+            return initiator;
+        }
+
+        public String getStatusMessage() {
+            return "test task";
+        }
+
+        public void run() {
+            executed = true;
+        }
+        
+    }
+    
 }

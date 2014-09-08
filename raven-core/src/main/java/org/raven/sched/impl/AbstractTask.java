@@ -33,6 +33,7 @@ public abstract class AbstractTask implements CancelableTask
     private final String status;
     private volatile CancelationProcessor cancelationProcessor;
     private final AtomicBoolean canceled = new AtomicBoolean(false);
+    private volatile boolean executed = false;
     
     public AbstractTask(Node taskNode, String status) {
         this.taskNode = taskNode;
@@ -59,10 +60,23 @@ public abstract class AbstractTask implements CancelableTask
         }
     }
 
+    public boolean isExecuted() {
+        return executed;
+    }
+    
+    public boolean isCanceled() {
+        return canceled.get();
+    }
+
     public void run() {
         try {
-            if (!canceled.get())
-                doRun();
+            if (!canceled.get()) {
+                try {
+                    doRun();
+                } finally {
+                    executed = true;
+                }
+            }
         } catch(Exception e) {
             if (taskNode.isLogLevelEnabled(LogLevel.ERROR))
                 taskNode.getLogger().error(String.format("Error executing (%s)", status), e);

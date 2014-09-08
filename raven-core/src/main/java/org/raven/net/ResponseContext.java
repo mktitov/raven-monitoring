@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.Set;
 import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
+import org.raven.net.impl.NetworkResponseServiceNode;
+import org.raven.prj.Project;
 import org.slf4j.Logger;
 
 /**
@@ -75,6 +77,12 @@ public interface ResponseContext {
      * don't use the result of this method to build response
      */
     public ResponseBuilder getResponseBuilder();
+    /**
+     * Returns the service node. For project this is the {@link Project#getWebInterface() project web interface node} 
+     * for global response builder this is a {@link NetworkResponseServiceNode /System/Services/NetworkResponseService}
+     * @return 
+     */
+    public ResponseServiceNode getServiceNode();
     /**
      * Returns the response service logger
      */

@@ -38,6 +38,10 @@ import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldCodec;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.log.LogLevel;
+import org.raven.sched.ExecutorService;
+import org.raven.sched.impl.AbstractTask;
+import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
+import org.raven.tree.Node;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -72,6 +76,12 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     @NotNull @Parameter(defaultValue = "10")
     private Integer operationTimeout;
     
+    @Parameter(valueHandlerType = SystemSchedulerValueHandlerFactory.TYPE)
+    private ExecutorService executor;
+    
+    @Parameter
+    private Integer cancelOperationAfterTimeout;
+    
     @Parameter(readOnly=true)
     private long recordSetsRecieved;
     @Parameter(readOnly=true)
@@ -98,6 +108,22 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
 
     public void setOperationTimeout(Integer operationTimeout) {
         this.operationTimeout = operationTimeout;
+    }
+
+    public ExecutorService getExecutor() {
+        return executor;
+    }
+
+    public void setExecutor(ExecutorService executor) {
+        this.executor = executor;
+    }
+
+    public Integer getCancelOperationAfterTimeout() {
+        return cancelOperationAfterTimeout;
+    }
+
+    public void setCancelOperationAfterTimeout(Integer cancelOperationAfterTimeout) {
+        this.cancelOperationAfterTimeout = cancelOperationAfterTimeout;
     }
 
     public Boolean getEnableUpdates()
@@ -273,7 +299,8 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         }
         SchemaMeta meta = conMetas.get(con);
         if (meta==null) {
-            meta = new SchemaMeta(schema, enableUpdates, enableDeletes, batchUpdate, updateIdField, operationTimeout);
+            meta = new SchemaMeta(schema, enableUpdates, enableDeletes, batchUpdate, updateIdField, 
+                    operationTimeout, executor, cancelOperationAfterTimeout);
             meta.init(con);
             conMetas.put(con, meta);            
         }
@@ -394,6 +421,8 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         private final boolean batchUpdate;
         private final boolean updateIdField;
         private final int operationTimeout;
+        private final ExecutorService executor;
+        private final long cancelTimeout;
 
         private PreparedStatement select;
         private PreparedStatement insert;
@@ -406,7 +435,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
 
         public SchemaMeta(
                 RecordSchema recordSchema, boolean enableUpdates, boolean enableDeletes, boolean batchUpdate
-                , boolean updateIdField, int operationTimeout)
+                , boolean updateIdField, int operationTimeout, ExecutorService executor, Integer cancelOperationAfterTimeout)
             throws Exception
         {
             RecordSchemaField[] fields = recordSchema.getFields();
@@ -415,6 +444,8 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                 throw new Exception(String.format(
                         "Schema (%s) does not contains fields", recordSchema.getName()));
             this.operationTimeout = operationTimeout;
+            this.executor = executor;
+            this.cancelTimeout = executor==null || cancelOperationAfterTimeout==null? 0l : cancelOperationAfterTimeout * 1000;
             columnNames = new ArrayList<String>(fields.length);
             dbFields =  new ArrayList<FieldInfo>(fields.length);
             idColumnName = null;
@@ -561,9 +592,16 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
 
                 if (batchUpdate)
                     st.addBatch();
-                else
-                {
-                    st.executeUpdate();
+                else {
+                    CancelTask cancelTask = cancelTimeout>0? new CancelTask(st) : null;
+                    if (cancelTask!=null)
+                        executor.executeQuietly(cancelTimeout, cancelTask);
+                    try {
+                        st.executeUpdate();
+                    } finally {
+                        if (cancelTask!=null)
+                            cancelTask.cancel();
+                    }
                     if (updateIdField && idColumnName!=null && !recordFound && !deleteRecord && sequenceName==null)
                     {
                         ResultSet rs = st.getGeneratedKeys();
@@ -607,6 +645,20 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                 select.close();
                 update.close();
             }
+        }
+    }
+    
+    private class CancelTask extends AbstractTask {
+        private final PreparedStatement statement;
+
+        public CancelTask(PreparedStatement statement) {
+            super(DatabaseRecordWriterNode.this, "Handling cancel operation timeout");
+            this.statement = statement;
+        }
+
+        @Override
+        public void doRun() throws Exception {
+            statement.cancel();
         }
     }
 }
