@@ -41,7 +41,7 @@ import org.raven.log.LogLevel;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.impl.AbstractTask;
 import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
-import org.raven.tree.Node;
+import org.raven.tree.impl.LoggerHelper;
 import org.weda.annotations.constraints.NotNull;
 
 /**
@@ -289,7 +289,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     }
     
     private SchemaMeta getOrCreateSchemeMeta(Connection con, RecordSchema schema, boolean batchUpdate,
-            Map<RecordSchema, Map<Connection, SchemaMeta>> metas) 
+            Map<RecordSchema, Map<Connection, SchemaMeta>> metas, final LoggerHelper logger) 
         throws Exception
     {
         Map<Connection, SchemaMeta> conMetas = metas.get(schema);
@@ -300,27 +300,27 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         SchemaMeta meta = conMetas.get(con);
         if (meta==null) {
             meta = new SchemaMeta(schema, enableUpdates, enableDeletes, batchUpdate, updateIdField, 
-                    operationTimeout, executor, cancelOperationAfterTimeout);
+                    operationTimeout, executor, cancelOperationAfterTimeout, logger);
             meta.init(con);
             conMetas.put(con, meta);            
         }
         return meta;
     }
 
-    private synchronized void flushRecords() throws Exception
-    {
-        if (isLogLevelEnabled(LogLevel.DEBUG))
-            debug("Flushing records to the database");
+    private synchronized void flushRecords() throws Exception {
+        final LoggerHelper logger = new LoggerHelper(this, "Flushing. ");
+        if (logger.isDebugEnabled())
+            logger.debug("Flushing records to the database");
         
         if (recordBuffer==null || recordBuffer.isEmpty()) {
-            if (isLogLevelEnabled(LogLevel.DEBUG))
-                debug("Nothing to flush. Records buffer is empty.");
+            if (logger.isDebugEnabled())
+                logger.debug("Nothing to flush. Records buffer is empty.");
             return;
         }
 
         Map<RecordSchema, Map<Connection, SchemaMeta>> metas = new HashMap<RecordSchema, Map<Connection, SchemaMeta>>();
 
-        Connection con = connectionPool.getConnection();
+        final Connection con = connectionPool.getConnection();
         con.setAutoCommit(false);
         try {
             try {
@@ -332,15 +332,15 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                     }
                 boolean batchUpdate = !updateIdField && con.getMetaData().supportsBatchUpdates() && !hasConnectionInRecord;
 
-                if (isLogLevelEnabled(LogLevel.DEBUG))
-                    debug(String.format(
+                if (logger.isDebugEnabled())
+                    logger.debug(String.format(
                             "Database driver %ssupports batch updates"
                             , batchUpdate? "" : "does not "));
 
                 for (Record record: recordBuffer) {
                     final Connection recCon = (Connection) record.getTag(Record.DB_CONNECTION);
                     SchemaMeta meta = getOrCreateSchemeMeta(
-                            recCon!=null? recCon : con, record.getSchema(), batchUpdate, metas);
+                            recCon!=null? recCon : con, record.getSchema(), batchUpdate, metas, logger);
 //                    SchemaMeta meta = metas.get(record.getSchema());
 //                    if (meta==null) {
 //                        meta = new SchemaMeta(
@@ -351,8 +351,8 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                     try {
                         meta.updateRecord(record);
                     } catch (Exception e) {
-                        if (isLogLevelEnabled(LogLevel.WARN))
-                            getLogger().warn("Record updating error: {}", record);
+                        if (logger.isWarnEnabled())
+                            logger.warn("Record updating error: {}", record);
                         throw e;
                     }
                 }
@@ -363,20 +363,19 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                             try {
                                 meta.executeBatch();
                             } catch (Exception e) {
-                                if (isLogLevelEnabled(LogLevel.WARN)) {
-                                    getLogger().warn("Error updating set of records");
+                                if (logger.isWarnEnabled()) {
+                                    logger.warn("Error updating set of records");
                                     int i=0;
                                     for (Record rec: recordBuffer)
-                                        getLogger().warn("[{}] Record: {}", ++i, rec);
+                                        logger.warn("[{}] Record: {}", ++i, rec);
                                 }
                                 throw e;
                             }
 
                 con.commit();
 
-                if (isLogLevelEnabled(LogLevel.DEBUG))
-                    debug(String.format(
-                            "Flushed (%d) records to the database", recordBuffer.size()));
+                if (logger.isWarnEnabled())
+                    logger.warn(String.format("Flushed (%d) records to the database", recordBuffer.size()));
                 recordsSaved+=recordBuffer.size();
 
             } finally {
@@ -423,6 +422,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         private final int operationTimeout;
         private final ExecutorService executor;
         private final long cancelTimeout;
+        private final LoggerHelper logger;
 
         private PreparedStatement select;
         private PreparedStatement insert;
@@ -435,7 +435,8 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
 
         public SchemaMeta(
                 RecordSchema recordSchema, boolean enableUpdates, boolean enableDeletes, boolean batchUpdate
-                , boolean updateIdField, int operationTimeout, ExecutorService executor, Integer cancelOperationAfterTimeout)
+                , boolean updateIdField, int operationTimeout, ExecutorService executor
+                , Integer cancelOperationAfterTimeout, LoggerHelper logger)
             throws Exception
         {
             RecordSchemaField[] fields = recordSchema.getFields();
@@ -445,6 +446,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                         "Schema (%s) does not contains fields", recordSchema.getName()));
             this.operationTimeout = operationTimeout;
             this.executor = executor;
+            this.logger = logger;
             this.cancelTimeout = executor==null || cancelOperationAfterTimeout==null? 0l : cancelOperationAfterTimeout * 1000;
             columnNames = new ArrayList<String>(fields.length);
             dbFields =  new ArrayList<FieldInfo>(fields.length);
@@ -504,17 +506,14 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         public void init(Connection connection) throws SQLException
         {
             insert = connection.prepareStatement(insertQuery);
-            if (updateQuery!=null)
-            {
+            if (updateQuery!=null) {
                 update = connection.prepareStatement(updateQuery);
                 select = connection.prepareStatement(selectQuery);
             }
             if (deleteQuery!=null)
                 delete = connection.prepareStatement(deleteQuery);
             if (sequenceName!=null && updateIdField)
-            {
                 sequence = connection.prepareStatement("select "+sequenceName+".nextval from dual");
-            }
         }
 
         private boolean findRecord(Record record) throws RecordException, SQLException
@@ -593,7 +592,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                 if (batchUpdate)
                     st.addBatch();
                 else {
-                    CancelTask cancelTask = cancelTimeout>0? new CancelTask(st) : null;
+                    CancelTask cancelTask = cancelTimeout>0? new CancelTask(st, logger) : null;
                     if (cancelTask!=null)
                         executor.executeQuietly(cancelTimeout, cancelTask);
                     try {
@@ -650,15 +649,28 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     
     private class CancelTask extends AbstractTask {
         private final PreparedStatement statement;
+        private final LoggerHelper logger;
 
-        public CancelTask(PreparedStatement statement) {
+        public CancelTask(PreparedStatement statement, LoggerHelper logger) {
             super(DatabaseRecordWriterNode.this, "Handling cancel operation timeout");
             this.statement = statement;
+            this.logger = logger;
         }
 
         @Override
         public void doRun() throws Exception {
+            if (logger.isWarnEnabled())
+                logger.warn("Query execution timeout detected! Canceling");
             statement.cancel();
+//            Connection conn = statement.getConnection();
+//            if (conn instanceof DelegatingConnection) {
+//                logger.warn("Detected DBCP connection. Trying to close connection");
+//                ((DelegatingConnection)conn).getDelegate().abort(new Executor() {
+//                    public void execute(Runnable r) {
+//                        r.run();
+//                    }
+//                });
+//            }
         }
     }
 }
