@@ -422,34 +422,28 @@ public class DatabaseRecordQuery
                     "Remove operation not supported in the RecordIterator");
         }
 
-        private void createNextRecord() 
-        {
-            try
-            {
-                if (!resultSet.next())
-                {
+        private void createNextRecord() {
+            try {
+                if (!resultSet.next()) {
                     next = null;
                     close();
-                }
-                else
-                {
+                } else {
                     next = schema.createRecord();
                     ResultSetMetaData metaData = resultSet.getMetaData();
                     Object idColumnValue = null;
                     Class idFieldType = null;
-                    for (int i=1; i<=metaData.getColumnCount(); ++i)
-                    {
+                    for (int i=1; i<=metaData.getColumnCount(); ++i) {
                         String columnName = metaData.getColumnLabel(i).toUpperCase();
                         FieldInfo fieldInfo = fields.get(columnName);
                         if (fieldInfo==null)
-                            throw new RecordIteratorError(String.format(
-                                    "Not found field for column name (%s)", columnName));
+                            continue;
+//                        if (fieldInfo==null)
+//                            throw new RecordIteratorError(String.format(
+//                                    "Not found field for column name (%s)", columnName));
                         RecordSchemaFieldType fieldType = fieldInfo.getField().getFieldType();
-                        if (RecordSchemaFieldType.BINARY!=fieldType)
-                        {
+                        if (RecordSchemaFieldType.BINARY!=fieldType) {
                             Object value = resultSet.getObject(i);
-                            if (idColumnName!=null && idColumnName.equals(columnName))
-                            {
+                            if (idColumnName!=null && idColumnName.equals(columnName)) {
                                 idColumnValue=value;
                                 idFieldType = fieldType.getType();
                             }
@@ -461,8 +455,7 @@ public class DatabaseRecordQuery
                         }
                     }
                     if (idColumnValue!=null)
-                        for (FieldInfo fieldInfo: fields.values())
-                        {
+                        for (FieldInfo fieldInfo: fields.values()) {
                             RecordSchemaFieldType fieldType = fieldInfo.getField().getFieldType();
                             if (fieldType==RecordSchemaFieldType.BINARY)
                             {
@@ -480,9 +473,7 @@ public class DatabaseRecordQuery
                             }
                         }
                 }
-            }
-            catch(Exception e)
-            {
+            } catch(Exception e) {
                 close();
                 throw new RecordIteratorError(e);
             }

@@ -374,8 +374,8 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
 
                 con.commit();
 
-                if (logger.isWarnEnabled())
-                    logger.warn(String.format("Flushed (%d) records to the database", recordBuffer.size()));
+                if (logger.isDebugEnabled())
+                    logger.debug(String.format("Flushed (%d) records to the database", recordBuffer.size()));
                 recordsSaved+=recordBuffer.size();
 
             } finally {
