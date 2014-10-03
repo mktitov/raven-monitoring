@@ -31,6 +31,7 @@ import org.raven.net.Response;
 import org.raven.net.ResponseBuilder;
 import org.raven.net.ResponseContext;
 import org.raven.net.ResponseContextListener;
+import org.raven.net.ResponseServiceNode;
 import org.raven.ui.servlet.NetworkResponseServlet.RequestContext;
 import org.slf4j.Logger;
 
@@ -145,4 +146,8 @@ public class CometResponseContext implements ResponseContext {
     public Logger getResponseBuilderLogger() {
         return responseContext.getResponseBuilderLogger();
     }    
+
+    public ResponseServiceNode getServiceNode() {
+        return responseContext.getServiceNode();
+    }
 }

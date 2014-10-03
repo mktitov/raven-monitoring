@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -35,7 +36,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import static javax.servlet.http.HttpServletResponse.*;
 import javax.servlet.http.HttpSession;
 import org.apache.catalina.CometEvent;
 //import org.apache.catalina.CometEvent;
@@ -64,10 +64,13 @@ import org.raven.net.Request;
 import org.raven.net.RequiredParameterMissedException;
 import org.raven.net.Response;
 import org.raven.net.ResponseContext;
+import org.raven.net.ResponseServiceNode;
 import org.raven.net.Result;
 import org.raven.net.UnauthoriedException;
 import org.raven.net.impl.RedirectResult;
 import org.raven.net.impl.RequestImpl;
+import org.raven.prj.WebInterface;
+import org.raven.prj.impl.ProjectNode;
 import org.raven.tree.impl.LoggerHelper;
 import org.raven.ui.util.RavenRegistry;
 import org.slf4j.Logger;
@@ -248,6 +251,29 @@ public class NetworkResponseServlet extends HttpServlet  {
             }
         return headers;
     }
+    
+    protected void sendError(RequestContext ctx, int statusCode, String message, Throwable exception) 
+            throws IOException 
+    {
+        final HttpServletRequest request = ctx.request;
+        final HttpServletResponse response = ctx.response;
+        String charset = getCharset(request, null);
+        response.setCharacterEncoding(charset);
+        response.setContentType("text/html");
+        response.setStatus(statusCode);
+        response.addHeader("Cache-control", "no-cache");
+        response.addHeader("Pragma", "no-cache");
+        PrintWriter writer = response.getWriter();
+        appendErrorHeader(writer);
+        
+        ResponseServiceNode service = ctx.responseContext.getServiceNode();        
+        writer.append("<h1>Problem detected");
+        if (service instanceof WebInterface) {
+            ProjectNode project = (ProjectNode) service.getParent();
+            writer.append(" in project \"").append(project.getName()).append("\"");
+        } 
+        
+    }
 
     protected void processServiceResponse(RequestContext ctx, Response serviceResponse) throws IOException 
     {
@@ -311,14 +337,16 @@ public class NetworkResponseServlet extends HttpServlet  {
                             }
                         }
                     }
-                } else
+                } else {
+                    response.flushBuffer();
                     response.getOutputStream().close();
+                }
             }
         }
     }
 
     private String getCharset(HttpServletRequest request, Response serviceResponse) {
-        if (serviceResponse.getCharset()!=null)
+        if (serviceResponse!=null && serviceResponse.getCharset()!=null)
             return serviceResponse.getCharset().name();
         String charset = null;
         String charsetsStr = request.getHeader("Accept-Charset");
@@ -385,8 +413,7 @@ public class NetworkResponseServlet extends HttpServlet  {
     {
         return new RequestImpl(ctx.request.getRemoteAddr(), params, headers, context, 
                 ctx.request.getMethod().toUpperCase(), ctx.request);
-    }
-    
+    }    
     
     protected void processError(RequestContext ctx, Throwable e) 
         throws ServletException, IOException
@@ -439,7 +466,7 @@ public class NetworkResponseServlet extends HttpServlet  {
         if (rethrow)
             throw new ServletException(e);
     }
-
+    
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -468,6 +495,66 @@ public class NetworkResponseServlet extends HttpServlet  {
     @Override
     public String getServletInfo() {
         return "Simple requests interface";
+    }
+    
+    private void appendErrorHeader(PrintWriter writer) {
+        writer.append("<!DOCTYPE html>\n" +
+            "<html>\n" +
+            "<head>\n" +
+            "  <meta charset=\"UTF-8\">\n" +
+            "  <title>Request processing error</title>\n" +
+            "  <style>\n" +
+            "  <!--\n" +
+            "  * {\n" +
+            "    font-size: 10pt;\n" +
+            "  } \n" +
+            "  h1 {\n" +
+            "    color: red;\n" +
+            "    font-size: 12pt;\n" +
+            "  }\n" +
+            "  h2 {\n" +
+            "    color: #565656;\n" +
+            "    font-size: 12pt;\n" +
+            "  }\n" +
+            "  body {\n" +
+            "    background-color: #FFEBE5;\n" +
+            "  }\n" +
+            "  pre {\n" +
+            "    font-family: \"Lucida Console\", Monaco, monospace, \"Courier New\", Courier;\n" +
+            "    font-size: 10pt;\n" +
+            "    background-color: white;\n" +
+            "    padding-left:20px;\n" +
+            "    padding-top: 5px;\n" +
+            "    padding-right:5px;\n" +
+            "    padding-bottom:5px;\n" +
+            "  }\n" +
+            "  ol > li {\n" +
+            "    font-family: \"Lucida Console\", Monaco, monospace, \"Courier New\", Courier;\n" +
+            "    font-size: 10pt;\n" +
+            "    color: #AE2000;\n" +
+            "  }\n" +
+            "  pre.exception-stack {\n" +
+            "    display: none;\n" +
+            "    color: black;\n" +
+            "  }\n" +
+            "  ol > li:hover  pre.exception-stack {\n" +
+            "    display: block;\n" +
+            "  }\n" +
+            "  table {\n" +
+            "    margin-top: 5px;\n" +
+            "    border-collapse: collapse;\n" +
+            "    padding:2px;\n" +
+            "  }\n" +
+            "  table, th, td {\n" +
+            "    border: 1px solid black;\n" +
+            "  }  \n" +
+            "  th, td {\n" +
+            "    padding: 2px;\n" +
+            "  }\n" +
+            "  -->\n" +
+            "  </style>\n" +
+            "</head>\n" +
+            "<body>");
     }
     
     protected static class RequestContext implements DataReceiver {
