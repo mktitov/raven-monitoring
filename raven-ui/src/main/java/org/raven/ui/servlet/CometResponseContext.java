@@ -137,6 +137,10 @@ public class CometResponseContext implements ResponseContext {
         return responseContext.getResponseBuilder();
     }
 
+    public ResponseServiceNode getServiceNode() {
+        return responseContext.getServiceNode();
+    }
+    
     @Override
     public Logger getLogger() {
         return responseContext.getLogger();
@@ -146,8 +150,5 @@ public class CometResponseContext implements ResponseContext {
     public Logger getResponseBuilderLogger() {
         return responseContext.getResponseBuilderLogger();
     }    
-
-    public ResponseServiceNode getServiceNode() {
-        return responseContext.getServiceNode();
-    }
+        
 }

@@ -36,6 +36,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import static javax.servlet.http.HttpServletResponse.*;
 import javax.servlet.http.HttpSession;
 import org.apache.catalina.CometEvent;
 //import org.apache.catalina.CometEvent;
@@ -71,6 +72,8 @@ import org.raven.net.impl.RedirectResult;
 import org.raven.net.impl.RequestImpl;
 import org.raven.prj.WebInterface;
 import org.raven.prj.impl.ProjectNode;
+import org.raven.prj.impl.WebInterfaceNode;
+import org.raven.tree.PropagatedAttributeValueError;
 import org.raven.tree.impl.LoggerHelper;
 import org.raven.ui.util.RavenRegistry;
 import org.slf4j.Logger;
@@ -84,7 +87,53 @@ public class NetworkResponseServlet extends HttpServlet  {
 
     private static final long serialVersionUID = 3540687833508728534L;
     private final AtomicLong fileUploadsCounter = new AtomicLong();
+    
+    public final static Map STATUS_CODES = new HashMap();
 
+    static {
+        STATUS_CODES.put(100,"CONTINUE");
+        STATUS_CODES.put(101,"SWITCHING_PROTOCOLS");
+        STATUS_CODES.put(200,"OK");
+        STATUS_CODES.put(201,"CREATED");
+        STATUS_CODES.put(202,"ACCEPTED");
+        STATUS_CODES.put(203,"NON_AUTHORITATIVE_INFORMATION");
+        STATUS_CODES.put(204,"NO_CONTENT");
+        STATUS_CODES.put(205,"RESET_CONTENT");
+        STATUS_CODES.put(206,"PARTIAL_CONTENT");
+        STATUS_CODES.put(300,"MULTIPLE_CHOICES");
+        STATUS_CODES.put(301,"MOVED_PERMANENTLY");
+        STATUS_CODES.put(302,"MOVED_TEMPORARILY");
+        STATUS_CODES.put(302,"FOUND");
+        STATUS_CODES.put(303,"SEE_OTHER");
+        STATUS_CODES.put(304,"NOT_MODIFIED");
+        STATUS_CODES.put(305,"USE_PROXY");
+        STATUS_CODES.put(307,"TEMPORARY_REDIRECT");
+        STATUS_CODES.put(400,"BAD_REQUEST");
+        STATUS_CODES.put(401,"UNAUTHORIZED");
+        STATUS_CODES.put(402,"PAYMENT_REQUIRED");
+        STATUS_CODES.put(403,"FORBIDDEN");
+        STATUS_CODES.put(404,"NOT_FOUND");
+        STATUS_CODES.put(405,"METHOD_NOT_ALLOWED");
+        STATUS_CODES.put(406,"NOT_ACCEPTABLE");
+        STATUS_CODES.put(407,"PROXY_AUTHENTICATION_REQUIRED");
+        STATUS_CODES.put(408,"REQUEST_TIMEOUT");
+        STATUS_CODES.put(409,"CONFLICT");
+        STATUS_CODES.put(410,"GONE");
+        STATUS_CODES.put(411,"LENGTH_REQUIRED");
+        STATUS_CODES.put(412,"PRECONDITION_FAILED");
+        STATUS_CODES.put(413,"REQUEST_ENTITY_TOO_LARGE");
+        STATUS_CODES.put(414,"REQUEST_URI_TOO_LONG");
+        STATUS_CODES.put(415,"UNSUPPORTED_MEDIA_TYPE");
+        STATUS_CODES.put(416,"REQUESTED_RANGE_NOT_SATISFIABLE");
+        STATUS_CODES.put(417,"EXPECTATION_FAILED");
+        STATUS_CODES.put(500,"INTERNAL_SERVER_ERROR");
+        STATUS_CODES.put(501,"NOT_IMPLEMENTED");
+        STATUS_CODES.put(502,"BAD_GATEWAY");
+        STATUS_CODES.put(503,"SERVICE_UNAVAILABLE");
+        STATUS_CODES.put(504,"GATEWAY_TIMEOUT");
+        STATUS_CODES.put(505,"HTTP_VERSION_NOT_SUPPORTED");
+    }
+    
     protected class BadRequestException extends Exception {
         public BadRequestException() {
         }
@@ -252,6 +301,14 @@ public class NetworkResponseServlet extends HttpServlet  {
         return headers;
     }
     
+    protected void sendError(RequestContext ctx, int statusCode) throws IOException {
+        sendError(ctx, statusCode, null, null);
+    }
+    
+    protected void sendError(RequestContext ctx, int statusCode, String message) throws IOException {
+        sendError(ctx, statusCode, message, null);
+    }
+    
     protected void sendError(RequestContext ctx, int statusCode, String message, Throwable exception) 
             throws IOException 
     {
@@ -261,18 +318,85 @@ public class NetworkResponseServlet extends HttpServlet  {
         response.setCharacterEncoding(charset);
         response.setContentType("text/html");
         response.setStatus(statusCode);
+        
         response.addHeader("Cache-control", "no-cache");
         response.addHeader("Pragma", "no-cache");
         PrintWriter writer = response.getWriter();
+        
+        //adding html initial markup with css
         appendErrorHeader(writer);
         
-        ResponseServiceNode service = ctx.responseContext.getServiceNode();        
+        //adding report header
+        boolean hasContext = ctx.responseContext!=null;
+        ResponseServiceNode service = hasContext? ctx.responseContext.getServiceNode() : null;        
         writer.append("<h1>Problem detected");
-        if (service instanceof WebInterface) {
+        if (service instanceof WebInterfaceNode) {
             ProjectNode project = (ProjectNode) service.getParent();
             writer.append(" in project \"").append(project.getName()).append("\"");
         } 
+        writer.append(": "+statusCode+" ("+STATUS_CODES.get(statusCode)+")");
+        writer.append("</h1>");
         
+        //adding message if need
+        if (message==null && exception!=null) {
+            message = exception.getCause() instanceof PropagatedAttributeValueError? 
+                    exception.getCause().getMessage() : exception.getMessage();
+        } 
+        if (message!=null) 
+            writer.append("<pre>"+message+"</pre>");
+        
+        //adding request info
+        writer.append("<h2>REQUEST: </h2>");
+        writer.append("<ul>");
+        writer.append("<li><b>URL: </b>"+request.getRequestURL());
+        if (hasContext)
+            writer.append("<li><b>RESPONSE BUILDER NODE: </b>"+ctx.responseContext.getResponseBuilder().getResponseBuilderNode().getPath());
+        writer.append("<li><b>QUERY STRING: </b>"+request.getQueryString());
+        writer.append("<li><b>HEADERS: </b>");
+        writer.append("    <table><tr><th>Name</th><th>Value</th></tr>");
+        Map<String, Object> headers = ctx.serviceRequest.getHeaders();
+        if (headers!=null)
+            for (Map.Entry<String, Object> entry: headers.entrySet())
+                writer.append(String.format("<tr><td>%s</td><td>%s</td></tr>", entry.getKey(), entry.getValue()));
+        writer.append("    </table>");
+        writer.append("<li><b>PARAMETERS: </b>");
+        writer.append("    <table><tr><th>Name</th><th>Value</th></tr>");
+        Map<String, Object> params = ctx.serviceRequest.getParams();
+        if (params!=null)
+            for (Map.Entry<String, Object> entry: params.entrySet())
+                writer.append(String.format("<tr><td>%s</td><td>%s</td></tr>", entry.getKey(), entry.getValue()));
+        writer.append("    </table>");
+        writer.append("</ul>");
+        
+        if (exception!=null) {
+            writer.append("<h2>EXCEPTION(s) STACK: </h2>");
+            writer.append("<a id='open-stack' tabindex=1 href=\"#s\">Show stack</a> <a id='close-stack' "
+                    + "tabindex=2 href=\"#s\">Collapse stack</a>");
+            writer.append("<ol>");
+            appendException(writer, exception);
+            writer.append("</ol>");
+        }
+        
+        writer.append("</body>");
+        writer.append("</html>");
+        writer.close();
+    }
+    
+    private void appendException(final PrintWriter writer, final Throwable exception) {
+        if (exception==null)
+            return;
+        if (!(exception.getCause() instanceof PropagatedAttributeValueError)) {
+            writer.append("<li>"+exception.getClass().getName()+": ");
+            String message = exception.getMessage();
+            if (message!=null) {
+                writer.append("<pre>"+message+"</pre>");
+            }
+            writer.append("<pre class=\"exception-stack\">");
+            for (StackTraceElement elem: exception.getStackTrace())
+                writer.append("at "+elem.toString()+"\n");
+            writer.append("</pre>");
+        }
+        appendException(writer, exception.getCause());
     }
 
     protected void processServiceResponse(RequestContext ctx, Response serviceResponse) throws IOException 
@@ -329,9 +453,9 @@ public class NetworkResponseServlet extends HttpServlet  {
                             OutputStream out = response.getOutputStream();
                             try {
                                 IOUtils.copy(contentStream, out);
+                                IOUtils.closeQuietly(out);
                             } finally {
 //                                out.flush();
-                                IOUtils.closeQuietly(out);
                                 IOUtils.closeQuietly(contentStream);
 //                                out.flush();
                             }
@@ -402,8 +526,9 @@ public class NetworkResponseServlet extends HttpServlet  {
         String context = ctx.request.getPathInfo().substring(1);
         Map<String, Object> params = extractParams(ctx.request, ctx.responseService);
         Map<String, Object> headers = extractHeaders(ctx.request);
-        Request serviceRequest = createServiceRequest(ctx, params, headers, context);
-        ctx.responseContext = ctx.responseService.getResponseContext(serviceRequest);
+//        Request serviceRequest = 
+        ctx.serviceRequest = createServiceRequest(ctx, params, headers, context);;
+        ctx.responseContext = ctx.responseService.getResponseContext(ctx.serviceRequest);
         ctx.user = checkAuth(ctx.request, ctx.response, ctx.responseContext, context);
         return ctx;
     }
@@ -415,57 +540,127 @@ public class NetworkResponseServlet extends HttpServlet  {
                 ctx.request.getMethod().toUpperCase(), ctx.request);
     }    
     
-    protected void processError(RequestContext ctx, Throwable e) 
+    private ResponseContext tryCreateErrorResponseContext(RequestContext ctx, String servicePath, String contextPath) 
+            throws NetworkResponseServiceExeption 
+    {
+        ErrorRequest errorRequest = new ErrorRequest(ctx.responseContext.getRequest(), contextPath, servicePath);
+        try {
+            ResponseContext errorResponseContext = ctx.responseService.getResponseContext(errorRequest);
+            return errorResponseContext;
+        } catch (ContextUnavailableException e) {
+            return null;
+        } catch (NetworkResponseServiceUnavailableException e) {
+            return null;
+        } catch (NetworkResponseServiceExeption e) {
+            String mess = "Error rendering error page";
+            
+            throw e;
+        }
+    }
+    
+    protected void processError2(RequestContext ctx, Throwable e) 
         throws ServletException, IOException
     {
-//        ErrorContext err;
-//        boolean rethrow = false;
-//        Request req = ctx.responseContext!=null? ctx.responseContext.getRequest() : null;
-//        if (e instanceof NetworkResponseServiceUnavailableException) {
-//            err = new ErrorContextImpl(SC_SERVICE_UNAVAILABLE, req, e.getMessage(), null);
-//        } else if (e instanceof ContextUnavailableException) {
-//            err = new ErrorContextImpl(SC_NOT_FOUND, req, e.getMessage(), null);
-//        } else if (e instanceof AccessDeniedException) {
-//            err = new ErrorContextImpl(SC_FORBIDDEN, req, e.getMessage(), null);
-//        } else if (e instanceof RequiredParameterMissedException || e instanceof NetworkResponseServlet.BadRequestException) {
-//            err = new ErrorContextImpl(SC_BAD_REQUEST, req, e.getMessage(), null);
-//        } else if (e instanceof UnauthoriedException || e instanceof AuthenticationFailedException) {
-//            ctx.response.setHeader("WWW-Authenticate", "BASIC realm=\"RAVEN\"");
-//            ctx.response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-//        } else {
-//            rethrow = true;
-//            err = new ErrorContextImpl(SC_BAD_REQUEST, req, e.getMessage(), e);
-//        }
-            
-        boolean rethrow = false;
+        ErrorContext err = null;
+        Request req = ctx.responseContext!=null? ctx.responseContext.getRequest() : null;
         if (e instanceof NetworkResponseServiceUnavailableException) {
-            ctx.response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, e.getMessage());
+            err = new ErrorContextImpl(SC_SERVICE_UNAVAILABLE, req, e.getMessage(), null);
         } else if (e instanceof ContextUnavailableException) {
-            ctx.response.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
+            err = new ErrorContextImpl(SC_NOT_FOUND, req, e.getMessage(), null);
         } else if (e instanceof AccessDeniedException) {
-            ctx.response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            err = new ErrorContextImpl(SC_FORBIDDEN, req, e.getMessage(), null);
         } else if (e instanceof RequiredParameterMissedException || e instanceof NetworkResponseServlet.BadRequestException) {
-            ctx.response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            err = new ErrorContextImpl(SC_BAD_REQUEST, req, e.getMessage(), null);
         } else if (e instanceof UnauthoriedException || e instanceof AuthenticationFailedException) {
             ctx.response.setHeader("WWW-Authenticate", "BASIC realm=\"RAVEN\"");
             ctx.response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
         } else {
-            rethrow = true;
+            err = new ErrorContextImpl(SC_INTERNAL_SERVER_ERROR, req, e.getMessage(), e);
+        }
+        if (err!=null) {
+            //trying to find error page template in project
+            //  1. Need to create org.raven.net.Request
+            //  2. Create ResponseContext
+            //  3. Build response
+            //  4. Write response
+            
+            //if error page template not found in project trying to find it in global SRI service
+
+            //if not found using simple hard coded template
+        }
+    }
+    
+    protected void processError(RequestContext ctx, Throwable e) 
+        throws ServletException, IOException
+    {
+        System.out.println("Processing !!!ERROR!!!");
+        boolean internalError = false;
+        if (e instanceof NetworkResponseServiceUnavailableException) {
+            sendError(ctx, HttpServletResponse.SC_SERVICE_UNAVAILABLE, e.getMessage());
+        } else if (e instanceof ContextUnavailableException) {
+            sendError(ctx, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
+        } else if (e instanceof AccessDeniedException) {
+            sendError(ctx, HttpServletResponse.SC_FORBIDDEN);
+        } else if (e instanceof RequiredParameterMissedException || e instanceof NetworkResponseServlet.BadRequestException) {
+            sendError(ctx, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+        } else if (e instanceof UnauthoriedException || e instanceof AuthenticationFailedException) {
+            ResponseServiceNode service = ctx.responseContext.getServiceNode();
+            System.out.println("SERVICE NODE TYPE is: "+service.getClass().getName());
+            System.out.println("SERVICE NODE path is: "+service.getPath());
+            String realm = service instanceof WebInterfaceNode? service.getParent().getName() : "RAVEN";
+            if ("system".equals(realm))
+                realm = "RAVEN";
+            ctx.response.setHeader("WWW-Authenticate", String.format("BASIC realm=\"%s\"", realm));
+            sendError(ctx, HttpServletResponse.SC_UNAUTHORIZED);
+        } else {
+            sendError(ctx, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, null, e);
+            internalError = true;
         }
         String mess = String.format("Error processing request (%s) from host (%s)", 
                 ctx.request.getPathInfo(), ctx.request.getRemoteAddr());
         if (ctx.responseService.getNetworkResponseServiceNode().isLogLevelEnabled(LogLevel.WARN)) {
             Logger logger = ctx.responseService.getNetworkResponseServiceNode().getLogger();
-            if (rethrow)
+            if (internalError)
                 logger.warn(mess, e);
             else
                 logger.warn(mess+"."+(e.getMessage()==null? e.getClass().getName() : e.getMessage()));
         }
         if (ctx.responseContext!=null && ctx.responseContext.getResponseBuilderLogger().isErrorEnabled()) 
             ctx.responseContext.getResponseBuilderLogger().error(mess, e);
-        if (rethrow)
-            throw new ServletException(e);
     }
+    
+//    protected void processError(RequestContext ctx, Throwable e) 
+//        throws ServletException, IOException
+//    {
+//        boolean rethrow = false;
+//        if (e instanceof NetworkResponseServiceUnavailableException) {
+//            ctx.response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, e.getMessage());
+//        } else if (e instanceof ContextUnavailableException) {
+//            ctx.response.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
+//        } else if (e instanceof AccessDeniedException) {
+//            ctx.response.sendError(HttpServletResponse.SC_FORBIDDEN);
+//        } else if (e instanceof RequiredParameterMissedException || e instanceof NetworkResponseServlet.BadRequestException) {
+//            ctx.response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+//        } else if (e instanceof UnauthoriedException || e instanceof AuthenticationFailedException) {
+//            ctx.response.setHeader("WWW-Authenticate", "BASIC realm=\"RAVEN\"");
+//            ctx.response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+//        } else {
+//            rethrow = true;
+//        }
+//        String mess = String.format("Error processing request (%s) from host (%s)", 
+//                ctx.request.getPathInfo(), ctx.request.getRemoteAddr());
+//        if (ctx.responseService.getNetworkResponseServiceNode().isLogLevelEnabled(LogLevel.WARN)) {
+//            Logger logger = ctx.responseService.getNetworkResponseServiceNode().getLogger();
+//            if (rethrow)
+//                logger.warn(mess, e);
+//            else
+//                logger.warn(mess+"."+(e.getMessage()==null? e.getClass().getName() : e.getMessage()));
+//        }
+//        if (ctx.responseContext!=null && ctx.responseContext.getResponseBuilderLogger().isErrorEnabled()) 
+//            ctx.responseContext.getResponseBuilderLogger().error(mess, e);
+//        if (rethrow)
+//            throw new ServletException(e);
+//    }
     
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -507,6 +702,7 @@ public class NetworkResponseServlet extends HttpServlet  {
             "  <!--\n" +
             "  * {\n" +
             "    font-size: 10pt;\n" +
+            "    font-family: \"Lucida Sans Unicode\", \"Lucida Grande\", sans-serif;\n" +
             "  } \n" +
             "  h1 {\n" +
             "    color: red;\n" +
@@ -522,6 +718,7 @@ public class NetworkResponseServlet extends HttpServlet  {
             "  pre {\n" +
             "    font-family: \"Lucida Console\", Monaco, monospace, \"Courier New\", Courier;\n" +
             "    font-size: 10pt;\n" +
+            "    color: black;" +
             "    background-color: white;\n" +
             "    padding-left:20px;\n" +
             "    padding-top: 5px;\n" +
@@ -537,9 +734,19 @@ public class NetworkResponseServlet extends HttpServlet  {
             "    display: none;\n" +
             "    color: black;\n" +
             "  }\n" +
-            "  ol > li:hover  pre.exception-stack {\n" +
+            "  \n" +
+            "  #open-stack:focus ~ ol > li pre.exception-stack {\n" +
+            "    display:block;\n" +
+            "  }\n" +
+            "  \n" +
+            "  #close-stack:focus ~ ol > li pre.exception-stack {\n" +
+            "    display:none;\n" +
+            "  }\n" +
+            "  \n" +
+            "  pre.exception-stack:hover {\n" +
             "    display: block;\n" +
             "  }\n" +
+            "  "+
             "  table {\n" +
             "    margin-top: 5px;\n" +
             "    border-collapse: collapse;\n" +
@@ -589,6 +796,7 @@ public class NetworkResponseServlet extends HttpServlet  {
         
         public UserContext user;
         public ResponseContext responseContext;
+        public Request serviceRequest;
 
         public RequestContext(HttpServletRequest request, HttpServletResponse response, Registry registry) 
         {
