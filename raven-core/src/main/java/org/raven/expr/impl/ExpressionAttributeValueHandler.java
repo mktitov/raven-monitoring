@@ -49,6 +49,7 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
     public static final String NODE_BINDING = "node";
     public static final String RAVEN_EXPRESSION_ARGS_BINDING = "args";
     public static final String RAVEN_EXPRESSION_VARS_BINDING = "vars";
+    public static final String RAVEN_EXPRESSION_SOURCES_BINDINS = "sources";
     public static final String RAVEN_EXPRESSION_VARS_INITIATED_BINDING = "isVarsInitiated";
 
     @Service
@@ -124,6 +125,7 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
             if (!varsInitiated) {
                 varsSupport.put(RAVEN_EXPRESSION_VARS_INITIATED_BINDING, true);
                 varsSupport.put(RAVEN_EXPRESSION_VARS_BINDING, new HashMap());
+                varsSupport.put(RAVEN_EXPRESSION_SOURCES_BINDINS, new HashMap());
             }
             bindings.put(RAVEN_EXPRESSION_VARS_BINDING, varsSupport.get(RAVEN_EXPRESSION_VARS_BINDING));
             Map args = (Map) varsSupport.get(RAVEN_EXPRESSION_ARGS_BINDING);
@@ -144,6 +146,9 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
                 {
                     try {
                         bindings.remove(ENABLE_SCRIPT_EXECUTION_BINDING);
+                        ((HashMap<String, ExpressionInfo>)varsSupport.get(RAVEN_EXPRESSION_SOURCES_BINDINS)).
+                                put(expressionIdent, 
+                                        new ExpressionInfo(attribute.getName(), attribute.getOwner(), data));
                         res = expression.eval(bindings);
                     } catch (Throwable ex) {
                         final Node owner = attribute.getOwner();
@@ -156,7 +161,9 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
                         if (varsInitiated)
                             throw error;
                         else if (owner.isLogLevelEnabled(LogLevel.ERROR)) {
-                            String errMess = GroovyExpressionExceptionAnalyzator.aggregate(error);
+                            String errMess = GroovyExpressionExceptionAnalyzator.aggregate(
+                                    error, 
+                                    ((HashMap<String, ExpressionInfo>)varsSupport.get(RAVEN_EXPRESSION_SOURCES_BINDINS)));
                             if (errMess==null || errMess.isEmpty())
                                 owner.getLogger().error(mess, ex);
                             else

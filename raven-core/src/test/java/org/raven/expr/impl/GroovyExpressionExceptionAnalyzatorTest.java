@@ -25,6 +25,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.raven.expr.Expression;
 import org.raven.test.RavenCoreTestCase;
+import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 
@@ -123,6 +125,30 @@ public class GroovyExpressionExceptionAnalyzatorTest extends RavenCoreTestCase {
             + ">>> [ 1] (  2) throw new Exception('Test exception')\n"
             + "         (  3) }\n"
         );
+    }
+    
+    @Test
+    public void execExprFromExprTest1() throws Exception {
+        Node node1 = new BaseNode("node1");
+        testsNode.addAndSaveChildren(node1);
+        addAttr(node1, "expr1", "cl()");
+        
+        Node node2 = new BaseNode("node2");
+        testsNode.addAndSaveChildren(node2);
+        NodeAttribute attr = addAttr(node2, "expr2", "cl = {\n"
+                + "throw new Exception('test error')\n"
+                + "}\n"
+                + "node.parent.getNode('node1').$expr1(cl:cl)");
+        attr.getRealValue();
+    }
+    
+    private NodeAttribute addAttr(Node owner, String name, String expr) throws Exception {
+        NodeAttributeImpl attr = new NodeAttributeImpl(name, String.class, expr, null);
+        attr.setOwner(owner);
+        attr.setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
+        attr.init();
+        owner.addAttr(attr);
+        return attr;
     }
     
     private void check(String source, String expectedRes) {

@@ -16,6 +16,8 @@
 
 package org.raven.expr.impl;
 
+import java.util.Collection;
+import java.util.Map;
 import org.raven.RavenRuntimeException;
 
 /**
@@ -24,15 +26,30 @@ import org.raven.RavenRuntimeException;
  */
 public class GroovyExpressionException extends RavenRuntimeException {
     private final GroovyExpressionExceptionAnalyzator analyzator;
+//    private final String attrName;
+//    private final String nodePath;
+            
     
     public GroovyExpressionException(String msg, Throwable ex, GroovyExpressionExceptionAnalyzator analyzator) {
         super(msg, ex);
         this.analyzator = analyzator;
     }
     
-    public StringBuilder constructMessage(String prefix, StringBuilder builder) {
-        builder.append(getMessage()).append('\n');
-        analyzator.addResultToBuilder(prefix, builder);
-        return builder;
+//    public GroovyExpressionException(String attrName, String nodePath, Throwable ex, GroovyExpressionExceptionAnalyzator analyzator) {
+//        super(msg, ex);
+//        this.attrName = attrName;
+//        this.nodePath = nodePath;
+//        this.analyzator = analyzator;
+//    }
+    
+//    public StringBuilder constructMessage(String prefix, StringBuilder builder) {
+//        builder.append(getMessage()).append('\n');
+//        analyzator.addResultToBuilder(prefix, builder);
+//        return builder;
+//    }
+    
+    public Collection<MessageConstructor> getMessageConstructors(Map<String/*expression id*/, ExpressionInfo> sources) 
+    {
+        return null;
     }
 }

@@ -68,7 +68,7 @@ public class NodeReferenceValueHandler
         super(attribute);
         this.addDependencyToNode = addDependencyToNode;
         this.slaveMode = slaveMode;
-        
+        attribute.getOwner().addListener(this);
         if (!slaveMode)
         {
             resolveNode(attribute.getRawValue());

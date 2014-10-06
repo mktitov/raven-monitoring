@@ -121,10 +121,10 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
         attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
         attr.setOwner(node);
         attr.init();
-        node.addNodeAttribute(attr);
+        node.addAttr(attr);
         assertTrue(parentNode.getDependentNodes().contains(node));
 
-        node.removeNodeAttribute("refAttr");
+        node.removeAttr("refAttr");
         assertFalse(parentNode.getDependentNodes().contains(node));
     }
     
@@ -204,7 +204,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
         NodeAttribute attr = new NodeAttributeImpl("ref", Node.class, childNode.getPath(), null);
         attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
         attr.setOwner(node);
-        node.addNodeAttribute(attr);
+        node.addAttr(attr);
         attr.save();
         attr.init();
 
@@ -221,7 +221,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
 
         node = tree.getNode(node.getPath());
         assertNotNull(node);
-        attr = node.getNodeAttribute("ref");
+        attr = node.getAttr("ref");
         assertNotNull(attr);
         assertEquals(newPath, attr.getValue());
         assertEquals(childNode, attr.getRealValue());
@@ -233,7 +233,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
         NodeAttribute attr = new NodeAttributeImpl("ref", Node.class, childNode.getPath(), null);
         attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
         attr.setOwner(node);
-        node.addNodeAttribute(attr);
+        node.addAttr(attr);
         attr.save();
         attr.init();
 
@@ -251,7 +251,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
 
         node = tree.getNode(node.getPath());
         assertNotNull(node);
-        attr = node.getNodeAttribute("ref");
+        attr = node.getAttr("ref");
         assertNotNull(attr);
         assertEquals(newPath, attr.getValue());
         assertEquals(childNode, attr.getRealValue());
@@ -263,7 +263,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
         NodeAttribute attr = new NodeAttributeImpl("ref", Node.class, "../parent/child", null);
         attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
         attr.setOwner(node);
-        node.addNodeAttribute(attr);
+        node.addAttr(attr);
         attr.save();
         attr.init();
 
@@ -281,7 +281,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
 
         node = tree.getNode(node.getPath());
         assertNotNull(node);
-        attr = node.getNodeAttribute("ref");
+        attr = node.getAttr("ref");
         assertNotNull(attr);
         assertEquals(newPath, attr.getRawValue());
         assertEquals(childNode, attr.getRealValue());
@@ -293,7 +293,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
         NodeAttribute attr = new NodeAttributeImpl("ref", Node.class, "../parent/child", null);
         attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
         attr.setOwner(node);
-        node.addNodeAttribute(attr);
+        node.addAttr(attr);
         attr.save();
         attr.init();
 
@@ -311,7 +311,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
 
         node = tree.getNode(node.getPath());
         assertNotNull(node);
-        attr = node.getNodeAttribute("ref");
+        attr = node.getAttr("ref");
         assertNotNull(attr);
         assertEquals(newPath, attr.getRawValue());
         assertEquals(childNode, attr.getRealValue());
@@ -339,7 +339,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
         NodeAttribute attr = new NodeAttributeImpl("ref", Node.class, "../../../child", null);
         attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
         attr.setOwner(node2);
-        node2.addNodeAttribute(attr);
+        node2.addAttr(attr);
         attr.save();
         attr.init();
 
@@ -355,7 +355,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
 
         node2 = tree.getNode(node2.getPath());
         assertNotNull(node2);
-        attr = node2.getNodeAttribute("ref");
+        attr = node2.getAttr("ref");
         assertNotNull(attr);
         assertEquals(newPath, attr.getRawValue());
         assertEquals(childNode, attr.getRealValue());
@@ -367,7 +367,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
         NodeAttribute attr = new NodeAttributeImpl("ref", Node.class, "../parent/child2", null);
         attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
         attr.setOwner(node);
-        node.addNodeAttribute(attr);
+        node.addAttr(attr);
         attr.save();
         attr.init();
 
@@ -390,7 +390,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
         NodeAttribute attr = new NodeAttributeImpl("ref", Node.class, childNode.getPath(), null);
         attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
         attr.setOwner(node);
-        node.addNodeAttribute(attr);
+        node.addAttr(attr);
         attr.save();
         attr.init();
         
@@ -403,7 +403,7 @@ public class NodeReferenceValueHandlerTest extends RavenCoreTestCase
         
         node = tree.getNode(node.getPath());
         assertNotNull(node);
-        attr = node.getNodeAttribute("ref");
+        attr = node.getAttr("ref");
         assertNotNull(attr);
         assertEquals(childNode, attr.getRealValue());
         
