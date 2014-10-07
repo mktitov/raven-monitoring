@@ -156,7 +156,7 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
                                 "Exception in @%s (%s)"
                                 , attribute.getName(), owner.getPath());
                         GroovyExpressionExceptionAnalyzator an = new GroovyExpressionExceptionAnalyzator(
-                                expressionIdent, data, ex, 2);
+                                expressionIdent, ex, 2);
                         GroovyExpressionException error = new GroovyExpressionException(mess, ex, an);
                         if (varsInitiated)
                             throw error;

@@ -215,15 +215,20 @@ public abstract class AbstractSafeDataPipe
         if (usePreProcess) {
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug("Preprocessing...");
-            bindingSupport.put(SESSIONATTRIBUTES_BINDING, context.getSessionAttributes());
-            bindingSupport.put(DATA_CONTEXT_BINDING, context);
-            bindingSupport.put(REQUESTER_BINDING, dataConsumer);
+            VarsSupportState varsSupportState = NodeUtils.resetVarsSupport(tree);
             try {
-                preprocessResult = getAttr(PREPROCESS_ATTRIBUTE).getRealValue();
-                if (isLogLevelEnabled(LogLevel.DEBUG))
-                    debug(String.format("Preprocessed value is (%s)", preprocessResult));
+                bindingSupport.put(SESSIONATTRIBUTES_BINDING, context.getSessionAttributes());
+                bindingSupport.put(DATA_CONTEXT_BINDING, context);
+                bindingSupport.put(REQUESTER_BINDING, dataConsumer);
+                try {
+                    preprocessResult = getAttr(PREPROCESS_ATTRIBUTE).getRealValue();
+                    if (isLogLevelEnabled(LogLevel.DEBUG))
+                        debug(String.format("Preprocessed value is (%s)", preprocessResult));
+                } finally {
+                    bindingSupport.reset();
+                }
             } finally {
-                bindingSupport.reset();
+                varsSupportState.restoreState();
             }
         }
         boolean result = true;

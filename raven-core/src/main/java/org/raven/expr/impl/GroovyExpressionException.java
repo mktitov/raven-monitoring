@@ -50,6 +50,6 @@ public class GroovyExpressionException extends RavenRuntimeException {
     
     public Collection<MessageConstructor> getMessageConstructors(Map<String/*expression id*/, ExpressionInfo> sources) 
     {
-        return null;
+        return analyzator.getMessageConstructors(sources);
     }
 }

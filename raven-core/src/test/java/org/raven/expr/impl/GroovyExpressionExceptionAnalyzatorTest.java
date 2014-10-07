@@ -16,6 +16,13 @@
 
 package org.raven.expr.impl;
 
+import groovy.lang.Binding;
+import groovy.lang.GroovyShell;
+import groovy.text.SimpleTemplateEngine;
+import groovy.text.Template;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 import static org.easymock.EasyMock.*;
@@ -48,9 +55,12 @@ public class GroovyExpressionExceptionAnalyzatorTest extends RavenCoreTestCase {
         compiler = new GroovyExpressionCompiler(new ExpressionCacheImpl());
         ident = GroovyExpressionCompiler.convertToIdentificator("test_script");
         bindings = new SimpleBindings();
+        node = new BaseNode("test node");
+        testsNode.addAndSaveChildren(node);
+        assertTrue(node.start());
     }
     
-    @Test 
+//    @Test 
     public void boundsTest() throws Exception {
         check(
             "throw new Exception('Test exception')", 
@@ -58,7 +68,7 @@ public class GroovyExpressionExceptionAnalyzatorTest extends RavenCoreTestCase {
         );
     }
     
-    @Test 
+//    @Test 
     public void emptyLinesTest() throws Exception {
         check(
             "\nthrow new Exception('Test exception')", 
@@ -67,7 +77,7 @@ public class GroovyExpressionExceptionAnalyzatorTest extends RavenCoreTestCase {
         );
     }
     
-    @Test 
+//    @Test 
     public void linesBeforeAndAfterTest() throws Exception {
         check(
             "1\n2\nthrow new Exception('Test exception')\n4", 
@@ -77,7 +87,7 @@ public class GroovyExpressionExceptionAnalyzatorTest extends RavenCoreTestCase {
         );
     }
     
-    @Test 
+//    @Test 
     public void twoErrorsTest() throws Exception {
         check(
             "a = {throw new Exception('Test exception')}\n2\n3\n4\na()", 
@@ -89,7 +99,7 @@ public class GroovyExpressionExceptionAnalyzatorTest extends RavenCoreTestCase {
         );
     }
     
-    @Test 
+//    @Test 
     public void twoErrorsNearTest() throws Exception {
         check(
             "a = {throw new Exception('Test exception')}\n2\n3\na()", 
@@ -100,7 +110,7 @@ public class GroovyExpressionExceptionAnalyzatorTest extends RavenCoreTestCase {
         );
     }
     
-    @Test 
+//    @Test 
     public void twoErrorsMergeTest1() throws Exception {
         check(
             "a = {throw new Exception('Test exception')}\na()", 
@@ -109,7 +119,7 @@ public class GroovyExpressionExceptionAnalyzatorTest extends RavenCoreTestCase {
         );
     }
     
-    @Test 
+//    @Test 
     public void twoErrorsMergeTest2() throws Exception {
         check(
             "a = {throw new Exception('Test exception')};a()", 
@@ -117,7 +127,7 @@ public class GroovyExpressionExceptionAnalyzatorTest extends RavenCoreTestCase {
         );
     }
     
-    @Test 
+//    @Test 
     public void twoErrorsMergeTest3() throws Exception {
         check(
             "[1].each{\nthrow new Exception('Test exception')\n}", 
@@ -127,7 +137,7 @@ public class GroovyExpressionExceptionAnalyzatorTest extends RavenCoreTestCase {
         );
     }
     
-    @Test
+//    @Test
     public void execExprFromExprTest1() throws Exception {
         Node node1 = new BaseNode("node1");
         testsNode.addAndSaveChildren(node1);
@@ -142,6 +152,56 @@ public class GroovyExpressionExceptionAnalyzatorTest extends RavenCoreTestCase {
         attr.getRealValue();
     }
     
+//    @Test
+    public void execExprFromExprTest2() throws Exception {
+        Node node1 = new BaseNode("node1");
+        testsNode.addAndSaveChildren(node1);
+        addAttr(node1, "expr1", 
+                "{->\n"
+                + "throw new Exception('test exception')\n"
+                + "}");
+        
+        Node node2 = new BaseNode("node2");
+        testsNode.addAndSaveChildren(node2);
+        NodeAttribute attr = addAttr(node2, "expr2", 
+                "cl = node.parent.getNode('node1').$expr1\n"
+                + "cl()");
+        attr.getRealValue();
+    }
+    
+    @Test
+    public void execGroovyTemplate() throws Exception {
+        SimpleTemplateEngine engine = new SimpleTemplateEngine();
+        String source = "line 1\n"
+                + "line 2\n"
+                + "line 3\n"
+                + "<%\n"
+                + "{->\n"
+                + "  throw new Exception('test')\n"
+                + "}()\n"
+                + "%>\n"
+                + "line 5";
+        Binding binding = new Binding();
+        binding.setVariable("engine", engine);
+        String scriptId = 
+                "SimpleTemplateScript"
+                + new GroovyShell(binding).evaluate("engine.counter")
+                + ".groovy";
+        try {
+            engine.createTemplate(source).make().toString();
+        } catch (Throwable e) {
+            GroovyExpressionExceptionAnalyzator a = new GroovyExpressionExceptionAnalyzator(scriptId, e, 1);
+            ExpressionInfo exprInfo = new ExpressionInfo("attr", node, source);
+            Map<String, ExpressionInfo> sources = new HashMap<String, ExpressionInfo>();
+            sources.put(scriptId, exprInfo);
+            Collection<MessageConstructor> messageConstructors = a.getMessageConstructors(sources);
+            String res = messageConstructors.iterator().next().constructMessage("", new StringBuilder()).toString();
+            System.out.println("MESSAGE:");
+            System.out.println(res);
+        }
+    }
+    
+    
     private NodeAttribute addAttr(Node owner, String name, String expr) throws Exception {
         NodeAttributeImpl attr = new NodeAttributeImpl(name, String.class, expr, null);
         attr.setOwner(owner);
@@ -155,7 +215,7 @@ public class GroovyExpressionExceptionAnalyzatorTest extends RavenCoreTestCase {
         try {
             compileAndExecute(source);
         } catch (ScriptException e) {
-            checkAnalyzer(e, source, "Message: Test exception\nCause: java.lang.Exception\n...\n"+expectedRes);
+            checkAnalyzer(e, source, "Exception at @attr (/\"tests node\"/\"test node\"/)\nMessage: Test exception\nCause: java.lang.Exception\n...\n"+expectedRes);
         }
         
     }
@@ -166,8 +226,14 @@ public class GroovyExpressionExceptionAnalyzatorTest extends RavenCoreTestCase {
     }
     
     private void checkAnalyzer(Throwable e, String source, String expectedRes) {
-        GroovyExpressionExceptionAnalyzator a = new GroovyExpressionExceptionAnalyzator(ident, source, e, 1);
-        String res = a.addResultToBuilder("", new StringBuilder()).toString();
+        GroovyExpressionExceptionAnalyzator a = new GroovyExpressionExceptionAnalyzator(ident, e, 1);
+        ExpressionInfo exprInfo = new ExpressionInfo("attr", node, source);
+        Map<String, ExpressionInfo> sources = new HashMap<String, ExpressionInfo>();
+        sources.put(ident, exprInfo);
+        Collection<MessageConstructor> messageConstructors = a.getMessageConstructors(sources);
+        assertEquals(1, messageConstructors.size());
+        String res = messageConstructors.iterator().next().constructMessage("", new StringBuilder()).toString();
+//        String res = a.addResultToBuilder("", new StringBuilder()).toString();
         if (!expectedRes.equals(res)) {
             System.out.println("EXPECTED: ");
             System.out.println(expectedRes);

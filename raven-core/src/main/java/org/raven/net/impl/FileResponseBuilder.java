@@ -206,6 +206,7 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
                                 bodyBindings = bindings;
                             addBinding(bodyBindings);
                             try {
+                                
                                 Object res = transform(thisTemplate.make(bodyBindings), bodyBindings);
                                 if (res instanceof Writable)
                                     return (Writable)res;
@@ -398,6 +399,20 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
 
     public Boolean getAutoRefresh() {
         return Boolean.TRUE;
+    }
+    
+    private static class TemplateInfo {
+        private final Template template;
+        private final SimpleTemplateEngine engine;
+
+        public TemplateInfo(Template template, SimpleTemplateEngine engine) {
+            this.template = template;
+            this.engine = engine;
+        }
+        
+        public String getFileName() {
+            
+        }
     }
     
     private class Include extends Closure {
