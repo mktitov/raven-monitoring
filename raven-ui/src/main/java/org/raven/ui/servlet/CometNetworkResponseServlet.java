@@ -132,11 +132,11 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
                             ctx.servletLogger.error("Response composing error", e);
                         try {
                             processError(ctx, e);
-                        } catch (ServletException ex) {
-                            ctx.processingException = ex;
+//                        } catch (IOException ex) {
+//                            ctx.processingException = ex;
                         } finally {
-                            if (ctx.processingException==null)
-                                ctx.response.flushBuffer();
+//                            if (ctx.processingException==null)
+//                                ctx.response.flushBuffer();
                             ctx.writeProcessed();                            
                         }
                     }
@@ -181,20 +181,23 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
         try {
             if (ctx.responseContext.getResponseBuilderLogger().isDebugEnabled())
                 ctx.responseContext.getResponseBuilderLogger().debug("Builder returned response. Handling");
-            if (serviceResponse != Response.ALREADY_COMPOSED && serviceResponse != Response.MANAGING_BY_BUILDER)
+            if (serviceResponse != Response.ALREADY_COMPOSED && serviceResponse != Response.MANAGING_BY_BUILDER) {
                 super.processServiceResponse(ctx, serviceResponse);
-        } finally {
-            if (serviceResponse!=Response.MANAGING_BY_BUILDER) {
-                try {
-//                    ev.setTimeout(1);
-                } catch (Throwable e) {
-                    ctx.servletLogger.error("Write channel close error", e);
-                } finally {
-                    ctx.writeProcessed();
-                }
-            } else {
+                ctx.writeProcessed();
+            } else if (serviceResponse==Response.MANAGING_BY_BUILDER)
                 ctx.responseManagingByBuilder = true;
-            }
+//            if (serviceResponse!=Response.MANAGING_BY_BUILDER) {
+//                try {
+////                    ev.setTimeout(1);
+//                } catch (Throwable e) {
+//                    ctx.servletLogger.error("Write channel close error", e);
+//                } finally {
+//                    ctx.writeProcessed();
+//                }
+//            } else {
+//                ctx.responseManagingByBuilder = true;
+//            }
+        } finally {
         }
     }
 

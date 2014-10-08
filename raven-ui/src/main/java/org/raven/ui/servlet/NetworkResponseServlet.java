@@ -47,6 +47,8 @@ import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.util.Streams;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.tapestry5.ioc.Registry;
 import org.raven.auth.AnonymousLoginService;
 import org.raven.auth.AuthenticationFailedException;
@@ -319,8 +321,8 @@ public class NetworkResponseServlet extends HttpServlet  {
         response.setContentType("text/html");
         response.setStatus(statusCode);
         
-        response.addHeader("Cache-control", "no-cache");
-        response.addHeader("Pragma", "no-cache");
+        response.setHeader("Cache-control", "no-cache");
+        response.setHeader("Pragma", "no-cache");
         PrintWriter writer = response.getWriter();
         
         //adding html initial markup with css
@@ -339,11 +341,12 @@ public class NetworkResponseServlet extends HttpServlet  {
         
         //adding message if need
         if (message==null && exception!=null) {
-            message = exception.getCause() instanceof PropagatedAttributeValueError? 
-                    exception.getCause().getMessage() : exception.getMessage();
+//            message = exception.getCause() instanceof PropagatedAttributeValueError? 
+//                    exception.getCause().getMessage() : exception.getMessage();
+            message = exception.getMessage();
         } 
         if (message!=null) 
-            writer.append("<pre>"+message+"</pre>");
+            writer.append("<pre>"+StringEscapeUtils.escapeHtml(message)+"</pre>");
         
         //adding request info
         writer.append("<h2>REQUEST: </h2>");
@@ -379,6 +382,7 @@ public class NetworkResponseServlet extends HttpServlet  {
         
         writer.append("</body>");
         writer.append("</html>");
+        ctx.response.flushBuffer();
         writer.close();
     }
     
@@ -389,7 +393,7 @@ public class NetworkResponseServlet extends HttpServlet  {
             writer.append("<li>"+exception.getClass().getName()+": ");
             String message = exception.getMessage();
             if (message!=null) {
-                writer.append("<pre>"+message+"</pre>");
+                writer.append("<pre>"+StringEscapeUtils.escapeHtml(message)+"</pre>");
             }
             writer.append("<pre class=\"exception-stack\">");
             for (StackTraceElement elem: exception.getStackTrace())
@@ -591,7 +595,7 @@ public class NetworkResponseServlet extends HttpServlet  {
     }
     
     protected void processError(RequestContext ctx, Throwable e) 
-        throws ServletException, IOException
+        throws IOException
     {
         System.out.println("Processing !!!ERROR!!!");
         boolean internalError = false;
@@ -749,8 +753,9 @@ public class NetworkResponseServlet extends HttpServlet  {
             "  "+
             "  table {\n" +
             "    margin-top: 5px;\n" +
+            "    margin-bottom:7px;\n" +
             "    border-collapse: collapse;\n" +
-            "    padding:2px;\n" +
+            "    padding:2px;\n"+
             "  }\n" +
             "  table, th, td {\n" +
             "    border: 1px solid black;\n" +
@@ -873,6 +878,8 @@ public class NetworkResponseServlet extends HttpServlet  {
         private void processChannelClose(CometEvent ev) throws IOException {
             ev.close();
             responseContext.channelClosed();
+            if (servletLogger.isDebugEnabled())
+                servletLogger.debug("Channel CLOSED");
         }
         
         public void logStat() {
