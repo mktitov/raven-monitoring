@@ -93,6 +93,8 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
     public final static String GSP_MIME_TYPE = "text/gsp";
     public static final String TEMPLATE_BODIES_BINDING = "template_bodies";
     public static final String TEMPLATE_SOURCES_BINDING = "template_sources";
+    public static final String ENTRY_TEMPLATE_CLASS_NAME = "ENTRY_TEMPLATE_CLASS_NAME";
+
 
     private final static RavenTemplate EMPTY_TEMPLATE = createEmptyTemplate();
     public static final String MIME_TYPE_ATTR = "file.mimeType";
@@ -213,13 +215,14 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
                             return doCall(null);
                         }
                         public Object doCall(Map params) {
-                            Map bodyBindings = null;
+                            Map bodyBindings = new HashMap(bindings);
                             if (params!=null) {
-                                bodyBindings = new HashMap();
-                                bodyBindings.putAll(bindings);
+//                                bodyBindings = new HashMap();
+//                                bodyBindings.putAll(bindings);
                                 bodyBindings.putAll(params);
-                            } else
-                                bodyBindings = bindings;
+                            } 
+//                            else
+//                                bodyBindings = bindings;
                             addBinding(bodyBindings);
                             try {
                                 
@@ -634,11 +637,18 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
         private final Writable writable;
         private final Map bindings;
         private final String templateClassName;
+        private final boolean entryTemplate;
 
         public WritableWrapper(Writable writable, Map bindings, String templateClassName) {
             this.writable = writable;
             this.bindings = bindings;
             this.templateClassName = templateClassName;
+            if (!bindings.containsKey(ENTRY_TEMPLATE_CLASS_NAME)) {
+                entryTemplate = true;
+                bindings.put(ENTRY_TEMPLATE_CLASS_NAME, templateClassName);
+            } else
+                entryTemplate = false;
+            
         }
 
         public Writer writeTo(Writer out) throws IOException {
@@ -651,12 +661,15 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
                 bindingsSupport.remove(BindingNames.LOGGER_BINDING);
                 bindingsSupport.remove(BindingNames.INCLUDE_BINDING);
                 bindingsSupport.remove(BindingNames.PATH_BINDING);
-                try {
+                if (entryTemplate) {
+                    try {
+                        return writable.writeTo(out);
+                    } catch (Throwable e) {
+                        analyzeError(e);
+                        return null; 
+                    }
+                } else
                     return writable.writeTo(out);
-                } catch (Throwable e) {
-                    analyzeError(e);
-                    return null; 
-                }
             } finally {
                 if (varsSupport!=null)
                     varsSupport.reset();
@@ -664,8 +677,16 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
             }
         }
         
-        private void analyzeError(Throwable e) throws RavenRuntimeException {
+        private void analyzeError(Throwable e) throws RuntimeException {
             //analyzing error
+//            if (!templateClassName.equals(bindings.get(ENTRY_TEMPLATE_CLASS_NAME))) {
+//                if (e instanceof IOException)
+//                    throw (IOException) e;
+//                else if (e instanceof RuntimeException) 
+//                    throw (RuntimeException) e;
+//                else 
+//                    throw new RuntimeException(e);
+//            }
             GroovyExpressionExceptionAnalyzator a = new GroovyExpressionExceptionAnalyzator(
                     templateClassName, e, 2, true);
             String mess = String.format("Exception in @file (%s)", getPath());
@@ -696,17 +717,19 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
         public String toString() {
             BindingSupport varsSupport = initExpressionExecutionContext();
             try {
-                try {
+                if (entryTemplate)
+                    try {
+                        return writable.toString();
+                    } catch (Throwable e) {
+                        analyzeError(e);
+                        return null;
+                    }
+                else
                     return writable.toString();
-                } catch (Exception e) {
-                    analyzeError(e);
-                    return null;
-                }
             } finally {
                 if (varsSupport!=null)
                     varsSupport.reset();
             }
         }
-        
     } 
 }
