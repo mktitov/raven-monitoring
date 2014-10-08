@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang.StringUtils;
+import org.raven.expr.ExpressionInfo;
 
 /**
  *
@@ -33,12 +34,20 @@ public class GroovyExpressionExceptionAnalyzator {
     private final int linesBeforeAfter;
     private final String expressionIdent;
     private final Throwable initialError;
+    private final boolean analyzeFullStack;
 
     public GroovyExpressionExceptionAnalyzator(String expressionIdent, Throwable error, int linesBeforeAfter) 
+    {
+        this(expressionIdent, error, linesBeforeAfter, false);
+    }
+    
+    public GroovyExpressionExceptionAnalyzator(String expressionIdent, Throwable error, int linesBeforeAfter,
+            boolean analyzeFullStack) 
     {
         this.expressionIdent = expressionIdent;
         this.linesBeforeAfter = linesBeforeAfter;
         this.initialError = error;
+        this.analyzeFullStack = analyzeFullStack;
     }
     
     public Collection<MessageConstructor> getMessageConstructors(final Map<String, ExpressionInfo> sources) 
@@ -50,15 +59,17 @@ public class GroovyExpressionExceptionAnalyzator {
             List<Integer> errorLineNumbers = entry.getValue();
             if (!errorLineNumbers.isEmpty()) {
                 final ExpressionInfo exprInfo = sources.get(entry.getKey());
-                final String[] lines = StringUtils.splitPreserveAllTokens(exprInfo.source, '\n');  
+                final String[] lines = StringUtils.splitPreserveAllTokens(exprInfo.getSource(), '\n');  
                 List<SourceCodeBlock> codeBlocks = new ArrayList<SourceCodeBlock>(errorLineNumbers.size());
                 int pos = 1;
                 for (int lineNumber: errorLineNumbers)
                     if (lineNumber <= lines.length)
                         codeBlocks.add(new SourceCodeBlock(pos++, lineNumber-1, lines));
-                codeBlocks = mergeCodeBlocks(codeBlocks);
-                Collections.sort(codeBlocks);
-                messageConstructors.add(new MessageConstructorImpl(codeBlocks, exprInfo, error));
+                if (!codeBlocks.isEmpty()) {
+                    codeBlocks = mergeCodeBlocks(codeBlocks);
+                    Collections.sort(codeBlocks);
+                    messageConstructors.add(new MessageConstructorImpl(codeBlocks, exprInfo, error));
+                }
             }
         }
         return messageConstructors.isEmpty()? Collections.EMPTY_LIST : messageConstructors;
@@ -95,14 +106,15 @@ public class GroovyExpressionExceptionAnalyzator {
                 exprId = elem.getFileName();
                 exprInfo = sources.get(exprId);
                 if (exprInfo!=null) {
-                    if (lineNumbers.containsKey(expressionIdent) && !exprId.equals(expressionIdent))
+                    if (lineNumbers.containsKey(expressionIdent) && !exprId.equals(expressionIdent) && !analyzeFullStack)
                         break;
                     numbers = lineNumbers.get(exprId);
                     if (numbers==null) {
                         numbers = new ArrayList<Integer>(5);
                         lineNumbers.put(exprId, numbers);
                     }
-                    numbers.add(elem.getLineNumber());
+                    if (!numbers.contains(elem.getLineNumber()))
+                        numbers.add(elem.getLineNumber());
                 }
             }
         }
@@ -148,8 +160,8 @@ public class GroovyExpressionExceptionAnalyzator {
         }
 
         public StringBuilder constructMessage(String prefix, StringBuilder builder) {
-            builder.append("Exception at @").append(expressionInfo.attrName).
-                    append(" (").append(expressionInfo.node.getPath()).append(")\n");
+            builder.append("Exception at @").append(expressionInfo.getAttrName()).
+                    append(" (").append(expressionInfo.getNode().getPath()).append(")\n");
             if (!(error instanceof GroovyExpressionException)) {
                 if (error.getMessage()!=null)
                     builder.append(prefix).append("Message: ").append(error.getMessage()).append('\n');

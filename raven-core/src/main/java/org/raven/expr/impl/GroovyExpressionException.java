@@ -19,6 +19,7 @@ package org.raven.expr.impl;
 import java.util.Collection;
 import java.util.Map;
 import org.raven.RavenRuntimeException;
+import org.raven.expr.ExpressionInfo;
 
 /**
  *

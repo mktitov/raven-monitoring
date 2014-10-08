@@ -25,10 +25,10 @@ import javax.script.Bindings;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 import org.raven.BindingNames;
-import org.raven.RavenRuntimeException;
 import org.raven.expr.BindingSupport;
 import org.raven.expr.Expression;
 import org.raven.expr.ExpressionCompiler;
+import org.raven.expr.ExpressionInfo;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -148,7 +148,7 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
                         bindings.remove(ENABLE_SCRIPT_EXECUTION_BINDING);
                         ((HashMap<String, ExpressionInfo>)varsSupport.get(RAVEN_EXPRESSION_SOURCES_BINDINS)).
                                 put(expressionIdent, 
-                                        new ExpressionInfo(attribute.getName(), attribute.getOwner(), data));
+                                        new ExpressionInfoImpl(attribute.getName(), attribute.getOwner(), data));
                         res = expression.eval(bindings);
                     } catch (Throwable ex) {
                         final Node owner = attribute.getOwner();

@@ -19,6 +19,7 @@ import groovy.lang.Closure;
 import groovy.lang.Writable;
 import groovy.text.SimpleTemplateEngine;
 import groovy.text.Template;
+import groovy.util.ScriptException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -34,18 +35,28 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
 import org.apache.commons.io.output.WriterOutputStream;
+import org.apache.commons.lang.StringUtils;
 import org.apache.poi.util.IOUtils;
 import org.raven.BindingNames;
+import org.raven.RavenRuntimeException;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.auth.UserContext;
 import org.raven.expr.BindingSupport;
+import org.raven.expr.ExpressionInfo;
 import org.raven.expr.impl.BindingSupportImpl;
+import static org.raven.expr.impl.ExpressionAttributeValueHandler.RAVEN_EXPRESSION_SOURCES_BINDINS;
 import static org.raven.expr.impl.ExpressionAttributeValueHandler.RAVEN_EXPRESSION_VARS_BINDING;
 import static org.raven.expr.impl.ExpressionAttributeValueHandler.RAVEN_EXPRESSION_VARS_INITIATED_BINDING;
+import org.raven.expr.impl.GroovyExpressionException;
+import org.raven.expr.impl.GroovyExpressionExceptionAnalyzator;
+import org.raven.expr.impl.RavenScriptTemplateEngine;
+import org.raven.expr.impl.RavenScriptTemplateEngine.RavenTemplate;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.net.ContentTransformer;
@@ -59,6 +70,7 @@ import org.raven.tree.DataFile;
 import org.raven.tree.DataFileException;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.PropagatedAttributeValueError;
 import org.raven.tree.Tree;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
@@ -79,7 +91,10 @@ import org.weda.internal.annotations.Service;
 public class FileResponseBuilder extends AbstractResponseBuilder implements Viewable {
     public final static String FILE_ATTR = "file";
     public final static String GSP_MIME_TYPE = "text/gsp";
-    private final static Template EMPTY_TEMPLATE = createEmptyTemplate();
+    public static final String TEMPLATE_BODIES_BINDING = "template_bodies";
+    public static final String TEMPLATE_SOURCES_BINDING = "template_sources";
+
+    private final static RavenTemplate EMPTY_TEMPLATE = createEmptyTemplate();
     public static final String MIME_TYPE_ATTR = "file.mimeType";
     
     @Service
@@ -103,11 +118,11 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
     @Parameter
     private Long lastModified;
     
-    private AtomicReference<Template> template;
+    private AtomicReference<RavenTemplate> template;
     
-    private static Template createEmptyTemplate() {
+    private static RavenTemplate createEmptyTemplate() {
         try {
-            return new SimpleTemplateEngine().createTemplate("");
+            return (RavenTemplate) new RavenScriptTemplateEngine().createTemplate("");
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -116,7 +131,7 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
     @Override
     protected void initFields() {
         super.initFields();
-        template = new AtomicReference<Template>();
+        template = new AtomicReference<RavenTemplate>();
     }
 
     @Override
@@ -177,7 +192,7 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
         } else {
             if (debugEnabled)
                 getLogger().debug("The content of the builder is GSP template. Generating dynamic content...");
-            Template _template = template.get();
+            RavenTemplate _template = template.get();
             if (_template==null) {
                 if (debugEnabled)
                     getLogger().debug("GSP template not compiled. Compiling...");
@@ -186,6 +201,7 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
             if (_template!=null) {
                 if (debugEnabled)
                     getLogger().debug("Generating content from GSP template");
+                getSources(bindings).put(_template.getClassFileName(), new SourceInfo());
                 final FileResponseBuilder _extendsTemplate = extendsTemplate;
                 final Template thisTemplate = _template;
                 if (_extendsTemplate!=null) {
@@ -221,7 +237,7 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
                     result = _extendsTemplate.buildResponseContent(addExtendsTemplateParams(bindings));
                 } else {
                     addBinding(bindings);
-                    result = new WritableWrapper(_template.make(bindings), bindings);
+                    result = new WritableWrapper(_template.make(bindings), bindings, _template.getClassFileName());
                 }
             } else if (isLogLevelEnabled(LogLevel.WARN)) {
                 getLogger().warn("Generated empty content");
@@ -291,12 +307,21 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
     } 
     
     private LinkedList getBodies(Map bindings, boolean create) {
-        LinkedList bodies = (LinkedList) bindings.get("template_bodies");
+        LinkedList bodies = (LinkedList) bindings.get(TEMPLATE_BODIES_BINDING);
         if (bodies==null && create) {
             bodies = new LinkedList();
-            bindings.put("template_bodies", bodies);                        
+            bindings.put(TEMPLATE_BODIES_BINDING, bodies);                        
         }                    
         return bodies;
+    }
+    
+    private Map<String, ExpressionInfo> getSources(Map bindings) {
+        Map<String, ExpressionInfo> sources = (Map<String, ExpressionInfo>) bindings.get(TEMPLATE_SOURCES_BINDING);
+        if (sources==null) {
+            sources = new HashMap<String, ExpressionInfo>();
+            bindings.put(TEMPLATE_SOURCES_BINDING, sources);
+        }
+        return sources;
     }
     
     private void addBinding(Map bindings) {        
@@ -363,7 +388,7 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
         this.executor = executor;
     }
     
-    public Template compile() throws Exception {
+    public RavenTemplate compile() throws Exception {
         if (!GSP_MIME_TYPE.equals(file.getMimeType()))
             return null;
         Reader reader = file.getDataReader();
@@ -372,7 +397,8 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
                 getLogger().debug("Builder does not have content nothing to compile!");
             return null;
         }
-        Template _template = reader==null? EMPTY_TEMPLATE : new SimpleTemplateEngine().createTemplate(reader);
+        RavenTemplate _template = reader==null? 
+                EMPTY_TEMPLATE : new RavenScriptTemplateEngine().createRavenTemplate(reader);
         template.set(_template);        
         return _template;
     }
@@ -401,17 +427,33 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
         return Boolean.TRUE;
     }
     
-    private static class TemplateInfo {
-        private final Template template;
-        private final SimpleTemplateEngine engine;
+    private class SourceInfo implements ExpressionInfo {
+//        private final String templateClassFileName;
 
-        public TemplateInfo(Template template, SimpleTemplateEngine engine) {
-            this.template = template;
-            this.engine = engine;
+//        public SourceInfo() {
+//            this.templateClassFileName = templateClassFileName;
+//        }
+
+//        public String getTemplateClassFileName() {
+//            return templateClassFileName;
+//        }       
+
+        public Node getNode() {
+            return FileResponseBuilder.this;
         }
-        
-        public String getFileName() {
-            
+
+        public String getAttrName() {
+            return "file";
+        }
+
+        public String getSource() {
+            try {
+                return org.apache.commons.io.IOUtils.toString(FileResponseBuilder.this.getFile().getDataReader());
+            } catch (Exception ex) {
+                if (isLogLevelEnabled(LogLevel.ERROR))
+                    getLogger().error("Error extracting content from 'file' attribute", ex);
+                return "";
+            }
         }
     }
     
@@ -538,6 +580,7 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
             if (!varsInitiated) {
                 varsSupport.put(RAVEN_EXPRESSION_VARS_INITIATED_BINDING, true);
                 varsSupport.put(RAVEN_EXPRESSION_VARS_BINDING, new HashMap());
+                varsSupport.put(RAVEN_EXPRESSION_SOURCES_BINDINS, new HashMap());
                 return varsSupport;
             } else
                 return null;
@@ -590,10 +633,12 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
     private class WritableWrapper implements Writable {
         private final Writable writable;
         private final Map bindings;
+        private final String templateClassName;
 
-        public WritableWrapper(Writable writable, Map bindings) {
+        public WritableWrapper(Writable writable, Map bindings, String templateClassName) {
             this.writable = writable;
             this.bindings = bindings;
+            this.templateClassName = templateClassName;
         }
 
         public Writer writeTo(Writer out) throws IOException {
@@ -606,12 +651,33 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
                 bindingsSupport.remove(BindingNames.LOGGER_BINDING);
                 bindingsSupport.remove(BindingNames.INCLUDE_BINDING);
                 bindingsSupport.remove(BindingNames.PATH_BINDING);
-                return writable.writeTo(out);
+                try {
+                    return writable.writeTo(out);
+                } catch (Throwable e) {
+                    analyzeError(e);
+                    return null; 
+                }
             } finally {
                 if (varsSupport!=null)
                     varsSupport.reset();
                 tree.removeGlobalBindings(bindingsId);
             }
+        }
+        
+        private void analyzeError(Throwable e) throws RavenRuntimeException {
+            //analyzing error
+            GroovyExpressionExceptionAnalyzator a = new GroovyExpressionExceptionAnalyzator(
+                    templateClassName, e, 2, true);
+            String mess = String.format("Exception in @file (%s)", getPath());
+            GroovyExpressionException error = new GroovyExpressionException("", e, a);
+            String errMess = GroovyExpressionExceptionAnalyzator.aggregate(error, getSources(bindings));
+            if (isLogLevelEnabled(LogLevel.ERROR)) {
+                if (errMess==null || errMess.isEmpty())
+                    getLogger().error(mess, e);
+                else
+                    getLogger().error(errMess, e);
+            }           
+            throw new RavenRuntimeException(errMess, e);            
         }
         
         private BindingSupport initExpressionExecutionContext() {
@@ -620,6 +686,7 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
             if (!varsInitiated) {
                 varsSupport.put(RAVEN_EXPRESSION_VARS_INITIATED_BINDING, true);
                 varsSupport.put(RAVEN_EXPRESSION_VARS_BINDING, new HashMap());
+                varsSupport.put(RAVEN_EXPRESSION_SOURCES_BINDINS, new HashMap());
                 return varsSupport;
             } else
                 return null;
@@ -629,7 +696,12 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
         public String toString() {
             BindingSupport varsSupport = initExpressionExecutionContext();
             try {
-                return writable.toString();
+                try {
+                    return writable.toString();
+                } catch (Exception e) {
+                    analyzeError(e);
+                    return null;
+                }
             } finally {
                 if (varsSupport!=null)
                     varsSupport.reset();

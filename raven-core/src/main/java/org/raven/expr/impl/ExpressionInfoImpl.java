@@ -15,21 +15,34 @@
  */
 package org.raven.expr.impl;
 
+import org.raven.expr.ExpressionInfo;
 import org.raven.tree.Node;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class ExpressionInfo {
-    public final String attrName;
-    public final Node node;
-    public final String source;
+public class ExpressionInfoImpl implements ExpressionInfo {
+    private final String attrName;
+    private final Node node;
+    private final String source;
 
-    public ExpressionInfo(String attrName, Node node, String source) {
+    public ExpressionInfoImpl(String attrName, Node node, String source) {
         this.attrName = attrName;
         this.node = node;
         this.source = source;
+    }
+
+    public Node getNode() {
+        return node;
+    }
+
+    public String getAttrName() {
+        return attrName;
+    }
+
+    public String getSource() {
+        return source;
     }
     
 }
