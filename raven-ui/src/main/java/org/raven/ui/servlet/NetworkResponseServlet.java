@@ -341,9 +341,9 @@ public class NetworkResponseServlet extends HttpServlet  {
         
         //adding message if need
         if (message==null && exception!=null) {
-//            message = exception.getCause() instanceof PropagatedAttributeValueError? 
-//                    exception.getCause().getMessage() : exception.getMessage();
-            message = exception.getMessage();
+            message = exception.getCause() instanceof PropagatedAttributeValueError? 
+                    exception.getCause().getMessage() : exception.getMessage();
+//            message = exception.getMessage();
         } 
         if (message!=null) 
             writer.append("<pre>"+StringEscapeUtils.escapeHtml(message)+"</pre>");
