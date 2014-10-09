@@ -23,8 +23,10 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.lang.StringUtils;
 import org.raven.expr.ExpressionInfo;
+import org.raven.tree.PropagatedAttributeValueError;
 
 /**
  *
@@ -126,7 +128,8 @@ public class GroovyExpressionExceptionAnalyzator {
         
     }
        
-    public static String aggregate(final GroovyExpressionException exception, final Map<String, ExpressionInfo> sources) 
+    public static String aggregate(final GroovyExpressionException exception, 
+            final Map<String, ExpressionInfo> sources, final AtomicInteger counter) 
     {
         LinkedList<GroovyExpressionException> errors = new LinkedList<GroovyExpressionException>();
         Throwable error = exception;
@@ -136,10 +139,9 @@ public class GroovyExpressionExceptionAnalyzator {
             error = error.getCause();
         }
         StringBuilder builder = new StringBuilder();
-        int i=1;
         for (GroovyExpressionException err: errors) {
             for (MessageConstructor messCons: err.getMessageConstructors(sources)) {
-                builder.append("\n").append(i++).append(". ");
+                builder.append("\n").append(counter.getAndIncrement()).append(". ");
                 messCons.constructMessage("   ", builder);
             }
         }
@@ -162,7 +164,7 @@ public class GroovyExpressionExceptionAnalyzator {
         public StringBuilder constructMessage(String prefix, StringBuilder builder) {
             builder.append("Exception at @").append(expressionInfo.getAttrName()).
                     append(" (").append(expressionInfo.getNode().getPath()).append(")\n");
-            if (!(error instanceof GroovyExpressionException)) {
+            if (!(error instanceof GroovyExpressionException) && !(error instanceof PropagatedAttributeValueError)) {
                 if (error.getMessage()!=null)
                     builder.append(prefix).append("Message: ").append(error.getMessage()).append('\n');
                 builder.append(prefix).append("Cause: ").append(error.getClass().getName()).append('\n');

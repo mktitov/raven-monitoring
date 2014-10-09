@@ -21,6 +21,7 @@ import java.util.Collections;
 import org.raven.tree.PropagatedAttributeValueError;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
@@ -50,6 +51,7 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
     public static final String RAVEN_EXPRESSION_ARGS_BINDING = "args";
     public static final String RAVEN_EXPRESSION_VARS_BINDING = "vars";
     public static final String RAVEN_EXPRESSION_SOURCES_BINDINS = "sources";
+    public static final String EXECUTED_FROM_TEMPLATE_BINDING = "executedFromTemplate";
     public static final String RAVEN_EXPRESSION_VARS_INITIATED_BINDING = "isVarsInitiated";
 
     @Service
@@ -122,10 +124,16 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
 
             BindingSupport varsSupport = tree.getGlobalBindings(Tree.EXPRESSION_VARS_BINDINGS);
             boolean varsInitiated = varsSupport.contains(RAVEN_EXPRESSION_VARS_INITIATED_BINDING);
+            boolean executedFromTemplate = false;
             if (!varsInitiated) {
                 varsSupport.put(RAVEN_EXPRESSION_VARS_INITIATED_BINDING, true);
                 varsSupport.put(RAVEN_EXPRESSION_VARS_BINDING, new HashMap());
                 varsSupport.put(RAVEN_EXPRESSION_SOURCES_BINDINS, new HashMap());
+            } else {
+                Boolean param = (Boolean) varsSupport.get(EXECUTED_FROM_TEMPLATE_BINDING);
+                executedFromTemplate = param==null? false : param;
+                if (executedFromTemplate) 
+                    varsSupport.put(EXECUTED_FROM_TEMPLATE_BINDING, false);
             }
             bindings.put(RAVEN_EXPRESSION_VARS_BINDING, varsSupport.get(RAVEN_EXPRESSION_VARS_BINDING));
             Map args = (Map) varsSupport.get(RAVEN_EXPRESSION_ARGS_BINDING);
@@ -135,7 +143,7 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
                 varsSupport.remove(RAVEN_EXPRESSION_ARGS_BINDING);
             } else 
                 bindings.put(RAVEN_EXPRESSION_ARGS_BINDING, Collections.EMPTY_MAP);
-            try{
+            try {
                 bindings.remove(ENABLE_SCRIPT_EXECUTION_BINDING);
                 attribute.getOwner().formExpressionBindings(bindings);
                 bindings.put(NODE_BINDING, attribute.getOwner());
@@ -144,11 +152,12 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
                     || bindings.containsKey(ENABLE_SCRIPT_EXECUTION_BINDING)
                     || varsInitiated)
                 {
+                    final HashMap<String, ExpressionInfo> sources = 
+                            (HashMap<String, ExpressionInfo>)varsSupport.get(RAVEN_EXPRESSION_SOURCES_BINDINS);
                     try {
-                        bindings.remove(ENABLE_SCRIPT_EXECUTION_BINDING);
-                        ((HashMap<String, ExpressionInfo>)varsSupport.get(RAVEN_EXPRESSION_SOURCES_BINDINS)).
-                                put(expressionIdent, 
-                                        new ExpressionInfoImpl(attribute.getName(), attribute.getOwner(), data));
+                        bindings.remove(ENABLE_SCRIPT_EXECUTION_BINDING);                        
+                        sources.put(expressionIdent, 
+                                    new ExpressionInfoImpl(attribute.getName(), attribute.getOwner(), data));
                         res = expression.eval(bindings);
                     } catch (Throwable ex) {
                         final Node owner = attribute.getOwner();
@@ -158,19 +167,23 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
                         GroovyExpressionExceptionAnalyzator an = new GroovyExpressionExceptionAnalyzator(
                                 expressionIdent, ex, 2);
                         GroovyExpressionException error = new GroovyExpressionException(mess, ex, an);
-                        if (varsInitiated)
+                        if (varsInitiated && !executedFromTemplate)
                             throw error;
                         else if (owner.isLogLevelEnabled(LogLevel.ERROR)) {
+                            owner.getLogger().error(mess, ex);
+                            varsSupport.put(EXECUTED_FROM_TEMPLATE_BINDING, false);
+                            final AtomicInteger counter = new AtomicInteger(1);
                             String errMess = GroovyExpressionExceptionAnalyzator.aggregate(
                                     error, 
-                                    ((HashMap<String, ExpressionInfo>)varsSupport.get(RAVEN_EXPRESSION_SOURCES_BINDINS)));
+                                    sources,
+                                    counter);
                             if (errMess==null || errMess.isEmpty())
                                 owner.getLogger().error(mess, ex);
                             else
                                 owner.getLogger().error(errMess, ex);
-                            if (bindings.containsKey(BindingNames.PROPAGATE_EXPRESSION_EXCEPTION)) {
+                            if (bindings.containsKey(BindingNames.PROPAGATE_EXPRESSION_EXCEPTION) || executedFromTemplate) {
                                 String err = errMess==null || errMess.isEmpty()? mess : errMess;
-                                throw new PropagatedAttributeValueError(err, ex);
+                                throw new PropagatedAttributeValueError(err, ex, counter);
                             }
                         }
                     }

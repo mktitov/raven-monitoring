@@ -17,6 +17,7 @@ package org.raven.expr.impl;
 
 import org.raven.expr.BindingSupport;
 import org.raven.expr.VarsSupportState;
+import static org.raven.expr.impl.ExpressionAttributeValueHandler.RAVEN_EXPRESSION_SOURCES_BINDINS;
 import static org.raven.expr.impl.ExpressionAttributeValueHandler.RAVEN_EXPRESSION_VARS_BINDING;
 import static org.raven.expr.impl.ExpressionAttributeValueHandler.RAVEN_EXPRESSION_VARS_INITIATED_BINDING;
 import org.raven.tree.Tree;
@@ -29,11 +30,13 @@ public class VarsSupportStateImpl implements VarsSupportState {
     private final BindingSupport varsSupport;
     private final boolean varsInitiated;
     private final Object varsBindings;
+    private final Object sources;
 
     public VarsSupportStateImpl(Tree tree) {
         this.varsSupport = tree.getGlobalBindings(Tree.EXPRESSION_VARS_BINDINGS);
         this.varsInitiated = varsSupport.contains(RAVEN_EXPRESSION_VARS_INITIATED_BINDING);
         this.varsBindings = varsInitiated? varsSupport.get(RAVEN_EXPRESSION_VARS_BINDING) : null;
+        this.sources = varsInitiated? varsSupport.get(RAVEN_EXPRESSION_SOURCES_BINDINS) : null;
         this.varsSupport.reset();
     }
 
@@ -43,6 +46,7 @@ public class VarsSupportStateImpl implements VarsSupportState {
         else {
             varsSupport.put(RAVEN_EXPRESSION_VARS_INITIATED_BINDING, true);
             varsSupport.put(RAVEN_EXPRESSION_VARS_BINDING, varsBindings);
+            varsSupport.put(RAVEN_EXPRESSION_SOURCES_BINDINS, sources);
         }
     }
 }

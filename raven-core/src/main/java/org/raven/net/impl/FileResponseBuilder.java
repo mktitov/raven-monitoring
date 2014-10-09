@@ -17,9 +17,7 @@ package org.raven.net.impl;
 
 import groovy.lang.Closure;
 import groovy.lang.Writable;
-import groovy.text.SimpleTemplateEngine;
 import groovy.text.Template;
-import groovy.util.ScriptException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -34,13 +32,11 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
 import org.apache.commons.io.output.WriterOutputStream;
-import org.apache.commons.lang.StringUtils;
 import org.apache.poi.util.IOUtils;
 import org.raven.BindingNames;
 import org.raven.RavenRuntimeException;
@@ -50,6 +46,7 @@ import org.raven.auth.UserContext;
 import org.raven.expr.BindingSupport;
 import org.raven.expr.ExpressionInfo;
 import org.raven.expr.impl.BindingSupportImpl;
+import static org.raven.expr.impl.ExpressionAttributeValueHandler.EXECUTED_FROM_TEMPLATE_BINDING;
 import static org.raven.expr.impl.ExpressionAttributeValueHandler.RAVEN_EXPRESSION_SOURCES_BINDINS;
 import static org.raven.expr.impl.ExpressionAttributeValueHandler.RAVEN_EXPRESSION_VARS_BINDING;
 import static org.raven.expr.impl.ExpressionAttributeValueHandler.RAVEN_EXPRESSION_VARS_INITIATED_BINDING;
@@ -224,11 +221,10 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
 //                            else
 //                                bodyBindings = bindings;
                             addBinding(bodyBindings);
-                            try {
-                                
+                            try {                                
                                 Object res = transform(thisTemplate.make(bodyBindings), bodyBindings);
                                 if (res instanceof Writable)
-                                    return (Writable)res;
+                                    return ((Writable)res).toString();
                                 else 
                                     return convertToWritable((Outputable)res);
                             } catch (Exception e) {
@@ -401,7 +397,7 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
             return null;
         }
         RavenTemplate _template = reader==null? 
-                EMPTY_TEMPLATE : new RavenScriptTemplateEngine().createRavenTemplate(reader);
+                EMPTY_TEMPLATE : new RavenScriptTemplateEngine(isLogLevelEnabled(LogLevel.TRACE)).createRavenTemplate(reader);
         template.set(_template);        
         return _template;
     }
@@ -584,6 +580,7 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
                 varsSupport.put(RAVEN_EXPRESSION_VARS_INITIATED_BINDING, true);
                 varsSupport.put(RAVEN_EXPRESSION_VARS_BINDING, new HashMap());
                 varsSupport.put(RAVEN_EXPRESSION_SOURCES_BINDINS, new HashMap());
+                varsSupport.put(EXECUTED_FROM_TEMPLATE_BINDING, true);
                 return varsSupport;
             } else
                 return null;
@@ -690,8 +687,21 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
             GroovyExpressionExceptionAnalyzator a = new GroovyExpressionExceptionAnalyzator(
                     templateClassName, e, 2, true);
             String mess = String.format("Exception in @file (%s)", getPath());
+            AtomicInteger counter;
+            String exprErrorMess = null;
+            if (e instanceof PropagatedAttributeValueError) {
+                PropagatedAttributeValueError exprErr = (PropagatedAttributeValueError) e;
+                counter = exprErr.getCounter();
+                exprErrorMess = exprErr.getMessage();
+                e = e.getCause();
+            } else 
+                counter = new AtomicInteger(1);
+            
             GroovyExpressionException error = new GroovyExpressionException("", e, a);
-            String errMess = GroovyExpressionExceptionAnalyzator.aggregate(error, getSources(bindings));
+            String errMess = GroovyExpressionExceptionAnalyzator.aggregate(error, getSources(bindings), 
+                    counter);
+            if (exprErrorMess!=null)
+                errMess = exprErrorMess + errMess;
             if (isLogLevelEnabled(LogLevel.ERROR)) {
                 if (errMess==null || errMess.isEmpty())
                     getLogger().error(mess, e);
@@ -708,6 +718,7 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
                 varsSupport.put(RAVEN_EXPRESSION_VARS_INITIATED_BINDING, true);
                 varsSupport.put(RAVEN_EXPRESSION_VARS_BINDING, new HashMap());
                 varsSupport.put(RAVEN_EXPRESSION_SOURCES_BINDINS, new HashMap());
+                varsSupport.put(EXECUTED_FROM_TEMPLATE_BINDING, true);                
                 return varsSupport;
             } else
                 return null;
@@ -716,7 +727,14 @@ public class FileResponseBuilder extends AbstractResponseBuilder implements View
         @Override
         public String toString() {
             BindingSupport varsSupport = initExpressionExecutionContext();
+            final BindingSupportImpl bindingsSupport = new BindingSupportImpl();
+            final String bindingsId = tree.addGlobalBindings(bindingsSupport);
             try {
+                bindingsSupport.putAll(bindings);
+                bindingsSupport.remove(BindingNames.NODE_BINDING);
+                bindingsSupport.remove(BindingNames.LOGGER_BINDING);
+                bindingsSupport.remove(BindingNames.INCLUDE_BINDING);
+                bindingsSupport.remove(BindingNames.PATH_BINDING);
                 if (entryTemplate)
                     try {
                         return writable.toString();

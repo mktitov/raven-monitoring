@@ -66,7 +66,8 @@ public class RavenScriptTemplateEngine extends TemplateEngine {
 
     public Template createTemplate(Reader reader) throws CompilationFailedException, IOException {
         try {
-            return new RavenTemplate("RavenTemplateScript" + counter.incrementAndGet() + ".groovy", reader, groovyShell);
+            return new RavenTemplate(
+                    "RavenTemplateScript" + counter.incrementAndGet() + ".groovy", reader, groovyShell, verbose);
         } catch (Exception e) {
             throw new GroovyRuntimeException("Failed to parse template script (your template may contain an error or be trying to use expressions not currently supported): " + e.getMessage());
         }
@@ -92,9 +93,17 @@ public class RavenScriptTemplateEngine extends TemplateEngine {
         private final Script script;
         private final String classFileName;
 
-        public RavenTemplate(String classFileName, Reader source, GroovyShell groovyShell) throws IOException {
+        public RavenTemplate(String classFileName, Reader source, GroovyShell groovyShell, boolean verbose) 
+                throws IOException 
+        {
             this.classFileName = classFileName;
-            this.script = groovyShell.parse(parse(source), classFileName);
+            String parsedSource = parse(source);
+            if (verbose) {
+                System.out.println("\n-- script source --");
+                System.out.print(parsedSource);
+                System.out.println("\n-- script end --\n");                
+            }
+            this.script = groovyShell.parse(parsedSource, classFileName);
         }
 
         public String getClassFileName() {
@@ -283,7 +292,7 @@ public class RavenScriptTemplateEngine extends TemplateEngine {
                 sw.write(c);
                 //}
             }
-            sw.write(";\nout.print(\"\"\"");
+            sw.write("; out.print(\"\"\"");
         }
 
     }    

@@ -16,13 +16,22 @@
 
 package org.raven.tree;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  *
  * @author Mikhail Titov
  */
 public class PropagatedAttributeValueError extends RuntimeException {
+    private final AtomicInteger counter;
 
-    public PropagatedAttributeValueError(String msg, Throwable cause) {
+    public PropagatedAttributeValueError(String msg, Throwable cause, AtomicInteger counter) {
         super(msg, cause);
+        this.counter = counter;
     }
+
+    public AtomicInteger getCounter() {
+        return counter;
+    }
+    
 }
