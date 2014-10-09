@@ -30,6 +30,7 @@ import org.raven.expr.BindingSupport;
 import org.raven.expr.Expression;
 import org.raven.expr.ExpressionCompiler;
 import org.raven.expr.ExpressionInfo;
+import org.raven.expr.ThroughExpressionException;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
@@ -160,6 +161,8 @@ public class ExpressionAttributeValueHandler extends AbstractAttributeValueHandl
                                     new ExpressionInfoImpl(attribute.getName(), attribute.getOwner(), data));
                         res = expression.eval(bindings);
                     } catch (Throwable ex) {
+                        if (ex.getCause() instanceof ThroughExpressionException)
+                            throw (ThroughExpressionException)ex.getCause();
                         final Node owner = attribute.getOwner();
                         String mess = String.format(
                                 "Exception in @%s (%s)"

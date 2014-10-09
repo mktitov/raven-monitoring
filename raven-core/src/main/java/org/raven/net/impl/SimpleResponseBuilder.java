@@ -27,6 +27,7 @@ import org.raven.annotations.Parameter;
 import org.raven.auth.UserContext;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
+import org.raven.net.HttpError;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.ResponseContext;
 import org.raven.tree.Node;
@@ -59,7 +60,11 @@ public class SimpleResponseBuilder extends AbstractResponseBuilder {
             bindingSupport.put(BindingNames.REDIRECT_BINDING, createRedirectClosure(responseContext));
             bindingSupport.put(BindingNames.RESULT_BINDING, createResultClosure());
             bindingSupport.put(BindingNames.PROPAGATE_EXPRESSION_EXCEPTION, null);
-            return responseContent;
+            try {
+                return responseContent;
+            } catch (HttpError e) {
+                return new ResultImpl(e.getStatusCode(), e.getContent(), e.getContentType());
+            }
         } finally {
             bindingSupport.reset();
         }

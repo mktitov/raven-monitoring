@@ -179,6 +179,54 @@ public class SimpleResponseBuilderTest extends RavenCoreTestCase {
         mocks.verify();        
     }
     
+    @Test
+    public void throwHttpErrorTest() throws Exception {
+        BindingsContainer group = createGroup();
+        SimpleResponseBuilder respBuilder = createBuilder(group, "builder", "{->throwHttpError('error')}()");
+        ResponseContext responceContext = trainResponseContext();
+        mocks.replay();
+        Object res = respBuilder.buildResponseContent(null, responceContext);
+        assertNotNull(res);
+        assertTrue(res instanceof Result);
+        Result result = (Result) res;
+        assertEquals(400, result.getStatusCode());
+        assertEquals("text/plain", result.getContentType());
+        assertEquals("error", result.getContent());
+        mocks.verify();        
+    }
+    
+    @Test
+    public void throwHttpErrorTest2() throws Exception {
+        BindingsContainer group = createGroup();
+        SimpleResponseBuilder respBuilder = createBuilder(group, "builder", "{->throwHttpError(500,'error')}()");
+        ResponseContext responceContext = trainResponseContext();
+        mocks.replay();
+        Object res = respBuilder.buildResponseContent(null, responceContext);
+        assertNotNull(res);
+        assertTrue(res instanceof Result);
+        Result result = (Result) res;
+        assertEquals(500, result.getStatusCode());
+        assertEquals("text/plain", result.getContentType());
+        assertEquals("error", result.getContent());
+        mocks.verify();        
+    }
+    
+    @Test
+    public void throwHttpErrorTest3() throws Exception {
+        BindingsContainer group = createGroup();
+        SimpleResponseBuilder respBuilder = createBuilder(group, "builder", "{->throwHttpError(500,'text/html','error')}()");
+        ResponseContext responceContext = trainResponseContext();
+        mocks.replay();
+        Object res = respBuilder.buildResponseContent(null, responceContext);
+        assertNotNull(res);
+        assertTrue(res instanceof Result);
+        Result result = (Result) res;
+        assertEquals(500, result.getStatusCode());
+        assertEquals("text/html", result.getContentType());
+        assertEquals("error", result.getContent());
+        mocks.verify();        
+    }
+    
     private BindingsContainer createGroup() throws NodeError {
         BindingsContainer group = new BindingsContainer();
         group.setName("group");

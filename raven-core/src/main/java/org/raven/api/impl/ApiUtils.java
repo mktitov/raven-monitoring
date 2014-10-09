@@ -35,6 +35,7 @@ import org.raven.ds.DataSource;
 import org.raven.ds.DataContext;
 import org.raven.ds.impl.DataContextImpl;
 import org.raven.ds.impl.ListDataConsumer;
+import org.raven.net.HttpError;
 import org.raven.table.Table;
 import org.raven.template.impl.TemplateNode;
 import org.raven.template.impl.TemplateWizard;
@@ -50,6 +51,18 @@ public class ApiUtils
 {
     public static Tree getTree(){
         return TreeImpl.INSTANCE;
+    }
+    
+    public static void throwHttpError(int status, String contentType, String content) {
+        throw new HttpError(status, contentType, content);
+    }
+
+    public static void throwHttpError(int status, String content) {
+        throw new HttpError(status, content);
+    }
+
+    public static void throwHttpError(String content) {
+        throw new HttpError(content);
     }
 
     public static Object withConnection(Connection connection, Closure closure) throws Throwable {
