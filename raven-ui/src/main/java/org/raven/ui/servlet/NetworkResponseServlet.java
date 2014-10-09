@@ -338,7 +338,7 @@ public class NetworkResponseServlet extends HttpServlet  {
         } 
         writer.append(": "+statusCode+" ("+STATUS_CODES.get(statusCode)+")");
         writer.append("</h1>");
-        
+                
         //adding message if need
         if (message==null && exception!=null) {
             message = exception.getCause() instanceof PropagatedAttributeValueError? 
@@ -380,7 +380,7 @@ public class NetworkResponseServlet extends HttpServlet  {
             writer.append("</ol>");
         }
         
-        writer.append("</body>");
+        writer.append("</div></body>");
         writer.append("</html>");
         ctx.response.flushBuffer();
         writer.close();
@@ -766,7 +766,8 @@ public class NetworkResponseServlet extends HttpServlet  {
             "  -->\n" +
             "  </style>\n" +
             "</head>\n" +
-            "<body>");
+            "<body>\n" +
+            "<div style='width:100%;height:100%; overflow:auto;'>");
     }
     
     protected static class RequestContext implements DataReceiver {
