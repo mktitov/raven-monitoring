@@ -23,6 +23,7 @@ import groovy.lang.MissingPropertyException;
 import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -86,7 +87,7 @@ public class BaseNode implements Node, NodeListener, Logger
     
     private Map<String, Node> nodes;
     private Map<String, NodeAttribute> nodeAttributes;
-    private Map<Node, Node> dependentNodes;
+    private Map<Node, Set<Object>> dependentNodes;
     private Collection<NodeListener>  listeners;
     private Map<NodeAttribute, Set<NodeAttributeListener>> attributesListeners;
     private Lock attributeListenersLock;
@@ -127,7 +128,7 @@ public class BaseNode implements Node, NodeListener, Logger
     {
     	logger = this;
         parent = null;
-        dependentNodes = new ConcurrentHashMap<Node, Node>();
+        dependentNodes = new ConcurrentHashMap<Node, Set<Object>>();
         listeners = new CopyOnWriteArraySet<NodeListener>();
         attributesListeners = new ConcurrentHashMap<NodeAttribute, Set<NodeAttributeListener>>();
         attributeListenersLock = new ReentrantLock();
@@ -231,23 +232,19 @@ public class BaseNode implements Node, NodeListener, Logger
     private void processNodeDependency(
             NodeAttributeImpl attr, Object newValue, Object oldValue) throws TypeConverterException
     {
-        if (Node.class.isAssignableFrom(attr.getType()))
-        {
-            if (oldValue != null)
-            {
+        if (Node.class.isAssignableFrom(attr.getType())) {
+            if (oldValue != null) {
 //                Node oldRef = (Node) converter.convert(attr.getType(), oldValue, null);
-                ((Node)oldValue).removeDependentNode(this);
+                ((Node)oldValue).removeDependentNode(this, attr);
             }
-            if (newValue != null)
-            {
+            if (newValue != null) {
                 Node node = (Node) converter.convert(attr.getType(), newValue, null);
-                ((Node)newValue).addDependentNode(this);
+                ((Node)newValue).addDependentNode(this, attr);
             }
         }
     }
 
-    public void setId(int id) 
-    {
+    public void setId(int id)  {
         this.id = id;
     }
     
@@ -416,14 +413,26 @@ public class BaseNode implements Node, NodeListener, Logger
         }
     }
     
-    public boolean addDependentNode(Node dependentNode)
-    {
-        if (dependentNodes.containsKey(dependentNode))
+    public boolean addDependentNode(Node dependentNode, Object dependencyOwner) {
+        Set<Object> owners = dependentNodes.get(dependentNode);
+        if (owners!=null && owners.contains(dependencyOwner))
             return false;
-        else
-        {
-            dependentNodes.put(dependentNode, dependentNode);
-            fireDependentNodeAdded(dependentNode);
+        else {
+            boolean added = false;
+            synchronized(dependentNodes) {
+                if (owners==null) {
+                    owners = dependentNodes.get(dependentNode);
+                    if (owners==null) {
+                        owners = new CopyOnWriteArraySet<Object>();
+                        dependentNodes.put(dependentNode, owners);
+                        added = true;
+                    }
+                }
+                owners.add(dependencyOwner);
+            } 
+//            dependentNodes.put(dependentNode, dependentNode);
+            if (added)
+                fireDependentNodeAdded(dependentNode);
             return true;
         }
     }
@@ -452,14 +461,23 @@ public class BaseNode implements Node, NodeListener, Logger
         }
     }
 
-    public boolean removeDependentNode(Node dependentNode)
-    {
-        if (dependentNodes.containsKey(dependentNode))
-        {
-            dependentNodes.remove(dependentNode);
-            return true;
-        }else
-            return false;
+    public boolean removeDependentNode(Node dependentNode, Object dependencyOwner) {
+        synchronized (dependentNodes) {
+            Set<Object> owners = dependentNodes.get(dependentNode);
+            if (owners==null)
+                return false;
+            else {
+                boolean removed = owners.remove(dependencyOwner);
+                if (owners.isEmpty()) 
+                    dependentNodes.remove(dependentNode);                 
+                return removed;
+            }
+        }
+//        if (dependentNodes.containsKey(dependentNode)) {
+//            dependentNodes.remove(dependentNode);
+//            return true;
+//        } else
+//            return false;
     }
 
     @Deprecated
@@ -968,8 +986,7 @@ public class BaseNode implements Node, NodeListener, Logger
         fireNodeShutdownedEvent(this);
     }
 
-    void fireAttributeValueChanged(NodeAttributeImpl attr, Object oldValue, Object newValue)
-    {
+    void fireAttributeValueChanged(NodeAttributeImpl attr, Object oldValue, Object newValue) {
         processNodeDependency(attr, newValue, oldValue);
         processAttributeGeneration(attr, newValue);
         processListeners(attr, newValue, oldValue);
@@ -1215,7 +1232,7 @@ public class BaseNode implements Node, NodeListener, Logger
                     clone.setOwner(this);
                     clone.setParentAttribute(parent.getName());
 
-                    addNodeAttribute(clone);
+                    addAttr(clone);
                     try {
                         clone.init();
                         clone.save();

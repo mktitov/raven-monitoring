@@ -217,7 +217,7 @@ public class RavenUtilsTest extends ServiceTestCase
     public void getSelfAndChildsViewableObjects_emptyResult() throws Exception
     {
         Node node = createMock(Node.class);
-        expect(node.getSortedChildrens()).andReturn(Collections.EMPTY_LIST);
+        expect(node.getNodes()).andReturn(Collections.EMPTY_LIST);
         replay(node);
         assertSame(Collections.EMPTY_LIST, RavenUtils.getSelfAndChildsViewableObjects(node, null));
         verify(node);
@@ -231,7 +231,7 @@ public class RavenUtilsTest extends ServiceTestCase
         ViewableObject vo = createMock(ViewableObject.class);
 
         Map<String, NodeAttribute> refreshAttributes = new HashMap<String, NodeAttribute>();
-        expect(node.getSortedChildrens()).andReturn(Arrays.asList((Node)child));
+        expect(node.getNodes()).andReturn(Arrays.asList((Node)child));
         expect(child.getViewableObjects(refreshAttributes)).andReturn(Arrays.asList(vo));
 
         replay(node, child, vo);

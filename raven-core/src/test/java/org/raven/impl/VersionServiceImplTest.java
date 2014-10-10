@@ -34,7 +34,7 @@ public class VersionServiceImplTest extends RavenCoreTestCase {
         assertNotNull(versionService);
         Collection<String> versions = versionService.getModulesVersion();
         assertNotNull(versions);
-        assertEquals(1, versions.size());
+        assertTrue(!versions.isEmpty());
         assertEquals("raven-core: 1.0", versions.iterator().next());
     }
 }

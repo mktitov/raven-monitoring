@@ -153,28 +153,22 @@ public abstract class AbstractThreadedDataSource
     }
 
     @Override
-    public synchronized boolean addDependentNode(Node dependentNode)
-    {
-        boolean nodeAdded = super.addDependentNode(dependentNode);
-        if (nodeAdded)
-        {
-            if (dependentNode instanceof DataConsumer)
-            {
+    public boolean addDependentNode(Node dependentNode, Object depenencyOwner) {
+        boolean nodeAdded = super.addDependentNode(dependentNode, depenencyOwner);
+        if (nodeAdded) {
+            if (dependentNode instanceof DataConsumer) {
                 dependentNode.addListener(this);
-                if ( getStatus()==Status.STARTED && dependentNode.getStatus()==Status.STARTED)
-                {
+                if ( isStarted() && dependentNode.isStarted()) 
                     addDataConsumer((DataConsumer)dependentNode);
-                }
             }
         }
-        
         return nodeAdded;
     }
 
     @Override
-    public synchronized boolean removeDependentNode(Node dependentNode)
+    public boolean removeDependentNode(Node dependentNode, Object depenencyOwner)
     {
-        boolean removed =  super.removeDependentNode(dependentNode);
+        boolean removed =  super.removeDependentNode(dependentNode, depenencyOwner);
         
         if (removed && getStatus()==Status.STARTED && dependentNode instanceof DataConsumer)
             removeDataConsumer((DataConsumer) dependentNode);
@@ -182,14 +176,13 @@ public abstract class AbstractThreadedDataSource
         return removed;
     }
 
-    protected void addDataConsumer(DataConsumer dataConsumer)
-    {
+    protected void addDataConsumer(DataConsumer dataConsumer) {
         int interval = dataConsumer instanceof Node? 
-            (Integer)((Node)dataConsumer).getNodeAttribute(INTERVAL_ATTRIBUTE).getRealValue() : 0;
+            (Integer)((Node)dataConsumer).getAttr(INTERVAL_ATTRIBUTE).getRealValue() : 0;
         if (interval<=0)
             return;
         TimeUnit unit = (TimeUnit) (dataConsumer instanceof Node ?
-            ((Node) dataConsumer).getNodeAttribute(INTERVAL_UNIT_ATTRIBUTE).getRealValue()
+            ((Node) dataConsumer).getAttr(INTERVAL_UNIT_ATTRIBUTE).getRealValue()
             : TimeUnit.SECONDS);
         
         executorService.scheduleAtFixedRate(new Task(dataConsumer), 0, interval, unit);

@@ -281,21 +281,18 @@ public class DataFileValueHandler extends AbstractAttributeValueHandler implemen
         String name = attribute.getName()+"."+suffix;
         Node owner = attribute.getOwner();
         NodeAttribute attr = owner.getAttr(name);
-        if (attr==null)
-        {
-            try
-            {
+        if (attr==null) {
+            try {
                 attr = new NodeAttributeImpl(name, type, null, null);
                 attr.setParentAttribute(attribute.getName());
                 attr.setOwner(owner);
                 attr.init();
-                owner.addNodeAttribute(attr);
+                owner.addAttr(attr);
                 String descKey = messagesRegistry.createMessageKeyForStringValue(
                         this.getClass().getName(), suffix);
                 attr.setDescriptionContainer(new MessageComposer(messagesRegistry).append(descKey));
                 attr.save();
-            } catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 throw new DataFileException(
                         String.format("Error creating attribute (%s)", name)
                         , ex);
@@ -307,10 +304,10 @@ public class DataFileValueHandler extends AbstractAttributeValueHandler implemen
     private boolean hasFileAttributes()
     {
         Node owner = attribute.getOwner();
-        NodeAttribute attr = owner.getNodeAttribute(attribute.getName()+"."+FILENAME_SUFFIX);
+        NodeAttribute attr = owner.getAttr(attribute.getName()+"."+FILENAME_SUFFIX);
         if (attr==null)
             return false;
-        attr = owner.getNodeAttribute(attribute.getName()+"."+MIMETYPE_SUFFIX);
+        attr = owner.getAttr(attribute.getName()+"."+MIMETYPE_SUFFIX);
         return attr!=null;
     }
 

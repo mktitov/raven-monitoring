@@ -41,11 +41,11 @@ public class ChildsAsTableViewableObjectTest extends ServiceTestCase
     public void noChildTest() throws Exception
     {
         Node owner = createMock(Node.class);
-        expect(owner.getSortedChildrens()).andReturn(Collections.EMPTY_LIST);
+        expect(owner.getNodes()).andReturn(Collections.EMPTY_LIST);
         replay(owner);
         ChildsAsTableViewableObject vo = new ChildsAsTableViewableObject(owner, null, null);
-        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, vo.getMimeType());
-        assertNull(vo.getData());
+        assertEquals(Viewable.RAVEN_TEXT_MIMETYPE, vo.getMimeType());
+        assertEquals("", vo.getData());
         verify(owner);
     }
 
@@ -57,10 +57,10 @@ public class ChildsAsTableViewableObjectTest extends ServiceTestCase
         Node child = createMock("child", Node.class);
         NodeAttribute attr = createMock(NodeAttribute.class);
 
-        expect(owner.getSortedChildrens()).andReturn(Arrays.asList(child));
+        expect(owner.getNodes()).andReturn(Arrays.asList(child));
         expect(child.getPath()).andReturn("/node/child");
         expect(child.getName()).andReturn("child");
-        expect(child.getNodeAttribute("attr")).andReturn(attr);
+        expect(child.getAttr("attr")).andReturn(attr);
         expect(attr.getValue()).andReturn("value");
 
         replay(owner, child, attr);

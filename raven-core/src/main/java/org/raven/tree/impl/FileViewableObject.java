@@ -17,14 +17,14 @@
 
 package org.raven.tree.impl;
 
-import eu.medsea.mimeutil.MimeType;
-import eu.medsea.mimeutil.MimeUtil;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import org.raven.MimeTypeService;
 import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.ViewableObject;
+import org.weda.internal.annotations.Service;
 
 /**
  *
@@ -32,38 +32,38 @@ import org.raven.tree.ViewableObject;
  */
 public class FileViewableObject implements ViewableObject
 {
+    @Service
+    private static MimeTypeService mimeTypeService;
+    
     private final File file;
-    private final MimeType mimeType;
+    private final String mimeType;
     private final Node owner;
 
     public FileViewableObject(File file, Node owner)
     {
         this.file = file;
-        mimeType = (MimeType) MimeUtil.getMimeTypes(file).iterator().next();
+//        mimeType = (MimeType) MimeUtil.getMimeTypes(file).iterator().next();
+        mimeType = mimeTypeService.getContentType(file.getName());
         this.owner = owner;
     }
 
     public FileViewableObject(File file, String mimeType, Node owner) {
         this.file = file;
         this.owner = owner;
-        this.mimeType = new MimeType(mimeType);
+        this.mimeType = mimeType;
     }
 
-    public String getMimeType()
-    {
-        return mimeType.toString();
+    public String getMimeType() {
+        return mimeType;
     }
 
     public Object getData()
     {
         if (file.exists())
-            try
-            {
+            try {
                 FileInputStream fileStream = new FileInputStream(file);
                 return fileStream;
-            }
-            catch (FileNotFoundException ex)
-            {
+            } catch (FileNotFoundException ex) {
                 if (owner.isLogLevelEnabled(LogLevel.ERROR))
                     owner.getLogger().error(
                             String.format("Error reading the file (%s)", file.getAbsolutePath())

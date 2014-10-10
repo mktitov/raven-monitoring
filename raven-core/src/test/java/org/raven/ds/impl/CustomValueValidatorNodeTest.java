@@ -36,7 +36,7 @@ public class CustomValueValidatorNodeTest extends RavenCoreTestCase
         UserContext userContext = createMock(UserContext.class);
         Map map = createMock(Map.class);
         expect(userContext.getParams()).andReturn(map);
-        expect(map.get("param1")).andReturn("context value");
+        expect(map.get("param")).andReturn("context value");
         replay(userContext, map);
 
         UserContextServiceModule.setUserContext(userContext);
@@ -48,7 +48,7 @@ public class CustomValueValidatorNodeTest extends RavenCoreTestCase
         assertNull(validator.validate("test"));
         
         validator.setValidateExpression("'validation '+value+' with '+userContext.params.param");
-        assertEquals("validation test with context value1", validator.validate("test"));
+        assertEquals("validation test with context value", validator.validate("test"));
         
         verify(userContext, map);
     }

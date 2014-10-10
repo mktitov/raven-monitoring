@@ -259,7 +259,7 @@ public class NodeReferenceValueHandler
         if (oldNode!=null)
         {
             if (addDependencyToNode)
-                oldNode.removeDependentNode(attribute.getOwner());
+                oldNode.removeDependentNode(attribute.getOwner(), attribute);
 
             for (PathElement pathElement: pathElements)
             {
@@ -275,7 +275,7 @@ public class NodeReferenceValueHandler
         if (node!=null)
         {
             if (addDependencyToNode)
-                node.addDependentNode(attribute.getOwner());
+                node.addDependentNode(attribute.getOwner(), attribute);
             
             for (PathElement pathElement: pathElements)
             {

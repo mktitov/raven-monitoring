@@ -24,15 +24,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.DataFile;
-import org.raven.tree.DataFileException;
-import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.objects.NodeWithDataFileAttribute;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class DataFileAttributeValueHandlerTest extends RavenCoreTestCase
+public class DataFileValueHandlerTest extends RavenCoreTestCase
 {
     private NodeWithDataFileAttribute node;
 
@@ -41,32 +39,10 @@ public class DataFileAttributeValueHandlerTest extends RavenCoreTestCase
     {
         node = new NodeWithDataFileAttribute();
         node.setName("node");
-        tree.getRootNode().addAndSaveChildren(node);
+        testsNode.addAndSaveChildren(node);
         assertTrue(node.start());
     }
     
-    @Test
-    public void nullDataFileTest() throws DataFileException
-    {
-        DataFile dataFile = node.getDataFile();
-        assertNotNull(dataFile);
-
-        assertNull(dataFile.getDataStream());
-        NodeAttribute attr = node.getNodeAttribute("dataFile.filename");
-        assertNull(attr);
-
-        dataFile.getFilename();
-        attr = node.getNodeAttribute("dataFile.filename");
-        assertEquals(String.class, attr.getType());
-
-        attr = node.getNodeAttribute("dataFile.mimeType");
-        assertNull(attr);
-        dataFile.getMimeType();
-        attr = node.getNodeAttribute("dataFile.mimeType");
-        assertNotNull(attr);
-        assertEquals(String.class, attr.getType());
-    }
-
     @Test
     public void setFilePropertiesTest() throws Exception
     {

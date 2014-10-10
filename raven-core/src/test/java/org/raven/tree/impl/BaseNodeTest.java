@@ -53,7 +53,7 @@ public class BaseNodeTest extends RavenCoreTestCase
         parent.addAndSaveChildren(node);
         node.setName("new name");
 
-        assertSame(node, parent.getChildren("new name"));
+        assertSame(node, parent.getNode("new name"));
     }
 
     @Test(expected=NodeError.class)
@@ -89,7 +89,7 @@ public class BaseNodeTest extends RavenCoreTestCase
         attr.setName("attr");
         attr.setType(String.class);
         attr.setOwner(node);
-        node.addNodeAttribute(attr);
+        node.addAttr(attr);
         
         //
         Node nodeClone = (Node) node.clone();
@@ -101,7 +101,7 @@ public class BaseNodeTest extends RavenCoreTestCase
         assertNull(nodeClone.getParent());
         assertEquals("node", nodeClone.getName());
         
-        NodeAttribute attrClone = nodeClone.getNodeAttribute("attr");
+        NodeAttribute attrClone = nodeClone.getAttr("attr");
         assertNotNull(attrClone);
         assertNotSame(attr, attrClone);
         assertEquals(0, attrClone.getId());
@@ -135,6 +135,7 @@ public class BaseNodeTest extends RavenCoreTestCase
         expect(condChild.getIndex()).andReturn(3);
         expect(condChild.compareTo(child1)).andReturn(1).anyTimes();
         expect(condChild.compareTo(child3)).andReturn(-1).anyTimes();
+//        expect(condChild.getEffectiveNodes()).andReturn(Arrays.asList(condChildChild));
         expect(condChild.getEffectiveChildrens()).andReturn(Arrays.asList(condChildChild));
         
         child3.setParent(node);
@@ -192,7 +193,7 @@ public class BaseNodeTest extends RavenCoreTestCase
         attr.setRequired(true);
         attr.setOwner(node);
         attr.init();
-        node.addNodeAttribute(attr);
+        node.addAttr(attr);
 
         assertFalse(node.start());
 
@@ -220,8 +221,8 @@ public class BaseNodeTest extends RavenCoreTestCase
         BaseNode node3 = new BaseNode("test3");
         node2.addAndSaveChildren(node3);
         
-        assertSame(node2, node1.getChildrenByPath("test2"));
-        assertSame(node3, node1.getChildrenByPath("test2/test3"));
+        assertSame(node2, node1.getNodeByPath("test2"));
+        assertSame(node3, node1.getNodeByPath("test2/test3"));
     }
     
     @Test
@@ -361,6 +362,55 @@ public class BaseNodeTest extends RavenCoreTestCase
         assertNull(attr.getRealValue());
         assertSame(attr, node.addUniqAttr("attr", testsNode, true));
         assertSame(testsNode, attr.getRealValue());
+    }
+    
+    @Test
+    public void addDependentNodeTest() {
+        BaseNode node1 = createNode("node1");
+        BaseNode node2 = createNode("node2");
+        BaseNode node3 = createNode("node3");
+        
+        assertTrue(node1.getDependentNodes().isEmpty());
+        assertTrue(node1.addDependentNode(node2, "owner1"));
+        checkDependencies(node1, 1, new Node[]{node2});        
+        assertFalse(node1.addDependentNode(node2, "owner1"));
+        
+        assertTrue(node1.addDependentNode(node2, "owner2"));
+        checkDependencies(node1, 1, new Node[]{node2});
+        
+        assertTrue(node1.removeDependentNode(node2, "owner1"));
+        checkDependencies(node1, 1, new Node[]{node2});
+        
+        assertTrue(node1.addDependentNode(node2, "owner1"));
+        checkDependencies(node1, 1, new Node[]{node2});
+        
+        assertTrue(node1.addDependentNode(node3, node3));
+        checkDependencies(node1, 2, new Node[]{node2, node3});
+        
+        
+        assertTrue(node1.removeDependentNode(node2, "owner1"));
+        checkDependencies(node1, 2, new Node[]{node2, node3});
+        assertFalse(node1.removeDependentNode(node2, "owner1"));
+        checkDependencies(node1, 2, new Node[]{node2, node3});
+        assertTrue(node1.removeDependentNode(node2, "owner2"));
+        checkDependencies(node1, 1, new Node[]{node3});
+        assertFalse(node1.removeDependentNode(node2, "owner2"));
+        checkDependencies(node1, 1, new Node[]{node3});
+        assertTrue(node1.removeDependentNode(node3, node3));
+        assertTrue(node1.getDependentNodes().isEmpty());
+    }
+    
+    private void checkDependencies(Node node, int size, Node[] dependentNodes) {
+        assertEquals(size, node.getDependentNodes().size());
+        for (Node dependentNode: dependentNodes)
+            assertTrue(node.getDependentNodes().contains(dependentNode));
+    }
+    
+    private BaseNode createNode(String name) {
+        BaseNode node = new BaseNode(name);
+        testsNode.addAndSaveChildren(node);
+        assertTrue(node.start());
+        return node;
     }
     
     private NodeAttribute createAttr(Node owner, String name, Class type, String valueHandlerType, Object val) throws Exception {

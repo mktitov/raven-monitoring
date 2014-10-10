@@ -27,6 +27,7 @@ import org.raven.test.DataCollector;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.NetworkResponseServiceExeption;
+import org.raven.net.Response;
 
 /**
  *
@@ -72,7 +73,8 @@ public class RequestContentContextNodeTest extends RavenCoreTestCase
         params.put(NetworkResponseService.REQUEST_CONTENT_PARAMETER, data);
 
         Object res = context.getResponse("127.0.0.1", params);
-        assertNull(res);
+        assertTrue(res instanceof Response);
+        assertNull(((Response)res).getContent());
         assertEquals(1, collector.getDataList().size());
         assertSame(data, collector.getDataList().get(0));
     }

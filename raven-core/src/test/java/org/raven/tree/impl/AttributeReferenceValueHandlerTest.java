@@ -109,7 +109,7 @@ public class AttributeReferenceValueHandlerTest extends RavenCoreTestCase
         NodeAttribute refAttr = createMock(NodeAttribute.class);
         AttributeValueHandlerListener listener = createMock(AttributeValueHandlerListener.class);
         
-        expect(refAttr.getOwner()).andReturn(node);
+        expect(refAttr.getOwner()).andReturn(node).atLeastOnce();
         expect(refAttr.getRawValue()).andReturn(null);
         expect(refAttr.getType()).andReturn(Integer.class).times(2);
         refAttr.save();
@@ -226,7 +226,8 @@ public class AttributeReferenceValueHandlerTest extends RavenCoreTestCase
         tree.move(node, newHome, null);
 
         assertEquals(10, refAttr.getRealValue());
-        String path = childNode.getPath()+Node.ATTRIBUTE_SEPARATOR+attr.getName();
+//        String path = childNode.getPath()+Node.ATTRIBUTE_SEPARATOR+attr.getName();
+        String path = pathResolver.getAbsolutePath(attr);
         assertEquals(path, refAttr.getRawValue());
 
         tree.reloadTree();

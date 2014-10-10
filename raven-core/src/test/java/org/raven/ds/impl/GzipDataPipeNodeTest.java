@@ -84,5 +84,4 @@ public class GzipDataPipeNodeTest extends RavenCoreTestCase {
         String str = IOUtils.toString(unzipStream, gzipPipe.getCharsetForStringData());
         assertEquals(testString, str);
     }
-    
 }

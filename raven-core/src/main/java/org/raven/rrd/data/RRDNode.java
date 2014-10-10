@@ -254,7 +254,7 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
         
         node.addListener(this);
         if (node instanceof RRDataSource)
-            node.addDependentNode(this);
+            node.addDependentNode(this, this);
     }
 
     @Override

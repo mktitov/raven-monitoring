@@ -55,8 +55,7 @@ public class SvnWriterNodeTest extends RavenCoreTestCase
     private File testFile;
 
     @Before
-    public void prepare() throws IOException
-    {
+    public void prepare() throws IOException {
         schema = new RecordSchemaNode();
         schema.setName("schema");
         tree.getRootNode().addAndSaveChildren(schema);

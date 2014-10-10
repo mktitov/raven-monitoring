@@ -322,7 +322,7 @@ public class TemporaryFileManagerNode extends BaseNode implements TemporaryFileM
         lock.readLock().lock();
         try {
             final FileInfo fileInfo = files.get(key);
-            if (fileInfo!=null && !fileInfo.initialized.get()) {
+            if (fileInfo!=null && fileInfo.initialized.get()) {
                 fileInfo.refreshUsageTime();
                 return fileInfo;
             }                

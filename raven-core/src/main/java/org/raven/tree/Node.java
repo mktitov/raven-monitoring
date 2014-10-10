@@ -395,12 +395,12 @@ public interface Node extends Cloneable, Comparable<Node>, PathObject
      * @return <code>true</code> if node successfully added. <code>False</code> if node already
      *        in dependents list
      */
-    public boolean addDependentNode(Node dependentNode);
+    public boolean addDependentNode(Node dependentNode, Object dependencyOwner);
     /**
      * Removes node from the dependency list of this node.
      * @return <code>true</code> if node successfully removed.
      */
-    public boolean removeDependentNode(Node dependentNode);
+    public boolean removeDependentNode(Node dependentNode, Object dependencyOwner);
     /**
      * Returns the collection of dependent nodes or null if no nodes dependent on this.
      */

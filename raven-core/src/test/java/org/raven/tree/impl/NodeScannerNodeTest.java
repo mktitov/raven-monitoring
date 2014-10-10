@@ -72,7 +72,7 @@ public class NodeScannerNodeTest extends RavenCoreTestCase
         consumer.init();
         consumer.start();
         assertEquals(Status.STARTED, consumer.getStatus());
-        scanner.addDependentNode(consumer);
+        scanner.addDependentNode(consumer, consumer);
 
         node1 = new ContainerNode("node1");
         nodeForScan.addChildren(node1);

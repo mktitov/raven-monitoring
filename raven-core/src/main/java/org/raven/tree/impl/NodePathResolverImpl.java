@@ -98,14 +98,17 @@ public class NodePathResolverImpl implements NodePathResolver
 //        return new AttributePathInfo(nodePathInfo, attr);
 //    }
 
-    public String getAbsolutePath(Node node)
-    {
-        StringBuffer path = new StringBuffer();
-        while (node!=null)
-        {
+    public String getAbsolutePath(Node node) {
+        return getAbsolutePath(node, true);
+    }
+
+    public String getAbsolutePath(Node node, boolean appendSeparator) {
+        StringBuilder path = new StringBuilder();
+        Node firstNode = node;
+        while (node!=null) {
             Node parent = node.getParent();
             if (parent!=null)
-                path.insert(0, QUOTE+node.getName()+QUOTE+Node.NODE_SEPARATOR);
+                path.insert(0, QUOTE+node.getName()+QUOTE+(firstNode!=node || appendSeparator? Node.NODE_SEPARATOR : ""));
             else
                 path.insert(0, node.getName()+Node.NODE_SEPARATOR);
             node = parent;
@@ -158,9 +161,8 @@ public class NodePathResolverImpl implements NodePathResolver
         return res.substring(0, res.length()-1)+Node.ATTRIBUTE_SEPARATOR+toAttr.getName();
     }
 
-    public String getAbsolutePath(NodeAttribute attribute)
-    {
-        return getAbsolutePath(attribute.getOwner())+Node.ATTRIBUTE_SEPARATOR+attribute.getName();
+    public String getAbsolutePath(NodeAttribute attribute) {
+        return getAbsolutePath(attribute.getOwner(), false)+Node.ATTRIBUTE_SEPARATOR+attribute.getName();
     }
 
     public String createPath(boolean absolute, String... nodeNames)
@@ -168,7 +170,7 @@ public class NodePathResolverImpl implements NodePathResolver
         StringBuilder buf = absolute?
             new StringBuilder(""+Node.NODE_SEPARATOR) : new StringBuilder();
         for (String nodeName: nodeNames)
-            buf.append(QUOTE+nodeName+QUOTE+Node.NODE_SEPARATOR);
+            buf.append(QUOTE).append(nodeName).append(QUOTE).append(Node.NODE_SEPARATOR);
         
         return buf.toString();
     }

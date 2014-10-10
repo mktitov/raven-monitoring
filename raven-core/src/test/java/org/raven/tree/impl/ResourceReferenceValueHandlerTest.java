@@ -42,14 +42,14 @@ public class ResourceReferenceValueHandlerTest extends RavenCoreTestCase {
         attr.setValueHandlerType(ResourceReferenceValueHandlerFactory.TYPE);
         attr.setOwner(node);
         attr.init();
-        node.addNodeAttribute(attr);
+        node.addAttr(attr);
         
         assertNull(attr.getValue());
         assertNull(attr.getRealValue());
         
         attr.setValue("test/res");
         assertSame(res, attr.getRealValue());
-        assertEquals("test/res", attr.getValue());
+        assertEquals("test/res", attr.getRawValue());
 
         attr.setValue("test/res1");
         assertNull(attr.getRealValue());

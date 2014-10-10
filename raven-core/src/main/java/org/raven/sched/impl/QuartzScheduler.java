@@ -181,9 +181,8 @@ public class QuartzScheduler extends BaseNode implements Scheduler, Viewable
     }
 
     @Override
-    public boolean addDependentNode(Node dependentNode)
-    {
-        boolean result =  super.addDependentNode(dependentNode);
+    public boolean addDependentNode(Node dependentNode, Object depenencyOwner) {
+        boolean result =  super.addDependentNode(dependentNode, depenencyOwner);
 
         if (result && dependentNode instanceof Schedulable)
             dependentNode.addListener(this);
@@ -192,12 +191,10 @@ public class QuartzScheduler extends BaseNode implements Scheduler, Viewable
     }
 
     @Override
-    public boolean removeDependentNode(Node dependentNode)
-    {
-        boolean result = super.removeDependentNode(dependentNode);
+    public boolean removeDependentNode(Node dependentNode, Object depenencyOwner) {
+        boolean result = super.removeDependentNode(dependentNode, depenencyOwner);
         
-        if (result && dependentNode instanceof Schedulable)
-        {
+        if (result && dependentNode instanceof Schedulable) {
             dependentNode.removeListener(this);
             removeJob((Schedulable)dependentNode);
         }

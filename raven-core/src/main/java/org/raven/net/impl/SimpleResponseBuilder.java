@@ -60,6 +60,7 @@ public class SimpleResponseBuilder extends AbstractResponseBuilder {
             bindingSupport.put(BindingNames.REDIRECT_BINDING, createRedirectClosure(responseContext));
             bindingSupport.put(BindingNames.RESULT_BINDING, createResultClosure());
             bindingSupport.put(BindingNames.PROPAGATE_EXPRESSION_EXCEPTION, null);
+            bindingSupport.put(BindingNames.THROW_HTTP_ERROR_BINDING, createHttpErrorClosure());
             try {
                 return responseContent;
             } catch (HttpError e) {
@@ -107,6 +108,20 @@ public class SimpleResponseBuilder extends AbstractResponseBuilder {
 
     public void setResponseContentCharset(Charset responseContentCharset) {
         this.responseContentCharset = responseContentCharset;
+    }
+    
+    private Closure createHttpErrorClosure() {
+        return new Closure(this) {
+            public Object doCall(int statusCode, String contentType, String content) {
+                throw new HttpError(statusCode, contentType, content);
+            }
+            public Object doCall(int statusCode, String content) {
+                throw new HttpError(statusCode, content);
+            }
+            public Object doCall(String content) {
+                throw new HttpError(content);
+            }
+        };
     }
     
     private PathClosure createPathClosure(ResponseContext responseContext) {

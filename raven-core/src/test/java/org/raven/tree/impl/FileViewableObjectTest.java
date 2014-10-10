@@ -22,16 +22,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.junit.Assert;
 import org.junit.Test;
 import org.raven.tree.Node;
 import static org.easymock.EasyMock.*;
+import org.raven.test.RavenCoreTestCase;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class FileViewableObjectTest extends Assert
+public class FileViewableObjectTest extends RavenCoreTestCase
 {
     @Test
     public void test() throws IOException

@@ -89,9 +89,11 @@ public class TimeWindowNodeTest extends RavenCoreTestCase
     {
         List<ViewableObject> vos = timeWindow.getViewableObjects(null);
         assertNotNull(vos);
-        assertEquals(2, vos.size());
+        assertEquals(4, vos.size());
         assertEquals(Viewable.RAVEN_TEXT_MIMETYPE, vos.get(0).getMimeType());
-        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, vos.get(1).getMimeType());
+        assertEquals(Viewable.RAVEN_TEXT_MIMETYPE, vos.get(1).getMimeType());
+        assertEquals(Viewable.RAVEN_TEXT_MIMETYPE, vos.get(2).getMimeType());
+        assertEquals(Viewable.RAVEN_TABLE_MIMETYPE, vos.get(3).getMimeType());
     }
     
     @Test
