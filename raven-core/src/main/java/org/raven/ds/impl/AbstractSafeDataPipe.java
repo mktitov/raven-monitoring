@@ -399,10 +399,16 @@ public abstract class AbstractSafeDataPipe
     protected boolean sendError(Object data, DataContext context, DataConsumer errorConsumer, 
             boolean stopProcessingOnError)
     {
+        if (stopProcessingOnError && context.hasErrors()) {
+            context.executeCallbacksOnEach(this);
+            if (data==null) 
+                context.executeCallbacksOnEnd(this);
+        }
         if (stopProcessingOnError && errorConsumer!=null && context.hasErrors()) {
             errorConsumer.setData(this, data, context);
             return true;
-        } else return false;
+        } else
+            return false;
             
     }
 }

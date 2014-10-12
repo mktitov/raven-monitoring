@@ -17,8 +17,11 @@
 
 package org.raven.ds.impl;
 
+import groovy.lang.Closure;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,6 +30,7 @@ import org.raven.auth.UserContext;
 import org.raven.auth.UserContextService;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataError;
+import org.raven.log.LogLevel;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeAttributeImpl;
@@ -47,6 +51,8 @@ public class DataContextImpl implements DataContext
     private final Map parameters;
     private final Queue<DataError> errors;
     private final Map<String, NodeAttribute> sessionAttributes;
+    private LinkedList<Closure> callbacks;
+    private LinkedList<Closure> eachDataSendCallbacks;
 
     public DataContextImpl()
     {
@@ -163,4 +169,56 @@ public class DataContextImpl implements DataContext
     {
         return userContext;
     }
+
+    public synchronized DataContext addCallback(Closure callback) {
+        return addCallbackOnEnd(callback);
+    }
+
+    public synchronized DataContext addCallbackOnEnd(Closure callback) {
+        if (callbacks==null) 
+            callbacks = new LinkedList<Closure>();
+        callbacks.addFirst(callback);
+        return this;
+    }
+
+    public synchronized DataContext addCallbackOnEach(Closure callback) {
+        if (eachDataSendCallbacks==null) 
+            eachDataSendCallbacks = new LinkedList<Closure>();
+        eachDataSendCallbacks.addFirst(callback);
+        return this;
+    }
+
+    public void executeCallbacks(Node initiator) {
+        _executeCallbacks(initiator, callbacks);
+    }
+
+    public void executeCallbacksOnEnd(Node initiator) {
+        _executeCallbacks(initiator, callbacks);
+    }
+    
+    public void executeCallbacksOnEach(Node initiator) {
+        _executeCallbacks(initiator, eachDataSendCallbacks);
+    }
+    
+    private void _executeCallbacks(Node initiator, Collection<Closure> callbacks) {
+        Collection<Closure> _callbacks;
+        synchronized (this) {
+            if (callbacks==null || callbacks.isEmpty())
+                return;
+            _callbacks = new ArrayList(callbacks);
+        }
+        for (Closure closure: _callbacks) {
+            try {
+                if (closure.getMaximumNumberOfParameters()==0)
+                    closure.call();
+                else if (closure.getMaximumNumberOfParameters()==1)
+                    closure.call(initiator);
+                else throw new Exception("Invalid number of parameters in closure. Expected 0 or 1 but was - "+closure.getMaximumNumberOfParameters());
+            } catch (Throwable e) {
+                if (initiator.isLogLevelEnabled(LogLevel.ERROR))
+                    initiator.getLogger().error("Data send callback execution error ", e);
+            }
+        }
+    }
+
 }

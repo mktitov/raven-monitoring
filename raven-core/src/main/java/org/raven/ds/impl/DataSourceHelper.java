@@ -17,6 +17,7 @@
 
 package org.raven.ds.impl;
 
+import java.util.List;
 import org.raven.BindingNames;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
@@ -45,26 +46,38 @@ public class DataSourceHelper
     public static void sendDataToConsumers(DataSource source, Object data, DataContext context, 
             DataConsumer excludeConsumer) 
     {
-        if (context.hasErrors() && source.getStopProcessingOnError())
+        if (context.hasErrors() && source.getStopProcessingOnError()) {
+            context.executeCallbacksOnEach(source);
+            if (data==null) 
+                context.executeCallbacksOnEnd(source);
             return;
+        }
         DataConsumer cons = (DataConsumer) context.getNodeParameter(source, BindingNames.CONSUMER_PARAM);
         if (cons!=null) {
             if (source.isLogLevelEnabled(LogLevel.DEBUG))
                 source.getLogger().debug("Pushing data ONLY for consumer ({})", cons.getPath());
             cons.setData(source, data, context);
         } else {
-            for (DataConsumer con: extractNodesOfType(source.getDependentNodes(), DataConsumer.class)) {
-                if (excludeConsumer==null || !con.equals(excludeConsumer)) 
-                    try {
-                        if (source.isLogLevelEnabled(LogLevel.DEBUG))
-                            source.getLogger().debug("Pushing data to the consumer ({})", con.getPath());
-                        con.setData(source, data, context);
-                    } catch(Throwable e) {
-                        if (source.isLogLevelEnabled(LogLevel.ERROR))
-                            source.getLogger().error(String.format(
-                                    "Error pushing data to the consumer (%s)", con.getPath())
-                                    , e);
-                    }
+            List<DataConsumer> consumers = extractNodesOfType(source.getDependentNodes(), DataConsumer.class);
+            if (consumers.isEmpty()) {
+                //мы последние в цепочке. Поэтому вызываем callback'и
+                context.executeCallbacksOnEach(source);
+                if (data==null) 
+                    context.executeCallbacksOnEnd(source);                
+            } else
+                //иначе шлем данные потребителям
+                for (DataConsumer con: consumers) {
+                    if (excludeConsumer==null || !con.equals(excludeConsumer)) 
+                        try {
+                            if (source.isLogLevelEnabled(LogLevel.DEBUG))
+                                source.getLogger().debug("Pushing data to the consumer ({})", con.getPath());
+                            con.setData(source, data, context);
+                        } catch(Throwable e) {
+                            if (source.isLogLevelEnabled(LogLevel.ERROR))
+                                source.getLogger().error(String.format(
+                                        "Error pushing data to the consumer (%s)", con.getPath())
+                                        , e);
+                        }
             }
         }
     }

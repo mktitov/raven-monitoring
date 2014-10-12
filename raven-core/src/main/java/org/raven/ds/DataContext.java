@@ -17,8 +17,8 @@
 
 package org.raven.ds;
 
+import groovy.lang.Closure;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import org.raven.auth.UserContext;
@@ -86,6 +86,30 @@ public interface DataContext
      * Returns the session attributes or null. Returned map is editable
      */
     public Map<String, NodeAttribute> getSessionAttributes();
+    /**
+     * Shorthand for {@link #addCallbackOnEnd(groovy.lang.Closure)}
+     */
+    public DataContext addCallback(Closure calback);
+    /**
+     * Shorthand for {@link #executeCallbacksOnEnd(org.raven.tree.Node)}
+     */
+    public void executeCallbacks(Node initator);
+    /**
+     * Add callback which will be called at the end of data transmission (on null passing on data channel)
+     */
+    public DataContext addCallbackOnEnd(Closure callback);
+    /**
+     * Executes callbacks which were added by {@link #addCallbackOnEnd(groovy.lang.Closure)}
+     */
+    public void executeCallbacksOnEnd(Node initiator);
+    /**
+     * Add callback which will be called on each of data transmission
+     */
+    public DataContext addCallbackOnEach(Closure callback);
+    /**
+     * Executes callbacks which were added by {@link #addCallbackOnEnd(groovy.lang.Closure)}
+     */
+    public void executeCallbacksOnEach(Node initiator);
     /**
      * Adds new session attribute.
      * @param attr the attribute that must be added to the session attributes

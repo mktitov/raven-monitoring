@@ -17,8 +17,10 @@
 
 package org.raven.ds.impl;
 
+import groovy.lang.Closure;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.test.DataCollector;
@@ -30,6 +32,7 @@ import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.ContainerNode;
 import org.raven.tree.impl.NodeAttributeImpl;
 import static org.junit.Assert.*;
+import org.raven.tree.Node;
 
 /**
  *
@@ -338,6 +341,41 @@ public class AbstractSafeDataPipeTest extends RavenCoreTestCase
         assertNull(pipes[0].getDataSource());
         pipes[1].getAttr(AbstractDataConsumer.AUTO_LINK_DATA_SOURCE_ATTR).setValue("true");
         assertEquals(pipes[0], pipes[1].getDataSource());
+    }
+    
+    @Test
+    public void callbacksOnNoConsumersTest() {
+        PushDataSource ds = new PushDataSource();
+        ds.setName("ds");
+        testsNode.addAndSaveChildren(ds);
+        assertTrue(ds.start());
+        pipe.setDataSource(ds);
+        assertTrue(pipe.start());
+        DataContextImpl context = new DataContextImpl();
+        final AtomicReference initiatorRef = new AtomicReference();
+        context.addCallback(new Closure(this) {
+            public void doCall(Node initiator) {
+                initiatorRef.set(initiator);
+            }
+        });
+        final AtomicReference initiatorRef2 = new AtomicReference();
+        context.addCallbackOnEach(new Closure(this) {
+            public void doCall(Node initiator) {
+                initiatorRef2.set(initiator);
+            }
+        });
+        
+        c1.stop();
+        c2.stop();
+        ds.pushData("test");
+        assertSame(pipe, initiatorRef2.get());
+        assertNull(initiatorRef.get());
+        
+        initiatorRef2.set(null);
+        ds.pushData(null);
+        assertSame(pipe, initiatorRef2.get());
+        assertSame(pipe, initiatorRef.get());
+        
     }
 
     private void testCollector(DataCollector collector, Object value)
