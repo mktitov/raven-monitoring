@@ -90,7 +90,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     private long recordsSaved;
     
 
-    private List<Record> recordBuffer;
+    private List<Data> recordBuffer;
 
     public Boolean getUpdateIdField()
     {
@@ -218,6 +218,7 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                         , dataSource.getPath()));
             ++recordSetsRecieved;
             flushRecords();
+            DataSourceHelper.executeContextCallbacks(this, context, data);
             return;
         }
         if (!(data instanceof Record)) {
@@ -225,15 +226,16 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                     "Invalid type (%s) recieved from data source (%s). The valid type is (%s) "
                     , data==null? "null" : data.getClass().getName(), dataSource.getPath()
                     , Record.class.getName()));
+            
+            DataSourceHelper.executeContextCallbacks(this, context, data);
             return;
         }
         Record record = (Record) data;
         ++recordsRecieved;
         int _recordBufferSize = recordBufferSize;
         if (recordBuffer==null)
-            recordBuffer = new ArrayList<Record>(_recordBufferSize);
-        recordBuffer.add(record);
-
+            recordBuffer = new ArrayList<Data>(_recordBufferSize);
+        recordBuffer.add(new Data(context, record));
         if (recordBuffer.size()>=_recordBufferSize)
             flushRecords();
     }
@@ -325,8 +327,8 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
         try {
             try {
                 boolean hasConnectionInRecord = false;
-                for (Record record: recordBuffer)
-                    if (record.getTag(Record.DB_CONNECTION) instanceof Connection) {
+                for (Data data: recordBuffer)
+                    if (data.record.getTag(Record.DB_CONNECTION) instanceof Connection) {
                         hasConnectionInRecord = true;
                         break;
                     }
@@ -337,10 +339,10 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                             "Database driver %ssupports batch updates"
                             , batchUpdate? "" : "does not "));
 
-                for (Record record: recordBuffer) {
-                    final Connection recCon = (Connection) record.getTag(Record.DB_CONNECTION);
+                for (Data data: recordBuffer) {
+                    final Connection recCon = (Connection) data.record.getTag(Record.DB_CONNECTION);
                     SchemaMeta meta = getOrCreateSchemeMeta(
-                            recCon!=null? recCon : con, record.getSchema(), batchUpdate, metas, logger);
+                            recCon!=null? recCon : con, data.record.getSchema(), batchUpdate, metas, logger);
 //                    SchemaMeta meta = metas.get(record.getSchema());
 //                    if (meta==null) {
 //                        meta = new SchemaMeta(
@@ -349,10 +351,10 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
 //                        metas.put(record.getSchema(), meta);
 //                    }
                     try {
-                        meta.updateRecord(record);
+                        meta.updateRecord(data.record);
                     } catch (Exception e) {
                         if (logger.isWarnEnabled())
-                            logger.warn("Record updating error: {}", record);
+                            logger.warn("Record updating error: {}", data.record);
                         throw e;
                     }
                 }
@@ -366,8 +368,8 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                                 if (logger.isWarnEnabled()) {
                                     logger.warn("Error updating set of records");
                                     int i=0;
-                                    for (Record rec: recordBuffer)
-                                        logger.warn("[{}] Record: {}", ++i, rec);
+                                    for (Data data: recordBuffer)
+                                        logger.warn("[{}] Record: {}", ++i, data.record);
                                 }
                                 throw e;
                             }
@@ -379,6 +381,8 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
                 recordsSaved+=recordBuffer.size();
 
             } finally {
+                for (Data data: recordBuffer) 
+                    DataSourceHelper.executeContextCallbacks(DatabaseRecordWriterNode.this, data.context, data.record);
                 recordBuffer = null;
                 for (Map<Connection, SchemaMeta> conMetas: metas.values())
                     for (SchemaMeta meta: conMetas.values())
@@ -672,5 +676,16 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
 //                });
 //            }
         }
+    }
+    
+    public static class Data {
+        private final DataContext context;
+        private final Record record;
+
+        public Data(DataContext context, Record record) {
+            this.context = context;
+            this.record = record;
+        }
+        
     }
 }

@@ -114,6 +114,7 @@ public class DataSourceFieldValueGenerator
     
     public void setData(DataSource dataSource, Object data, DataContext context)
     {
+        //TODO: Add calback handling???
         if (data!=null || dataInfo.get()==null)
             dataInfo.set(new DataInfo(data, context));
     }

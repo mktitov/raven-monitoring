@@ -84,16 +84,20 @@ public class ExcelRecordReaderNode extends AbstractSafeDataPipe
         if (data==null) {
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug(String.format("Recieved null data from node (%s)", dataSource.getPath()));
+            DataSourceHelper.executeContextCallbacks(dataSource, context, data);
             return;
         }
 
         Map<String, FieldInfo> fieldsColumns = CsvRecordReaderNode.getFieldsColumns(
                 recordSchema, cvsExtensionName, dataSource, context, tree, bindingSupport);
         if (fieldsColumns==null) {
-            if (isLogLevelEnabled(LogLevel.WARN))
-                debug(String.format(
+            String mess = String.format(
                         "CsvRecordFieldExtension was not defined for fields in the record schema (%s)"
-                        , recordSchema.getName()));
+                        , recordSchema.getName());
+            if (isLogLevelEnabled(LogLevel.WARN))
+                getLogger().debug(mess);
+            context.addError(this, mess);
+            DataSourceHelper.executeContextCallbacks(dataSource, context, data);
             return;
         }
 

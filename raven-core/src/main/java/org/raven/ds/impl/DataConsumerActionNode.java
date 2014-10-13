@@ -68,9 +68,8 @@ public class DataConsumerActionNode extends ActionNode
     {
         private final List dataList = new ArrayList(512);
 
-        public Consumer(DataContext context)
-        {
-            for (NodeAttribute attr: getNodeAttributes())
+        public Consumer(DataContext context) {
+            for (NodeAttribute attr: getAttrs())
                 if (   DATA_SOURCE_ATTR.equals(attr.getParentAttribute())
                     && !context.getSessionAttributes().containsKey(attr.getName()))
                 {
@@ -80,23 +79,20 @@ public class DataConsumerActionNode extends ActionNode
             dataSource.getDataImmediate(this, context);
         }
 
-        public void setData(DataSource dataSource, Object data, DataContext context)
-        {
+        public void setData(DataSource dataSource, Object data, DataContext context) {
             dataList.add(data);
+            DataSourceHelper.executeContextCallbacks(DataConsumerActionNode.this, context, data);
         }
 
-        public List getDataList()
-        {
+        public List getDataList() {
             return dataList;
         }
 
-        public Object refereshData(Collection<NodeAttribute> sessionAttributes)
-        {
+        public Object refereshData(Collection<NodeAttribute> sessionAttributes) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public String getPath()
-        {
+        public String getPath() {
             return DataConsumerActionNode.this.getPath();
         }
     }

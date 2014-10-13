@@ -41,6 +41,7 @@ public class ListDataConsumer implements DataConsumer {
     public synchronized void setData(DataSource dataSource, Object data, DataContext context) {
         if (data!=null)
             dataList.add(data);
+        DataSourceHelper.executeContextCallbacks(owner, context, data);
     }
 
     public Object refereshData(Collection<NodeAttribute> sessionAttributes) {

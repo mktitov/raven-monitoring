@@ -127,10 +127,8 @@ public class CsvRecordWriterNode extends AbstractSafeDataPipe
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
-    {
-        if (data==null)
-        {
+    protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception {
+        if (data==null) {
             Collection<Record> recs = records.get();
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug(String.format(
@@ -138,8 +136,7 @@ public class CsvRecordWriterNode extends AbstractSafeDataPipe
                         "Preparing csv string from (%d) records"
                         , recs==null? 0 : recs.size()));
             Object res = null;
-            if (recs!=null && !recs.isEmpty())
-            {
+            if (recs!=null && !recs.isEmpty()) {
                 RecordSchemaNode _recordSchema = recordSchema;
                 RecordSchemaField[] fields = null;
                 String _fieldsOrder = fieldsOrder;
@@ -182,32 +179,34 @@ public class CsvRecordWriterNode extends AbstractSafeDataPipe
             }
             sendDataToConsumers(res, context);
             records.remove();
-        }
-        else
-        {
-            if (!(data instanceof Record))
-            {
-                if (isLogLevelEnabled(LogLevel.DEBUG))
-                    debug(String.format(
+        } else {
+            if (!(data instanceof Record)) {
+                String mess = String.format(
                             "Invalid data type recieved from (%s). Expected (%s) recieved (%s)"
                             , dataSource.getPath(), data.getClass().getName()
-                            , Record.class.getName()));
-                return;
-            }
-            Record record = (Record) data;
-            if (!recordSchema.equals(record.getSchema()))
-            {
+                            , Record.class.getName());
                 if (isLogLevelEnabled(LogLevel.DEBUG))
-                    debug(String.format(
-                            "Invalid schema of the record recieved from (%s). " +
-                            "Expected (%s) recieved (%s)"
-                            , dataSource.getPath(), recordSchema.getName()
-                            , record.getSchema().getName()));
-                return;
+                    debug(mess);
+                context.addError(this, fieldsOrder);
+//                return;
+            } else {
+                Record record = (Record) data;
+                if (!recordSchema.equals(record.getSchema())) {
+                    String mess = String.format(
+                                "Invalid schema of the record recieved from (%s). " +
+                                "Expected (%s) recieved (%s)"
+                                , dataSource.getPath(), recordSchema.getName()
+                                , record.getSchema().getName());
+                    if (isLogLevelEnabled(LogLevel.DEBUG))
+                        debug(mess);
+//                    return;
+                } else {
+                    if (records.get()==null)
+                        records.set(new ArrayList(INITIAL_RECORDS_BUFFER_SIZE));
+                    records.get().add((Record)data);
+                }
             }
-            if (records.get()==null)
-                records.set(new ArrayList(INITIAL_RECORDS_BUFFER_SIZE));
-            records.get().add((Record)data);
+            DataSourceHelper.executeContextCallbacks(dataSource, context, data);
         }
     }
 
