@@ -367,15 +367,79 @@ public class AbstractSafeDataPipeTest extends RavenCoreTestCase
         
         c1.stop();
         c2.stop();
-        ds.pushData("test");
+        ds.pushData("test", context);
         assertSame(pipe, initiatorRef2.get());
         assertNull(initiatorRef.get());
         
         initiatorRef2.set(null);
-        ds.pushData(null);
+        ds.pushData(null, context);
         assertSame(pipe, initiatorRef2.get());
-        assertSame(pipe, initiatorRef.get());
+        assertSame(pipe, initiatorRef.get());        
+    }
+    
+    @Test
+    public void callbackOnDoSetDataError() throws Exception {
+        PushDataSource ds = new PushDataSource();
+        ds.setName("ds");
+        testsNode.addAndSaveChildren(ds);
+        assertTrue(ds.start());
+        pipe.setDataSource(ds);
+        assertTrue(pipe.start());
+        DataContextImpl context = new DataContextImpl();
+        final AtomicReference initiatorRef = new AtomicReference();
+        context.addCallback(new Closure(this) {
+            public void doCall(Node initiator) {
+                initiatorRef.set(initiator);
+            }
+        });
+        final AtomicReference initiatorRef2 = new AtomicReference();
+        context.addCallbackOnEach(new Closure(this) {
+            public void doCall(Node initiator) {
+                initiatorRef2.set(initiator);
+            }
+        });
         
+        pipe.setThrowErrorOnSetData(true);
+        ds.pushData("test", context);
+        assertSame(pipe, initiatorRef2.get());
+        assertNull(initiatorRef.get());
+        
+        initiatorRef2.set(null);
+        ds.pushData(null, context);
+        assertSame(pipe, initiatorRef2.get());
+        assertSame(pipe, initiatorRef.get());        
+    }
+    
+    @Test
+    public void noCallbackOnNormalDataProcessing() throws Exception {
+        PushDataSource ds = new PushDataSource();
+        ds.setName("ds");
+        testsNode.addAndSaveChildren(ds);
+        assertTrue(ds.start());
+        pipe.setDataSource(ds);
+        assertTrue(pipe.start());
+        DataContextImpl context = new DataContextImpl();
+        final AtomicReference initiatorRef = new AtomicReference();
+        context.addCallback(new Closure(this) {
+            public void doCall(Node initiator) {
+                initiatorRef.set(initiator);
+            }
+        });
+        final AtomicReference initiatorRef2 = new AtomicReference();
+        context.addCallbackOnEach(new Closure(this) {
+            public void doCall(Node initiator) {
+                initiatorRef2.set(initiator);
+            }
+        });
+        
+        ds.pushData("test", context);
+        assertNull(initiatorRef2.get());
+        assertNull(initiatorRef.get());
+        
+        initiatorRef2.set(null);
+        ds.pushData(null, context);
+        assertNull(initiatorRef2.get());
+        assertNull(initiatorRef.get());
     }
 
     private void testCollector(DataCollector collector, Object value)

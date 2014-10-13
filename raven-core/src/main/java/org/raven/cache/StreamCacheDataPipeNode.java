@@ -88,7 +88,6 @@ public class StreamCacheDataPipeNode extends AbstractSafeDataPipe
             data = temporaryFileManager.saveFile(this, key.toString(), in, null, true);
         }
         sendDataToConsumers(data, context);
-        return;
     }
 
     @Override

@@ -101,6 +101,7 @@ public class CsvRecordReaderNode extends AbstractSafeDataPipe
         if (data==null) {
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug(String.format("Recieved null data from node (%s)", dataSource.getPath()));
+            sendDataToConsumers(null, context);
             return;
         }
         Map<String, FieldInfo> fieldsColumns = getFieldsColumns(

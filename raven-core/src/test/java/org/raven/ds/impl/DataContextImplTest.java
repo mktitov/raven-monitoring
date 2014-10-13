@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.easymock.EasyMock.*;
 import org.easymock.IMocksControl;
+import org.raven.ds.DataContext;
 import org.raven.test.ServiceTestCase;
 import org.raven.test.UserContextServiceModule;
 import org.raven.tree.Node;
@@ -34,6 +35,43 @@ import org.raven.tree.Node;
 public class DataContextImplTest extends ServiceTestCase {
     private Node initiator;
 
+    public static interface ClosureTester {
+        public void executed();
+    }
+    
+    public static Closure configureCallback(IMocksControl mocks, final int executeTimes) {
+        final ClosureTester tester = mocks.createMock(ClosureTester.class);
+        if (executeTimes > 0) {
+            tester.executed();
+            expectLastCall().times(executeTimes);
+        }
+        return new Closure(tester) {
+            public void doCall() {
+                if (executeTimes > 0)
+                    tester.executed();
+            }
+        };
+    }
+    
+    public static Closure configureOnEachCallback(IMocksControl mocks, final int executeTimes, DataContext context) {
+        Closure callback = configureCallback(mocks, executeTimes);
+        context.addCallbackOnEach(callback);
+        return callback;
+    }
+    
+    public static Closure configureOnEndCallback(IMocksControl mocks, final int executeTimes, DataContext context) {
+        Closure callback = configureCallback(mocks, executeTimes);
+        context.addCallbackOnEnd(callback);
+        return callback;
+    }
+    
+    public static IMocksControl configureCallbacks(int onEachExecutions, int onEndExecutions, DataContext context) {
+        IMocksControl mocks = createControl();
+        configureOnEachCallback(mocks, onEachExecutions, context);
+        configureOnEndCallback(mocks, onEndExecutions, context);
+        return mocks;
+    }
+    
     @Override
     protected void configureRegistry(Set<Class> builder) {
         super.configureRegistry(builder);

@@ -152,22 +152,23 @@ public abstract class AbstractDataPipe extends AbstractDataConsumer implements D
 
     protected void sendDataToConsumers(Object data, DataContext context)
     {
-        DataConsumer consumer = (DataConsumer) context.getNodeParameter(this, CONSUMER_PARAM);
-        if (consumer!=null)
-        {
-            if (isLogLevelEnabled(LogLevel.DEBUG))
-                debug(String.format("Sending data to requester consumer (%s)", consumer.getPath()));
-            consumer.setData(this, data, context);
-        }
-        else
-        {
-            if (isLogLevelEnabled(LogLevel.DEBUG))
-                debug("Sending data to all consumers");
-            Collection<Node> deps = getDependentNodes();
-            if (deps!=null && deps.size()>0)
-                for (Node dep: deps)
-                    if (dep.getStatus()==Status.STARTED && dep instanceof DataConsumer)
-                        ((DataConsumer)dep).setData(this, data, context);
-        }
+        DataSourceHelper.sendDataToConsumers(this, data, context);
+//        DataConsumer consumer = (DataConsumer) context.getNodeParameter(this, CONSUMER_PARAM);
+//        if (consumer!=null)
+//        {
+//            if (isLogLevelEnabled(LogLevel.DEBUG))
+//                debug(String.format("Sending data to requester consumer (%s)", consumer.getPath()));
+//            consumer.setData(this, data, context);
+//        }
+//        else
+//        {
+//            if (isLogLevelEnabled(LogLevel.DEBUG))
+//                debug("Sending data to all consumers");
+//            Collection<Node> deps = getDependentNodes();
+//            if (deps!=null && deps.size()>0)
+//                for (Node dep: deps)
+//                    if (dep.getStatus()==Status.STARTED && dep instanceof DataConsumer)
+//                        ((DataConsumer)dep).setData(this, data, context);
+//        }
     }
 }

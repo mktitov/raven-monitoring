@@ -136,8 +136,12 @@ public abstract class AbstractAsyncDataPipe extends AbstractSafeDataPipe impleme
                         if (waitForHandlerFree.await(waitForHandlerTimeout, TimeUnit.MILLISECONDS))
                             res = processData(data, dataSource, context);
                     }
-                    if (!res && isLogLevelEnabled(LogLevel.WARN))
-                        getLogger().warn("No free handlers to process data from "+dataSource.getPath());
+                    if (!res) {
+                        if (isLogLevelEnabled(LogLevel.WARN))
+                            getLogger().warn("No free handlers to process data from "+dataSource.getPath());
+                        context.addError(this, "No free handlers to process data from "+dataSource.getPath());
+                        DataSourceHelper.executeContextCallbacks(this, context, data);
+                    }
                 } else {
                     boolean hasBusy;
                     do {

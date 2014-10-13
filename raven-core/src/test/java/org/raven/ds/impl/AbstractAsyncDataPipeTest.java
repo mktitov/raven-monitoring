@@ -20,9 +20,11 @@ package org.raven.ds.impl;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.easymock.IMocksControl;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenUtils;
+import org.raven.ds.DataContext;
 import org.raven.sched.impl.ExecutorServiceNode;
 import org.raven.table.Table;
 import org.raven.test.DataCollector;
@@ -30,7 +32,6 @@ import org.raven.test.PushDataSource;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
-
 /**
  *
  * @author Mikhail Titov
@@ -51,7 +52,7 @@ public class AbstractAsyncDataPipeTest extends RavenCoreTestCase
         executor = new ExecutorServiceNode();
         executor.setName("executor");
         tree.getRootNode().addAndSaveChildren(executor);
-        executor.setCorePoolSize(2);
+        executor.setCorePoolSize(4);
         assertTrue(executor.start());
 
         dataSource = new PushDataSource();
@@ -127,14 +128,23 @@ public class AbstractAsyncDataPipeTest extends RavenCoreTestCase
         dataPipe.setWaitForHandlerTimeout(5);
 
         long time = System.currentTimeMillis();
-        dataSource.pushData("1");
-        dataSource.pushData("2");
+        DataContext context = new DataContextImpl();
+        
+        IMocksControl mocks = DataContextImplTest.configureCallbacks(1, 0, context);
+        mocks.replay();
+        
+        dataSource.pushData("1", context);
+        assertFalse(context.hasErrors());
+        dataSource.pushData("2", context);
+        assertTrue(context.hasErrors());
 
-        Thread.sleep(1100);
+        Thread.sleep(1200);
 
         List dataList = collector.getDataList();
         assertNotNull(dataList);
         assertArrayEquals(new Object[]{"1"}, dataList.toArray());
+        
+        mocks.verify();
     }
 
     @Test
@@ -179,7 +189,7 @@ public class AbstractAsyncDataPipeTest extends RavenCoreTestCase
         assertArrayEquals(new Object[]{"1"}, collector.getDataList().toArray());
         
         assertEquals(1, dataPipe.getHandlers().size());
-        TimeUnit.MILLISECONDS.sleep(AbstractAsyncDataPipe.RELEASE_HANDLERS_INTERVAL+200);
+        TimeUnit.MILLISECONDS.sleep(AbstractAsyncDataPipe.RELEASE_HANDLERS_INTERVAL+1000);
         assertTrue(dataPipe.getHandlers().isEmpty());
     }
 }

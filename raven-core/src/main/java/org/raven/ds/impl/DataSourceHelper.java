@@ -35,6 +35,20 @@ import static org.raven.util.NodeUtils.*;
 public class DataSourceHelper
 {
     private DataSourceHelper() {}
+    
+    /**
+     * Executes data context callbacks.
+     * @param initiator the node which initiate callbacks
+     * @param context data context
+     * @param data data triggered callbacks
+     */
+    public static void executeContextCallbacks(Node initiator, DataContext context, Object data) {
+        if (context!=null) {
+            context.executeCallbacksOnEach(initiator);
+            if (data==null)
+                context.executeCallbacksOnEnd(initiator);
+        }
+    }
 
     /**
      * Sends data to all {@link Node#getDependentNodes() dependent nodes} which are in STARTED state and
@@ -47,9 +61,7 @@ public class DataSourceHelper
             DataConsumer excludeConsumer) 
     {
         if (context.hasErrors() && source.getStopProcessingOnError()) {
-            context.executeCallbacksOnEach(source);
-            if (data==null) 
-                context.executeCallbacksOnEnd(source);
+            executeContextCallbacks(source, context, data);
             return;
         }
         DataConsumer cons = (DataConsumer) context.getNodeParameter(source, BindingNames.CONSUMER_PARAM);
@@ -61,9 +73,7 @@ public class DataSourceHelper
             List<DataConsumer> consumers = extractNodesOfType(source.getDependentNodes(), DataConsumer.class);
             if (consumers.isEmpty()) {
                 //мы последние в цепочке. Поэтому вызываем callback'и
-                context.executeCallbacksOnEach(source);
-                if (data==null) 
-                    context.executeCallbacksOnEnd(source);                
+                executeContextCallbacks(source, context, data);
             } else
                 //иначе шлем данные потребителям
                 for (DataConsumer con: consumers) {

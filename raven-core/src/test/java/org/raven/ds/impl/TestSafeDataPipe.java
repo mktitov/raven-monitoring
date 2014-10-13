@@ -27,8 +27,17 @@ import org.raven.expr.BindingSupport;
  * @author Mikhail Titov
  */
 @NodeClass(childNodes=TestSessionAttributeNode.class)
-public class TestSafeDataPipe extends AbstractSafeDataPipe
-{
+public class TestSafeDataPipe extends AbstractSafeDataPipe {
+    private boolean throwErrorOnSetData = false;
+
+    public boolean isThrowErrorOnSetData() {
+        return throwErrorOnSetData;
+    }
+
+    public void setThrowErrorOnSetData(boolean throwErrorOnSetData) {
+        this.throwErrorOnSetData = throwErrorOnSetData;
+    }
+    
     @Override
     protected void doAddBindingsForExpression(
             DataSource dataSource, Object data, DataContext context, BindingSupport bindingSupport)
@@ -36,8 +45,9 @@ public class TestSafeDataPipe extends AbstractSafeDataPipe
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
-    {
+    protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception {
+        if (throwErrorOnSetData)
+            throw new Exception("Test exception in doSetData");
         sendDataToConsumers(data, context);
     }
 }

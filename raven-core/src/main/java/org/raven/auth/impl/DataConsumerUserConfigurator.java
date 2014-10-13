@@ -28,6 +28,7 @@ import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.DataContextImpl;
+import org.raven.ds.impl.DataSourceHelper;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.tree.NodeAttribute;
@@ -73,6 +74,7 @@ public class DataConsumerUserConfigurator extends AbstractUserContextConfigurato
     public void setData(DataSource dataSource, Object data, DataContext context) {
         if (data!=null)
             dataHolder.get().add(data);
+        DataSourceHelper.executeContextCallbacks(this, context, data);
     }
 
     public Object refereshData(Collection<NodeAttribute> sessionAttributes) {
