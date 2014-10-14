@@ -113,8 +113,6 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
                         if (debugEnabled)
                             ctx.servletLogger.debug("Composing response using builder: "
                                     +ctx.responseContext.getResponseBuilder().getResponseBuilderNode());
-//                        if (!isMultipart)
-//                            ctx.incomingDataListener = (DataReceiver) ctx.responseContext.getRequest();
                         Response result = ctx.responseContext.getResponse(ctx.user);
                         ctx.responseGenerated();
                         ctx.builderProcessedTs = System.currentTimeMillis();
