@@ -88,9 +88,9 @@ public class DataContextImplTest extends ServiceTestCase {
         IMocksControl mocks = createMocks();
         mocks.replay();
         DataContextImpl context = new DataContextImpl();
-        context.executeCallbacks(initiator);
-        context.executeCallbacksOnEnd(initiator);
-        context.executeCallbacksOnEach(initiator);
+//        context.executeCallbacksOnEnd(initiator, null);
+        context.executeCallbacksOnEnd(initiator, null);
+        context.executeCallbacksOnEach(initiator, null);
         mocks.verify();
     }
     
@@ -116,12 +116,12 @@ public class DataContextImplTest extends ServiceTestCase {
         DataContextImpl context = new DataContextImpl();
         context.addCallback(callback);
         context.addCallback(callback2);
-        context.executeCallbacks(initiator);
+        context.executeCallbacksOnEnd(initiator, null);
         assertTrue(executed.get());
         assertSame(initiator, initiatorRef.get());
         
         executed.set(false);
-        context.executeCallbacksOnEnd(initiator);
+        context.executeCallbacksOnEnd(initiator, null);
         assertTrue(executed.get());
         
         mocks.verify();
@@ -142,7 +142,7 @@ public class DataContextImplTest extends ServiceTestCase {
         
         DataContextImpl context = new DataContextImpl();
         context.addCallbackOnEach(callback);
-        context.executeCallbacksOnEach(initiator);
+        context.executeCallbacksOnEach(initiator, null);
         assertTrue(executed.get());
         
         mocks.verify();

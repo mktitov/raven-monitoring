@@ -93,7 +93,7 @@ public interface DataContext
     /**
      * Shorthand for {@link #executeCallbacksOnEnd(org.raven.tree.Node)}
      */
-    public void executeCallbacks(Node initator);
+//    public void executeCallbacks(Node initator);
     /**
      * Add callback which will be called at the end of data transmission (on null passing on data channel)
      */
@@ -101,7 +101,7 @@ public interface DataContext
     /**
      * Executes callbacks which were added by {@link #addCallbackOnEnd(groovy.lang.Closure)}
      */
-    public void executeCallbacksOnEnd(Node initiator);
+    public void executeCallbacksOnEnd(Node initiator, Object data);
     /**
      * Add callback which will be called on each of data transmission
      */
@@ -109,7 +109,7 @@ public interface DataContext
     /**
      * Executes callbacks which were added by {@link #addCallbackOnEnd(groovy.lang.Closure)}
      */
-    public void executeCallbacksOnEach(Node initiator);
+    public void executeCallbacksOnEach(Node initiator, Object data);
     /**
      * Adds new session attribute.
      * @param attr the attribute that must be added to the session attributes

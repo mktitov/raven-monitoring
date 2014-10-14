@@ -29,6 +29,7 @@ import org.raven.annotations.Parameter;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataPipe;
+import org.raven.ds.impl.DataSourceHelper;
 import org.raven.log.LogLevel;
 import org.raven.table.BalancedColumnBasedTable;
 import org.raven.tree.NodeAttribute;
@@ -174,6 +175,7 @@ public class RegexpDataConverterNode extends AbstractDataPipe
         {
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug("Can't convert NULL data to table");
+            DataSourceHelper.executeContextCallbacks(this, context, data);
             return;
         }
 
@@ -188,8 +190,10 @@ public class RegexpDataConverterNode extends AbstractDataPipe
         String[] rows = extractRows(str);
         if (isLogLevelEnabled(LogLevel.DEBUG))
             debug(String.format("(%d) rows extracted", rows==null? 0 : rows.length));
-        if (rows==null)
+        if (rows==null) {
+            DataSourceHelper.executeContextCallbacks(this, context, data);
             return;
+        }
 
         if (isLogLevelEnabled(LogLevel.DEBUG))
             debug("Creating table");

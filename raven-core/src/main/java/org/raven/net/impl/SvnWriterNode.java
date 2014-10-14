@@ -40,6 +40,7 @@ import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.ds.impl.AbstractDataConsumer;
+import org.raven.ds.impl.DataSourceHelper;
 import org.raven.log.LogLevel;
 import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
@@ -134,20 +135,20 @@ public class SvnWriterNode extends AbstractDataConsumer
     protected synchronized void doSetData(DataSource dataSource, Object data, DataContext context)
             throws Exception
     {
-        if (data==null)
-        {
+        if (data==null) {
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug("Recieved the end marker of the records sequence");
             return;
         }
 
-        if (!(data instanceof Record))
-        {
-            if (isLogLevelEnabled(LogLevel.WARN))
-                warn(String.format(
+        if (!(data instanceof Record)) {
+            String message = String.format(
                         "Invalid data type recieved from the data source (%s). " +
                         "Expected (%s) recieved (%s)"
-                        , dataSource.getPath(), Record.class.getName(), data.getClass().getName()));
+                        , dataSource.getPath(), Record.class.getName(), data.getClass().getName());
+            if (isLogLevelEnabled(LogLevel.WARN))
+                getLogger().warn(message);
+            context.addError(this, message);
             return;
         }
 

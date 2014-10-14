@@ -91,20 +91,21 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
     @Override
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
-        if (data==null && !aggregations.get().isEmpty())
-        {
-            try{
+        if (data==null && !aggregations.get().isEmpty()) {
+            try {
                 for (Aggregation agg: aggregations.get().values())
                     finishAndSendAggregation(agg, context);
                 sendDataToConsumers(null, context);
                 return;
-            }finally {
+            } finally {
                 aggregations.remove();
             }
         }
         
-        if (!(data instanceof Record))
+        if (!(data instanceof Record)) {
+            DataSourceHelper.executeContextCallbacks(this, context, data);
             return;
+        }
         
         List<RecordsAggregatorGroupFieldNode> groupFields =
                 new ArrayList<RecordsAggregatorGroupFieldNode>();
@@ -122,26 +123,29 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
                 }
         if (groupFields.isEmpty())
         {
+            String mess = "Can't aggregate. No group fields were defined";
             if (isLogLevelEnabled(LogLevel.WARN))
-                warn("Can't aggregate. No group fields were defined");
+                getLogger().warn(mess);
+            context.addError(this, mess);
+            DataSourceHelper.executeContextCallbacks(this, context, data);
             return ;
         }
-        if (valueFields.isEmpty())
-        {
+        if (valueFields.isEmpty()) {
+            String mess = "Can't aggregate. No value fields were defined";
             if (isLogLevelEnabled(LogLevel.WARN))
-                warn("Can't aggregate. No value fields were defined");
+                warn(mess);
+            context.addError(this, mess);
+            DataSourceHelper.executeContextCallbacks(this, context, data);
             return ;
         }
         bindingSupport.put(RECORD_BINDING, data);
-        try
-        {
+        try {
             Object[] groupValues = new Object[groupFields.size()];
             for (int i=0; i<groupFields.size(); ++i)
                 groupValues[i] = groupFields.get(i).getValue((Record)data);
             GroupKey key = new GroupKey(groupValues);
             Aggregation agg = aggregations.get().get(key);
-            if (agg==null)
-            {
+            if (agg==null) {
                 if (isRecordsSorted && aggregations.get().size()>0){
                     finishAndSendAggregation(aggregations.get().values().iterator().next(), context);
                     aggregations.get().clear();
@@ -150,9 +154,8 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
                 aggregations.get().put(key, agg);
             }
             aggregateValues(agg, valueFields, (Record)data);
-        }
-        finally
-        {
+        } finally {
+            DataSourceHelper.executeContextCallbacks(this, context, data);
             bindingSupport.reset();
         }
     }

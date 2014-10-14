@@ -109,15 +109,13 @@ public class MailWriterNode extends AbstractSafeDataPipe
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data, DataContext context) 
-    {
+    protected void doSetData(DataSource dataSource, Object data, DataContext context)  {
         if (data==null){
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 getLogger().debug("Recieved NULL data. Skiping");
             sendDataToConsumers(null, context);
             return;
         }
-
         if (isLogLevelEnabled(LogLevel.DEBUG))
             getLogger().debug("Creating mail for data: {}", data);
         Properties props = new Properties();

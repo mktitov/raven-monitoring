@@ -95,7 +95,7 @@ public class WriteToFileAttributeDataPipe extends AbstractSafeDataPipe {
                 String _mimeType = mimeType;
                 if (_mimeType==null)
                     throw new Exception("mimeType attribute value can not be null");
-                NodeAttribute attr = sourceNode.getNodeAttribute(attrName);
+                NodeAttribute attr = sourceNode.getAttr(attrName);
                 if (!DataFile.class.isAssignableFrom(attr.getType()))
                     throw new Exception(String.format("Invalid type if the attribute (%s). "
                             + "The attribute must be of type DataFile, but the type is (%s) "

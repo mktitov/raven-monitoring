@@ -248,14 +248,19 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
     @Override
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
-        if (!Status.STARTED.equals(getStatus()))
-            return;
+//        if (!isStarted())
+//            return;
 
-        if (data==null && states.get()!=null)
-            formAndSendCrossTable();
-
-        if (!(data instanceof Record))
+        if (data==null) {
+            if (states.get()!=null)
+                formAndSendCrossTable();
+            else
+                DataSourceHelper.executeContextCallbacks(this, context, data);
+        }
+        if (!(data instanceof Record)) {
+            DataSourceHelper.executeContextCallbacks(this, context, data);
             return;
+        }
 
         Record rec = (Record) data;
         bindingSupport.put("record", rec);
@@ -267,10 +272,8 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
                     , NEW_TABLE_FIELDS_EXPRESSION_ATTR, rec);
             if (newState)
                 state.setTableValue(tableValue);
-            else
-            {
-                if (!ObjectUtils.equals(tableValue, state.getTableValue()))
-                {
+            else {
+                if (!ObjectUtils.equals(tableValue, state.getTableValue())) {
                     formAndSendCrossTable();
                     state = getOrCreateState(rec.getSchema(), context);
                     state.setTableValue(tableValue);
@@ -283,9 +286,7 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
             Object cellValue = getValue(cellValueFieldNames, useCellValueFieldsExpression
                     , CELLVALUE_FIELDS_EXPRESSION_ATTR, rec);
             state.addValueToRow(masterValue, detailValue, cellValue);
-        }
-        finally
-        {
+        } finally {
             bindingSupport.reset();
         }
     }
@@ -326,7 +327,7 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
     {
         Object value = null;
         if (useExpression)
-            value = getNodeAttribute(exprAttr).getRealValue();
+            value = getAttr(exprAttr).getRealValue();
         else
         {
             if (fieldNames!=null)
@@ -348,19 +349,16 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
     private State getOrCreateState(RecordSchema schema, DataContext context)
     {
         State state = states.get();
-        if (state==null)
-        {
+        if (state==null) {
             state = new State(schema, context);
             states.set(state);
         }
         return state;
     }
 
-    private void formAndSendCrossTable() throws Exception
-    {
-        try
-        {
-            State state = states.get();
+    private void formAndSendCrossTable() throws Exception {
+        State state = states.get();
+        try {
             List row = state.getRow(0);
             String[] colNames = new String[row.size()];
             for (int i=0; i<row.size(); ++i)
@@ -381,11 +379,8 @@ public class RecordsAsCrossTableNode extends AbstractSafeDataPipe
                     throw e;
                 }
             }
-
             sendDataToConsumers(table, state.dataContext);
-        }
-        finally
-        {
+        } finally {
             states.remove();
         }
     }

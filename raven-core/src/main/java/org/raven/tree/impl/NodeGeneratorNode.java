@@ -38,6 +38,7 @@ import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
 import org.raven.ds.impl.DataPipeImpl;
+import org.raven.ds.impl.DataSourceHelper;
 import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.table.Table;
@@ -167,8 +168,10 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
             if (dataLock.tryLock())
             {
                 try {
-                    if (data==null)
+                    if (data==null) {
+                        DataSourceHelper.executeContextCallbacks(this, context, data);
                         return;
+                    }
                     if (!(data instanceof Table))
                     {
                         logger.error(String.format(
@@ -178,6 +181,7 @@ public class NodeGeneratorNode extends DataPipeImpl implements ConfigurableNode
                             , Table.class.getName()));
                         logger.warn(String.format("Stopping node (%s) due errors", getPath()));
                         stop();
+                        DataSourceHelper.executeContextCallbacks(this, context, data);
                         return;
                     }
                     processData(data, context);

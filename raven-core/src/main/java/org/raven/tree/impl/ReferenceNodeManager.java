@@ -24,6 +24,7 @@ import org.raven.annotations.Parameter;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractDataConsumer;
+import org.raven.ds.impl.DataSourceHelper;
 import org.raven.table.Table;
 import org.raven.tree.Node;
 import org.weda.annotations.constraints.NotNull;
@@ -58,13 +59,10 @@ public class ReferenceNodeManager extends AbstractDataConsumer
     @Override
     protected void doSetData(DataSource dataSource, Object data, DataContext context)
     {
-        Collection<Node> childs = getChildrens();
-        if (childs!=null)
-            for (Node child: childs)
-                tree.remove(child);
+        for (Node child: getNodes())
+            tree.remove(child);
 
-        if (!(data instanceof Table))
-        {
+        if (!(data instanceof Table)) {
             if (data==null)
                 logger.warn(String.format(
                         "Error in the node (%s). Null data recieved from (%s)"
@@ -80,7 +78,7 @@ public class ReferenceNodeManager extends AbstractDataConsumer
 
         Table table = (Table) data;
         int column = tableColumn;
-        if (column>table.getColumnNames().length)
+        if (column > table.getColumnNames().length)
             logger.error(String.format(
                     "Error in the node (%s). Invalid column index (%d). Table has (%d) columns"
                     , getPath(), column, table.getColumnNames().length));

@@ -291,6 +291,8 @@ public class NetworkScannerNode extends DataPipeImpl implements Viewable, Schedu
     {
         if (dataSource==this)
             super.doSetData(dataSource, data, context);
+        else
+            DataSourceHelper.executeContextCallbacks(this, context, data);
     }
     
     private long getScanDurationInMillisec()

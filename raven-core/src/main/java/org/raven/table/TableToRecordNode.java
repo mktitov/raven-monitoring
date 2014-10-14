@@ -33,6 +33,7 @@ import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldCodec;
 import org.raven.ds.impl.AbstractDataPipe;
+import org.raven.ds.impl.DataSourceHelper;
 import org.raven.ds.impl.RecordSchemaNode;
 import org.raven.ds.impl.RecordSchemaValueTypeHandlerFactory;
 import org.raven.expr.impl.BindingSupportImpl;
@@ -125,14 +126,14 @@ public class TableToRecordNode extends AbstractDataPipe
     @Override
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
-        if (!(data instanceof Table))
-        {
+        if (!(data instanceof Table)) {
             if (isLogLevelEnabled(LogLevel.WARN))
                 warn(String.format(
                         "Invalid data type recieved from (%s). Recieved (%s) expected (%s)"
                         , dataSource.getPath()
                         , (data==null? "NULL" : data.getClass().getName())
                         , Table.class.getName()));
+            DataSourceHelper.executeContextCallbacks(this, context, data);
             return;
         }
 

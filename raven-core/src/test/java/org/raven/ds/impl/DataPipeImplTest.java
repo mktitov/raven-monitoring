@@ -72,7 +72,7 @@ public class DataPipeImplTest extends RavenCoreTestCase
     {
         createNodes();
         
-        NodeAttribute attr = pipe.getNodeAttribute(DataPipeImpl.EXPRESSION_ATTRIBUTE);
+        NodeAttribute attr = pipe.getAttr(DataPipeImpl.EXPRESSION_ATTRIBUTE);
         attr.setValue("lastData+1");
         attr.save();
         
@@ -81,13 +81,12 @@ public class DataPipeImplTest extends RavenCoreTestCase
     }
     
     @Test
-    public void expression_with_convertToType() throws Exception
-    {
+    public void expression_with_convertToType() throws Exception {
         createNodes();
-        NodeAttribute attr = pipe.getNodeAttribute(DataPipeImpl.CONVERT_VALUE_TO_TYPE_ATTRIBUTE);
+        NodeAttribute attr = pipe.getAttr(DataPipeImpl.CONVERT_VALUE_TO_TYPE_ATTRIBUTE);
         attr.setValue(Integer.class.getName());
         attr.save();
-        attr = pipe.getNodeAttribute(DataPipeImpl.EXPRESSION_ATTRIBUTE);
+        attr = pipe.getAttr(DataPipeImpl.EXPRESSION_ATTRIBUTE);
         attr.setValue("lastData+1");
         attr.save();
         
@@ -108,7 +107,7 @@ public class DataPipeImplTest extends RavenCoreTestCase
         tree.getRootNode().addChildren(pipe);
         pipe.save();
         pipe.init();
-        NodeAttribute attr = pipe.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE);
+        NodeAttribute attr = pipe.getAttr(AbstractDataConsumer.DATASOURCE_ATTRIBUTE);
         attr.setValue(ds.getPath());
         attr.save();
         pipe.start();
@@ -119,7 +118,7 @@ public class DataPipeImplTest extends RavenCoreTestCase
         tree.getRootNode().addChildren(consumer);
         consumer.save();
         consumer.init();
-        attr = consumer.getNodeAttribute(AbstractDataConsumer.DATASOURCE_ATTRIBUTE);
+        attr = consumer.getAttr(AbstractDataConsumer.DATASOURCE_ATTRIBUTE);
         attr.setValue(pipe.getPath());
         attr.save();
         consumer.setResetDataPolicy(AbstractDataConsumer.ResetDataPolicy.DONT_RESET_DATA);

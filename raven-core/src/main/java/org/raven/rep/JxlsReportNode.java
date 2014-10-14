@@ -41,6 +41,7 @@ import org.raven.ds.Record;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.ds.impl.AbstractSafeDataPipe;
+import org.raven.ds.impl.DataSourceHelper;
 import org.raven.ds.impl.InputStreamBinaryFieldValue;
 import org.raven.expr.BindingSupport;
 import org.raven.expr.impl.IfNode;
@@ -108,7 +109,7 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
     @Override
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
-        if (data==null){
+        if (data==null) {
             generateReport(context);
             sendDataToConsumers(null, context);
             return;
@@ -135,7 +136,9 @@ public class JxlsReportNode extends AbstractSafeDataPipe implements Viewable
             sheets.add(new SheetInfo(beans, fixedSizeCollectionBeanNames, templateSheetName, sheetName));
             if (!multiSheetReport)
                 generateReport(context);
-        }finally{
+            else 
+                DataSourceHelper.executeContextCallbacks(this, context, data);
+        } finally {
             bindingSupport.reset();
             beansStore.remove();
         }

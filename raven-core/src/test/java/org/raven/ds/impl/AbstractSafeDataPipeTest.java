@@ -432,14 +432,15 @@ public class AbstractSafeDataPipeTest extends RavenCoreTestCase
             }
         });
         
+        c2.stop();
         ds.pushData("test", context);
-        assertNull(initiatorRef2.get());
+        assertSame(c1, initiatorRef2.get());
         assertNull(initiatorRef.get());
         
         initiatorRef2.set(null);
         ds.pushData(null, context);
-        assertNull(initiatorRef2.get());
-        assertNull(initiatorRef.get());
+        assertSame(c1, initiatorRef2.get());
+        assertSame(c1, initiatorRef.get());
     }
 
     private void testCollector(DataCollector collector, Object value)

@@ -48,8 +48,10 @@ public class TimeWindowDataFilterNode extends AbstractSafeDataPipe {
 
     @Override
     public void setData(DataSource dataSource, Object data, DataContext context) {
-        if (isCurrentTimeInPeriod() || !filterOnPush)
+        if (isCurrentTimeInPeriod() || !filterOnPush)            
             super.setData(dataSource, data, context);
+        else 
+            DataSourceHelper.executeContextCallbacks(this, context, data);
     }
 
     @Override

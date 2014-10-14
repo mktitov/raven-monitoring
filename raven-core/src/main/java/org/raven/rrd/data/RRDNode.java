@@ -49,6 +49,7 @@ import org.raven.ds.ArchiveException;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
+import org.raven.ds.impl.DataSourceHelper;
 import org.raven.log.LogLevel;
 import org.raven.rrd.ConsolidationFunction;
 import org.raven.rrd.RRIoQueueNode;
@@ -305,9 +306,9 @@ public class RRDNode extends BaseNode implements DataConsumer, NodeListener
 
     public void setData(DataSource dataSource, Object data, DataContext context)
     {
-		if (getStatus()!=Status.STARTED)
-			return;
-		ioQueue.pushWriteRequest((RRDataSource)dataSource,data);
+		if (isStarted())
+    		ioQueue.pushWriteRequest((RRDataSource)dataSource,data);
+        DataSourceHelper.executeContextCallbacks(this, context, data);
     }
 
 	public void setDataFromQueue(RRDataSource dataSource, Object data)

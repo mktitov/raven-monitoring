@@ -30,6 +30,7 @@ import org.raven.annotations.Parameter;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.AbstractSafeDataPipe;
+import org.raven.ds.impl.DataSourceHelper;
 import org.raven.expr.BindingSupport;
 import org.weda.annotations.constraints.NotNull;
 
@@ -82,8 +83,10 @@ public class ExcelTableReaderNode extends AbstractSafeDataPipe
     @Override
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
-        if (data==null)
+        if (data==null) {
+            DataSourceHelper.executeContextCallbacks(this, context, data);
             return;
+        }
         InputStream dataStream = converter.convert(InputStream.class, data, null);
         Workbook wb = WorkbookFactory.create(new PushbackInputStream(dataStream));
         Sheet sheet = wb.getSheetAt(sheetNumber-1);
@@ -103,6 +106,8 @@ public class ExcelTableReaderNode extends AbstractSafeDataPipe
         if (table!=null){
             table.freeze();
             sendDataToConsumers(table, context);
+        } else {
+            DataSourceHelper.executeContextCallbacks(this, context, data);
         }
     }
 

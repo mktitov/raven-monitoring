@@ -25,6 +25,7 @@ import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.DataContextImpl;
+import org.raven.ds.impl.DataSourceHelper;
 import org.raven.graph.DataSeries;
 import org.raven.log.LogLevel;
 import org.raven.statdb.impl.SdbQueryResultNode;
@@ -148,19 +149,19 @@ public class SdbQueryResultDataDef extends AbstractDataDef implements DataConsum
 
     }
 
-    public void setData(DataSource dataSource, Object data, DataContext context)
-    {
-        if (data instanceof QueryResult)
-        {
+    public void setData(DataSource dataSource, Object data, DataContext context) {
+        if (data instanceof QueryResult) {
             queryResult.set((QueryResult)data);
-        }
-        else if (isLogLevelEnabled(LogLevel.DEBUG))
-        {
-            debug(String.format(
+        } else {
+            String mess = String.format(
                     "Invalid data type recieved from (%s). Expected (%s) but recieved (%s)"
                     , dataSource.getPath(), QueryResult.class.getName()
-                    , (data==null? "NULL" : data.getClass().getName())));
+                    , (data==null? "NULL" : data.getClass().getName()));
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug(mess);
+            context.addError(this, mess);
         }
+        DataSourceHelper.executeContextCallbacks(this, context, data);
     }
 
     public Object refereshData(Collection<NodeAttribute> sessionAttributes)

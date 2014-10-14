@@ -75,6 +75,24 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
     private long lastDataTime;
     private Object previousData;
     private long previousDataTime;
+    private final boolean autoExecuteCallbacks;
+
+    public AbstractDataConsumer() {
+        this(true);
+    }
+
+    public AbstractDataConsumer(String name) {
+        this(true, name);
+    }
+
+    public AbstractDataConsumer(boolean autoExecuteCallbacks) {
+        this.autoExecuteCallbacks = autoExecuteCallbacks;
+    }
+
+    public AbstractDataConsumer(boolean autoExecuteCallbacks, String name) {
+        super(name);
+        this.autoExecuteCallbacks = autoExecuteCallbacks;
+    }
 
     public Boolean getAutoLinkDataSource() {
         return autoLinkDataSource;
@@ -170,7 +188,8 @@ public abstract class AbstractDataConsumer extends ContainerNode implements Data
                     error(String.format("Error processing data by consumer (%s)", getPath()), e);
             }
         } finally {
-            DataSourceHelper.executeContextCallbacks(this, context, data);
+            if (autoExecuteCallbacks)
+                DataSourceHelper.executeContextCallbacks(this, context, data);
             switch(resetDataPolicy)
             {
                 case RESET_LAST_AND_PREVIOUS_DATA: this.data = null; previousData = null; break;

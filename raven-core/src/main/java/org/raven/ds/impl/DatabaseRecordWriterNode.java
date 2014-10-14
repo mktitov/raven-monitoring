@@ -87,10 +87,17 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
     @Parameter(readOnly=true)
     private long recordsRecieved;
     @Parameter(readOnly=true)
-    private long recordsSaved;
-    
+    private long recordsSaved;    
 
     private List<Data> recordBuffer;
+
+    public DatabaseRecordWriterNode() {
+        super(false);
+    }
+
+    public DatabaseRecordWriterNode(String name) {
+        super(false, name);
+    }
 
     public Boolean getUpdateIdField()
     {

@@ -95,23 +95,23 @@ public class SafeDataConsumer extends BaseNode implements DataConsumer
 
     public void setData(DataSource dataSource, Object data, DataContext context)
     {
-        if (useExpression)
-        {
-            bindingSupport.put(DATA_BINDING, data);
-            bindingSupport.put(DATA_CONTEXT_BINDING, context);
-            try
-            {
-                NodeAttribute exprAttr = getNodeAttribute(EXPRESSION_ATTRIBUTE);
-                data = exprAttr.getRealValue();
+        try {
+            if (useExpression) {
+                bindingSupport.put(DATA_BINDING, data);
+                bindingSupport.put(DATA_CONTEXT_BINDING, context);
+                try {
+                    NodeAttribute exprAttr = getAttr(EXPRESSION_ATTRIBUTE);
+                    data = exprAttr.getRealValue();
+                } finally {
+                    bindingSupport.reset();
+                }
             }
-            finally
-            {
-                bindingSupport.reset();
-            }
+            if (this.data.get()==null)
+                this.data.set(new LinkedList());
+            this.data.get().add(data);
+        } finally {
+            DataSourceHelper.executeContextCallbacks(this, context, data);
         }
-        if (this.data.get()==null)
-            this.data.set(new LinkedList());
-        this.data.get().add(data);
     }
 
     /**

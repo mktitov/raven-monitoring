@@ -85,10 +85,8 @@ public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
     }
 
     @Override
-    protected void doSetData(DataSource dataSource, Object data, DataContext context)
-    {
-        try
-        {
+    protected void doSetData(DataSource dataSource, Object data, DataContext context) {
+        try {
             Class convertTo = convertValueToType;
             if (convertTo!=null)
                 this.data = converter.convert(convertTo, this.data, null);
@@ -101,17 +99,16 @@ public class DataPipeImpl extends AbstractDataConsumer implements DataPipe
             if (skipFirstCycle && getPreviuosDataTimeMillis()==0)
                 return;
             Object newData = this.data;
-            NodeAttribute attr = getNodeAttribute(EXPRESSION_ATTRIBUTE);
+            NodeAttribute attr = getAttr(EXPRESSION_ATTRIBUTE);
             if (attr.getRawValue()!=null && attr.getRawValue().trim().length()>0)
                 newData = attr.getRealValue();
 
-            if (getDependentNodes()!=null)
-                for (Node node: getDependentNodes())
-                    if (node.getStatus()==Status.STARTED && node instanceof DataConsumer)
-                        sendDataToConsumer((DataConsumer)node, newData, context);
-        }
-        finally
-        {
+            DataSourceHelper.sendDataToConsumers(this, newData, context);
+//            if (getDependentNodes()!=null)
+//                for (Node node: getDependentNodes())
+//                    if (node.getStatus()==Status.STARTED && node instanceof DataConsumer)
+//                        sendDataToConsumer((DataConsumer)node, newData, context);
+        } finally {
             bindingSupport.reset();
         }
     }

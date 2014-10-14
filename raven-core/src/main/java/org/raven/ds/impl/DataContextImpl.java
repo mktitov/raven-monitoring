@@ -188,19 +188,19 @@ public class DataContextImpl implements DataContext
         return this;
     }
 
-    public void executeCallbacks(Node initiator) {
-        _executeCallbacks(initiator, callbacks);
-    }
+//    public void executeCallbacks(Node initiator) {
+//        _executeCallbacks(initiator, callbacks);
+//    }
 
-    public void executeCallbacksOnEnd(Node initiator) {
-        _executeCallbacks(initiator, callbacks);
+    public void executeCallbacksOnEnd(Node initiator, Object data) {
+        _executeCallbacks(initiator, data, callbacks);
     }
     
-    public void executeCallbacksOnEach(Node initiator) {
-        _executeCallbacks(initiator, eachDataSendCallbacks);
+    public void executeCallbacksOnEach(Node initiator, Object data) {
+        _executeCallbacks(initiator, data, eachDataSendCallbacks);
     }
     
-    private void _executeCallbacks(Node initiator, Collection<Closure> callbacks) {
+    private void _executeCallbacks(Node initiator, Object data, Collection<Closure> callbacks) {
         Collection<Closure> _callbacks;
         synchronized (this) {
             if (callbacks==null || callbacks.isEmpty())
@@ -213,6 +213,8 @@ public class DataContextImpl implements DataContext
                     closure.call();
                 else if (closure.getMaximumNumberOfParameters()==1)
                     closure.call(initiator);
+                else if (closure.getMaximumNumberOfParameters()==2)
+                    closure.call(initiator, data);
                 else throw new Exception("Invalid number of parameters in closure. Expected 0 or 1 but was - "+closure.getMaximumNumberOfParameters());
             } catch (Throwable e) {
                 if (initiator.isLogLevelEnabled(LogLevel.ERROR))

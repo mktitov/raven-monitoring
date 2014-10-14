@@ -280,10 +280,11 @@ public abstract class AbstractSafeDataPipe
     public void setData(DataSource dataSource, Object data, DataContext context)
     {
         final boolean debugEnabled = isLogLevelEnabled(LogLevel.DEBUG);
-        if (!Status.STARTED.equals(getStatus())) {
+        if (!isStarted()) {
             if (debugEnabled)
                 debug(String.format(
                         "Can't recieve DATA from data source (%s). Node not STARTED", dataSource.getPath()));
+            DataSourceHelper.executeContextCallbacks(this, context, data);
             return;
         }
         if (context.hasErrors() && getStopProcessingOnError()) {
@@ -291,6 +292,7 @@ public abstract class AbstractSafeDataPipe
                 debug(String.format(
                         "Data context has error flag and stopProcessingOnError is true, so IGNORING", 
                         dataSource.getPath()));
+            DataSourceHelper.executeContextCallbacks(this, context, data);
             return;
         }
         VarsSupportState varsSupportState = NodeUtils.resetVarsSupport(tree);

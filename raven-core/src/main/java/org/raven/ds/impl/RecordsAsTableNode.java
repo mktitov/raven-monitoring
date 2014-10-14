@@ -779,6 +779,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                         RavenUtils.setMasterFieldValues(RecordsAsTableNode.this, null);
                     }
                 }
+                DataSourceHelper.executeContextCallbacks(RecordsAsTableNode.this, context, data);
                 return;
             }
 
@@ -789,6 +790,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                             "Invalid data type recieved from (%s) data source. " +
                             "The valid type is (%s)"
                             , dataSource.getPath(), Record.class.getName()));
+                DataSourceHelper.executeContextCallbacks(RecordsAsTableNode.this, context, data);
                 return;
             }
 
@@ -799,6 +801,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                 if (isLogLevelEnabled(LogLevel.ERROR))
                     error(String.format(
                             "Invalid record schema recived from (%s)", dataSource.getPath()));
+                DataSourceHelper.executeContextCallbacks(RecordsAsTableNode.this, context, data);
                 return;
             }
 
@@ -943,6 +946,7 @@ public class RecordsAsTableNode extends BaseNode implements Viewable, DataSource
                 if (isLogLevelEnabled(LogLevel.WARN))
                     getLogger().warn("Error while checking index fields values", e);
             }
+            DataSourceHelper.executeContextCallbacks(RecordsAsTableNode.this, context, data);
         }
 
         private ViewableObject createDetailObject(String displayValue, Record record)

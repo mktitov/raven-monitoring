@@ -27,6 +27,7 @@ import org.raven.ds.Record;
 import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.impl.AbstractSafeDataPipe;
+import org.raven.ds.impl.DataSourceHelper;
 import org.raven.ds.impl.RecordSchemaValueTypeHandlerFactory;
 import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
@@ -113,7 +114,7 @@ public class RecordsToTableNode extends AbstractSafeDataPipe
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
         TableImpl table = tableHolder.get();
-        if (data==null){
+        if (data==null) {
             sendDataToConsumers(table, context);
             tableHolder.remove();
             return;
@@ -121,19 +122,20 @@ public class RecordsToTableNode extends AbstractSafeDataPipe
 
         RecordSchema _recordSchema = recordSchema;
 
-        if (!checkData(data, dataSource, _recordSchema))
-            return;
+        if (checkData(data, dataSource, _recordSchema)) {
+            Record rec = (Record) data;
+            if (table==null) {
+                table = new TableImpl(columnNames);
+                tableHolder.set(table);
+            }
 
-        Record rec = (Record) data;
-        if (table==null){
-            table = new TableImpl(columnNames);
-            tableHolder.set(table);
+            Object[] row = new Object[fieldNames.length];
+            for (int i=0; i<fieldNames.length; ++i)
+                row[i]=rec.getValue(fieldNames[i]);
+
+            table.addRow(row);
         }
-
-        Object[] row = new Object[fieldNames.length];
-        for (int i=0; i<fieldNames.length; ++i)
-            row[i]=rec.getValue(fieldNames[i]);
-        table.addRow(row);
+        DataSourceHelper.executeContextCallbacks(this, context, data);
     }
 
     private boolean checkData(Object data, DataSource dataSource, RecordSchema _recordSchema)

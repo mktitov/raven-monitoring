@@ -44,9 +44,9 @@ public class DataSourceHelper
      */
     public static void executeContextCallbacks(Node initiator, DataContext context, Object data) {
         if (context!=null) {
-            context.executeCallbacksOnEach(initiator);
+            context.executeCallbacksOnEach(initiator, data);
             if (data==null)
-                context.executeCallbacksOnEnd(initiator);
+                context.executeCallbacksOnEnd(initiator, data);
         }
     }
 

@@ -197,11 +197,14 @@ public class EventSourceBuilder extends AbstractResponseBuilder
     //TODO: По channelForUser?
     //TODO: нужно событие по которому канал будет закрываться. Но работать событие должно совместно с channelSelector? или по channelForUser? или по channelId
     public void setData(DataSource dataSource, final Object data, DataContext context) {        
-        if (data==null || !isStarted()) 
+        if (data==null || !isStarted())  {
+            DataSourceHelper.executeContextCallbacks(this, context, data);
             return;
+        } 
         if (channels.isEmpty()) {
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 getLogger().debug("Received data for submitting but no registered channels. Ignoring...");
+            DataSourceHelper.executeContextCallbacks(this, context, data);
             return;
         }
         final int counter = asyncUsageDetector.incrementAndGet();
@@ -259,6 +262,7 @@ public class EventSourceBuilder extends AbstractResponseBuilder
             }
         } finally {
             asyncUsageDetector.decrementAndGet();
+            DataSourceHelper.executeContextCallbacks(this, context, data);
         }
     }
     

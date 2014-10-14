@@ -80,15 +80,17 @@ public class TextToLinesNode extends AbstractSafeDataPipe
             return;
         }
         InputStream is = converter.convert(InputStream.class, data, encoding.name());
-        if (is==null)
+        if (is==null) {
+            DataSourceHelper.executeContextCallbacks(this, context, data);
             return;
+        }
 
         LineIterator it = IOUtils.lineIterator(is, encoding.name());
         int lineNumber = 0;
         int _startFromLine = startFromLine;
         boolean _stopOnError = getStopProcessingOnError();
         DataConsumer _errorConsumer = getErrorConsumer();
-        try{
+        try {
             while (it.hasNext()) {
                 ++lineNumber;
                 String line = it.nextLine();

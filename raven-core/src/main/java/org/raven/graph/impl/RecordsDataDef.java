@@ -33,6 +33,7 @@ import org.raven.ds.DataSource;
 import org.raven.ds.Record;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.impl.DataContextImpl;
+import org.raven.ds.impl.DataSourceHelper;
 import org.raven.ds.impl.RecordSchemaNode;
 import org.raven.ds.impl.RecordSchemaValueTypeHandlerFactory;
 import org.raven.graph.DataSeries;
@@ -218,18 +219,18 @@ public class RecordsDataDef extends AbstractDataDef implements DataConsumer
     {
         if (data instanceof Record)
             records.get().add((Record)data);
-        else if (data==null)
-        {
+        else if (data==null) {
             if (isLogLevelEnabled(LogLevel.DEBUG))
                 debug("Recieved end marker in record sequence");
-        }
-        else
-        {
-            if (isLogLevelEnabled(LogLevel.ERROR))
-            error(String.format(
+        } else {
+            String mess = String.format(
                     "Data type (%s) recieved from (%s) data source must be instance of (%s)"
-                    , data.getClass().getName(), dataSource.getPath(), Record.class.getName()));
+                    , data.getClass().getName(), dataSource.getPath(), Record.class.getName());
+            context.addError(this, mess);
+            if (isLogLevelEnabled(LogLevel.ERROR))
+                getLogger().error(mess);
         }
+        DataSourceHelper.executeContextCallbacks(this, context, data);
     }
 
     public Object refereshData(Collection<NodeAttribute> sessionAttributes)

@@ -57,26 +57,33 @@ public class DataSourceFieldValueGenerator
 
     @NotNull @Parameter(defaultValue="false")
     private Boolean usePreProcess;
+    
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean executeContextCallbacks;
 
     private ThreadLocal<DataInfo> dataInfo;
 
-    public String getExpression()
-    {
+    public Boolean getExecuteContextCallbacks() {
+        return executeContextCallbacks;
+    }
+
+    public void setExecuteContextCallbacks(Boolean executeContextCallbacks) {
+        this.executeContextCallbacks = executeContextCallbacks;
+    }
+
+    public String getExpression() {
         return expression;
     }
 
-    public void setExpression(String expression)
-    {
+    public void setExpression(String expression) {
         this.expression = expression;
     }
 
-    public Boolean getUseExpression()
-    {
+    public Boolean getUseExpression() {
         return useExpression;
     }
 
-    public void setUseExpression(Boolean useExpression)
-    {
+    public void setUseExpression(Boolean useExpression) {
         this.useExpression = useExpression;
     }
 
@@ -114,9 +121,10 @@ public class DataSourceFieldValueGenerator
     
     public void setData(DataSource dataSource, Object data, DataContext context)
     {
-        //TODO: Add calback handling???
         if (data!=null || dataInfo.get()==null)
             dataInfo.set(new DataInfo(data, context));
+        if (executeContextCallbacks)
+            DataSourceHelper.executeContextCallbacks(this, context, data);
     }
 
     public Object refereshData(Collection<NodeAttribute> sessionAttributes)

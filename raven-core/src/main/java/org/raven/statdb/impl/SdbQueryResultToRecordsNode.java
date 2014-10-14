@@ -30,6 +30,7 @@ import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.ds.impl.AbstractDataPipe;
+import org.raven.ds.impl.DataSourceHelper;
 import org.raven.ds.impl.RecordSchemaNode;
 import org.raven.ds.impl.RecordSchemaValueTypeHandlerFactory;
 import org.raven.log.LogLevel;
@@ -72,14 +73,15 @@ public class SdbQueryResultToRecordsNode extends AbstractDataPipe
     @Override
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception
     {
-        if (!(data instanceof QueryResult))
-        {
-            if (isLogLevelEnabled(LogLevel.DEBUG))
-                debug(String.format(
+        if (!(data instanceof QueryResult)) {
+            String mess = String.format(
                         "Invalid data type recieved from (%s). Exepected (%s) but recieved (%s)"
                         , dataSource.getPath()
                         , QueryResult.class.getName()
-                        , data==null? "NULL" : data.getClass().getName()));
+                        , data==null? "NULL" : data.getClass().getName());
+            if (isLogLevelEnabled(LogLevel.DEBUG))
+                debug(mess);
+            DataSourceHelper.executeContextCallbacks(this, context, data);
             return;
         }
 

@@ -36,7 +36,7 @@ public class DataSourceHelperTest {
     public void executeContextCallbacks() {
         Node initiator = createMock(Node.class);
         DataContext context = createMock(DataContext.class);
-        context.executeCallbacksOnEach(initiator);
+        context.executeCallbacksOnEach(initiator, "test");
         replay(initiator, context);
         DataSourceHelper.executeContextCallbacks(initiator, context, "test");
         verify(initiator, context);
@@ -46,8 +46,8 @@ public class DataSourceHelperTest {
     public void executeContextCallbacks2() {
         Node initiator = createMock(Node.class);
         DataContext context = createMock(DataContext.class);
-        context.executeCallbacksOnEach(initiator);
-        context.executeCallbacksOnEnd(initiator);
+        context.executeCallbacksOnEach(initiator, null);
+        context.executeCallbacksOnEnd(initiator, null);
         replay(initiator, context);
         DataSourceHelper.executeContextCallbacks(initiator, context, null);
         verify(initiator, context);

@@ -81,7 +81,10 @@ public class RecordValidatorNode extends AbstractSafeDataPipe
                 bindingSupport.put(RECORD_BINDING, record);
                 bindingSupport.put(ERRORS_BINDING, errors);
                 try {
-                    data = getNodeAttribute(ON_RECORD_VALIDATION_ERROR_ATTR).getRealValue();
+                    data = getAttr(ON_RECORD_VALIDATION_ERROR_ATTR).getRealValue();
+                    if (data==null) {
+                        context.addError(this, errors.toText());
+                    }
                 } finally {
                     bindingSupport.reset();
                 }
@@ -89,6 +92,8 @@ public class RecordValidatorNode extends AbstractSafeDataPipe
         } 
         if (data!=null)
             sendDataToConsumers(data, context);
+        else
+            DataSourceHelper.executeContextCallbacks(this, context, record);
     }
 
     @Override

@@ -25,6 +25,7 @@ import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.DataContextImpl;
+import org.raven.ds.impl.DataSourceHelper;
 import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
@@ -63,6 +64,7 @@ public class NetworkResponseContextNode
 
     public void setData(DataSource dataSource, Object data, DataContext context) {
         value.set(data);
+        DataSourceHelper.executeContextCallbacks(this, context, data);
     }
 
     public Object refereshData(Collection<NodeAttribute> sessionAttributes) {
