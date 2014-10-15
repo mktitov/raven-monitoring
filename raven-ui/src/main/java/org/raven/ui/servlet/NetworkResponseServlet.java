@@ -594,43 +594,42 @@ public class NetworkResponseServlet extends HttpServlet  {
         }
     }
     
-    protected void processError(RequestContext ctx, Throwable e) 
-        throws IOException
-    {
-        System.out.println("Processing !!!ERROR!!!");
-        boolean internalError = false;
-        if (e instanceof NetworkResponseServiceUnavailableException) {
-            sendError(ctx, HttpServletResponse.SC_SERVICE_UNAVAILABLE, e.getMessage());
-        } else if (e instanceof ContextUnavailableException) {
-            sendError(ctx, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
-        } else if (e instanceof AccessDeniedException) {
-            sendError(ctx, HttpServletResponse.SC_FORBIDDEN);
-        } else if (e instanceof RequiredParameterMissedException || e instanceof NetworkResponseServlet.BadRequestException) {
-            sendError(ctx, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-        } else if (e instanceof UnauthoriedException || e instanceof AuthenticationFailedException) {
-            ResponseServiceNode service = ctx.responseContext.getServiceNode();
-            System.out.println("SERVICE NODE TYPE is: "+service.getClass().getName());
-            System.out.println("SERVICE NODE path is: "+service.getPath());
-            String realm = service instanceof WebInterfaceNode? service.getParent().getName() : "RAVEN";
-            if ("system".equals(realm))
-                realm = "RAVEN";
-            ctx.response.setHeader("WWW-Authenticate", String.format("BASIC realm=\"%s\"", realm));
-            sendError(ctx, HttpServletResponse.SC_UNAUTHORIZED);
-        } else {
-            sendError(ctx, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, null, e);
-            internalError = true;
+    protected void processError(RequestContext ctx, Throwable e) {
+        try {
+            boolean internalError = false;
+            if (e instanceof NetworkResponseServiceUnavailableException) {
+                sendError(ctx, HttpServletResponse.SC_SERVICE_UNAVAILABLE, e.getMessage());
+            } else if (e instanceof ContextUnavailableException) {
+                sendError(ctx, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
+            } else if (e instanceof AccessDeniedException) {
+                sendError(ctx, HttpServletResponse.SC_FORBIDDEN);
+            } else if (e instanceof RequiredParameterMissedException || e instanceof NetworkResponseServlet.BadRequestException) {
+                sendError(ctx, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            } else if (e instanceof UnauthoriedException || e instanceof AuthenticationFailedException) {
+                ResponseServiceNode service = ctx.responseContext.getServiceNode();
+                String realm = service instanceof WebInterfaceNode? service.getParent().getName() : "RAVEN";
+                if ("system".equals(realm))
+                    realm = "RAVEN";
+                ctx.response.setHeader("WWW-Authenticate", String.format("BASIC realm=\"%s\"", realm));
+                sendError(ctx, HttpServletResponse.SC_UNAUTHORIZED);
+            } else {
+                sendError(ctx, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, null, e);
+                internalError = true;
+            }
+            String mess = String.format("Error processing request (%s) from host (%s)", 
+                    ctx.request.getPathInfo(), ctx.request.getRemoteAddr());
+            if (ctx.servletLogger.isWarnEnabled()) {
+                if (internalError)
+                    ctx.servletLogger.warn(mess, e);
+                else
+                    ctx.servletLogger.warn(mess+"."+(e.getMessage()==null? e.getClass().getName() : e.getMessage()));
+            }
+            if (ctx.responseContext!=null && ctx.responseContext.getResponseBuilderLogger().isErrorEnabled()) 
+                ctx.responseContext.getResponseBuilderLogger().error(mess, e);
+        } catch (IOException ex) {
+            if (ctx.servletLogger.isErrorEnabled())
+                ctx.servletLogger.error("Error while processing ERROR!", ex);
         }
-        String mess = String.format("Error processing request (%s) from host (%s)", 
-                ctx.request.getPathInfo(), ctx.request.getRemoteAddr());
-        if (ctx.responseService.getNetworkResponseServiceNode().isLogLevelEnabled(LogLevel.WARN)) {
-            Logger logger = ctx.responseService.getNetworkResponseServiceNode().getLogger();
-            if (internalError)
-                logger.warn(mess, e);
-            else
-                logger.warn(mess+"."+(e.getMessage()==null? e.getClass().getName() : e.getMessage()));
-        }
-        if (ctx.responseContext!=null && ctx.responseContext.getResponseBuilderLogger().isErrorEnabled()) 
-            ctx.responseContext.getResponseBuilderLogger().error(mess, e);
     }
     
 //    protected void processError(RequestContext ctx, Throwable e) 
@@ -789,6 +788,7 @@ public class NetworkResponseServlet extends HttpServlet  {
         private volatile boolean responseGenerated = false;
         //timestamps for statistics 
         public final long createdTs = System.currentTimeMillis();
+//        public volatile long 
         public volatile long writeProcessedTs;
         public volatile long channelClosedTs;
         public volatile long builderExecutedTs;
@@ -841,7 +841,7 @@ public class NetworkResponseServlet extends HttpServlet  {
             return writeProcessed.get();
         }
         
-        public void writeProcessed() throws IOException {
+        public void writeProcessed() {
             writeProcessed.set(true);
         }              
        
@@ -856,14 +856,15 @@ public class NetworkResponseServlet extends HttpServlet  {
                     processChannelClose(ev);
                 }
             } else {
+                final long curTime = System.currentTimeMillis();
                 if (   requestStreamRequestTime.get()>0 
-                       && System.currentTimeMillis()>requestStreamRequestTime.get()+REQUEST_STREAM_WAIT_TIMEOUT)
+                       && curTime>requestStreamRequestTime.get()+REQUEST_STREAM_WAIT_TIMEOUT)
                 {
                     if (servletLogger.isWarnEnabled())
                         servletLogger.warn("Request stream read timeout detected! Closing request stream");
                     requestStream.dataStreamClosed();
                 }
-                if (!responseGenerated && System.currentTimeMillis()>createdTs + RESPONSE_GENERATION_TIMEOUT) 
+                if (!responseGenerated && curTime > createdTs + RESPONSE_GENERATION_TIMEOUT) 
                 {
                     if (servletLogger.isWarnEnabled())
                         servletLogger.warn("Response generating by builder timeout detected! Closing channel");

@@ -22,6 +22,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -31,6 +32,8 @@ import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.raven.net.Request;
 import org.raven.net.Response;
+import org.raven.net.ResponsePromise;
+import org.raven.net.ResponseReadyCallback;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.impl.AbstractTask;
 import org.raven.tree.Node;
@@ -96,7 +99,6 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
             configureRequestContext(ctx);
             ctx.responseContext = new CometResponseContext(ctx);
             final Node builderNode = ctx.responseContext.getResponseBuilder().getResponseBuilderNode();
-            final long ts = System.currentTimeMillis();
             executor.execute(new AbstractTask(builderNode, "Processing http request") {                
                 @Override public void doRun() throws Exception {
                     try {
@@ -114,31 +116,15 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
                             ctx.servletLogger.debug("Composing response using builder: "
                                     +ctx.responseContext.getResponseBuilder().getResponseBuilderNode());
                         Response result = ctx.responseContext.getResponse(ctx.user);
-                        ctx.responseGenerated();
-                        ctx.builderProcessedTs = System.currentTimeMillis();
-                        if (debugEnabled)
-                            ctx.servletLogger.debug(String.format(
-                                    "Composed by %sms. Handling response (%s)", 
-                                    System.currentTimeMillis()-ts, result));
-                        processServiceResponse(ce, ctx, result);
-                        ctx.writeProcessedTs = System.currentTimeMillis();
-//                        ce.setTimeout(1);
-                        if (debugEnabled)
-                            ctx.servletLogger.debug("Handled", System.currentTimeMillis()-ts);
+                        if (result instanceof ResponsePromise)
+                            processResponsePromise(ce, ctx, (ResponsePromise)result);
+                        else
+                            processServiceResponse(ce, ctx, result);
                     } catch (Throwable e) {
-                        if (ctx.servletLogger.isErrorEnabled())
-                            ctx.servletLogger.error("Response composing error", e);
-                        try {
-                            processError(ctx, e);
-//                        } catch (IOException ex) {
-//                            ctx.processingException = ex;
-                        } finally {
-//                            if (ctx.processingException==null)
-//                                ctx.response.flushBuffer();
-                            ctx.writeProcessed();                            
-                        }
+                        processResponseError(ctx, e);
                     }
                 }
+
             });
         } catch (Throwable e) {
             processError(ctx, e);
@@ -175,8 +161,44 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
         return ctx;
     }
     
-    private void processServiceResponse(CometEvent ev, RequestContext ctx, Response serviceResponse) throws IOException {
+    private void processResponseError(RequestContext ctx, Throwable e) {
+        if (ctx.servletLogger.isErrorEnabled())
+            ctx.servletLogger.error("Response composing error", e);
         try {
+            processError(ctx, e);
+        } finally {
+            ctx.writeProcessed();                            
+        }
+    }
+    
+    private void processResponsePromise(final CometEvent ev, final RequestContext ctx, 
+            final ResponsePromise responsePromise) 
+    {
+        responsePromise.onComplete(new ResponseReadyCallback() {
+            public void onSuccess(Response response) {
+                try {
+                    processServiceResponse(ev, ctx, response);
+                } catch (Throwable ex) {
+                    processResponseError(ctx, ex);
+                }
+            }
+            public void onError(Throwable e) {
+                processResponseError(ctx, e);
+            }
+        });
+    }
+    
+    private void processServiceResponse(CometEvent ev, RequestContext ctx, Response serviceResponse) 
+            throws IOException 
+    {
+        try {
+            final boolean debugEnabled = ctx.servletLogger.isDebugEnabled();
+            ctx.responseGenerated();
+            ctx.builderProcessedTs = System.currentTimeMillis();
+            if (debugEnabled)
+                ctx.servletLogger.debug(String.format("Composed by %sms. Handling response (%s)"
+                        , System.currentTimeMillis()-ctx.createdTs, serviceResponse));
+            
             if (ctx.responseContext.getResponseBuilderLogger().isDebugEnabled())
                 ctx.responseContext.getResponseBuilderLogger().debug("Builder returned response. Handling");
             if (serviceResponse != Response.ALREADY_COMPOSED && serviceResponse != Response.MANAGING_BY_BUILDER) {
@@ -184,6 +206,12 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
                 ctx.writeProcessed();
             } else if (serviceResponse==Response.MANAGING_BY_BUILDER)
                 ctx.responseManagingByBuilder = true;
+            
+            ctx.writeProcessedTs = System.currentTimeMillis();
+    //                        ce.setTimeout(1);
+            if (debugEnabled)
+                ctx.servletLogger.debug("Handled", System.currentTimeMillis()-ctx.createdTs);
+
 //            if (serviceResponse!=Response.MANAGING_BY_BUILDER) {
 //                try {
 ////                    ev.setTimeout(1);
