@@ -48,6 +48,7 @@ public interface BindingNames
     public static final String DATA_BINDING = "data";
     public final static String DB_CONNECTION = "dbConnection";
     public final static String THROW_HTTP_ERROR_BINDING = "throwHttpError";
+    public final static String SEND_DATA_ASYNC_BINDING = "sendDataAsync";
     public static final String REQUESTER_BINDING = "requester";
     public static final String REQUEST_BINDING = "request";
     public static final String RESPONSE_BINDING = "response";

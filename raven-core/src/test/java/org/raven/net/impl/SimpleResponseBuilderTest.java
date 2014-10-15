@@ -17,6 +17,8 @@
 package org.raven.net.impl;
 
 import groovy.lang.Writable;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
@@ -32,11 +34,21 @@ import org.easymock.IMocksControl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import org.raven.ds.impl.AsyncDataPipe;
 import org.raven.net.Request;
+import org.raven.net.Response;
 import org.raven.net.ResponseContext;
+import org.raven.net.ResponsePromise;
+import org.raven.net.ResponseReadyCallback;
 import org.raven.net.Result;
+import org.raven.sched.ExecutorService;
+import org.raven.sched.impl.ExecutorServiceNode;
+import org.raven.test.DataCollector;
+import org.raven.test.PushDataSource;
 import org.raven.tree.DataFile;
 import org.raven.tree.DataFileException;
+import org.raven.tree.impl.NodeAttributeImpl;
+import org.raven.tree.impl.NodeReferenceValueHandlerFactory;
 
 /**
  *
@@ -46,6 +58,8 @@ public class SimpleResponseBuilderTest extends RavenCoreTestCase {
     private SimpleResponseBuilder builder;
     private Node sriRootNode;    
     private IMocksControl mocks;
+    private PushDataSource ds;
+    private DataCollector collector;
     
     @Before
     public void prepare() {
@@ -225,6 +239,203 @@ public class SimpleResponseBuilderTest extends RavenCoreTestCase {
         assertEquals("text/html", result.getContentType());
         assertEquals("error", result.getContent());
         mocks.verify();        
+    }
+    
+    @Test(timeout = 2000)
+    public void sendDataAsyncTest() throws Exception {
+        BindingsContainer group = createGroup();
+        SimpleResponseBuilder respBuilder = createBuilder(group, "builder", 
+                "res = 'o'; sendDataAsync(node.$ds, node.$consumer, 'test'){\n"
+               + "  res+'k'\n"
+               + "}"
+        );
+        prepareSendAsyncTests(respBuilder);
+        ResponseContext responseContext = trainResponseContext();
+        Map headers = mocks.createMock("headers", Map.class);
+        expect(responseContext.getHeaders()).andReturn(headers);        
+        mocks.replay();
+        
+        Object res = respBuilder.buildResponseContent(null, responseContext);
+        checkPromise(res, "ok", false);
+        mocks.verify();                
+    }
+    
+    @Test(timeout = 2000)
+    public void sendDataAsyncTest2() throws Exception {
+        BindingsContainer group = createGroup();
+        SimpleResponseBuilder respBuilder = createBuilder(group, "builder", 
+                "sendDataAsync(node.$ds, node.$consumer, 'test'){initiator->\n"
+               + "  initiator.path\n"
+               + "}"
+        );
+        prepareSendAsyncTests(respBuilder);
+        ResponseContext responseContext = trainResponseContext();
+        Map headers = mocks.createMock("headers", Map.class);
+        expect(responseContext.getHeaders()).andReturn(headers);        
+        mocks.replay();
+        
+        Object res = respBuilder.buildResponseContent(null, responseContext);
+        checkPromise(res, collector.getPath(), false);
+        mocks.verify();                
+    }
+    
+    @Test(timeout = 2000)
+    public void sendDataAsyncTest3() throws Exception {
+        BindingsContainer group = createGroup();
+        SimpleResponseBuilder respBuilder = createBuilder(group, "builder", 
+                "sendDataAsync(node.$ds, node.$consumer, 'test'){initiator, data->\n"
+               + "  initiator.path+data\n"
+               + "}"
+        );
+        prepareSendAsyncTests(respBuilder);
+        ResponseContext responseContext = trainResponseContext();
+        Map headers = mocks.createMock("headers", Map.class);
+        expect(responseContext.getHeaders()).andReturn(headers);        
+        mocks.replay();
+        
+        Object res = respBuilder.buildResponseContent(null, responseContext);
+        checkPromise(res, collector.getPath()+"test", false);
+        mocks.verify();                
+    }
+    
+    @Test(timeout = 2000)
+    public void sendDataAsyncTest4() throws Exception {
+        BindingsContainer group = createGroup();
+        SimpleResponseBuilder respBuilder = createBuilder(group, "builder", 
+                "ctx = createDataContext()\n"
+               + "sendDataAsync(node.$ds, node.$consumer, ctx, 'test'){\n"
+               + "  'ok'\n"
+               + "}"
+        );
+        prepareSendAsyncTests(respBuilder);
+        ResponseContext responseContext = trainResponseContext();
+        Map headers = mocks.createMock("headers", Map.class);
+        expect(responseContext.getHeaders()).andReturn(headers);        
+        mocks.replay();
+        
+        Object res = respBuilder.buildResponseContent(null, responseContext);
+        checkPromise(res, "ok", false);
+        mocks.verify();                
+    }
+    
+    @Test(timeout = 2000)
+    public void sendDataAsyncTest5() throws Exception {
+        BindingsContainer group = createGroup();
+        SimpleResponseBuilder respBuilder = createBuilder(group, "builder", 
+                "ctx = createDataContext()\n"
+               +"sendDataAsync(node.$ds, node.$consumer, ctx, 'test'){initiator->\n"
+               + "  initiator.path\n"
+               + "}"
+        );
+        prepareSendAsyncTests(respBuilder);
+        ResponseContext responseContext = trainResponseContext();
+        Map headers = mocks.createMock("headers", Map.class);
+        expect(responseContext.getHeaders()).andReturn(headers);        
+        mocks.replay();
+        
+        Object res = respBuilder.buildResponseContent(null, responseContext);
+        checkPromise(res, collector.getPath(), false);
+        mocks.verify();                
+    }    
+    
+    @Test(timeout = 2000)
+    public void sendDataAsyncTest6() throws Exception {
+        BindingsContainer group = createGroup();
+        SimpleResponseBuilder respBuilder = createBuilder(group, "builder", 
+                "ctx = createDataContext()\n"
+               +"sendDataAsync(node.$ds, node.$consumer, ctx, 'test'){initiator, data->\n"
+               + "  initiator.path+data\n"
+               + "}"
+        );
+        prepareSendAsyncTests(respBuilder);
+        ResponseContext responseContext = trainResponseContext();
+        Map headers = mocks.createMock("headers", Map.class);
+        expect(responseContext.getHeaders()).andReturn(headers);        
+        mocks.replay();
+        
+        Object res = respBuilder.buildResponseContent(null, responseContext);
+        checkPromise(res, collector.getPath()+"test", false);
+        mocks.verify();                
+    }
+    
+    @Test(timeout = 2000)
+    public void sendDataAsyncErrorTest() throws Exception {
+        BindingsContainer group = createGroup();
+        SimpleResponseBuilder respBuilder = createBuilder(group, "builder", 
+                "res = 'o'; sendDataAsync(node.$ds, node.$consumer, 'test'){\n"
+               + "  throw new Exception('error')"
+               + "}"
+        );
+        prepareSendAsyncTests(respBuilder);
+        ResponseContext responseContext = trainResponseContext();
+        mocks.replay();
+        
+        Object res = respBuilder.buildResponseContent(null, responseContext);
+        checkPromise(res, "error", true);
+        mocks.verify();                
+    }
+    
+    private void checkPromise(Object res, Object expectContent, boolean waitForError) throws InterruptedException {
+        assertNotNull(res);
+        assertTrue(res instanceof ResponsePromise);
+        final AtomicReference responseRes = new AtomicReference();
+        final AtomicReference<Throwable> responseErr = new AtomicReference();
+        ((ResponsePromise)res).onComplete(new ResponseReadyCallback() {
+            public void onSuccess(Response response) {
+                responseRes.set(response);
+            }
+            public void onError(Throwable e) {
+                responseErr.set(e);
+            }
+        });
+        while (responseRes.get()==null && responseErr.get()==null) 
+            Thread.currentThread().sleep(5);
+        if (!waitForError) {
+            assertTrue(responseRes.get() instanceof Response);
+            Response response = (Response) responseRes.get();
+            assertEquals(expectContent, response.getContent());
+        } else {
+            assertNotNull(responseErr.get());
+            assertEquals(expectContent, responseErr.get().getMessage());
+        }        
+    }
+    
+    private void prepareSendAsyncTests(SimpleResponseBuilder builder ) throws Exception {
+        ExecutorServiceNode executor = new ExecutorServiceNode();
+        executor.setName("executor");
+        testsNode.addAndSaveChildren(executor);
+        executor.setCorePoolSize(4);
+        assertTrue(executor.start());
+        
+        ds = new PushDataSource();
+        ds.setName("ds");
+        testsNode.addAndSaveChildren(ds);
+        assertTrue(ds.start());
+        
+        AsyncDataPipe pipe = new AsyncDataPipe();        
+        pipe.setName("pipe");
+        testsNode.addAndSaveChildren(pipe);
+        pipe.setDataSource(ds);
+        pipe.setHandleDataInSeparateThread(Boolean.TRUE);
+        pipe.setExecutor(executor);
+        assertTrue(pipe.start());
+        
+        collector = new DataCollector();
+        collector.setName("collector");
+        testsNode.addAndSaveChildren(collector);
+        collector.setDataSource(pipe);
+        assertTrue(collector.start());
+        
+        addNodeRefAttr(builder, "ds", ds);
+        addNodeRefAttr(builder, "consumer", collector);
+    }
+    
+    private void addNodeRefAttr(Node owner, String name, Node ref) throws Exception {
+        NodeAttributeImpl attr = new NodeAttributeImpl(name, Node.class, ref.getPath(), null);
+        attr.setOwner(owner);
+        attr.setValueHandlerType(NodeReferenceValueHandlerFactory.TYPE);
+        attr.init();
+        owner.addAttr(attr);
     }
     
     private BindingsContainer createGroup() throws NodeError {

@@ -24,11 +24,17 @@ import javax.servlet.http.HttpServletResponse;
 import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.api.impl.ApiUtils;
 import org.raven.auth.UserContext;
+import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
+import org.raven.ds.DataSource;
+import org.raven.ds.impl.DataContextImpl;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
 import org.raven.net.HttpError;
 import org.raven.net.NetworkResponseService;
+import org.raven.net.Response;
 import org.raven.net.ResponseContext;
 import org.raven.tree.Node;
 import org.weda.annotations.constraints.NotNull;
@@ -61,6 +67,7 @@ public class SimpleResponseBuilder extends AbstractResponseBuilder {
             bindingSupport.put(BindingNames.RESULT_BINDING, createResultClosure());
             bindingSupport.put(BindingNames.PROPAGATE_EXPRESSION_EXCEPTION, null);
             bindingSupport.put(BindingNames.THROW_HTTP_ERROR_BINDING, createHttpErrorClosure());
+            bindingSupport.put(BindingNames.SEND_DATA_ASYNC_BINDING, createSendDataAsyncClosure(responseContext));
             try {
                 return responseContent;
             } catch (HttpError e) {
@@ -185,6 +192,77 @@ public class SimpleResponseBuilder extends AbstractResponseBuilder {
             
             public Object doCall(int status, FileResponseBuilder builder, Map params) throws Throwable {
                 return new ResultImpl(status, doCall(builder, params));
+            }
+        };
+    }
+    
+    private Closure createSendDataAsyncClosure(final ResponseContext responseContext) {
+        return new Closure(this) {
+            private final ResponsePromiseImpl promise = new ResponsePromiseImpl();
+            
+            public Object doCall(DataSource source, DataConsumer target, Object data, Closure callback) throws Exception {
+                DataContext context = new DataContextImpl();
+                return doCall(source, target, context, data, callback);
+            }
+            
+            public Object doCall(DataSource source, DataConsumer target, DataContext ctx, Object data, Closure callback) throws Exception {
+                switch (callback.getMaximumNumberOfParameters()) {
+                    case 0 : ctx.addCallbackOnEach(createCallback0(callback));
+                    case 1 : ctx.addCallbackOnEach(createCallback1(callback));
+                    case 2 : ctx.addCallbackOnEach(createCallback2(callback));
+                }
+                ApiUtils.sendData(source, target, ctx, data);
+                return promise;
+            }
+            
+            private Closure createCallback0(final Closure callback) {
+                return new Closure(this) {
+                    public Object doCall() {
+                        processResult(callback);
+                        return null;
+                    }
+                };
+            }
+            
+            private Closure createCallback1(final Closure callback) {
+                return new Closure(this) {
+                    public Object doCall(Node initiator) {
+                        processResult(callback, initiator);
+                        return null;
+                    }
+                };
+            }
+            
+            private Closure createCallback2(final Closure callback) {
+                return new Closure(this) {
+                    public Object doCall(Node initiator, Object data) {
+                        processResult(callback, initiator, data);
+                        return null;
+                    }
+                };
+            }
+            
+            private void processResult(Closure callback, Object... args) {
+                try {
+                    Object res = callback.call(args);
+                    createResponse(res);
+                } catch (HttpError e) {
+                    createResponse(new ResultImpl(e.getStatusCode(), e.getContent(), e.getContentType()));
+                } catch (Throwable e) {
+                    promise.error(e);
+                }
+            }
+            
+            private void createResponse(Object res) {
+                if (res instanceof Response)
+                    promise.success((Response)res);
+                else
+                    try {
+                        promise.success(new ResponseImpl(getContentType(), res, responseContext.getHeaders(), 
+                                    doGetLastModified(), getContentCharset()));
+                    } catch (Exception e) {
+                        promise.error(e);
+                    }
             }
         };
     }

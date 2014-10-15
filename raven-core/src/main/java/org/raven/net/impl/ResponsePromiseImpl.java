@@ -23,22 +23,50 @@ import org.raven.net.ResponseReadyCallback;
  *
  * @author Mikhail Titov
  */
-public class ResponsePromiseImpl extends Response.DummyResponse implements ResponsePromise{
+public class ResponsePromiseImpl extends Response.DummyResponse implements ResponsePromise {
+    private Response response;
+    private Throwable error;
+    private ResponseReadyCallback callback;
 
     public ResponsePromiseImpl() {
         super(null);
     }
     
     public void success(Response res) {
-        
+        ResponseReadyCallback _callback = null;
+        synchronized(this) {
+            this.response = res;
+            _callback = callback;
+        }
+        if (_callback!=null)
+            _callback.onSuccess(response);
     }
     
     public void error(Throwable ex) {
-        
+        ResponseReadyCallback _callback = null;
+        synchronized(this) {
+            this.error = ex;
+            _callback = callback;
+        }
+        if (_callback!=null)
+            _callback.onError(error);
     }
 
     public void onComplete(ResponseReadyCallback callback) {
-        
+        Response _response = null;
+        Throwable _error = null;
+        synchronized(this) {
+            if (response==null && error==null)
+                this.callback = callback;
+            else {
+                _response = response;
+                _error = error;
+            }
+        }
+        if      (_response!=null)
+            callback.onSuccess(response);
+        else if (_error!=null)
+            callback.onError(error);                
     }
     
 }
