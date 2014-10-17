@@ -19,6 +19,7 @@ package org.raven.sched.impl;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ForkJoinPool;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenUtils;
@@ -49,7 +50,7 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         tree.getRootNode().addAndSaveChildren(executor);
     }
     
-//    @Test
+    @Test
     public void test() throws ExecutorServiceException, InterruptedException, IOException, Exception
     {
         executor.setCorePoolSize(2);
@@ -126,7 +127,7 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         assertEquals(1l, executor.getRejectedTasks().get());
     }
 
-    @Test
+//    @Test
     public void delayedTasksTest() throws InterruptedException {
         executor.setCorePoolSize(2);
         executor.setMaximumPoolSize(2);
@@ -148,7 +149,7 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         assertTrue(task3.time < task2.time);
     }
     
-    @Test
+//    @Test
     public void cancelDelayedTaskTest() throws InterruptedException {
         executor.setCorePoolSize(2);
         executor.setMaximumPoolSize(2);
