@@ -93,42 +93,52 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
                     ce.getEventType(), ce, request.getRequestURI()));            
         request.setAttribute(REQUEST_CONTEXT, ctx);
         try {
-//            final ExecutorService executor = ctx.responseService.getExecutor();
-//            if (executor==null)
-//                throw new ServletException("Comet servlet can't work without executor service");
             configureRequestContext(ctx);
             ctx.responseContext = new CometResponseContext(ctx);
             final Node builderNode = ctx.responseContext.getResponseBuilder().getResponseBuilderNode();
-//            executor.execute(new AbstractTask(builderNode, "Processing http request") {                
-//                @Override public void doRun() throws Exception {
-                    try {
-                        ctx.builderExecutedTs = System.currentTimeMillis();
-                        final boolean isMultipart = ServletFileUpload.isMultipartContent(request);
-                        if (isMultipart) {
-                            if (debugEnabled)
-                                ctx.servletLogger.debug("Processing multipart content");
-                            parseMultipartContentParams(ctx.responseContext.getRequest().getParams(), ctx.request, 
-                                    ctx.responseService);
-                            if (debugEnabled)
-                                ctx.servletLogger.debug("Multipart content processed");
-                        }
-                        if (debugEnabled)
-                            ctx.servletLogger.debug("Composing response using builder: "
-                                    +ctx.responseContext.getResponseBuilder().getResponseBuilderNode());
-                        Response result = ctx.responseContext.getResponse(ctx.user);
-                        if (result instanceof ResponsePromise)
-                            processResponsePromise(ce, ctx, (ResponsePromise)result);
-                        else
-                            processServiceResponse(ce, ctx, result);
-                    } catch (Throwable e) {
-                        processResponseError(ctx, e);
+            if (request.getContentType()==null)
+                startReponseProcessing(ctx, request, debugEnabled, ce);
+            else {
+                final ExecutorService executor = ctx.responseService.getExecutor();
+                if (executor==null)
+                    throw new ServletException("Comet servlet can't work without executor service");
+                executor.execute(new AbstractTask(builderNode, "Processing http request") {
+                    @Override public void doRun() throws Exception {
+                        startReponseProcessing(ctx, request, debugEnabled, ce);                        
                     }
-//                }
-//
-//            });
+                });                
+            }
         } catch (Throwable e) {
             processError(ctx, e);
         }
+    }
+
+    public void startReponseProcessing(final RequestContext ctx, final HttpServletRequest request, final boolean debugEnabled, final CometEvent ce) {
+        try {
+            ctx.builderExecutedTs = System.currentTimeMillis();
+            final boolean isMultipart = ServletFileUpload.isMultipartContent(request);
+            if (isMultipart) {
+                if (debugEnabled)
+                    ctx.servletLogger.debug("Processing multipart content");
+                parseMultipartContentParams(ctx.responseContext.getRequest().getParams(), ctx.request,
+                        ctx.responseService);
+                if (debugEnabled)
+                    ctx.servletLogger.debug("Multipart content processed");
+            }
+            if (debugEnabled)
+                ctx.servletLogger.debug("Composing response using builder: "
+                        +ctx.responseContext.getResponseBuilder().getResponseBuilderNode());
+            Response result = ctx.responseContext.getResponse(ctx.user);
+            if (result instanceof ResponsePromise)
+                processResponsePromise(ce, ctx, (ResponsePromise)result);
+            else
+                processServiceResponse(ce, ctx, result);
+        } catch (Throwable e) {
+            processResponseError(ctx, e);
+        }
+//                }
+//
+//            });
     }
 
     @Override
