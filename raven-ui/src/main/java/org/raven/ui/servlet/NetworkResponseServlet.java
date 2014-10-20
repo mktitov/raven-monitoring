@@ -795,6 +795,7 @@ public class NetworkResponseServlet extends HttpServlet  {
         public volatile long builderProcessedTs;
         public volatile long waitForCloseTs;
         public volatile long redBytes = 0;
+        public volatile AtomicBoolean dataStreamClosed = new AtomicBoolean();
 //        public final Atomic
         private final AtomicReference<CometEvent> readProcessed = new AtomicReference<CometEvent>();
         private final AtomicBoolean writeProcessed = new AtomicBoolean();
@@ -898,16 +899,21 @@ public class NetworkResponseServlet extends HttpServlet  {
         }
 
         public void pushBuffer(ByteBuf buf) {
-            requestStream.pushBuffer(buf);
             redBytes += buf.readableBytes();
+            requestStream.pushBuffer(buf);
         }
 
         public long getRedBytes() {
             return redBytes;
         }
+        
+        public boolean isDataStreamClosed() {
+            return dataStreamClosed.get();
+        }
 
         public void dataStreamClosed() {
-            requestStream.dataStreamClosed();
+            if (dataStreamClosed.compareAndSet(false, true))
+                requestStream.dataStreamClosed();
         }
 
         public Reader getRequestReader() throws IOException {

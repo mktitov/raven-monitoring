@@ -261,6 +261,12 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
 
     private void processReadEvent(CometEvent ce) throws IOException {
         final RequestContext ctx = getRequestContext(ce);
+        
+        if (ctx.isDataStreamClosed()) {
+            if (ctx.servletLogger.isDebugEnabled())
+                ctx.servletLogger.debug("Request stream already PROCESSED. Ignoring READ event");
+            return;
+        }
         if (ctx.servletLogger.isDebugEnabled())
             ctx.servletLogger.debug("Request content length: {}", ctx.request.getContentLength());
         if (ctx.canPushBuffer()) {
@@ -284,7 +290,7 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
                     } catch (IOException e) {
                         eos = true;
                         if (!(e instanceof EOFException) && ctx.servletLogger.isErrorEnabled())
-                            ctx.servletLogger.warn("Error while reading request content stream.");
+                            ctx.servletLogger.warn("Error while reading request content stream.", e);
                         break;
                     }
 
