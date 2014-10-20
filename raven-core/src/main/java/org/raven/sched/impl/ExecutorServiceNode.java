@@ -22,6 +22,8 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import org.apache.commons.pool.PoolableObjectFactory;
+import org.apache.commons.pool.impl.GenericObjectPool;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.log.LogLevel;
@@ -38,6 +40,7 @@ import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.AbstractActionViewableObject;
 import org.raven.tree.impl.BaseNode;
+import org.raven.tree.impl.LoggerHelper;
 import org.raven.tree.impl.ViewableObjectImpl;
 import org.raven.util.LoadAverageStatistic;
 import org.raven.util.NodeUtils;
@@ -83,6 +86,9 @@ public class ExecutorServiceNode extends BaseNode
 
     @NotNull @Parameter(defaultValue=""+CHECK_MANAGED_TASKS_INTERVAL)
     private Long checkManagedTasksInterval;
+    
+    @NotNull @Parameter(defaultValue="false")
+    private Boolean cacheTaskWrappers;
 
     @Message private String interruptDisplayMessage;
     @Message private String interruptConfirmationMessage;
@@ -91,13 +97,14 @@ public class ExecutorServiceNode extends BaseNode
     private ThreadPoolExecutor executor;
     private ScheduledThreadPoolExecutor scheduledExecutor;
     private BlockingQueue queue;
-    private Collection<TaskWrapper> executingTasks;
+    private Collection<AbstractTaskWrapper> executingTasks;
     private Set<Node> managedTasks;
     private DelayQueue<DelayedTaskWrapper> delayedTasks;
     private AtomicLong taskIdCounter;
     private volatile long maxExecutionWaitTime;
     private volatile long avgExecutionWaitTime;
     private Lock waitTimeLock;
+    private GenericObjectPool taskWrappersPool;
 
     @Override
     protected void initFields() {
@@ -105,6 +112,7 @@ public class ExecutorServiceNode extends BaseNode
         executor = null;
         queue = null;
         executingTasks = null;
+        taskWrappersPool = null;
         rejectedTasks = new AtomicLong();
         executedTasks = new OperationStatistic();
         taskIdCounter = new AtomicLong();
@@ -126,9 +134,13 @@ public class ExecutorServiceNode extends BaseNode
         managedTasks = new HashSet<Node>();
         executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, timeUnit, queue);
         executor.execute(new TaskWrapper(new DelayedTaskExecutor()));
+        loadAverage = new LoadAverageStatistic(300000, maximumPoolSize);
+        if (cacheTaskWrappers)
+            taskWrappersPool = new GenericObjectPool(new TaskWrapperObjectPoolFactory(), 
+                    maximumPoolSize+(capacity==null?0:capacity), 
+                    GenericObjectPool.WHEN_EXHAUSTED_FAIL, 0, corePoolSize);
         delayedTasks.add(new DelayedTaskWrapper(new TasksManagerTask(checkManagedTasksInterval)
                 , checkManagedTasksInterval, delayedTasks));
-        loadAverage = new LoadAverageStatistic(300000, maximumPoolSize);
     }
 
     @Override
@@ -146,18 +158,17 @@ public class ExecutorServiceNode extends BaseNode
         try {
             if (Status.STARTED.equals(getStatus())) { 
 //                getLogger().debug("Executing: "+task.getStatusMessage());
-                executor.execute(new TaskWrapper(task));
+                executor.execute(getTaskWrapper(task));
             }
-        } catch (RejectedExecutionException e) {
+        } catch (Exception e) {
             rejectedTasks.incrementAndGet();
             String message = String.format(
-                        "Error executing task for node (%s). Executor service does not have " +
-                        "the free thread for task execution"
+                        "Error executing task for node (%s)"
                         , task.getTaskNode().getPath());
             if (isLogLevelEnabled(LogLevel.ERROR))
-                error(message, e);
+                getLogger().error(message, e);
             throw new ExecutorServiceException(message, e);
-        }
+        } 
     }
 
     public void execute(long delay, Task task) throws ExecutorServiceException {
@@ -186,6 +197,16 @@ public class ExecutorServiceNode extends BaseNode
                 task.getTaskNode().getLogger().error(String.format(
                         "Error executing delayed task (%s)", task.getStatusMessage()));
             return false;
+        }
+    }
+    
+    private AbstractTaskWrapper getTaskWrapper(Task task) throws Exception {
+        if (taskWrappersPool==null) 
+            return new TaskWrapper(task);
+        else {
+            PoolableTaskWrapper taskWrapper = (PoolableTaskWrapper)taskWrappersPool.borrowObject();
+            taskWrapper.init(task);
+            return taskWrapper;
         }
     }
 
@@ -244,6 +265,14 @@ public class ExecutorServiceNode extends BaseNode
 
     public void setCheckManagedTasksInterval(Long checkManagedTasksInterval) {
         this.checkManagedTasksInterval = checkManagedTasksInterval;
+    }
+
+    public Boolean getCacheTaskWrappers() {
+        return cacheTaskWrappers;
+    }
+
+    public void setCacheTaskWrappers(Boolean cacheTaskWrappers) {
+        this.cacheTaskWrappers = cacheTaskWrappers;
     }
 
     public AtomicLong getRejectedTasks() {
@@ -315,9 +344,9 @@ public class ExecutorServiceNode extends BaseNode
         TableImpl table = new TableImpl(new String[]{"", "Node submited the task", "Status"
                 , "Is Managed task?", "Execution start time", "Execution duration (sec)", "Thread status"
                 , "Stack trace"});
-        Collection<TaskWrapper> taskList = executingTasks;
+        Collection<AbstractTaskWrapper> taskList = executingTasks;
         if (taskList != null) {
-            for (TaskWrapper task : taskList) {
+            for (AbstractTaskWrapper task : taskList) {
                 String date = null;
                 if (task.getExecutionStart() != 0) 
                     date = converter.convert(String.class, new Date(task.getExecutionStart())
@@ -341,7 +370,7 @@ public class ExecutorServiceNode extends BaseNode
                             , interruptDisplayMessage, interruptCompletionMessage, this, thread);
                 table.addRow(new Object[]{interruptAction, task.getTaskNode().getPath()
                         , task.getStatusMessage()
-                        , task.task instanceof ManagedTask ? "<b style='color:green'>Yes</b>" : "No"
+                        , task.getTask() instanceof ManagedTask ? "<b style='color:green'>Yes</b>" : "No"
                         , date, task.getExecutionDuation(), threadStatus, traceVO});
             }
         }
@@ -391,36 +420,12 @@ public class ExecutorServiceNode extends BaseNode
     {
         return true;
     }
-
-    private class TaskWrapper implements Task, Comparable
-    {
-        private final Task task;
-        private final Long id;
-        private final long created = System.nanoTime();
+    
+    private abstract class AbstractTaskWrapper implements Task, Comparable {
         private long executionStart;
         private Thread thread;
-
-        public TaskWrapper(Task task) {
-            this.task = task;
-            id = taskIdCounter.incrementAndGet();
-        }
-
-        public Long getId() {
-            return id;
-        }
-
-        public Thread getThread() {
-            return thread;
-        }
-
-        public Node getTaskNode() {
-            return task.getTaskNode();
-        }
-
-        public String getStatusMessage() {
-            return task.getStatusMessage();
-        }
-
+        
+        
         public long getExecutionStart() {
             return executionStart;
         }
@@ -428,18 +433,40 @@ public class ExecutorServiceNode extends BaseNode
         public long getExecutionDuation() {
             return executionStart==0? 0 : (System.currentTimeMillis() - executionStart)/1000;
         }
+        
+        public Thread getThread() {
+            return thread;
+        }
 
+
+        public Node getTaskNode() {
+            return getTask().getTaskNode();
+        }
+
+        public String getStatusMessage() {
+            return getTask().getStatusMessage();
+        }
+
+        public int compareTo(Object o) {
+            return Long.compare(getId(), ((AbstractTaskWrapper)o).getId());
+        }
+        
+        protected abstract Task getTask();
+        protected abstract long getCreated();
+        protected abstract long getId();
+        
         public void run() {
-            aggExecutionWaitTime(System.nanoTime()-created);
+            aggExecutionWaitTime(System.nanoTime()-getCreated());
             thread = Thread.currentThread();
             executionStart = executedTasks.markOperationProcessingStart();
             long startTime = System.currentTimeMillis();
             boolean enableTaskExecution = true;
+            final Task _task = getTask();
             try {
                 try {
-                    if (task instanceof ManagedTask) {
+                    if (_task instanceof ManagedTask) {
                         synchronized(managedTasksLock) {
-                            ManagedTask managedTask = (ManagedTask) task;
+                            ManagedTask managedTask = (ManagedTask) _task;
                             if (managedTasks.contains(managedTask)) {
                                 enableTaskExecution = false;
                                 if (isLogLevelEnabled(LogLevel.WARN))
@@ -450,14 +477,14 @@ public class ExecutorServiceNode extends BaseNode
                         }
                     } else if (isLogLevelEnabled(LogLevel.DEBUG))
                         debug(String.format(
-                                "Executing task for node (%s)", task.getTaskNode().getPath()));
+                                "Executing task for node (%s)", _task.getTaskNode().getPath()));
                     if (enableTaskExecution) {
                         executingTasks.add(this);
-                        task.run();
+                        _task.run();
                     }
                 } catch(Throwable e) {
                     if (isLogLevelEnabled(LogLevel.ERROR))
-                        error(String.format("Error executing task for node (%s)", task.getTaskNode().getPath())
+                        error(String.format("Error executing task for node (%s)", _task.getTaskNode().getPath())
                                 , e);
                 }
             } finally {
@@ -466,20 +493,173 @@ public class ExecutorServiceNode extends BaseNode
                 Collection executingTasksList = executingTasks;
                 if (executingTasksList!=null)
                     executingTasksList.remove(this);
-                if (enableTaskExecution && task instanceof ManagedTask) {
+                if (enableTaskExecution && _task instanceof ManagedTask) {
                     Collection<Node> _managedTasks = managedTasks;
-                    ManagedTask managedTask = (ManagedTask) task;
+                    ManagedTask managedTask = (ManagedTask) _task;
                     if (_managedTasks!=null)
                         synchronized(managedTasksLock) {
                             _managedTasks.remove(managedTask);
                         }
                 }
+                thread = null;
+                
+            }            
+        }
+
+    }
+
+    private class TaskWrapper extends AbstractTaskWrapper
+    {
+        private final Task task;
+        private final Long id;
+        private final long created = System.nanoTime();
+//        private long executionStart;
+//        private Thread thread;
+
+        public TaskWrapper(Task task) {
+            this.task = task;
+            id = taskIdCounter.incrementAndGet();
+        }
+
+        public long getId() {
+            return id;
+        }
+        
+        @Override
+        protected Task getTask() {
+            return task;
+        }
+
+        @Override
+        protected long getCreated() {
+            return created;
+        }
+
+//        public Thread getThread() {
+//            return thread;
+//        }
+
+//        public Node getTaskNode() {
+//            return task.getTaskNode();
+//        }
+//
+//        public String getStatusMessage() {
+//            return task.getStatusMessage();
+//        }
+//
+//        public long getExecutionStart() {
+//            return executionStart;
+//        }
+//
+//        public long getExecutionDuation() {
+//            return executionStart==0? 0 : (System.currentTimeMillis() - executionStart)/1000;
+//        }
+
+//        public void run() {
+//            aggExecutionWaitTime(System.nanoTime()-created);
+//            thread = Thread.currentThread();
+//            executionStart = executedTasks.markOperationProcessingStart();
+//            long startTime = System.currentTimeMillis();
+//            boolean enableTaskExecution = true;
+//            try {
+//                try {
+//                    if (task instanceof ManagedTask) {
+//                        synchronized(managedTasksLock) {
+//                            ManagedTask managedTask = (ManagedTask) task;
+//                            if (managedTasks.contains(managedTask)) {
+//                                enableTaskExecution = false;
+//                                if (isLogLevelEnabled(LogLevel.WARN))
+//                                    getLogger().warn("Skipping executing the task ({}). "
+//                                            + "The task is already executing", managedTask.getPath());
+//                            } else 
+//                                managedTasks.add(managedTask);
+//                        }
+//                    } else if (isLogLevelEnabled(LogLevel.DEBUG))
+//                        debug(String.format(
+//                                "Executing task for node (%s)", task.getTaskNode().getPath()));
+//                    if (enableTaskExecution) {
+//                        executingTasks.add(this);
+//                        task.run();
+//                    }
+//                } catch(Throwable e) {
+//                    if (isLogLevelEnabled(LogLevel.ERROR))
+//                        error(String.format("Error executing task for node (%s)", task.getTaskNode().getPath())
+//                                , e);
+//                }
+//            } finally {
+//                executedTasks.markOperationProcessingEnd(executionStart);
+//                loadAverage.addDuration(System.currentTimeMillis()-startTime);
+//                Collection executingTasksList = executingTasks;
+//                if (executingTasksList!=null)
+//                    executingTasksList.remove(this);
+//                if (enableTaskExecution && task instanceof ManagedTask) {
+//                    Collection<Node> _managedTasks = managedTasks;
+//                    ManagedTask managedTask = (ManagedTask) task;
+//                    if (_managedTasks!=null)
+//                        synchronized(managedTasksLock) {
+//                            _managedTasks.remove(managedTask);
+//                        }
+//                }
+//            }
+//        }
+//
+//        public int compareTo(Object o) {
+//            return id.compareTo(((TaskWrapper)o).getId());
+//        }
+
+    }
+    
+    private class PoolableTaskWrapper extends AbstractTaskWrapper {
+        private final TaskWrapperObjectPoolFactory factory;
+        private Task task;
+        private long created;
+        private long id;
+
+        public PoolableTaskWrapper(TaskWrapperObjectPoolFactory factory) {
+            this.factory = factory;
+        }
+        
+        public void init(Task task) {
+            this.task = task;
+            this.id = taskIdCounter.incrementAndGet();
+            this.created = System.nanoTime();
+        }
+        
+        public void reset() {
+            this.task = null;
+            id = 0l;
+            created = 0l;
+        }
+
+        @Override
+        protected Task getTask() {
+            return task;
+        }
+
+        @Override
+        protected long getCreated() {
+            return created;
+        }
+
+        @Override
+        protected long getId() {
+            return id;
+        }        
+
+        @Override
+        public void run() {
+            try {
+                super.run();
+            } finally {
+                try {
+                    factory.passivateObject(this);
+                } catch (Exception ex) {
+                    if (isLogLevelEnabled(LogLevel.ERROR))
+                        getLogger().error("Error on task wrapper passivating", ex);
+                }
             }
         }
 
-        public int compareTo(Object o) {
-            return id.compareTo(((TaskWrapper)o).getId());
-        }
     }
 
     private class DelayedTaskWrapper implements Delayed, CancelationProcessor {
@@ -561,9 +741,11 @@ public class ExecutorServiceNode extends BaseNode
     private class TasksManagerTask implements Task {
         private final long restartInterval;
         private final static long RESTART_TIMEOUT = 10000;
+        private final LoggerHelper logger;
 
         public TasksManagerTask(long restartInterval) {
             this.restartInterval = restartInterval;
+            this.logger = new LoggerHelper(ExecutorServiceNode.this, "Managed task reexecutor. ");
         }
 
         public Node getTaskNode() {
@@ -573,21 +755,33 @@ public class ExecutorServiceNode extends BaseNode
         public String getStatusMessage() {
             return "Managed tasks reexecutor";
         }
+        
+        private void evictTaskWrappers() {
+            if (taskWrappersPool!=null) {
+                try {
+                    taskWrappersPool.evict();
+                } catch (Exception ex) {
+                    if (logger.isErrorEnabled())
+                        logger.error("Error evicting task wrappers pool", ex);
+                }
+            }
+        }
 
         public void run() {
             try {
+                evictTaskWrappers();
                 List<ManagedTask> tasksToStart = new LinkedList<ManagedTask>();
                 for (ManagedTask task: NodeUtils.extractNodesOfType(getDependentNodes(), ManagedTask.class)) {
                     boolean hasTask = false;
-                    if (isLogLevelEnabled(LogLevel.DEBUG))
-                        getLogger().debug("Managed tasks reexecutor. Found managed task ({})", task.getPath());
+                    if (logger.isDebugEnabled())
+                        logger.debug("Found managed task ({})", task.getPath());
                     synchronized(managedTasksLock) {
                         hasTask = managedTasks==null || !managedTasks.contains(task);
                     }
                     if (hasTask) {
                         try {
-                            if (isLogLevelEnabled(LogLevel.DEBUG))
-                                getLogger().debug("Managed tasks reexecutor. Reexecuting task ({})", task.getPath());
+                            if (logger.isDebugEnabled())
+                                logger.debug("Reexecuting task ({})", task.getPath());
                             switch (task.getTaskRestartPolicy()) {
                                 case REEXECUTE_TASK: execute(task); break;
                                 case RESTART_NODE:
@@ -598,13 +792,13 @@ public class ExecutorServiceNode extends BaseNode
                                     break;
                             }
                         } catch (Throwable e){
-                            if (isLogLevelEnabled(LogLevel.ERROR))
-                                getLogger().error(
+                            if (logger.isErrorEnabled())
+                                logger.error(
                                         String.format("Error reexecuting the task (%s)", task.getPath())
                                         , e);
                         }
-                    } else if (isLogLevelEnabled(LogLevel.DEBUG))
-                        getLogger().debug("Managed task reexecutor. Task ({}) already executing", task.getPath());
+                    } else if (logger.isDebugEnabled())
+                        logger.debug("Managed task reexecutor. Task ({}) already executing", task.getPath());
                 }
                 long ts = System.currentTimeMillis();
                 while (!tasksToStart.isEmpty() && System.currentTimeMillis()<ts+RESTART_TIMEOUT) {
@@ -625,4 +819,24 @@ public class ExecutorServiceNode extends BaseNode
             }
         }
     }
+    
+    private class TaskWrapperObjectPoolFactory implements PoolableObjectFactory {
+
+        public Object makeObject() throws Exception {
+            return new PoolableTaskWrapper(this);
+        }
+
+        public void destroyObject(Object obj) throws Exception {
+        }
+
+        public boolean validateObject(Object obj) {
+            return true;
+        }
+
+        public void activateObject(Object obj) throws Exception {
+        }
+
+        public void passivateObject(Object obj) throws Exception {
+        }        
+    } 
 }

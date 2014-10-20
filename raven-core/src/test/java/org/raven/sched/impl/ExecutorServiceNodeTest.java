@@ -47,10 +47,11 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
     public void prepare() {
         executor = new ExecutorServiceNode();
         executor.setName("executor");
-        tree.getRootNode().addAndSaveChildren(executor);
+        testsNode.addAndSaveChildren(executor);
+        executor.setCacheTaskWrappers(Boolean.TRUE);
     }
     
-    @Test
+//    @Test
     public void test() throws ExecutorServiceException, InterruptedException, IOException, Exception
     {
         executor.setCorePoolSize(2);
@@ -202,7 +203,7 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         assertEquals(2, task.getRestartCount());
     }
 
-//    @Test
+    @Test
     public  void singleManagedTaskExecutionTest() throws Exception {
         executor.setCheckManagedTasksInterval(500l);
         assertTrue(executor.start());
