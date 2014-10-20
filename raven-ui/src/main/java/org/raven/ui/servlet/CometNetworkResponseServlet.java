@@ -96,18 +96,18 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
             configureRequestContext(ctx);
             ctx.responseContext = new CometResponseContext(ctx);
             final Node builderNode = ctx.responseContext.getResponseBuilder().getResponseBuilderNode();
-            if (request.getContentType()==null)
-                startReponseProcessing(ctx, request, debugEnabled, ce);
-            else {
+            if (request.getContentType()!=null || !"GET".equals(request.getMethod()) || request.getContentLength()>0)
+            {
                 final ExecutorService executor = ctx.responseService.getExecutor();
                 if (executor==null)
                     throw new ServletException("Comet servlet can't work without executor service");
-                executor.execute(new AbstractTask(builderNode, "Processing http request") {
+                executor.execute(new AbstractTask(builderNode, ctx.servletLogger.getPrefix()+"Processing http request") {
                     @Override public void doRun() throws Exception {
                         startReponseProcessing(ctx, request, debugEnabled, ce);                        
                     }
                 });                
-            }
+            } else 
+                startReponseProcessing(ctx, request, debugEnabled, ce);
         } catch (Throwable e) {
             processError(ctx, e);
         }
