@@ -20,14 +20,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
-import org.raven.net.ContextUnavailableException;
 import org.raven.net.NetworkResponseService;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.Node;
@@ -37,6 +32,7 @@ import static org.junit.Assert.assertTrue;
 import org.raven.TestScheduler;
 import org.raven.cache.TemporaryFileManagerNode;
 import org.raven.log.LogLevel;
+import org.raven.net.ContextUnavailableException;
 import org.raven.net.Request;
 import org.raven.net.Response;
 import org.raven.net.ResponseContext;
@@ -67,7 +63,7 @@ public class ZipFileResponseBuilderTest extends RavenCoreTestCase {
         mocks = createControl();
     }
     
-//    @Test(expected = ContextUnavailableException.class)
+    @Test(expected = ContextUnavailableException.class)
     public void nullSubcontextTest() throws Exception {
         ResponseContext respconseContext = trainResponseContext();
         expect(params.get(NetworkResponseServiceNode.SUBCONTEXT_PARAM)).andReturn(null);
@@ -76,7 +72,7 @@ public class ZipFileResponseBuilderTest extends RavenCoreTestCase {
         mocks.verify();
     }
     
-//    @Test(expected = ContextUnavailableException.class)
+    @Test(expected = ContextUnavailableException.class)
     public void entryNotFoundTest() throws Exception {
         ResponseContext respconseContext = trainResponseContext();
         expect(params.get(NetworkResponseServiceNode.SUBCONTEXT_PARAM)).andReturn("unknown");
@@ -85,7 +81,7 @@ public class ZipFileResponseBuilderTest extends RavenCoreTestCase {
         mocks.verify();
     }
     
-//    @Test
+    @Test
     public void successTest() throws Exception {
         ResponseContext respconseContext = trainResponseContext();
         expect(params.get(NetworkResponseServiceNode.SUBCONTEXT_PARAM)).andReturn("folder/2.txt");
@@ -154,12 +150,12 @@ public class ZipFileResponseBuilderTest extends RavenCoreTestCase {
 //        assertFalse(hasError.get());
     }
     
-//    @Test
+    @Test
     public void baseDirTest() throws Exception {
         testBaseDir("folder");
     }
     
-//    @Test
+    @Test
     public void baseDirTest2() throws Exception {
         testBaseDir("folder/");
     }

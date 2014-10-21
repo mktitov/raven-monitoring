@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.activation.DataSource;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
@@ -79,12 +80,12 @@ public class ZipFileResponseBuilder extends AbstractResponseBuilder implements V
     @Parameter
     private TemporaryFileManager temporaryFileManager;
     
-    private ReentrantLock tempFileLock;
+    private ReentrantReadWriteLock tempFileLock;
 
     @Override
     protected void initFields() {
         super.initFields();
-        tempFileLock = new ReentrantLock();
+        tempFileLock = new ReentrantReadWriteLock();
     }
 
     @Override
@@ -121,18 +122,29 @@ public class ZipFileResponseBuilder extends AbstractResponseBuilder implements V
     }
     
     private File getUnpackedArchiveDir(String contextPath, TemporaryFileManager tempManager) throws Exception {
-        DataFile _file = file;
-        String key = getTempFileKey(_file);
-        File dir = tempManager.getFile(key);
+        final DataFile _file = file;
+        final String key = getTempFileKey(_file);
+        File dir = getUnpackedArchiveDir(tempManager, key);
         if (dir==null) 
             dir = unpackArchiveToTempDir(key, contextPath, tempManager);
+        return dir;
+    }
+
+    private File getUnpackedArchiveDir(TemporaryFileManager tempManager, final String key) throws InterruptedException {
+        File dir = null;
+        if (tempFileLock.readLock().tryLock(60, TimeUnit.SECONDS))
+            try {
+                dir = tempManager.getFile(key);
+            } finally {
+                tempFileLock.readLock().unlock();
+            }
         return dir;
     }
     
     private File unpackArchiveToTempDir(String key, String contextPath, TemporaryFileManager tempManager) 
             throws Exception 
     {
-        if (tempFileLock.tryLock(60, TimeUnit.SECONDS)) 
+        if (tempFileLock.writeLock().tryLock(60, TimeUnit.SECONDS)) 
             try {
                 File dir = tempManager.getFile(key);
                 if (dir!=null) 
@@ -150,10 +162,10 @@ public class ZipFileResponseBuilder extends AbstractResponseBuilder implements V
                         if (!entry.isDirectory()) {
                             if (isLogLevelEnabled(LogLevel.TRACE))
                                 getLogger().debug("Unpacking file {} in zip archive", entry.getName());
-                            File file = new File(dir, entry.getName());
-                            if (!file.getParentFile().exists())
-                                file.getParentFile().mkdirs();
-                            FileOutputStream out = new FileOutputStream(file);
+                            File _file = new File(dir, entry.getName());
+                            if (!_file.getParentFile().exists())
+                                _file.getParentFile().mkdirs();
+                            FileOutputStream out = new FileOutputStream(_file);
                             try {
                                 IOUtils.copy(stream, out);
                             } finally  {
@@ -167,39 +179,39 @@ public class ZipFileResponseBuilder extends AbstractResponseBuilder implements V
                 }  
                 return dir;
             } finally {
-                tempFileLock.unlock();
+                tempFileLock.writeLock().unlock();
             }
         throw new ContextUnavailableException("Timeout for wating while arhive copied to temporary file");
     }
     
-    private InputStream getDataStreamFromTempFile(String filename, String contextPath, 
-            TemporaryFileManager tempManager) 
-        throws Exception 
-    {
-        DataFile _file = file;
-        String key = getTempFileKey(_file);
-        DataSource tempFile = tempManager.getDataSource(key);
-        if (tempFile==null)
-            tempFile = createTempFile(key, contextPath, tempManager);
-        else if (isLogLevelEnabled(LogLevel.DEBUG))
-            getLogger().debug("Found zip arhive in temporary file manager");
-        return tempFile.getInputStream();
-    }
-    
-    private DataSource createTempFile(String key, String contextPath, TemporaryFileManager tempManager) throws Exception {
-        if (tempFileLock.tryLock(60, TimeUnit.SECONDS)) 
-            try {
-                if (isLogLevelEnabled(LogLevel.DEBUG))
-                    getLogger().debug("Creating temporary file for zip archive");
-                DataSource tempFile = tempManager.getDataSource(key);
-                if (tempFile!=null)
-                    return tempFile;
-                return tempManager.saveFile(this, key, getDataStream(contextPath), "application/zip", true);
-            } finally {
-                tempFileLock.unlock();
-            }
-        throw new ContextUnavailableException("Timeout for wating while arhive copied to temporary file");
-    }
+//    private InputStream getDataStreamFromTempFile(String filename, String contextPath, 
+//            TemporaryFileManager tempManager) 
+//        throws Exception 
+//    {
+//        DataFile _file = file;
+//        String key = getTempFileKey(_file);
+//        DataSource tempFile = tempManager.getDataSource(key);
+//        if (tempFile==null)
+//            tempFile = createTempFile(key, contextPath, tempManager);
+//        else if (isLogLevelEnabled(LogLevel.DEBUG))
+//            getLogger().debug("Found zip arhive in temporary file manager");
+//        return tempFile.getInputStream();
+//    }
+//    
+//    private DataSource createTempFile(String key, String contextPath, TemporaryFileManager tempManager) throws Exception {
+//        if (tempFileLock.tryLock(60, TimeUnit.SECONDS)) 
+//            try {
+//                if (isLogLevelEnabled(LogLevel.DEBUG))
+//                    getLogger().debug("Creating temporary file for zip archive");
+//                DataSource tempFile = tempManager.getDataSource(key);
+//                if (tempFile!=null)
+//                    return tempFile;
+//                return tempManager.saveFile(this, key, getDataStream(contextPath), "application/zip", true);
+//            } finally {
+//                tempFileLock.unlock();
+//            }
+//        throw new ContextUnavailableException("Timeout for wating while arhive copied to temporary file");
+//    }
     
     private InputStream getDataStream(String contextPath) throws Exception {
         InputStream dataStream = file.getDataStream();
