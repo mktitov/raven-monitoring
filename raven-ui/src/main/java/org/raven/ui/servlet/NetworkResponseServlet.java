@@ -846,7 +846,12 @@ public class NetworkResponseServlet extends HttpServlet  {
             writeProcessed.set(true);
         }              
        
-        public void closeChannel(CometEvent ev) throws IOException, ServletException {                        
+        public void closeChannel(CometEvent ev) throws IOException, ServletException {
+            if (closed.get()) {
+                if (servletLogger.isDebugEnabled())
+                    servletLogger.debug("Can't close channel because of it already closed");
+                return;
+            }
             if (writeProcessed.get()) {
                 waitForCloseTs = System.currentTimeMillis();
                 channelClosedTs = System.currentTimeMillis();
@@ -879,10 +884,16 @@ public class NetworkResponseServlet extends HttpServlet  {
         }
 
         private void processChannelClose(CometEvent ev) throws IOException {
-            ev.close();
-            responseContext.channelClosed();
-            if (servletLogger.isDebugEnabled())
-                servletLogger.debug("Channel CLOSED");
+            if (closed.compareAndSet(false, true)) {
+                IOUtils.closeQuietly(ev.getHttpServletRequest().getInputStream());
+                ev.close();
+                responseContext.channelClosed();
+                if (servletLogger.isDebugEnabled())
+                    servletLogger.debug("Channel CLOSED");
+            } else {
+                if (servletLogger.isDebugEnabled())
+                    servletLogger.debug("Trying to close channel but it already closed. Ignoring");                
+            }
         }
         
         public void logStat() {

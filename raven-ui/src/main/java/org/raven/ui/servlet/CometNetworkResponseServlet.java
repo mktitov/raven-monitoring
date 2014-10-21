@@ -30,6 +30,7 @@ import org.apache.catalina.CometEvent;
 import org.apache.catalina.CometProcessor;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.IOUtils;
 import org.raven.net.Request;
 import org.raven.net.Response;
 import org.raven.net.ResponsePromise;
@@ -84,12 +85,12 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
     private void initResponseProcessing(final CometEvent ce, final HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException
     {
-        final RequestContext ctx = createContext(request, response);
+        final RequestContext ctx = createContext(request, response);        
 //        request.setAttribute("org.apache.tomcat.comet.timeout", 5); //30 seconds	
         request.setAttribute("org.apache.tomcat.comet.timeout", 1000); //30 seconds	
         final boolean debugEnabled = ctx.servletLogger.isDebugEnabled();
         if (debugEnabled) 
-            ctx.servletLogger.debug(String.format("Processing %s event (id: %s) for URI: %s", 
+            ctx.servletLogger.debug(String.format("Initializing request processing (%s event) (id: %s) for URI: %s", 
                     ce.getEventType(), ce, request.getRequestURI()));            
         request.setAttribute(REQUEST_CONTEXT, ctx);
         try {
@@ -153,6 +154,7 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
         try {
             if (ctx!=null) {
                 ctx.dataStreamClosed();
+//                IOUtils.closeQuietly(ev.getHttpServletRequest().getInputStream());
                 ctx.closeChannel(ev);                
             }
         } finally {
@@ -167,8 +169,7 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
     }
 
     private RequestContext getRequestContext(CometEvent ev) {
-        final RequestContext ctx = (RequestContext) ev.getHttpServletRequest().getAttribute(REQUEST_CONTEXT);
-        return ctx;
+        return (RequestContext) ev.getHttpServletRequest().getAttribute(REQUEST_CONTEXT);
     }
     
     private void processResponseError(RequestContext ctx, Throwable e) {
@@ -303,8 +304,9 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
                             written, ctx.getRedBytes()));
                 if (eos || ctx.request.getContentLength()==ctx.getRedBytes()) {
                     if (ctx.servletLogger.isDebugEnabled())
-                        ctx.servletLogger.debug("End of stream detected. Closing");
+                        ctx.servletLogger.debug("End of stream detected. Closing request stream");
                     ctx.dataStreamClosed();
+//                    IOUtils.closeQuietly(stream);
                 }
             }
         } else if (ctx.servletLogger.isDebugEnabled())
