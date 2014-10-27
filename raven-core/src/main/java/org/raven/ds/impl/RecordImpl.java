@@ -83,14 +83,30 @@ public class RecordImpl implements Record
                     "Error setting value (%s) for field (%s)", value, fieldName), e);
         }
     }
+    
+    private Object getDefFieldValue(RecordSchemaField field) {
+        Object val = field.getFieldDefaultValue();
+        if (val==null)
+            return null;
+        else 
+            return converter.convert(field.getFieldType().getType(), val, field.getPattern());
+    }
+    
+    private Object getFieldValue(Object val, RecordSchemaField field) {
+        return val!=null? val : getDefFieldValue(field);
+    }
+
+    private Object getFieldValue(RecordSchemaField field) {
+        final Object val = values.get(field.getName());
+        return val!=null? val : getDefFieldValue(field);
+    }
 
     public Object getValue(String fieldName) throws RecordException
     {
         RecordSchemaField field = fields.get(fieldName);
         if (field==null)
             throw new InvalidRecordFieldException(fieldName, schema.getName());
-
-        return values.get(fieldName);
+        return getFieldValue(field);
     }
 
     public Object getAt(String fieldName) throws RecordException
@@ -107,7 +123,7 @@ public class RecordImpl implements Record
         Map<String, Object> res = new HashMap<String, Object>(values);
         for (String fieldName: fields.keySet())
             if (!res.containsKey(fieldName))
-                res.put(fieldName, null);
+                res.put(fieldName, getDefFieldValue(fields.get(fieldName)));
         return res;
     }
 
@@ -158,12 +174,14 @@ public class RecordImpl implements Record
     {
         return tags==null? Collections.EMPTY_MAP : tags;
     }
+    
+//    private Object getFieldValue(String field) {
 
     public RecordValidationErrors validate()
     {
         RecordValidationErrorsImpl errors = null;
         for (RecordSchemaField field: fields.values()) {
-            Collection<String> fieldErrors = field.validate(values.get(field.getName()));
+            Collection<String> fieldErrors = field.validate(getFieldValue(field));
             if (fieldErrors!=null){
                 if (errors==null)
                     errors = new RecordValidationErrorsImpl(schema.getName());
@@ -185,7 +203,7 @@ public class RecordImpl implements Record
     @Override
     public String toString()
     {
-        return "Schema: "+schema.getName()+"; field values: "+values.toString();
+        return "Schema: "+schema.getName()+"; field values: "+getValues().toString();
     }
 
 }

@@ -28,6 +28,7 @@ import org.raven.ds.RecordSchemaField;
 import org.raven.ds.RecordSchemaFieldType;
 import org.raven.ds.ReferenceValuesSource;
 import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.BaseNode;
 import org.raven.util.NodeUtils;
 import org.weda.annotations.constraints.NotNull;
@@ -48,6 +49,8 @@ import org.weda.internal.annotations.Message;
     })
 public class RecordSchemaFieldNode extends BaseNode implements RecordSchemaField
 {
+    private static final String DEFAULT_VALUE_ATTR = "defaultValue";
+    
     @Parameter
     private String displayName;
 
@@ -90,18 +93,10 @@ public class RecordSchemaFieldNode extends BaseNode implements RecordSchemaField
         this.pattern = pattern;
     }
 
-    public <E> E getFieldExtension(Class<E> extensionType, String extensionName)
-    {
-        Collection<Node> childs = getChildrens();
-        if (childs!=null && childs.size()>0)
-            for (Node child: childs)
-                if (   Status.STARTED==child.getStatus()
-                    && extensionType.isAssignableFrom(child.getClass())
-                    && (extensionName==null || extensionName.equals(child.getName())))
-                {
-                    return (E)child;
-                }
-
+    public <E> E getFieldExtension(Class<E> extensionType, String extensionName) {
+        for (E ext: NodeUtils.getChildsOfType(this, extensionType))
+            if (extensionName==null || extensionName.equals(((Node)ext).getName()))
+                return ext;
         return null;
     }
 
@@ -110,13 +105,12 @@ public class RecordSchemaFieldNode extends BaseNode implements RecordSchemaField
         return getFieldExtension(ReferenceValuesSource.class, null);
     }
 
-    public Collection<String> validate(Object value)
-    {
-        Object val = null;
+    public Collection<String> validate(Object value) {
+        Object val;
         Class type = getFieldType().getType();
-        try{
+        try {
             val = converter.convert(type, value, getPattern());
-        }catch(TypeConverterException e){
+        } catch(TypeConverterException e) {
             return Arrays.asList(String.format(conversationErrorMessage, value, type.getName()));
         }
         List<ValueValidator> validators =
@@ -145,7 +139,7 @@ public class RecordSchemaFieldNode extends BaseNode implements RecordSchemaField
             Node owner, String name, String displayName
             , RecordSchemaFieldType type, String pattern)
     {
-        if (owner.getChildren(name)!=null)
+        if (owner.getNode(name)!=null)
             return null;
         RecordSchemaFieldNode field = new RecordSchemaFieldNode();
         field.setName(name);
@@ -155,5 +149,10 @@ public class RecordSchemaFieldNode extends BaseNode implements RecordSchemaField
         field.setPattern(pattern);
         field.start();
         return field;
+    }
+
+    public Object getFieldDefaultValue() {
+        NodeAttribute attr = getAttr(DEFAULT_VALUE_ATTR);
+        return attr==null? null : attr.getRealValue();
     }
 }

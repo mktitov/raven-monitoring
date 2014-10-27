@@ -52,4 +52,8 @@ public interface RecordSchemaField extends ValueValidatorController
      * reference values.
      */
     public ReferenceValuesSource getReferenceValuesSource();
+    /**
+     * Returns default value for field
+     */
+    public Object getFieldDefaultValue();
 }
