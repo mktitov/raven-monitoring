@@ -268,7 +268,7 @@ public class Attr implements Comparable<Attr>
 			nw.saveRefreshAttributes();
 		else
 		{
-			nw.saveWithoutWrite();
+			nw.save(true);
 			nw.loadAttributes();
 		}
 	}
