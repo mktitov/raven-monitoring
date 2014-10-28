@@ -25,6 +25,7 @@ import org.raven.annotations.Parameter;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.Record;
+import org.raven.ds.RecordSchema;
 import org.raven.ds.impl.CsvRecordReaderNode.FieldInfo;
 import org.raven.expr.BindingSupport;
 import org.raven.log.LogLevel;
@@ -84,8 +85,9 @@ public class CsvLineToRecordNode extends AbstractSafeDataPipe
     @Override
     protected void doSetData(DataSource dataSource, Object data, DataContext context) throws Exception {
         if (data!=null) {
+            RecordSchema _recordSchema = _getRecordSchema(context, data, dataSource);
             Map<String, FieldInfo> fieldsColumns = CsvRecordReaderNode.getFieldsColumns(
-                    recordSchema, csvExtensionName, dataSource, context, tree, bindingSupport);
+                    _recordSchema, csvExtensionName, dataSource, context, tree, bindingSupport);
             if (fieldsColumns==null) {
                 if (isLogLevelEnabled(LogLevel.WARN))
                     debug(String.format(
@@ -123,6 +125,17 @@ public class CsvLineToRecordNode extends AbstractSafeDataPipe
             }
         } else 
             sendDataToConsumers(null, context);
+    }
+
+    private RecordSchema _getRecordSchema(DataContext context, Object data, DataSource dataSource) {
+        bindingSupport.put(BindingNames.DATA_CONTEXT_BINDING, context);
+        bindingSupport.put(BindingNames.DATA_BINDING, data);
+        bindingSupport.put(BindingNames.DATASOURCE_BINDING, dataSource);
+        try {
+            return recordSchema;
+        } finally {
+            bindingSupport.reset();
+        }
     }
 
     @Override
