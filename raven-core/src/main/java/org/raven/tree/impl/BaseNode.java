@@ -23,7 +23,6 @@ import groovy.lang.MissingPropertyException;
 import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -1591,7 +1590,7 @@ public class BaseNode implements Node, NodeListener, Logger
 		return sb.toString();
 	}	
 	
-        public boolean isLogLevelEnabled(LogLevel level) {
+    public boolean isLogLevelEnabled(LogLevel level) {
 		return getLogLevel().ordinal() <= level.ordinal();
 	}
 
@@ -1602,138 +1601,147 @@ public class BaseNode implements Node, NodeListener, Logger
 	}
 
 	public void debug(String arg0, Object arg1) {
-		sl4jLogger.debug(arg0,arg1);
-		if(getLogLevel().ordinal() <= LogLevel.DEBUG.ordinal())
-		{
+		if(getLogLevel().ordinal() <= LogLevel.DEBUG.ordinal()) {
+            sl4jLogger.debug(arg0,arg1);
 			String x = MessageFormatter.format(arg0,arg1);
 			nodeLogger.write(this, LogLevel.DEBUG, x);
 		}	
 	}
 
 	public void debug(String arg0, Object[] arg1) {
-		sl4jLogger.debug(arg0,arg1);
-		if(getLogLevel().ordinal() <= LogLevel.DEBUG.ordinal())
-		{
+		if(getLogLevel().ordinal() <= LogLevel.DEBUG.ordinal()) {
+            sl4jLogger.debug(arg0,arg1);
 			String x = MessageFormatter.arrayFormat(arg0, arg1);
 			nodeLogger.write(this, LogLevel.DEBUG, x);
 		}	
 	}
 
-	public void debug(String arg0, Throwable arg1) 
-	{
-		sl4jLogger.debug(arg0,arg1);
-		if(getLogLevel().ordinal() <= LogLevel.DEBUG.ordinal())
+	public void debug(String arg0, Throwable arg1) {
+		if(getLogLevel().ordinal() <= LogLevel.DEBUG.ordinal()) {
+            sl4jLogger.debug(arg0,arg1);
 			nodeLogger.write(this, LogLevel.DEBUG, arg0 +" : "+ getTrace(arg1));
+        }
 	}
 
 	public void debug(Marker arg0, String arg1) {
-		sl4jLogger.debug(arg0,arg1);
+		if(getLogLevel().ordinal() <= LogLevel.DEBUG.ordinal()) {
+    		sl4jLogger.debug(arg0,arg1);
+        }
 	}
 
 	public void debug(String arg0, Object arg1, Object arg2) {
-		sl4jLogger.debug(arg0,arg1,arg2);
-		if(getLogLevel().ordinal() <= LogLevel.DEBUG.ordinal())
-		{
+		if(getLogLevel().ordinal() <= LogLevel.DEBUG.ordinal()) {
+            sl4jLogger.debug(arg0,arg1,arg2);
 			String x = MessageFormatter.format(arg0, arg1, arg2);
 			nodeLogger.write(this, LogLevel.DEBUG, x);
 		}	
 	}
 
 	public void debug(Marker arg0, String arg1, Object arg2) {
-		sl4jLogger.debug(arg0,arg1,arg2);
+		if(getLogLevel().ordinal() <= LogLevel.DEBUG.ordinal()) {
+    		sl4jLogger.debug(arg0,arg1,arg2);
+        }
 	}
 
 	public void debug(Marker arg0, String arg1, Object[] arg2) {
-		sl4jLogger.debug(arg0,arg1,arg2);
+		if(getLogLevel().ordinal() <= LogLevel.DEBUG.ordinal()) 
+    		sl4jLogger.debug(arg0,arg1,arg2);
 	}
 
 	public void debug(Marker arg0, String arg1, Throwable arg2) {
-		sl4jLogger.debug(arg0,arg1,arg2);
+		if(getLogLevel().ordinal() <= LogLevel.DEBUG.ordinal()) 
+    		sl4jLogger.debug(arg0,arg1,arg2);
 	}
 
 	public void debug(Marker arg0, String arg1, Object arg2, Object arg3) {
-		sl4jLogger.debug(arg0,arg1,arg2,arg3);
+		if(getLogLevel().ordinal() <= LogLevel.DEBUG.ordinal()) 
+    		sl4jLogger.debug(arg0,arg1,arg2,arg3);
 	}
 
 	public void trace(String arg0) {
-		sl4jLogger.trace(arg0);
-		if(getLogLevel().ordinal() <= LogLevel.TRACE.ordinal())
+		if(getLogLevel().ordinal() <= LogLevel.TRACE.ordinal()) {
+    		sl4jLogger.trace(arg0);
 			nodeLogger.write(this, LogLevel.TRACE, arg0);
+        }
 	}
 
 	public void trace(String arg0, Object arg1) {
-		sl4jLogger.trace(arg0,arg1);
-		if(getLogLevel().ordinal() <= LogLevel.TRACE.ordinal())
-		{
+		if(getLogLevel().ordinal() <= LogLevel.TRACE.ordinal()) {
+        	sl4jLogger.trace(arg0,arg1);
 			String x = MessageFormatter.format(arg0,arg1);
 			nodeLogger.write(this, LogLevel.TRACE, x);
 		}	
 	}
 
 	public void trace(String arg0, Object[] arg1) {
-		sl4jLogger.trace(arg0,arg1);
-		if(getLogLevel().ordinal() <= LogLevel.TRACE.ordinal())
-		{
+		if(getLogLevel().ordinal() <= LogLevel.TRACE.ordinal()) {
+            sl4jLogger.trace(arg0,arg1);
 			String x = MessageFormatter.arrayFormat(arg0, arg1);
 			nodeLogger.write(this, LogLevel.TRACE, x);
 		}	
 	}
 
-	public void trace(String arg0, Throwable arg1) 
-	{
-		sl4jLogger.trace(arg0,arg1);
-		if(getLogLevel().ordinal() <= LogLevel.TRACE.ordinal())
+	public void trace(String arg0, Throwable arg1) 	{
+		if(getLogLevel().ordinal() <= LogLevel.TRACE.ordinal()) {
+            sl4jLogger.trace(arg0,arg1);
 			nodeLogger.write(this, LogLevel.TRACE, arg0 +" : "+ getTrace(arg1));
+        }
 	}
 
 	public void trace(Marker arg0, String arg1) {
-		sl4jLogger.trace(arg0,arg1);
+		if(getLogLevel().ordinal() <= LogLevel.DEBUG.ordinal()) 
+    		sl4jLogger.trace(arg0,arg1);
 	}
 
 	public void trace(String arg0, Object arg1, Object arg2) {
-		sl4jLogger.trace(arg0,arg1,arg2);
 		if(getLogLevel().ordinal() <= LogLevel.TRACE.ordinal())
 		{
+            sl4jLogger.trace(arg0,arg1,arg2);
 			String x = MessageFormatter.format(arg0, arg1, arg2);
 			nodeLogger.write(this, LogLevel.TRACE, x);
 		}	
 	}
 
 	public void trace(Marker arg0, String arg1, Object arg2) {
-		sl4jLogger.trace(arg0,arg1,arg2);
+		if(getLogLevel().ordinal() <= LogLevel.DEBUG.ordinal()) 
+    		sl4jLogger.trace(arg0,arg1,arg2);
 	}
 
 	public void trace(Marker arg0, String arg1, Object[] arg2) {
-		sl4jLogger.trace(arg0,arg1,arg2);
+		if(getLogLevel().ordinal() <= LogLevel.DEBUG.ordinal()) 
+    		sl4jLogger.trace(arg0,arg1,arg2);
 	}
 
 	public void trace(Marker arg0, String arg1, Throwable arg2) {
-		sl4jLogger.trace(arg0,arg1,arg2);
+		if(getLogLevel().ordinal() <= LogLevel.DEBUG.ordinal()) 
+    		sl4jLogger.trace(arg0,arg1,arg2);
 	}
 
 	public void trace(Marker arg0, String arg1, Object arg2, Object arg3) {
-		sl4jLogger.trace(arg0,arg1,arg2,arg3);
+		if(getLogLevel().ordinal() <= LogLevel.DEBUG.ordinal()) 
+            sl4jLogger.trace(arg0,arg1,arg2,arg3);
 	}
 
 	public void info(String arg0) {
-		sl4jLogger.info(arg0);
-		if(getLogLevel().ordinal() <= LogLevel.INFO.ordinal())
+		if(getLogLevel().ordinal() <= LogLevel.INFO.ordinal()) {
+            sl4jLogger.info(arg0);
 			nodeLogger.write(this, LogLevel.INFO, arg0);
+        }
 	}
 
 	public void info(String arg0, Object arg1) {
-		sl4jLogger.info(arg0,arg1);
 		if(getLogLevel().ordinal() <= LogLevel.INFO.ordinal())
 		{
+            sl4jLogger.info(arg0,arg1);
 			String x = MessageFormatter.format(arg0,arg1);
 			nodeLogger.write(this, LogLevel.INFO, x);
 		}	
 	}
 
 	public void info(String arg0, Object[] arg1) {
-		sl4jLogger.info(arg0,arg1);
 		if(getLogLevel().ordinal() <= LogLevel.INFO.ordinal())
 		{
+            sl4jLogger.info(arg0,arg1);
 			String x = MessageFormatter.arrayFormat(arg0, arg1);
 			nodeLogger.write(this, LogLevel.INFO, x);
 		}	
@@ -1741,120 +1749,133 @@ public class BaseNode implements Node, NodeListener, Logger
 
 	public void info(String arg0, Throwable arg1) 
 	{
-		sl4jLogger.info(arg0,arg1);
-		if(getLogLevel().ordinal() <= LogLevel.INFO.ordinal())
+		if(getLogLevel().ordinal() <= LogLevel.INFO.ordinal()) {
+            sl4jLogger.info(arg0,arg1);
 			nodeLogger.write(this, LogLevel.INFO, arg0 +" : "+ getTrace(arg1));
+        }
 	}
 
 	public void info(Marker arg0, String arg1) {
-		sl4jLogger.info(arg0,arg1);
+		if(getLogLevel().ordinal() <= LogLevel.INFO.ordinal())
+            sl4jLogger.info(arg0,arg1);
 	}
 
 	public void info(String arg0, Object arg1, Object arg2) {
-		sl4jLogger.info(arg0,arg1,arg2);
 		if(getLogLevel().ordinal() <= LogLevel.INFO.ordinal())
 		{
+            sl4jLogger.info(arg0,arg1,arg2);
 			String x = MessageFormatter.format(arg0, arg1, arg2);
 			nodeLogger.write(this, LogLevel.INFO, x);
 		}	
 	}
 
 	public void info(Marker arg0, String arg1, Object arg2) {
-		sl4jLogger.info(arg0,arg1,arg2);
+		if(getLogLevel().ordinal() <= LogLevel.INFO.ordinal())
+            sl4jLogger.info(arg0,arg1,arg2);
 	}
 
 	public void info(Marker arg0, String arg1, Object[] arg2) {
-		sl4jLogger.info(arg0,arg1,arg2);
+        if(getLogLevel().ordinal() <= LogLevel.INFO.ordinal())
+            sl4jLogger.info(arg0,arg1,arg2);
 	}
 
 	public void info(Marker arg0, String arg1, Throwable arg2) {
-		sl4jLogger.info(arg0,arg1,arg2);
+		if(getLogLevel().ordinal() <= LogLevel.INFO.ordinal())
+            sl4jLogger.info(arg0,arg1,arg2);
 	}
 
 	public void info(Marker arg0, String arg1, Object arg2, Object arg3) {
-		sl4jLogger.info(arg0,arg1,arg2,arg3);
+		if(getLogLevel().ordinal() <= LogLevel.INFO.ordinal())
+            sl4jLogger.info(arg0,arg1,arg2,arg3);
 	}
 
 	public void warn(String arg0) {
-		sl4jLogger.warn(arg0);
-		if(getLogLevel().ordinal() <= LogLevel.WARN.ordinal())
+		if(getLogLevel().ordinal() <= LogLevel.WARN.ordinal()) {
+            sl4jLogger.warn(arg0);
 			nodeLogger.write(this, LogLevel.WARN, arg0);
+        }
 	}
 
 	public void warn(String arg0, Object arg1) {
-		sl4jLogger.warn(arg0,arg1);
 		if(getLogLevel().ordinal() <= LogLevel.WARN.ordinal())
 		{
+            sl4jLogger.warn(arg0,arg1);
 			String x = MessageFormatter.format(arg0,arg1);
 			nodeLogger.write(this, LogLevel.WARN, x);
 		}	
 	}
 
 	public void warn(String arg0, Object[] arg1) {
-		sl4jLogger.warn(arg0,arg1);
 		if(getLogLevel().ordinal() <= LogLevel.WARN.ordinal())
 		{
+            sl4jLogger.warn(arg0,arg1);
 			String x = MessageFormatter.arrayFormat(arg0, arg1);
 			nodeLogger.write(this, LogLevel.WARN, x);
 		}	
 	}
 
 	public void warn(String arg0, Throwable arg1) {
-		sl4jLogger.warn(arg0,arg1);
 		if(getLogLevel().ordinal() <= LogLevel.WARN.ordinal())
 		{
+            sl4jLogger.warn(arg0,arg1);
 			nodeLogger.write(this, LogLevel.WARN, arg0 +" : "+ getTrace(arg1));
 		}	
 	}
 
 	public void warn(Marker arg0, String arg1) {
-		sl4jLogger.warn(arg0,arg1);
+		if(getLogLevel().ordinal() <= LogLevel.WARN.ordinal())
+            sl4jLogger.warn(arg0,arg1);
 	}
 
 	public void warn(String arg0, Object arg1, Object arg2) {
-		sl4jLogger.warn(arg0,arg1,arg2);
 		if(getLogLevel().ordinal() <= LogLevel.WARN.ordinal())
 		{
+            sl4jLogger.warn(arg0,arg1,arg2);
 			String x = MessageFormatter.format(arg0, arg1, arg2);
 			nodeLogger.write(this, LogLevel.WARN, x);
 		}	
 	}
 
 	public void warn(Marker arg0, String arg1, Object arg2) {
-		sl4jLogger.warn(arg0,arg1,arg2);
+		if(getLogLevel().ordinal() <= LogLevel.WARN.ordinal())
+            sl4jLogger.warn(arg0,arg1,arg2);
 	}
 
 	public void warn(Marker arg0, String arg1, Object[] arg2) {
-		sl4jLogger.warn(arg0,arg1,arg2);
+		if(getLogLevel().ordinal() <= LogLevel.WARN.ordinal())
+            sl4jLogger.warn(arg0,arg1,arg2);
 	}
 
 	public void warn(Marker arg0, String arg1, Throwable arg2) {
-		sl4jLogger.warn(arg0,arg1,arg2);
+		if(getLogLevel().ordinal() <= LogLevel.WARN.ordinal())
+            sl4jLogger.warn(arg0,arg1,arg2);
 	}
 
 	public void warn(Marker arg0, String arg1, Object arg2, Object arg3) {
-		sl4jLogger.warn(arg0,arg1,arg2,arg3);
+		if(getLogLevel().ordinal() <= LogLevel.WARN.ordinal())
+            sl4jLogger.warn(arg0,arg1,arg2,arg3);
 	}
 
 	public void error(String arg0) {
-		sl4jLogger.error(arg0);
-		if(getLogLevel().ordinal() <= LogLevel.ERROR.ordinal())
+		if(getLogLevel().ordinal() <= LogLevel.ERROR.ordinal()) {
+            sl4jLogger.error(arg0);
 			nodeLogger.write(this, LogLevel.ERROR, arg0);
+        }
 	}
 
 	public void error(String arg0, Object arg1) {
-		sl4jLogger.error(arg0,arg1);
 		if(getLogLevel().ordinal() <= LogLevel.ERROR.ordinal())
 		{
+            sl4jLogger.error(arg0,arg1);
 			String x = MessageFormatter.format(arg0,arg1);
 			nodeLogger.write(this, LogLevel.ERROR, x);
 		}	
 	}
 
 	public void error(String arg0, Object[] arg1) {
-		sl4jLogger.error(arg0,arg1);
 		if(getLogLevel().ordinal() <= LogLevel.ERROR.ordinal())
 		{
+            sl4jLogger.error(arg0,arg1);
 			String x = MessageFormatter.arrayFormat(arg0, arg1);
 			nodeLogger.write(this, LogLevel.ERROR, x);
 		}	
@@ -1862,78 +1883,84 @@ public class BaseNode implements Node, NodeListener, Logger
 
 	public void error(String arg0, Throwable arg1) 
 	{
-		sl4jLogger.error(arg0,arg1);
-		if(getLogLevel().ordinal() <= LogLevel.ERROR.ordinal())
+		if(getLogLevel().ordinal() <= LogLevel.ERROR.ordinal()) {
+            sl4jLogger.error(arg0,arg1);
 			nodeLogger.write(this, LogLevel.ERROR, arg0 +" : "+ getTrace(arg1));
+        }
 	}
 
 	public void error(Marker arg0, String arg1) {
-		sl4jLogger.error(arg0,arg1);
+		if(getLogLevel().ordinal() <= LogLevel.ERROR.ordinal())
+            sl4jLogger.error(arg0,arg1);
 	}
 
 	public void error(String arg0, Object arg1, Object arg2) {
-		sl4jLogger.error(arg0,arg1,arg2);
 		if(getLogLevel().ordinal() <= LogLevel.ERROR.ordinal())
 		{
+            sl4jLogger.error(arg0,arg1,arg2);
 			String x = MessageFormatter.format(arg0, arg1, arg2);
 			nodeLogger.write(this, LogLevel.ERROR, x);
 		}	
 	}
 
 	public void error(Marker arg0, String arg1, Object arg2) {
-		sl4jLogger.error(arg0,arg1,arg2);
+		if(getLogLevel().ordinal() <= LogLevel.ERROR.ordinal())
+            sl4jLogger.error(arg0,arg1,arg2);
 	}
 
 	public void error(Marker arg0, String arg1, Object[] arg2) {
-		sl4jLogger.error(arg0,arg1,arg2);
+		if(getLogLevel().ordinal() <= LogLevel.ERROR.ordinal())
+            sl4jLogger.error(arg0,arg1,arg2);
 	}
 
 	public void error(Marker arg0, String arg1, Throwable arg2) {
-		sl4jLogger.error(arg0,arg1,arg2);
+		if(getLogLevel().ordinal() <= LogLevel.ERROR.ordinal())
+            sl4jLogger.error(arg0,arg1,arg2);
 	}
 
 	public void error(Marker arg0, String arg1, Object arg2, Object arg3) {
-		sl4jLogger.error(arg0,arg1,arg2,arg3);
+		if(getLogLevel().ordinal() <= LogLevel.ERROR.ordinal())
+            sl4jLogger.error(arg0,arg1,arg2,arg3);
 	}
 
 	public boolean isDebugEnabled() {
-		return sl4jLogger.isDebugEnabled();
+		return isLogLevelEnabled(LogLevel.DEBUG);
 	}
 
 	public boolean isDebugEnabled(Marker arg0) {
-		return sl4jLogger.isDebugEnabled(arg0);
+		return isLogLevelEnabled(LogLevel.DEBUG) && sl4jLogger.isDebugEnabled(arg0);
 	}
 
 	public boolean isErrorEnabled() {
-		return sl4jLogger.isErrorEnabled();
+		return isLogLevelEnabled(LogLevel.ERROR);
 	}
 
 	public boolean isErrorEnabled(Marker arg0) {
-		return sl4jLogger.isErrorEnabled(arg0);
+		return sl4jLogger.isErrorEnabled(arg0) && isLogLevelEnabled(LogLevel.ERROR);
 	}
 
 	public boolean isInfoEnabled() {
-		return sl4jLogger.isInfoEnabled();
+		return isLogLevelEnabled(LogLevel.INFO);
 	}
 
 	public boolean isInfoEnabled(Marker arg0) {
-		return sl4jLogger.isInfoEnabled(arg0);
+		return sl4jLogger.isInfoEnabled(arg0) && isLogLevelEnabled(LogLevel.INFO);
 	}
 
 	public boolean isTraceEnabled() {
-		return sl4jLogger.isTraceEnabled();
+		return isLogLevelEnabled(LogLevel.TRACE);
 	}
 
 	public boolean isTraceEnabled(Marker arg0) {
-		return sl4jLogger.isTraceEnabled(arg0);
+		return sl4jLogger.isTraceEnabled(arg0) && isLogLevelEnabled(LogLevel.TRACE);
 	}
 
 	public boolean isWarnEnabled() {
-		return sl4jLogger.isWarnEnabled();
+		return isLogLevelEnabled(LogLevel.WARN);
 	}
 
 	public boolean isWarnEnabled(Marker arg0) {
-		return sl4jLogger.isWarnEnabled(arg0);
+		return sl4jLogger.isWarnEnabled(arg0) && isLogLevelEnabled(LogLevel.WARN);
 	}
 
 	public String getPrefix() {
