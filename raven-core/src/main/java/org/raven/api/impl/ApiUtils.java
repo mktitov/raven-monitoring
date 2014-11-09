@@ -35,6 +35,7 @@ import org.raven.ds.DataSource;
 import org.raven.ds.DataContext;
 import org.raven.ds.impl.DataContextImpl;
 import org.raven.ds.impl.ListDataConsumer;
+import org.raven.net.HttpError;
 import org.raven.table.Table;
 import org.raven.template.impl.TemplateNode;
 import org.raven.template.impl.TemplateWizard;
@@ -208,6 +209,15 @@ public class ApiUtils
         return parser.parse(jsonReader);
     }
     
+    public static void throwHttpError(int statusCode, String contentType, String content) {
+        throw new HttpError(statusCode, contentType, content);
+    }
+    public static void throwHttpError(int statusCode, String content) {
+        throw new HttpError(statusCode, content);
+    }
+    public static void throwHttpError(String content) {
+        throw new HttpError(content);
+    }
 //    public static String buildXml(Object data) {        
 //        XmlBuilder json = new JsonBuilder();
 //        if (data instanceof Closure)

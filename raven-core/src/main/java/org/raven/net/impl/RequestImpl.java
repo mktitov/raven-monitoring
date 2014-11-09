@@ -79,6 +79,10 @@ public class RequestImpl implements Request {
         return method;
     }
 
+    public String getContentType() {
+        return httpRequest.getContentType();
+    }
+
     public InputStream getContent() throws IOException {
         return httpRequest.getInputStream();
     }

@@ -66,7 +66,7 @@ public class SimpleResponseBuilder extends AbstractResponseBuilder {
             bindingSupport.put(BindingNames.REDIRECT_BINDING, createRedirectClosure(responseContext));
             bindingSupport.put(BindingNames.RESULT_BINDING, createResultClosure());
             bindingSupport.put(BindingNames.PROPAGATE_EXPRESSION_EXCEPTION, null);
-            bindingSupport.put(BindingNames.THROW_HTTP_ERROR_BINDING, createHttpErrorClosure());
+//            bindingSupport.put(BindingNames.THROW_HTTP_ERROR_BINDING, createHttpErrorClosure());
             bindingSupport.put(BindingNames.SEND_DATA_ASYNC_BINDING, createSendDataAsyncClosure(responseContext));
             try {
                 return responseContent;

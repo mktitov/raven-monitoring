@@ -62,7 +62,7 @@ public interface Request {
     /**Returns the raven application path in web server. For instance for path 
      * <b>http://some.host.name/raven/sri/some/context</b> it returns <b>/raven</b>
      */
-    public String getRootPath();
+    public String getRootPath();    
     /**
      * Returns http method: POST, GET, PUT or DELETE
      */
@@ -73,7 +73,11 @@ public interface Request {
      */
     public long getIfModifiedSince();
     /**
-     * Returns the request content
+     * Returns the request content type
+     */
+    public String getContentType();
+    /**
+     * Returns the request content type or null if content type is not known
      * @throws IOException 
      */
     public InputStream getContent() throws IOException;
