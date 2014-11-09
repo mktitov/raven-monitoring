@@ -21,6 +21,7 @@ import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -129,6 +130,13 @@ public class EventSourceBuilder extends AbstractResponseBuilder
     @Override
     protected Charset getContentCharset() throws Exception {
         return UTF8;
+    }
+    
+    public Collection<EventSourceChannel> getChannels() {
+        Collection<Channel> _channels = channels;
+        if (_channels==null || _channels.isEmpty())
+            return Collections.EMPTY_LIST;
+        return new ArrayList(_channels);
     }
 
     @Parameter(readOnly = true)
