@@ -88,6 +88,10 @@ public class ErrorRequest implements Request {
         return request.getIfModifiedSince();
     }
 
+    public String getContentType() {
+        return request.getContentType();
+    }
+
     @Override
     public InputStream getContent() throws IOException {
         return request.getContent();
