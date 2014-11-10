@@ -66,6 +66,8 @@ public class EventSourceBuilder extends AbstractResponseBuilder
     
     public final static Charset UTF8 = Charset.forName("utf-8"); //standard for text/event-stream
     public final static String CLOSE_CHANNEL_EVENT = "CLOSE_CHANNEL";
+    public static final String MESSAGE_KEY = "message";
+    public final static String CHANNEL_SELECTOR_ATTR = "channelSelector";
     
     @NotNull @Parameter(valueHandlerType = NodeReferenceValueHandlerFactory.TYPE)
     private DataSource dataSource;
@@ -217,7 +219,10 @@ public class EventSourceBuilder extends AbstractResponseBuilder
         }
         final int counter = asyncUsageDetector.incrementAndGet();
         try {                
-            final String message = "data: "+converter.convert(String.class, data, null);
+            Object messObj = data;
+            if (data instanceof Map && ((Map)data).containsKey(MESSAGE_KEY))
+                messObj = ((Map)data).get(MESSAGE_KEY);
+            final String message = "data: "+converter.convert(String.class, messObj, null);
             if (logger.isDebugEnabled())
                 getLogger().debug("Received data for submitting to channels");
             if (counter>1) {

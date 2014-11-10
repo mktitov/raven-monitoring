@@ -18,6 +18,7 @@ package org.raven.net.impl;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Collection;
 import java.util.Map;
 import static org.easymock.EasyMock.*;
 import org.easymock.IMocksControl;
@@ -25,6 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.raven.BindingNames;
+import static org.raven.RavenUtils.*;
 import org.raven.auth.UserContext;
 import org.raven.ds.DataContext;
 import org.raven.ds.impl.DataContextImpl;
@@ -80,6 +82,14 @@ public class EventSourceBuilderTest extends RavenCoreTestCase {
         Object response = eventsSource.buildResponseContent(user, responseContext);
         assertSame(Response.MANAGING_BY_BUILDER, response);
         assertTrue(responseStream.flushed);
+        Collection<EventSourceChannel> channels = eventsSource.getChannels();
+        assertNotNull(channels);
+        assertEquals(1, channels.size());
+        EventSourceChannel channel = channels.iterator().next();
+        assertNotNull(channel);
+        assertSame(user, channel.getUser());
+        assertSame(responseContext.getRequest(), channel.getRequest());
+        
         
         assertEquals(1, collector.getDataListSize());
         Object obj = collector.getDataList().get(0);
@@ -101,6 +111,25 @@ public class EventSourceBuilderTest extends RavenCoreTestCase {
         
         eventsSource.buildResponseContent(user, responseContext);
         ds.pushData("test");
+        assertTrue(responseStream.flushed);
+        assertNotNull(responseStream.writtenBytes);
+        assertEquals("data: test\n\n", new String(responseStream.writtenBytes, "utf-8"));
+        
+        mocks.verify();        
+    }
+    
+    @Test
+    public void sendMessageInMapTest() throws Exception {
+        IMocksControl mocks = createControl();
+        TestOutputStream responseStream = new TestOutputStream();
+        trainChannelCreation(mocks, responseStream);
+        expect(responseContext.getResponseStream()).andReturn(responseStream);
+        mocks.replay();
+        
+        eventsSource.setUseChannelSelector(true);
+        eventsSource.getAttr(EventSourceBuilder.CHANNEL_SELECTOR_ATTR).setValue("data instanceof java.util.Map");
+        eventsSource.buildResponseContent(user, responseContext);
+        ds.pushData(asMap(pair(EventSourceBuilder.MESSAGE_KEY, "test")));
         assertTrue(responseStream.flushed);
         assertNotNull(responseStream.writtenBytes);
         assertEquals("data: test\n\n", new String(responseStream.writtenBytes, "utf-8"));
