@@ -81,6 +81,7 @@ public class InitiatePushDataNode extends AbstractSafeDataPipe
         Object dataForPush = data;
         if (useExpressionForPushDataTo){
             bindingSupport.put(DATA_BINDING, data);
+            bindingSupport.put(DATASOURCE_BINDING, dataSource);
             bindingSupport.put(SKIP_DATA_BINDING, SKIP_DATA);
             bindingSupport.put(DATA_CONTEXT_BINDING, context);
             bindingSupport.put(DATA_STREAM_BINDING, new DataStreamForPushDataTo(pushDataTo, context, this));

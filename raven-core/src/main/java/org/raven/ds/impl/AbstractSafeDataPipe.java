@@ -220,6 +220,7 @@ public abstract class AbstractSafeDataPipe
                 bindingSupport.put(SESSIONATTRIBUTES_BINDING, context.getSessionAttributes());
                 bindingSupport.put(DATA_CONTEXT_BINDING, context);
                 bindingSupport.put(REQUESTER_BINDING, dataConsumer);
+                bindingSupport.put(SKIP_DATA_BINDING, SKIP_DATA);
                 try {
                     preprocessResult = getAttr(PREPROCESS_ATTRIBUTE).getRealValue();
                     if (isLogLevelEnabled(LogLevel.DEBUG))
@@ -241,7 +242,10 @@ public abstract class AbstractSafeDataPipe
             } finally {
                 bindingSupport.reset();
             }
-        else
+        else if (preprocessResult==SKIP_DATA) {
+            if (logger.isDebugEnabled())
+                logger.debug("preProcess returns SKIP_DATA. Skipping...");
+        } else
             setData(this, preprocessResult, context);
 
         return result;

@@ -276,7 +276,7 @@ public class AbstractSafeDataPipeTest extends RavenCoreTestCase
     }
 
     @Test
-    public void preprocessTest() throws Exception
+    public void preProcessTest() throws Exception
     {
         PushOnDemandDataSource ds = new PushOnDemandDataSource();
         ds.setName("ds");
@@ -299,6 +299,31 @@ public class AbstractSafeDataPipeTest extends RavenCoreTestCase
         attr.init();
         Object data = c1.refereshData(Arrays.asList(attr));
         assertEquals(11, data);
+    }
+
+    @Test
+    public void preProcessSkipDataTest() throws Exception
+    {
+        PushOnDemandDataSource ds = new PushOnDemandDataSource();
+        ds.setName("ds");
+        tree.getRootNode().addAndSaveChildren(ds);
+        ds.setLogLevel(LogLevel.DEBUG);
+        assertTrue(ds.start());
+
+        pipe.setDataSource(ds);
+        pipe.setUsePreProcess(true);
+        pipe.setPreProcess("SKIP_DATA");
+        assertTrue(pipe.start());
+
+//        TestSessionAttributeNode sessAttr = new TestSessionAttributeNode();
+//        sessAttr.setName("sessAttr");
+//        pipe.addAndSaveChildren(sessAttr);
+//        assertTrue(sessAttr.start());
+
+//        NodeAttribute attr = new NodeAttributeImpl("consAttr", Integer.class, 1, null);
+//        attr.init();
+        Object data = c1.refereshData(null);
+        assertNull(data);
     }
 
     @Test
