@@ -137,6 +137,13 @@ public class RecordImpl implements Record
                     setValue(entry.getKey(), entry.getValue());
                 } catch(InvalidRecordFieldException e){ }
     }
+    
+    public void copyFrom(Map<String, Object> values) throws RecordException {
+        if (values==null) return;
+        for (String field: fields.keySet())
+            if (values.containsKey(field))
+                setValue(field, values.get(field));
+    }
 
     public void copyFrom(Record record) throws RecordException
     {

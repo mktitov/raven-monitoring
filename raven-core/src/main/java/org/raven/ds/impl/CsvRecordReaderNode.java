@@ -215,7 +215,7 @@ public class CsvRecordReaderNode extends AbstractSafeDataPipe
         try {
             bindingSupport.put(BindingNames.RECORD_SCHEMA_BINDING, recordSchema);
             bindingSupport.put(BindingNames.DATA_CONTEXT_BINDING, context);
-            bindingSupport.put(BindingNames.DATASOURCE_BINDING, context);
+            bindingSupport.put(BindingNames.DATASOURCE_BINDING, dataSource);
             RecordSchemaField[] fields = recordSchema.getFields();
             if (fields==null)
                 return null;

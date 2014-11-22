@@ -92,7 +92,7 @@ public class CsvLineToRecordNode extends AbstractSafeDataPipe
                 if (isLogLevelEnabled(LogLevel.WARN))
                     debug(String.format(
                             "CsvRecordFieldExtension was not defined for fields in the record schema (%s)"
-                            , recordSchema.getName()));
+                            , _recordSchema.getName()));
                 return;
             }
             bindingSupport.enableScriptExecution();
@@ -109,7 +109,7 @@ public class CsvLineToRecordNode extends AbstractSafeDataPipe
                     tokenizer.setIgnoreEmptyTokens(false);
                     tokenizer.reset(line);
                     String[] tokens = tokenizer.getTokenArray();
-                    Record record = recordSchema.createRecord();
+                    Record record = _recordSchema.createRecord();
                     for (Map.Entry<String, FieldInfo> entry: fieldsColumns.entrySet()) {
                         int colNum = entry.getValue().getColumnNumber()-1;
                         if (colNum<tokens.length) {
