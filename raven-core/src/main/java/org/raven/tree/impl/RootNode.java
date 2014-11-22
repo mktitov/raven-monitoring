@@ -59,7 +59,8 @@ public class RootNode extends BaseNode
      * @see Tree#removeGlobalBindings(String) 
      */
     public void removeBindingSupport(String bindingSupportId) {
-        bindingSupports.remove(bindingSupportId);       
+        BindingSupport bindingSupport = bindingSupports.remove(bindingSupportId);
+        bindingSupport.setForceDisableScriptExcecution(false);
     }
 
     @Override
