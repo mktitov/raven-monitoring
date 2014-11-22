@@ -60,7 +60,8 @@ public class RootNode extends BaseNode
      */
     public void removeBindingSupport(String bindingSupportId) {
         BindingSupport bindingSupport = bindingSupports.remove(bindingSupportId);
-        bindingSupport.setForceDisableScriptExcecution(false);
+        if (bindingSupport!=null)
+            bindingSupport.setForceDisableScriptExcecution(false);
     }
 
     @Override
