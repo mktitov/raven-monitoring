@@ -649,12 +649,27 @@ public class DatabaseRecordWriterNode extends AbstractDataConsumer
 
         public void close() throws SQLException
         {
-            insert.close();
-            if (tryUpdate)
-            {
-                select.close();
-                update.close();
-            }
+            closeStatement(insert);
+            closeStatement(update);
+            closeStatement(delete);
+            closeStatement(select);
+            closeStatement(sequence);
+//            insert.close();
+//            if (tryUpdate)
+//            {
+//                select.close();
+//                update.close();
+//            }
+        }
+        
+        private void closeStatement(PreparedStatement st) {
+            if (st!=null) 
+                try {
+                    st.close();
+                } catch (SQLException e) {
+                    if (logger.isErrorEnabled())
+                        logger.error("Error while closing prepared statement", e);
+                }
         }
     }
     

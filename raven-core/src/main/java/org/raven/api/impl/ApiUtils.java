@@ -88,7 +88,7 @@ public class ApiUtils
         } finally {
             if (autoCommit)
                 connection.close();
-        }
+        }                    
     }
     //
     public static Object withHttpClient(String url, Closure closure) throws Exception {
