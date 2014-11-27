@@ -281,7 +281,7 @@ public class NetworkResponseServlet extends HttpServlet  {
     protected FileItemIterator getMultipartItemIterator(HttpServletRequest request) throws Exception {
         return new ServletFileUpload().getItemIterator(request);
     }
-    
+       
     protected String getTextFieldCharset(FileItemStream item) {
         Iterator<String> elems = item.getHeaders().getHeaders("content-type");
         while (elems.hasNext()) {

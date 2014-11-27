@@ -35,7 +35,8 @@ public class FileUploadContext implements RequestContext {
     }
 
     public String getCharacterEncoding() {
-        return request.getCharacterEncoding();
+        final String charset = request.getCharacterEncoding();
+        return charset==null? "utf-8" : charset;
     }
 
     public String getContentType() {

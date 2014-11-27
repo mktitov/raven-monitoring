@@ -18,7 +18,6 @@ package org.raven.ui.servlet;
 
 import io.netty.buffer.ByteBuf;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.raven.ds.RingQueue;
 import org.raven.ds.impl.RingQueueImpl;
@@ -30,9 +29,10 @@ import org.raven.ds.impl.RingQueueImpl;
 public class CometInputStreamImpl extends CometInputStream {
     private final AtomicBoolean sourceClosed = new AtomicBoolean();
     private final RingQueue<ByteBuf> buffers;
+    private volatile int readBytes = 0;
 
     public CometInputStreamImpl() {
-        this(10);
+        this(100);
     }
     
     public CometInputStreamImpl(int queueSize) {
@@ -41,8 +41,9 @@ public class CometInputStreamImpl extends CometInputStream {
     
     @Override
     public int read() throws IOException {
-        if (sourceClosed.get() && !buffers.hasElement())
+        if (sourceClosed.get() && !buffers.hasElement()) {
             return -1;
+        }
         ByteBuf buf;
         try {
             while (true) {
@@ -52,12 +53,14 @@ public class CometInputStreamImpl extends CometInputStream {
                     }
                 }
                 if (buf!=null) {
-                    if (buf.isReadable())
-                        return buf.readByte();
-                    else 
+                    if (buf.isReadable()) {
+                        ++readBytes;
+                        return buf.readUnsignedByte();
+                    } else 
                         buffers.pop().release();
-                } else if (sourceClosed.get())
+                } else if (sourceClosed.get()) {
                     return -1;
+                }
             }
         } catch (InterruptedException e) {
             return -1;
