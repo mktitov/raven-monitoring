@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.activation.DataSource;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -207,6 +208,21 @@ public class NetworkResponseServlet extends HttpServlet  {
             if (created && responseContext.isSessionAllowed()) {
                 if (responseContext.getResponseBuilderLogger().isDebugEnabled())
                     responseContext.getResponseBuilderLogger().debug("Created new session for user: "+userContext);
+//                if (session==null) {
+//                    Cookie[] cookies = request.getCookies();
+//                    if (cookies!=null) 
+//                        for (Cookie cookie: cookies)
+//                            if (   "JSESSIONID".equals(cookie.getName()) && cookie.getValue()!=null 
+//                                && !cookie.getValue().isEmpty())
+//                            {
+//                            if (responseContext.getLogger().isWarnEnabled())
+//                                responseContext.getLogger().warn(String.format(
+//                                        "User (%s) session invalidated need relogon", 
+//                                        userContext));
+//                            resetSessionIdCookie(response);
+//                            throw new UnauthoriedException();
+//                            }
+//                }
                 request.getSession().setAttribute(userContextAttrName, userContext);
             }
         } else {
@@ -217,6 +233,12 @@ public class NetworkResponseServlet extends HttpServlet  {
             throw new UnauthoriedException();
         }
         return userContext;
+    }
+    
+    private void resetSessionIdCookie(HttpServletResponse response) {
+        Cookie jsession = new Cookie("JSESSIONID", null);
+        jsession.setMaxAge(0);
+        response.addCookie(jsession);        
     }
 
     protected Map<String, Object> extractParams(HttpServletRequest request, NetworkResponseService responseService) 
@@ -229,27 +251,6 @@ public class NetworkResponseServlet extends HttpServlet  {
                 String paramName = reqParams.nextElement();
                 params.put(paramName, request.getParameter(paramName));
             }
-//        if (ServletFileUpload.isMultipartContent(request)) {
-//            TemporaryFileManager tempFileManager = responseService.getTemporaryFileManager();
-//            if (tempFileManager==null) 
-//                throw new NetworkResponseServiceExeption("Can't store uploaded file because of "
-//                        + "TemporaryFileManager not assigned to NetworkResponseServiceNode");
-//            ServletFileUpload upload = new ServletFileUpload();
-//            FileItemIterator it = upload.getItemIterator(request);
-//            while (it.hasNext()) {
-//                FileItemStream item = it.next();
-//                String name = item.getFieldName();
-//                if (item.isFormField())
-//                    params.put(name, Streams.asString(item.openStream(), getTextFieldCharset(item)));
-//                else {
-//                    DataSource tempFile = tempFileManager.saveFile(
-//                            responseService.getNetworkResponseServiceNode(), 
-//                            "sri_fileupload_"+fileUploadsCounter.incrementAndGet(), 
-//                            item.openStream(), item.getContentType(), true, item.getName());
-//                    params.put(item.getFieldName(), tempFile);
-//                }
-//            }
-//        }
         return params;
     }
     
@@ -418,6 +419,10 @@ public class NetworkResponseServlet extends HttpServlet  {
             Object content = serviceResponse.getContent();
             if (content instanceof RedirectResult) {
 //                response.sendRedirect(((RedirectResult)content).getContent().toString());
+                if (ctx.user.isNeedRelogin() && ctx.responseContext.isSessionAllowed()) {
+                    //removing jsession cookie
+                    resetSessionIdCookie(response);
+                }
                 response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
                 response.addHeader("Location", ((RedirectResult)content).getContent().toString());
 //                response.flushBuffer();
