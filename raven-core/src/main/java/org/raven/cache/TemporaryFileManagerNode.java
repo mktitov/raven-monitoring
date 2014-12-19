@@ -193,7 +193,7 @@ public class TemporaryFileManagerNode extends BaseNode implements TemporaryFileM
                     }
                     if (!filesToDelete.isEmpty())
                         for (File file: filesToDelete)
-                            if (FileUtils.deleteQuietly(file) && isLogLevelEnabled(LogLevel.WARN))
+                            if (!FileUtils.deleteQuietly(file) && isLogLevelEnabled(LogLevel.WARN))
                                 getLogger().warn(
                                         "Can't delete old temporary file ({})"
                                         , file.getAbsolutePath());

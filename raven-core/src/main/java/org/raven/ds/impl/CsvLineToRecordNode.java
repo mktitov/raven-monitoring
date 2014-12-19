@@ -46,6 +46,9 @@ public class CsvLineToRecordNode extends AbstractSafeDataPipe
 
     @NotNull @Parameter(valueHandlerType=RecordSchemaValueTypeHandlerFactory.TYPE)
     private RecordSchemaNode recordSchema;
+    
+    @NotNull @Parameter(defaultValue = "true")
+    private Boolean validateRecord;
 
     @Parameter
     private String csvExtensionName;
@@ -80,6 +83,14 @@ public class CsvLineToRecordNode extends AbstractSafeDataPipe
 
     public void setRecordSchema(RecordSchemaNode recordSchema) {
         this.recordSchema = recordSchema;
+    }
+
+    public Boolean getValidateRecord() {
+        return validateRecord;
+    }
+
+    public void setValidateRecord(Boolean validateRecord) {
+        this.validateRecord = validateRecord;
     }
 
     @Override
@@ -117,7 +128,8 @@ public class CsvLineToRecordNode extends AbstractSafeDataPipe
                             record.setValue(entry.getKey(), value);
                         }
                     }
-                    if (record.validate(this, context)) sendDataToConsumers(record, context);
+                    if (!validateRecord || record.validate(this, context)) 
+                        sendDataToConsumers(record, context);
                     else sendError(data, context);
                 }
             } finally {

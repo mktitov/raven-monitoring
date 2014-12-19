@@ -35,6 +35,7 @@ import org.raven.ds.DataSource;
 import org.raven.ds.DataContext;
 import org.raven.ds.impl.DataContextImpl;
 import org.raven.ds.impl.ListDataConsumer;
+import org.raven.expr.VarsSupportState;
 import org.raven.net.HttpError;
 import org.raven.table.Table;
 import org.raven.template.impl.TemplateNode;
@@ -42,6 +43,7 @@ import org.raven.template.impl.TemplateWizard;
 import org.raven.tree.Node;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.TreeImpl;
+import org.raven.util.NodeUtils;
 
 /**
  *
@@ -140,9 +142,14 @@ public class ApiUtils
     }
 
     public static DataContext sendData(DataSource source, DataConsumer target, Object data) throws Exception {
-        final DataContext context = new DataContextImpl();
-        target.setData(source, data, context);
-        return context;
+        VarsSupportState varsSupportState = NodeUtils.resetVarsSupport(TreeImpl.INSTANCE);
+        try {
+            final DataContext context = new DataContextImpl();
+            target.setData(source, data, context);
+            return context;
+        } finally {
+            varsSupportState.restoreState();
+        }
     }
     
     public static DataContext sendData(DataSource source, DataConsumer target, DataContext context, Object data) 
@@ -153,9 +160,14 @@ public class ApiUtils
     }
     
     public static List getData(Node initiator, DataSource dataSource, DataContext context) {
-        ListDataConsumer consumer = new ListDataConsumer(initiator, context);
-        dataSource.getDataImmediate(consumer, context);
-        return consumer.getDataList();
+        VarsSupportState varsSupportState = NodeUtils.resetVarsSupport(TreeImpl.INSTANCE);
+        try {
+            ListDataConsumer consumer = new ListDataConsumer(initiator, context);
+            dataSource.getDataImmediate(consumer, context);
+            return consumer.getDataList();
+        } finally {
+            varsSupportState.restoreState();
+        }
     }
 
 //    public static List getData(Node initiator, DataSource dataSource) {
