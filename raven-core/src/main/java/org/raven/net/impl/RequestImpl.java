@@ -18,6 +18,7 @@ package org.raven.net.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import org.raven.net.Request;
@@ -34,6 +35,7 @@ public class RequestImpl implements Request {
     private final String method;
     private final String servicePath;
     private final HttpServletRequest httpRequest;
+    private Map<String, Object> attrs = null;
 
     public RequestImpl(String remoteAddr, Map<String, Object> params, Map<String, Object> headers, 
             String contextPath, String method, HttpServletRequest httpRequest) 
@@ -57,6 +59,18 @@ public class RequestImpl implements Request {
 
     public String getServerHost() {
         return httpRequest.getLocalName();
+    }
+
+    public Map<String, Object> getAttrs() {
+        if (attrs!=null)
+            return attrs;
+        else {
+            synchronized(this) {
+                if (attrs==null)
+                    attrs = new HashMap<String, Object>();
+                return attrs;
+            }
+        }
     }
 
     public Map<String, Object> getParams() {

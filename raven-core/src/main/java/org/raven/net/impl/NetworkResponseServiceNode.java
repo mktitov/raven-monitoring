@@ -17,7 +17,6 @@
 
 package org.raven.net.impl;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -78,6 +77,8 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
     public static final String REQUEST_BINDING = "request";
     public static final String NAMED_PARAMETER_TYPE_ATTR = "namedParameterType";
     public static final String NAMED_PARAMETER_PATTERN_ATTR = "namedParameterPattern";
+    public static final String NAMED_PARAMETER_VALIDATOR_ATTR = "namedParameterValidator";
+    public static final String NAMED_PARAMETER_VALIDATORS_ATTR = "_namedParameterValidators";
     
     private final static NetRespAnonymousLoginService netRespAnonLoginService = new NetRespAnonymousLoginService();
     
@@ -414,6 +415,10 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
         final String name = child.getName();
         if (name.length()>2 && name.startsWith("{") && name.endsWith("}")) {
             String paramName = name.substring(1, child.getName().length()-1);
+            NodeAttribute validator = child.getAttr(NAMED_PARAMETER_VALIDATOR_ATTR);
+            if (validator!=null) {
+                getNamedParameterValidators(request).put(paramName, validator);
+            }
             Object value = applyNamedParameterPattern(child, paramValue);
             if (value!=null) {
                 NodeAttribute paramType = child.getAttr(NAMED_PARAMETER_TYPE_ATTR);
@@ -431,6 +436,15 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
             }
         } 
         return false;
+    }
+    
+    private Map<String, NodeAttribute> getNamedParameterValidators(Request request) {
+        Map<String, NodeAttribute> validators = (Map<String, NodeAttribute>) request.getAttrs().get(NAMED_PARAMETER_VALIDATORS_ATTR);
+        if (validators==null) {
+            validators = new HashMap();
+            request.getAttrs().put(NAMED_PARAMETER_VALIDATORS_ATTR, validators);
+        }
+        return validators;
     }
     
     private String applyNamedParameterPattern(Node child, String paramValue) {

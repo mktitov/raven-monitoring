@@ -57,6 +57,7 @@ import org.raven.net.ResponseContext;
 import org.raven.prj.impl.ProjectNode;
 import org.raven.test.PushOnDemandDataSource;
 import org.raven.tree.impl.LoggerHelper;
+import org.raven.tree.impl.NodeAttributeImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -266,6 +267,40 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
         
         ResponseContext responseContext = responseService.getResponseContext(request);
         assertNotNull(responseContext);
+        assertSame(loginService, responseContext.getLoginService());
+        assertSame(request, responseContext.getRequest());
+        assertSame(builder, responseContext.getResponseBuilder());
+        assertEquals("test", request.getParams().get("param1"));
+        assertEquals(new Integer(1), request.getParams().get("param2"));
+        mocks.verify();
+    }
+    
+    @Test
+    public void namedParameterValidatorTest() throws Exception {
+        Request request = trainRequest("test/1");
+        Map attrs = new HashMap();
+        
+        expect(request.getAttrs()).andReturn(attrs).times(2);
+        expect(request.getMethod()).andReturn("GET");
+        mocks.replay();
+        
+        NetworkResponseGroupNode group = createGroup(responseServiceNode, "{param1}");
+        NodeAttribute validator = new NodeAttributeImpl(NetworkResponseServiceNode.NAMED_PARAMETER_VALIDATOR_ATTR,
+                Boolean.class, null, null);
+        validator.setOwner(group);
+        validator.init();
+        group.addAttr(validator);
+        
+        group.setLoginService(loginService);
+        SimpleResponseBuilder builder = createSimpleResponseBuilder(group, "{param2}");
+        builder.setNamedParameterType(Integer.class);
+        
+        ResponseContext responseContext = responseService.getResponseContext(request);
+        assertNotNull(responseContext);
+        Map<String, NodeAttribute> validators = (Map<String, NodeAttribute>) 
+                attrs.get(NetworkResponseServiceNode.NAMED_PARAMETER_VALIDATORS_ATTR);
+        assertNotNull(validators);
+        assertSame(validator, validators.get("param1"));
         assertSame(loginService, responseContext.getLoginService());
         assertSame(request, responseContext.getRequest());
         assertSame(builder, responseContext.getResponseBuilder());

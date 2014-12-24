@@ -44,6 +44,20 @@ public interface Request {
      */
     public Map<String, Object> getHeaders();
     /**
+     * Returns mutable map of the attributes of the request 
+     */
+    public Map<String, Object> getAttrs();
+//    /**
+//     * Returns the value of the attribute or null 
+//     */
+//    public Object getAttr(String name);
+//    /**
+//     * Sets the value of the attribute
+//     * @param name
+//     * @param value 
+//     */
+//    public void setAttr(String name, Object value);
+    /**
      * Returns the request parameters. It may be a query string parameters or form parameters.
      * If form parameter is a file, then the parameter type would be javax.activation.DataSource
      */
