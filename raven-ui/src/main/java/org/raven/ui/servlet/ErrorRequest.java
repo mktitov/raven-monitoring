@@ -63,6 +63,10 @@ public class ErrorRequest implements Request {
         return request.getParams();
     }
 
+    public Map<String, Object> getAttrs() {
+        return request.getAttrs();
+    }
+
     @Override
     public String getServicePath() {
         return servicePath;
