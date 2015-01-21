@@ -210,7 +210,7 @@ public class RecordImpl implements Record
     @Override
     public String toString()
     {
-        return "Schema: "+schema.getName()+"; field values: "+getValues().toString();
+        return "Schema: "+schema.getName()+"; field values: "+getValues().toString()+(tags==null?"":"; tags: "+tags.toString());
     }
 
 }
