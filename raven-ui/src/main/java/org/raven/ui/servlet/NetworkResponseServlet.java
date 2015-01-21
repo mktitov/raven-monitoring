@@ -59,6 +59,7 @@ import org.raven.auth.UserContext;
 import org.raven.cache.TemporaryFileManager;
 import org.raven.log.LogLevel;
 import org.raven.net.AccessDeniedException;
+import org.raven.net.AuthorizationNeededException;
 import org.raven.net.ContextUnavailableException;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.NetworkResponseServiceExeption;
@@ -183,7 +184,7 @@ public class NetworkResponseServlet extends HttpServlet  {
                                 userContext.getName());
                     session.invalidate();
                     userContext = null;
-                    throw new UnauthoriedException();
+                    throw new AuthorizationNeededException();
                 }
             }
         }
@@ -196,7 +197,7 @@ public class NetworkResponseServlet extends HttpServlet  {
         if (userContext==null) {
             created = true;
             String requestAuth = request.getHeader("Authorization");
-            if (requestAuth == null) throw new UnauthoriedException();
+            if (requestAuth == null) throw new AuthorizationNeededException();
             else {
                 String userAndPath = new String(Base64.decodeBase64(requestAuth.substring(6).getBytes()));
                 String elems[] = userAndPath.split(":");
@@ -602,6 +603,7 @@ public class NetworkResponseServlet extends HttpServlet  {
     protected void processError(RequestContext ctx, Throwable e) {
         try {
             boolean internalError = false;
+            boolean isWarn = true;
             if (e instanceof NetworkResponseServiceUnavailableException) {
                 sendError(ctx, HttpServletResponse.SC_SERVICE_UNAVAILABLE, e.getMessage());
             } else if (e instanceof ContextUnavailableException) {
@@ -611,6 +613,7 @@ public class NetworkResponseServlet extends HttpServlet  {
             } else if (e instanceof RequiredParameterMissedException || e instanceof NetworkResponseServlet.BadRequestException) {
                 sendError(ctx, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
             } else if (e instanceof UnauthoriedException || e instanceof AuthenticationFailedException) {
+                isWarn = !(e instanceof AuthorizationNeededException);
                 ResponseServiceNode service = ctx.responseContext.getServiceNode();
                 String realm = service instanceof WebInterfaceNode? service.getParent().getName() : "RAVEN";
                 if ("system".equals(realm))
@@ -623,14 +626,19 @@ public class NetworkResponseServlet extends HttpServlet  {
             }
             String mess = String.format("Error processing request (%s) from host (%s)", 
                     ctx.request.getPathInfo(), ctx.request.getRemoteAddr());
-            if (ctx.servletLogger.isWarnEnabled()) {
+            if (ctx.servletLogger.isWarnEnabled() && isWarn) {
                 if (internalError)
                     ctx.servletLogger.warn(mess, e);
                 else
                     ctx.servletLogger.warn(mess+"."+(e.getMessage()==null? e.getClass().getName() : e.getMessage()));
+            } else if (!isWarn && ctx.servletLogger.isDebugEnabled())
+                ctx.servletLogger.debug(mess+"."+(e.getMessage()==null? e.getClass().getName() : e.getMessage()));
+                
+            if (ctx.responseContext!=null) {
+                final Logger logger = ctx.responseContext.getResponseBuilderLogger();
+                if (isWarn && logger.isErrorEnabled()) 
+                    logger.error(mess, e);
             }
-            if (ctx.responseContext!=null && ctx.responseContext.getResponseBuilderLogger().isErrorEnabled()) 
-                ctx.responseContext.getResponseBuilderLogger().error(mess, e);
         } catch (IOException ex) {
             if (ctx.servletLogger.isErrorEnabled())
                 ctx.servletLogger.error("Error while processing ERROR!", ex);
