@@ -145,7 +145,7 @@ public class CsvReaderNode extends AbstractSafeDataPipe {
     }
 
     private CSVFormat privateFormat() {
-        CSVFormat _format = format.getCsvFormat().withHeader(null);
+        CSVFormat _format = format.getCsvFormat().withHeader(null).withNullString("");
         String _quoteChar = quoteChar;
         if (_quoteChar!=null)
             _format = _format.withQuote(_quoteChar.charAt(0));

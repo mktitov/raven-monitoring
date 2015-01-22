@@ -95,6 +95,14 @@ public class CsvReaderNodeTest extends RavenCoreTestCase {
         assertNull(collector.getDataList().get(1));        
     }
 
+    @Test
+    public void testNullValue() throws Exception {
+        ds.pushData(new ByteArrayInputStream(",v2".getBytes()));
+        assertEquals(2, collector.getDataListSize());
+        assertArrayEquals(new Object[]{null,"v2"}, (Object[]) collector.getDataList().get(0));
+        assertNull(collector.getDataList().get(1));        
+    }
+
     private void checkResults() {
         assertEquals(3,collector.getDataListSize());
         assertArrayEquals(new Object[]{"v1.1","v1.2"}, (Object[]) collector.getDataList().get(0));
