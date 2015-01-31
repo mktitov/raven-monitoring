@@ -24,6 +24,9 @@ import org.raven.test.PushOnDemandDataSource;
 import org.raven.test.RavenCoreTestCase;
 import static org.easymock.EasyMock.*;
 import org.raven.auth.UserContextConfiguratorException;
+import org.raven.ds.DataConsumer;
+import org.raven.ds.DataContext;
+import org.raven.test.PushOnDemandDataSourceListener;
 
 /**
  *
@@ -67,6 +70,28 @@ public class DataConsumerUserConfiguratorTest extends RavenCoreTestCase {
         conf.setConfigure("user.groups.add(context['group']+'-'+data[0])");
         assertTrue(conf.start());
         ds.addDataPortion("group");
+        conf.configure(user);
+        verify(user);
+    }
+    
+    @Test(expected = UserContextConfiguratorException.class)
+    public void configureErrorTest() throws UserContextConfiguratorException {
+        UserContextConfig user = createMock(UserContextConfig.class);
+        Set<String> groups = createMock(Set.class);
+        expect(user.getLogin()).andReturn("test");
+        expect(user.getGroups()).andReturn(groups);
+        expect(groups.add("test-group")).andReturn(true);
+        replay(user);
+        
+        conf.setBeforeConfigure("context['group']=user.login");
+        conf.setConfigure("user.groups.add(context['group']+'-'+data[0])");
+        assertTrue(conf.start());
+        ds.addDataPortion("group");
+        ds.setListener(new PushOnDemandDataSourceListener() {
+            public void onGatherDataForConsumer(DataConsumer consumer, DataContext context) {
+                context.addError(ds, "Error from dataSource!!!");
+            }
+        });
         conf.configure(user);
         verify(user);
     }

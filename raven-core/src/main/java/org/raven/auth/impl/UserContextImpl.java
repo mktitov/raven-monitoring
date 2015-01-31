@@ -85,7 +85,8 @@ public class UserContextImpl implements UserContext
     }
 
     public int getAccessForNode(Node node) {
-        return admin? AccessControl.ALL_RIGHTS : policyManager.getAccessPoliciesForUser(this).getAccessForNode(node);
+        return admin? AccessControl.ALL_RIGHTS : 
+                policyManager.getAccessPoliciesForUser(this).getAccessForNode(node);
     }
 
     public boolean hasAccessToNode(Node node, String rights) {

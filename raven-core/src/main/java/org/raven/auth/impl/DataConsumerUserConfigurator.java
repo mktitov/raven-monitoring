@@ -26,6 +26,7 @@ import org.raven.auth.UserContextConfig;
 import org.raven.auth.UserContextConfiguratorException;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
+import org.raven.ds.DataError;
 import org.raven.ds.DataSource;
 import org.raven.ds.impl.DataContextImpl;
 import org.raven.ds.impl.DataSourceHelper;
@@ -90,9 +91,13 @@ public class DataConsumerUserConfigurator extends AbstractUserContextConfigurato
             bindingSupport.put(DATA_CONTEXT_BINDING, context);
             bindingSupport.put(USER_CONTEXT_CONFIGURATOR_BINDING, userContext);
             getBeforeConfigure();
+            checkContextErrors(context);
+            getBeforeConfigure();
             dataSource.getDataImmediate(this, context);
+            checkContextErrors(context);            
             bindingSupport.put(DATA_BINDING, dataHolder.get());
             getConfigure();
+            checkContextErrors(context);            
         } finally {
             dataHolder.remove();
             bindingSupport.reset();
@@ -121,5 +126,12 @@ public class DataConsumerUserConfigurator extends AbstractUserContextConfigurato
 
     public void setConfigure(Object configure) {
         this.configure = configure;
+    }
+
+    private void checkContextErrors(DataContext context) throws UserContextConfiguratorException {
+        if (context.hasErrors()) {
+            DataError firstError = context.getErrors().peek();
+            throw new UserContextConfiguratorException(firstError.getMessage(), firstError.getError());
+        }
     }
 }
