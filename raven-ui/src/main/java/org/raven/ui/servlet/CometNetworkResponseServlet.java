@@ -212,8 +212,9 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
             
             if (ctx.responseContext.getResponseBuilderLogger().isDebugEnabled())
                 ctx.responseContext.getResponseBuilderLogger().debug("Builder returned response. Handling");
-            if (serviceResponse != Response.ALREADY_COMPOSED && serviceResponse != Response.MANAGING_BY_BUILDER) {
-                super.processServiceResponse(ctx, serviceResponse);
+            if (serviceResponse != Response.MANAGING_BY_BUILDER) {
+                if (serviceResponse != Response.ALREADY_COMPOSED)
+                    super.processServiceResponse(ctx, serviceResponse);
                 ctx.writeProcessed();
             } else if (serviceResponse==Response.MANAGING_BY_BUILDER)
                 ctx.responseManagingByBuilder = true;
