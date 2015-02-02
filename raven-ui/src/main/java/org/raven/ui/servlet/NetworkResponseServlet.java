@@ -201,7 +201,10 @@ public class NetworkResponseServlet extends HttpServlet  {
             else {
                 String userAndPath = new String(Base64.decodeBase64(requestAuth.substring(6).getBytes()));
                 String elems[] = userAndPath.split(":");
-                userContext = responseContext.getLoginService().login(elems[0], elems[1], request.getRemoteAddr());
+                if (elems.length>=2)
+                    userContext = responseContext.getLoginService().login(elems[0], elems[1], request.getRemoteAddr());
+                else 
+                    throw new AuthorizationNeededException();
             }
         } else if (responseContext.getResponseBuilderLogger().isDebugEnabled())
             responseContext.getResponseBuilderLogger().debug("User ({}) already logged in. Skiping auth.", userContext);
