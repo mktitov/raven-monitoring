@@ -30,6 +30,7 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
+import org.raven.ds.DataPipe;
 import org.raven.ds.DataSource;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.log.LogLevel;
@@ -119,14 +120,16 @@ public class AttributeValueDataSourceNode extends BaseNode implements DataSource
                 bindingSupport.put(SESSIONATTRIBUTES_BINDING, context.getSessionAttributes());
                 bindingSupport.put(DATA_CONTEXT_BINDING, context);
                 bindingSupport.put(DATA_STREAM_BINDING, new DataStreamImpl(this, context));
+                bindingSupport.put(DataPipe.SKIP_DATA_BINDING, DataPipe.SKIP_DATA);
                 if (!consumerAttrNames.isEmpty())
                     for (String name: consumerAttrNames)
                         bindingSupport.put(name, context.getSessionAttributes().get(name).getRealValue());
-                val = getNodeAttribute(VALUE_ATTR).getRealValue();
+                val = getAttr(VALUE_ATTR).getRealValue();
             } finally {
                 bindingSupport.reset();
             }
-            dataConsumer.setData(this, val, context);
+            if (val!=DataPipe.SKIP_DATA)
+                dataConsumer.setData(this, val, context);
             return true;
         } catch(Throwable e) {
             if (isLogLevelEnabled(LogLevel.ERROR))

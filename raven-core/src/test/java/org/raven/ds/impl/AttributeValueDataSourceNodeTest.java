@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.junit.Test;
 import org.raven.TestScheduler;
+import org.raven.expr.impl.ExpressionAttributeValueHandlerFactory;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
 import org.raven.log.LogLevel;
@@ -51,6 +52,25 @@ public class AttributeValueDataSourceNodeTest extends RavenCoreTestCase
 
         assertEquals("test", ((List)collector.refereshData(null)).get(0));
     }
+    
+    @Test
+    public void skipDataTest() throws Exception
+    {
+        AttributeValueDataSourceNode ds = new AttributeValueDataSourceNode();
+        ds.setName("ds");
+        tree.getRootNode().addAndSaveChildren(ds);
+        ds.getAttr("value").setValueHandlerType(ExpressionAttributeValueHandlerFactory.TYPE);
+        ds.setValue("SKIP_DATA");
+        assertTrue(ds.start());
+
+        SafeDataConsumer collector = new SafeDataConsumer();
+        collector.setName("collector");
+        tree.getRootNode().addAndSaveChildren(collector);
+        collector.setDataSource(ds);
+        assertTrue(collector.start());
+
+        assertEquals(null, ((List)collector.refereshData(null)));
+    }
 
     @Test
     public void dataStreamTest() throws Exception
@@ -58,7 +78,7 @@ public class AttributeValueDataSourceNodeTest extends RavenCoreTestCase
         AttributeValueDataSourceNode ds = new AttributeValueDataSourceNode();
         ds.setName("ds");
         tree.getRootNode().addAndSaveChildren(ds);
-        ds.getNodeAttribute(AttributeValueDataSourceNode.VALUE_ATTR)
+        ds.getAttr(AttributeValueDataSourceNode.VALUE_ATTR)
                 .setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
         ds.setValue("dataStream << 1; 2");
         assertTrue(ds.start());
@@ -79,7 +99,7 @@ public class AttributeValueDataSourceNodeTest extends RavenCoreTestCase
         AttributeValueDataSourceNode ds = new AttributeValueDataSourceNode();
         ds.setName("ds");
         tree.getRootNode().addAndSaveChildren(ds);
-        NodeAttribute valAttr = ds.getNodeAttribute("value");
+        NodeAttribute valAttr = ds.getAttr("value");
         valAttr.setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
         ds.setValue("'hello '+consAttr1+consAttr2");
         NodeAttributeImpl consAttr =
@@ -88,14 +108,14 @@ public class AttributeValueDataSourceNodeTest extends RavenCoreTestCase
         consAttr.setValueHandlerType(DataConsumerAttributeValueHandlerFactory.TYPE);
         consAttr.save();
         consAttr.init();
-        ds.addNodeAttribute(consAttr);
+        ds.addAttr(consAttr);
         NodeAttributeImpl consAttr2 =
                 new NodeAttributeImpl("consAttr2", String.class, "world", null);
         consAttr2.setOwner(ds);
         consAttr2.setValueHandlerType(DataConsumerAttributeValueHandlerFactory.TYPE);
         consAttr2.save();
         consAttr2.init();
-        ds.addNodeAttribute(consAttr2);
+        ds.addAttr(consAttr2);
         ds.setRequiredAttributes("consAttr1");
         ds.setLogLevel(LogLevel.DEBUG);
         assertTrue(ds.start());
@@ -108,12 +128,12 @@ public class AttributeValueDataSourceNodeTest extends RavenCoreTestCase
         assertTrue(collector.start());
 
         NodeAttribute attr;
-        attr = collector.getNodeAttribute("consAttr1");
+        attr = collector.getAttr("consAttr1");
         assertNotNull(attr);
         assertTrue(attr.isRequired());
         assertNull(attr.getValueHandlerType());
         attr.setValue("world");
-        attr = collector.getNodeAttribute("consAttr2");
+        attr = collector.getAttr("consAttr2");
         assertNotNull(attr);
         assertNull(attr.getValueHandlerType());
         assertFalse(attr.isRequired());
@@ -130,7 +150,7 @@ public class AttributeValueDataSourceNodeTest extends RavenCoreTestCase
         AttributeValueDataSourceNode ds = new AttributeValueDataSourceNode();
         ds.setName("ds");
         tree.getRootNode().addAndSaveChildren(ds);
-        ds.getNodeAttribute(AttributeValueDataSourceNode.VALUE_ATTR).setValueHandlerType(
+        ds.getAttr(AttributeValueDataSourceNode.VALUE_ATTR).setValueHandlerType(
                 ScriptAttributeValueHandlerFactory.TYPE);
         ds.setValue("'test'");
         assertTrue(ds.start());
@@ -150,7 +170,7 @@ public class AttributeValueDataSourceNodeTest extends RavenCoreTestCase
         
         assertEquals("test", ((List)collector.refereshData(null)).get(0));
         
-        pipe.getNodeAttribute("expression").setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        pipe.getAttr("expression").setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
         pipe.setUseExpression(Boolean.TRUE);
         pipe.setExpression("data+'test'");
         assertEquals("testtest", ((List)collector.refereshData(null)).get(0));
@@ -166,7 +186,7 @@ public class AttributeValueDataSourceNodeTest extends RavenCoreTestCase
         AttributeValueDataSourceNode ds = new AttributeValueDataSourceNode();
         ds.setName("ds");
         tree.getRootNode().addAndSaveChildren(ds);
-        ds.getNodeAttribute(AttributeValueDataSourceNode.VALUE_ATTR).setValueHandlerType(
+        ds.getAttr(AttributeValueDataSourceNode.VALUE_ATTR).setValueHandlerType(
                 ScriptAttributeValueHandlerFactory.TYPE);
         ds.setValue("'test'");
         assertTrue(ds.start());
@@ -196,7 +216,7 @@ public class AttributeValueDataSourceNodeTest extends RavenCoreTestCase
         assertEquals(1, collector.getDataListSize());
         assertEquals("test", collector.getDataList().get(0));
         
-        pipe.getNodeAttribute("expression").setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        pipe.getAttr("expression").setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
         pipe.setUseExpression(Boolean.TRUE);
         pipe.setExpression("data+'test'");
         
