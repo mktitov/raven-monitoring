@@ -107,6 +107,18 @@ public class ArrayToRecordNodeTest extends RavenCoreTestCase {
     }
     
     @Test
+    public void nullValueTest() throws Exception{
+        ds.pushData(new String[]{"10", "something", null});
+
+        assertEquals(1, consumer.getDataListSize());
+        assertTrue(consumer.getDataList().get(0) instanceof Record);
+        Record rec = (Record) consumer.getDataList().get(0);
+        assertEquals(10, rec.getValue("field1"));
+        assertNull(rec.getValue("field2"));
+//        assertEquals("hello", rec.getValue("field2"));        
+    }
+    
+    @Test
     public void nullDataTest() throws Exception {
         ds.pushData(null);
         assertEquals(1, consumer.getDataListSize());
