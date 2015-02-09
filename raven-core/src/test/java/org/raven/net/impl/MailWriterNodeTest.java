@@ -36,7 +36,6 @@ import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.NodeError;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
-import org.raven.tree.impl.TextNode;
 import org.raven.tree.impl.ViewableObjectImpl;
 
 /**
@@ -87,9 +86,9 @@ public class MailWriterNodeTest extends RavenCoreTestCase
 
 //        mailer.setSmtpHost("mail.spb.mts.ru");
         mailer.setSmtpHost("relay.spb.mts.ru");
-        mailer.setFrom("it@komi.mts.ru");
+        mailer.setFrom("mktitov@mts.ru");
         mailer.setFromPersonalName("Генератор отчетов");
-        mailer.setTo("tim@komi.mts.ru");
+        mailer.setTo("mktitov@mts.ru");
 //        mailer.setTo("mikhail1207@gmail.com");
 
 //        mailer.setSmtpHost("smtp.gmail.com");
@@ -240,6 +239,9 @@ public class MailWriterNodeTest extends RavenCoreTestCase
         ViewableObjectsMessagePartNode part = new ViewableObjectsMessagePartNode();
         part.setName("part");
         mailer.addAndSaveChildren(part);
+//        mailer.setMessageId("raven-126");
+        mailer.setSubject("Письмо 2");
+        mailer.getAttr("headers").setValue("['Thread-Index': 'raven-123', 'Thread-Topic':'raven']");
         part.setExecutor(executor);
         part.setTemporaryFileManager(manager);
         part.setUseTemporaryFileManager(Boolean.TRUE);

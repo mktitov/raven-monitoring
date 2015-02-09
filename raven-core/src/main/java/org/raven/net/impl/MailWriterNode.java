@@ -20,6 +20,7 @@ package org.raven.net.impl;
 import java.security.Security;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import javax.activation.DataHandler;
 import javax.mail.Message;
@@ -104,6 +105,12 @@ public class MailWriterNode extends AbstractSafeDataPipe
     @NotNull @Parameter(defaultValue="false")
     private Boolean useErrorHandler;
     
+    @Parameter(valueHandlerType = ScriptAttributeValueHandlerFactory.TYPE)
+    private Map headers;
+    
+    @Parameter
+    private String messageId;
+    
     static {
         Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
     }
@@ -151,7 +158,7 @@ public class MailWriterNode extends AbstractSafeDataPipe
             try {
                 bindingSupport.put(DATA_BINDING, data);
                 bindingSupport.put(DATA_CONTEXT_BINDING, context);
-                MimeMessage msg = new MimeMessage(session);
+                MimeMessage msg = new MailMessage(session, messageId);
                 msg.setFrom(new InternetAddress(from, fromPersonalName, fromEncoding));
                 String[] addrs = to.split("\\s*,\\s*");
                 InternetAddress[] toAddresses = new InternetAddress[addrs.length];
@@ -162,7 +169,12 @@ public class MailWriterNode extends AbstractSafeDataPipe
                 msg.setRecipients(Message.RecipientType.TO, toAddresses);
                 msg.setSubject(subject, subjectEncoding);
                 msg.setHeader("X-Mailer", "Raven-Monitoring");
-                
+                Map<String, String> _headers = headers;
+                if (_headers!=null) {
+                    for (Map.Entry<String, String> header: _headers.entrySet()) {
+                        msg.setHeader(header.getKey(), header.getValue());
+                    }
+                }
                 createContent(msg, context);
                 
                 msg.setSentDate(new Date());
@@ -372,5 +384,21 @@ public class MailWriterNode extends AbstractSafeDataPipe
 
     public void setUseErrorHandler(Boolean useErrorHandler) {
         this.useErrorHandler = useErrorHandler;
+    }
+
+    public Map getHeaders() {
+        return headers;
+    }
+
+    public void setHeaders(Map headers) {
+        this.headers = headers;
+    }
+
+    public String getMessageId() {
+        return messageId;
+    }
+
+    public void setMessageId(String messageId) {
+        this.messageId = messageId;
     }
 }
