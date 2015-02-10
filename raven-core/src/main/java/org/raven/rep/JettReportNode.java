@@ -28,6 +28,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import net.sf.jett.event.SheetListener;
 import net.sf.jett.transform.ExcelTransformer;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.h2.util.IOUtils;
@@ -58,7 +59,7 @@ import org.weda.annotations.constraints.NotNull;
  */
 @NodeClass(
     childNodes={
-        JxlsAttributeValueBeanNode.class, JxlsDataSourceBeanNode.class,
+        JxlsAttributeValueBeanNode.class, JxlsDataSourceBeanNode.class, SheetListenerNode.class,
         IfNode.class})
 public class JettReportNode extends AbstractSafeDataPipe implements Viewable
 {
@@ -168,6 +169,7 @@ public class JettReportNode extends AbstractSafeDataPipe implements Viewable
             List<String> templateSheetNames = new ArrayList<String>(sheets.size());
             List<String> sheetNames = new ArrayList<String>(sheets.size());
             List<Map<String, Object>> sheetBeans = new ArrayList<Map<String, Object>>(sheets.size());
+            
             //create and init transformer
             ExcelTransformer transformer = new ExcelTransformer();
             final String _styles = styles;
@@ -178,14 +180,17 @@ public class JettReportNode extends AbstractSafeDataPipe implements Viewable
             if (_forceRecalculationOnOpening!=null)
                 transformer.setForceRecalculationOnOpening(_forceRecalculationOnOpening);
             
+            //add sheet listeners
+            for (SheetListener sheetListener: NodeUtils.getEffectiveChildsOfType(this, SheetListener.class))
+                transformer.addSheetListener(sheetListener);
+            
             for (SheetInfo info: sheets){
                 templateSheetNames.add(info.templateSheetName);
                 sheetNames.add(info.sheetName);
                 sheetBeans.add(info.beans);
                 for (String name: info.fixedSizeCollectionBeanNames)
                     transformer.addFixedSizeCollectionName(name);
-            }
-
+            }            
             Workbook wb = transformer.transform(reportTemplate.getDataStream(), templateSheetNames, sheetNames, sheetBeans);
             final String fileKey = RavenUtils.generateUniqKey("jett_report_");
             TemporaryFileManager tempFileManager = temporaryFileManager;
