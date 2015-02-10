@@ -224,6 +224,10 @@ public class TemporaryFileManagerNode extends BaseNode implements TemporaryFileM
     }
 
     public File createFile(Node requester, String key, String contentType) throws IOException {
+        return createFile(requester, key, contentType, null);
+    }
+    
+    public File createFile(Node requester, String key, String contentType, String filename) throws IOException {
         lock.writeLock().lock();
         File file = null;
         try {
@@ -231,7 +235,7 @@ public class TemporaryFileManagerNode extends BaseNode implements TemporaryFileM
             file = File.createTempFile(tempFilePrefix, ".tmp", dirFile);
             if (fileInfo!=null)
                 streamsToClose.addAll(fileInfo.streams);
-            fileInfo = new FileInfo(requester, System.currentTimeMillis(), key, file, contentType, null);
+            fileInfo = new FileInfo(requester, System.currentTimeMillis(), key, file, contentType, filename);
             files.put(key, fileInfo);
             fileInfo.initialized.set(true);
         } finally {

@@ -61,10 +61,10 @@ public class TemporaryFileManagerNodeTest extends RavenCoreTestCase
         byte[] arr = {1,2,3,4,5};
         ByteArrayInputStream in = new ByteArrayInputStream(arr);
         DataSource ds = manager.saveFile(manager, "test", in, null, true);
-        checkDataSource(ds, arr);
+        checkDataSource(ds, arr, false);
 
         ds = manager.getDataSource("test");
-        checkDataSource(ds, arr);
+        checkDataSource(ds, arr, false);
 
         assertNull(manager.getDataSource("test2"));
 
@@ -125,8 +125,8 @@ public class TemporaryFileManagerNodeTest extends RavenCoreTestCase
         DataSource ds1 = manager.saveFile(manager, "test", in, null, true);
         File file = new File(ds1.getName());
         assertTrue(file.exists());
-        checkDataSource(manager.saveFile(manager, "test", in2, null, false), arr);
-        checkDataSource(manager.saveFile(manager, "test", in2, null, true), arr2);
+        checkDataSource(manager.saveFile(manager, "test", in2, null, false), arr, false);
+        checkDataSource(manager.saveFile(manager, "test", in2, null, true), arr2, false);
 
         manager.executeScheduledJob(null);
         assertFalse(file.exists());
@@ -162,15 +162,29 @@ public class TemporaryFileManagerNodeTest extends RavenCoreTestCase
         FileUtils.writeByteArrayToFile(file, buf);
         DataSource source = manager.getDataSource("test_file");
         assertNotNull(source);
-        checkDataSource(source, buf);
+        checkDataSource(source, buf, false);
     }
 
-    private void checkDataSource(DataSource source, byte[] expected) throws IOException
+    @Test
+    public void createFileWithFilenameTest() throws Exception {
+        File file = manager.createFile(manager, "test_file", "test/test", "test.txt");
+        assertNotNull(file);
+        byte[] buf = new byte[]{1,2,3,4};
+        FileUtils.writeByteArrayToFile(file, buf);
+        DataSource source = manager.getDataSource("test_file");
+        assertNotNull(source);
+        checkDataSource(source, buf, true);
+        assertEquals("test/test", source.getContentType());
+        assertEquals("test.txt", source.getName());
+    }
+
+    private void checkDataSource(DataSource source, byte[] expected, boolean virtualFilename) throws IOException
     {
         assertNotNull(source);
         assertNotNull(source.getName());
         File file =new File(source.getName());
-        assertTrue(file.exists());
+        if (!virtualFilename)
+            assertTrue(file.exists());
         byte[] arr = IOUtils.toByteArray(source.getInputStream());
         assertArrayEquals(expected, arr);
     }

@@ -217,6 +217,10 @@
       <artifactId>jxls-core</artifactId>
     </dependency>
     <dependency>
+        <groupId>net.sf.jett</groupId>
+        <artifactId>jett-core</artifactId>
+    </dependency>
+    <dependency>
       <groupId>geronimo-spec</groupId>
       <artifactId>geronimo-spec-jta</artifactId>
     </dependency>
