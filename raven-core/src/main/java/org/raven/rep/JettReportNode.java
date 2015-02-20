@@ -304,12 +304,16 @@ public class JettReportNode extends AbstractSafeDataPipe implements Viewable
         private final String sheetName;
 
         public SheetInfo(Map beans, Set<String> fixedSizeCollectionBeanNames
-                , String templateSheetName, String sheetName) 
+                , String templateSheetName, String sheetName) throws Exception
         {
             this.beans = beans;
             this.fixedSizeCollectionBeanNames = fixedSizeCollectionBeanNames.isEmpty()?
                     Collections.EMPTY_SET : fixedSizeCollectionBeanNames;
+            if (templateSheetName==null)
+                throw new Exception("Report template sheet name (templateSheetName) not specefied");
             this.templateSheetName = templateSheetName;
+            if (sheetName==null)
+                throw new Exception("Report sheet name (sheetName) not specefied");
             this.sheetName = sheetName;
         }
 

@@ -35,7 +35,6 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.raven.TestScheduler;
-import org.raven.cache.TemporaryFileManager;
 import org.raven.cache.TemporaryFileManagerNode;
 import org.raven.ds.DataContext;
 import org.raven.expr.impl.ScriptAttributeValueHandlerFactory;
@@ -105,6 +104,31 @@ public class JettReportNodeTest extends RavenCoreTestCase {
         ds.pushData("hello world");
 
         verify(handler);
+    }
+
+    @Test()
+    public void nullSheetNameTest() throws Exception
+    {
+        report.getReportTemplate().setDataStream(new FileInputStream("src/test/conf/jxls_template.xlsx"));
+        NodeAttribute attr = report.getAttr("sheetName");
+        attr.setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        attr.setValue("null");
+        assertTrue(report.start());
+
+        ds.pushData("hello world");
+        assertEquals(0, collector.getDataListSize());
+    }
+
+    @Test()
+    public void nullTemplateSheetNameTest() throws Exception {
+        report.getReportTemplate().setDataStream(new FileInputStream("src/test/conf/jxls_template.xlsx"));
+        NodeAttribute attr = report.getAttr("templateSheetName");
+        attr.setValueHandlerType(ScriptAttributeValueHandlerFactory.TYPE);
+        attr.setValue("null");
+        assertTrue(report.start());
+
+        ds.pushData("hello world");
+        assertEquals(0, collector.getDataListSize());
     }
 
 //    @Test
@@ -198,7 +222,7 @@ public class JettReportNodeTest extends RavenCoreTestCase {
 //        verify(handler);
     }
 
-    @Test
+//    @Test
     public void multiSheetReportTest() throws Exception
     {
         report.getReportTemplate().setDataStream(new FileInputStream("src/test/conf/jxls_template2.xls"));
