@@ -66,6 +66,7 @@ import org.weda.constraints.ReferenceValue;
 import org.weda.services.TypeConverter;
 import static org.easymock.EasyMock.*;
 import org.raven.auth.impl.LoginManagerNode;
+import org.raven.sched.impl.ActorSystemsNode;
 import org.raven.tree.impl.objects.NodeWithChildsFromOther;
 import org.raven.tree.impl.objects.NodeWithChildsFromParentLevel;
 /**
@@ -809,6 +810,10 @@ public class TreeServiceTest extends ServiceTestCase
         SchedulersNode schedulersNode = 
                 (SchedulersNode) systemNode.getNode(SchedulersNode.NAME);
         assertNotNull(schedulersNode);
+        
+        ActorSystemsNode actorSystemsNode = 
+                (ActorSystemsNode) systemNode.getNode(ActorSystemsNode.NAME);
+        assertNotNull(actorSystemsNode);
 
         LocalDatabaseNode localDatabaseNode =
                 (LocalDatabaseNode) systemNode.getNode(LocalDatabaseNode.NAME);

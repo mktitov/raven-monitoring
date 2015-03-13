@@ -20,6 +20,7 @@ import org.raven.annotations.NodeClass;
 import org.raven.auth.impl.LoginManagerNode;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.prj.Project;
+import org.raven.sched.impl.ActorSystemsNode;
 import org.raven.template.impl.TemplatesNode;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
@@ -51,6 +52,8 @@ public class ProjectNode extends BaseNode implements Project {
     public void initNodes(boolean start) {
         if (!checkNode(LoginManagerNode.NAME)) 
             addSaveAndStartNode(new ProjectLoginManagerNode(), start);
+        if (!checkNode(ActorSystemsNode.NAME))
+            addSaveAndStartNode(new ActorSystemsNode(), start);
         if (!checkNode(ConnectionPoolsNode.NAME))
             addSaveAndStartNode(new ConnectionPoolsNode(), start);
         if (!checkNode(SchemasNode.NAME))

@@ -21,6 +21,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import java.io.Reader;
 import java.util.concurrent.atomic.AtomicReference;
+import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.sched.ActorSystemProvider;
 import org.raven.tree.DataFile;
@@ -32,6 +33,7 @@ import org.raven.tree.impl.DataFileValueHandlerFactory;
  *
  * @author Mikhail Titov
  */
+@NodeClass(parentNode = ActorSystemsNode.class)
 public class ActorSystemNode extends BaseNode implements ActorSystemProvider {
     
     @Parameter(valueHandlerType = DataFileValueHandlerFactory.TYPE) 

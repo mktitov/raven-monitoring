@@ -136,10 +136,11 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
     public void init() throws NodeError
     {
         super.init();
-
-        RecordSchemaNode _recordSchema = recordSchema;
-        if (_recordSchema!=null)
-            _recordSchema.addListener(schemaListener);
+        if (!ScriptAttributeValueHandlerFactory.TYPE.equals(getAttr("recordSchema").getValueHandlerType())) {
+            RecordSchemaNode _recordSchema = recordSchema;
+            if (_recordSchema!=null)
+                _recordSchema.addListener(schemaListener);
+        }
     }
 
     @Override

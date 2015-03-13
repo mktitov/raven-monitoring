@@ -45,6 +45,7 @@ import org.raven.impl.NodeClassTransformerWorker;
 import org.raven.log.impl.NodeLoggerNode;
 import org.raven.net.impl.NetworkResponseServiceNode;
 import org.raven.prj.Projects;
+import org.raven.sched.impl.ActorSystemsNode;
 import org.raven.sched.impl.SchedulersNode;
 import org.raven.template.impl.TemplateVariable;
 import org.raven.template.impl.TemplatesNode;
@@ -123,6 +124,7 @@ public class TreeImpl implements Tree {
     private ProjectsNode projectsNode;
     private ConnectionPoolsNode connectionPoolsNode;
     private SchedulersNode schedulersNode;
+    private ActorSystemsNode actorSystemsNode;
     private NodeLoggerNode nodeLoggerNode;
     private AuditorNode auditorNode;
 	 private QueuesNode queuesNode;
@@ -586,6 +588,14 @@ public class TreeImpl implements Tree {
         	authorizationNode.setParent(systemNode);
             saveNode(authorizationNode);
             systemNode.addChildren(authorizationNode);
+        }
+        
+        actorSystemsNode = (ActorSystemsNode) systemNode.getNode(ActorSystemsNode.NAME);
+        if (actorSystemsNode==null) {
+            actorSystemsNode = new ActorSystemsNode();
+            actorSystemsNode.setParent(systemNode);
+            saveNode(actorSystemsNode);
+            systemNode.addChildren(actorSystemsNode);
         }
         
         schedulersNode = (SchedulersNode) systemNode.getChildren(SchedulersNode.NAME);
