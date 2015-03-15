@@ -19,6 +19,7 @@ package org.raven.ds;
  *
  * @author Mikhail Titov
  */
-public interface DataProcessor<T> {
-    public boolean processData(T dataPackage);
+public interface DataProcessorLogic<T> extends DataProcessor<T> {
+    public void setFacade(DataProcessorFacade facade);
+    public DataProcessorFacade getFacade();
 }

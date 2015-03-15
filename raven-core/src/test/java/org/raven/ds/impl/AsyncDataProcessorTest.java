@@ -24,15 +24,17 @@ import static org.easymock.EasyMock.*;
 import org.easymock.IArgumentMatcher;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.impl.ExecutorServiceNode;
+import org.raven.tree.impl.LoggerHelper;
 /**
  *
  * @author Mikhail Titov
  */
 public class AsyncDataProcessorTest extends RavenCoreTestCase {
-    
+    private LoggerHelper logger;
     
     @Before
     public void prepare() {
+        logger = new LoggerHelper(testsNode, null);
     }
     
     @Test
@@ -42,7 +44,7 @@ public class AsyncDataProcessorTest extends RavenCoreTestCase {
         replay(realProcessor);
         
         InThreadExecutorService executor = new InThreadExecutorService();
-        AsyncDataProcessor processor = new AsyncDataProcessor(executor, realProcessor, executor);
+        AsyncDataProcessor processor = new AsyncDataProcessor(new AsyncDataProcessorConfig(executor, realProcessor, executor, logger));
         processor.processData("test");
         
         verify(realProcessor);
@@ -56,7 +58,8 @@ public class AsyncDataProcessorTest extends RavenCoreTestCase {
         expect(realProcessor.processData(checkDataPacket("test3",0))).andReturn(Boolean.TRUE);
         replay(realProcessor);        
         
-        AsyncDataProcessor processor = new AsyncDataProcessor(executor, realProcessor, executor, 1);
+        AsyncDataProcessor processor = new AsyncDataProcessor(
+                new AsyncDataProcessorConfig(executor, realProcessor, executor, logger).withQueueSize(1));
         assertTrue(processor.processData("test"));
         assertFalse(processor.processData("test2"));
         Thread.sleep(110);
@@ -76,7 +79,7 @@ public class AsyncDataProcessorTest extends RavenCoreTestCase {
         replay(realProcessor);
         
         
-        AsyncDataProcessor processor = new AsyncDataProcessor(executor, realProcessor, executor);
+        AsyncDataProcessor processor = new AsyncDataProcessor(new AsyncDataProcessorConfig(executor, realProcessor, executor, logger));
         Thread source1 = new Thread(new Source(processor, 1, 500));
         Thread source2 = new Thread(new Source(processor, 2, 500));
         source1.start();

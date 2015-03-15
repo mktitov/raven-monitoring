@@ -13,12 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.ds;
+package org.raven.ds.impl;
+
+import org.raven.ds.DataProcessorFacade;
+import org.raven.ds.DataProcessorLogic;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataProcessor<T> {
-    public boolean processData(T dataPackage);
+public abstract class AbstractDataProcessorLogic implements DataProcessorLogic {
+    private volatile DataProcessorFacade facade;
+
+    public void setFacade(DataProcessorFacade facade) {
+        this.facade = facade;
+    }
+
+    public DataProcessorFacade getFacade() {
+        return facade;
+    }
+
 }

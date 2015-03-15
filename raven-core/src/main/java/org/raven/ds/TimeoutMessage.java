@@ -19,6 +19,6 @@ package org.raven.ds;
  *
  * @author Mikhail Titov
  */
-public interface DataProcessor<T> {
-    public boolean processData(T dataPackage);
+public interface TimeoutMessage {
+    
 }

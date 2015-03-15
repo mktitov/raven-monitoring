@@ -17,12 +17,12 @@ package org.raven.ds.impl;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.raven.ds.DataProcessor;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.impl.AbstractTask;
 import org.raven.tree.Node;
+import org.raven.tree.impl.LoggerHelper;
 
 
 /**
@@ -30,35 +30,51 @@ import org.raven.tree.Node;
  * @author Mikhail Titov
  */
 public class AsyncDataProcessor<T> implements DataProcessor<T> {
-    private final Node owner;
-    private final DataProcessor<T> processor;
-    private final ExecutorService executor;
+    protected final Node owner;
+    protected final DataProcessor<T> processor;
+    protected final ExecutorService executor;
     private final Queue<T> queue;
     private final AtomicBoolean running;
     private final Task task;
+    private final int maxMessageProcessTries;
+    private final int maxExecuteMessageDispatcherTies;
+    protected final LoggerHelper logger;
+    private final AtomicBoolean terminated = new AtomicBoolean();
 
-    public AsyncDataProcessor(Node owner, DataProcessor<T> processor, ExecutorService executor) {
-        this(owner, processor, executor, new ConcurrentLinkedQueue<T>());
-    }
-
-    public AsyncDataProcessor(Node owner, DataProcessor<T> processor, ExecutorService executor, int queueSize) {
-        this(owner, processor, executor, new LinkedBlockingQueue<T>(queueSize));
-    }
-
-    public AsyncDataProcessor(Node owner, DataProcessor<T> processor, ExecutorService executor, Queue<T> queue) {
-        this.owner = owner;
-        this.processor = processor;
-        this.executor = executor;
-        this.queue = queue;
+    public AsyncDataProcessor(AsyncDataProcessorConfig<T> config) {
+        this.owner = config.getOwner();
+        this.processor = config.getProcessor();
+        this.executor = config.getExecutor();
+        this.queue = config.getQueue()!=null? config.getQueue() : new ConcurrentLinkedQueue<T>();
+        this.maxMessageProcessTries = config.getMaxMessageProcessTries();
+        this.maxExecuteMessageDispatcherTies = config.getMaxExecuteMessageDispatcherTies();
         this.running = new AtomicBoolean();
-        this.task = new Task(owner, "Processing data async");
+        this.task = new Task(owner, "Processing messages");
+        this.logger = config.getLogger();
     }
     
-    public boolean processData(T dataPacket) throws Exception {
+    public void terminate() {
+        terminated.compareAndSet(false, true);
+    }
+    
+    public boolean isTerminated() {
+        return terminated.get();
+    }
+    
+    public boolean processData(T dataPacket) {
+        if (terminated.get())
+            return false;
         final boolean res = queue.offer(dataPacket);
-        if (res && running.compareAndSet(false, true)) 
-            if (!executor.executeQuietly(task))
+        if (res && running.compareAndSet(false, true)) { 
+            boolean executed;
+            int cnt = 0;
+            while ( !(executed = executor.executeQuietly(task)) && cnt++<maxExecuteMessageDispatcherTies) ;            
+            if (!executed) {
                 running.set(false);
+                if (logger.isErrorEnabled())
+                    logger.error("Error executing message dispatcher task");
+            }
+        }
         return res;
     }
     
@@ -74,14 +90,23 @@ public class AsyncDataProcessor<T> implements DataProcessor<T> {
             while (!stop)
                 try {
                     T dataPacket;
-                    while ( (dataPacket=queue.peek()) != null ) {
+                    int processTry = 0;
+                    while ( !terminated.get() && (dataPacket=queue.peek()) != null ) {
                         boolean processed = processor.processData(dataPacket);
-                        if (processed)
+                        if (processed) {
                             queue.poll();
+                            processTry = 0;
+                        } else {
+                            if (processTry++ > maxMessageProcessTries) {
+                                queue.poll();
+                                if (logger.isErrorEnabled())
+                                    logger.error("The maximum number of attempts reached to process the message: "+dataPacket);
+                            }
+                        }
                     }
                 } finally {
                     running.set(false);
-                    if (queue.isEmpty() || !running.compareAndSet(false, true))
+                    if (terminated.get() || queue.isEmpty() || !running.compareAndSet(false, true))
                         stop = true;
                 }
         }        
