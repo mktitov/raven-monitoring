@@ -18,6 +18,8 @@ package org.raven.ds.impl;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.Before;
 import static org.junit.Assert.*;
 import org.junit.Test;
@@ -25,8 +27,10 @@ import org.raven.sched.ExecutorService;
 import org.raven.sched.impl.ExecutorServiceNode;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.DataProcessor;
+import org.raven.ds.DataProcessorFacade;
 import org.raven.tree.impl.LoggerHelper;
 import static org.raven.ds.impl.DataProcessorFacadeImpl.TIMEOUT_MESSAGE;
+import org.raven.sched.ExecutorServiceException;
 
 /**
  *
@@ -40,7 +44,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         logger = new LoggerHelper(testsNode, null);
     }
     
-    @Test
+//    @Test
     public void setTimeoutTest() throws Exception {
         MessageCollector collector = new MessageCollector();
         ExecutorService executor = createExecutor();
@@ -61,7 +65,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
                 initialTime);
     }
     
-    @Test
+//    @Test
     public void sendDelayedTest() throws Exception {
         MessageCollector collector = new MessageCollector();
         ExecutorService executor = createExecutor();
@@ -78,7 +82,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
                 initialTime);
     }
     
-    @Test
+//    @Test
     public void sendRepeatedly() throws Exception {
         MessageCollector collector = new MessageCollector();
         ExecutorService executor = createExecutor();
@@ -93,6 +97,15 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
                 new long[]{100, 150, 200, 250, 300}, 
                 new long[]{ 10,  10,  15,  15,  15}, 
                 initialTime);
+        
+    }
+    
+    @Test
+    public void logicTest() throws Exception {
+        ExecutorService executor = createExecutor();
+        DataProcessorFacadeImpl facade = new DataProcessorFacadeImpl(
+                new AsyncDataProcessorConfig(testsNode, new Logic(), executor, logger));
+        Thread.sleep(5000);
         
     }
     
@@ -119,6 +132,25 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         assertTrue(executor.start());
         
         return executor;
+    }
+    
+    private class Logic extends AbstractDataProcessorLogic {
+
+        @Override
+        protected void init(DataProcessorFacade facade) {
+            try {
+                facade.sendRepeatedly(50, 50, 0, "TEST");
+                System.out.println("\n\n\n!!!INITIALIZED ");
+            } catch (ExecutorServiceException ex) {
+                System.out.println("\n\n\n!!!ERROR: "+ex.toString());
+                Logger.getLogger(DataProcessorFacadeImplTest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        public boolean processData(Object dataPackage) {
+            System.out.println("\n\n>>>\n"+dataPackage);
+            return true;
+        }        
     }
     
     private class MessageCollector implements DataProcessor {

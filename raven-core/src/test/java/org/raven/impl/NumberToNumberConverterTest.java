@@ -34,14 +34,12 @@ public class NumberToNumberConverterTest extends RavenCoreTestCase
 
         Class[] numberTypes = 
             {
-                Short.class, Short.TYPE, Integer.class, Integer.TYPE, Long.class, Long.TYPE,
+                Byte.class, Byte.TYPE, Short.class, Short.TYPE, Integer.class, Integer.TYPE, Long.class, Long.TYPE,
                 Double.class, Double.TYPE, Float.class, Float.TYPE
             };
-        Object[] numbers = {(short)5, (short)5, 5, 5, 5l, 5l, 5., 5., (float)5., (float)5.};
+        Object[] numbers = {(byte)5, (byte)5, (short)5, (short)5, 5, 5, 5l, 5l, 5., 5., (float)5., (float)5.};
         for (int i=0; i<numberTypes.length; ++i)
-        {
             check(converter, numberTypes[i], numbers[i]);
-        }
     }
 
     public void service_test() throws Exception
@@ -59,5 +57,6 @@ public class NumberToNumberConverterTest extends RavenCoreTestCase
         assertEquals(number, converter.convert(5l, numberClass, null));
         assertEquals(number, converter.convert(5., numberClass, null));
         assertEquals(number, converter.convert(new Float(5.), numberClass, null));
+        assertEquals(number, converter.convert((byte)5, numberClass, null));
     }
 }

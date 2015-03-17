@@ -42,6 +42,8 @@ public class NumberToNumberConverter extends AbstractConverter<Number, Number>
             return value.doubleValue();
         else if (Float.class.equals(realTargetType) || Float.TYPE.equals(realTargetType))
             return value.floatValue();
+        else if (Byte.class.equals(realTargetType) || Byte.TYPE.equals(realTargetType))
+            return value.byteValue();
         else
             return value;
     }

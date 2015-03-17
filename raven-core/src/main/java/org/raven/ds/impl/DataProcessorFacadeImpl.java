@@ -73,7 +73,7 @@ public class DataProcessorFacadeImpl extends AsyncDataProcessor implements DataP
     }
 
     public void sendRepeatedly(final long delay, final long interval, final int times, final Object message) throws ExecutorServiceException {
-        if (times <= 0 || isTerminated())
+        if (times < 0 || isTerminated())
             return;
         AbstractTask task = new AbstractTask(owner, "Sending message repeatedly") {
             private int cnt=0;

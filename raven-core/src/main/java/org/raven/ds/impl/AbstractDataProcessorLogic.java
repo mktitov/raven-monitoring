@@ -27,10 +27,13 @@ public abstract class AbstractDataProcessorLogic implements DataProcessorLogic {
 
     public void setFacade(DataProcessorFacade facade) {
         this.facade = facade;
+        init(facade);
     }
 
     public DataProcessorFacade getFacade() {
         return facade;
     }
+    
+    protected abstract void init(DataProcessorFacade facade);
 
 }
