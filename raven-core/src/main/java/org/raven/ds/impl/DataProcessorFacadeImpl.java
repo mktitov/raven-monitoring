@@ -48,8 +48,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     private final int maxExecuteMessageDispatcherTies;
     protected final LoggerHelper logger;
     private final AtomicBoolean terminated = new AtomicBoolean();
-    
-    
+        
     public final static TimeoutMessage TIMEOUT_MESSAGE = new TimeoutMessage() {
         @Override public String toString() {
             return "TIMEOUT_MESSAGE";
@@ -177,11 +176,19 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     }
     
     protected void sendMessageToProcessor(Object message) {
-        if (message instanceof AskFuture) {
-            final AskFuture future = (AskFuture) message;
-            future.set(processor.processData(future.message));
-        } else 
-            processor.processData(message);
+        final AskFuture future = message instanceof AskFuture? (AskFuture)message : null;
+        if (future!=null)
+            message = future.message;
+        try {
+            final Object result = processor.processData(message);
+            if (future!=null)
+                future.set(result);
+        } catch (Throwable e) {
+            if (logger.isErrorEnabled())
+                logger.error("Error processing message", e);
+            if (future!=null)
+                future.setError(e);
+        }
     }
     
 

@@ -84,8 +84,8 @@ public class RavenFutureImpl<V> implements RavenFuture<V> {
 
     public boolean cancel(boolean bln) {
         if (state.compareAndSet(COMPUTING, CANCELED)) {
-            done();
             latch.countDown();
+            done();
             return true;
         } 
         return false;
@@ -102,16 +102,16 @@ public class RavenFutureImpl<V> implements RavenFuture<V> {
     public void setError(Throwable error) {
         if (state.compareAndSet(COMPUTING, ERROR)) {
             this.error = error;
-            done();
             latch.countDown();
+            done();
         }
     }
     
     public void set(V value) {
         if (state.compareAndSet(COMPUTING, DONE)) {
             result = value;
-            done();
             latch.countDown();
+            done();
         }
     }
 

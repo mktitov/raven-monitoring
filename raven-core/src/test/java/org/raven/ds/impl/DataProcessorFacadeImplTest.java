@@ -18,6 +18,7 @@ package org.raven.ds.impl;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.Before;
@@ -33,6 +34,7 @@ import static org.raven.ds.impl.DataProcessorFacadeImpl.TIMEOUT_MESSAGE;
 import org.raven.sched.ExecutorServiceException;
 import static org.easymock.EasyMock.*;
 import org.easymock.IArgumentMatcher;
+import org.raven.ds.AskCallback;
 import org.raven.test.InThreadExecutorService;
 
 /**
@@ -164,6 +166,50 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         Thread.sleep(5000);
         
     }
+    
+    @Test
+    public void askTest() throws Exception {
+        ExecutorService executor = createExecutor();
+        DataProcessor processor = createMock(DataProcessor.class);
+        expect(processor.processData("test")).andReturn("ok");
+        replay(processor);
+        DataProcessorFacadeImpl facade = new DataProcessorFacadeImpl(
+                new DataProcessorFacadeConfig(testsNode, processor, executor, logger));
+        assertEquals("ok", facade.ask("test").get());
+        verify(processor);
+    }
+    
+    @Test(expected = ExecutionException.class)
+    public void askWithErrorTest() throws Exception {
+        ExecutorService executor = createExecutor();
+        DataProcessor processor = createMock(DataProcessor.class);
+        expect(processor.processData("test")).andThrow(new Exception("error"));
+        replay(processor);
+        DataProcessorFacadeImpl facade = new DataProcessorFacadeImpl(
+                new DataProcessorFacadeConfig(testsNode, processor, executor, logger));
+        try {
+            assertEquals("ok", facade.ask("test").get());
+        } finally {
+            verify(processor);
+        }
+    }
+    
+    @Test
+    public void askWithCallbackTest() throws Exception {
+        ExecutorService executor = createExecutor();
+        DataProcessor processor = createMock(DataProcessor.class);
+        AskCallback callback = createMock(AskCallback.class);
+        expect(processor.processData("test")).andReturn("ok");
+        callback.onSuccess("ok");
+        replay(processor, callback);
+        DataProcessorFacadeImpl facade = new DataProcessorFacadeImpl(
+                new DataProcessorFacadeConfig(testsNode, processor, executor, logger));
+        facade.ask("test", callback).get();
+        
+        verify(processor, callback);
+    }
+    
+    
     
     private void checkMessages(MessageCollector collector, Object[] messages, long[] timings, long[] accuracy, long initialTime) {
         assertEquals(String.format("Expected messages: %s; Received messages: %s", Arrays.toString(messages), collector.messages),

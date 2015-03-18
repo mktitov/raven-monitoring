@@ -20,5 +20,5 @@ package org.raven.ds;
  * @author Mikhail Titov
  */
 public interface DataProcessor<T> {
-    public Object processData(T dataPackage);
+    public Object processData(T dataPackage) throws Exception;
 }
