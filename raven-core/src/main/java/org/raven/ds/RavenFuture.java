@@ -15,10 +15,15 @@
  */
 package org.raven.ds;
 
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataProcessor<T> {
-    public Object processData(T dataPackage);
+public interface RavenFuture<V> extends Future<V> {
+    public V getOrElse(V v);
+    public V getOrElse(V v, long timeout, TimeUnit timeUnit);
+    public V getOrElse(V v, long timeoutMs);
 }

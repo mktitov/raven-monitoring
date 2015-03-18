@@ -26,7 +26,7 @@ import org.raven.tree.impl.LoggerHelper;
  *
  * @author Mikhail Titov
  */
-public class AsyncDataProcessorConfig<T> {
+public class DataProcessorFacadeConfig<T> {
     private final Node owner;
     private final DataProcessor<T> processor;
     private final ExecutorService executor;
@@ -35,28 +35,28 @@ public class AsyncDataProcessorConfig<T> {
     private int maxMessageProcessTries = 1;
     private int maxExecuteMessageDispatcherTies = 1;
 
-    public AsyncDataProcessorConfig(Node owner, DataProcessor<T> processor, ExecutorService executor, LoggerHelper logger) {
+    public DataProcessorFacadeConfig(Node owner, DataProcessor<T> processor, ExecutorService executor, LoggerHelper logger) {
         this.owner = owner;
         this.processor = processor;
         this.executor = executor;
         this.logger = logger;
     }
     
-    public AsyncDataProcessorConfig<T> withQueueSize(int size) {
+    public DataProcessorFacadeConfig<T> withQueueSize(int size) {
         queue = new LinkedBlockingQueue<T>(size);
         return this;
     }
     
-    public AsyncDataProcessorConfig<T> withQueue(Queue<T> queue) {
+    public DataProcessorFacadeConfig<T> withQueue(Queue<T> queue) {
         this.queue = queue;
         return this;
     }
     
-    public AsyncDataProcessorConfig<T> withMaxMessageProcessTries(int maxMessageProcessTries) {
+    public DataProcessorFacadeConfig<T> withMaxMessageProcessTries(int maxMessageProcessTries) {
         this.maxMessageProcessTries = maxMessageProcessTries;
         return this;
     }
-    public AsyncDataProcessorConfig<T> withMaxExecuteMessageDispatcherTies(int maxExecuteMessageDispatcherTies) {
+    public DataProcessorFacadeConfig<T> withMaxExecuteMessageDispatcherTies(int maxExecuteMessageDispatcherTies) {
         this.maxExecuteMessageDispatcherTies = maxExecuteMessageDispatcherTies;
         return this;
     }

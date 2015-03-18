@@ -17,8 +17,8 @@ package org.raven.ds;
 
 /**
  *
- * @author Mikhail Titov
+ * @author tim
  */
-public interface DataProcessor<T> {
-    public Object processData(T dataPackage);
+public class MessageQueueError extends DataProcessorFacadeException {
+
 }

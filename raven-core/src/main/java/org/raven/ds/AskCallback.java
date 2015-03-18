@@ -19,6 +19,7 @@ package org.raven.ds;
  *
  * @author Mikhail Titov
  */
-public interface DataProcessor<T> {
-    public Object processData(T dataPackage);
+public interface AskCallback {
+    public void onSuccess(Object askResult);
+    public void onError(Throwable error);
 }

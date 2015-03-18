@@ -15,20 +15,41 @@
  */
 package org.raven.ds.impl;
 
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import org.raven.ds.AskCallback;
+import org.raven.ds.DataProcessor;
 import org.raven.ds.DataProcessorFacade;
 import org.raven.ds.DataProcessorLogic;
+import org.raven.ds.MessageQueueError;
+import org.raven.ds.RavenFuture;
 import org.raven.ds.TimeoutMessage;
+import org.raven.sched.ExecutorService;
 import org.raven.sched.ExecutorServiceException;
 import org.raven.sched.Task;
 import org.raven.sched.impl.AbstractTask;
 import org.raven.tree.Node;
+import org.raven.tree.impl.LoggerHelper;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class DataProcessorFacadeImpl extends AsyncDataProcessor implements DataProcessorFacade {
+public class DataProcessorFacadeImpl implements  DataProcessorFacade {
+    protected final Node owner;
+    protected final DataProcessor processor;
+    protected final ExecutorService executor;
+    private final Queue queue;
+    private final AtomicBoolean running;
+    private final WorkerTask task;
+//    private final int maxMessageProcessTries;
+    private final int maxExecuteMessageDispatcherTies;
+    protected final LoggerHelper logger;
+    private final AtomicBoolean terminated = new AtomicBoolean();
+    
+    
     public final static TimeoutMessage TIMEOUT_MESSAGE = new TimeoutMessage() {
         @Override public String toString() {
             return "TIMEOUT_MESSAGE";
@@ -38,26 +59,51 @@ public class DataProcessorFacadeImpl extends AsyncDataProcessor implements DataP
     
     private final AtomicReference<CheckTimeoutTask> checkTimeoutTask = new AtomicReference<CheckTimeoutTask>();
 
-    public DataProcessorFacadeImpl(AsyncDataProcessorConfig config) {
-        super(config);
+    public DataProcessorFacadeImpl(DataProcessorFacadeConfig config) {
+        this.owner = config.getOwner();
+        this.processor = config.getProcessor();
+        this.executor = config.getExecutor();
+        this.queue = config.getQueue()!=null? config.getQueue() : new ConcurrentLinkedQueue();
+//        this.maxMessageProcessTries = config.getMaxMessageProcessTries();
+        this.maxExecuteMessageDispatcherTies = config.getMaxExecuteMessageDispatcherTies();
+        this.running = new AtomicBoolean();
+        this.task = new WorkerTask(owner, "Processing messages");
+        this.logger = config.getLogger();
         if (processor instanceof DataProcessorLogic)
             ((DataProcessorLogic)processor).setFacade(this);
     }
 
-    @Override
-    public boolean processData(Object dataPacket) {
-        if (super.processData(dataPacket)) {
-            if (checkTimeoutTask.get()!=null)
-                lastMessageTs = System.currentTimeMillis();
-            return true;
-        } else
+    public void terminate() {
+        terminated.compareAndSet(false, true);
+    }
+    
+    public boolean isTerminated() {
+        return terminated.get();
+    }    
+    
+    protected boolean queueMessage(Object message) {
+        if (terminated.get())
             return false;
+        final boolean res = queue.offer(message);
+        if (res && running.compareAndSet(false, true)) { 
+            boolean executed;
+            int cnt = 0;
+            while ( !(executed = executor.executeQuietly(task)) && cnt++<maxExecuteMessageDispatcherTies) ;            
+            if (!executed) {
+                running.set(false);
+                if (logger.isErrorEnabled())
+                    logger.error("Error executing message dispatcher task");
+            }
+        }
+        return res;        
     }
 
     public boolean send(Object message) {
-        if (processData(message))
+        if (queueMessage(message)) {
+            if (checkTimeoutTask.get()!=null)
+                lastMessageTs = System.currentTimeMillis();
             return true;
-        else {
+        } else {
             if (logger.isErrorEnabled())
                 logger.error("Message sending error. Message not queued. Message: "+message);
             return false;            
@@ -95,6 +141,21 @@ public class DataProcessorFacadeImpl extends AsyncDataProcessor implements DataP
         executor.execute(delay, task);
     }
     
+    private RavenFuture sendAskFuture(Object message, AskCallback callback) {
+        final AskFuture future = new AskFuture(message, callback);
+        if (!send(future))
+            future.setError(new MessageQueueError());
+        return future;
+    }
+
+    public RavenFuture ask(Object message) {
+        return sendAskFuture(message, null);
+    }
+
+    public RavenFuture ask(Object message, AskCallback callback) {
+        return sendAskFuture(message, callback);
+    }
+
     private void executeDelayedTask(long delay, Task task) {
         try {
             if (!isTerminated())
@@ -114,6 +175,15 @@ public class DataProcessorFacadeImpl extends AsyncDataProcessor implements DataP
                 logger.error("Error executing delayed task", e);
         }
     }
+    
+    protected void sendMessageToProcessor(Object message) {
+        if (message instanceof AskFuture) {
+            final AskFuture future = (AskFuture) message;
+            future.set(processor.processData(future.message));
+        } else 
+            processor.processData(message);
+    }
+    
 
     public void setTimeout(long timeout, long checkTimeoutInterval)  throws ExecutorServiceException {
         lastMessageTs = System.currentTimeMillis();
@@ -140,5 +210,36 @@ public class DataProcessorFacadeImpl extends AsyncDataProcessor implements DataP
                 send(TIMEOUT_MESSAGE);                
             executeDelayedTask(checkTimeoutInterval, this);
         }
+    }
+    
+    private class WorkerTask extends AbstractTask {
+
+        public WorkerTask(Node taskNode, String status) {
+            super(taskNode, status);
+        }
+
+        @Override
+        public void doRun() throws Exception {
+            boolean stop = false;
+            while (!stop)
+                try {
+                    Object message;
+                    while ( !terminated.get() && (message=queue.poll()) != null ) 
+                        sendMessageToProcessor(message);
+                } finally {
+                    running.set(false);
+                    if (terminated.get() || queue.isEmpty() || !running.compareAndSet(false, true))
+                        stop = true;
+                }
+        }        
+    }
+    
+    private static class AskFuture extends RavenFutureImpl {
+        private final Object message;
+
+        public AskFuture(Object message, AskCallback callback) {
+            super(callback);
+            this.message = message;
+        }        
     }
 }

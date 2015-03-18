@@ -31,6 +31,9 @@ import org.raven.ds.DataProcessorFacade;
 import org.raven.tree.impl.LoggerHelper;
 import static org.raven.ds.impl.DataProcessorFacadeImpl.TIMEOUT_MESSAGE;
 import org.raven.sched.ExecutorServiceException;
+import static org.easymock.EasyMock.*;
+import org.easymock.IArgumentMatcher;
+import org.raven.test.InThreadExecutorService;
 
 /**
  *
@@ -44,11 +47,64 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         logger = new LoggerHelper(testsNode, null);
     }
     
-//    @Test
+    @Test
+    public void singlePacketTest() throws Exception {
+        DataProcessor realProcessor = createMock(DataProcessor.class);
+        expect(realProcessor.processData("test")).andReturn(Boolean.TRUE);
+        replay(realProcessor);
+        
+        InThreadExecutorService executor = new InThreadExecutorService();
+        DataProcessorFacadeImpl processor = new DataProcessorFacadeImpl(
+                new DataProcessorFacadeConfig(executor, realProcessor, executor, logger));
+        processor.send("test");
+        
+        verify(realProcessor);
+    }
+    
+    @Test(timeout = 500l)
+    public void capacityTest() throws Exception {
+        ExecutorService executor = createExecutor();
+        DataProcessor realProcessor = createMock(DataProcessor.class);
+        expect(realProcessor.processData(checkDataPacket("test", 100))).andReturn(Boolean.TRUE);
+        expect(realProcessor.processData(checkDataPacket("test3",0))).andReturn(Boolean.TRUE);
+        replay(realProcessor);        
+        
+        DataProcessorFacadeImpl processor = new DataProcessorFacadeImpl(
+                new DataProcessorFacadeConfig(executor, realProcessor, executor, logger).withQueueSize(1));
+        assertTrue(processor.send("test"));
+        assertFalse(processor.send("test2"));
+        Thread.sleep(110);
+        assertTrue(processor.send("test3"));
+        
+        Thread.sleep(200l);
+        
+        verify(realProcessor);        
+    }
+    
+    @Test(timeout = 4000l)
+    public void loadTest() throws Exception {
+        ExecutorService executor = createExecutor();
+        DataProcessor realProcessor = createMock(DataProcessor.class);
+        expect(realProcessor.processData(checkDataPacket("test", 1))).andReturn(Boolean.TRUE).times(1000);
+        replay(realProcessor);
+        
+        
+        DataProcessorFacadeImpl processor = new DataProcessorFacadeImpl(
+                new DataProcessorFacadeConfig(executor, realProcessor, executor, logger));
+        Thread source1 = new Thread(new Source(processor, 1, 500));
+        Thread source2 = new Thread(new Source(processor, 2, 500));
+        source1.start();
+        source2.start();
+        
+        Thread.sleep(2000);
+        verify(realProcessor);
+    }
+    
+    @Test
     public void setTimeoutTest() throws Exception {
         MessageCollector collector = new MessageCollector();
         ExecutorService executor = createExecutor();
-        DataProcessorFacadeImpl facade = new DataProcessorFacadeImpl(new AsyncDataProcessorConfig(testsNode, collector, executor, logger));
+        DataProcessorFacadeImpl facade = new DataProcessorFacadeImpl(new DataProcessorFacadeConfig(testsNode, collector, executor, logger));
         Thread.sleep(1000l);
         long initialTime = System.currentTimeMillis();
         facade.setTimeout(100l, 2l);
@@ -65,11 +121,11 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
                 initialTime);
     }
     
-//    @Test
+    @Test
     public void sendDelayedTest() throws Exception {
         MessageCollector collector = new MessageCollector();
         ExecutorService executor = createExecutor();
-        DataProcessorFacadeImpl facade = new DataProcessorFacadeImpl(new AsyncDataProcessorConfig(testsNode, collector, executor, logger));
+        DataProcessorFacadeImpl facade = new DataProcessorFacadeImpl(new DataProcessorFacadeConfig(testsNode, collector, executor, logger));
         Thread.sleep(1000l);
         long initialTime = System.currentTimeMillis();
         facade.sendDelayed(100l, "TEST");
@@ -82,11 +138,11 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
                 initialTime);
     }
     
-//    @Test
+    @Test
     public void sendRepeatedly() throws Exception {
         MessageCollector collector = new MessageCollector();
         ExecutorService executor = createExecutor();
-        DataProcessorFacadeImpl facade = new DataProcessorFacadeImpl(new AsyncDataProcessorConfig(testsNode, collector, executor, logger));
+        DataProcessorFacadeImpl facade = new DataProcessorFacadeImpl(new DataProcessorFacadeConfig(testsNode, collector, executor, logger));
         Thread.sleep(1000l);
         long initialTime = System.currentTimeMillis();
         facade.sendRepeatedly(100l, 50l, 5, "TEST");
@@ -104,7 +160,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
     public void logicTest() throws Exception {
         ExecutorService executor = createExecutor();
         DataProcessorFacadeImpl facade = new DataProcessorFacadeImpl(
-                new AsyncDataProcessorConfig(testsNode, new Logic(), executor, logger));
+                new DataProcessorFacadeConfig(testsNode, new Logic(), executor, logger));
         Thread.sleep(5000);
         
     }
@@ -120,6 +176,23 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
                     timing, i, messages[i], timings[i], timings[i]+accuracy[i]);
             assertTrue(assertMess, timing>=timings[i] && timing<=timings[i]+accuracy[i]);
         }
+    }
+    
+    public static String checkDataPacket(final String dataPacket, final long pause) {
+        reportMatcher(new IArgumentMatcher() {
+            public boolean matches(Object argument) {
+                assertEquals(dataPacket, argument);
+                try {
+                    if (pause>0)
+                        Thread.sleep(pause);
+                } catch (InterruptedException ex) {
+                }
+                return true;
+            }
+            public void appendTo(StringBuffer buffer) {
+            }
+        });
+        return null;
     }
     
     private ExecutorService createExecutor() {
@@ -147,18 +220,18 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
             }
         }
 
-        public boolean processData(Object dataPackage) {
+        public Object processData(Object dataPackage) {
             System.out.println("\n\n>>>\n"+dataPackage);
-            return true;
+            return null;
         }        
     }
     
     private class MessageCollector implements DataProcessor {
         private final List<Message> messages = new LinkedList<Message>();
         
-        public boolean processData(Object dataPackage) {
+        public Object processData(Object dataPackage) {
             messages.add(new Message(dataPackage, System.currentTimeMillis()));
-            return true;
+            return null;
         }
     }
     
@@ -176,4 +249,28 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
             return message.toString();
         }
     }
+    
+    private class Source implements Runnable {
+        private final DataProcessorFacade processor;
+        private final long pause;
+        private final int count;
+
+        public Source(DataProcessorFacade processor, long pause, int count) {
+            this.processor = processor;
+            this.pause = pause;
+            this.count = count;
+        }
+        
+        public void run() {
+            try {
+                for (int i=0; i<count; ++i) {
+                    processor.send("test");
+                    Thread.sleep(pause);
+                }
+            } catch (Exception e) {
+                
+            }
+        }        
+    }
+    
 }

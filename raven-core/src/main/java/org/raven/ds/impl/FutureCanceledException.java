@@ -13,12 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.ds;
+package org.raven.ds.impl;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataProcessor<T> {
-    public Object processData(T dataPackage);
+public class FutureCanceledException extends InterruptedException {
+
+    public FutureCanceledException() {
+        super("Ask future was canceled");
+    }
+    
 }

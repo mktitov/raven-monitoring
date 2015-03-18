@@ -21,7 +21,7 @@ import org.raven.sched.ExecutorServiceException;
  *
  * @author Mikhail Titov
  */
-public interface DataProcessorFacade extends DataProcessor {
+public interface DataProcessorFacade {
     public boolean isTerminated();
     public void terminate();
     /**
@@ -49,4 +49,7 @@ public interface DataProcessorFacade extends DataProcessor {
      * @param timeout interval in milliseconds 
      */
     public void setTimeout(long timeout, long checkTimeoutInterval) throws ExecutorServiceException;
+    
+    public RavenFuture ask(Object message);
+    public RavenFuture ask(Object message, AskCallback callback);
 }

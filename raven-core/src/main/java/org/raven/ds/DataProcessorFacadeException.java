@@ -17,8 +17,14 @@ package org.raven.ds;
 
 /**
  *
- * @author Mikhail Titov
+ * @author tim
  */
-public interface DataProcessor<T> {
-    public Object processData(T dataPackage);
+public class DataProcessorFacadeException extends Exception {
+
+    public DataProcessorFacadeException() {
+    }
+
+    public DataProcessorFacadeException(String msg) {
+        super(msg);
+    }
 }
