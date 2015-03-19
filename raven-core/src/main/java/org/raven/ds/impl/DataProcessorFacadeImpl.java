@@ -23,9 +23,11 @@ import org.raven.ds.AskCallback;
 import org.raven.ds.DataProcessor;
 import org.raven.ds.DataProcessorFacade;
 import org.raven.ds.DataProcessorLogic;
+import org.raven.ds.LoggerSupport;
 import org.raven.ds.MessageQueueError;
 import org.raven.ds.RavenFuture;
 import org.raven.ds.TimeoutMessage;
+import org.raven.ds.TimeoutMessageSelector;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.ExecutorServiceException;
 import org.raven.sched.Task;
@@ -44,16 +46,15 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     private final Queue queue;
     private final AtomicBoolean running;
     private final WorkerTask task;
-//    private final int maxMessageProcessTries;
     private final int maxExecuteMessageDispatcherTies;
     protected final LoggerHelper logger;
     private final AtomicBoolean terminated = new AtomicBoolean();
         
-    public final static TimeoutMessage TIMEOUT_MESSAGE = new TimeoutMessage() {
-        @Override public String toString() {
-            return "TIMEOUT_MESSAGE";
-        }
-    };
+//    public final static TimeoutMessage TIMEOUT_MESSAGE = new TimeoutMessage() {
+//        @Override public String toString() {
+//            return "TIMEOUT_MESSAGE";
+//        }
+//    };
     private volatile long lastMessageTs = System.currentTimeMillis();
     
     private final AtomicReference<CheckTimeoutTask> checkTimeoutTask = new AtomicReference<CheckTimeoutTask>();
@@ -63,17 +64,21 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         this.processor = config.getProcessor();
         this.executor = config.getExecutor();
         this.queue = config.getQueue()!=null? config.getQueue() : new ConcurrentLinkedQueue();
-//        this.maxMessageProcessTries = config.getMaxMessageProcessTries();
         this.maxExecuteMessageDispatcherTies = config.getMaxExecuteMessageDispatcherTies();
         this.running = new AtomicBoolean();
         this.task = new WorkerTask(owner, "Processing messages");
-        this.logger = config.getLogger();
+        this.logger = new LoggerHelper(config.getLogger(), "[DP Facade] ");
         if (processor instanceof DataProcessorLogic)
             ((DataProcessorLogic)processor).setFacade(this);
+        if (processor instanceof LoggerSupport)
+            ((LoggerSupport)processor).setLogger(new LoggerHelper(config.getLogger(), "[DP Logic] "));
     }
 
     public void terminate() {
-        terminated.compareAndSet(false, true);
+        if (terminated.compareAndSet(false, true)) {
+            if (logger.isDebugEnabled())
+                logger.debug("Terminating");
+        }
     }
     
     public boolean isTerminated() {
@@ -99,7 +104,8 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
 
     public boolean send(Object message) {
         if (queueMessage(message)) {
-            if (checkTimeoutTask.get()!=null)
+            CheckTimeoutTask _checkTimeoutTask = checkTimeoutTask.get();
+            if (_checkTimeoutTask!=null && _checkTimeoutTask.resetTimeout(message))
                 lastMessageTs = System.currentTimeMillis();
             return true;
         } else {
@@ -109,12 +115,22 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         }
     }
 
+    public boolean sendTo(DataProcessorFacade facade, Object message) {
+        return facade.send(new MessageFromFacade(message, this));
+    }
+
     public void sendDelayed(long delay, final Object message) throws ExecutorServiceException {
         executor.execute(delay, new AbstractTask(owner, "Delaying message before send") {            
             @Override public void doRun() throws Exception {
                 send(message);
             }
         });
+    }
+
+    public void sendDelayedTo(DataProcessorFacade facade, long delay, Object message) 
+            throws ExecutorServiceException 
+    {
+        facade.sendDelayed(delay, new MessageFromFacade(message, this));
     }
 
     public void sendRepeatedly(final long delay, final long interval, final int times, final Object message) throws ExecutorServiceException {
@@ -138,6 +154,12 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
             }
         };        
         executor.execute(delay, task);
+    }
+
+    public void sendRepeatedlyTo(DataProcessorFacade facade, long delay, long interval, int times, Object message) 
+            throws ExecutorServiceException 
+    {
+        facade.sendRepeatedly(delay, interval, times, new MessageFromFacade(message, this));
     }
     
     private RavenFuture sendAskFuture(Object message, AskCallback callback) {
@@ -177,12 +199,22 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     
     protected void sendMessageToProcessor(Object message) {
         final AskFuture future = message instanceof AskFuture? (AskFuture)message : null;
+        DataProcessorFacade sender = null;
         if (future!=null)
             message = future.message;
+        else if (message instanceof MessageFromFacade) {
+            final MessageFromFacade messageFromFacade = (MessageFromFacade) message;
+            message = messageFromFacade.message;
+            sender = messageFromFacade.facade;            
+        }
+        if (processor instanceof DataProcessorLogic)
+            ((DataProcessorLogic)processor).setSender(sender);
         try {
             final Object result = processor.processData(message);
             if (future!=null)
                 future.set(result);
+            else if (sender!=null && result!=DataProcessor.VOID) 
+                sendTo(sender, result);
         } catch (Throwable e) {
             if (logger.isErrorEnabled())
                 logger.error("Error processing message", e);
@@ -193,22 +225,34 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     
 
     public void setTimeout(long timeout, long checkTimeoutInterval)  throws ExecutorServiceException {
+        setTimeout(timeout, checkTimeoutInterval, null);
+    }
+
+    public void setTimeout(long timeout, long checkTimeoutInterval, TimeoutMessageSelector selector) 
+            throws ExecutorServiceException 
+    {
         lastMessageTs = System.currentTimeMillis();
-        final CheckTimeoutTask newTask = new CheckTimeoutTask(owner, timeout, checkTimeoutInterval);
+        final CheckTimeoutTask newTask = new CheckTimeoutTask(owner, timeout, checkTimeoutInterval, selector);
         final CheckTimeoutTask oldTask = checkTimeoutTask.getAndSet(newTask);
         if (oldTask!=null)
             oldTask.cancel();      
         executor.execute(checkTimeoutInterval, newTask);
     }
-    
+
     private class CheckTimeoutTask extends AbstractTask {
         private final long timeout;    
         private final long checkTimeoutInterval;
+        private final TimeoutMessageSelector selector;
 
-        public CheckTimeoutTask(Node taskNode, long timeout, long checkTimeoutInterval) {
+        public CheckTimeoutTask(Node taskNode, long timeout, long checkTimeoutInterval, TimeoutMessageSelector selector) {
             super(taskNode, "Checking waiting for message timeout");
             this.timeout = timeout;
             this.checkTimeoutInterval = checkTimeoutInterval;
+            this.selector = selector;
+        }
+        
+        public boolean resetTimeout(Object message) {
+            return selector==null || message==TIMEOUT_MESSAGE? true : selector.resetTimeout(message);
         }
 
         @Override
@@ -248,5 +292,15 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
             super(callback);
             this.message = message;
         }        
+    }
+    
+    private static class MessageFromFacade {
+        private final Object message;
+        private final DataProcessorFacade facade;
+
+        public MessageFromFacade(Object message, DataProcessorFacade facade) {
+            this.message = message;
+            this.facade = facade;
+        }
     }
 }

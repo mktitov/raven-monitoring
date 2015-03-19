@@ -20,5 +20,7 @@ package org.raven.ds;
  * @author Mikhail Titov
  */
 public interface DataProcessor<T> {
+    public final static Object VOID = Void.class;
+    
     public Object processData(T dataPackage) throws Exception;
 }

@@ -15,34 +15,24 @@
  */
 package org.raven.ds.impl;
 
-import org.raven.ds.DataProcessorFacade;
-import org.raven.ds.DataProcessorLogic;
+import org.raven.ds.LoggerSupport;
+import org.raven.tree.impl.LoggerHelper;
 
 /**
  *
  * @author Mikhail Titov
  */
-public abstract class AbstractDataProcessorLogic implements DataProcessorLogic {
-    private DataProcessorFacade facade;
-    private DataProcessorFacade sender;
+public abstract class AbstractDataProcessorWithLogger
+    extends AbstractDataProcessorLogic implements LoggerSupport 
+{
+    protected LoggerHelper logger;
 
-    public void setFacade(DataProcessorFacade facade) {
-        this.facade = facade;
-        init(facade);
+    public void setLogger(LoggerHelper logger) {
+        this.logger = logger;
     }
 
-    public DataProcessorFacade getFacade() {
-        return facade;
-    }
-
-    public void setSender(DataProcessorFacade sender) {
-        this.sender = sender;
-    }
-
-    public DataProcessorFacade getSender() {
-        return sender;
+    public LoggerHelper getLogger() {
+        return logger;
     }
     
-    protected abstract void init(DataProcessorFacade facade);
-
 }

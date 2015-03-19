@@ -35,6 +35,7 @@ import org.raven.sched.ExecutorServiceException;
 import static org.easymock.EasyMock.*;
 import org.easymock.IArgumentMatcher;
 import org.raven.ds.AskCallback;
+import org.raven.ds.TimeoutMessageSelector;
 import org.raven.test.InThreadExecutorService;
 
 /**
@@ -50,7 +51,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
     }
     
     @Test
-    public void singlePacketTest() throws Exception {
+    public void sendTest() throws Exception {
         DataProcessor realProcessor = createMock(DataProcessor.class);
         expect(realProcessor.processData("test")).andReturn(Boolean.TRUE);
         replay(realProcessor);
@@ -61,6 +62,39 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         processor.send("test");
         
         verify(realProcessor);
+    }
+    
+    @Test
+    public void sendToWithReply() throws Exception {
+        ExecutorService executor = createExecutor();
+        DataProcessor sender = createMock(DataProcessor.class);
+        DataProcessor receiver = createMock(DataProcessor.class);
+        expect(receiver.processData("test")).andReturn("ok");
+        expect(sender.processData("ok")).andReturn(DataProcessor.VOID);
+        replay(sender, receiver);
+        DataProcessorFacadeImpl senderFacade = new DataProcessorFacadeImpl(
+                new DataProcessorFacadeConfig(testsNode, sender, executor, logger));
+        DataProcessorFacadeImpl receiverFacade = new DataProcessorFacadeImpl(
+                new DataProcessorFacadeConfig(testsNode, receiver, executor, logger));
+        senderFacade.sendTo(receiverFacade, "test");
+        Thread.sleep(100);
+        verify(sender, receiver);
+    }
+    
+    @Test
+    public void sendToWithoutReply() throws Exception {
+        ExecutorService executor = createExecutor();
+        DataProcessor sender = createMock(DataProcessor.class);
+        DataProcessor receiver = createMock(DataProcessor.class);
+        expect(receiver.processData("test")).andReturn(DataProcessor.VOID);
+        replay(sender, receiver);
+        DataProcessorFacadeImpl senderFacade = new DataProcessorFacadeImpl(
+                new DataProcessorFacadeConfig(testsNode, sender, executor, logger));
+        DataProcessorFacadeImpl receiverFacade = new DataProcessorFacadeImpl(
+                new DataProcessorFacadeConfig(testsNode, receiver, executor, logger));
+        senderFacade.sendTo(receiverFacade, "test");
+        Thread.sleep(100);
+        verify(sender, receiver);
     }
     
     @Test(timeout = 500l)
@@ -124,6 +158,32 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
     }
     
     @Test
+    public void setTimeoutWithSelectorTest() throws Exception {
+        MessageCollector collector = new MessageCollector();
+        ExecutorService executor = createExecutor();
+        DataProcessorFacadeImpl facade = new DataProcessorFacadeImpl(
+                new DataProcessorFacadeConfig(testsNode, collector, executor, logger));
+        Thread.sleep(1000l);
+        long initialTime = System.currentTimeMillis();
+        facade.setTimeout(50l, 2l, new TimeoutMessageSelector() {
+            public boolean resetTimeout(Object message) {
+                return "TEST".equals(message);
+            }
+        });
+        Thread.sleep(40);
+        facade.send("TEST1");
+        Thread.sleep(50);
+        facade.send("TEST");
+        Thread.sleep(20);
+        facade.terminate();
+        checkMessages(collector, 
+                new Object[]{"TEST1",  TIMEOUT_MESSAGE, "TEST"}, 
+                new long[]{40, 50, 90}, 
+                new long[]{ 10,  10,  10}, 
+                initialTime);
+    }
+    
+    @Test
     public void sendDelayedTest() throws Exception {
         MessageCollector collector = new MessageCollector();
         ExecutorService executor = createExecutor();
@@ -138,6 +198,22 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
                 new long[]{100}, 
                 new long[]{ 10}, 
                 initialTime);
+    }
+    
+    @Test
+    public void sendToDelayedWithoutReply() throws Exception {
+        ExecutorService executor = createExecutor();
+        MessageCollector sender = new MessageCollector();
+        MessageCollector receiver = new MessageCollector();
+        DataProcessorFacadeImpl senderFacade = new DataProcessorFacadeImpl(
+                new DataProcessorFacadeConfig(testsNode, sender, executor, logger));
+        DataProcessorFacadeImpl receiverFacade = new DataProcessorFacadeImpl(
+                new DataProcessorFacadeConfig(testsNode, receiver, executor, logger));
+        long ts = System.currentTimeMillis();
+        senderFacade.sendDelayedTo(receiverFacade, 50, "test");
+        Thread.sleep(100);
+        checkMessages(receiver, new Object[]{"test"}, new long[]{50}, new long[]{5}, ts);
+        assertTrue(sender.messages.isEmpty());
     }
     
     @Test
@@ -157,6 +233,23 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
                 initialTime);
         
     }
+    
+    @Test
+    public void sendRepeatedlyToWithoutReply() throws Exception {
+        ExecutorService executor = createExecutor();
+        MessageCollector sender = new MessageCollector();
+        MessageCollector receiver = new MessageCollector();
+        DataProcessorFacadeImpl senderFacade = new DataProcessorFacadeImpl(
+                new DataProcessorFacadeConfig(testsNode, sender, executor, logger));
+        DataProcessorFacadeImpl receiverFacade = new DataProcessorFacadeImpl(
+                new DataProcessorFacadeConfig(testsNode, receiver, executor, logger));
+        long ts = System.currentTimeMillis();
+        senderFacade.sendRepeatedlyTo(receiverFacade, 0, 50, 2, "test");
+        Thread.sleep(120);
+        checkMessages(receiver, new Object[]{"test", "test"}, new long[]{0, 50}, new long[]{5, 5}, ts);
+        assertTrue(sender.messages.isEmpty());
+    }
+    
     
     @Test
     public void logicTest() throws Exception {
@@ -277,7 +370,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         
         public Object processData(Object dataPackage) {
             messages.add(new Message(dataPackage, System.currentTimeMillis()));
-            return null;
+            return VOID;
         }
     }
     

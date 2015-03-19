@@ -18,6 +18,7 @@ package org.raven.ds.impl;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.raven.ds.DataProcessor;
+import org.raven.ds.DataProcessorFacade;
 import org.raven.sched.ExecutorService;
 import org.raven.tree.Node;
 import org.raven.tree.impl.LoggerHelper;
@@ -87,6 +88,10 @@ public class DataProcessorFacadeConfig<T> {
 
     public int getMaxExecuteMessageDispatcherTies() {
         return maxExecuteMessageDispatcherTies;
+    }
+    
+    public DataProcessorFacade build() {
+        return new DataProcessorFacadeImpl(this);
     }
     
 }

@@ -19,9 +19,6 @@ package org.raven.ds;
  *
  * @author Mikhail Titov
  */
-public interface DataProcessorLogic<T> extends DataProcessor<T> {
-    public void setSender(DataProcessorFacade sender);
-    public DataProcessorFacade getSender();
-    public void setFacade(DataProcessorFacade facade);
-    public DataProcessorFacade getFacade();
+public interface TimeoutMessageSelector {
+    public boolean resetTimeout(Object message);
 }

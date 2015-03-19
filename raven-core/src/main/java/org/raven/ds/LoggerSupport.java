@@ -15,13 +15,13 @@
  */
 package org.raven.ds;
 
+import org.raven.tree.impl.LoggerHelper;
+
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataProcessorLogic<T> extends DataProcessor<T> {
-    public void setSender(DataProcessorFacade sender);
-    public DataProcessorFacade getSender();
-    public void setFacade(DataProcessorFacade facade);
-    public DataProcessorFacade getFacade();
+public interface LoggerSupport {
+    public void setLogger(LoggerHelper logger);
+    public LoggerHelper getLogger();    
 }
