@@ -355,7 +355,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         expect(processor.processData("test")).andReturn(DataProcessor.VOID);
         processor.postStop();
         
-        expect(stopListener.processData(DataProcessorFacade.STOPPED_MESSAGE)).andReturn(DataProcessor.VOID);
+        expect(stopListener.processData(DataProcessorFacade.TERMINATED_MESSAGE)).andReturn(DataProcessor.VOID);
         replay(processor, stopListener);
         
         ExecutorService executor = createExecutor();

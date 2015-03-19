@@ -24,7 +24,7 @@ import org.raven.sched.ExecutorServiceException;
 public interface DataProcessorFacade {
     public final static String TIMEOUT_MESSAGE = "TIMEOUT_MESSAGE";
     public final static String STOP_MESSAGE = "STOP_MESSAGE";
-    public final static String STOPPED_MESSAGE = "STOPPED_MESSAGE"; 
+    public final static String TERMINATED_MESSAGE = "TERMINATED_MESSAGE"; 
     
     public boolean isTerminated();
     public void terminate();

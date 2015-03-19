@@ -49,6 +49,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     protected final LoggerHelper logger;
     private final AtomicBoolean terminated = new AtomicBoolean();
     private final AtomicBoolean stopping = new AtomicBoolean();
+    
         
 //    public final static TimeoutMessage TIMEOUT_MESSAGE = new TimeoutMessage() {
 //        @Override public String toString() {
@@ -257,7 +258,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
             if (future!=null)
                 future.set(result);
             else if (sender!=null && result!=DataProcessor.VOID) 
-                sendTo(sender, message==STOP_MESSAGE? STOPPED_MESSAGE : result);
+                sendTo(sender, message==STOP_MESSAGE? TERMINATED_MESSAGE : result);
         } catch (Throwable e) {
             if (logger.isErrorEnabled())
                 logger.error("Error processing message", e);
