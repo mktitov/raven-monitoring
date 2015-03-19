@@ -45,4 +45,6 @@ public abstract class AbstractDataProcessorLogic implements DataProcessorLogic {
     
     protected abstract void init(DataProcessorFacade facade);
 
+    public void postStop() {
+    }
 }

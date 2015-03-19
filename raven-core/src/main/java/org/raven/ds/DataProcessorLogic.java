@@ -24,4 +24,5 @@ public interface DataProcessorLogic<T> extends DataProcessor<T> {
     public DataProcessorFacade getSender();
     public void setFacade(DataProcessorFacade facade);
     public DataProcessorFacade getFacade();
+    public void postStop();
 }

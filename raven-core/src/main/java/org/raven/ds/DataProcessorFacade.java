@@ -22,10 +22,15 @@ import org.raven.sched.ExecutorServiceException;
  * @author Mikhail Titov
  */
 public interface DataProcessorFacade {
-    public final static String TIMEOUT_MESSAGE = "TIMEOUT_MESSAGE";    
+    public final static String TIMEOUT_MESSAGE = "TIMEOUT_MESSAGE";
+    public final static String STOP_MESSAGE = "STOP_MESSAGE";
+    public final static String STOPPED_MESSAGE = "STOPPED_MESSAGE"; 
     
     public boolean isTerminated();
     public void terminate();
+    
+    public void stop();
+    public RavenFuture askStop();
     /**
      * Sends message to data processor asynchronously 
      * @param message message to process

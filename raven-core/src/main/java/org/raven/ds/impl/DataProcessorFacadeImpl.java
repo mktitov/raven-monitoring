@@ -26,7 +26,6 @@ import org.raven.ds.DataProcessorLogic;
 import org.raven.ds.LoggerSupport;
 import org.raven.ds.MessageQueueError;
 import org.raven.ds.RavenFuture;
-import org.raven.ds.TimeoutMessage;
 import org.raven.ds.TimeoutMessageSelector;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.ExecutorServiceException;
@@ -49,6 +48,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     private final int maxExecuteMessageDispatcherTies;
     protected final LoggerHelper logger;
     private final AtomicBoolean terminated = new AtomicBoolean();
+    private final AtomicBoolean stopping = new AtomicBoolean();
         
 //    public final static TimeoutMessage TIMEOUT_MESSAGE = new TimeoutMessage() {
 //        @Override public String toString() {
@@ -84,11 +84,25 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     public boolean isTerminated() {
         return terminated.get();
     }    
+
+    public void stop() {
+        send(STOP_MESSAGE);
+    }
     
+    public RavenFuture askStop() {
+        return ask(STOP_MESSAGE);
+    }
+
     protected boolean queueMessage(Object message) {
-        if (terminated.get())
+        if (terminated.get() || stopping.get())
             return false;
+        if (isStopMessage(message)) {
+            if (!stopping.compareAndSet(false, true))
+                return false;
+        }
         final boolean res = queue.offer(message);
+        if (stopping.get() && !res)
+            stopping.set(false);
         if (res && running.compareAndSet(false, true)) { 
             boolean executed;
             int cnt = 0;
@@ -101,6 +115,16 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         }
         return res;        
     }
+    
+    private boolean isStopMessage(Object message) {
+        if (message==STOP_MESSAGE)
+            return true;
+        if (message instanceof AskFuture && ((AskFuture)message).message==STOP_MESSAGE)
+            return true;
+        if (message instanceof MessageFromFacade && ((MessageFromFacade)message).message==STOP_MESSAGE)
+            return true;
+        return false;
+    }
 
     public boolean send(Object message) {
         if (queueMessage(message)) {
@@ -109,8 +133,11 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
                 lastMessageTs = System.currentTimeMillis();
             return true;
         } else {
-            if (logger.isErrorEnabled())
-                logger.error("Message sending error. Message not queued. Message: "+message);
+            if (logger.isErrorEnabled()) {
+                final String cause = terminated.get()? "processor was terminated" 
+                        : (stopping.get()? "processor is stopping" : "messages queue is full");
+                logger.error("Message sending error. Message not queued because of {}. Message: {}", cause, message);
+            }
             return false;            
         }
     }
@@ -200,21 +227,37 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     protected void sendMessageToProcessor(Object message) {
         final AskFuture future = message instanceof AskFuture? (AskFuture)message : null;
         DataProcessorFacade sender = null;
+        boolean setSender = false;
         if (future!=null)
             message = future.message;
         else if (message instanceof MessageFromFacade) {
             final MessageFromFacade messageFromFacade = (MessageFromFacade) message;
             message = messageFromFacade.message;
-            sender = messageFromFacade.facade;            
+            sender = messageFromFacade.facade;       
+            setSender = processor instanceof DataProcessorLogic && message!=STOP_MESSAGE;
+            if (setSender)
+                ((DataProcessorLogic)processor).setSender(sender);
         }
-        if (processor instanceof DataProcessorLogic)
-            ((DataProcessorLogic)processor).setSender(sender);
         try {
-            final Object result = processor.processData(message);
+            Object result;
+            if (message==STOP_MESSAGE) {
+                terminated.compareAndSet(false, true);
+                if (processor instanceof DataProcessorLogic) 
+                    ((DataProcessorLogic)processor).postStop();
+                if (logger.isDebugEnabled())
+                    logger.debug("Stopped");
+                result = Boolean.TRUE;
+            } else  
+                try {
+                    result = processor.processData(message);
+                } finally {
+                    if (setSender)
+                        ((DataProcessorLogic)processor).setSender(sender);
+                }
             if (future!=null)
                 future.set(result);
             else if (sender!=null && result!=DataProcessor.VOID) 
-                sendTo(sender, result);
+                sendTo(sender, message==STOP_MESSAGE? STOPPED_MESSAGE : result);
         } catch (Throwable e) {
             if (logger.isErrorEnabled())
                 logger.error("Error processing message", e);
@@ -222,7 +265,6 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
                 future.setError(e);
         }
     }
-    
 
     public void setTimeout(long timeout, long checkTimeoutInterval)  throws ExecutorServiceException {
         setTimeout(timeout, checkTimeoutInterval, null);

@@ -35,6 +35,8 @@ import org.raven.sched.ExecutorServiceException;
 import static org.easymock.EasyMock.*;
 import org.easymock.IArgumentMatcher;
 import org.raven.ds.AskCallback;
+import org.raven.ds.DataProcessorLogic;
+import org.raven.ds.RavenFuture;
 import org.raven.ds.TimeoutMessageSelector;
 import org.raven.test.InThreadExecutorService;
 
@@ -302,7 +304,74 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         verify(processor, callback);
     }
     
+    @Test
+    public void stopTest() throws Exception {
+        DataProcessorLogic processor = createStrictMock(DataProcessorLogic.class);
+        processor.setFacade(isA(DataProcessorFacade.class));
+//        processor.setSender(null);
+        expect(processor.processData("test")).andReturn(DataProcessor.VOID);
+        processor.postStop();
+        replay(processor);
+        
+        InThreadExecutorService executor = new InThreadExecutorService();
+        DataProcessorFacade facade = new DataProcessorFacadeConfig(executor, processor, executor, logger).build();
+        facade.send("test");
+        facade.stop();
+        facade.send("test2");
+        facade.stop();
+        
+        verify(processor);
+        
+    }
     
+    @Test
+    public void askStopTest() throws Exception {
+        DataProcessorLogic processor = createStrictMock(DataProcessorLogic.class);
+        processor.setFacade(isA(DataProcessorFacade.class));
+//        processor.setSender(null);
+        expect(processor.processData("test")).andReturn(DataProcessor.VOID);
+        processor.postStop();
+        replay(processor);
+        
+        ExecutorService executor = createExecutor();
+        DataProcessorFacade facade = new DataProcessorFacadeConfig(executor, processor, executor, logger).build();
+        facade.send("test");
+        RavenFuture res = facade.askStop();
+        facade.send("test2");
+        facade.stop();
+        
+        assertEquals(Boolean.TRUE, res.get());
+        
+        verify(processor);
+        
+    }
+    
+    @Test
+    public void stopFromOtherFacadeTest() throws Exception {
+        DataProcessorLogic processor = createStrictMock(DataProcessorLogic.class);
+        DataProcessor stopListener = createMock(DataProcessor.class);
+        processor.setFacade(isA(DataProcessorFacade.class));
+//        processor.setSender(null);
+        expect(processor.processData("test")).andReturn(DataProcessor.VOID);
+        processor.postStop();
+        
+        expect(stopListener.processData(DataProcessorFacade.STOPPED_MESSAGE)).andReturn(DataProcessor.VOID);
+        replay(processor, stopListener);
+        
+        ExecutorService executor = createExecutor();
+        DataProcessorFacade facade = new DataProcessorFacadeConfig(executor, processor, executor, logger).build();
+        DataProcessorFacade stopper = new DataProcessorFacadeConfig(executor, stopListener, executor, logger).build();
+        
+        facade.send("test");
+        stopper.sendTo(facade, DataProcessorFacade.STOP_MESSAGE);
+        facade.send("test2");
+        facade.stop();
+        
+        Thread.sleep(100);
+                
+        verify(processor, stopListener);
+        
+    }
     
     private void checkMessages(MessageCollector collector, Object[] messages, long[] timings, long[] accuracy, long initialTime) {
         assertEquals(String.format("Expected messages: %s; Received messages: %s", Arrays.toString(messages), collector.messages),
