@@ -39,9 +39,7 @@ import org.raven.tree.impl.LoggerHelper;
  *
  * @author Mikhail Titov
  */
-public class DataProcessorFacadeImpl implements  DataProcessorFacade {
-    private final static long DEFAULT_TIMEOUT = 1000; //ms
-    
+public class DataProcessorFacadeImpl implements  DataProcessorFacade {   
     protected final Node owner;
     protected final DataProcessor processor;
     protected final ExecutorService executor;
@@ -52,6 +50,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     protected final LoggerHelper logger;
     private final AtomicBoolean terminated = new AtomicBoolean();
     private final AtomicBoolean stopping = new AtomicBoolean();
+    private final long defaultStopTimeout;
         
 //    public final static TimeoutMessage TIMEOUT_MESSAGE = new TimeoutMessage() {
 //        @Override public String toString() {
@@ -70,6 +69,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         this.maxExecuteMessageDispatcherTies = config.getMaxExecuteMessageDispatcherTies();
         this.running = new AtomicBoolean();
         this.task = new WorkerTask(owner, "Processing messages");
+        this.defaultStopTimeout = config.getDefaultStopTimeout();
         this.logger = new LoggerHelper(config.getLogger(), "[DP Facade] ");
         if (processor instanceof DataProcessorLogic)
             ((DataProcessorLogic)processor).setFacade(this);
@@ -172,7 +172,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     
     private Object wrapToStopIfNeed(Object message) {
         if (isStopMessage(message))
-            return new StopFuture(new StopCallback(DEFAULT_TIMEOUT, message));
+            return new StopFuture(new StopCallback(defaultStopTimeout, message));
         else
             return message;
     }
@@ -416,7 +416,8 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         public AskFuture(Object message, AskCallback callback) {
             super(callback);
             this.message = message;
-        }        
+        }
+        
     }
     
     private static class MessageFromFacade {

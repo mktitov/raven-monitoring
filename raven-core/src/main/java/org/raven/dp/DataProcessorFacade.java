@@ -28,7 +28,6 @@ public interface DataProcessorFacade {
     public final static String TERMINATED_MESSAGE = "TERMINATED_MESSAGE"; 
     
     public boolean isTerminated();
-    public void terminate();
     
     public void stop();
     public RavenFuture askStop();

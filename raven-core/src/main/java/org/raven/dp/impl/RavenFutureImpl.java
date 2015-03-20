@@ -26,7 +26,6 @@ import org.raven.dp.AskCallbackWithTimeout;
 import org.raven.dp.FutureTimeoutException;
 import org.raven.dp.RavenFuture;
 import org.raven.sched.impl.AbstractTask;
-import org.raven.tree.Node;
 
 /**
  *

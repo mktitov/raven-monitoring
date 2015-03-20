@@ -35,6 +35,8 @@ public class DataProcessorFacadeConfig<T> {
     private Queue<T> queue;
     private int maxMessageProcessTries = 1;
     private int maxExecuteMessageDispatcherTies = 1;
+    private long defaultStopTimeout = 1000;
+//    private long defaultAskTimeout = 1000;
 
     public DataProcessorFacadeConfig(Node owner, DataProcessor<T> processor, ExecutorService executor, LoggerHelper logger) {
         this.owner = owner;
@@ -57,11 +59,22 @@ public class DataProcessorFacadeConfig<T> {
         this.maxMessageProcessTries = maxMessageProcessTries;
         return this;
     }
+    
     public DataProcessorFacadeConfig<T> withMaxExecuteMessageDispatcherTies(int maxExecuteMessageDispatcherTies) {
         this.maxExecuteMessageDispatcherTies = maxExecuteMessageDispatcherTies;
         return this;
     }
-
+    
+    public DataProcessorFacadeConfig<T> withDefaultStopTimout(long defaultStopTimeout) {
+        this.defaultStopTimeout = defaultStopTimeout;
+        return this;
+    }
+    
+//    public DataProcessorFacadeConfig<T> withDefaultAskTimout(long defaultAskTimeout) {
+//        this.defaultAskTimeout = defaultAskTimeout;
+//        return this;
+//    }
+//
     public Node getOwner() {
         return owner;
     }
@@ -88,6 +101,10 @@ public class DataProcessorFacadeConfig<T> {
 
     public int getMaxExecuteMessageDispatcherTies() {
         return maxExecuteMessageDispatcherTies;
+    }
+
+    public long getDefaultStopTimeout() {
+        return defaultStopTimeout;
     }
     
     public DataProcessorFacade build() {
