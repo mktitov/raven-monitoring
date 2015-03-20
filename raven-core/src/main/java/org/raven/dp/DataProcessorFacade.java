@@ -15,6 +15,7 @@
  */
 package org.raven.dp;
 
+import org.raven.dp.impl.DataProcessorFacadeConfig;
 import org.raven.ds.TimeoutMessageSelector;
 import org.raven.sched.ExecutorServiceException;
 
@@ -27,11 +28,35 @@ public interface DataProcessorFacade {
     public final static String STOP_MESSAGE = "STOP_MESSAGE";
     public final static String TERMINATED_MESSAGE = "TERMINATED_MESSAGE"; 
     
+    /**
+     * Returns true if processor was terminated
+     */
     public boolean isTerminated();
     
+    /**
+     * Sends stop message to the data processor with {@link DataProcessorFacadeConfig#getDefaultStopTimeout()} timeout.
+     * If processor will not stop after this timeout then data processor will be terminated.
+     */
     public void stop();
+    /**
+     * Sends stop message to the data processor with {@link DataProcessorFacadeConfig#getDefaultStopTimeout()} timeout.
+     * If processor will not stop after this timeout then data processor will be terminated.
+     */
     public RavenFuture askStop();
+    /**
+     * Sends stop message to the data processor with timeout passed in the parameter.
+     * If processor will not stop after this timeout then data processor will be terminated.
+     */
     public RavenFuture askStop(long timeoutMs);
+    /**
+     * Returns the future that watches for data processor termination
+     */
+    public RavenFuture watch();
+    /**
+     * Adds data processor passed in the parameter for this data processor termination
+     */
+    public void watch(DataProcessorFacade watcher);
+    
     /**
      * Sends message to data processor asynchronously 
      * @param message message to process
@@ -78,11 +103,25 @@ public interface DataProcessorFacade {
             throws ExecutorServiceException;
     
     /**
-     * sends {@link TimeoutMessage timeout message} after being idle <b>timeout</b> milliseconds (no message send to data processor in passed interval)
+     * Sends {@link TimeoutMessage timeout message} after being idle <b>timeout</b> milliseconds (no message send to data processor in passed interval)
      * @param timeout interval in milliseconds 
+     * @param checkTimeoutInterval Tick interval in milliseconds at which the timeout will be checked
      */
     public void setTimeout(long timeout, long checkTimeoutInterval) throws ExecutorServiceException;
+    /**
+     * Sends {@link TimeoutMessage timeout message} after being idle <b>timeout</b> milliseconds (no message send to data processor in passed interval)
+     * @param timeout interval in milliseconds 
+     * @param checkTimeoutInterval Tick interval in milliseconds at which the timeout will be checked
+     * @param selector Allows to select messages that reset timeout
+     */
     public void setTimeout(long timeout, long checkTimeoutInterval, TimeoutMessageSelector selector) throws ExecutorServiceException;
+    /**
+     * Sends message to data processor and return the future that's wait the response for this message
+     */
     public RavenFuture ask(Object message);
+    /**
+     * Sends message to data processor and return the future that's wait the response for this message and executes callback
+     * on future callback
+     */
     public RavenFuture ask(Object message, AskCallback callback);
 }

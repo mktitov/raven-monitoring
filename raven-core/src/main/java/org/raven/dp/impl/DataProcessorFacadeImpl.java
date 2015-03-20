@@ -15,6 +15,8 @@
  */
 package org.raven.dp.impl;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -27,6 +29,7 @@ import org.raven.dp.DataProcessorLogic;
 import org.raven.ds.LoggerSupport;
 import org.raven.dp.MessageQueueError;
 import org.raven.dp.RavenFuture;
+import org.raven.dp.Terminated;
 import org.raven.ds.TimeoutMessageSelector;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.ExecutorServiceException;
@@ -51,6 +54,9 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     private final AtomicBoolean terminated = new AtomicBoolean();
     private final AtomicBoolean stopping = new AtomicBoolean();
     private final long defaultStopTimeout;
+    private final LoggerHelper origLogger;
+    private final AtomicBoolean terminateSentToWatcherService = new AtomicBoolean();
+    private volatile DataProcessorFacade watcherService;
         
 //    public final static TimeoutMessage TIMEOUT_MESSAGE = new TimeoutMessage() {
 //        @Override public String toString() {
@@ -70,6 +76,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         this.running = new AtomicBoolean();
         this.task = new WorkerTask(owner, "Processing messages");
         this.defaultStopTimeout = config.getDefaultStopTimeout();
+        this.origLogger = config.getLogger();
         this.logger = new LoggerHelper(config.getLogger(), "[DP Facade] ");
         if (processor instanceof DataProcessorLogic)
             ((DataProcessorLogic)processor).setFacade(this);
@@ -106,9 +113,45 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
             future.setError(new MessageQueueError());
         return future;
     }
+
+    public RavenFuture watch() {
+        final WatchFuture future = new WatchFuture();
+        getWatcherService(true).send(future);
+        return future;
+    }
+
+    public void watch(DataProcessorFacade watcher) {
+        getWatcherService(true).send(watcher);
+    }
+    
+    private DataProcessorFacade getWatcherService(final boolean create) {
+        DataProcessorFacade _watcherService = watcherService;
+        if (_watcherService!=null || !create)
+            return _watcherService;
+        else {
+            synchronized(this) {
+                _watcherService = watcherService;
+                if (_watcherService!=null)
+                    return _watcherService;
+                watcherService = new DataProcessorFacadeConfig(
+                                owner, new WatcherDataProcessor(), executor, new LoggerHelper(origLogger, "[Death Watcher] ")
+                            ).build();
+                if (isTerminated())
+                    sendTerminateToWatcherService();
+                return watcherService;
+            }
+        }
+    }
+    
+    private void sendTerminateToWatcherService() {
+        if (terminateSentToWatcherService.compareAndSet(false, true))
+            watcherService.send(new TerminatedImpl(this, true));
+    }
     
     private void processTermination(Object stopMessage, boolean success) {
         if (terminated.compareAndSet(false, true)) {
+            if (getWatcherService(false)!=null)
+                sendTerminateToWatcherService();
             if (success && processor instanceof DataProcessorLogic) 
                 ((DataProcessorLogic)processor).postStop();
             if (stopMessage instanceof MessageFromFacade) 
@@ -427,6 +470,51 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         public MessageFromFacade(Object message, DataProcessorFacade facade) {
             this.message = message;
             this.facade = facade;
+        }
+    }
+    
+    private static class WatchFuture extends RavenFutureImpl {
+    }
+    
+    private static class WatcherDataProcessor extends AbstractDataProcessorLogic {
+        private Terminated terminated = null;
+        private List watchers;
+
+        @Override
+        protected void init(DataProcessorFacade facade) {
+        }
+
+        public Object processData(Object message) throws Exception {
+            if (terminated!=null)
+                sendReplay(message);
+            else if (message instanceof Terminated) {
+                terminated = (Terminated) message;
+                notifyWatchers();
+            } else {
+                if (watchers==null)
+                    watchers = new LinkedList();
+                watchers.add(message);
+            }
+            return VOID;
+        }
+        
+        private void notifyWatchers() {
+            if (watchers!=null) {
+                for (Object watcher: watchers)
+                    sendReplay(watcher);
+                watchers = null;
+            }
+        }
+        
+        private void sendReplay(Object replayDest) {
+            if (replayDest instanceof WatchFuture)
+                ((WatchFuture)replayDest).set(true);
+            else if (replayDest instanceof DataProcessorFacade)
+                ((DataProcessorFacade)replayDest).send(terminated);
+        }
+        
+        private Object getReplayDest(Object message) {
+            return message instanceof WatchFuture? message : getSender();
         }
     }
 }

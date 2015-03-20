@@ -42,6 +42,7 @@ import org.raven.dp.AskCallback;
 import org.raven.dp.DataProcessorLogic;
 import org.raven.dp.FutureTimeoutException;
 import org.raven.dp.RavenFuture;
+import org.raven.dp.Terminated;
 import org.raven.ds.TimeoutMessageSelector;
 import org.raven.test.InThreadExecutorService;
 
@@ -388,7 +389,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         expect(processor.processData("test")).andReturn(DataProcessor.VOID);
         processor.postStop();
         
-        expect(stopListener.processData(DataProcessorFacade.TERMINATED_MESSAGE)).andReturn(DataProcessor.VOID);
+        expect(stopListener.processData(isA(Terminated.class))).andReturn(DataProcessor.VOID);
         replay(processor, stopListener);
         
         ExecutorService executor = createExecutor();
@@ -405,6 +406,54 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         verify(processor, stopListener);
         
     }
+    
+    @Test
+    public void watchTest() throws Exception {
+        DataProcessor processor = createStrictMock(DataProcessor.class);
+        replay(processor);
+        
+        ExecutorService executor = createExecutor();
+        DataProcessorFacade facade = new DataProcessorFacadeConfig(executor, processor, executor, logger).build();
+        
+        //register watcher before stop
+        RavenFuture watcher = facade.watch();
+        assertFalse(watcher.isDone());
+        facade.stop();
+        assertTrue((Boolean)watcher.get());
+        assertTrue(watcher.isDone());
+        
+        //register watcher after stop
+        watcher = facade.watch();
+        assertFalse(watcher.isDone());
+        assertTrue((Boolean)watcher.get());
+        assertTrue(watcher.isDone());
+        
+        verify(processor);
+    }
+    
+    @Test
+    public void watchFromOtherFacadeTest() throws Exception {
+        DataProcessor processor = createStrictMock(DataProcessor.class);
+        DataProcessor watchProcessor = createMock(DataProcessor.class);
+        
+        expect(watchProcessor.processData(isA(Terminated.class))).andReturn(DataProcessor.VOID);
+        expect(watchProcessor.processData(isA(Terminated.class))).andReturn(DataProcessor.VOID);
+        replay(processor, watchProcessor);
+        
+        ExecutorService executor = createExecutor();
+        DataProcessorFacade facade = new DataProcessorFacadeConfig(executor, processor, executor, logger).build();
+        DataProcessorFacade watcher = new DataProcessorFacadeConfig(executor, watchProcessor, executor, logger).build();
+        
+        facade.watch(watcher);
+        facade.stop();
+        
+        Thread.sleep(100);
+        facade.watch(watcher);
+        Thread.sleep(100);
+                
+        verify(processor, watchProcessor);
+    }
+    
     
     private void checkMessages(MessageCollector collector, Object[] messages, long[] timings, long[] accuracy, long initialTime) {
         assertEquals(String.format("Expected messages: %s; Received messages: %s", Arrays.toString(messages), collector.messages),
