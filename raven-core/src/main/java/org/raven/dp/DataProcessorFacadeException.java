@@ -13,26 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.ds.impl;
-
-import org.raven.ds.LoggerSupport;
-import org.raven.tree.impl.LoggerHelper;
+package org.raven.dp;
 
 /**
  *
- * @author Mikhail Titov
+ * @author tim
  */
-public abstract class AbstractDataProcessorWithLogger
-    extends AbstractDataProcessorLogic implements LoggerSupport 
-{
-    protected LoggerHelper logger;
+public class DataProcessorFacadeException extends Exception {
 
-    public void setLogger(LoggerHelper logger) {
-        this.logger = logger;
+    public DataProcessorFacadeException() {
     }
 
-    public LoggerHelper getLogger() {
-        return logger;
+    public DataProcessorFacadeException(String msg) {
+        super(msg);
     }
-    
 }

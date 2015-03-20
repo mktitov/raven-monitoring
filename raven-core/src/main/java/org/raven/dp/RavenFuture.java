@@ -13,18 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.ds;
+package org.raven.dp;
+
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
- * @author tim
+ * @author Mikhail Titov
  */
-public class DataProcessorFacadeException extends Exception {
-
-    public DataProcessorFacadeException() {
-    }
-
-    public DataProcessorFacadeException(String msg) {
-        super(msg);
-    }
+public interface RavenFuture<V> extends Future<V> {
+    public V getOrElse(V v);
+    public V getOrElse(V v, long timeout, TimeUnit timeUnit);
+    public V getOrElse(V v, long timeoutMs);
 }

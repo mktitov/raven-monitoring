@@ -13,13 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.ds;
+package org.raven.dp.impl;
+
+import org.raven.dp.Terminated;
+import org.raven.dp.DataProcessorFacade;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface AskCallback {
-    public void onSuccess(Object askResult);
-    public void onError(Throwable error);
+public class TerminatedImpl implements Terminated {
+    private final DataProcessorFacade facade;
+    private final boolean successfullyStopped;
+
+    public TerminatedImpl(DataProcessorFacade facade, boolean successfullyStopped) {
+        this.facade = facade;
+        this.successfullyStopped = successfullyStopped;
+    }
+
+    public DataProcessorFacade getFacade() {
+        return facade;
+    }
+
+    public boolean isSuccessfullyStopped() {
+        return successfullyStopped;
+    }
 }

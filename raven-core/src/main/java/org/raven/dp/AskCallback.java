@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.ds;
+package org.raven.dp;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataProcessor<T> {
-    public final static Object VOID = Void.class;
-    
-    public Object processData(T dataPackage) throws Exception;
+public interface AskCallback {
+    public void onSuccess(Object askResult);
+    public void onError(Throwable error);
+    public void onCanceled();
 }

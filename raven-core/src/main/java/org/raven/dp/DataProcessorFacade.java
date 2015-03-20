@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.ds;
+package org.raven.dp;
 
+import org.raven.ds.TimeoutMessageSelector;
 import org.raven.sched.ExecutorServiceException;
 
 /**
@@ -31,6 +32,7 @@ public interface DataProcessorFacade {
     
     public void stop();
     public RavenFuture askStop();
+    public RavenFuture askStop(long timeoutMs);
     /**
      * Sends message to data processor asynchronously 
      * @param message message to process

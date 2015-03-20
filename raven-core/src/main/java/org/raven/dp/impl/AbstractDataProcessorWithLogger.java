@@ -13,12 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.ds;
+package org.raven.dp.impl;
+
+import org.raven.dp.impl.AbstractDataProcessorLogic;
+import org.raven.ds.LoggerSupport;
+import org.raven.tree.impl.LoggerHelper;
 
 /**
  *
- * @author tim
+ * @author Mikhail Titov
  */
-public class MessageQueueError extends DataProcessorFacadeException {
+public abstract class AbstractDataProcessorWithLogger
+    extends AbstractDataProcessorLogic implements LoggerSupport 
+{
+    protected LoggerHelper logger;
 
+    public void setLogger(LoggerHelper logger) {
+        this.logger = logger;
+    }
+
+    public LoggerHelper getLogger() {
+        return logger;
+    }
+    
 }

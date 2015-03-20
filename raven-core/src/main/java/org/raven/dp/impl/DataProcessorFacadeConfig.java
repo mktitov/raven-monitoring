@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.ds.impl;
+package org.raven.dp.impl;
 
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
-import org.raven.ds.DataProcessor;
-import org.raven.ds.DataProcessorFacade;
+import org.raven.dp.DataProcessor;
+import org.raven.dp.DataProcessorFacade;
 import org.raven.sched.ExecutorService;
 import org.raven.tree.Node;
 import org.raven.tree.impl.LoggerHelper;

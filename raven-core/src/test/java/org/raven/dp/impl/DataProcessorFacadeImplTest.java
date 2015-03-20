@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.ds.impl;
+package org.raven.dp.impl;
 
+import org.raven.dp.impl.AbstractDataProcessorLogic;
+import org.raven.dp.impl.DataProcessorFacadeImpl;
+import org.raven.dp.impl.DataProcessorFacadeConfig;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,16 +30,18 @@ import org.junit.Test;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.impl.ExecutorServiceNode;
 import org.raven.test.RavenCoreTestCase;
-import org.raven.ds.DataProcessor;
-import org.raven.ds.DataProcessorFacade;
+import org.raven.dp.DataProcessor;
+import org.raven.dp.DataProcessorFacade;
 import org.raven.tree.impl.LoggerHelper;
-import static org.raven.ds.impl.DataProcessorFacadeImpl.TIMEOUT_MESSAGE;
+import static org.raven.dp.impl.DataProcessorFacadeImpl.TIMEOUT_MESSAGE;
 import org.raven.sched.ExecutorServiceException;
 import static org.easymock.EasyMock.*;
+import org.easymock.IAnswer;
 import org.easymock.IArgumentMatcher;
-import org.raven.ds.AskCallback;
-import org.raven.ds.DataProcessorLogic;
-import org.raven.ds.RavenFuture;
+import org.raven.dp.AskCallback;
+import org.raven.dp.DataProcessorLogic;
+import org.raven.dp.FutureTimeoutException;
+import org.raven.dp.RavenFuture;
 import org.raven.ds.TimeoutMessageSelector;
 import org.raven.test.InThreadExecutorService;
 
@@ -313,15 +318,43 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         processor.postStop();
         replay(processor);
         
-        InThreadExecutorService executor = new InThreadExecutorService();
+//        InThreadExecutorService executor = new InThreadExecutorService();
+        ExecutorService executor = createExecutor();
         DataProcessorFacade facade = new DataProcessorFacadeConfig(executor, processor, executor, logger).build();
         facade.send("test");
         facade.stop();
         facade.send("test2");
         facade.stop();
-        
+        Thread.sleep(100);
         verify(processor);
+    }
+    
+    @Test(expected = FutureTimeoutException.class)
+    public void askStopTestWithTimeout() throws Exception {
+        DataProcessorLogic processor = createStrictMock(DataProcessorLogic.class);
+        processor.setFacade(isA(DataProcessorFacade.class));
+//        processor.setSender(null);
+        expect(processor.processData("test")).andAnswer(new IAnswer<Object>() {
+            public Object answer() throws Throwable {
+                Thread.sleep(200);
+                return DataProcessor.VOID;
+            }
+        });
+        replay(processor);
         
+//        InThreadExecutorService executor = new InThreadExecutorService();
+        ExecutorService executor = createExecutor();
+        DataProcessorFacade facade = new DataProcessorFacadeConfig(executor, processor, executor, logger).build();
+        facade.send("test");
+        try {
+            facade.askStop(100).get();
+        } finally {
+            assertTrue(facade.isTerminated());
+            facade.send("test2");
+            facade.stop();
+            Thread.sleep(100);
+            verify(processor);
+        }
     }
     
     @Test

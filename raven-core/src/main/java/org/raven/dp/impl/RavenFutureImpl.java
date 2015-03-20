@@ -13,15 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.ds.impl;
+package org.raven.dp.impl;
 
+import org.raven.dp.FutureCanceledException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.raven.ds.AskCallback;
-import org.raven.ds.RavenFuture;
+import org.raven.dp.AskCallback;
+import org.raven.dp.AskCallbackWithTimeout;
+import org.raven.dp.FutureTimeoutException;
+import org.raven.dp.RavenFuture;
+import org.raven.sched.impl.AbstractTask;
+import org.raven.tree.Node;
 
 /**
  *
@@ -32,6 +37,7 @@ public class RavenFutureImpl<V> implements RavenFuture<V> {
     private final static int CANCELED = 1;
     private final static int DONE = 2;
     private final static int ERROR = 3;
+    private final static int TIMEOUT = 4;
             
     private final CountDownLatch latch = new CountDownLatch(1);
     private final AtomicInteger state = new AtomicInteger(COMPUTING);
@@ -39,6 +45,7 @@ public class RavenFutureImpl<V> implements RavenFuture<V> {
     private volatile Throwable error;
     
     private final AskCallback callback;
+    private final TimeoutTask timeoutTask;
 
     public RavenFutureImpl() {
         this(null);
@@ -46,6 +53,12 @@ public class RavenFutureImpl<V> implements RavenFuture<V> {
 
     public RavenFutureImpl(AskCallback callback) {
         this.callback = callback;
+        if (callback instanceof AskCallbackWithTimeout) {
+            AskCallbackWithTimeout timeoutedCallback = (AskCallbackWithTimeout) callback;
+            timeoutTask = new TimeoutTask(timeoutedCallback);
+            timeoutedCallback.getExecutor().executeQuietly(timeoutedCallback.getTimeout(), timeoutTask);
+        } else 
+            timeoutTask = null;
     }
 
     protected void done() {
@@ -53,8 +66,11 @@ public class RavenFutureImpl<V> implements RavenFuture<V> {
             switch (state.get()) {
                 case DONE : callback.onSuccess(result); break;
                 case ERROR: callback.onError(error); break;
-                case CANCELED: callback.onError(new FutureCanceledException());
+                case CANCELED: callback.onCanceled(); break;
+                case TIMEOUT: ((AskCallbackWithTimeout)callback).onTimeout(); break;
             }
+            if (timeoutTask!=null && state.get()!=TIMEOUT)
+                timeoutTask.cancel();
         }
     }
 
@@ -107,6 +123,13 @@ public class RavenFutureImpl<V> implements RavenFuture<V> {
         }
     }
     
+    public void setTimeout() {
+        if (state.compareAndSet(COMPUTING, TIMEOUT)) {
+            latch.countDown();
+            done();
+        }
+    }
+    
     public void set(V value) {
         if (state.compareAndSet(COMPUTING, DONE)) {
             result = value;
@@ -131,7 +154,21 @@ public class RavenFutureImpl<V> implements RavenFuture<V> {
             case DONE: return result;
             case CANCELED: throw new FutureCanceledException();
             case ERROR: throw new ExecutionException("Future computation error", error);
+            case TIMEOUT: throw new FutureTimeoutException();
         }
         throw new InterruptedException("Unknown future state");
+    }
+    
+    private class TimeoutTask extends AbstractTask {
+
+        public TimeoutTask(AskCallbackWithTimeout callback) {
+            super(callback.getOwner(), "Wating for future callback timeout");
+        }
+
+        @Override
+        public void doRun() throws Exception {
+            setTimeout();
+        }
+        
     }
 }

@@ -53,7 +53,7 @@ public abstract class AbstractTask implements CancelableTask
     }
 
     public void cancel() {
-        if (canceled.compareAndSet(false, true)) {
+        if (canceled.compareAndSet(false, true) && !executed) {
             final CancelationProcessor _processor = cancelationProcessor;
             if (_processor!=null)
                 _processor.cancel();

@@ -13,19 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.ds.impl;
+package org.raven.dp.impl;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import org.raven.ds.AskCallback;
-import org.raven.ds.DataProcessor;
-import org.raven.ds.DataProcessorFacade;
-import org.raven.ds.DataProcessorLogic;
+import org.raven.dp.AskCallback;
+import org.raven.dp.AskCallbackWithTimeout;
+import org.raven.dp.DataProcessor;
+import org.raven.dp.DataProcessorFacade;
+import org.raven.dp.DataProcessorLogic;
 import org.raven.ds.LoggerSupport;
-import org.raven.ds.MessageQueueError;
-import org.raven.ds.RavenFuture;
+import org.raven.dp.MessageQueueError;
+import org.raven.dp.RavenFuture;
 import org.raven.ds.TimeoutMessageSelector;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.ExecutorServiceException;
@@ -39,6 +40,8 @@ import org.raven.tree.impl.LoggerHelper;
  * @author Mikhail Titov
  */
 public class DataProcessorFacadeImpl implements  DataProcessorFacade {
+    private final static long DEFAULT_TIMEOUT = 1000; //ms
+    
     protected final Node owner;
     protected final DataProcessor processor;
     protected final ExecutorService executor;
@@ -49,7 +52,6 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     protected final LoggerHelper logger;
     private final AtomicBoolean terminated = new AtomicBoolean();
     private final AtomicBoolean stopping = new AtomicBoolean();
-    
         
 //    public final static TimeoutMessage TIMEOUT_MESSAGE = new TimeoutMessage() {
 //        @Override public String toString() {
@@ -90,20 +92,45 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         send(STOP_MESSAGE);
     }
     
+    public void stop(long timeoutMs) {
+        send(new StopFuture(new StopCallback(timeoutMs, null)));
+    }
+    
     public RavenFuture askStop() {
         return ask(STOP_MESSAGE);
+    }
+    
+    public RavenFuture askStop(long timeoutMs) {
+        StopFuture future = new StopFuture(new StopCallback(timeoutMs, null));
+        if (!send(future))
+            future.setError(new MessageQueueError());
+        return future;
+    }
+    
+    private void processTermination(Object stopMessage, boolean success) {
+        if (terminated.compareAndSet(false, true)) {
+            if (success && processor instanceof DataProcessorLogic) 
+                ((DataProcessorLogic)processor).postStop();
+            if (stopMessage instanceof MessageFromFacade) 
+                ((MessageFromFacade)stopMessage).facade.send(new TerminatedImpl(this, success));
+            else if (stopMessage instanceof AskFuture)
+                ((AskFuture)stopMessage).set(true);
+        }
     }
 
     protected boolean queueMessage(Object message) {
         if (terminated.get() || stopping.get())
             return false;
-        if (isStopMessage(message)) {
-            if (!stopping.compareAndSet(false, true))
+        if (message instanceof StopFuture) {
+            if (!stopping.compareAndSet(false, true)) {
+                ((StopFuture)message).cancel(true);
                 return false;
+            }
         }
         final boolean res = queue.offer(message);
-        if (stopping.get() && !res)
-            stopping.set(false);
+        if (stopping.get() && !res) {
+            ((StopFuture)message).setError(new Exception("Normal STOP process was interrupted because of ERROR queuing STOP_MESSAGE. Terminating..."));
+        } 
         if (res && running.compareAndSet(false, true)) { 
             boolean executed;
             int cnt = 0;
@@ -128,7 +155,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     }
 
     public boolean send(Object message) {
-        if (queueMessage(message)) {
+        if (queueMessage(wrapToStopIfNeed(message))) {
             CheckTimeoutTask _checkTimeoutTask = checkTimeoutTask.get();
             if (_checkTimeoutTask!=null && _checkTimeoutTask.resetTimeout(message))
                 lastMessageTs = System.currentTimeMillis();
@@ -141,6 +168,13 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
             }
             return false;            
         }
+    }
+    
+    private Object wrapToStopIfNeed(Object message) {
+        if (isStopMessage(message))
+            return new StopFuture(new StopCallback(DEFAULT_TIMEOUT, message));
+        else
+            return message;
     }
 
     public boolean sendTo(DataProcessorFacade facade, Object message) {
@@ -191,7 +225,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     }
     
     private RavenFuture sendAskFuture(Object message, AskCallback callback) {
-        final AskFuture future = new AskFuture(message, callback);
+        final AskFuture future = new AskFuture(message, callback);        
         if (!send(future))
             future.setError(new MessageQueueError());
         return future;
@@ -226,6 +260,10 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     }
     
     protected void sendMessageToProcessor(Object message) {
+        if (message instanceof StopFuture) {
+            ((StopFuture)message).set(true);
+            return;
+        }
         final AskFuture future = message instanceof AskFuture? (AskFuture)message : null;
         DataProcessorFacade sender = null;
         boolean setSender = false;
@@ -235,30 +273,30 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
             final MessageFromFacade messageFromFacade = (MessageFromFacade) message;
             message = messageFromFacade.message;
             sender = messageFromFacade.facade;       
-            setSender = processor instanceof DataProcessorLogic && message!=STOP_MESSAGE;
+            setSender = processor instanceof DataProcessorLogic;
             if (setSender)
                 ((DataProcessorLogic)processor).setSender(sender);
         }
         try {
             Object result;
-            if (message==STOP_MESSAGE) {
-                terminated.compareAndSet(false, true);
-                if (processor instanceof DataProcessorLogic) 
-                    ((DataProcessorLogic)processor).postStop();
-                if (logger.isDebugEnabled())
-                    logger.debug("Stopped");
-                result = Boolean.TRUE;
-            } else  
+//            if (message==STOP_MESSAGE) {
+//                terminated.compareAndSet(false, true);
+//                if (processor instanceof DataProcessorLogic) 
+//                    ((DataProcessorLogic)processor).postStop();
+//                if (logger.isDebugEnabled())
+//                    logger.debug("Stopped");
+//                result = Boolean.TRUE;
+//            } else  
                 try {
                     result = processor.processData(message);
                 } finally {
                     if (setSender)
-                        ((DataProcessorLogic)processor).setSender(sender);
+                        ((DataProcessorLogic)processor).setSender(null);
                 }
             if (future!=null)
                 future.set(result);
             else if (sender!=null && result!=DataProcessor.VOID) 
-                sendTo(sender, message==STOP_MESSAGE? TERMINATED_MESSAGE : result);
+                sendTo(sender, result);
         } catch (Throwable e) {
             if (logger.isErrorEnabled())
                 logger.error("Error processing message", e);
@@ -326,6 +364,50 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
                         stop = true;
                 }
         }        
+    }
+    
+    private class StopFuture extends RavenFutureImpl {
+
+        public StopFuture(StopCallback callback) {
+            super(callback);
+        }        
+    }
+    
+    private class StopCallback implements AskCallbackWithTimeout {
+        private final long stopTimemout;
+        private final Object message;
+
+        public StopCallback(long stopTimemout, Object message) {
+            this.stopTimemout = stopTimemout;
+            this.message = message;
+        }
+
+        public ExecutorService getExecutor() {
+            return executor;
+        }
+
+        public Node getOwner() {
+            return owner;
+        }
+
+        public long getTimeout() {
+            return stopTimemout;
+        }
+
+        public void onTimeout() {
+            processTermination(message, false);
+        }
+
+        public void onSuccess(Object askResult) {
+            processTermination(message, true);
+        }
+
+        public void onError(Throwable error) {
+            processTermination(message, false);
+        }
+
+        public void onCanceled() {
+        }
     }
     
     private static class AskFuture extends RavenFutureImpl {

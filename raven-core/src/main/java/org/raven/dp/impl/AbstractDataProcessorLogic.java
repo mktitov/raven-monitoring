@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.ds.impl;
+package org.raven.dp.impl;
 
-import org.raven.ds.DataProcessorFacade;
-import org.raven.ds.DataProcessorLogic;
+import org.raven.dp.DataProcessorFacade;
+import org.raven.dp.DataProcessorLogic;
 
 /**
  *

@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.ds.impl;
+package org.raven.dp.impl;
 
+import org.raven.dp.FutureCanceledException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.junit.Test;
 import static org.easymock.EasyMock.*;
 import org.junit.Assert;
-import org.raven.ds.AskCallback;
+import org.raven.dp.AskCallback;
 
 public class RavenFutureImplTest extends Assert {
 

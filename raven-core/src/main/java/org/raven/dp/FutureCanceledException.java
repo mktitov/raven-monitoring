@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.ds;
+package org.raven.dp;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataProcessorLogic<T> extends DataProcessor<T> {
-    public void setSender(DataProcessorFacade sender);
-    public DataProcessorFacade getSender();
-    public void setFacade(DataProcessorFacade facade);
-    public DataProcessorFacade getFacade();
-    public void postStop();
+public class FutureCanceledException extends InterruptedException {
+
+    public FutureCanceledException() {
+        super("Ask future was canceled");
+    }
+    
 }

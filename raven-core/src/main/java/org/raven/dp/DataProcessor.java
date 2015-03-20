@@ -13,18 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.ds;
+package org.raven.dp;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class DataProcessorException extends Exception {
-
-    public DataProcessorException() {
-    }
-
-    public DataProcessorException(String msg) {
-        super(msg);
-    }
+public interface DataProcessor<T> {
+    public final static Object VOID = Void.class;
+    
+    public Object processData(T dataPackage) throws Exception;
 }
