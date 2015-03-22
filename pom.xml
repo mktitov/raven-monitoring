@@ -211,7 +211,7 @@
                 <plugin>
                     <groupId>org.weda</groupId>
                     <artifactId>weda-maven-plugin</artifactId>
-                    <version>1.0-SNAPSHOT</version>
+                    <version>1.0-SNAPSHOT</version>                    
                     <executions>
                         <execution>
                             <id>transform-classes</id>
@@ -323,6 +323,11 @@
                 <version>3.0.19</version>
             </dependency>
             <dependency>
+                <groupId>org.javassist</groupId>
+                <artifactId>javassist</artifactId>
+                <version>3.19.0-GA</version>
+            </dependency>
+            <dependency>
                 <groupId>org.codehaus.groovy.modules.http-builder</groupId>
                 <artifactId>http-builder</artifactId>
                 <version>0.6</version>
@@ -408,12 +413,12 @@
                 <artifactId>svnkit</artifactId>
                 <version>1.3.4</version>
             </dependency>
-            <dependency>
+<!--            <dependency>
                 <groupId>org.apache.tapestry</groupId>
                 <artifactId>tapestry-ioc</artifactId>
                 <version>5.0.18</version>
                 <scope>compile</scope>
-            </dependency>
+            </dependency>-->
             <dependency>
                 <groupId>org.onesec</groupId>
                 <artifactId>onesec-core</artifactId>
