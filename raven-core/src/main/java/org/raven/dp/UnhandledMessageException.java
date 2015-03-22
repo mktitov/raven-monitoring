@@ -19,7 +19,14 @@ package org.raven.dp;
  *
  * @author Mikhail Titov
  */
-public interface DataProcessorLogic<T> extends DataProcessor<T> {
-    public void init(DataProcessorFacade facade, DataProcessorContext context);
-    public void postStop();
+public class UnhandledMessageException extends DataProcessorException {
+    private final Object unhandledMessage;
+
+    public UnhandledMessageException(Object unhandledMessage) {
+        this.unhandledMessage = unhandledMessage;
+    }
+
+    public Object getUnhandledMessage() {
+        return unhandledMessage;
+    }
 }

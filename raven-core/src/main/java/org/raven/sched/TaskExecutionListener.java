@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.dp;
+package org.raven.sched;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataProcessorLogic<T> extends DataProcessor<T> {
-    public void init(DataProcessorFacade facade, DataProcessorContext context);
-    public void postStop();
+public interface TaskExecutionListener {
+    public void taskExecutionStarted(long taskScheduleTime, long taskStartTime);
+    public void taskExecutionFinished(long taskStartTime, long taskFinishTime);
 }

@@ -13,13 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.dp;
+package org.raven.dp.impl;
+
+import org.raven.dp.DataProcessor;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataProcessorLogic<T> extends DataProcessor<T> {
-    public void init(DataProcessorFacade facade, DataProcessorContext context);
-    public void postStop();
+public abstract class Behaviour implements DataProcessor {
+    private final String behaviourName;
+
+    public Behaviour(String behaviourName) {
+        this.behaviourName = behaviourName;
+    }
+
+    @Override
+    public String toString() {
+        return behaviourName;
+    }
 }

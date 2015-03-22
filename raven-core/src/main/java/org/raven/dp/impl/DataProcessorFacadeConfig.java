@@ -36,6 +36,7 @@ public class DataProcessorFacadeConfig<T> {
     private int maxMessageProcessTries = 1;
     private int maxExecuteMessageDispatcherTies = 1;
     private long defaultStopTimeout = 1000;
+    private DataProcessorFacade unhandledMessageProcessor;
 //    private long defaultAskTimeout = 1000;
 
     public DataProcessorFacadeConfig(Node owner, DataProcessor<T> processor, ExecutorService executor, LoggerHelper logger) {
@@ -67,6 +68,11 @@ public class DataProcessorFacadeConfig<T> {
     
     public DataProcessorFacadeConfig<T> withDefaultStopTimout(long defaultStopTimeout) {
         this.defaultStopTimeout = defaultStopTimeout;
+        return this;
+    }
+    
+    public DataProcessorFacadeConfig<T> withUnhandledMessageProcessor(DataProcessorFacade unhandledMessageProcessor) {
+        this.unhandledMessageProcessor = unhandledMessageProcessor;
         return this;
     }
     
@@ -105,6 +111,10 @@ public class DataProcessorFacadeConfig<T> {
 
     public long getDefaultStopTimeout() {
         return defaultStopTimeout;
+    }
+
+    public DataProcessorFacade getUnhandledMessageProcessor() {
+        return unhandledMessageProcessor;
     }
     
     public DataProcessorFacade build() {

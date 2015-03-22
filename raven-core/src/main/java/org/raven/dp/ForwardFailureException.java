@@ -19,7 +19,9 @@ package org.raven.dp;
  *
  * @author Mikhail Titov
  */
-public interface DataProcessorLogic<T> extends DataProcessor<T> {
-    public void init(DataProcessorFacade facade, DataProcessorContext context);
-    public void postStop();
+public class ForwardFailureException extends DataProcessorFacadeException {
+
+    public ForwardFailureException(Object message) {
+        super("Can't forward message because of it arrived not from DataProcessorFacade. Message: "+message);
+    }
 }

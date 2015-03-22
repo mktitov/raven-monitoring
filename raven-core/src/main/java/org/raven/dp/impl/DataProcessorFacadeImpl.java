@@ -24,12 +24,14 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.raven.dp.AskCallback;
 import org.raven.dp.AskCallbackWithTimeout;
 import org.raven.dp.DataProcessor;
+import org.raven.dp.DataProcessorContext;
 import org.raven.dp.DataProcessorFacade;
 import org.raven.dp.DataProcessorLogic;
-import org.raven.ds.LoggerSupport;
 import org.raven.dp.MessageQueueError;
 import org.raven.dp.RavenFuture;
 import org.raven.dp.Terminated;
+import org.raven.dp.UnbecomeFailureException;
+import org.raven.dp.UnhandledMessageException;
 import org.raven.ds.TimeoutMessageSelector;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.ExecutorServiceException;
@@ -43,14 +45,16 @@ import org.raven.tree.impl.LoggerHelper;
  * @author Mikhail Titov
  */
 public class DataProcessorFacadeImpl implements  DataProcessorFacade {   
-    protected final Node owner;
-    protected final DataProcessor processor;
-    protected final ExecutorService executor;
+    private final Node owner;
+    private final DataProcessor processor;
+    private final Context processorContext;
+    private final ExecutorService executor;
     private final Queue queue;
     private final AtomicBoolean running;
     private final WorkerTask task;
+    private final DataProcessorFacade unhandledMessagesProcessor;
     private final int maxExecuteMessageDispatcherTies;
-    protected final LoggerHelper logger;
+    private final LoggerHelper logger;
     private final AtomicBoolean terminated = new AtomicBoolean();
     private final AtomicBoolean stopping = new AtomicBoolean();
     private final long defaultStopTimeout;
@@ -73,15 +77,17 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         this.executor = config.getExecutor();
         this.queue = config.getQueue()!=null? config.getQueue() : new ConcurrentLinkedQueue();
         this.maxExecuteMessageDispatcherTies = config.getMaxExecuteMessageDispatcherTies();
+        this.unhandledMessagesProcessor = config.getUnhandledMessageProcessor();
         this.running = new AtomicBoolean();
         this.task = new WorkerTask(owner, "Processing messages");
         this.defaultStopTimeout = config.getDefaultStopTimeout();
         this.origLogger = config.getLogger();
-        this.logger = new LoggerHelper(config.getLogger(), "[DP Facade] ");
-        if (processor instanceof DataProcessorLogic)
-            ((DataProcessorLogic)processor).setFacade(this);
-        if (processor instanceof LoggerSupport)
-            ((LoggerSupport)processor).setLogger(new LoggerHelper(config.getLogger(), "[DP Logic] "));
+        this.logger = new LoggerHelper(config.getLogger(), "[DP] ");
+        if (processor instanceof DataProcessorLogic) {
+            this.processorContext = new Context();
+            ((DataProcessorLogic)processor).init(this, processorContext);
+        } else
+            this.processorContext = null;
     }
 
     public void terminate() {
@@ -308,43 +314,40 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
             return;
         }
         final AskFuture future = message instanceof AskFuture? (AskFuture)message : null;
+        final Object origMessage = message;
         DataProcessorFacade sender = null;
-        boolean setSender = false;
         if (future!=null)
             message = future.message;
         else if (message instanceof MessageFromFacade) {
             final MessageFromFacade messageFromFacade = (MessageFromFacade) message;
             message = messageFromFacade.message;
             sender = messageFromFacade.facade;       
-            setSender = processor instanceof DataProcessorLogic;
-            if (setSender)
-                ((DataProcessorLogic)processor).setSender(sender);
+        }
+        if (processorContext!=null) {
+            processorContext.sender = sender;
+            processorContext.message = message;
+            processorContext.origMessage = origMessage;
+            processorContext.unhandled = false;
         }
         try {
-            Object result;
-//            if (message==STOP_MESSAGE) {
-//                terminated.compareAndSet(false, true);
-//                if (processor instanceof DataProcessorLogic) 
-//                    ((DataProcessorLogic)processor).postStop();
-//                if (logger.isDebugEnabled())
-//                    logger.debug("Stopped");
-//                result = Boolean.TRUE;
-//            } else  
-                try {
-                    result = processor.processData(message);
-                } finally {
-                    if (setSender)
-                        ((DataProcessorLogic)processor).setSender(null);
-                }
-            if (future!=null)
-                future.set(result);
-            else if (sender!=null && result!=DataProcessor.VOID) 
+            final DataProcessor _processor = processorContext==null? processor : processorContext.currentBehaviuor;
+            final Object result = _processor.processData(message);
+            final boolean unhandled = processorContext!=null && processorContext.unhandled;            
+            if (future!=null) {
+                if (!unhandled) future.set(result);
+                else future.setError(new UnhandledMessageException(message));
+            }
+            else if (!unhandled && sender!=null && result!=DataProcessor.VOID) 
                 sendTo(sender, result);
+            if (unhandled && unhandledMessagesProcessor!=null)
+                unhandledMessagesProcessor.send(new UnhandledMessageImpl(sender, this, message));
         } catch (Throwable e) {
             if (logger.isErrorEnabled())
-                logger.error("Error processing message", e);
+                logger.error("Error processing message: "+message, e);
             if (future!=null)
                 future.setError(e);
+            if (unhandledMessagesProcessor!=null)
+                unhandledMessagesProcessor.send(new UnhandledMessageImpl(sender, this, message, e));
         }
     }
 
@@ -407,6 +410,64 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
                         stop = true;
                 }
         }        
+    }
+    
+    private class Context implements DataProcessorContext {
+        private DataProcessorFacade sender;
+        private LoggerHelper logger;
+        private Queue<DataProcessor> behaviourStack;
+        private DataProcessor currentBehaviuor = processor;
+        private Object origMessage;
+        private Object message;
+        private boolean unhandled;
+
+        public DataProcessorFacade getSender() {
+            return sender;
+        }
+
+        public LoggerHelper getLogger() {
+            if (logger==null)
+                logger = new LoggerHelper(origLogger, "[DP Logic: "+currentBehaviuor+"] ");
+            return logger;
+        }
+        
+        public void become(final DataProcessor dataProcessor, final boolean replace) {
+            if (getLogger().isDebugEnabled())
+                getLogger().debug("Behaviour "+(replace?"replaced by ":"changed on ")+dataProcessor);
+            if (!replace) {
+                if (behaviourStack==null)
+                    behaviourStack = new LinkedList<DataProcessor>();
+                behaviourStack.offer(currentBehaviuor);
+            }
+            currentBehaviuor = dataProcessor;
+            logger = null;
+        }
+
+        public void unbecome() throws UnbecomeFailureException {
+            final DataProcessor behaviour = behaviourStack==null? null : behaviourStack.poll();
+            if (behaviour==null)
+                throw new UnbecomeFailureException();
+            logger = null;
+            if (getLogger().isDebugEnabled())
+                getLogger().debug("Behaviour changed from "+currentBehaviuor);
+            currentBehaviuor = behaviour;
+            if (behaviourStack!=null && behaviourStack.isEmpty())
+                behaviourStack = null;
+        }
+
+        public void unhandled() {
+            unhandled = true;
+            if (getLogger().isWarnEnabled())
+                getLogger().warn("Unhandled message: "+message);
+        }
+
+        public void forward(DataProcessorFacade facade) {
+            facade.send(origMessage);
+        }
+
+        public void forward(DataProcessorFacade facade, Object message) {
+            facade.send(sender==null? message : new MessageFromFacade(message, sender));
+        }
     }
     
     private class StopFuture extends RavenFutureImpl {
@@ -480,10 +541,6 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         private Terminated terminated = null;
         private List watchers;
 
-        @Override
-        protected void init(DataProcessorFacade facade) {
-        }
-
         public Object processData(Object message) throws Exception {
             if (terminated!=null)
                 sendReplay(message);
@@ -511,10 +568,6 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
                 ((WatchFuture)replayDest).set(true);
             else if (replayDest instanceof DataProcessorFacade)
                 ((DataProcessorFacade)replayDest).send(terminated);
-        }
-        
-        private Object getReplayDest(Object message) {
-            return message instanceof WatchFuture? message : getSender();
         }
     }
 }

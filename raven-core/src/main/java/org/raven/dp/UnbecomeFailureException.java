@@ -19,7 +19,12 @@ package org.raven.dp;
  *
  * @author Mikhail Titov
  */
-public interface DataProcessorLogic<T> extends DataProcessor<T> {
-    public void init(DataProcessorFacade facade, DataProcessorContext context);
-    public void postStop();
+public class UnbecomeFailureException extends Exception {
+
+    public UnbecomeFailureException() {
+    }
+
+    public UnbecomeFailureException(String msg) {
+        super(msg);
+    }
 }

@@ -15,11 +15,18 @@
  */
 package org.raven.dp;
 
+import org.raven.tree.impl.LoggerHelper;
+
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataProcessorLogic<T> extends DataProcessor<T> {
-    public void init(DataProcessorFacade facade, DataProcessorContext context);
-    public void postStop();
+public interface DataProcessorContext {
+    public DataProcessorFacade getSender();
+    public LoggerHelper getLogger();
+    public void become(DataProcessor dataProcessor, boolean replace);
+    public void unbecome() throws UnbecomeFailureException;
+    public void forward(DataProcessorFacade facade);
+    public void forward(DataProcessorFacade facade, Object message);
+    public void unhandled();
 }

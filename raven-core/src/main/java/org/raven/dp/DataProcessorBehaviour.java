@@ -19,7 +19,6 @@ package org.raven.dp;
  *
  * @author Mikhail Titov
  */
-public interface DataProcessorLogic<T> extends DataProcessor<T> {
-    public void init(DataProcessorFacade facade, DataProcessorContext context);
-    public void postStop();
+public interface DataProcessorBehaviour extends DataProcessor {
+    public String getBehaviuorName();
 }

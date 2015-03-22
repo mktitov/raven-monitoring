@@ -19,7 +19,11 @@ package org.raven.sched.impl;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenUtils;
@@ -42,16 +46,85 @@ import org.raven.tree.ViewableObject;
 public class ExecutorServiceNodeTest extends RavenCoreTestCase {
     
     private ExecutorServiceNode executor;
+    private CountDownLatch executedTasks;
 
     @Before
     public void prepare() {
         executor = new ExecutorServiceNode();
         executor.setName("executor");
         testsNode.addAndSaveChildren(executor);
-        executor.setCacheTaskWrappers(Boolean.TRUE);
+//        executor.setCacheTaskWrappers(Boolean.TRUE);
     }
     
-//    @Test
+    @Test
+    public void performanceTest() throws InterruptedException {
+        executor.setCorePoolSize(16);
+        executor.setMaximumPoolSize(17);
+        executor.setMaximumQueueSize(1000);
+        assertTrue(executor.start());
+        for (int i=0; i<5; ++i)
+            runTest(i);
+    }
+    
+    private void runTest(int number) throws InterruptedException {
+        System.out.println("\n\nRUNING TEST NUMBER: "+number);
+        int messagesCount = 1000000;
+        executedTasks = new CountDownLatch(messagesCount);
+        long ts = System.nanoTime();
+        for (int i=0; i<messagesCount; ++i)
+            while (!executor.executeQuietly(new PerformanceTask2())) 
+                Thread.sleep(1);
+        long submitTs = System.nanoTime();
+        executedTasks.await(20, TimeUnit.SECONDS);
+        long executedCount = messagesCount-executedTasks.getCount();
+        long finishTs = System.nanoTime();
+        System.out.println("Executed tasks count: "+executedCount);
+        System.out.println("Submit time ns: "+(submitTs-ts));
+        System.out.println("Submit time ms: "+TimeUnit.NANOSECONDS.toMillis(submitTs-ts));
+        System.out.println("Test time ns: "+(finishTs-ts));
+        System.out.println("Test time ms: "+TimeUnit.NANOSECONDS.toMillis(finishTs-ts));
+        double messagesPerMs = (double)executedCount/TimeUnit.NANOSECONDS.toMillis(finishTs-ts);
+        System.out.println("Messages per ms: "+messagesPerMs);
+        System.out.println();
+    }
+    
+    @Test
+    public void threadFactoryTest() throws InterruptedException {
+        executor.setCorePoolSize(3);
+        executor.setMaximumPoolSize(5);
+        executor.setMaximumQueueSize(1);
+        executor.setKeepAliveTime(100l);
+        executor.setTimeUnit(TimeUnit.MILLISECONDS);
+        assertTrue(executor.start());
+        for (int i=0; i<5; ++i)
+            executor.executeQuietly(new Task() {
+                @Override
+                public Node getTaskNode() {
+                    return testsNode;
+                }
+                @Override
+                public String getStatusMessage() {
+                    return "test";
+                }
+                @Override
+                public void run() {
+                    try {
+                        System.out.println(">>>Executing");
+                        Thread.sleep(50);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(ExecutorServiceNodeTest.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+        System.out.println("RUNNING threads count: "+executor.threadFactory.getRunningThreadsCount());
+        System.out.println("CURRENT POOL SIZE: "+executor.getCurrentPoolSize());
+        Thread.sleep(1000);
+        System.out.println("RUNNING threads count: "+executor.threadFactory.getRunningThreadsCount());
+        System.out.println("CURRENT POOL SIZE: "+executor.getCurrentPoolSize());
+        System.out.println("Test finished");
+    }
+    
+    @Test
     public void test() throws ExecutorServiceException, InterruptedException, IOException, Exception
     {
         executor.setCorePoolSize(2);
@@ -68,6 +141,7 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
             fail();
         } catch (ExecutorServiceException executorServiceException) {
         }
+        System.out.println("RUNNING threads count: "+executor.threadFactory.getRunningThreadsCount());
 
         Thread.sleep(100);
         assertEquals(new Integer(2+1), executor.getExecutingTaskCount()); //+1 is the delayed tasks executor
@@ -97,11 +171,11 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         Thread.sleep(1000);
 
         assertEquals(new Integer(0+1), executor.getExecutingTaskCount()); //+1 is the delayed tasks executor
-        assertEquals(4, executor.getExecutedTasks().getOperationsCount());
+        assertEquals(3, executor.getExecutedTasks().getOperationsCount());
         assertEquals(1l, executor.getRejectedTasks().get());
     }
 
-//    @Test
+    @Test
     public void test_nullMaximumQueueSize() throws Exception {
         executor.setCorePoolSize(2);
         executor.setMaximumPoolSize(3);
@@ -124,11 +198,11 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         Thread.sleep(1000);
 
         assertEquals(new Integer(0+1), executor.getExecutingTaskCount()); //+1 is the delayed tasks executor
-        assertEquals(3, executor.getExecutedTasks().getOperationsCount());
+        assertEquals(2, executor.getExecutedTasks().getOperationsCount());
         assertEquals(1l, executor.getRejectedTasks().get());
     }
 
-//    @Test
+    @Test
     public void delayedTasksTest() throws InterruptedException {
         executor.setCorePoolSize(2);
         executor.setMaximumPoolSize(2);
@@ -150,7 +224,7 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         assertTrue(task3.time < task2.time);
     }
     
-//    @Test
+    @Test
     public void cancelDelayedTaskTest() throws InterruptedException {
         executor.setCorePoolSize(2);
         executor.setMaximumPoolSize(2);
@@ -170,7 +244,7 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         assertTrue(task1.canceled);
     }
 
-//    @Test
+    @Test
     public  void managedTaskReexecutePolicyTest() throws Exception {
         executor.setCheckManagedTasksInterval(500l);
         assertTrue(executor.start());
@@ -186,7 +260,7 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         assertEquals(1, task.getExecutionCount());
     }
 
-//    @Test
+    @Test
     public  void managedTaskRestartPolicyTest() throws Exception {
         executor.setCheckManagedTasksInterval(500l);
         assertTrue(executor.start());
@@ -287,6 +361,40 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
             executed = true;
         }
         
+    }
+    
+    private class PerformanceTask2 extends AbstractExecutorTask {
+
+        @Override
+        public void doRun() throws Exception {
+            executedTasks.countDown();
+        }
+
+        @Override
+        public Node getTaskNode() {
+            return testsNode;
+        }
+
+        @Override
+        public String getStatusMessage() {
+            return "Testing performance";
+        }
+        
+    }
+    
+    private class PerformanceTask implements Task {
+
+        public Node getTaskNode() {
+            return testsNode;
+        }
+
+        public String getStatusMessage() {
+            return "Testing performance";
+        }
+
+        public void run() {
+            executedTasks.countDown();
+        }
     }
     
 }

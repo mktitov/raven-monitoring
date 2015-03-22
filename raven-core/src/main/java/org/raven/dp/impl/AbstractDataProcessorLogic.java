@@ -15,8 +15,12 @@
  */
 package org.raven.dp.impl;
 
+import org.raven.dp.DataProcessor;
+import org.raven.dp.DataProcessorContext;
 import org.raven.dp.DataProcessorFacade;
 import org.raven.dp.DataProcessorLogic;
+import org.raven.dp.UnbecomeFailureException;
+import org.raven.tree.impl.LoggerHelper;
 
 /**
  *
@@ -24,27 +28,48 @@ import org.raven.dp.DataProcessorLogic;
  */
 public abstract class AbstractDataProcessorLogic implements DataProcessorLogic {
     private DataProcessorFacade facade;
-    private DataProcessorFacade sender;
+    private DataProcessorContext context;
 
-    public void setFacade(DataProcessorFacade facade) {
+    
+    public void init(DataProcessorFacade facade, DataProcessorContext context) {
         this.facade = facade;
-        init(facade);
+        this.context = context;
+    }
+
+    public DataProcessorContext getContext() {
+        return context;
     }
 
     public DataProcessorFacade getFacade() {
         return facade;
     }
-
-    public void setSender(DataProcessorFacade sender) {
-        this.sender = sender;
-    }
-
-    public DataProcessorFacade getSender() {
-        return sender;
+    
+    protected DataProcessorFacade getSender() {
+        return context.getSender();
     }
     
-    protected abstract void init(DataProcessorFacade facade);
+    protected LoggerHelper getLogger() {
+        return context.getLogger();
+    }
+    
+    protected void become(DataProcessor processor, boolean replace) {
+        context.become(processor, replace);
+    }
+    
+    protected void unbecome() throws UnbecomeFailureException {
+        context.unbecome();
+    }
+    
+    protected final Object unhandled() {
+        context.unhandled();
+        return VOID;
+    }
 
     public void postStop() {
+    }
+
+    @Override
+    public String toString() {
+        return "MAIN";
     }
 }

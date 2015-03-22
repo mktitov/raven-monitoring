@@ -18,7 +18,6 @@
 package org.raven.sched.impl;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.raven.log.LogLevel;
 import org.raven.sched.CancelableTask;
 import org.raven.sched.CancelationProcessor;
 import org.raven.tree.Node;
@@ -27,7 +26,7 @@ import org.raven.tree.Node;
  *
  * @author Mikhail Titov
  */
-public abstract class AbstractTask implements CancelableTask
+public abstract class AbstractTask extends AbstractExecutorTask implements CancelableTask
 {
     private final Node taskNode;
     private final String status;
@@ -40,18 +39,22 @@ public abstract class AbstractTask implements CancelableTask
         this.status = status;
     }
 
+    @Override
     public Node getTaskNode() {
         return taskNode;
     }
 
+    @Override
     public String getStatusMessage() {
         return status;
     }
 
+    @Override
     public void setCancelationProcessor(CancelationProcessor cancelationProcessor) {
         this.cancelationProcessor = cancelationProcessor;
     }
 
+    @Override
     public void cancel() {
         if (canceled.compareAndSet(false, true) && !executed) {
             final CancelationProcessor _processor = cancelationProcessor;
@@ -68,20 +71,14 @@ public abstract class AbstractTask implements CancelableTask
         return canceled.get();
     }
 
+    @Override
     public void run() {
-        try {
-            if (!canceled.get()) {
-                try {
-                    doRun();
-                } finally {
-                    executed = true;
-                }
+        if (!canceled.get()) {
+            try {
+                super.run();
+            } finally {
+                executed = true;
             }
-        } catch(Exception e) {
-            if (taskNode.isLogLevelEnabled(LogLevel.ERROR))
-                taskNode.getLogger().error(String.format("Error executing (%s)", status), e);
         }
     }
-
-    public abstract void doRun() throws Exception;
 }
