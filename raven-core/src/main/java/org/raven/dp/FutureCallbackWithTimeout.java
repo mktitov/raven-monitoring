@@ -15,26 +15,11 @@
  */
 package org.raven.dp;
 
-import org.raven.sched.ExecutorService;
-import org.raven.tree.Node;
-
 /**
  *
  * @author Mikhail Titov
  */
-public interface AskCallbackWithTimeout extends AskCallback {
-    /**
-     * Return executor which will be used to monitor timeout
-     */
-    public ExecutorService getExecutor();
-    /**
-     * Returns the node owned by callback
-     */
-    public Node getOwner();
-    /**
-     * Returns timeout in milliseconds
-     */
-    public long getTimeout();
+public interface FutureCallbackWithTimeout<T> extends FutureCallback<T> {
     /**
      * Calls when timeout acquires
      */

@@ -21,8 +21,8 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import org.raven.dp.AskCallback;
-import org.raven.dp.AskCallbackWithTimeout;
+import org.raven.dp.FutureCallback;
+import org.raven.dp.FutureCallbackWithTimeout;
 import org.raven.dp.DataProcessor;
 import org.raven.dp.DataProcessorContext;
 import org.raven.dp.DataProcessorFacade;
@@ -62,11 +62,6 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     private final AtomicBoolean terminateSentToWatcherService = new AtomicBoolean();
     private volatile DataProcessorFacade watcherService;
         
-//    public final static TimeoutMessage TIMEOUT_MESSAGE = new TimeoutMessage() {
-//        @Override public String toString() {
-//            return "TIMEOUT_MESSAGE";
-//        }
-//    };
     private volatile long lastMessageTs = System.currentTimeMillis();
     
     private final AtomicReference<CheckTimeoutTask> checkTimeoutTask = new AtomicReference<CheckTimeoutTask>();
@@ -106,7 +101,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     }
     
     public void stop(long timeoutMs) {
-        send(new StopFuture(new StopCallback(timeoutMs, null)));
+        send(new StopFuture().onComplete(timeoutMs, new StopCallback(null)));
     }
     
     public RavenFuture askStop() {
@@ -114,14 +109,15 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     }
     
     public RavenFuture askStop(long timeoutMs) {
-        StopFuture future = new StopFuture(new StopCallback(timeoutMs, null));
+        StopFuture future = new StopFuture();
+        future.onComplete(timeoutMs, new StopCallback(null));
         if (!send(future))
             future.setError(new MessageQueueError());
         return future;
     }
 
     public RavenFuture watch() {
-        final WatchFuture future = new WatchFuture();
+        final WatchFuture future = new WatchFuture(executor);
         getWatcherService(true).send(future);
         return future;
     }
@@ -221,7 +217,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     
     private Object wrapToStopIfNeed(Object message) {
         if (isStopMessage(message))
-            return new StopFuture(new StopCallback(defaultStopTimeout, message));
+            return new StopFuture().onComplete(defaultStopTimeout, new StopCallback(message));
         else
             return message;
     }
@@ -273,19 +269,18 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         facade.sendRepeatedly(delay, interval, times, new MessageFromFacade(message, this));
     }
     
-    private RavenFuture sendAskFuture(Object message, AskCallback callback) {
-        final AskFuture future = new AskFuture(message, callback);        
+//    private RavenFuture sendAskFuture(Object message, FutureCallback callback) {
+//        final AskFuture future = new AskFuture(message, callback);        
+//        if (!send(future))
+//            future.setError(new MessageQueueError());
+//        return future;
+//    }
+
+    public RavenFuture ask(Object message) {
+        final AskFuture future = new AskFuture(message, executor);        
         if (!send(future))
             future.setError(new MessageQueueError());
         return future;
-    }
-
-    public RavenFuture ask(Object message) {
-        return sendAskFuture(message, null);
-    }
-
-    public RavenFuture ask(Object message, AskCallback callback) {
-        return sendAskFuture(message, callback);
     }
 
     private void executeDelayedTask(long delay, Task task) {
@@ -471,31 +466,16 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     }
     
     private class StopFuture extends RavenFutureImpl {
-
-        public StopFuture(StopCallback callback) {
-            super(callback);
+        public StopFuture() {
+            super(executor);
         }        
     }
     
-    private class StopCallback implements AskCallbackWithTimeout {
-        private final long stopTimemout;
+    private class StopCallback implements FutureCallbackWithTimeout {
         private final Object message;
 
-        public StopCallback(long stopTimemout, Object message) {
-            this.stopTimemout = stopTimemout;
+        public StopCallback(Object message) {
             this.message = message;
-        }
-
-        public ExecutorService getExecutor() {
-            return executor;
-        }
-
-        public Node getOwner() {
-            return owner;
-        }
-
-        public long getTimeout() {
-            return stopTimemout;
         }
 
         public void onTimeout() {
@@ -517,11 +497,10 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     private static class AskFuture extends RavenFutureImpl {
         private final Object message;
 
-        public AskFuture(Object message, AskCallback callback) {
-            super(callback);
+        public AskFuture(Object message, ExecutorService executor) {
+            super(executor);
             this.message = message;
-        }
-        
+        }        
     }
     
     private static class MessageFromFacade {
@@ -535,6 +514,9 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     }
     
     private static class WatchFuture extends RavenFutureImpl {
+        public WatchFuture(ExecutorService executor) {
+            super(executor);
+        }        
     }
     
     private static class WatcherDataProcessor extends AbstractDataProcessorLogic {

@@ -22,17 +22,27 @@ import java.util.concurrent.TimeoutException;
 import org.junit.Test;
 import static org.easymock.EasyMock.*;
 import org.junit.Assert;
-import org.raven.dp.AskCallback;
+import org.junit.Before;
+import org.raven.dp.FutureCallback;
+import org.raven.sched.ExecutorService;
+import org.raven.test.InThreadExecutorService;
 
 public class RavenFutureImplTest extends Assert {
+    private ExecutorService executor;
+    
+    @Before
+    public void prepare() {
+        executor = new InThreadExecutorService();
+    }
 
     @Test
     public void successCallbackTest() {
-        AskCallback callback = createMock(AskCallback.class);
+        FutureCallback callback = createMock(FutureCallback.class);
         callback.onSuccess("test");
         replay(callback);
         
-        RavenFutureImpl future = new RavenFutureImpl(callback);
+        RavenFutureImpl future = new RavenFutureImpl(executor);
+        future.onComplete(callback);
         future.set("test");
         
         verify(callback);
@@ -40,12 +50,13 @@ public class RavenFutureImplTest extends Assert {
     
     @Test
     public void errorCallbackTest() {
-        AskCallback callback = createMock(AskCallback.class);
+        FutureCallback callback = createMock(FutureCallback.class);
         Exception error = new Exception("test");
         callback.onError(error);
         replay(callback);
         
-        RavenFutureImpl future = new RavenFutureImpl(callback);
+        RavenFutureImpl future = new RavenFutureImpl(executor);
+        future.onComplete(callback);
         future.setError(error);
         
         verify(callback);
@@ -53,11 +64,12 @@ public class RavenFutureImplTest extends Assert {
     
     @Test
     public void cancelCallbackTest() {
-        AskCallback callback = createMock(AskCallback.class);
-        callback.onError(isA(FutureCanceledException.class));
+        FutureCallback callback = createMock(FutureCallback.class);
+        callback.onCanceled();
         replay(callback);
         
-        RavenFutureImpl future = new RavenFutureImpl(callback);
+        RavenFutureImpl future = new RavenFutureImpl(executor);
+        future.onComplete(callback);
         future.cancel(true);
         
         verify(callback);
@@ -65,7 +77,7 @@ public class RavenFutureImplTest extends Assert {
     
     @Test
     public void getSuccesTest() throws Exception {
-        RavenFutureImpl future = new RavenFutureImpl();
+        RavenFutureImpl future = new RavenFutureImpl(executor);
         assertFalse(future.isDone());
         assertFalse(future.isCancelled());
         setFutureValue(future, "test", 0);
@@ -76,7 +88,7 @@ public class RavenFutureImplTest extends Assert {
     
     @Test(expected = ExecutionException.class)
     public void getErrorTest() throws Exception {
-        RavenFutureImpl future = new RavenFutureImpl();
+        RavenFutureImpl future = new RavenFutureImpl(executor);
         assertFalse(future.isDone());
         setFutureValue(future, new Exception("test"), 0);
         try {
@@ -89,7 +101,7 @@ public class RavenFutureImplTest extends Assert {
     
     @Test(expected = FutureCanceledException.class)
     public void getCanceledTest() throws Exception {
-        RavenFutureImpl future = new RavenFutureImpl();
+        RavenFutureImpl future = new RavenFutureImpl(executor);
         assertFalse(future.isDone());
         cancelFuture(future, 10);
         try {
@@ -102,7 +114,7 @@ public class RavenFutureImplTest extends Assert {
     
     @Test
     public void getSuccessWithTimeoutTest() throws Exception {
-        RavenFutureImpl future = new RavenFutureImpl();
+        RavenFutureImpl future = new RavenFutureImpl(executor);
         assertFalse(future.isDone());
         assertFalse(future.isCancelled());
         setFutureValue(future, "test", 40);
@@ -113,7 +125,7 @@ public class RavenFutureImplTest extends Assert {
     
     @Test(expected = TimeoutException.class)
     public void getTimeoutExWithTimeoutTest() throws Exception {
-        RavenFutureImpl future = new RavenFutureImpl();
+        RavenFutureImpl future = new RavenFutureImpl(executor);
         assertFalse(future.isDone());
         assertFalse(future.isCancelled());
         setFutureValue(future, "test", 60);
@@ -122,7 +134,7 @@ public class RavenFutureImplTest extends Assert {
     
     @Test
     public void getOrElseSuccesTest() throws Exception {
-        RavenFutureImpl future = new RavenFutureImpl();
+        RavenFutureImpl future = new RavenFutureImpl(executor);
         assertFalse(future.isDone());
         assertFalse(future.isCancelled());
         setFutureValue(future, "test", 0);
@@ -133,7 +145,7 @@ public class RavenFutureImplTest extends Assert {
     
     @Test
     public void getOrElseErrorTest() throws Exception {
-        RavenFutureImpl future = new RavenFutureImpl();
+        RavenFutureImpl future = new RavenFutureImpl(executor);
         assertFalse(future.isDone());
         assertFalse(future.isCancelled());
         setFutureValue(future, new Exception("test"), 0);
@@ -144,7 +156,7 @@ public class RavenFutureImplTest extends Assert {
     
     @Test
     public void getOrElseCancelTest() throws Exception {
-        RavenFutureImpl future = new RavenFutureImpl();
+        RavenFutureImpl future = new RavenFutureImpl(executor);
         assertFalse(future.isDone());
         assertFalse(future.isCancelled());
         cancelFuture(future, 0);
@@ -155,7 +167,7 @@ public class RavenFutureImplTest extends Assert {
     
     @Test
     public void getOrElseSuccessWithTimeoutTest() throws Exception {
-        RavenFutureImpl future = new RavenFutureImpl();
+        RavenFutureImpl future = new RavenFutureImpl(executor);
         assertFalse(future.isDone());
         assertFalse(future.isCancelled());
         setFutureValue(future, "test", 40);
@@ -166,7 +178,7 @@ public class RavenFutureImplTest extends Assert {
     
     @Test
     public void getOrElseTimeoutWithTimeoutTest() throws Exception {
-        RavenFutureImpl future = new RavenFutureImpl();
+        RavenFutureImpl future = new RavenFutureImpl(executor);
         assertFalse(future.isDone());
         assertFalse(future.isCancelled());
         setFutureValue(future, "test", 60);

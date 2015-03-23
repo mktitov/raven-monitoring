@@ -15,11 +15,9 @@
  */
 package org.raven.dp;
 
-import org.raven.dp.DataProcessorFacadeException;
-
 /**
  *
- * @author tim
+ * @author Mikhail Titov
  */
 public class MessageQueueError extends DataProcessorFacadeException {
 

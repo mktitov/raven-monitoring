@@ -19,8 +19,8 @@ package org.raven.dp;
  *
  * @author Mikhail Titov
  */
-public interface AskCallback {
-    public void onSuccess(Object askResult);
+public interface FutureCallback<T> {
+    public void onSuccess(T result);
     public void onError(Throwable error);
     public void onCanceled();
 }

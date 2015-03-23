@@ -26,4 +26,6 @@ public interface RavenFuture<V> extends Future<V> {
     public V getOrElse(V v);
     public V getOrElse(V v, long timeout, TimeUnit timeUnit);
     public V getOrElse(V v, long timeoutMs);
+    public RavenFuture<V> onComplete(FutureCallback<V> callback);
+    public RavenFuture<V> onComplete(long timeout, FutureCallbackWithTimeout<V> callback);
 }

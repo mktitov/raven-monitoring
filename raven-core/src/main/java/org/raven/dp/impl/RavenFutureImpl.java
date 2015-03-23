@@ -15,16 +15,19 @@
  */
 package org.raven.dp.impl;
 
+import java.util.LinkedList;
+import java.util.List;
 import org.raven.dp.FutureCanceledException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.raven.dp.AskCallback;
-import org.raven.dp.AskCallbackWithTimeout;
-import org.raven.dp.FutureTimeoutException;
+import org.raven.dp.FutureCallback;
+import org.raven.dp.FutureCallbackWithTimeout;
 import org.raven.dp.RavenFuture;
+import org.raven.sched.ExecutorService;
 import org.raven.sched.impl.AbstractTask;
 
 /**
@@ -36,41 +39,72 @@ public class RavenFutureImpl<V> implements RavenFuture<V> {
     private final static int CANCELED = 1;
     private final static int DONE = 2;
     private final static int ERROR = 3;
-    private final static int TIMEOUT = 4;
+//    private final static int TIMEOUT = 4;
             
     private final CountDownLatch latch = new CountDownLatch(1);
     private final AtomicInteger state = new AtomicInteger(COMPUTING);
     private volatile V result;
     private volatile Throwable error;
     
-    private final AskCallback callback;
-    private final TimeoutTask timeoutTask;
+//    private final FutureCallback callback;
+    private final ExecutorService executor;
+    private List<FutureCallback> onCompleteCallbacks;
 
-    public RavenFutureImpl() {
-        this(null);
+//    public RavenFutureImpl() {
+//        this(null);
+//    }
+//
+    public RavenFutureImpl(ExecutorService executor) {
+        this.executor = executor;
     }
 
-    public RavenFutureImpl(AskCallback callback) {
-        this.callback = callback;
-        if (callback instanceof AskCallbackWithTimeout) {
-            AskCallbackWithTimeout timeoutedCallback = (AskCallbackWithTimeout) callback;
-            timeoutTask = new TimeoutTask(timeoutedCallback);
-            timeoutedCallback.getExecutor().executeQuietly(timeoutedCallback.getTimeout(), timeoutTask);
-        } else 
-            timeoutTask = null;
-    }
-
-    protected void done() {
-        if (callback!=null) {
-            switch (state.get()) {
-                case DONE : callback.onSuccess(result); break;
-                case ERROR: callback.onError(error); break;
-                case CANCELED: callback.onCanceled(); break;
-                case TIMEOUT: ((AskCallbackWithTimeout)callback).onTimeout(); break;
-            }
-            if (timeoutTask!=null && state.get()!=TIMEOUT)
-                timeoutTask.cancel();
+    @Override
+    public RavenFuture<V> onComplete(FutureCallback<V> callback) {
+        if (isDone()) executeOnCompleteCallback(callback);
+        else {
+            addCallback(callback);
+            if (isDone())
+                executeCallbacks();                
         }
+        return this;
+    }
+
+    @Override
+    public RavenFuture<V> onComplete(long timeout, FutureCallbackWithTimeout<V> callback) {
+        if (isDone()) executeOnCompleteCallback(callback);
+        else onComplete(new CallbackWrapper(timeout, callback));
+        return this;
+    }
+
+    private synchronized void addCallback(FutureCallback<V> callback) {
+        if (onCompleteCallbacks==null)
+            onCompleteCallbacks = new LinkedList();
+        onCompleteCallbacks.add(callback);
+    }
+    
+    private synchronized void executeCallbacks() {
+        if (onCompleteCallbacks!=null) {
+            for (FutureCallback callback: onCompleteCallbacks)
+                executeOnCompleteCallback(callback);
+            onCompleteCallbacks = null;
+        }
+    }
+    
+    private void executeOnCompleteCallback(final FutureCallback<V> callback) {
+        executor.executeQuietly(new AbstractTask(executor, "Processing future onComplete") {
+            @Override
+            public void doRun() throws Exception {
+                switch (state.get()) {
+                    case DONE : callback.onSuccess(result); break;
+                    case ERROR: callback.onError(error); break;
+                    case CANCELED: callback.onCanceled(); break;
+                }
+            }
+        });
+    }
+    
+    protected void done() {
+        executeCallbacks();
     }
 
     public V getOrElse(V v) {
@@ -122,13 +156,6 @@ public class RavenFutureImpl<V> implements RavenFuture<V> {
         }
     }
     
-    public void setTimeout() {
-        if (state.compareAndSet(COMPUTING, TIMEOUT)) {
-            latch.countDown();
-            done();
-        }
-    }
-    
     public void set(V value) {
         if (state.compareAndSet(COMPUTING, DONE)) {
             result = value;
@@ -153,21 +180,64 @@ public class RavenFutureImpl<V> implements RavenFuture<V> {
             case DONE: return result;
             case CANCELED: throw new FutureCanceledException();
             case ERROR: throw new ExecutionException("Future computation error", error);
-            case TIMEOUT: throw new FutureTimeoutException();
         }
         throw new InterruptedException("Unknown future state");
     }
     
-    private class TimeoutTask extends AbstractTask {
+    private class CallbackWrapper<V> implements FutureCallbackWithTimeout<V> {
+        private final FutureCallbackWithTimeout<V> callback;
+        private final AtomicBoolean executed = new AtomicBoolean();
+        private final TimeoutTask timeoutTask;
 
-        public TimeoutTask(AskCallbackWithTimeout callback) {
-            super(callback.getOwner(), "Wating for future callback timeout");
+        public CallbackWrapper(long timeout, FutureCallbackWithTimeout<V> callback) {
+            this.callback = callback;
+            this.timeoutTask = new TimeoutTask(this);
+            executor.executeQuietly(timeout, timeoutTask);
+        }
+                
+        @Override
+        public void onSuccess(V result) {
+            if (executed.compareAndSet(false, true)) {
+                timeoutTask.cancel();
+                callback.onSuccess(result);
+            }
+        }
+
+        @Override
+        public void onError(Throwable error) {
+            if (executed.compareAndSet(false, true)) {
+                timeoutTask.cancel();
+                callback.onError(error);
+            }
+        }
+
+        @Override
+        public void onCanceled() {
+            if (executed.compareAndSet(false, true)) {
+                timeoutTask.cancel();
+                callback.onCanceled();
+            }
+        }
+
+        @Override
+        public void onTimeout() {
+            if (executed.compareAndSet(false, true))
+                callback.onTimeout();
+        }
+        
+    }
+    
+    private class TimeoutTask extends AbstractTask {
+        private final CallbackWrapper callback;
+
+        public TimeoutTask(CallbackWrapper callback) {
+            super(executor, "Wating for future onComplete timeout");
+            this.callback = callback;
         }
 
         @Override
         public void doRun() throws Exception {
-            setTimeout();
+            callback.onTimeout();
         }
-        
     }
 }

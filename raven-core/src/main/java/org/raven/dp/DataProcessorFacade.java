@@ -119,9 +119,4 @@ public interface DataProcessorFacade {
      * Sends message to data processor and return the future that's wait the response for this message
      */
     public RavenFuture ask(Object message);
-    /**
-     * Sends message to data processor and return the future that's wait the response for this message and executes callback
-     * on future callback
-     */
-    public RavenFuture ask(Object message, AskCallback callback);
 }
