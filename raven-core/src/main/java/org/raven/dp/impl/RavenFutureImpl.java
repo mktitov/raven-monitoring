@@ -39,21 +39,15 @@ public class RavenFutureImpl<V> implements RavenFuture<V> {
     private final static int CANCELED = 1;
     private final static int DONE = 2;
     private final static int ERROR = 3;
-//    private final static int TIMEOUT = 4;
             
     private final CountDownLatch latch = new CountDownLatch(1);
     private final AtomicInteger state = new AtomicInteger(COMPUTING);
     private volatile V result;
     private volatile Throwable error;
     
-//    private final FutureCallback callback;
     private final ExecutorService executor;
     private List<FutureCallback> onCompleteCallbacks;
 
-//    public RavenFutureImpl() {
-//        this(null);
-//    }
-//
     public RavenFutureImpl(ExecutorService executor) {
         this.executor = executor;
     }

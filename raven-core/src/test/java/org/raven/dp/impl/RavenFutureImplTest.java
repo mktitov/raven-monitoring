@@ -24,6 +24,7 @@ import static org.easymock.EasyMock.*;
 import org.junit.Assert;
 import org.junit.Before;
 import org.raven.dp.FutureCallback;
+import org.raven.dp.FutureCallbackWithTimeout;
 import org.raven.sched.ExecutorService;
 import org.raven.test.InThreadExecutorService;
 
@@ -74,6 +75,24 @@ public class RavenFutureImplTest extends Assert {
         
         verify(callback);
     }
+    
+    @Test
+    public void onCompleteTimeoutTest() throws Exception {
+        FutureCallbackWithTimeout callback = createMock(FutureCallbackWithTimeout.class);
+        callback.onTimeout();
+        replay(callback);
+        
+        RavenFutureImpl future = new RavenFutureImpl(executor);
+        long ts = System.currentTimeMillis();
+        future.onComplete(100, callback);
+        assertFalse(future.isCancelled());
+        assertFalse(future.isDone());
+        
+        assertTrue(System.currentTimeMillis()-ts>=100);
+        
+        verify(callback);
+    }
+    
     
     @Test
     public void getSuccesTest() throws Exception {

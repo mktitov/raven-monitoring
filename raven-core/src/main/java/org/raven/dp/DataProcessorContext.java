@@ -15,6 +15,7 @@
  */
 package org.raven.dp;
 
+import java.util.Iterator;
 import org.raven.tree.impl.LoggerHelper;
 
 /**
@@ -29,4 +30,10 @@ public interface DataProcessorContext {
     public void forward(DataProcessorFacade facade);
     public void forward(DataProcessorFacade facade, Object message);
     public void unhandled();
+    public DataProcessorFacade getParent();
+    public void addChild(DataProcessorFacade facade);
+    public DataProcessorFacade getChild(String name);
+    public Iterator<DataProcessorFacade> getChildren();
+//    public Collection<DataProcessorFacade> getChilds();
+    
 }

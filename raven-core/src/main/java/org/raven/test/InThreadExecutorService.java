@@ -31,6 +31,10 @@ public class InThreadExecutorService extends BaseNode implements ExecutorService
     }
 
     public void execute(long delay, Task task) throws ExecutorServiceException {
+        try {
+            Thread.sleep(delay);
+        } catch (InterruptedException ex) {
+        }        
         task.run();
     }
 
@@ -40,6 +44,10 @@ public class InThreadExecutorService extends BaseNode implements ExecutorService
     }
 
     public boolean executeQuietly(long delay, Task task) {
+        try {
+            Thread.sleep(delay);
+        } catch (InterruptedException ex) {
+        }
         task.run();
         return true;
     }

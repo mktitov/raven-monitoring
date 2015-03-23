@@ -21,7 +21,6 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import org.raven.dp.FutureCallback;
 import org.raven.dp.FutureCallbackWithTimeout;
 import org.raven.dp.DataProcessor;
 import org.raven.dp.DataProcessorContext;
@@ -45,6 +44,7 @@ import org.raven.tree.impl.LoggerHelper;
  * @author Mikhail Titov
  */
 public class DataProcessorFacadeImpl implements  DataProcessorFacade {   
+    private final String facadeName;
     private final Node owner;
     private final DataProcessor processor;
     private final Context processorContext;
@@ -67,6 +67,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     private final AtomicReference<CheckTimeoutTask> checkTimeoutTask = new AtomicReference<CheckTimeoutTask>();
 
     public DataProcessorFacadeImpl(DataProcessorFacadeConfig config) {
+        this.facadeName = config.getFacadeName();
         this.owner = config.getOwner();
         this.processor = config.getProcessor();
         this.executor = config.getExecutor();
@@ -83,6 +84,10 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
             ((DataProcessorLogic)processor).init(this, processorContext);
         } else
             this.processorContext = null;
+    }
+
+    public String getName() {
+        return facadeName;
     }
 
     public void terminate() {
@@ -109,9 +114,10 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     }
     
     public RavenFuture askStop(long timeoutMs) {
-        StopFuture future = new StopFuture();
-        future.onComplete(timeoutMs, new StopCallback(null));
-        if (!send(future))
+        AskFuture future = new AskFuture(STOP_MESSAGE, executor);
+        StopFuture stopFuture = new StopFuture();
+        stopFuture.onComplete(timeoutMs, new StopCallback(future));
+        if (!send(stopFuture))
             future.setError(new MessageQueueError());
         return future;
     }
@@ -164,13 +170,16 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     }
 
     protected boolean queueMessage(Object message) {
-        if (terminated.get() || stopping.get())
+        if (terminated.get() || stopping.get()) {
+            if (message instanceof StopFuture)
+                ((StopFuture)message).cancel(true);
             return false;
+        }
         if (message instanceof StopFuture) {
             if (!stopping.compareAndSet(false, true)) {
                 ((StopFuture)message).cancel(true);
                 return false;
-            }
+            } 
         }
         final boolean res = queue.offer(message);
         if (stopping.get() && !res) {

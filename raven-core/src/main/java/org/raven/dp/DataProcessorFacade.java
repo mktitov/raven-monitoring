@@ -29,6 +29,11 @@ public interface DataProcessorFacade {
     public final static String TERMINATED_MESSAGE = "TERMINATED_MESSAGE"; 
     
     /**
+     * Returns the name of the facade. Can return null
+     */
+    public String getName();
+    
+    /**
      * Returns true if processor was terminated
      */
     public boolean isTerminated();

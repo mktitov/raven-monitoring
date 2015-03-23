@@ -354,9 +354,9 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         DataProcessorFacade facade = new DataProcessorFacadeConfig(testsNode, processor, executor, logger).build();
         facade.send("test");
         try {
-            facade.askStop(100);
-//            facade.askStop(100).get();
-            Thread.sleep(110);
+//            facade.askStop(100);
+            assertEquals(Boolean.TRUE, facade.askStop(100).get());
+//            Thread.sleep(110);
         } finally {
             assertTrue(facade.isTerminated());
             facade.send("test2");

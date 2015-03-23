@@ -36,14 +36,27 @@ public class DataProcessorFacadeConfig<T> {
     private int maxMessageProcessTries = 1;
     private int maxExecuteMessageDispatcherTies = 1;
     private long defaultStopTimeout = 1000;
+    private String facadeName;
     private DataProcessorFacade unhandledMessageProcessor;
 //    private long defaultAskTimeout = 1000;
 
+    public DataProcessorFacadeConfig(String facadeName, Node owner, DataProcessor<T> processor, ExecutorService executor, LoggerHelper logger) {
+        this.owner = owner;
+        this.processor = processor;
+        this.executor = executor;
+        this.logger = logger;
+        this.facadeName = facadeName;
+    }
+    
     public DataProcessorFacadeConfig(Node owner, DataProcessor<T> processor, ExecutorService executor, LoggerHelper logger) {
         this.owner = owner;
         this.processor = processor;
         this.executor = executor;
         this.logger = logger;
+    }
+
+    public String getFacadeName() {
+        return facadeName;
     }
     
     public DataProcessorFacadeConfig<T> withQueueSize(int size) {
