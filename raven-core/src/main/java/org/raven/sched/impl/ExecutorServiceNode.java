@@ -349,7 +349,7 @@ public class ExecutorServiceNode extends BaseNode
             table.addRow(new Object[]{interruptAction, task.getTaskNode().getPath()
                     , task.getStatusMessage()
                     , managedTask ? "<b style='color:green'>Yes</b>" : "No"
-                    , date, nano.toMillis(task.getExecutionDuration()), threadStatus, traceVO});
+                    , date, nano.toSeconds(task.getExecutionDuration()), threadStatus, traceVO});
         }
         vos.add(new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table));
     }
