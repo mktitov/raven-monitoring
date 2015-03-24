@@ -35,6 +35,17 @@ public abstract class AbstractDataProcessorLogic implements DataProcessorLogic {
         this.facade = facade;
         this.context = context;
     }
+    
+    @Override
+    public void postStop() {
+    }
+
+    public void postInit(){        
+    }
+
+    @Override
+    public void childTerminated(DataProcessorFacade child) {
+    }
 
     public DataProcessorContext getContext() {
         return context;
@@ -63,9 +74,6 @@ public abstract class AbstractDataProcessorLogic implements DataProcessorLogic {
     protected final Object unhandled() {
         context.unhandled();
         return VOID;
-    }
-
-    public void postStop() {
     }
 
     @Override

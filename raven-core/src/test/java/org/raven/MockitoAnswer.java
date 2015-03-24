@@ -13,14 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.dp;
+package org.raven;
+
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface DataProcessorLogic<T> extends DataProcessor<T> {
-    public void init(DataProcessorFacade facade, DataProcessorContext context);
-    public void postStop();
-    public void childTerminated(DataProcessorFacade child);
+public class MockitoAnswer<T> implements Answer<T> {
+    private final T answer;
+
+    public MockitoAnswer(T answer) {
+        this.answer = answer;
+    }
+
+    @Override
+    public T answer(InvocationOnMock invocation) throws Throwable {
+        return answer;
+    }
 }

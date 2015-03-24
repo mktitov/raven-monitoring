@@ -320,7 +320,9 @@ public abstract class AbstractSafeDataPipe
                 }
             }
             try  {
-                if (data!=SKIP_DATA)
+                if (context.hasErrors()) {
+                    sendError(data, context);
+                } else if (data!=SKIP_DATA)
                     doSetData(dataSource, data, context);
                 else if (debugEnabled)
                     getLogger().debug("Expression return SKIP_DATA. Terminating push data process");

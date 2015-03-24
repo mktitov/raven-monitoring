@@ -38,6 +38,7 @@ public class DataProcessorFacadeConfig<T> {
     private long defaultStopTimeout = 1000;
     private String facadeName;
     private DataProcessorFacade unhandledMessageProcessor;
+    private DataProcessorFacade parent;
 //    private long defaultAskTimeout = 1000;
 
     public DataProcessorFacadeConfig(String facadeName, Node owner, DataProcessor<T> processor, ExecutorService executor, LoggerHelper logger) {
@@ -55,8 +56,9 @@ public class DataProcessorFacadeConfig<T> {
         this.logger = logger;
     }
 
-    public String getFacadeName() {
-        return facadeName;
+    public DataProcessorFacadeConfig<T> withParent(DataProcessorFacade parent) {
+        this.parent = parent;
+        return this;
     }
     
     public DataProcessorFacadeConfig<T> withQueueSize(int size) {
@@ -94,10 +96,18 @@ public class DataProcessorFacadeConfig<T> {
 //        return this;
 //    }
 //
+    public String getFacadeName() {
+        return facadeName;
+    }
+    
     public Node getOwner() {
         return owner;
     }
 
+    DataProcessorFacade getParent() {
+        return parent;
+    }
+    
     public DataProcessor<T> getProcessor() {
         return processor;
     }

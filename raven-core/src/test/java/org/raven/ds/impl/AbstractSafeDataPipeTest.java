@@ -139,6 +139,11 @@ public class AbstractSafeDataPipeTest extends RavenCoreTestCase
         ds.pushData(1);
         testCollector(c1, ds.getId()+2);
     }
+    
+    @Test
+    public void expressionWithError() {
+        fail();
+    }
 
     @Test
     public void dataStreamTest()

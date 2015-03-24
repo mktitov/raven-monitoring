@@ -61,6 +61,10 @@ public interface DataProcessorFacade {
      * Adds data processor passed in the parameter for this data processor termination
      */
     public void watch(DataProcessorFacade watcher);
+    /**
+     * Remove processor passed in the parameter from watchers
+     */
+    public void unwatch(DataProcessorFacade watcher);
     
     /**
      * Sends message to data processor asynchronously 

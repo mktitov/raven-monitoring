@@ -15,6 +15,8 @@
  */
 package org.raven.dp.impl;
 
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -45,6 +47,7 @@ import org.raven.tree.impl.LoggerHelper;
  */
 public class DataProcessorFacadeImpl implements  DataProcessorFacade {   
     private final String facadeName;
+    private final DataProcessorFacade parent; 
     private final Node owner;
     private final DataProcessor processor;
     private final Context processorContext;
@@ -69,6 +72,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     public DataProcessorFacadeImpl(DataProcessorFacadeConfig config) {
         this.facadeName = config.getFacadeName();
         this.owner = config.getOwner();
+        this.parent = config.getParent();
         this.processor = config.getProcessor();
         this.executor = config.getExecutor();
         this.queue = config.getQueue()!=null? config.getQueue() : new ConcurrentLinkedQueue();
@@ -131,6 +135,13 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     public void watch(DataProcessorFacade watcher) {
         getWatcherService(true).send(watcher);
     }
+
+    @Override
+    public void unwatch(DataProcessorFacade watcher) {
+        DataProcessorFacade _watcherService = getWatcherService(false);
+        if (_watcherService!=null)
+            _watcherService.send(new Unwatch(watcher));
+    }        
     
     private DataProcessorFacade getWatcherService(final boolean create) {
         DataProcessorFacade _watcherService = watcherService;
@@ -160,19 +171,26 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         if (terminated.compareAndSet(false, true)) {
             if (getWatcherService(false)!=null)
                 sendTerminateToWatcherService();
-            if (success && processor instanceof DataProcessorLogic) 
-                ((DataProcessorLogic)processor).postStop();
-            if (stopMessage instanceof MessageFromFacade) 
-                ((MessageFromFacade)stopMessage).facade.send(new TerminatedImpl(this, success));
-            else if (stopMessage instanceof AskFuture)
+            //???
+//            if (success && processor instanceof DataProcessorLogic) 
+//                ((DataProcessorLogic)processor).postStop();
+            //???
+//            if (stopMessage instanceof MessageFromFacade) 
+//                ((MessageFromFacade)stopMessage).facade.send(new TerminatedImpl(this, success));
+//            else if (stopMessage instanceof AskFuture)
+            if (stopMessage instanceof AskFuture)
                 ((AskFuture)stopMessage).set(true);
+            if (parent!=null)
+                parent.send(new ChildTerminated(this));
         }
     }
-
-    protected boolean queueMessage(Object message) {
+    
+    private boolean isMessageAllowed(final Object message) {
         if (terminated.get() || stopping.get()) {
             if (message instanceof StopFuture)
                 ((StopFuture)message).cancel(true);
+            if (!terminated.get() && message instanceof ChildTerminated)
+                return true;
             return false;
         }
         if (message instanceof StopFuture) {
@@ -181,6 +199,12 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
                 return false;
             } 
         }
+        return true;
+    }
+
+    protected boolean queueMessage(final Object message) {
+        if (!isMessageAllowed(message))
+            return false;
         final boolean res = queue.offer(message);
         if (stopping.get() && !res) {
             ((StopFuture)message).setError(new Exception("Normal STOP process was interrupted because of ERROR queuing STOP_MESSAGE. Terminating..."));
@@ -312,11 +336,22 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         }
     }
     
-    protected void sendMessageToProcessor(Object message) {
-        if (message instanceof StopFuture) {
-            ((StopFuture)message).set(true);
+    private boolean isStopSequenceMessage(final Object message) {
+        if (message instanceof ChildTerminated)
+            processorContext.childTerminated((ChildTerminated) message);
+        else if (message instanceof StopFuture) {
+            if (processorContext!=null)
+                processorContext.stopSelfAndChildren((StopFuture) message);
+            else
+                ((StopFuture)message).set(true);
+        } else
+            return false;
+        return true;
+    }
+    
+    private void sendMessageToProcessor(Object message) {
+        if (isStopSequenceMessage(message))
             return;
-        }
         final AskFuture future = message instanceof AskFuture? (AskFuture)message : null;
         final Object origMessage = message;
         DataProcessorFacade sender = null;
@@ -424,11 +459,70 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         private Object origMessage;
         private Object message;
         private boolean unhandled;
+        private List<DataProcessorFacade> children;
+        private StopFuture stopFuture;
 
         public DataProcessorFacade getSender() {
             return sender;
         }
 
+        @Override
+        public DataProcessorFacade getParent() {
+            return parent;
+        }
+
+        @Override
+        public void addChild(DataProcessorFacadeConfig config) {
+            if (children==null)
+                children = new LinkedList<>();
+            children.add(config.withParent(DataProcessorFacadeImpl.this).build());            
+        }
+
+        @Override
+        public DataProcessorFacade getChild(String name) {
+            if (children!=null)
+                for (DataProcessorFacade child: children)
+                    if (name.equals(child.getName()))
+                        return child;
+            return null;
+        }
+
+        @Override
+        public List<DataProcessorFacade> getChildren() {
+            if (children==null || children.isEmpty())
+                return Collections.EMPTY_LIST;
+            return Collections.unmodifiableList(children);
+        }
+        
+        private void childTerminated(ChildTerminated termMessage) {
+            if (children!=null)
+                for (Iterator<DataProcessorFacade> it=children.iterator(); it.hasNext();)
+                    if (it.next()==termMessage.child) {
+                        it.remove();
+                        ((DataProcessorLogic)processor).childTerminated(termMessage.child);
+                        break;
+                    }
+            if (children!=null && children.isEmpty())
+                children = null;
+            if (children==null && stopFuture!=null)
+                processStop(stopFuture);
+        }
+        
+        private void stopSelfAndChildren(StopFuture stopFuture) {
+            if (children==null || children.isEmpty()) 
+                processStop(stopFuture);
+            else {
+                this.stopFuture = stopFuture;
+                for (DataProcessorFacade child: children)
+                    child.stop();
+            }
+        }
+        
+        private void processStop(StopFuture stopFuture) {
+            ((DataProcessorLogic)processor).postStop();
+            stopFuture.set(true);
+        }
+        
         public LoggerHelper getLogger() {
             if (logger==null)
                 logger = new LoggerHelper(origLogger, "[DP Logic: "+currentBehaviuor+"] ");
@@ -532,9 +626,12 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         private Terminated terminated = null;
         private List watchers;
 
+        @Override
         public Object processData(Object message) throws Exception {
             if (terminated!=null)
                 sendReplay(message);
+            else if (message instanceof Unwatch)
+                removeWatcher((Unwatch) message);
             else if (message instanceof Terminated) {
                 terminated = (Terminated) message;
                 notifyWatchers();
@@ -544,6 +641,11 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
                 watchers.add(message);
             }
             return VOID;
+        }
+        
+        private void removeWatcher(Unwatch unwatch) {
+            if (watchers!=null)
+                watchers.remove(unwatch.watcher);
         }
         
         private void notifyWatchers() {
@@ -560,5 +662,21 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
             else if (replayDest instanceof DataProcessorFacade)
                 ((DataProcessorFacade)replayDest).send(terminated);
         }
+    }
+    
+    private static class ChildTerminated {
+        private final DataProcessorFacade child;
+
+        public ChildTerminated(DataProcessorFacade child) {
+            this.child = child;
+        }
+    }
+    
+    private static class Unwatch {
+        private final DataProcessorFacade watcher;
+
+        public Unwatch(DataProcessorFacade watcher) {
+            this.watcher = watcher;
+        }        
     }
 }
