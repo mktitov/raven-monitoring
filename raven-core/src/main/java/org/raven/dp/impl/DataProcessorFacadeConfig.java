@@ -32,29 +32,29 @@ public class DataProcessorFacadeConfig<T> {
     private final DataProcessor<T> processor;
     private final ExecutorService executor;
     private final LoggerHelper logger;
+    private final String name;
     private Queue<T> queue;
     private int maxMessageProcessTries = 1;
     private int maxExecuteMessageDispatcherTies = 1;
     private long defaultStopTimeout = 1000;
-    private String facadeName;
     private DataProcessorFacade unhandledMessageProcessor;
     private DataProcessorFacade parent;
 //    private long defaultAskTimeout = 1000;
 
-    public DataProcessorFacadeConfig(String facadeName, Node owner, DataProcessor<T> processor, ExecutorService executor, LoggerHelper logger) {
+    public DataProcessorFacadeConfig(String name, Node owner, DataProcessor<T> processor, ExecutorService executor, LoggerHelper logger) {
         this.owner = owner;
         this.processor = processor;
         this.executor = executor;
         this.logger = logger;
-        this.facadeName = facadeName;
+        this.name = name;
     }
     
-    public DataProcessorFacadeConfig(Node owner, DataProcessor<T> processor, ExecutorService executor, LoggerHelper logger) {
-        this.owner = owner;
-        this.processor = processor;
-        this.executor = executor;
-        this.logger = logger;
-    }
+//    public DataProcessorFacadeConfig(Node owner, DataProcessor<T> processor, ExecutorService executor, LoggerHelper logger) {
+//        this.owner = owner;
+//        this.processor = processor;
+//        this.executor = executor;
+//        this.logger = logger;
+//    }
 
     public DataProcessorFacadeConfig<T> withParent(DataProcessorFacade parent) {
         this.parent = parent;
@@ -97,7 +97,7 @@ public class DataProcessorFacadeConfig<T> {
 //    }
 //
     public String getFacadeName() {
-        return facadeName;
+        return name;
     }
     
     public Node getOwner() {

@@ -15,7 +15,7 @@
  */
 package org.raven.dp;
 
-import java.util.List;
+import java.util.Collection;
 import org.raven.dp.impl.DataProcessorFacadeConfig;
 import org.raven.tree.impl.LoggerHelper;
 
@@ -32,8 +32,8 @@ public interface DataProcessorContext {
     public void forward(DataProcessorFacade facade, Object message);
     public void unhandled();
     public DataProcessorFacade getParent();
-    public void addChild(DataProcessorFacadeConfig config);
+    public DataProcessorFacade addChild(DataProcessorFacadeConfig config) throws NonUniqueNameException;
     public DataProcessorFacade getChild(String name);
-    public List<DataProcessorFacade> getChildren();
-    
+    public Collection<DataProcessorFacade> getChildren();
+    public DataProcessorFacadeConfig createChild(String name, DataProcessor processor);
 }

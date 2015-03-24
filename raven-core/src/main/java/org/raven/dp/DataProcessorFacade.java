@@ -33,6 +33,8 @@ public interface DataProcessorFacade {
      */
     public String getName();
     
+    public String getPath();
+    
     /**
      * Returns true if processor was terminated
      */

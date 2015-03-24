@@ -15,10 +15,13 @@
  */
 package org.raven.dp.impl;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -29,6 +32,7 @@ import org.raven.dp.DataProcessorContext;
 import org.raven.dp.DataProcessorFacade;
 import org.raven.dp.DataProcessorLogic;
 import org.raven.dp.MessageQueueError;
+import org.raven.dp.NonUniqueNameException;
 import org.raven.dp.RavenFuture;
 import org.raven.dp.Terminated;
 import org.raven.dp.UnbecomeFailureException;
@@ -46,7 +50,8 @@ import org.raven.tree.impl.LoggerHelper;
  * @author Mikhail Titov
  */
 public class DataProcessorFacadeImpl implements  DataProcessorFacade {   
-    private final String facadeName;
+    private final String name;
+    private final String path;
     private final DataProcessorFacade parent; 
     private final Node owner;
     private final DataProcessor processor;
@@ -70,9 +75,10 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     private final AtomicReference<CheckTimeoutTask> checkTimeoutTask = new AtomicReference<CheckTimeoutTask>();
 
     public DataProcessorFacadeImpl(DataProcessorFacadeConfig config) {
-        this.facadeName = config.getFacadeName();
+        this.name = config.getFacadeName();
         this.owner = config.getOwner();
         this.parent = config.getParent();
+        this.path = (parent!=null?parent.getPath()+"/":"")+name;
         this.processor = config.getProcessor();
         this.executor = config.getExecutor();
         this.queue = config.getQueue()!=null? config.getQueue() : new ConcurrentLinkedQueue();
@@ -81,17 +87,28 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         this.running = new AtomicBoolean();
         this.task = new WorkerTask(owner, "Processing messages");
         this.defaultStopTimeout = config.getDefaultStopTimeout();
-        this.origLogger = config.getLogger();
-        this.logger = new LoggerHelper(config.getLogger(), "[DP] ");
+        this.origLogger = config.getLogger(); // 
+        this.logger = new LoggerHelper(config.getLogger(), String.format("[DP %s] ", path));
         if (processor instanceof DataProcessorLogic) {
             this.processorContext = new Context();
             ((DataProcessorLogic)processor).init(this, processorContext);
         } else
             this.processorContext = null;
     }
-
+    
+//    private String createPath() {
+//        final StringBuilder buf = new StringBuilder(name);
+//        DataProcessorFacade facade = this;
+//        while (facade.)
+//        return buf.toString();
+//    }
+//
     public String getName() {
-        return facadeName;
+        return name;
+    }
+
+    public String getPath() {
+        return path;
     }
 
     public void terminate() {
@@ -153,7 +170,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
                 if (_watcherService!=null)
                     return _watcherService;
                 watcherService = new DataProcessorFacadeConfig(
-                                owner, new WatcherDataProcessor(), executor, new LoggerHelper(origLogger, "[Death Watcher] ")
+                                "Death Watcher", owner, new WatcherDataProcessor(), executor, origLogger
                             ).build();
                 if (isTerminated())
                     sendTerminateToWatcherService();
@@ -178,10 +195,10 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
 //            if (stopMessage instanceof MessageFromFacade) 
 //                ((MessageFromFacade)stopMessage).facade.send(new TerminatedImpl(this, success));
 //            else if (stopMessage instanceof AskFuture)
-            if (stopMessage instanceof AskFuture)
-                ((AskFuture)stopMessage).set(true);
             if (parent!=null)
                 parent.send(new ChildTerminated(this));
+            if (stopMessage instanceof AskFuture)
+                ((AskFuture)stopMessage).set(true);
         }
     }
     
@@ -459,7 +476,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         private Object origMessage;
         private Object message;
         private boolean unhandled;
-        private List<DataProcessorFacade> children;
+        private Map<String, DataProcessorFacade> children;
         private StopFuture stopFuture;
 
         public DataProcessorFacade getSender() {
@@ -472,36 +489,39 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         }
 
         @Override
-        public void addChild(DataProcessorFacadeConfig config) {
+        public DataProcessorFacadeConfig createChild(String name, DataProcessor processor) {
+            return new DataProcessorFacadeConfig(name, owner, processor, executor, origLogger);
+        }
+
+        @Override
+        public DataProcessorFacade addChild(DataProcessorFacadeConfig config) throws NonUniqueNameException {
             if (children==null)
-                children = new LinkedList<>();
-            children.add(config.withParent(DataProcessorFacadeImpl.this).build());            
+                children = new HashMap<>();
+            else if (children.containsKey(config.getFacadeName()))
+                throw new NonUniqueNameException(String.format("Child with name %s is already exists", config.getFacadeName()));
+            DataProcessorFacade child = config.withParent(DataProcessorFacadeImpl.this).build();
+            children.put(child.getName(), child);            
+            return child;
         }
 
         @Override
         public DataProcessorFacade getChild(String name) {
-            if (children!=null)
-                for (DataProcessorFacade child: children)
-                    if (name.equals(child.getName()))
-                        return child;
-            return null;
+            return children!=null? children.get(name) : null;
         }
 
         @Override
-        public List<DataProcessorFacade> getChildren() {
+        public Collection<DataProcessorFacade> getChildren() {
             if (children==null || children.isEmpty())
                 return Collections.EMPTY_LIST;
-            return Collections.unmodifiableList(children);
+            return Collections.unmodifiableCollection(children.values());
         }
         
         private void childTerminated(ChildTerminated termMessage) {
-            if (children!=null)
-                for (Iterator<DataProcessorFacade> it=children.iterator(); it.hasNext();)
-                    if (it.next()==termMessage.child) {
-                        it.remove();
-                        ((DataProcessorLogic)processor).childTerminated(termMessage.child);
-                        break;
-                    }
+            if (children!=null) {
+                DataProcessorFacade child = children.remove(termMessage.child.getName());
+                if (child!=null)
+                    ((DataProcessorLogic)processor).childTerminated(child);
+            }
             if (children!=null && children.isEmpty())
                 children = null;
             if (children==null && stopFuture!=null)
@@ -513,7 +533,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
                 processStop(stopFuture);
             else {
                 this.stopFuture = stopFuture;
-                for (DataProcessorFacade child: children)
+                for (DataProcessorFacade child: children.values())
                     child.stop();
             }
         }
@@ -525,13 +545,13 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         
         public LoggerHelper getLogger() {
             if (logger==null)
-                logger = new LoggerHelper(origLogger, "[DP Logic: "+currentBehaviuor+"] ");
+                logger = new LoggerHelper(origLogger, String.format("[DP %s: %s] ", path, currentBehaviuor));
             return logger;
         }
         
         public void become(final DataProcessor dataProcessor, final boolean replace) {
             if (getLogger().isDebugEnabled())
-                getLogger().debug("Behaviour "+(replace?"replaced by ":"changed on ")+dataProcessor);
+                getLogger().debug("Behaviour "+(replace?"replaced by ":"changed to ")+dataProcessor);
             if (!replace) {
                 if (behaviourStack==null)
                     behaviourStack = new LinkedList<DataProcessor>();
@@ -545,10 +565,11 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
             final DataProcessor behaviour = behaviourStack==null? null : behaviourStack.poll();
             if (behaviour==null)
                 throw new UnbecomeFailureException();
+            DataProcessor oldBehaviour = currentBehaviuor;
+            currentBehaviuor = behaviour;
             logger = null;
             if (getLogger().isDebugEnabled())
-                getLogger().debug("Behaviour changed from "+currentBehaviuor);
-            currentBehaviuor = behaviour;
+                getLogger().debug("Behaviour changed from "+oldBehaviour);
             if (behaviourStack!=null && behaviourStack.isEmpty())
                 behaviourStack = null;
         }
