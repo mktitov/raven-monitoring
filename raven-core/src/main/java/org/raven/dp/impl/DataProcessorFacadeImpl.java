@@ -479,6 +479,17 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         private Map<String, DataProcessorFacade> children;
         private StopFuture stopFuture;
 
+        @Override
+        public Node getOwner() {
+            return owner;
+        }
+
+        @Override
+        public ExecutorService getExecutor() {
+            return executor;
+        }
+
+        @Override
         public DataProcessorFacade getSender() {
             return sender;
         }

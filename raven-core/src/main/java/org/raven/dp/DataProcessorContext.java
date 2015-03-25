@@ -17,6 +17,8 @@ package org.raven.dp;
 
 import java.util.Collection;
 import org.raven.dp.impl.DataProcessorFacadeConfig;
+import org.raven.sched.ExecutorService;
+import org.raven.tree.Node;
 import org.raven.tree.impl.LoggerHelper;
 
 /**
@@ -24,7 +26,9 @@ import org.raven.tree.impl.LoggerHelper;
  * @author Mikhail Titov
  */
 public interface DataProcessorContext {
-    public DataProcessorFacade getSender();
+    public Node getOwner();
+    public ExecutorService getExecutor();
+    public DataProcessorFacade getSender();    
     public LoggerHelper getLogger();
     public void become(DataProcessor dataProcessor, boolean replace);
     public void unbecome() throws UnbecomeFailureException;
