@@ -970,6 +970,8 @@ public class BaseNode implements Node, NodeListener, Logger
     
     public synchronized void shutdown() throws NodeShutdownError
     {
+        if (getStatus()==Status.SHUTDOWNED)
+            return; //already shutdowned
         if (logger.isDebugEnabled())
             logger.debug(String.format("Shutdowning node (%s)", getPath()));
         if (getStatus()==Status.STARTED)
@@ -983,6 +985,7 @@ public class BaseNode implements Node, NodeListener, Logger
 //                    node.removeDependentNode(this);
 //                }
         fireNodeShutdownedEvent(this);
+        setStatus(Status.SHUTDOWNED);
     }
 
     void fireAttributeValueChanged(NodeAttributeImpl attr, Object oldValue, Object newValue) {

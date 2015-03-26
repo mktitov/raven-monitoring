@@ -27,6 +27,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,6 +46,7 @@ import org.raven.impl.NodeClassTransformerWorker;
 import org.raven.log.impl.NodeLoggerNode;
 import org.raven.net.impl.NetworkResponseServiceNode;
 import org.raven.prj.Projects;
+import org.raven.sched.ExecutorService;
 import org.raven.sched.impl.ActorSystemsNode;
 import org.raven.sched.impl.SchedulersNode;
 import org.raven.template.impl.TemplateVariable;
@@ -280,9 +282,18 @@ public class TreeImpl implements Tree {
     
     public void shutdown()
     {
-        logger.info("Shutdowning the tree");
-        if (rootNode!=null)
-            shutdownNode(rootNode);
+        if (rootNode!=null) {
+            logger.info("Shutdowning the tree");
+            List<ExecutorService> executors = new LinkedList<>();
+            //Shutdowning nodes exclude executors
+            logger.info("Shutdowning all nodes excluding Executor Services");
+            shutdownNode(rootNode, executors);
+            //Shutdowning executors
+            logger.info("Shutdowning all nodes excluding Executor Services");
+            for (ExecutorService executor: executors) 
+                shutdownNode(executor, null);
+        }
+        rootNode = null;
         logger.info("Tree shutdowned");
     }
 
@@ -449,7 +460,7 @@ public class TreeImpl implements Tree {
             for (Node child: node.getChildrens())
                 stop(child);
     }
-
+    
     public boolean scanSubtree(
             Node startingPoint, ScannedNodeHandler handler, ScanOptions options)
     {
@@ -786,21 +797,26 @@ public class TreeImpl implements Tree {
                 saveClonedNode(source, clonedSource, destPath, child, store);
     }
 
-    private void shutdownNode(Node node)
+    private void shutdownNode(Node node, List<ExecutorService> executors)
     {
-       Collection<Node> childrens = node.getSortedChildrens();
-       
-       if (childrens!=null)
-           for (Node children: childrens)
-               shutdownNode(children);
+        if (executors!=null && node instanceof ExecutorService) 
+            executors.add((ExecutorService) node);
+        else {
+            Collection<Node> childrens = node.getNodes();
 
-       String nodePath = node.getPath();
-       try{
-           node.shutdown();
-       }catch(Throwable e)
-       {
-           logger.error(String.format("Error stoping node (%s)", nodePath), e);
-       }
+            if (childrens != null) {
+                for (Node children : childrens) {
+                    shutdownNode(children, executors);
+                }
+            }
+
+            String nodePath = node.getPath();
+            try {
+                node.shutdown();
+            } catch (Throwable e) {
+                logger.error(String.format("Error stoping node (%s)", nodePath), e);
+            }
+        }
     }
     
     @SuppressWarnings("unchecked")

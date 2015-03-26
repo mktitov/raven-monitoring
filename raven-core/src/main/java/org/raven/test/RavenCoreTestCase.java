@@ -75,7 +75,8 @@ public class RavenCoreTestCase extends ServiceTestCase
     @After
     public void finalizeTest() throws Exception
     {
-        tree.stop(tree.getRootNode());
+//        tree.stop(tree.getRootNode());
+        tree.shutdown();
         configurator.close();
     }
 

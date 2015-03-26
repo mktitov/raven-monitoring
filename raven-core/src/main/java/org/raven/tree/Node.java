@@ -68,7 +68,7 @@ import org.slf4j.Logger;
 //@Description("The node type")
 public interface Node extends Cloneable, Comparable<Node>, PathObject
 {
-    public enum Status {CREATED, INITIALIZED, STARTED, REMOVING, REMOVED}
+    public enum Status {CREATED, INITIALIZED, STARTED, REMOVING, REMOVED, SHUTDOWNED}
     /**
      * The separator char between nodes names in the path
      * @see #getPath() 

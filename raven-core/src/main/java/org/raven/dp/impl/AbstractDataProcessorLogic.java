@@ -34,6 +34,7 @@ public abstract class AbstractDataProcessorLogic implements DataProcessorLogic {
     public void init(DataProcessorFacade facade, DataProcessorContext context) {
         this.facade = facade;
         this.context = context;
+        postInit();
     }
     
     @Override
