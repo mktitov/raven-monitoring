@@ -199,6 +199,8 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
                 parent.send(new ChildTerminated(this));
             if (stopMessage instanceof AskFuture)
                 ((AskFuture)stopMessage).set(true);
+            if (logger.isDebugEnabled())
+                logger.debug(success? "Stopped" : "Terminated");
         }
     }
     
@@ -214,7 +216,8 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
             if (!stopping.compareAndSet(false, true)) {
                 ((StopFuture)message).cancel(true);
                 return false;
-            } 
+            } else if (logger.isDebugEnabled())
+                logger.debug("Stopping...");
         }
         return true;
     }
