@@ -26,20 +26,28 @@ import org.raven.sched.ExecutorTaskHolder;
  * @author Mikhail Titov
  */
 public class ForkJoinExecutorThreadFactory extends ExecutorThreadGroup implements ForkJoinPool.ForkJoinWorkerThreadFactory {
+    private final boolean createDaemonThreads;
 
     public ForkJoinExecutorThreadFactory(String groupName) {
+        this(groupName, false);
+    }
+
+    public ForkJoinExecutorThreadFactory(String groupName, boolean createDaemonThreads) {
         super(groupName);
+        this.createDaemonThreads = createDaemonThreads;
     }
 
     @Override
     public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
         final AtomicReference<ExecutorThread> newThread = new AtomicReference<>();
         try {
-            new Thread(this, new Runnable() {
+            final Thread creator = new Thread(this, new Runnable() {
                 @Override public void run() {
                     newThread.set(new ExecutorThread(pool));
                 }
-            }).join();
+            });
+            creator.start();
+            creator.join();
         } catch (InterruptedException ex) {
         }
         return newThread.get();
@@ -51,6 +59,7 @@ public class ForkJoinExecutorThreadFactory extends ExecutorThreadGroup implement
 
         public ExecutorThread(ForkJoinPool pool) {
             super(pool);
+            this.setDaemon(createDaemonThreads);
         }
 
         @Override

@@ -25,8 +25,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.log.LogLevel;
-import org.raven.sched.CancelableTask;
-import org.raven.sched.CancelationProcessor;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.ExecutorServiceException;
 import org.raven.sched.ExecutorTask;
@@ -37,6 +35,7 @@ import org.raven.sched.TaskExecutionListener;
 import org.raven.table.TableImpl;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
+import org.raven.tree.NodeError;
 import org.raven.tree.Viewable;
 import org.raven.tree.ViewableObject;
 import org.raven.tree.impl.AbstractActionViewableObject;
@@ -60,6 +59,9 @@ public class ExecutorServiceNode extends BaseNode
 {
     private final String managedTasksLock = "l";
     private final int CHECK_MANAGED_TASKS_INTERVAL = 10000;
+    
+    @NotNull @Parameter(defaultValue="THREADED_POOL")
+    private Type type;
 
     @NotNull @Parameter(defaultValue="2")
     private Integer corePoolSize;
@@ -122,19 +124,23 @@ public class ExecutorServiceNode extends BaseNode
         super.doStart();
         resetStatFields();
         Integer capacity = maximumQueueSize;
-        if (capacity==null)
-            queue = new ZeroBlockingQueue();
-        else
-            queue = new LinkedBlockingQueue(capacity);
         delayedTasks = new DelayQueue<DelayedTaskWrapper>();
         managedTasks = new HashSet<Node>();
         taskLogger = new LoggerHelper(this, "Task executor. ");
         
-        ThreadPoolExecutorThreadFactory _threadFactory = new ThreadPoolExecutorThreadFactory(getPath());
-        threadFactory = _threadFactory;
-        executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, timeUnit, queue, _threadFactory);
-//        executor = new ForkJoinPool(corePoolSize);
-//        executor = new 
+        if (type==Type.THREADED_POOL) {
+            if (capacity==null)
+                queue = new ZeroBlockingQueue();
+            else
+                queue = new LinkedBlockingQueue(capacity);
+            ThreadPoolExecutorThreadFactory _threadFactory = new ThreadPoolExecutorThreadFactory(getPath());
+            threadFactory = _threadFactory;
+            executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, timeUnit, queue, _threadFactory);
+        } else {
+            ForkJoinExecutorThreadFactory _threadFactory = new ForkJoinExecutorThreadFactory(getPath());
+            threadFactory = _threadFactory;
+            executor = new ForkJoinPool(corePoolSize, _threadFactory, null, true);
+        }
         executor.execute(new TaskWrapper(new DelayedTaskExecutor()));
         loadAverage = new LoadAverageStatistic(300000, maximumPoolSize);
         delayedTasks.add(new DelayedTaskWrapper(new TasksManagerTask(checkManagedTasksInterval)
@@ -147,6 +153,24 @@ public class ExecutorServiceNode extends BaseNode
         super.doStop();
         executor.shutdown();
         resetStatFields();
+//        delayedTasks.clear();
+//        delayedTasks = null;
+    }
+
+    @Override
+    public synchronized void stop() throws NodeError {
+        super.stop(); 
+        final Node effectiveParent = getEffectiveParent();
+        if (effectiveParent instanceof ExecutorServiceBalancerNode) {
+            LinkedList<DelayedTaskWrapper> tasks = new LinkedList<>();
+            delayedTasks.drainTo(tasks);
+            ExecutorServiceBalancerNode balancer = (ExecutorServiceBalancerNode) effectiveParent;
+            for (DelayedTaskWrapper task: tasks) {
+                final long delay = task.getDelay(TimeUnit.MILLISECONDS);
+                System.out.println("!!! delay: "+delay);
+                balancer.executeQuietly(delay, task.getTask());
+            }
+        }
         delayedTasks.clear();
         delayedTasks = null;
     }
@@ -156,6 +180,9 @@ public class ExecutorServiceNode extends BaseNode
         try {
             if (isStarted()) 
                 executor.execute(getTaskWrapper(task));
+            else
+                throw new ExecutorServiceException("Can't execute task... Not Started");
+            
         } catch (Exception e) {
             rejectedTasks.incrementAndGet();
             String message = String.format(
@@ -169,8 +196,10 @@ public class ExecutorServiceNode extends BaseNode
 
     @Override
     public void execute(long delay, Task task) throws ExecutorServiceException {
-        if (Status.STARTED.equals(getStatus()))
+        if (isStarted())
             delayedTasks.add(new DelayedTaskWrapper(task, delay, delayedTasks));
+        else
+            throw new ExecutorServiceException("Can't execute task... Not Started");
     }
 
     @Override
@@ -260,6 +289,14 @@ public class ExecutorServiceNode extends BaseNode
         return loadAverage;
     }
 
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
+
     public Integer getCorePoolSize() {
         return corePoolSize;
     }
@@ -308,9 +345,9 @@ public class ExecutorServiceNode extends BaseNode
         if (_delayedTasks != null && !_delayedTasks.isEmpty()) {
             long time = System.currentTimeMillis();
             for (DelayedTaskWrapper task : _delayedTasks) {
-                String date = converter.convert(String.class, new Date(task.startAt), "dd.MM.yyyy HH:mm:ss");
-                table.addRow(new Object[]{task.task.getTaskNode().getPath(), date
-                        , (task.startAt - time) / 1000, task.task.getStatusMessage()});
+                String date = converter.convert(String.class, new Date(task.getStartAt()), "dd.MM.yyyy HH:mm:ss");
+                table.addRow(new Object[]{task.getTask().getTaskNode().getPath(), date
+                        , (task.getStartAt() - time) / 1000, task.getTask().getStatusMessage()});
             }
         }
         vos.add(new ViewableObjectImpl(Viewable.RAVEN_TABLE_MIMETYPE, table));
@@ -466,35 +503,35 @@ public class ExecutorServiceNode extends BaseNode
         }
     }
 
-    private class DelayedTaskWrapper implements Delayed, CancelationProcessor {
-        private final long startAt;
-        private final Task task;
-        private final DelayQueue<DelayedTaskWrapper> queue;
-
-        public DelayedTaskWrapper(Task task, long delay, DelayQueue<DelayedTaskWrapper> queue) {
-            this.task = task;
-            this.startAt = System.currentTimeMillis()+delay;
-            this.queue = queue;
-            if (task instanceof CancelableTask)
-                ((CancelableTask)task).setCancelationProcessor(this);
-        }
-
-        public long getDelay(TimeUnit unit) {
-            return unit.convert(startAt-System.currentTimeMillis(), TimeUnit.MILLISECONDS);
-        }
-
-        public int compareTo(Delayed o) {
-            if (o==this)
-                return 0;
-            long d = getDelay(TimeUnit.MILLISECONDS)-o.getDelay(TimeUnit.MILLISECONDS);
-            return d==0? 0 : (d<0? -1 : 1);
-        }
-
-        public void cancel() {
-            queue.remove(this);
-        }
-    }
-
+//    private class DelayedTaskWrapper implements Delayed, CancelationProcessor {
+//        private final long startAt;
+//        private final Task task;
+//        private final DelayQueue<DelayedTaskWrapper> queue;
+//
+//        public DelayedTaskWrapper(Task task, long delay, DelayQueue<DelayedTaskWrapper> queue) {
+//            this.task = task;
+//            this.startAt = System.currentTimeMillis()+delay;
+//            this.queue = queue;
+//            if (task instanceof CancelableTask)
+//                ((CancelableTask)task).setCancelationProcessor(this);
+//        }
+//
+//        public long getDelay(TimeUnit unit) {
+//            return unit.convert(startAt-System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+//        }
+//
+//        public int compareTo(Delayed o) {
+//            if (o==this)
+//                return 0;
+//            long d = getDelay(TimeUnit.MILLISECONDS)-o.getDelay(TimeUnit.MILLISECONDS);
+//            return d==0? 0 : (d<0? -1 : 1);
+//        }
+//
+//        public void cancel() {
+//            queue.remove(this);
+//        }
+//    }
+//
     private class DelayedTaskExecutor implements Task {
         public Node getTaskNode() {
             return ExecutorServiceNode.this;
@@ -512,7 +549,7 @@ public class ExecutorServiceNode extends BaseNode
                         return;
                     DelayedTaskWrapper delayedTask = _delayedTasks.poll(1, TimeUnit.SECONDS);
                     if (delayedTask!=null)
-                        executeQuietly(delayedTask.task);
+                        executeQuietly(delayedTask.getTask());
                 }
             } catch (InterruptedException e) {
                 if (isLogLevelEnabled(LogLevel.DEBUG))

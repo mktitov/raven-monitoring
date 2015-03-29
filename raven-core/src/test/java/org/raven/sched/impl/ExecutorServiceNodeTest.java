@@ -30,6 +30,7 @@ import org.raven.test.RavenCoreTestCase;
 import org.raven.log.LogLevel;
 import org.raven.sched.CancelableTask;
 import org.raven.sched.CancelationProcessor;
+import org.raven.sched.ExecutorService;
 import org.raven.sched.ExecutorServiceException;
 import org.raven.sched.Task;
 import org.raven.sched.TaskRestartPolicy;
@@ -60,6 +61,7 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         executor.setCorePoolSize(16);
         executor.setMaximumPoolSize(17);
         executor.setMaximumQueueSize(1000);
+        executor.setType(ExecutorService.Type.FORK_JOIN_POOL);
         assertTrue(executor.start());
         for (int i=0; i<5; ++i)
             runTest(i);

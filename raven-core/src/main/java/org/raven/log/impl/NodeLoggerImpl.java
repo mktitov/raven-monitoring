@@ -65,7 +65,7 @@ public class NodeLoggerImpl extends AbstractDbWorker<NodeLogRecord> implements N
 
 	public void write(Node node, LogLevel level, String message) {
         final NodeLogRecord rec = new NodeLogRecord(node.getId(),node.getPath(),level,message);
-		write(rec);
+        write(rec);
         final NodeLoggerNode _nodeLogger = nodeLogger;
         if (_nodeLogger!=null)
             _nodeLogger.pushLogRecordToHandlers(rec);

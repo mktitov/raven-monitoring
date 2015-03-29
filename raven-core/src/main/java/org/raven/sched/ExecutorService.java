@@ -23,23 +23,7 @@ import org.raven.tree.Node;
  *
  * @author Mikhail Titov
  */
-public interface ExecutorService extends Node
+public interface ExecutorService extends Executor, Node
 {
-    /**
-     * Executes the task in separate thread
-     */
-    public void execute(Task task) throws ExecutorServiceException;
-    /**
-     * Executes the task in separate thread through <code>delay</code> milliseconds.
-     */
-    public void execute(long delay, Task task) throws ExecutorServiceException;
-    /**
-     * The same as {@link #execute(org.raven.sched.Task)} but this method does not throws exception
-     * @return <b>true</b> if tasks successfully
-     */
-    public boolean executeQuietly(Task task);
-    /**
-     * The same as {@link #execute(long, org.raven.sched.Task)} but this method does not throws exception
-     */
-    public boolean executeQuietly(long delay, Task task);
+    public enum Type {THREADED_POOL, FORK_JOIN_POOL};
 }

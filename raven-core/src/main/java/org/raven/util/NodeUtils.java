@@ -95,7 +95,7 @@ public class NodeUtils
      */
     public static <T> List<T> getChildsOfType(Node owner, Class<T> childType)
     {
-        return extractNodesOfType(owner.getSortedChildrens(), childType, true);
+        return extractNodesOfType(owner.getNodes(), childType, true);
     }
 
     /**
