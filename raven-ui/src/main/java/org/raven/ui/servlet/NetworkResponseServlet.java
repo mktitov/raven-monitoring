@@ -200,11 +200,14 @@ public class NetworkResponseServlet extends HttpServlet  {
             if (requestAuth == null) throw new AuthorizationNeededException();
             else {
                 String userAndPath = new String(Base64.decodeBase64(requestAuth.substring(6).getBytes()));
-                String elems[] = userAndPath.split(":");
-                if (elems.length>=2)
-                    userContext = responseContext.getLoginService().login(elems[0], elems[1], request.getRemoteAddr());
-                else 
+                final int colonPos = userAndPath.indexOf(':');
+                if (colonPos==-1 || colonPos==0 || colonPos==userAndPath.length()-1)
                     throw new AuthorizationNeededException();
+                else {
+                    final String login = userAndPath.substring(0, colonPos);
+                    final String pwd = userAndPath.substring(colonPos+1);
+                    userContext = responseContext.getLoginService().login(login, pwd, request.getRemoteAddr());
+                }
             }
         } else if (responseContext.getResponseBuilderLogger().isDebugEnabled())
             responseContext.getResponseBuilderLogger().debug("User ({}) already logged in. Skiping auth.", userContext);
