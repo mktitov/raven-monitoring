@@ -15,12 +15,9 @@
  */
 package org.raven.sched.impl;
 
-import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import mockit.Expectations;
-import mockit.FullVerifications;
-import mockit.Injectable;
 import mockit.Mocked;
 import mockit.Verifications;
 import mockit.VerificationsInOrder;
@@ -329,15 +326,15 @@ public class ExecutorServiceBalancerNodeTest extends RavenCoreTestCase {
         assertTrue(balancer.start());
         
         addExecutor("executor1", executor1, true);
-        balancer.execute(1000, task);
-//        new Verifications(){{
-//            executor1.execute(anyLong, (Task)any); times=0;
-//        }};
+        balancer.execute(60000, task);
+        new Verifications(){{
+            executor1.execute(anyLong, (Task)any); times=0;
+        }};
         executor.stop();
         new Verifications(){{
             long d;
             executor1.execute(d = withCapture(), task);
-//            assertTrue(d>900);
+            assertTrue(d>59000);
         }};
         
     }

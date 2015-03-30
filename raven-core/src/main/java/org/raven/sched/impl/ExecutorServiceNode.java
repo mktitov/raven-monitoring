@@ -28,6 +28,7 @@ import org.raven.log.LogLevel;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.ExecutorServiceException;
 import org.raven.sched.ExecutorTask;
+import org.raven.sched.ExecutorTaskHolder;
 import org.raven.sched.ExecutorThreadFactory;
 import org.raven.sched.ManagedTask;
 import org.raven.sched.Task;
@@ -99,10 +100,11 @@ public class ExecutorServiceNode extends BaseNode
     private LoggerHelper taskLogger;
     private BlockingQueue queue;
     private Set<Node> managedTasks;
-    private DelayQueue<DelayedTaskWrapper> delayedTasks;
+    private volatile DelayQueue<DelayedTaskWrapper> delayedTasks;
     private AtomicLong taskIdCounter;
     private volatile long maxExecutionWaitTime;
     private volatile long avgExecutionWaitTime;
+    private DelayedTaskExecutorThread delayedTaskExecutorThread;
     private Lock waitTimeLock;
 
     @Override
@@ -126,8 +128,7 @@ public class ExecutorServiceNode extends BaseNode
         Integer capacity = maximumQueueSize;
         delayedTasks = new DelayQueue<DelayedTaskWrapper>();
         managedTasks = new HashSet<Node>();
-        taskLogger = new LoggerHelper(this, "Task executor. ");
-        
+        taskLogger = new LoggerHelper(this, "Task executor. ");        
         if (type==Type.THREADED_POOL) {
             if (capacity==null)
                 queue = new ZeroBlockingQueue();
@@ -141,7 +142,9 @@ public class ExecutorServiceNode extends BaseNode
             threadFactory = _threadFactory;
             executor = new ForkJoinPool(corePoolSize, _threadFactory, null, true);
         }
-        executor.execute(new TaskWrapper(new DelayedTaskExecutor()));
+//        executor.execute(new TaskWrapper(new DelayedTaskExecutor()));
+        delayedTaskExecutorThread = new DelayedTaskExecutorThread(new DelayedTaskExecutor());
+        delayedTaskExecutorThread.start();
         loadAverage = new LoadAverageStatistic(300000, maximumPoolSize);
         delayedTasks.add(new DelayedTaskWrapper(new TasksManagerTask(checkManagedTasksInterval)
                 , checkManagedTasksInterval, delayedTasks));
@@ -152,6 +155,7 @@ public class ExecutorServiceNode extends BaseNode
     {
         super.doStop();
         executor.shutdown();
+        delayedTaskExecutorThread.interrupt();
         resetStatFields();
 //        delayedTasks.clear();
 //        delayedTasks = null;
@@ -159,20 +163,22 @@ public class ExecutorServiceNode extends BaseNode
 
     @Override
     public synchronized void stop() throws NodeError {
+        boolean needStop = isStarted();
         super.stop(); 
-        final Node effectiveParent = getEffectiveParent();
-        if (effectiveParent instanceof ExecutorServiceBalancerNode) {
-            LinkedList<DelayedTaskWrapper> tasks = new LinkedList<>();
-            delayedTasks.drainTo(tasks);
-            ExecutorServiceBalancerNode balancer = (ExecutorServiceBalancerNode) effectiveParent;
-            for (DelayedTaskWrapper task: tasks) {
-                final long delay = task.getDelay(TimeUnit.MILLISECONDS);
-                System.out.println("!!! delay: "+delay);
-                balancer.executeQuietly(delay, task.getTask());
+        if (needStop)
+            try {
+                final Node effectiveParent = getEffectiveParent();
+                if (effectiveParent instanceof ExecutorServiceBalancerNode) {
+                    ExecutorServiceBalancerNode balancer = (ExecutorServiceBalancerNode) effectiveParent;
+                    for (DelayedTaskWrapper task : delayedTasks) {
+                        if (delayedTasks.remove(task))
+                            balancer.executeQuietly(task.getDelay(TimeUnit.MILLISECONDS), task.getTask());
+                    }
+                }
+            } finally {
+                delayedTasks.clear();
+                delayedTasks = null;
             }
-        }
-        delayedTasks.clear();
-        delayedTasks = null;
     }
 
     @Override
@@ -532,16 +538,40 @@ public class ExecutorServiceNode extends BaseNode
 //        }
 //    }
 //
-    private class DelayedTaskExecutor implements Task {
+    private class DelayedTaskExecutorThread extends Thread implements ExecutorTaskHolder {
+        private final DelayedTaskExecutor task;
+
+        public DelayedTaskExecutorThread(DelayedTaskExecutor task) {
+            super(task);
+            this.task = task;
+        }
+
+        @Override
+        public void setExecutorTask(ExecutorTask task) {
+        }
+
+        @Override
+        public ExecutorTask getExecutorTask() {
+            return task;
+        }
+    }
+    
+    private class DelayedTaskExecutor extends AbstractExecutorTask {
+        
+        @Override
         public Node getTaskNode() {
             return ExecutorServiceNode.this;
         }
 
+        @Override
         public String getStatusMessage() {
             return "Servicing delayed tasks";
         }
 
-        public void run() {
+        @Override
+        public void doRun() {
+            if (isDebugEnabled())
+                getLogger().debug("Delayed task executor started");
             try {
                 for (;;) {
                     DelayQueue<DelayedTaskWrapper> _delayedTasks = delayedTasks;

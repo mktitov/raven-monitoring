@@ -23,6 +23,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.RavenUtils;
@@ -53,7 +54,13 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         executor = new ExecutorServiceNode();
         executor.setName("executor");
         testsNode.addAndSaveChildren(executor);
+        executor.setLogLevel(LogLevel.TRACE);
 //        executor.setCacheTaskWrappers(Boolean.TRUE);
+    }
+    
+    @After
+    public void after() {
+        executor.stop();
     }
     
     @Test
@@ -128,8 +135,8 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
     @Test
     public void test() throws ExecutorServiceException, InterruptedException, IOException, Exception
     {
-        executor.setCorePoolSize(2);
-        executor.setMaximumPoolSize(3);
+        executor.setCorePoolSize(1);
+        executor.setMaximumPoolSize(2);
         executor.setMaximumQueueSize(1);
         executor.setLogLevel(LogLevel.DEBUG);
         assertTrue(executor.start());
@@ -145,7 +152,7 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         System.out.println("RUNNING threads count: "+executor.threadFactory.getRunningThreadsCount());
 
         Thread.sleep(100);
-        assertEquals(new Integer(2+1), executor.getExecutingTaskCount()); //+1 is the delayed tasks executor
+        assertEquals(new Integer(2), executor.getExecutingTaskCount()); 
         List<ViewableObject> vos = executor.getViewableObjects(null);
         assertNotNull(vos);
         assertEquals(4, vos.size());
@@ -156,7 +163,7 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         System.out.println("\nTRACE: \n");
 //        for (Object[] row: rows)
 //            System.out.println(row[5]);
-        assertEquals(2+1, rows.size()); //+1 is the delayed tasks executor
+        assertEquals(2, rows.size()); 
         assertEquals(executor.getPath(), rows.get(1)[1]);
         assertEquals("status message", rows.get(1)[2]);
         assertEquals(Thread.State.TIMED_WAITING.toString(), rows.get(1)[6]);
@@ -171,15 +178,15 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
 
         Thread.sleep(1000);
 
-        assertEquals(new Integer(0+1), executor.getExecutingTaskCount()); //+1 is the delayed tasks executor
+        assertEquals(new Integer(0), executor.getExecutingTaskCount()); 
         assertEquals(3, executor.getExecutedTasks().getOperationsCount());
         assertEquals(1l, executor.getRejectedTasks().get());
     }
 
     @Test
     public void test_nullMaximumQueueSize() throws Exception {
-        executor.setCorePoolSize(2);
-        executor.setMaximumPoolSize(3);
+        executor.setCorePoolSize(1);
+        executor.setMaximumPoolSize(2);
         executor.setMaximumQueueSize(null);
         executor.setLogLevel(LogLevel.DEBUG);
         assertTrue(executor.start());
@@ -193,12 +200,12 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         }
 
         Thread.sleep(100);
-        assertEquals(new Integer(2+1), executor.getExecutingTaskCount()); //+1 is the delayed tasks executor
+        assertEquals(new Integer(2), executor.getExecutingTaskCount()); 
         List<ViewableObject> vos = executor.getViewableObjects(null);
 
         Thread.sleep(1000);
 
-        assertEquals(new Integer(0+1), executor.getExecutingTaskCount()); //+1 is the delayed tasks executor
+        assertEquals(new Integer(0), executor.getExecutingTaskCount()); 
         assertEquals(2, executor.getExecutedTasks().getOperationsCount());
         assertEquals(1l, executor.getRejectedTasks().get());
     }
@@ -223,6 +230,8 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         assertTrue(task3.executed);
         assertTrue(task1.time < task3.time);
         assertTrue(task3.time < task2.time);
+        executor.stop();
+        Thread.sleep(100);
     }
     
     @Test
