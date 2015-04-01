@@ -141,10 +141,11 @@ public class DataSourceFieldValueGenerator
         dataSource.getDataImmediate(this, context);
         DataInfo info = dataInfo.get();
         val = info==null? null : info.data;
+        DataContext _context = info==null || info.context==null? context : info.context;
         dataInfo.remove();
         if (useExpression) {
-            bindingSupport.put(DATA_BINDING, info.data);
-            bindingSupport.put(DATA_CONTEXT_BINDING, info.context);
+            bindingSupport.put(DATA_BINDING, val);
+            bindingSupport.put(DATA_CONTEXT_BINDING, _context);
             val = getAttr(EXPRESSION_ATTR).getRealValue();
         }
         return val;
