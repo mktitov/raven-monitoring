@@ -41,6 +41,7 @@ import org.raven.MockitoAnswer;
 import org.raven.dp.FutureCallback;
 import org.raven.dp.DataProcessorContext;
 import org.raven.dp.DataProcessorLogic;
+import org.raven.dp.FutureCanceledException;
 import org.raven.dp.NonUniqueNameException;
 import org.raven.dp.RavenFuture;
 import org.raven.dp.Terminated;
@@ -301,11 +302,70 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         verifyNoMoreInteractions(processor);
     }
     
+    @Test
+    public void askWithFutureAsResultTest() throws Exception {
+        final ExecutorService executor = createExecutor();
+        DataProcessor processor = mock(DataProcessor.class);
+        when(processor.processData("test")).then(new Answer() {
+            @Override public Object answer(InvocationOnMock invocation) throws Throwable {
+                RavenFutureImpl future = new RavenFutureImpl(executor);
+                future.set("ok");
+                return future;
+            }
+        });
+        DataProcessorFacade facade = new DataProcessorFacadeConfig("receiver", testsNode, processor, executor, logger).build();
+        assertEquals("ok", facade.ask("test").get());
+        verify(processor).processData("test");
+        verifyNoMoreInteractions(processor);
+    }
+    
     @Test(expected = ExecutionException.class)
     public void askWithErrorTest() throws Exception {
         ExecutorService executor = createExecutor();
         DataProcessor processor = mock(DataProcessor.class);
         when(processor.processData("test")).thenThrow(new Exception("error"));
+
+        DataProcessorFacade facade = new DataProcessorFacadeConfig("receiver", testsNode, processor, executor, logger).build();
+        try {
+            assertEquals("ok", facade.ask("test").get());
+        } finally {
+            verify(processor).processData("test");
+            verifyNoMoreInteractions(processor);
+        }
+    }
+    
+    @Test(expected = ExecutionException.class)
+    public void askWithErrorFutureAsResultTest() throws Exception {
+        final ExecutorService executor = createExecutor();
+        DataProcessor processor = mock(DataProcessor.class);
+        when(processor.processData("test")).then(new Answer() {
+            @Override public Object answer(InvocationOnMock invocation) throws Throwable {
+                RavenFutureImpl future = new RavenFutureImpl(executor);
+                future.setError(new Exception("error"));
+                return future;
+            }
+        });
+
+        DataProcessorFacade facade = new DataProcessorFacadeConfig("receiver", testsNode, processor, executor, logger).build();
+        try {
+            assertEquals("ok", facade.ask("test").get());
+        } finally {
+            verify(processor).processData("test");
+            verifyNoMoreInteractions(processor);
+        }
+    }
+    
+    @Test(expected = FutureCanceledException.class)
+    public void askWithCanceledFutureAsResultTest() throws Exception {
+        final ExecutorService executor = createExecutor();
+        DataProcessor processor = mock(DataProcessor.class);
+        when(processor.processData("test")).then(new Answer() {
+            @Override public Object answer(InvocationOnMock invocation) throws Throwable {
+                RavenFutureImpl future = new RavenFutureImpl(executor);
+                future.cancel(true);
+                return future;
+            }
+        });
 
         DataProcessorFacade facade = new DataProcessorFacadeConfig("receiver", testsNode, processor, executor, logger).build();
         try {

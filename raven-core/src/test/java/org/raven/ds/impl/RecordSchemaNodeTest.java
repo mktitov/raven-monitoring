@@ -17,6 +17,7 @@
 
 package org.raven.ds.impl;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
@@ -26,6 +27,7 @@ import org.raven.conf.Configurator;
 import org.raven.dbcp.ConnectionPool;
 import org.raven.dbcp.impl.ConnectionPoolsNode;
 import org.raven.dbcp.impl.JDBCConnectionPoolNode;
+import org.raven.ds.RecordSchema;
 import org.raven.ds.RecordSchemaField;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.ds.RecordSchemaFieldType;
@@ -101,6 +103,36 @@ public class RecordSchemaNodeTest extends RavenCoreTestCase
         assertEquals(1, fields.size());
         assertSame(fieldNode, fields.get("field"));
         assertSame(fieldNode, schemaNode.getField("field"));
+    }
+    
+    @Test public void adjustTest() {
+        RecordSchemaNode schema = createSchema("Test schema");
+        RecordSchemaField field1 = addField(schema, "field1", RecordSchemaFieldType.STRING);
+        RecordSchemaField field2 = addField(schema, "field2", RecordSchemaFieldType.STRING);
+        RecordSchema adjustedSchema = schema.adjust("adjusted schema", Arrays.asList("field2"));
+        assertEquals("adjusted schema", adjustedSchema.getName());
+        assertArrayEquals(new RecordSchemaField[]{field2}, adjustedSchema.getFields());
+        adjustedSchema = schema.adjust("adjusted schema", null, Arrays.asList("field1"));
+        assertEquals("adjusted schema", adjustedSchema.getName());
+        assertArrayEquals(new RecordSchemaField[]{field2}, adjustedSchema.getFields());
+    }
+    
+    private RecordSchemaNode createSchema(String name) {
+        RecordSchemaNode schemaNode = new RecordSchemaNode();
+        schemaNode.setName(name);
+        testsNode.addAndSaveChildren(schemaNode);
+        schemaNode.start();
+        assertEquals(Status.STARTED, schemaNode.getStatus());
+        return schemaNode;
+    }
+    
+    private RecordSchemaFieldNode addField(RecordSchemaNode schema, String fieldName, RecordSchemaFieldType fieldType) {
+        RecordSchemaFieldNode fieldNode = new RecordSchemaFieldNode();
+        fieldNode.setName(fieldName);
+        schema.addAndSaveChildren(fieldNode);
+        fieldNode.setFieldType(fieldType);
+        assertTrue(fieldNode.start());
+        return fieldNode;
     }
 
     @Test

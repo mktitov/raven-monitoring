@@ -17,6 +17,7 @@
 
 package org.raven.ds;
 
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -29,6 +30,21 @@ public interface RecordSchema
      * Return the record schema name.
      */
     public String getName();
+    /**
+     * Creates new schema based on this
+     * @param name the name of the new schema
+     * @param includeFields the name of fields which must be included to the new schema
+     * @param excludeFields then name of the fields that must be excluded from the new schema
+     * @return Returns new schema based on this
+     */
+    public RecordSchema adjust(String name, Collection<String> includeFields, Collection<String> excludeFields);
+    /**
+     * Creates new schema based on this
+     * @param name the name of the new schema
+     * @param includeFields the name of fields which must be included to the new schema
+     * @return Returns new schema based on this
+     */
+    public RecordSchema adjust(String name, Collection<String> includeFields);
     /**
      * Returns the fields of the schema.
      */

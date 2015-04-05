@@ -89,6 +89,16 @@ public class RecordSchemaNode extends BaseNode implements RecordSchema, Viewable
         }
     }
 
+    @Override
+    public RecordSchema adjust(String name, Collection<String> includeFields) {
+        return adjust(name, includeFields, null);
+    }
+
+    @Override
+    public RecordSchema adjust(String name, Collection<String> includeFields, Collection<String> excludeFields) {
+        return new AdjustedRecordSchema(name, this, includeFields, excludeFields);
+    }
+ 
     public RecordSchemaField[] getFields()
     {
         List<RecordSchemaField> fields = new ArrayList<RecordSchemaField>(32);

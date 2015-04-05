@@ -31,6 +31,7 @@ import org.raven.dp.DataProcessor;
 import org.raven.dp.DataProcessorContext;
 import org.raven.dp.DataProcessorFacade;
 import org.raven.dp.DataProcessorLogic;
+import org.raven.dp.FutureCallback;
 import org.raven.dp.MessageQueueError;
 import org.raven.dp.NonUniqueNameException;
 import org.raven.dp.RavenFuture;
@@ -392,10 +393,11 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
             final DataProcessor _processor = processorContext==null? processor : processorContext.currentBehaviuor;
             final Object result = _processor.processData(message);
             final boolean unhandled = processorContext!=null && processorContext.unhandled;            
-            if (future!=null) {
-                if (!unhandled) future.set(result);
-                else future.setError(new UnhandledMessageException(message));
-            }
+            if (future!=null) processResultForFuture(future, result, unhandled);
+//            {
+//                if (!unhandled) future.set(result);
+//                else future.setError(new UnhandledMessageException(message));
+//            }
             else if (!unhandled && sender!=null && result!=DataProcessor.VOID) 
                 sendTo(sender, result);
             if (unhandled && unhandledMessagesProcessor!=null)
@@ -407,6 +409,26 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
                 future.setError(e);
             if (unhandledMessagesProcessor!=null)
                 unhandledMessagesProcessor.send(new UnhandledMessageImpl(sender, this, message, e));
+        }
+    }
+    
+    private void processResultForFuture(final AskFuture future, final Object message, final boolean unhandled) {
+        if (unhandled) future.setError(new UnhandledMessageException(message));
+        else {
+            if (!(message instanceof RavenFuture)) future.set(message);
+            else {
+                ((RavenFuture)message).onComplete(new FutureCallback<Object>() {
+                    @Override public void onSuccess(Object result) {
+                        future.set(result);
+                    }
+                    @Override public void onError(Throwable error) {
+                        future.setError(error);
+                    }
+                    @Override public void onCanceled() {
+                        future.cancel(true);
+                    }
+                });
+            }
         }
     }
 
