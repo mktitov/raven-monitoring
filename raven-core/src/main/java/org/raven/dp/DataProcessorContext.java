@@ -30,6 +30,8 @@ public interface DataProcessorContext {
     public ExecutorService getExecutor();
     public DataProcessorFacade getSender();    
     public LoggerHelper getLogger();
+    public void stash();
+    public void unstashAll() throws NoStashedMessagesException;
     public void become(DataProcessor dataProcessor, boolean replace);
     public void unbecome() throws UnbecomeFailureException;
     public void forward(DataProcessorFacade facade);

@@ -15,6 +15,7 @@
  */
 package org.raven.dp.impl;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -645,6 +646,19 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         assertTrue(logic.childTerminated);
     }
     
+    @Test
+    public void stashUnstashTest() throws Exception {
+        ExecutorService executor = createExecutor();
+        MessageCollector collector = new MessageCollector();
+        DataProcessorFacade receiver = new DataProcessorFacadeConfig("receiver", testsNode, collector, executor, logger).build();
+        DataProcessorFacade stashHandler = new DataProcessorFacadeConfig("stash test", testsNode, new StashLogic(), executor, logger).build();
+        receiver.sendTo(stashHandler, "1");
+        receiver.sendTo(stashHandler, "2");
+        stashHandler.send("UNSTASH");
+        Thread.sleep(100);
+        assertArrayEquals(new Object[]{"1", "2"}, collector.getMessages().toArray());
+    }
+    
     private LoggerHelper createLogger(String prefix) {
         return new LoggerHelper(logger, prefix);
     }
@@ -672,6 +686,26 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
             return VOID;
         }
         
+    }
+    
+    private class StashLogic extends AbstractDataProcessorLogic {
+        @Override
+        public Object processData(Object message) throws Exception {
+            if (message.equals("UNSTASH")) {
+                getContext().unstashAll();
+                become(unstash, true);
+            } else {
+                getContext().stash();                
+            }
+            return VOID;
+        }
+        
+        private Behaviour unstash = new Behaviour("Unstashing") {
+            @Override public Object processData(Object dataPackage) throws Exception {
+//                getSender().send(dataPackage);
+                return dataPackage;
+            }
+        };
     }
     
     private class ChildLogic extends AbstractDataProcessorLogic {
@@ -772,6 +806,13 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         public Object processData(Object dataPackage) {
             messages.add(new Message(dataPackage, System.currentTimeMillis()));
             return VOID;
+        }
+        
+        public List<Object> getMessages() {
+            List _messages = new ArrayList(messages.size());
+            for (Message message: messages)
+                _messages.add(message.message);
+            return _messages;
         }
     }
     

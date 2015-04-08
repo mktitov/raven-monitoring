@@ -18,7 +18,6 @@ package org.raven.dp.impl;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -393,7 +392,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
             final DataProcessor _processor = processorContext==null? processor : processorContext.currentBehaviuor;
             final Object result = _processor.processData(message);
             final boolean unhandled = processorContext!=null && processorContext.unhandled;            
-            if (future!=null) processResultForFuture(future, result, unhandled);
+            if (future!=null) processResultForFuture(future, result, message, unhandled);
 //            {
 //                if (!unhandled) future.set(result);
 //                else future.setError(new UnhandledMessageException(message));
@@ -412,12 +411,12 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         }
     }
     
-    private void processResultForFuture(final AskFuture future, final Object message, final boolean unhandled) {
+    private void processResultForFuture(final AskFuture future, final Object result, final Object message, final boolean unhandled) {
         if (unhandled) future.setError(new UnhandledMessageException(message));
         else {
-            if (!(message instanceof RavenFuture)) future.set(message);
+            if (!(result instanceof RavenFuture)) future.set(result);
             else {
-                ((RavenFuture)message).onComplete(new FutureCallback<Object>() {
+                ((RavenFuture)result).onComplete(new FutureCallback<Object>() {
                     @Override public void onSuccess(Object result) {
                         future.set(result);
                     }
@@ -483,8 +482,11 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
             while (!stop)
                 try {
                     Object message;
-                    while ( !terminated.get() && (message=queue.poll()) != null ) 
+                    while ( !terminated.get() && (message=queue.poll()) != null ) { 
                         sendMessageToProcessor(message);
+                        while (processorContext!=null && processorContext.unstashing) 
+                            sendMessageToProcessor(processorContext.nextStashed());
+                    }
                 } finally {
                     running.set(false);
                     if (terminated.get() || queue.isEmpty() || !running.compareAndSet(false, true))
@@ -503,6 +505,8 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         private boolean unhandled;
         private Map<String, DataProcessorFacade> children;
         private StopFuture stopFuture;
+        private Queue stashedMessages;
+        private boolean unstashing;
 
         @Override
         public Node getOwner() {
@@ -522,6 +526,27 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         @Override
         public DataProcessorFacade getParent() {
             return parent;
+        }
+
+        @Override
+        public void stash() {
+            if (stashedMessages==null)
+                stashedMessages = new LinkedList();
+            stashedMessages.offer(origMessage);
+        }
+
+        @Override
+        public void unstashAll() {
+            unstashing = stashedMessages!=null;
+        }
+        
+        private Object nextStashed() {
+            final Object next = stashedMessages.poll();
+            if (stashedMessages.isEmpty()) {
+                stashedMessages = null;
+                unstashing = false;
+            }
+            return next;
         }
 
         @Override
