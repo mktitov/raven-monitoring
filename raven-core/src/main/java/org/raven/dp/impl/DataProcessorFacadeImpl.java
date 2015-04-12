@@ -34,6 +34,7 @@ import org.raven.dp.FutureCallback;
 import org.raven.dp.MessageQueueError;
 import org.raven.dp.NonUniqueNameException;
 import org.raven.dp.RavenFuture;
+import org.raven.dp.Stashed;
 import org.raven.dp.Terminated;
 import org.raven.dp.UnbecomeFailureException;
 import org.raven.dp.UnhandledMessageException;
@@ -70,7 +71,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     private final AtomicBoolean terminateSentToWatcherService = new AtomicBoolean();
     private volatile DataProcessorFacade watcherService;
         
-    private volatile long lastMessageTs = System.currentTimeMillis();
+//    private volatile long lastMessageTs = System.currentTimeMillis();
     
     private final AtomicReference<CheckTimeoutTask> checkTimeoutTask = new AtomicReference<CheckTimeoutTask>();
 
@@ -255,8 +256,8 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     public boolean send(Object message) {
         if (queueMessage(wrapToStopIfNeed(message))) {
             CheckTimeoutTask _checkTimeoutTask = checkTimeoutTask.get();
-            if (_checkTimeoutTask!=null && _checkTimeoutTask.resetTimeout(message))
-                lastMessageTs = System.currentTimeMillis();
+            if (_checkTimeoutTask!=null)
+                _checkTimeoutTask.messageReceived(message);
             return true;
         } else {
             if (logger.isErrorEnabled()) {
@@ -391,16 +392,18 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         try {
             final DataProcessor _processor = processorContext==null? processor : processorContext.currentBehaviuor;
             final Object result = _processor.processData(message);
-            final boolean unhandled = processorContext!=null && processorContext.unhandled;            
-            if (future!=null) processResultForFuture(future, result, message, unhandled);
-//            {
-//                if (!unhandled) future.set(result);
-//                else future.setError(new UnhandledMessageException(message));
-//            }
-            else if (!unhandled && sender!=null && result!=DataProcessor.VOID) 
+            final boolean unhandled = result==DataProcessor.UNHANDLED || (processorContext!=null && processorContext.unhandled);            
+            if (future!=null) 
+                processResultForFuture(future, result, message, unhandled);
+            else if (!unhandled && sender!=null && result!=DataProcessor.VOID && result!=DataProcessor.STASHED) 
                 sendTo(sender, result);
             if (unhandled && unhandledMessagesProcessor!=null)
                 unhandledMessagesProcessor.send(new UnhandledMessageImpl(sender, this, message));
+            if (unhandled) {
+                final LoggerHelper _logger = processorContext!=null? processorContext.getLogger() : logger;
+                if (_logger.isWarnEnabled())
+                    _logger.warn("Message ({}) was UNHANDLED", message);
+            }
         } catch (Throwable e) {
             if (logger.isErrorEnabled())
                 logger.error("Error processing message: "+message, e);
@@ -412,6 +415,8 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     }
     
     private void processResultForFuture(final AskFuture future, final Object result, final Object message, final boolean unhandled) {
+        if (result==DataProcessor.STASHED)
+            return;
         if (unhandled) future.setError(new UnhandledMessageException(message));
         else {
             if (!(result instanceof RavenFuture)) future.set(result);
@@ -431,42 +436,55 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         }
     }
 
-    public void setTimeout(long timeout, long checkTimeoutInterval)  throws ExecutorServiceException {
-        setTimeout(timeout, checkTimeoutInterval, null);
+    @Override
+    public void setReceiveTimeout(long timeout)  throws ExecutorServiceException {
+        setReceiveTimeout(timeout, null);
     }
 
-    public void setTimeout(long timeout, long checkTimeoutInterval, TimeoutMessageSelector selector) 
+    @Override
+    public void setReceiveTimeout(long timeout, TimeoutMessageSelector selector) 
             throws ExecutorServiceException 
     {
-        lastMessageTs = System.currentTimeMillis();
-        final CheckTimeoutTask newTask = new CheckTimeoutTask(owner, timeout, checkTimeoutInterval, selector);
+        final CheckTimeoutTask newTask = new CheckTimeoutTask(owner, timeout, selector);
         final CheckTimeoutTask oldTask = checkTimeoutTask.getAndSet(newTask);
         if (oldTask!=null)
             oldTask.cancel();      
-        executor.execute(checkTimeoutInterval, newTask);
+        executor.execute(timeout, newTask);
+    }
+
+    @Override
+    public void resetReceiveTimeout() {
+        final CheckTimeoutTask task = checkTimeoutTask.getAndSet(null);
+        if (task!=null)
+            task.cancel();
     }
 
     private class CheckTimeoutTask extends AbstractTask {
         private final long timeout;    
-        private final long checkTimeoutInterval;
+//        private final long checkTimeoutInterval;
         private final TimeoutMessageSelector selector;
+        private volatile long lastMessageReceiveTime = System.currentTimeMillis();
 
-        public CheckTimeoutTask(Node taskNode, long timeout, long checkTimeoutInterval, TimeoutMessageSelector selector) {
+        public CheckTimeoutTask(Node taskNode, long timeout, TimeoutMessageSelector selector) {
             super(taskNode, "Checking waiting for message timeout");
             this.timeout = timeout;
-            this.checkTimeoutInterval = checkTimeoutInterval;
+//            this.checkTimeoutInterval = checkTimeoutInterval;
             this.selector = selector;
         }
         
-        public boolean resetTimeout(Object message) {
-            return selector==null || message==TIMEOUT_MESSAGE? true : selector.resetTimeout(message);
+        public void messageReceived(Object message) {
+            if (selector==null || message==TIMEOUT_MESSAGE || selector.resetTimeout(message)) 
+                lastMessageReceiveTime = System.currentTimeMillis();
         }
 
         @Override
         public void doRun() throws Exception {
-            if (lastMessageTs+timeout<=System.currentTimeMillis()) 
-                send(TIMEOUT_MESSAGE);                
-            executeDelayedTask(checkTimeoutInterval, this);
+            if (lastMessageReceiveTime+timeout<=System.currentTimeMillis()) {
+//                System.out.println("SENDING TIMEOUT");
+                send(TIMEOUT_MESSAGE);               
+            }
+//            System.out.println("new timeout: "+(timeout-(System.currentTimeMillis()-lastMessageReceiveTime)));
+            executeDelayedTask(timeout-(System.currentTimeMillis()-lastMessageReceiveTime), this);
         }
     }
     
@@ -529,10 +547,11 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         }
 
         @Override
-        public void stash() {
+        public Stashed stash() {
             if (stashedMessages==null)
                 stashedMessages = new LinkedList();
             stashedMessages.offer(origMessage);
+            return DataProcessor.STASHED;
         }
 
         @Override
@@ -612,7 +631,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         
         public void become(final DataProcessor dataProcessor, final boolean replace) {
             if (getLogger().isDebugEnabled())
-                getLogger().debug("Behaviour "+(replace?"replaced by ":"changed to ")+dataProcessor);
+                getLogger().debug("--> ["+dataProcessor+"]");
             if (!replace) {
                 if (behaviourStack==null)
                     behaviourStack = new LinkedList<DataProcessor>();
@@ -630,7 +649,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
             currentBehaviuor = behaviour;
             logger = null;
             if (getLogger().isDebugEnabled())
-                getLogger().debug("Behaviour changed from "+oldBehaviour);
+                getLogger().debug("<-- ["+oldBehaviour+"]");
             if (behaviourStack!=null && behaviourStack.isEmpty())
                 behaviourStack = null;
         }

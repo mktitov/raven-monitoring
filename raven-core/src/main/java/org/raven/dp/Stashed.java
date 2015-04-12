@@ -19,11 +19,9 @@ package org.raven.dp;
  *
  * @author Mikhail Titov
  */
-public interface DataProcessor<T> {
-    public final static Object VOID = Void.class;
-    public final static Unhandled UNHANDLED = new Unhandled();
-    public final static Stashed STASHED = new Stashed();
-    
-    public Object processData(T dataPackage) throws Exception;
-    
+public class Stashed {
+    @Override
+    public boolean equals(Object obj) {
+        return obj==this || obj instanceof Stashed;
+    }
 }

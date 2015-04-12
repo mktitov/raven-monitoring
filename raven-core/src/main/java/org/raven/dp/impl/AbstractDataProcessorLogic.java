@@ -68,6 +68,10 @@ public abstract class AbstractDataProcessorLogic implements DataProcessorLogic {
         context.become(processor, replace);
     }
     
+    protected void become(DataProcessor processor) {
+        context.become(processor, true);
+    }
+    
     protected void unbecome() throws UnbecomeFailureException {
         context.unbecome();
     }

@@ -106,6 +106,8 @@ public class ExecutorServiceNode extends BaseNode
     private volatile long avgExecutionWaitTime;
     private DelayedTaskExecutorThread delayedTaskExecutorThread;
     private Lock waitTimeLock;
+//    private ScheduledExecutorService delayedTasksExecutor;
+    private Timer delayedTasksTimer;
 
     @Override
     protected void initFields() {
@@ -143,6 +145,8 @@ public class ExecutorServiceNode extends BaseNode
             executor = new ForkJoinPool(corePoolSize, _threadFactory, null, true);
         }
 //        executor.execute(new TaskWrapper(new DelayedTaskExecutor()));
+//        delayedTasksExecutor = new ScheduledThreadPoolExecutor(1);
+//        delayedTasksTimer = new Timer(true);
         delayedTaskExecutorThread = new DelayedTaskExecutorThread(new DelayedTaskExecutor());
         delayedTaskExecutorThread.start();
         loadAverage = new LoadAverageStatistic(300000, maximumPoolSize);
@@ -201,10 +205,22 @@ public class ExecutorServiceNode extends BaseNode
     }
 
     @Override
-    public void execute(long delay, Task task) throws ExecutorServiceException {
-        if (isStarted())
+    public void execute(final long delay, final Task task) throws ExecutorServiceException {
+        if (isStarted()) {
             delayedTasks.add(new DelayedTaskWrapper(task, delay, delayedTasks));
-        else
+//            delayedTasksTimer.schedule(new TimerTask() {
+//                final long expectedExecTime = System.currentTimeMillis()+delay;
+//                @Override public void run() {
+////                    System.out.println("DISPERTION: "+(System.currentTimeMillis()-expectedExecTime));
+//                    executeQuietly(task);
+//                }
+//            }, delay);
+//            delayedTasksExecutor.schedule(new Runnable() {
+//                @Override public void run() {
+//                    executeQuietly(task);
+//                }
+//            }, delay, TimeUnit.MILLISECONDS);
+        } else
             throw new ExecutorServiceException("Can't execute task... Not Started");
     }
 

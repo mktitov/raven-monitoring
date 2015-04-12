@@ -32,4 +32,25 @@ public abstract class Behaviour implements DataProcessor {
     public String toString() {
         return behaviourName;
     }
+    
+    public Behaviour andThen(DataProcessor processor) {
+        return new ComposeWith(processor);
+    }
+    
+    private class ComposeWith extends Behaviour {
+        private final DataProcessor thenBehaviour;
+
+        public ComposeWith(DataProcessor thenBehaviour) {
+            super(behaviourName);
+            this.thenBehaviour = thenBehaviour;
+        }
+
+        @Override
+        public Object processData(Object dataPackage) throws Exception {
+            Object res;
+            if ( (res=Behaviour.this.processData(dataPackage))==UNHANDLED )
+                res = thenBehaviour.processData(dataPackage);
+            return res;
+        }
+    }
 }

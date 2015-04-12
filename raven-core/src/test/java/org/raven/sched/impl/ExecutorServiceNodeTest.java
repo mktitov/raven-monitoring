@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.After;
@@ -232,6 +233,35 @@ public class ExecutorServiceNodeTest extends RavenCoreTestCase {
         assertTrue(task3.time < task2.time);
         executor.stop();
         Thread.sleep(100);
+    }
+    
+    @Test
+    public void delayedTasksAccuracyTest() throws Exception {
+        executor.setType(ExecutorService.Type.FORK_JOIN_POOL);
+        executor.setCorePoolSize(8);
+        assertTrue(executor.start());
+        final long delay = 100l;
+        final int count = 100;
+        final CountDownLatch counter = new CountDownLatch(count);
+        final AtomicLong totalDispertion = new AtomicLong();
+        executor.executeQuietly(10000, new AbstractTask(testsNode, "warm up") {
+            @Override public void doRun() throws Exception {
+            }
+        });
+        for (int i=0; i<count; ++i) {
+            executor.execute(delay, new AbstractTask(testsNode, "task: "+i) {
+                private final long expectedExecTime = System.currentTimeMillis()+delay;
+                @Override
+                public void doRun() throws Exception {
+//                    System.out.println("DISPERTION: "+(System.currentTimeMillis()-expectedExecTime));
+                    totalDispertion.addAndGet(System.currentTimeMillis()-expectedExecTime);
+                    counter.countDown();
+                }
+            });
+            Thread.sleep(delay);
+        }
+        counter.await();
+        System.out.println("TOTAL DISPERTION: "+totalDispertion);
     }
     
     @Test

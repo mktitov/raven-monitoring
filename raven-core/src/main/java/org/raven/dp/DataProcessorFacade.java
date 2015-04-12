@@ -116,16 +116,15 @@ public interface DataProcessorFacade {
     /**
      * Sends {@link TimeoutMessage timeout message} after being idle <b>timeout</b> milliseconds (no message send to data processor in passed interval)
      * @param timeout interval in milliseconds 
-     * @param checkTimeoutInterval Tick interval in milliseconds at which the timeout will be checked
      */
-    public void setTimeout(long timeout, long checkTimeoutInterval) throws ExecutorServiceException;
+    public void setReceiveTimeout(long timeout) throws ExecutorServiceException;
     /**
      * Sends {@link TimeoutMessage timeout message} after being idle <b>timeout</b> milliseconds (no message send to data processor in passed interval)
      * @param timeout interval in milliseconds 
-     * @param checkTimeoutInterval Tick interval in milliseconds at which the timeout will be checked
      * @param selector Allows to select messages that reset timeout
      */
-    public void setTimeout(long timeout, long checkTimeoutInterval, TimeoutMessageSelector selector) throws ExecutorServiceException;
+    public void setReceiveTimeout(long timeout, TimeoutMessageSelector selector) throws ExecutorServiceException;
+    public void resetReceiveTimeout();
     /**
      * Sends message to data processor and return the future that's wait the response for this message
      */
