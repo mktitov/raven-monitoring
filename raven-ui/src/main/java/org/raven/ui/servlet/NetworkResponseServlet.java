@@ -56,6 +56,7 @@ import org.raven.auth.AuthenticationFailedException;
 import org.raven.auth.LoginException;
 import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
+import org.raven.auth.UserContextService;
 import org.raven.cache.TemporaryFileManager;
 import org.raven.log.LogLevel;
 import org.raven.net.AccessDeniedException;
@@ -171,7 +172,8 @@ public class NetworkResponseServlet extends HttpServlet  {
         if (loginService instanceof AnonymousLoginService)
             return responseContext.getLoginService().login(null, null, null);        
         UserContext userContext = null;
-        String userContextAttrName = "sri_user_context_"+loginService.getId();
+//        String userContextAttrName = "sri_user_context_"+loginService.getId();
+        String userContextAttrName = UserContextService.USER_CONTEXT_SESSION_ATTR;
         HttpSession session = null;
         if (responseContext.isSessionAllowed()) {
             session = request.getSession(false);
