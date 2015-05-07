@@ -73,7 +73,7 @@ public class CustomReferenceValuesSourceNode extends BaseNode implements Referen
 
         bindingSupport.put("userContext", userContextService.getUserContext());
         try {
-            Object val = getNodeAttribute(REFERENCE_VALUES_EXPRESSION_ATTR).getRealValue();
+            Object val = getAttr(REFERENCE_VALUES_EXPRESSION_ATTR).getRealValue();
             if (!(val instanceof Map)) {
                 if (isLogLevelEnabled(LogLevel.ERROR))
                     getLogger().error(

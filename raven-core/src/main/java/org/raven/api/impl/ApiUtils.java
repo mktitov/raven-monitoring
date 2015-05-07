@@ -56,17 +56,24 @@ public class ApiUtils
     }
     
     public static Object withConnection(Connection connection, Closure closure) throws Throwable {
+        return withConnection(connection, true, closure);
+    }
+    
+    public static Object withConnection(Connection connection, boolean autoCommit, Closure closure) throws Throwable {
         try {
             try {
                 Object res = closure.call(connection);
-                connection.commit();
+                if (autoCommit)
+                    connection.commit();
                 return res;
             } catch (Throwable e) {
-                connection.rollback();
+                if (autoCommit)
+                    connection.rollback();
                 throw e;
             }
         } finally {
-            connection.close();
+            if (autoCommit)
+                connection.close();
         }
     }
 

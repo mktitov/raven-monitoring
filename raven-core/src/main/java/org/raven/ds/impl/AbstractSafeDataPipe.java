@@ -291,7 +291,8 @@ public abstract class AbstractSafeDataPipe
             DataSourceHelper.executeContextCallbacks(this, context, data);
             return;
         }
-        if (context.hasErrors() && getStopProcessingOnError()) {
+        final boolean _stopProcessingOnError = getStopProcessingOnError();
+        if (context.hasErrors() && _stopProcessingOnError) {
             if (debugEnabled)
                 debug(String.format(
                         "Data context has error flag and stopProcessingOnError is true, so IGNORING", 
@@ -320,9 +321,9 @@ public abstract class AbstractSafeDataPipe
                 }
             }
             try  {
-                if (context.hasErrors()) {
+                if (context.hasErrors() && _stopProcessingOnError) 
                     sendError(data, context);
-                } else if (data!=SKIP_DATA)
+                else if (data!=SKIP_DATA)
                     doSetData(dataSource, data, context);
                 else if (debugEnabled)
                     getLogger().debug("Expression return SKIP_DATA. Terminating push data process");
