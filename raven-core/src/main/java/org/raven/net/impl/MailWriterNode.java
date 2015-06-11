@@ -150,7 +150,7 @@ public class MailWriterNode extends AbstractSafeDataPipe
                     }
                 });
             } else 
-                session = Session.getDefaultInstance(props);
+                session = Session.getInstance(props);
             
             if (isLogLevelEnabled(LogLevel.DEBUG)) 
                 session.setDebug(true);

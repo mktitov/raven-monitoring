@@ -69,7 +69,7 @@ public class AuditorImpl extends AbstractDbWorker<AuditRecord> implements Audito
 	
 	public void write(Node node, String login, Action action, String message) 
 	{
-		AuditRecord ar = new AuditRecord(node,login,action,message);
+		AuditRecord ar = new AuditRecord(node, login, null, action, message);
 		write(ar);
 	}
     
@@ -98,7 +98,7 @@ public class AuditorImpl extends AbstractDbWorker<AuditRecord> implements Audito
 	
 	public AuditRecord prepare(Node node, String login, Action action, String message) 
 	{
-		return new AuditRecord(node,login,action,message);
+		return new AuditRecord(node, login, null, action, message);
 	}
     
 	public AuditRecord prepare(Node node, String login, Action action, 
@@ -148,6 +148,5 @@ public class AuditorImpl extends AbstractDbWorker<AuditRecord> implements Audito
     	try { return (AuditorNode) getNode(); }
     	catch(Exception e) { logger.error("Xmm...",e); }
     	return null;
-    }
-	
+    }	
 }

@@ -21,8 +21,9 @@ public class AuditRecord implements Comparator<AuditRecord>, IRecord
 	public static final String ACTION_TYPE = "actionType";
 	public static final String ACTION = "action";
 	public static final String MESSAGE = "message";
+    public static final String REMOTE_IP = "remoteIp";
 	
-	public static final String[] FIELDS = {FD, NODE_ID, NODE_PATH, LOGIN,
+	public static final String[] FIELDS = {FD, NODE_ID, NODE_PATH, LOGIN, REMOTE_IP,
 		ACTION_TYPE, ACTION, MESSAGE};
 	
 	public static final String[] sCreateLogTable = { 
@@ -30,6 +31,7 @@ public class AuditRecord implements Comparator<AuditRecord>, IRecord
 		NODE_ID+" int ,"+
 		NODE_PATH+" varchar("+MAX_NODE_PATH_LENGTH+") ,"+
 		LOGIN+" varchar(64) not null,"+
+        REMOTE_IP+" varchar(128),"+
 		ACTION_TYPE+" int not null,"+
 		ACTION+" int not null,"+
 		MESSAGE+" varchar("+MAX_MESSAGE_LENGTH+") )",
@@ -44,10 +46,11 @@ public class AuditRecord implements Comparator<AuditRecord>, IRecord
 	private String message;
 	private String nodePath;
 	private String login;
+    private String remoteIp;
 	private Action action;
 	
 	//int nodeId,String nodePath
-	public AuditRecord(Node node,String login,Action action,String message)
+	public AuditRecord(Node node, String login, String remoteIp, Action action, String message)
 	{
 		fd = System.currentTimeMillis();
 		this.message = message;
@@ -63,6 +66,7 @@ public class AuditRecord implements Comparator<AuditRecord>, IRecord
 		}	
 		this.login = login;
 		this.action = action;
+        this.remoteIp = remoteIp;
 	}
 
 	public AuditRecord()
@@ -76,6 +80,7 @@ public class AuditRecord implements Comparator<AuditRecord>, IRecord
         	rec.setNodeId(rs.getInt(AuditRecord.NODE_ID));
         	rec.setNodePath(rs.getString(AuditRecord.NODE_PATH));
         	rec.setLogin(rs.getString(AuditRecord.LOGIN));
+        	rec.setRemoteIp(rs.getString(AuditRecord.REMOTE_IP));
         	rec.setAction(Action.values()[rs.getInt(AuditRecord.ACTION)]);
         	rec.setMessage(rs.getString(AuditRecord.MESSAGE));
         	return rec;
@@ -91,6 +96,7 @@ public class AuditRecord implements Comparator<AuditRecord>, IRecord
 				getNodeId(),
 				getNodePath(),
 				getLogin(),
+				getRemoteIp(),
 				new Integer(getActionType().ordinal()),
 				new Integer(getAction().ordinal()),
 				mes}; 
@@ -104,6 +110,7 @@ public class AuditRecord implements Comparator<AuditRecord>, IRecord
 		sb.append("; "+nodeId);
 		sb.append("; "+nodePath);
 		sb.append("; "+login);
+		sb.append("; "+remoteIp);
 		sb.append("; "+action.getActionType());
 		sb.append("; "+action);
 		sb.append("; "+message);
@@ -167,6 +174,14 @@ public class AuditRecord implements Comparator<AuditRecord>, IRecord
 	public void setLogin(String user) {
 		this.login = user;
 	}
+
+    public String getRemoteIp() {
+        return remoteIp;
+    }
+
+    public void setRemoteIp(String remoteIp) {
+        this.remoteIp = remoteIp;
+    }
 
 	public ActionType getActionType() {
 		return action.getActionType();

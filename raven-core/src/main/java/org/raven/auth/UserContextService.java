@@ -24,6 +24,7 @@ package org.raven.auth;
 public interface UserContextService
 {
     public static final String USER_CONTEXT_SESSION_ATTR = "USER_CONTEXT";
+    public static final String SERVICE_NODE_SESSION_ATTR = "USER_CONTEXT_SERVICE_NODE";
     /**
      * Returns the user context or null user context not attached.
      */
