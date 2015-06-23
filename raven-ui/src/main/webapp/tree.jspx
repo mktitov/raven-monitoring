@@ -207,6 +207,7 @@
                         <tr:outputText 
                           rendered="#{node.template}"
                           inlineStyle="color: grey; font-weight: bold; font-size: 100%;" 
+                          shortDesc="#{node.path}"
                           value="#{node.prefix}#{node.name}#{node.nodeTitle}"/>
                         <tr:outputText
                           rendered="#{!node.template}"

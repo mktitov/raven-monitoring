@@ -156,6 +156,12 @@
 	     	value="#{row.login}"/>
 	</tr:column>
     <tr:column 
+    	headerText="#{msgs.remoteIp}">
+	    <tr:outputText
+			inlineStyle="font-size: 80%;"	       
+	     	value="#{row.remoteIp}"/>
+	</tr:column>
+    <tr:column 
     	headerText="#{msgs.actionType}">
 	    <tr:outputText
 			inlineStyle="font-size: 80%;"	       

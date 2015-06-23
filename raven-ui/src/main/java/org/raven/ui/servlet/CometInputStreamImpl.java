@@ -18,9 +18,9 @@ package org.raven.ui.servlet;
 
 import io.netty.buffer.ByteBuf;
 import java.io.IOException;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.raven.ds.RingQueue;
-import org.raven.ds.impl.RingQueueImpl;
 
 /**
  *
@@ -28,20 +28,24 @@ import org.raven.ds.impl.RingQueueImpl;
  */
 public class CometInputStreamImpl extends CometInputStream {
     private final AtomicBoolean sourceClosed = new AtomicBoolean();
-    private final RingQueue<ByteBuf> buffers;
-    private volatile int readBytes = 0;
+//    private final RingQueue<ByteBuf> buffers;
+//    private final ConcurrentLinkedQueue<ByteBuf> buffers = new ConcurrentLinkedQueue();
+    private final BlockingQueue<ByteBuf> buffers;
+//    private volatile int readBytes = 0;
 
     public CometInputStreamImpl() {
         this(100);
     }
     
     public CometInputStreamImpl(int queueSize) {
-        buffers = new RingQueueImpl<ByteBuf>(queueSize);
+//        buffers = new RingQueueImpl<ByteBuf>(queueSize);
+//        buffers = ne
+        buffers = new ArrayBlockingQueue<>(queueSize);
     }
     
     @Override
     public int read() throws IOException {
-        if (sourceClosed.get() && !buffers.hasElement()) {
+        if (sourceClosed.get() && buffers.isEmpty()) {
             return -1;
         }
         ByteBuf buf;
@@ -54,10 +58,10 @@ public class CometInputStreamImpl extends CometInputStream {
                 }
                 if (buf!=null) {
                     if (buf.isReadable()) {
-                        ++readBytes;
+//                        ++readBytes;
                         return buf.readUnsignedByte();
                     } else 
-                        buffers.pop().release();
+                        buffers.poll().release();
                 } else if (sourceClosed.get()) {
                     return -1;
                 }
@@ -68,11 +72,12 @@ public class CometInputStreamImpl extends CometInputStream {
     }
 
     public boolean canPushBuffer() {
-        return buffers.canPush();
+//        return buffers.canPush();
+        return buffers.remainingCapacity()>0;
     }
 
     public void pushBuffer(ByteBuf buf) {
-        buffers.push(buf);
+        buffers.offer(buf);
         synchronized(this) {
             notify();
         }

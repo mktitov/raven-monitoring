@@ -13,6 +13,7 @@ public class AuditRecordTable extends AbstractRecordTable<AuditRecord>
     			ar.getNodeId(),
     			ar.getNodePath(),
     			ar.getLogin(),
+    			ar.getRemoteIp(),
     			ar.getActionType(),
     			ar.getAction(),
     			ar.getMessage()
@@ -26,6 +27,7 @@ public class AuditRecordTable extends AbstractRecordTable<AuditRecord>
 				Messages.getUiMessage(Messages.NODE_ID),
 				Messages.getUiMessage(Messages.NODE_PATH),
 				Messages.getUiMessage(Messages.LOGIN),
+				Messages.getUiMessage(Messages.REMOTE_IP),
 				Messages.getUiMessage(Messages.ACTION_TYPE),
 				Messages.getUiMessage(Messages.ACTION),
 				Messages.getUiMessage(Messages.MESSAGE)

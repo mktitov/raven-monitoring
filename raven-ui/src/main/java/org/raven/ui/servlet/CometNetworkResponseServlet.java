@@ -311,6 +311,6 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
                 }
             }
         } else if (ctx.servletLogger.isDebugEnabled())
-            ctx.servletLogger.debug("Request stream consumer is FULL. Wating...");
+            ctx.servletLogger.warn("Request stream consumer is FULL. Wating...");
     }
 }

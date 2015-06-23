@@ -49,8 +49,10 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.util.Streams;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.tapestry5.ioc.Registry;
+import org.raven.audit.Action;
+import org.raven.audit.AuditRecord;
+import org.raven.audit.Auditor;
 import org.raven.auth.AnonymousLoginService;
 import org.raven.auth.AuthenticationFailedException;
 import org.raven.auth.LoginException;
@@ -58,7 +60,6 @@ import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
 import org.raven.auth.UserContextService;
 import org.raven.cache.TemporaryFileManager;
-import org.raven.log.LogLevel;
 import org.raven.net.AccessDeniedException;
 import org.raven.net.AuthorizationNeededException;
 import org.raven.net.ContextUnavailableException;
@@ -75,7 +76,6 @@ import org.raven.net.Result;
 import org.raven.net.UnauthoriedException;
 import org.raven.net.impl.RedirectResult;
 import org.raven.net.impl.RequestImpl;
-import org.raven.prj.WebInterface;
 import org.raven.prj.impl.ProjectNode;
 import org.raven.prj.impl.WebInterfaceNode;
 import org.raven.tree.PropagatedAttributeValueError;
@@ -94,6 +94,7 @@ public class NetworkResponseServlet extends HttpServlet  {
     private final AtomicLong fileUploadsCounter = new AtomicLong();
     
     public final static Map STATUS_CODES = new HashMap();
+    private Auditor auditor;
 
     static {
         STATUS_CODES.put(100,"CONTINUE");
@@ -146,6 +147,12 @@ public class NetworkResponseServlet extends HttpServlet  {
             super(string);
         }
         
+    }
+
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        auditor = RavenRegistry.getRegistry().getService(Auditor.class);
     }
 
     protected void checkRequest(HttpServletRequest request, HttpServletResponse response) 
@@ -232,6 +239,11 @@ public class NetworkResponseServlet extends HttpServlet  {
 //                            throw new UnauthoriedException();
 //                            }
 //                }
+                auditor.write(new AuditRecord(
+                        responseContext.getResponseBuilder().getResponseBuilderNode(), 
+                        userContext.getLogin(), request.getRemoteAddr(), Action.SESSION_START, null));
+                final HttpSession newSession = request.getSession();
+                newSession.setAttribute(UserContextService.SERVICE_NODE_SESSION_ATTR, responseContext.getServiceNode());
                 request.getSession().setAttribute(userContextAttrName, userContext);
             }
         } else {
@@ -548,6 +560,11 @@ public class NetworkResponseServlet extends HttpServlet  {
         ctx.serviceRequest = createServiceRequest(ctx, params, headers, context);;
         ctx.responseContext = ctx.responseService.getResponseContext(ctx.serviceRequest);
         ctx.user = checkAuth(ctx.request, ctx.response, ctx.responseContext, context);
+        auditor.write(new AuditRecord(
+                ctx.responseContext.getResponseBuilder().getResponseBuilderNode(), 
+                ctx.user.getLogin(), 
+                ctx.user.getHost(), 
+                Action.VIEW, "Method: "+ctx.request.getMethod()+"\nParams: "+params));
         return ctx;
     }
     

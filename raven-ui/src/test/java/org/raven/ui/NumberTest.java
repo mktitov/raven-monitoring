@@ -17,6 +17,8 @@
 
 package org.raven.ui;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -34,5 +36,12 @@ public class NumberTest extends Assert
         assertEquals(1, grp);
         int col = (int) ((n / 1000. - grp) * 1000);
         assertEquals(2, col);
+    }
+    
+    @Test public void mapToStringTest() {
+        Map map = new HashMap();
+        map.put("test", 1);
+        map.put("test2", "2");
+        System.out.println("map: "+map);
     }
 }
