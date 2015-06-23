@@ -292,7 +292,7 @@ public class NodeReferenceValueHandler
             data = null;
         else
         {
-            StringBuffer path = new StringBuffer();
+            StringBuilder path = new StringBuilder();
             for (PathElement pathElement: pathElements)
                 path.append(pathElement.getElement()).append(Node.NODE_SEPARATOR);
             data = path.toString();
