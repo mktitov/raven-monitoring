@@ -76,7 +76,9 @@
         </repository>
         <repository>
             <id>codehaus</id>
-            <url>http://repository.codehaus.org</url>
+            <!--<url>http://repository.codehaus.org</url>-->
+            <url>https://repository-master.mulesoft.org/nexus/content/groups/public/</url>
+            <layout>default</layout>
         </repository>
         <repository>
             <id>tomcat</id>
