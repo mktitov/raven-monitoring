@@ -255,6 +255,9 @@ public class EventSourceBuilder extends AbstractResponseBuilder
                             || messageForChannel==channel) 
                         {
                             final OutputStream stream = channel.responseContext.getResponseStream();
+                            if (logger.isTraceEnabled()) {
+                                getLogger().trace(String.format("Sending message to channel (%s): %s", channel, message));
+                            }
                             stream.write(messBytes);
                             stream.flush();
                             totalMessagesSent.incrementAndGet();
