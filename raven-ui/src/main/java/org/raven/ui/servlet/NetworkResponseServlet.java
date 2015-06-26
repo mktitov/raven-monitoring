@@ -180,7 +180,7 @@ public class NetworkResponseServlet extends HttpServlet  {
             return responseContext.getLoginService().login(null, null, null);        
         UserContext userContext = null;
 //        String userContextAttrName = "sri_user_context_"+loginService.getId();
-        String userContextAttrName = UserContextService.USER_CONTEXT_SESSION_ATTR;
+        String userContextAttrName = UserContextService.USER_CONTEXT_SESSION_ATTR+"_"+loginService.getId();
         HttpSession session = null;
         if (responseContext.isSessionAllowed()) {
             session = request.getSession(false);
