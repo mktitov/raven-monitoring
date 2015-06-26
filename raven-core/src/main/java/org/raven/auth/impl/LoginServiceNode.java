@@ -198,7 +198,7 @@ public class LoginServiceNode extends BaseNode implements LoginService {
         } catch (Throwable e) {
             if (e instanceof LoginException) {
                 if (isLogLevelEnabled(LogLevel.WARN))
-                    getLogger().warn("Login failed for user ({}). {}", login, e.getMessage());
+                    getLogger().warn(String.format("Login failed for user (%s) from remote ip (%s). %s", login, ip, e.getMessage()));
                 throw (LoginException)e;
             }
             String mess = String.format("Error in login service (%s)", getName());
