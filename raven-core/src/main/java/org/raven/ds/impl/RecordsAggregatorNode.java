@@ -107,11 +107,9 @@ public class RecordsAggregatorNode extends AbstractSafeDataPipe
             return;
         }
         
-        List<RecordsAggregatorGroupFieldNode> groupFields =
-                new ArrayList<RecordsAggregatorGroupFieldNode>();
-        List<RecordsAggregatorValueFieldNode> valueFields =
-                new ArrayList<RecordsAggregatorValueFieldNode>();
-        Collection<Node> childs = getChildrens();
+        List<RecordsAggregatorGroupFieldNode> groupFields = new ArrayList<>();
+        List<RecordsAggregatorValueFieldNode> valueFields = new ArrayList<>();
+        Collection<Node> childs = getNodes();
         if (childs!=null && !childs.isEmpty())
             for (Node child: childs)
                 if (Status.STARTED.equals(child.getStatus()))

@@ -411,7 +411,7 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
         if (_filterFields != null && _filterFields.size() > 0) {
             Map<String, FieldTableAliasNode> fieldAliases =
                     NodeUtils.getChildsOfTypeMap(this, FieldTableAliasNode.class);
-            filterElements = new ArrayList<DatabaseFilterElement>(_filterFields.size());
+            filterElements = new ArrayList<>(_filterFields.size());
             for (FilterField field : _filterFields.values()) {
                 String expression = null;
                 String fieldName = field.getFieldInfo().getName();
@@ -433,7 +433,15 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
                         field.getColumnName(), alias, fieldType
                         , field.getFieldInfo().getPattern(), field.isVirtual(), converter
                         , field.dbInfo==null? null : field.dbInfo.getCodec());
-                element.setExpression(expression);
+                try {
+                    element.setExpression(expression);
+                } catch (DatabaseFilterElementException e) {
+                    if (isLogLevelEnabled(LogLevel.ERROR))
+                        getLogger().error(String.format(
+                                "Error setting filter value (%s) for field (%s) of schema (%s): %s",
+                                expression, field.getFieldInfo().getName(), schema, e.getMessage()));
+                    throw e;
+                }
                 if (element.getExpressionType() != DatabaseFilterElement.ExpressionType.EMPTY)
                     filterElements.add(element);
             }

@@ -100,28 +100,55 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         field.setDisplayName("field1 display name");
         field.start();
         assertEquals(Status.STARTED, field.getStatus());
+        
+        dbExtension = createDbExtension(field, "COL1");
+//        dbExtension = new DatabaseRecordFieldExtension();
+//        dbExtension.setName("db");
+//        field.addAndSaveChildren(dbExtension);
+//        dbExtension.setColumnName("COL1");
+//        dbExtension.save();
+//        dbExtension.start();
+//        assertEquals(Status.STARTED, dbExtension.getStatus());
+        
+        filterExtension = createFilterExtension(field, "test");
+//
+//        filterExtension = new FilterableRecordFieldExtension();
+//        filterExtension.setName("filter");
+//        field.addAndSaveChildren(filterExtension);
+//        filterExtension.setDefaultValue("test");
+//        filterExtension.setFilterValueRequired(false);
+//        filterExtension.save();
+//        filterExtension.start();
+//        assertEquals(Status.STARTED, filterExtension.getStatus());
 
-        dbExtension = new DatabaseRecordFieldExtension();
-        dbExtension.setName("db");
-        field.addAndSaveChildren(dbExtension);
-        dbExtension.setColumnName("COL1");
-        dbExtension.save();
-        dbExtension.start();
-        assertEquals(Status.STARTED, dbExtension.getStatus());
-
-        filterExtension = new FilterableRecordFieldExtension();
-        filterExtension.setName("filter");
-        field.addAndSaveChildren(filterExtension);
-        filterExtension.setDefaultValue("test");
-        filterExtension.setFilterValueRequired(false);
-        filterExtension.save();
-        filterExtension.start();
-        assertEquals(Status.STARTED, filterExtension.getStatus());
 
         reader = new DatabaseRecordReaderNode();
         reader.setName("reader");
         tree.getRootNode().addAndSaveChildren(reader);
         reader.setConnectionPool(pool);
+    }
+    
+    private DatabaseRecordFieldExtension createDbExtension(RecordSchemaFieldNode field, String colName) {
+        DatabaseRecordFieldExtension dbExtension = new DatabaseRecordFieldExtension();
+        dbExtension.setName("db");
+        field.addAndSaveChildren(dbExtension);
+        dbExtension.setColumnName(colName);
+        dbExtension.save();
+        dbExtension.start();
+        assertEquals(Status.STARTED, dbExtension.getStatus());
+        return dbExtension;
+    }
+    
+    private FilterableRecordFieldExtension createFilterExtension(RecordSchemaFieldNode field, String defaultValue) {
+        FilterableRecordFieldExtension filter = new FilterableRecordFieldExtension();
+        filter.setName("filter");
+        field.addAndSaveChildren(filter);
+        filter.setDefaultValue(defaultValue);
+        filter.setFilterValueRequired(false);
+        filter.save();
+        filter.start();
+        assertEquals(Status.STARTED, filter.getStatus());
+        return filter;
     }
 
     @Test
@@ -362,7 +389,7 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
 
         reader.setRecordSchema(schema);
         reader.setOrderByExpression("col1");
-        reader.getNodeAttribute("field1").setValue("{3, 5}");
+        reader.getAttr("field1").setValue("{3, 5}");
         assertTrue(reader.start());
         reader.getDataImmediate(collector, new DataContextImpl());
 
@@ -389,6 +416,31 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         checkRecords(collector.getDataList(), "3", "5");
     }
 
+    @Test
+    public void gatherDataWithInvalidFilterAttributesTest() throws Exception {
+        RecordSchemaFieldNode field2 = new RecordSchemaFieldNode();
+        field2.setName("field2");
+        schema.addAndSaveChildren(field2);
+        field2.setFieldType(RecordSchemaFieldType.INTEGER);
+        field2.setDisplayName("field2 display name");
+        field2.start();
+        assertEquals(Status.STARTED, field2.getStatus());
+        
+        createDbExtension(field2, "COL2");
+        createFilterExtension(field2, null);
+
+
+        prepareCollector();
+        prepareData();
+
+        reader.setRecordSchema(schema);
+        reader.getAttr("field2").setValue("notANumber");
+        assertTrue(reader.start());
+        reader.getDataImmediate(collector, new DataContextImpl());
+
+//        checkRecords(collector.getDataList(), "3", "5");
+    }
+    
     @Test
     public void gatherDataWithQueryTemplateAndFilterAttributesTest() throws Exception
     {
@@ -489,7 +541,7 @@ public class DatabaseRecordReaderNodeTest extends RavenCoreTestCase
         Connection con = pool.getConnection();
         Statement st = con.createStatement();
         st.executeUpdate("drop table if exists record_data");
-        st.executeUpdate("create table record_data(col1 varchar)");
+        st.executeUpdate("create table record_data(col1 varchar, col2 int)");
         
         st.executeUpdate("insert into record_data (col1) values('3')");
         st.executeUpdate("insert into record_data (col1) values('4')");
