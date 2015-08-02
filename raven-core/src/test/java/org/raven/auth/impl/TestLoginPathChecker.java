@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Mikhail Titov.
+ * Copyright 2015 Mikhail Titov.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,7 @@
  */
 package org.raven.auth.impl;
 
-import org.raven.auth.LoginService;
-import org.raven.auth.UserContext;
+import org.raven.auth.LoginPathChecker;
 import org.raven.net.ResponseContext;
 import org.raven.tree.impl.BaseNode;
 
@@ -24,17 +23,20 @@ import org.raven.tree.impl.BaseNode;
  *
  * @author Mikhail Titov
  */
-public class TestAuthService extends BaseNode implements LoginService {
+public class TestLoginPathChecker extends BaseNode implements LoginPathChecker {
+    private LoginPathChecker checker;
 
-    public TestAuthService(String name) {
-        super(name);
+    public LoginPathChecker getChecker() {
+        return checker;
     }
 
-    public UserContext login(String username, String password, String host, ResponseContext responseContext) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public void setChecker(LoginPathChecker checker) {
+        this.checker = checker;
     }
 
-    public boolean isLoginAllowedFromIp(String ip) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    @Override
+    public boolean isLoginAllowedFromPath(ResponseContext responseContext) {
+        return checker.isLoginAllowedFromPath(responseContext);
     }
+    
 }

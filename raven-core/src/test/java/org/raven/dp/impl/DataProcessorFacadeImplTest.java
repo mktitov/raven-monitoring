@@ -20,11 +20,17 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import mockit.Delegate;
+import mockit.Expectations;
+import mockit.Mocked;
+import mockit.integration.junit4.JMockit;
 import org.junit.Before;
 import static org.junit.Assert.*;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.impl.ExecutorServiceNode;
 import org.raven.test.RavenCoreTestCase;
@@ -43,23 +49,24 @@ import org.raven.dp.FutureCallback;
 import org.raven.dp.DataProcessorContext;
 import org.raven.dp.DataProcessorLogic;
 import org.raven.dp.FutureCanceledException;
-import org.raven.dp.NonUniqueNameException;
+import org.raven.dp.FutureTimeoutException;
 import org.raven.dp.RavenFuture;
 import org.raven.dp.Terminated;
-import org.raven.dp.UnbecomeFailureException;
 import org.raven.dp.UnhandledMessage;
-import org.raven.dp.UnhandledMessageException;
 import org.raven.ds.TimeoutMessageSelector;
 import org.raven.log.LogLevel;
+import org.raven.sched.Task;
 import org.raven.sched.impl.AbstractTask;
 import org.raven.test.InThreadExecutorService;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author Mikhail Titov
  */
+@RunWith(JMockit.class)
 public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
-    private LoggerHelper logger;
+    private LoggerHelper logger = new LoggerHelper(LogLevel.TRACE, "[TEST]", "[TEST] ", LoggerFactory.getLogger("TEST"));
     
     private final static Answer VOID_ANSWER = new Answer() {
         @Override
@@ -71,10 +78,10 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
     @Before
     public void prepare() {
         testsNode.setLogLevel(LogLevel.TRACE);
-        logger = new LoggerHelper(testsNode, null);
+//        logger = new LoggerHelper(testsNode, null);
     }
     
-    @Test
+    @Test(timeout = 5000l)
     public void sendTest() throws Exception {
         DataProcessor realProcessor = mock(DataProcessor.class);
         when(realProcessor.processData(any())).thenReturn(Boolean.TRUE);
@@ -87,8 +94,38 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         verify(realProcessor).processData("test");
         verifyNoMoreInteractions(realProcessor);
     }
+  
+    @Test(timeout = 5000l)
+    public void maxMessagesPerCycleTest(
+            @Mocked final ExecutorService executor,
+            @Mocked final DataProcessor processor
+    ) throws Exception
+    {
+        new Expectations() {{
+            executor.execute((Task)any); times=2; result = new Delegate(){
+                boolean execute(final Task task) {
+                    new Thread(){
+                        @Override public void run() {
+                            task.run();
+                        }
+                    }.start();
+                    return true;
+                }
+            };
+            processor.processData("test"); times=2; result = new Delegate() {
+                void processData(Object message) throws Exception {
+                    Thread.sleep(100);
+                }
+            };
+        }};
+        DataProcessorFacade facade = new DataProcessorFacadeConfig(
+                "receiver", executor, processor, executor, logger).withMaxMessagesPerCycle(1).build();
+        facade.send("test");
+        facade.send("test");
+        Thread.sleep(500);
+    }
     
-    @Test
+    @Test(timeout = 5000l)
     public void sendToWithReply() throws Exception {
         ExecutorService executor = createExecutor();
         DataProcessor sender = mock(DataProcessor.class);
@@ -107,7 +144,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         verify(sender).processData("ok");
     }
     
-    @Test
+    @Test(timeout = 5000l)
     public void sendToWithoutReply() throws Exception {
         ExecutorService executor = createExecutor();
         DataProcessor sender = mock(DataProcessor.class, VOID_ANSWER);
@@ -124,7 +161,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         verifyZeroInteractions(receiver);
     }
     
-    @Test(timeout = 500l)
+    @Test(timeout = 5000l)
     public void capacityTest() throws Exception {
         ExecutorService executor = createExecutor();
         DataProcessor realProcessor = mock(DataProcessor.class, new MockitoAnswer(true));
@@ -174,7 +211,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         verify(realProcessor, times(1000)).processData("test");
     }
     
-    @Test
+    @Test(timeout = 5000l)
     public void setReceiveTimeoutTest() throws Exception {
         MessageCollector collector = new MessageCollector();
         ExecutorService executor = createExecutor();
@@ -191,11 +228,11 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         checkMessages(collector, 
                 new Object[]{TIMEOUT_MESSAGE, TIMEOUT_MESSAGE, TIMEOUT_MESSAGE, "TEST", TIMEOUT_MESSAGE}, 
                 new long[]{100, 200, 405, 600, 800}, 
-                new long[]{ 10,  10,  20,  20,  30}, 
+                new long[]{ 15,  15,  20,  25,  30}, 
                 initialTime);
     }
     
-    @Test
+    @Test(timeout = 5000l)
     public void setReceiveTimeoutWithSelectorTest() throws Exception {
         MessageCollector collector = new MessageCollector();
         ExecutorService executor = createExecutor();
@@ -216,11 +253,11 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         checkMessages(collector, 
                 new Object[]{"TEST1",  TIMEOUT_MESSAGE, "TEST"}, 
                 new long[]{40, 50, 90}, 
-                new long[]{ 10,  10,  10}, 
+                new long[]{ 15,  15,  15}, 
                 initialTime);
     }
     
-    @Test
+    @Test(timeout = 5000l)
     public void sendDelayedTest() throws Exception {
         MessageCollector collector = new MessageCollector();
         ExecutorService executor = createExecutor();
@@ -233,11 +270,11 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         checkMessages(collector, 
                 new Object[]{"TEST"}, 
                 new long[]{100}, 
-                new long[]{ 10}, 
+                new long[]{ 15}, 
                 initialTime);
     }
     
-    @Test
+    @Test(timeout = 5000l)
     public void sendToDelayedWithoutReply() throws Exception {
         ExecutorService executor = createExecutor();
         MessageCollector sender = new MessageCollector();
@@ -247,11 +284,11 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         long ts = System.currentTimeMillis();
         senderFacade.sendDelayedTo(receiverFacade, 50, "test");
         Thread.sleep(100);
-        checkMessages(receiver, new Object[]{"test"}, new long[]{50}, new long[]{5}, ts);
+        checkMessages(receiver, new Object[]{"test"}, new long[]{50}, new long[]{15}, ts);
         assertTrue(sender.messages.isEmpty());
     }
     
-    @Test
+    @Test(timeout = 5000l)
     public void sendRepeatedly() throws Exception {
         MessageCollector collector = new MessageCollector();
         ExecutorService executor = createExecutor();
@@ -264,12 +301,12 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         checkMessages(collector, 
                 new Object[]{"TEST", "TEST", "TEST", "TEST", "TEST"}, 
                 new long[]{100, 150, 200, 250, 300}, 
-                new long[]{ 10,  10,  15,  15,  15}, 
+                new long[]{ 15,  15,  15,  15,  20}, 
                 initialTime);
         
     }
     
-    @Test
+    @Test(timeout = 5000l)
     public void sendRepeatedlyToWithoutReply() throws Exception {
         ExecutorService executor = createExecutor();
         MessageCollector sender = new MessageCollector();
@@ -279,19 +316,19 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         long ts = System.currentTimeMillis();
         senderFacade.sendRepeatedlyTo(receiverFacade, 0, 50, 2, "test");
         Thread.sleep(120);
-        checkMessages(receiver, new Object[]{"test", "test"}, new long[]{0, 50}, new long[]{5, 5}, ts);
+        checkMessages(receiver, new Object[]{"test", "test"}, new long[]{0, 50}, new long[]{10, 5}, ts);
         assertTrue(sender.messages.isEmpty());
     }
     
     
-    @Test
+    @Test(timeout = 6000l)
     public void logicTest() throws Exception {
         ExecutorService executor = createExecutor();
         DataProcessorFacade facade = new DataProcessorFacadeConfig("receiver", testsNode, new Logic(), executor, logger).build();
         Thread.sleep(5000);
     }
     
-    @Test
+    @Test(timeout = 5000l)
     public void askTest() throws Exception {
         ExecutorService executor = createExecutor();
         DataProcessor processor = mock(DataProcessor.class);
@@ -303,7 +340,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         verifyNoMoreInteractions(processor);
     }
     
-    @Test
+    @Test(timeout = 5000l)
     public void askWithFutureAsResultTest() throws Exception {
         final ExecutorService executor = createExecutor();
         DataProcessor processor = mock(DataProcessor.class);
@@ -320,7 +357,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         verifyNoMoreInteractions(processor);
     }
     
-    @Test(expected = ExecutionException.class)
+    @Test(timeout = 5000, expected = ExecutionException.class)
     public void askWithErrorTest() throws Exception {
         ExecutorService executor = createExecutor();
         DataProcessor processor = mock(DataProcessor.class);
@@ -335,7 +372,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         }
     }
     
-    @Test(expected = ExecutionException.class)
+    @Test(timeout = 5000, expected = ExecutionException.class)
     public void askWithErrorFutureAsResultTest() throws Exception {
         final ExecutorService executor = createExecutor();
         DataProcessor processor = mock(DataProcessor.class);
@@ -356,7 +393,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         }
     }
     
-    @Test(expected = FutureCanceledException.class)
+    @Test(timeout = 5000, expected = FutureCanceledException.class)
     public void askWithCanceledFutureAsResultTest() throws Exception {
         final ExecutorService executor = createExecutor();
         DataProcessor processor = mock(DataProcessor.class);
@@ -377,7 +414,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         }
     }
     
-    @Test
+    @Test(timeout = 5000)
     public void askWithCallbackTest() throws Exception {
         ExecutorService executor = createExecutor();
         DataProcessor processor = mock(DataProcessor.class);
@@ -394,7 +431,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         verifyNoMoreInteractions(processor, callback);
     }
     
-    @Test
+    @Test(timeout = 5000l)
     public void stopTest() throws Exception {
         DataProcessorLogic processor = mock(DataProcessorLogic.class, VOID_ANSWER);
         
@@ -412,7 +449,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         verifyNoMoreInteractions(processor);
     }
     
-    @Test()
+    @Test(timeout = 5000l)
 //    @Test(expected = FutureTimeoutException.class)
     public void askStopTestWithTimeout() throws Exception {
         DataProcessorLogic processor = mock(DataProcessorLogic.class);
@@ -431,7 +468,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         facade.send("test");
         try {
 //            facade.askStop(100);
-            assertEquals(Boolean.TRUE, facade.askStop(100).get());
+            assertEquals(Boolean.TRUE, facade.askStop(150, TimeUnit.MILLISECONDS).get());
 //            Thread.sleep(110);
         } finally {
             assertTrue(facade.isTerminated());
@@ -444,7 +481,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         }
     }
     
-    @Test
+    @Test(timeout = 5000l)
     public void askStopTest() throws Exception {
         DataProcessorLogic processor = mock(DataProcessorLogic.class, VOID_ANSWER);
         
@@ -462,7 +499,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         verifyNoMoreInteractions(processor);
     }
     
-    @Test
+    @Test(timeout = 5000l)
     public void stopFromOtherFacadeTest() throws Exception {
         DataProcessorLogic processor = mock(DataProcessorLogic.class, VOID_ANSWER);
         DataProcessor stopListener = mock(DataProcessor.class);
@@ -485,7 +522,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         verifyZeroInteractions(stopListener);
     }
     
-    @Test
+    @Test(timeout = 5000l)
     public void watchTest() throws Exception {
         DataProcessor processor = mock(DataProcessor.class);
         
@@ -508,7 +545,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         verifyZeroInteractions(processor);
     }
         
-    @Test
+    @Test(timeout = 5000l)
     public void watchUnwatchFromOtherFacadeTest() throws Exception {
         DataProcessor processor = mock(DataProcessor.class);
         DataProcessor watchProcessor = mock(DataProcessor.class, VOID_ANSWER);
@@ -533,18 +570,18 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         verifyZeroInteractions(watchProcessor2);
     }
         
-    @Test
+    @Test(timeout = 5000l)
     public void becomeUnbecomeTest() throws Exception {
-        ExecutorService executor = new InThreadExecutorService();
+        ExecutorService executor = createExecutor();
         DataProcessorFacade facade = new DataProcessorFacadeConfig("receiver", testsNode, new LogicWithBehaviour(), executor, logger).build();
         assertEquals("MAIN", facade.ask("CHANGE_TO_B1").get());
         assertEquals("B1", facade.ask("CHANGE_TO_MAIN").get());
         assertEquals("MAIN", facade.ask("TEST").get());
     }
     
-    @Test
+    @Test(timeout = 5000l)
     public void unbecomeExceptionTest() throws Exception {
-        ExecutorService executor = new InThreadExecutorService();
+        ExecutorService executor = createExecutor();
         DataProcessorFacade facade = new DataProcessorFacadeConfig("receiver", executor, new LogicWithBehaviour(), executor, logger).build();
         assertEquals("MAIN", facade.ask("CHANGE_TO_B1_WITH_REPLACE").get());
         assertEquals("B1", facade.ask("TEST").get());
@@ -552,11 +589,11 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
             assertEquals("MAIN", facade.ask("CHANGE_TO_MAIN").get());
             fail();
         } catch (ExecutionException e) {
-            assertTrue(e.getCause() instanceof UnbecomeFailureException);
+            assertTrue(e.getCause() instanceof FutureTimeoutException);
         }
     }
     
-    @Test
+    @Test(timeout = 5000l)
     public void unhandledMessageTest() throws Exception {
         ExecutorService executor = createExecutor();
         MessageCollector unhandledProcessor = new MessageCollector();
@@ -568,19 +605,19 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
             facade.ask("UNHANDLE").get();
             fail();
         } catch (ExecutionException e) {
-            assertTrue(e.getCause() instanceof UnhandledMessageException);
-            assertEquals("UNHANDLE", ((UnhandledMessageException)e.getCause()).getUnhandledMessage());
+            assertTrue(e.getCause() instanceof FutureTimeoutException);
+//            assertEquals("UNHANDLE", ((UnhandledMessageException)e.getCause()).getUnhandledMessage());
         }
         Thread.sleep(100);
         assertEquals(1, unhandledProcessor.messages.size());
         assertTrue(unhandledProcessor.messages.get(0).message instanceof UnhandledMessage);
         UnhandledMessage mess = (UnhandledMessage) unhandledProcessor.messages.get(0).message;
         assertEquals("UNHANDLE", mess.getMessage());
-        assertNull(mess.getSender());
+        assertNotNull(mess.getSender());
         assertSame(facade, mess.getReceiver());
     }
     
-    @Test
+    @Test(timeout = 5000l)
     public void unhandledMessageTest2() throws Exception {
         ExecutorService executor = createExecutor();
         MessageCollector unhandledProcessor = new MessageCollector();
@@ -592,19 +629,20 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
             facade.ask("UNHANDLE2").get();
             fail(); 
         } catch (ExecutionException e) {
-            assertTrue(e.getCause() instanceof UnhandledMessageException);
-            assertEquals("UNHANDLE2", ((UnhandledMessageException)e.getCause()).getUnhandledMessage());
+            assertTrue(e.getCause() instanceof FutureTimeoutException);
+//            assertTrue(e.getCause() instanceof UnhandledMessageException);
+//            assertEquals("UNHANDLE2", ((UnhandledMessageException)e.getCause()).getUnhandledMessage());
         }
         Thread.sleep(100);
         assertEquals(1, unhandledProcessor.messages.size());
         assertTrue(unhandledProcessor.messages.get(0).message instanceof UnhandledMessage);
         UnhandledMessage mess = (UnhandledMessage) unhandledProcessor.messages.get(0).message;
         assertEquals("UNHANDLE2", mess.getMessage());
-        assertNull(mess.getSender());
+        assertNotNull(mess.getSender());
         assertSame(facade, mess.getReceiver());
     }
     
-    @Test
+    @Test(timeout = 5000l)
     public void unhandledMessageFromFacadeTest() throws Exception {
         DataProcessor emptyProcessor = mock(DataProcessor.class);
         
@@ -627,7 +665,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         verifyZeroInteractions(emptyProcessor);
     }
     
-    @Test
+    @Test(timeout = 5000l)
     public void childTest() throws Exception {
         LogicWithChild logic = new LogicWithChild();
         DataProcessorFacade parent = new DataProcessorFacadeConfig("parent", testsNode, logic, createExecutor(), logger).build();
@@ -660,7 +698,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
             parent.ask("CREATE").get();
             fail();
         } catch (ExecutionException e) {
-            assertTrue(e.getCause() instanceof NonUniqueNameException);
+//            assertTrue(e.getCause() instanceof NonUniqueNameException);
         }
         
         //stopping parent and checking that child is terminated too
@@ -670,7 +708,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         assertTrue(logic.childTerminated);
     }
     
-    @Test
+    @Test(timeout = 5000l)
     public void stashUnstashTest() throws Exception {
         ExecutorService executor = createExecutor();
         MessageCollector collector = new MessageCollector();
@@ -682,7 +720,8 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
         Thread.sleep(100);
         assertArrayEquals(new Object[]{"1", "2"}, collector.getMessages().toArray());
     }
-    @Test
+    
+    @Test(timeout = 5000l)
     public void stashUnstashWithAskTest() throws Exception {
         ExecutorService executor = createExecutor();
         DataProcessorFacade stashHandler = new DataProcessorFacadeConfig("stash test", testsNode, new StashLogic(), executor, logger).build();
@@ -802,7 +841,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
                 @Override public void doRun() throws Exception {
                 }
             });
-        Thread.sleep(1000);
+        Thread.sleep(100);
         return executor;
     }
     
@@ -822,7 +861,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
             else if ("CHANGE_TO_B1_WITH_REPLACE".equals(message))
                 become(b1, true);
             else if ("UNHANDLE".equals(message)) 
-                return unhandled();
+                return UNHANDLED;
             else if ("UNHANDLE2".equals(message)) 
                 return UNHANDLED;
             return "MAIN";

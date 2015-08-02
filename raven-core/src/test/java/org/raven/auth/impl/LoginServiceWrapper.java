@@ -18,6 +18,7 @@ package org.raven.auth.impl;
 import org.raven.auth.LoginException;
 import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
+import org.raven.net.ResponseContext;
 import org.raven.tree.impl.BaseNode;
 
 /**
@@ -27,8 +28,8 @@ import org.raven.tree.impl.BaseNode;
 public class LoginServiceWrapper extends BaseNode implements LoginService {
     private LoginService loginService;
 
-    public UserContext login(String username, String password, String ip) throws LoginException {
-        return loginService.login(username, password, ip);
+    public UserContext login(String username, String password, String ip, ResponseContext responseContext) throws LoginException {
+        return loginService.login(username, password, ip, responseContext);
     }
 
     public boolean isLoginAllowedFromIp(String ip) {

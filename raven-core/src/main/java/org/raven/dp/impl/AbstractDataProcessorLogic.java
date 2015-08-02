@@ -41,7 +41,7 @@ public abstract class AbstractDataProcessorLogic implements DataProcessorLogic {
     public void postStop() {
     }
 
-    public void postInit(){        
+    public void postInit() {        
     }
 
     @Override
@@ -76,10 +76,10 @@ public abstract class AbstractDataProcessorLogic implements DataProcessorLogic {
         context.unbecome();
     }
     
-    protected final Object unhandled() {
-        context.unhandled();
-        return VOID;
-    }
+//    protected final Object unhandled() {
+//        context.unhandled();
+//        return VOID;
+//    }
 
     @Override
     public String toString() {

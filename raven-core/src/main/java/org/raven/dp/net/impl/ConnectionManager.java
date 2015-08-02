@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Mikhail Titov.
+ * Copyright 2015 Mikhail Titov.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.raven.dp.net.impl;
 
-package org.raven.tree.impl;
-
-import org.raven.dp.DataProcessorFacade;
+import org.raven.annotations.NodeClass;
+import org.raven.dp.impl.AbstractDataProcessorLogic;
+import org.raven.tree.impl.BaseNodeWithBehavior;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class TestNodeWithBehavior extends BaseNodeWithBehavior {
+@NodeClass
+public class ConnectionManager extends BaseNodeWithBehavior {
     
-    public void setBehavior(DataProcessorFacade behavior) {
-        this.behavior.set(behavior);
+    
+    private static class ConnectionManagerDP extends AbstractDataProcessorLogic {
+
+        @Override
+        public Object processData(Object dataPackage) throws Exception {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+        
     }
 }

@@ -30,6 +30,7 @@ import org.raven.sched.ExecutorServiceException;
 import org.raven.sched.ExecutorTask;
 import org.raven.sched.ExecutorTaskHolder;
 import org.raven.sched.ExecutorThreadFactory;
+import org.raven.sched.ForkJoinTaskSupport;
 import org.raven.sched.ManagedTask;
 import org.raven.sched.Task;
 import org.raven.sched.TaskExecutionListener;
@@ -189,7 +190,10 @@ public class ExecutorServiceNode extends BaseNode
     public void execute(Task task) throws ExecutorServiceException {
         try {
             if (isStarted()) 
-                executor.execute(getTaskWrapper(task));
+                if (type==Type.THREADED_POOL || !(task instanceof ForkJoinTaskSupport))
+                    executor.execute(getTaskWrapper(task));
+                else
+                    ((ForkJoinPool)executor).execute(((ForkJoinTaskSupport)task).getForJoinTask());
             else
                 throw new ExecutorServiceException("Can't execute task... Not Started");
             

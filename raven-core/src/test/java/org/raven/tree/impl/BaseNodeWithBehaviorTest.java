@@ -16,99 +16,96 @@
 
 package org.raven.tree.impl;
 
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.pattern.Patterns;
-import akka.testkit.TestActorRef;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import org.junit.After;
-import org.junit.AfterClass;
+import mockit.Delegate;
+import mockit.Expectations;
+import mockit.Mocked;
+import mockit.integration.junit4.JMockit;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import org.raven.sched.ActorSystemProvider;
-import org.raven.sched.impl.ActorSystemNode;
+import org.junit.runner.RunWith;
+import org.raven.dp.DataProcessor;
+import org.raven.dp.DataProcessorFacade;
+import org.raven.dp.impl.DataProcessorFacadeConfig;
+import org.raven.sched.ExecutorService;
+import org.raven.sched.impl.ExecutorServiceNode;
 import org.raven.test.RavenCoreTestCase;
-import org.raven.tree.NodeException;
 import org.raven.tree.NodeWithBehavior;
-import scala.concurrent.Future;
-import scala.concurrent.duration.Duration;
 
 /**
  *
  * @author Mikhail Titov
  */
+@RunWith(JMockit.class)
 public class BaseNodeWithBehaviorTest extends RavenCoreTestCase {
-    private ActorSystemNode actorSystemProvider;
+    private ExecutorServiceNode executor;
     private TestNodeWithBehavior node;
+    private LoggerHelper logger;
     
     @Before
     public void prepare() {
-        actorSystemProvider = new ActorSystemNode();
-        actorSystemProvider.setName("actorSystem");
-        testsNode.addAndSaveChildren(actorSystemProvider);
-        assertTrue(actorSystemProvider.start());
-        
+        executor = new ExecutorServiceNode();
+        executor.setName("executor");
+        testsNode.addAndSaveChildren(executor);
+        executor.setType(ExecutorService.Type.FORK_JOIN_POOL);
+        executor.setCorePoolSize(8);
+        assertTrue(executor.start());
+                
         node = new TestNodeWithBehavior();
         node.setName("behavior node");
         testsNode.addAndSaveChildren(node);
-        node.setActorSystemProvider(actorSystemProvider);
+        node.setExecutor(executor);
         assertTrue(node.start());
-    }
-    
-    @Test
-    public void behaviorUnavailableTest() throws NodeException {
-        Props props = Props.create(RequesterActor.class);
-        TestActorRef<RequesterActor> requester = TestActorRef.create(
-                actorSystemProvider.getActorSystem(), props, "requester");
-        node.requestBehavior(requester);
-        assertSame(BaseNodeWithBehavior.BEHAVIOR_UNAVAILABLE, requester.underlyingActor().behaviorUnavailable);
-    }
-    
-    @Test
-    public void behaviorTest() throws Exception {
-        ActorRef behavior = actorSystemProvider.getActorSystem().actorOf(Props.create(BehaviorActor.class));
-        node.setBehavior(behavior);
-        Props props = Props.create(RequesterActor.class);
-        TestActorRef<RequesterActor> requester = TestActorRef.create(
-                actorSystemProvider.getActorSystem(), props, "requester");
-        node.requestBehavior(requester);
-        assertNotNull(requester.underlyingActor().behavior);
-        assertSame(behavior, requester.underlyingActor().behavior.getBehavior());
-        behavior.tell("test", requester);
-        Future res = Patterns.ask(behavior, "test", 2000);
-        Object resp = res.result(Duration.create(2000, TimeUnit.MILLISECONDS), null);
-        assertEquals("ok", requester.underlyingActor().behaviorMessage);
-    }
-    
-    public static class BehaviorActor extends UntypedActor {
-
-        public BehaviorActor() throws InterruptedException {
-            Thread.sleep(1500);
-        }
         
-        @Override
-        public void onReceive(Object message) throws Exception {
-            if ("test".equals(message)) 
-                sender().tell("ok", self());
-        }
+        logger = new LoggerHelper(testsNode, null);
     }
     
-    public static class RequesterActor extends UntypedActor {
-        private NodeWithBehavior.Behavior behavior;
-        private NodeWithBehavior.BehaviorUnavailable behaviorUnavailable;
-        private String behaviorMessage;
-
-        @Override
-        public void onReceive(Object message) throws Exception {
-            if (message instanceof NodeWithBehavior.Behavior)
-                behavior = (NodeWithBehavior.Behavior) message;
-            else if (message instanceof NodeWithBehavior.BehaviorUnavailable)
-                behaviorUnavailable = (NodeWithBehavior.BehaviorUnavailable) message;
-            else if ("ok".equals(message)) 
-                behaviorMessage = (String) message;
-        }
+    @Test
+    public void behaviorUnavailableTest(
+            final @Mocked DataProcessor dp
+    ) throws Exception {
+        final CountDownLatch latch = new CountDownLatch(1);
+        new Expectations() {{
+            dp.processData(BaseNodeWithBehavior.BEHAVIOR_UNAVAILABLE); result = new Delegate() {
+                public Object processData(Object mess) {
+                    latch.countDown();
+                    return DataProcessor.VOID;
+                }
+            };
+        }};
+        DataProcessorFacade facade = new DataProcessorFacadeConfig("dp", node, dp, executor, logger).build();
+        node.requestBehavior(facade);
+        latch.await(1, TimeUnit.SECONDS);
     }
+    
+    @Test
+    public void behaviorTest(
+            final @Mocked DataProcessorFacade behaviour,
+            final @Mocked DataProcessor dp
+    ) throws Exception {
+        final CountDownLatch latch = new CountDownLatch(1);
+        new Expectations() {{
+            dp.processData(withArgThat(new BaseMatcher<NodeWithBehavior.Behavior>() {
+                @Override public boolean matches(Object item) {
+                    return (item instanceof NodeWithBehavior.Behavior && ((NodeWithBehavior.Behavior)item).getBehavior()==behaviour);
+                }
+                @Override public void describeTo(Description description) {
+                }
+            })); 
+            result = new Delegate() {
+                public Object processData(NodeWithBehavior.Behavior mess) {
+                    latch.countDown();
+                    return DataProcessor.VOID;
+                }
+            };
+        }};
+        DataProcessorFacade facade = new DataProcessorFacadeConfig("dp", node, dp, executor, logger).build();
+        node.setBehavior(behaviour);
+        node.requestBehavior(facade);
+        latch.await(1, TimeUnit.SECONDS);
+    }    
 }

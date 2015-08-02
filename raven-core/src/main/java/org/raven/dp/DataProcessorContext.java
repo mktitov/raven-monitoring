@@ -36,7 +36,7 @@ public interface DataProcessorContext {
     public void unbecome() throws UnbecomeFailureException;
     public void forward(DataProcessorFacade facade);
     public void forward(DataProcessorFacade facade, Object message);
-    public void unhandled();
+//    public void unhandled();
     public DataProcessorFacade getParent();
     public DataProcessorFacade addChild(DataProcessorFacadeConfig config) throws NonUniqueNameException;
     public DataProcessorFacade getChild(String name);

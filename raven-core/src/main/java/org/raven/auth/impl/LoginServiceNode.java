@@ -24,15 +24,18 @@ import org.raven.auth.AuthenticationFailedException;
 import org.raven.auth.Authenticator;
 import org.raven.auth.IllegalLoginException;
 import org.raven.auth.IllegalPasswordException;
+import org.raven.auth.InvalidLoginUrlException;
 import org.raven.auth.IpFilter;
 import org.raven.auth.LoginException;
 import org.raven.auth.LoginListener;
+import org.raven.auth.LoginPathChecker;
 import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
 import org.raven.auth.UserContextConfig;
 import org.raven.auth.UserContextConfigurator;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.log.LogLevel;
+import org.raven.net.ResponseContext;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import static org.raven.util.NodeUtils.*;
@@ -95,6 +98,8 @@ public class LoginServiceNode extends BaseNode implements LoginService {
     protected void initChildren() {
         if (!hasNode(IpFiltersNode.NAME))
             addAndStart(new IpFiltersNode());
+        if (!hasNode(LoginPathsNode.NAME))
+            addAndStart(new LoginPathsNode());
         if (!hasNode(AuthenticatorsNode.NAME) && createAuthenticatorsNode())
             addAndStart(new AuthenticatorsNode());
         if (!hasNode(UserContextConfiguratorsNode.NAME))
@@ -177,8 +182,10 @@ public class LoginServiceNode extends BaseNode implements LoginService {
         return false;
     }
     
-    public UserContext login(String login, String password, String ip) throws LoginException {
+    public UserContext login(String login, String password, String ip, ResponseContext responseContext) throws LoginException {
         try {
+            if (!isLoginAllowedFromPath(responseContext))
+                throw new InvalidLoginUrlException();
             if (login==null || login.trim().isEmpty())
                 throw new IllegalLoginException();
             if (password==null || password.trim().isEmpty())
@@ -206,6 +213,11 @@ public class LoginServiceNode extends BaseNode implements LoginService {
                 getLogger().error(mess, e);
             throw new LoginException(mess, e);
         }
+    }
+    
+    private boolean isLoginAllowedFromPath(ResponseContext responceContext) {
+        LoginPathChecker loginPathChecker  = (LoginPathChecker) getNode(LoginPathsNode.NAME);
+        return loginPathChecker==null? true : loginPathChecker.isLoginAllowedFromPath(responceContext);
     }
     
     private Node getNodeOrThrowEx(String name) throws Exception {

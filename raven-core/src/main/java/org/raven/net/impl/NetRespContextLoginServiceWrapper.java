@@ -21,6 +21,7 @@ import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
 import org.raven.net.Authentication;
 import org.raven.net.NetworkResponseContext;
+import org.raven.net.ResponseContext;
 
 /**
  *
@@ -33,7 +34,7 @@ public class NetRespContextLoginServiceWrapper implements LoginService {
         this.respContext = respContext;
     }
 
-    public UserContext login(String username, String password, String ip) throws LoginException {
+    public UserContext login(String username, String password, String ip, ResponseContext responseContext) throws LoginException {
         Authentication auth = respContext.getAuthentication();
         if (auth==null || (auth.getUser().equals(username) && auth.getPassword().equals(password)))
             return new NetRespContextUserContext(respContext, username, ip);

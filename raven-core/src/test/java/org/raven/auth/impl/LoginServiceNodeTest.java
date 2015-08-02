@@ -15,20 +15,29 @@
  */
 package org.raven.auth.impl;
 
+import mockit.Expectations;
+import mockit.Mocked;
+import mockit.integration.junit4.JMockit;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Before;
+import org.junit.runner.RunWith;
 import org.raven.auth.AuthenticationFailedException;
 import org.raven.auth.IllegalLoginException;
 import org.raven.auth.IllegalPasswordException;
+import org.raven.auth.InvalidLoginUrlException;
 import org.raven.auth.LoginException;
+import org.raven.auth.LoginPathChecker;
+import org.raven.net.ResponseContext;
 import org.raven.test.RavenCoreTestCase;
 import org.raven.tree.Node;
+import org.raven.tree.NodeError;
 
 /**
  *
  * @author Mikhail Titov
  */
+@RunWith(JMockit.class)
 public class LoginServiceNodeTest extends RavenCoreTestCase {
     
     private LoginServiceNode loginService;
@@ -44,6 +53,7 @@ public class LoginServiceNodeTest extends RavenCoreTestCase {
     @Test
     public void structureTest() {
         checkNode(loginService, IpFiltersNode.NAME);
+        checkNode(loginService, LoginPathsNode.NAME);
         checkNode(loginService, AuthenticatorsNode.NAME);
         checkNode(loginService, UserContextConfiguratorsNode.NAME);
         checkNode(loginService, ResourcesListNode.NAME);
@@ -53,39 +63,39 @@ public class LoginServiceNodeTest extends RavenCoreTestCase {
     
     @Test(expected=IllegalLoginException.class)
     public void authNullLoginTest() throws LoginException {
-        loginService.login(null, "pwd", "host");
+        loginService.login(null, "pwd", "host", null);
     }
     
     @Test(expected=IllegalLoginException.class)
     public void authEmptyLoginTest() throws LoginException {
-        loginService.login(" ", "pwd", "host");
+        loginService.login(" ", "pwd", "host", null);
     }
     
     @Test(expected=IllegalPasswordException.class)
     public void authNullPasswordTest() throws LoginException {
-        loginService.login("test", null, "host");
+        loginService.login("test", null, "host", null);
     }
     
     @Test(expected=IllegalPasswordException.class)
     public void authEmptyPasswordTest() throws LoginException {
-        loginService.login("test", " ", "host");
+        loginService.login("test", " ", "host", null);
     }
     
     @Test(expected=AuthenticationFailedException.class)
     public void authFailTest() throws LoginException {
-        loginService.login("test", "pwd", "host");
+        loginService.login("test", "pwd", "host", null);
     }
     
     @Test(expected=AuthenticationFailedException.class)
     public void authFail2Test() throws LoginException {
         addAuthenticator(new TestAuthenticator("auth1", false));
-        loginService.login("test", "pwd", "host");
+        loginService.login("test", "pwd", "host", null);
     }
     
     @Test
     public void successAuthTest() throws LoginException {
         addAuthenticator(new TestAuthenticator("auth1", true));
-        loginService.login("test", "pwd", "host");
+        loginService.login("test", "pwd", "host", null);
     }
     
     @Test
@@ -97,6 +107,27 @@ public class LoginServiceNodeTest extends RavenCoreTestCase {
     public void isLoginAllowedFromIp_withFilter() {
         addIpFilter(new AllowAnyIPs(), "allow any");
         assertTrue(loginService.isLoginAllowedFromIp("1.1.1.1"));
+    }
+    
+    @Test(expected = InvalidLoginUrlException.class)
+    public void loginPathCheck(
+            final @Mocked ResponseContext responseContext,
+            final @Mocked LoginPathChecker checker
+    ) throws Exception 
+    {
+        new Expectations() {{
+            checker.isLoginAllowedFromPath(responseContext); result = false;
+        }};
+        addLoginPathChecker(checker);
+        loginService.login("test", "pwd", "host", responseContext);
+    }
+
+    private void addLoginPathChecker(final LoginPathChecker checker) throws NodeError {
+        TestLoginPathChecker checkerNode = new TestLoginPathChecker();
+        checkerNode.setName("test checker");
+        loginService.getNode(LoginPathsNode.NAME).addAndSaveChildren(checkerNode);
+        checkerNode.setChecker(checker);
+        assertTrue(checkerNode.start());
     }
     
     private void checkNode(Node owner, String child) {

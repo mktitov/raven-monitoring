@@ -37,8 +37,10 @@ public class DataProcessorFacadeConfig<T> {
     private int maxMessageProcessTries = 1;
     private int maxExecuteMessageDispatcherTies = 1;
     private long defaultStopTimeout = 1000;
+    private long defaultAskTimeout = 1000;
     private DataProcessorFacade unhandledMessageProcessor;
     private DataProcessorFacade parent;
+    private int maxMessagesPerCycle = 32;
 //    private long defaultAskTimeout = 1000;
 
     public DataProcessorFacadeConfig(String name, Node owner, DataProcessor<T> processor, ExecutorService executor, LoggerHelper logger) {
@@ -55,6 +57,11 @@ public class DataProcessorFacadeConfig<T> {
 //        this.executor = executor;
 //        this.logger = logger;
 //    }
+    
+    public DataProcessorFacadeConfig<T> withMaxMessagesPerCycle(int maxMessagesPerCycle) {
+        this.maxMessagesPerCycle = maxMessagesPerCycle;
+        return this;
+    }
 
     public DataProcessorFacadeConfig<T> withParent(DataProcessorFacade parent) {
         this.parent = parent;
@@ -86,6 +93,11 @@ public class DataProcessorFacadeConfig<T> {
         return this;
     }
     
+    private DataProcessorFacadeConfig<T> withDefaultAskTimeout(long defaultAskTimeout) {
+        this.defaultAskTimeout = defaultAskTimeout;
+        return this;
+    }
+    
     public DataProcessorFacadeConfig<T> withUnhandledMessageProcessor(DataProcessorFacade unhandledMessageProcessor) {
         this.unhandledMessageProcessor = unhandledMessageProcessor;
         return this;
@@ -106,6 +118,10 @@ public class DataProcessorFacadeConfig<T> {
 
     DataProcessorFacade getParent() {
         return parent;
+    }
+
+    public int getMaxMessagesPerCycle() {
+        return maxMessagesPerCycle;
     }
     
     public DataProcessor<T> getProcessor() {
@@ -134,6 +150,10 @@ public class DataProcessorFacadeConfig<T> {
 
     public long getDefaultStopTimeout() {
         return defaultStopTimeout;
+    }
+
+    public long getDefaultAskTimeout() {
+        return defaultAskTimeout;
     }
 
     public DataProcessorFacade getUnhandledMessageProcessor() {

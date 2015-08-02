@@ -16,7 +16,7 @@
 
 package org.raven.tree;
 
-import akka.actor.ActorRef;
+import org.raven.dp.DataProcessorFacade;
 
 /**
  * Node with behavior realized using actor
@@ -26,15 +26,15 @@ public interface NodeWithBehavior extends Node {
     /**
      * Returns the reference to the behavior actor
      */
-    public ActorRef getBehavior();
+    public DataProcessorFacade getBehavior();
     /**
      * Methods MUST send to the <b>requester</b> one of the messages: {@link Behavior} or {@link BehaviorUnavailable}
      * @param requester 
      */
-    public void requestBehavior(ActorRef requester);
+    public void requestBehavior(DataProcessorFacade requester);
     
     public interface Behavior {
-        public ActorRef getBehavior();
+        public DataProcessorFacade getBehavior();
     }
     
     public interface BehaviorUnavailable {

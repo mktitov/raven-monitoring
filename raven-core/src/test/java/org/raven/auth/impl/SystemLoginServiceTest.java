@@ -61,7 +61,7 @@ public class SystemLoginServiceTest extends RavenCoreTestCase {
     @Test
     public void rootLoginTest() throws LoginException {
         assertTrue(service.isLoginAllowedFromIp("1.1.1.1"));
-        UserContext user = service.login(RootUserAuthenticator.ROOT_USER_NAME, "12345", "host");
+        UserContext user = service.login(RootUserAuthenticator.ROOT_USER_NAME, "12345", "host", null);
         assertNotNull(user);
         assertEquals(RootUserAuthenticator.ROOT_USER_NAME, user.getLogin());
         assertTrue(user.isAdmin());

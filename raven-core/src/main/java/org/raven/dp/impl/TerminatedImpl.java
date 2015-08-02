@@ -38,4 +38,9 @@ public class TerminatedImpl implements Terminated {
     public boolean isSuccessfullyStopped() {
         return successfullyStopped;
     }
+
+    @Override
+    public String toString() {
+        return "DATA_PROCESSOR_TERMINATED";
+    }
 }

@@ -22,6 +22,7 @@ import org.raven.auth.AuthProvider;
 import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
 import org.raven.conf.Configurator;
+import org.raven.net.ResponseContext;
 import org.slf4j.Logger;
 
 /**
@@ -56,7 +57,7 @@ public class AuthServiceImpl implements LoginService
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public UserContext login(String username, String password, String host)
+    public UserContext login(String username, String password, String host, ResponseContext responseContext)
     {
         if (logger.isInfoEnabled())
             logger.info("Authenticating user ({})", username);

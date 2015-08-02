@@ -16,14 +16,11 @@
 
 package org.raven.tree.impl;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicReference;
 import org.raven.annotations.Parameter;
-import org.raven.log.LogLevel;
-import org.raven.sched.ActorSystemProvider;
-import org.raven.tree.NodeException;
+import org.raven.dp.DataProcessorFacade;
+import org.raven.sched.ExecutorService;
 import org.raven.tree.NodeWithBehavior;
 import org.weda.annotations.constraints.NotNull;
 
@@ -35,58 +32,41 @@ public class BaseNodeWithBehavior extends BaseNode implements NodeWithBehavior {
     public final static BehaviorUnavailable BEHAVIOR_UNAVAILABLE = new BehaviorUnavailableImpl();
     
     @NotNull @Parameter
-    private ActorSystemProvider actorSystemProvider;
+    private ExecutorService executor;
     
-    protected AtomicReference<ActorRef> behaviorActor;
+    protected AtomicReference<DataProcessorFacade> behavior;
 
     @Override
     protected void doInit() throws Exception {
         super.doInit();
-        behaviorActor = new AtomicReference<ActorRef>();
+        behavior = new AtomicReference<>();
     }
 
-    public ActorRef getBehavior() {
-        return behaviorActor.get();
+    public DataProcessorFacade getBehavior() {
+        return behavior.get();
     }
 
-    public void requestBehavior(ActorRef requester) {
-        final ActorRef actor = behaviorActor.get();
-        if (actor==null)
-            requester.tell(BEHAVIOR_UNAVAILABLE, null);
-        else
-            requester.tell(new BehaviorImpl(actor), actor);
+    public void requestBehavior(DataProcessorFacade requester) {
+        final DataProcessorFacade actor = behavior.get();
+        requester.send(actor==null? BEHAVIOR_UNAVAILABLE : new BehaviorImpl(actor));
     }
     
-    /**
-     * Returns actor system or null
-     */
-    protected ActorSystem getActorSystem() { 
-        ActorSystemProvider _provider = actorSystemProvider;
-        try {
-            return _provider!=null? _provider.getActorSystem() : null;
-        } catch (NodeException e) {
-            if (isLogLevelEnabled(LogLevel.ERROR))
-                getLogger().error("Error getting actor system", e);
-            return null;
-        }
+    public ExecutorService getExecutor() {
+        return executor;
     }
 
-    public ActorSystemProvider getActorSystemProvider() {
-        return actorSystemProvider;
+    public void setExecutor(ExecutorService executor) {
+        this.executor = executor;
     }
 
-    public void setActorSystemProvider(ActorSystemProvider actorSystemProvider) {
-        this.actorSystemProvider = actorSystemProvider;
-    }
-    
     private static class BehaviorImpl implements Behavior, Serializable {
-        private final ActorRef behavior;
+        private final DataProcessorFacade behavior;
 
-        public BehaviorImpl(ActorRef behavior) {
+        public BehaviorImpl(DataProcessorFacade behavior) {
             this.behavior = behavior;
         }
 
-        public ActorRef getBehavior() {
+        public DataProcessorFacade getBehavior() {
             return behavior;
         }
     }

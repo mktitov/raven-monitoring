@@ -15,25 +15,37 @@
  */
 package org.raven.sched.impl;
 
+import java.util.concurrent.ForkJoinTask;
 import org.raven.log.LogLevel;
 import org.raven.sched.ExecutorTask;
 import org.raven.sched.ExecutorTaskHolder;
+import org.raven.sched.ForkJoinTaskSupport;
 import org.raven.sched.TaskExecutionListener;
 
 /**
  *
  * @author Mikhail Titov
  */
-public abstract class AbstractExecutorTask implements ExecutorTask {
+public abstract class AbstractExecutorTask implements ExecutorTask, ForkJoinTaskSupport {
+//public abstract class AbstractExecutorTask implements ExecutorTask {
     private TaskExecutionListener statListener;
     private long executionStart;
     private long scheduleTime;
     private Thread thread;
+    
+    private volatile FJTask fjTask;
 
     @Override
     public void init(TaskExecutionListener statListener) {
         this.statListener = statListener;
         this.scheduleTime = System.nanoTime();
+    }
+
+    @Override
+    public ForkJoinTask getForJoinTask() {
+        if (fjTask==null)
+            fjTask = new FJTask();
+        return fjTask.getAndSetNext();
     }
 
     @Override
@@ -55,7 +67,23 @@ public abstract class AbstractExecutorTask implements ExecutorTask {
     public Thread getThread() {
         return thread;
     }
-    
+
+//    @Override
+//    public Object getRawResult() {
+//        return null;
+//    }
+//
+//    @Override
+//    protected void setRawResult(Object value) {
+//        
+//    }
+//
+//    @Override
+//    protected boolean exec() {
+//        run();
+//        return true;
+//    }
+//    
     @Override
     public void run() {
         final TaskExecutionListener _listener = statListener;
@@ -81,5 +109,61 @@ public abstract class AbstractExecutorTask implements ExecutorTask {
     }
 
     public abstract void doRun() throws Exception;
-    
+ 
+    private class FJTask extends ForkJoinTask {
+        private final FJTask next;
+        private volatile boolean isNew = true;
+
+        public FJTask() {
+            next = new FJTask(new FJTask(this));
+        }
+        
+        private FJTask prepareNext(final FJTask stopper) {
+//            if (isNew) return this;
+            if (isNew || isDone()) {
+//                reinitialize();
+                return this;
+            } else {
+                if (next==stopper) {
+                    join();
+                    return this;
+                } else 
+                    return next.prepareNext(stopper);
+            }
+        }
+        
+        public FJTask(FJTask next) {
+            this.next = next;
+        }
+
+        @Override
+        public Object getRawResult() {
+            return null;
+        }
+
+        @Override
+        protected void setRawResult(Object value) {
+        }
+
+        @Override
+        protected boolean exec() {
+            isNew = false;
+            run();
+            return true;
+        }
+
+        private ForkJoinTask getAndSetNext() {
+            fjTask = next;
+//            if (fjTask==null)
+//                throw new RavenRuntimeException("Error assigning fork join task to task: "+this);
+            if (!isNew) {
+                if (!isDone()) {
+//                    System.out.println(" >>>> JOIN <<<<");
+                    join();
+                }
+                reinitialize();
+            }
+            return this;
+        }
+    }
 }

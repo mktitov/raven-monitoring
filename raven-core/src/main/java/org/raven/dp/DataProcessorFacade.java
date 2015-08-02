@@ -15,6 +15,7 @@
  */
 package org.raven.dp;
 
+import java.util.concurrent.TimeUnit;
 import org.raven.dp.impl.DataProcessorFacadeConfig;
 import org.raven.ds.TimeoutMessageSelector;
 import org.raven.sched.ExecutorServiceException;
@@ -54,7 +55,7 @@ public interface DataProcessorFacade {
      * Sends stop message to the data processor with timeout passed in the parameter.
      * If processor will not stop after this timeout then data processor will be terminated.
      */
-    public RavenFuture askStop(long timeoutMs);
+    public RavenFuture askStop(long timeout, TimeUnit timeoutTimeUnit);
     /**
      * Returns the future that watches for data processor termination
      */
@@ -125,8 +126,17 @@ public interface DataProcessorFacade {
      */
     public void setReceiveTimeout(long timeout, TimeoutMessageSelector selector) throws ExecutorServiceException;
     public void resetReceiveTimeout();
+    
     /**
-     * Sends message to data processor and return the future that's wait the response for this message
+     * Sends message to data processor and return the future that's wait the response for this message with timeout passed
+     * in the parameter timeout
+     * @param message message that will be sent to the data processor
+     * @param timeout timeout for waiting message
+     * @param timeoutTimeUnit time unit for <b>timeout</b>
+     */
+    public RavenFuture ask(final Object message, final long timeout, final TimeUnit timeoutTimeUnit);
+    /**
+     * Sends message to data processor and return the future that's wait the response for this message with default ask timeout
      */
     public RavenFuture ask(Object message);
 }

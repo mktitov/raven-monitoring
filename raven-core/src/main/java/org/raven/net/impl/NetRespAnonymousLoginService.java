@@ -19,6 +19,7 @@ import org.raven.auth.AnonymousLoginService;
 import org.raven.auth.LoginException;
 import org.raven.auth.UserContext;
 import org.raven.auth.impl.AnonymousLoginServiceNode;
+import org.raven.net.ResponseContext;
 
 /**
  *
@@ -26,7 +27,7 @@ import org.raven.auth.impl.AnonymousLoginServiceNode;
  */
 public class NetRespAnonymousLoginService implements AnonymousLoginService {
 
-    public UserContext login(String username, String password, String ip) throws LoginException {
+    public UserContext login(String username, String password, String ip, ResponseContext responseContext) throws LoginException {
         return AnonymousLoginServiceNode.ANONYMOUS_USER;
     }
 

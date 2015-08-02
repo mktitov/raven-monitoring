@@ -558,7 +558,7 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
         checkForInvalid(loginService, "user_name", "invalid_pass", "1.1.1.1");
         checkForInvalid(loginService, null, "pass", "1.1.1.1");
         checkForInvalid(loginService, "user_name", null, "1.1.1.1");
-        UserContext user = loginService.login("user_name", "pass", null);
+        UserContext user = loginService.login("user_name", "pass", null, null);
         assertTrue(responseContext.isAccessGranted(user));
         mocks.verify();
     }
@@ -585,7 +585,7 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
         mocks.replay();
         ResponseContext responseContext = responseService.getResponseContext(request1);
         LoginService loginService = responseContext.getLoginService();
-        UserContext user = loginService.login("any_user", "any_pass", "any_ip");
+        UserContext user = loginService.login("any_user", "any_pass", "any_ip", null);
         assertTrue(responseContext.isAccessGranted(user));
         
         context.setNeedsAuthentication(true);
@@ -594,7 +594,7 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
         
         responseContext = responseService.getResponseContext(request2);
         loginService = responseContext.getLoginService();
-        user = loginService.login("user_name", "pass", "1.1.1.2");
+        user = loginService.login("user_name", "pass", "1.1.1.2", null);
         assertTrue(responseContext.isAccessGranted(user));
         
         try {
@@ -750,7 +750,7 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
 
     private Response getResponse(Request request, String remoteIp) throws Exception {
         ResponseContext responseContext = responseService.getResponseContext(request);
-        UserContext user = responseContext.getLoginService().login("test", "test_pwd", remoteIp);
+        UserContext user = responseContext.getLoginService().login("test", "test_pwd", remoteIp, null);
         assertTrue(responseContext.isAccessGranted(user));
         Response resp = responseContext.getResponse(user);
         return resp;
@@ -760,7 +760,7 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
             throws LoginException 
     {
         try {
-            loginService.login(user, pass, remoteIp);
+            loginService.login(user, pass, remoteIp, null);
             fail();
         } catch (AuthenticationFailedException ex) {}
     } 

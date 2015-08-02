@@ -18,6 +18,7 @@ package org.raven.auth.impl;
 import org.raven.auth.AnonymousLoginService;
 import org.raven.auth.LoginException;
 import org.raven.auth.UserContext;
+import org.raven.net.ResponseContext;
 
 /**
  *
@@ -38,7 +39,7 @@ public class AnonymousLoginServiceNode extends LoginServiceNode implements Anony
     }
 
     @Override
-    public UserContext login(String login, String password, String ip) throws LoginException {
+    public UserContext login(String login, String password, String ip, ResponseContext responseContext) throws LoginException {
 //        throw new AuthenticationFailedException(login, NAME);
         return ANONYMOUS_USER;
     }
