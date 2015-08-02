@@ -88,7 +88,7 @@ public class LoginFilter implements Filter {
             if (elems.length==2) {
                 try {
                     UserContext user = loginManager.getLoginService(SystemLoginService.NAME).login(
-                        elems[0], elems[1], request.getRemoteAddr());
+                        elems[0], elems[1], request.getRemoteAddr(), null);
                     if (user.getAccessForNode(tree.getRootNode())==AccessControl.NONE) {
                         response.sendError(HttpServletResponse.SC_FORBIDDEN);
                         return false;

@@ -55,6 +55,7 @@ import org.raven.audit.AuditRecord;
 import org.raven.audit.Auditor;
 import org.raven.auth.AnonymousLoginService;
 import org.raven.auth.AuthenticationFailedException;
+import org.raven.auth.InvalidLoginUrlException;
 import org.raven.auth.LoginException;
 import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
@@ -177,7 +178,7 @@ public class NetworkResponseServlet extends HttpServlet  {
         if (!loginService.isLoginAllowedFromIp(request.getRemoteAddr()))
             throw new AccessDeniedException();
         if (loginService instanceof AnonymousLoginService)
-            return responseContext.getLoginService().login(null, null, null);        
+            return responseContext.getLoginService().login(null, null, null, null);        
         UserContext userContext = null;
 //        String userContextAttrName = "sri_user_context_"+loginService.getId();
         String userContextAttrName = UserContextService.USER_CONTEXT_SESSION_ATTR+"_"+loginService.getId();
@@ -215,11 +216,11 @@ public class NetworkResponseServlet extends HttpServlet  {
                 else {
                     final String login = userAndPath.substring(0, colonPos);
                     final String pwd = userAndPath.substring(colonPos+1);
-                    userContext = responseContext.getLoginService().login(login, pwd, request.getRemoteAddr());
+                    userContext = responseContext.getLoginService().login(login, pwd, request.getRemoteAddr(), responseContext);
                 }
             }
         } else if (responseContext.getResponseBuilderLogger().isDebugEnabled())
-            responseContext.getResponseBuilderLogger().debug("User ({}) already logged in. Skiping auth.", userContext);
+            responseContext.getResponseBuilderLogger().debug("User ({}) already logged in. Skipping auth.", userContext);
         if (responseContext.isAccessGranted(userContext)) {
             if (created && responseContext.isSessionAllowed()) {
                 if (responseContext.getResponseBuilderLogger().isDebugEnabled())
@@ -637,6 +638,8 @@ public class NetworkResponseServlet extends HttpServlet  {
                 sendError(ctx, HttpServletResponse.SC_FORBIDDEN);
             } else if (e instanceof RequiredParameterMissedException || e instanceof NetworkResponseServlet.BadRequestException) {
                 sendError(ctx, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            } else if (e instanceof InvalidLoginUrlException) {
+                sendError(ctx, HttpServletResponse.SC_FORBIDDEN, e.getMessage());
             } else if (e instanceof UnauthoriedException || e instanceof AuthenticationFailedException) {
                 isWarn = !(e instanceof AuthorizationNeededException);
                 ResponseServiceNode service = ctx.responseContext.getServiceNode();
