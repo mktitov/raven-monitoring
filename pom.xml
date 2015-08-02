@@ -247,6 +247,7 @@
                     <version>2.17</version>
                     <configuration>
                         <forkMode>always</forkMode>
+                        <argLine>-server -XX:+UseNUMA -XX:+UseCondCardMark -XX:-UseBiasedLocking -Xms1024M -Xmx2048M -Xss1M -XX:MaxPermSize=128m -XX:+UseParallelGC</argLine>
                         <includes>
                             <include>**/*Test.java</include>
                         </includes>
@@ -316,7 +317,7 @@
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId> <!-- Use 'netty-all' for 4.0 or above -->
-                <version>4.0.20.Final</version>
+                <version>4.0.27.Final</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
