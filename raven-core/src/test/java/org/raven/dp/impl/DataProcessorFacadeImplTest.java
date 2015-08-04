@@ -77,7 +77,7 @@ public class DataProcessorFacadeImplTest extends RavenCoreTestCase {
     
     @Before
     public void prepare() {
-        testsNode.setLogLevel(LogLevel.TRACE);
+        testsNode.setLogLevel(LogLevel.TRACE);        
 //        logger = new LoggerHelper(testsNode, null);
     }
     

@@ -82,7 +82,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         this.name = config.getFacadeName();
         this.owner = config.getOwner();
         this.parent = config.getParent();
-        this.path = (parent!=null?parent.getPath()+"/":"")+name;
+        this.path = (parent!=null? parent.getPath()+"/" : "")+name;
         this.processor = config.getProcessor();
         this.executor = config.getExecutor();
         this.queue = config.getQueue()!=null? config.getQueue() : new ConcurrentLinkedQueue();
@@ -163,7 +163,8 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
                 if (_watcherService!=null)
                     return _watcherService;
                 watcherService = new DataProcessorFacadeConfig(
-                                "Death Watcher", owner, new WatcherDataProcessor(), executor, origLogger
+                                "Death Watcher", owner, new WatcherDataProcessor(), executor, 
+                                new LoggerHelper(logger, "<-> ")
                             ).build();
                 if (isTerminated())
                     sendTerminateToWatcherService();
@@ -201,28 +202,23 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         if (!terminated.get() && !stopping.get() && !(message instanceof StopFuture))
             return true;
         else { 
-//            boolean res = false;
             if (terminated.get() || stopping.get()) {
                 if (message instanceof StopFuture)
                     ((StopFuture)message).cancel(true);
                 if (!terminated.get() && message instanceof ChildTerminated)
                     return true;
-//                return false;
             } else  {
                 if (!stopping.compareAndSet(false, true)) {
                     ((StopFuture)message).cancel(true);
-//                    return false;
                 } else {
                     if (logger.isDebugEnabled()) 
                         logger.debug("Stopping...");
                     return true;
                 }
-//                return true;
             }
-            if (logger.isErrorEnabled())
-                logger.error("Message sending error. Message not queued because of processor is stopping. Message: {}", message);
-            return false;
-            
+            if (logger.isDebugEnabled())
+                logger.debug("Message sending error. Message not queued because of processor is stopping. Message: {}", message);
+            return false;            
         }
     }
 
@@ -370,7 +366,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         else {
             final RavenFutureImpl future = new RavenFutureImpl(executor);
             final AskDataProcessor ask = new AskDataProcessor(message, timeoutTimeUnit.toMillis(timeout), future);
-            new DataProcessorFacadeConfig("ask", owner, ask, executor, origLogger).build();        
+            new DataProcessorFacadeConfig("ask <"+message+">", owner, ask, executor, new LoggerHelper(logger, "<-> ")).build();        
             return future;
         }
     }
@@ -389,7 +385,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     public RavenFuture askStop(long timeout, TimeUnit timeoutTimeUnit) {
         final RavenFutureImpl future = new RavenFutureImpl(executor);
         final StopDataProcessor ask = new StopDataProcessor(timeoutTimeUnit.toMillis(timeout), future);
-        new DataProcessorFacadeConfig("ask stop", owner, ask, executor, origLogger).build();
+        new DataProcessorFacadeConfig("ask stop", owner, ask, executor, new LoggerHelper(logger, "<-> ")).build();
         return future;
 //        AskFuture future = new AskFuture(STOP_MESSAGE, executor);
 //        StopFuture stopFuture = new StopFuture();
@@ -901,18 +897,18 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         }
     }
     
-    private class StopOnTimeoutTask extends AbstractTask {
-
-        public StopOnTimeoutTask(Node taskNode, String status) {
-            super(taskNode, status);
-        }
-
-        @Override
-        public void doRun() throws Exception {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-        
-    }
+//    private class StopOnTimeoutTask extends AbstractTask {
+//
+//        public StopOnTimeoutTask(Node taskNode, String status) {
+//            super(taskNode, status);
+//        }
+//
+//        @Override
+//        public void doRun() throws Exception {
+//            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+//        }
+//        
+//    }
     
     private class StopDataProcessor extends AbstractDataProcessorLogic {
         private final long timeout;
