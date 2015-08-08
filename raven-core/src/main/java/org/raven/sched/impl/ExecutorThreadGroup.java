@@ -43,7 +43,7 @@ public class ExecutorThreadGroup extends ThreadGroup implements ExecutorThreadFa
         if (size==0)
             return Collections.EMPTY_LIST;
         else {
-            ArrayList<ExecutorTask> tasks = new ArrayList<ExecutorTask>(size);
+            ArrayList<ExecutorTask> tasks = new ArrayList<>(size);
             Thread[] threads = new Thread[size];
             int total = enumerate(threads);
             for (int i=0; i<total; ++i) {

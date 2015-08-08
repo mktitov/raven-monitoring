@@ -120,7 +120,7 @@ public class ExecutorServiceNode extends BaseNode
         rejectedTasks = new AtomicLong();
         executedTasks = new OperationStatistic();
         taskIdCounter = new AtomicLong();
-        managedTasks = new HashSet<Node>();
+        managedTasks = new HashSet<>();
         waitTimeLock = new ReentrantLock();
     }
 
@@ -129,8 +129,8 @@ public class ExecutorServiceNode extends BaseNode
         super.doStart();
         resetStatFields();
         Integer capacity = maximumQueueSize;
-        delayedTasks = new DelayQueue<DelayedTaskWrapper>();
-        managedTasks = new HashSet<Node>();
+        delayedTasks = new DelayQueue<>();
+        managedTasks = new HashSet<>();
         taskLogger = new LoggerHelper(this, "Task executor. ");        
         if (type==Type.THREADED_POOL) {
             if (capacity==null)
