@@ -142,7 +142,7 @@ public class RavenFutureImpl<V> implements RavenFuture<V> {
         return state.get() > COMPUTING;
     }
     
-    public void setError(Throwable error) {
+    protected void setError(Throwable error) {
         if (state.compareAndSet(COMPUTING, ERROR)) {
             this.error = error;
             latch.countDown();
@@ -150,7 +150,7 @@ public class RavenFutureImpl<V> implements RavenFuture<V> {
         }
     }
     
-    public void set(V value) {
+    protected void set(V value) {
         if (state.compareAndSet(COMPUTING, DONE)) {
             result = value;
             latch.countDown();
