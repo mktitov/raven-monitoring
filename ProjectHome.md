@@ -1,0 +1,1 @@
+Program for service and equipment monitoring
