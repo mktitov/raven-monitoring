@@ -131,7 +131,7 @@ public class RecordImpl implements Record
     {
         if (values==null) return;
 
-        if (values!=null && !values.isEmpty())
+        if (!values.isEmpty())
             for (Map.Entry<String, Object> entry: values.entrySet())
                 try {
                     setValue(entry.getKey(), entry.getValue());

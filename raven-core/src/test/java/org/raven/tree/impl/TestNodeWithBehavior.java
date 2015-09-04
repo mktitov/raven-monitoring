@@ -27,4 +27,9 @@ public class TestNodeWithBehavior extends BaseNodeWithBehavior {
     public void setBehavior(DataProcessorFacade behavior) {
         this.behavior.set(behavior);
     }
+
+    @Override
+    protected DataProcessorFacade createBehaviour() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

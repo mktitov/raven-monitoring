@@ -16,6 +16,7 @@
 package org.raven.dp.net.impl;
 
 import org.raven.annotations.NodeClass;
+import org.raven.dp.DataProcessorFacade;
 import org.raven.dp.impl.AbstractDataProcessorLogic;
 import org.raven.tree.impl.BaseNodeWithBehavior;
 
@@ -25,13 +26,18 @@ import org.raven.tree.impl.BaseNodeWithBehavior;
  */
 @NodeClass
 public class ConnectionManager extends BaseNodeWithBehavior {
+
+    @Override
+    protected DataProcessorFacade createBehaviour() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
     
     
     private static class ConnectionManagerDP extends AbstractDataProcessorLogic {
 
         @Override
         public Object processData(Object dataPackage) throws Exception {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            throw new UnsupportedOperationException("Not supported yet."); 
         }
         
     }
