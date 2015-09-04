@@ -96,7 +96,9 @@ public class Attr implements Comparable<Attr>
 		this.id = na.getId();
 		Registry registry = RavenRegistry.getRegistry();
 		ClassDescriptorRegistry classDsc = registry.getService(ClassDescriptorRegistry.class);
-		classDisplayName = classDsc.getClassDescriptor(na.getType()).getDisplayName();
+//		classDisplayName = classDsc.getClassDescriptor(na.getType()).getDisplayName();
+		classDisplayName = na.getType().getSimpleName();
+        
 		if(na.getParentAttribute()==null && na.getParameterName()==null) allowDelete = true;
         
 		expressionSupported = na.isExpression();
