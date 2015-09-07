@@ -66,14 +66,21 @@ public class XMLWriterTest extends RavenCoreTestCase
                 .append("Привет ")
                 .append("message:org.raven.tree.store.impl.TestMessages:worldMessage");
         attr.setDescriptionContainer(composer);
-        fileNode.addNodeAttribute(attr);
+        fileNode.addAttr(attr);
         attr.save();
 
         attr = new NodeAttributeImpl("attr2", String.class, null, null);
         attr.setOwner(fileNode);
         attr.init();
         attr.setTemplateExpression(true);
-        fileNode.addNodeAttribute(attr);
+        fileNode.addAttr(attr);
+        attr.save();
+        
+        attr = new NodeAttributeImpl("attr3", String.class, null, null);
+        attr.setOwner(fileNode);
+        attr.init();
+        fileNode.addAttr(attr);
+        attr.setValue("cdata<[CDATA[test]]>!");
         attr.save();
         
         writer.write(out, "UTF-8", node);
@@ -82,15 +89,15 @@ public class XMLWriterTest extends RavenCoreTestCase
         //check
         tree.remove(node);
         tree.reloadTree();
-        assertNull(tree.getRootNode().getChildren("node"));
+        assertNull(tree.getRootNode().getNode("node"));
         XMLReader reader = new XMLReader();
         reader.read(tree.getRootNode(), new FileInputStream("target/nodes.xml"));
 
-        node =  (ContainerNode) tree.getRootNode().getChildren("node");
+        node =  (ContainerNode) tree.getRootNode().getNode("node");
         assertNotNull(node);
         assertEquals(LogLevel.TRACE, node.getLogLevel());
 
-        fileNode = (FileNode) node.getChildren("fileNode");
+        fileNode = (FileNode) node.getNode("fileNode");
         assertNotNull(fileNode);
         assertEquals(fileNode.getFile().getFilename(), "hello.txt");
         InputStream fileData = fileNode.getFile().getDataStream();
@@ -98,7 +105,7 @@ public class XMLWriterTest extends RavenCoreTestCase
         String decodedData = IOUtils.toString(fileData, "UTF-8");
         assertEquals("Привет world", decodedData);
 
-        attr = fileNode.getNodeAttribute("attr1");
+        attr = fileNode.getAttr("attr1");
         assertNotNull(attr);
         assertEquals(String.class, attr.getType());
         assertTrue(attr.isRequired());
@@ -106,8 +113,12 @@ public class XMLWriterTest extends RavenCoreTestCase
         assertEquals("Привет world!", attr.getDescription());
         assertFalse(attr.isTemplateExpression());
 
-        attr = fileNode.getNodeAttribute("attr2");
+        attr = fileNode.getAttr("attr2");
         assertNotNull(attr);
         assertTrue(attr.isTemplateExpression());
+        
+        attr = fileNode.getAttr("attr3");
+        assertNotNull(attr);
+        assertEquals("cdata<[CDATA[test]]>!", attr.getValue());
     }
 }
