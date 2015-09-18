@@ -101,13 +101,15 @@ public class ApiUtils
     }
     //
     public static Object withHttpClient(String url, Closure closure) throws Exception {
-      HTTPBuilder builder = new HTTPBuilder(url);
-      try {
-          Object res = closure.call(builder);
-          return res;
-      } finally {
-          builder.shutdown();
-      }
+        HTTPBuilder builder = new HTTPBuilder(url);
+        builder.getClient().getParams().setParameter("http.connection.timeout", 10_000);
+        builder.getClient().getParams().setParameter("http.socket.timeout", 30_000);      
+        try {
+            Object res = closure.call(builder);
+        return res;
+        } finally {
+            builder.shutdown();
+        }
     }
     
     public static Object catchErrors(DataContext context, Node node, Closure block) throws Throwable {

@@ -46,7 +46,7 @@ public class RecordImpl implements Record
     private final RecordSchema schema;
     private final Map<String, Object> values;
     private final Map<String, RecordSchemaField> fields;
-    private Map<String, Object> tags;
+    private volatile Map<String, Object> tags;
 
     public RecordImpl(RecordSchema schema) throws RecordException {
         this.schema = schema;
@@ -149,24 +149,38 @@ public class RecordImpl implements Record
     {
         setValues(record.getValues());
     }
+    
+    private Map<String, Object> getOrCreateTags() {
+        Map<String, Object> _tags = tags;
+        if (_tags!=null)
+            return _tags;
+        else {
+            synchronized(this) {
+                _tags = tags;
+                if (_tags!=null)
+                   return _tags;
+                _tags = tags = new ConcurrentHashMap<>();
+                return _tags;
+            }
+        }
+    }
 
     public Object getTag(String tagName)
     {
-        return tags==null? null : tags.get(tagName);
+        return tags==null? null : getOrCreateTags().get(tagName);
     }
 
     public void setTag(String tagName, Object tag)
     {
-        if (tags==null)
-            tags = new HashMap<String, Object>();
-        tags.put(tagName, tag);
+//        if (tags==null)
+//            tags = new HashMap<String, Object>();
+        getOrCreateTags().put(tagName, tag);
     }
 
     public void removeTag(String tagName)
     {
-        if (tags!=null)
-        {
-            tags.remove(tagName);
+        if (tags!=null) {
+            getOrCreateTags().remove(tagName);
             if (tags.isEmpty())
                 tags = null;
         }
@@ -174,12 +188,12 @@ public class RecordImpl implements Record
 
     public boolean containsTag(String tagName)
     {
-        return tags==null? false : tags.containsKey(tagName);
+        return tags==null? false : getOrCreateTags().containsKey(tagName);
     }
 
     public Map<String, Object> getTags()
     {
-        return tags==null? Collections.EMPTY_MAP : tags;
+        return tags==null? Collections.EMPTY_MAP : getOrCreateTags();
     }
     
 //    private Object getFieldValue(String field) {
