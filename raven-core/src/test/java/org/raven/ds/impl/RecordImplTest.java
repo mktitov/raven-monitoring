@@ -254,6 +254,13 @@ public class RecordImplTest extends RavenCoreTestCase
         assertNull(rec.getTag("tag2"));
         assertSame(Collections.EMPTY_MAP, rec.getTags());
         
+        rec.setTag("tag3", null);
+        assertNull(rec.getTag("tag3"));
+        rec.setTag("tag3", "val");
+        assertEquals(rec.getTag("tag3"), "val");
+        rec.setTag("tag3", null);
+        assertNull(rec.getTag("tag3"));
+        
         verify(schema, field);
     }
     

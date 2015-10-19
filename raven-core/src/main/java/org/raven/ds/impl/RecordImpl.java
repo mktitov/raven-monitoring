@@ -174,7 +174,13 @@ public class RecordImpl implements Record
     {
 //        if (tags==null)
 //            tags = new HashMap<String, Object>();
-        getOrCreateTags().put(tagName, tag);
+        if (tags==null && tag==null)
+            return;
+        Map<String, Object> _tags = getOrCreateTags();
+        if (tag==null)
+            _tags.remove(tagName);
+        else
+            _tags.put(tagName, tag);
     }
 
     public void removeTag(String tagName)
