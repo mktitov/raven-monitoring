@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
 import javax.activation.DataSource;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
@@ -811,8 +812,8 @@ public class NetworkResponseServlet extends HttpServlet  {
     }
     
     protected static class RequestContext implements DataReceiver {
-        public final static long REQUEST_STREAM_WAIT_TIMEOUT = 5000;
-        public final static long RESPONSE_GENERATION_TIMEOUT = 30000;
+        public final static long REQUEST_STREAM_WAIT_TIMEOUT = 30000;
+        public final static long RESPONSE_GENERATION_TIMEOUT = 300000;
         private final static AtomicLong requestId = new AtomicLong(0);
         public final HttpServletRequest request;
         public final HttpServletResponse response;
@@ -838,7 +839,7 @@ public class NetworkResponseServlet extends HttpServlet  {
         public volatile long redBytes = 0;
         public volatile AtomicBoolean dataStreamClosed = new AtomicBoolean();
 //        public final Atomic
-        private final AtomicReference<CometEvent> readProcessed = new AtomicReference<CometEvent>();
+        private final AtomicBoolean readProcessed = new AtomicBoolean();
         private final AtomicBoolean writeProcessed = new AtomicBoolean();
         private final AtomicBoolean closed = new AtomicBoolean();
         
@@ -870,30 +871,52 @@ public class NetworkResponseServlet extends HttpServlet  {
                 return true;
         }
                
-        public void readProcessed(CometEvent ev) throws IOException {
-            if (writeProcessed.get()) {
-                if (servletLogger.isDebugEnabled())
-                    servletLogger.debug("Closing channel");
-                ev.close();
-            }
-//                tryClose();
-        }
+//        public void readProcessed(CometEvent ev) throws IOException {
+//            if (writeProcessed.get()) {
+//                if (servletLogger.isDebugEnabled())
+//                    servletLogger.debug("Closing channel");
+//                ev.close();
+//            }
+////                tryClose();
+//        }
         
         public boolean isWriteProcessed() {
             return writeProcessed.get();
         }
         
-        public void writeProcessed() {
-            writeProcessed.set(true);
-        }              
+        public void writeProcessed(final CometEvent ev) {
+            if (writeProcessed.compareAndSet(false, true)) {
+                if (servletLogger.isDebugEnabled())
+                    servletLogger.debug("Write processed. Trying to close channel");
+                tryToCloseChannelQuietly(ev);
+            }
+        }
+        
+        public void readProcessed(final CometEvent ev) {
+            if (readProcessed.compareAndSet(false, true)) {
+                if (servletLogger.isDebugEnabled())
+                    servletLogger.debug("Read processed. Trying to close channel");
+                tryToCloseChannelQuietly(ev);                    
+            }
+        }
+        
+        private void tryToCloseChannelQuietly(final CometEvent ev) {
+            try {
+                tryToCloseChannel(ev);
+            } catch (Exception ex) {
+                if (servletLogger.isErrorEnabled()) {
+                    servletLogger.error("Error while closing channel", ex);
+                }
+            }
+        }
        
-        public void closeChannel(CometEvent ev) throws IOException, ServletException {
+        public void tryToCloseChannel(CometEvent ev) throws IOException, ServletException {
             if (closed.get()) {
                 if (servletLogger.isDebugEnabled())
                     servletLogger.debug("Can't close channel because of it already closed");
                 return;
             }
-            if (writeProcessed.get()) {
+            if (writeProcessed.get() && readProcessed.get()) {
                 waitForCloseTs = System.currentTimeMillis();
                 channelClosedTs = System.currentTimeMillis();
                 logStat();
@@ -904,27 +927,35 @@ public class NetworkResponseServlet extends HttpServlet  {
                 }
             } else {
                 final long curTime = System.currentTimeMillis();
-                if (   requestStreamRequestTime.get()>0 
-                       && curTime>requestStreamRequestTime.get()+REQUEST_STREAM_WAIT_TIMEOUT)
+                if (   !readProcessed.get()
+                    && requestStreamRequestTime.get()>0 
+                    && curTime>requestStreamRequestTime.get()+REQUEST_STREAM_WAIT_TIMEOUT)
                 {
                     if (servletLogger.isWarnEnabled())
                         servletLogger.warn("Request stream read timeout detected! Closing request stream");
                     requestStream.dataStreamClosed();
                 }
-                if (!responseGenerated && curTime > createdTs + RESPONSE_GENERATION_TIMEOUT) 
+                if (!writeProcessed.get() && !responseGenerated && curTime > createdTs + RESPONSE_GENERATION_TIMEOUT) 
                 {
                     if (servletLogger.isWarnEnabled())
                         servletLogger.warn("Response generating by builder timeout detected! Closing channel");
                     processChannelClose(ev);
-                } else if (responseManagingByBuilder) {
-                    if (servletLogger.isDebugEnabled())
-                        servletLogger.debug("Channel closed by client");
-                    processChannelClose(ev);
-                }
+                } 
             }
         }
+        
+        public void forceCloseChannel(final CometEvent e) throws IOException {
+            if (servletLogger.isDebugEnabled())
+                servletLogger.debug("Trying to force close channel");
+            if (requestStreamRequestTime.get()>0)
+                requestStream.dataStreamClosed();
+            if (responseManagingByBuilder) 
+                if (servletLogger.isDebugEnabled())
+                    servletLogger.debug("Channel closed by client");
+            processChannelClose(e);
+        }
 
-        private void processChannelClose(CometEvent ev) throws IOException {
+        private void processChannelClose(final CometEvent ev) throws IOException {
             if (closed.compareAndSet(false, true)) {
                 IOUtils.closeQuietly(ev.getHttpServletRequest().getInputStream());
                 ev.close();
@@ -964,8 +995,11 @@ public class NetworkResponseServlet extends HttpServlet  {
         }
 
         public void dataStreamClosed() {
-            if (dataStreamClosed.compareAndSet(false, true))
+            if (dataStreamClosed.compareAndSet(false, true)) {
+                if (servletLogger.isDebugEnabled())
+                    servletLogger.debug("Request stream closed");
                 requestStream.dataStreamClosed();
+            }
         }
 
         public Reader getRequestReader() throws IOException {
