@@ -178,10 +178,10 @@ public class DatabaseRecordReaderNode extends AbstractDataSource
                 bindingSupport.put(SESS_ATTRS_BINDING, context.getSessionAttributes());
                 bindingSupport.put(CONTEXT_BINDING, context);
                 RecordSchema _recordSchema = recordSchema;
-                List<DatabaseFilterElement> filterElements = 
-                        createFilterElements(_recordSchema, context.getSessionAttributes());
 
                 String _query = query;
+                List<DatabaseFilterElement> filterElements = 
+                        createFilterElements(_recordSchema, context.getSessionAttributes());
                 if (_query==null || _query.trim().isEmpty())
                     recordQuery = new DatabaseRecordQuery(
                             _recordSchema, databaseExtensionName, filterExtensionName, filterElements
