@@ -206,6 +206,7 @@
                         </execution>
                     </executions>
                     <configuration>
+                        <shortRevisionLength>5</shortRevisionLength>
                         <doCheck>false</doCheck>
                         <doUpdate>false</doUpdate>
                     </configuration>
