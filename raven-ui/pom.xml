@@ -11,8 +11,8 @@
   <description>Core module of the raven</description>
   <packaging>war</packaging>
   <scm>
-    <connection>scm:svn:https://raven-monitoring.googlecode.com/svn/trunk/raven-ui</connection>
-    <url>https://raven-monitoring.googlecode.com/svn/trunk/raven-ui</url>
+    <connection>scm:git:https://github.com/mktitov/raven-monitoring/tree/master/raven-ui</connection>
+    <url>https://github.com/mktitov/raven-monitoring/tree/master/raven-ui</url>
   </scm>
   <build>
     <plugins>
