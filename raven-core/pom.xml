@@ -9,8 +9,8 @@
   <artifactId>raven-core</artifactId>
   <name>raven-core</name>
   <scm>
-    <connection>scm:git:https://mktitov@github.com/mktitov/raven-monitoring.git</connection>
-    <url>https://github.com/mktitov/raven-monitoring/tree/master/raven-core</url>
+    <connection>scm:git:https://github.com/mktitov/raven-monitoring.git</connection>
+    <url>scm:git:https://github.com/mktitov/raven-monitoring.git</url>
   </scm>
   <description>Core module of the raven project</description>
   <reporting>
