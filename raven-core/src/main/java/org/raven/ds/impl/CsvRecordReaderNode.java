@@ -114,33 +114,38 @@ public class CsvRecordReaderNode extends AbstractSafeDataPipe
             return;
         }
         InputStream dataStream = converter.convert(InputStream.class, data, null);
-        Charset _charset = dataEncoding;
-        RecordSchemaNode _recordSchema = recordSchema;
-        boolean _stopOnError = getStopProcessingOnError();
-        DataConsumer _errorConsumer = getErrorConsumer();
-        bindingSupport.enableScriptExecution();
         try {
+            Charset _charset = dataEncoding;
+            RecordSchemaNode _recordSchema = recordSchema;
+            boolean _stopOnError = getStopProcessingOnError();
+            DataConsumer _errorConsumer = getErrorConsumer();
+            bindingSupport.enableScriptExecution();
             try {
-                LineIterator it = IOUtils.lineIterator(dataStream, _charset==null? null : _charset.name());
-                if (isLogLevelEnabled(LogLevel.TRACE))
-                    trace(String.format("Lines recieved from the node (%s)", dataSource.getPath()));
-                int linenum=1;
-                StrTokenizer tokenizer = new StrTokenizer();
-                tokenizer.setDelimiterString(delimiter);
-                tokenizer.setQuoteChar(quoteChar.charAt(0));
-                tokenizer.setEmptyTokenAsNull(true);
-                tokenizer.setIgnoreEmptyTokens(false);
-                while (it.hasNext()) 
-                    if (!processLine(it.nextLine(), linenum++, tokenizer, fieldsColumns, context, _recordSchema, _stopOnError, _errorConsumer))
-                        break;
-                sendDataAndError(null, context, _stopOnError, _errorConsumer);
-            } catch(Exception e) {
-                if (isLogLevelEnabled(LogLevel.ERROR))
-                    error(String.format("Error reading data from node (%s).", dataSource.getPath()), e);
+                try {
+                    LineIterator it = IOUtils.lineIterator(dataStream, _charset==null? null : _charset.name());
+                    if (isLogLevelEnabled(LogLevel.TRACE))
+                        trace(String.format("Lines recieved from the node (%s)", dataSource.getPath()));
+                    int linenum=1;
+                    StrTokenizer tokenizer = new StrTokenizer();
+                    tokenizer.setDelimiterString(delimiter);
+                    tokenizer.setQuoteChar(quoteChar.charAt(0));
+                    tokenizer.setEmptyTokenAsNull(true);
+                    tokenizer.setIgnoreEmptyTokens(false);
+                    while (it.hasNext()) 
+                        if (!processLine(it.nextLine(), linenum++, tokenizer, fieldsColumns, context, _recordSchema, _stopOnError, _errorConsumer))
+                            break;
+                    sendDataAndError(null, context, _stopOnError, _errorConsumer);
+                } catch(Exception e) {
+                    if (isLogLevelEnabled(LogLevel.ERROR))
+                        error(String.format("Error reading data from node (%s).", dataSource.getPath()), e);
+                }
+            } finally {
+                bindingSupport.reset();
+                processingTime.addAndGet(System.currentTimeMillis() - start);
             }
         } finally {
-            bindingSupport.reset();
-            processingTime.addAndGet(System.currentTimeMillis() - start);
+            if (dataStream!=null)
+                IOUtils.closeQuietly(dataStream);
         }
     }
 
