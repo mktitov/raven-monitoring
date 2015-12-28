@@ -44,6 +44,7 @@ public class GzipContentTransformer extends BaseNode implements ContentTransform
                     IOUtils.copy(source, gzip);
                     return out;
                 } finally {
+                    IOUtils.closeQuietly(source);
                     gzip.finish();                    
                 }
             }

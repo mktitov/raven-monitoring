@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.catalina.CometEvent;
 import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
 import org.raven.net.NetworkResponseServiceExeption;
@@ -44,12 +45,14 @@ public class CometResponseContext implements ResponseContext {
     private final ResponseContext responseContext;
     private final HttpServletResponse httpResponse;
     private final AtomicBoolean headersAdded = new AtomicBoolean();
+    private final CometEvent cometEvent;
 
-    public CometResponseContext(RequestContext requestContext)
+    public CometResponseContext(RequestContext requestContext, CometEvent event)
     {
         this.responseContext = requestContext.responseContext;
         this.httpResponse = requestContext.response;
         this.requestContext = requestContext;
+        this.cometEvent = event;
     }
     
     private void addHeadersToResponse() {
@@ -70,7 +73,7 @@ public class CometResponseContext implements ResponseContext {
     }
 
     public void closeChannel() throws IOException {
-        requestContext.writeProcessed();
+        requestContext.writeProcessed(cometEvent);
     }
     
     //other calls to ResponseContext delegating to normal response context   

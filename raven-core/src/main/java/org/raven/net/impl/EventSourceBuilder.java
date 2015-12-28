@@ -16,6 +16,7 @@
 
 package org.raven.net.impl;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
@@ -29,6 +30,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
@@ -269,6 +272,7 @@ public class EventSourceBuilder extends AbstractResponseBuilder
                         totalSendErrors.incrementAndGet();
                         if (logger.isErrorEnabled())
                             getLogger().error(String.format("Error writing to channel (%s). May be channel closed?. Unregistering...", channel), e);
+                        closeChannel(channel);
                         it.remove();
                     }
                 }
@@ -280,6 +284,15 @@ public class EventSourceBuilder extends AbstractResponseBuilder
             asyncUsageDetector.decrementAndGet();
             DataSourceHelper.executeContextCallbacks(this, context, data);
         }
+    }
+    
+    private void closeChannel(Channel channel) {
+        try {
+            channel.responseContext.closeChannel();
+        } catch (IOException ex) {
+            if (logger.isErrorEnabled())
+                logger.error(String.format("Error closing channel (%s)", channel), ex);
+        }        
     }
     
     private boolean selectChannel(boolean useSelector, Channel channel) throws Exception {

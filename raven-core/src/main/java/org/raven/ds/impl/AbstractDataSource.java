@@ -60,6 +60,8 @@ public abstract class AbstractDataSource extends BaseNode implements DataSource
     }
 
     public boolean getDataImmediate(DataConsumer dataConsumer, DataContext context) {
+        if (!isStarted())
+            return false;
         context.addSessionAttributes(dataConsumer instanceof Node? ((Node)dataConsumer).getAttrs() : null, false);
 
         if (!checkDataConsumer(dataConsumer, context.getSessionAttributes()))

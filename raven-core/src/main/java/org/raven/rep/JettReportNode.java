@@ -181,7 +181,7 @@ public class JettReportNode extends AbstractSafeDataPipe implements Viewable
                 transformer.setForceRecalculationOnOpening(_forceRecalculationOnOpening);
             
             //add sheet listeners
-            for (SheetListener sheetListener: NodeUtils.getEffectiveChildsOfType(this, SheetListener.class))
+            for (SheetListener sheetListener: NodeUtils.getChildsOfType(this, SheetListener.class))
                 transformer.addSheetListener(sheetListener);
             
             for (SheetInfo info: sheets){

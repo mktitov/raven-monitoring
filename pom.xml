@@ -206,6 +206,7 @@
                         </execution>
                     </executions>
                     <configuration>
+                        <shortRevisionLength>5</shortRevisionLength>
                         <doCheck>false</doCheck>
                         <doUpdate>false</doUpdate>
                     </configuration>
@@ -317,7 +318,7 @@
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId> <!-- Use 'netty-all' for 4.0 or above -->
-                <version>4.0.30.Final</version>
+                <version>4.0.31.Final</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>

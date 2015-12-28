@@ -44,15 +44,27 @@ import org.raven.tree.Node;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.TreeImpl;
 import org.raven.util.NodeUtils;
+import org.weda.internal.annotations.Service;
+import org.weda.internal.services.ServiceProvider;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class ApiUtils
-{
+public class ApiUtils {
+    @Service
+    private static ServiceProvider serviceProvider;
+    
     public static Tree getTree(){
         return TreeImpl.INSTANCE;
+    }
+    
+    public static<T> T getService(Class<T> serviceClass) {
+        return serviceProvider.getService(serviceClass);
+    }
+    
+    public static<T> T getService(String serviceId, Class<T> serviceClass) {
+        return serviceProvider.getService(serviceId, serviceClass);
     }
     
     public static Object withConnection(Connection connection, Closure closure) throws Throwable {
@@ -101,13 +113,15 @@ public class ApiUtils
     }
     //
     public static Object withHttpClient(String url, Closure closure) throws Exception {
-      HTTPBuilder builder = new HTTPBuilder(url);
-      try {
-          Object res = closure.call(builder);
-          return res;
-      } finally {
-          builder.shutdown();
-      }
+        HTTPBuilder builder = new HTTPBuilder(url);
+        builder.getClient().getParams().setParameter("http.connection.timeout", 10_000);
+        builder.getClient().getParams().setParameter("http.socket.timeout", 30_000);      
+        try {
+            Object res = closure.call(builder);
+        return res;
+        } finally {
+            builder.shutdown();
+        }
     }
     
     public static Object catchErrors(DataContext context, Node node, Closure block) throws Throwable {

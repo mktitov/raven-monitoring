@@ -125,7 +125,8 @@ public class XMLWriter implements XMLConsts
                         else
                         {
                             writer.append(childOffset+"  <value><![CDATA[");
-                            writer.append(attr.getRawValue());
+                            final String rawValue = attr.getRawValue().replace("]]>", "]]]]><![CDATA[>");
+                            writer.append(rawValue);
                             writer.append("]]></value>\n");
                         }
                     }
@@ -133,7 +134,7 @@ public class XMLWriter implements XMLConsts
                 writer.append(childOffset+"</attribute>\n");
             }
         }
-        Collection<Node> childs = node.getSortedChildrens();
+        Collection<Node> childs = node.getNodes();
         if (childs!=null && !childs.isEmpty())
             for (Node child: childs)
                 writeNode(offset, child, writer, out);
