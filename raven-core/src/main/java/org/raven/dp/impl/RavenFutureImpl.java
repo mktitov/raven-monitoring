@@ -34,7 +34,7 @@ import org.raven.sched.impl.AbstractTask;
  *
  * @author Mikhail Titov
  */
-public class RavenFutureImpl<V> implements RavenFuture<V> {
+public class RavenFutureImpl<V, E extends Throwable> implements RavenFuture<V, E> {
     private final static int COMPUTING = 0;
     private final static int CANCELED = 1;
     private final static int DONE = 2;
@@ -43,7 +43,7 @@ public class RavenFutureImpl<V> implements RavenFuture<V> {
     private final CountDownLatch latch = new CountDownLatch(1);
     private final AtomicInteger state = new AtomicInteger(COMPUTING);
     private volatile V result;
-    private volatile Throwable error;
+    private volatile E error;
     
     private final ExecutorService executor;
     private List<FutureCallback> onCompleteCallbacks;
@@ -53,7 +53,7 @@ public class RavenFutureImpl<V> implements RavenFuture<V> {
     }
 
     @Override
-    public RavenFuture<V> onComplete(FutureCallback<V> callback) {
+    public RavenFuture<V, E> onComplete(FutureCallback<V, E> callback) {
         if (isDone()) executeOnCompleteCallback(callback);
         else {
             addCallback(callback);
@@ -64,13 +64,13 @@ public class RavenFutureImpl<V> implements RavenFuture<V> {
     }
 
     @Override
-    public RavenFuture<V> onComplete(long timeout, FutureCallbackWithTimeout<V> callback) {
+    public RavenFuture<V, E> onComplete(long timeout, FutureCallbackWithTimeout<V, E> callback) {
         if (isDone()) executeOnCompleteCallback(callback);
         else onComplete(new CallbackWrapper(timeout, callback));
         return this;
     }
 
-    private synchronized void addCallback(FutureCallback<V> callback) {
+    private synchronized void addCallback(FutureCallback<V, E> callback) {
         if (onCompleteCallbacks==null)
             onCompleteCallbacks = new LinkedList();
         onCompleteCallbacks.add(callback);
@@ -84,7 +84,7 @@ public class RavenFutureImpl<V> implements RavenFuture<V> {
         }
     }
     
-    private void executeOnCompleteCallback(final FutureCallback<V> callback) {
+    private void executeOnCompleteCallback(final FutureCallback<V, E> callback) {
         executor.executeQuietly(new AbstractTask(executor, "Processing future onComplete") {
             @Override
             public void doRun() throws Exception {
@@ -142,7 +142,7 @@ public class RavenFutureImpl<V> implements RavenFuture<V> {
         return state.get() > COMPUTING;
     }
     
-    protected void setError(Throwable error) {
+    protected void setError(E error) {
         if (state.compareAndSet(COMPUTING, ERROR)) {
             this.error = error;
             latch.countDown();
@@ -178,12 +178,12 @@ public class RavenFutureImpl<V> implements RavenFuture<V> {
         throw new InterruptedException("Unknown future state");
     }
     
-    private class CallbackWrapper<V> implements FutureCallbackWithTimeout<V> {
-        private final FutureCallbackWithTimeout<V> callback;
+    private class CallbackWrapper implements FutureCallbackWithTimeout<V, E> {
+        private final FutureCallbackWithTimeout<V, E> callback;
         private final AtomicBoolean executed = new AtomicBoolean();
         private final TimeoutTask timeoutTask;
 
-        public CallbackWrapper(long timeout, FutureCallbackWithTimeout<V> callback) {
+        public CallbackWrapper(long timeout, FutureCallbackWithTimeout<V, E> callback) {
             this.callback = callback;
             this.timeoutTask = new TimeoutTask(this);
             executor.executeQuietly(timeout, timeoutTask);
@@ -198,7 +198,7 @@ public class RavenFutureImpl<V> implements RavenFuture<V> {
         }
 
         @Override
-        public void onError(Throwable error) {
+        public void onError(E error) {
             if (executed.compareAndSet(false, true)) {
                 timeoutTask.cancel();
                 callback.onError(error);

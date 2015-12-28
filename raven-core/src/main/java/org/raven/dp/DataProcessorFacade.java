@@ -87,7 +87,7 @@ public interface DataProcessorFacade {
      * @param delay delay in milliseconds
      * @param message message to send
      */
-    public void sendDelayed(long delay, Object message) throws ExecutorServiceException;
+    public void sendDelayed(long delay, Object message);
     /**
      * Sends message after delay to the data processor facade passed in the parameter
      * @param facade Receiver of the message. Receiver in this case received the reference to this facade

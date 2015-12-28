@@ -19,7 +19,7 @@ package org.raven.dp;
  *
  * @author Mikhail Titov
  */
-public interface FutureCallbackWithTimeout<T> extends FutureCallback<T> {
+public interface FutureCallbackWithTimeout<T, E extends Throwable> extends FutureCallback<T, E> {
     /**
      * Calls when timeout acquires
      */

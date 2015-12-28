@@ -102,13 +102,6 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
             this.processorContext = null;
     }
     
-//    private String createPath() {
-//        final StringBuilder buf = new StringBuilder(name);
-//        DataProcessorFacade facade = this;
-//        while (facade.)
-//        return buf.toString();
-//    }
-//
     public String getName() {
         return name;
     }
@@ -182,17 +175,8 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         if (terminated.compareAndSet(false, true)) {
             if (getWatcherService(false)!=null)
                 sendTerminateToWatcherService();
-            //???
-//            if (success && processor instanceof DataProcessorLogic) 
-//                ((DataProcessorLogic)processor).postStop();
-            //???
-//            if (stopMessage instanceof MessageFromFacade) 
-//                ((MessageFromFacade)stopMessage).facade.send(new TerminatedImpl(this, success));
-//            else if (stopMessage instanceof AskFuture)
             if (parent!=null)
                 parent.send(new ChildTerminated(this));
-//            if (stopMessage instanceof AskFuture)
-//                ((AskFuture)stopMessage).set(true);
             if (logger.isDebugEnabled())
                 logger.debug(success? "Stopped" : "Terminated");
         }
@@ -248,48 +232,17 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         } catch (ExecutorServiceException ex) {
             running.set(false);
             if (logger.isErrorEnabled())
-                logger.error("Error executing message dispatcher task");
+                logger.error("Error executing message dispatcher task", ex);
         }
     }
     
-//    private boolean isStopMessage(Object message) {
-//        if (message==STOP_MESSAGE)
-//            return true;
-//        if (message instanceof AskFuture && ((AskFuture)message).message==STOP_MESSAGE)
-//            return true;
-//        if (message instanceof MessageFromFacade && ((MessageFromFacade)message).message==STOP_MESSAGE)
-//            return true;
-//        return false;
-//    }
-//
     @Override
     public boolean send(final Object message) {
-//        if (queueMessage(wrapToStopIfNeed(message))) {
         if (message!=STOP_MESSAGE)
             return queueMessage(message);
         else
             return queueMessage(wrapToStop(message));
-//        if (queueMessage(message==STOP_MESSAGE? wrapToStop(message) : message)) {
-//            CheckTimeoutTask _checkTimeoutTask = checkTimeoutTask.get();
-//            if (_checkTimeoutTask!=null)
-//                _checkTimeoutTask.messageReceived(message);
-//            return true;
-//        } else {
-//            if (logger.isErrorEnabled()) {
-//                final String cause = terminated.get()? "processor was terminated" 
-//                        : (stopping.get()? "processor is stopping" : "messages queue is full");
-//                logger.error("Message sending error. Message not queued because of {}. Message: {}", cause, message);
-//            }
-//            return false;            
-//        }
     }
-    
-//    private Object wrapToStopIfNeed(Object message) {
-//        if (isStopMessage(message))
-//            return new StopFuture().onComplete(defaultStopTimeout, new StopCallback(message));
-//        else
-//            return message;
-//    }
     
     private Object wrapToStop(Object message) {
         return new StopFuture().onComplete(defaultStopTimeout, new StopCallback(message));
@@ -301,13 +254,11 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
             return facade.send(new MessageFromFacade(message, this));
         else 
             return facade.send(wrapToStop(new MessageFromFacade(message, this)));
-//        final Object packet = new MessageFromFacade(message, this);
-//        return facade.send(message==STOP_MESSAGE? wrapToStop(packet) : packet);
     }
 
     @Override
-    public void sendDelayed(long delay, final Object message) throws ExecutorServiceException {
-        executor.execute(delay, new AbstractTask(owner, "Delaying message before send") {            
+    public void sendDelayed(long delay, final Object message) {
+        executor.executeQuietly(delay, new AbstractTask(owner, "Delaying message before send") {            
             @Override public void doRun() throws Exception {
                 send(message);
             }
@@ -352,13 +303,6 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         facade.sendRepeatedly(delay, interval, times, new MessageFromFacade(message, this));
     }
     
-//    private RavenFuture sendAskFuture(Object message, FutureCallback callback) {
-//        final AskFuture future = new AskFuture(message, callback);        
-//        if (!send(future))
-//            future.setError(new MessageQueueError());
-//        return future;
-//    }
-    
     @Override
     public RavenFuture ask(final Object message, final long timeout, final TimeUnit timeoutTimeUnit) {
         if (message==STOP_MESSAGE)
@@ -387,17 +331,11 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         final StopDataProcessor ask = new StopDataProcessor(timeoutTimeUnit.toMillis(timeout), future);
         new DataProcessorFacadeConfig("ask stop", owner, ask, executor, new LoggerHelper(logger, "<-> ")).build();
         return future;
-//        AskFuture future = new AskFuture(STOP_MESSAGE, executor);
-//        StopFuture stopFuture = new StopFuture();
-//        stopFuture.onComplete(timeoutMs, new StopCallback(future));
-//        if (!send(stopFuture))
-//            future.setError(new MessageQueueError());
-//        return future;
     }
 
     @Override
     public String toString() {
-        return owner.toString()+": "+logger.logMess("");
+        return owner.getPath()+": "+logger.logMess("");
     }
 
     private void executeDelayedTask(long delay, Task task) {
@@ -421,17 +359,15 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
     }
     
     private void processStopSequence(final Object message) {
-//        if (!(message instanceof ChildTerminated) && !(message instanceof StopFuture))
-//            return false;
-        if (message instanceof ChildTerminated)
-            processorContext.childTerminated((ChildTerminated) message);
-        else if (message instanceof StopFuture) {
+        if (message instanceof ChildTerminated) {
+            if (processorContext!=null)
+                processorContext.childTerminated((ChildTerminated) message);
+        } else if (message instanceof StopFuture) {
             if (processorContext!=null)
                 processorContext.stopSelfAndChildren((StopFuture) message);
             else
                 ((StopFuture)message).set(true);
         }
-//        return true;
     }
     
     private void sendMessageToProcessor(Object message) {
@@ -441,15 +377,8 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
             processStopSequence(message);
             return;
         }
-//        if (isStopSequenceMessage(message))
-//            return;
-//        final AskFuture future = message instanceof AskFuture? (AskFuture)message : null;
         final Object origMessage = message;
         DataProcessorFacade sender = null;
-//        boolean unstashing = false;
-//        if (future!=null)
-//            message = future.message;
-//        else if (message instanceof MessageFromFacade) {
         if (message instanceof MessageFromFacade) {
             final MessageFromFacade messageFromFacade = (MessageFromFacade) message;
             message = messageFromFacade.message;
@@ -463,12 +392,8 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
                 processorContext.sender = sender;
                 processorContext.origMessage = origMessage;
                 result = processorContext.currentBehaviuor.processData(message);
-//                unstashing = processorContext.unstashing;
             }
             if (result!=DataProcessor.UNHANDLED) {
-//                if (future!=null) 
-//                    processResultForFuture(future, result, message, false);
-//                else if (sender!=null && result!=DataProcessor.VOID && result!=DataProcessor.STASHED) 
                 if (sender!=null && result!=DataProcessor.VOID && result!=DataProcessor.STASHED) 
                     sendTo(sender, result);                
             } else {
@@ -477,42 +402,15 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
                 final LoggerHelper _logger = processorContext!=null? processorContext.getLogger() : logger;
                 if (_logger.isWarnEnabled())
                     _logger.warn("Message ({}) was UNHANDLED", message);
-//                if (future!=null)
-//                    processResultForFuture(future, result, message, true);
             }
         } catch (Throwable e) {
             if (logger.isErrorEnabled())
                 logger.error("Error processing message: "+message, e);
-//            if (future!=null)
-//                future.setError(e);
             if (unhandledMessagesProcessor!=null)
                 unhandledMessagesProcessor.send(new UnhandledMessageImpl(sender, this, message, e));
         }
-//        return true;
     }
     
-//    private void processResultForFuture(final AskFuture future, final Object result, final Object message, final boolean unhandled) {
-//        if (result==DataProcessor.STASHED)
-//            return;
-//        if (unhandled) future.setError(new UnhandledMessageException(message));
-//        else {
-//            if (!(result instanceof RavenFuture)) future.set(result);
-//            else {
-//                ((RavenFuture)result).onComplete(new FutureCallback<Object>() {
-//                    @Override public void onSuccess(Object result) {
-//                        future.set(result);
-//                    }
-//                    @Override public void onError(Throwable error) {
-//                        future.setError(error);
-//                    }
-//                    @Override public void onCanceled() {
-//                        future.cancel(true);
-//                    }
-//                });
-//            }
-//        }
-//    }
-
     @Override
     public void setReceiveTimeout(long timeout)  throws ExecutorServiceException {
         setReceiveTimeout(timeout, null);
@@ -536,14 +434,12 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
 
     private class CheckTimeoutTask extends AbstractTask {
         private final long timeout;    
-//        private final long checkTimeoutInterval;
         private final TimeoutMessageSelector selector;
         private volatile long lastMessageReceiveTime = System.currentTimeMillis();
 
         public CheckTimeoutTask(Node taskNode, long timeout, TimeoutMessageSelector selector) {
             super(taskNode, "Checking waiting for message timeout");
             this.timeout = timeout;
-//            this.checkTimeoutInterval = checkTimeoutInterval;
             this.selector = selector;
         }
         
@@ -554,11 +450,8 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
 
         @Override
         public void doRun() throws Exception {
-            if (lastMessageReceiveTime+timeout<=System.currentTimeMillis()) {
-//                System.out.println("SENDING TIMEOUT");
+            if (lastMessageReceiveTime+timeout<=System.currentTimeMillis()) 
                 send(TIMEOUT_MESSAGE);               
-            }
-//            System.out.println("new timeout: "+(timeout-(System.currentTimeMillis()-lastMessageReceiveTime)));
             executeDelayedTask(timeout-(System.currentTimeMillis()-lastMessageReceiveTime), this);
         }
     }
@@ -573,14 +466,8 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
             return processorContext!=null && processorContext.unstashing;
         }
         
-//        private Object getNextMessage(final boolean unstashing) {
-//            return !unstashing? queue.poll() : processorContext.nextStashed();
-////            return  queue.poll();
-//        }
-        
         private Object getNextMessage() {
             return processorContext.unstashing? processorContext.nextStashed() : queue.poll();
-//            return  queue.poll();
         }
 
         @Override
@@ -588,7 +475,6 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
             boolean stop = false;
             int processedMessages = 0;
             while (!stop) {
-//                boolean isUnstashing = isUnstashing();
                 try {
                     Object message;
                     if (processorContext==null)
@@ -596,20 +482,14 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
                             sendMessageToProcessor(message);
                     else 
                         while ( processedMessages++<maxMessagesPerCycle && (message=getNextMessage()) != null && !terminated.get() ) 
-//                    while ( processedMessages++<maxMessagesPerCycle  && !terminated.get() ) 
                         sendMessageToProcessor(message);
-//                        if (!sendMessageToProcessor(getNextMessage()))
-//                            break;
                 } finally {
-//                    complete(null);
                     running.set(false);
                     if (terminated.get() || (queue.isEmpty() && !isUnstashing()) || !running.compareAndSet(false, true)) {
                         stop = true;
                     } else if (processedMessages-1==maxMessagesPerCycle) {
                         stop = true;
                         executeTask();
-//                        reinitialize();
-//                        executor.execute(this);
                     }
                 }
             }
@@ -755,12 +635,6 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
                 behaviourStack = null;
         }
 
-//        public void unhandled() {
-//            unhandled = true;
-//            if (getLogger().isWarnEnabled())
-//                getLogger().warn("Unhandled message: "+message);
-//        }
-
         public void forward(DataProcessorFacade facade) {
             facade.send(origMessage);
         }
@@ -813,9 +687,9 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         }        
     }
     
-    private static class MessageFromFacade {
-        private final Object message;
-        private final DataProcessorFacade facade;
+    protected static class MessageFromFacade {
+        public final Object message;
+        public final DataProcessorFacade facade;
 
         public MessageFromFacade(Object message, DataProcessorFacade facade) {
             this.message = message;
@@ -882,6 +756,11 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         public ChildTerminated(DataProcessorFacade child) {
             this.child = child;
         }
+
+        @Override
+        public String toString() {
+            return "CHILD_TERMINATED: "+child.getName();
+        }
     }
     
     private static class Unwatch {
@@ -896,19 +775,6 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
             return watcher+"UNWATCH";
         }
     }
-    
-//    private class StopOnTimeoutTask extends AbstractTask {
-//
-//        public StopOnTimeoutTask(Node taskNode, String status) {
-//            super(taskNode, status);
-//        }
-//
-//        @Override
-//        public void doRun() throws Exception {
-//            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-//        }
-//        
-//    }
     
     private class StopDataProcessor extends AbstractDataProcessorLogic {
         private final long timeout;
@@ -994,7 +860,7 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         }
         
         private void processFutureMessage(RavenFuture future) {
-            future.onComplete(new FutureCallback<Object>() {
+            future.onComplete(new FutureCallback<Object, Throwable>() {
                 @Override public void onSuccess(Object result) {
                     askFuture.set(result);
                 }

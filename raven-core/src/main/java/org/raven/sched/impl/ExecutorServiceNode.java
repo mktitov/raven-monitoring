@@ -65,7 +65,7 @@ public class ExecutorServiceNode extends BaseNode
     @NotNull @Parameter(defaultValue="THREADED_POOL")
     private Type type;
 
-    @NotNull @Parameter(defaultValue="2")
+    @NotNull @Parameter(defaultValue="4")
     private Integer corePoolSize;
 
     @NotNull @Parameter(defaultValue="6")

@@ -93,7 +93,7 @@ public class DataProcessorFacadeConfig<T> {
         return this;
     }
     
-    private DataProcessorFacadeConfig<T> withDefaultAskTimeout(long defaultAskTimeout) {
+    public DataProcessorFacadeConfig<T> withDefaultAskTimeout(long defaultAskTimeout) {
         this.defaultAskTimeout = defaultAskTimeout;
         return this;
     }

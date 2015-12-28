@@ -19,8 +19,8 @@ package org.raven.dp;
  *
  * @author Mikhail Titov
  */
-public interface FutureCallback<T> {
+public interface FutureCallback<T, E extends Throwable> {
     public void onSuccess(T result);
-    public void onError(Throwable error);
+    public void onError(E error);
     public void onCanceled();
 }

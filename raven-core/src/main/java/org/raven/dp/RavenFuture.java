@@ -22,10 +22,10 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Mikhail Titov
  */
-public interface RavenFuture<V> extends Future<V> {
+public interface RavenFuture<V, E extends Throwable> extends Future<V> {
     public V getOrElse(V v);
     public V getOrElse(V v, long timeout, TimeUnit timeUnit);
     public V getOrElse(V v, long timeoutMs);
-    public RavenFuture<V> onComplete(FutureCallback<V> callback);
-    public RavenFuture<V> onComplete(long timeout, FutureCallbackWithTimeout<V> callback);
+    public RavenFuture<V, E> onComplete(FutureCallback<V, E> callback);
+    public RavenFuture<V, E> onComplete(long timeout, FutureCallbackWithTimeout<V, E> callback);
 }

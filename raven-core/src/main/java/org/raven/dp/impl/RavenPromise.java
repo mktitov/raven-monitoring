@@ -22,14 +22,14 @@ import org.raven.sched.ExecutorService;
  *
  * @author Mikhail Titov
  */
-public class RavenPromiseImpl<V> {
-    private final Future<V> future;
+public class RavenPromise<V, E extends Throwable> {
+    private final Future future;
 
-    public RavenPromiseImpl(ExecutorService executor) {
-        this.future = new Future<>(executor);                
+    public RavenPromise(ExecutorService executor) {
+        this.future = new Future(executor);                
     }
 
-    public RavenFuture<V> getFuture() {
+    public RavenFuture<V, E> getFuture() {
         return future;
     }
 
@@ -37,15 +37,18 @@ public class RavenPromiseImpl<V> {
         future.set(value);
     }
 
-    public void completeWithError(Throwable error) {
+    public void completeWithError(E error) {
         future.setError(error);
     }
     
-    private class Future<V> extends RavenFutureImpl<V> {
+    public boolean isCanceled() {
+        return future.isCancelled();
+    }
+    
+    private class Future extends RavenFutureImpl<V, E> {
 
         public Future(ExecutorService executor) {
             super(executor);
         }
-        
     }
 }
