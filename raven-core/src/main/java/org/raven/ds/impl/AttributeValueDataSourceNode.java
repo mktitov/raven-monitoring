@@ -119,7 +119,7 @@ public class AttributeValueDataSourceNode extends BaseNode implements DataSource
             try {
                 bindingSupport.put(SESSIONATTRIBUTES_BINDING, context.getSessionAttributes());
                 bindingSupport.put(DATA_CONTEXT_BINDING, context);
-                bindingSupport.put(DATA_STREAM_BINDING, new DataStreamImpl(this, context));
+                bindingSupport.put(DATA_STREAM_BINDING, new DataStreamImpl(this, context, dataConsumer));
                 bindingSupport.put(DataPipe.SKIP_DATA_BINDING, DataPipe.SKIP_DATA);
                 if (!consumerAttrNames.isEmpty())
                     for (String name: consumerAttrNames)

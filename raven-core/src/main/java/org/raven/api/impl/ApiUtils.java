@@ -239,7 +239,11 @@ public class ApiUtils {
     
     public static Object parseJson(Reader jsonReader) {
         JsonSlurper parser =  new JsonSlurper();
+        try {
         return parser.parse(jsonReader);
+        } finally  {
+//            jsonReader.close(); ???
+        }
     }
     
     public static void throwHttpError(int statusCode, String contentType, String content) {

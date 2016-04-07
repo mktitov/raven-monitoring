@@ -17,6 +17,7 @@
 
 package org.raven.ds.impl;
 
+import org.raven.ds.DataConsumer;
 import org.raven.ds.DataContext;
 import org.raven.ds.DataSource;
 import org.raven.ds.DataStream;
@@ -29,21 +30,33 @@ public class DataStreamImpl implements DataStream
 {
     private final DataSource source;
     private final DataContext context;
+    private final DataConsumer consumer;
 
     public DataStreamImpl(DataSource source, DataContext context) {
+        this(source, context, null);
+    }
+    
+    public DataStreamImpl(DataSource source, DataContext context, DataConsumer consumer) {
         this.source = source;
         this.context = context;
+        this.consumer = consumer;
     }
 
+    @Override
     public DataStream push(Object data) {
-        DataSourceHelper.sendDataToConsumers(source, data, context);
+        if (consumer!=null)
+            consumer.setData(source, data, context);
+        else 
+            DataSourceHelper.sendDataToConsumers(source, data, context);
         return this;
     }
 
+    @Override
     public DataStream leftShift(Object data) {
         return push(data);
     }
 
+    @Override
     public DataContext getContext() {
         return context;
     }

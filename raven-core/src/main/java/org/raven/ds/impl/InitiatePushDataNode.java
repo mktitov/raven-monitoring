@@ -93,8 +93,10 @@ public class InitiatePushDataNode extends AbstractSafeDataPipe
         }
         if (!SKIP_DATA.equals(dataForPush))
             pushDataTo.setData(this, dataForPush, context);
-        
-        sendDataToConsumers(data, context);
+        if (context.hasErrors() && getStopProcessingOnError())
+            sendError(data, context);
+        else
+            sendDataToConsumers(data, context);
     }
 
     @Override
