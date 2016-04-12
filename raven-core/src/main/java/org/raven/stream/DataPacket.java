@@ -37,4 +37,13 @@ public interface DataPacket<T> {
      * Send's the reject message to the owner
      */
     public void reject();
+    /**
+     * Returns the sequence number of the packet
+     */
+    public long getSeqNum();
+    /**
+     * Set's the sequence number of the packet
+     * @param seqnum 
+     */
+    public void setSeqNum(long seqnum);
 }

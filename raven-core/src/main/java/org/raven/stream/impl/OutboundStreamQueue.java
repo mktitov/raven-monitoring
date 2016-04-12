@@ -27,11 +27,12 @@ import org.raven.stream.Reject;
  *
  * @author Mikhail Titov
  */
-public class ReceiverQueue<T> {
+public class OutboundStreamQueue<T> {
     public enum Status {READY, WAITING_ACK, WAITING_RECEIVER_READY, INVALID};
     
     private final UnsafeRingQueue<DataPacket<T>> packetQueue;
     private final UnsafeRingQueue<DataPacket<T>> packetCache;
+//    private final UnsafeRingQueue<DataPacket<T>> unconfirmedPackets;
     private final DataProcessorFacade sender;
     private final DataProcessorFacade receiver;
     private final int maxUnconfirmed;
@@ -42,10 +43,13 @@ public class ReceiverQueue<T> {
     private long unsuccessCache;
     private long reuseCount;
     private long packetsCreationCount;
+    private long seqnum;
     private boolean completing;
     private int unconfirmedCount;
     
-    public ReceiverQueue(final DataProcessorFacade sender, final DataProcessorFacade receiver, final int queueId, final int size, final int maxUnconfirmed) {
+    public OutboundStreamQueue(final DataProcessorFacade sender, final DataProcessorFacade receiver, 
+            final int queueId, final int size, final int maxUnconfirmed) 
+    {
         this.sender = sender;
         this.receiver = receiver;
         this.queueId = queueId;
@@ -54,6 +58,7 @@ public class ReceiverQueue<T> {
         packetCache = new UnsafeRingQueue<>(size);
         status = Status.READY;
         this.unconfirmedCount = 0;
+        this.seqnum = 1;
     };
     
     public Status getStatus() {
@@ -92,6 +97,7 @@ public class ReceiverQueue<T> {
             reuseCount++;
         }
         if (packetQueue.push(packet)) {
+            packet.setSeqNum(seqnum++);
             trySendToReceiver();
             return true;
         } else {
@@ -112,8 +118,14 @@ public class ReceiverQueue<T> {
     
     private void trySendToReceiver() {
         if (status==Status.READY || (status==Status.WAITING_ACK && unconfirmedCount<maxUnconfirmed)) {
-            DataPacket<T> packet = packetQueue.peek();
+            DataPacket<T> packet = packetQueue.peek(unconfirmedCount);
             if (packet!=null) {
+//                if (receiver.send(packet)) {
+//                    status = Status.WAITING_ACK;
+//                    
+//                } else {
+//                    
+//                }
                 status = receiver.send(packet)? Status.WAITING_ACK : Status.INVALID;
                 unconfirmedCount++;
             } else if (completing) {
@@ -145,11 +157,12 @@ public class ReceiverQueue<T> {
     
     public boolean processRejectEvent(Reject<T> reject) {
         final DataPacket<T> packet = reject.getDataPacket();
-        final DataPacket<T> expectedPacket = packetCache.peek();
-        if (packet!=expectedPacket) 
-            return false;
+        final DataPacket<T> expectedPacket = packetQueue.peek();
+        if (packet!=expectedPacket) {
+            return false;            
+        }
         status = Status.WAITING_RECEIVER_READY;
-        unconfirmedCount--;
+        unconfirmedCount = 0;
         return true;
     }
     

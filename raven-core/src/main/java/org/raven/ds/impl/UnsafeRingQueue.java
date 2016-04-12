@@ -15,11 +15,13 @@
  */
 package org.raven.ds.impl;
 
+import org.raven.ds.RingQueue;
+
 /**
  *
  * @author Mikhail Titov
  */
-public class UnsafeRingQueue<E> {
+public class UnsafeRingQueue<E> implements RingQueue<E>{
     private final E[] data;
     private final long maxSize;
     private long readPos = 0;
@@ -37,16 +39,17 @@ public class UnsafeRingQueue<E> {
     public boolean push(E element) {
         if (writePos-readPos >= maxSize)
             return false;
-//        if (writePos+1<0) {
-//            writePos = writePos%maxSize;
-//            readPos =  readPos%maxSize;
-//        }
         data[(int)((writePos++)%maxSize)] = element;
         return true; 
    }
     
     public boolean hasElement() {
         return readPos<writePos;
+    }
+    
+    public E peek(final int pos) {
+        final long elemPos = readPos+pos;
+        return elemPos<writePos? data[(int)(elemPos % maxSize)] : null;
     }
     
     public E peek() {

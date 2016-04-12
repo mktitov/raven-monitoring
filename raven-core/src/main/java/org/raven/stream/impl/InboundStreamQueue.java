@@ -13,12 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.stream;
+package org.raven.stream.impl;
+
+import org.raven.ds.impl.UnsafeRingQueue;
+import org.raven.stream.DataPacket;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface ReceiverReady {
-    public int getReceiverQueueId();
+public class InboundStreamQueue<T> {
+    private final UnsafeRingQueue<DataPacket<T>> packetQueue;
+    
+    public boolean processDataPacket(DataPacket<T> packet) {
+        return true;
+    }
 }

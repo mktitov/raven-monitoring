@@ -30,6 +30,7 @@ public class DataPacketImpl<T> implements DataPacket<T> {
     private final Reject<T> reject;
     private final DataProcessorFacade owner;
     private final int queueId;
+    private long seqnum;
     
     private T data;
 
@@ -58,6 +59,16 @@ public class DataPacketImpl<T> implements DataPacket<T> {
     @Override
     public void reject() {
         owner.send(reject);
+    }
+
+    @Override
+    public long getSeqNum() {
+        return seqnum;
+    }
+
+    @Override
+    public void setSeqNum(long seqnum) {
+        this.seqnum = seqnum;
     }
     
     private class Resp implements DataPacketHolderMessage<T> {
