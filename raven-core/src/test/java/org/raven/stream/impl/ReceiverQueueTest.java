@@ -92,7 +92,44 @@ public class ReceiverQueueTest extends Assert {
             final @Mocked DataProcessorFacade sender,
             final @Mocked DataProcessorFacade receiver
     ) throws Exception {
+        final AtomicReference<DataPacket> packet = new AtomicReference<>();
+        final ReceiverQueue<String> queue = new ReceiverQueue<>(sender, receiver, 1, 2, 2);
+        new Expectations() {{
+            receiver.send(any); result = new Delegate() {
+                public boolean send(DataPacket data) {
+                    assertNotNull(data);
+                    packet.set(data);
+                    return true;
+                }
+            }; times = 2;
+            
+            sender.send(any); result = new Delegate() {
+                public boolean send(Ack ack) {
+                    queue.processAckEvent(ack);
+                    return true;
+                };
+            }; times = 2;
+            sender.sendTo(receiver, Consts.COMPLETE_MESSAGE);
+        }};
+        assertEquals(READY, queue.getStatus());
+        assertTrue(queue.send("test1"));
+        assertEquals(WAITING_ACK, queue.getStatus());
+        assertTrue(queue.send("test2"));
+        assertEquals(WAITING_ACK, queue.getStatus());
+        assertFalse(queue.send("test3"));
+        assertEquals(WAITING_ACK, queue.getStatus());
         
+        assertNotNull(packet.get());
+        assertEquals("test1", packet.get().getData());
+        packet.get().ack();
+        assertEquals(WAITING_ACK, queue.getStatus());
+        
+        assertNotNull(packet.get());
+        assertEquals("test2", packet.get().getData());
+        packet.get().ack();
+        assertEquals(READY, queue.getStatus());
+        queue.sendComplete();
+        assertFalse(queue.send("test4"));        
     }
     
 }
