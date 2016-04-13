@@ -13,21 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.stream.impl;
+package org.raven.stream;
 
-import org.raven.ds.impl.UnsafeRingQueue;
-import org.raven.stream.DataPacket;
+import org.raven.dp.RavenFuture;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class InboundStreamQueue<T> {
-    private final UnsafeRingQueue<DataPacket<T>> packetQueue;
-    private long lastReceivedSeqNum;
-    private PacketHandler packetHandler
-    
-    public boolean processDataPacket(DataPacket<T> packet) {
-        return true;
-    }
+public interface PacketHandler<T> {
+    public RavenFuture<Integer, Throwable> processData(T data);
 }
