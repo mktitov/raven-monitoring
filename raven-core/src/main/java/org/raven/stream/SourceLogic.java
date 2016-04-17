@@ -15,25 +15,11 @@
  */
 package org.raven.stream;
 
-import org.raven.dp.RavenFuture;
-
 /**
  *
  * @author Mikhail Titov
+ * @param <A> the type of the source messages
  */
-public interface Flow<A, B> {
-    public final static int PROCESSED = 0;
-    public final static int INPUT_NOT_CONSUMED = 1;
-    public final static int OUTPUT_NOT_READY = 2;
-    public final static int COMPUTING = 4;
-    
-    public interface MapResult<B> {
-        public void setValue(B value);
-        public void getValue(B vaule);
-        public void setFuture(RavenFuture<Integer, Throwable> future);
-    }
-    
-    public int map(A input, MapResult<B> result);
-    public void onComplete();
-    public void onError();
+public interface SourceLogic<A> {
+    public void readyForSend(MessageSender<A> sender);
 }
