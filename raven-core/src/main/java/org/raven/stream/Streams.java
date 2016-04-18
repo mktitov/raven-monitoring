@@ -16,9 +16,16 @@
 package org.raven.stream;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import org.raven.dp.DataProcessor;
 import org.raven.dp.DataProcessorFacade;
+import org.raven.dp.impl.DataProcessorFacadeConfig;
+import org.raven.sched.ExecutorService;
+import org.raven.stream.impl.StreamControllerDP;
+import org.raven.tree.Node;
+import org.raven.tree.impl.LoggerHelper;
 
 /**
  *
@@ -29,31 +36,52 @@ public class Streams {
 //        return null;
 //    }
 //    
-    public interface Materializer {
-        public DataProcessorFacade materialize();
+    public interface StreamElement {
+        public DataProcessor materialize();
+        public String getName();
     }
     
-    public interface Sender<T> extends Materializer {
+    public abstract class AbstractStreamElem implements StreamElement{
+        private final String name;
+
+        public AbstractStreamElem(String name) {
+            this.name = name;
+        }
+
+        @Override public String getName() {
+            return name;
+        }
+    }
+    
+    public interface Sender<T> extends StreamElement {
         public List<Consumer<T>> getConsumers();
     }
     
-    public interface Consumer<T> extends Materializer {
+    public interface Consumer<T> extends StreamElement {
         public List<Sender<T>> getSenders();
     }
     
     public interface Pipe<S,T> extends Sender<S>, Consumer<T> {        
     }
     
-    protected abstract class AbstractSender<T> implements Sender<T> {
+    protected static abstract class AbstractSender<T> extends AbstractStreamElem implements Sender<T> {
         protected final List<Consumer<T>> consumers = new ArrayList<>();
+
+        public AbstractSender(String name) {
+            super(name);
+        }
         
         @Override public List<Consumer<T>> getConsumers() {
             return consumers;
         }        
     }
     
-    protected abstract class AbstractConsumer<T> implements Consumer<T> {
+    protected static abstract class AbstractConsumer<T> extends AbstractStreamElem implements Consumer<T> {
         protected final List<Sender<T>> senders = new ArrayList<>();
+
+        public AbstractConsumer(String name) {
+            super(name);
+        }
 
         @Override public List<Sender<T>> getSenders() {
             return senders;
@@ -62,56 +90,100 @@ public class Streams {
     
     public class Source<T> extends AbstractSender<T> {
         private final SourceLogic<T> logic;
+
+        public Source(String name, SourceLogic<T> logic) {
+            super(name);
+            this.logic = logic;
+        }
         
         public Source(final SourceLogic<T> logic) {
-            this.logic = logic;
+            this(null, logic);
         }
 
         public Source() {
-            this(null);
+            this(null, null);
         }
         
-        @Override public DataProcessorFacade materialize() {
+        @Override public DataProcessor materialize() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }        
     }
     
     public class Sink<T> extends AbstractConsumer<T> {
-        public final SinkLogic<T> logic;
+        private final SinkLogic<T> logic;
+
+        public Sink(String name, SinkLogic<T> logic) {
+            super(name);
+            this.logic = logic;
+        }
 
         public Sink(SinkLogic<T> logic) {
-            this.logic = logic;
+            this(null, logic);
         }
 
         public Sink() {
             this(null);
         }
 
-        @Override public DataProcessorFacade materialize() {
+        @Override public DataProcessor materialize() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }        
+        }     
+        
+//        public Stream toStream(ExecutorService executor) {
+//            return null;
+//        }
     }
     
-    public class Flow<S, T> implements Sender<S>, Consumer<T> {
+//    public class Stream {
+//        private final Sink sink;
+//        private final ExecutorService executor;
+//        private final DataProcessorFacade controller;
+//
+//        public Stream(Sink sink, ExecutorService executor) {
+//            this.sink = sink;
+//            this.executor = executor;
+//        }
+//        
+//        
+//    }
+    
+    public class Flow<S, T> extends AbstractStreamElem implements Sender<S>, Consumer<T> {
         private final FlowLogic<S,T> logic;
         private final List<Consumer<S>> consumers = new ArrayList<>();
         private final List<Sender<T>> senders = new ArrayList<>();
 
-        public Flow(FlowLogic<S, T> logic) {
+        public Flow(String name, FlowLogic<S, T> logic) {
+            super(name);
             this.logic = logic;
+        }
+
+        public Flow(FlowLogic<S, T> logic) {
+            this(null, logic);
         }
 
         @Override public List<Consumer<S>> getConsumers() {
             return consumers;
         }
 
-        @Override public DataProcessorFacade materialize() {
+        @Override public DataProcessor materialize() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
         @Override public List<Sender<T>> getSenders() {
             return senders;
         }        
+    }
+    
+    public static class Stream {}
+    
+    public static class StreamMaterializer {
+
+        public final static Stream materialize(String name, Node owner, Consumer consumer, ExecutorService executor) {
+            Map<StreamElement, DataProcessorFacade> cache = new HashMap<>();
+            final LoggerHelper logger = new LoggerHelper(owner, "Stream -> ");
+            DataProcessorFacade controller = new DataProcessorFacadeConfig(name, owner, new StreamControllerDP(), executor, logger).build();
+            return null;
+        }
     }
     
     
