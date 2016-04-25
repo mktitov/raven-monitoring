@@ -43,6 +43,7 @@ import org.raven.tree.Node;
  */
 public class CometNetworkResponseServlet extends NetworkResponseServlet implements CometProcessor {
     public static final String REQUEST_CONTEXT = "RAVEN_REQUEST_CONTEXT";
+    public static final String FORM_URLENCODED_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
     public void event(CometEvent ce) throws IOException, ServletException {
         final HttpServletRequest request = ce.getHttpServletRequest();
@@ -95,9 +96,11 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
             configureRequestContext(ctx);
             ctx.responseContext = new CometResponseContext(ctx, ce);
             final Node builderNode = ctx.responseContext.getResponseBuilder().getResponseBuilderNode();
-            if (request.getContentLength()<=0)
+            final boolean formParams = request.getContentType()!=null && request.getContentType().startsWith(FORM_URLENCODED_CONTENT_TYPE);
+            if (request.getContentLength()<=0 || formParams)
                 ctx.readProcessed(ce);
-            if (request.getContentType()!=null || !"GET".equals(request.getMethod()) || request.getContentLength()>0)
+            if (!formParams && (request.getContentType()!=null 
+                || !"GET".equals(request.getMethod()) || request.getContentLength()>0))
             {
                 final ExecutorService executor = ctx.responseService.getExecutor();
                 if (executor==null)
