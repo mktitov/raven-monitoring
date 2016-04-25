@@ -74,6 +74,10 @@
   </build>
   <dependencies>
     <dependency>
+      <groupId>org.reactivestreams</groupId>
+      <artifactId>reactive-streams</artifactId>
+    </dependency>      
+    <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-all</artifactId> 
     </dependency>

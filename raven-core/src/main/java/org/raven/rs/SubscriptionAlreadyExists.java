@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Mikhail Titov.
+ * Copyright 2016 Mikhail TItov.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.stream;
+package org.raven.rs;
 
 /**
  *
- * @author Mikhail Titov
- * @param <A> the type of the source messages
+ * @author Mikhail TItov
  */
-public interface SourceLogic<A> extends Logic {
-    public void readyForSend(MessageSender<A> sender);
+public class SubscriptionAlreadyExists extends Exception {
+    public SubscriptionAlreadyExists() {
+    }
 }

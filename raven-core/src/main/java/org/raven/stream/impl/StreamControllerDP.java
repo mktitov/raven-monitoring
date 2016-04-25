@@ -18,12 +18,12 @@ package org.raven.stream.impl;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.raven.dp.DataProcessor;
+import java.util.Set;
 import org.raven.dp.DataProcessorFacade;
 import org.raven.dp.impl.AbstractDataProcessorLogic;
 import org.raven.dp.impl.Behaviour;
-import org.raven.dp.impl.DataProcessorFacadeConfig;
 import org.raven.stream.Streams;
+//import org.raven.stream.Streams.Source;
 
 /**
  *
@@ -35,7 +35,7 @@ public class StreamControllerDP extends AbstractDataProcessorLogic {
 
     @Override
     public void postInit() {
-        become(new ConfigureStage());
+//        become(new ConfigureStage());
     }
 
     @Override
@@ -43,32 +43,35 @@ public class StreamControllerDP extends AbstractDataProcessorLogic {
         return UNHANDLED;
     }
     
-    private class ConfigureStage extends Behaviour {
-        private final Map<Streams.StreamElement, DataProcessorFacade> cache = new HashMap<>();
-        private long elemSeq = 0;
-
-        public ConfigureStage() {
-            super("Configuring");
-        }
-
-        @Override
-        public Object processData(Object message) throws Exception {
-            if (message instanceof Streams.Consumer) {
-                
-            }
-            return UNHANDLED;
-        }
-        
-        private DataProcessorFacade materialize(Streams.StreamElement streamElem) {
-            DataProcessorFacade facade = cache.get(streamElem);
-            if (facade==null) {                
-                DataProcessor dp = streamElem.materialize();
-                String name = streamElem.getName()!=null? streamElem.getName() : ""; //Как формировать имена?
-                DataProcessorFacadeConfig elemConfig = getContext().createChild(streamElem.getName(), dp);
-                elemConfig.withQueue(null)
-                DataProcessorFacade elem = getContext().addChild(getContext().createChild(streamElem.getName(), dp));
-            }
-            
-        }
-    }
+//    private class ConfigureStage extends Behaviour {
+//        private final Map<Streams.StreamElement, DataProcessorFacade> cache = new HashMap<>();
+//        private long elemSeq = 0;
+//
+//        public ConfigureStage() {
+//            super("Configuring");
+//        }
+//
+//        @Override
+//        public Object processData(Object message) throws Exception {
+//            if (message instanceof Streams.Consumer) {
+//                
+//            }
+//            return UNHANDLED;
+//        }
+//        
+//        private void findSources(Streams.StreamElement element, Set<Source> sources, Source ignore) {
+//            
+//        }
+//        
+//        private DataProcessorFacade materialize(Streams.StreamElement streamElem) {
+//            DataProcessorFacade facade = cache.get(streamElem);
+//            if (facade==null) {                
+//                DataProcessor dp = streamElem.materialize();
+//                String name = streamElem.getName()!=null? streamElem.getName() : ""; //Как формировать имена?
+//                DataProcessorFacadeConfig elemConfig = getContext().createChild(streamElem.getName(), dp);
+////                elemConfig.withQueue(null)
+////                DataProcessorFacade elem = getContext().addChild(getContext().createChild(streamElem.getName(), dp));
+//            }            
+//        }
+//    }
 }

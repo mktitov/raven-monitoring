@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.stream;
+package org.raven.rs;
 
 /**
  *
  * @author Mikhail Titov
- * @param <A> the type of the source messages
  */
-public interface SourceLogic<A> extends Logic {
-    public void readyForSend(MessageSender<A> sender);
+public interface Producer<T> {
+    public void request(Transmitter<T> transmitter, long count);
 }

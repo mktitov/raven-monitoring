@@ -21,7 +21,7 @@ import org.raven.dp.RavenFuture;
  *
  * @author Mikhail Titov
  */
-public interface FlowLogic<A, B> {
+public interface FlowLogic<A, B> extends Logic {
     public final static int PROCESSED = 0;
     public final static int INPUT_NOT_CONSUMED = 1;
     public final static int OUTPUT_NOT_READY = 2;
