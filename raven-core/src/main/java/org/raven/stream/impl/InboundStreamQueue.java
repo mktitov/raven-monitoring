@@ -23,7 +23,7 @@ import org.raven.stream.DataPacket;
  * @author Mikhail Titov
  */
 public class InboundStreamQueue<T> {
-    private final UnsafeRingQueue<DataPacket<T>> packetQueue;
+//    private final UnsafeRingQueue<DataPacket<T>> packetQueue;
     
     public boolean processDataPacket(DataPacket<T> packet) {
         return true;

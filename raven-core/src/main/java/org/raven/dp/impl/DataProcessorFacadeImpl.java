@@ -451,8 +451,9 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
         @Override
         public void doRun() throws Exception {
             if (lastMessageReceiveTime+timeout<=System.currentTimeMillis()) 
-                send(TIMEOUT_MESSAGE);               
-            executeDelayedTask(timeout-(System.currentTimeMillis()-lastMessageReceiveTime), this);
+                send(TIMEOUT_MESSAGE);
+            if (!isCanceled())
+                executeDelayedTask(timeout-(System.currentTimeMillis()-lastMessageReceiveTime), this);
         }
     }
     
