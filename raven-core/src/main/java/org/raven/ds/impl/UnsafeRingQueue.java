@@ -59,4 +59,12 @@ public class UnsafeRingQueue<E> implements RingQueue<E>{
     public E pop() {
         return hasElement()? data[(int)(readPos++ % maxSize)] : null;
     }    
+    
+    public long getFreeSlots() {
+        return maxSize - (writePos - readPos);
+    }
+    
+    public long size() {
+        return writePos - readPos;
+    }
 }

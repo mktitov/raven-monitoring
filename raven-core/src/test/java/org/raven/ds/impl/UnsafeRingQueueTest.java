@@ -34,4 +34,20 @@ public class UnsafeRingQueueTest extends Assert {
                 System.out.println("i="+i);
         }
     }
+    
+    @Test
+    public void getFreeSlotsTest() {
+        UnsafeRingQueue queue = new UnsafeRingQueue(5);
+        assertEquals(5, queue.getFreeSlots());
+        queue.push(1);
+        assertEquals(4, queue.getFreeSlots());
+        queue.push(1);
+        assertEquals(3, queue.getFreeSlots());
+        queue.pop();
+        assertEquals(4, queue.getFreeSlots());
+        queue.pop();
+        assertEquals(5, queue.getFreeSlots());
+        queue.pop();
+        assertEquals(5, queue.getFreeSlots());
+    }
 }

@@ -13,27 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.stream;
-
-import org.raven.dp.RavenFuture;
+package org.raven.rs;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface Flow<A, B> {
-    public final static int PROCESSED = 0;
-    public final static int INPUT_NOT_CONSUMED = 1;
-    public final static int OUTPUT_NOT_READY = 2;
-    public final static int COMPUTING = 4;
-    
-    public interface MapResult<B> {
-        public void setValue(B value);
-        public void getValue(B vaule);
-        public void setFuture(RavenFuture<Integer, Throwable> future);
-    }
-    
-    public int map(A input, MapResult<B> result);
-    public void onComplete();
-    public void onError();
+public interface Producer<T> {
+    public void request(Transmitter<T> transmitter, long count);
 }

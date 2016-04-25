@@ -39,7 +39,7 @@ import static org.raven.stream.impl.OutboundStreamQueue.Status.*;
  * @author Mikhail Titov
  */
 @RunWith(JMockit.class)
-public class ReceiverQueueTest extends Assert {
+public class OutboundStreamQueueTest extends Assert {
     
     @Test
     public void successSendOne(

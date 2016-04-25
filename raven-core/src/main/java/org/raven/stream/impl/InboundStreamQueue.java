@@ -16,16 +16,71 @@
 package org.raven.stream.impl;
 
 import org.raven.ds.impl.UnsafeRingQueue;
-import org.raven.stream.DataPacket;
 
 /**
  *
  * @author Mikhail Titov
  */
 public class InboundStreamQueue<T> {
-//    private final UnsafeRingQueue<DataPacket<T>> packetQueue;
+    private final UnsafeRingQueue<ElementImpl> elemQueue;
+    private final UnsafeRingQueue<ElementImpl> elemCache;
     
-    public boolean processDataPacket(DataPacket<T> packet) {
-        return true;
+    public InboundStreamQueue(final int queueSize) {
+        elemQueue = new UnsafeRingQueue<>(queueSize);
+        elemCache = new UnsafeRingQueue<>(queueSize);
+    }
+    
+    public boolean push(T data, long seqnum) {
+        if (elemQueue.canPush()) {
+            ElementImpl elem = elemCache.pop();
+            if (elem==null) 
+                elem = new ElementImpl();
+            elem.init(data, seqnum);
+            elemQueue.push(elem);
+            return true;
+        } else 
+            return false;
+    }
+    
+    public Element<T> peek() {
+        return elemQueue.peek();
+    }
+    
+    public Element<T> pop() {
+        final ElementImpl elem =  elemQueue.pop();
+        if (elem!=null)
+            elemCache.push(elem);
+        return elem;
+    }
+    
+    public interface Element<D> {
+        public D getData();
+        public long getSeqnum();
+        public InboundStreamQueue<D> getQueue();
+    }    
+
+    private class ElementImpl implements Element<T> {
+        private T data;
+        private long seqnum;
+        
+        public void init(T data, long seqnum) {
+            this.data = data;
+            this.seqnum = seqnum;
+        }
+
+        @Override
+        public T getData() {
+            return data;
+        }
+
+        @Override
+        public long getSeqnum() {
+            return seqnum;
+        }
+
+        @Override
+        public InboundStreamQueue<T> getQueue() {
+            return InboundStreamQueue.this;
+        }
     }
 }

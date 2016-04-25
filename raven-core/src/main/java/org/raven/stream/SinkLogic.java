@@ -21,7 +21,7 @@ import org.raven.dp.RavenFuture;
  *
  * @author Mikhail Titov
  */
-public interface Sink<B> {
+public interface SinkLogic<B> extends Logic {
     public enum OperationResult {DONE, INPUT_NOT_CONSUMED, COMPUTING};
     
     public interface Result {

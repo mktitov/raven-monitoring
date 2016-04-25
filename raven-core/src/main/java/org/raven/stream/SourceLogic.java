@@ -20,6 +20,6 @@ package org.raven.stream;
  * @author Mikhail Titov
  * @param <A> the type of the source messages
  */
-public interface Source<A> {
+public interface SourceLogic<A> extends Logic {
     public void readyForSend(MessageSender<A> sender);
 }
