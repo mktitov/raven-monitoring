@@ -53,11 +53,26 @@ public class Publisher<T> implements org.reactivestreams.Publisher<T> {
     public static class PublisherDP<T> extends AbstractDataProcessorLogic {
         private final List<SubscriberQueue<T>> subscriberQueues;
         private final int messageQueueSize;
-        private final static ErrorSubscription errorSubscription = new ErrorSubscription();                
+        private final static ErrorSubscription errorSubscription = new ErrorSubscription();
+        private final UnsafeRingQueue<T> outboundQueue;
+        private final boolean asyncTransmitter;
 
-        public PublisherDP(int messageQueueSize) {
+        public PublisherDP(int messageQueueSize, boolean asyncTransmitter) {
             this.subscriberQueues = new ArrayList<>(2);
             this.messageQueueSize = messageQueueSize;
+            this.outboundQueue = new UnsafeRingQueue<>(this.messageQueueSize);
+            this.asyncTransmitter = asyncTransmitter;
+        }
+
+        @Override
+        public void postInit() {
+            
+        }
+
+        @Override
+        public void postStop() {
+            for (SubscriberQueue queue: subscriberQueues)
+                queue.sendMessages();
         }
 
         @Override public Object processData(Object message) throws Exception {
@@ -70,9 +85,20 @@ public class Publisher<T> implements org.reactivestreams.Publisher<T> {
                 SubscriberQueue queue = ((SubscriberQueue.Cancel)message).getQueue();
                 subscriberQueues.remove(queue);
             } else { //значит поступили данные
-                
+                handleDataFromTransmitter((T) message);
             }
             return null;
+        }
+        
+        private boolean handleDataFromTransmitter(T data) {
+            if (!outboundQueue.push(data)) {
+                if (getContext().getLogger().isErrorEnabled())
+                    getContext().getLogger().error("Error processing data from producer because message PUBLISHER QUEUE IS FULL");
+                getFacade().stop();
+                return false;
+            } else {
+                return true;
+            }
         }
         
         private void subscribeNew(Subscriber subscriber) {
@@ -85,6 +111,12 @@ public class Publisher<T> implements org.reactivestreams.Publisher<T> {
             SubscriberQueue queue = new SubscriberQueue(messageQueueSize, getFacade(), subscriber);
             subscriberQueues.add(queue);
             queue.subscribe();
+        }
+        
+        private class TransmitterImpl implements Transmitter<T>{
+            @Override public boolean transmit(T data) {
+                return asyncTransmitter? getFacade().send(data) : handleDataFromTransmitter(data);
+            }
         }
         
         private static class ErrorSubscription implements Subscription {
@@ -127,6 +159,10 @@ public class Publisher<T> implements org.reactivestreams.Publisher<T> {
                     subscriber.onNext(messageQueue.pop());
                 allowedForSend.addAndGet(-readyForSend);
             }
+        }
+        
+        public void sendError(Throwable error) {
+            subscriber.onError(error);
         }
         
         public long getFreeSlots() {
