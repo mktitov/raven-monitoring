@@ -37,9 +37,18 @@ public abstract class Behaviour implements DataProcessor {
         return new ComposeWith(processor);
     }
     
+    public Behaviour andThen(String behaviourName, DataProcessor processor) {
+        return new ComposeWith(behaviourName, processor);
+    }
+    
     private class ComposeWith extends Behaviour {
         private final DataProcessor thenBehaviour;
 
+        public ComposeWith(String behaviourName, DataProcessor thenBehaviour) {
+            super(behaviourName);
+            this.thenBehaviour = thenBehaviour;
+        }
+        
         public ComposeWith(DataProcessor thenBehaviour) {
             super(behaviourName);
             this.thenBehaviour = thenBehaviour;

@@ -19,8 +19,6 @@ package org.raven.rs;
  *
  * @author Mikhail Titov
  */
-public interface Transmitter<T> {
-    public void onNext(T data);
-    public void onError(Throwable error);
-    public void onComplete();
+public interface Consumer<T> extends Transmitter<T>{
+    public void onSubscribe(StreamSubscription subscription);
 }

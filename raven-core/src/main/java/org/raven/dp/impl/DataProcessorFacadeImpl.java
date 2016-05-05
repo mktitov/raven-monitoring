@@ -529,10 +529,20 @@ public class DataProcessorFacadeImpl implements  DataProcessorFacade {
 
         @Override
         public Stashed stash() {
+            getOrCreateStashedMessages().offer(origMessage);
+            return DataProcessor.STASHED;
+        }
+
+        @Override
+        public Stashed stash(Object message) {
+            getOrCreateStashedMessages().offer(message);
+            return DataProcessor.STASHED;
+        }
+        
+        private Queue getOrCreateStashedMessages() {
             if (stashedMessages==null)
                 stashedMessages = new LinkedList();
-            stashedMessages.offer(origMessage);
-            return DataProcessor.STASHED;
+            return stashedMessages;
         }
 
         @Override

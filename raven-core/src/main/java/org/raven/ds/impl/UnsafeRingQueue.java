@@ -67,4 +67,8 @@ public class UnsafeRingQueue<E> implements RingQueue<E>{
     public long size() {
         return writePos - readPos;
     }
+    
+    public boolean isEmpty() {
+        return writePos==readPos;
+    }
 }
