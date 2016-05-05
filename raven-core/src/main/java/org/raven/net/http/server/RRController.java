@@ -21,20 +21,12 @@ import io.netty.handler.codec.http.HttpRequest;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.Map;
-import java.util.Set;
 import org.raven.auth.LoginService;
-import org.raven.auth.UserContext;
-import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.net.Request;
-import org.raven.net.Response;
 import org.raven.net.ResponseBuilder;
-import org.raven.net.ResponseContext;
-import org.raven.net.ResponseContextListener;
 import org.raven.net.ResponseServiceNode;
 import org.raven.net.impl.ResponseContextImpl;
 import org.raven.sched.ExecutorService;
-import org.slf4j.Logger;
 
 /**
  * Request/Response controller
