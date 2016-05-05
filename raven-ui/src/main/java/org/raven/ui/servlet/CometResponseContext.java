@@ -73,7 +73,7 @@ public class CometResponseContext implements ResponseContext {
     }
 
     public void closeChannel() throws IOException {
-        requestContext.writeProcessed(cometEvent);
+        requestContext.writeProcessed(cometEvent, true);
     }
     
     //other calls to ResponseContext delegating to normal response context   

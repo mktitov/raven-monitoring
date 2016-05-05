@@ -23,6 +23,7 @@
         <module>desktop-client-project</module>
         <module>raven-doc-plugin</module>
         -->
+        <module>comet-support</module>
     </modules>
     <properties>
         <project.reporting.outputEncoding>utf-8</project.reporting.outputEncoding>
@@ -585,7 +586,13 @@
             <dependency>
                 <groupId>org.apache.tomcat</groupId>
                 <artifactId>catalina</artifactId>
-                <version>6.0.41</version>
+                <version>6.0.43</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat</groupId>
+                <artifactId>coyote</artifactId>
+                <version>6.0.43</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>

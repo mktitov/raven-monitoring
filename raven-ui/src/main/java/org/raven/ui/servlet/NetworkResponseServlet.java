@@ -50,6 +50,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.util.Streams;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.coyote.ActionCode;
 import org.apache.tapestry5.ioc.Registry;
 import org.raven.audit.Action;
 import org.raven.audit.AuditRecord;
@@ -492,7 +493,7 @@ public class NetworkResponseServlet extends HttpServlet  {
 //                                response.flushBuffer();
 //                                IOUtils.closeQuietly(out);
                             } finally {
-//                                response.flushBuffer();
+                                response.flushBuffer();
 //                                out.flush();
                                 IOUtils.closeQuietly(contentStream);
 //                                out.flush();
@@ -848,6 +849,7 @@ public class NetworkResponseServlet extends HttpServlet  {
         private final AtomicBoolean readProcessed = new AtomicBoolean();
         private final AtomicBoolean writeProcessed = new AtomicBoolean();
         private final AtomicBoolean closed = new AtomicBoolean();
+        private volatile boolean reallyClosed = false;
         private volatile Response serviceResponse;
         private volatile CometNetworkResponseServlet servlet;
         
@@ -892,13 +894,50 @@ public class NetworkResponseServlet extends HttpServlet  {
             return writeProcessed.get();
         }
         
-        public void writeProcessed(final CometEvent ev) {
+        public boolean isClosed() {
+            return closed.get();
+        }
+        
+        public boolean isReallyClosed() {
+            return reallyClosed;
+        }
+        
+        public void writeProcessed(final CometEvent ev, boolean notNioThread) {
             if (serviceResponse==null && writeProcessed.compareAndSet(false, true)) {
+//                request.setAttribute("org.apache.tomcat.comet.timeout", 1); //1 seconds	
+//                response.flushBuffer();
                 writeProcessedTs = System.currentTimeMillis();
                 if (servletLogger.isDebugEnabled())
 //                    servletLogger.debug("Write processed");
                     servletLogger.debug("Write processed. Trying to close channel");
-                tryToCloseChannelQuietly(ev);
+                if (notNioThread) {
+                    if (!closed.get()) {
+                        org.apache.catalina.connector.Request connectorRequest = 
+                                (org.apache.catalina.connector.Request) request.getAttribute("connectorRequest");
+                        if (connectorRequest!=null) {                            
+//                            try {
+//                                connectorRequest.getResponse().finishResponse();
+//                            } catch (IOException ex) {
+//                                servletLogger.error("Error finish response", ex);
+//                            }
+                            if (servletLogger.isDebugEnabled())
+                                servletLogger.debug("Sending async cometClose event");                            
+//                            try {
+//                                connectorRequest.getResponse().flushBuffer();
+//                            } catch (IOException ex) {
+//                                servletLogger.error("Error finish response", ex);
+//                            }
+//                            try {
+//                                Thread.sleep(100);
+//                            } catch (InterruptedException ex) { }
+//                            if (!closed.get())
+//                                connectorRequest.cometClose();
+//                            connectorRequest.getCoyoteRequest().action(ActionCode.ACTION_CLOSE, connectorRequest.getResponse());
+                            connectorRequest.getCoyoteRequest().action(ActionCode.ACTION_CUSTOM, connectorRequest.getResponse());
+                        }
+                    }
+                } else 
+                    tryToCloseChannelQuietly(ev);
             }
         }
         
@@ -968,13 +1007,24 @@ public class NetworkResponseServlet extends HttpServlet  {
         private void processChannelClose(final CometEvent ev) throws IOException {
             if (closed.compareAndSet(false, true)) {
 //                IOUtils.closeQuietly(ev.getHttpServletRequest().getInputStream());
-                ev.close();
-                responseContext.channelClosed();
-                if (servletLogger.isDebugEnabled())
-                    servletLogger.debug("Channel CLOSED");
+                try {
+                        try {
+                            Thread.sleep(5);
+                        } catch (InterruptedException ex) {
+//                            java.util.logging.Logger.getLogger(NetworkResponseServlet.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    ev.close();                
+                    responseContext.channelClosed();
+                    if (servletLogger.isDebugEnabled())
+                        servletLogger.debug("Channel CLOSED");
+//                    return true;
+                } finally {
+                    reallyClosed = true;                    
+                }
             } else {
                 if (servletLogger.isDebugEnabled())
                     servletLogger.debug("Trying to close channel but it already closed. Ignoring");                
+//                return false;
             }
         }
         
@@ -1037,7 +1087,7 @@ public class NetworkResponseServlet extends HttpServlet  {
                 servletLogger.debug("Requesting response write");
             this.serviceResponse = serviceResponse;
             this.servlet = servlet;
-            request.setAttribute("org.apache.tomcat.comet.timeout", 1);
+//            request.setAttribute("org.apache.tomcat.comet.timeout", 1);
         }
 
         void writeResponseIfNeed(CometEvent ev) {

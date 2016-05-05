@@ -21,6 +21,7 @@ import io.netty.buffer.Unpooled;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Enumeration;
 import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -40,7 +41,7 @@ import org.raven.tree.Node;
 /**
  *
  * @author Mikhail Titov
- */
+ */ 
 public class CometNetworkResponseServlet extends NetworkResponseServlet implements CometProcessor {
     public static final String REQUEST_CONTEXT = "RAVEN_REQUEST_CONTEXT";
     public static final String FORM_URLENCODED_CONTENT_TYPE = "application/x-www-form-urlencoded";
@@ -87,6 +88,11 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
         final RequestContext ctx = createContext(request, response);        
 //        request.setAttribute("org.apache.tomcat.comet.timeout", 5); //30 seconds	
         request.setAttribute("org.apache.tomcat.comet.timeout", 1000); //30 seconds	
+//        StringUtils.j
+        Enumeration names = request.getAttributeNames();
+        while (names.hasMoreElements()) {
+            ctx.servletLogger.info("REQUEST attr: "+names.nextElement());
+        }
         final boolean debugEnabled = ctx.servletLogger.isDebugEnabled();
         if (debugEnabled) 
             ctx.servletLogger.debug(String.format("Initializing request processing (%s event) (id: %s) (contentLength: %s) for URI: %s", 
@@ -170,6 +176,19 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
                     ctx.readProcessed(ev);
                     ctx.writeResponseIfNeed(ev);
                     ctx.tryToCloseChannel(ev);
+                    if (ctx.isClosed()) {
+                        for (int i=0; i<1000; i++) {
+                            if (ctx.isReallyClosed())
+                                break;
+                            try {
+                                Thread.sleep(1);
+                            } catch (InterruptedException ex) {
+                                break;
+                            }
+                        }
+                        if (!ctx.isReallyClosed() && ctx.servletLogger.isErrorEnabled())
+                            ctx.servletLogger.error("ERROR wating for REALLY_CLOSED flag.");
+                    }
                 }
             } else {
 //                if (ctx.servletLogger.isDebugEnabled())
@@ -197,7 +216,7 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
         try {
             processError(ctx, e);
         } finally {
-            ctx.writeProcessed(ce);                            
+            ctx.writeProcessed(ce, true);                            
         }
     }
     
@@ -239,7 +258,7 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
 //                    else
 //                        ctx.setServiceResponse(ev, serviceResponse, this);
                 }
-                ctx.writeProcessed(ev);
+                ctx.writeProcessed(ev, notNioThread);
             } else if (serviceResponse==Response.MANAGING_BY_BUILDER)
                 ctx.responseManagingByBuilder = true;
             
