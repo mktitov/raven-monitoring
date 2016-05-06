@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import org.raven.net.NetworkResponseService;
+import org.raven.net.impl.RequestImpl;
 import org.raven.sched.ExecutorService;
 import org.raven.tree.Node;
 import org.raven.tree.impl.LoggerHelper;
@@ -107,7 +108,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         //экстрактим параметры
         Map<String, Object> params = decodeParams(request);
         //экстрактим заголовки
-        
+        Map<String, Object> headers = decodeHeaders(request);
         //нужно создать Raven Request
         
         //нужно создать ResponseContext
@@ -118,6 +119,8 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         
         //создаем RRController
     }
+    
+    private RequestImpl
     
     private static Map<String, Object> decodeParams(final HttpRequest request) {
         final Map<String, List<String>> params = new QueryStringDecoder(request.getUri()).parameters();
@@ -137,7 +140,9 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         final HttpHeaders httpHeaders = request.headers();
         Map<String, Object> headers = new HashMap<>();
         if (!httpHeaders.isEmpty())
-            
+            for (Map.Entry<String, String> header: httpHeaders)
+                headers.put(header.getKey(), header.getValue());
+        return headers;
     }
 
     private void processHttpRequestContent(HttpContent content) {

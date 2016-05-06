@@ -27,6 +27,7 @@ import groovyx.net.http.HTTPBuilder;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.sql.Connection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import static org.raven.RavenUtils.*;
@@ -225,9 +226,10 @@ public class ApiUtils {
         final StringWriter writer = new StringWriter();
         final MarkupBuilder xml = new MarkupBuilder(writer);
         MarkupBuilderHelper helper = (MarkupBuilderHelper) xml.getMkp();
-        helper.xmlDeclaration(asMap(
-                pair("version", (Object)"1.0"), 
-                pair("encoding", (Object)encoding)));
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put("version", "1.0");
+        params.put("encoding", "encoding");
+        helper.xmlDeclaration(params);
         closure.call(xml);
         return writer.toString();
     }
