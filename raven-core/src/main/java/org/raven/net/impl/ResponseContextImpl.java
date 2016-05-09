@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -45,7 +44,7 @@ import org.weda.internal.annotations.Service;
  *
  * @author Mikhail Titov
  */
-public class ResponseContextImpl implements ResponseContext {
+public abstract class ResponseContextImpl implements ResponseContext {
     public final static String INCLUDE_JQUERY_STR = 
             "<script src=\"%s/jquery/jquery-1.10.1.min.js\"></script>";
     public final static String INCLUDE_JQUERY_CSS_STR = 
@@ -87,49 +86,60 @@ public class ResponseContextImpl implements ResponseContext {
         this.sessionAllowed = _sessionAllowed==null? false : _sessionAllowed;
     }
 
+    @Override
     public synchronized void addListener(ResponseContextListener listener) {
         if (listeners==null)
-            listeners = new ConcurrentSkipListSet<ResponseContextListener>();
+            listeners = new ConcurrentSkipListSet<>();
         listeners.add(listener);
     }
 
+    @Override
     public synchronized void removeListener(ResponseContextListener listener) {
         if (listeners!=null)
             listeners.remove(listener);
     }
 
+    @Override
     public Set<ResponseContextListener> getListeners() {
         return listeners;
     }
     
+    @Override
     public String getSubcontextPath() {
         return subcontextPath;
     }
 
+    @Override
     public LoginService getLoginService() {
         return loginService;
     }
 
+    @Override
     public ResponseBuilder getResponseBuilder() {
         return responseBuilder;
     }
 
+    @Override
     public ResponseServiceNode getServiceNode() {
         return serviceNode;
     }
 
+    @Override
     public Request getRequest() {
         return request;
     }
 
+    @Override
     public Logger getLogger() {
         return logger;
     }
 
+    @Override
     public LoggerHelper getResponseBuilderLogger() {
         return responseBuilderLogger;
     }
 
+    @Override
     public Map<String, String> getHeaders() {
         if (headers==null)
             headers = new HashMap<String, String>();
@@ -140,6 +150,7 @@ public class ResponseContextImpl implements ResponseContext {
         return user.getAccessForNode(responseBuilder.getResponseBuilderNode());
     }
 
+    @Override
     public boolean isAccessGranted(UserContext user) {
         AccessRight accessRight = responseBuilder.getAccessRight();
         if (accessRight==null) return false;
@@ -150,14 +161,17 @@ public class ResponseContextImpl implements ResponseContext {
         }
     }
 
+    @Override
     public boolean isSessionAllowed() {
         return sessionAllowed;
     }
 
+    @Override
     public Response getResponse(UserContext user) throws NetworkResponseServiceExeption {
         return getResponse(this, user);
     }
 
+    @Override
     public Response getResponse(ResponseContext delegate, UserContext user) throws NetworkResponseServiceExeption {
         final Request request = delegate.getRequest();
         final String subcontextPath = delegate.getSubcontextPath();
@@ -229,18 +243,22 @@ public class ResponseContextImpl implements ResponseContext {
         return buf.toString();
     }
 
-    public OutputStream getResponseStream() throws IOException {
-        throw new UnsupportedOperationException("Not supported by this response context implementation. Use comet servlet");
-    }
+//    @Override
+//    public OutputStream getResponseStream() throws IOException {
+//        throw new UnsupportedOperationException("Not supported by this response context implementation. Use comet servlet");
+//    }
+//
+//    @Override
+//    public PrintWriter getResponseWriter() throws IOException {
+//        throw new UnsupportedOperationException("Not supported by this response context implementation. Use comet servlet");
+//    }
+//
+//    @Override
+//    public void closeChannel() throws IOException {
+//        throw new UnsupportedOperationException("Not supported by this response context implementation. Use comet servlet");
+//    }
 
-    public PrintWriter getResponseWriter() throws IOException {
-        throw new UnsupportedOperationException("Not supported by this response context implementation. Use comet servlet");
-    }
-
-    public void closeChannel() throws IOException {
-        throw new UnsupportedOperationException("Not supported by this response context implementation. Use comet servlet");
-    }
-
+    @Override
     public void channelClosed() {
         Set<ResponseContextListener> _listeners = listeners;
         if (_listeners!=null)

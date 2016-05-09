@@ -24,13 +24,19 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.util.ReferenceCountUtil;
-import java.util.Collections;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
+import org.apache.commons.lang.StringUtils;
+import org.apache.http.entity.ContentType;
 import org.raven.net.NetworkResponseService;
-import org.raven.net.impl.RequestImpl;
+import org.raven.net.Request;
 import org.raven.sched.ExecutorService;
 import org.raven.tree.Node;
 import org.raven.tree.impl.LoggerHelper;
@@ -44,10 +50,12 @@ public class HttpServerHandler extends ChannelDuplexHandler {
     private final Node owner;
     private final AtomicLong connectionCounter;
     private final AtomicLong requestCounter;
-    private final NetworkResponseService responseService;
+    private final NetworkResponseService responseService;    
     
     private LoggerHelper logger;
     private RRController rrController;
+    private InetSocketAddress remoteAddr;
+    private InetSocketAddress localAddr;
 
     public HttpServerHandler(ExecutorService executor, Node owner, AtomicLong connectionCounter, AtomicLong requestCounter, 
             NetworkResponseService responseService) 
@@ -62,6 +70,8 @@ public class HttpServerHandler extends ChannelDuplexHandler {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         long connectionNum = connectionCounter.incrementAndGet();
+        remoteAddr = (InetSocketAddress) ctx.channel().remoteAddress();
+        localAddr = (InetSocketAddress) ctx.channel().localAddress();
         logger = new LoggerHelper(owner, "(+"+connectionNum+") " + ctx.channel().remoteAddress().toString()+" ");
         if (logger.isDebugEnabled())
             logger.debug("New connection established");
@@ -101,15 +111,21 @@ public class HttpServerHandler extends ChannelDuplexHandler {
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
     }
     
-    private void processHttpRequest(HttpRequest request, ChannelHandlerContext ctx) {
+    private void processHttpRequest(HttpRequest request, ChannelHandlerContext ctx) throws Exception {
         final long requestNum = requestCounter.incrementAndGet();
         if (logger.isDebugEnabled())
-            logger.debug("Received new request #"+requestNum);
+            logger.debug("Received new request #"+requestNum);        
+        
+        final String contentTypeStr = request.headers().get(HttpHeaders.Names.CONTENT_TYPE);
+        final ContentType contentType = contentTypeStr==null || contentTypeStr.isEmpty()? null : ContentType.parse(contentTypeStr);
         //экстрактим параметры
-        Map<String, Object> params = decodeParams(request);
+        QueryStringDecoder queryString = new QueryStringDecoder(request.getUri());
+        Map<String, Object> params = new HashMap<>();
+        addQueryStringParams(params, queryString.parameters());
         //экстрактим заголовки
         Map<String, Object> headers = decodeHeaders(request);
         //нужно создать Raven Request
+        RequestImpl ravenRequest = new RequestImpl(request, localAddr, remoteAddr, params, headers, contentTypeStr, contentType);
         
         //нужно создать ResponseContext
         
@@ -119,22 +135,20 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         
         //создаем RRController
     }
-    
-    private RequestImpl
-    
-    private static Map<String, Object> decodeParams(final HttpRequest request) {
-        final Map<String, List<String>> params = new QueryStringDecoder(request.getUri()).parameters();
-        final Map<String, Object> requestParams = new HashMap<>();
-        if (params!=null && !params.isEmpty()) {
+        
+    private static Map<String, Object> addQueryStringParams(Map<String, Object> requestParams, Map<String, List<String>> queryStringParams) {
+        if (queryStringParams!=null && !queryStringParams.isEmpty()) {
             List<String> vals;
-            for (Map.Entry<String, List<String>> param: params.entrySet()) {            
+            for (Map.Entry<String, List<String>> param: queryStringParams.entrySet()) {            
                 vals = param.getValue();
                 if (vals!=null && !vals.isEmpty()) 
-                    requestParams.put(param.getKey(), vals.get(0)); //берем только первой значение параметра, хоть это не совсем корректно
+                    requestParams.put(param.getKey(), vals.get(0)); 
             }
         }
         return requestParams;
     }
+    
+//    private static Map<String, Object> addUrl
     
     private static Map<String, Object> decodeHeaders(final HttpRequest request) {
         final HttpHeaders httpHeaders = request.headers();
@@ -150,5 +164,126 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         if (content instanceof LastHttpContent) {
             
         }
+    }
+    
+    private static class RequestImpl implements Request {
+        private final InetSocketAddress remoteAddr;
+        private final InetSocketAddress localAddr;
+        private final Map<String, Object> params;
+        private final Map<String, Object> headers;
+        private final String servicePath;
+        private final String contextPath;
+        private final String method;
+        private final String contentType;
+        private final String contentCharset;
+        private final long ifModifiedSince;
+        private Map<String, Object> attrs = null;
+        private InputStream content;
+        private InputStreamReader contentReader;
+        
+        
+        public RequestImpl(HttpRequest nettyRequest, InetSocketAddress localAddr, InetSocketAddress remoteAddr,
+                Map<String, Object> params, Map<String, Object> headers, String path, ContentType contentType) throws Exception
+        {
+            this.remoteAddr = remoteAddr;
+            this.localAddr = localAddr;
+            this.params = params;
+            this.headers = headers;
+            String[] pathElems = path.split("/");
+            if (pathElems.length<2)
+                throw new InvalidPathException(path);
+            this.servicePath = pathElems[0];
+            this.contextPath = StringUtils.join(pathElems, "/", 1, pathElems.length);
+            this.method = nettyRequest.getMethod().name();
+            this.ifModifiedSince = nettyRequest.headers().contains(HttpHeaders.Names.IF_MODIFIED_SINCE)?
+                    HttpHeaders.getDateHeader(nettyRequest, HttpHeaders.Names.IF_MODIFIED_SINCE).getTime()
+                    : -1;
+            this.contentType = contentType!=null? contentType.getMimeType() : null;
+            String _contentCharset=null;
+            if (contentType!=null)
+                _contentCharset = contentType.getCharset()==null? null : contentType.getCharset().name();
+            this.contentCharset = _contentCharset;
+        }
+
+        @Override
+        public String getRemoteAddr() {
+            return remoteAddr.getAddress().getHostAddress();
+        }
+
+        @Override
+        public int getRemotePort() {
+            return remoteAddr.getPort();
+        }
+
+        @Override
+        public String getServerHost() {
+            return localAddr.getHostName();
+        }
+
+        @Override
+        public Map<String, Object> getHeaders() {
+            return headers;
+        }
+
+        @Override
+        public Map<String, Object> getAttrs() {
+            if (attrs!=null)
+                return attrs;
+            else {
+                synchronized(this) {
+                    if (attrs==null)
+                        attrs = new HashMap<>();
+                    return attrs;
+                }
+            }
+        }
+
+        @Override
+        public Map<String, Object> getParams() {
+            return params;
+        }
+
+        @Override
+        public String getServicePath() {
+            return servicePath;
+        }
+
+        @Override
+        public String getContextPath() {
+            return contextPath;
+        }
+
+        @Override
+        public String getRootPath() {
+            return "";
+        }
+
+        @Override
+        public String getMethod() {
+            return method;
+        }
+
+        @Override
+        public long getIfModifiedSince() {
+            return ifModifiedSince;
+        }
+
+        @Override
+        public String getContentType() {
+            return contentType==null? null : contentType;
+        }
+
+        @Override
+        public InputStream getContent() throws IOException {
+            return content;
+        }
+
+        @Override
+        public Reader getContentReader() throws IOException {
+            if (contentReader==null)
+                contentReader = contentCharset==null? new InputStreamReader(content) : new InputStreamReader(content, contentCharset);
+            return contentReader;
+        }
+        
     }
 }
