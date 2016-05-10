@@ -16,6 +16,8 @@
 package org.raven.auth.impl;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.script.Bindings;
 import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
@@ -36,6 +38,7 @@ import org.raven.auth.UserContextConfigurator;
 import org.raven.expr.impl.BindingSupportImpl;
 import org.raven.log.LogLevel;
 import org.raven.net.ResponseContext;
+import org.raven.net.http.server.HttpSession;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import static org.raven.util.NodeUtils.*;
@@ -54,6 +57,7 @@ public class LoginServiceNode extends BaseNode implements LoginService {
     private OperationStatistic authStat;
     private OperationStatistic configureStat;
     private OperationStatistic loginListenersStat;
+    private Map<String, HttpSession> sessions;
     
     private BindingSupportImpl bindingSupport;
 
@@ -68,6 +72,7 @@ public class LoginServiceNode extends BaseNode implements LoginService {
         super.initFields();
         initStat();
         bindingSupport = new BindingSupportImpl();
+        sessions = new ConcurrentHashMap<>();
     }
 
     @Override

@@ -18,6 +18,7 @@
 package org.raven.auth;
 
 import org.raven.net.ResponseContext;
+import org.raven.net.http.server.HttpSession;
 
 /**
  *
@@ -28,6 +29,8 @@ public interface LoginService
     public static final String ROOT_USER_NAME = "root";
     public static final String PUBLIC_GROUP = "PUBLIC";
     
+    public HttpSession getSession(String sessionId);
+    public HttpSession createSession();
 //    public UserContext login(String username, String password, String ip, boolean needServerSession) 
     public UserContext login(String username, String password, String ip, ResponseContext responseContext) throws LoginException;
 //    public UserContext login(String username, String password, String ip) throws LoginException;

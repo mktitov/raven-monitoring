@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.net.http.server;
+package org.raven.net.http.server.impl;
 
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -32,13 +32,16 @@ import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.entity.ContentType;
-import org.raven.net.NetworkResponseService;
+import org.raven.auth.AnonymousLoginService;
+import org.raven.auth.LoginService;
+import org.raven.auth.UserContext;
+import org.raven.net.AccessDeniedException;
 import org.raven.net.Request;
-import org.raven.sched.ExecutorService;
-import org.raven.tree.Node;
+import org.raven.net.ResponseContext;
+import org.raven.net.http.server.HttpServerContext;
+import org.raven.net.http.server.InvalidPathException;
 import org.raven.tree.impl.LoggerHelper;
 
 /**
@@ -46,33 +49,23 @@ import org.raven.tree.impl.LoggerHelper;
  * @author Mikhail Titov
  */
 public class HttpServerHandler extends ChannelDuplexHandler {
-    private final ExecutorService executor;
-    private final Node owner;
-    private final AtomicLong connectionCounter;
-    private final AtomicLong requestCounter;
-    private final NetworkResponseService responseService;    
+    private final HttpServerContext serverContext;
     
     private LoggerHelper logger;
     private RRController rrController;
     private InetSocketAddress remoteAddr;
     private InetSocketAddress localAddr;
 
-    public HttpServerHandler(ExecutorService executor, Node owner, AtomicLong connectionCounter, AtomicLong requestCounter, 
-            NetworkResponseService responseService) 
-    {
-        this.executor = executor;
-        this.owner = owner;
-        this.connectionCounter = connectionCounter;
-        this.requestCounter = requestCounter;
-        this.responseService = responseService;
+    public HttpServerHandler(HttpServerContext serverContext) {
+        this.serverContext = serverContext;
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        long connectionNum = connectionCounter.incrementAndGet();
+        long connectionNum = serverContext.getConnectionsCounter().incrementAndGet();
         remoteAddr = (InetSocketAddress) ctx.channel().remoteAddress();
         localAddr = (InetSocketAddress) ctx.channel().localAddress();
-        logger = new LoggerHelper(owner, "(+"+connectionNum+") " + ctx.channel().remoteAddress().toString()+" ");
+        logger = new LoggerHelper(serverContext.getOwner(), "(+"+connectionNum+") " + ctx.channel().remoteAddress().toString()+" ");
         if (logger.isDebugEnabled())
             logger.debug("New connection established");
     }
@@ -112,7 +105,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
     }
     
     private void processHttpRequest(HttpRequest request, ChannelHandlerContext ctx) throws Exception {
-        final long requestNum = requestCounter.incrementAndGet();
+        final long requestNum = serverContext.getRequestsCounter().incrementAndGet();
         if (logger.isDebugEnabled())
             logger.debug("Received new request #"+requestNum);        
         
@@ -128,12 +121,24 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         RequestImpl ravenRequest = new RequestImpl(request, localAddr, remoteAddr, params, headers, contentTypeStr, contentType);
         
         //нужно создать ResponseContext
+        ResponseContext responseContext = serverContext.getNetworkResponseService().getResponseContext(ravenRequest);
         
         //проверяем аутентификацию
+        
         
         //добавляем запись в audit
         
         //создаем RRController
+    }
+    
+    private UserContext checkAuth(HttpRequest request, ResponseContext responseContext) throws Exception {
+        final LoginService loginService = responseContext.getLoginService();
+        if (!loginService.isLoginAllowedFromIp(remoteAddr.getAddress().getHostAddress()))
+            throw new AccessDeniedException();
+        if (loginService instanceof AnonymousLoginService)
+            return responseContext.getLoginService().login(null, null, null, null);        
+        UserContext userContext = null;
+        return null;
     }
         
     private static Map<String, Object> addQueryStringParams(Map<String, Object> requestParams, Map<String, List<String>> queryStringParams) {

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.net.http.server;
+package org.raven.net.http.server.impl;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
@@ -21,11 +21,16 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import java.util.concurrent.atomic.AtomicLong;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.net.NetworkResponseService;
+import org.raven.net.http.server.HttpServerContext;
 import org.raven.sched.ExecutorService;
+import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNodeWithStat;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.internal.annotations.Service;
 
 /**
  *
@@ -33,6 +38,9 @@ import org.weda.annotations.constraints.NotNull;
  */
 @NodeClass
 public class HttpServerNode extends BaseNodeWithStat {
+    @Service
+    private static NetworkResponseService networkResponseService;
+    
     @NotNull @Parameter()
     private Integer port;
     
@@ -54,14 +62,32 @@ public class HttpServerNode extends BaseNodeWithStat {
     @NotNull @Parameter
     private ExecutorService executor;
     
+    @Parameter(readOnly = true)
+    private AtomicLong  connectionsCount;
+    
+    @Parameter(readOnly = true)
+    private AtomicLong requestsCount;
+    
+    @Parameter(readOnly = true)
+    private AtomicLong writtenBytes;
+    
+    @Parameter(readOnly = true)
+    private AtomicLong readBytes;
+    
     private EventLoopGroup acceptorGroup;
     private EventLoopGroup workerGroup;
+    private HttpServerContext serverContext;
 
     @Override
     protected void doInit() throws Exception {
         super.doInit();
         acceptorGroup = null;
         workerGroup = null;
+        connectionsCount = new AtomicLong();
+        requestsCount = new AtomicLong();
+        writtenBytes = new AtomicLong();
+        readBytes = new AtomicLong();
+        serverContext = null;
     }
     
     @Override
@@ -69,6 +95,8 @@ public class HttpServerNode extends BaseNodeWithStat {
         super.doStart();
         acceptorGroup = new NioEventLoopGroup(acceptorThreadsCount);
         workerGroup = new NioEventLoopGroup(workerThreadsCount);
+        serverContext = new ServerContextImpl(connectionsCount, requestsCount, writtenBytes, readBytes, 
+                networkResponseService, this, executor);
         try {
             ServerBootstrap bootstrap = new ServerBootstrap()
                     .group(acceptorGroup, workerGroup)
@@ -141,6 +169,82 @@ public class HttpServerNode extends BaseNodeWithStat {
     public void setKeystorePassword(String keystorePassword) {
         this.keystorePassword = keystorePassword;
     }        
+
+    public AtomicLong getConnectionsCount() {
+        return connectionsCount;
+    }
+
+    public AtomicLong getRequestsCount() {
+        return requestsCount;
+    }
+
+    public AtomicLong getWrittenBytes() {
+        return writtenBytes;
+    }
+
+    public AtomicLong getReadBytes() {
+        return readBytes;
+    }
+    
+    private static class ServerContextImpl implements HttpServerContext {
+        private final AtomicLong connectionsCounter;
+        private final AtomicLong requestsCounter;
+        private final AtomicLong writtenBytesCounter;
+        private final AtomicLong readBytesCounter;
+        private final NetworkResponseService responseService;
+        private final Node owner;
+        private final ExecutorService executor;
+
+        public ServerContextImpl(AtomicLong connectionsCounter, AtomicLong requestsCounter, 
+                AtomicLong writtenBytesCounter, AtomicLong readBytesCounter, 
+                NetworkResponseService responseService, Node owner, ExecutorService executor) 
+        {
+            this.connectionsCounter = connectionsCounter;
+            this.requestsCounter = requestsCounter;
+            this.writtenBytesCounter = writtenBytesCounter;
+            this.readBytesCounter = readBytesCounter;
+            this.responseService = responseService;
+            this.owner = owner;
+            this.executor = executor;
+        }
+
+
+        @Override
+        public AtomicLong getConnectionsCounter() {
+            return connectionsCounter;
+        }
+
+        @Override
+        public AtomicLong getRequestsCounter() {
+            return requestsCounter;
+        }
+
+        @Override
+        public AtomicLong getWrittenBytesCounter() {
+            return writtenBytesCounter;
+        }
+
+        @Override
+        public AtomicLong getReadBytesCounter() {
+            return readBytesCounter;
+        }
+
+        @Override
+        public NetworkResponseService getNetworkResponseService() {
+            return responseService;
+        }
+
+        @Override
+        public ExecutorService getExecutor() {
+            return executor;
+        }
+
+        @Override
+        public Node getOwner() {
+            return owner;
+        }
+        
+    }
     
     private static class Initializer extends ChannelInitializer<SocketChannel> {
 

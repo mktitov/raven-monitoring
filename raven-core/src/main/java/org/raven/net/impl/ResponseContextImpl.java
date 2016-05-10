@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.raven.BindingNames;
 import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
@@ -32,6 +33,7 @@ import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.net.Request;
 import org.raven.net.Response;
 import org.raven.net.ResponseBuilder;
+import org.raven.net.ResponseAdapter;
 import org.raven.net.ResponseContext;
 import org.raven.net.ResponseContextListener;
 import org.raven.net.ResponseServiceNode;
@@ -44,7 +46,7 @@ import org.weda.internal.annotations.Service;
  *
  * @author Mikhail Titov
  */
-public abstract class ResponseContextImpl implements ResponseContext {
+public class ResponseContextImpl implements ResponseContext {
     public final static String INCLUDE_JQUERY_STR = 
             "<script src=\"%s/jquery/jquery-1.10.1.min.js\"></script>";
     public final static String INCLUDE_JQUERY_CSS_STR = 
@@ -67,6 +69,8 @@ public abstract class ResponseContextImpl implements ResponseContext {
     private final LoggerHelper responseBuilderLogger;
     private final ResponseServiceNode serviceNode;
     private final boolean sessionAllowed;
+    private AtomicBoolean headersAdded = new AtomicBoolean();
+    private volatile ResponseAdapter responseAdapter;
     private Map<String, String> headers;
     private Set<ResponseContextListener> listeners;
 
@@ -86,6 +90,11 @@ public abstract class ResponseContextImpl implements ResponseContext {
         this.sessionAllowed = _sessionAllowed==null? false : _sessionAllowed;
     }
 
+    @Override
+    public void attachResponseAdapter(ResponseAdapter responseAdapter) {
+        this.responseAdapter = responseAdapter;
+    }
+ 
     @Override
     public synchronized void addListener(ResponseContextListener listener) {
         if (listeners==null)
@@ -242,21 +251,28 @@ public abstract class ResponseContextImpl implements ResponseContext {
         }
         return buf.toString();
     }
+    
+    private void addHeadersToResponse() {
+        if (headersAdded.compareAndSet(false, true) && headers!=null) 
+            for (Map.Entry<String, String> header: headers.entrySet()) 
+                responseAdapter.addHeader(header.getKey(), header.getValue());
+    }
 
-//    @Override
-//    public OutputStream getResponseStream() throws IOException {
-//        throw new UnsupportedOperationException("Not supported by this response context implementation. Use comet servlet");
-//    }
-//
-//    @Override
-//    public PrintWriter getResponseWriter() throws IOException {
-//        throw new UnsupportedOperationException("Not supported by this response context implementation. Use comet servlet");
-//    }
-//
-//    @Override
-//    public void closeChannel() throws IOException {
-//        throw new UnsupportedOperationException("Not supported by this response context implementation. Use comet servlet");
-//    }
+    @Override
+    public OutputStream getResponseStream() throws IOException {
+        addHeadersToResponse();
+        return responseAdapter.getStream();
+    }
+
+    @Override
+    public PrintWriter getResponseWriter() throws IOException {
+        return responseAdapter.getWriter();
+    }
+
+    @Override
+    public void closeChannel() throws IOException {
+        responseAdapter.close();
+    }
 
     @Override
     public void channelClosed() {

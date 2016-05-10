@@ -30,7 +30,7 @@ import org.slf4j.Logger;
  * Response context for SRI (simple response interface)
  * @author Mikhail Titov
  */
-public interface ResponseContext {
+public interface ResponseContext {    
     /**
      * Returns the login service
      */
@@ -91,6 +91,10 @@ public interface ResponseContext {
      * Returns the response builder logger
      */
     public Logger getResponseBuilderLogger();
+    /**
+     * Attaches response channel to the response context
+     */
+    public void attachResponseAdapter(ResponseAdapter responseAdapter);
     /**
      * Returns the response output stream.
      * Response builder must use this stream only when it returns the {@link Response#ALREADY_COMPOSED} or 
