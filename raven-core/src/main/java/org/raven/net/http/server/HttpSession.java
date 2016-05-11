@@ -53,4 +53,8 @@ public interface HttpSession {
      * Attach user context to the session
      */
     public void setUserContext(UserContext userContext);
+    /**
+     * Invalidates the session.
+     */
+    public void invalidate();
 }

@@ -15,20 +15,22 @@
  */
 package org.raven.net.http.server.impl;
 
-import java.util.HashMap;
-import java.util.Map;
-import org.raven.dp.impl.AbstractDataProcessorLogic;
+import java.util.Collection;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import static org.junit.Assert.*;
+import org.raven.net.http.server.HttpSession;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class SessionManagerDP extends AbstractDataProcessorLogic {
-    private final Map<String, AbstractHttpSession> sessions = new HashMap<>();
-
-    @Override
-    public Object processData(Object message) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-    
+public class SessionManagerImplTest {
+    @Test
+    public void test() {
+        
+//    }
 }

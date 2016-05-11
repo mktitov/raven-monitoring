@@ -16,6 +16,7 @@
 package org.raven.net.http.server.impl;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.raven.auth.UserContext;
 import org.raven.net.http.server.HttpSession;
 
@@ -23,49 +24,56 @@ import org.raven.net.http.server.HttpSession;
  *
  * @author Mikhail Titov
  */
-public class HttpSessionImpl implements HttpSession {
+public abstract class AbstractHttpSession implements HttpSession {
     private final String id;
     private final long creationTime;
-    private volatile long lastAccessTime;
     private volatile UserContext userContext;
     private volatile Map<String, Object> attributes;
 
-    public HttpSessionImpl(String id) {
+    public AbstractHttpSession(String id) {
         this.id = id;
+        this.creationTime = System.currentTimeMillis();
     }
 
     @Override
     public String getId() {
+        return id;
     }
 
     @Override
     public long getCreationTime() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public long getLastAccessTime() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return creationTime;
     }
 
     @Override
     public void setAttribute(String name, Object value) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (value==null)
+            return;
+        getOrCreateAttributes().put(name, value);
     }
 
     @Override
     public Object getAttribute(String name) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return attributes==null? null : getOrCreateAttributes().get(name);
     }
 
     @Override
     public UserContext getUserContext() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return userContext;
     }
 
     @Override
     public void setUserContext(UserContext userContext) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        this.userContext = userContext;
     }
     
+    private Map<String, Object> getOrCreateAttributes() {
+        if (attributes==null) {
+            synchronized(this) {
+                if (attributes==null)
+                    attributes = new ConcurrentHashMap<>();
+            }
+        }
+        return attributes;
+    }
 }

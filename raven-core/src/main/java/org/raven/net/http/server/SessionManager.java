@@ -13,22 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.net.http.server.impl;
+package org.raven.net.http.server;
 
-import java.util.HashMap;
-import java.util.Map;
-import org.raven.dp.impl.AbstractDataProcessorLogic;
+import java.util.Collection;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class SessionManagerDP extends AbstractDataProcessorLogic {
-    private final Map<String, AbstractHttpSession> sessions = new HashMap<>();
-
-    @Override
-    public Object processData(Object message) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-    
+public interface SessionManager {
+    public void start();
+    public void stop();
+    public HttpSession getSession(String sessionId);
+    public HttpSession createSession();
+    public void invalidateSession(String sessionId);
+    public Collection<? extends HttpSession> getSessions();
 }
