@@ -22,6 +22,8 @@ import java.util.Iterator;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.raven.audit.Auditor;
+import org.raven.auth.UserContextService;
 import org.raven.net.http.server.HttpSession;
 import org.raven.net.http.server.SessionManager;
 import org.raven.sched.Executor;
@@ -35,6 +37,7 @@ import org.raven.tree.Node;
 public class SessionManagerImpl implements SessionManager {
     public final static long SESSIONS_CHECK_INTERVAL = 1000L;
     private final Executor executor;
+    private final Auditor auditor;
     private final Node owner;
     private final long sessionTimeout; //in ms
     
@@ -42,7 +45,7 @@ public class SessionManagerImpl implements SessionManager {
     private final AtomicBoolean stopped = new AtomicBoolean();
     private volatile CheckSessionsTask checkSessionsTask;
 
-    public SessionManagerImpl(Executor executor, Node owner, long sessionTimeout) {
+    public SessionManagerImpl(Executor executor, Node owner, long sessionTimeout, Auditor auditor) {
         this.executor = executor;
         this.owner = owner;
         this.sessionTimeout = sessionTimeout;
@@ -85,6 +88,12 @@ public class SessionManagerImpl implements SessionManager {
     @Override
     public void invalidateSession(String sessionId) {
         sessions.remove(sessionId);
+    }
+    
+    private void auditSessionClose(Session session) {
+        if (session.getUserContext()!=null)
+        final Node serviceNode = (Node)session.getAttribute(UserContextService.SERVICE_NODE_SESSION_ATTR);
+        
     }
 
     @Override

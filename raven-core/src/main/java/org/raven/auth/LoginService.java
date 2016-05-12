@@ -18,7 +18,7 @@
 package org.raven.auth;
 
 import org.raven.net.ResponseContext;
-import org.raven.net.http.server.HttpSession;
+import org.raven.net.http.server.SessionManager;
 
 /**
  *
@@ -32,6 +32,8 @@ public interface LoginService
 //    public HttpSession getSession(String sessionId);
 //    public HttpSession createSession();
 //    public UserContext login(String username, String password, String ip, boolean needServerSession) 
+    public boolean isStarted();
+    public SessionManager getSessionManager();
     public UserContext login(String username, String password, String ip, ResponseContext responseContext) throws LoginException;
 //    public UserContext login(String username, String password, String ip) throws LoginException;
 //    public UserContext getUserForSessionId(String sessionId);

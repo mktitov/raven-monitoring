@@ -21,5 +21,6 @@ package org.raven.net.http.server;
  */
 public interface HttpConsts {
     public static final String DEFAULT_CONTENT_CHARSET = "UTF-8";
+    public static final String SESSIONID_COOKIE_NAME = "RSESSION";
     public static final String FORM_URLENCODED_MIME_TYPE = "application/x-www-form-urlencoded";   
 }

@@ -22,6 +22,7 @@ import org.raven.auth.UserContext;
 import org.raven.net.Authentication;
 import org.raven.net.NetworkResponseContext;
 import org.raven.net.ResponseContext;
+import org.raven.net.http.server.SessionManager;
 
 /**
  *
@@ -51,5 +52,15 @@ public class NetRespContextLoginServiceWrapper implements LoginService {
 
     public String getName() {
         return respContext.getName();
+    }
+
+    @Override
+    public boolean isStarted() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public SessionManager getSessionManager() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

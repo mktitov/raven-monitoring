@@ -20,6 +20,7 @@ import org.raven.auth.LoginException;
 import org.raven.auth.UserContext;
 import org.raven.auth.impl.AnonymousLoginServiceNode;
 import org.raven.net.ResponseContext;
+import org.raven.net.http.server.SessionManager;
 
 /**
  *
@@ -41,5 +42,15 @@ public class NetRespAnonymousLoginService implements AnonymousLoginService {
 
     public String getName() {
         return "Anonymous login service";
+    }
+
+    @Override
+    public boolean isStarted() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public SessionManager getSessionManager() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

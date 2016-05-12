@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
+import org.raven.net.http.server.HttpSession;
 import org.raven.net.impl.NetworkResponseServiceNode;
 import org.raven.prj.Project;
 import org.slf4j.Logger;
@@ -95,6 +96,15 @@ public interface ResponseContext {
      * Attaches response channel to the response context
      */
     public void attachResponseAdapter(ResponseAdapter responseAdapter);
+    /**
+     * Attaches the http session to the response context
+     */
+    public void setSession(HttpSession session);
+    /**
+     * Returns the http session attached to the response context
+     * @return 
+     */
+    public HttpSession getSession();
     /**
      * Returns the response output stream.
      * Response builder must use this stream only when it returns the {@link Response#ALREADY_COMPOSED} or 

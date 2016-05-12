@@ -37,6 +37,7 @@ import org.raven.net.ResponseAdapter;
 import org.raven.net.ResponseContext;
 import org.raven.net.ResponseContextListener;
 import org.raven.net.ResponseServiceNode;
+import org.raven.net.http.server.HttpSession;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.LoggerHelper;
 import org.slf4j.Logger;
@@ -71,6 +72,7 @@ public class ResponseContextImpl implements ResponseContext {
     private final boolean sessionAllowed;
     private AtomicBoolean headersAdded = new AtomicBoolean();
     private volatile ResponseAdapter responseAdapter;
+    private volatile HttpSession session;
     private Map<String, String> headers;
     private Set<ResponseContextListener> listeners;
 
@@ -88,6 +90,16 @@ public class ResponseContextImpl implements ResponseContext {
         this.responseBuilderLogger = new LoggerHelper(responseBuilder.getResponseBuilderNode(), "["+requestId+"] ");
         Boolean _sessionAllowed = responseBuilder.isSessionAllowed();
         this.sessionAllowed = _sessionAllowed==null? false : _sessionAllowed;
+    }
+
+    @Override
+    public void setSession(HttpSession session) {
+        this.session = session;
+    }
+
+    @Override
+    public HttpSession getSession() {
+        return session;
     }
 
     @Override

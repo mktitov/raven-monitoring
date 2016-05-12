@@ -23,6 +23,7 @@ import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
 import org.raven.conf.Configurator;
 import org.raven.net.ResponseContext;
+import org.raven.net.http.server.SessionManager;
 import org.slf4j.Logger;
 
 /**
@@ -96,5 +97,15 @@ public class AuthServiceImpl implements LoginService
             }
         }
         return null;
+    }
+
+    @Override
+    public boolean isStarted() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public SessionManager getSessionManager() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

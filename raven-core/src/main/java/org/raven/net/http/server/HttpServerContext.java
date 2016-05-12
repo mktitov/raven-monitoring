@@ -16,6 +16,7 @@
 package org.raven.net.http.server;
 
 import java.util.concurrent.atomic.AtomicLong;
+import org.raven.audit.Auditor;
 import org.raven.net.NetworkResponseService;
 import org.raven.sched.ExecutorService;
 import org.raven.tree.Node;
@@ -53,4 +54,8 @@ public interface HttpServerContext {
      * Returns the http server node
      */
     public Node getOwner();
+    /**
+     * Returns the auditor service
+     */
+    public Auditor getAuditor();
 }

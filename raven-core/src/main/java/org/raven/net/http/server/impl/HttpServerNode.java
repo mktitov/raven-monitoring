@@ -24,6 +24,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import java.util.concurrent.atomic.AtomicLong;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.audit.Auditor;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.http.server.HttpServerContext;
 import org.raven.sched.ExecutorService;
@@ -40,6 +41,8 @@ import org.weda.internal.annotations.Service;
 public class HttpServerNode extends BaseNodeWithStat {
     @Service
     private static NetworkResponseService networkResponseService;
+    @Service
+    private static Auditor auditor;
     
     @NotNull @Parameter()
     private Integer port;
@@ -96,7 +99,7 @@ public class HttpServerNode extends BaseNodeWithStat {
         acceptorGroup = new NioEventLoopGroup(acceptorThreadsCount);
         workerGroup = new NioEventLoopGroup(workerThreadsCount);
         serverContext = new ServerContextImpl(connectionsCount, requestsCount, writtenBytes, readBytes, 
-                networkResponseService, this, executor);
+                networkResponseService, this, executor, auditor);
         try {
             ServerBootstrap bootstrap = new ServerBootstrap()
                     .group(acceptorGroup, workerGroup)
@@ -194,10 +197,11 @@ public class HttpServerNode extends BaseNodeWithStat {
         private final NetworkResponseService responseService;
         private final Node owner;
         private final ExecutorService executor;
+        private final Auditor auditor;
 
         public ServerContextImpl(AtomicLong connectionsCounter, AtomicLong requestsCounter, 
                 AtomicLong writtenBytesCounter, AtomicLong readBytesCounter, 
-                NetworkResponseService responseService, Node owner, ExecutorService executor) 
+                NetworkResponseService responseService, Node owner, ExecutorService executor, Auditor auditor) 
         {
             this.connectionsCounter = connectionsCounter;
             this.requestsCounter = requestsCounter;
@@ -206,8 +210,13 @@ public class HttpServerNode extends BaseNodeWithStat {
             this.responseService = responseService;
             this.owner = owner;
             this.executor = executor;
+            this.auditor = auditor;
         }
 
+        @Override
+        public Auditor getAuditor() {
+            return auditor;
+        }
 
         @Override
         public AtomicLong getConnectionsCounter() {

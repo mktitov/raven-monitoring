@@ -23,25 +23,38 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import io.netty.util.ReferenceCountUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.InetSocketAddress;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.entity.ContentType;
+import org.raven.audit.Action;
+import org.raven.audit.AuditRecord;
 import org.raven.auth.AnonymousLoginService;
 import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
+import org.raven.auth.UserContextService;
 import org.raven.net.AccessDeniedException;
+import org.raven.net.AuthorizationNeededException;
 import org.raven.net.Request;
 import org.raven.net.ResponseContext;
+import org.raven.net.UnauthoriedException;
+import org.raven.net.http.server.HttpConsts;
 import org.raven.net.http.server.HttpServerContext;
+import org.raven.net.http.server.HttpSession;
 import org.raven.net.http.server.InvalidPathException;
+import org.raven.net.http.server.SessionManager;
 import org.raven.tree.impl.LoggerHelper;
 
 /**
@@ -49,7 +62,9 @@ import org.raven.tree.impl.LoggerHelper;
  * @author Mikhail Titov
  */
 public class HttpServerHandler extends ChannelDuplexHandler {
-    private final HttpServerContext serverContext;
+    private final static AuthorizationNeededException authorizationNeededException = new AuthorizationNeededException();
+    
+    private final HttpServerContext serverContext;    
     
     private LoggerHelper logger;
     private RRController rrController;
@@ -111,10 +126,11 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         
         final String contentTypeStr = request.headers().get(HttpHeaders.Names.CONTENT_TYPE);
         final ContentType contentType = contentTypeStr==null || contentTypeStr.isEmpty()? null : ContentType.parse(contentTypeStr);
+        
         //экстрактим параметры
-        QueryStringDecoder queryString = new QueryStringDecoder(request.getUri());
+        QueryStringDecoder queryString = new QueryStringDecoder(request.getUri());        
         Map<String, Object> params = new HashMap<>();
-        addQueryStringParams(params, queryString.parameters());
+        addQueryStringParams(params, queryString.parameters());        
         //экстрактим заголовки
         Map<String, Object> headers = decodeHeaders(request);
         //нужно создать Raven Request
@@ -124,21 +140,98 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         ResponseContext responseContext = serverContext.getNetworkResponseService().getResponseContext(ravenRequest);
         
         //провер€ем аутентификацию
-        
+        final Set<Cookie> cookies = decodeCookies(request);
         
         //добавл€ем запись в audit
         
         //создаем RRController
     }
     
-    private UserContext checkAuth(HttpRequest request, ResponseContext responseContext) throws Exception {
+    private UserContext checkAuth(HttpRequest request, ResponseContext responseContext, Set<Cookie> cookies) throws Exception {
         final LoginService loginService = responseContext.getLoginService();
-        if (!loginService.isLoginAllowedFromIp(remoteAddr.getAddress().getHostAddress()))
+        final SessionManager sessionManager = loginService.getSessionManager();
+        if (!loginService.isStarted() || !loginService.isLoginAllowedFromIp(remoteAddr.getAddress().getHostAddress()))
             throw new AccessDeniedException();
         if (loginService instanceof AnonymousLoginService)
             return responseContext.getLoginService().login(null, null, null, null);        
         UserContext userContext = null;
+        if (responseContext.isSessionAllowed()) {
+            if (sessionManager==null) 
+                throw new Exception("LoginService (%s) doesn't have session manager");
+            final String sessionId = getSessionId(cookies);
+            HttpSession session;
+            if (sessionId!=null && (session = sessionManager.getSession(sessionId))!=null) {
+                userContext = session.getUserContext();
+                if (userContext!=null && userContext.isNeedRelogin()) {
+                    //handling relogin event
+                    if (responseContext.getLogger().isDebugEnabled())
+                        responseContext.getLogger().debug("User ({}, {}) logged out", userContext.getLogin(), 
+                                userContext.getName());
+                    session.invalidate();
+                    userContext = null;
+                    throw authorizationNeededException;
+                }                
+            }
+        }
+        boolean created = false;
+        if (userContext==null) {
+            created = true;
+            String requestAuth = request.headers().get(HttpHeaders.Names.AUTHORIZATION);
+            if (requestAuth == null) throw authorizationNeededException;
+            else {
+                String userAndPath = new String(Base64.decodeBase64(requestAuth.substring(6).getBytes()));
+                final int colonPos = userAndPath.indexOf(':');
+                if (colonPos==-1 || colonPos==0 || colonPos==userAndPath.length()-1)
+                    throw authorizationNeededException;
+                else {
+                    final String login = userAndPath.substring(0, colonPos);
+                    final String pwd = userAndPath.substring(colonPos+1);
+                    userContext = loginService.login(login, pwd, remoteAddr.getAddress().getHostAddress(), responseContext);
+                }
+            }
+        } else if (responseContext.getResponseBuilderLogger().isDebugEnabled())
+            responseContext.getResponseBuilderLogger().debug("User ({}) already logged in. Skipping auth.", userContext);
+        if (responseContext.isAccessGranted(userContext)) {
+            if (created && responseContext.isSessionAllowed()) {
+                if (responseContext.getResponseBuilderLogger().isDebugEnabled())
+                    responseContext.getResponseBuilderLogger().debug("Created new session for user: "+userContext);
+                serverContext.getAuditor().write(new AuditRecord(
+                        responseContext.getResponseBuilder().getResponseBuilderNode(), 
+                        userContext.getLogin(), remoteAddr.getAddress().getHostAddress(), Action.SESSION_START, null));
+                final HttpSession newSession = sessionManager.createSession(); //сессию нужно в response context запихать
+                newSession.setUserContext(userContext);
+                
+//                final javax.servlet.http.HttpSession newSession = request.getSession();
+                
+                newSession.setAttribute(UserContextService.SERVICE_NODE_SESSION_ATTR, responseContext.getServiceNode());
+                newSession.setUserContext(userContext);
+            }
+        } else {
+            if (responseContext.getLogger().isWarnEnabled())
+                responseContext.getLogger().warn(String.format(
+                        "User (%s) has no access to (%s) using (%s) operation", 
+                        userContext, request.getPathInfo(), request.getMethod()));
+            throw new UnauthoriedException();
+        }
+        
         return null;
+    }
+    
+    public Set<Cookie> decodeCookies(final HttpRequest request) {
+        String cookieStr = request.headers().get(HttpHeaders.Names.COOKIE);
+        return cookieStr==null? Collections.EMPTY_SET : ServerCookieDecoder.STRICT.decode(cookieStr);
+    }
+    
+    public Cookie getSessionIdCookie(final Set<Cookie> cookies) {
+        for (Cookie cookie: cookies)
+            if (HttpConsts.SESSIONID_COOKIE_NAME.equals(cookie.name()))
+                return cookie;
+        return null;
+    }
+    
+    public String getSessionId(final Set<Cookie> cookies) {
+        Cookie sessionIdCookie = getSessionIdCookie(cookies);
+        return sessionIdCookie==null? null : sessionIdCookie.value();
     }
         
     private static Map<String, Object> addQueryStringParams(Map<String, Object> requestParams, Map<String, List<String>> queryStringParams) {
