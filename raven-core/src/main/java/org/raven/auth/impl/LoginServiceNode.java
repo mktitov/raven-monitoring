@@ -21,6 +21,7 @@ import javax.script.Bindings;
 import org.raven.BindingNames;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
+import org.raven.audit.Auditor;
 import org.raven.auth.AuthenticationFailedException;
 import org.raven.auth.Authenticator;
 import org.raven.auth.IllegalLoginException;
@@ -46,6 +47,7 @@ import static org.raven.util.NodeUtils.*;
 import org.raven.util.OperationStatistic;
 import org.slf4j.Logger;
 import org.weda.annotations.constraints.NotNull;
+import org.weda.internal.annotations.Service;
 
 /**
  *
@@ -53,6 +55,8 @@ import org.weda.annotations.constraints.NotNull;
  */
 @NodeClass(parentNode=LoginManagerNode.class)
 public class LoginServiceNode extends BaseNode implements LoginService {
+    @Service
+    private static Auditor auditor;
     
     private OperationStatistic ipFiltersStat;
     private OperationStatistic loginStat;
@@ -97,7 +101,7 @@ public class LoginServiceNode extends BaseNode implements LoginService {
         super.doStart();
         initStat();
         initChildren();
-        sessionManager = new SessionManagerImpl(executor, this, sessionTimeoutTimeUnit.toMillis(sessionTimeout));        
+        sessionManager = new SessionManagerImpl(executor, this, sessionTimeoutTimeUnit.toMillis(sessionTimeout), auditor);        
     }
 
     @Override
