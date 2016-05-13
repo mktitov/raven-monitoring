@@ -18,6 +18,7 @@ package org.raven.auth.impl;
 import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
 import org.raven.net.ResponseContext;
+import org.raven.net.http.server.SessionManager;
 import org.raven.tree.impl.BaseNode;
 
 /**
@@ -35,6 +36,11 @@ public class TestAuthService extends BaseNode implements LoginService {
     }
 
     public boolean isLoginAllowedFromIp(String ip) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public SessionManager getSessionManager() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }

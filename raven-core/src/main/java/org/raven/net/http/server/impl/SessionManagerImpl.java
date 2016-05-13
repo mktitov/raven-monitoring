@@ -22,7 +22,10 @@ import java.util.Iterator;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.raven.audit.Action;
+import org.raven.audit.AuditRecord;
 import org.raven.audit.Auditor;
+import org.raven.auth.UserContext;
 import org.raven.auth.UserContextService;
 import org.raven.net.http.server.HttpSession;
 import org.raven.net.http.server.SessionManager;
@@ -49,6 +52,7 @@ public class SessionManagerImpl implements SessionManager {
         this.executor = executor;
         this.owner = owner;
         this.sessionTimeout = sessionTimeout;
+        this.auditor = auditor;
     }
 
     @Override
@@ -87,13 +91,18 @@ public class SessionManagerImpl implements SessionManager {
 
     @Override
     public void invalidateSession(String sessionId) {
-        sessions.remove(sessionId);
+        Session session = sessions.remove(sessionId);
+        if (session!=null)
+            auditSessionClose(session);
     }
     
     private void auditSessionClose(Session session) {
-        if (session.getUserContext()!=null)
-        final Node serviceNode = (Node)session.getAttribute(UserContextService.SERVICE_NODE_SESSION_ATTR);
-        
+        UserContext userContext = session.getUserContext();
+        if (userContext != null) {
+            Node serviceNode = (Node)session.getAttribute(UserContextService.SERVICE_NODE_SESSION_ATTR);
+            auditor.write(new AuditRecord(
+                    serviceNode, userContext.getLogin(), userContext.getHost(), Action.SESSION_STOP, null));            
+        }
     }
 
     @Override
@@ -107,9 +116,14 @@ public class SessionManagerImpl implements SessionManager {
     
     private void checkSessions() {
         final long curTime = System.currentTimeMillis();
-        for (Iterator<Session> it = sessions.values().iterator(); it.hasNext();)
-            if (it.next().lastAccessTime+sessionTimeout < curTime)
+        Session session;
+        for (Iterator<Session> it = sessions.values().iterator(); it.hasNext();) {
+            session = it.next();
+            if (session.lastAccessTime+sessionTimeout < curTime)  {
                 it.remove();
+                auditSessionClose(session);
+            }
+        }
     }
     
     private class CheckSessionsTask extends AbstractTask {

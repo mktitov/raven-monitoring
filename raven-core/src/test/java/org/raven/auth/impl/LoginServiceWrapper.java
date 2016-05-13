@@ -19,6 +19,7 @@ import org.raven.auth.LoginException;
 import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
 import org.raven.net.ResponseContext;
+import org.raven.net.http.server.SessionManager;
 import org.raven.tree.impl.BaseNode;
 
 /**
@@ -42,5 +43,10 @@ public class LoginServiceWrapper extends BaseNode implements LoginService {
 
     public void setLoginService(LoginService loginService) {
         this.loginService = loginService;
+    }
+
+    @Override
+    public SessionManager getSessionManager() {
+        return loginService.getSessionManager();
     }
 }

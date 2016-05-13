@@ -147,7 +147,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         //создаем RRController
     }
     
-    private UserContext checkAuth(HttpRequest request, ResponseContext responseContext, Set<Cookie> cookies) throws Exception {
+    private UserContext checkAuth(HttpRequest request, ResponseContext responseContext, Set<Cookie> cookies, String path) throws Exception {
         final LoginService loginService = responseContext.getLoginService();
         final SessionManager sessionManager = loginService.getSessionManager();
         if (!loginService.isStarted() || !loginService.isLoginAllowedFromIp(remoteAddr.getAddress().getHostAddress()))
@@ -210,7 +210,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
             if (responseContext.getLogger().isWarnEnabled())
                 responseContext.getLogger().warn(String.format(
                         "User (%s) has no access to (%s) using (%s) operation", 
-                        userContext, request.getPathInfo(), request.getMethod()));
+                        userContext, path, request.getMethod()));
             throw new UnauthoriedException();
         }
         
