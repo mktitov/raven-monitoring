@@ -227,21 +227,6 @@ public class NetworkResponseServlet extends HttpServlet  {
             if (created && responseContext.isSessionAllowed()) {
                 if (responseContext.getResponseBuilderLogger().isDebugEnabled())
                     responseContext.getResponseBuilderLogger().debug("Created new session for user: "+userContext);
-//                if (session==null) {
-//                    Cookie[] cookies = request.getCookies();
-//                    if (cookies!=null) 
-//                        for (Cookie cookie: cookies)
-//                            if (   "JSESSIONID".equals(cookie.getName()) && cookie.getValue()!=null 
-//                                && !cookie.getValue().isEmpty())
-//                            {
-//                            if (responseContext.getLogger().isWarnEnabled())
-//                                responseContext.getLogger().warn(String.format(
-//                                        "User (%s) session invalidated need relogon", 
-//                                        userContext));
-//                            resetSessionIdCookie(response);
-//                            throw new UnauthoriedException();
-//                            }
-//                }
                 auditor.write(new AuditRecord(
                         responseContext.getResponseBuilder().getResponseBuilderNode(), 
                         userContext.getLogin(), request.getRemoteAddr(), Action.SESSION_START, null));

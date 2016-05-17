@@ -30,6 +30,7 @@ import org.raven.net.NetworkResponseServiceExeption;
 import org.raven.net.Request;
 import org.raven.net.Response;
 import org.raven.net.ResponseBuilder;
+import org.raven.net.ResponseAdapter;
 import org.raven.net.ResponseContext;
 import org.raven.net.ResponseContextListener;
 import org.raven.net.ResponseServiceNode;
@@ -54,7 +55,12 @@ public class CometResponseContext implements ResponseContext {
         this.requestContext = requestContext;
         this.cometEvent = event;
     }
-    
+
+    @Override
+    public void attachResponseAdapter(ResponseAdapter responseChannel) {
+        throw new UnsupportedOperationException("Not supported");
+    }
+
     private void addHeadersToResponse() {
         final Map<String, String> headers = responseContext.getHeaders();
         if (headersAdded.compareAndSet(false, true) && headers!=null) 
