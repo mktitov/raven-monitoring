@@ -105,7 +105,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         try {
             if (msg instanceof HttpRequest) {
-                processHttpRequest((HttpRequest) msg, ctx);
+                processNewHttpRequest((HttpRequest) msg, ctx);
             }
             if (msg instanceof HttpContent) {
                 processHttpRequestContent((HttpContent) msg);
@@ -119,7 +119,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
     }
     
-    private void processHttpRequest(HttpRequest request, ChannelHandlerContext ctx) throws Exception {
+    private void processNewHttpRequest(HttpRequest request, ChannelHandlerContext ctx) throws Exception {
         final long requestNum = serverContext.getRequestsCounter().incrementAndGet();
         if (logger.isDebugEnabled())
             logger.debug("Received new request #"+requestNum);        
@@ -141,10 +141,16 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         
         //проверяем аутентификацию
         final Set<Cookie> cookies = decodeCookies(request);
-        
+        final UserContext userContext = checkAuth(request, responseContext, cookies, contentTypeStr);                
         //добавляем запись в audit
+        serverContext.getAuditor().write(new AuditRecord(
+                responseContext.getResponseBuilder().getResponseBuilderNode(), 
+                userContext.getLogin(), 
+                userContext.getHost(), 
+                Action.VIEW, "Method: "+request.getMethod()+"\nParams: "+params));        
         
         //создаем RRController
+        rrController = new RRController(ctx, responseContext, serverContext.getExecutor());
     }
     
     private UserContext checkAuth(HttpRequest request, ResponseContext responseContext, Set<Cookie> cookies, String path) throws Exception {
@@ -212,9 +218,8 @@ public class HttpServerHandler extends ChannelDuplexHandler {
                         "User (%s) has no access to (%s) using (%s) operation", 
                         userContext, path, request.getMethod()));
             throw new UnauthoriedException();
-        }
-        
-        return null;
+        }        
+        return userContext;
     }
     
     public Set<Cookie> decodeCookies(final HttpRequest request) {

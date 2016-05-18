@@ -17,14 +17,17 @@ package org.raven.net.http.server.impl;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpContent;
-import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.LastHttpContent;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import org.raven.auth.LoginService;
 import org.raven.net.Request;
+import org.raven.net.ResponseAdapter;
 import org.raven.net.ResponseBuilder;
+import org.raven.net.ResponseContext;
 import org.raven.net.ResponseServiceNode;
+import org.raven.net.http.server.HttpConsts;
 import org.raven.net.impl.ResponseContextImpl;
 import org.raven.sched.ExecutorService;
 
@@ -34,19 +37,46 @@ import org.raven.sched.ExecutorService;
  */
 public class RRController {
     private final ChannelHandlerContext ctx;
+    private final ResponseContext responseContext;
     private final ExecutorService executor;
+    private final Request request;
+    
+    private volatile boolean building;
 
-    public RRController(ChannelHandlerContext ctx, ExecutorService executor) {
+    public RRController(Request request, ResponseContext responseContext, ChannelHandlerContext ctx, ExecutorService executor
+    ) {
+        this.request = request;
         this.ctx = ctx;
+        this.responseContext = responseContext;
         this.executor = executor;
     }
     
-    public void onRequest(final HttpRequest request) {
+    public void start(boolean receivedFullRequest) {
+        if (receivedFullRequest || HttpConsts.FORM_URLENCODED_MIME_TYPE.equals(request.getContentType()))
+            return; //wating for calling onRequestContent
+        buildResponse();
         
     }
     
     public void onRequestContent(final HttpContent chunk) {
-        
+        if (chunk instanceof LastHttpContent) {
+            if (!building)
+        } else {
+            
+        }
+    }
+    
+    private void buildResponse(ResponseAdapter responseDatapter) {
+        building = true;
+    }
+    
+    private void tryBuildResponse() {        
+        //Response можем начать билдить если
+        //1. ≈сли прочитаны все параметры учитыва€ и те что наход€тс€ в content:
+        //   contentType==application/x-www-form-urlencoded
+        //   contentType==multipart/
+        //2. 
+        if (request.getContentType()==null || )
     }
     
     //free resources. For example reference counted
