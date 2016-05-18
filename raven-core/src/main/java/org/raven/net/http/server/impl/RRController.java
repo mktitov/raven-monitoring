@@ -15,6 +15,7 @@
  */
 package org.raven.net.http.server.impl;
 
+import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.LastHttpContent;
@@ -40,6 +41,7 @@ public class RRController {
     private final ResponseContext responseContext;
     private final ExecutorService executor;
     private final Request request;
+    private final boolean formUrlEncoded;
     
     private volatile boolean building;
 
@@ -49,25 +51,38 @@ public class RRController {
         this.ctx = ctx;
         this.responseContext = responseContext;
         this.executor = executor;
+        this.formUrlEncoded = HttpConsts.FORM_URLENCODED_MIME_TYPE.equals(request.getContentType());
     }
     
     public void start(boolean receivedFullRequest) {
-        if (receivedFullRequest || HttpConsts.FORM_URLENCODED_MIME_TYPE.equals(request.getContentType()))
+        if (receivedFullRequest || formUrlEncoded)
             return; //wating for calling onRequestContent
-        buildResponse();
+        buildResponse(null); //создаем динамический адаптер 
         
     }
     
     public void onRequestContent(final HttpContent chunk) {
         if (chunk instanceof LastHttpContent) {
             if (!building)
+                buildResponse(null); //создаем адаптер со статическим контентом
         } else {
             
         }
     }
     
-    private void buildResponse(ResponseAdapter responseDatapter) {
+    private void buildResponse(final LastHttpContent chunk) {
         building = true;
+        final ResponseAdapter responseAdapter = new ResponseAdapterImpl();
+        //создаем response input stream
+        if (chunk!=null) {
+            if (formUrlEncoded) {
+                //парсим и добавляем переметры
+            } else {
+                //создаем статический контент
+                final ByteBufInputStream requestStream = new ByteBufInputStream(chunk.content());
+            }
+        }
+        
     }
     
     private void tryBuildResponse() {        
@@ -76,7 +91,6 @@ public class RRController {
         //   contentType==application/x-www-form-urlencoded
         //   contentType==multipart/
         //2. 
-        if (request.getContentType()==null || )
     }
     
     //free resources. For example reference counted
@@ -84,22 +98,27 @@ public class RRController {
         
     }
     
-    private class RespContext extends ResponseContextImpl {
+    private class ResponseAdapterImpl implements ResponseAdapter {
 
         @Override
-        public OutputStream getResponseStream() throws IOException {
-            return super.getResponseStream();
+        public OutputStream getStream() {
+            throw new UnsupportedOperationException("Not supported yet.");
         }
 
         @Override
-        public PrintWriter getResponseWriter() throws IOException {
-            return super.getResponseWriter();
-        }        
-
-        public RespContext(Request request, String builderPath, String subcontext, long requestId, 
-                LoginService loginService, ResponseBuilder responseBuilder, ResponseServiceNode serviceNode) 
-        {
-            super(request, builderPath, subcontext, requestId, loginService, responseBuilder, serviceNode);
+        public PrintWriter getWriter() {
+            throw new UnsupportedOperationException("Not supported yet.");
         }
-    } 
+
+        @Override
+        public void close() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public void addHeader(String name, String value) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+        
+    }
 }

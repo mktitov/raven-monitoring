@@ -280,13 +280,14 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         private final String contentType;
         private final String contentCharset;
         private final long ifModifiedSince;
-        private Map<String, Object> attrs = null;
         private InputStream content;
+        private Map<String, Object> attrs = null;
         private InputStreamReader contentReader;
         
         
         public RequestImpl(HttpRequest nettyRequest, InetSocketAddress localAddr, InetSocketAddress remoteAddr,
-                Map<String, Object> params, Map<String, Object> headers, String path, ContentType contentType) throws Exception
+                Map<String, Object> params, Map<String, Object> headers, String path, ContentType contentType) 
+            throws Exception
         {
             this.remoteAddr = remoteAddr;
             this.localAddr = localAddr;
@@ -380,13 +381,16 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         public InputStream getContent() throws IOException {
             return content;
         }
-
+        
+        public void attachContentInputStream(InputStream is) {
+            this.content = is;
+        }
+        
         @Override
         public Reader getContentReader() throws IOException {
             if (contentReader==null)
                 contentReader = contentCharset==null? new InputStreamReader(content) : new InputStreamReader(content, contentCharset);
             return contentReader;
-        }
-        
+        }        
     }
 }
