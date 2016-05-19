@@ -58,4 +58,12 @@ public interface HttpServerContext {
      * Returns the auditor service
      */
     public Auditor getAuditor();
+    /**
+     * Returns the response buffer size
+     */
+    public int getResponseStreamBufferSize();
+    /**
+     * Returns the max bytes pending for write
+     */
+    public int getResponseStreamMaxPendingBytesForWrite();
 }

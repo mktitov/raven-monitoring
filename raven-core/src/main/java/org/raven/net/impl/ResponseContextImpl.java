@@ -277,7 +277,7 @@ public class ResponseContextImpl implements ResponseContext {
     }
 
     @Override
-    public PrintWriter getResponseWriter() throws IOException {
+    public PrintWriter getResponseWriter() throws IOException {        
         return responseAdapter.getWriter();
     }
 

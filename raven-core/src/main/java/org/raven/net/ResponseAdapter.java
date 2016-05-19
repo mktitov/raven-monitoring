@@ -15,6 +15,7 @@
  */
 package org.raven.net;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 
@@ -30,7 +31,7 @@ public interface ResponseAdapter {
     /**
      * Returns the writer for the response channel
      */
-    public PrintWriter getWriter();
+    public PrintWriter getWriter() throws IOException;
     /**
      * Closes the response channel
      */

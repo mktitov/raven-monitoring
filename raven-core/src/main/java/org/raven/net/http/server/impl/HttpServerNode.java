@@ -65,6 +65,12 @@ public class HttpServerNode extends BaseNodeWithStat {
     @NotNull @Parameter
     private ExecutorService executor;
     
+    @NotNull @Parameter(defaultValue = "1024")
+    private Integer responseStreamBufferSize;
+    
+    @NotNull @Parameter(defaultValue = "4096")
+    private Integer responseStreamMaxPendingBytesForWrite;   
+    
     @Parameter(readOnly = true)
     private AtomicLong  connectionsCount;
     
@@ -99,7 +105,8 @@ public class HttpServerNode extends BaseNodeWithStat {
         acceptorGroup = new NioEventLoopGroup(acceptorThreadsCount);
         workerGroup = new NioEventLoopGroup(workerThreadsCount);
         serverContext = new ServerContextImpl(connectionsCount, requestsCount, writtenBytes, readBytes, 
-                networkResponseService, this, executor, auditor);
+                networkResponseService, this, executor, auditor, 
+                responseStreamBufferSize, responseStreamMaxPendingBytesForWrite);
         try {
             ServerBootstrap bootstrap = new ServerBootstrap()
                     .group(acceptorGroup, workerGroup)
@@ -123,6 +130,22 @@ public class HttpServerNode extends BaseNodeWithStat {
 
     public void setExecutor(ExecutorService executor) {
         this.executor = executor;
+    }
+
+    public Integer getResponseStreamBufferSize() {
+        return responseStreamBufferSize;
+    }
+
+    public void setResponseStreamBufferSize(Integer responseStreamBufferSize) {
+        this.responseStreamBufferSize = responseStreamBufferSize;
+    }
+
+    public Integer getResponseStreamMaxPendingBytesForWrite() {
+        return responseStreamMaxPendingBytesForWrite;
+    }
+
+    public void setResponseStreamMaxPendingBytesForWrite(Integer responseStreamMaxPendingBytesForWrite) {
+        this.responseStreamMaxPendingBytesForWrite = responseStreamMaxPendingBytesForWrite;
     }
 
     public Integer getPort() {
@@ -198,10 +221,13 @@ public class HttpServerNode extends BaseNodeWithStat {
         private final Node owner;
         private final ExecutorService executor;
         private final Auditor auditor;
+        private final int responseStreamBufferSize;
+        private final int responseStreamMaxPendingBytesForWrite;
 
         public ServerContextImpl(AtomicLong connectionsCounter, AtomicLong requestsCounter, 
                 AtomicLong writtenBytesCounter, AtomicLong readBytesCounter, 
-                NetworkResponseService responseService, Node owner, ExecutorService executor, Auditor auditor) 
+                NetworkResponseService responseService, Node owner, ExecutorService executor, 
+                Auditor auditor, int responseStreamBufferSize, int responseStreamMaxPendingBytesForWrite) 
         {
             this.connectionsCounter = connectionsCounter;
             this.requestsCounter = requestsCounter;
@@ -211,6 +237,8 @@ public class HttpServerNode extends BaseNodeWithStat {
             this.owner = owner;
             this.executor = executor;
             this.auditor = auditor;
+            this.responseStreamBufferSize = responseStreamBufferSize;
+            this.responseStreamMaxPendingBytesForWrite = responseStreamMaxPendingBytesForWrite;
         }
 
         @Override
@@ -251,6 +279,16 @@ public class HttpServerNode extends BaseNodeWithStat {
         @Override
         public Node getOwner() {
             return owner;
+        }
+
+        @Override
+        public int getResponseStreamBufferSize() {
+            return responseStreamBufferSize;
+        }
+
+        @Override
+        public int getResponseStreamMaxPendingBytesForWrite() {
+            return responseStreamMaxPendingBytesForWrite;
         }
         
     }

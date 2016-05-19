@@ -150,7 +150,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
                 Action.VIEW, "Method: "+request.getMethod()+"\nParams: "+params));        
         
         //создаем RRController
-        rrController = new RRController(ctx, responseContext, serverContext.getExecutor());
+//        rrController = new RRController(ctx, responseContext, serverContext.getExecutor());
     }
     
     private UserContext checkAuth(HttpRequest request, ResponseContext responseContext, Set<Cookie> cookies, String path) throws Exception {
