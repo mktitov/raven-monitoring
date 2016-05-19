@@ -269,7 +269,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         }
     }
     
-    private static class RequestImpl implements Request {
+    public static class RequestImpl implements Request {
         private final InetSocketAddress remoteAddr;
         private final InetSocketAddress localAddr;
         private final Map<String, Object> params;
@@ -375,6 +375,11 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         @Override
         public String getContentType() {
             return contentType==null? null : contentType;
+        }
+
+        @Override
+        public String getContentCharset() {
+            return contentCharset;
         }
 
         @Override

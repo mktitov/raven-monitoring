@@ -91,6 +91,10 @@ public interface Request {
      */
     public String getContentType();
     /**
+     * Returns the content charset
+     */
+    public String getContentCharset();
+    /**
      * Returns the request content type or null if content type is not known
      * @throws IOException 
      */

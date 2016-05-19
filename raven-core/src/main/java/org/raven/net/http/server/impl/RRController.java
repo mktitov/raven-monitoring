@@ -19,17 +19,16 @@ import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.LastHttpContent;
-import java.io.IOException;
+import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.util.ReferenceCounted;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import org.raven.auth.LoginService;
-import org.raven.net.Request;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 import org.raven.net.ResponseAdapter;
-import org.raven.net.ResponseBuilder;
 import org.raven.net.ResponseContext;
-import org.raven.net.ResponseServiceNode;
 import org.raven.net.http.server.HttpConsts;
-import org.raven.net.impl.ResponseContextImpl;
 import org.raven.sched.ExecutorService;
 
 /**
@@ -40,12 +39,13 @@ public class RRController {
     private final ChannelHandlerContext ctx;
     private final ResponseContext responseContext;
     private final ExecutorService executor;
-    private final Request request;
+    private final HttpServerHandler.RequestImpl request;
     private final boolean formUrlEncoded;
-    
+    private volatile List<ReferenceCounted> resources;        
     private volatile boolean building;
 
-    public RRController(Request request, ResponseContext responseContext, ChannelHandlerContext ctx, ExecutorService executor
+    public RRController(HttpServerHandler.RequestImpl request, ResponseContext responseContext, ChannelHandlerContext ctx, 
+            ExecutorService executor
     ) {
         this.request = request;
         this.ctx = ctx;
@@ -75,11 +75,19 @@ public class RRController {
         final ResponseAdapter responseAdapter = new ResponseAdapterImpl();
         //создаем response input stream
         if (chunk!=null) {
+            final ByteBufInputStream requestStream = new ByteBufInputStream(chunk.content());
+            resources.add(chunk.content().retain());
             if (formUrlEncoded) {
                 //парсим и добавляем переметры
+                String contentCharset = request.getContentCharset()==null? 
+                        HttpConsts.DEFAULT_CONTENT_CHARSET : request.getContentCharset();
+                String content = chunk.content().toString(Charset.forName(contentCharset));
+                QueryStringDecoder decoder = new QueryStringDecoder(content);
+                request.attachContentInputStream(EmptyInputStream.INSTANCE);
             } else {
-                //создаем статический контент
-                final ByteBufInputStream requestStream = new ByteBufInputStream(chunk.content());
+                request.attachContentInputStream(requestStream);
+                //создаем статический request stream
+                
             }
         }
         
@@ -95,7 +103,15 @@ public class RRController {
     
     //free resources. For example reference counted
     public void release() {
-        
+        if (resources!=null)
+            for (ReferenceCounted resource: resources)
+                resource.release();
+    }
+    
+    private void addResource(ReferenceCounted resource) {
+        if (resources==null) 
+            resources = new ArrayList<>();
+        resources.add(resource);
     }
     
     private class ResponseAdapterImpl implements ResponseAdapter {

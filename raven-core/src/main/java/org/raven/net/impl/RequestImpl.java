@@ -97,6 +97,11 @@ public class RequestImpl implements Request {
         return httpRequest.getContentType();
     }
 
+    @Override
+    public String getContentCharset() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
     public InputStream getContent() throws IOException {
         return httpRequest.getInputStream();
     }
