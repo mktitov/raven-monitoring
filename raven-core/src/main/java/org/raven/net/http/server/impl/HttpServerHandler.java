@@ -76,6 +76,11 @@ public class HttpServerHandler extends ChannelDuplexHandler {
     }
 
     @Override
+    public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
+        super.channelWritabilityChanged(ctx);
+    }
+
+    @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         long connectionNum = serverContext.getConnectionsCounter().incrementAndGet();
         remoteAddr = (InetSocketAddress) ctx.channel().remoteAddress();
@@ -123,7 +128,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         final long requestNum = serverContext.getRequestsCounter().incrementAndGet();
         if (logger.isDebugEnabled())
             logger.debug("Received new request #"+requestNum);        
-        
+        final LoggerHelper requestLogger = new LoggerHelper(logger, " req#"+requestNum+": ");
         final String contentTypeStr = request.headers().get(HttpHeaders.Names.CONTENT_TYPE);
         final ContentType contentType = contentTypeStr==null || contentTypeStr.isEmpty()? null : ContentType.parse(contentTypeStr);
         

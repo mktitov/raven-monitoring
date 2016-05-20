@@ -15,12 +15,9 @@
  */
 package org.raven.net.http.server.impl;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
-import io.netty.handler.codec.http.HttpContent;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -36,5 +33,16 @@ public class RRControllerTest {
         headers.add("Content-Type", "text/plain");
         assertEquals("text/plain", headers.get("Content-Type"));
         assertEquals("text/plain", headers.get("Content-TYPE"));
+    }
+    
+    @Test
+    public void testEmptyBuffer() {
+        ByteBuf buf = Unpooled.EMPTY_BUFFER;
+        System.out.println("buf class: "+buf.getClass().getName());
+        System.out.println("refCnt: "+buf.refCnt());
+        buf.release();
+        System.out.println("refCnt: "+buf.refCnt());
+        buf.release();
+        System.out.println("refCnt: "+buf.refCnt());
     }
 }

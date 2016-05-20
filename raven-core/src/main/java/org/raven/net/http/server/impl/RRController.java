@@ -17,11 +17,12 @@ package org.raven.net.http.server.impl;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
-import io.netty.buffer.ByteBufOutputStream;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpContent;
 import io.netty.handler.codec.http.DefaultHttpResponse;
+import io.netty.handler.codec.http.DefaultLastHttpContent;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
@@ -35,6 +36,7 @@ import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.http.entity.ContentType;
 import org.apache.tika.metadata.HttpHeaders;
@@ -43,27 +45,31 @@ import org.raven.net.ResponseContext;
 import org.raven.net.http.server.HttpConsts;
 import org.raven.net.http.server.HttpServerContext;
 import org.raven.sched.ExecutorService;
+import org.raven.tree.impl.LoggerHelper;
 
 /**
  * Request/Response controller
  * @author Mikhail Titov
  */
 public class RRController {    
+    public final static DefaultLastHttpContent EMPTY_LAST_HTTP_CONTENT = new DefaultLastHttpContent(Unpooled.EMPTY_BUFFER);
     private final HttpServerContext serverContext;
     private final ChannelHandlerContext ctx;
     private final ResponseContext responseContext;
     private final HttpServerHandler.RequestImpl request;
+    private final LoggerHelper logger;
     private final boolean formUrlEncoded;
     private volatile List<ReferenceCounted> resources;        
     private volatile boolean building;
 
     public RRController(HttpServerContext serverContext,
             HttpServerHandler.RequestImpl request, ResponseContext responseContext, ChannelHandlerContext ctx, 
-            ExecutorService executor
+            ExecutorService executor, LoggerHelper logger
     ) {
         this.serverContext = serverContext;
         this.request = request;
         this.ctx = ctx;
+        this.logger = logger;
         this.responseContext = responseContext;
         this.formUrlEncoded = HttpConsts.FORM_URLENCODED_MIME_TYPE.equals(request.getContentType());
     }
@@ -86,25 +92,28 @@ public class RRController {
     
     private void buildResponse(final LastHttpContent chunk) {
         building = true;
-        final ResponseAdapter responseAdapter = new ResponseWriter();
+        final ResponseWriter responseAdapter = new ResponseWriter();
         //создаем response input stream
         if (chunk!=null) {
-            final ByteBufInputStream requestStream = new ByteBufInputStream(chunk.content());
-            resources.add(chunk.content().retain());
             if (formUrlEncoded) {
                 //парсим и добавляем переметры
                 String contentCharset = request.getContentCharset()==null? 
                         HttpConsts.DEFAULT_CONTENT_CHARSET : request.getContentCharset();
                 String content = chunk.content().toString(Charset.forName(contentCharset));
                 QueryStringDecoder decoder = new QueryStringDecoder(content);
+                for (Map.Entry<String, List<String>> param: decoder.parameters().entrySet()) 
+                    request.getParams().put(param.getKey(), param.getValue());
                 request.attachContentInputStream(EmptyInputStream.INSTANCE);
             } else {
+                //создаем статический request stream                
+                final ByteBufInputStream requestStream = new ByteBufInputStream(chunk.content());
+                resources.add(chunk.content().retain());
                 request.attachContentInputStream(requestStream);
-                //создаем статический request stream
-                
             }
+        } else {
+            //creating async input stream
         }
-        
+        //building response
     }
     
     private void tryBuildResponse() {        
@@ -132,6 +141,7 @@ public class RRController {
 //        private final Map<String, String> headers = new LinkedHashMap<>();
         private final AtomicBoolean headerWritten = new AtomicBoolean();
         private final DefaultHttpResponse responseHeader;
+        private volatile Stream stream = new Stream();
         private volatile PrintWriter writer;
 
         public ResponseWriter() {
@@ -140,7 +150,13 @@ public class RRController {
 
         @Override
         public OutputStream getStream() {
-            return this;
+            if (stream==null) {
+                synchronized(this) {
+                    if (stream==null)
+                        stream = new Stream();                                
+                }
+            }
+            return stream;
         }
 
         @Override
@@ -167,17 +183,30 @@ public class RRController {
         }
 
         @Override
-        public void close() { //close есть и в ResponseAdapter и OutputStream. Плохо??
-            throw new UnsupportedOperationException("Not supported yet.");
+        public void close() throws IOException { 
+            Stream _stream = stream;
+            if (_stream!=null)
+                _stream.close();
+            else {
+                writeResponseHeaderIfNeed();
+                writeLastHttpMessage();
+                ctx.flush();
+            }
         }
         
-        private void writeResponseHeader() {
-            
-        }
+        public void writeResponseHeaderIfNeed() {
+            if (headerWritten.compareAndSet(false, true)) {
+                ctx.write(new ResponseMessage(RRController.this, responseHeader));
+            }
+        }                
 
         @Override
         public void addHeader(String name, String value) {
             responseHeader.headers().add(name, value);
+        }
+
+        private void writeLastHttpMessage() {
+            ctx.write(new ResponseMessage(RRController.this, EMPTY_LAST_HTTP_CONTENT));
         }
         
         private class Stream extends OutputStream {
@@ -188,58 +217,55 @@ public class RRController {
             }
 
             @Override
+            public void write(byte[] b) throws IOException {
+                buf.writeBytes(b);
+                writeToChannelIfNeedAndCan(false);
+            }
+
+            @Override
+            public void write(byte[] b, int off, int len) throws IOException {
+                buf.writeBytes(b, off, len);
+                writeToChannelIfNeedAndCan(false);
+            }
+
+            @Override
             public void write(int i) throws IOException {
                 buf.writeByte(i);
-                writeToChannelIfNeed(false);
+                writeToChannelIfNeedAndCan(false);
             }
 
             @Override
             public void flush() throws IOException {
-                super.flush();
-                writeToChannelIfNeed(true);
+                writeToChannelIfNeedAndCan(true);
                 ctx.flush();
             }
 
             @Override
             public void close() throws IOException {
-                super.close();
-                flush();
+                writeToChannelIfNeedAndCan(true);
+                writeLastHttpMessage();
+                ctx.flush();
                 buf.release();
             }
             
-            private void writeToChannelIfNeed(boolean forceWrite) {
+            private void writeToChannelIfNeedAndCan(boolean forceWrite) {
                 if (forceWrite || buf.readableBytes()>=serverContext.getResponseStreamBufferSize()) {
-                    //формируем отправляем chunk в канал
-                    //если http header не отправлялся, отправляем?
-                    if (headerWritten.compareAndSet(false, true)) {
-                        ctx.write(new ResponseMessage(RRController.this, responseHeader));
-                    }
+                    //forming and sending data chunk to the channel
+                    writeResponseHeaderIfNeed();
                     if (buf.isReadable()) {
+                        while (!ctx.channel().isWritable())  {
+                            try {
+                                Thread.sleep(10); //TODO Is it correct to do this at event loop thread??
+                            } catch (InterruptedException ex) {
+                                if (logger.isErrorEnabled())
+                                    logger.error("Interrupted", ex);
+                            }
+                        }
                         ByteBuf bufForWrite = buf.retain().slice();
                         ctx.write(new ResponseMessage(RRController.this, new DefaultHttpContent(bufForWrite)));
                     }
                 }
             }
-        } 
-        
-    }
-    
-    private class ResponseStream extends OutputStream {
-        public final AtomicBoolean headersWritten = new AtomicBoolean();
-
-        @Override
-        public void write(int i) throws IOException {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public void flush() throws IOException {
-            super.flush();
-        }
-
-        @Override
-        public void close() throws IOException {
-            super.close();
-        }        
-    }
+        }         
+    }    
 }

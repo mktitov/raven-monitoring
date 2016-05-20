@@ -35,7 +35,7 @@ public interface ResponseAdapter {
     /**
      * Closes the response channel
      */
-    public void close();
+    public void close() throws IOException;
     /**
      * Adds a header to low level http response
      * @param name the name of the header
