@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.util.Map;
 import org.raven.net.Request;
+import org.raven.sched.ExecutorService;
 
 /**
  *
@@ -37,6 +38,10 @@ public class ErrorRequest implements Request {
         this.servicePath = servicePath;
     }
 
+    @Override
+    public ExecutorService getExecutor() {
+        return null;
+    }
 
     @Override
     public String getRemoteAddr() {

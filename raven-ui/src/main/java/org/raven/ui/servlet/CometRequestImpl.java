@@ -39,7 +39,7 @@ public class CometRequestImpl extends RequestImpl implements CometRequest {
             String contextPath) 
     {
         super(requestContext.request.getRemoteAddr(), params, headers, contextPath, 
-                requestContext.request.getMethod().toUpperCase(), requestContext.request);
+                requestContext.request.getMethod().toUpperCase(), requestContext.request, null);
         this.requestContext = requestContext;
     }
 
