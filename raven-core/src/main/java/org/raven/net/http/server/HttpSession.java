@@ -57,4 +57,8 @@ public interface HttpSession {
      * Invalidates the session.
      */
     public void invalidate();
+    /**
+     * Returns <b>true</b> if session is valid
+     */
+    public boolean isValid();
 }

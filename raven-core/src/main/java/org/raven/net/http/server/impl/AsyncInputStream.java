@@ -28,6 +28,7 @@ import org.raven.rs.Transmitter;
  *
  * @author Mikhail Titov 
  */
+//TODO надо сделать поддержку back presure
 public class AsyncInputStream extends InputStream implements Transmitter<ByteBuf> {
     private final AtomicBoolean sourceClosed = new AtomicBoolean();
     private final BlockingQueue<ByteBuf> buffers;

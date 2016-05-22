@@ -36,6 +36,7 @@ import org.raven.net.ContextUnavailableException;
 import org.raven.net.Request;
 import org.raven.net.Response;
 import org.raven.net.ResponseContext;
+import static org.junit.Assert.assertTrue;
 
 /**
  *

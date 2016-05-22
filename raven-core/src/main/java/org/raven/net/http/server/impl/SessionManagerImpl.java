@@ -92,8 +92,10 @@ public class SessionManagerImpl implements SessionManager {
     @Override
     public void invalidateSession(String sessionId) {
         Session session = sessions.remove(sessionId);
-        if (session!=null)
+        if (session!=null) {            
             auditSessionClose(session);
+            session.valid = false;
+        }
     }
     
     private void auditSessionClose(Session session) {
@@ -143,6 +145,7 @@ public class SessionManagerImpl implements SessionManager {
     
     private class Session extends AbstractHttpSession {
         private volatile long lastAccessTime;
+        private boolean valid = true;
 
         public Session(String id) {
             super(id);
@@ -157,6 +160,11 @@ public class SessionManagerImpl implements SessionManager {
         public void invalidate() {
             invalidateSession(getId());
         }        
+
+        @Override
+        public boolean isValid() {
+            return valid;
+        }
         
         private void updateLastAccessTime() {
             lastAccessTime = System.currentTimeMillis();

@@ -32,6 +32,7 @@ import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNodeWithStat;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.internal.annotations.Service;
+import org.weda.services.TypeConverter;
 
 /**
  *
@@ -71,6 +72,12 @@ public class HttpServerNode extends BaseNodeWithStat {
     @NotNull @Parameter(defaultValue = "4096")
     private Integer responseStreamMaxPendingBytesForWrite;   
     
+    @NotNull @Parameter(defaultValue = "32")
+    private Integer requestStreamBuffersCount;
+    
+    @NotNull @Parameter(defaultValue = "false")
+    private Boolean alwaysExecuteBuilderInExecutor;
+    
     @Parameter(readOnly = true)
     private AtomicLong  connectionsCount;
     
@@ -106,7 +113,8 @@ public class HttpServerNode extends BaseNodeWithStat {
         workerGroup = new NioEventLoopGroup(workerThreadsCount);
         serverContext = new ServerContextImpl(connectionsCount, requestsCount, writtenBytes, readBytes, 
                 networkResponseService, this, executor, auditor, 
-                responseStreamBufferSize, responseStreamMaxPendingBytesForWrite);
+                responseStreamBufferSize, responseStreamMaxPendingBytesForWrite, requestStreamBuffersCount,
+                alwaysExecuteBuilderInExecutor, converter);
         try {
             ServerBootstrap bootstrap = new ServerBootstrap()
                     .group(acceptorGroup, workerGroup)
@@ -146,6 +154,22 @@ public class HttpServerNode extends BaseNodeWithStat {
 
     public void setResponseStreamMaxPendingBytesForWrite(Integer responseStreamMaxPendingBytesForWrite) {
         this.responseStreamMaxPendingBytesForWrite = responseStreamMaxPendingBytesForWrite;
+    }
+
+    public Integer getRequestStreamBuffersCount() {
+        return requestStreamBuffersCount;
+    }
+
+    public void setRequestStreamBuffersCount(Integer requestStreamBuffersCount) {
+        this.requestStreamBuffersCount = requestStreamBuffersCount;
+    }
+
+    public Boolean getAlwaysExecuteBuilderInExecutor() {
+        return alwaysExecuteBuilderInExecutor;
+    }
+
+    public void setAlwaysExecuteBuilderInExecutor(Boolean alwaysExecuteBuilderInExecutor) {
+        this.alwaysExecuteBuilderInExecutor = alwaysExecuteBuilderInExecutor;
     }
 
     public Integer getPort() {
@@ -223,11 +247,16 @@ public class HttpServerNode extends BaseNodeWithStat {
         private final Auditor auditor;
         private final int responseStreamBufferSize;
         private final int responseStreamMaxPendingBytesForWrite;
+        private final int requestStreamBuffersCount;
+        private final boolean alwaysExecuteBuilderInExecutor;
+        private final TypeConverter typeConverter;
 
         public ServerContextImpl(AtomicLong connectionsCounter, AtomicLong requestsCounter, 
                 AtomicLong writtenBytesCounter, AtomicLong readBytesCounter, 
                 NetworkResponseService responseService, Node owner, ExecutorService executor, 
-                Auditor auditor, int responseStreamBufferSize, int responseStreamMaxPendingBytesForWrite) 
+                Auditor auditor, int responseStreamBufferSize, int responseStreamMaxPendingBytesForWrite,
+                int requestStreamBuffersCount, boolean alwaysExecuteBuilderInExecutor,
+                TypeConverter typeConverter) 
         {
             this.connectionsCounter = connectionsCounter;
             this.requestsCounter = requestsCounter;
@@ -239,6 +268,9 @@ public class HttpServerNode extends BaseNodeWithStat {
             this.auditor = auditor;
             this.responseStreamBufferSize = responseStreamBufferSize;
             this.responseStreamMaxPendingBytesForWrite = responseStreamMaxPendingBytesForWrite;
+            this.requestStreamBuffersCount = requestStreamBuffersCount;
+            this.alwaysExecuteBuilderInExecutor = alwaysExecuteBuilderInExecutor;
+            this.typeConverter = typeConverter;
         }
 
         @Override
@@ -290,7 +322,21 @@ public class HttpServerNode extends BaseNodeWithStat {
         public int getResponseStreamMaxPendingBytesForWrite() {
             return responseStreamMaxPendingBytesForWrite;
         }
-        
+
+        @Override
+        public int getRequestStreamBuffersCount() {
+            return requestStreamBuffersCount;
+        }
+
+        @Override
+        public boolean getAlwaysExecuteBuilderInExecutor() {
+            return alwaysExecuteBuilderInExecutor;
+        }
+
+        @Override
+        public TypeConverter getTypeConverter() {
+            return typeConverter;
+        }
     }
     
     private static class Initializer extends ChannelInitializer<SocketChannel> {

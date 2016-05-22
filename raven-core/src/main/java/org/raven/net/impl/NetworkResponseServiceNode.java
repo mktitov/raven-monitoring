@@ -199,8 +199,9 @@ public class NetworkResponseServiceNode extends BaseNode implements NetworkRespo
             ResponseBuilder respBuilder = findResponseBuilder(serviceNode, pathElems, pathIndex, pathInfo, request);
             
             LoginService loginService = findLoginService(respBuilder);
+            ExecutorService _executor = request.getExecutor()!=null? request.getExecutor() : executor;
             return new ResponseContextImpl(request, pathInfo.getBuilderPath(), pathInfo.getSubpath(), 
-                    serviceNode.getNextRequestId(), loginService, respBuilder, serviceNode);
+                    serviceNode.getNextRequestId(), loginService, respBuilder, serviceNode, _executor);
         } finally {
             if (bindings!=null)
                 bindings.reset();

@@ -60,6 +60,10 @@ import org.raven.tree.impl.LoggerHelper;
 import org.raven.tree.impl.NodeAttributeImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -411,7 +415,7 @@ public class NetworkResponseServiceImplTest extends RavenCoreTestCase {
         
         responseServiceNode.setLogLevel(LogLevel.ERROR);
         ResponseContextImpl responseContext = new ResponseContextImpl(
-                request, "context", "sub", 1, loginService, responseBuilder, responseServiceNode);
+                request, "context", "sub", 1, loginService, responseBuilder, responseServiceNode, null);
         
         expect(request.getParams()).andReturn(params).atLeastOnce();
         expect(request.getRootPath()).andReturn("/raven").anyTimes();

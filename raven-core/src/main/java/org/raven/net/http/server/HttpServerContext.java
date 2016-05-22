@@ -20,6 +20,7 @@ import org.raven.audit.Auditor;
 import org.raven.net.NetworkResponseService;
 import org.raven.sched.ExecutorService;
 import org.raven.tree.Node;
+import org.weda.services.TypeConverter;
 
 /**
  *
@@ -66,4 +67,17 @@ public interface HttpServerContext {
      * Returns the max bytes pending for write
      */
     public int getResponseStreamMaxPendingBytesForWrite();
+    /**
+     * Returns the maximum buffers count in request input stream
+     */
+    public int getRequestStreamBuffersCount();
+    /**
+     * If <b>true</b> then response builder will be executed in the executor thread otherwise, if possible, builder will
+     * executed in the netty thread
+     */
+    public boolean getAlwaysExecuteBuilderInExecutor();
+    /**
+     * Returns the type converter service
+     */
+    public TypeConverter getTypeConverter();
 }

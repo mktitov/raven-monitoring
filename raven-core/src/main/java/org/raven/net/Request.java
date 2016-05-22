@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.util.Map;
+import org.raven.sched.ExecutorService;
 
 /**
  *
@@ -104,4 +105,8 @@ public interface Request {
      * @throws IOException 
      */
     public Reader getContentReader() throws IOException;
+    /**
+     * Returns the executor linked with the request
+     */
+    public ExecutorService getExecutor();
 }

@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import org.raven.net.Request;
+import org.raven.sched.ExecutorService;
 
 /**
  *
@@ -35,10 +36,11 @@ public class RequestImpl implements Request {
     private final String method;
     private final String servicePath;
     private final HttpServletRequest httpRequest;
+    private final ExecutorService executor;
     private Map<String, Object> attrs = null;
 
     public RequestImpl(String remoteAddr, Map<String, Object> params, Map<String, Object> headers, 
-            String contextPath, String method, HttpServletRequest httpRequest) 
+            String contextPath, String method, HttpServletRequest httpRequest, ExecutorService executor) 
     {
         this.remoteAddr = remoteAddr;
         this.params = params;
@@ -47,6 +49,12 @@ public class RequestImpl implements Request {
         this.method = method;
         this.httpRequest = httpRequest;
         this.servicePath = httpRequest.getServletPath().substring(1);
+        this.executor = executor;
+    }
+
+    @Override
+    public ExecutorService getExecutor() {
+        return executor;
     }
 
     public String getRemoteAddr() {

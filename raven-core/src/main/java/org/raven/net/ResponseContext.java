@@ -25,6 +25,7 @@ import org.raven.auth.UserContext;
 import org.raven.net.http.server.HttpSession;
 import org.raven.net.impl.NetworkResponseServiceNode;
 import org.raven.prj.Project;
+import org.raven.sched.ExecutorService;
 import org.slf4j.Logger;
 
 /**
@@ -139,6 +140,10 @@ public interface ResponseContext {
      * @return 
      */
     public Set<ResponseContextListener> getListeners();
+    /**
+     * Returns the executor service linked with response context
+     */
+    public ExecutorService getExecutor();
 //    public String getPath();
 //    public String getBuilderPath();
 //    public String getSubpath();

@@ -15,6 +15,7 @@
  */
 package org.raven.net.http.server.impl;
 
+import com.sun.xml.internal.ws.api.policy.PolicyResolver;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
@@ -55,6 +56,7 @@ import org.raven.net.http.server.HttpServerContext;
 import org.raven.net.http.server.HttpSession;
 import org.raven.net.http.server.InvalidPathException;
 import org.raven.net.http.server.SessionManager;
+import org.raven.sched.ExecutorService;
 import org.raven.tree.impl.LoggerHelper;
 
 /**
@@ -139,14 +141,18 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         //экстрактим заголовки
         Map<String, Object> headers = decodeHeaders(request);
         //нужно создать Raven Request
-        RequestImpl ravenRequest = new RequestImpl(request, localAddr, remoteAddr, params, headers, contentTypeStr, contentType);
+        
+        //TODO нужно найти projectPath        
+        RequestImpl ravenRequest = new RequestImpl(request, localAddr, remoteAddr, params, headers, queryString.path(), 
+                contentType, serverContext);
         
         //нужно создать ResponseContext
         ResponseContext responseContext = serverContext.getNetworkResponseService().getResponseContext(ravenRequest);
         
         //проверяем аутентификацию
         final Set<Cookie> cookies = decodeCookies(request);
-        final UserContext userContext = checkAuth(request, responseContext, cookies, contentTypeStr);                
+        final Cookie sessionCookie = getSessionIdCookie(cookies, ravenRequest.getProjectPath());
+        final UserContext userContext = checkAuth(request, responseContext, sessionCookie, contentTypeStr);                
         //добавляем запись в audit
         serverContext.getAuditor().write(new AuditRecord(
                 responseContext.getResponseBuilder().getResponseBuilderNode(), 
@@ -158,7 +164,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
 //        rrController = new RRController(ctx, responseContext, serverContext.getExecutor());
     }
     
-    private UserContext checkAuth(HttpRequest request, ResponseContext responseContext, Set<Cookie> cookies, String path) throws Exception {
+    private UserContext checkAuth(HttpRequest request, ResponseContext responseContext, Cookie sessionCookie, String path) throws Exception {
         final LoginService loginService = responseContext.getLoginService();
         final SessionManager sessionManager = loginService.getSessionManager();
         if (!loginService.isStarted() || !loginService.isLoginAllowedFromIp(remoteAddr.getAddress().getHostAddress()))
@@ -169,7 +175,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         if (responseContext.isSessionAllowed()) {
             if (sessionManager==null) 
                 throw new Exception("LoginService (%s) doesn't have session manager");
-            final String sessionId = getSessionId(cookies);
+            final String sessionId = sessionCookie==null? null : sessionCookie.name();
             HttpSession session;
             if (sessionId!=null && (session = sessionManager.getSession(sessionId))!=null) {
                 userContext = session.getUserContext();
@@ -181,7 +187,8 @@ public class HttpServerHandler extends ChannelDuplexHandler {
                     session.invalidate();
                     userContext = null;
                     throw authorizationNeededException;
-                }                
+                } else 
+                    responseContext.setSession(session);
             }
         }
         boolean created = false;
@@ -209,13 +216,14 @@ public class HttpServerHandler extends ChannelDuplexHandler {
                 serverContext.getAuditor().write(new AuditRecord(
                         responseContext.getResponseBuilder().getResponseBuilderNode(), 
                         userContext.getLogin(), remoteAddr.getAddress().getHostAddress(), Action.SESSION_START, null));
-                final HttpSession newSession = sessionManager.createSession(); //сессию нужно в response context запихать
+                final HttpSession newSession = sessionManager.createSession(); //TODO сессию нужно в response context запихать
                 newSession.setUserContext(userContext);
                 
 //                final javax.servlet.http.HttpSession newSession = request.getSession();
                 
                 newSession.setAttribute(UserContextService.SERVICE_NODE_SESSION_ATTR, responseContext.getServiceNode());
                 newSession.setUserContext(userContext);
+                responseContext.setSession(newSession);
             }
         } else {
             if (responseContext.getLogger().isWarnEnabled())
@@ -232,15 +240,15 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         return cookieStr==null? Collections.EMPTY_SET : ServerCookieDecoder.STRICT.decode(cookieStr);
     }
     
-    public Cookie getSessionIdCookie(final Set<Cookie> cookies) {
+    public Cookie getSessionIdCookie(final Set<Cookie> cookies, final String projectPath) {
         for (Cookie cookie: cookies)
-            if (HttpConsts.SESSIONID_COOKIE_NAME.equals(cookie.name()))
+            if (HttpConsts.SESSIONID_COOKIE_NAME.equals(cookie.name()) && projectPath.equals(cookie.path()))
                 return cookie;
         return null;
     }
     
-    public String getSessionId(final Set<Cookie> cookies) {
-        Cookie sessionIdCookie = getSessionIdCookie(cookies);
+    public String getSessionId(final Set<Cookie> cookies, final String projectPath) {
+        Cookie sessionIdCookie = getSessionIdCookie(cookies, projectPath);
         return sessionIdCookie==null? null : sessionIdCookie.value();
     }
         
@@ -285,13 +293,16 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         private final String contentType;
         private final String contentCharset;
         private final long ifModifiedSince;
+        private final HttpServerContext serverContext;
+        private final String projectPath;
         private InputStream content;
         private Map<String, Object> attrs = null;
         private InputStreamReader contentReader;
         
         
         public RequestImpl(HttpRequest nettyRequest, InetSocketAddress localAddr, InetSocketAddress remoteAddr,
-                Map<String, Object> params, Map<String, Object> headers, String path, ContentType contentType) 
+                Map<String, Object> params, Map<String, Object> headers, String path, ContentType contentType,
+                HttpServerContext serverContext) 
             throws Exception
         {
             this.remoteAddr = remoteAddr;
@@ -301,7 +312,8 @@ public class HttpServerHandler extends ChannelDuplexHandler {
             String[] pathElems = path.split("/");
             if (pathElems.length<2)
                 throw new InvalidPathException(path);
-            this.servicePath = pathElems[0];
+            this.servicePath = pathElems[0];            
+            this.projectPath = SRI_SERVICE.equals(servicePath)? "/"+SRI_SERVICE : "/"+pathElems[0]+"/"+pathElems[1];
             this.contextPath = StringUtils.join(pathElems, "/", 1, pathElems.length);
             this.method = nettyRequest.getMethod().name();
             this.ifModifiedSince = nettyRequest.headers().contains(HttpHeaders.Names.IF_MODIFIED_SINCE)?
@@ -312,6 +324,16 @@ public class HttpServerHandler extends ChannelDuplexHandler {
             if (contentType!=null)
                 _contentCharset = contentType.getCharset()==null? null : contentType.getCharset().name();
             this.contentCharset = _contentCharset;
+            this.serverContext = serverContext;
+        }
+
+        public String getProjectPath() {
+            return projectPath;
+        }
+
+        @Override
+        public ExecutorService getExecutor() {
+            return serverContext.getExecutor();
         }
 
         @Override

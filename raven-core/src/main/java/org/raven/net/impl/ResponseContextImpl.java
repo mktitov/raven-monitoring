@@ -38,6 +38,8 @@ import org.raven.net.ResponseContext;
 import org.raven.net.ResponseContextListener;
 import org.raven.net.ResponseServiceNode;
 import org.raven.net.http.server.HttpSession;
+import org.raven.sched.Executor;
+import org.raven.sched.ExecutorService;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.LoggerHelper;
 import org.slf4j.Logger;
@@ -70,6 +72,7 @@ public class ResponseContextImpl implements ResponseContext {
     private final LoggerHelper responseBuilderLogger;
     private final ResponseServiceNode serviceNode;
     private final boolean sessionAllowed;
+    private final ExecutorService executor;
     private AtomicBoolean headersAdded = new AtomicBoolean();
     private volatile ResponseAdapter responseAdapter;
     private volatile HttpSession session;
@@ -77,7 +80,8 @@ public class ResponseContextImpl implements ResponseContext {
     private Set<ResponseContextListener> listeners;
 
     public ResponseContextImpl(Request request, String builderPath, String subcontext, long requestId, 
-            LoginService loginService, ResponseBuilder responseBuilder, ResponseServiceNode serviceNode) 
+            LoginService loginService, ResponseBuilder responseBuilder, ResponseServiceNode serviceNode,
+            ExecutorService executor) 
     {
         this.request = request;
         this.builderPath = builderPath;
@@ -90,6 +94,7 @@ public class ResponseContextImpl implements ResponseContext {
         this.responseBuilderLogger = new LoggerHelper(responseBuilder.getResponseBuilderNode(), "["+requestId+"] ");
         Boolean _sessionAllowed = responseBuilder.isSessionAllowed();
         this.sessionAllowed = _sessionAllowed==null? false : _sessionAllowed;
+        this.executor = executor;
     }
 
     @Override
@@ -292,6 +297,11 @@ public class ResponseContextImpl implements ResponseContext {
         if (_listeners!=null)
             for (ResponseContextListener listener: _listeners)
                 listener.contextClosed(this);
+    }
+
+    @Override
+    public ExecutorService getExecutor() {
+        return executor;
     }
 
 }
