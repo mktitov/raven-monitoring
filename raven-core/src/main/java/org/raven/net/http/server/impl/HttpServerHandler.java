@@ -15,8 +15,8 @@
  */
 package org.raven.net.http.server.impl;
 
-import com.sun.xml.internal.ws.api.policy.PolicyResolver;
 import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpContent;
@@ -27,6 +27,8 @@ import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import io.netty.util.ReferenceCountUtil;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -102,21 +104,22 @@ public class HttpServerHandler extends ChannelDuplexHandler {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         if (logger.isErrorEnabled())
             logger.error("Error catched", cause);
-        if (rrController!=null)
+        if (rrController!=null) {
             rrController.release();
-        rrController = null;
+            rrController = null;
+        }
+        //if write not started we can produce http response with error
+        
         ctx.close();
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         try {
-            if (msg instanceof HttpRequest) {
+            if (msg instanceof HttpRequest) 
                 processNewHttpRequest((HttpRequest) msg, ctx);
-            }
-            if (msg instanceof HttpContent) {
+            if (msg instanceof HttpContent) 
                 processHttpRequestContent((HttpContent) msg);
-            }
         } finally {
             ReferenceCountUtil.release(msg);
         }
@@ -124,12 +127,45 @@ public class HttpServerHandler extends ChannelDuplexHandler {
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+        if (msg instanceof ResponseMessage) {
+            final ResponseMessage resp = (ResponseMessage) msg;
+            if (resp.getRrController()!=rrController) {
+                resp.getRrController().release();
+                throw new InternalServerError("Attempt to write for comopleted response");
+            }
+            //if received LastHttpContent then:
+            //1. Must release the RRController
+            //2. if connection not keep alive we must close connection
+            if (resp.getMessage() instanceof LastHttpContent) {
+                rrController = null;
+                promise.addListener(new GenericFutureListener<ChannelFuture>() {
+                    @Override public void operationComplete(ChannelFuture future) throws Exception {
+                        resp.getRrController().release();
+                        if (!resp.getRrController().isKeepAlive())
+                            future.channel().close();
+                    }
+                });
+            }
+            ctx.write(resp.getMessage(), promise);
+            if (!resp.getRrController().isWriteStarted())
+                resp.getRrController().setWriteStarted(true);
+        } else
+            throw new InternalServerError("Invalid message type. Exepect ResponseMessage but was: "
+                    +(msg==null?null:msg.getClass().getName()));
     }
+    
+//    private void resetCurrentRRController() {
+//        if (rrController!=null)
+//    }
     
     private void processNewHttpRequest(HttpRequest request, ChannelHandlerContext ctx) throws Exception {
         final long requestNum = serverContext.getRequestsCounter().incrementAndGet();
         if (logger.isDebugEnabled())
             logger.debug("Received new request #"+requestNum);        
+        if (rrController!=null && logger.isWarnEnabled())  {
+            logger.warn("Received new request, but previous RRController not closed");
+            resetCurrentRRController();
+        }
         final LoggerHelper requestLogger = new LoggerHelper(logger, " req#"+requestNum+": ");
         final String contentTypeStr = request.headers().get(HttpHeaders.Names.CONTENT_TYPE);
         final ContentType contentType = contentTypeStr==null || contentTypeStr.isEmpty()? null : ContentType.parse(contentTypeStr);
@@ -140,13 +176,12 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         addQueryStringParams(params, queryString.parameters());        
         //экстрактим заголовки
         Map<String, Object> headers = decodeHeaders(request);
-        //нужно создать Raven Request
         
-        //TODO нужно найти projectPath        
+        //creating Raven Request        
         RequestImpl ravenRequest = new RequestImpl(request, localAddr, remoteAddr, params, headers, queryString.path(), 
                 contentType, serverContext);
         
-        //нужно создать ResponseContext
+        //creating ResponseContext
         ResponseContext responseContext = serverContext.getNetworkResponseService().getResponseContext(ravenRequest);
         
         //проверяем аутентификацию
@@ -161,7 +196,10 @@ public class HttpServerHandler extends ChannelDuplexHandler {
                 Action.VIEW, "Method: "+request.getMethod()+"\nParams: "+params));        
         
         //создаем RRController
-//        rrController = new RRController(ctx, responseContext, serverContext.getExecutor());
+        boolean keepAlive = HttpHeaders.isKeepAlive(request);
+        rrController = new RRController(serverContext, ravenRequest, responseContext, ctx, userContext, 
+                requestLogger, sessionCookie, keepAlive);
+        rrController.start(request instanceof LastHttpContent);
     }
     
     private UserContext checkAuth(HttpRequest request, ResponseContext responseContext, Cookie sessionCookie, String path) throws Exception {
@@ -275,11 +313,8 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         return headers;
     }
 
-    private void processHttpRequestContent(HttpContent content) {
-        
-        if (content instanceof LastHttpContent) {
-            
-        }
+    private void processHttpRequestContent(HttpContent content) throws Exception {
+        rrController.onRequestContent(content);
     }
     
     public static class RequestImpl implements Request {

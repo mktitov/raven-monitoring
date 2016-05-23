@@ -18,6 +18,7 @@ package org.raven.net.http.server.impl;
 import groovy.lang.Writable;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
+import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
@@ -81,12 +82,16 @@ public class RRController {
     private final UserContext user;
     private final Cookie sessionCookie;
     private final boolean formUrlEncoded;
+    private final AtomicBoolean released = new AtomicBoolean();
+    private volatile boolean writeStarted = false;
     private volatile List<ReferenceCounted> resources;        
     private volatile boolean building;
+    private volatile CompositeByteBuf formUrlParamsBuf;
+    private volatile boolean keepAlive;
 
     public RRController(HttpServerContext serverContext,
             HttpServerHandler.RequestImpl request, ResponseContext responseContext, ChannelHandlerContext ctx, 
-            UserContext user, ExecutorService executor, LoggerHelper logger, Cookie sessionCookie
+            UserContext user, LoggerHelper logger, Cookie sessionCookie, boolean keepAlive
     ) {
         this.serverContext = serverContext;
         this.request = request;
@@ -96,29 +101,51 @@ public class RRController {
         this.responseContext = responseContext;
         this.formUrlEncoded = HttpConsts.FORM_URLENCODED_MIME_TYPE.equals(request.getContentType());
         this.sessionCookie = sessionCookie;
+        this.keepAlive = keepAlive;
+    }
+
+    public boolean isWriteStarted() {
+        return writeStarted;
+    }
+    
+    public boolean isKeepAlive() {
+        return keepAlive;
+    }
+
+    public void setWriteStarted(boolean writeStarted) {
+        this.writeStarted = writeStarted;
     }
     
     public void start(boolean receivedFullRequest) throws InternalServerError {
         if (receivedFullRequest || formUrlEncoded)
             return; //wating for calling onRequestContent
-        buildResponse(null); //создаем динамический адаптер 
-        
+        buildResponse(null); //creating response context with dynamic request content 
     }
     
     public void onRequestContent(final HttpContent chunk) throws Exception {
         if (chunk instanceof LastHttpContent) {
             if (!building)
-                buildResponse((LastHttpContent) chunk); //создаем адаптер со статическим контентом
+                buildResponse((LastHttpContent) chunk); //creating response context adapter with static request content
+            else 
+                appendToRequestInputStream(chunk);
         } else {
             if (formUrlEncoded) {
-                //TODO копим byteBuf
-            } else {
-                //adding chunk to request stream
-                if (request.getContent() instanceof AsyncInputStream)
-                    ((AsyncInputStream)request.getContent()).onNext(chunk.content().retain());
-            }
-            
+                if (formUrlParamsBuf==null) 
+                    formUrlParamsBuf = ctx.alloc().compositeBuffer();
+                formUrlParamsBuf.addComponent(chunk.content());
+            } else 
+                appendToRequestInputStream(chunk);
         }
+    }
+    
+    private void appendToRequestInputStream(final HttpContent chunk) throws Exception {
+        if (request.getContent() instanceof AsyncInputStream) {
+            AsyncInputStream stream = (AsyncInputStream) request.getContent();                    
+            stream.onNext(chunk.content());
+            if (chunk instanceof LastHttpContent)
+                stream.onComplete();
+        } else 
+            throw new InternalServerError("The request input stream must be a type of AyncInputStream");        
     }
     
     private void buildResponse(final LastHttpContent chunk) throws InternalServerError {
@@ -190,6 +217,8 @@ public class RRController {
     }
         
     private void processError(Throwable error) {
+        if (logger.isErrorEnabled())
+            logger.error("Error while processing request", error);
             //TODO обрабатываем ошибку
             //1 Если запись в поток не началась можно сформировать html
             //2 Если запись в поток response началась, тогда можем только матюгнуться в лог и закрыть connection
@@ -279,11 +308,18 @@ public class RRController {
                 //парсим и добавляем переметры
                 String contentCharset = request.getContentCharset()==null? 
                         HttpConsts.DEFAULT_CONTENT_CHARSET : request.getContentCharset();
-                String content = chunk.content().toString(Charset.forName(contentCharset));
-                QueryStringDecoder decoder = new QueryStringDecoder(content);
-                for (Map.Entry<String, List<String>> param: decoder.parameters().entrySet()) 
-                    request.getParams().put(param.getKey(), param.getValue());
-                requestStream = EmptyInputStream.INSTANCE;
+                ByteBuf buf = formUrlParamsBuf==null? 
+                        chunk.content().retain() : formUrlParamsBuf.addComponent(chunk.content().retain());
+                try {
+                    String content = buf.toString(Charset.forName(contentCharset));
+                    QueryStringDecoder decoder = new QueryStringDecoder(content);
+                    for (Map.Entry<String, List<String>> param: decoder.parameters().entrySet()) 
+                        request.getParams().put(param.getKey(), param.getValue());
+                    requestStream = EmptyInputStream.INSTANCE;
+                } finally {
+                    buf.release();
+                    formUrlParamsBuf = null;
+                }
             } else {
                 if (logger.isDebugEnabled())
                     logger.debug("Creating static request input stream");
@@ -301,19 +337,17 @@ public class RRController {
         return staticStream;
     }
     
-    private void tryBuildResponse() {        
-        //Response можем начать билдить если
-        //1. Если прочитаны все параметры учитывая и те что находятся в content:
-        //   contentType==application/x-www-form-urlencoded
-        //   contentType==multipart/
-        //2. 
-    }
-    
-    //free resources. For example reference counted
-    public void release() {
-        if (resources!=null)
-            for (ReferenceCounted resource: resources)
-                resource.release();
+    //free resources. For example reference counted. Must be called from the netty channel processing thread
+    public void release() throws Exception {
+        if (released.compareAndSet(false, true)) {
+            if (resources!=null)
+                for (ReferenceCounted resource: resources)
+                    resource.release();
+            if (request.getContent() instanceof AsyncInputStream) 
+                ((AsyncInputStream)request.getContent()).forceComplete();
+            if (formUrlParamsBuf!=null)
+                formUrlParamsBuf.release();
+        }
     }
     
     private void addResource(ReferenceCounted resource) {

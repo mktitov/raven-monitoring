@@ -16,6 +16,7 @@
 package org.raven.net.http.server.impl;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import org.junit.Test;
@@ -39,6 +40,16 @@ public class RRControllerTest {
     public void testEmptyBuffer() {
         ByteBuf buf = Unpooled.EMPTY_BUFFER;
         System.out.println("buf class: "+buf.getClass().getName());
+        System.out.println("refCnt: "+buf.refCnt());
+        buf.release();
+        System.out.println("refCnt: "+buf.refCnt());
+        buf.release();
+        System.out.println("refCnt: "+buf.refCnt());
+    }
+    
+    @Test
+    public void releaseTest() {
+        ByteBuf buf = PooledByteBufAllocator.DEFAULT.buffer();
         System.out.println("refCnt: "+buf.refCnt());
         buf.release();
         System.out.println("refCnt: "+buf.refCnt());

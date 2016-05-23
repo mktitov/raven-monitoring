@@ -16,11 +16,14 @@
 package org.raven.net.http.server.impl;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.http.HttpRequestDecoder;
+import io.netty.handler.codec.http.HttpResponseEncoder;
 import java.util.concurrent.atomic.AtomicLong;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
@@ -117,9 +120,19 @@ public class HttpServerNode extends BaseNodeWithStat {
                 alwaysExecuteBuilderInExecutor, converter);
         try {
             ServerBootstrap bootstrap = new ServerBootstrap()
-                    .group(acceptorGroup, workerGroup)
-                    .channel(NioServerSocketChannel.class)
-                    .childHandler(null);
+                .group(acceptorGroup, workerGroup)
+                .channel(NioServerSocketChannel.class)
+                .childHandler(new ChannelInitializer<SocketChannel>() {
+                    @Override protected void initChannel(SocketChannel ch) throws Exception {
+                        ch.pipeline()
+                            .addLast(new HttpRequestDecoder())
+                            .addLast(new HttpResponseEncoder())
+                            .addLast(new HttpServerHandler(serverContext));
+                    }
+            });
+            Channel channel = bootstrap.bind(port).sync().channel();
+            if (logger.isInfoEnabled())
+                logger.info("HTTP server succcessfully started on channel: "+channel);
         } catch (Exception e) {
             acceptorGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
@@ -130,6 +143,8 @@ public class HttpServerNode extends BaseNodeWithStat {
     @Override
     protected void doStop() throws Exception {
         super.doStop();
+        acceptorGroup.shutdownGracefully();
+        workerGroup.shutdownGracefully();
     }
 
     public ExecutorService getExecutor() {
@@ -337,17 +352,5 @@ public class HttpServerNode extends BaseNodeWithStat {
         public TypeConverter getTypeConverter() {
             return typeConverter;
         }
-    }
-    
-    private static class Initializer extends ChannelInitializer<SocketChannel> {
-
-        @Override
-        protected void initChannel(SocketChannel ch) throws Exception {
-//            ch.pipeline()
-//                    .addLast(new HttpRequestDecoder())
-//                    .addLast(new HttpResponseEncoder())
-//                    .add
-        }
-        
     }
 }

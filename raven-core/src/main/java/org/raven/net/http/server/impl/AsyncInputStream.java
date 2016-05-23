@@ -18,6 +18,7 @@ package org.raven.net.http.server.impl;
 import io.netty.buffer.ByteBuf;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -59,6 +60,19 @@ public class AsyncInputStream extends InputStream implements Transmitter<ByteBuf
     @Override
     public void onComplete() {
         sourceClosed.set(true);
+    }
+    
+    public void forceComplete() {
+        if (sourceClosed.get() && buffers.isEmpty())
+            return;
+        onComplete();
+        int size = buffers.size();
+        if (size>0) {
+            ArrayList<ByteBuf> _buffers = new ArrayList<>(size);
+            buffers.drainTo(_buffers);
+            for (ByteBuf buf: _buffers)
+                buf.release();
+        }
     }
 
     @Override
