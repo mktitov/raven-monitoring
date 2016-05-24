@@ -20,7 +20,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.Channel;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpContent;
 import io.netty.handler.codec.http.DefaultHttpResponse;
@@ -62,11 +62,9 @@ import org.raven.net.http.server.HttpConsts;
 import org.raven.net.http.server.HttpServerContext;
 import org.raven.net.http.server.HttpSession;
 import org.raven.net.impl.RedirectResult;
-import org.raven.sched.ExecutorService;
 import org.raven.sched.impl.AbstractTask;
 import org.raven.tree.impl.LoggerHelper;
 import org.weda.converter.TypeConverterException;
-import org.weda.services.TypeConverter;
 
 /**
  * Request/Response controller
@@ -75,7 +73,7 @@ import org.weda.services.TypeConverter;
 public class RRController {    
     public final static DefaultLastHttpContent EMPTY_LAST_HTTP_CONTENT = new DefaultLastHttpContent(Unpooled.EMPTY_BUFFER);
     private final HttpServerContext serverContext;
-    private final ChannelHandlerContext ctx;
+    private final Channel channel;
     private final ResponseContext responseContext;
     private final HttpServerHandler.RequestImpl request;
     private final LoggerHelper logger;
@@ -90,12 +88,12 @@ public class RRController {
     private volatile boolean keepAlive;
 
     public RRController(HttpServerContext serverContext,
-            HttpServerHandler.RequestImpl request, ResponseContext responseContext, ChannelHandlerContext ctx, 
+            HttpServerHandler.RequestImpl request, ResponseContext responseContext, Channel channel, 
             UserContext user, LoggerHelper logger, Cookie sessionCookie, boolean keepAlive
     ) {
         this.serverContext = serverContext;
         this.request = request;
-        this.ctx = ctx;
+        this.channel = channel;
         this.user = user;
         this.logger = logger;
         this.responseContext = responseContext;
@@ -131,7 +129,7 @@ public class RRController {
         } else {
             if (formUrlEncoded) {
                 if (formUrlParamsBuf==null) 
-                    formUrlParamsBuf = ctx.alloc().compositeBuffer();
+                    formUrlParamsBuf = channel.alloc().compositeBuffer();
                 formUrlParamsBuf.addComponent(chunk.content());
             } else 
                 appendToRequestInputStream(chunk);
@@ -417,7 +415,7 @@ public class RRController {
             else {
                 writeResponseHeaderIfNeed();
                 writeLastHttpMessage();
-                ctx.flush();
+                channel.flush();
             }
         }
         
@@ -442,7 +440,7 @@ public class RRController {
                     _sessionCookie.setPath(request.getProjectPath());
                     responseHeader.headers().add(HttpHeaders.Names.SET_COOKIE, ServerCookieEncoder.STRICT.encode(_sessionCookie));
                 }
-                ctx.write(new ResponseMessage(RRController.this, responseHeader));
+                channel.write(new ResponseMessage(RRController.this, responseHeader));
             }
         }                
 
@@ -452,14 +450,14 @@ public class RRController {
         }
 
         private void writeLastHttpMessage() {
-            ctx.write(new ResponseMessage(RRController.this, EMPTY_LAST_HTTP_CONTENT));
+            channel.write(new ResponseMessage(RRController.this, EMPTY_LAST_HTTP_CONTENT));
         }
         
         private class Stream extends OutputStream {
             private final ByteBuf buf;
 
             public Stream() {
-                buf = ctx.alloc().buffer(serverContext.getResponseStreamBufferSize());                
+                buf = channel.alloc().buffer(serverContext.getResponseStreamBufferSize());                
             }
 
             @Override
@@ -483,14 +481,14 @@ public class RRController {
             @Override
             public void flush() throws IOException {
                 writeToChannelIfNeedAndCan(true);
-                ctx.flush();
+                channel.flush();
             }
 
             @Override
             public void close() throws IOException {
                 writeToChannelIfNeedAndCan(true);
                 writeLastHttpMessage();
-                ctx.flush();
+                channel.flush();
                 buf.release();
             }
             
@@ -499,7 +497,7 @@ public class RRController {
                     //forming and sending data chunk to the channel
                     writeResponseHeaderIfNeed();
                     if (buf.isReadable()) {
-                        while (!ctx.channel().isWritable())  {
+                        while (!channel.isWritable())  {
                             try {
                                 Thread.sleep(10); //TODO Is it correct to do this at event loop thread??
                             } catch (InterruptedException ex) {
@@ -508,7 +506,8 @@ public class RRController {
                             }
                         }
                         ByteBuf bufForWrite = buf.retain().slice();
-                        ctx.write(new ResponseMessage(RRController.this, new DefaultHttpContent(bufForWrite)));
+//                        ctx.channel().fl
+                        channel.write(new ResponseMessage(RRController.this, new DefaultHttpContent(bufForWrite)));
                     }
                 }
             }

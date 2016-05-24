@@ -27,7 +27,6 @@ import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import io.netty.util.ReferenceCountUtil;
-import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import java.io.IOException;
 import java.io.InputStream;
@@ -104,12 +103,15 @@ public class HttpServerHandler extends ChannelDuplexHandler {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         if (logger.isErrorEnabled())
             logger.error("Error catched", cause);
+        boolean writeStarted = rrController==null? false : rrController.isWriteStarted(); 
         if (rrController!=null) {
             rrController.release();
             rrController = null;
         }
-        //if write not started we can produce http response with error
-        
+        if (!writeStarted) {
+            //if write not started we can produce http response with error
+            
+        }
         ctx.close();
     }
 
@@ -141,8 +143,13 @@ public class HttpServerHandler extends ChannelDuplexHandler {
                 promise.addListener(new GenericFutureListener<ChannelFuture>() {
                     @Override public void operationComplete(ChannelFuture future) throws Exception {
                         resp.getRrController().release();
-                        if (!resp.getRrController().isKeepAlive())
+                        if (!resp.getRrController().isKeepAlive()) {
+                            if (logger.isDebugEnabled())
+                                logger.debug("Request processed. Closing connection");
                             future.channel().close();
+                        } else if (logger.isDebugEnabled()) {
+                            logger.debug("Request processed. Keeping connection alive");
+                        }
                     }
                 });
             }
@@ -153,18 +160,15 @@ public class HttpServerHandler extends ChannelDuplexHandler {
             throw new InternalServerError("Invalid message type. Exepect ResponseMessage but was: "
                     +(msg==null?null:msg.getClass().getName()));
     }
-    
-//    private void resetCurrentRRController() {
-//        if (rrController!=null)
-//    }
-    
+        
     private void processNewHttpRequest(HttpRequest request, ChannelHandlerContext ctx) throws Exception {
         final long requestNum = serverContext.getRequestsCounter().incrementAndGet();
         if (logger.isDebugEnabled())
             logger.debug("Received new request #"+requestNum);        
         if (rrController!=null && logger.isWarnEnabled())  {
             logger.warn("Received new request, but previous RRController not closed");
-            resetCurrentRRController();
+            rrController.release();
+            rrController = null;
         }
         final LoggerHelper requestLogger = new LoggerHelper(logger, " req#"+requestNum+": ");
         final String contentTypeStr = request.headers().get(HttpHeaders.Names.CONTENT_TYPE);
@@ -197,7 +201,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         
         //создаем RRController
         boolean keepAlive = HttpHeaders.isKeepAlive(request);
-        rrController = new RRController(serverContext, ravenRequest, responseContext, ctx, userContext, 
+        rrController = new RRController(serverContext, ravenRequest, responseContext, ctx.channel(), userContext, 
                 requestLogger, sessionCookie, keepAlive);
         rrController.start(request instanceof LastHttpContent);
     }
