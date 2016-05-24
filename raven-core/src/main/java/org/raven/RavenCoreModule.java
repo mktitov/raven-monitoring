@@ -63,6 +63,7 @@ import org.raven.impl.*;
 import org.raven.log.NodeLogger;
 import org.raven.log.impl.NodeLoggerImpl;
 import org.raven.net.NetworkResponseService;
+import org.raven.net.http.server.impl.HttpServerResourcesRegistrator;
 import org.raven.net.impl.NetworkResponseServiceImpl;
 import org.raven.sched.SystemExecutorService;
 import org.raven.sched.impl.SystemExecutorServiceImpl;
@@ -388,17 +389,17 @@ public class RavenCoreModule
                     , ExpressionCache expressionCache)
     {
             conf.add(
-                            CacheExpressionCompiler.class.getName()
-                            , new CacheExpressionCompiler(expressionCache)
-                            , "before:*");
+                CacheExpressionCompiler.class.getName()
+                , new CacheExpressionCompiler(expressionCache)
+                , "before:*");
             conf.add(
-                            GroovyExpressionCompiler.class.getName()
-                            , new GroovyExpressionCompiler(expressionCache)
-                            , "after:"+CacheExpressionCompiler.class.getName());
+                GroovyExpressionCompiler.class.getName()
+                , new GroovyExpressionCompiler(expressionCache)
+                , "after:"+CacheExpressionCompiler.class.getName());
             conf.add(
-                            ExpressionCompilerImpl.class.getName()
-                            , new ExpressionCompilerImpl(expressionCache)
-                            , "after:*");
+                ExpressionCompilerImpl.class.getName()
+                , new ExpressionCompilerImpl(expressionCache)
+                , "after:*");
     }
 
 //    public static void contributeAuthenticator(
@@ -430,4 +431,9 @@ public class RavenCoreModule
     {
         providers.add(templateNodeBuildersProvider);
     }
+    
+    public static void contributeResourceManager(Configuration<ResourceRegistrator> conf) {
+        conf.add(new HttpServerResourcesRegistrator());
+    }
+    
 }

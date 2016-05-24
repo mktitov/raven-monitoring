@@ -135,7 +135,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
                 resp.getRrController().release();
                 throw new InternalServerError("Attempt to write for comopleted response");
             }
-            //if received LastHttpContent then:
+            //After processing LastHttpContent then:
             //1. Must release the RRController
             //2. if connection not keep alive we must close connection
             if (resp.getMessage() instanceof LastHttpContent) {

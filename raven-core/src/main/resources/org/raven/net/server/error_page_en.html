@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<!--
+Copyright 2016 Mikhail Titov.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<html>
+  <head>
+    <title>${messages.pageTitle}</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      <!--
+      * {
+        font-size: 10pt;
+        font-family: \"Lucida Sans Unicode\", \"Lucida Grande\", sans-serif;
+      } 
+      h1 {
+        color: red;
+        font-size: 12pt;
+      }
+      h2 {
+        color: #565656;
+        font-size: 12pt;
+      }
+      body {
+        background-color: #FFEBE5;
+      }
+      pre {
+        font-family: \"Lucida Console\", Monaco, monospace, \"Courier New\", Courier;
+        font-size: 10pt;
+        color: black;
+        background-color: white;
+        padding-left:20px;
+        padding-top: 5px;
+        padding-right:5px;
+        padding-bottom:5px;
+      }
+      ol > li {
+        font-family: \"Lucida Console\", Monaco, monospace, \"Courier New\", Courier;
+        font-size: 10pt;
+        color: #AE2000;
+      }
+      pre.exception-stack {
+        display: none;
+        color: black;
+      }
+      #open-stack:focus ~ ol > li pre.exception-stack {
+        display:block;
+      }
+      #close-stack:focus ~ ol > li pre.exception-stack {
+        display:none;
+      }
+      pre.exception-stack:hover {
+        display: block;
+      }
+      table {
+        margin-top: 5px;
+        margin-bottom:7px;
+        border-collapse: collapse;
+        padding:2px;
+      }
+      table, th, td {
+        border: 1px solid black;
+      }  
+      th, td {
+        padding: 2px;
+      }
+      -->
+    </style>
+  </head>
+  <body>
+    <div style='width:100%;height:100%; overflow:auto;'>
+      <h1>${messages.errorTitle}
+        <% if (projectName) { %>
+        ${messages.inProject} ${projectName}
+        <% } %>
+        ${statusCode} (${statusCodeDesc})
+      </h1>
+      <% if (message) { %><pre>${errorMessage}</pre> <% } %>
+      <h2>${messages.request}: </h2>
+      <ul>
+        <li><b>URL: </b>${requestURL}
+        <% if (responseBuilderNodePath) { %>
+          <li><b>${messages.responseBuilderNode}: </b>"${responseBuilderNodePath}
+        <% } %>
+        <li><b>${messages.queryString}: </b>${queryString}
+          
+        <% if ($devMode) { %> 
+          <li><b>${messages.headers}: </b>
+            <table><tr><th>Name</th><th>Value</th></tr>
+              <% headers.each { h -> %>
+                <tr><td>${h.key}</td><td>${h.value}</td></tr>
+              <% } %>
+            </table>
+          <li><b>${messages.parameters}: </b>
+            <table><tr><th>Name</th><th>Value</th></tr>
+              <% parameters.each { h -> %>
+                <tr><td>${h.key}</td><td>${h.value}</td></tr>
+              <% } %>
+            </table>
+        <% } %>
+      </ul>
+      <% if ($devMode && exceptions) { %> 
+      
+      <% } %>
+    </div>    
+  </body>
+</html>

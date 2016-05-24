@@ -13,17 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.net.http.server;
+package org.raven.net.http.server.impl;
+
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import static org.junit.Assert.*;
+import org.raven.tree.ResourceManager;
 
 /**
  *
  * @author Mikhail Titov
  */
-public interface HttpConsts {
-    public static final String RESOURCES_BASE = "HTTP Server/";
-    public static final String PAGES_RESOURCES_BASE = RESOURCES_BASE+"Pages/";
-    public static final String MESSAGES_RESOURCES_BASE = RESOURCES_BASE+"Messages/";
-    public static final String DEFAULT_CONTENT_CHARSET = "UTF-8";
-    public static final String SESSIONID_COOKIE_NAME = "RSESSION";
-    public static final String FORM_URLENCODED_MIME_TYPE = "application/x-www-form-urlencoded";   
+public class HttpServerResourcesRegistratorTest {
 }
