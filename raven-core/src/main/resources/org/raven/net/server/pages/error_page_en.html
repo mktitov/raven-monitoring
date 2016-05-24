@@ -112,7 +112,13 @@ limitations under the License.
         <% } %>
       </ul>
       <% if ($devMode && exceptions) { %> 
-      
+          <h2>${messages.exceptionStack}: </h2>
+          <a id='open-stack' tabindex=1 href=\"#s\">Show stack</a> <a id='close-stack' tabindex=2 href=\"#s\">
+              ${messages.collapseStack}
+          </a>
+          <ol>
+              
+          </ol>
       <% } %>
     </div>    
   </body>
