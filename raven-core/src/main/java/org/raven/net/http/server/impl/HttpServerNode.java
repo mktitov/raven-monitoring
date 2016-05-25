@@ -29,9 +29,12 @@ import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.audit.Auditor;
 import org.raven.net.NetworkResponseService;
+import org.raven.net.http.server.ErrorPageGenerator;
+import org.raven.net.http.server.HttpConsts;
 import org.raven.net.http.server.HttpServerContext;
 import org.raven.sched.ExecutorService;
 import org.raven.tree.Node;
+import org.raven.tree.ResourceManager;
 import org.raven.tree.impl.BaseNodeWithStat;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.internal.annotations.Service;
@@ -47,6 +50,8 @@ public class HttpServerNode extends BaseNodeWithStat {
     private static NetworkResponseService networkResponseService;
     @Service
     private static Auditor auditor;
+    @Service
+    private static ResourceManager resourceManager;
     
     @NotNull @Parameter()
     private Integer port;
@@ -114,10 +119,12 @@ public class HttpServerNode extends BaseNodeWithStat {
         super.doStart();
         acceptorGroup = new NioEventLoopGroup(acceptorThreadsCount);
         workerGroup = new NioEventLoopGroup(workerThreadsCount);
+        ErrorPageGenerator errorPageGenerator = new ErrorPageGeneratorImpl(
+                resourceManager, HttpConsts.ERROR_PAGE_RESOURCE, HttpConsts.ERROR_PAGE_MESSAGES_RESOURCE);
         serverContext = new ServerContextImpl(connectionsCount, requestsCount, writtenBytes, readBytes, 
                 networkResponseService, this, executor, auditor, 
                 responseStreamBufferSize, responseStreamMaxPendingBytesForWrite, requestStreamBuffersCount,
-                alwaysExecuteBuilderInExecutor, converter);
+                alwaysExecuteBuilderInExecutor, converter, errorPageGenerator);
         try {
             ServerBootstrap bootstrap = new ServerBootstrap()
                 .group(acceptorGroup, workerGroup)
@@ -265,13 +272,14 @@ public class HttpServerNode extends BaseNodeWithStat {
         private final int requestStreamBuffersCount;
         private final boolean alwaysExecuteBuilderInExecutor;
         private final TypeConverter typeConverter;
+        private final ErrorPageGenerator errorPageGenerator;
 
         public ServerContextImpl(AtomicLong connectionsCounter, AtomicLong requestsCounter, 
                 AtomicLong writtenBytesCounter, AtomicLong readBytesCounter, 
                 NetworkResponseService responseService, Node owner, ExecutorService executor, 
                 Auditor auditor, int responseStreamBufferSize, int responseStreamMaxPendingBytesForWrite,
                 int requestStreamBuffersCount, boolean alwaysExecuteBuilderInExecutor,
-                TypeConverter typeConverter) 
+                TypeConverter typeConverter, ErrorPageGenerator errorPageGenerator) 
         {
             this.connectionsCounter = connectionsCounter;
             this.requestsCounter = requestsCounter;
@@ -286,6 +294,7 @@ public class HttpServerNode extends BaseNodeWithStat {
             this.requestStreamBuffersCount = requestStreamBuffersCount;
             this.alwaysExecuteBuilderInExecutor = alwaysExecuteBuilderInExecutor;
             this.typeConverter = typeConverter;
+            this.errorPageGenerator = errorPageGenerator;
         }
 
         @Override
@@ -351,6 +360,11 @@ public class HttpServerNode extends BaseNodeWithStat {
         @Override
         public TypeConverter getTypeConverter() {
             return typeConverter;
+        }
+
+        @Override
+        public ErrorPageGenerator getErrorPageGenerator() {
+            return errorPageGenerator;
         }
     }
 }

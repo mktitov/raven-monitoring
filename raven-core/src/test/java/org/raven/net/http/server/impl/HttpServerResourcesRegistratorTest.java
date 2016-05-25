@@ -15,17 +15,54 @@
  */
 package org.raven.net.http.server.impl;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import java.util.Locale;
+import java.util.Properties;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.raven.net.http.server.HttpConsts;
+import org.raven.test.RavenCoreTestCase;
+import org.raven.tree.DataFile;
+import org.raven.tree.Node;
 import org.raven.tree.ResourceManager;
+import org.raven.tree.impl.FileNode;
+import org.raven.tree.impl.PropertiesNode;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class HttpServerResourcesRegistratorTest {
+public class HttpServerResourcesRegistratorTest extends RavenCoreTestCase {
+    
+    @Test
+    public void test() throws Exception {
+        ResourceManager resourceManager = registry.getService(ResourceManager.class);
+        assertNotNull(resourceManager);
+        checkRes(resourceManager, "pages/error_page", "error_page_en.html", "en", true);
+        checkRes(resourceManager, "messages/messages", "messages_en.properties", "en", false);
+        checkRes(resourceManager, "messages/messages", "messages_ru.properties", "ru", false);
+    }
+    
+    public void checkRes(ResourceManager resourceManager, String path, String filename, String locale, boolean isHtml) throws Exception {
+        Node res = resourceManager.getResource(HttpConsts.RESOURCES_BASE+path, new Locale(locale));
+        assertNotNull(res);
+        DataFile file;
+        if (isHtml) {
+            assertTrue(res instanceof FileNode);
+            FileNode htmlRes = (FileNode) res;
+            file = htmlRes.getFile();
+            assertEquals("text/html", file.getMimeType());
+        } else {
+            assertTrue(res instanceof PropertiesNode);
+            PropertiesNode propsRes = (PropertiesNode) res;
+            file = propsRes.getPropertiesFile();
+            assertEquals("text/plain", file.getMimeType());
+            Properties props = propsRes.getProperties();
+            assertNotNull(props.getProperty("pageTitle"));
+        }
+        assertNotNull(file);
+        assertEquals(filename, file.getFilename());
+        assertNotNull(file.getFileSize());
+        assertTrue(file.getFileSize()>0);
+    }
+    
 }

@@ -102,6 +102,10 @@ public class RRController {
         this.keepAlive = keepAlive;
     }
 
+    public ResponseContext getResponseContext() {
+        return responseContext;
+    }
+
     public boolean isWriteStarted() {
         return writeStarted;
     }

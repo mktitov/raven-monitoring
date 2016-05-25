@@ -21,23 +21,27 @@ limitations under the License.
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
       <!--
-      * {
+      div.raven-error-panel {
+        width:100%;
+        height:100%; 
+        overflow:auto;
         font-size: 10pt;
-        font-family: \"Lucida Sans Unicode\", \"Lucida Grande\", sans-serif;
-      } 
-      h1 {
+        font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+      }
+      
+      div.raven-error-panel h1 {
         color: red;
         font-size: 12pt;
       }
-      h2 {
+      div.raven-error-panel h2 {
         color: #565656;
         font-size: 12pt;
       }
       body {
         background-color: #FFEBE5;
       }
-      pre {
-        font-family: \"Lucida Console\", Monaco, monospace, \"Courier New\", Courier;
+      div.raven-error-panel pre {
+        font-family: "Lucida Console", Monaco, monospace, "Courier New", Courier;
         font-size: 10pt;
         color: black;
         background-color: white;
@@ -46,12 +50,12 @@ limitations under the License.
         padding-right:5px;
         padding-bottom:5px;
       }
-      ol > li {
+      div.raven-error-panel ol > li {
         font-family: \"Lucida Console\", Monaco, monospace, \"Courier New\", Courier;
         font-size: 10pt;
         color: #AE2000;
       }
-      pre.exception-stack {
+      div.raven-error-panel pre.exception-stack {
         display: none;
         color: black;
       }
@@ -61,33 +65,45 @@ limitations under the License.
       #close-stack:focus ~ ol > li pre.exception-stack {
         display:none;
       }
-      pre.exception-stack:hover {
+      div.raven-error-panel pre.exception-stack:hover {
         display: block;
       }
-      table {
+      div.raven-error-panel table {
         margin-top: 5px;
         margin-bottom:7px;
         border-collapse: collapse;
         padding:2px;
       }
-      table, th, td {
+      div.raven-error-panel table, div.raven-error-panel th, div.raven-error-panel td {
         border: 1px solid black;
       }  
-      th, td {
+      div.raven-error-panel th, div.raven-error-panel td {
         padding: 2px;
       }
       -->
     </style>
   </head>
   <body>
-    <div style='width:100%;height:100%; overflow:auto;'>
+    <%
+    def isPropogatedEx = { e ->
+      e.cause instanceof org.raven.tree.PropagatedAttributeValueError
+    }
+    def escape = { mes ->
+      org.apache.commons.lang.StringEscapeUtils.escapeHtml(mes)
+    }
+    %>
+    <div class="raven-error-panel">
       <h1>${messages.errorTitle}
         <% if (projectName) { %>
-        ${messages.inProject} ${projectName}
+        ${messages.inProject} "${projectName}"
         <% } %>
-        ${statusCode} (${statusCodeDesc})
+        : ${statusCode} (${statusCodeDesc})
       </h1>
-      <% if (message) { %><pre>${errorMessage}</pre> <% } %>
+      <% if (message) { %>
+        <pre>${escape(message)}</pre> 
+      <% } else if (exceptions) { %>
+        <pre>${isPropogatedEx(exceptions[0])? exceptions[0].cause.message : exceptions[0].message}</pre>
+      <% } %>
       <h2>${messages.request}: </h2>
       <ul>
         <li><b>URL: </b>${requestURL}
@@ -96,7 +112,7 @@ limitations under the License.
         <% } %>
         <li><b>${messages.queryString}: </b>${queryString}
           
-        <% if ($devMode) { %> 
+        <% if (devMode) { %> 
           <li><b>${messages.headers}: </b>
             <table><tr><th>Name</th><th>Value</th></tr>
               <% headers.each { h -> %>
@@ -111,13 +127,22 @@ limitations under the License.
             </table>
         <% } %>
       </ul>
-      <% if ($devMode && exceptions) { %> 
+      <% if (devMode && exceptions) { %> 
           <h2>${messages.exceptionStack}: </h2>
-          <a id='open-stack' tabindex=1 href=\"#s\">Show stack</a> <a id='close-stack' tabindex=2 href=\"#s\">
-              ${messages.collapseStack}
-          </a>
+          <a id='open-stack' tabindex=1 href="#s">${messages.showStack}</a> 
+          <a id='close-stack' tabindex=2 href="#s">${messages.collapseStack}</a>
           <ol>
-              
+              <% exceptions.each { e -> %>
+                <% if (!isPropogatedEx(e)) { %>
+                  <li>${e.class.name}: 
+                    <% if (e.message) { %>
+                      <pre>${escape(e.message)}</pre>
+                    <% } %>
+                    <pre class="exception-stack">
+<% e.stackTrace.each { t -> %>at ${t.toString()+'\n'}<% } %>
+                    </pre>
+                <% } %>
+              <% } %>              
           </ol>
       <% } %>
     </div>    

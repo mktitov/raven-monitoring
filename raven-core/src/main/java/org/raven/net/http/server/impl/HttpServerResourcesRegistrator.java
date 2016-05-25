@@ -20,9 +20,11 @@ import java.util.Locale;
 import org.apache.commons.io.IOUtils;
 import static  org.raven.net.http.server.HttpConsts.*;
 import org.raven.tree.DataFile;
+import org.raven.tree.Node;
 import org.raven.tree.ResourceManager;
 import org.raven.tree.ResourceRegistrator;
 import org.raven.tree.impl.FileNode;
+import org.raven.tree.impl.PropertiesNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +34,7 @@ import org.slf4j.LoggerFactory;
  */
 public class HttpServerResourcesRegistrator implements ResourceRegistrator {
     public static final String RES_BASE = "/org/raven/net/http/server/";
+    private final static String PROPERTIES_EXT = ".properties";
     private final static Logger logger = LoggerFactory.getLogger(HttpServerResourcesRegistrator.class);
     private final static String[] pages = new String[] {
         "pages/error_page_en"
@@ -44,7 +47,7 @@ public class HttpServerResourcesRegistrator implements ResourceRegistrator {
     @Override
     public void registerResources(ResourceManager resourceManager) {
         createResourcesFromList(resourceManager, pages, ".html", "text/html");
-        createResourcesFromList(resourceManager, messages, ".properties", "text/plain");
+        createResourcesFromList(resourceManager, messages, PROPERTIES_EXT, "text/plain");
     }
     
     private void createResourcesFromList(ResourceManager resourceManager, String[] names, String ext, String mimeType) {
@@ -60,10 +63,10 @@ public class HttpServerResourcesRegistrator implements ResourceRegistrator {
                 try {
                     if (is==null)
                         throw new Exception(String.format("Resource (%s) does not exists", resInfo.resPath));
-                    FileNode node = resInfo.createNode();
+                    Node node = resInfo.createNode();
                     if (!resourceManager.registerResource(resInfo.ravenResName, resInfo.locale, node))
                         throw new Exception("Resource manager can't register resource");
-                    DataFile file = node.getFile();
+                    DataFile file = resInfo.getDataFile();
                     file.setFilename(resInfo.fileName);
                     file.setDataStream(is);
                     file.setMimeType(mimeType);
@@ -75,7 +78,7 @@ public class HttpServerResourcesRegistrator implements ResourceRegistrator {
             }
         } catch (Throwable e) {
             if (logger.isErrorEnabled())
-                logger.error(String.format("Error registering resource (%s)", PAGES_RESOURCES_BASE+resName), e);            
+                logger.error(String.format("Error registering resource (%s)", RESOURCES_BASE+resName), e);            
         }
     }
     
@@ -83,10 +86,12 @@ public class HttpServerResourcesRegistrator implements ResourceRegistrator {
         private final Locale locale;
         private final String resPath;
         private final String ravenResName;
-        private final String fileName;                
-        private FileNode node;
+        private final String fileName;             
+        private final boolean isHtml;
+        private Node node;
 
         public ResInfo(String name, String ext) throws Exception {
+            this.isHtml = !PROPERTIES_EXT.equals(ext);
             String[] elems = name.split("_");
             if (elems==null || elems.length<=1)
                 throw new Exception("Can't detect resource locale");
@@ -98,8 +103,12 @@ public class HttpServerResourcesRegistrator implements ResourceRegistrator {
             fileName = elems[elems.length-1]+ext;
         }
         
-        private FileNode createNode() {
-            return node = new FileNode();
+        private Node createNode() {
+            return node = isHtml? new FileNode() : new PropertiesNode();
+        }
+        
+        private DataFile getDataFile() {
+            return isHtml? ((FileNode)node).getFile() : ((PropertiesNode)node).getPropertiesFile();
         }
 
         @Override

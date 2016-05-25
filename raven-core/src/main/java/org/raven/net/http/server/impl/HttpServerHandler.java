@@ -22,6 +22,7 @@ import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.cookie.Cookie;
@@ -33,6 +34,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -57,7 +59,11 @@ import org.raven.net.http.server.HttpServerContext;
 import org.raven.net.http.server.HttpSession;
 import org.raven.net.http.server.InvalidPathException;
 import org.raven.net.http.server.SessionManager;
+import org.raven.prj.impl.ProjectNode;
+import org.raven.prj.impl.WebInterfaceNode;
 import org.raven.sched.ExecutorService;
+import org.raven.tree.Node;
+import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.LoggerHelper;
 
 /**
@@ -73,6 +79,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
     private RRController rrController;
     private InetSocketAddress remoteAddr;
     private InetSocketAddress localAddr;
+    private HttpRequest httpRequest;
 
     public HttpServerHandler(HttpServerContext serverContext) {
         this.serverContext = serverContext;
@@ -104,13 +111,16 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         if (logger.isErrorEnabled())
             logger.error("Error catched", cause);
         boolean writeStarted = rrController==null? false : rrController.isWriteStarted(); 
+        RRController _rrController = rrController;
+        HttpRequest _httpRequest = httpRequest;
         if (rrController!=null) {
             rrController.release();
             rrController = null;
+            httpRequest = null;
         }
-        if (!writeStarted) {
+        if (!writeStarted && _httpRequest != null) {
             //if write not started we can produce http response with error
-            
+            responseWithError(ctx, _httpRequest, _rrController);
         }
         ctx.close();
     }
@@ -162,6 +172,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
     }
         
     private void processNewHttpRequest(HttpRequest request, ChannelHandlerContext ctx) throws Exception {
+        httpRequest = request;
         final long requestNum = serverContext.getRequestsCounter().incrementAndGet();
         if (logger.isDebugEnabled())
             logger.debug("Received new request #"+requestNum);        
@@ -319,6 +330,61 @@ public class HttpServerHandler extends ChannelDuplexHandler {
 
     private void processHttpRequestContent(HttpContent content) throws Exception {
         rrController.onRequestContent(content);
+    }
+
+    private void responseWithError(ChannelHandlerContext ctx, HttpRequest httpRequest, RRController rrController, Throwable error) {
+        HttpResponseStatus status;
+        Map<String, Object> bindings = new HashMap<>();
+        ProjectNode projectNode = getProjectNode(rrController);
+        bindings.put("projectName", getProjectName(projectNode));
+        bindings.put("message", null);
+        bindings.put("exceptions", createListOfExceptions(error, new ArrayList()));
+        bindings.put("requestURL", httpRequest.getUri());
+        bindings.put("responseBuilderNodePath", getResponseBuilderPath(rrController));
+        
+        bindings.put("devMode", projectNode==null? false : projectNode.get);
+        
+        bindings.put("statusCode", status.code());
+        bindings.put("statusCodeDesc", status.reasonPhrase());
+//        if ()
+    }
+
+    private static String getResponseBuilderPath(RRController rrController) {
+        return rrController != null ? 
+                rrController.getResponseContext().getResponseBuilder().getResponseBuilderNode().getPath() : null;
+    }
+    
+    private boolean isDevMode(RRController rrController) {
+        if (rrController==null)
+            return false;
+        Node serviceNode = rrController.getResponseContext().getServiceNode();
+        if (serviceNode instanceof WebInterfaceNode)
+            serviceNode = serviceNode.getParent();
+        NodeAttribute prodAttr = serviceNode.getAttr("prod");
+        if (Boolean.class.equals(prodAttr.getType())) {
+            
+        } else 
+            return false;
+            
+        Node serviceNode = rrController.getResponseContext().getServiceNode()
+    }
+    
+    private String getProjectName(ProjectNode projectNode) {
+        return projectNode==null? null : projectNode.getName();        
+    }
+
+    private List createListOfExceptions(Throwable error, List errors) {
+        if (error==null)
+            return errors;
+        errors.add(error);
+        return createListOfExceptions(error.getCause(), errors);        
+    }
+
+    private ProjectNode getProjectNode(RRController rrController) {
+        if (rrController==null)
+            return null;
+        Node serviceNode = rrController.getResponseContext().getServiceNode();
+        return serviceNode instanceof WebInterfaceNode? ((ProjectNode)serviceNode.getParent()) : null;
     }
     
     public static class RequestImpl implements Request {

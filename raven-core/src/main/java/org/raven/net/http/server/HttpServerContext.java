@@ -18,6 +18,7 @@ package org.raven.net.http.server;
 import java.util.concurrent.atomic.AtomicLong;
 import org.raven.audit.Auditor;
 import org.raven.net.NetworkResponseService;
+import org.raven.net.http.server.impl.ErrorPageGeneratorImpl;
 import org.raven.sched.ExecutorService;
 import org.raven.tree.Node;
 import org.weda.services.TypeConverter;
@@ -80,4 +81,8 @@ public interface HttpServerContext {
      * Returns the type converter service
      */
     public TypeConverter getTypeConverter();
+    /**
+     * Returns the error page generator
+     */
+    public ErrorPageGenerator getErrorPageGenerator();
 }
