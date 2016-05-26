@@ -32,6 +32,8 @@ import org.weda.beans.ObjectUtils;
  * @author Mikhail Titov
  */
 public class ErrorPageGeneratorImpl implements ErrorPageGenerator {
+    private final static Locale DEFAULT_LOCALE = Locale.ENGLISH;
+    
     private final ResourceManager resourceManager;
     private final String pageTemplatePath;
     private final String messagesResourceKey;
@@ -44,18 +46,23 @@ public class ErrorPageGeneratorImpl implements ErrorPageGenerator {
         this.messagesResourceKey = messagesResourceKey;
     }
     
-    public String buildPage(Map<String, Object> bindings, Locale locale) throws Exception {
+    public String buildPage(Map<String, Object> bindings, Locale locale, boolean verbose) throws Exception {
         FileNode pageNode = (FileNode) resourceManager.getResource(pageTemplatePath, Locale.ENGLISH);
         if (pageNode==null)
             throw new Exception("Not found page template: "+pageTemplatePath);
         PropertiesNode messages = (PropertiesNode) resourceManager.getResource(messagesResourceKey, locale);
-        if (messages==null)
-            throw new Exception(String.format("Not found message bundle (%s) for locale (%s)", messagesResourceKey, locale));
+        if (messages==null) {
+            messages = (PropertiesNode) resourceManager.getResource(messagesResourceKey, DEFAULT_LOCALE);
+            if (messages==null)
+                throw new Exception(String.format(
+                        "Not found message bundle (%s) for locale (%s) and for DEFAULT_LOCALE (%s)"
+                        , messagesResourceKey, locale, DEFAULT_LOCALE));
+        }
         if (template==null || !ObjectUtils.equals(lastPageCheckSum, pageNode.getFile().getChecksum())) {
             synchronized(this) {                
                 if (template==null || !ObjectUtils.equals(lastPageCheckSum, pageNode.getFile().getChecksum())) {
-                    template = new SimpleTemplateEngine(true).createTemplate(pageNode.getFile().getDataReader());
-                    template = new RavenScriptTemplateEngine(true).createTemplate(pageNode.getFile().getDataReader());
+//                    template = new SimpleTemplateEngine(true).createTemplate(pageNode.getFile().getDataReader());
+                    template = new RavenScriptTemplateEngine(verbose).createTemplate(pageNode.getFile().getDataReader());
                     lastPageCheckSum = pageNode.getFile().getChecksum();
                 }
             }

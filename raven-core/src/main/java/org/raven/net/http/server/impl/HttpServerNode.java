@@ -32,6 +32,7 @@ import org.raven.net.NetworkResponseService;
 import org.raven.net.http.server.ErrorPageGenerator;
 import org.raven.net.http.server.HttpConsts;
 import org.raven.net.http.server.HttpServerContext;
+import org.raven.net.http.server.Protocol;
 import org.raven.sched.ExecutorService;
 import org.raven.tree.Node;
 import org.raven.tree.ResourceManager;
@@ -86,6 +87,9 @@ public class HttpServerNode extends BaseNodeWithStat {
     @NotNull @Parameter(defaultValue = "false")
     private Boolean alwaysExecuteBuilderInExecutor;
     
+    @NotNull @Parameter(defaultValue = "HTTP")
+    private Protocol protocol;
+    
     @Parameter(readOnly = true)
     private AtomicLong  connectionsCount;
     
@@ -124,7 +128,7 @@ public class HttpServerNode extends BaseNodeWithStat {
         serverContext = new ServerContextImpl(connectionsCount, requestsCount, writtenBytes, readBytes, 
                 networkResponseService, this, executor, auditor, 
                 responseStreamBufferSize, responseStreamMaxPendingBytesForWrite, requestStreamBuffersCount,
-                alwaysExecuteBuilderInExecutor, converter, errorPageGenerator);
+                alwaysExecuteBuilderInExecutor, converter, errorPageGenerator, protocol);
         try {
             ServerBootstrap bootstrap = new ServerBootstrap()
                 .group(acceptorGroup, workerGroup)
@@ -192,6 +196,14 @@ public class HttpServerNode extends BaseNodeWithStat {
 
     public void setAlwaysExecuteBuilderInExecutor(Boolean alwaysExecuteBuilderInExecutor) {
         this.alwaysExecuteBuilderInExecutor = alwaysExecuteBuilderInExecutor;
+    }
+
+    public Protocol getProtocol() {
+        return protocol;
+    }
+
+    public void setProtocol(Protocol protocol) {
+        this.protocol = protocol;
     }
 
     public Integer getPort() {
@@ -273,13 +285,14 @@ public class HttpServerNode extends BaseNodeWithStat {
         private final boolean alwaysExecuteBuilderInExecutor;
         private final TypeConverter typeConverter;
         private final ErrorPageGenerator errorPageGenerator;
+        private final Protocol protocol;
 
         public ServerContextImpl(AtomicLong connectionsCounter, AtomicLong requestsCounter, 
                 AtomicLong writtenBytesCounter, AtomicLong readBytesCounter, 
                 NetworkResponseService responseService, Node owner, ExecutorService executor, 
                 Auditor auditor, int responseStreamBufferSize, int responseStreamMaxPendingBytesForWrite,
                 int requestStreamBuffersCount, boolean alwaysExecuteBuilderInExecutor,
-                TypeConverter typeConverter, ErrorPageGenerator errorPageGenerator) 
+                TypeConverter typeConverter, ErrorPageGenerator errorPageGenerator, Protocol protocol) 
         {
             this.connectionsCounter = connectionsCounter;
             this.requestsCounter = requestsCounter;
@@ -295,6 +308,7 @@ public class HttpServerNode extends BaseNodeWithStat {
             this.alwaysExecuteBuilderInExecutor = alwaysExecuteBuilderInExecutor;
             this.typeConverter = typeConverter;
             this.errorPageGenerator = errorPageGenerator;
+            this.protocol = protocol;
         }
 
         @Override
@@ -365,6 +379,11 @@ public class HttpServerNode extends BaseNodeWithStat {
         @Override
         public ErrorPageGenerator getErrorPageGenerator() {
             return errorPageGenerator;
+        }
+
+        @Override
+        public Protocol getProtocol() {
+            return protocol;
         }
     }
 }

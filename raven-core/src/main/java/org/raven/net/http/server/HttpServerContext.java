@@ -85,4 +85,8 @@ public interface HttpServerContext {
      * Returns the error page generator
      */
     public ErrorPageGenerator getErrorPageGenerator();
+    /**
+     * Returns the type of the http protocol
+     */
+    public Protocol getProtocol();
 }

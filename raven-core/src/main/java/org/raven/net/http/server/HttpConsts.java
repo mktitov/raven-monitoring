@@ -20,6 +20,7 @@ package org.raven.net.http.server;
  * @author Mikhail Titov
  */
 public interface HttpConsts {
+    public static final String HTTP_SERVER_HEADER = "Raven/1.1";
     public static final String RESOURCES_BASE = "HTTP Server/";
     public static final String ERROR_PAGE_RESOURCE = RESOURCES_BASE+"pages/error_page";
     public static final String ERROR_PAGE_MESSAGES_RESOURCE = RESOURCES_BASE+"messages/messages";

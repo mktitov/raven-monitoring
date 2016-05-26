@@ -102,6 +102,10 @@ public class RRController {
         this.keepAlive = keepAlive;
     }
 
+    public HttpServerHandler.RequestImpl getRequest() {
+        return request;
+    }
+    
     public ResponseContext getResponseContext() {
         return responseContext;
     }

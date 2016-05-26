@@ -58,7 +58,7 @@ public class ErrorPageGeneratorImplTest extends RavenCoreTestCase {
         
         ErrorPageGeneratorImpl generator = new ErrorPageGeneratorImpl(
                 resourceManager, HttpConsts.ERROR_PAGE_RESOURCE, HttpConsts.ERROR_PAGE_MESSAGES_RESOURCE);
-        String res = generator.buildPage(bindings, new Locale("ru"));
+        String res = generator.buildPage(bindings, new Locale("ru", "RU"), true);
         System.out.println("HTML: \n"+res);
         
         FileUtils.write(new File("target/error.html"), res, Charset.forName("UTF-8"));

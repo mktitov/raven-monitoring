@@ -15,13 +15,10 @@
  */
 package org.raven.net.http.server;
 
-import java.util.Locale;
-import java.util.Map;
-
 /**
  *
  * @author Mikhail Titov
  */
-public interface ErrorPageGenerator {
-    public String buildPage(Map<String, Object> bindings, Locale locale, boolean verbose) throws Exception;
+public enum Protocol {
+    HTTP, HTTPS
 }

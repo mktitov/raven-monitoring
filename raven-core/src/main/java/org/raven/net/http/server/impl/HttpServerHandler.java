@@ -15,14 +15,18 @@
  */
 package org.raven.net.http.server.impl;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.cookie.Cookie;
@@ -36,8 +40,10 @@ import java.io.Reader;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import org.apache.commons.codec.binary.Base64;
@@ -51,6 +57,7 @@ import org.raven.auth.UserContext;
 import org.raven.auth.UserContextService;
 import org.raven.net.AccessDeniedException;
 import org.raven.net.AuthorizationNeededException;
+import org.raven.net.ContextUnavailableException;
 import org.raven.net.Request;
 import org.raven.net.ResponseContext;
 import org.raven.net.UnauthoriedException;
@@ -80,6 +87,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
     private InetSocketAddress remoteAddr;
     private InetSocketAddress localAddr;
     private HttpRequest httpRequest;
+    private boolean hasError = false;
 
     public HttpServerHandler(HttpServerContext serverContext) {
         this.serverContext = serverContext;
@@ -95,7 +103,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         long connectionNum = serverContext.getConnectionsCounter().incrementAndGet();
         remoteAddr = (InetSocketAddress) ctx.channel().remoteAddress();
         localAddr = (InetSocketAddress) ctx.channel().localAddress();
-        logger = new LoggerHelper(serverContext.getOwner(), "(+"+connectionNum+") " + ctx.channel().remoteAddress().toString()+" ");
+        logger = new LoggerHelper(serverContext.getOwner(), "("+connectionNum+") " + ctx.channel().remoteAddress().toString()+" ");
         if (logger.isDebugEnabled())
             logger.debug("New connection established");
     }
@@ -108,6 +116,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        hasError = true;
         if (logger.isErrorEnabled())
             logger.error("Error catched", cause);
         boolean writeStarted = rrController==null? false : rrController.isWriteStarted(); 
@@ -119,10 +128,10 @@ public class HttpServerHandler extends ChannelDuplexHandler {
             httpRequest = null;
         }
         if (!writeStarted && _httpRequest != null) {
-            //if write not started we can produce http response with error
-            responseWithError(ctx, _httpRequest, _rrController);
-        }
-        ctx.close();
+            //if write not started we can produce http response with error            
+            responseWithError(ctx, _httpRequest, _rrController, cause);
+        } else
+            ctx.close();
     }
 
     @Override
@@ -130,8 +139,9 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         try {
             if (msg instanceof HttpRequest) 
                 processNewHttpRequest((HttpRequest) msg, ctx);
-            if (msg instanceof HttpContent) 
+            if (msg instanceof HttpContent) {
                 processHttpRequestContent((HttpContent) msg);
+            }
         } finally {
             ReferenceCountUtil.release(msg);
         }
@@ -148,9 +158,10 @@ public class HttpServerHandler extends ChannelDuplexHandler {
             //After processing LastHttpContent then:
             //1. Must release the RRController
             //2. if connection not keep alive we must close connection
+            ChannelFuture writeFuture = ctx.write(resp.getMessage(), promise);
             if (resp.getMessage() instanceof LastHttpContent) {
                 rrController = null;
-                promise.addListener(new GenericFutureListener<ChannelFuture>() {
+                writeFuture.addListener(new GenericFutureListener<ChannelFuture>() {
                     @Override public void operationComplete(ChannelFuture future) throws Exception {
                         resp.getRrController().release();
                         if (!resp.getRrController().isKeepAlive()) {
@@ -163,7 +174,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
                     }
                 });
             }
-            ctx.write(resp.getMessage(), promise);
+            
             if (!resp.getRrController().isWriteStarted())
                 resp.getRrController().setWriteStarted(true);
         } else
@@ -173,6 +184,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         
     private void processNewHttpRequest(HttpRequest request, ChannelHandlerContext ctx) throws Exception {
         httpRequest = request;
+        hasError = false;
         final long requestNum = serverContext.getRequestsCounter().incrementAndGet();
         if (logger.isDebugEnabled())
             logger.debug("Received new request #"+requestNum);        
@@ -329,32 +341,70 @@ public class HttpServerHandler extends ChannelDuplexHandler {
     }
 
     private void processHttpRequestContent(HttpContent content) throws Exception {
-        rrController.onRequestContent(content);
+        if (rrController==null && !hasError) 
+            throw new InternalServerError("Received HttpContent but RRController does not exists");
+        else if (rrController!=null)
+            rrController.onRequestContent(content);
     }
 
-    private void responseWithError(ChannelHandlerContext ctx, HttpRequest httpRequest, RRController rrController, Throwable error) {
-        HttpResponseStatus status;
-        Map<String, Object> bindings = new HashMap<>();
-        ProjectNode projectNode = getProjectNode(rrController);
-        bindings.put("projectName", getProjectName(projectNode));
-        bindings.put("message", null);
-        bindings.put("exceptions", createListOfExceptions(error, new ArrayList()));
-        bindings.put("requestURL", httpRequest.getUri());
-        bindings.put("responseBuilderNodePath", getResponseBuilderPath(rrController));
-        
-        bindings.put("devMode", projectNode==null? false : projectNode.get);
-        
-        bindings.put("statusCode", status.code());
-        bindings.put("statusCodeDesc", status.reasonPhrase());
-//        if ()
+    private void responseWithError(ChannelHandlerContext ctx, HttpRequest httpRequest, RRController rrController, 
+            Throwable error) 
+    {
+        try {
+            HttpResponseStatus status;
+            ResponseContext respContext = rrController==null? null : rrController.getResponseContext();
+            RequestImpl req = rrController==null? null : rrController.getRequest();
+            Map<String, Object> bindings = new HashMap<>();
+            ProjectNode projectNode = getProjectNode(rrController);
+            bindings.put("projectName", getProjectName(projectNode));
+            bindings.put("message", null);
+            bindings.put("exceptions", createListOfExceptions(error, new ArrayList()));
+            
+            bindings.put("requestURL", httpRequest.getUri());
+            bindings.put("queryString", decodeQueryString(httpRequest));
+            bindings.put("responseBuilderNodePath", getResponseBuilderPath(rrController));        
+            bindings.put("devMode", isInDevMode(rrController));
+            bindings.put("parameters", req==null? Collections.EMPTY_MAP : req.getParams());
+            bindings.put("headers", req==null? Collections.EMPTY_MAP : req.getHeaders());
+            //determine the status code
+            if (error instanceof InvalidPathException || error instanceof ContextUnavailableException)
+                status = HttpResponseStatus.NOT_FOUND;
+            else {
+                status = HttpResponseStatus.INTERNAL_SERVER_ERROR;
+            }
+            //adding http status to bindings
+            bindings.put("statusCode", status.code());
+            bindings.put("statusCodeDesc", status.reasonPhrase());
+            //detecting request locale
+            //composing response 
+            String pageContent = serverContext.getErrorPageGenerator().buildPage(
+                    bindings, getLocaleFromRequest(httpRequest), logger.isTraceEnabled());
+            ByteBuf buf = ctx.alloc().buffer().writeBytes(pageContent.getBytes("utf-8"));
+            DefaultFullHttpResponse resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, buf);
+            resp.headers().set(HttpHeaders.Names.SERVER, HttpConsts.HTTP_SERVER_HEADER);
+            resp.headers().set(HttpHeaders.Names.CACHE_CONTROL, "no-cache");
+            resp.headers().add(HttpHeaders.Names.PRAGMA, "no-cache");
+            resp.headers().set(HttpHeaders.Names.CONTENT_TYPE, "text/html;charset=UTF-8");
+            resp.headers().set(HttpHeaders.Names.DATE, new Date());
+            resp.headers().set(HttpHeaders.Names.CONTENT_LENGTH, buf.readableBytes());
+            
+            ChannelFuture writeFuture = ctx.writeAndFlush(resp);
+            if (!HttpHeaders.isKeepAlive(httpRequest))
+                writeFuture.addListener(ChannelFutureListener.CLOSE);
+        } catch (Throwable e) {
+            if (logger.isErrorEnabled())
+                logger.error("Error while composing ERROR_PAGE", e);
+            ctx.close();
+        }
     }
 
     private static String getResponseBuilderPath(RRController rrController) {
         return rrController != null ? 
-                rrController.getResponseContext().getResponseBuilder().getResponseBuilderNode().getPath() : null;
+                rrController.getResponseContext().getResponseBuilder().getResponseBuilderNode().getPath() 
+                : null;
     }
     
-    private boolean isDevMode(RRController rrController) {
+    private boolean isInDevMode(RRController rrController) {
         if (rrController==null)
             return false;
         Node serviceNode = rrController.getResponseContext().getServiceNode();
@@ -362,11 +412,10 @@ public class HttpServerHandler extends ChannelDuplexHandler {
             serviceNode = serviceNode.getParent();
         NodeAttribute prodAttr = serviceNode.getAttr("prod");
         if (Boolean.class.equals(prodAttr.getType())) {
-            
+            Boolean res = prodAttr.getRealValue();
+            return res==null? false : res;
         } else 
             return false;
-            
-        Node serviceNode = rrController.getResponseContext().getServiceNode()
     }
     
     private String getProjectName(ProjectNode projectNode) {
@@ -385,6 +434,19 @@ public class HttpServerHandler extends ChannelDuplexHandler {
             return null;
         Node serviceNode = rrController.getResponseContext().getServiceNode();
         return serviceNode instanceof WebInterfaceNode? ((ProjectNode)serviceNode.getParent()) : null;
+    }
+
+    private Locale getLocaleFromRequest(HttpRequest httpRequest) {
+        String acceptLanguage = httpRequest.headers().get(HttpHeaders.Names.ACCEPT_LANGUAGE);
+        if (acceptLanguage==null || acceptLanguage.isEmpty())
+            return Locale.ENGLISH;
+        AcceptLanguageHttpHeader header = new AcceptLanguageHttpHeader(acceptLanguage);
+        return header.getLocale()==null? Locale.ENGLISH : header.getLocale();
+    }
+
+    private Object decodeQueryString(HttpRequest httpRequest) {
+        QueryStringDecoder decoder = new QueryStringDecoder(httpRequest.getUri());
+        return decoder.path();
     }
     
     public static class RequestImpl implements Request {
