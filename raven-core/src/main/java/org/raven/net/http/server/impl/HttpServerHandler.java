@@ -49,6 +49,7 @@ import java.util.Set;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.entity.ContentType;
+import org.raven.RavenUtils;
 import org.raven.audit.Action;
 import org.raven.audit.AuditRecord;
 import org.raven.auth.AnonymousLoginService;
@@ -64,7 +65,6 @@ import org.raven.net.UnauthoriedException;
 import org.raven.net.http.server.HttpConsts;
 import org.raven.net.http.server.HttpServerContext;
 import org.raven.net.http.server.HttpSession;
-import org.raven.net.http.server.InvalidPathException;
 import org.raven.net.http.server.SessionManager;
 import org.raven.prj.impl.ProjectNode;
 import org.raven.prj.impl.WebInterfaceNode;
@@ -72,6 +72,7 @@ import org.raven.sched.ExecutorService;
 import org.raven.tree.Node;
 import org.raven.tree.NodeAttribute;
 import org.raven.tree.impl.LoggerHelper;
+import org.weda.beans.ObjectUtils;
 
 /**
  *
@@ -368,7 +369,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
             bindings.put("parameters", req==null? Collections.EMPTY_MAP : req.getParams());
             bindings.put("headers", req==null? Collections.EMPTY_MAP : req.getHeaders());
             //determine the status code
-            if (error instanceof InvalidPathException || error instanceof ContextUnavailableException)
+            if (error instanceof ContextUnavailableException)
                 status = HttpResponseStatus.NOT_FOUND;
             else {
                 status = HttpResponseStatus.INTERNAL_SERVER_ERROR;
@@ -476,7 +477,6 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         private Map<String, Object> attrs = null;
         private InputStreamReader contentReader;
         
-        
         public RequestImpl(HttpRequest nettyRequest, InetSocketAddress localAddr, InetSocketAddress remoteAddr,
                 Map<String, Object> params, Map<String, Object> headers, String path, ContentType contentType,
                 HttpServerContext serverContext) 
@@ -486,9 +486,11 @@ public class HttpServerHandler extends ChannelDuplexHandler {
             this.localAddr = localAddr;
             this.params = params;
             this.headers = headers;
-            String[] pathElems = path.split("/");
-            if (pathElems.length<2)
-                throw new InvalidPathException(path);
+            if (path.length()<2)
+                throw new ContextUnavailableException(path);            
+            String[] pathElems = RavenUtils.split(path, "/", true);
+            if (pathElems.length<2 || !ObjectUtils.in(pathElems[0], SRI_SERVICE, PROJECTS_SERVICE))
+                throw new ContextUnavailableException(path);            
             this.servicePath = pathElems[0];            
             this.projectPath = SRI_SERVICE.equals(servicePath)? "/"+SRI_SERVICE : "/"+pathElems[0]+"/"+pathElems[1];
             this.contextPath = StringUtils.join(pathElems, "/", 1, pathElems.length);

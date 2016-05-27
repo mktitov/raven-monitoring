@@ -17,6 +17,7 @@ package org.raven.net.http.server.impl;
 
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.log.LogLevel;
@@ -31,6 +32,7 @@ import org.raven.test.RavenCoreTestCase;
 public class HttpServerNodeTest extends RavenCoreTestCase {
     private ExecutorServiceNode executor;
     private HttpServerNode httpServer;
+    private WebClient webclient;
     
     @Before
     public void prepare() {
@@ -46,6 +48,15 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         httpServer.setExecutor(executor);
         httpServer.setPort(7777);
         httpServer.setLogLevel(LogLevel.TRACE);
+        
+        webclient = new WebClient(); 
+        webclient.setThrowExceptionOnFailingStatusCode(false);
+    }
+    
+    @After
+    public void finishTest() {
+//        if (webclient!=null)
+//            webclient.
     }
     
     @Test
@@ -58,12 +69,24 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
     
     @Test
     public void invalidPathTest() throws Exception {
-        assertTrue(httpServer.start());
-        try (final WebClient client = new WebClient()) {
-            HtmlPage p = client.getPage("http://localhost:7777");
-            assertEquals(404, p.getWebResponse().getStatusCode());
-            
-        }
+        assertTrue(httpServer.start()); 
+        //
+        HtmlPage p = webclient.getPage("http://localhost:7777");
+        assertEquals(404, p.getWebResponse().getStatusCode());
+        assertTrue(p.asText().contains("Context (/) unavailable"));
+        
+        p = webclient.getPage("http://localhost:7777/a");
+        assertEquals(404, p.getWebResponse().getStatusCode());
+        assertTrue(p.asText().contains("Context (/a) unavailable"));
+        
+        p = webclient.getPage("http://localhost:7777/sri/a");
+        assertEquals(404, p.getWebResponse().getStatusCode());
+        assertTrue(p.asText().contains("Context (sri/a) unavailable. Can't resolve (a) path element"));
+        
+        p = webclient.getPage("http://localhost:7777/projects/test");
+        assertEquals(404, p.getWebResponse().getStatusCode());
+        assertTrue(p.asText().contains("Context (projects/test) unavailable. Can't resolve (test) path element"));
+        
         httpServer.stop();
     }
         
