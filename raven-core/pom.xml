@@ -309,11 +309,7 @@
       <groupId>org.ccil.cowan.tagsoup</groupId>
       <artifactId>tagsoup</artifactId>
     </dependency>
-    <!--        <dependency>
-        <groupId>commons-httpclient</groupId>
-        <artifactId>commons-httpclient</artifactId>
-    </dependency>
-    -->        
+            
     <dependency>
       <groupId>commons-net</groupId>
       <artifactId>commons-net</artifactId>

@@ -15,6 +15,8 @@
  */
 package org.raven.net.http.server.impl;
 
+import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import org.junit.Before;
 import org.junit.Test;
 import org.raven.log.LogLevel;
@@ -52,6 +54,17 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         Thread.sleep(30000);
         httpServer.stop();
         Thread.sleep(1000);
+    }
+    
+    @Test
+    public void invalidPathTest() throws Exception {
+        assertTrue(httpServer.start());
+        try (final WebClient client = new WebClient()) {
+            HtmlPage p = client.getPage("http://localhost:7777");
+            assertEquals(404, p.getWebResponse().getStatusCode());
+            
+        }
+        httpServer.stop();
     }
         
 }

@@ -356,11 +356,12 @@ public class HttpServerHandler extends ChannelDuplexHandler {
             RequestImpl req = rrController==null? null : rrController.getRequest();
             Map<String, Object> bindings = new HashMap<>();
             ProjectNode projectNode = getProjectNode(rrController);
+            QueryStringDecoder queryStringDecoder = new QueryStringDecoder(httpRequest.getUri());
+            //
             bindings.put("projectName", getProjectName(projectNode));
             bindings.put("message", null);
-            bindings.put("exceptions", createListOfExceptions(error, new ArrayList()));
-            
-            bindings.put("requestURL", httpRequest.getUri());
+            bindings.put("exceptions", createListOfExceptions(error, new ArrayList()));            
+            bindings.put("requestURL", getRequestURL(ctx, httpRequest, queryStringDecoder));
             bindings.put("queryString", decodeQueryString(httpRequest));
             bindings.put("responseBuilderNodePath", getResponseBuilderPath(rrController));        
             bindings.put("devMode", isInDevMode(rrController));
@@ -396,6 +397,15 @@ public class HttpServerHandler extends ChannelDuplexHandler {
                 logger.error("Error while composing ERROR_PAGE", e);
             ctx.close();
         }
+    }
+    
+    private String getRequestURL(ChannelHandlerContext ctx, HttpRequest req, QueryStringDecoder queryStringDecoder) {
+        String proto = serverContext.getProtocol().name().toLowerCase();
+        String host = req.headers().get(HttpHeaders.Names.HOST);
+        InetSocketAddress addr = (InetSocketAddress)ctx.channel().parent().localAddress();
+        if (host==null)
+            host = addr.getHostName()+":"+addr.getPort();
+        return proto+"://"+host+queryStringDecoder.path();
     }
 
     private static String getResponseBuilderPath(RRController rrController) {
@@ -445,8 +455,8 @@ public class HttpServerHandler extends ChannelDuplexHandler {
     }
 
     private Object decodeQueryString(HttpRequest httpRequest) {
-        QueryStringDecoder decoder = new QueryStringDecoder(httpRequest.getUri());
-        return decoder.path();
+        int pos = httpRequest.getUri().indexOf('?');
+        return pos>0 && pos+1<httpRequest.getUri().length()? httpRequest.getUri().substring(pos+1) : "";
     }
     
     public static class RequestImpl implements Request {

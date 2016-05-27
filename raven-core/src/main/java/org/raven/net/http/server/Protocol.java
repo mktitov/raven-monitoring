@@ -20,5 +20,5 @@ package org.raven.net.http.server;
  * @author Mikhail Titov
  */
 public enum Protocol {
-    HTTP, HTTPS
+    HTTP, HTTPS;
 }
