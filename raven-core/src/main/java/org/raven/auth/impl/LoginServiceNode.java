@@ -101,7 +101,8 @@ public class LoginServiceNode extends BaseNode implements LoginService {
         super.doStart();
         initStat();
         initChildren();
-        sessionManager = new SessionManagerImpl(executor, this, sessionTimeoutTimeUnit.toMillis(sessionTimeout), auditor);        
+        sessionManager = new SessionManagerImpl(executor, this, sessionTimeoutTimeUnit.toMillis(sessionTimeout), auditor);    
+        sessionManager.start();
     }
 
     @Override
@@ -121,6 +122,30 @@ public class LoginServiceNode extends BaseNode implements LoginService {
         authStat = new OperationStatistic();
         configureStat = new OperationStatistic();
         loginListenersStat = new OperationStatistic();
+    }
+
+    public Long getSessionTimeout() {
+        return sessionTimeout;
+    }
+
+    public void setSessionTimeout(Long sessionTimeout) {
+        this.sessionTimeout = sessionTimeout;
+    }
+
+    public TimeUnit getSessionTimeoutTimeUnit() {
+        return sessionTimeoutTimeUnit;
+    }
+
+    public void setSessionTimeoutTimeUnit(TimeUnit sessionTimeoutTimeUnit) {
+        this.sessionTimeoutTimeUnit = sessionTimeoutTimeUnit;
+    }
+
+    public ExecutorService getExecutor() {
+        return executor;
+    }
+
+    public void setExecutor(ExecutorService executor) {
+        this.executor = executor;
     }
     
     protected boolean createAuthenticatorsNode() {

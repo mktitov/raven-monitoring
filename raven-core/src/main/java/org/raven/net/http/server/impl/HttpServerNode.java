@@ -28,6 +28,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.audit.Auditor;
+import org.raven.dp.DataProcessorFacade;
+import org.raven.dp.impl.DataProcessorFacadeConfig;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.http.server.ErrorPageGenerator;
 import org.raven.net.http.server.HttpConsts;
@@ -36,7 +38,9 @@ import org.raven.net.http.server.Protocol;
 import org.raven.sched.ExecutorService;
 import org.raven.tree.Node;
 import org.raven.tree.ResourceManager;
+import org.raven.tree.impl.BaseNodeWithBehavior;
 import org.raven.tree.impl.BaseNodeWithStat;
+import org.raven.tree.impl.LoggerHelper;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.internal.annotations.Service;
 import org.weda.services.TypeConverter;
@@ -46,7 +50,7 @@ import org.weda.services.TypeConverter;
  * @author Mikhail Titov
  */
 @NodeClass
-public class HttpServerNode extends BaseNodeWithStat {
+public class HttpServerNode extends BaseNodeWithBehavior {
     @Service
     private static NetworkResponseService networkResponseService;
     @Service
@@ -90,6 +94,15 @@ public class HttpServerNode extends BaseNodeWithStat {
     @NotNull @Parameter(defaultValue = "HTTP")
     private Protocol protocol;
     
+    @NotNull @Parameter(defaultValue = "5000")
+    private Long readTimeout;
+    
+    @NotNull @Parameter(defaultValue = "20000")
+    private Long keepAliveTimeout;
+    
+    @Parameter(readOnly = true)
+    private AtomicLong activeConnectionsCount;
+    
     @Parameter(readOnly = true)
     private AtomicLong  connectionsCount;
     
@@ -115,7 +128,16 @@ public class HttpServerNode extends BaseNodeWithStat {
         requestsCount = new AtomicLong();
         writtenBytes = new AtomicLong();
         readBytes = new AtomicLong();
+        activeConnectionsCount = new AtomicLong();
         serverContext = null;
+    }
+
+    @Override
+    protected DataProcessorFacade createBehaviour() {
+        return new DataProcessorFacadeConfig(
+                "ConnectionTOManager", this, new ConnectionManagerDP(), executor, 
+                new LoggerHelper(this, null)
+            ).build();
     }
     
     @Override
@@ -125,10 +147,13 @@ public class HttpServerNode extends BaseNodeWithStat {
         workerGroup = new NioEventLoopGroup(workerThreadsCount);
         ErrorPageGenerator errorPageGenerator = new ErrorPageGeneratorImpl(
                 resourceManager, HttpConsts.ERROR_PAGE_RESOURCE, HttpConsts.ERROR_PAGE_MESSAGES_RESOURCE);
-        serverContext = new ServerContextImpl(connectionsCount, requestsCount, writtenBytes, readBytes, 
+        serverContext = new ServerContextImpl(
+                activeConnectionsCount, connectionsCount, requestsCount, writtenBytes, readBytes, 
                 networkResponseService, this, executor, auditor, 
                 responseStreamBufferSize, responseStreamMaxPendingBytesForWrite, requestStreamBuffersCount,
-                alwaysExecuteBuilderInExecutor, converter, errorPageGenerator, protocol);
+                alwaysExecuteBuilderInExecutor, converter, errorPageGenerator, protocol,
+                behavior.get(), readTimeout, keepAliveTimeout
+        );
         try {
             ServerBootstrap bootstrap = new ServerBootstrap()
                 .group(acceptorGroup, workerGroup)
@@ -206,6 +231,22 @@ public class HttpServerNode extends BaseNodeWithStat {
         this.protocol = protocol;
     }
 
+    public Long getReadTimeout() {
+        return readTimeout;
+    }
+
+    public void setReadTimeout(Long readTimeout) {
+        this.readTimeout = readTimeout;
+    }
+
+    public Long getKeepAliveTimeout() {
+        return keepAliveTimeout;
+    }
+
+    public void setKeepAliveTimeout(Long keepAliveTimeout) {
+        this.keepAliveTimeout = keepAliveTimeout;
+    }
+
     public Integer getPort() {
         return port;
     }
@@ -254,6 +295,10 @@ public class HttpServerNode extends BaseNodeWithStat {
         this.keystorePassword = keystorePassword;
     }        
 
+    public AtomicLong getActiveConnectionsCount() {
+        return activeConnectionsCount;
+    }
+
     public AtomicLong getConnectionsCount() {
         return connectionsCount;
     }
@@ -271,6 +316,7 @@ public class HttpServerNode extends BaseNodeWithStat {
     }
     
     private static class ServerContextImpl implements HttpServerContext {
+        private final AtomicLong activeConnectionsCounter;
         private final AtomicLong connectionsCounter;
         private final AtomicLong requestsCounter;
         private final AtomicLong writtenBytesCounter;
@@ -286,14 +332,19 @@ public class HttpServerNode extends BaseNodeWithStat {
         private final TypeConverter typeConverter;
         private final ErrorPageGenerator errorPageGenerator;
         private final Protocol protocol;
+        private final DataProcessorFacade connectionManager;
+        private final long readTimeout;
+        private final long keepAliveTimeout;
 
-        public ServerContextImpl(AtomicLong connectionsCounter, AtomicLong requestsCounter, 
+        public ServerContextImpl(AtomicLong activeConnectionsCounter, AtomicLong connectionsCounter, AtomicLong requestsCounter, 
                 AtomicLong writtenBytesCounter, AtomicLong readBytesCounter, 
                 NetworkResponseService responseService, Node owner, ExecutorService executor, 
                 Auditor auditor, int responseStreamBufferSize, int responseStreamMaxPendingBytesForWrite,
                 int requestStreamBuffersCount, boolean alwaysExecuteBuilderInExecutor,
-                TypeConverter typeConverter, ErrorPageGenerator errorPageGenerator, Protocol protocol) 
+                TypeConverter typeConverter, ErrorPageGenerator errorPageGenerator, Protocol protocol,
+                DataProcessorFacade connectionManager, long readTimeout, long keepAliveTimeout) 
         {
+            this.activeConnectionsCounter = activeConnectionsCounter;
             this.connectionsCounter = connectionsCounter;
             this.requestsCounter = requestsCounter;
             this.writtenBytesCounter = writtenBytesCounter;
@@ -309,11 +360,19 @@ public class HttpServerNode extends BaseNodeWithStat {
             this.typeConverter = typeConverter;
             this.errorPageGenerator = errorPageGenerator;
             this.protocol = protocol;
+            this.connectionManager = connectionManager;
+            this.keepAliveTimeout = keepAliveTimeout;
+            this.readTimeout = readTimeout;
         }
 
         @Override
         public Auditor getAuditor() {
             return auditor;
+        }
+
+        @Override
+        public AtomicLong getActiveConnectionsCounter() {
+            return activeConnectionsCounter;
         }
 
         @Override
@@ -384,6 +443,21 @@ public class HttpServerNode extends BaseNodeWithStat {
         @Override
         public Protocol getProtocol() {
             return protocol;
+        }
+
+        @Override
+        public DataProcessorFacade getConnectionManager() {
+            return connectionManager;
+        }
+
+        @Override
+        public long getKeepAliveTimeout() {
+            return keepAliveTimeout;
+        }
+
+        @Override
+        public long getReadTimeout() {
+            return readTimeout;
         }
     }
 }

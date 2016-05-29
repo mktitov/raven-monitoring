@@ -21,12 +21,12 @@ import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpContent;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.DefaultLastHttpContent;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
@@ -42,13 +42,16 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
+import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.ParseException;
 import org.apache.http.entity.ContentType;
 import org.raven.auth.UserContext;
 import org.raven.dp.FutureCallback;
@@ -130,12 +133,18 @@ public class RRController {
     
     public void onRequestContent(final HttpContent chunk) throws Exception {
         if (chunk instanceof LastHttpContent) {
+            if (logger.isDebugEnabled())
+                logger.debug("Processing LastHttpContent");
             if (!building)
                 buildResponse((LastHttpContent) chunk); //creating response context adapter with static request content
             else 
                 appendToRequestInputStream(chunk);
         } else {
+            if (logger.isDebugEnabled())
+                logger.debug("Processing HttpContent");            
             if (formUrlEncoded) {
+                if (logger.isDebugEnabled())
+                    logger.debug("Collecting HttpContent for later decoding (application/x-www-form-urlencoded)");
                 if (formUrlParamsBuf==null) 
                     formUrlParamsBuf = channel.alloc().compositeBuffer();
                 formUrlParamsBuf.addComponent(chunk.content());
@@ -163,6 +172,8 @@ public class RRController {
         
         //building response
         if (!staticStream || serverContext.getAlwaysExecuteBuilderInExecutor()) {
+            if (logger.isDebugEnabled())
+                logger.debug("Response will be built in executor ({})", serverContext.getExecutor().getPath());
             boolean executed = serverContext.getExecutor().executeQuietly(
                     new AbstractTask(responseContext.getResponseBuilder().getResponseBuilderNode(), logger.getPrefix()+"Processing http request") {
                         @Override public void doRun() throws Exception {
@@ -176,26 +187,34 @@ public class RRController {
                     logger.error(msg);
                 throw new InternalServerError(msg);
             }
-        } else
+        } else {
+            if (logger.isDebugEnabled()) 
+                logger.debug("Response will be built in Netty thread");
             startResponseProcessing(responseWriter);
+        }
     }
 
     private ResponseWriter createAndAttachResponseAdapter() {
         if (logger.isDebugEnabled())
             logger.debug("Creating response adapter (writer)");
-        final ResponseWriter responseWriter = new ResponseWriter();
+        final ResponseWriter responseWriter = new ResponseWriter(logger);
         responseContext.attachResponseAdapter(responseWriter);
         return responseWriter;
     }
     
     private void startResponseProcessing(final ResponseWriter responseWriter) {
         try {
+            if (logger.isDebugEnabled())
+                logger.debug("Composing response using builder: "+responseContext.getResponseBuilder().getResponseBuilderNode().getPath());
             Response result = responseContext.getResponse(user);
             if (result instanceof RavenFuture) {
-                //wating for future completing
+                if (logger.isDebugEnabled())
+                    logger.debug("Response builder returned the future. Wating for completion");
+                //wating for future completion
                 processFutureResponse((RavenFuture) result, responseWriter);
+            } else {
+                composeResponse(result, responseWriter);
             }
-            composeResponse(result, responseWriter);
         } catch (Throwable ex) {
             //TODO обрабатываем ошибку
             //1 Если запись в поток не началась можно сформировать html
@@ -224,16 +243,20 @@ public class RRController {
         
     private void processError(Throwable error) {
         if (logger.isErrorEnabled())
-            logger.error("Error while processing request", error);
-            //TODO обрабатываем ошибку
-            //1 Если запись в поток не началась можно сформировать html
-            //2 Если запись в поток response началась, тогда можем только матюгнуться в лог и закрыть connection
-        
+            logger.error("Error while processing request", error); 
+        //we must to deliver the error to the server handler
+        channel.write(new ErrorResponseMessage(this, error));
     }
     
     private void composeResponse(final Response response, final ResponseWriter responseWriter) throws Exception {
-        if (response == Response.MANAGING_BY_BUILDER || response == Response.ALREADY_COMPOSED)
+        if (logger.isDebugEnabled())
+            logger.debug("Response created by builder. Forming HTTP Response");        
+        if (response == Response.MANAGING_BY_BUILDER)
             return;        
+        if (response == Response.ALREADY_COMPOSED) {
+            responseWriter.close(); //just in case
+            return;
+        }
         HttpResponse httpResponse = responseWriter.responseHeader;
         if (response == Response.NOT_MODIFIED) {
             httpResponse.setStatus(HttpResponseStatus.NOT_MODIFIED);
@@ -259,6 +282,8 @@ public class RRController {
                     httpResponse.headers().set(HttpHeaders.Names.LAST_MODIFIED, new Date(response.getLastModified()));
                 httpResponse.headers().set(HttpHeaders.Names.CACHE_CONTROL, "no-cache");
                 httpResponse.headers().add(HttpHeaders.Names.PRAGMA, "no-cache");
+                if (logger.isTraceEnabled())
+                    logger.trace("Response content: "+content);
                 if (content!=null) 
                     writeResponseContent(content, responseWriter, charset);
                 responseWriter.close();
@@ -274,7 +299,7 @@ public class RRController {
         else if (content instanceof Outputable)
             ((Outputable)content).outputTo(responseWriter.getStream());
         else {
-            InputStream contentStream = serverContext.getTypeConverter().convert(InputStream.class, content, charset);
+            InputStream contentStream = serverContext.getTypeConverter().convert(InputStream.class, content, charset);            
             if (contentStream!=null) {
                 try {
                     IOUtils.copy(contentStream, responseWriter.getStream());
@@ -345,6 +370,8 @@ public class RRController {
     
     //free resources. For example reference counted. Must be called from the netty channel processing thread
     public void release() throws Exception {
+        if (logger.isDebugEnabled())
+            logger.debug("Releasing resources");
         if (released.compareAndSet(false, true)) {
             if (resources!=null)
                 for (ReferenceCounted resource: resources)
@@ -365,12 +392,16 @@ public class RRController {
     private class ResponseWriter  implements ResponseAdapter {
 //        private final Map<String, String> headers = new LinkedHashMap<>();
         private final AtomicBoolean headerWritten = new AtomicBoolean();
+        private final AtomicBoolean closed = new AtomicBoolean();
         private final DefaultHttpResponse responseHeader;
+        private final LoggerHelper logger;        
         private volatile Stream stream = new Stream();
         private volatile PrintWriter writer;
 
-        public ResponseWriter() {
-            this.responseHeader = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+        public ResponseWriter(LoggerHelper logger) {
+            this.responseHeader = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+            responseHeader.headers().set(HttpHeaders.Names.SERVER, HttpConsts.HTTP_SERVER_HEADER);
+            this.logger = new LoggerHelper(logger, "ChannelWriter. ");
         }
 
         @Override
@@ -400,36 +431,58 @@ public class RRController {
                         //перед вызовом метода все header'ы должны быть добавлены
                         //определяем charset из contentType
                         String contentTypeStr = responseHeader.headers().get(HttpHeaders.Names.CONTENT_TYPE);
-                        if (contentTypeStr==null) {
+                        if (contentTypeStr==null) 
                             throw new IOException("Can't detect response content type charset beacause of "
                                     + "Content-Type header not defined");
-                        }
-                        String charset = null;
-                        if (contentTypeStr!=null) 
-                            charset = ContentType.parse(contentTypeStr).getCharset().name();
-                        if (charset==null)
-                            charset = HttpConsts.DEFAULT_CONTENT_CHARSET;
-                        writer = new PrintWriter(new OutputStreamWriter(getStream(), charset));
+                        writer = new PrintWriter(new OutputStreamWriter(getStream(), getContentCharset(contentTypeStr)));
                     }                        
                 }
             return writer;
         }
 
+        private String getContentCharset(String contentTypeStr) throws ParseException, UnsupportedCharsetException {
+            String charset = null;
+            if (contentTypeStr!=null) {
+                Charset contentCharset = ContentType.parse(contentTypeStr).getCharset();
+                if (contentCharset!=null)
+                    charset = contentCharset.name();
+            }
+            if (charset==null)
+                charset = HttpConsts.DEFAULT_CONTENT_CHARSET;
+            return charset;
+        }
+
         @Override
         public void close() throws IOException { 
-            Stream _stream = stream;
-            if (_stream!=null)
-                _stream.close();
-            else {
-                writeResponseHeaderIfNeed();
-                writeLastHttpMessage();
-                channel.flush();
+            if (closed.compareAndSet(false, true)) {
+                if (logger.isDebugEnabled())
+                    logger.debug("Closing");
+                Stream _stream = stream;
+                if (_stream!=null)
+                    if (writer!=null)
+                        writer.close();
+                    else
+                        _stream.close();
+                else {
+                    writeResponseHeaderIfNeed();
+                    writeLastHttpMessage();
+                    channel.flush();
+                }
             }
         }
         
         public void writeResponseHeaderIfNeed() {
             if (headerWritten.compareAndSet(false, true)) {
+                logger.debug("Writing response headers to channel");
+                HttpHeaders headers = responseHeader.headers();
                 //cookies encoding
+                if (!headers.contains(HttpHeaders.Names.CONTENT_LENGTH)) 
+                    headers.set(HttpHeaders.Names.TRANSFER_ENCODING, HttpHeaders.Values.CHUNKED);
+                if (!headers.contains(HttpHeaders.Names.CONNECTION))
+                    headers.set(HttpHeaders.Names.CONNECTION, keepAlive? HttpHeaders.Values.KEEP_ALIVE : HttpHeaders.Values.CLOSE);
+                else 
+                    keepAlive = HttpHeaders.Values.KEEP_ALIVE.equals(
+                            headers.get(HttpHeaders.Names.TRANSFER_ENCODING).trim().toLowerCase());
                 HttpSession session = responseContext.getSession();
                 Cookie _sessionCookie = null;
                 if (session==null || !session.isValid()) {
@@ -448,7 +501,7 @@ public class RRController {
                     _sessionCookie.setPath(request.getProjectPath());
                     responseHeader.headers().add(HttpHeaders.Names.SET_COOKIE, ServerCookieEncoder.STRICT.encode(_sessionCookie));
                 }
-                channel.write(new ResponseMessage(RRController.this, responseHeader));
+                channel.write(new HttpObjectResponseMessage(RRController.this, responseHeader));
             }
         }                
 
@@ -458,11 +511,12 @@ public class RRController {
         }
 
         private void writeLastHttpMessage() {
-            channel.write(new ResponseMessage(RRController.this, EMPTY_LAST_HTTP_CONTENT));
+            channel.write(new HttpObjectResponseMessage(RRController.this, EMPTY_LAST_HTTP_CONTENT));
         }
         
         private class Stream extends OutputStream {
             private final ByteBuf buf;
+            private final AtomicBoolean writeStarted = new AtomicBoolean();
 
             public Stream() {
                 buf = channel.alloc().buffer(serverContext.getResponseStreamBufferSize());                
@@ -470,53 +524,69 @@ public class RRController {
 
             @Override
             public void write(byte[] b) throws IOException {
-                buf.writeBytes(b);
-                writeToChannelIfNeedAndCan(false);
+                write(b, 0, b.length);
+                writeToChannelIfNeedAndCan(false, false);
             }
 
             @Override
             public void write(byte[] b, int off, int len) throws IOException {
-                buf.writeBytes(b, off, len);
-                writeToChannelIfNeedAndCan(false);
+                do {
+                    int _len = Math.min(len, buf.writableBytes());
+                    buf.writeBytes(b, off, _len);
+                    len -= _len;
+                    off += _len;
+                    writeToChannelIfNeedAndCan(false, false);
+                } while (len>0);
             }
 
             @Override
             public void write(int i) throws IOException {
                 buf.writeByte(i);
-                writeToChannelIfNeedAndCan(false);
+                writeToChannelIfNeedAndCan(false, false);
             }
 
             @Override
             public void flush() throws IOException {
-                writeToChannelIfNeedAndCan(true);
+                if (logger.isDebugEnabled())
+                    logger.debug("Flushing...");
+                writeToChannelIfNeedAndCan(true, false);
                 channel.flush();
             }
 
             @Override
             public void close() throws IOException {
-                writeToChannelIfNeedAndCan(true);
-                writeLastHttpMessage();
+                if (logger.isDebugEnabled())
+                    logger.debug("Closing response stream");
+                writeToChannelIfNeedAndCan(true, true);
                 channel.flush();
                 buf.release();
             }
             
-            private void writeToChannelIfNeedAndCan(boolean forceWrite) {
+            private void writeToChannelIfNeedAndCan(boolean forceWrite, boolean lastWrite) {
                 if (forceWrite || buf.readableBytes()>=serverContext.getResponseStreamBufferSize()) {
                     //forming and sending data chunk to the channel
+                    if (!headerWritten.get() && lastWrite && writeStarted.compareAndSet(false, true)) 
+                        responseHeader.headers().set(HttpHeaders.Names.CONTENT_LENGTH, buf.readableBytes());
                     writeResponseHeaderIfNeed();
                     if (buf.isReadable()) {
+                        int bytesToRead = buf.readableBytes();
+                        if (logger.isDebugEnabled())
+                            logger.debug("Have ({}) bytes ready to write. Writing...", bytesToRead);
+                                    
                         while (!channel.isWritable())  {
                             try {
-                                Thread.sleep(10); //TODO Is it correct to do this at event loop thread??
+                                Thread.sleep(10); //TODO Is it correct to do this at netty event loop thread??
                             } catch (InterruptedException ex) {
                                 if (logger.isErrorEnabled())
                                     logger.error("Interrupted", ex);
                             }
                         }
-                        ByteBuf bufForWrite = buf.retain().slice();
-//                        ctx.channel().fl
-                        channel.write(new ResponseMessage(RRController.this, new DefaultHttpContent(bufForWrite)));
-                    }
+                        ByteBuf bufForWrite = buf.readBytes(bytesToRead);
+                        buf.discardSomeReadBytes();
+                        HttpContent chunk = lastWrite? new DefaultLastHttpContent(bufForWrite) : new DefaultHttpContent(bufForWrite);
+                        channel.write(new HttpObjectResponseMessage(RRController.this, chunk));
+                    } else if (logger.isDebugEnabled()) 
+                        logger.debug("Nothing to write");
                 }
             }
         }         

@@ -19,6 +19,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
+import io.netty.handler.codec.http.HttpHeaders;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -55,5 +56,12 @@ public class RRControllerTest {
         System.out.println("refCnt: "+buf.refCnt());
         buf.release();
         System.out.println("refCnt: "+buf.refCnt());
+    }
+    
+    @Test
+    public void httpHeaderValueTest() {
+        HttpHeaders headers = new DefaultHttpHeaders();
+        headers.set("Connection", "Keep-Alive");
+        assertEquals("keep-alive", headers.get(HttpHeaders.Names.CONNECTION));
     }
 }

@@ -21,21 +21,10 @@ import io.netty.handler.codec.http.HttpObject;
  *
  * @author Mikhail Titov
  */
-public class ResponseMessage<T> {
-    private final RRController rrController;
-    private final T message;
-
-    protected ResponseMessage(RRController rrController, T message) {
-        this.rrController = rrController;
-        this.message = message;
+public class HttpObjectResponseMessage extends ResponseMessage<HttpObject> {
+    
+    public HttpObjectResponseMessage(RRController rrController, HttpObject message) {
+        super(rrController, message);
     }
-
-
-    public RRController getRrController() {
-        return rrController;
-    }   
-
-    public T getMessage() {
-        return message;
-    }
+    
 }

@@ -17,6 +17,7 @@ package org.raven.net.http.server;
 
 import java.util.concurrent.atomic.AtomicLong;
 import org.raven.audit.Auditor;
+import org.raven.dp.DataProcessorFacade;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.http.server.impl.ErrorPageGeneratorImpl;
 import org.raven.sched.ExecutorService;
@@ -28,6 +29,10 @@ import org.weda.services.TypeConverter;
  * @author Mikhail Titov
  */
 public interface HttpServerContext {
+    /**
+     * Returns the active connections counter
+     */
+    public AtomicLong getActiveConnectionsCounter();
     /**
      * Returns the connections counter
      */
@@ -89,4 +94,16 @@ public interface HttpServerContext {
      * Returns the type of the http protocol
      */
     public Protocol getProtocol();
+    /**
+     * Returns the facade of the DP that periodically calls {@link ChannelTimeoutChecker#checkTimeoutIfNeed(long) } 
+     */
+    public DataProcessorFacade getConnectionManager();
+    /**
+     * Returns the socket read timeout in ms.
+     */
+    public long getReadTimeout();
+    /**
+     * Returns the keep-alive timeout
+     */
+    public long getKeepAliveTimeout();
 }

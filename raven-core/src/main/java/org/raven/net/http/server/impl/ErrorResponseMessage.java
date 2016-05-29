@@ -15,27 +15,14 @@
  */
 package org.raven.net.http.server.impl;
 
-import io.netty.handler.codec.http.HttpObject;
-
 /**
  *
  * @author Mikhail Titov
  */
-public class ResponseMessage<T> {
-    private final RRController rrController;
-    private final T message;
-
-    protected ResponseMessage(RRController rrController, T message) {
-        this.rrController = rrController;
-        this.message = message;
+public class ErrorResponseMessage extends ResponseMessage<Throwable>{
+    
+    public ErrorResponseMessage(RRController rrController, Throwable message) {
+        super(rrController, message);
     }
-
-
-    public RRController getRrController() {
-        return rrController;
-    }   
-
-    public T getMessage() {
-        return message;
-    }
+    
 }

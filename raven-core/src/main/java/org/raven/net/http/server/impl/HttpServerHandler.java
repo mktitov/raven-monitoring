@@ -62,9 +62,11 @@ import org.raven.net.ContextUnavailableException;
 import org.raven.net.Request;
 import org.raven.net.ResponseContext;
 import org.raven.net.UnauthoriedException;
+import org.raven.net.http.server.ChannelTimeoutChecker;
 import org.raven.net.http.server.HttpConsts;
 import org.raven.net.http.server.HttpServerContext;
 import org.raven.net.http.server.HttpSession;
+import org.raven.net.http.server.RequestTimeoutException;
 import org.raven.net.http.server.SessionManager;
 import org.raven.prj.impl.ProjectNode;
 import org.raven.prj.impl.WebInterfaceNode;
@@ -78,8 +80,10 @@ import org.weda.beans.ObjectUtils;
  *
  * @author Mikhail Titov
  */
-public class HttpServerHandler extends ChannelDuplexHandler {
+public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTimeoutChecker {
+    private enum TimeoutType {READ, KEEP_ALIVE};
     private final static AuthorizationNeededException authorizationNeededException = new AuthorizationNeededException();
+    private final static String CHECK_TIMEOUT = "CHECK_TIMEOUT";
     
     private final HttpServerContext serverContext;    
     
@@ -89,6 +93,9 @@ public class HttpServerHandler extends ChannelDuplexHandler {
     private InetSocketAddress localAddr;
     private HttpRequest httpRequest;
     private boolean hasError = false;
+    private volatile long nextTimeout = 0l;
+    private TimeoutType timeoutType;
+    private volatile ChannelHandlerContext channelContext;
 
     public HttpServerHandler(HttpServerContext serverContext) {
         this.serverContext = serverContext;
@@ -98,6 +105,48 @@ public class HttpServerHandler extends ChannelDuplexHandler {
     public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
         super.channelWritabilityChanged(ctx);
     }
+    
+    /**
+     * Returns <b>true</b> if channel closed
+     */
+    public boolean checkTimeoutIfNeed(final long curTime) {
+        if (logger.isTraceEnabled())
+            logger.trace("Checking timeout");
+        if (!channelContext.channel().isActive())
+            return true;
+        if (nextTimeout!=0l && curTime>nextTimeout) {
+            if (logger.isDebugEnabled())
+                logger.debug("Timeout detected. Sending CHECK_TIMEOUT to channel pipeline");
+            channelContext.pipeline().fireUserEventTriggered(CHECK_TIMEOUT);
+        }
+        return false;
+    }
+
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        if (evt==CHECK_TIMEOUT) {
+            if (logger.isDebugEnabled())
+                logger.debug("Checking timeout");
+            if (nextTimeout!=0l && System.currentTimeMillis()>nextTimeout) {
+                switch (timeoutType) {
+                    case KEEP_ALIVE: 
+                        if (logger.isDebugEnabled())
+                            logger.debug("KEEP-ALIVE timeout detected. Closing connection");
+                        ctx.close();
+                        break;
+                    case READ:
+                        if (logger.isErrorEnabled())
+                            logger.error("READ TIMEOUT detected");
+                        throw new RequestTimeoutException();
+                }
+            }                
+        } 
+    }
+    
+    private void setTimeout(long timeout, TimeoutType timeoutType) {
+        nextTimeout = System.currentTimeMillis() + timeout;
+        this.timeoutType = timeoutType;
+    }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -105,6 +154,11 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         remoteAddr = (InetSocketAddress) ctx.channel().remoteAddress();
         localAddr = (InetSocketAddress) ctx.channel().localAddress();
         logger = new LoggerHelper(serverContext.getOwner(), "("+connectionNum+") " + ctx.channel().remoteAddress().toString()+" ");
+        channelContext = ctx;
+        nextTimeout = System.currentTimeMillis() + serverContext.getReadTimeout();
+        setTimeout(serverContext.getReadTimeout(), TimeoutType.READ);
+        serverContext.getConnectionManager().send(this);
+        serverContext.getActiveConnectionsCounter().incrementAndGet();
         if (logger.isDebugEnabled())
             logger.debug("New connection established");
     }
@@ -113,6 +167,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         if (logger.isDebugEnabled())
             logger.debug("Connection closed");
+        serverContext.getActiveConnectionsCounter().decrementAndGet();
     }
 
     @Override
@@ -138,6 +193,12 @@ public class HttpServerHandler extends ChannelDuplexHandler {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         try {
+            if (logger.isTraceEnabled())
+                logger.trace("Received new HTTP message:\n"+msg);
+            if (msg instanceof LastHttpContent)
+                nextTimeout = 0l;
+            else 
+                setTimeout(serverContext.getReadTimeout(), TimeoutType.READ);
             if (msg instanceof HttpRequest) 
                 processNewHttpRequest((HttpRequest) msg, ctx);
             if (msg instanceof HttpContent) {
@@ -150,11 +211,15 @@ public class HttpServerHandler extends ChannelDuplexHandler {
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-        if (msg instanceof ResponseMessage) {
+        if (msg instanceof HttpObjectResponseMessage) {
             final ResponseMessage resp = (ResponseMessage) msg;
+            if (logger.isDebugEnabled())
+                logger.debug("Received message from RRController: "+resp.getMessage().getClass().getName());
+            if (logger.isTraceEnabled())
+                logger.trace("Message content: \n"+resp.getMessage());
             if (resp.getRrController()!=rrController) {
                 resp.getRrController().release();
-                throw new InternalServerError("Attempt to write for comopleted response");
+                throw new InternalServerError("Attempt write to completed response");
             }
             //After processing LastHttpContent then:
             //1. Must release the RRController
@@ -169,8 +234,10 @@ public class HttpServerHandler extends ChannelDuplexHandler {
                             if (logger.isDebugEnabled())
                                 logger.debug("Request processed. Closing connection");
                             future.channel().close();
-                        } else if (logger.isDebugEnabled()) {
-                            logger.debug("Request processed. Keeping connection alive");
+                        } else {
+                            if (logger.isDebugEnabled()) 
+                                logger.debug("Request processed. Keeping connection alive");
+                            setTimeout(serverContext.getKeepAliveTimeout(), TimeoutType.KEEP_ALIVE);
                         }
                     }
                 });
@@ -178,6 +245,10 @@ public class HttpServerHandler extends ChannelDuplexHandler {
             
             if (!resp.getRrController().isWriteStarted())
                 resp.getRrController().setWriteStarted(true);
+        } else if (msg instanceof ErrorResponseMessage) {
+            if (logger.isDebugEnabled())
+                logger.debug("Received an error from the RRController. Processing");
+            exceptionCaught(ctx, ((ErrorResponseMessage)msg).getMessage());
         } else
             throw new InternalServerError("Invalid message type. Exepect ResponseMessage but was: "
                     +(msg==null?null:msg.getClass().getName()));
@@ -342,6 +413,8 @@ public class HttpServerHandler extends ChannelDuplexHandler {
     }
 
     private void processHttpRequestContent(HttpContent content) throws Exception {
+        if (logger.isDebugEnabled())
+            logger.debug("Received http content: "+content);
         if (rrController==null && !hasError) 
             throw new InternalServerError("Received HttpContent but RRController does not exists");
         else if (rrController!=null)
@@ -371,9 +444,10 @@ public class HttpServerHandler extends ChannelDuplexHandler {
             //determine the status code
             if (error instanceof ContextUnavailableException)
                 status = HttpResponseStatus.NOT_FOUND;
-            else {
+            else if (error instanceof RequestTimeoutException)
+                status = HttpResponseStatus.REQUEST_TIMEOUT;
+            else 
                 status = HttpResponseStatus.INTERNAL_SERVER_ERROR;
-            }
             //adding http status to bindings
             bindings.put("statusCode", status.code());
             bindings.put("statusCodeDesc", status.reasonPhrase());
@@ -422,7 +496,7 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         if (serviceNode instanceof WebInterfaceNode)
             serviceNode = serviceNode.getParent();
         NodeAttribute prodAttr = serviceNode.getAttr("prod");
-        if (Boolean.class.equals(prodAttr.getType())) {
+        if (prodAttr!=null && Boolean.class.equals(prodAttr.getType())) {
             Boolean res = prodAttr.getRealValue();
             return res==null? false : res;
         } else 
@@ -459,7 +533,12 @@ public class HttpServerHandler extends ChannelDuplexHandler {
         int pos = httpRequest.getUri().indexOf('?');
         return pos>0 && pos+1<httpRequest.getUri().length()? httpRequest.getUri().substring(pos+1) : "";
     }
-    
+
+    @Override
+    public String toString() {
+        return logger==null? super.toString() : logger.getPrefix(); 
+    }
+        
     public static class RequestImpl implements Request {
         private final InetSocketAddress remoteAddr;
         private final InetSocketAddress localAddr;

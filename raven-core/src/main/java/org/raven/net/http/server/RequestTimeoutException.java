@@ -13,29 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.raven.net.http.server.impl;
-
-import io.netty.handler.codec.http.HttpObject;
+package org.raven.net.http.server;
 
 /**
  *
  * @author Mikhail Titov
  */
-public class ResponseMessage<T> {
-    private final RRController rrController;
-    private final T message;
-
-    protected ResponseMessage(RRController rrController, T message) {
-        this.rrController = rrController;
-        this.message = message;
-    }
-
-
-    public RRController getRrController() {
-        return rrController;
-    }   
-
-    public T getMessage() {
-        return message;
-    }
+public class RequestTimeoutException extends Exception {
+    
 }

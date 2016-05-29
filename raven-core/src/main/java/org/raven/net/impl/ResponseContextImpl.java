@@ -283,6 +283,7 @@ public class ResponseContextImpl implements ResponseContext {
 
     @Override
     public PrintWriter getResponseWriter() throws IOException {        
+        addHeadersToResponse();
         return responseAdapter.getWriter();
     }
 

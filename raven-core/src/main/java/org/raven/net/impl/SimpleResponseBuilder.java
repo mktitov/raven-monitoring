@@ -68,6 +68,7 @@ public class SimpleResponseBuilder extends AbstractResponseBuilder {
             bindingSupport.put(BindingNames.PROPAGATE_EXPRESSION_EXCEPTION, null);
 //            bindingSupport.put(BindingNames.THROW_HTTP_ERROR_BINDING, createHttpErrorClosure());
             bindingSupport.put(BindingNames.SEND_DATA_ASYNC_BINDING, createSendDataAsyncClosure(responseContext));
+            bindingSupport.put(BindingNames.ALREADY_COMPOSED, Response.ALREADY_COMPOSED);
             try {
                 return responseContent;
             } catch (HttpError e) {
