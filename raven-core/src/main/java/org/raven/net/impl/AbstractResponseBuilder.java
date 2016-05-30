@@ -54,6 +54,9 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
     @NotNull @Parameter(defaultValue = "false")
     private Boolean canHandleUnknownPath;
     
+    @Parameter
+    private Long buildTimeout;
+    
     private ParametersSupport paramsSupport;
 
     @Override
@@ -185,6 +188,14 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
 
     public boolean canHandleUnknownPath() {
         return canHandleUnknownPath;
+    }
+
+    public Long getBuildTimeout() {
+        return buildTimeout;
+    }
+
+    public void setBuildTimeout(Long buildTimeout) {
+        this.buildTimeout = buildTimeout;
     }
 
     @Override

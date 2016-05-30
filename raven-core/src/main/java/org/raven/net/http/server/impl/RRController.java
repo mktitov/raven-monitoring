@@ -85,10 +85,12 @@ public class RRController {
     private final boolean formUrlEncoded;
     private final AtomicBoolean released = new AtomicBoolean();
     private volatile boolean writeStarted = false;
+    private volatile ResponseWriter responseWriter;
     private volatile List<ReferenceCounted> resources;        
     private volatile boolean building;
     private volatile CompositeByteBuf formUrlParamsBuf;
     private volatile boolean keepAlive;
+    private volatile long nextTimeout = 0l;
 
     public RRController(HttpServerContext serverContext,
             HttpServerHandler.RequestImpl request, ResponseContext responseContext, Channel channel, 
@@ -107,6 +109,10 @@ public class RRController {
 
     public HttpServerHandler.RequestImpl getRequest() {
         return request;
+    }
+    
+    public boolean hasTimeout(long curTime) {
+        return nextTimeout!=0l && curTime>nextTimeout;
     }
     
     public ResponseContext getResponseContext() {
@@ -168,9 +174,12 @@ public class RRController {
         if (logger.isDebugEnabled())
             logger.debug("Initializing request processing");                    
         final ResponseWriter responseWriter = createAndAttachResponseAdapter();
+        this.responseWriter = responseWriter;
         final boolean staticStream = createAndAttachRequestInputStream(chunk);
         
         //building response
+        Long _timeout = responseContext.getResponseBuilder().getBuildTimeout();
+        nextTimeout = _timeout==null? serverContext.getDefaultResponseBuildTimeout() : _timeout;
         if (!staticStream || serverContext.getAlwaysExecuteBuilderInExecutor()) {
             if (logger.isDebugEnabled())
                 logger.debug("Response will be built in executor ({})", serverContext.getExecutor().getPath());
@@ -216,9 +225,6 @@ public class RRController {
                 composeResponse(result, responseWriter);
             }
         } catch (Throwable ex) {
-            //TODO обрабатываем ошибку
-            //1 Если запись в поток не началась можно сформировать html
-            //2 Если запись в поток response началась, тогда можем только матюгнуться в лог и закрыть connection
             processError(ex);
         }        
     }
@@ -275,7 +281,8 @@ public class RRController {
                     if (result.getContentType()!=null)
                         contentType = result.getContentType();
                 } else 
-                    responseWriter.setStatus(content!=null? HttpServletResponse.SC_OK : HttpServletResponse.SC_NO_CONTENT);
+                    responseWriter.setStatus(content!=null? 
+                            HttpServletResponse.SC_OK : HttpServletResponse.SC_NO_CONTENT);
                 String charset = response.getCharset()==null? null : response.getCharset().name();
                 responseWriter.setContentType(ContentType.create(contentType, charset).toString());
                 if (response.getLastModified()!=null) 
@@ -373,6 +380,9 @@ public class RRController {
         if (logger.isDebugEnabled())
             logger.debug("Releasing resources");
         if (released.compareAndSet(false, true)) {
+            ResponseWriter _responseWriter = responseWriter;
+            if (_responseWriter!=null)
+                _responseWriter.release();
             if (resources!=null)
                 for (ReferenceCounted resource: resources)
                     resource.release();
@@ -455,6 +465,7 @@ public class RRController {
         @Override
         public void close() throws IOException { 
             if (closed.compareAndSet(false, true)) {
+                nextTimeout = 0l;
                 if (logger.isDebugEnabled())
                     logger.debug("Closing");
                 Stream _stream = stream;
@@ -468,6 +479,14 @@ public class RRController {
                     writeLastHttpMessage();
                     channel.flush();
                 }
+            }
+        }
+        
+        public void release() {
+            if (closed.compareAndSet(false, true)) {
+                Stream _stream = stream;
+                if (_stream!=null)
+                    _stream.release();
             }
         }
         
@@ -517,9 +536,16 @@ public class RRController {
         private class Stream extends OutputStream {
             private final ByteBuf buf;
             private final AtomicBoolean writeStarted = new AtomicBoolean();
+            private final AtomicBoolean closed = new AtomicBoolean();
 
             public Stream() {
                 buf = channel.alloc().buffer(serverContext.getResponseStreamBufferSize());                
+            }
+            
+            private void ensureWrite() throws IOException {
+//                if (closed.get() || ResponseWriter.this.closed.get())
+                if (closed.get())
+                    throw new IOException("Attempt to write to closed channel");
             }
 
             @Override
@@ -530,6 +556,7 @@ public class RRController {
 
             @Override
             public void write(byte[] b, int off, int len) throws IOException {
+                ensureWrite();
                 do {
                     int _len = Math.min(len, buf.writableBytes());
                     buf.writeBytes(b, off, _len);
@@ -541,12 +568,14 @@ public class RRController {
 
             @Override
             public void write(int i) throws IOException {
+                ensureWrite();
                 buf.writeByte(i);
                 writeToChannelIfNeedAndCan(false, false);
             }
 
             @Override
             public void flush() throws IOException {
+                ensureWrite();
                 if (logger.isDebugEnabled())
                     logger.debug("Flushing...");
                 writeToChannelIfNeedAndCan(true, false);
@@ -554,12 +583,21 @@ public class RRController {
             }
 
             @Override
-            public void close() throws IOException {
-                if (logger.isDebugEnabled())
-                    logger.debug("Closing response stream");
-                writeToChannelIfNeedAndCan(true, true);
-                channel.flush();
-                buf.release();
+            public void close() throws IOException {                
+                if (closed.compareAndSet(false, true)) {
+                    if (logger.isDebugEnabled())
+                        logger.debug("Closing response stream");
+                    writeToChannelIfNeedAndCan(true, true);
+                    channel.flush();
+                    buf.release();
+                } else 
+                    ensureWrite();
+            }
+            
+            public void release() {
+                if (closed.compareAndSet(false, true)) {
+                    buf.release();
+                }
             }
             
             private void writeToChannelIfNeedAndCan(boolean forceWrite, boolean lastWrite) {

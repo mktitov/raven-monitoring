@@ -88,7 +88,7 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
     private final HttpServerContext serverContext;    
     
     private LoggerHelper logger;
-    private RRController rrController;
+    private volatile RRController rrController;
     private InetSocketAddress remoteAddr;
     private InetSocketAddress localAddr;
     private HttpRequest httpRequest;
@@ -116,8 +116,15 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
             return true;
         if (nextTimeout!=0l && curTime>nextTimeout) {
             if (logger.isDebugEnabled())
-                logger.debug("Timeout detected. Sending CHECK_TIMEOUT to channel pipeline");
+                logger.debug("Timeout detected (preliminary). Sending CHECK_TIMEOUT to channel pipeline");
             channelContext.pipeline().fireUserEventTriggered(CHECK_TIMEOUT);
+        } else {
+            RRController _rrController = rrController;
+            if (_rrController!=null && _rrController.hasTimeout(curTime)) {
+                if (logger.isDebugEnabled())
+                    logger.debug("Response build timeout detected (preliminary). Sending CHECK_TIMEOUT to channel pipeline");
+                channelContext.pipeline().fireUserEventTriggered(CHECK_TIMEOUT);
+            }
         }
         return false;
     }
@@ -127,7 +134,8 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
         if (evt==CHECK_TIMEOUT) {
             if (logger.isDebugEnabled())
                 logger.debug("Checking timeout");
-            if (nextTimeout!=0l && System.currentTimeMillis()>nextTimeout) {
+            final long curTime = System.currentTimeMillis();
+            if (nextTimeout!=0l && curTime>nextTimeout) {
                 switch (timeoutType) {
                     case KEEP_ALIVE: 
                         if (logger.isDebugEnabled())
@@ -139,8 +147,12 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
                             logger.error("READ TIMEOUT detected");
                         throw new RequestTimeoutException();
                 }
-            }                
-        } 
+            } else if (rrController!=null && rrController.hasTimeout(curTime)) {
+                if (logger.isErrorEnabled())
+                    logger.error("RESPONSE-BUILD TIMEOUT detected");
+                throw new InternalServerError("Response generation timeout");
+            } 
+        }
     }
     
     private void setTimeout(long timeout, TimeoutType timeoutType) {

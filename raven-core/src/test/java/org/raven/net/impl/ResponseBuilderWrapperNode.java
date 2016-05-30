@@ -62,6 +62,11 @@ public class ResponseBuilderWrapperNode extends BaseNode implements ResponseBuil
     public boolean canHandleUnknownPath() {
         return false;
     }
+
+    @Override
+    public Long getBuildTimeout() {
+        return null;
+    }
     
     public interface ResponseBuilderWrapper {
         public AccessRight getAccessRight();

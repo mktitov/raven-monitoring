@@ -45,7 +45,8 @@ public class AsyncInputStream extends InputStream implements Transmitter<ByteBuf
 
     @Override
     public void onNext(ByteBuf data) {
-        if (!sourceClosed.get() && !buffers.offer(data)) {
+        if (!sourceClosed.get() && !buffers.offer(data.retain())) {
+            data.release();
             if (errorRef.compareAndSet(null, new OverflowException()))
                 sourceClosed.set(true);
         }

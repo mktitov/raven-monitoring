@@ -100,6 +100,9 @@ public class HttpServerNode extends BaseNodeWithBehavior {
     @NotNull @Parameter(defaultValue = "20000")
     private Long keepAliveTimeout;
     
+    @NotNull @Parameter(defaultValue = "600000") //min
+    private Long defaultResponseBuildTimeout;
+    
     @Parameter(readOnly = true)
     private AtomicLong activeConnectionsCount;
     
@@ -152,7 +155,7 @@ public class HttpServerNode extends BaseNodeWithBehavior {
                 networkResponseService, this, executor, auditor, 
                 responseStreamBufferSize, responseStreamMaxPendingBytesForWrite, requestStreamBuffersCount,
                 alwaysExecuteBuilderInExecutor, converter, errorPageGenerator, protocol,
-                behavior.get(), readTimeout, keepAliveTimeout
+                behavior.get(), readTimeout, keepAliveTimeout, defaultResponseBuildTimeout
         );
         try {
             ServerBootstrap bootstrap = new ServerBootstrap()
@@ -247,6 +250,14 @@ public class HttpServerNode extends BaseNodeWithBehavior {
         this.keepAliveTimeout = keepAliveTimeout;
     }
 
+    public Long getDefaultResponseBuildTimeout() {
+        return defaultResponseBuildTimeout;
+    }
+
+    public void setDefaultResponseBuildTimeout(Long defaultResponseBuildTimeout) {
+        this.defaultResponseBuildTimeout = defaultResponseBuildTimeout;
+    }
+
     public Integer getPort() {
         return port;
     }
@@ -335,6 +346,7 @@ public class HttpServerNode extends BaseNodeWithBehavior {
         private final DataProcessorFacade connectionManager;
         private final long readTimeout;
         private final long keepAliveTimeout;
+        private final long defaultResponseBuildTimeout;
 
         public ServerContextImpl(AtomicLong activeConnectionsCounter, AtomicLong connectionsCounter, AtomicLong requestsCounter, 
                 AtomicLong writtenBytesCounter, AtomicLong readBytesCounter, 
@@ -342,7 +354,8 @@ public class HttpServerNode extends BaseNodeWithBehavior {
                 Auditor auditor, int responseStreamBufferSize, int responseStreamMaxPendingBytesForWrite,
                 int requestStreamBuffersCount, boolean alwaysExecuteBuilderInExecutor,
                 TypeConverter typeConverter, ErrorPageGenerator errorPageGenerator, Protocol protocol,
-                DataProcessorFacade connectionManager, long readTimeout, long keepAliveTimeout) 
+                DataProcessorFacade connectionManager, long readTimeout, long keepAliveTimeout,
+                long defaultResponseBuildTimeout) 
         {
             this.activeConnectionsCounter = activeConnectionsCounter;
             this.connectionsCounter = connectionsCounter;
@@ -363,6 +376,7 @@ public class HttpServerNode extends BaseNodeWithBehavior {
             this.connectionManager = connectionManager;
             this.keepAliveTimeout = keepAliveTimeout;
             this.readTimeout = readTimeout;
+            this.defaultResponseBuildTimeout = defaultResponseBuildTimeout;
         }
 
         @Override
@@ -458,6 +472,11 @@ public class HttpServerNode extends BaseNodeWithBehavior {
         @Override
         public long getReadTimeout() {
             return readTimeout;
+        }
+
+        @Override
+        public long getDefaultResponseBuildTimeout() {
+            return defaultResponseBuildTimeout;
         }
     }
 }

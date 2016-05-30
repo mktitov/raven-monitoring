@@ -30,4 +30,5 @@ public interface ResponseBuilder {
     public Node getResponseBuilderNode();
     public Boolean isSessionAllowed();
     public boolean canHandleUnknownPath();
+    public Long getBuildTimeout();
 }

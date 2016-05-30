@@ -56,4 +56,10 @@ public class NetRespContextRespBuilderWrapper implements ResponseBuilder {
     public boolean canHandleUnknownPath() {
         return false;
     }
+
+    @Override
+    public Long getBuildTimeout() {
+        return null;
+    }
+    
 }

@@ -106,4 +106,8 @@ public interface HttpServerContext {
      * Returns the keep-alive timeout
      */
     public long getKeepAliveTimeout();
+    /**
+     * Returns the default response build timeout. The build timeout can be also defined by response builder node
+     */
+    public long getDefaultResponseBuildTimeout();
 }
