@@ -24,9 +24,10 @@ import io.netty.channel.Channel;
 import io.netty.handler.codec.http.DefaultHttpContent;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.DefaultLastHttpContent;
+import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.HttpObject;
+import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
@@ -35,7 +36,13 @@ import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
+import io.netty.handler.codec.http.multipart.Attribute;
+import io.netty.handler.codec.http.multipart.FileUpload;
+import io.netty.handler.codec.http.multipart.HttpPostMultipartRequestDecoder;
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
+import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 import io.netty.util.ReferenceCounted;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -45,14 +52,16 @@ import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
+import javax.activation.DataSource;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.ParseException;
 import org.apache.http.entity.ContentType;
+import org.raven.RavenUtils;
 import org.raven.auth.UserContext;
 import org.raven.dp.FutureCallback;
 import org.raven.dp.RavenFuture;
@@ -83,12 +92,17 @@ public class RRController {
     private final UserContext user;
     private final Cookie sessionCookie;
     private final boolean formUrlEncoded;
+    
+    //this fields must bre references only from event loop thread
+    private boolean isMultipart = false;
+    private List<ReferenceCounted> resources;        
+    private HttpPostMultipartRequestDecoder multipartDecoder;
+    private CompositeByteBuf formUrlParamsBuf;
+    private boolean building;
+    
     private final AtomicBoolean released = new AtomicBoolean();
     private volatile boolean writeStarted = false;
     private volatile ResponseWriter responseWriter;
-    private volatile List<ReferenceCounted> resources;        
-    private volatile boolean building;
-    private volatile CompositeByteBuf formUrlParamsBuf;
     private volatile boolean keepAlive;
     private volatile long nextTimeout = 0l;
 
@@ -131,8 +145,13 @@ public class RRController {
         this.writeStarted = writeStarted;
     }
     
-    public void start(boolean receivedFullRequest) throws InternalServerError {
-        if (receivedFullRequest || formUrlEncoded)
+    public void start(HttpRequest request) throws Exception {
+        if (HttpPostRequestDecoder.isMultipart(request)) {
+            isMultipart = true;
+            multipartDecoder = new HttpPostMultipartRequestDecoder(
+                    new RavenHttpDataFactory(serverContext.getUploadedFilesTempDir()), request); //mixed store 16k, utf-8            
+        }
+        if (request instanceof FullHttpRequest || formUrlEncoded || isMultipart)
             return; //wating for calling onRequestContent
         buildResponse(null); //creating response context with dynamic request content 
     }
@@ -154,6 +173,8 @@ public class RRController {
                 if (formUrlParamsBuf==null) 
                     formUrlParamsBuf = channel.alloc().compositeBuffer();
                 formUrlParamsBuf.addComponent(chunk.content());
+            } if (isMultipart) {
+                multipartDecoder.offer(chunk);
             } else 
                 appendToRequestInputStream(chunk);
         }
@@ -169,7 +190,7 @@ public class RRController {
             throw new InternalServerError("The request input stream must be a type of AyncInputStream");        
     }
     
-    private void buildResponse(final LastHttpContent chunk) throws InternalServerError {
+    private void buildResponse(final LastHttpContent chunk) throws Exception {
         building = true;
         if (logger.isDebugEnabled())
             logger.debug("Initializing request processing");                    
@@ -332,7 +353,7 @@ public class RRController {
                 responseWriter.addHeader(e.getKey(), e.getValue());
     }
 
-    private boolean createAndAttachRequestInputStream(final LastHttpContent chunk) {
+    private boolean createAndAttachRequestInputStream(final LastHttpContent chunk) throws Exception {
         //создаем request input stream
         InputStream requestStream;
         boolean staticStream = false;
@@ -341,29 +362,15 @@ public class RRController {
         if (chunk!=null) {
             staticStream = true;
             if (formUrlEncoded) {
-                if (logger.isDebugEnabled())
-                    logger.debug("Content-Type is application/x-www-form-urlencoded, so extracting parameters");
-                //парсим и добавляем переметры
-                String contentCharset = request.getContentCharset()==null? 
-                        HttpConsts.DEFAULT_CONTENT_CHARSET : request.getContentCharset();
-                ByteBuf buf = formUrlParamsBuf==null? 
-                        chunk.content().retain() : formUrlParamsBuf.addComponent(chunk.content().retain());
-                try {
-                    String content = buf.toString(Charset.forName(contentCharset));
-                    QueryStringDecoder decoder = new QueryStringDecoder(content);
-                    for (Map.Entry<String, List<String>> param: decoder.parameters().entrySet()) 
-                        request.getParams().put(param.getKey(), param.getValue());
-                    requestStream = EmptyInputStream.INSTANCE;
-                } finally {
-                    buf.release();
-                    formUrlParamsBuf = null;
-                }
+                requestStream = decodeFormUrl(chunk);
+            } else if (isMultipart) {
+                requestStream = decodeMultipart(chunk);
             } else {
                 if (logger.isDebugEnabled())
                     logger.debug("Creating static request input stream");
                 //создаем статический request stream                
                 requestStream = new ByteBufInputStream(chunk.content());
-                resources.add(chunk.content().retain());
+                addResource(chunk.content().retain());
             }
         } else {
             if (logger.isDebugEnabled())
@@ -373,6 +380,70 @@ public class RRController {
         }
         request.attachContentInputStream(requestStream);        
         return staticStream;
+    }
+    
+    private InputStream decodeMultipart(final LastHttpContent chunk) throws Exception {
+        if (logger.isDebugEnabled())
+            logger.debug("Content-Type is multipart/form-data, so extracting parameters/files");
+        try {
+            multipartDecoder.offer(chunk);
+            List<InterfaceHttpData> dataList = multipartDecoder.getBodyHttpDatas();
+            if (dataList!=null) {
+                Map<String, List> allParams = new HashMap<>();
+                for (InterfaceHttpData data: dataList) {
+                    switch(data.getHttpDataType()) {
+                        case Attribute:
+                            addParam(allParams, data.getName(), ((Attribute)data).getValue());
+                            break;
+                        case FileUpload:
+                            FileUpload fileParam = (FileUpload) data;
+                            String key = RavenUtils.generateUniqKey("httserver_file_upload");                            
+                            File tempFile = serverContext.getTempFileManager().createFile(
+                                    serverContext.getOwner(), key, fileParam.getContentType(), 
+                                    fileParam.getName());
+                            if (!fileParam.renameTo(tempFile))
+                                throw new InternalServerError(String.format(
+                                        "Error while storing uploaded file (param name: %s, filename: %s)",
+                                        fileParam.getName(), fileParam.getFilename()));
+                            DataSource fileSource = serverContext.getTempFileManager().getDataSource(key);
+                            addParam(allParams, fileParam.getName(), fileSource);
+                            break;
+                    }
+                }
+            }
+        } finally {
+            multipartDecoder.destroy();
+        }
+        return EmptyInputStream.INSTANCE;
+    }
+    
+    private void addParam(Map<String, List> allParams, String name, Object value) {
+        List values = allParams.get(name);
+        if (values==null) {
+            values = new ArrayList(1);
+            allParams.put(name, values);
+        }
+        values.add(value);
+    }
+
+    private InputStream decodeFormUrl(final LastHttpContent chunk) {
+        if (logger.isDebugEnabled())
+            logger.debug("Content-Type is application/x-www-form-urlencoded, so extracting parameters");
+        //парсим и добавляем переметры
+        String contentCharset = request.getContentCharset()==null?
+                HttpConsts.DEFAULT_CONTENT_CHARSET : request.getContentCharset();
+        ByteBuf buf = formUrlParamsBuf==null?
+                chunk.content().retain() : formUrlParamsBuf.addComponent(chunk.content().retain());
+        try {
+            String content = buf.toString(Charset.forName(contentCharset));
+            QueryStringDecoder decoder = new QueryStringDecoder(content);
+            for (Map.Entry<String, List<String>> param: decoder.parameters().entrySet())
+                request.getParams().put(param.getKey(), param.getValue());
+        } finally {
+            buf.release();
+            formUrlParamsBuf = null;
+        }
+        return EmptyInputStream.INSTANCE;
     }
     
     //free resources. For example reference counted. Must be called from the netty channel processing thread
@@ -398,7 +469,7 @@ public class RRController {
             resources = new ArrayList<>();
         resources.add(resource);
     }
-    
+
     private class ResponseWriter  implements ResponseAdapter {
 //        private final Map<String, String> headers = new LinkedHashMap<>();
         private final AtomicBoolean headerWritten = new AtomicBoolean();

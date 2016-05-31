@@ -17,6 +17,7 @@ package org.raven.net.http.server;
 
 import java.util.concurrent.atomic.AtomicLong;
 import org.raven.audit.Auditor;
+import org.raven.cache.TemporaryFileManager;
 import org.raven.dp.DataProcessorFacade;
 import org.raven.net.NetworkResponseService;
 import org.raven.net.http.server.impl.ErrorPageGeneratorImpl;
@@ -110,4 +111,13 @@ public interface HttpServerContext {
      * Returns the default response build timeout. The build timeout can be also defined by response builder node
      */
     public long getDefaultResponseBuildTimeout();
+    
+    /**
+     * Returns the temporary file where uploaded file will be stored
+     */
+    public String getUploadedFilesTempDir();
+    /**
+     * Returns the temporary file manager that will be used by http server
+     */
+    public TemporaryFileManager getTempFileManager();
 }

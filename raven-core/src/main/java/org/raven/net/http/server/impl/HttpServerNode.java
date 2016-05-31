@@ -24,10 +24,13 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
+import java.io.File;
 import java.util.concurrent.atomic.AtomicLong;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.audit.Auditor;
+import org.raven.cache.TemporaryFileManager;
+import org.raven.cache.TemporaryFileManagerValueHandlerFactory;
 import org.raven.dp.DataProcessorFacade;
 import org.raven.dp.impl.DataProcessorFacadeConfig;
 import org.raven.net.NetworkResponseService;
@@ -39,7 +42,6 @@ import org.raven.sched.ExecutorService;
 import org.raven.tree.Node;
 import org.raven.tree.ResourceManager;
 import org.raven.tree.impl.BaseNodeWithBehavior;
-import org.raven.tree.impl.BaseNodeWithStat;
 import org.raven.tree.impl.LoggerHelper;
 import org.weda.annotations.constraints.NotNull;
 import org.weda.internal.annotations.Service;
@@ -103,6 +105,12 @@ public class HttpServerNode extends BaseNodeWithBehavior {
     @NotNull @Parameter(defaultValue = "600000") //min
     private Long defaultResponseBuildTimeout;
     
+    @NotNull @Parameter()
+    private String uploadedFilesTempDir;
+    
+    @NotNull @Parameter(valueHandlerType = TemporaryFileManagerValueHandlerFactory.TYPE)
+    private TemporaryFileManager tempFileManager;    
+    
     @Parameter(readOnly = true)
     private AtomicLong activeConnectionsCount;
     
@@ -150,12 +158,23 @@ public class HttpServerNode extends BaseNodeWithBehavior {
         workerGroup = new NioEventLoopGroup(workerThreadsCount);
         ErrorPageGenerator errorPageGenerator = new ErrorPageGeneratorImpl(
                 resourceManager, HttpConsts.ERROR_PAGE_RESOURCE, HttpConsts.ERROR_PAGE_MESSAGES_RESOURCE);
+        File _tempDir = new File(uploadedFilesTempDir);
+        if (_tempDir.exists()) {
+            if (!_tempDir.isDirectory())
+                throw new Exception(String.format("File %s exists but it is not a dir", uploadedFilesTempDir));
+            if (!_tempDir.canWrite() || !_tempDir.canRead())
+                throw new Exception(String.format("Not enough rights to work with (%s)", uploadedFilesTempDir));
+        } else {
+            if (_tempDir.mkdirs())
+                throw new Exception(String.format("Can not create dir (%s)", uploadedFilesTempDir));
+        }
         serverContext = new ServerContextImpl(
                 activeConnectionsCount, connectionsCount, requestsCount, writtenBytes, readBytes, 
                 networkResponseService, this, executor, auditor, 
                 responseStreamBufferSize, responseStreamMaxPendingBytesForWrite, requestStreamBuffersCount,
                 alwaysExecuteBuilderInExecutor, converter, errorPageGenerator, protocol,
-                behavior.get(), readTimeout, keepAliveTimeout, defaultResponseBuildTimeout
+                behavior.get(), readTimeout, keepAliveTimeout, defaultResponseBuildTimeout,
+                uploadedFilesTempDir, tempFileManager
         );
         try {
             ServerBootstrap bootstrap = new ServerBootstrap()
@@ -258,6 +277,22 @@ public class HttpServerNode extends BaseNodeWithBehavior {
         this.defaultResponseBuildTimeout = defaultResponseBuildTimeout;
     }
 
+    public String getUploadedFilesTempDir() {
+        return uploadedFilesTempDir;
+    }
+
+    public void setUploadedFilesTempDir(String uploadedFilesTempDir) {
+        this.uploadedFilesTempDir = uploadedFilesTempDir;
+    }
+
+    public TemporaryFileManager getTempFileManager() {
+        return tempFileManager;
+    }
+
+    public void setTempFileManager(TemporaryFileManager tempFileManager) {
+        this.tempFileManager = tempFileManager;
+    }
+
     public Integer getPort() {
         return port;
     }
@@ -347,6 +382,8 @@ public class HttpServerNode extends BaseNodeWithBehavior {
         private final long readTimeout;
         private final long keepAliveTimeout;
         private final long defaultResponseBuildTimeout;
+        private final String uploadedFilesTempDir;
+        private final TemporaryFileManager tempFileManager;
 
         public ServerContextImpl(AtomicLong activeConnectionsCounter, AtomicLong connectionsCounter, AtomicLong requestsCounter, 
                 AtomicLong writtenBytesCounter, AtomicLong readBytesCounter, 
@@ -355,7 +392,7 @@ public class HttpServerNode extends BaseNodeWithBehavior {
                 int requestStreamBuffersCount, boolean alwaysExecuteBuilderInExecutor,
                 TypeConverter typeConverter, ErrorPageGenerator errorPageGenerator, Protocol protocol,
                 DataProcessorFacade connectionManager, long readTimeout, long keepAliveTimeout,
-                long defaultResponseBuildTimeout) 
+                long defaultResponseBuildTimeout, String uploadedFilesTempDir, TemporaryFileManager tempFileManager) 
         {
             this.activeConnectionsCounter = activeConnectionsCounter;
             this.connectionsCounter = connectionsCounter;
@@ -377,6 +414,8 @@ public class HttpServerNode extends BaseNodeWithBehavior {
             this.keepAliveTimeout = keepAliveTimeout;
             this.readTimeout = readTimeout;
             this.defaultResponseBuildTimeout = defaultResponseBuildTimeout;
+            this.uploadedFilesTempDir = uploadedFilesTempDir;
+            this.tempFileManager = tempFileManager;
         }
 
         @Override
@@ -478,5 +517,16 @@ public class HttpServerNode extends BaseNodeWithBehavior {
         public long getDefaultResponseBuildTimeout() {
             return defaultResponseBuildTimeout;
         }
+
+        @Override
+        public String getUploadedFilesTempDir() {
+            return uploadedFilesTempDir;
+        }
+
+        @Override
+        public TemporaryFileManager getTempFileManager() {
+            return tempFileManager;
+        }
+        
     }
 }
