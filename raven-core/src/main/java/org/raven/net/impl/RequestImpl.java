@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import org.raven.net.Request;
@@ -79,6 +80,11 @@ public class RequestImpl implements Request {
                 return attrs;
             }
         }
+    }
+
+    @Override
+    public Map<String, List> getAllParams() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     public Map<String, Object> getParams() {

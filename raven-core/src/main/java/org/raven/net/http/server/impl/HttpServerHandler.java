@@ -310,7 +310,7 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
         boolean keepAlive = HttpHeaders.isKeepAlive(request);
         rrController = new RRController(serverContext, ravenRequest, responseContext, ctx.channel(), userContext, 
                 requestLogger, sessionCookie, keepAlive);
-        rrController.start(request instanceof LastHttpContent);
+        rrController.start(request);
     }
     
     private UserContext checkAuth(HttpRequest request, ResponseContext responseContext, Cookie sessionCookie, String path) throws Exception {
@@ -555,6 +555,7 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
         private final InetSocketAddress remoteAddr;
         private final InetSocketAddress localAddr;
         private final Map<String, Object> params;
+        private final Map<String, List> allParams;
         private final Map<String, Object> headers;
         private final String servicePath;
         private final String contextPath;
@@ -576,6 +577,13 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
             this.remoteAddr = remoteAddr;
             this.localAddr = localAddr;
             this.params = params;
+            this.allParams = new HashMap<>();
+            if (params!=null)
+                for (Map.Entry<String, Object> p: params.entrySet()) {
+                    ArrayList vals = new ArrayList<>(1);
+                    vals.add(p.getValue());
+                    allParams.put(p.getKey(), vals);
+                }
             this.headers = headers;
             if (path.length()<2)
                 throw new ContextUnavailableException(path);            
@@ -642,6 +650,11 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
         @Override
         public Map<String, Object> getParams() {
             return params;
+        }
+
+        @Override
+        public Map<String, List> getAllParams() {
+            return allParams;
         }
 
         @Override

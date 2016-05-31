@@ -21,7 +21,11 @@ import com.gargoylesoftware.htmlunit.TextPage;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.WebResponse;
+import com.gargoylesoftware.htmlunit.html.HtmlFileInput;
+import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.gargoylesoftware.htmlunit.html.HtmlTextInput;
+import com.gargoylesoftware.htmlunit.javascript.host.Event;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import io.netty.handler.codec.http.HttpHeaderDateFormat;
 import io.netty.handler.codec.http.HttpHeaders;
@@ -32,11 +36,14 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Date;
 import org.junit.After;
+import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
+import org.raven.TestScheduler;
 import org.raven.auth.impl.AccessRight;
 import org.raven.auth.impl.AnonymousLoginServiceNode;
 import org.raven.auth.impl.LoginManagerNode;
+import org.raven.cache.TemporaryFileManagerNode;
 import org.raven.log.LogLevel;
 import org.raven.net.impl.FileResponseBuilder;
 import org.raven.net.impl.SimpleResponseBuilder;
@@ -65,11 +72,25 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         executor.setType(ExecutorService.Type.FORK_JOIN_POOL);
         assertTrue(executor.start());
         
+        TestScheduler scheduler = new TestScheduler();
+        scheduler.setName("scheduler");
+        testsNode.addAndSaveChildren(scheduler);
+        assertTrue(scheduler.start());
+
+        TemporaryFileManagerNode manager = new TemporaryFileManagerNode();
+        manager.setName("manager");
+        tree.getRootNode().addAndSaveChildren(manager);
+        manager.setDirectory("target/");
+        manager.setScheduler(scheduler);
+        assertTrue(manager.start());
+        
         httpServer = new HttpServerNode();
         httpServer.setName("HTTP server");
         testsNode.addAndSaveChildren(httpServer);
         httpServer.setExecutor(executor);
         httpServer.setPort(7777);
+        httpServer.setTempFileManager(manager);
+        httpServer.setUploadedFilesTempDir("target/upload_tmp");
         httpServer.setLogLevel(LogLevel.TRACE);
         projects = tree.getProjectsNode();
         
@@ -280,6 +301,32 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
     }
     
     @Test
+    public void queryParametersTest() throws Exception {
+        SimpleResponseBuilder builder = createProjectAndBuilder();
+        builder.setResponseContentType("text/plain");
+        builder.setResponseContent(""
+                + "assert request.params.p1=='v1';"
+                + "assert request.params.p2=='v2';"
+                + "'ok'");
+        assertTrue(builder.start());
+        
+        //do test
+        assertTrue(httpServer.start());
+        webclient.addRequestHeader("Connection", "close");        
+        WebRequest request = new WebRequest(new URL("http://localhost:7777/projects/hello/world"));
+        request.setEncodingType(FormEncodingType.URL_ENCODED);        
+        request.setHttpMethod(HttpMethod.GET);
+        request.setRequestParameters(Arrays.asList(
+                new NameValuePair("p1", "v1"),
+                new NameValuePair("p2", "v2")
+        ));
+        TextPage page = webclient.getPage(request);
+        assertNotNull(page);
+        assertEquals(200, page.getWebResponse().getStatusCode());
+        assertEquals("ok", page.getContent());
+    }
+    
+    @Test
     public void formUrlEncodedTest() throws Exception {
         SimpleResponseBuilder builder = createProjectAndBuilder();
         builder.setResponseContentType("text/plain");
@@ -294,6 +341,7 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         webclient.addRequestHeader("Connection", "close");        
         WebRequest request = new WebRequest(new URL("http://localhost:7777/projects/hello/world"));
         request.setEncodingType(FormEncodingType.URL_ENCODED);        
+        request.setHttpMethod(HttpMethod.POST);
         request.setRequestParameters(Arrays.asList(
                 new NameValuePair("p1", "v1"),
                 new NameValuePair("p2", "v2")
@@ -302,6 +350,74 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         assertNotNull(page);
         assertEquals(200, page.getWebResponse().getStatusCode());
         assertEquals("ok", page.getContent());
+    }
+    
+    @Test
+    public void multipartFormDataTest() throws Exception {
+        SimpleResponseBuilder builder = createProjectAndBuilder();
+        builder.setResponseContentType("text/plain");
+        builder.setResponseContent(""
+                + "assert request.params.p1=='v1';"
+                + "assert request.params.p2=='v2';"
+                + "'ok'");
+        assertTrue(builder.start());
+        
+        //do test
+        assertTrue(httpServer.start());
+        webclient.addRequestHeader("Connection", "close");        
+        WebRequest request = new WebRequest(new URL("http://localhost:7777/projects/hello/world"));
+        request.setEncodingType(FormEncodingType.MULTIPART);
+        request.setHttpMethod(HttpMethod.POST);
+        request.setRequestParameters(Arrays.asList(
+                new NameValuePair("p1", "v1"),
+                new NameValuePair("p2", "v2")
+        ));
+        TextPage page = webclient.getPage(request);
+        assertNotNull(page);
+        assertEquals(200, page.getWebResponse().getStatusCode());
+        assertEquals("ok", page.getContent());
+    }
+    
+    @Test
+    public void multipartFileDataTest() throws Exception {
+        FileResponseBuilder fileBuilder = createProjectAndFileBuilder();
+        fileBuilder.setResponseContentType("text/html");
+        fileBuilder.getFile().setDataString(
+                "<html><body><form name='form' action='world' enctype='multipart/form-data' method='post'>"
+                        + "<input type='file' name='file1'>"
+                        + "<input type='text' name='field1'>"
+                        + "<input type='submit' id='submitForm'>"
+                        + "</form></body></html>");
+        assertTrue(fileBuilder.start());
+        
+        SimpleResponseBuilder builder = createProjectAndBuilder();
+        builder.setResponseContentType("text/plain");
+        builder.setResponseContent(""
+                + "assert request.params.field1=='v1';"
+                + "assert request.params.file1 instanceof javax.activation.DataSource;"
+                + "assert request.params.file1.inputStream.text=='Hello World!';"
+                + "'ok'");
+        assertTrue(builder.start());
+        
+        //do test
+        assertTrue(httpServer.start());
+        webclient.addRequestHeader("Connection", "close");        
+        HtmlPage page = webclient.getPage("http://localhost:7777/projects/hello/file");
+        assertNotNull(page);
+        assertEquals(200, page.getWebResponse().getStatusCode());
+        HtmlForm form = page.getFormByName("form");
+        HtmlFileInput fileInput = form.getInputByName("file1");
+        fileInput.setValueAttribute("target/file_to_upload.txt");
+        fileInput.setContentType("text/plain");
+        fileInput.setData("Hello World!".getBytes());
+        
+        HtmlTextInput textInput = form.getInputByName("field1");
+        textInput.setValueAttribute("v1");
+        //
+        TextPage resPage = (TextPage) form.getElementById("submitForm").click();
+        assertNotNull(resPage);
+        assertEquals(200, resPage.getWebResponse().getStatusCode());
+        assertEquals("ok", resPage.getContent());
     }
     
     @Test
@@ -357,8 +473,24 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         return builder;
     }
     
+//    private FileResponseBuilder createProjectAndFileBuilder(String content, String contentType) throws Exception {
+//        ProjectNode project = createProject();
+//        
+//        FileResponseBuilder builder = new FileResponseBuilder();
+//        builder.setName("file");
+//        project.getWebInterface().addAndSaveChildren(builder);
+//        builder.setResponseContentType(contentType);
+//        builder.setLogLevel(LogLevel.TRACE);
+//        builder.setMinimalAccessRight(AccessRight.NONE);
+//        builder.setLoginService(loginService);
+//        return builder;
+//    }
+    
     private ProjectNode createProject() throws Exception {
-        ProjectNode project = new ProjectNode();
+        ProjectNode project = (ProjectNode) projects.getNode("hello");
+        if (project!=null)
+            return project;
+        project = new ProjectNode();
         project.setName("hello");
         projects.addAndSaveChildren(project);
         assertTrue(project.start());

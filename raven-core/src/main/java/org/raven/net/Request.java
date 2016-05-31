@@ -18,6 +18,7 @@ package org.raven.net;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.List;
 import java.util.Map;
 import org.raven.sched.ExecutorService;
 
@@ -63,6 +64,11 @@ public interface Request {
      * If form parameter is a file, then the parameter type would be javax.activation.DataSource
      */
     public Map<String, Object> getParams();
+    /**
+     * Returns parameters with all its values
+     * @return 
+     */
+    public Map<String, List> getAllParams();
     /**
      * Returns the service path: "sri" or "projects"
      * @return 

@@ -408,16 +408,23 @@ public class RRController {
                             DataSource fileSource = serverContext.getTempFileManager().getDataSource(key);
                             addParam(allParams, fileParam.getName(), fileSource);
                             break;
+                        default:
+                            throw new InternalServerError(String.format(
+                                    "Invalid multipart attribute type (%s) for param (%s)",
+                                    data.getHttpDataType(), data.getName()));
                     }
                 }
+                request.getAllParams().putAll(allParams);
             }
         } finally {
             multipartDecoder.destroy();
+            multipartDecoder = null;
         }
         return EmptyInputStream.INSTANCE;
     }
     
     private void addParam(Map<String, List> allParams, String name, Object value) {
+        request.getParams().put(name, value);
         List values = allParams.get(name);
         if (values==null) {
             values = new ArrayList(1);
@@ -436,9 +443,19 @@ public class RRController {
                 chunk.content().retain() : formUrlParamsBuf.addComponent(chunk.content().retain());
         try {
             String content = buf.toString(Charset.forName(contentCharset));
-            QueryStringDecoder decoder = new QueryStringDecoder(content);
-            for (Map.Entry<String, List<String>> param: decoder.parameters().entrySet())
-                request.getParams().put(param.getKey(), param.getValue());
+            if (logger.isTraceEnabled())
+                logger.trace("FormUrl encoded params: "+content);
+            QueryStringDecoder decoder = new QueryStringDecoder(content, false);
+            for (Map.Entry<String, List<String>> param: decoder.parameters().entrySet()) {
+                List<String> values = param.getValue();
+                if (values!=null && !values.isEmpty()) {
+                    request.getParams().put(param.getKey(), values.get(0));
+                    request.getAllParams().put(param.getKey(), new ArrayList(values));
+                } else {
+                    request.getParams().put(param.getKey(), null);
+                    request.getAllParams().put(param.getKey(), new ArrayList(1));
+                }
+            }
         } finally {
             buf.release();
             formUrlParamsBuf = null;
@@ -461,6 +478,10 @@ public class RRController {
                 ((AsyncInputStream)request.getContent()).forceComplete();
             if (formUrlParamsBuf!=null)
                 formUrlParamsBuf.release();
+            if (multipartDecoder!=null) {
+                multipartDecoder.destroy();
+                multipartDecoder = null;
+            }
         }
     }
     
