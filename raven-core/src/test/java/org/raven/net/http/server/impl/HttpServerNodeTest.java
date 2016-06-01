@@ -60,12 +60,13 @@ import org.raven.prj.impl.ProjectNode;
 import org.raven.sched.ExecutorService;
 import org.raven.sched.impl.ExecutorServiceNode;
 import org.raven.test.RavenCoreTestCase;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
  * @author Mikhail Titov
  */
-@RunWith(Parameterized.class)
+//@RunWith(Parameterized.class)
 public class HttpServerNodeTest extends RavenCoreTestCase {
     private ExecutorServiceNode executor;
     private HttpServerNode httpServer;
@@ -80,12 +81,16 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         return Arrays.asList(new Object[]{Protocol.HTTP}, new Object[]{Protocol.HTTPS});
     }
 
-    public HttpServerNodeTest(Protocol proto) {
-        this.proto = proto;
-    }    
+    public HttpServerNodeTest() {
+        proto = Protocol.HTTP;
+    }
+
+//    public HttpServerNodeTest(Protocol proto) {
+//        this.proto = proto;
+//    }    
     
     @Before
-    public void prepare() {
+    public void prepare() throws Exception {
         executor = new ExecutorServiceNode();
         executor.setName("Executor service");
         testsNode.addAndSaveChildren(executor);        
@@ -112,14 +117,21 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         httpServer.setTempFileManager(manager);
         httpServer.setUploadedFilesTempDir("target/upload_tmp");
         httpServer.setLogLevel(LogLevel.TRACE);
-        if (proto==Protocol.HTTPS) {
-            httpServer.setProtocol(proto);
-            httpServer.setKeystorePassword("src/test/resources/self_signed_keystore.jks");
-            httpServer.setKeystorePath("test123");
-        }
+//        if (proto==Protocol.HTTPS) {
+//            httpServer.setProtocol(proto);
+//            httpServer.setKeystorePassword("test123");
+//            httpServer.setKeystorePath("src/test/resources/self_signed_keystore.jks");
+//        }
         projects = tree.getProjectsNode();        
         webclient = new WebClient(); 
         webclient.setThrowExceptionOnFailingStatusCode(false);
+        webclient.setUseInsecureSSL(true);
+    }
+    
+    public void prepareHttps() {
+        httpServer.setProtocol(Protocol.HTTPS);
+        httpServer.setKeystorePassword("test123");
+        httpServer.setKeystorePath("src/test/resources/self_signed_keystore2.jks");
     }
     
     @After
@@ -138,24 +150,36 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
     }
     
     @Test
+    public void httpsStartTest() throws Exception {
+        prepareHttps();
+        startTest();
+    }
+    
+    @Test
     public void invalidPathTest() throws Exception {
         assertTrue(httpServer.start()); 
         //
-        HtmlPage p = webclient.getPage("http://localhost:7777");
+        HtmlPage p = webclient.getPage(formUrl("localhost:7777"));
         assertEquals(404, p.getWebResponse().getStatusCode());
         assertTrue(p.asText().contains("Context (/) unavailable"));
         
-        p = webclient.getPage("http://localhost:7777/a");
+        p = webclient.getPage(formUrl("localhost:7777/a"));
         assertEquals(404, p.getWebResponse().getStatusCode());
         assertTrue(p.asText().contains("Context (/a) unavailable"));
         
-        p = webclient.getPage("http://localhost:7777/sri/a");
+        p = webclient.getPage(formUrl("localhost:7777/sri/a"));
         assertEquals(404, p.getWebResponse().getStatusCode());
         assertTrue(p.asText().contains("Context (sri/a) unavailable. Can't resolve (a) path element"));
         
-        p = webclient.getPage("http://localhost:7777/projects/test");
+        p = webclient.getPage(formUrl("localhost:7777/projects/test"));
         assertEquals(404, p.getWebResponse().getStatusCode());
         assertTrue(p.asText().contains("Context (projects/test) unavailable. Can't resolve (test) path element"));        
+    }
+    
+    @Test
+    public void httpsInvalidPathTest() throws Exception {
+        prepareHttps();
+        invalidPathTest();
     }
     
     @Test(timeout = 5000l)
@@ -168,12 +192,18 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         //do test
         assertTrue(httpServer.start());
         webclient.addRequestHeader("Connection", "close");        
-        TextPage p = webclient.getPage("http://localhost:7777/projects/hello/world");
+        TextPage p = webclient.getPage(formUrl("localhost:7777/projects/hello/world"));
         assertNotNull(p);
         assertEquals(200, p.getWebResponse().getStatusCode());
         assertEquals("text/plain", p.getWebResponse().getContentType());
         assertEquals("12", p.getWebResponse().getResponseHeaderValue(HttpHeaders.Names.CONTENT_LENGTH));
         assertEquals("Hello World!", p.getContent());        
+    }
+    
+    @Test(timeout = 5000l)
+    public void httpsHelloWorldTest() throws Exception {
+        prepareHttps();
+        helloWorldTest();
     }
     
     @Test(timeout = 5000l)
@@ -555,5 +585,9 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         loginService.setExecutor(executor);
         assertTrue(loginService.start());
         return project;
+    }
+    
+    private String formUrl(String path) {
+        return (httpServer.getProtocol()==Protocol.HTTP? "http://" : "https://")+path;
     }
 }
