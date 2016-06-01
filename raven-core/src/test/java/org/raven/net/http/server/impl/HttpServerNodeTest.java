@@ -25,7 +25,6 @@ import com.gargoylesoftware.htmlunit.html.HtmlFileInput;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlTextInput;
-import com.gargoylesoftware.htmlunit.javascript.host.Event;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import io.netty.handler.codec.http.HttpHeaderDateFormat;
 import io.netty.handler.codec.http.HttpHeaders;
@@ -34,17 +33,26 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
+import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.junit.After;
 import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.raven.TestScheduler;
 import org.raven.auth.impl.AccessRight;
 import org.raven.auth.impl.AnonymousLoginServiceNode;
 import org.raven.auth.impl.LoginManagerNode;
 import org.raven.cache.TemporaryFileManagerNode;
 import org.raven.log.LogLevel;
+import org.raven.net.http.server.Protocol;
 import org.raven.net.impl.FileResponseBuilder;
 import org.raven.net.impl.SimpleResponseBuilder;
 import org.raven.prj.Projects;
@@ -57,12 +65,24 @@ import org.raven.test.RavenCoreTestCase;
  *
  * @author Mikhail Titov
  */
+@RunWith(Parameterized.class)
 public class HttpServerNodeTest extends RavenCoreTestCase {
     private ExecutorServiceNode executor;
     private HttpServerNode httpServer;
     private WebClient webclient;
     private Projects projects;
     private AnonymousLoginServiceNode loginService;
+    
+    private Protocol proto;
+    
+    @Parameterized.Parameters
+    public static Collection<Object[]> PARAMS() {
+        return Arrays.asList(new Object[]{Protocol.HTTP}, new Object[]{Protocol.HTTPS});
+    }
+
+    public HttpServerNodeTest(Protocol proto) {
+        this.proto = proto;
+    }    
     
     @Before
     public void prepare() {
@@ -92,8 +112,12 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         httpServer.setTempFileManager(manager);
         httpServer.setUploadedFilesTempDir("target/upload_tmp");
         httpServer.setLogLevel(LogLevel.TRACE);
-        projects = tree.getProjectsNode();
-        
+        if (proto==Protocol.HTTPS) {
+            httpServer.setProtocol(proto);
+            httpServer.setKeystorePassword("src/test/resources/self_signed_keystore.jks");
+            httpServer.setKeystorePath("test123");
+        }
+        projects = tree.getProjectsNode();        
         webclient = new WebClient(); 
         webclient.setThrowExceptionOnFailingStatusCode(false);
     }
@@ -420,7 +444,7 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         assertEquals("ok", resPage.getContent());
     }
     
-    @Test
+    @Test(timeout = 5_000L)
     public void responseContentReadTest() throws Exception{
         SimpleResponseBuilder builder = createProjectAndBuilder();
         builder.setResponseContentType("text/plain");
@@ -439,6 +463,35 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         assertNotNull(page);
         assertEquals(200, page.getWebResponse().getStatusCode());
         assertEquals("ok", page.getContent());
+    }
+    
+    @Test(timeout = 30_000L)
+    public void responseContentReadWithBackPressure() throws Exception {
+        SimpleResponseBuilder builder = createProjectAndBuilder();
+        builder.setBuildTimeout(25_000L);
+        builder.setResponseContentType("text/plain");
+        builder.setResponseContent(""
+                + "Thread.sleep(5000); "
+                + "def counter=0;"
+                + "request.content.eachByte{counter++};"
+                + "''+counter");
+        assertTrue(builder.start());
+        
+        //do test
+        assertTrue(httpServer.start());
+        
+        //creating big file 5M
+        int size = 5*1024*1024;
+        byte[] buf = new byte[size];
+        for (int i=0; i<size; i++)
+            buf[i] = (byte)32;
+        //streaming file to http server as application/octet-stream
+        PostMethod httpPost = new PostMethod("http://localhost:7777/projects/hello/world");
+        httpPost.setRequestEntity(new ByteArrayRequestEntity(buf, "application/octet-stream"));
+        HttpClient client = new HttpClient();
+        client.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(0, false));
+        client.executeMethod(httpPost);
+        assertEquals(""+size, httpPost.getResponseBodyAsString());
     }
     
     private WebResponse makeRequest(String url) throws IOException {

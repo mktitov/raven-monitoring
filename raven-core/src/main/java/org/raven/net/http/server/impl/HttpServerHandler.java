@@ -81,7 +81,9 @@ import org.weda.beans.ObjectUtils;
  * @author Mikhail Titov
  */
 public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTimeoutChecker {
-    private enum TimeoutType {READ, KEEP_ALIVE};
+    public final static String ENABLE_AUTO_READ_EVENT = "ENABLE_AUTO_READ_EVENT";
+    
+    private enum TimeoutType {READ, KEEP_ALIVE};    
     private final static AuthorizationNeededException authorizationNeededException = new AuthorizationNeededException();
     private final static String CHECK_TIMEOUT = "CHECK_TIMEOUT";
     
@@ -135,7 +137,7 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
             if (logger.isDebugEnabled())
                 logger.debug("Checking timeout");
             final long curTime = System.currentTimeMillis();
-            if (nextTimeout!=0l && curTime>nextTimeout) {
+            if (nextTimeout!=0l && curTime>nextTimeout && ctx.channel().config().isAutoRead()) {
                 switch (timeoutType) {
                     case KEEP_ALIVE: 
                         if (logger.isDebugEnabled())
@@ -152,8 +154,11 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
                     logger.error("RESPONSE-BUILD TIMEOUT detected");
                 throw new InternalServerError("Response generation timeout");
             } 
+        } else if (evt==ENABLE_AUTO_READ_EVENT) {
+            setTimeout(serverContext.getReadTimeout(), TimeoutType.READ);
+            ctx.channel().config().setAutoRead(true);
         }
-    }
+    } 
     
     private void setTimeout(long timeout, TimeoutType timeoutType) {
         nextTimeout = System.currentTimeMillis() + timeout;
@@ -477,8 +482,8 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
             resp.headers().set(HttpHeaders.Names.CONTENT_LENGTH, buf.readableBytes());
             
             ChannelFuture writeFuture = ctx.writeAndFlush(resp);
-            if (!HttpHeaders.isKeepAlive(httpRequest))
-                writeFuture.addListener(ChannelFutureListener.CLOSE);
+//            if (!HttpHeaders.isKeepAlive(httpRequest))
+            writeFuture.addListener(ChannelFutureListener.CLOSE);
         } catch (Throwable e) {
             if (logger.isErrorEnabled())
                 logger.error("Error while composing ERROR_PAGE", e);

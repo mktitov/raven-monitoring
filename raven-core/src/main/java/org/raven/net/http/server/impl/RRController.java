@@ -200,7 +200,8 @@ public class RRController {
         
         //building response
         Long _timeout = responseContext.getResponseBuilder().getBuildTimeout();
-        nextTimeout = _timeout==null? serverContext.getDefaultResponseBuildTimeout() : _timeout;
+        nextTimeout = System.currentTimeMillis() 
+                + (_timeout==null? serverContext.getDefaultResponseBuildTimeout() : _timeout);
         if (!staticStream || serverContext.getAlwaysExecuteBuilderInExecutor()) {
             if (logger.isDebugEnabled())
                 logger.debug("Response will be built in executor ({})", serverContext.getExecutor().getPath());
@@ -376,7 +377,7 @@ public class RRController {
             if (logger.isDebugEnabled())
                 logger.debug("Creating async request input stream");
             //creating async input stream
-            requestStream = new AsyncInputStream(serverContext.getRequestStreamBuffersCount());            
+            requestStream = new AsyncInputStream(channel, logger, serverContext.getRequestStreamBuffersCount());
         }
         request.attachContentInputStream(requestStream);        
         return staticStream;
@@ -687,9 +688,8 @@ public class RRController {
             }
             
             public void release() {
-                if (closed.compareAndSet(false, true)) {
+                if (closed.compareAndSet(false, true)) 
                     buf.release();
-                }
             }
             
             private void writeToChannelIfNeedAndCan(boolean forceWrite, boolean lastWrite) {
@@ -701,8 +701,7 @@ public class RRController {
                     if (buf.isReadable()) {
                         int bytesToRead = buf.readableBytes();
                         if (logger.isDebugEnabled())
-                            logger.debug("Have ({}) bytes ready to write. Writing...", bytesToRead);
-                                    
+                            logger.debug("Have ({}) bytes ready to write. Writing...", bytesToRead);                                    
                         while (!channel.isWritable())  {
                             try {
                                 Thread.sleep(10); //TODO Is it correct to do this at netty event loop thread??

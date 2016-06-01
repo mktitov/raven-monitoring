@@ -24,8 +24,13 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
 import java.io.File;
+import java.io.FileInputStream;
+import java.security.KeyStore;
 import java.util.concurrent.atomic.AtomicLong;
+import javax.net.ssl.KeyManagerFactory;
 import org.raven.annotations.NodeClass;
 import org.raven.annotations.Parameter;
 import org.raven.audit.Auditor;
@@ -154,10 +159,6 @@ public class HttpServerNode extends BaseNodeWithBehavior {
     @Override
     protected void doStart() throws Exception {
         super.doStart();
-        acceptorGroup = new NioEventLoopGroup(acceptorThreadsCount);
-        workerGroup = new NioEventLoopGroup(workerThreadsCount);
-        ErrorPageGenerator errorPageGenerator = new ErrorPageGeneratorImpl(
-                resourceManager, HttpConsts.ERROR_PAGE_RESOURCE, HttpConsts.ERROR_PAGE_MESSAGES_RESOURCE);
         File _tempDir = new File(uploadedFilesTempDir);
         if (_tempDir.exists()) {
             if (!_tempDir.isDirectory())
@@ -168,6 +169,8 @@ public class HttpServerNode extends BaseNodeWithBehavior {
             if (_tempDir.mkdirs())
                 throw new Exception(String.format("Can not create dir (%s)", uploadedFilesTempDir));
         }
+        ErrorPageGenerator errorPageGenerator = new ErrorPageGeneratorImpl(
+                resourceManager, HttpConsts.ERROR_PAGE_RESOURCE, HttpConsts.ERROR_PAGE_MESSAGES_RESOURCE);
         serverContext = new ServerContextImpl(
                 activeConnectionsCount, connectionsCount, requestsCount, writtenBytes, readBytes, 
                 networkResponseService, this, executor, auditor, 
@@ -176,12 +179,17 @@ public class HttpServerNode extends BaseNodeWithBehavior {
                 behavior.get(), readTimeout, keepAliveTimeout, defaultResponseBuildTimeout,
                 uploadedFilesTempDir, tempFileManager
         );
+        acceptorGroup = new NioEventLoopGroup(acceptorThreadsCount);
+        workerGroup = new NioEventLoopGroup(workerThreadsCount);
         try {
+            final SslContext sslContext = createSslContext();
             ServerBootstrap bootstrap = new ServerBootstrap()
                 .group(acceptorGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override protected void initChannel(SocketChannel ch) throws Exception {
+                        if (sslContext!=null)
+                            ch.pipeline().addLast(sslContext.newHandler(ch.alloc()));
                         ch.pipeline()
                             .addLast(new HttpRequestDecoder())
                             .addLast(new HttpResponseEncoder())
@@ -196,6 +204,24 @@ public class HttpServerNode extends BaseNodeWithBehavior {
             workerGroup.shutdownGracefully();
             throw e;
         }
+    }
+    
+    private SslContext createSslContext() throws Exception {
+        if (protocol==Protocol.HTTPS) {
+            if (keystorePath==null || keystorePassword==null)
+                throw new Exception("Attributes keystorePath and keystorePassword must be filled for HTTPS protocol");
+            File ksFile = new File(keystorePath);
+            if (!ksFile.exists())
+                throw new Exception(String.format("Keystore file (%s) does not exists", keystorePath));            
+            final KeyStore ks = KeyStore.getInstance("JKS");
+            try (FileInputStream is = new FileInputStream(ksFile)) {
+                ks.load(is, keystorePassword.toCharArray());
+            }
+            KeyManagerFactory keyManager = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            keyManager.init(ks, keystorePassword.toCharArray());
+            return SslContextBuilder.forServer(keyManager).build();
+        } else
+            return null;
     }
 
     @Override

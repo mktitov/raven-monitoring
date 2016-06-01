@@ -16,6 +16,7 @@
 package org.raven.net.http.server.impl;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -23,42 +24,55 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import org.raven.rs.Transmitter;
+import org.raven.tree.impl.LoggerHelper;
 
 /**
  *
  * @author Mikhail Titov 
  */
 //TODO надо сделать поддержку back presure
-public class AsyncInputStream extends InputStream implements Transmitter<ByteBuf> {
+public class AsyncInputStream extends InputStream {
     private final AtomicBoolean sourceClosed = new AtomicBoolean();
     private final BlockingQueue<ByteBuf> buffers;
     private final AtomicReference<IOException> errorRef = new AtomicReference<>();
+    private final Channel channel;    
+    private final int stopReadThreshold;
+    private final LoggerHelper logger;
     
-    public AsyncInputStream() {
-        this(100);
+    public AsyncInputStream(Channel channel, LoggerHelper parentLogger) {
+        this(channel, parentLogger, 100);
     }
     
-    public AsyncInputStream(int queueSize) {
+    public AsyncInputStream(Channel channel, LoggerHelper parentLogger, int queueSize) {
         buffers = new ArrayBlockingQueue<>(queueSize);
+        this.channel = channel;
+        this.stopReadThreshold = queueSize / 2;
+        this.logger = new LoggerHelper(parentLogger, "Request stream. ");
     }
 
-    @Override
-    public void onNext(ByteBuf data) {
+    public void onNext(ByteBuf data) throws IOException {
         if (!sourceClosed.get() && !buffers.offer(data.retain())) {
             data.release();
-            if (errorRef.compareAndSet(null, new OverflowException()))
+            OverflowException ex = new OverflowException();
+            if (errorRef.compareAndSet(null, ex)) 
                 sourceClosed.set(true);
+            if (logger.isErrorEnabled())
+                logger.error("OVERFLOWED");
+            throw ex;
+        } else {
+            if (buffers.remainingCapacity() <= stopReadThreshold && channel.isActive() && channel.config().isAutoRead()) {
+                if (logger.isDebugEnabled())
+                    logger.debug("Reached stopReadThreshold. Setting channel AUTO_READ to false (Waiting while response builder will read buffers from the stream)");
+                channel.config().setAutoRead(false);
+            }
         }
     }
 
-    @Override
     public void onError(Throwable error) {
         if (errorRef.compareAndSet(null, new IOException(error)))
             sourceClosed.set(true);        
     }
 
-    @Override
     public void onComplete() {
         sourceClosed.set(true);
     }
@@ -94,8 +108,14 @@ public class AsyncInputStream extends InputStream implements Transmitter<ByteBuf
                 if (buf!=null) {
                     if (buf.isReadable()) 
                         return buf.readUnsignedByte();
-                    else 
+                    else {
                         buffers.poll().release();
+                        if (buffers.remainingCapacity() > stopReadThreshold && channel.isActive() && !channel.config().isAutoRead()) {
+                            if (logger.isDebugEnabled())
+                                logger.debug("Setting channel AUTO_READ to TRUE by sending ENABLE_AUTO_READ_EVENT to server handler");
+                            channel.pipeline().fireUserEventTriggered(HttpServerHandler.ENABLE_AUTO_READ_EVENT);
+                        }
+                    }
                 } else if (sourceClosed.get()) {
                     if (errorRef.get()!=null)
                         throw errorRef.get();
@@ -108,5 +128,9 @@ public class AsyncInputStream extends InputStream implements Transmitter<ByteBuf
     }
     
     public class OverflowException extends IOException {
+
+        public OverflowException() {
+            super("Request input stream overflowed");
+        }        
     }
 }
