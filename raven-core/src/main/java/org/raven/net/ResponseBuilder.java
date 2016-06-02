@@ -31,4 +31,12 @@ public interface ResponseBuilder {
     public Boolean isSessionAllowed();
     public boolean canHandleUnknownPath();
     public Long getBuildTimeout();
+    /**
+     * Returns <b>true</b> if response builder requires audit
+     */
+    public Boolean getRequireAudit();  
+    /**
+     * Returns <b>true</b> if response builder requires secure protocol (SSL)
+     */
+    public Boolean getRequireSSL();
 }

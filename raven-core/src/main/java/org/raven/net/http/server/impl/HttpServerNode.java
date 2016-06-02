@@ -114,8 +114,11 @@ public class HttpServerNode extends BaseNodeWithBehavior {
     @NotNull @Parameter()
     private String uploadedFilesTempDir;
     
-    @NotNull @Parameter(valueHandlerType = TemporaryFileManagerValueHandlerFactory.TYPE)
+    @NotNull @Parameter(valueHandlerType = TemporaryFileManagerValueHandlerFactory.TYPE)    
     private TemporaryFileManager tempFileManager;    
+    
+    @Parameter
+    private HttpServerNode httpsServerNode;
     
     @Parameter(readOnly = true)
     private AtomicLong activeConnectionsCount;
@@ -167,7 +170,7 @@ public class HttpServerNode extends BaseNodeWithBehavior {
             if (!_tempDir.canWrite() || !_tempDir.canRead())
                 throw new Exception(String.format("Not enough rights to work with (%s)", uploadedFilesTempDir));
         } else {
-            if (_tempDir.mkdirs())
+            if (!_tempDir.mkdirs())
                 throw new Exception(String.format("Can not create dir (%s)", uploadedFilesTempDir));
         }
         ErrorPageGenerator errorPageGenerator = new ErrorPageGeneratorImpl(
@@ -194,7 +197,7 @@ public class HttpServerNode extends BaseNodeWithBehavior {
                         ch.pipeline()
                             .addLast(new HttpRequestDecoder())
                             .addLast(new HttpResponseEncoder())
-                            .addLast(new HttpServerHandler(serverContext));
+                            .addLast(new HttpServerHandler(serverContext, httpsServerNode));
                     }
             });
             Channel channel = bootstrap.bind(port).sync().channel();
@@ -314,6 +317,14 @@ public class HttpServerNode extends BaseNodeWithBehavior {
 
     public TemporaryFileManager getTempFileManager() {
         return tempFileManager;
+    }
+
+    public HttpServerNode getHttpsServerNode() {
+        return httpsServerNode;
+    }
+
+    public void setHttpsServerNode(HttpServerNode httpsServerNode) {
+        this.httpsServerNode = httpsServerNode;
     }
 
     public void setTempFileManager(TemporaryFileManager tempFileManager) {

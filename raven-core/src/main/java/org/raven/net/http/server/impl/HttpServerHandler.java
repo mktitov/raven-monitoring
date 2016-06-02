@@ -66,6 +66,7 @@ import org.raven.net.http.server.ChannelTimeoutChecker;
 import org.raven.net.http.server.HttpConsts;
 import org.raven.net.http.server.HttpServerContext;
 import org.raven.net.http.server.HttpSession;
+import org.raven.net.http.server.Protocol;
 import org.raven.net.http.server.RequestTimeoutException;
 import org.raven.net.http.server.SessionManager;
 import org.raven.prj.impl.ProjectNode;
@@ -88,6 +89,7 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
     private final static String CHECK_TIMEOUT = "CHECK_TIMEOUT";
     
     private final HttpServerContext serverContext;    
+    private final HttpServerNode httpsServer;
     
     private LoggerHelper logger;
     private volatile RRController rrController;
@@ -99,8 +101,9 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
     private TimeoutType timeoutType;
     private volatile ChannelHandlerContext channelContext;
 
-    public HttpServerHandler(HttpServerContext serverContext) {
+    public HttpServerHandler(HttpServerContext serverContext, HttpServerNode httpsServerNode) {
         this.serverContext = serverContext;
+        this.httpsServer = httpsServerNode;
     }
 
     @Override
@@ -282,7 +285,7 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
             rrController.release();
             rrController = null;
         }
-        final LoggerHelper requestLogger = new LoggerHelper(logger, " req#"+requestNum+": ");
+        final LoggerHelper requestLogger = new LoggerHelper(logger, "req#"+requestNum+": ");
         final String contentTypeStr = request.headers().get(HttpHeaders.Names.CONTENT_TYPE);
         final ContentType contentType = contentTypeStr==null || contentTypeStr.isEmpty()? null : ContentType.parse(contentTypeStr);
         
@@ -305,16 +308,18 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
         final Cookie sessionCookie = getSessionIdCookie(cookies, ravenRequest.getProjectPath());
         final UserContext userContext = checkAuth(request, responseContext, sessionCookie, contentTypeStr);                
         //добавляем запись в audit
-        serverContext.getAuditor().write(new AuditRecord(
-                responseContext.getResponseBuilder().getResponseBuilderNode(), 
-                userContext.getLogin(), 
-                userContext.getHost(), 
-                Action.VIEW, "Method: "+request.getMethod()+"\nParams: "+params));        
+        if (Boolean.TRUE.equals(responseContext.getResponseBuilder().getRequireAudit()))
+            serverContext.getAuditor().write(new AuditRecord(
+                    responseContext.getResponseBuilder().getResponseBuilderNode(), 
+                    userContext.getLogin(), 
+                    userContext.getHost(), 
+                    Action.VIEW, "Method: "+request.getMethod()+"\nParams: "+params));        
         
         //создаем RRController
         boolean keepAlive = HttpHeaders.isKeepAlive(request);
+        final String requestURL = getRequestURL(ctx, request, queryString);
         rrController = new RRController(serverContext, ravenRequest, responseContext, ctx.channel(), userContext, 
-                requestLogger, sessionCookie, keepAlive);
+                requestLogger, sessionCookie, keepAlive, requestURL, httpsServer);
         rrController.start(request);
     }
     

@@ -48,6 +48,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
@@ -73,6 +74,7 @@ import org.raven.net.Result;
 import org.raven.net.http.server.HttpConsts;
 import org.raven.net.http.server.HttpServerContext;
 import org.raven.net.http.server.HttpSession;
+import org.raven.net.http.server.Protocol;
 import org.raven.net.impl.RedirectResult;
 import org.raven.sched.impl.AbstractTask;
 import org.raven.tree.impl.LoggerHelper;
@@ -92,8 +94,11 @@ public class RRController {
     private final UserContext user;
     private final Cookie sessionCookie;
     private final boolean formUrlEncoded;
+    private final boolean needRedirectToHttps;
+    private final String requestURL;
+    private final HttpServerNode httpsServer;
     
-    //this fields must bre references only from event loop thread
+    //this fields must be references only from event loop thread
     private boolean isMultipart = false;
     private List<ReferenceCounted> resources;        
     private HttpPostMultipartRequestDecoder multipartDecoder;
@@ -108,8 +113,10 @@ public class RRController {
 
     public RRController(HttpServerContext serverContext,
             HttpServerHandler.RequestImpl request, ResponseContext responseContext, Channel channel, 
-            UserContext user, LoggerHelper logger, Cookie sessionCookie, boolean keepAlive
-    ) {
+            UserContext user, LoggerHelper logger, Cookie sessionCookie, boolean keepAlive, String requestURL,
+            HttpServerNode httpsServer)
+        throws InternalServerError 
+    {
         this.serverContext = serverContext;
         this.request = request;
         this.channel = channel;
@@ -119,6 +126,16 @@ public class RRController {
         this.formUrlEncoded = HttpConsts.FORM_URLENCODED_MIME_TYPE.equals(request.getContentType());
         this.sessionCookie = sessionCookie;
         this.keepAlive = keepAlive;
+        this.needRedirectToHttps = Boolean.TRUE.equals(responseContext.getResponseBuilder().getRequireSSL()) &&
+                serverContext.getProtocol()==Protocol.HTTP;
+        this.requestURL = requestURL;
+        this.httpsServer = httpsServer;
+        if (needRedirectToHttps && httpsServer==null)
+            throw new InternalServerError(String.format(
+                    "Can't automaticly redirect to https resource. "
+                    + "Attibute (httpsServer) not defined for server (%s)",
+                    serverContext.getOwner()));
+                    
     }
 
     public HttpServerHandler.RequestImpl getRequest() {
@@ -151,7 +168,7 @@ public class RRController {
             multipartDecoder = new HttpPostMultipartRequestDecoder(
                     new RavenHttpDataFactory(serverContext.getUploadedFilesTempDir()), request); //mixed store 16k, utf-8            
         }
-        if (request instanceof FullHttpRequest || formUrlEncoded || isMultipart)
+        if (needRedirectToHttps || request instanceof FullHttpRequest || formUrlEncoded || isMultipart)
             return; //wating for calling onRequestContent
         buildResponse(null); //creating response context with dynamic request content 
     }
@@ -164,7 +181,7 @@ public class RRController {
                 buildResponse((LastHttpContent) chunk); //creating response context adapter with static request content
             else 
                 appendToRequestInputStream(chunk);
-        } else {
+        } else if (!needRedirectToHttps) {
             if (logger.isDebugEnabled())
                 logger.debug("Processing HttpContent");            
             if (formUrlEncoded) {
@@ -196,32 +213,38 @@ public class RRController {
             logger.debug("Initializing request processing");                    
         final ResponseWriter responseWriter = createAndAttachResponseAdapter();
         this.responseWriter = responseWriter;
-        final boolean staticStream = createAndAttachRequestInputStream(chunk);
-        
-        //building response
-        Long _timeout = responseContext.getResponseBuilder().getBuildTimeout();
-        nextTimeout = System.currentTimeMillis() 
-                + (_timeout==null? serverContext.getDefaultResponseBuildTimeout() : _timeout);
-        if (!staticStream || serverContext.getAlwaysExecuteBuilderInExecutor()) {
+        if (needRedirectToHttps) {
             if (logger.isDebugEnabled())
-                logger.debug("Response will be built in executor ({})", serverContext.getExecutor().getPath());
-            boolean executed = serverContext.getExecutor().executeQuietly(
-                    new AbstractTask(responseContext.getResponseBuilder().getResponseBuilderNode(), logger.getPrefix()+"Processing http request") {
-                        @Override public void doRun() throws Exception {
-                            startResponseProcessing(responseWriter);
-                        }
-                    }
-            );
-            if (!executed) {
-                String msg = "Executor rejected response builder task";
-                if (logger.isErrorEnabled())
-                    logger.error(msg);
-                throw new InternalServerError(msg);
-            }
+                logger.debug("Response builder (%s) requires HTTPS protocol. Redirecting");
+            redirectToHttps(responseWriter);
         } else {
-            if (logger.isDebugEnabled()) 
-                logger.debug("Response will be built in Netty thread");
-            startResponseProcessing(responseWriter);
+            final boolean staticStream = createAndAttachRequestInputStream(chunk);
+
+            //building response
+            Long _timeout = responseContext.getResponseBuilder().getBuildTimeout();
+            nextTimeout = System.currentTimeMillis() 
+                    + (_timeout==null? serverContext.getDefaultResponseBuildTimeout() : _timeout);
+            if (!staticStream || serverContext.getAlwaysExecuteBuilderInExecutor()) {
+                if (logger.isDebugEnabled())
+                    logger.debug("Response will be built in executor ({})", serverContext.getExecutor().getPath());
+                boolean executed = serverContext.getExecutor().executeQuietly(
+                        new AbstractTask(responseContext.getResponseBuilder().getResponseBuilderNode(), logger.getPrefix()+"Processing http request") {
+                            @Override public void doRun() throws Exception {
+                                startResponseProcessing(responseWriter);
+                            }
+                        }
+                );
+                if (!executed) {
+                    String msg = "Executor rejected response builder task";
+                    if (logger.isErrorEnabled())
+                        logger.error(msg);
+                    throw new InternalServerError(msg);
+                }
+            } else {
+                if (logger.isDebugEnabled()) 
+                    logger.debug("Response will be built in Netty thread");
+                startResponseProcessing(responseWriter);
+            }
         }
     }
 
@@ -293,7 +316,7 @@ public class RRController {
             addHeadersToResponseWriter(response, responseWriter);
             Object content = response.getContent();
             if (content instanceof RedirectResult) 
-                composeRedirectResponse(httpResponse, content, responseWriter);
+                composeRedirectResponse(httpResponse, (RedirectResult)content, responseWriter);
             else {
                 String contentType = response.getContentType();
                 if (content instanceof Result) {
@@ -338,8 +361,18 @@ public class RRController {
             }
         }
     }
+    
+    private void redirectToHttps(ResponseWriter writer) throws IOException {
+        URL url = new URL(requestURL);
+        URL redirUrl = new URL("https", url.getHost(), httpsServer.getPort(), url.getFile());
+        RedirectResult result = new RedirectResult(redirUrl.toString());
+        composeRedirectResponse(writer.responseHeader, result, responseWriter);        
+    }
 
-    private void composeRedirectResponse(HttpResponse httpResponse, Object content, final ResponseWriter responseWriter) throws IOException {
+    private void composeRedirectResponse(HttpResponse httpResponse, RedirectResult content, 
+            ResponseWriter responseWriter) 
+        throws IOException 
+    {
         if (user.isNeedRelogin() && responseContext.getSession()!=null)
             responseContext.getSession().invalidate();
         httpResponse.setStatus(HttpResponseStatus.TEMPORARY_REDIRECT);

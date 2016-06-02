@@ -32,20 +32,28 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.params.HttpMethodParams;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.ContentType;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.BasicClientConnectionManager;
+import org.apache.http.util.EntityUtils;
 import org.junit.After;
-import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.raven.TestScheduler;
 import org.raven.auth.impl.AccessRight;
 import org.raven.auth.impl.AnonymousLoginServiceNode;
@@ -73,10 +81,11 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
     private WebClient webclient;
     private Projects projects;
     private AnonymousLoginServiceNode loginService;
+    private TemporaryFileManagerNode tempFileManager;
     
     private Protocol proto;
     
-    @Parameterized.Parameters
+//    @Parameterized.Parameters
     public static Collection<Object[]> PARAMS() {
         return Arrays.asList(new Object[]{Protocol.HTTP}, new Object[]{Protocol.HTTPS});
     }
@@ -102,19 +111,19 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         testsNode.addAndSaveChildren(scheduler);
         assertTrue(scheduler.start());
 
-        TemporaryFileManagerNode manager = new TemporaryFileManagerNode();
-        manager.setName("manager");
-        tree.getRootNode().addAndSaveChildren(manager);
-        manager.setDirectory("target/");
-        manager.setScheduler(scheduler);
-        assertTrue(manager.start());
+        tempFileManager = new TemporaryFileManagerNode();
+        tempFileManager.setName("manager");
+        tree.getRootNode().addAndSaveChildren(tempFileManager);
+        tempFileManager.setDirectory("target/");
+        tempFileManager.setScheduler(scheduler);
+        assertTrue(tempFileManager.start());
         
         httpServer = new HttpServerNode();
         httpServer.setName("HTTP server");
         testsNode.addAndSaveChildren(httpServer);
         httpServer.setExecutor(executor);
         httpServer.setPort(7777);
-        httpServer.setTempFileManager(manager);
+        httpServer.setTempFileManager(tempFileManager);
         httpServer.setUploadedFilesTempDir("target/upload_tmp");
         httpServer.setLogLevel(LogLevel.TRACE);
 //        if (proto==Protocol.HTTPS) {
@@ -220,12 +229,18 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         //do test
         assertTrue(httpServer.start());
         webclient.addRequestHeader("Connection", "close");        
-        TextPage p = webclient.getPage("http://localhost:7777/projects/hello/world");
+        TextPage p = webclient.getPage(formUrl("localhost:7777/projects/hello/world"));
         assertNotNull(p);
         assertEquals(200, p.getWebResponse().getStatusCode());
         assertEquals("text/plain", p.getWebResponse().getContentType());
 //        assertEquals("12", p.getWebResponse().getResponseHeaderValue(HttpHeaders.Names.CONTENT_LENGTH));
         assertEquals("Hello World!", p.getContent());        
+    }
+    
+    @Test(timeout = 5000l)
+    public void httpsChunkedEncodingTest() throws Exception {
+        prepareHttps();
+        chunkedEncodingTest();
     }
     
     @Test(timeout = 5000l)
@@ -242,11 +257,17 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         httpServer.setResponseStreamBufferSize(4); //size 4 bytes, so to send '123456789' we need 3 chunks
         assertTrue(httpServer.start());
         webclient.addRequestHeader("Connection", "close");        
-        TextPage p = webclient.getPage("http://localhost:7777/projects/hello/world");
+        TextPage p = webclient.getPage(formUrl("localhost:7777/projects/hello/world"));
         assertNotNull(p);
         assertEquals(200, p.getWebResponse().getStatusCode());
         assertEquals("text/plain", p.getWebResponse().getContentType());
         assertEquals("123456789", p.getContent());        
+    }
+    
+    @Test(timeout = 5000l)
+    public void httpsOutputBufferOverflowTest() throws Exception {
+        prepareHttps();
+        outputBufferOverflowTest();
     }
     
     @Test(timeout = 10000l)
@@ -260,13 +281,13 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         httpServer.setKeepAliveTimeout(5000l);
         assertTrue(httpServer.start());
         webclient.addRequestHeader("Connection", "keep-alive");        
-        TextPage p = webclient.getPage("http://localhost:7777/projects/hello/world");
+        TextPage p = webclient.getPage(formUrl("localhost:7777/projects/hello/world"));
         assertNotNull(p);
         assertEquals(200, p.getWebResponse().getStatusCode());
         assertEquals("text/plain", p.getWebResponse().getContentType());
         assertEquals("test", p.getContent());        
         
-        p = webclient.getPage("http://localhost:7777/projects/hello/world");
+        p = webclient.getPage(formUrl("localhost:7777/projects/hello/world"));
         assertNotNull(p);
         assertEquals(200, p.getWebResponse().getStatusCode());
         assertEquals("text/plain", p.getWebResponse().getContentType());
@@ -280,6 +301,12 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         assertEquals(0l, httpServer.getActiveConnectionsCount().get());
     }
     
+    @Test(timeout = 10000l)
+    public void httpsKeepAliveTest() throws Exception {
+        prepareHttps();
+        keepAliveTest();
+    }
+    
     @Test(timeout=10000)
     public void buildResponseTimeoutTest() throws Exception {
         SimpleResponseBuilder builder = createProjectAndBuilder();
@@ -291,32 +318,82 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         httpServer.setDefaultResponseBuildTimeout(1000L);
         assertTrue(httpServer.start());
         webclient.addRequestHeader("Connection", "close");        
-        HtmlPage p = webclient.getPage("http://localhost:7777/projects/hello/world");
+        HtmlPage p = webclient.getPage(formUrl("localhost:7777/projects/hello/world"));
         assertNotNull(p);
         assertEquals(500, p.getWebResponse().getStatusCode());
         assertEquals("text/html", p.getWebResponse().getContentType());
         assertTrue(p.asText().contains("Response generation timeout"));
         Thread.sleep(2000L);
     }
+    
+    @Test(timeout = 10_000L)
+    public void httpsBuildResponseTimeoutTest() throws Exception {
+        prepareHttps();
+        buildResponseTimeoutTest();
+    }
         
     @Test(timeout = 5000l)
     public void redirectTest() throws Exception {
         SimpleResponseBuilder builder = createProjectAndBuilder();
         builder.setResponseContentType("text/plain");
-        builder.setResponseContent("redirect('http://localhost:7777/world/hello')");
+        builder.setResponseContent("redirect('"+formUrl("localhost:7777/world/hello")+"')");
         assertTrue(builder.start());
         
         //do test
         assertTrue(httpServer.start());
         webclient.addRequestHeader("Connection", "close");        
         webclient.setRedirectEnabled(false);
-        TextPage p = webclient.getPage("http://localhost:7777/projects/hello/world");
+        TextPage p = webclient.getPage(formUrl("localhost:7777/projects/hello/world"));
         assertNotNull(p);
         assertEquals(307, p.getWebResponse().getStatusCode());
-        assertEquals("http://localhost:7777/world/hello", p.getWebResponse().getResponseHeaderValue(HttpHeaders.Names.LOCATION));
+        assertEquals(formUrl("localhost:7777/world/hello"), p.getWebResponse().getResponseHeaderValue(HttpHeaders.Names.LOCATION));
     }
     
-    @Test
+    @Test(timeout = 5_000l)
+    public void httpsRedirectTest() throws Exception {
+        prepareHttps();
+        redirectTest();
+    }
+    
+    @Test(timeout = 5_000L)
+    public void redirectToHttpsTest() throws Exception {
+        SimpleResponseBuilder builder = createProjectAndBuilder();
+        builder.setResponseContentType("text/plain");
+        builder.setResponseContent("'ok'");
+        builder.setRequireSSL(Boolean.TRUE);
+        assertTrue(builder.start());
+        
+        HttpServerNode httpsServer = createHttpsServer();        
+        assertTrue(httpsServer.start());
+        httpServer.setHttpsServerNode(httpsServer);
+        assertTrue(httpsServer.start());
+        assertTrue(httpServer.start());
+        
+        webclient.setRedirectEnabled(true);
+        TextPage p = webclient.getPage(formUrl("localhost:7777/projects/hello/world"));
+        assertNotNull(p);
+        assertEquals(200, p.getWebResponse().getStatusCode());
+        assertEquals("ok", p.getContent());
+    }
+    
+    @Test(timeout = 5_000L)
+    public void redirectToHttpsWithoutHttpsServer() throws Exception {
+        SimpleResponseBuilder builder = createProjectAndBuilder();
+        builder.setResponseContentType("text/plain");
+        builder.setResponseContent("'ok'");
+        builder.setRequireSSL(Boolean.TRUE);
+        assertTrue(builder.start());
+        
+        assertTrue(httpServer.start());
+        
+        webclient.setRedirectEnabled(true);
+        HtmlPage p = webclient.getPage(formUrl("localhost:7777/projects/hello/world"));
+        assertNotNull(p);
+        assertEquals(500, p.getWebResponse().getStatusCode());
+        assertTrue(p.asText().contains("Can't automaticly redirect to https resource"));
+    }
+    
+    @Test(timeout = 5_000l)
     public void notModifiedTest() throws Exception {
         FileResponseBuilder builder = createProjectAndFileBuilder();
         builder.setLastModified(System.currentTimeMillis()-10000);
@@ -327,17 +404,23 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         webclient.addRequestHeader("Connection", "close");        
         webclient.addRequestHeader(HttpHeaders.Names.IF_MODIFIED_SINCE, HttpHeaderDateFormat.get().format(new Date()));        
         webclient.setRedirectEnabled(false);        
-        WebResponse resp = makeRequest("http://localhost:7777/projects/hello/file");
+        WebResponse resp = makeRequest(formUrl("localhost:7777/projects/hello/file"));
         assertEquals(HttpResponseStatus.NOT_MODIFIED.code(), resp.getStatusCode());
         
         webclient.addRequestHeader(HttpHeaders.Names.IF_MODIFIED_SINCE, HttpHeaderDateFormat.get().format(
                 new Date(System.currentTimeMillis()-20_000)));        
-        resp = makeRequest("http://localhost:7777/projects/hello/file");
+        resp = makeRequest(formUrl("localhost:7777/projects/hello/file"));
         assertEquals(200, resp.getStatusCode());
         assertEquals("Hello world!", resp.getContentAsString());
     }
     
-    @Test
+    @Test(timeout = 5_000L)
+    public void httpsNotModifiedTest() throws Exception {
+        prepareHttps();;
+        notModifiedTest();
+    }
+    
+    @Test(timeout = 5_000L)
     public void noContentTest() throws Exception {
         SimpleResponseBuilder builder = createProjectAndBuilder();
         builder.setResponseContentType("text/plain");
@@ -348,13 +431,19 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         assertTrue(httpServer.start());
         webclient.addRequestHeader("Connection", "close");        
         webclient.setRedirectEnabled(false);
-        WebResponse resp =makeRequest("http://localhost:7777/projects/hello/world");
+        WebResponse resp =makeRequest(formUrl("localhost:7777/projects/hello/world"));
         assertNotNull(resp);
         assertEquals(HttpResponseStatus.NO_CONTENT.code(), resp.getStatusCode());
         assertEquals("", resp.getContentAsString());
     }
     
-    @Test
+    @Test(timeout = 5_000L)
+    public void httpsNoContentTest() throws Exception {
+        prepareHttps();
+        noContentTest();
+    }
+    
+    @Test(timeout = 5_000L)
     public void queryParametersTest() throws Exception {
         SimpleResponseBuilder builder = createProjectAndBuilder();
         builder.setResponseContentType("text/plain");
@@ -367,7 +456,7 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         //do test
         assertTrue(httpServer.start());
         webclient.addRequestHeader("Connection", "close");        
-        WebRequest request = new WebRequest(new URL("http://localhost:7777/projects/hello/world"));
+        WebRequest request = new WebRequest(new URL(formUrl("localhost:7777/projects/hello/world")));
         request.setEncodingType(FormEncodingType.URL_ENCODED);        
         request.setHttpMethod(HttpMethod.GET);
         request.setRequestParameters(Arrays.asList(
@@ -380,7 +469,13 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         assertEquals("ok", page.getContent());
     }
     
-    @Test
+    @Test(timeout = 5_000L)
+    public void httpsQueryParametersTest() throws Exception {
+        prepareHttps();
+        queryParametersTest();
+    }
+    
+    @Test(timeout = 5_000L)
     public void formUrlEncodedTest() throws Exception {
         SimpleResponseBuilder builder = createProjectAndBuilder();
         builder.setResponseContentType("text/plain");
@@ -393,7 +488,7 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         //do test
         assertTrue(httpServer.start());
         webclient.addRequestHeader("Connection", "close");        
-        WebRequest request = new WebRequest(new URL("http://localhost:7777/projects/hello/world"));
+        WebRequest request = new WebRequest(new URL(formUrl("localhost:7777/projects/hello/world")));
         request.setEncodingType(FormEncodingType.URL_ENCODED);        
         request.setHttpMethod(HttpMethod.POST);
         request.setRequestParameters(Arrays.asList(
@@ -406,7 +501,13 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         assertEquals("ok", page.getContent());
     }
     
-    @Test
+    @Test(timeout = 5_000L)
+    public void httpsFormUrlEncodedTest() throws Exception {
+        prepareHttps();
+        formUrlEncodedTest();
+    }
+    
+    @Test(timeout = 5_000L)
     public void multipartFormDataTest() throws Exception {
         SimpleResponseBuilder builder = createProjectAndBuilder();
         builder.setResponseContentType("text/plain");
@@ -419,7 +520,7 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         //do test
         assertTrue(httpServer.start());
         webclient.addRequestHeader("Connection", "close");        
-        WebRequest request = new WebRequest(new URL("http://localhost:7777/projects/hello/world"));
+        WebRequest request = new WebRequest(new URL(formUrl("localhost:7777/projects/hello/world")));
         request.setEncodingType(FormEncodingType.MULTIPART);
         request.setHttpMethod(HttpMethod.POST);
         request.setRequestParameters(Arrays.asList(
@@ -430,6 +531,12 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         assertNotNull(page);
         assertEquals(200, page.getWebResponse().getStatusCode());
         assertEquals("ok", page.getContent());
+    }
+    
+    @Test(timeout = 5_000L)
+    public void httpsMultipartFormDataTest() throws Exception {
+        prepareHttps();
+        multipartFormDataTest();
     }
     
     @Test
@@ -456,7 +563,7 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         //do test
         assertTrue(httpServer.start());
         webclient.addRequestHeader("Connection", "close");        
-        HtmlPage page = webclient.getPage("http://localhost:7777/projects/hello/file");
+        HtmlPage page = webclient.getPage(formUrl("localhost:7777/projects/hello/file"));
         assertNotNull(page);
         assertEquals(200, page.getWebResponse().getStatusCode());
         HtmlForm form = page.getFormByName("form");
@@ -475,6 +582,12 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
     }
     
     @Test(timeout = 5_000L)
+    public void httpsMultipartFileDataTest() throws Exception {
+        prepareHttps();
+        multipartFileDataTest();
+    }
+    
+    @Test(timeout = 5_000L)
     public void responseContentReadTest() throws Exception{
         SimpleResponseBuilder builder = createProjectAndBuilder();
         builder.setResponseContentType("text/plain");
@@ -486,13 +599,19 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         //do test
         assertTrue(httpServer.start());
         webclient.addRequestHeader("Connection", "close");        
-        WebRequest request = new WebRequest(new URL("http://localhost:7777/projects/hello/world"), HttpMethod.POST);
+        WebRequest request = new WebRequest(new URL(formUrl("localhost:7777/projects/hello/world")), HttpMethod.POST);
         request.setRequestBody("Test");
         request.setAdditionalHeader("Content-Type", "text/plain");
         TextPage page = webclient.getPage(request);
         assertNotNull(page);
         assertEquals(200, page.getWebResponse().getStatusCode());
         assertEquals("ok", page.getContent());
+    }
+    
+    @Test(timeout = 5_000L)
+    public void httpsResponseContentReadTest() throws Exception {
+        prepareHttps();
+        responseContentReadTest();
     }
     
     @Test(timeout = 30_000L)
@@ -516,12 +635,42 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         for (int i=0; i<size; i++)
             buf[i] = (byte)32;
         //streaming file to http server as application/octet-stream
-        PostMethod httpPost = new PostMethod("http://localhost:7777/projects/hello/world");
-        httpPost.setRequestEntity(new ByteArrayRequestEntity(buf, "application/octet-stream"));
-        HttpClient client = new HttpClient();
-        client.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(0, false));
-        client.executeMethod(httpPost);
-        assertEquals(""+size, httpPost.getResponseBodyAsString());
+        HttpPost post = new HttpPost(formUrl("localhost:7777/projects/hello/world"));
+        post.setEntity(new ByteArrayEntity(buf, ContentType.APPLICATION_OCTET_STREAM));
+        HttpClient client = createHttpClient();
+        HttpResponse resp = client.execute(post);
+        assertEquals(""+size, EntityUtils.toString(resp.getEntity()));                
+    }
+    
+    @Test(timeout = 30_000L)
+    public void httpsResponseContentReadWithBackPressure() throws Exception {
+        prepareHttps();
+        responseContentReadWithBackPressure();
+    }
+    
+    private HttpClient createHttpClient() throws Exception {
+        if (httpServer.getProtocol()==Protocol.HTTPS) {
+            TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
+                @Override public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                    return null;
+                }
+                @Override public void checkClientTrusted(X509Certificate[] certs, String authType) { }
+                @Override public void checkServerTrusted(X509Certificate[] certs, String authType) { }
+            }};
+            SSLContext context = SSLContext.getInstance("TLS");
+            context.init(null, trustAllCerts, null);
+
+            SSLSocketFactory sf = new SSLSocketFactory(context, SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+
+            SchemeRegistry schemeRegistry = new SchemeRegistry();
+            schemeRegistry.register(new Scheme("http", 80, PlainSocketFactory.getSocketFactory()));
+            schemeRegistry.register(new Scheme("https", 443, sf));
+
+            BasicClientConnectionManager cm = new BasicClientConnectionManager(schemeRegistry);
+
+            return new DefaultHttpClient(cm);            
+        } else
+            return new DefaultHttpClient();
     }
     
     private WebResponse makeRequest(String url) throws IOException {
@@ -589,5 +738,20 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
     
     private String formUrl(String path) {
         return (httpServer.getProtocol()==Protocol.HTTP? "http://" : "https://")+path;
+    }
+    
+    private HttpServerNode createHttpsServer() {
+        HttpServerNode httpsServer = new HttpServerNode();
+        httpsServer.setName("HTTPS server");
+        testsNode.addAndSaveChildren(httpsServer);
+        httpsServer.setExecutor(executor);
+        httpsServer.setPort(7443);
+        httpsServer.setTempFileManager(tempFileManager);
+        httpsServer.setUploadedFilesTempDir("target/upload_tmp");
+        httpsServer.setLogLevel(LogLevel.TRACE);
+        httpsServer.setProtocol(Protocol.HTTPS);
+        httpsServer.setKeystorePassword("test123");
+        httpsServer.setKeystorePath("src/test/resources/self_signed_keystore.jks");
+        return httpsServer;
     }
 }

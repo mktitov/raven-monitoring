@@ -61,5 +61,15 @@ public class NetRespContextRespBuilderWrapper implements ResponseBuilder {
     public Long getBuildTimeout() {
         return null;
     }
+
+    @Override
+    public Boolean getRequireAudit() {
+        return false;
+    }
+
+    @Override
+    public Boolean getRequireSSL() {
+        return false;
+    }
     
 }

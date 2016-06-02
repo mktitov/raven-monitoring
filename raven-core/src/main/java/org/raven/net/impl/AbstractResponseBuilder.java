@@ -57,6 +57,12 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
     @Parameter
     private Long buildTimeout;
     
+    @Parameter
+    private Boolean requireAudit;
+    
+    @Parameter
+    private Boolean requireSSL;
+    
     private ParametersSupport paramsSupport;
 
     @Override
@@ -196,6 +202,22 @@ public abstract class AbstractResponseBuilder extends NetworkResponseBaseNode im
 
     public void setBuildTimeout(Long buildTimeout) {
         this.buildTimeout = buildTimeout;
+    }
+
+    public Boolean getRequireAudit() {
+        return requireAudit;
+    }
+
+    public void setRequireAudit(Boolean requireAudit) {
+        this.requireAudit = requireAudit;
+    }
+
+    public Boolean getRequireSSL() {
+        return requireSSL;
+    }
+
+    public void setRequireSSL(Boolean requireSSL) {
+        this.requireSSL = requireSSL;
     }
 
     @Override

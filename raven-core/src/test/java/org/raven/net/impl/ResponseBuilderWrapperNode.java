@@ -67,6 +67,16 @@ public class ResponseBuilderWrapperNode extends BaseNode implements ResponseBuil
     public Long getBuildTimeout() {
         return null;
     }
+
+    @Override
+    public Boolean getRequireAudit() {
+        return false;
+    }
+
+    @Override
+    public Boolean getRequireSSL() {
+        return false;
+    }
     
     public interface ResponseBuilderWrapper {
         public AccessRight getAccessRight();
