@@ -40,7 +40,9 @@ import org.raven.log.LogLevel;
 import org.raven.net.ResponseContext;
 import org.raven.net.http.server.SessionManager;
 import org.raven.net.http.server.impl.SessionManagerImpl;
+import org.raven.sched.Executor;
 import org.raven.sched.ExecutorService;
+import org.raven.sched.SystemExecutorService;
 import org.raven.tree.Node;
 import org.raven.tree.impl.BaseNode;
 import static org.raven.util.NodeUtils.*;
@@ -57,6 +59,8 @@ import org.weda.internal.annotations.Service;
 public class LoginServiceNode extends BaseNode implements LoginService {
     @Service
     private static Auditor auditor;
+    @Service
+    private static SystemExecutorService systemExecutorService;
     
     private OperationStatistic ipFiltersStat;
     private OperationStatistic loginStat;
@@ -73,7 +77,7 @@ public class LoginServiceNode extends BaseNode implements LoginService {
     @NotNull @Parameter(defaultValue = "MINUTES")
     private TimeUnit sessionTimeoutTimeUnit;
     
-    @NotNull @Parameter
+    @Parameter
     private ExecutorService executor;
 
     public LoginServiceNode() { }
@@ -101,7 +105,8 @@ public class LoginServiceNode extends BaseNode implements LoginService {
         super.doStart();
         initStat();
         initChildren();
-        sessionManager = new SessionManagerImpl(executor, this, sessionTimeoutTimeUnit.toMillis(sessionTimeout), auditor);    
+        Executor _executor = executor!=null? executor : systemExecutorService.getExecutor();
+        sessionManager = new SessionManagerImpl(_executor, this, sessionTimeoutTimeUnit.toMillis(sessionTimeout), auditor);    
         sessionManager.start();
     }
 
