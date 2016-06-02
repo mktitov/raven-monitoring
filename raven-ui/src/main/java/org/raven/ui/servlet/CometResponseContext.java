@@ -34,6 +34,8 @@ import org.raven.net.ResponseAdapter;
 import org.raven.net.ResponseContext;
 import org.raven.net.ResponseContextListener;
 import org.raven.net.ResponseServiceNode;
+import org.raven.net.http.server.HttpSession;
+import org.raven.sched.ExecutorService;
 import org.raven.ui.servlet.NetworkResponseServlet.RequestContext;
 import org.slf4j.Logger;
 
@@ -79,7 +81,7 @@ public class CometResponseContext implements ResponseContext {
     }
 
     public void closeChannel() throws IOException {
-        requestContext.writeProcessed(cometEvent, true);
+        requestContext.writeProcessed(cometEvent);
     }
     
     //other calls to ResponseContext delegating to normal response context   
@@ -159,5 +161,20 @@ public class CometResponseContext implements ResponseContext {
     public Logger getResponseBuilderLogger() {
         return responseContext.getResponseBuilderLogger();
     }    
+
+    @Override
+    public void setSession(HttpSession session) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public HttpSession getSession() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public ExecutorService getExecutor() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
         
 }

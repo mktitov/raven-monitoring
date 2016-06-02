@@ -19,6 +19,7 @@ package org.raven.ui.servlet;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.List;
 import java.util.Map;
 import org.raven.net.Request;
 import org.raven.sched.ExecutorService;
@@ -109,6 +110,16 @@ public class ErrorRequest implements Request {
     @Override
     public Reader getContentReader() throws IOException {
         return request.getContentReader();
+    }
+
+    @Override
+    public Map<String, List> getAllParams() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public String getContentCharset() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
      
 }

@@ -97,7 +97,9 @@ public class LoginFilter implements Filter {
                         session.getServletContext().log(String.format("User (%s) successfully logged in", user.getLogin()));
                         return true;
                     }
-                } catch (LoginException ex) { }                
+                } catch (LoginException ex) {
+                    session.getServletContext().log("Auth error", ex);
+                }                
             }
             session.getServletContext().log("Authentification failed for user");
         }

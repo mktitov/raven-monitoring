@@ -21,7 +21,6 @@ import io.netty.buffer.Unpooled;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Enumeration;
 import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -41,15 +40,14 @@ import org.raven.tree.Node;
 /**
  *
  * @author Mikhail Titov
- */ 
+ */
 public class CometNetworkResponseServlet extends NetworkResponseServlet implements CometProcessor {
     public static final String REQUEST_CONTEXT = "RAVEN_REQUEST_CONTEXT";
-    public static final String FORM_URLENCODED_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
     public void event(CometEvent ce) throws IOException, ServletException {
         final HttpServletRequest request = ce.getHttpServletRequest();
         final HttpServletResponse response = ce.getHttpServletResponse();
-        final RequestContext ctx = getRequestContext(ce);
+        final NetworkResponseServlet.RequestContext ctx = getRequestContext(ce);
         if (ctx!=null && ctx.servletLogger.isDebugEnabled()) {
             CometEvent.EventSubType subtype = ce.getEventSubType();
             String event = ce.getEventType()+(subtype==null?"":"/"+subtype);
@@ -85,14 +83,9 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
     private void initResponseProcessing(final CometEvent ce, final HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException
     {
-        final RequestContext ctx = createContext(request, response);        
+        final NetworkResponseServlet.RequestContext ctx = createContext(request, response);        
 //        request.setAttribute("org.apache.tomcat.comet.timeout", 5); //30 seconds	
         request.setAttribute("org.apache.tomcat.comet.timeout", 1000); //30 seconds	
-//        StringUtils.j
-        Enumeration names = request.getAttributeNames();
-        while (names.hasMoreElements()) {
-            ctx.servletLogger.info("REQUEST attr: "+names.nextElement());
-        }
         final boolean debugEnabled = ctx.servletLogger.isDebugEnabled();
         if (debugEnabled) 
             ctx.servletLogger.debug(String.format("Initializing request processing (%s event) (id: %s) (contentLength: %s) for URI: %s", 
@@ -102,11 +95,9 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
             configureRequestContext(ctx);
             ctx.responseContext = new CometResponseContext(ctx, ce);
             final Node builderNode = ctx.responseContext.getResponseBuilder().getResponseBuilderNode();
-            final boolean formParams = request.getContentType()!=null && request.getContentType().startsWith(FORM_URLENCODED_CONTENT_TYPE);
-            if (request.getContentLength()<=0 || formParams)
+            if (request.getContentLength()<=0)
                 ctx.readProcessed(ce);
-            if (!formParams && (request.getContentType()!=null 
-                || !"GET".equals(request.getMethod()) || request.getContentLength()>0))
+            if (request.getContentType()!=null || !"GET".equals(request.getMethod()) || request.getContentLength()>0)
             {
                 final ExecutorService executor = ctx.responseService.getExecutor();
                 if (executor==null)
@@ -123,7 +114,7 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
         }
     }
 
-    public void startReponseProcessing(final RequestContext ctx, final HttpServletRequest request, 
+    public void startReponseProcessing(final NetworkResponseServlet.RequestContext ctx, final HttpServletRequest request, 
             final boolean debugEnabled, final CometEvent ce, final boolean notNioThread) 
     {
         try {
@@ -152,12 +143,12 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
 
     @Override
     protected FileItemIterator getMultipartItemIterator(HttpServletRequest request) throws Exception {
-        RequestContext ctx = (RequestContext) request.getAttribute(REQUEST_CONTEXT);
+        NetworkResponseServlet.RequestContext ctx = (NetworkResponseServlet.RequestContext) request.getAttribute(REQUEST_CONTEXT);
         FileUploadContext fileUploadContext = new FileUploadContext(request, ctx.getRequestStream());
         return new ServletFileUpload().getItemIterator(fileUploadContext);
     }
 
-    private void processEndEvent(final CometEvent ev, final RequestContext ctx) throws IOException, ServletException {
+    private void processEndEvent(final CometEvent ev, final NetworkResponseServlet.RequestContext ctx) throws IOException, ServletException {
 //        RequestContext ctx = getRequestContext(ev);
 //        try {
             if (ctx!=null) {
@@ -176,19 +167,6 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
                     ctx.readProcessed(ev);
                     ctx.writeResponseIfNeed(ev);
                     ctx.tryToCloseChannel(ev);
-                    if (ctx.isClosed()) {
-                        for (int i=0; i<1000; i++) {
-                            if (ctx.isReallyClosed())
-                                break;
-                            try {
-                                Thread.sleep(1);
-                            } catch (InterruptedException ex) {
-                                break;
-                            }
-                        }
-                        if (!ctx.isReallyClosed() && ctx.servletLogger.isErrorEnabled())
-                            ctx.servletLogger.error("ERROR wating for REALLY_CLOSED flag.");
-                    }
                 }
             } else {
 //                if (ctx.servletLogger.isDebugEnabled())
@@ -206,21 +184,21 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
 //        }
     }
 
-    private RequestContext getRequestContext(CometEvent ev) {
-        return (RequestContext) ev.getHttpServletRequest().getAttribute(REQUEST_CONTEXT);
+    private NetworkResponseServlet.RequestContext getRequestContext(CometEvent ev) {
+        return (NetworkResponseServlet.RequestContext) ev.getHttpServletRequest().getAttribute(REQUEST_CONTEXT);
     }
     
-    private void processResponseError(RequestContext ctx, Throwable e, CometEvent ce) {
+    private void processResponseError(NetworkResponseServlet.RequestContext ctx, Throwable e, CometEvent ce) {
         if (ctx.servletLogger.isErrorEnabled())
             ctx.servletLogger.error("Response composing error", e);
         try {
             processError(ctx, e);
         } finally {
-            ctx.writeProcessed(ce, true);                            
+            ctx.writeProcessed(ce);                            
         }
     }
     
-    private void processResponsePromise(final CometEvent ev, final RequestContext ctx, 
+    private void processResponsePromise(final CometEvent ev, final NetworkResponseServlet.RequestContext ctx, 
             final ResponsePromise responsePromise) 
     {
         responsePromise.onComplete(new ResponseReadyCallback() {
@@ -237,7 +215,7 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
         });
     }
     
-    private void processServiceResponse(CometEvent ev, RequestContext ctx, Response serviceResponse, boolean notNioThread) 
+    private void processServiceResponse(CometEvent ev, NetworkResponseServlet.RequestContext ctx, Response serviceResponse, boolean notNioThread) 
             throws IOException 
     {
         try {
@@ -258,7 +236,7 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
 //                    else
 //                        ctx.setServiceResponse(ev, serviceResponse, this);
                 }
-                ctx.writeProcessed(ev, notNioThread);
+                ctx.writeProcessed(ev);
             } else if (serviceResponse==Response.MANAGING_BY_BUILDER)
                 ctx.responseManagingByBuilder = true;
             
@@ -283,13 +261,13 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
     }
 
     @Override
-    protected Request createServiceRequest(RequestContext ctx, Map<String, Object> params, 
+    protected Request createServiceRequest(NetworkResponseServlet.RequestContext ctx, Map<String, Object> params, 
             Map<String, Object> headers, String context) 
     {
         return new CometRequestImpl(ctx, params, headers, context);
     }
 
-    private void processErrorEvent(final CometEvent ce, final RequestContext ctx) throws IOException, ServletException {
+    private void processErrorEvent(final CometEvent ce, final NetworkResponseServlet.RequestContext ctx) throws IOException, ServletException {
         try {
 //            RequestContext ctx = getRequestContext(ce);
 //            Logger logger = ctx.responseContext.getResponseBuilderLogger();            
@@ -308,7 +286,7 @@ public class CometNetworkResponseServlet extends NetworkResponseServlet implemen
         }
     }
 
-    private void processReadEvent(CometEvent ce, final RequestContext ctx) throws IOException {
+    private void processReadEvent(CometEvent ce, final NetworkResponseServlet.RequestContext ctx) throws IOException {
 //        final RequestContext ctx = getRequestContext(ce);
         
         if (ctx.isDataStreamClosed()) {
