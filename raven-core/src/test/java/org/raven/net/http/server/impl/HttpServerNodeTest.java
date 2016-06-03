@@ -86,18 +86,9 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
     
     private Protocol proto;
     
-//    @Parameterized.Parameters
-    public static Collection<Object[]> PARAMS() {
-        return Arrays.asList(new Object[]{Protocol.HTTP}, new Object[]{Protocol.HTTPS});
-    }
-
     public HttpServerNodeTest() {
         proto = Protocol.HTTP;
     }
-
-//    public HttpServerNodeTest(Protocol proto) {
-//        this.proto = proto;
-//    }    
     
     @Before
     public void prepare() throws Exception {
@@ -197,6 +188,25 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         SimpleResponseBuilder builder = createProjectAndBuilder();
         builder.setResponseContentType("text/plain");
         builder.setResponseContent("'Hello World!'");
+        assertTrue(builder.start());
+        
+        //do test
+        assertTrue(httpServer.start());
+        webclient.addRequestHeader("Connection", "close");        
+        TextPage p = webclient.getPage(formUrl("localhost:7777/projects/hello/world"));
+        assertNotNull(p);
+        assertEquals(200, p.getWebResponse().getStatusCode());
+        assertEquals("text/plain", p.getWebResponse().getContentType());
+        assertEquals("12", p.getWebResponse().getResponseHeaderValue(HttpHeaders.Names.CONTENT_LENGTH));
+        assertEquals("Hello World!", p.getContent());        
+    }
+    
+    @Test(timeout = 5000l)
+    public void helloWorldDefaultCharsetTest() throws Exception {
+        SimpleResponseBuilder builder = createProjectAndBuilder();
+        builder.setResponseContentType("text/plain");
+        builder.setResponseContent("'Hello World!'");
+        builder.setResponseContentCharset(null);
         assertTrue(builder.start());
         
         //do test
@@ -749,7 +759,7 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
     private LoginServiceNode addLoginService(ProjectNode project) {
         LoginServiceNode loginService = new LoginServiceNode("main");
         project.getNode(LoginManagerNode.NAME).addAndSaveChildren(loginService);
-        
+        return loginService;
     }
     
     private HttpServerNode createHttpsServer() {

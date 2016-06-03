@@ -16,6 +16,8 @@
 package org.raven.net.http.server.impl;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
@@ -45,6 +47,7 @@ import org.raven.net.http.server.HttpConsts;
 import org.raven.net.http.server.HttpServerContext;
 import org.raven.net.http.server.Protocol;
 import org.raven.sched.ExecutorService;
+import org.raven.sched.impl.SystemSchedulerValueHandlerFactory;
 import org.raven.tree.Node;
 import org.raven.tree.ResourceManager;
 import org.raven.tree.impl.BaseNodeWithBehavior;
@@ -84,7 +87,7 @@ public class HttpServerNode extends BaseNodeWithBehavior {
     @Parameter()
     private String keystorePassword;
     
-    @NotNull @Parameter
+    @NotNull @Parameter(valueHandlerType = SystemSchedulerValueHandlerFactory.TYPE)
     private ExecutorService executor;
     
     @NotNull @Parameter(defaultValue = "1024")
@@ -187,11 +190,13 @@ public class HttpServerNode extends BaseNodeWithBehavior {
         workerGroup = new NioEventLoopGroup(workerThreadsCount);
         try {
             final SslContext sslContext = createSslContext();
+            final ByteBufAllocator bufAllocator = PooledByteBufAllocator.DEFAULT;
             ServerBootstrap bootstrap = new ServerBootstrap()
                 .group(acceptorGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override protected void initChannel(SocketChannel ch) throws Exception {
+                        ch.config().setAllocator(bufAllocator);
                         if (sslContext!=null)
                             ch.pipeline().addLast(sslContext.newHandler(ch.alloc()));
                         ch.pipeline()

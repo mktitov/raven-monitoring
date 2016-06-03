@@ -328,7 +328,7 @@ public class RRController {
                 } else 
                     responseWriter.setStatus(content!=null? 
                             HttpServletResponse.SC_OK : HttpServletResponse.SC_NO_CONTENT);
-                String charset = response.getCharset()==null? null : response.getCharset().name();
+                String charset = response.getCharset()==null? HttpConsts.DEFAULT_CONTENT_CHARSET : response.getCharset().name();
                 responseWriter.setContentType(ContentType.create(contentType, charset).toString());
                 if (response.getLastModified()!=null) 
                     httpResponse.headers().set(HttpHeaders.Names.LAST_MODIFIED, new Date(response.getLastModified()));
