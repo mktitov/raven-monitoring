@@ -69,6 +69,7 @@ import org.raven.sched.ExecutorService;
 import org.raven.sched.impl.ExecutorServiceNode;
 import org.raven.test.RavenCoreTestCase;
 import static org.junit.Assert.assertTrue;
+import org.raven.auth.impl.LoginServiceNode;
 
 /**
  *
@@ -648,6 +649,11 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         responseContentReadWithBackPressure();
     }
     
+    @Test
+    public void successAuthTest() throws Exception {
+        SimpleResponseBuilder builder = createProjectAndBuilder();
+    }
+    
     private HttpClient createHttpClient() throws Exception {
         if (httpServer.getProtocol()==Protocol.HTTPS) {
             TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
@@ -738,6 +744,12 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
     
     private String formUrl(String path) {
         return (httpServer.getProtocol()==Protocol.HTTP? "http://" : "https://")+path;
+    }
+    
+    private LoginServiceNode addLoginService(ProjectNode project) {
+        LoginServiceNode loginService = new LoginServiceNode("main");
+        project.getNode(LoginManagerNode.NAME).addAndSaveChildren(loginService);
+        
     }
     
     private HttpServerNode createHttpsServer() {
