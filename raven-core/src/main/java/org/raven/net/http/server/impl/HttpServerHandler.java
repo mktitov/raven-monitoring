@@ -53,6 +53,7 @@ import org.raven.RavenUtils;
 import org.raven.audit.Action;
 import org.raven.audit.AuditRecord;
 import org.raven.auth.AnonymousLoginService;
+import org.raven.auth.AuthenticationFailedException;
 import org.raven.auth.LoginService;
 import org.raven.auth.UserContext;
 import org.raven.auth.UserContextService;
@@ -96,6 +97,7 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
     private InetSocketAddress remoteAddr;
     private InetSocketAddress localAddr;
     private HttpRequest httpRequest;
+    private ResponseContext responseContext;
     private boolean hasError = false;
     private volatile long nextTimeout = 0l;
     private TimeoutType timeoutType;
@@ -276,6 +278,7 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
         
     private void processNewHttpRequest(HttpRequest request, ChannelHandlerContext ctx) throws Exception {
         httpRequest = request;
+        responseContext = null;
         hasError = false;
         final long requestNum = serverContext.getRequestsCounter().incrementAndGet();
         if (logger.isDebugEnabled())
@@ -301,7 +304,7 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
                 contentType, serverContext);
         
         //creating ResponseContext
-        ResponseContext responseContext = serverContext.getNetworkResponseService().getResponseContext(ravenRequest);
+        responseContext = serverContext.getNetworkResponseService().getResponseContext(ravenRequest);
         
         //проверяем аутентификацию
         final Set<Cookie> cookies = decodeCookies(request);
@@ -333,7 +336,7 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
         UserContext userContext = null;
         if (responseContext.isSessionAllowed()) {
             if (sessionManager==null) 
-                throw new Exception("LoginService (%s) doesn't have session manager");
+                throw new InternalServerError("LoginService (%s) doesn't have session manager");
             final String sessionId = sessionCookie==null? null : sessionCookie.name();
             HttpSession session;
             if (sessionId!=null && (session = sessionManager.getSession(sessionId))!=null) {
@@ -447,11 +450,11 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
             Throwable error) 
     {
         try {
-            HttpResponseStatus status;
-            ResponseContext respContext = rrController==null? null : rrController.getResponseContext();
+            HttpResponseStatus status=null;
+//            ResponseContext respContext = responseContext;
             RequestImpl req = rrController==null? null : rrController.getRequest();
             Map<String, Object> bindings = new HashMap<>();
-            ProjectNode projectNode = getProjectNode(rrController);
+            ProjectNode projectNode = getProjectNode(responseContext);
             QueryStringDecoder queryStringDecoder = new QueryStringDecoder(httpRequest.getUri());
             //
             bindings.put("projectName", getProjectName(projectNode));
@@ -464,10 +467,13 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
             bindings.put("parameters", req==null? Collections.EMPTY_MAP : req.getParams());
             bindings.put("headers", req==null? Collections.EMPTY_MAP : req.getHeaders());
             //determine the status code
+            DefaultFullHttpResponse resp;
             if (error instanceof ContextUnavailableException)
                 status = HttpResponseStatus.NOT_FOUND;
             else if (error instanceof RequestTimeoutException)
                 status = HttpResponseStatus.REQUEST_TIMEOUT;
+            else if (error instanceof UnauthoriedException || error instanceof AuthenticationFailedException) 
+                status = HttpResponseStatus.UNAUTHORIZED;
             else 
                 status = HttpResponseStatus.INTERNAL_SERVER_ERROR;
             //adding http status to bindings
@@ -478,13 +484,17 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
             String pageContent = serverContext.getErrorPageGenerator().buildPage(
                     bindings, getLocaleFromRequest(httpRequest), logger.isTraceEnabled());
             ByteBuf buf = ctx.alloc().buffer().writeBytes(pageContent.getBytes("utf-8"));
-            DefaultFullHttpResponse resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, buf);
-            resp.headers().set(HttpHeaders.Names.SERVER, HttpConsts.HTTP_SERVER_HEADER);
+            resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, buf);
+            if (status==HttpResponseStatus.UNAUTHORIZED) {
+                String realm = projectNode!=null? projectNode.getName() : "RAVEN";
+                resp.headers().set(HttpHeaders.Names.WWW_AUTHENTICATE, String.format("BASIC realm=\"%s\"", realm));                
+            }
             resp.headers().set(HttpHeaders.Names.CACHE_CONTROL, "no-cache");
             resp.headers().add(HttpHeaders.Names.PRAGMA, "no-cache");
             resp.headers().set(HttpHeaders.Names.CONTENT_TYPE, "text/html;charset=UTF-8");
-            resp.headers().set(HttpHeaders.Names.DATE, new Date());
             resp.headers().set(HttpHeaders.Names.CONTENT_LENGTH, buf.readableBytes());
+            resp.headers().set(HttpHeaders.Names.DATE, new Date());
+            resp.headers().set(HttpHeaders.Names.SERVER, HttpConsts.HTTP_SERVER_HEADER);
             
             ChannelFuture writeFuture = ctx.writeAndFlush(resp);
 //            if (!HttpHeaders.isKeepAlive(httpRequest))
@@ -536,10 +546,10 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
         return createListOfExceptions(error.getCause(), errors);        
     }
 
-    private ProjectNode getProjectNode(RRController rrController) {
-        if (rrController==null)
+    private ProjectNode getProjectNode(ResponseContext responseContext) {
+        if (responseContext==null)
             return null;
-        Node serviceNode = rrController.getResponseContext().getServiceNode();
+        Node serviceNode = responseContext.getServiceNode();
         return serviceNode instanceof WebInterfaceNode? ((ProjectNode)serviceNode.getParent()) : null;
     }
 

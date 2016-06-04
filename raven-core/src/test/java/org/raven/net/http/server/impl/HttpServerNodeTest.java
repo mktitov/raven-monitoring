@@ -15,6 +15,7 @@
  */
 package org.raven.net.http.server.impl;
 
+import com.gargoylesoftware.htmlunit.DefaultCredentialsProvider;
 import com.gargoylesoftware.htmlunit.FormEncodingType;
 import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.TextPage;
@@ -40,6 +41,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import org.apache.http.HttpResponse;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.scheme.PlainSocketFactory;
@@ -69,6 +71,9 @@ import org.raven.sched.ExecutorService;
 import org.raven.sched.impl.ExecutorServiceNode;
 import org.raven.test.RavenCoreTestCase;
 import static org.junit.Assert.assertTrue;
+import org.raven.auth.impl.AuthenticateByExpression;
+import org.raven.auth.impl.AuthenticatorsNode;
+import org.raven.auth.impl.BasicAuthenticator;
 import org.raven.auth.impl.LoginServiceNode;
 
 /**
@@ -81,6 +86,7 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
     private HttpServerNode httpServer;
     private WebClient webclient;
     private Projects projects;
+    private ProjectNode project;
     private AnonymousLoginServiceNode loginService;
     private TemporaryFileManagerNode tempFileManager;
     
@@ -661,7 +667,33 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
     
     @Test
     public void successAuthTest() throws Exception {
-        SimpleResponseBuilder builder = createProjectAndBuilder();
+        SimpleResponseBuilder builder = createProjectAndBuilder();        
+        LoginServiceNode loginService = addLoginService(project);
+        builder.setLoginService(loginService);
+        builder.setResponseContent("'ok'");
+        assertTrue(builder.start());
+        
+        assertTrue(httpServer.start());
+        
+        webclient.setRedirectEnabled(true);
+        HtmlPage page = webclient.getPage(formUrl("localhost:7777/projects/hello/world"));
+        assertEquals(401, page.getWebResponse().getStatusCode());
+        assertTrue(page.asText().contains("401 (Unauthorized)"));
+        assertNotNull(page.getWebResponse().getResponseHeaderValue(HttpHeaders.Names.WWW_AUTHENTICATE));
+        //
+        webclient.setThrowExceptionOnFailingStatusCode(false);
+        DefaultCredentialsProvider userProv = new DefaultCredentialsProvider();
+        userProv.addCredentials("user1", "321");
+        webclient.setCredentialsProvider(userProv);
+        page = webclient.getPage(formUrl("localhost:7777/projects/hello/world"));
+        assertEquals(401, page.getWebResponse().getStatusCode());
+        assertTrue(page.asText().contains("401 (Unauthorized)"));
+        assertNotNull(page.getWebResponse().getResponseHeaderValue(HttpHeaders.Names.WWW_AUTHENTICATE));
+        //
+        userProv.addCredentials("user1", "123");
+        TextPage okPage = webclient.getPage(formUrl("localhost:7777/projects/hello/world"));
+        assertEquals(200, okPage.getWebResponse().getStatusCode());
+        assertEquals("ok", okPage.getContent());
     }
     
     private HttpClient createHttpClient() throws Exception {
@@ -694,7 +726,7 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
     }
     
     private SimpleResponseBuilder createProjectAndBuilder() throws Exception {
-        ProjectNode project = createProject();
+        project = createProject();
         
         //adding response builder node
         SimpleResponseBuilder builder = new SimpleResponseBuilder();
@@ -759,6 +791,14 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
     private LoginServiceNode addLoginService(ProjectNode project) {
         LoginServiceNode loginService = new LoginServiceNode("main");
         project.getNode(LoginManagerNode.NAME).addAndSaveChildren(loginService);
+        loginService.setExecutor(executor);
+        assertTrue(loginService.start());
+        //
+        BasicAuthenticator authNode = new BasicAuthenticator();
+        authNode.setName("user1");
+        loginService.getNode(AuthenticatorsNode.NAME).addAndSaveChildren(authNode);
+        authNode.setPassword("123");
+        assertTrue(authNode.start());
         return loginService;
     }
     

@@ -95,14 +95,16 @@ limitations under the License.
     <div class="raven-error-panel">
       <h1>${messages.errorTitle}
         <% if (projectName) { %>
-        ${messages.inProject} "${projectName}"
+        ${messages.inProject} "${projectName}" :
         <% } %>
-        : ${statusCode} (${statusCodeDesc})
+        ${statusCode} (${statusCodeDesc})
       </h1>
+      <%
+        if (!message) 
+            message = isPropogatedEx(exceptions[0])? exceptions[0].cause.message : exceptions[0].message
+      %>
       <% if (message) { %>
         <pre>${escape(message)}</pre> 
-      <% } else if (exceptions) { %>
-        <pre>${isPropogatedEx(exceptions[0])? exceptions[0].cause.message : exceptions[0].message}</pre>
       <% } %>
       <h2>${messages.request}: </h2>
       <ul>
