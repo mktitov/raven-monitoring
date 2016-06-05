@@ -38,6 +38,7 @@ import org.raven.net.ResponseContext;
 import org.raven.net.ResponseContextListener;
 import org.raven.net.ResponseServiceNode;
 import org.raven.net.http.server.HttpSession;
+import org.raven.net.http.server.SessionManager;
 import org.raven.sched.ExecutorService;
 import org.raven.tree.Tree;
 import org.raven.tree.impl.LoggerHelper;
@@ -103,6 +104,14 @@ public class ResponseContextImpl implements ResponseContext {
 
     @Override
     public HttpSession getSession() {
+        return session;
+    }
+
+    @Override
+    public HttpSession getSession(boolean create) {
+        if (session!=null)
+            return session;
+        session = loginService.getSessionManager().createSession();
         return session;
     }
 

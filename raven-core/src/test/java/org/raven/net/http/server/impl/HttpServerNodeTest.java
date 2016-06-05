@@ -35,13 +35,11 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import org.apache.http.HttpResponse;
-import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.scheme.PlainSocketFactory;
@@ -71,10 +69,11 @@ import org.raven.sched.ExecutorService;
 import org.raven.sched.impl.ExecutorServiceNode;
 import org.raven.test.RavenCoreTestCase;
 import static org.junit.Assert.assertTrue;
-import org.raven.auth.impl.AuthenticateByExpression;
 import org.raven.auth.impl.AuthenticatorsNode;
 import org.raven.auth.impl.BasicAuthenticator;
 import org.raven.auth.impl.LoginServiceNode;
+import org.raven.net.impl.ContextParameters;
+import org.raven.net.impl.ParameterNode;
 
 /**
  *
@@ -167,12 +166,12 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         assertTrue(httpServer.start()); 
         //
         HtmlPage p = webclient.getPage(formUrl("localhost:7777"));
-        assertEquals(404, p.getWebResponse().getStatusCode());
-        assertTrue(p.asText().contains("Context (/) unavailable"));
+        assertEquals(HttpResponseStatus.BAD_REQUEST.code(), p.getWebResponse().getStatusCode());
+        assertTrue(p.asText().contains("Invalid path: /"));
         
         p = webclient.getPage(formUrl("localhost:7777/a"));
-        assertEquals(404, p.getWebResponse().getStatusCode());
-        assertTrue(p.asText().contains("Context (/a) unavailable"));
+        assertEquals(HttpResponseStatus.BAD_REQUEST.code(), p.getWebResponse().getStatusCode());
+        assertTrue(p.asText().contains("Invalid path: /a"));
         
         p = webclient.getPage(formUrl("localhost:7777/sri/a"));
         assertEquals(404, p.getWebResponse().getStatusCode());
@@ -665,7 +664,7 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         responseContentReadWithBackPressure();
     }
     
-    @Test
+    @Test(timeout = 5_000L)
     public void successAuthTest() throws Exception {
         SimpleResponseBuilder builder = createProjectAndBuilder();        
         LoginServiceNode loginService = addLoginService(project);
@@ -694,6 +693,233 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         TextPage okPage = webclient.getPage(formUrl("localhost:7777/projects/hello/world"));
         assertEquals(200, okPage.getWebResponse().getStatusCode());
         assertEquals("ok", okPage.getContent());
+    }
+    
+    @Test(timeout = 5_000L)
+    public void httpsSuccessAuthTest() throws Exception {
+        prepareHttps();
+        successAuthTest();
+    }
+    
+    @Test(timeout = 5_000L)
+    public void noAccessToResourceTest() throws Exception {
+        SimpleResponseBuilder builder = createProjectAndBuilder();        
+        LoginServiceNode loginService = addLoginService(project);
+        builder.setLoginService(loginService);
+        builder.setResponseContent("'ok'");
+        builder.setMinimalAccessRight(AccessRight.READ);
+        assertTrue(builder.start());
+        
+        assertTrue(httpServer.start());
+        DefaultCredentialsProvider userProv = new DefaultCredentialsProvider();
+        userProv.addCredentials("user1", "123");
+        webclient.setCredentialsProvider(userProv);
+        HtmlPage page = webclient.getPage(formUrl("localhost:7777/projects/hello/world"));
+        assertEquals(HttpResponseStatus.FORBIDDEN.code(), page.getWebResponse().getStatusCode());
+        assertTrue(page.asText().contains("403 (Forbidden)"));
+        assertTrue(page.asText().contains("User (login: user1; host: 127.0.0.1; admin: false; authenticator: user1) "
+                + "has no access to (/projects/hello/world) using (GET) operation"));
+        
+    }
+    
+    @Test(timeout = 5_000L)
+    public void httpsNoAccessToResourceTest() throws Exception {
+        prepareHttps();
+        noAccessToResourceTest();
+    }
+    
+    @Test(timeout = 5_000L)
+    public void requiredParameterMissedTest() throws Exception {
+        SimpleResponseBuilder builder = createProjectAndBuilder();        
+        builder.setUseParameters(Boolean.TRUE);
+        ContextParameters params = (ContextParameters) builder.getNode(ContextParameters.NAME);
+        assertNotNull(params);
+        ParameterNode param = new ParameterNode();
+        param.setName("required_param");
+        params.addAndSaveChildren(param);
+        param.setRequired(Boolean.TRUE);
+        assertTrue(param.start());
+        assertTrue(builder.start());
+        
+        assertTrue(httpServer.start());
+        HtmlPage page = webclient.getPage(formUrl("localhost:7777/projects/hello/world"));
+        assertEquals(HttpResponseStatus.BAD_REQUEST.code(), page.getWebResponse().getStatusCode());
+        assertTrue(page.asText().contains("400 (Bad Request)"));
+        assertTrue(page.asText().contains("Required parameter (required_param) missed for context (world)"));        
+    }
+    
+    @Test(timeout = 5_000L)
+    public void httpsRequiredParameterMissedTest() throws Exception {
+        prepareHttps();
+        requiredParameterMissedTest();
+    }
+    
+    @Test(timeout = 5_000L)
+    public void anonymSessionTest() throws Exception {
+        SimpleResponseBuilder builder = createProjectAndBuilder();        
+        builder.setUseServerSession(Boolean.TRUE);
+        builder.setResponseContent("response.session.attrs.greeting='Hello world'; 'ok'");
+        assertTrue(builder.start());
+        
+        SimpleResponseBuilder resBuilder = createProjectAndBuilder("greeting");
+        resBuilder.setResponseContent("response.session.attrs.greeting");
+        assertTrue(resBuilder.start());
+        
+        assertTrue(httpServer.start());
+        TextPage page = webclient.getPage(formUrl("localhost:7777/projects/hello/world"));
+        assertNotNull(page);
+        assertEquals(200, page.getWebResponse().getStatusCode());
+        //
+        page = webclient.getPage(formUrl("localhost:7777/projects/hello/greeting"));
+        assertNotNull(page);
+        assertEquals(200, page.getWebResponse().getStatusCode());
+        assertEquals("Hello world", page.getContent());
+    }
+    
+    @Test(timeout = 5_000L)
+    public void httpsAnonymSessionTest() throws Exception {
+        prepareHttps();
+        anonymSessionTest();
+    }
+    
+    @Test(timeout = 5_000L)
+    public void loggedUserSessionTest() throws Exception {
+        SimpleResponseBuilder builder = createProjectAndBuilder();        
+        LoginServiceNode loginService = addLoginService(project);
+        builder.setLoginService(loginService);
+        builder.setResponseContent("userContext.params.greeting = 'Hello world'");
+        assertTrue(builder.start());
+        
+        SimpleResponseBuilder resBuilder = createProjectAndBuilder("greeting");
+        resBuilder.setLoginService(loginService);
+        resBuilder.setResponseContent("userContext.params.greeting");
+        assertTrue(resBuilder.start());
+        
+        assertTrue(httpServer.start());
+        DefaultCredentialsProvider userProv = new DefaultCredentialsProvider();
+        userProv.addCredentials("user1", "123");
+        webclient.setCredentialsProvider(userProv);
+        TextPage page = webclient.getPage(formUrl("localhost:7777/projects/hello/world"));
+        assertNotNull(page);
+        assertEquals(200, page.getWebResponse().getStatusCode());
+        //
+        page = webclient.getPage(formUrl("localhost:7777/projects/hello/greeting"));
+        assertNotNull(page);
+        assertEquals(200, page.getWebResponse().getStatusCode());
+        assertEquals("Hello world", page.getContent());
+    }
+    
+    @Test(timeout = 5_000L)
+    public void httpsLoggedUserSessionTest() throws Exception {
+        prepareHttps();
+        loggedUserSessionTest();
+    }
+    
+    @Test(timeout = 5_000L)
+    public void createSessionFromBuilderTest() throws Exception {
+        SimpleResponseBuilder builder = createProjectAndBuilder();
+        builder.setUseServerSession(false);
+        builder.setResponseContent("response.getSession(true).attrs.greeting='Hello world'; 'ok'");
+        assertTrue(builder.start());
+        
+        SimpleResponseBuilder resBuilder = createProjectAndBuilder("greeting");
+        resBuilder.setResponseContent("response.session.attrs.greeting");
+        assertTrue(resBuilder.start());
+        
+        assertTrue(httpServer.start());
+        TextPage page = webclient.getPage(formUrl("localhost:7777/projects/hello/world"));
+        assertNotNull(page);
+        assertEquals(200, page.getWebResponse().getStatusCode());
+        //
+        page = webclient.getPage(formUrl("localhost:7777/projects/hello/greeting"));
+        assertNotNull(page);
+        assertEquals(200, page.getWebResponse().getStatusCode());
+        assertEquals("Hello world", page.getContent());        
+    }
+    
+    @Test(timeout = 5_000L)
+    public void httpsCreateSessionFromBuilderTest() throws Exception {
+        prepareHttps();
+        createSessionFromBuilderTest();
+    }
+    
+    @Test(timeout = 5_000L)
+    public void invalidateSessionTest() throws Exception {
+        SimpleResponseBuilder builder = createProjectAndBuilder();
+        builder.setUseServerSession(false);
+        builder.setResponseContent("response.getSession(true).attrs.greeting='Hello world'; 'ok'");
+        assertTrue(builder.start());
+        
+        SimpleResponseBuilder resBuilder = createProjectAndBuilder("greeting");
+        resBuilder.setResponseContent("response.session.invalidate(); response.session.attrs.greeting");
+        assertTrue(resBuilder.start());
+        
+        SimpleResponseBuilder lastBuilder = createProjectAndBuilder("test");
+        lastBuilder.setResponseContent("response.session==null? 'ok' : 'error'");
+        assertTrue(lastBuilder.start());
+        
+        assertTrue(httpServer.start());
+        TextPage page = webclient.getPage(formUrl("localhost:7777/projects/hello/world"));
+        assertNotNull(page);
+        assertEquals(200, page.getWebResponse().getStatusCode());
+        //
+        page = webclient.getPage(formUrl("localhost:7777/projects/hello/greeting"));
+        assertNotNull(page);
+        assertEquals(200, page.getWebResponse().getStatusCode());
+        assertEquals("Hello world", page.getContent());        
+        
+        page = webclient.getPage(formUrl("localhost:7777/projects/hello/test"));
+        assertNotNull(page);
+        assertEquals(200, page.getWebResponse().getStatusCode());
+        assertEquals("ok", page.getContent());        
+    }
+    
+    @Test(timeout = 5_000L)
+    public void httpsInvalidateSessionTest() throws Exception {
+        prepareHttps();
+        invalidateSessionTest();
+    }    
+    
+    @Test(timeout = 5_000L)
+    public void needRelogingTest() throws Exception {
+        SimpleResponseBuilder builder = createProjectAndBuilder();        
+        LoginServiceNode loginService = addLoginService(project);
+        builder.setLoginService(loginService);
+        builder.setResponseContent("userContext.needRelogin(); userContext.params.greeting = 'Hello world'");
+        assertTrue(builder.start());
+        
+        SimpleResponseBuilder resBuilder = createProjectAndBuilder("greeting");
+        resBuilder.setLoginService(loginService);
+        resBuilder.setResponseContent("userContext.params.greeting");
+        assertTrue(resBuilder.start());
+        
+        assertTrue(httpServer.start());
+        DefaultCredentialsProvider userProv = new DefaultCredentialsProvider();
+        userProv.addCredentials("user1", "123");
+        webclient.setCredentialsProvider(userProv);
+        TextPage page = webclient.getPage(formUrl("localhost:7777/projects/hello/world"));
+        assertNotNull(page);
+        assertEquals(200, page.getWebResponse().getStatusCode());
+        //
+        userProv.clear();
+        HtmlPage resPage = webclient.getPage(formUrl("localhost:7777/projects/hello/greeting"));
+        assertNotNull(resPage);
+        assertEquals(HttpResponseStatus.UNAUTHORIZED.code(), resPage.getWebResponse().getStatusCode());
+//        assertEquals("Hello world", page.getContent());        
+    }
+    
+    @Test(timeout = 5_000L)
+    public void httpsNeedRelogingTest() throws Exception {
+        prepareHttps();
+        needRelogingTest();
+    }
+    
+    public void invalidLoginPath() throws Exception {
+        
+    }
+    
+    public void sseTest() throws Exception {
+        
     }
     
     private HttpClient createHttpClient() throws Exception {
@@ -726,11 +952,15 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
     }
     
     private SimpleResponseBuilder createProjectAndBuilder() throws Exception {
+        return createProjectAndBuilder("world");
+    }
+    
+    private SimpleResponseBuilder createProjectAndBuilder(String name) throws Exception {
         project = createProject();
         
         //adding response builder node
         SimpleResponseBuilder builder = new SimpleResponseBuilder();
-        builder.setName("world");
+        builder.setName(name);
         project.getWebInterface().addAndSaveChildren(builder);
         builder.setResponseContentCharset(Charset.forName("utf-8"));
         builder.setResponseContentType("text/plain");

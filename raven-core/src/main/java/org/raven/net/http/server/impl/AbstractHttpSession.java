@@ -58,6 +58,11 @@ public abstract class AbstractHttpSession implements HttpSession {
     }
 
     @Override
+    public Map<String, Object> getAttrs() {
+        return getOrCreateAttributes();
+    }
+
+    @Override
     public UserContext getUserContext() {
         return userContext;
     }

@@ -15,6 +15,7 @@
  */
 package org.raven.net.http.server;
 
+import java.util.Map;
 import org.raven.auth.UserContext;
 
 /**
@@ -49,6 +50,10 @@ public interface HttpSession {
      * Returns the context of the user attached to the session
      */
     public UserContext getUserContext();
+    /**
+     * Returns the map of the attributes
+     */
+    public Map<String, Object> getAttrs();
     /**
      * Attach user context to the session
      */

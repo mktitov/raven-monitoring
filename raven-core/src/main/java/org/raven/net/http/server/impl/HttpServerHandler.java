@@ -61,8 +61,10 @@ import org.raven.net.AccessDeniedException;
 import org.raven.net.AuthorizationNeededException;
 import org.raven.net.ContextUnavailableException;
 import org.raven.net.Request;
+import org.raven.net.RequiredParameterMissedException;
 import org.raven.net.ResponseContext;
 import org.raven.net.UnauthoriedException;
+import org.raven.net.http.server.BadRequestException;
 import org.raven.net.http.server.ChannelTimeoutChecker;
 import org.raven.net.http.server.HttpConsts;
 import org.raven.net.http.server.HttpServerContext;
@@ -309,7 +311,7 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
         //провер€ем аутентификацию
         final Set<Cookie> cookies = decodeCookies(request);
         final Cookie sessionCookie = getSessionIdCookie(cookies, ravenRequest.getProjectPath());
-        final UserContext userContext = checkAuth(request, responseContext, sessionCookie, contentTypeStr);                
+        final UserContext userContext = checkAuth(request, responseContext, sessionCookie, queryString.path());                
         //добавл€ем запись в audit
         if (Boolean.TRUE.equals(responseContext.getResponseBuilder().getRequireAudit()))
             serverContext.getAuditor().write(new AuditRecord(
@@ -331,13 +333,19 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
         final SessionManager sessionManager = loginService.getSessionManager();
         if (!loginService.isStarted() || !loginService.isLoginAllowedFromIp(remoteAddr.getAddress().getHostAddress()))
             throw new AccessDeniedException();
-        if (loginService instanceof AnonymousLoginService)
-            return responseContext.getLoginService().login(null, null, null, null);        
+        final String sessionId = sessionCookie==null? null : sessionCookie.value();
+        if (loginService instanceof AnonymousLoginService) {
+            HttpSession session = sessionId==null? null : sessionManager.getSession(sessionId);
+            if (session==null && responseContext.isSessionAllowed())
+                session = sessionManager.createSession();
+            if (session!=null)
+                responseContext.setSession(session);            
+            return responseContext.getLoginService().login(null, null, null, null); 
+        }
         UserContext userContext = null;
         if (responseContext.isSessionAllowed()) {
             if (sessionManager==null) 
                 throw new InternalServerError("LoginService (%s) doesn't have session manager");
-            final String sessionId = sessionCookie==null? null : sessionCookie.name();
             HttpSession session;
             if (sessionId!=null && (session = sessionManager.getSession(sessionId))!=null) {
                 userContext = session.getUserContext();
@@ -388,11 +396,12 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
                 responseContext.setSession(newSession);
             }
         } else {
-            if (responseContext.getLogger().isWarnEnabled())
-                responseContext.getLogger().warn(String.format(
+            final String mess = String.format(
                         "User (%s) has no access to (%s) using (%s) operation", 
-                        userContext, path, request.getMethod()));
-            throw new UnauthoriedException();
+                        userContext, path, request.getMethod());
+            if (responseContext.getLogger().isWarnEnabled())
+                responseContext.getLogger().warn(mess);
+            throw new AccessDeniedException(mess);
         }        
         return userContext;
     }
@@ -404,7 +413,7 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
     
     public Cookie getSessionIdCookie(final Set<Cookie> cookies, final String projectPath) {
         for (Cookie cookie: cookies)
-            if (HttpConsts.SESSIONID_COOKIE_NAME.equals(cookie.name()) && projectPath.equals(cookie.path()))
+            if (HttpConsts.SESSIONID_COOKIE_NAME.equals(cookie.name()))
                 return cookie;
         return null;
     }
@@ -474,6 +483,10 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
                 status = HttpResponseStatus.REQUEST_TIMEOUT;
             else if (error instanceof UnauthoriedException || error instanceof AuthenticationFailedException) 
                 status = HttpResponseStatus.UNAUTHORIZED;
+            else if (error instanceof AccessDeniedException)
+                status = HttpResponseStatus.FORBIDDEN;
+            else if (error instanceof RequiredParameterMissedException || error instanceof BadRequestException)
+                status = HttpResponseStatus.BAD_REQUEST;
             else 
                 status = HttpResponseStatus.INTERNAL_SERVER_ERROR;
             //adding http status to bindings
@@ -606,10 +619,10 @@ public class HttpServerHandler extends ChannelDuplexHandler implements ChannelTi
                 }
             this.headers = headers;
             if (path.length()<2)
-                throw new ContextUnavailableException(path);            
+                throw new BadRequestException("Invalid path: "+path);            
             String[] pathElems = RavenUtils.split(path, "/", true);
             if (pathElems.length<2 || !ObjectUtils.in(pathElems[0], SRI_SERVICE, PROJECTS_SERVICE))
-                throw new ContextUnavailableException(path);            
+                throw new BadRequestException("Invalid path: "+path);            
             this.servicePath = pathElems[0];            
             this.projectPath = SRI_SERVICE.equals(servicePath)? "/"+SRI_SERVICE : "/"+pathElems[0]+"/"+pathElems[1];
             this.contextPath = StringUtils.join(pathElems, "/", 1, pathElems.length);

@@ -107,6 +107,11 @@ public interface ResponseContext {
      */
     public HttpSession getSession();
     /**
+     * Creates (if need) the http session and returns it
+     * @param create if true and if session not created yet the session will be created
+     */
+    public HttpSession getSession(boolean create);
+    /**
      * Returns the response output stream.
      * Response builder must use this stream only when it returns the {@link Response#ALREADY_COMPOSED} or 
      * {@link Response#MANAGING_BY_BUILDER} response

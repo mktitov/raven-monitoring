@@ -631,7 +631,7 @@ public class RRController {
                 HttpSession session = responseContext.getSession();
                 Cookie _sessionCookie = null;
                 if (session==null || !session.isValid()) {
-                    if (sessionCookie!=null && responseContext.isSessionAllowed()) {
+                    if (sessionCookie!=null && (responseContext.isSessionAllowed() || session!=null)) {
                         //reseting sessionCookie
                         _sessionCookie = new DefaultCookie(HttpConsts.SESSIONID_COOKIE_NAME, "");
                         _sessionCookie.setMaxAge(0);
