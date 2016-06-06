@@ -71,6 +71,7 @@ import org.raven.test.RavenCoreTestCase;
 import static org.junit.Assert.assertTrue;
 import org.raven.auth.impl.AuthenticatorsNode;
 import org.raven.auth.impl.BasicAuthenticator;
+import org.raven.auth.impl.LoginNodePath;
 import org.raven.auth.impl.LoginServiceNode;
 import org.raven.net.impl.ContextParameters;
 import org.raven.net.impl.ParameterNode;
@@ -905,7 +906,6 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         HtmlPage resPage = webclient.getPage(formUrl("localhost:7777/projects/hello/greeting"));
         assertNotNull(resPage);
         assertEquals(HttpResponseStatus.UNAUTHORIZED.code(), resPage.getWebResponse().getStatusCode());
-//        assertEquals("Hello world", page.getContent());        
     }
     
     @Test(timeout = 5_000L)
@@ -913,8 +913,33 @@ public class HttpServerNodeTest extends RavenCoreTestCase {
         prepareHttps();
         needRelogingTest();
     }
-    
+
+    @Test(timeout = 5_000L)
     public void invalidLoginPath() throws Exception {
+        SimpleResponseBuilder builder = createProjectAndBuilder();        
+        LoginServiceNode loginService = addLoginService(project);
+        LoginNodePath loginPath = new LoginNodePath();
+        builder.setLoginService(loginService);
+        builder.setResponseContent("'ok");
+        assertTrue(builder.start());
+        
+        SimpleResponseBuilder resBuilder = createProjectAndBuilder("greeting");
+        resBuilder.setLoginService(loginService);
+        resBuilder.setResponseContent("userContext.params.greeting");
+        assertTrue(resBuilder.start());
+        
+        assertTrue(httpServer.start());
+        DefaultCredentialsProvider userProv = new DefaultCredentialsProvider();
+        userProv.addCredentials("user1", "123");
+        webclient.setCredentialsProvider(userProv);
+        TextPage page = webclient.getPage(formUrl("localhost:7777/projects/hello/world"));
+        assertNotNull(page);
+        assertEquals(200, page.getWebResponse().getStatusCode());
+        //
+        userProv.clear();
+        HtmlPage resPage = webclient.getPage(formUrl("localhost:7777/projects/hello/greeting"));
+        assertNotNull(resPage);
+        assertEquals(HttpResponseStatus.UNAUTHORIZED.code(), resPage.getWebResponse().getStatusCode());
         
     }
     
