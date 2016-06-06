@@ -190,13 +190,13 @@ public class HttpServerNode extends BaseNodeWithBehavior {
         workerGroup = new NioEventLoopGroup(workerThreadsCount);
         try {
             final SslContext sslContext = createSslContext();
-            final ByteBufAllocator bufAllocator = PooledByteBufAllocator.DEFAULT;
+//            final ByteBufAllocator bufAllocator = PooledByteBufAllocator.DEFAULT;
             ServerBootstrap bootstrap = new ServerBootstrap()
                 .group(acceptorGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override protected void initChannel(SocketChannel ch) throws Exception {
-                        ch.config().setAllocator(bufAllocator);
+//                        ch.config().setAllocator(bufAllocator);
                         if (sslContext!=null)
                             ch.pipeline().addLast(sslContext.newHandler(ch.alloc()));
                         ch.pipeline()
