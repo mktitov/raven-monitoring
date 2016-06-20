@@ -231,6 +231,12 @@
     <dependency>
       <groupId>net.sf.jxls</groupId>
       <artifactId>jxls-core</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-jexl</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
         <groupId>net.sf.jett</groupId>
