@@ -433,8 +433,7 @@ public class NetworkResponseServlet extends HttpServlet  {
         final HttpServletResponse response = ctx.response;
         if (serviceResponse == Response.NOT_MODIFIED) {
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
-            response.flushBuffer();
-//            response.getOutputStream().close();
+            response.getOutputStream().close();
         } else {
             Map<String, String> headers = serviceResponse.getHeaders();
             if (headers != null) 
@@ -449,9 +448,9 @@ public class NetworkResponseServlet extends HttpServlet  {
                 }
                 response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
                 response.addHeader("Location", ((RedirectResult)content).getContent().toString());
-                response.flushBuffer();
+//                response.flushBuffer();
 //                response.getOutputStream().flush();
-//                response.getOutputStream().close();
+                response.getOutputStream().close();
             } else {
                 response.setContentType(serviceResponse.getContentType());
                 if (content instanceof Result) {
@@ -475,24 +474,19 @@ public class NetworkResponseServlet extends HttpServlet  {
                     if (content instanceof Writable) {
                         Writable writable = (Writable) content;
                         writable.writeTo(response.getWriter());
-//                        response.getWriter().flush();
-                        response.flushBuffer();
-//                        response.getWriter().close();
+                        response.getWriter().flush();
+                        response.getWriter().close();
                     } else if (content instanceof Outputable) {
                         ((Outputable)content).outputTo(response.getOutputStream());
-                        response.flushBuffer();
-//                        response.getOutputStream().close();
+                        response.getOutputStream().close();
                     } else {
                         InputStream contentStream = converter.convert(InputStream.class, content, charset);
                         if (contentStream!=null) {
                             OutputStream out = response.getOutputStream();
                             try {
                                 IOUtils.copy(contentStream, out);
-                                out.flush();
-//                                response.flushBuffer();
-//                                IOUtils.closeQuietly(out);
+                                IOUtils.closeQuietly(out);
                             } finally {
-//                                response.flushBuffer();
 //                                out.flush();
                                 IOUtils.closeQuietly(contentStream);
 //                                out.flush();
@@ -501,7 +495,7 @@ public class NetworkResponseServlet extends HttpServlet  {
                     }
                 } else {
                     response.flushBuffer();
-//                    response.getOutputStream().close();
+                    response.getOutputStream().close();
                 }
             }
         }
@@ -837,7 +831,7 @@ public class NetworkResponseServlet extends HttpServlet  {
         //timestamps for statistics 
         public final long createdTs = System.currentTimeMillis();
 //        public volatile long 
-        private volatile long writeProcessedTs;
+        public volatile long writeProcessedTs;
         public volatile long channelClosedTs;
         public volatile long builderExecutedTs;
         public volatile long builderProcessedTs;
@@ -848,8 +842,6 @@ public class NetworkResponseServlet extends HttpServlet  {
         private final AtomicBoolean readProcessed = new AtomicBoolean();
         private final AtomicBoolean writeProcessed = new AtomicBoolean();
         private final AtomicBoolean closed = new AtomicBoolean();
-        private volatile Response serviceResponse;
-        private volatile CometNetworkResponseServlet servlet;
         
         public UserContext user;
         public ResponseContext responseContext;
@@ -893,10 +885,8 @@ public class NetworkResponseServlet extends HttpServlet  {
         }
         
         public void writeProcessed(final CometEvent ev) {
-            if (serviceResponse==null && writeProcessed.compareAndSet(false, true)) {
-                writeProcessedTs = System.currentTimeMillis();
+            if (writeProcessed.compareAndSet(false, true)) {
                 if (servletLogger.isDebugEnabled())
-//                    servletLogger.debug("Write processed");
                     servletLogger.debug("Write processed. Trying to close channel");
                 tryToCloseChannelQuietly(ev);
             }
@@ -967,7 +957,7 @@ public class NetworkResponseServlet extends HttpServlet  {
 
         private void processChannelClose(final CometEvent ev) throws IOException {
             if (closed.compareAndSet(false, true)) {
-//                IOUtils.closeQuietly(ev.getHttpServletRequest().getInputStream());
+                IOUtils.closeQuietly(ev.getHttpServletRequest().getInputStream());
                 ev.close();
                 responseContext.channelClosed();
                 if (servletLogger.isDebugEnabled())
@@ -1028,29 +1018,7 @@ public class NetworkResponseServlet extends HttpServlet  {
         }        
         
         public void responseGenerated() {
-            builderExecutedTs = System.currentTimeMillis();
             responseGenerated = true;
-        }
-
-        void setServiceResponse(CometEvent ev, Response serviceResponse, CometNetworkResponseServlet servlet) {
-            if (servletLogger.isDebugEnabled())
-                servletLogger.debug("Requesting response write");
-            this.serviceResponse = serviceResponse;
-            this.servlet = servlet;
-            request.setAttribute("org.apache.tomcat.comet.timeout", 1);
-        }
-
-        void writeResponseIfNeed(CometEvent ev) {
-            if (serviceResponse!=null)
-                try {
-                    if (servletLogger.isDebugEnabled())
-                        servletLogger.debug("Writing response");
-                    servlet.processServiceResponse(this, serviceResponse);
-                    serviceResponse = null;
-                    writeProcessed.set(true);
-            } catch (IOException ex) {
-                servletLogger.error("Error writing response", ex);
-            }
         }
     } 
 }
