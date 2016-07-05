@@ -176,5 +176,10 @@ public class CometResponseContext implements ResponseContext {
     public ExecutorService getExecutor() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+
+    @Override
+    public HttpSession getSession(boolean create) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
         
 }
